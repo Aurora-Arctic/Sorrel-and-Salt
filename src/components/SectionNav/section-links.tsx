@@ -13,7 +13,7 @@ import {
   useSyncExternalStore,
 } from 'react';
 import { isAtPath } from '../../lib/at-path';
-import { ChevronIcon } from '../Combobox/icons';
+import { ChevronIcon } from '../IconTip/icons';
 import SectionIcon from './icons';
 import type { SectionNavItem, SectionNavProps } from './types';
 
@@ -22,11 +22,10 @@ import type { SectionNavItem, SectionNavProps } from './types';
 // the browser. The list is the server's, passed in as plain data
 // (claude-docs/components/section-nav.md).
 
-// How many sections stay in view on a phone, and what the server and the
-// first client render show; the stylesheet's `--extra` class hides the rest,
-// so the number lives here once and the stylesheet is told by the class, not
-// by a second count. Wider than the phone a measured count replaces it, and
-// until that is known the stylesheet shows every tab (`index.scss`).
+// How many sections stay in view on a phone, and what the server and the first client render
+// show; the stylesheet's `--extra` class hides the rest, so the number lives here once. Wider
+// than the phone a measured count replaces it, and until that is known the stylesheet shows
+// every tab (`index.scss`).
 const VISIBLE = 4;
 
 // Wider than the phone (`$shell-phone-width`, 40rem; `_variables.scss`): the
@@ -47,10 +46,14 @@ const inTabletBandNever = (): boolean => false;
 const pixels = (value: string): number => Number.parseFloat(value) || 0;
 
 // What is measured of the row with every tab showing: each tab's width with
-// its margin, the gap between tabs, More's own width, the gap inside its
-// button and its chevron's.
+// its margin, which tab is the current page's and its width without the
+// margin, the gap between tabs, More's own width, the gap inside its button
+// and its chevron's.
 type Natural = {
   widths: number[];
+  // -1 when no tab is the current page's.
+  current: number;
+  currentWidth: number;
   gap: number;
   more: number;
   buttonGap: number;
@@ -66,11 +69,14 @@ const measureNatural = (list: HTMLElement): Natural | null => {
   );
   // No layout (happy-dom, a hidden nav): there is nothing to fit, so keep the default.
   if (widths.length === 0 || widths.some((width) => width === 0)) return null;
+  const current = items.findIndex((item) => item.querySelector('[aria-current="page"]'));
   const more = list.querySelector<HTMLElement>(':scope > .section-nav__more');
   const chevron = more?.querySelector<HTMLElement>('.section-nav__chevron');
   const moreButton = more?.querySelector<HTMLElement>('.section-nav__more-button');
   return {
     widths,
+    current,
+    currentWidth: current === -1 ? 0 : items[current]!.offsetWidth,
     gap: pixels(getComputedStyle(list).columnGap),
     more: more?.offsetWidth ?? 0,
     buttonGap: moreButton ? pixels(getComputedStyle(moreButton).columnGap) : 0,
@@ -78,19 +84,16 @@ const measureNatural = (list: HTMLElement): Natural | null => {
   };
 };
 
-// The most leading tabs, never fewer than one, that fit `available` beside
-// More; all of them when they fit without it. More is reserved at its own
-// width or, since it wears a hidden current page's label, the widest tab it
-// would hide plus the gap inside the button and the chevron, whichever is
-// more: not the widest tab of all, which tucked tabs away while the row still
-// had room for them.
+// The most leading tabs, at least one, that fit `available` beside More. More is reserved at its
+// own width, or at the current tab's width plus the button's gap and chevron if that tab would be
+// hidden, whichever is wider. Not the widest hidden tab, which would hide one while room remains.
 const countThatFit = (
-  { widths, gap, more, buttonGap, chevron }: Natural,
+  { widths, current, currentWidth, gap, more, buttonGap, chevron }: Natural,
   available: number,
 ): number => {
   for (let count = widths.length; count > 1; count -= 1) {
     const tabs = widths.slice(0, count).reduce((sum, width) => sum + width, 0) + gap * (count - 1);
-    const reserve = Math.max(more, Math.max(...widths.slice(count)) + buttonGap + chevron);
+    const reserve = current >= count ? Math.max(more, currentWidth + buttonGap + chevron) : more;
     if (tabs + (count < widths.length ? gap + reserve : 0) <= available) return count;
   }
   return 1;
@@ -101,10 +104,10 @@ const countThatFit = (
 const isCurrent = (pathname: string, { href, exact, matches = [] }: SectionNavItem): boolean =>
   exact ? pathname === href : [href, ...matches].some((each) => isAtPath(pathname, each));
 
-// A browser without a visual viewport has no keyboard to answer to. The on-screen keyboard is up when it has taken a quarter of the window: the
-// visual viewport shrinks, the layout viewport does not, which is how a fixed
-// bar ends up sitting on top of the keyboard. Subscribed as an external
-// store so the server and the first client render agree (no keyboard).
+// A browser without a visual viewport has no keyboard to answer to. The on-screen keyboard is
+// up when it has taken a quarter of the window: the visual viewport shrinks, the layout
+// viewport does not, which is how a fixed bar ends up sitting on top of the keyboard.
+// Subscribed as an external store so the server and the first client render agree (no keyboard).
 const subscribeToKeyboard = (notify: () => void): (() => void) => {
   const viewport = window.visualViewport;
   viewport?.addEventListener('resize', notify);
@@ -231,7 +234,7 @@ const SectionLinks = ({ label, sections }: SectionNavProps): ReactElement => {
               aria-current={isCurrent(pathname, section) ? 'page' : undefined}
             >
               <SectionIcon name={section.icon} />
-              <span className="section-nav__label">{section.label}</span>
+              <span>{section.label}</span>
             </PendingLink>
           </li>
         ))}
@@ -247,7 +250,7 @@ const SectionLinks = ({ label, sections }: SectionNavProps): ReactElement => {
               onClick={() => setOpenAt(open ? null : pathname)}
             >
               <SectionIcon name={hidden ? hidden.icon : 'more'} />
-              <span className="section-nav__label">
+              <span>
                 {/* The space sits outside the hidden span: a trailing one inside it is
                     trimmed from the name, which then reads "More:Astrology". */}
                 {hidden && (
@@ -271,7 +274,7 @@ const SectionLinks = ({ label, sections }: SectionNavProps): ReactElement => {
                     aria-current={isCurrent(pathname, section) ? 'page' : undefined}
                   >
                     <SectionIcon name={section.icon} />
-                    <span className="section-nav__label">{section.label}</span>
+                    <span>{section.label}</span>
                   </PendingLink>
                 </li>
               ))}

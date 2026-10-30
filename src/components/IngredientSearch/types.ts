@@ -1,4 +1,5 @@
-import type { ToxicFilter } from '@/modules/ingredients/schema/ingredient-enums';
+import type { NomenclatureKind, ToxicFilter } from '@/modules/ingredients/schema/ingredient-enums';
+import type { SpellStatus } from '@/modules/grimoire';
 import type { Route } from 'next';
 import type { ReactNode } from 'react';
 import type { FilterValue } from '../FilterForm/types';
@@ -15,13 +16,19 @@ export interface IngredientSearchMatch {
   /** Its formal name, null for none. */
   canonicalName: string | null;
   /** Its naming system, which a pick's dialog head sets the formal name by. */
-  nomenclature: string;
+  nomenclature: NomenclatureKind;
 }
 
-/** A dropdown row: the combobox's option, carrying the match it stands for. */
+/** A dropdown row: the combobox's option, carrying the ingredient it stands for. A spell's row carries the spell id as `id` and `slug`. */
 export interface IngredientSearchOption extends ComboboxOption {
-  match: IngredientSearchMatch;
+  match?: IngredientSearchMatch;
 }
+
+/** What the type-ahead suggests from: the compendium (default), a coven's cupboard by its label, or a coven's grimoire by spell title. */
+export type SearchSource =
+  | { kind: 'compendium' }
+  | { kind: 'cupboard'; workspaceId: string }
+  | { kind: 'grimoire'; workspaceId: string; status?: SpellStatus };
 
 export interface IngredientSearchProps extends Partial<PagerHrefs<Route>> {
   /** The consumer's client filter row, normally an `IngredientSearchForm`. */
@@ -49,20 +56,14 @@ export interface IngredientSearchFormProps {
   shown: readonly FilterValue[];
   /** The list with `query` set to `text` and the other filters kept, from the first page. */
   searchHref: (text: string) => Route;
-  /** Where a picked match opens. */
-  pickHref: (match: IngredientSearchMatch) => Route;
-  /**
-   * The head of the route modal a pick opens, shown at once while the
-   * modal's content loads. Given, a pick opens `pickHref` as a route modal
-   * over the list as it stands; left out, a pick is a plain navigation.
-   */
+  /** Where a picked ingredient opens: on a list with a Quick Look, its details modal over the list as it stands. Left out, a pick applies its row's text as the search. */
+  pickHref?: (match: IngredientSearchMatch) => Route;
+  /** The head of the route modal a pick opens, shown while its content loads. Given, a pick opens `pickHref` as a route modal; left out, a plain navigation. */
   pickHeading?: (match: IngredientSearchMatch) => ModalHeading;
-  /**
-   * A coven's id. Given, the type-ahead suggests from that coven's own
-   * ingredients, by the coven's label where it sets one, instead of from the
-   * compendium.
-   */
-  workspaceId?: string;
+  /** The page's place for the modal a pick opens (`RouteModalProps.place`), where the page has more than one. */
+  pickPlace?: string;
+  /** What the type-ahead suggests from: the compendium when left out. */
+  source?: SearchSource;
   /** Draw the form's own Clear while a filter is shown. Default true. */
   clear?: boolean;
   /** Joins the form's class. */
@@ -76,15 +77,22 @@ export interface IngredientSearchBoxProps {
   text: string;
   onText: (text: string) => void;
   searchHref: IngredientSearchFormProps['searchHref'];
-  pickHref: IngredientSearchFormProps['pickHref'];
+  pickHref?: IngredientSearchFormProps['pickHref'];
   pickHeading?: IngredientSearchFormProps['pickHeading'];
-  workspaceId?: IngredientSearchFormProps['workspaceId'];
+  pickPlace?: IngredientSearchFormProps['pickPlace'];
+  source?: IngredientSearchFormProps['source'];
 }
 
 /** The kinds of filter the search sentence can name, in the order it names them. */
 export type SearchSentenceFacet =
   | 'query'
+  | 'covens'
+  | 'covensNot'
   | 'categories'
+  | 'moonPhases'
+  | 'daysOfWeek'
+  | 'visibilities'
+  | 'makers'
   | 'forms'
   | 'deities'
   | 'zodiac'
@@ -96,15 +104,28 @@ export type SearchSentenceFacet =
   | 'lowStockOnly'
   | 'nomenclature'
   | 'withoutReferences'
-  | 'withoutForms';
+  | 'withoutForms'
+  | 'reviewed';
 
 /** The filter as the address holds it: the chosen values of each kind. Anything left out is not chosen. */
 export interface SearchSentenceFilter {
   query?: string | null;
+  /** The public compendium only: ids of the viewer's covens an entry is held in, any of them. */
+  covens?: readonly string[];
+  /** Held in none of the picked covens, or with none picked none of the viewer's. */
+  covensNot?: boolean;
   /** Category slugs. */
   categories?: readonly string[];
   /** `all` (the default) lists entries in every category, `any` in at least one. */
   categoryMode?: 'all' | 'any';
+  /** The grimoire's moon phases, as the spells word them. */
+  moonPhases?: readonly string[];
+  /** The grimoire's days of the week, as the spells word them. */
+  daysOfWeek?: readonly string[];
+  /** The grimoire's visibility, one of `private`, `workspace`; empty or left out is Any. */
+  visibility?: string;
+  /** The grimoire's makers, by user id. */
+  makers?: readonly string[];
   forms?: readonly string[];
   /** Deity slugs. */
   deities?: readonly string[];
@@ -125,21 +146,28 @@ export interface SearchSentenceFilter {
   withoutReferences?: boolean;
   /** Admin lists only. */
   withoutForms?: boolean;
+  /** Admin lists only: `reviewed`, `needs_review`, or left out for either. */
+  reviewed?: 'reviewed' | 'needs_review' | null;
 }
 
 /** The kinds that choose from a vocabulary, and so take display labels. */
 export type SearchSentenceLabelFacet =
-  'categories' | 'forms' | 'deities' | 'zodiac' | 'celestialBodies' | 'elements';
+  | 'covens'
+  | 'categories'
+  | 'visibilities'
+  | 'makers'
+  | 'forms'
+  | 'deities'
+  | 'zodiac'
+  | 'celestialBodies'
+  | 'elements';
 
 /** Display labels by chosen value. A value with no label is named by itself. */
 export type SearchSentenceLabels = Partial<
   Record<SearchSentenceLabelFacet, Readonly<Record<string, string>>>
 >;
 
-/**
- * One piece of the sentence: plain text, a chosen value, or a join, the bare word ("or",
- * "and") that links two values in a list. A join is the word alone; the spaces round it are text.
- */
+/** One piece of the sentence: plain text, a chosen value, or a join, the bare word ("or", "and") between two values; the spaces round a join are text. */
 export type SearchSentenceFragment =
   | { kind: 'text'; text: string }
   | { kind: 'join'; text: string }

@@ -115,9 +115,9 @@ ingredientId, variant, author)` writes one more form beside those an
   A layer points at an ingredient _or_ names one of its own
   (`num_nonnulls(ingredient_id, name) = 1`, MB.40), with `form` allowed only
   beside a name, so `{ ingredientId: … }` clears both. Defaulted layers take
-  distinct names, because `spell_ingredients_spell_id_custom_name_unique`
-  folds `Salt` onto `salt` within one jar; `layerOrder` is the position in the
-  array, 1-based, so the two cannot disagree.
+  distinct names, because `spell_steps_spell_id_custom_name_unique`
+  folds `Salt` onto `salt` within one jar; `position` is the place in the
+  array, 1-based.
 - **`makeWorkspace` derives the slug from the name**, through
   `src/lib/slugify` — CLAUDE.md's slug rule, and a fixture is exactly where a
   second spelling would get written down.

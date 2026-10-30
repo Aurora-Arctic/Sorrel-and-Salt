@@ -36,6 +36,8 @@ export interface GroupedValueListEntry extends UpdatedStamp {
   name: string;
   slug: string;
   description: string;
+  /** A deity's other names, alphabetically; absent for the other kinds, which have none. */
+  otherNames?: readonly string[];
   /** The group's name; `''` for a flat kind, which shows no group column. */
   groupName: string;
   /** The group's chip pair, which its name is drawn in; none draws it plain. */
@@ -43,7 +45,7 @@ export interface GroupedValueListEntry extends UpdatedStamp {
   /** A form's group's icon name, `null` for a group with none; absent for the other kinds, which draw no icon. */
   groupIcon?: FormGroupIcon | null;
   editHref: Route;
-  /** The head of its edit modal, which a press shows at once while the form loads (M9.18). */
+  /** The head of its edit modal, which a press shows at once while the form loads. */
   editHeading: ModalHeading;
 }
 
@@ -53,7 +55,7 @@ export interface GroupedValueListProps extends Partial<PagerHrefs<Route>> {
   values: readonly GroupedValueListEntry[];
   /** The filter the page shows, which the form starts from and compares against. */
   filter: GroupedValueListFilter;
-  /** Every live group of the kind, alphabetical (MB.35): the group filter's choices; none for a flat kind. */
+  /** Every live group of the kind, alphabetical: the group filter's choices; none for a flat kind. */
   groups?: readonly GroupedValueGroupOption[];
   /** Where this page stands among them all, for the pager. */
   position?: PagePosition;

@@ -1,25 +1,24 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
-import { type ReactElement, useEffect, useState } from 'react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { QueryClientProvider } from '@tanstack/react-query';
-import CompendiumListBase from '@/components/CompendiumList';
-import IngredientSearch from '@/components/IngredientSearch';
-import AudienceFilter from '@/components/CompendiumList/filter';
+import { useEffect } from 'react';
+import { describe, expect, it, vi } from 'vitest';
 import FormIcon from '@/components/FormIcon';
 import { compendiumHref } from '@/components/CompendiumList/href';
-import type {
-  CompendiumFacetCounts,
-  CompendiumListEntry,
-  CompendiumListFilter,
-  CompendiumListProps,
-} from '@/components/CompendiumList/types';
-import { DEBOUNCE_MS } from '@/lib/debounce';
-import { COMPENDIUM_PARAMS } from '@/components/CompendiumList/params';
-import { makeQueryClient } from '@/lib/graphql-client';
-import { drawnOnServer, filterForm, sent } from '../../support/filter-form';
+import type { CompendiumListFilter } from '@/components/CompendiumList/types';
+import {
+  applyFilters,
+  CompendiumList,
+  nameBox,
+  NO_FILTER,
+  openPanel,
+  props,
+  readyFilterRow,
+  row,
+  SEARCHED,
+  typing,
+  typingClock,
+  unsourcedSwitch,
+} from '../../support/compendium-list';
 import { waitFor } from '../../support/ingredient-form';
-import { typeIn } from '../../support/interact';
-import { mockGraphQLQuery } from '../../support/msw/graphql';
 import { useNavigationState } from '@/lib/navigation';
 import { Navigating } from '../../support/navigating';
 import { RouteModal, RouteModalProvider } from '@/components/Modal';
@@ -29,145 +28,11 @@ import { DETAILS_PLACE } from '@/components/IngredientEntry/details';
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// `/admin/compendium`'s filter, table and pager (M5.5): each entry with its
-// formal name and live forms, an Edit link opening it in the page's modal, the
-// filter that narrows them to the admin's to-do lists, and the pager
-// (claude-docs/components/compendium-list.md).
+// `/admin/compendium`'s filter, table and pager: each entry with its formal name and live forms, an Edit link opening it in the page's modal,
+// the filter that narrows them to the admin's to-do lists, and the pager (claude-docs/components/compendium-list.md).
 
-// The Name box is IngredientSearch's type-ahead, which asks the server through
-// TanStack Query, so every render sits under a client, as the app's providers give it.
-const client = makeQueryClient();
-const CompendiumList = (listProps: CompendiumListProps): ReactElement => (
-  <QueryClientProvider client={client}>
-    <CompendiumListBase {...listProps} />
-  </QueryClientProvider>
-);
-
-const WARDS = {
-  id: 'g-ward',
-  name: 'Fixture Wards',
-  colorDark: '#4e8bc2',
-  colorLight: '#0c5393',
-};
-const ENTRIES: CompendiumListEntry[] = [
-  {
-    id: 'i1',
-    updatedBy: 'Fixture Editor',
-    updatedAt: new Date('2026-05-06T10:00:00Z'),
-    name: 'Testwort',
-    slug: 'testwort',
-    nomenclature: 'botanical',
-    canonicalName: 'Fixtura testalis',
-    forms: [
-      { name: 'Fixture Herb', icon: 'botanical' },
-      { name: 'Fixture Oil', icon: null },
-    ],
-    categories: [
-      { category: { id: 'c-tw', name: 'Testward' }, group: WARDS },
-      { category: { id: 'c-tc', name: 'Testcraft' }, group: WARDS },
-      { category: { id: 'c-tb', name: 'Testbane' }, group: WARDS },
-    ],
-    editHref: compendiumHref({}, { edit: 'testwort' }),
-    editHeading: { eyebrow: 'Edit Ingredient', title: 'Testwort' },
-    details: {
-      href: compendiumHref({ entry: 'testwort' }),
-      heading: { eyebrow: 'Ingredient', title: 'Testwort' },
-    },
-  },
-  {
-    id: 'i2',
-    updatedBy: 'Fixture Editor',
-    updatedAt: new Date('2026-05-06T10:00:00Z'),
-    name: 'Fixture Salt',
-    slug: 'fixture-salt',
-    nomenclature: 'unknown',
-    canonicalName: null,
-    forms: [],
-    categories: [],
-    editHref: compendiumHref({}, { edit: 'fixture-salt' }),
-    editHeading: { eyebrow: 'Edit Ingredient', title: 'Fixture Salt' },
-    details: {
-      href: compendiumHref({ entry: 'fixture-salt' }),
-      heading: { eyebrow: 'Ingredient', title: 'Fixture Salt' },
-    },
-  },
-];
-
-/**
- * The list's loading status, the skeleton's: the Form type-ahead holds a
- * status of its own, inside the filter's search landmark.
- */
-const listStatus = () =>
-  screen.queryAllByRole('status').filter((status) => !status.closest('search'));
-
-const NO_FILTER: CompendiumListFilter = {
-  query: '',
-  forms: [],
-  withoutReferences: false,
-  withoutForms: false,
-  elements: [],
-  categories: [],
-  categoryMode: 'all',
-  deities: [],
-  zodiac: [],
-  celestialBodies: [],
-  toxic: '',
-};
-
-/** Every filter in use, as a page shows it. */
-const SHOWN: CompendiumListFilter = {
-  query: 'test',
-  forms: ['Fixture Oil'],
-  withoutReferences: true,
-  withoutForms: false,
-  elements: [],
-  categories: [],
-  categoryMode: 'all',
-  deities: [],
-  zodiac: [],
-  celestialBodies: [],
-  toxic: '',
-};
-
-/** The categories the Categories box offers, each with the slug the address carries. */
-const CATEGORIES = [
-  { id: 'c-tw', slug: 'testward', name: 'Testward', group: WARDS },
-  { id: 'c-tc', slug: 'testcraft', name: 'Testcraft', group: WARDS },
-  { id: 'c-tb', slug: 'testbane', name: 'Testbane', group: WARDS },
-];
-
-/** The facets the page reads: the curated forms the Form box offers, each with its count. */
-const FORMS = [
-  { value: 'Fixture Oil', label: 'Fixture Oil', count: 3, icon: null },
-  { value: 'Fixture Powder', label: 'Fixture Powder', count: 2, icon: null },
-  { value: 'Fixture Resin', label: 'Fixture Resin', count: 1, icon: null },
-];
-const FACETS: CompendiumFacetCounts = {
-  forms: FORMS,
-  deities: [],
-  categories: CATEGORIES.map(({ slug, name, group }, i) => ({
-    value: slug,
-    label: name,
-    count: i + 1,
-    group,
-  })),
-  zodiac: [],
-  celestialBodies: [],
-  elements: [],
-  toxic: [],
-  withoutReferences: 0,
-  withoutForms: 0,
-};
-
-const props = (overrides: Partial<CompendiumListProps> = {}): CompendiumListProps => ({
-  entries: ENTRIES,
-  filter: NO_FILTER,
-  facets: FACETS,
-  categories: CATEGORIES,
-  vocabulary: { deities: [], formIcons: {} },
-  total: ENTRIES.length,
-  ...overrides,
-});
+// The fixtures and the filter row's controls are shared with filter.test.tsx, which renders the
+// row and its search sentence without the table.
 
 describe('CompendiumList', () => {
   it('lists each entry with its formal name and every live form', () => {
@@ -213,7 +78,7 @@ describe('CompendiumList', () => {
     expect(cells[heads.indexOf('Categories')]).toHaveTextContent('—');
   });
 
-  // M12.7: each form wears its group's icon; a form with none wears the spoon.
+  // Each form wears its group's icon; a form with none wears the spoon.
   it('draws each form with its group icon in the Form column', () => {
     const { container: botanical } = render(<FormIcon name="botanical" />);
     const { container: spoon } = render(<FormIcon name={null} />);
@@ -228,7 +93,7 @@ describe('CompendiumList', () => {
     ]);
   });
 
-  // MB.260: who last edited each row, and when, as the coven's member list has it.
+  // Who last edited each row, and when, as the coven's member list has it.
   it('shows who last edited each row and when in an Updated column', () => {
     render(<CompendiumList {...props()} />);
 
@@ -367,7 +232,9 @@ describe('compendiumHref', () => {
     expect(compendiumHref({ after: 'x/y' }, { edit: 'testwort' })).toBe(
       '/admin/compendium?after=x%2Fy&edit=testwort',
     );
-    expect(compendiumHref({ before: 'b' }, 'new')).toBe('/admin/compendium?before=b&new');
+    expect(compendiumHref({ before: 'b' }, 'new')).toBe(
+      '/admin/compendium?before=b&new=ingredient-compendium',
+    );
     expect(compendiumHref({})).toBe('/admin/compendium');
   });
 
@@ -389,7 +256,7 @@ describe('compendiumHref', () => {
       '/admin/compendium?elements=fire&elements=water&after=a',
     );
     expect(compendiumHref({ query: 'test', before: 'b' }, 'new')).toBe(
-      '/admin/compendium?query=test&before=b&new',
+      '/admin/compendium?query=test&before=b&new=ingredient-compendium',
     );
     expect(compendiumHref({ withoutReferences: true })).toBe(
       '/admin/compendium?withoutReferences=1',
@@ -400,348 +267,10 @@ describe('compendiumHref', () => {
     expect(compendiumHref(NO_FILTER)).toBe('/admin/compendium');
   });
 });
-
-/**
- * The compendium's page as the App Router draws it: the list under the
- * filter its address shows, which a push changes inside the list's
- * transition, as Next renders the new page.
- */
-function RoutedCompendium(): ReactElement {
-  const [filter, setFilter] = useState<CompendiumListFilter>(NO_FILTER);
-  router.push.mockImplementation((href: string) => {
-    const params = new URL(href, 'http://localhost').searchParams;
-    // The page reads its address through the table; so does this stand-in.
-    setFilter(
-      COMPENDIUM_PARAMS.read(
-        Object.fromEntries([...new Set(params.keys())].map((name) => [name, params.getAll(name)])),
-      ),
-    );
-  });
-  return <CompendiumList {...props({ filter })} />;
-}
-
-// The filter row (M12.4): the name search, then the Filters button with the panel of facets.
-// Every address it pushes carries the name typed and every facet shown.
-describe('CompendiumList filter', () => {
-  beforeEach(() => {
-    router.push.mockReset();
-  });
-
-  // The panel opens as it does from the tablet width up, over the results.
-  beforeEach(() => {
-    vi.stubGlobal('matchMedia', (query: string) => ({
-      matches: query.includes('min-width'),
-      media: query,
-      addEventListener: () => undefined,
-      removeEventListener: () => undefined,
-    }));
-  });
-  afterEach(() => {
-    vi.unstubAllGlobals();
-  });
-  const openPanel = () => fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
-  const row = () => filterForm('Filter the Compendium');
-  const nameBox = () => screen.getByRole('combobox', { name: 'Name' });
-  const unsourcedSwitch = () => screen.getByRole('switch', { name: /^No Refs/ });
-  const pushed = () => new URL(router.push.mock.lastCall![0], 'http://localhost').searchParams;
-  /** The form's fields as the browser would send them. */
-  const fields = (form: HTMLElement) => new URLSearchParams(sent(form));
-  const panel = () => screen.getByRole('dialog', { name: 'Filters' });
-  const escape = () => fireEvent.keyDown(panel(), { key: 'Escape' });
-  const applyFilters = () => fireEvent.click(screen.getByRole('button', { name: 'Apply Filters' }));
-  /** What the server would answer for the filter held in the panel: only the No Refs count is read. */
-  const answerCounts = (withoutReferences: number) =>
-    mockGraphQLQuery('CompendiumFacetCounts', () => ({
-      compendiumFacets: {
-        forms: [],
-        deities: [],
-        categories: [],
-        zodiacSigns: [],
-        celestialBodies: [],
-        elements: [],
-        toxic: [],
-        withoutReferences,
-        withoutForms: 0,
-      },
-    }));
-  beforeEach(() => answerCounts(0));
-
-  it('draws no Compact switch in the admin list', () => {
-    render(<CompendiumList {...props()} />);
-    expect(screen.queryByRole('switch', { name: 'Compact' })).toBeNull();
-  });
-
-  it('draws no Compact switch in the public list', () => {
-    const { filter, facets, categories, vocabulary, total } = props();
-    render(
-      <QueryClientProvider client={client}>
-        <IngredientSearch
-          search={
-            <AudienceFilter
-              audience="public"
-              filter={filter}
-              facets={facets}
-              categories={categories}
-              vocabulary={vocabulary}
-              total={total}
-            />
-          }
-        >
-          {null}
-        </IngredientSearch>
-      </QueryClientProvider>,
-    );
-    expect(screen.queryByRole('switch', { name: 'Compact' })).toBeNull();
-  });
-
-  it('counts the chosen values on the Filters button, not the name typed', () => {
-    const { rerender } = render(
-      <CompendiumList {...props({ filter: { ...NO_FILTER, query: 'x' } })} />,
-    );
-    expect(screen.getByRole('button', { name: /^Filters/ })).toHaveAccessibleName('Filters');
-
-    rerender(
-      <CompendiumList
-        {...props({
-          filter: {
-            ...NO_FILTER,
-            forms: ['Fixture Oil', 'Fixture Resin'],
-            withoutReferences: true,
-          },
-        })}
-      />,
-    );
-    expect(screen.getByRole('button', { name: /^Filters/ })).toHaveAccessibleName('Filters 3');
-  });
-
-  it('offers Clear All, a link to the unfiltered list, only while a facet is in use', () => {
-    const { rerender } = render(
-      <CompendiumList {...props({ filter: { ...NO_FILTER, query: 'x' } })} />,
-    );
-    expect(screen.queryByRole('link', { name: 'Clear All' })).not.toBeInTheDocument();
-
-    rerender(<CompendiumList {...props({ filter: SHOWN })} />);
-    expect(screen.getByRole('link', { name: 'Clear All' })).toHaveAttribute(
-      'href',
-      '/admin/compendium',
-    );
-  });
-
-  // The server draws the panel open inside the GET form, each facet a native control, so the
-  // whole filter submits before any script runs.
-  it('sends the name and every facet from the form the server drew, categories included', () => {
-    const { container } = drawnOnServer(
-      <CompendiumList
-        {...props({
-          filter: { ...SHOWN, categories: ['testward', 'testcraft'], categoryMode: 'any' },
-        })}
-      />,
-    );
-    const served = filterForm('Filter the Compendium', within(container));
-
-    const categories = within(served).getByRole('listbox', { name: 'Categories' });
-    expect(categories).toHaveAttribute('name', 'categories');
-    expect(categories).toHaveAttribute('multiple');
-    const sentFields = fields(served);
-    expect([...(categories as HTMLSelectElement).selectedOptions].map((o) => o.value)).toEqual([
-      'testward',
-      'testcraft',
-    ]);
-    expect(sentFields.getAll('forms')).toEqual(['Fixture Oil']);
-    expect(sentFields.get('query')).toBe('test');
-    expect(sentFields.get('withoutReferences')).toBe('1');
-    expect(sentFields.get('categoryMode')).toBe('any');
-  });
-
-  // The panel covers the results, so a change in it is held, not applied: the address moves
-  // once, when the panel is closed or Apply Filters is pressed.
-  it('holds a change in the open panel, and Apply Filters applies them all in one push', () => {
-    render(
-      <CompendiumList
-        {...props({
-          filter: { ...SHOWN, elements: ['fire'], categories: ['testward'] },
-          nextHref: compendiumHref({ after: 'a' }),
-        })}
-      />,
-    );
-
-    openPanel();
-    fireEvent.change(nameBox(), { target: { value: ' Test wort ' } });
-    fireEvent.click(unsourcedSwitch());
-    expect(router.push).not.toHaveBeenCalled();
-
-    applyFilters();
-
-    expect(router.push).toHaveBeenCalledTimes(1);
-    const address = pushed();
-    expect(address.get('query')).toBe('Test wort');
-    expect(address.getAll('forms')).toEqual(['Fixture Oil']);
-    expect(address.getAll('elements')).toEqual(['fire']);
-    expect(address.getAll('categories')).toEqual(['testward']);
-    expect(address.has('withoutReferences')).toBe(false);
-    expect(address.has('after')).toBe(false);
-  });
-
-  it('applies what was held when Escape closes the panel, once', () => {
-    render(<CompendiumList {...props()} />);
-    openPanel();
-    fireEvent.click(unsourcedSwitch());
-    expect(router.push).not.toHaveBeenCalled();
-
-    escape();
-
-    expect(router.push.mock.calls).toEqual([['/admin/compendium?withoutReferences=1']]);
-  });
-
-  it('pushes nothing when the panel closes with nothing changed', () => {
-    render(<CompendiumList {...props({ filter: SHOWN })} />);
-    openPanel();
-
-    escape();
-
-    expect(router.push).not.toHaveBeenCalled();
-  });
-
-  it('writes No Refs as 1 and the toggle off by leaving it out', () => {
-    const { unmount } = render(<CompendiumList {...props()} />);
-    openPanel();
-    fireEvent.click(unsourcedSwitch());
-    escape();
-    expect(router.push).toHaveBeenLastCalledWith('/admin/compendium?withoutReferences=1');
-    unmount();
-
-    render(<CompendiumList {...props({ filter: SHOWN })} />);
-    openPanel();
-    fireEvent.click(unsourcedSwitch());
-    escape();
-    expect(router.push).toHaveBeenLastCalledWith('/admin/compendium?query=test&forms=Fixture+Oil');
-  });
-
-  it('writes No Form as 1 beside No Refs, and the toggle off by leaving it out', () => {
-    const { unmount } = render(
-      <CompendiumList {...props({ facets: { ...FACETS, withoutForms: 3 } })} />,
-    );
-    openPanel();
-    const formless = screen.getByRole('switch', { name: 'No Form 3' });
-    fireEvent.click(formless);
-    escape();
-    expect(router.push).toHaveBeenLastCalledWith('/admin/compendium?withoutForms=1');
-    unmount();
-
-    render(<CompendiumList {...props({ filter: { ...SHOWN, withoutForms: true } })} />);
-    openPanel();
-    fireEvent.click(screen.getByRole('switch', { name: /^No Form/ }));
-    escape();
-    expect(router.push).toHaveBeenLastCalledWith(
-      '/admin/compendium?query=test&forms=Fixture+Oil&withoutReferences=1',
-    );
-  });
-
-  // Counts stay live while the panel is open: each change asks the server what the held
-  // filter would list, and the panel shows the answer before anything is applied.
-  it('updates a count in the panel after a change, before Apply', async () => {
-    answerCounts(7);
-    render(<CompendiumList {...props({ facets: { ...FACETS, withoutReferences: 2 } })} />);
-    openPanel();
-    expect(unsourcedSwitch()).toHaveAccessibleName('No Refs 2');
-
-    fireEvent.click(unsourcedSwitch());
-
-    expect(await screen.findByRole('switch', { name: 'No Refs 7' })).toBeChecked();
-    expect(router.push).not.toHaveBeenCalled();
-  });
-
-  // The server counts forms with the forms chosen left out of the filter, so the other forms
-  // keep their counts; the open panel must offer them while one is held.
-  it('still offers the other forms, with their counts, after one is picked before Apply', async () => {
-    mockGraphQLQuery('CompendiumFacetCounts', () => ({
-      compendiumFacets: {
-        forms: FORMS.map(({ value, count }) => ({ value, count })),
-        deities: [],
-        categories: [],
-        zodiacSigns: [],
-        celestialBodies: [],
-        elements: [],
-        toxic: [],
-        withoutReferences: 5,
-      },
-    }));
-    render(<CompendiumList {...props()} />);
-    openPanel();
-    const forms = within(panel()).getByRole('combobox', { name: 'Forms' });
-
-    fireEvent.click(forms);
-    fireEvent.click(screen.getByRole('option', { name: 'Fixture Oil 3' }));
-    await screen.findByRole('switch', { name: 'No Refs 5' });
-
-    fireEvent.change(forms, { target: { value: 'Fixture Pow' } });
-    expect(await screen.findByRole('option', { name: 'Fixture Powder 2' })).toBeInTheDocument();
-  });
-
-  it('applies Clear All beside the Filters button at once, and Clear All in the panel too', () => {
-    const { unmount } = render(<CompendiumList {...props({ filter: SHOWN })} />);
-    fireEvent.click(screen.getAllByRole('link', { name: 'Clear All' })[0]);
-    expect(router.push.mock.calls).toEqual([['/admin/compendium']]);
-    unmount();
-    router.push.mockReset();
-
-    render(<CompendiumList {...props({ filter: SHOWN })} />);
-    openPanel();
-    fireEvent.click(within(panel()).getByRole('link', { name: 'Clear All' }));
-    expect(router.push.mock.calls).toEqual([['/admin/compendium']]);
-  });
-
-  it('applies the name on its Search submit with the facets shown', () => {
-    render(<CompendiumList {...props({ filter: { ...SHOWN, query: '' } })} />);
-
-    fireEvent.change(nameBox(), { target: { value: 'Two words' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Search' }));
-
-    expect(router.push.mock.calls).toEqual([
-      ['/admin/compendium?query=Two+words&forms=Fixture+Oil&withoutReferences=1'],
-    ]);
-  });
-
-  // The owner's call (M8.10): a pick opens the entry over the list as it
-  // stands, so the text typed and not searched is not applied.
-  describe('picking a name from the dropdown', () => {
-    beforeEach(() => {
-      vi.useFakeTimers({ shouldAdvanceTime: true });
-    });
-    afterEach(() => {
-      vi.useRealTimers();
-    });
-
-    it('opens that entry\x27s modal over the filter shown, not the text typed', async () => {
-      mockGraphQLQuery('IngredientSearchMatches', () => ({
-        compendium: {
-          pageInfo: { hasNextPage: false },
-          edges: [
-            {
-              node: {
-                id: 'i1',
-                slug: 'testwort',
-                name: 'Testwort',
-                canonicalName: 'Fixtura testalis',
-                nomenclature: 'botanical',
-              },
-            },
-          ],
-        },
-      }));
-      render(<CompendiumList {...props({ filter: SHOWN })} />);
-
-      act(() => nameBox().focus());
-      typeIn(nameBox(), 'fixt');
-      await act(async () => {
-        await vi.advanceTimersByTimeAsync(DEBOUNCE_MS);
-      });
-      fireEvent.click(await screen.findByRole('option', { name: /Testwort/ }));
-
-      await waitFor(() => expect(router.push).toHaveBeenCalled());
-      expect(router.push.mock.calls).toEqual([[compendiumHref(SHOWN, { edit: 'testwort' })]]);
-    });
-  });
+// While a filter or a page is on its way, the list gives way to its loading status and the row
+// is off. These cases render the table, which the filter row's own test (filter.test.tsx) leaves out.
+describe('the list while a filter is on its way', () => {
+  readyFilterRow(router.push);
 
   // While the filtered list reads, the list gives way to the loading status and the row is
   // off: every control `aria-disabled` and the form `aria-busy`, until the new list renders.
@@ -798,320 +327,84 @@ describe('CompendiumList filter', () => {
     expect(row()).not.toHaveAttribute('aria-busy');
   });
 
-  // The row is not drawn afresh for a facet, so the open panel and the focus in it survive
-  // the change; a new name does draw it afresh.
-  it('keeps the same form through a facet change, and draws a new one for a new name', async () => {
-    render(<RoutedCompendium />);
-    const before = row();
+  it('leaves the sentence settled when a pager end opens another page', async () => {
+    render(
+      <Navigating push={router.push}>
+        <CompendiumList {...props({ filter: SEARCHED, nextHref: '/admin/compendium?after=a' })} />
+      </Navigating>,
+    );
+    expect(typing()).toBe(false);
 
-    openPanel();
-    fireEvent.click(unsourcedSwitch());
     await act(async () => {
-      escape();
+      fireEvent.click(screen.getByRole('link', { name: /Next/ }));
     });
-    expect(row()).toBe(before);
-    // The address, not the switch: the panel is sliding shut, and `useSlide`'s
-    // fallback timer closes it after 600ms of real time, which a loaded run can
-    // pass before this line. The switch is read again once the panel reopens.
+    // The page is on its way, so the list gave way to its status; the sentence did not move.
     expect(router.push).toHaveBeenCalledTimes(1);
-    expect(pushed().get('withoutReferences')).toBe('1');
-
-    fireEvent.change(nameBox(), { target: { value: 'test' } });
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Search' }));
-    });
-    expect(row()).not.toBe(before);
-    expect(nameBox()).toHaveValue('test');
-    openPanel();
-    expect(unsourcedSwitch()).toBeChecked();
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(typing()).toBe(false);
   });
 
-  it('follows the address when it changes under the row, as Back does', () => {
-    const { rerender } = render(<CompendiumList {...props({ filter: SHOWN })} />);
-    openPanel();
-    expect(unsourcedSwitch()).toBeChecked();
+  // The details the sentence opens to: the one holding its Show or Hide Search Details control.
+  const details = () =>
+    screen.getByText(/^(Show|Hide) Search Details$/).closest('details') as HTMLElement;
 
-    rerender(<CompendiumList {...props({ filter: { ...SHOWN, withoutReferences: false } })} />);
-
-    expect(unsourcedSwitch()).not.toBeChecked();
-  });
-
-  describe('the match mode', () => {
-    const twoChosen = { ...NO_FILTER, categories: ['testward', 'testcraft'] };
-
-    it('is applied into the address, keeping the categories', () => {
-      render(<CompendiumList {...props({ filter: twoChosen })} />);
-      openPanel();
-
-      fireEvent.click(
-        within(screen.getByRole('group', { name: 'Match' })).getByRole('radio', { name: 'Any' }),
-      );
-      escape();
-
-      expect(pushed().get('categoryMode')).toBe('any');
-      expect(pushed().getAll('categories')).toEqual(['testward', 'testcraft']);
-    });
-
-    it('is left out of the address for All, and once fewer than two categories remain', () => {
-      render(<CompendiumList {...props({ filter: { ...twoChosen, categoryMode: 'any' } })} />);
-      openPanel();
-
-      fireEvent.click(
-        within(screen.getByRole('group', { name: 'Match' })).getByRole('radio', { name: 'All' }),
-      );
-      escape();
-      expect(pushed().has('categoryMode')).toBe(false);
-      expect(pushed().getAll('categories')).toEqual(['testward', 'testcraft']);
-
-      openPanel();
-      fireEvent.click(screen.getByRole('button', { name: 'Remove Category: Testcraft' }));
-      escape();
-      expect(pushed().has('categoryMode')).toBe(false);
-      expect(pushed().getAll('categories')).toEqual(['testward']);
-    });
-  });
-
-  describe('the search sentence', () => {
-    const DEITIES: CompendiumFacetCounts['deities'] = [
-      { value: 'hecate-greek', label: 'Hecate', count: 2, tradition: 'Greek' },
-      { value: 'hecate-roman', label: 'Hecate', count: 1, tradition: 'Roman' },
-      { value: 'janus-roman', label: 'Janus', count: 1, tradition: 'Roman' },
-    ];
-    const WITH_DEITIES: CompendiumFacetCounts = { ...FACETS, deities: DEITIES };
-    // The sentence is the status outside the search landmark, where the comboboxes keep theirs.
-    const sentence = () => listStatus()[0];
-
-    it('names a chosen deity, with its tradition only when another deity shares the name', () => {
-      const { rerender } = render(
-        <CompendiumList
-          {...props({
-            facets: WITH_DEITIES,
-            filter: { ...NO_FILTER, deities: ['hecate-roman', 'janus-roman'] },
-          })}
-        />,
-      );
-
-      expect(sentence()).toHaveTextContent('Hecate (Roman)');
-      expect(sentence()).not.toHaveTextContent('Janus (Roman)');
-      expect(sentence()).toHaveTextContent('Janus');
-
-      rerender(
-        <CompendiumList
-          {...props({ facets: WITH_DEITIES, filter: { ...NO_FILTER, deities: ['hecate-greek'] } })}
-        />,
-      );
-      expect(sentence()).toHaveTextContent('Hecate (Greek)');
-    });
-
-    it('names a chosen category by its name, not its slug', () => {
-      // A slug that is more than the name in other case, so the name is what the sentence read.
-      const categories = [
-        ...CATEGORIES,
-        { id: 'c-tx', slug: 'test-x-slug', name: 'Testcraft', group: WARDS },
-      ];
+  it.each(['closed', 'open'])(
+    'leaves a %s sentence as it was, with no slide, from the pager press to the new page',
+    async (was) => {
+      let arrive = () => {};
+      const arrives = new Promise<void>((resolve) => {
+        arrive = resolve;
+      });
       render(
-        <CompendiumList
-          {...props({ categories, filter: { ...NO_FILTER, categories: ['test-x-slug'] } })}
-        />,
-      );
-
-      // The sentence shows categories in lower case.
-      expect(sentence()).toHaveTextContent('testcraft');
-      expect(sentence()).not.toHaveTextContent('test-x-slug');
-    });
-
-    // The sentence is typed out, hidden from assistive technology, while a search is on its way.
-    const typing = () =>
-      screen
-        .queryAllByRole('group', { hidden: true })
-        .some(
-          (group) => group.tagName === 'DETAILS' && group.getAttribute('aria-hidden') === 'true',
-        );
-    const SEARCHED = { ...NO_FILTER, categories: ['testcraft'] };
-
-    it('leaves the sentence settled when a pager end opens another page', async () => {
-      render(
-        <Navigating push={router.push}>
+        <Navigating push={router.push} arrives={arrives}>
           <CompendiumList {...props({ filter: SEARCHED, nextHref: '/admin/compendium?after=a' })} />
         </Navigating>,
       );
-      expect(typing()).toBe(false);
+      if (was === 'open') {
+        fireEvent.click(screen.getByText('Show Search Details'));
+        await waitFor(() => expect(details().hasAttribute('open')).toBe(true));
+      }
+      const wasOpen = details().hasAttribute('open');
+      // Every change of the details' open state from here on.
+      const seen: boolean[] = [];
+      const watch = new MutationObserver(() => seen.push(details().hasAttribute('open')));
+      watch.observe(details(), { attributes: true, attributeFilter: ['open'] });
 
       await act(async () => {
         fireEvent.click(screen.getByRole('link', { name: /Next/ }));
       });
-      // The page is on its way, so the list gave way to its status; the sentence did not move.
-      expect(router.push).toHaveBeenCalledTimes(1);
       expect(screen.queryByRole('table')).not.toBeInTheDocument();
-      expect(typing()).toBe(false);
-    });
+      await act(async () => {
+        arrive();
+      });
+      expect(screen.getByRole('table')).toBeInTheDocument();
+      // Long enough for any slide, hold or net timer to have run.
+      await act(async () => {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      });
+      watch.disconnect();
 
-    // The details the sentence opens to: the one holding its Show or Hide Search Details control.
-    const details = () =>
-      screen.getByText(/^(Show|Hide) Search Details$/).closest('details') as HTMLElement;
+      expect(seen).toEqual([]);
+      expect(details().hasAttribute('open')).toBe(wasOpen);
+    },
+  );
 
-    it.each(['closed', 'open'])(
-      'leaves a %s sentence as it was, with no slide, from the pager press to the new page',
-      async (was) => {
-        let arrive = () => {};
-        const arrives = new Promise<void>((resolve) => {
-          arrive = resolve;
-        });
-        render(
-          <Navigating push={router.push} arrives={arrives}>
-            <CompendiumList
-              {...props({ filter: SEARCHED, nextHref: '/admin/compendium?after=a' })}
-            />
-          </Navigating>,
-        );
-        if (was === 'open') {
-          fireEvent.click(screen.getByText('Show Search Details'));
-          await waitFor(() => expect(details().hasAttribute('open')).toBe(true));
-        }
-        const wasOpen = details().hasAttribute('open');
-        // Every change of the details' open state from here on.
-        const seen: boolean[] = [];
-        const watch = new MutationObserver(() => seen.push(details().hasAttribute('open')));
-        watch.observe(details(), { attributes: true, attributeFilter: ['open'] });
-
-        await act(async () => {
-          fireEvent.click(screen.getByRole('link', { name: /Next/ }));
-        });
-        expect(screen.queryByRole('table')).not.toBeInTheDocument();
-        await act(async () => {
-          arrive();
-        });
-        expect(screen.getByRole('table')).toBeInTheDocument();
-        // Long enough for any slide, hold or net timer to have run.
-        await act(async () => {
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-        });
-        watch.disconnect();
-
-        expect(seen).toEqual([]);
-        expect(details().hasAttribute('open')).toBe(wasOpen);
-      },
+  it('types the sentence when a filter is applied', async () => {
+    typingClock();
+    render(
+      <Navigating push={router.push}>
+        <CompendiumList {...props({ filter: SEARCHED })} />
+      </Navigating>,
     );
+    expect(typing()).toBe(false);
 
-    it('types the sentence when a filter is applied', async () => {
-      render(
-        <Navigating push={router.push}>
-          <CompendiumList {...props({ filter: SEARCHED })} />
-        </Navigating>,
-      );
-      expect(typing()).toBe(false);
-
-      openPanel();
-      fireEvent.click(unsourcedSwitch());
-      await act(async () => {
-        applyFilters();
-      });
-      expect(router.push).toHaveBeenCalledTimes(1);
-      expect(screen.queryByRole('table')).not.toBeInTheDocument();
-      expect(typing()).toBe(true);
+    openPanel();
+    fireEvent.click(unsourcedSwitch());
+    await act(async () => {
+      applyFilters();
     });
-
-    // The line typed out while the search is on its way: the first line of the hidden sentence.
-    const typedLine = () =>
-      screen
-        .getAllByRole('group', { hidden: true })
-        .find(
-          (group) => group.tagName === 'DETAILS' && group.getAttribute('aria-hidden') === 'true',
-        )!
-        .querySelector('summary')!.textContent;
-
-    // The search is applied from the name just typed, not yet from the address, so the filter the
-    // page still shows is the previous search: the typed line must name the new term, not that one.
-    it('names the term being searched, not the previous one, while the search is on its way', async () => {
-      render(
-        <Navigating push={router.push}>
-          <CompendiumList {...props({ filter: { ...SEARCHED, query: 'oldwort' } })} />
-        </Navigating>,
-      );
-      typeIn(nameBox(), 'newwort');
-      await act(async () => {
-        fireEvent.submit(row());
-      });
-
-      expect(pushed().get('query')).toBe('newwort');
-      expect(typing()).toBe(true);
-      expect(typedLine()).toContain('newwort');
-      expect(typedLine()).not.toContain('oldwort');
-    });
-
-    it('drops the previous term from the typed line when the search is cleared', async () => {
-      render(
-        <Navigating push={router.push}>
-          <CompendiumList {...props({ filter: { ...SEARCHED, query: 'oldwort' } })} />
-        </Navigating>,
-      );
-      typeIn(nameBox(), '');
-      await act(async () => {
-        fireEvent.submit(row());
-      });
-
-      expect(pushed().has('query')).toBe(false);
-      expect(typing()).toBe(true);
-      expect(typedLine()).not.toContain('oldwort');
-    });
-
-    // The whole typed sentence while a search is on its way: the first line and the clauses
-    // beneath it, typed or still to type.
-    const typedSentence = () =>
-      screen
-        .getAllByRole('group', { hidden: true })
-        .find(
-          (group) => group.tagName === 'DETAILS' && group.getAttribute('aria-hidden') === 'true',
-        )!.textContent;
-
-    // A facet changed in the panel is on the address being opened, not on the page being left.
-    it('names the facets being searched with while the search is on its way', async () => {
-      render(
-        <Navigating push={router.push}>
-          <CompendiumList {...props({ filter: SEARCHED })} />
-        </Navigating>,
-      );
-      openPanel();
-      fireEvent.click(unsourcedSwitch());
-      await act(async () => {
-        applyFilters();
-      });
-
-      expect(pushed().get('withoutReferences')).toBe('1');
-      expect(typing()).toBe(true);
-      expect(typedSentence()).toContain('without references');
-      expect(typedSentence()).toContain('testcraft');
-    });
-
-    it('drops a facet being removed from the typed sentence, and names the new term and facet', async () => {
-      render(
-        <Navigating push={router.push}>
-          <CompendiumList {...props({ filter: { ...SEARCHED, query: 'oldwort' } })} />
-        </Navigating>,
-      );
-      typeIn(nameBox(), 'newwort');
-      openPanel();
-      fireEvent.click(screen.getByRole('button', { name: 'Remove Category: Testcraft' }));
-      fireEvent.click(unsourcedSwitch());
-      await act(async () => {
-        applyFilters();
-      });
-
-      expect(pushed().get('query')).toBe('newwort');
-      expect(pushed().has('categories')).toBe(false);
-      expect(typing()).toBe(true);
-      expect(typedSentence()).toContain('newwort');
-      expect(typedSentence()).toContain('without references');
-      expect(typedSentence()).not.toContain('oldwort');
-      expect(typedSentence()).not.toContain('testcraft');
-    });
-
-    it('holds no link, so a chosen value is removed in the panel alone', () => {
-      render(
-        <CompendiumList {...props({ filter: { ...NO_FILTER, categories: ['testcraft'] } })} />,
-      );
-
-      expect(within(sentence()).queryByRole('link')).not.toBeInTheDocument();
-    });
+    expect(router.push).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(typing()).toBe(true);
   });
 });

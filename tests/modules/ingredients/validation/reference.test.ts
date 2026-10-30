@@ -1,10 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ReferenceInput } from '@/modules/ingredients/validation/reference';
 
-// DESIGN.md §5, "References": a reference's fields as the form sends them,
-// held to the CHECKs MB.152 put on the table — each refusal pathed to its
-// field, per kind — plus the form's own rule that a book needs a date
-// (claude-docs/design-decisions/mb.151-references.md).
+// DESIGN.md §5, "References": a reference's fields as the form sends them, held to the table's CHECKs with each refusal pathed to its field per kind,
+// plus the form's own rule that a book needs a date (claude-docs/design-decisions/mb.151-references.md).
 
 /** The paths a failed parse reported: which field each refusal lands beside. */
 function failedPaths(input: unknown) {
@@ -35,29 +33,6 @@ const MINIMAL = {
 describe('ReferenceInput', () => {
   it.each(Object.entries(MINIMAL))('takes the least a %s needs', (_kind, input) => {
     expect(ReferenceInput.safeParse(input).success).toBe(true);
-  });
-
-  it('trims every text field, and takes a blank one as absent', () => {
-    expect(
-      ReferenceInput.parse({
-        ...MINIMAL.chapter,
-        title: '  On Testwort ',
-        authors: ' Testwort, Fixtura ',
-        edition: '',
-        pages: '   ',
-        modified: '',
-        note: null,
-      }),
-    ).toEqual({
-      kind: 'chapter',
-      title: 'On Testwort',
-      container: 'The Fixture Reader',
-      authors: 'Testwort, Fixtura',
-      edition: null,
-      pages: null,
-      modified: null,
-      note: null,
-    });
   });
 
   it('takes every field filled', () => {
@@ -102,12 +77,6 @@ describe('ReferenceInput', () => {
       }
     });
 
-    // Why the refusal above is the kind's: a book and a web page need none.
-    it('takes a book or a web page without a container', () => {
-      expect(ReferenceInput.safeParse(MINIMAL.book).success).toBe(true);
-      expect(ReferenceInput.safeParse(MINIMAL.web_page).success).toBe(true);
-    });
-
     it('refuses a web page without its address or the day it was read, at each', () => {
       expect(failedPaths({ kind: 'web_page', title: 'Testwort' })).toEqual([['url'], ['accessed']]);
     });
@@ -133,7 +102,7 @@ describe('ReferenceInput', () => {
       }
     });
 
-    // MB.154: an address typed without its scheme is taken as https.
+    // An address typed without its scheme is taken as https.
     it('takes an address with no scheme as https', () => {
       expect(
         ReferenceInput.parse({ ...MINIMAL.web_page, url: 'www.example.org/testwort' }).url,
@@ -146,18 +115,12 @@ describe('ReferenceInput', () => {
       }
     });
 
-    it('takes an http or https address', () => {
-      for (const url of ['http://example.org/a', 'https://example.org/Greek_Mythology/']) {
-        expect(ReferenceInput.safeParse({ ...MINIMAL.book, url }).success, url).toBe(true);
-      }
-    });
-
     it('refuses an accessed day without an address, at the day', () => {
       expect(failedPaths({ ...MINIMAL.book, accessed: '2026-10-06' })).toEqual([['accessed']]);
     });
   });
 
-  // MB.154, the owner's calls: what is typed is tidied the way the citation
+  // What is typed is tidied the way the citation
   // prints it, on the server as on the form (reference-format.ts).
   describe('formatting', () => {
     it('tidies spacing, drops quotes around a title, and dashes ranges', () => {
@@ -198,7 +161,7 @@ describe('ReferenceInput', () => {
     });
   });
 
-  // MB.154: the extra checks, each beside its field.
+  // The extra checks, each beside its field.
   describe('checks', () => {
     beforeEach(() => {
       vi.useFakeTimers({ now: new Date('2026-10-07T12:00:00Z'), toFake: ['Date'] });

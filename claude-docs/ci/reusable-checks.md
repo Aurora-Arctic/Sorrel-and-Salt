@@ -1,10 +1,11 @@
 ## Reusable checks (`workflow_call`, never triggered directly)
 
-- **`checks.yml`** (MB.32) — one matrix job running `lint`, `format`,
-  `typecheck`, `build` and `audit`, each reporting as `checks / <name>`. One
-  workflow, because the legs share their inputs, their
-  `container: image: ${{ inputs.image }}` job (`options: --user root`) and
-  their checkout, `job-summary` and `pr-comment` scaffolding, and differ in
+- **`checks.yml`** (MB.32) — nine plain jobs, `lint`, `unused`, `format`,
+  `typecheck`, `codegen`, `build`, `destructive-ddl`, `migration-order` and
+  `audit`, each reporting as `checks / <name>`. One
+  workflow, because the jobs share their inputs, their
+  `container: image: ${{ inputs.image }}` preamble (`options: --user root`) and
+  the `run-check` composite action's steps, and differ in
   one npm script and one summarising step (MB.32 collapsed the five
   workflows they were).
   - Every leg runs its command under `set -o pipefail` inside a brace group,
@@ -15,17 +16,16 @@
     came from, so what a PR comment says did not change. The brace group is
     what keeps `2>&1 | tee` applying to the whole command rather than to the
     last thing in it.
-  - **`fail-fast: false` is load-bearing.** A cancelled leg reports a
-    cancelled check, which required-status-check protection treats as
-    unsatisfied — so one failing leg would otherwise block the PR on four
-    checks that never got to run.
+  - **The jobs are independent.** There is no matrix, so one failing job
+    cancels no other.
   - **`run-lint` / `run-typecheck` / `run-build` / `run-destructive-ddl` /
-    `run-migration-order` are the path-filter inputs**, one per filtered leg. `format` has none and always runs,
-    since Prettier covers non-code files; `audit` has none because it is
-    non-blocking and PR-only. The first step resolves the five down to one flag
-    for the leg it is running, and treats an empty flag as true — so `act`,
-    which applies no `workflow_call` input defaults, cannot report a check it
-    never ran.
+    `run-migration-order` are the path-filter inputs**, one per filtered job, each read by that job's
+    own `if: ${{ format('{0}', inputs.run-<leg>) != 'false' }}`, so a
+    filtered-off job is skipped before its container is pulled. `format` and
+    `codegen` have none and always run, since Prettier covers non-code files;
+    `audit` has none because it is non-blocking and PR-only. The `format()`
+    wrapper treats an empty input as true — so `act`, which applies no
+    `workflow_call` input defaults, cannot skip a check it should run.
   - **`build`'s extras**: `DATABASE_URL`/`BETTER_AUTH_SECRET`, and
     `npm run workshop:build` chained onto `npm run build` with `&&`, which
     short-circuits the same way separate steps would. It posts no PR comment.
@@ -74,6 +74,7 @@
     the run's summary page as a result. The summary is written whether or not
     a `pr-number` was passed; the PR comment only when one was, so
     `make act-check CHECK=audit` shows the table and skips the comment.
+  - **`unused`** — `npm run lint:unused` (knip, [`commands.md`](../commands.md)), skipped by `run-lint`'s job-level `if:` like `lint`. Non-blocking and **never a required status check**: its `run-check` step carries `continue-on-error: true`, so a run with findings records a failed outcome for the action's Run step, which `pr-comment` posts as a failure comment with the log, while the job itself passes. A later run with no findings resolves that comment (`minimize`). It has no summariser: knip's own grouped output is the report.
   - **`vitest` and `playwright` are deliberately not legs.** Each brings a
     `services: postgres:` block, a `db-image` input and its own artifact
     uploads — a different job shape, not a different npm script.
@@ -158,9 +159,12 @@
   entirely** — it's Alpine/musl-based and Playwright's Chromium build has no
   official musl support — so every `checks.yml` leg and `vitest` consume it,
   but `playwright` does not; see `build-e2e-image.yml` below.
-- **`vitest.yml`** (M1.14) — `npm run test:coverage` in the same container
-  shape as `checks.yml`'s legs (`inputs.image` from `build-image.yml`),
-  plus a `services: postgres:` block on the `vitest` job keyed off its
+- **`vitest.yml`** (M1.14; split in M14.27) — four jobs, described in
+  [`runner-budget.md`](runner-budget.md), "Splitting the Vitest job": three
+  parts that each run some Vitest projects, and `vitest`, which merges them
+  and is the required check. Each runs in the same container
+  shape as `checks.yml`'s legs (`inputs.image` from `build-image.yml`);
+  only `vitest-db` has a `services: postgres:` block, keyed off its
   `inputs.db-image` — reachable by service name since `vitest` runs inside
   its own `container:`, per DESIGN.md §11's CI table. `db-image` comes in
   from the caller (`pr-gate.yml`'s own top-level
@@ -191,16 +195,45 @@
   `playwright` and runs beside it, under its own `stories` path filter. The
   input switches the run command (`npm run test:stories` with
   `STORIES_JSON=/app/stories.json`), the summariser
-  (`.github/scripts/summarize-stories.mjs`: "3 of 52 stories passing" and a
+  (`.github/scripts/summarize-stories.mjs`: "3 of 63 stories passing" and a
   markdown checklist), the check name, the comment thread
   (`marker-slug: stories`) and the report artifact's name (`stories-report`,
   since one workflow run may not upload two artifacts under one name), and
-  skips the coverage artifact. The run step carries `continue-on-error: true`
+  the coverage artifact's (`playwright-coverage-stories`, M14.28). The
+  summariser adds this run's own coverage figure to the summary line through
+  `lib/coverage-table.mjs`, as `summarize-playwright.mjs` does, and posts the
+  checklist alone when no report was written. Both suites' coverage artifacts
+  hold monocart's raw data too, for the `playwright-coverage` job below. The run step carries `continue-on-error: true`
   for stories, since a job that calls a workflow cannot, so a red story never
   fails the job; the comment reads the real result from `steps.run.outcome`,
   and so does the report upload. It is never a required check, which keeps red
   scaffolds off the merge path, and nothing waits on it, which keeps the
   gate's time down (`claude-docs/testing/acceptance.md`).
+- **`playwright-coverage.yml`** (M14.28) — the two Playwright suites'
+  coverage, merged, called by `pr-gate.yml`'s `playwright-coverage` job in the
+  `testing` image. That job `needs` `playwright` and `stories` and runs after
+  both whatever their result (its `!cancelled()` keeps a failed suite from skipping it, and it
+  also names the stand-down, which `!cancelled()` would otherwise ignore; it is
+  no required check, and the workflow carries `continue-on-error` too). It is
+  a called workflow, not a job with its own runner, so a run that stands down
+  leaves it skipped, as for the other called workflows. Its steps run only when `changes` says a suite ran
+  (`should-run`), and post nothing otherwise. It downloads each coverage artifact
+  by name into a folder of its own. A download that fails is either an artifact
+  that was never uploaded (a suite that did not run), which the merge leaves out
+  quietly, or one that exists in the run and could not be fetched.
+  `check-coverage-downloads.mjs` tells them apart by asking the run's artifact
+  list (the called workflow and its caller grant `actions: read` for this). For the
+  second kind the job posts the "Playwright Coverage" comment as a failure saying
+  coverage is missing for this commit, with the run link, merges nothing, and fails,
+  so the job shows red and "Re-run failed jobs" runs it again.
+  Otherwise `merge-playwright-coverage.mjs` merges the
+  `raw/` data that is there, and the job uploads `playwright-coverage-merged`, writes the job
+  summary and comments as "Playwright Coverage" (`marker-slug: playwright-coverage`).
+  The summary line names the suites included. Only this comment carries the
+  per-file table; the two suites' comments carry their figure alone. It reads
+  as a failure when either suite failed (`suites-failed`): `playwright`'s
+  result, and `stories`'s run step outcome, which `playwright.yml` exposes as
+  its `outcome` output because the stories job passes whatever its stories did.
 - **`playwright.yml`** (M1.14) — `npm run e2e` against the servers
   `webServer` builds and starts: one per worker slot on 8001 and up — four
   on GitHub's 4-vCPU runner, since the job sets `E2E_WORKERS: 4` over the
@@ -212,7 +245,7 @@
   as `vitest.yml`, fed by the same caller-built `build-db-image` job (one
   build, shared by both — see `vitest.yml`'s entry above). Uploads
   `.reports/playwright-report/`/`.reports/test-results/` on failure and
-  `.reports/coverage-e2e/` always (parallel to `vitest.yml`'s
+  `.reports/coverage-e2e/` always (named `playwright-coverage`; parallel to `vitest.yml`'s
   `.reports/coverage/` upload). Its reporters (`list`, `json`, `html`) come
   from `playwright.config.ts` under `CI`, not from the command line: a CLI
   `--reporter` replaces the config's list and with it the html report's

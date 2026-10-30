@@ -10,11 +10,8 @@ const { RouteModal, RouteModalProvider } = await import('@/components/Modal');
 const { default: DetailsLink } = await import('@/components/IngredientEntry/details-link');
 const { DETAILS_PLACE, detailsHeading } = await import('@/components/IngredientEntry/details');
 
-// An entry's Quick Look in a list (M12.5): the icon beside its name, a link to
-// the list's own address with `?entry=`, which a plain press opens at once as
-// the details modal over the list, while a new tab or a press before the
-// script loads opens that address (claude-docs/components/ingredient-entry.md,
-// "The details modal").
+// An entry's Quick Look in a list: the icon beside its name, a link to the list's own address with `?entry=`.
+// A plain press opens it at once as the details modal over the list; a new tab, or a press before the script loads, opens that address (claude-docs/components/ingredient-entry.md, "The details modal").
 
 const DETAILS: Route = '/admin/compendium?entry=testwort';
 const heading = detailsHeading({

@@ -1,13 +1,6 @@
-// CLAUDE.md rule 2: the only application code that imports the client
-// (claude-docs/db/client-imports.md, "Who may import the client"). `db` is not re-exported and
-// callers never see the transaction — `withAudit`'s `AuditWriter` is the sole
-// write mechanism, so no write can skip audit stamping. Rule 4: every exported
-// finder applies `deleted_at IS NULL` but the six named `…IncludingSoftDeleted`
-// hatches and the coven Ingredients list's three readers, which admit a
-// retired compendium entry the coven's cupboard still names through an
-// internal hatch (M12.32), and the two read builders are not re-exported
-// here — guarded by tests/guards/soft-delete-finder-guard.test.ts.
-// Import this file, never a sibling: the rest of the folder is internal.
+// CLAUDE.md rule 2: the only application code that imports the client (claude-docs/db/client-imports.md, "Who may import the client").
+// `db` is not re-exported, so `withAudit`'s `AuditWriter` is the sole write mechanism. Rule 4: every exported finder applies `deleted_at IS NULL`
+// bar the named `…IncludingSoftDeleted` hatches and the internal ones, which tests/guards/soft-delete-finder-guard.test.ts holds. Import this file, never a sibling.
 
 export { withAudit } from './write';
 export {
@@ -22,15 +15,33 @@ export {
   findOneInWorkspace,
   findPage,
   findPageCount,
+  findPageCountInReadableSpells,
+  findPageInReadableSpells,
   findPageInWorkspace,
 } from './finders';
 export {
+  findFormsInSpellsIncludingSoftDeleted,
   findIngredientsInSpellsIncludingSoftDeleted,
   findManyInSpell,
+  findManyInSpells,
   findManyOfSpellIngredientsIncludingSoftDeleted,
-  findManySpells,
   findOneSpell,
 } from './spells';
+export {
+  findCompleteWorkingCounts,
+  findDeductionsOfWorkings,
+  findOneWorking,
+  findParticipantsOfWorkings,
+  findWorkingsInSpell,
+  findWorkingsPage,
+  isParticipantOfWorking,
+} from './workings';
+export {
+  findGrimoireCategoryCounts,
+  findGrimoireCount,
+  findGrimoireFacetCounts,
+  findGrimoirePage,
+} from './grimoire';
 export {
   findCompendiumCount,
   findCompendiumEntryByIdentity,
@@ -40,8 +51,10 @@ export {
   findManyIngredients,
   findManyOfIngredients,
   findManyOfVariants,
+  findCompendiumReview,
   findOneIngredient,
   findReadableVariant,
+  findReadableVariants,
   findSimilarIngredients,
   findSubstitutesIncludingSoftDeleted,
   findWorkspaceIngredientByIdentity,
@@ -64,6 +77,7 @@ export {
   findStockById,
   findStockByIds,
   findStockOfIngredients,
+  findStockOfVariants,
 } from './stock';
 export { findManyReferences, findReferenceSuggestions, findReferencesOf } from './references';
 export {
@@ -75,6 +89,8 @@ export {
   findCuratedRowsByIds,
   findCuratedRowsByName,
   findDeityCount,
+  findDeityOtherNameHolders,
+  findDeityOtherNames,
   findDeityPage,
   findGroupCount,
   findGroupPage,
@@ -95,6 +111,7 @@ export {
   findMembershipsOfUsers,
   findWorkspaceRole,
 } from './memberships';
+export { findDemoWorkspace } from './workspaces';
 export {
   findCoMemberNamesIncludingSoftDeleted,
   findPrivilegeChangeCount,
@@ -122,6 +139,11 @@ export { findOpenAdminRoleChangePause } from './admin-roles';
 export { deleteProvisionalUsers } from './provisional-users';
 export type { PrivilegeDeclaration, PrivilegeRoute } from '../types';
 export type {
+  WorkingCount,
+  WorkingDeductionRow,
+  WorkingParticipantRow,
+  WorkingParticipantValue,
+  WorkingRow,
   AstrologyList,
   AstrologyValueFilter,
   AstrologyVocabulary,
@@ -132,12 +154,15 @@ export type {
   CommonNameSuggestion,
   CompendiumFacets,
   CompendiumScore,
+  GrimoireFacetCounts,
+  GrimoireQuery,
   SuggestionGroup,
   SuggestionGroupTag,
   CupboardEntryRow,
   DeityFilter,
   DeitySuggestion,
   FacetCount,
+  ReviewFacetValue,
   FormSuggestion,
   GroupFilter,
   IngredientFacets,
@@ -146,6 +171,7 @@ export type {
   IngredientFilter,
   IngredientFormValueFilter,
   IngredientIdentity,
+  CompendiumReviewRow,
   IngredientRow,
   InvitableRole,
   InvitableSiteRole,

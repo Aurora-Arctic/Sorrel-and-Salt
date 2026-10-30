@@ -20,7 +20,7 @@ places drive the same attribute and key:
   `globals.scss` resolves the theme through `prefers-color-scheme`. That is why
   no `matchMedia` listener is needed: the system-preference tier stays live
   until the user makes an explicit choice.
-- **The Ladle theme decorator** (`.ladle/components.tsx`) calls the same
+- **The Storybook theme decorator** (`.storybook/components.tsx`) calls the same
   `applyTheme()` rather than keeping a second copy of the write half. Its `auto`
   branch clears **both** `data-theme` and `localStorage['theme']` — clearing
   only the attribute leaves a stale pin that reasserts itself on reload.
@@ -158,19 +158,23 @@ look differs.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/ThemeToggle/index.stories.tsx),
-titled "Layout / Theme Toggle" — five renders, no test ids and no snapshots; behaviour is asserted in
+titled "Layout / Theme Toggle" — renders, no test ids and no snapshots; behaviour is asserted in
 `tests/components/ThemeToggle/index.test.tsx`, not here.
 
-- **Default** — follows the toolbar theme control. Default, Light, Dark and
+- **States** — a control that chooses Corner or Inline. Corner follows the toolbar theme control. Corner and
   ReducedMotion draw the `corner` variant as a page with no shell has it: a
   quarter disc pinned to the story frame's top-right corner and clipped by its
   edge, which is the design, not a clipped story.
-- **Light** / **Dark** — pin their theme with `.meta = { theme: '…' }`, which the
-  decorator honours over the toolbar. Light shows the solar-disc facet and
-  `aria-pressed="true"`; Dark the crescent and `aria-pressed="false"`.
-- **Inline** — the shell's disc, bare. AppShell's stories show it in the bar.
+- **Light and dark** — there are no stories for them; the toolbar's theme
+  control (or `globals=theme:light` in the link) sets the theme. Light shows the
+  solar-disc facet and `aria-pressed="true"`; dark, the app's default, the
+  crescent and `aria-pressed="false"`. **Manual check, the sun swinging in on
+  first paint:** open `/iframe.html?id=layout-theme-toggle--states&globals=theme:light`
+  directly. The workshop stamps `data-theme` before paint, as the app's init
+  script does, so the link reproduces that timing, which no test covers.
+- **Inline** (in `States`) — the shell's disc, bare. AppShell's stories show it in the bar.
 - **ReducedMotion** — `.meta = { reducedMotion: true }`, which the workshop
-  decorator (`.ladle/components.tsx`) reads to simulate
+  decorator (`.storybook/components.tsx`) reads to simulate
   `prefers-reduced-motion: reduce`: it patches `window.matchMedia` to match and
   the frame's `--reduced-motion` class zeroes every transition, so this story
   reproduces the real setting rather than only linking to it — see

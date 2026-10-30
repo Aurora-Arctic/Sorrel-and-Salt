@@ -12,16 +12,12 @@ import {
 } from '../../scripts/check-migration-order';
 import type { JournalEntry } from '../../scripts/types';
 
-// Drizzle's migrator applies only the journal entries whose `when` is later
-// than the newest it has recorded, so an entry merged older than one already
-// applied is skipped on staging and production, and no test database notices
-// (claude-docs/db/migrations-and-scripts.md, "Migration order"). Each refusal
-// below is paired with the journal it would have let through: 2026-10-06's,
-// where 0046 was regenerated after 0047 and 0048 had been generated.
+// Drizzle's migrator applies only journal entries whose `when` is later than the newest it has recorded, so an entry merged older than one already applied is skipped on staging and production and no test database notices (claude-docs/db/migrations-and-scripts.md, "Migration order").
+// Each refusal below is paired with the journal it would have let through: one where 0046 was regenerated after 0047 and 0048 had been generated.
 
 const entry = (idx: number, tag: string, when: number): JournalEntry => ({ idx, tag, when });
 
-/** What staging held once MB.171's 0045 merged. */
+/** A staging journal that holds 0045. */
 const BASE = [
   entry(44, '0044_admin-role-change-pauses', 1791324406382),
   entry(45, '0045_seed-keys', 1791326893502),
@@ -38,8 +34,8 @@ describe('an entry the branch adds', () => {
   });
 
   it("is refused, by name, when its `when` is no later than the base's newest", () => {
-    // MB.172's 0047, generated before 0046 was regenerated, onto a staging
-    // that had merged 0046: in journal order, and still never applied.
+    // 0047, generated before 0046 was regenerated, onto a staging that had merged 0046: in journal
+    // order, and still never applied.
     const base = [...BASE, entry(46, '0046_admin-invitations', 1791328303254)];
     const branch = [...base, entry(47, '0047_refill-seed-keys', 1791327264878)];
 

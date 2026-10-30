@@ -54,9 +54,9 @@ worth knowing:
 ## Styling
 
 A `.panel` (MB.119, decision c), as sign-in's panel, the email page's and the create page's are:
-the root is `panel invitation-acceptance`, and its `.header` (the layout primitive's) holds the
-`h1` and the grant sentence as a `.lede`. A refusal has no grant, so its header is the heading
-alone and the alert says the rest. The page has no AppShell, the signed-in pages' shared frame, so
+the root is `panel invitation-acceptance`, and its `PageHeader` ([`page-header.md`](page-header.md)) holds the
+`h1` and the grant sentence as its `lede`. A refusal has no grant, so its head is the heading
+alone, its row's margin dropped so the panel's gap spaces it, and the alert says the rest. The page has no AppShell, the signed-in pages' shared frame, so
 its `main` is the page frame, `.page-frame.page-frame--narrow`
 ([`styling.md`](../styling.md), "The page frame"): it centres the panel,
 holds it clear of the top inset and caps it at the forms' column,
@@ -75,17 +75,14 @@ buttons and the spinner are the primitives', Accept drawn through
 
 [`index.stories.tsx`](../../src/components/InvitationAcceptance/index.stories.tsx) —
 `Pages / Invitation Acceptance`, each inside the page's own
-`main.page-frame.page-frame--narrow`, so the workshop shows what the page shows. Render-only, bar
+`main.page-frame.page-frame--narrow`, so the workshop shows what the page shows. The `States` dropdown opens with Signed Out, the sign-in prompt a visitor with no session gets for any link, valid or not (the page reads nothing of the invitation until someone is signed in). Render-only, bar
 the failed accept.
 
-- **The states:** `SignedOut`, `Acceptable`, `AcceptableCurator`, `AcceptableCoven`, `Unverified`, and one for each other
-  refusal: `Invalid`, `Accepted`, `Revoked`, `Expired`, `Declined`, `DeletedCoven`,
-  `DifferentAddress` and `Paused`. The refusal sentences are copied from the service's `MESSAGES`,
+- **The states:** `SignedOut` is its own story; `States`, with a control that chooses Default, Acceptable Curator, Acceptable Coven, Unverified, and one for each other
+  refusal: Invalid, Accepted, Revoked, Expired, Declined, Deleted Coven,
+  Different Address and Paused. The refusal sentences are copied from the service's `MESSAGES`,
   as a story cannot import a server-only module.
-- **Phone and both themes:** `SignedOut`, `AcceptableCoven`, `Unverified` and `DeletedCoven` each
-  have `PhoneDark` and `PhoneLight` (375px), covering a sentence and a button, an alert and a
-  button, and an alert alone.
-- **A failed accept:** `AcceptRefused`, with `PhoneDark` and `PhoneLight`, presses Accept on mount
+- **A failed accept:** `AcceptRefused` presses Accept on mount
   (`usePressOnMount`); the workshop has no API, so the request fails and the callout says
   `GENERIC_FAILURE` under the button.
 

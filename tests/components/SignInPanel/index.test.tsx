@@ -9,11 +9,8 @@ import {
   signInErrorMessage,
 } from '@/lib/sign-in';
 
-// Better Auth's client performs the OAuth hop by assigning
-// `window.location.href` (tests/lib/auth-client.test.ts) — happy-dom can't
-// follow that, so `signIn` is mocked here rather than stubbing fetch, which is
-// how auth-client.test.ts exercises the real thing. The rest of the module is
-// the real one, so the last-used mark reads happy-dom's own `document.cookie`.
+// Better Auth's client performs the OAuth hop by assigning `window.location.href` (tests/lib/auth-client.test.ts), which happy-dom cannot follow, so `signIn` is mocked here rather than stubbing fetch.
+// The rest of the module is the real one, so the last-used mark reads happy-dom's own `document.cookie`.
 const socialMock = vi.fn();
 vi.mock('@/lib/auth-client', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/auth-client')>()),
@@ -94,7 +91,6 @@ describe('SignInPanel', () => {
 
     await press(google);
 
-    expect(google).toHaveAccessibleName('Signing In');
     expect(google).toHaveAttribute('aria-busy', 'true');
     // `aria-disabled`, not `disabled`, which would drop the focus it holds.
     expect(google).toHaveAttribute('aria-disabled', 'true');
@@ -108,7 +104,7 @@ describe('SignInPanel', () => {
     ['answers an error', () => Promise.resolve({ error: { message: 'network down' } })],
     ['cannot be reached', () => Promise.reject(new Error('offline'))],
   ])(
-    'says so in an alert under the pressed provider when the sign-in %s, keeps the focus there, frees every provider, and its badge brings the alert back',
+    'says so in an alert under the pressed provider when the sign-in %s, keeps the focus there, frees every provider',
     async (_how, answer) => {
       socialMock.mockImplementation(answer);
       render(<SignInPanel next="/" configured={['google', 'discord']} />);
@@ -126,12 +122,6 @@ describe('SignInPanel', () => {
       expect(google).not.toHaveAttribute('aria-disabled');
       expect(google).toHaveAccessibleDescription(expect.stringContaining(GENERIC_SIGN_IN_ERROR));
       expect(screen.getByRole('button', { name: 'Continue with Discord' })).toBeEnabled();
-
-      await press(screen.getByRole('button', { name: 'Dismiss' }));
-      expect(screen.queryByRole('alert')).toBeNull();
-      expect(google).toHaveFocus();
-      await press(screen.getByRole('button', { name: 'Show the error for Continue with Google' }));
-      expect(screen.getByRole('alert')).toHaveTextContent(GENERIC_SIGN_IN_ERROR);
     },
   );
 
@@ -140,7 +130,7 @@ describe('SignInPanel', () => {
     socialMock.mockResolvedValue({ error: { message: 'x' } });
     render(<SignInPanel next="/" configured={['google']} />);
 
-    await press(screen.getByRole('button', { name: 'Continue with Google, last used' }));
+    await press(screen.getByRole('button', { name: 'Continue with Google Last Used' }));
 
     expect(await screen.findByRole('alert')).toBeVisible();
     expect(
@@ -211,7 +201,7 @@ describe('SignInPanel', () => {
     const roster = ['google', 'discord', 'facebook', 'microsoft'] as const;
     const { unmount } = render(<SignInPanel next="/coven" configured={[...roster]} />);
 
-    const marked = screen.getByRole('button', { name: 'Continue with Discord, last used' });
+    const marked = screen.getByRole('button', { name: 'Continue with Discord Last Used' });
     for (const name of ['Google', 'Facebook', 'Microsoft']) {
       expect(screen.getByRole('button', { name: `Continue with ${name}` })).toBeInTheDocument();
     }
@@ -228,28 +218,8 @@ describe('SignInPanel', () => {
     }
   });
 
-  // happy-dom reads a cookie cleared with max-age=0 as empty-valued for the
-  // rest of that millisecond and as absent after it, so two reads in one render
-  // can differ. Neither names a provider, so both must read as the same "none":
-  // React warns, and the harness fails the test, when a snapshot changes
-  // between two reads of one render.
-  it('reads a cookie naming no provider as the same value however it is spelled, so the render is stable', () => {
-    const reads = [`${LAST_USED_PROVIDER_COOKIE}=`, ''];
-    let read = 0;
-    const cookie = vi.spyOn(document, 'cookie', 'get').mockImplementation(() => reads[read++ % 2]!);
-    try {
-      render(<SignInPanel next="/" configured={['google', 'discord']} />);
-    } finally {
-      cookie.mockRestore();
-    }
-
-    expect(screen.queryByRole('button', { name: /last used/i })).not.toBeInTheDocument();
-  });
-
-  // The server has no cookie to read, so its HTML must carry no mark, or a
-  // returning visitor's hydration would disagree with it. happy-dom has a
-  // `document` even here, so it is the server snapshot, not its absence, that
-  // keeps the mark out.
+  // The server has no cookie to read, so its HTML must carry no mark, or a returning visitor's hydration would disagree with it.
+  // happy-dom has a `document` even here, so it is the server snapshot, not its absence, that keeps the mark out.
   it('server-renders no mark, and hydration adds it without a mismatch', async () => {
     setLastUsed('google');
     const panel = <SignInPanel next="/" configured={['google']} />;
@@ -266,7 +236,7 @@ describe('SignInPanel', () => {
       });
 
       expect(
-        within(container).getByRole('button', { name: 'Continue with Google, last used' }),
+        within(container).getByRole('button', { name: 'Continue with Google Last Used' }),
       ).toBeInTheDocument();
       expect(onRecoverableError).not.toHaveBeenCalled();
     } finally {

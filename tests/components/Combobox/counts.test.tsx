@@ -5,7 +5,7 @@ import Combobox, { ComboboxEntry, ComboboxMultiSelect } from '@/components/Combo
 import type { ComboboxChoice, ComboboxOption } from '@/components/Combobox/types';
 
 // The multi-select's counts and disabled rows, and the chip's icon, count and
-// loading mark (M12.4): what a faceted filter draws, with the box unchanged
+// loading mark: what a faceted filter draws, with the box unchanged
 // for a caller that passes none of them.
 
 const ELEMENTS: ComboboxChoice[] = [

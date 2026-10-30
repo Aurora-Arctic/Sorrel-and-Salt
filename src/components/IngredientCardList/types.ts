@@ -5,10 +5,9 @@ export interface IngredientCardListProps {
   label: string;
   /**
    * How tightly the cards sit. Regular is the default; compact is the coven's Ingredients
-   * page's choice (M9.6). It is written as `data-density` on the list, which the card's own
-   * styles read.
+   * page's choice. Written as `data-density` on the list, which the card's styles read.
    */
   density?: 'regular' | 'compact';
-  /** One `IngredientCard` per child; each is wrapped in its own list item. */
+  /** One card per child, an `IngredientCard` or a `SpellCard`; each is wrapped in its own list item. */
   children: ReactNode;
 }

@@ -93,7 +93,7 @@ with transparent so it reads the same on the page and on a card. The tint's
 strength is `--notice-tint`, set per theme in `_mixins.scss`: 7% on light,
 8% on dark, where the same strength reads fainter. The tint is the owner's
 call too, 2026-10-19, lowered from 10% and 12% for a lighter ground. The padding is
-`space(2)` by `space(3)`, the type `small` at weight 400.
+`space(2)` by `space(3)`, the type `small` at weight 400. A notice that leads with the triangle pads its start by the triangle's width, `$notice-mark-size` (1.0125rem, sized to the body type's cap height), and sets it `$notice-mark-drop` down from the first line; the click callout and the ingredient form's notices read the same two tokens.
 
 | Kind      | Bar and tint (`--notice-bar`) | Triangle (`--notice-icon`) | Text               |
 | --------- | ----------------------------- | -------------------------- | ------------------ |
@@ -113,6 +113,8 @@ lowest text is the dark error on a card, at 5.62:1, and the lowest mark the
 light caution's triangle over its grey tint on the page, at 4.46:1 (the
 warning's is 4.47:1).
 
+A button inside a warning or an error (`.notice--warn .btn`, `.notice--error .btn`) takes its label from `$notice-button-ink` (`--notice-button-ink`), not from `$accent`. On light the tint under the accent label measured 4.25:1 (warning) and 4.19:1 (error) on the page, under 4.5:1. The light value is `#33680f` (`$sorrel-notice-button`), 5.07:1 and 5.00:1 on the page and 5.61 and 5.53 on a card; dark keeps `$accent`, so its computed colours are unchanged. The border stays `$accent`, and a hover or a focus fills the button as any `.btn` does. The two buttons-in-notice rows in `tests/scss/tokens.test.ts` hold the floor on the page and the card. The owner chose this on 2026-10-23 over two other options: lighter tints (a 2% tint was needed, which leaves almost nothing of the tint) and a mix of both (a 5% tint with `#356f10`, 4.74:1 and 4.67:1).
+
 **Another kind is a few lines**: a modifier class that sets `--notice-bar`
 and, if it leads with the triangle, `--notice-icon`, joined to the triangle's
 selector; then its role in `index.tsx` and a row in the table above. The
@@ -123,11 +125,10 @@ at 4.5:1 over its own tint on the page and on a card, are rows in
 ## Stories
 
 [`index.stories.tsx`](../../src/components/Notice/index.stories.tsx), under
-`Surfaces / Notice`: `Failure` (an error), `Warning`, `QuietWarning` (a
-warning as a status), `Caution`, `Success` and `Plain`, one for each look and role in
-the table above, and `BlockWarning` and `BlockFailure`, the block form with a
-sentence, a list of links and a button. `PhoneDark` and `PhoneLight` stack
-the five kinds and the two block notices at 375px in each theme.
+`Feedback / Notice`: `States`, a grid of Plain, Failed (an error), Warning, Quiet Warning (a
+warning as a status), Caution and Success, one for each look and role in
+the table above, and Block Warning and Block Failure, the block form with a
+sentence, a list of links and a button. The toolbar viewport menu shows them at 375px.
 
 ## Testing
 
@@ -135,5 +136,9 @@ the five kinds and the two block notices at 375px in each theme.
 row per kind, and that a quiet warning or caution is a status; that the block
 form holds a sentence, a list and a button in every kind, with the same roles
 and no list or button inside a paragraph or an `<output>`; and that a notice
-`inRegion` takes no role, so the region round it is the one thing announced. The look is the story's (`Surfaces / Notice`, both themes at
+`inRegion` takes no role, so the region round it is the one thing announced. The look is the story's (`Feedback / Notice`, both themes at
 375px) and axe's on every page that shows one.
+
+## The demo coven's notice
+
+The `/coven/[slug]` layout draws a quiet warning (`kind="warn" quiet`, a status that never interrupts) under the `ContextRow` on every page of the demo coven (`workspace.demo`) and of no other. A viewer or member reads that it is a demo, that they may look at everything and change nothing, and that a coven of their own starts with an invitation; an owner (a site admin, seated by the system) reads that what they change is what every new account sees. The coven page's `<h1>` also carries a `badge badge--demo` reading "Demo" (tinted, in Local's inks) at the title's top right, as `PageHeader`'s `tag`: the `<h1>` is a two-column grid (`page-title--tagged`), the name in the first column and the badge in the second at the top of the row, so a wrapped name leaves the badge beside its first line. Tests: `tests/app/(shell)/coven/layout.test.tsx` and `page.test.tsx`. The notice stands in a `coven-layout__demo-notice` section with the content column's own width and gutter, so its box spans the content; the sentence sits in `coven-layout__demo-text`, which stops at the reading measure (`$measure`), the measure being on the text and never on the box. The spell preview pane (`SpellPreview`, `demoNotice`) draws the same notice at its top, since the pane covers the layout's; both import the sentences from `src/lib/demo-notice.ts`.

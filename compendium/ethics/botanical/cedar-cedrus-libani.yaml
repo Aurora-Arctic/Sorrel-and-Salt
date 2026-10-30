@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/cedar-cedrus-libani
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: VU
+    listedAs: Cedrus libani
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-cedrus-libani
+    locator: 'Taxobox: status = VU, status_system = IUCN3.1; its status_ref reads: "Cedrus libani", Gardner, M., 2013, 10.2305/IUCN.UK.2013-1.RLTS.T46191675A46192926.en'

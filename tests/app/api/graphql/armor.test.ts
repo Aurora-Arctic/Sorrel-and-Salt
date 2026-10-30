@@ -1,13 +1,11 @@
-import { describe, expect, it, vi, afterEach } from 'vitest';
+import { describe, expect, it, vi, afterAll, beforeAll } from 'vitest';
 
 const ENDPOINT = 'http://localhost/api/graphql';
 
 vi.mock('@/lib/request-session', () => ({ sessionFromHeaders: async () => null }));
 
-// The real schema is one `ok` field, one level deep, so no query against it
-// can reach a depth or cost limit. The route is loaded over a schema that
-// nests without end and pages without running out of rows, so the limits are
-// the only thing that can refuse a query here.
+// The real schema is one `ok` field, one level deep, so no query against it can reach a depth or cost limit.
+// The route is loaded over a schema that nests without end and pages without running out of rows, so the limits are the only thing that can refuse a query here.
 vi.mock('@/graphql/schema', async () => {
   const { createBuilder } = await import('@/graphql/builder');
   const scratch = createBuilder();
@@ -35,17 +33,20 @@ vi.mock('@/graphql/schema', async () => {
   return { schema: scratch.toSchema() };
 });
 
-// Staging and every preview run at NODE_ENV=production, and the depth and cost
-// limits read no environment (src/graphql/armor.ts), so one environment is
-// the whole of their behaviour.
-async function loadRoute() {
-  vi.resetModules();
+// Staging and every preview run at NODE_ENV=production and the limits read no environment (src/graphql/armor.ts), so one environment is the whole of their behaviour.
+// The route is loaded once for the file, because loading it builds the schema in about 1.5 s.
+let POST: (typeof import('@/app/api/graphql/route'))['POST'];
+
+beforeAll(async () => {
   vi.stubEnv('NODE_ENV', 'production');
-  return import('@/app/api/graphql/route');
-}
+  ({ POST } = await import('@/app/api/graphql/route'));
+});
+
+afterAll(() => {
+  vi.unstubAllEnvs();
+});
 
 async function query(source: string, variables?: Record<string, unknown>) {
-  const { POST } = await loadRoute();
   const response = await POST(
     new Request(ENDPOINT, {
       method: 'POST',
@@ -63,25 +64,16 @@ function nested(depth: number): string {
   return `{ node { ${selection} } }`;
 }
 
-/**
- * Two pages, one inside the other: `size` squared rows, at depth 7. `size` is
- * written as given, so `(first: 10)` and `(first: $n)` are the same shape.
- */
+/** Two pages, one inside the other: `size` squared rows at depth 7. `size` is written as given, so `(first: 10)` and `(first: $n)` are the same shape. */
 function paged(size: string): string {
   return `{ nodes${size} { edges { node { children${size} { edges { node { name } } } } } } }`;
 }
 
-afterEach(() => {
-  vi.unstubAllEnvs();
-});
-
 describe('graphql-armor', () => {
   describe('depth', () => {
     // The precondition: the schema answers seven levels, so a refusal one
-    // level further is the limit and not a schema that stops short. It is the
-    // file's first request, so it pays for loading the route and building the
-    // schema: about 1.5 s alone, past the 5 s default in a busy full run.
-    it('answers a query seven levels deep', { timeout: 20_000 }, async () => {
+    // level further is the limit and not a schema that stops short.
+    it('answers a query seven levels deep', async () => {
       const result = await query(nested(7));
 
       expect(result.errors).toBeUndefined();

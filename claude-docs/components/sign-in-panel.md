@@ -5,6 +5,8 @@ error state and unavailable-provider treatment, on a card ground. Server compone
 reads `?next=`/`?error=` and the environment, and hands the results down as
 props; this component does the rendering and the click.
 
+A visitor who is already signed in never sees the panel. The page reads the session with `getSession()` and redirects on the server: to `?next=` when it passes `safeReturnPath()`, otherwise to `signedInLanding(session)` (the landing a sign-in uses). An account whose address is unverified goes to `emailPagePath(target)` instead, as `requireSession()` sends it. Tested in `tests/app/sign-in-page.test.tsx`.
+
 ## The `?next=` contract
 
 `safeReturnPath()` and `signInErrorMessage()` (`src/lib/sign-in.ts`) turn the
@@ -128,12 +130,10 @@ rather than relying on the DOM attribute to stop it.
 ## Last used
 
 The button for the provider this browser last signed in with carries a "Last
-Used" badge hanging off its top-left corner. Its accessible name is an
-`aria-label`, "Continue with Discord, last used": the name built from the
-button's text would run the label into the badge ("Discord Last Used"), and the
-comma gives a screen reader a pause without displaying anything. The badge's
-word is title case, as a label is; inside the sentence of the name it is lower
-case. Only the marked
+Used" badge hanging off its top-left corner. Its accessible name is the button's
+own text, "Continue with Discord Last Used": a space sits before the badge, and
+there is no `aria-label`, because a name that rewords the visible words (a comma
+for a pause) fails axe's `label-content-name-mismatch` (WCAG 2.5.3). Only the marked
 button carries one. The provider comes from the
 `better-auth.last_used_login_method` cookie, which Better Auth's `lastLoginMethod` plugin sets on a callback that
 signs the browser in (`auth/plugins.md`, "The last-used provider"). It exists so that
@@ -219,8 +219,8 @@ it bigger there at the sign-off. The rule is
 buttons sit `space(4)` apart, the room the last-used badge needs and no more. The panel is `border-box`, so the padding
 stays inside the column.
 
-Its children stretch to the column. The head is a `.header`, centred: the
-`h1` and a `.lede` saying what the buttons are for, "Sign in, or create your
+Its children stretch to the column. The head is a `PageHeader` ([`page-header.md`](page-header.md)), centred by its `sign-in-panel__header` class: the
+`h1` and a `lede` saying what the buttons are for, "Sign in, or create your
 account, with one of these.", since the first sign-in is also how an account
 is made. The buttons are one `max-content` grid column, centred, so every
 button is as wide as the widest label. Gaps are `space(4)` between the head,
@@ -255,14 +255,12 @@ are the primitives' (`.panel`, `.notice--error`, `.meta`,
 every story inside the page's own `main.page-frame.page-frame--narrow`, so the
 workshop shows what the page shows:
 
-- `Default` (every provider configured), `LastUsed` (Discord marked),
-  `WithError`, and `SomeUnavailable` (the shape most local dev actually sees:
+- `States`, with a control that chooses Default (every provider configured), Last Used (Discord marked),
+  With Error, and Some Unavailable (the shape most local dev actually sees:
   one pair in `.env.local`, the rest greyed out);
-- `PhoneDark` and `PhoneLight`, at 375px with the error and the mark both
-  showing, the badge nearest the screen's edge;
-- `LoadingSignIn` and `FailedSignIn`, each pressing Continue with Google as a
+- `Pending` and `Failed`, each pressing Continue with Google as a
   person would: the first with the request held open by the workshop's server
-  (`.ladle/vite.config.ts`), the second answered by the workshop's 404, so the
+  (`.storybook/vite.config.ts`), the second answered by the workshop's 404, so the
   failure's callout opens under the button.
 
 The mark is read from the workshop's own cookie, which outlives the story that
@@ -318,3 +316,19 @@ unconfigured state is every worker slot's own server, on 8001 and up; the
 configured one is a server of its own on 8100, reading `sorrel_e2e_providers`,
 which no spec reseeds. See [`testing/e2e.md`](../testing/e2e.md), "E2E —
 Playwright", for how they are wired.
+
+## Brand buttons against `.btn`
+
+Every button in the roster carries `.btn` (`_primitives.scss`) for its shape: padding, radius, shadow, focus ring and transition. The panel's stylesheet states only where a provider's brand button differs from `.btn`'s defaults. The icon sits at the left edge instead of centred. The button fills its grid column instead of sizing to its content. The edge is the 1px stroke Google's and Microsoft's guidelines draw, rather than `.btn`'s 1.6px, and it is applied to all four buttons so the roster stays one height. A white button takes its brand's `edge`; one with none keeps the transparent edge.
+
+Colour is never set in these shared rules. Each provider's published colours come from `$brand-palettes` (`_variables.scss`), not from the `$accent` and `$secondary` tokens, and `icons.tsx` names each mark's source. `.btn` changes its text colour on hover and focus to `$text-on-color`, which suits a plain outlined button. A brand button's text colour is part of the brand and stays fixed, so the hover and focus block restates its own `color`: an omitted `color` would tie with `.btn`'s in specificity and depend on stylesheet load order.
+
+The overrides are compounded with `.btn` (`.sign-in-panel__button.btn`) for the same reason: they apply whichever stylesheet loads first.
+
+## The panel's frame
+
+The page around the panel is `.page-frame--narrow` (`src/app/sign-in/page.tsx`), which centres it and holds it clear of the top inset. The panel fills that narrow column on its own `.panel` ground with one step more padding than the default, using `border-box` so the padding stays inside the column. Children stretch to the column and the button grid centres its own. The selector is compounded with `.panel` because in the app the primitives compile as `body .panel`, which outranks a lone component class. A bare `.sign-in-panel` would keep the panel's default padding in the app while the workshop, whose primitives are scoped with `:where()`, showed the override.
+
+## Disabled Facebook button
+
+The disabled look is the universal `.btn[aria-disabled='true']` (`_primitives.scss`). Facebook adds one wrinkle: its mark is a white shape with the "f" as a hole in it (`icons.tsx`), so the hole shows whatever sits behind the chip. Dropping the chip's own blue while disabled lets the hole show the button's own greyed background instead of staying blue against a grey button. The rule is scoped off the button's `aria-disabled`, not a brand class: a disabled button carries no `--facebook` class (see the `className` comment in `provider-button.tsx`), but `FacebookIcon` still renders its chip.

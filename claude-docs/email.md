@@ -213,13 +213,15 @@ exactly`, which Word applies as written.
 
 ## Previewing
 
-Each template's stories render it in Ladle under `Emails / …`, through
-`.ladle/EmailPreview.tsx`: the HTML part in an iframe and the text part
+Each template's stories render it in Storybook under `Emails / …`, through
+`.storybook/EmailPreview.tsx`: the HTML part in an iframe and the text part
 beneath, following the toolbar's theme control
-([`workshop.md`](workshop.md), "Mail templates"). A real send lands in
+([`workshop.md`](workshop.md), "Mail templates"). With the control on dark, a
+story shows what Gmail, and any client that ignores the reader's setting,
+shows. A real send lands in
 Mailpit at `http://localhost:8025` under compose.
 
-Neither is a rendering check. The Ladle iframe has a real `<body>`, and
+Neither is a rendering check. The Storybook iframe has a real `<body>`, and
 Mailpit's HTML Check scores CSS feature support from caniemail data, so neither
 can show what a client does to the document's structure; the npm email linters
 are wrappers over that same data and cannot either. Mailpit's check is the first

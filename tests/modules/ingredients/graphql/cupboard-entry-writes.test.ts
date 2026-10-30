@@ -10,7 +10,7 @@ import { makeIngredient } from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
 import type { CupboardEntryNode } from './types';
 
-// The three cupboard-entry mutations over the wire (M12.15): the answer as a
+// The three cupboard-entry mutations over the wire: the answer as a
 // fresh read gives it, and the viewer refused at the field. Every rule of who
 // may write what is services/cupboard-entry-writes.test.ts's.
 
@@ -101,20 +101,6 @@ describe('annotateCupboardEntry', () => {
     expect(result.data?.annotateCupboardEntry).toMatchObject({
       description: null,
       elements: ['fire'],
-    });
-  });
-
-  it('answers the row for a retired entry the coven still holds, with its compendium name', async () => {
-    await sql`update ingredients set deleted_at = now(), deleted_by = ${E.id} where id = ${entry}`;
-    const [retired] = await sql`select deleted_at from ingredients where id = ${entry}`;
-    expect(retired.deleted_at).not.toBeNull();
-
-    const result = await annotate(asUser(B), { label: 'Our Testwort' });
-
-    expect(result.errors).toBeUndefined();
-    expect(result.data?.annotateCupboardEntry).toMatchObject({
-      label: 'Our Testwort',
-      compendiumName: 'Testwort',
     });
   });
 

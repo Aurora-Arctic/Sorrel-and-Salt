@@ -10,11 +10,8 @@ import type { BuilderTypes, Context, Defined, Suggest } from './types';
 // "Resolver helpers"). None of it decides who may: that is the service's.
 
 /**
- * The request's session, non-null, or `Forbidden` for a signed-out caller —
- * the refusal a field scope would have given, so the transport maps one
- * shape. A narrowing for the type, not a gate: a scoped field has refused a
- * null session already, and the service behind every field checks again.
- * `.oxlintrc.json` refuses the inline copy in a module's resolvers.
+ * The request's session, or `Forbidden` for a signed-out caller. A narrowing for the type, not a gate.
+ * `.oxlintrc.json` refuses the inline copy in a resolver.
  */
 export function sessionOf({ session }: Pick<Context, 'session'>): Session {
   if (!session) throw new Forbidden();
@@ -22,10 +19,8 @@ export function sessionOf({ session }: Pick<Context, 'session'>): Session {
 }
 
 /**
- * The arguments as a service takes them: each null, which GraphQL sends for
- * an optional argument or input field, made absent. Pass the fields named
- * rather than a connection's whole `args`, which also carry `first` and the
- * cursors, so a filter never grows keys its service would read or cache by.
+ * The arguments as a service takes them: each null made absent. Pass the fields named,
+ * not a connection's whole `args`, so a filter never grows keys the service would read.
  */
 export function definedArgs<T extends object>(args: T): Defined<T> {
   return Object.fromEntries(
@@ -34,10 +29,8 @@ export function definedArgs<T extends object>(args: T): Defined<T> {
 }
 
 /**
- * A picker's suggestion field: a page of `type` matching `query` across the
- * compendium and, when `workspaceId` names one, a coven the caller may read.
- * The resolver refuses only a missing session; which covens a caller may ask
- * about is `suggest`'s check.
+ * A picker's suggestion field: a page of `type` matching `query` across the compendium and, with `workspaceId`,
+ * a coven the caller may read. The resolver refuses only a missing session; `suggest` checks the coven.
  */
 export function suggestionConnection<Node>(
   name: string,
@@ -48,7 +41,7 @@ export function suggestionConnection<Node>(
     t.pagedConnection({
       type,
       args: {
-        // Null reads the compendium alone: the admin's compendium form names no coven (M5.5).
+        // Null reads the compendium alone: the admin's compendium form names no coven.
         workspaceId: t.arg.id({ required: false }),
         query: t.arg.string({ required: false }),
       },

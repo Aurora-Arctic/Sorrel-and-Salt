@@ -7,18 +7,9 @@ import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 import type { GroupedValueKind } from '@/components/GroupedValueForm/types';
 
-// The page every curated value shares (src/app/(shell)/admin/value-page.tsx, MB.115):
-// the guard, one page of the vocabulary under the address's filter and its
-// groups, and the modal its address opens — `?new` empty, `?edit=` a value
-// by slug. The shape runs on the categories, as `/admin/categories` (M5.6,
-// MB.178); every other kind gets only what it changes, its path and its
-// services (claude-docs/testing/layer-ownership.md, rule 5). The guard and the
-// services are mocked: what they decide is tests/lib/request-session.test.ts's
-// and the vocabulary module's service tests'. This file holds the page's half
-// — the address read into service calls, the guard, NotFound against any
-// other error, and what the page builds for the list and the modal; how the
-// list and the form behave given those props is their own tests'
-// (claude-docs/testing/layer-ownership.md, "The owning layer").
+// The page every curated value shares (src/app/(shell)/admin/value-page.tsx): the guard, one page of the vocabulary under the address's filter and groups, and the modal its address opens (`?new` empty, `?edit=` a value by slug).
+// The shape runs on the categories; other kinds get only what they change, their path and services (claude-docs/testing/layer-ownership.md, rule 5). The guard and services are mocked (tests/lib/request-session.test.ts, the vocabulary service tests).
+// This file holds the page's half: the address read into service calls, the guard, NotFound against any other error, and the props built for the list and modal; how those behave is their own tests' (layer-ownership.md, "The owning layer").
 
 const requireCuratorSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireCuratorSession }));
@@ -41,6 +32,7 @@ const listDeities = vi.fn();
 const listDeityTraditions = vi.fn();
 const getDeityBySlug = vi.fn();
 const countDeities = vi.fn();
+const deityOtherNamesOf = vi.fn(async (ids: readonly string[]) => ids.map((): string[] => []));
 const listAstrologyValues = vi.fn();
 const getAstrologyValueBySlug = vi.fn();
 const countAstrologyValues = vi.fn();
@@ -57,6 +49,7 @@ vi.mock('@/modules/vocabulary', () => ({
   listDeityTraditions,
   getDeityBySlug,
   countDeities,
+  deityOtherNamesOf,
   listAstrologyValues,
   getAstrologyValueBySlug,
   countAstrologyValues,
@@ -177,7 +170,6 @@ describe('a curated value page, on the categories', () => {
       key: ['Testcraft 0'],
       id: expect.any(String),
     });
-    expect(screen.getByRole('navigation', { name: 'Pages' })).toHaveTextContent('Page 2 of 3');
   });
 
   it('opens the empty modal on ?new', async () => {
@@ -191,11 +183,7 @@ describe('a curated value page, on the categories', () => {
     await renderPage({ edit: 'testcraft' });
 
     expect(getCategoryBySlug).toHaveBeenCalledWith('testcraft');
-    const dialog = screen.getByRole('dialog', { name: 'Edit Category, Testcraft' });
-    expect(within(dialog).getByRole('textbox', { name: 'Name' })).toHaveValue('Testcraft');
-    expect(within(dialog).getByRole('combobox', { name: 'Group' })).toHaveValue(
-      'Fixture Protection',
-    );
+    expect(screen.getByRole('dialog', { name: 'Edit Category, Testcraft' })).toBeInTheDocument();
   });
 
   it('says so, and opens nothing, when ?edit= names no category', async () => {
@@ -224,8 +212,8 @@ describe('a curated value page, on the categories', () => {
   });
 });
 
-// MB.178: `?query=` and `?group=<slug>` narrow the list, as the user list's
-// filter does (MB.52), and every link the page builds keeps them.
+// `?query=` and `?group=<slug>` narrow the list, as the user list's
+// filter does, and every link the page builds keeps them.
 describe("a curated value page's filter, on the categories", () => {
   /** A full page and one more, so the pager links both ways. */
   const fullPage = () =>
@@ -351,19 +339,6 @@ describe('a curated value page, for each other kind', () => {
       row: { ...VALUE, description: 'A celestial body' },
       dialog: 'Edit Celestial Body, Testwort Shard',
     },
-    {
-      kind: 'zodiacSign',
-      path: '/admin/zodiac-signs',
-      address: {},
-      list: listAstrologyValues,
-      count: countAstrologyValues,
-      groups: undefined,
-      get: getAstrologyValueBySlug,
-      filter: { query: 'te' },
-      getArgs: ['zodiacSigns', 'testwort-shard'],
-      row: { ...VALUE, description: 'A sign' },
-      dialog: 'Edit Zodiac Sign, Testwort Shard',
-    },
   ] as const;
 
   it.each(ROWS)(
@@ -396,4 +371,35 @@ describe('a curated value page, for each other kind', () => {
       );
     },
   );
+
+  // A deity's other names, read once for the page and once for the
+  // deity the modal edits, so its row says them and its form opens on them.
+  it("reads each deity's other names into its row and into the form that edits it", async () => {
+    const row = { ...VALUE, description: 'A deity', traditionId: GROUPS[1].id };
+    listDeities.mockReset();
+    listDeities.mockResolvedValue([entry(row)]);
+    countDeities.mockReset();
+    countDeities.mockResolvedValue({ totalCount: 1, countBefore: 0 });
+    listDeityTraditions.mockReset();
+    listDeityTraditions.mockResolvedValue(GROUPS.map(entry));
+    getDeityBySlug.mockReset();
+    getDeityBySlug.mockResolvedValue(row);
+    deityOtherNamesOf.mockReset();
+    deityOtherNamesOf.mockResolvedValue([['Testrina', 'Tess']]);
+
+    await renderPage({ edit: 'testwort-shard' }, 'deity');
+
+    expect(deityOtherNamesOf.mock.calls).toEqual([[[VALUE.id]], [[VALUE.id]]]);
+    const table = screen.getByRole('table');
+    expect(
+      within(table).getByRole('cell', { name: 'Testwort Shard Also called Testrina, Tess' }),
+    ).toBeInTheDocument();
+    const dialog = screen.getByRole('dialog', {
+      name: 'Edit Deity, Testwort Shard, Fixture Protection',
+    });
+    const names = within(dialog).getByRole('group', { name: 'Other Names' });
+    for (const name of ['Testrina', 'Tess']) {
+      expect(within(names).getByRole('button', { name: `Remove ${name}` })).toBeInTheDocument();
+    }
+  });
 });

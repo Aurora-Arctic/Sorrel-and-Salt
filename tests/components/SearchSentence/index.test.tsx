@@ -1,14 +1,12 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { buildSearchSentence } from '@/components/IngredientSearch/sentence';
 import SearchSentence from '@/components/SearchSentence';
 import type { SearchSentenceProps } from '@/components/SearchSentence/types';
 
-// The sentence above a list that says what it is searching for (M12.4): a closed
-// one-line disclosure once a search has settled, typed out as the loading animation while
-// one is on its way, with the finished sentence given once to a status region
-// (claude-docs/components/search-sentence.md).
+// The sentence above a list that says what it is searching for: a closed one-line disclosure once a search has settled, typed out as the loading animation while one is on its way,
+// with the finished sentence given once to a status region (claude-docs/components/search-sentence.md).
 
 const sentence = (query = 'testwort') =>
   buildSearchSentence({
@@ -175,6 +173,79 @@ describe('SearchSentence', () => {
       pass(3000);
       expect(disclosure()).not.toHaveAttribute('open');
       expect(disclosure()).not.toHaveAttribute('aria-hidden');
+    });
+
+    // The term the line shows at each tick, "" while it has none, each change recorded once. It
+    // follows "matching " in the first line and runs up to the clauses beneath ("in the ..."), whose
+    // text is in the page whole, typed or not, or to the space before the visually hidden label.
+    function watchTerm(ticks: number): string[] {
+      const seen: string[] = [];
+      for (let tick = 0; tick < ticks; tick += 1) {
+        const term =
+          /matching (.*?)(?= |in the)/.exec(disclosure(true).textContent ?? '')?.[1] ?? '';
+        if (seen[seen.length - 1] !== term) seen.push(term);
+        pass(16);
+      }
+      return seen;
+    }
+
+    it('wipes the old term and types the new one a character at a time when the term changes', () => {
+      stubMotion(false);
+      vi.useFakeTimers();
+      const { rerender } = render(<SearchSentence {...PROPS} />);
+
+      // The list names the new term from the moment its search starts, as the filter row does.
+      const next: SearchSentenceProps = {
+        sentence: sentence('mossbell'),
+        query: 'mossbell',
+        pending: true,
+      };
+      rerender(<SearchSentence {...next} />);
+      const seen = watchTerm(200);
+
+      expect(seen[0]).toBe('testwort');
+      expect(seen).toContain('');
+      const typed = seen.slice(seen.indexOf('') + 1);
+      expect(typed).toEqual(['m', 'mo', 'mos', 'moss', 'mossb', 'mossbe', 'mossbel', 'mossbell']);
+    });
+
+    it('keeps a term that did not change in view, never retyping it, while the rest of the line is retyped', () => {
+      stubMotion(false);
+      vi.useFakeTimers();
+      const { rerender } = render(<SearchSentence {...PROPS} />);
+
+      // The same term under another filter: only the clauses change.
+      const other = buildSearchSentence({
+        filter: { query: 'testwort', categories: ['mending'] },
+        labels: { categories: { mending: 'Testmending' } },
+        total: 3,
+      });
+      rerender(<SearchSentence sentence={other} query="testwort" pending />);
+      const seen = watchTerm(200);
+
+      expect(disclosure(true)).toHaveTextContent('testmending');
+      expect(seen).toEqual(['testwort']);
+    });
+
+    it('switches straight to the new term, with nothing typed, when reduced motion is asked for', () => {
+      vi.useFakeTimers();
+      const { rerender } = render(<SearchSentence {...PROPS} />);
+
+      const next: SearchSentenceProps = {
+        sentence: sentence('mossbell'),
+        query: 'mossbell',
+        pending: true,
+      };
+      rerender(<SearchSentence {...next} />);
+      const seen = watchTerm(10);
+      rerender(<SearchSentence {...next} pending={false} />);
+      pass(100);
+
+      // A term is only ever whole or gone: no tick shows part of one.
+      expect(seen.every((term) => ['testwort', '', 'mossbell'].includes(term))).toBe(true);
+      expect(seen[seen.length - 1]).toBe('mossbell');
+      expect(disclosure()).toHaveTextContent('matching mossbell');
+      expect(status()).toHaveTextContent('mossbell');
     });
   });
 });

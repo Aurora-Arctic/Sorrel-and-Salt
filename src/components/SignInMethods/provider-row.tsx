@@ -1,19 +1,15 @@
-import type { ReactElement } from 'react';
+import { type ReactElement, useCallback, useRef, useState } from 'react';
 import BusyButton from '../BusyButton';
 import { useClickFeedback } from '../ClickFeedback';
+import Modal from '../Modal';
 import Notice from '../Notice';
 import ProviderMark from '../ProviderMark';
 import { ProviderUnavailableNote } from '../ProviderMark/unavailable-note';
 import type { ProviderRowProps } from './types';
 
-// One provider in the account's list of sign-in methods, in one of three
-// states, each told apart by its control and its words rather than by hue:
-// linked has Remove (greyed for the only method left, with a line saying why;
-// or, from a stale session, nothing, since the list says why once),
-// addable has Add, and unavailable has a greyed Add with the note saying why.
-// A press's failure is a callout under the control pressed; a failed link's
-// callback error, which no press here raised, sits in the row beneath the
-// controls as a `Notice`. claude-docs/components/sign-in-methods.md, "The rows".
+// One provider as linked (Remove, which asks first), addable (Add) or unavailable (greyed Add
+// with a note), told apart by control and words, not hue. A press's failure is a callout under
+// the control (claude-docs/components/sign-in-methods.md, "The rows").
 export function ProviderRow({
   provider,
   state,
@@ -31,9 +27,27 @@ export function ProviderRow({
   const { anchorRef, report, feedback } = useClickFeedback({
     name: `${state === 'linked' ? 'Remove' : 'Add'} ${provider.label}`,
   });
+  // The row's one control, Remove or Add: the focus comes back to it as the question closes,
+  // to the Add that replaced a Remove once one is removed.
+  const control = useRef<HTMLButtonElement | null>(null);
+  const controlRef = useCallback(
+    (node: HTMLButtonElement | null) => {
+      control.current = node;
+      anchorRef(node);
+    },
+    [anchorRef],
+  );
+  const [asking, setAsking] = useState(false);
   const run = async (action: () => Promise<string | undefined>): Promise<void> => {
     report(undefined);
     report(await action());
+  };
+  // The question stays open, its Remove busy, until the answer; a refusal is then said under the
+  // row's Remove, as any other press's failure is.
+  const remove = async (): Promise<void> => {
+    const failure = await onRemove();
+    setAsking(false);
+    report(failure);
   };
 
   return (
@@ -55,24 +69,31 @@ export function ProviderRow({
           // The pressed one is `aria-disabled` and keeps the focus, refusing a
           // second press itself; the others are disabled until it answers.
           <BusyButton
-            ref={anchorRef}
-            className="btn btn--destructive btn--small"
+            ref={controlRef}
+            className="btn btn--quiet btn--small"
             aria-label={`Remove ${provider.label}`}
             busy={busy}
             busyLabel="Removing"
             aria-disabled={busy || undefined}
             disabled={pending && !busy}
-            onClick={busy ? undefined : () => void run(onRemove)}
+            onClick={
+              busy
+                ? undefined
+                : () => {
+                    report(undefined);
+                    setAsking(true);
+                  }
+            }
           >
             Remove
           </BusyButton>
         ) : removal === 'last' ? (
-          // Greyed rather than gone, as an unavailable Add is: the reason
-          // beneath it then sits under the control it explains (the owner,
-          // 2026-10-11), and a screen reader hears it as the button's description.
+          // Greyed rather than gone, as an unavailable Add is: the reason beneath it then
+          // sits under the control it explains, and a screen reader hears it as the
+          // button's description.
           <button
             type="button"
-            className="btn btn--destructive btn--small"
+            className="btn btn--quiet btn--small"
             aria-label={`Remove ${provider.label}`}
             aria-disabled="true"
             aria-describedby={reasonId}
@@ -82,9 +103,8 @@ export function ProviderRow({
         ) : null
       ) : (
         <BusyButton
-          ref={anchorRef}
-          // Small and quiet, as Remove is small and in the wax: a row's action,
-          // not a page's (the owner, 2026-10-11).
+          ref={controlRef}
+          // Small and quiet, as Remove is: a row's action, not a page's.
           className="btn btn--quiet btn--small"
           aria-label={`Add ${provider.label}`}
           // Not `disabled`, as on /sign-in: it stays in the tab order.
@@ -99,6 +119,36 @@ export function ProviderRow({
         </BusyButton>
       )}
       {feedback}
+      {asking && (
+        <Modal
+          title="Remove Sign-In Method"
+          onClose={() => setAsking(false)}
+          returnTo={() => control.current}
+        >
+          {(close) => (
+            <>
+              <p>
+                Remove <strong>{provider.label}</strong> from your sign-in methods? You can no
+                longer sign in with it until you add it again.
+              </p>
+              <div className="modal__actions">
+                <BusyButton
+                  className="btn btn--destructive"
+                  busy={busy}
+                  busyLabel="Removing"
+                  disabled={busy}
+                  onClick={() => void remove()}
+                >
+                  Remove
+                </BusyButton>
+                <button type="button" className="btn btn--quiet" disabled={busy} onClick={close}>
+                  Cancel
+                </button>
+              </div>
+            </>
+          )}
+        </Modal>
+      )}
       {unavailable && <ProviderUnavailableNote id={noteId} className="sign-in-methods__line" />}
       {state === 'linked' && removal === 'last' && (
         <p id={reasonId} className="meta sign-in-methods__line">

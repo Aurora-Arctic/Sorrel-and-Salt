@@ -1,0 +1,29 @@
+@use '../../scss/variables' as *;
+
+// A grimoire tab with no card, laid out as the coven's empty cupboard (CovenCards/index.scss): the empty
+// tab's sentences centred and larger than body copy; a filter matching nothing says what to do, muted.
+.grimoire-list__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: space(5);
+  margin-block-start: space(7);
+  text-align: center;
+
+  p {
+    margin: 0;
+    font-size: heading-size(4);
+    color: $text-muted;
+  }
+}
+
+.grimoire-list__no-match {
+  display: block;
+  color: $text-muted;
+}
+
+// The filter row is the positioned ancestor the facet panel opens under
+// (claude-docs/components/facet-panel.md).
+.grimoire-list__row {
+  position: relative;
+}

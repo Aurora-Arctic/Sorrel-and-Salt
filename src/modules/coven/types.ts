@@ -17,7 +17,7 @@ export type CovenMembership = {
   membership: Membership;
 };
 
-/** A member's address as the owner's Email column reads it (M11.19). */
+/** A member's address as the owner's Email column reads it. */
 export type MemberEmail = {
   userId: string;
   address: string;

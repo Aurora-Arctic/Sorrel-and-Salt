@@ -3,12 +3,11 @@
 @use '../scss/typography' as *;
 @use '../scss/layout' as *;
 @use '../scss/primitives' as *;
+@use '../scss/print';
 
-// The single global stylesheet, imported once by the root layout: the theme
-// tokens and the three `*-base` mixins must be emitted exactly once, and every
-// component's index.scss is its own compilation unit. Three theme states, not
-// two; the :not([data-theme='dark']) guard lets an explicit dark beat a light
-// system preference. claude-docs/styling.md, "Theme resolution".
+// The single global stylesheet: the theme tokens and `*-base` mixins must be emitted once, as every
+// component's index.scss compiles alone. The :not([data-theme='dark']) guard lets an explicit dark beat
+// a light system preference (claude-docs/styling.md, "Theme resolution").
 :root {
   @include theme-dark;
 }
@@ -29,9 +28,9 @@ html {
   scroll-behavior: smooth;
 }
 
-// Inside the shell a scroll that brings a focused control into view lands
+// Inside either frame (the shell, or the public frame) a scroll that brings a focused control into view lands
 // it below the sticky bar, and on a phone above the fixed section bar.
-html:has(.app-shell) {
+html:has(:is(.app-shell, .public-frame)) {
   scroll-padding-top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
 }
 
@@ -63,4 +62,12 @@ body {
   body {
     transition: none;
   }
+}
+
+// Highlighted text swaps the page's two colours (the ink as the ground, the page as the ink), so it
+// holds the page's own contrast in both themes and is never green.
+// stylelint-disable-next-line plugin/use-baseline -- enhancement: a browser without it keeps its own highlight, not yet Baseline
+::selection {
+  background-color: $text-primary;
+  color: $text-on-color;
 }

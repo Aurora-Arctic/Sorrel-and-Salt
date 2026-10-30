@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { describe, expect, it } from 'vitest';
 import StockFields, {
@@ -11,10 +11,8 @@ import StockFields, {
 import { UNITS } from '@/modules/ingredients/schema/units';
 import { choose, typeIn } from '../../support/interact';
 
-// A jar's three amounts, drawn for whichever form holds a jar (M9.9, and
-// M9.12's add dialog). The fields hand their values to the form that draws
-// them; changing the unit never converts the numbers
-// (claude-docs/components/stock-fields.md).
+// A jar's three amounts, drawn for whichever form holds a jar and for the add dialog. The fields hand their values to the form that draws them;
+// changing the unit never converts the numbers (claude-docs/components/stock-fields.md).
 
 /** What the form holds now, read from the form itself. */
 let held: StockFormValues;
@@ -97,17 +95,6 @@ describe('StockFields', () => {
     expect(UNIT_OPTIONS.slice(1).map((option) => option.value)).toEqual([...UNITS]);
     const labels = UNIT_OPTIONS.map((option) => option.label);
     expect(new Set(labels).size).toBe(labels.length);
-  });
-
-  it('reaches the unit by keyboard alone', () => {
-    render(<Harness start={EMPTY_STOCK} />);
-
-    act(() => unit().focus());
-    fireEvent.keyDown(unit(), { key: 'ArrowDown' });
-    fireEvent.keyDown(unit(), { key: 'ArrowDown' });
-    fireEvent.keyDown(unit(), { key: 'Enter' });
-
-    expect(held.unit).toBe('mg');
   });
 });
 

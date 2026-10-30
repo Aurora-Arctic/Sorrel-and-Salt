@@ -13,21 +13,22 @@ box's state.
 
 `FacetComboboxProps` (`types.ts`):
 
-| Prop               | What it is                                                                                                                                        |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `label`            | The field's name above the box and the box's accessible name, in title case: "Elements"                                                           |
-| `name`             | The parameter each chosen value is sent under, once per value                                                                                     |
-| `choices`          | The `ComboboxChoice`s on offer: `label`, and `count` where it is known; `icon` and `qualifier` draw as the multi-select draws them                |
-| `values`           | The values chosen, in the order chosen                                                                                                            |
-| `onChange`         | Called with the whole new list after a value is added or taken out                                                                                |
-| `typeahead`        | Type to narrow the list: the typed box in place of the select-style one. Also used whenever a choice has a `group`. Off unless set                |
-| `placeholder`      | A short action shown, muted, while a choice is left: "Add an element"                                                                             |
-| `emptyPlaceholder` | Shown instead of the placeholder when nothing is chosen and every value is left out (all counts 0): defaults to "No" and the label, "No Elements" |
-| `removeNoun`       | Names a chip's x "Remove {Noun}: {Value}", "Remove Element: Water"                                                                                |
-| `loading`          | The counts are still being read: each chip holds a placeholder where its count will be                                                            |
-| `hideZeros`        | Defaults to true: a value with a count of 0 is left out of the list; a chosen value keeps its chip whatever its count                             |
-| `hint`             | The field's `InfoTip` text, if any                                                                                                                |
-| `className`        | Added to the field's wrapper                                                                                                                      |
+| Prop               | What it is                                                                                                                                                           |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `label`            | The field's name above the box and the box's accessible name, in title case: "Elements"                                                                              |
+| `name`             | The parameter each chosen value is sent under, once per value                                                                                                        |
+| `choices`          | The `ComboboxChoice`s on offer: `label`, and `count` where it is known; `icon` and `qualifier` draw as the multi-select draws them                                   |
+| `values`           | The values chosen, in the order chosen                                                                                                                               |
+| `onChange`         | Called with the whole new list after a value is added or taken out                                                                                                   |
+| `typeahead`        | Type to narrow the list: the typed box in place of the select-style one. Also used whenever a choice has a `group`. Off unless set                                   |
+| `placeholder`      | A short action shown, muted, while a choice is left: "Add an element"                                                                                                |
+| `emptyPlaceholder` | Shown instead of the placeholder when nothing is chosen and every value is left out (all counts 0): defaults to "No" and the label, "No Elements"                    |
+| `removeNoun`       | Names a chip's x "Remove {Noun}: {Value}", "Remove Element: Water"                                                                                                   |
+| `loading`          | The counts are still being read: each chip holds a placeholder where its count will be                                                                               |
+| `counts`           | Whether the values carry counts; on unless `false`. A field without counts (In My Covens, M12.55) draws no count and no loading placeholder, whatever `loading` says |
+| `hideZeros`        | Defaults to true: a value with a count of 0 is left out of the list; a chosen value keeps its chip whatever its count                                                |
+| `hint`             | The field's `InfoTip` text, if any                                                                                                                                   |
+| `className`        | Added to the field's wrapper                                                                                                                                         |
 
 ## Contracts
 
@@ -59,7 +60,8 @@ box's state.
   component draws the typed `Combobox` instead (`typeahead.tsx`), the way the
   Forms and Deities filters were drawn in the workshop: typing keeps the rows
   whose label contains the text, a chosen value is not listed again, a pick
-  clears the text, and Backspace on empty text takes the last chip off. Chips,
+  clears the text and leaves the list open for the next, the focus in the text (M12.54;
+  Escape, Tab or a press outside closes it), and Backspace on empty text takes the last chip off. Chips,
   counts, icons, the loading placeholder, `removeNoun`, `hideZeros` (a zero
   value left out) and the hidden inputs all
   behave as in the default form. A row's `group` is its heading in the list,
@@ -68,6 +70,8 @@ box's state.
   (`matchesLabelOrGroup`, `Combobox/match.ts`, shared with the category picker), so
   "irish" lists every Irish deity. Before
   hydration the native select makes each group an `optgroup`.
+  The list toggle and the count it announces say "suggestions" ("Show Forms suggestions"),
+  as every `Combobox` does by default, since a plural label read twice would say "Forms formss".
 - **`count`, `disabled` and `note` on a choice** are drawn by both forms; the
   plain `Combobox` ignores them.
 
@@ -82,14 +86,10 @@ Tokens only.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/FacetCombobox/index.stories.tsx),
-under "Admin / Facet Combobox": `NothingChosen`, its list open with every count;
-`SomeChosen`, two elements chosen, the list open on the rest, the zero value
-left out; `CountsLoading`, chips holding the placeholder; `ChosenWithNothingBehindIt`,
-a chosen value with a count of 0, still removable; `WithFormIcons`, icons on
-rows and chips; `Narrow`, the box in a 16rem column, where chips stack; `Typeahead`, the Forms
-filter with typing; and `Grouped`, the Deities filter with tradition headings.
+under "Forms / Facet Combobox": `States`, with a control that chooses Default (its list open with every count), Some Chosen (two elements chosen, the list open on the rest, the zero value left out), Counts Loading (chips holding the placeholder), Chosen With Nothing Behind It (a chosen value with a count of 0, still removable), All Zero, Zeros Listed, With Form Icons (icons on rows and chips), Grouped (the Deities filter with tradition headings), With Hint, Custom Empty Text, Narrow (the box in a 16rem column, where chips stack), Typeahead (the Forms
+filter with typing) and Without Counts (`counts={false}`, as In My Covens draws it).
 Story ids use a double dash between the group and the name, for example
-`admin--facet-combobox--some-chosen`.
+`forms-facet-combobox--states`.
 
 ## Testing
 

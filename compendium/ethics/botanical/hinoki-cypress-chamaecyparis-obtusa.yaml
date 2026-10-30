@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/hinoki-cypress-chamaecyparis-obtusa
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species
+    value: Near Threatened (IUCN 3.1)
+    listedAs: Chamaecyparis obtusa
+    scope: global
+    nameBasis: stated
+    source: wikipedia-chamaecyparis-obtusa
+    locator: Infobox, Conservation status

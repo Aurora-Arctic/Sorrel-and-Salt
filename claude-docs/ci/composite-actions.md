@@ -28,6 +28,9 @@ would need no edit at any call site; nothing passes it today.
     the image under a tag hashed from `Dockerfile.node` and
     `package-lock.json`; an edit to this action does not, because every caller
     resolves it at `@main`.
+- **`run-check`** — the steps every `checks.yml` job but `audit` shares: the command
+  under `set -o pipefail` teeing to `/app/output.log`, the summarising script,
+  then `job-summary` and `pr-comment`.
 - **`job-summary`** — a pass/fail `$GITHUB_STEP_SUMMARY` callout, with a tailed
   log excerpt on failure.
 - **`pr-comment`** — upserts one marked comment per check (`<!-- ci-<slug> -->`),
@@ -83,8 +86,8 @@ would need no edit at any call site; nothing passes it today.
   has no checkout to resolve a local action from.
 
 **What cannot become a composite action**, so it is not re-proposed: the
-`container:` / `defaults:` preamble `checks.yml`, `vitest.yml` and
-`playwright.yml` share, and the `services: postgres:` block `vitest.yml` and
+`container:` / `defaults:` preamble every `checks.yml` job,
+`vitest.yml` and `playwright.yml` share, and the `services: postgres:` block `vitest.yml` and
 `playwright.yml` share. Those are job-level keys, evaluated before the first
 step runs; a composite contributes steps and nothing above them, and the only
 job-level `uses:` is a reusable workflow, which is a whole job rather than a

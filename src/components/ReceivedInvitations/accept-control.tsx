@@ -10,13 +10,9 @@ import BusyButton from '../BusyButton';
 import { useClickFeedback } from '../ClickFeedback';
 import type { AcceptControlProps } from './types';
 
-// A received invitation's Accept on the account page (M10.32). It sends
-// `acceptInvitationById`, which checks that the invitation is addressed to
-// this verified account and decides; the landing is the coven itself, which
-// says the success, or the refusal is said in a callout under the button
-// (M12.31), floating, so a phone card does not wrap round it. It is the by-id
-// twin of InvitationAcceptance's link accept
-// (claude-docs/components/received-invitations.md).
+// A received invitation's Accept: it sends `acceptInvitationById`, which checks the address match
+// and decides. The landing is the coven; a refusal shows in a floating callout so a phone card does
+// not wrap round it (claude-docs/components/received-invitations.md).
 
 const AcceptInvitationByIdDocument = graphql(`
   mutation AcceptInvitationById($id: ID!) {
@@ -59,7 +55,7 @@ const AcceptControl = ({
     <>
       <BusyButton
         ref={feedback.anchorRef}
-        className="btn btn--small btn--solid"
+        className="btn btn--solid btn--small"
         aria-label={`Accept the invitation to ${covenName}`}
         aria-disabled={sending || undefined}
         busy={sending}
@@ -68,6 +64,7 @@ const AcceptControl = ({
       >
         Accept
       </BusyButton>
+      {/* oxlint-disable-next-line react/refs -- the callback ref and handlers come from a hook and are only handed to the DOM, never read while rendering */}
       {feedback.feedback}
     </>
   );

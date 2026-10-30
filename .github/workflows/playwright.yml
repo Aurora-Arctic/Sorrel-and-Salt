@@ -27,12 +27,11 @@ on:
         default: false
       should-run:
         description: >-
-          Set false to skip the actual e2e run while still completing this job under
-          its normal name. pr-gate passes this from its path-filter output instead of
-          putting an `if:` on the calling job — a job-level `if:` makes GitHub report
-          a differently-named, bare check run ("playwright" instead of
-          "playwright / playwright") when skipped, which never satisfies the
-          "playwright / playwright" required status check and leaves the PR stuck.
+          Set false to skip the job before it starts, so a run the path filter
+          rules out never pulls its container. pr-gate passes this from its
+          path-filter output instead of putting an `if:` on the calling job, which
+          would report one bare "playwright" check in place of "playwright / playwright"
+          (claude-docs/design-decisions/mb.39-job-level-if-and-check-names.md).
           Defaults true so a caller that does no path filtering is unaffected.
         required: false
         type: boolean
@@ -54,6 +53,12 @@ on:
         required: false
         type: string
         default: e2e
+    outputs:
+      outcome:
+        description: >-
+          The run step's outcome. The story suite's job reports success whatever
+          its stories did (continue-on-error), so a caller reads this instead.
+        value: ${{ jobs.playwright.outputs.outcome }}
 
 permissions:
   contents: read
@@ -63,7 +68,10 @@ permissions:
 
 jobs:
   playwright:
+    if: inputs.should-run
     runs-on: ubuntu-26.04
+    outputs:
+      outcome: ${{ steps.run.outcome }}
     container:
       image: ${{ inputs.image }}
       credentials:
@@ -133,7 +141,6 @@ jobs:
       E2E_COVERAGE: '1'
     steps:
       - name: Checkout into /app
-        if: inputs.should-run
         uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
 
       # The e2e build's cache, restored here and saved only under build-only.
@@ -148,7 +155,6 @@ jobs:
       # no other run can read, uploaded after the tests (MB.235).
       - name: Restore Next.js e2e build cache
         id: e2e-cache
-        if: inputs.should-run
         uses: actions/cache/restore@v6
         with:
           path: /app/.next-e2e/cache
@@ -169,7 +175,6 @@ jobs:
       # It sits on the step because a job that calls a workflow cannot carry it.
       - name: Run Playwright tests
         id: run
-        if: inputs.should-run
         continue-on-error: ${{ inputs.suite == 'stories' }}
         env:
           E2E_ARGS: ${{ inputs.build-only && '--grep-invert . --pass-with-no-tests' || '' }}
@@ -188,7 +193,7 @@ jobs:
       # hand on. The key is the restore step's, so both name the same entry,
       # and an exact hit has nothing new to save.
       - name: Save Next.js e2e build cache
-        if: inputs.should-run && inputs.build-only && steps.e2e-cache.outputs.cache-hit != 'true'
+        if: inputs.build-only && steps.e2e-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v6
         with:
           path: /app/.next-e2e/cache
@@ -207,18 +212,19 @@ jobs:
             /app/.reports/test-results/
           retention-days: 7
 
-      # Not failure-only: a coverage report on every run that ran a spec.
+      # Not failure-only: a coverage report on every run that ran a spec. Named
+      # per suite for the same reason as the report above.
       - name: Upload coverage artifact
-        if: always() && inputs.should-run && !inputs.build-only && inputs.suite != 'stories'
+        if: always() && !inputs.build-only
         uses: actions/upload-artifact@v7
         with:
-          name: playwright-coverage
+          name: ${{ inputs.suite == 'stories' && 'playwright-coverage-stories' || 'playwright-coverage' }}
           path: /app/.reports/coverage-e2e/
           retention-days: 7
 
       - name: Summarize output
         id: summarize
-        if: always() && inputs.should-run
+        if: always()
         env:
           SUITE: ${{ inputs.suite }}
         run: |
@@ -229,7 +235,7 @@ jobs:
           fi
 
       - name: Write job summary
-        if: always() && inputs.should-run
+        if: always()
         uses: ./.github/actions/job-summary
         with:
           check-name: ${{ inputs.suite == 'stories' && 'Stories' || 'Playwright E2E' }}
@@ -240,7 +246,7 @@ jobs:
 
       # .github/actions/pr-comment has the modes.
       - name: Comment on PR
-        if: ${{ !cancelled() && inputs.pr-number && inputs.should-run }}
+        if: ${{ !cancelled() && inputs.pr-number }}
         uses: ./.github/actions/pr-comment
         with:
           check-name: ${{ inputs.suite == 'stories' && 'Stories' || 'Playwright E2E' }}

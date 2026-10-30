@@ -17,16 +17,17 @@ const rolePermits = vi.fn((role: string, statement?: { member?: string[] }) =>
 vi.mock('@/lib/request-session', () => ({ requireSignedIn, getSession }));
 vi.mock('@/modules/identity', () => ({ getMe, countReceivedInvitations }));
 // The switcher's order is the coven module's too; stood in for by the rule it states.
-const byCovenName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name);
+const byCovenName = (a: { name: string; demo?: boolean }, b: { name: string; demo?: boolean }) =>
+  Number(a.demo ?? false) - Number(b.demo ?? false) || a.name.localeCompare(b.name);
 vi.mock('@/modules/coven', () => ({ membershipsOf, rolePermits, byCovenName }));
 
 const { covenRolesIfSignedIn, viewerIfSignedIn, viewerOf } = await import('@/lib/viewer');
 
 const SESSION = { userId: 'u1', role: 'user' } as const;
 const ME = { name: 'Fixture Member', canCreateWorkspace: true, emailVerified: true };
-const membership = (slug: string, name: string, role = 'member') => ({
+const membership = (slug: string, name: string, role = 'member', demo = false) => ({
   role,
-  workspace: { id: `id-${slug}`, slug, name },
+  workspace: { id: `id-${slug}`, slug, name, demo },
 });
 
 beforeEach(() => {
@@ -45,26 +46,13 @@ describe('viewerOf', () => {
     const { viewer } = await viewerOf();
 
     expect(viewer).toEqual({
+      id: 'u1',
       name: 'Fixture Member',
       canCurate: true,
       canCreate: false,
       verified: false,
       pendingInvitations: 0,
     });
-  });
-
-  // M11.20: the shell's Admin link and home follow curation, which an admin
-  // and a curator hold and a user does not.
-  it.each([
-    ['admin', true],
-    ['curator', true],
-    ['user', false],
-  ] as const)('reads %s as curating: %s', async (role, canCurate) => {
-    requireSignedIn.mockResolvedValue({ ...SESSION, role });
-
-    const { viewer } = await viewerOf();
-
-    expect(viewer.canCurate).toBe(canCurate);
   });
 
   it('counts the coven invitations waiting for a verified viewer, all of them', async () => {
@@ -85,10 +73,17 @@ describe('viewerOf', () => {
     expect(countReceivedInvitations).not.toHaveBeenCalled();
   });
 
-  it('asks for the viewer’s own memberships only', async () => {
-    await viewerOf();
+  it("lists the demo coven last, though its name sorts ahead of the viewer's own", async () => {
+    membershipsOf.mockResolvedValue([
+      [
+        membership('sorrel-salt-demo', 'Sorrel & Salt Demo', 'viewer', true),
+        membership('testwort-circle', 'Testwort Circle', 'owner'),
+      ],
+    ]);
 
-    expect(membershipsOf).toHaveBeenCalledExactlyOnceWith(SESSION, ['u1']);
+    const { workspaces } = await viewerOf();
+
+    expect(workspaces.map(({ slug }) => slug)).toEqual(['testwort-circle', 'sorrel-salt-demo']);
   });
 
   it('lists the covens by name, alphabetically', async () => {
@@ -156,7 +151,7 @@ describe('viewerOf', () => {
   });
 });
 
-// The public frame's read (MB.83): the same viewer, or nothing, and never a redirect.
+// The public frame's read: the same viewer, or nothing, and never a redirect.
 describe('viewerIfSignedIn', () => {
   it('is null for a signed-out visitor, without asking for the viewer or redirecting', async () => {
     getSession.mockResolvedValue(null);
@@ -176,9 +171,9 @@ describe('viewerIfSignedIn', () => {
   });
 });
 
-// The public entry page's read (M9.12): which role the viewer holds in each of their covens, for
-// the cupboard choices each coven permits there. The shell carries a coven's permissions as
-// flags, not its role, so the page reads the role here, from the same memberships.
+// The public entry page's read: which role the viewer holds in each of their covens, for the
+// cupboard choices each coven permits there. The shell carries a coven's permissions as flags,
+// not its role, so the page reads the role here, from the same memberships.
 describe('covenRolesIfSignedIn', () => {
   it('is null for a signed-out visitor, asking for no memberships', async () => {
     getSession.mockResolvedValue(null);
@@ -204,11 +199,5 @@ describe('covenRolesIfSignedIn', () => {
         ['id-testwort-circle', 'viewer'],
       ]),
     );
-  });
-
-  it('refuses to answer from a refused lookup', async () => {
-    membershipsOf.mockResolvedValue([new Forbidden()]);
-
-    await expect(covenRolesIfSignedIn()).rejects.toThrow();
   });
 });

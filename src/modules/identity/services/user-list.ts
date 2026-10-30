@@ -7,7 +7,7 @@ import type { Session } from '../../../lib/session';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import type { UserFilter, UserRow } from '../types';
 
-// The admin user list's reads (MB.52), and its count (MB.115). A read, so M5.7's mutation sweep
+// The admin user list's reads, and its count. A read, so the mutation sweep
 // does not reach it: the check is here, by direct call, and the page confers
 // no workspace access (claude-docs/auth/admin-users.md, "The user list").
 
@@ -31,7 +31,7 @@ export async function listUsers(
 /**
  * How many users `listUsers` pages under `filter`, and how many come before
  * `start`, a page's first row, none on an empty page: the user list's
- * "Page X of Y" (MB.115).
+ * "Page X of Y".
  *
  * @throws {Forbidden} the session's role is not `admin`.
  */
@@ -50,10 +50,8 @@ function trimmedFilter({ query, awaitingApproval, role }: UserFilter): UserFilte
 }
 
 /**
- * The providers linked to each user named, sorted, one answer per id in the
- * order given: a DataLoader's batch, and the page's. A site admin's alone, a
- * user's own row included: every slot of anyone else's batch is a `Forbidden`.
- * One query whatever the batch size.
+ * The providers linked to each user named, sorted: a DataLoader's batch. A site admin's alone, their own row included:
+ * every slot of anyone else's batch is a `Forbidden`.
  */
 export async function providersOf(
   session: Session,

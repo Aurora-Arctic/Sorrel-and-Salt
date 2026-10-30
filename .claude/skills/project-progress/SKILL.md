@@ -10,11 +10,11 @@ description: Use when the user asks how far along the project is (e.g. "project 
 
 Show a summary of completed, remaining and total **tasks** and **hours**, sized for a quick read. It runs on local data. The GitHub issues are the source of truth for status, but the default mode leaves them alone so the figures need no board call; verify mode reads them in one.
 
-| Figure | Local source                                                                                                                                                                                                                              |
-| ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Hours  | The `· Nh` on each `**ID — title**` heading in the breakdown — `claude-docs/TASKS.md` and `claude-docs/tasks/`, the files `scripts/tasks-md.mjs` names. A `**RETIRED …**` heading is excluded from every figure.                          |
-| Done   | Merged into `origin/staging`, taken from the merge commit's `feature/<id>-…`/`hotfix/<id>-…` branch name, an id that opens a subject (`M2.4/M2.5/M0.27 — …`), or a trailing `(MB.13)`, plus `tally.mjs`'s list of tasks done outside git. |
-| Total  | Every non-retired id in the breakdown, plus any merged id that has no heading, counted at 0h.                                                                                                                                             |
+| Figure | Local source                                                                                                                                                                                                                                                                                                                                        |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Hours  | The `· Nh` on each `**ID — title**` heading in the breakdown — `claude-docs/TASKS.md` and `claude-docs/tasks/`, the files `scripts/tasks-md.mjs` names. A `**RETIRED …**` heading is excluded from every figure.                                                                                                                                    |
+| Done   | Merged into `origin/staging`, taken from the merge commit's `feature/<id>-…`/`hotfix/<id>-…` branch name, an id that opens a subject (`M2.4/M2.5/M0.27 — …`), or a single trailing `(MB.13)` whose id has a heading in the breakdown (a list of ids, or a code that is no task, does not count), plus `tally.mjs`'s list of tasks done outside git. |
+| Total  | Every non-retired id in the breakdown, plus any merged id that has no heading, counted at 0h.                                                                                                                                                                                                                                                       |
 
 Both sources are read at the same ref — `git show origin/staging:<file>` for each file `TASKS_FILES` names, skipping one the ref lacks, so a ref from before MB.143's split still tallies — and an unmerged edit to the breakdown on the current branch does not skew the figures.
 
@@ -38,5 +38,5 @@ Run this only when the user asks to check against the board ("verify", "check th
 ## Notes
 
 - Everything is read-only: the skill changes no files, branches or issues. The one exception is an edit to `tally.mjs` that the user approves in verify mode. `create-pr` ends the body of each PR it opens or updates with `tally.mjs`'s output; that write is `create-pr`'s, not this skill's.
-- The open-branch count is any `feature/*`/`hotfix/*` branch, local or pushed, whose id has not merged — even one with no commits yet. It measures work under way, not open PRs.
+- The open-branch count is any `feature/*`/`hotfix/*` branch, local or pushed, whose id has not merged — even one with no commits yet. A retired id is excluded. It measures work under way, not open PRs.
 - A task done in a PR whose branch and subject both omit its id will read as remaining. Verify mode catches it, and the fix is the done-outside-git list, not a looser regex. An id mentioned mid-sentence is a reference, not a completion.

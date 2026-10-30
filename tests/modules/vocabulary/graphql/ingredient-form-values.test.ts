@@ -1,5 +1,6 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import postgres from 'postgres';
+import type postgres from 'postgres';
+import { useTestDatabase } from '../../../support/db/database';
 import { createLoaders } from '@/graphql/loaders';
 import type { Session } from '@/lib/session';
 import { formSlug } from '@/lib/slugify';
@@ -14,17 +15,9 @@ import type {
   FormValueNode,
 } from './types';
 
-// `ingredientFormValues`: the curated form vocabulary as `IngredientFormValue`
-// — named apart from the `IngredientForm` component — a page at a time, each
-// with its group, answered to a signed-out visitor (MB.80); the groups it is
-// filed under; and M5.6a's three admin writes. This file holds the transport's
-// half (claude-docs/testing/layer-ownership.md): a page, its groups in one
-// read, its count, the filters reaching the read, the loaders cleared by a
-// write, and per write one refusal per error code, read as the browser reads
-// it. Which roles are refused, what a filter matches and every collision are
-// services/ingredient-form-values.test.ts's; a signed-out caller at every
-// field refused, and a non-admin at the `admin` scope, are
-// tests/db/graphql-query-scopes.test.ts's.
+// `ingredientFormValues` over the wire: the curated form vocabulary as `IngredientFormValue` (named apart from the `IngredientForm` component), each with its group, readable signed out, and the three admin writes.
+// This is the transport's half (claude-docs/testing/layer-ownership.md): a page, its groups in one read, its count, the filters, the loaders cleared by a write, and one refusal per error code per write.
+// Roles, filter matching and collisions are services/ingredient-form-values.test.ts's; signed-out and non-admin scope refusals are tests/db/graphql-query-scopes.test.ts's.
 
 // The reads a page makes, counted at the repository: one for the groups of a
 // whole page, and never a role lookup.
@@ -38,9 +31,7 @@ vi.mock('@/db/repository', async (importOriginal) => {
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string);
-});
+useTestDatabase((client) => (sql = client));
 
 beforeEach(() => {
   repository.findManyByIds.mockClear();

@@ -1,8 +1,5 @@
-// One field's shell on the form primitives (claude-docs/styling.md, "Form
-// fields"): label, required mark, hint tip, note, control and error, wired to
-// each other by id. The shell knows no form library, so a react-hook-form
-// field (`TextField`, `SelectField`) and a plain-state form's own control
-// share it rather than each writing the block by hand
+// One field's shell: label, required mark, hint tip, note, control and error, wired by id. It knows
+// no form library, so react-hook-form fields and plain-state controls share it
 // (claude-docs/components/field.md).
 
 export { FieldError, FieldShell, Required } from './shell';
@@ -11,6 +8,7 @@ export { TextField } from './text-field';
 export { SelectField } from './select-field';
 export { RadioGroupField } from './radio-group-field';
 export { SwitchField } from './switch-field';
+export { VisibilitySwitch } from './visibility-switch';
 export { SearchField } from './search-field';
 export { FilterSelectField } from './filter-select-field';
 export { errorShown, useField } from './use-field';

@@ -23,7 +23,19 @@ full date), which is the M12.43 test for a real tip.
 
 On the coven card the card's stretched name link covers the card, so the line sits above it
 (`position: relative; z-index: 1`); without that, hover never reached the line and only
-focus worked.
+focus worked. On a spell card the foot also passes the pointer through to the title's link
+(`pointer-events: none`, inherited), so the card gives the line `pointer-events: auto` back
+for the same reason (spell-card.md, "The link").
+
+The button is at least 24px tall to press (WCAG 2.5.8, Target Size (Minimum); MB.272, the
+owner's call). One line of the card's small text is 21.4px, and WCAG's spacing exception for a
+smaller target does not apply on the card, where the button lies on the stretched link and just
+above the foot's buttons. `padding-block` grows the button by half the shortfall (`$icon-size`,
+24px, less one line height, `1lh`) above and below, and an equal negative `margin-block` takes it
+back out of the line, so the line, the card and its foot do not move (measured in Chromium: the
+card's height and the foot row's place are the same to the hundredth of a pixel before and after).
+Not a `min-block-size`, which would make the line taller and push the foot down. The same rule
+holds wherever the line is used. `tests/e2e/card-click.spec.ts` measures it on a coven card.
 
 ## How the time works
 
@@ -40,7 +52,21 @@ ahead of the reader's clock, it reads "just now". An unparseable `at` draws noth
 - `IngredientEntry` ([`ingredient-entry.md`](ingredient-entry.md)): above the names, in the
   head. Quick Look (the details modal) draws it in the same place through the Modal's
   `aboveName` slot ([`modal.md`](modal.md)); the spacing is one shared rule in `index.scss`.
+- `SpellCard`'s `lastEdit` prop ([`spell-card.md`](spell-card.md)): in the card's foot, under
+  the categories (M10.11).
 
 The caller works out which edit is the latest; this component only shows it. The ink is
-`$text-placeholder`, the faintest existing text token that passes 4.5:1 on the card in both
-themes.
+`$last-edit-ink` (M12.56): in dark the placeholder mix (the muted ink 85% into the card), 7.37:1;
+in light the muted ink itself, 5.99:1 on the page and higher on the card. The placeholder mix was
+4.22:1 on the page in light, under 4.5:1, so light takes the muted ink; dark keeps its colour
+unchanged. `tests/scss/tokens.test.ts` holds both on the card and the page.
+
+## The compact line and its tip
+
+The compact line reads "Edited 3 days ago" once the page has hydrated and "Edited 1 Sep 2026" before it, inside a `<time>`. The full sentence is the tip. The relative phrase depends on the reader's clock, so it is drawn only after hydration (`useHydrated`), which keeps the server's HTML and the first client render in agreement.
+
+The text is a button, so a keyboard reaches the tip. It follows InfoTip's pattern rather than IconTip's: the tip holds what the line leaves out, so the button lists it in `aria-describedby` and the sentence stays in the page while the tip is closed.
+
+## Stories
+
+`src/components/LastEdit/index.stories.tsx`, titled "Ingredients / Last Edit": `States`, a grid of Just Now, Hours Ago, Days Ago, Months Ago, Years Ago, Unnamed (an editor the viewer cannot name, so the time stays and the name goes), Clock In The Future, and Invalid Date: Nothing Drawn.

@@ -3,12 +3,8 @@ import { list, oneOf, single, someOf, trimmed } from './search-params';
 import type { ListHrefParams } from './types';
 import type { Route } from 'next';
 
-// A search's parameters as one typed table (M8.13). Each entry holds the name
-// the address carries, how that is read, how a value is written back, and the
-// GraphQL variable it becomes. The page's read, every link, the pager and the
-// filter form all go through the table's four functions, so a new filter is
-// one new entry and none of those change. Before this, each of them listed
-// the parameters by hand and a filter was added in five places.
+// A search's parameters as one typed table: each entry holds the name the address carries, how it is read and written back, and the
+// GraphQL variable it becomes. The read, links, pager and filter form all go through its four functions, so a new filter is one entry.
 
 /** Slug to id, per lookup name: what a page reads once to turn the address's slugs into ids. */
 export type SearchLookups = Readonly<Record<string, ReadonlyMap<string, string>>>;
@@ -77,13 +73,8 @@ export const listParam = <T extends string>(
 });
 
 /**
- * Any number of free-text values, written as repeated parameters,
- * `?forms=Oil&forms=Tincture`, each trimmed, with blanks and repeats dropped
- * (a repeat folds case, as the compendium read does, so `oil` after `Oil` is
- * the same form); empty is no filter. For a vocabulary that is only an
- * autofill: unlike `listParam` it holds no fixed set to check against, so a
- * value nobody has curated stays valid. Repeated rather than comma-joined,
- * since the text may hold a comma.
+ * Any number of free-text values as repeated parameters (`?forms=Oil&forms=Tincture`), trimmed, blanks and case-folded repeats dropped.
+ * For an autofill vocabulary, so unlike `listParam` an uncurated value stays valid. Repeated, not comma-joined, as text may hold a comma.
  */
 export const textListParam = (name: string, variable: string): SearchParam<string[]> => ({
   name,
@@ -102,13 +93,8 @@ export const textListParam = (name: string, variable: string): SearchParam<strin
 });
 
 /**
- * Any number of slugs, written as repeated parameters, `?categories=a&categories=b`,
- * each trimmed and a repeat dropped; empty is no filter. The variable is the
- * ids of the slugs the page's lookup `lookupKey` holds: a slug it does not
- * hold, such as one a rename has since changed, is dropped and the rest still
- * filter, as `listParam` drops a hand-edited value. Why slugs: the address
- * is read and shared, and a slug survives where an id would mean nothing
- * to the reader.
+ * Any number of slugs as repeated parameters (`?categories=a&categories=b`), trimmed, repeats dropped. The variable is the ids the
+ * page's `lookupKey` lookup holds; a slug it does not hold (a renamed one) is dropped and the rest still filter. Slugs, as an id means nothing to a reader.
  */
 export const slugListParam = (
   name: string,

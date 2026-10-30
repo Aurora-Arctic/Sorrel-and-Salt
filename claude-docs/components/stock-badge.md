@@ -75,18 +75,18 @@ jar states that both are tested against, so a change to one copy alone fails.
 
 ## Shared words
 
-The badge's words are written once, in `stock-words.ts` beside it: `stockName(state)` ("Low Stock" or "Out of Stock"), `stockTip(state, threshold, unit)` ("Low Stock at 10 g or less", or "Out of Stock") and `withUnit(amount, unit)` ("6 g", or "6" with no unit). They are plain strings, not a component, so a server component can call them. `StockBadge` and [`JarShelf`](jar-shelf.md) both use them: the shelf tells a Low or Out jar by the jar's own drawing and a button on its amount (the owner's call, 2026-10-21), with the same name, tip and description as the badge, and so cannot drift from it. The badge is still the card's jar lines and the Edit Stock dialog's, now unboxed and in the jars' colours ("Styling" below).
+The badge's words are written once, in `stock-words.ts` beside it: `stockName(state)` ("Low Stock" or "Out of Stock"), `stockTip(state, threshold, unit)` ("Low Stock at 10 g or less", or "Out of Stock") and `withUnit(amount, unit)` ("6 g", or "6" with no unit) and `amountText(quantity, unit)` (the jar's amount, `withUnit`'s words or **Unmeasured** when no quantity is recorded, used by the card's jar lines, the Edit Stock dialog's list and the shelf; MB.121 merged their three copies into it). They are plain strings, not a component, so a server component can call them. `StockBadge` and [`JarShelf`](jar-shelf.md) both use them: the shelf tells a Low or Out jar by the jar's own drawing and a button on its amount (the owner's call, 2026-10-21), with the same tip and description as the badge, and so cannot drift from it. The drawing itself is exported as `StockIcon`, which the shelf puts before a Low or Out amount (MB.121, proposal P1). Both draw that button through `StockTip`, exported beside `StockBadge`: an `IconTip` round a button that takes its name, class and face from its caller, with Low's statement written once out of sight as its description (MB.121 merged the shelf's copy into it). The badge is still the card's jar lines and the Edit Stock dialog's, now unboxed and in the jars' colours ("Styling" below).
 
 ## Styling
 
-No box (the owner's call, 2026-10-21): no border, tint or padding. The badge is its drawing alone, drawn in the colour of the matching jar on the entry page's shelf ([`jar-shelf.md`](jar-shelf.md)): Low in the warning amber (`$warning`) and Out of Stock in the Out of Stock palette's ink (`badge-token('out-of-stock', 'fg')`). It is a button reset to bare (`button-reset(help)`, so the help cursor), with the app's normal focus ring. It is not a `.badge`: its own class, `.stock-badge`, is all that styles it, so neither the badge palettes nor the card's badge sizes reach it, and the card no longer zeroes its padding. Safety stays the only boxed, alarming badge ([`styling.md`](../styling.md), "Badge palettes"). Meaning never rests on colour: the two drawings differ, the slashed ring in place of the double chevron. The drawing sits centred in the same square as before, `$stock-badge-size` (24px), so the jar lines' inset still centres it on the actions' icon below ([`jar-lines.md`](jar-lines.md)).
+No box (the owner's call, 2026-10-21): no border, tint or padding. The badge is its drawing alone, drawn in the colour of the matching jar on the entry page's shelf ([`jar-shelf.md`](jar-shelf.md)): Low in `$stock-low-ink` (the warning amber, `$warning`) and Out of Stock in `$stock-out-ink` (the Out of Stock palette's ink, `badge-token('out-of-stock', 'fg')`). The two tokens are the one home of which colour means Low and which Out, read by this badge and by the jar shelf alike (MB.121). It is a button reset to bare (`button-reset(help)`, so the help cursor), with the app's normal focus ring. It is not a `.badge`: its own class, `.stock-badge`, is all that styles it, so neither the badge palettes nor the card's badge sizes reach it, and the card no longer zeroes its padding. Safety stays the only boxed, alarming badge ([`styling.md`](../styling.md), "Badge palettes"). Meaning never rests on colour: the two drawings differ, the slashed ring in place of the double chevron. The drawing sits centred in the same square as before, `$stock-badge-size` (24px), so the jar lines' inset still centres it on the actions' icon below ([`jar-lines.md`](jar-lines.md)).
 
 The inks were checked as text on both surfaces of both themes, and clear 4.5:1: Low 7.55:1 on the dark card and 8.32:1 on the dark page, 5.44:1 on the light card and 4.89:1 on the light page; Out 6.40:1 and 7.04:1 dark, 7.45:1 and 6.70:1 light. The `out-of-stock` palette is now the `ink` treatment, its `fg` alone (`--badge-out-of-stock-fg`, read by this badge and by the jar shelf), and has no `.badge--out-of-stock` class; the `low-stock` palette is unchanged, since the tip bubble and the Compendium mark still use it ([`styling.md`](../styling.md), "Badge palettes"). Until 2026-10-21 the badge wore `.badge--low-stock` (the muted tinted palette) and `.badge--out-of-stock` (a tint of the sealing wax); until 2026-10-20 the badges carried the words ("Low · 6 g", "Out of Stock"), and Out of Stock a 2px border and a heavier weight.
 
 ## Stories
 
 [`index.stories.tsx`](../../src/components/StockBadge/index.stories.tsx), under
-`Surfaces / Stock Badge`: `Low`, `Out`, and `PhoneDark` and `PhoneLight` showing a jar line of each state at 375px.
+`Ingredients / Stock Badge`: `States`, a grid of Low, Low Without A Unit, Quantity Equal To The Threshold and Out; Stocked, No Quantity and No Threshold draw nothing.
 
 ## Testing
 
@@ -100,3 +100,21 @@ tip's words, opening on focus or after a 300ms rest, closing the moment the poin
 leaves or on Escape, and that the bubble is kept from a screen reader. The `lowStockOnly` filter is proved
 on the same jar states, one entry each, in `tests/modules/ingredients/services/workspace-ingredient-list.test.ts`
 and its count in `tests/modules/ingredients/services/ingredient-facets.test.ts`.
+
+## Where the badge sits and what it draws
+
+The badge sits in the jar-line slot the ingredient card leaves. A consumer renders it every time and checks nothing: with nothing to flag it renders nothing. Each state is its drawing alone in a small square, so neither rests on colour. Low is a double chevron and Out of Stock is a slashed ring. Neither is boxed. The drawing takes the colour of the matching jar on the entry's shelf: the warning amber for Low and Out of Stock's red. Safety stays the only boxed, alarming badge (`styling.md`). The drawing is exported so the shelf puts the same symbol beside a Low or Out amount and the two places never draw the states differently.
+
+Styling adds no border, tint or padding. Both inks reach 4.5:1 on the card and the page in both themes. The square is 24px, so the jar lines keep the inset that centres it on the actions' icon below.
+
+## Words, names and tips
+
+The words live in a button name and a tip. Both states are buttons whose only job is to open that tip, and the tips are `IconTip`'s: they open after a rest of the pointer or at once on focus, fade, close the moment the pointer leaves or on Escape, and cannot be hovered. Low's tip is one statement of the level, "Low Stock at 10 g or less", without the jar's amount, which the jar line already shows. Out of Stock's tip is its name.
+
+The name is an `aria-label` ("Low Stock" or "Out of Stock") so a screen reader has the words without opening the tip. `IconTip`'s bubble is decoration, hidden from a screen reader and mounted only while open, so Low's statement is also written once, out of sight, as the button's description. Out's description would only repeat the name.
+
+The words are in `stock-words.ts`, shared with the entry page's jar shelf, which tells Low and Out by the jar and a button on its amount. That button is `StockTip`, exported from `index.tsx` so the badge and the shelf draw one button with one name and one description. The amount writer is shared by the card's jar line, the Edit Stock dialog's list and the entry page's shelf, so the three never drift.
+
+## `stockState`
+
+A held jar with no quantity is `ok`, since there is nothing to compare. A quantity of 0 is `out` whatever the threshold. A threshold of 0 or none switches the Low Stock warning off and never means always low. The function is pure so a test can walk every row, and `tests/support/jar-states.ts` holds the shared list of jar states that both copies are tested against.

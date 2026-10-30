@@ -14,10 +14,8 @@ import { insertReference, insertReferenceLink } from '../../../support/db/insert
 import { type IngredientFixture, makeIngredient, makeVariant } from '../../../support/fixtures';
 import type { PageRequest } from '@/lib/types';
 
-// The compendium's two reads (claude-docs/db/compendium-read.md, "The compendium read"): the
-// public list, which takes no session at all, and one entry by id, which a
-// coven's member may also point at the coven's own row. The table is emptied
-// per test, so every row a result could come from is one this file wrote.
+// The compendium's two reads (claude-docs/db/compendium-read.md, "The compendium read"): the public list, which takes no session, and one entry by id, which a coven's member may also point at the coven's own row.
+// The table is emptied per test, so every row a result could come from is one this file wrote.
 
 // The list's two reads, the page and its count, wrapped so a test sees what
 // each was asked for without changing what it answers.
@@ -78,7 +76,7 @@ describe('listCompendium', () => {
     expect(queries).toEqual([undefined, undefined, undefined, undefined, 'mu']);
   });
 
-  // M5.5's to-do list of formal names to look up: the entries declared
+  // The to-do list of formal names to look up: the entries declared
   // `unknown`, with the search and the citing filter on top.
   it('narrows to one nomenclature, with the search and the to-do filter beside it', async () => {
     const book = await insertReference(sql, {}, E.id);
@@ -111,7 +109,7 @@ describe('listCompendium', () => {
     expect(await names({ nomenclature: 'botanical' })).toEqual([]);
   });
 
-  // M12.30's to-do list of entries nobody can stock yet: no live variant.
+  // The to-do list of entries nobody can stock yet: no live variant.
   // Entries are seeded with no variant, the fixture's default one left off.
   const seedFormless = (name: string, workspaceId: string | null = null) =>
     insertIngredient(
@@ -184,7 +182,7 @@ describe('listCompendium', () => {
     expect(repository.findCompendiumPage).not.toHaveBeenCalled();
   });
 
-  // M8.12: `all` is the default, so it parses to no setting and only `any`
+  // `all` is the default, so it parses to no setting and only `any`
   // reaches the read; a mode that is neither is refused rather than read as all.
   it('hands the read only categoryMode any, and refuses a mode that is neither', async () => {
     const categoryIds = ['3d6b0d1a-0000-4000-8000-000000000001'];
@@ -207,10 +205,8 @@ describe('listCompendium', () => {
   });
 });
 
-// M11.22's facets (claude-docs/design-decisions/m11.22-search-facets.md): four
-// lists, any value matching within one, and a toxic setting, the kinds ANDed.
-// What each arm matches is the repository's test; this holds what the service
-// parses and that the count agrees with the page under each.
+// The facets (claude-docs/design-decisions/m11.22-search-facets.md): four lists, any value matching within one, and a toxic setting, the kinds ANDed.
+// What each arm matches is tests/db/repository/ingredients.test.ts's; this holds what the service parses.
 describe('listCompendium, under the facets', () => {
   let hecate: string;
   let hermes: string;
@@ -270,73 +266,6 @@ describe('listCompendium, under the facets', () => {
     return listed;
   }
 
-  it('lists an entry holding any one of two values of each list, once', async () => {
-    // Why Fixture Both could have come back twice: it holds both of each pair.
-    expect(await names({ forms: ['Fixture Herb'] })).toEqual(['Fixture Both', 'Fixture Herbed']);
-    expect(await names({ forms: ['Fixture Oil'] })).toEqual(['Fixture Both', 'Fixture Oiled']);
-
-    const either = ['Fixture Both', 'Fixture Herbed', 'Fixture Oiled'];
-    expect(await names({ forms: ['fixture herb', ' FIXTURE OIL '] })).toEqual(either);
-    expect(await names({ celestialBodies: ['Fixture Sun', 'fixture moon'] })).toEqual(either);
-    expect(await names({ zodiacSigns: ['Fixture Ram', 'Fixture Bull'] })).toEqual(either);
-    expect(await names({ deityIds: [hecate, hermes] })).toEqual(['Fixture Both', 'Fixture Herbed']);
-  });
-
-  // M8.13: any listed element matches an entry holding it among others.
-  it('lists an entry holding any one of the elements, once, and ANDs them with the other kinds', async () => {
-    expect(await names({ elements: ['fire'] })).toEqual(['Fixture Both', 'Fixture Herbed']);
-    expect(await names({ elements: ['fire', 'water'] })).toEqual([
-      'Fixture Both',
-      'Fixture Herbed',
-      'Fixture Oiled',
-    ]);
-    expect(await names({ elements: ['water'], forms: ['Fixture Oil'], toxic: 'toxic' })).toEqual([
-      'Fixture Both',
-      'Fixture Oiled',
-    ]);
-    expect(await names({ elements: ['fire'], zodiacSigns: ['Fixture Bull'] })).toEqual([
-      'Fixture Both',
-    ]);
-    // A value that is no element is refused rather than matched.
-    await expect(names({ elements: ['fixture'] as never })).rejects.toThrow();
-  });
-
-  // M8.13, MB.215: a form's element counts for its entry, a retired form's does not.
-  it('lists an entry holding the element only on a live form', async () => {
-    await insertIngredient(
-      sql,
-      makeIngredient({
-        name: 'Fixture Formfire',
-        nomenclature: 'none',
-        variants: [makeVariant({ form: 'Fixture Oil', elements: ['air'] })],
-      }),
-      A.id,
-    );
-    expect(await names({ elements: ['air'] })).toEqual(['Fixture Formfire']);
-    expect(await names({ elements: ['air', 'water'] })).toEqual([
-      'Fixture Both',
-      'Fixture Formfire',
-      'Fixture Oiled',
-    ]);
-  });
-
-  it('narrows to the entries matching every kind chosen together', async () => {
-    expect(await names({ forms: ['Fixture Oil'], zodiacSigns: ['Fixture Ram'] })).toEqual([
-      'Fixture Both',
-    ]);
-    expect(await names({ deityIds: [hecate], celestialBodies: ['Fixture Moon'] })).toEqual([
-      'Fixture Both',
-    ]);
-    expect(await names({ forms: ['Fixture Herb'], toxic: 'not_toxic' })).toEqual([
-      'Fixture Herbed',
-    ]);
-  });
-
-  it('keeps an entry flagged itself or on a live form as toxic, and neither as not toxic', async () => {
-    expect(await names({ toxic: 'toxic' })).toEqual(['Fixture Both', 'Fixture Oiled']);
-    expect(await names({ toxic: 'not_toxic' })).toEqual(['Fixture Herbed', 'Fixture Retired']);
-  });
-
   it('hands the finder each list trimmed of blanks, and no filter for any, blank or empty', async () => {
     const everything = ['Fixture Both', 'Fixture Herbed', 'Fixture Oiled', 'Fixture Retired'];
     for (const filter of [
@@ -390,6 +319,10 @@ describe('listCompendium, under the facets', () => {
     const attempt = listCompendium({ toxic: 'deadly' as 'toxic' }, PAGE);
 
     await expect(attempt).rejects.toBeInstanceOf(ValidationError);
+    // An element the parser does not know is refused the same way, not matched.
+    await expect(listCompendium({ elements: ['fixture'] as never }, PAGE)).rejects.toBeInstanceOf(
+      ValidationError,
+    );
     expect(repository.findCompendiumPage).not.toHaveBeenCalled();
   });
 });
@@ -415,13 +348,6 @@ describe('countCompendium', () => {
       totalCount: 1,
       countBefore: null,
     });
-  });
-
-  it('refuses a category id that is not a uuid, before any read', async () => {
-    await expect(
-      countCompendium({ categoryIds: ['not-a-uuid'] }, undefined),
-    ).rejects.toBeInstanceOf(ValidationError);
-    expect(repository.findCompendiumCount).not.toHaveBeenCalled();
   });
 });
 

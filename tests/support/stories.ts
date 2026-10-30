@@ -2,10 +2,8 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type { Story } from './types';
 
-// The v1 user stories, parsed out of DESIGN.md §10 rather than copied: a second
-// list here would drift without a test failing. The path starts from the working
-// directory, not tests/support/paths.ts: Playwright loads its reporters as
-// CommonJS, where `import.meta` does not exist, and both runners start at the root.
+// The v1 user stories, parsed out of DESIGN.md §10 rather than copied. The path starts from the working
+// directory: Playwright loads its reporters as CommonJS, where `import.meta` does not exist.
 
 const SECTION_HEADING = /^## 10\. User stories\s*$/m;
 const NEXT_SECTION = /^## \d+\./m;
@@ -26,20 +24,6 @@ export function parseStories(design: string): Story[] {
     .map((line) => STORY_LINE.exec(line))
     .filter((match): match is RegExpExecArray => match !== null)
     .map((match) => ({ id: Number(match[1]), title: match[2] }));
-}
-
-/** "1–34, 47–57": the ids as runs, for a message that should not go stale. */
-export function describeRanges(ids: readonly number[]): string {
-  const runs: Array<[number, number]> = [];
-  for (const id of ids) {
-    const last = runs[runs.length - 1];
-    if (last && last[1] === id - 1) {
-      last[1] = id;
-    } else {
-      runs.push([id, id]);
-    }
-  }
-  return runs.map(([from, to]) => (from === to ? `${from}` : `${from}–${to}`)).join(', ');
 }
 
 export const V1_STORIES: readonly Story[] = parseStories(

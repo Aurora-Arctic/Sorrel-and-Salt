@@ -210,9 +210,10 @@ stock.
 
 - **A jar is read through a live form of a live ingredient.** M5.3's ingredient
   delete leaves the jar in place, so the repository's stock finders
-  (`src/db/repository/stock.ts`) add `readableVariantParent` to the proof's
+  (`src/db/repository/stock.ts`) add `inUseVariantParent` to the proof's
   own scope: the form must be live, and its ingredient live and in the
-  compendium or this coven. A deleted ingredient's jar is then in no read, and
+  compendium or this coven, or a retired compendium entry this coven's
+  cupboard still names. A deleted ingredient's jar is then in no read, and
   an update or delete of it answers `NotFound`. The writes read the jar first
   for this reason: the writer's by-id methods see the jar's own tombstone, not
   its ingredient's. `findStockOfIngredients` is the batch read behind
@@ -374,3 +375,14 @@ counts differs from coven to coven (CLAUDE.md rule 6).
   ingredient's live jars after the write (`findStockOfIngredients`).
   `findStockByIds` (`src/db/repository/stock.ts`) reads a coven's live jars by
   id under the same proof and readability rules as the other finders.
+
+## Stock service details
+
+`src/modules/ingredients/services/stock.ts` writes and reads a coven's jars.
+
+- **Starting a jar.** `createStock` refuses a form the coven already holds rather than topping it up, so the caller knows nothing was written; a form whose jar was deleted gets a fresh one. A new jar with a unit and no threshold gets §5's default: 3 of a count unit, 10 g or 15 ml in its own unit. The jar sits on the form asked for, whatever the coven calls its own entries: an own entry sharing a compendium entry's name takes nothing from it. A jar of a compendium form puts that entry in the coven's cupboard in the same transaction when it is not there. The lock the create takes makes the cupboard read see a concurrent create's row, and the unique index backs it. A form of a retired compendium entry takes a jar while this coven's cupboard row names the entry, and never puts it back in the cupboard; the row is read again under the lock so a remove that tombstoned it first refuses the jar. The partial unique index is the check, with no read before it, so two creates racing for one form are refused alike.
+- **Changing a jar.** A field the input leaves out keeps its value and one set to null is cleared; a new unit brings its own dimension. A jar that had no unit and gets one while its threshold is empty takes the unit's default; a threshold already set, or stated by the input, is never replaced, and a jar that already had a unit gets none. No unit is ever converted.
+- **The dialog's Save (`saveStock`).** One ingredient's jars created, changed and deleted in one transaction, each row taking the single-jar write's rules so the two paths cannot drift. `ingredientId` scopes the batch: every jar and form named must be of that ingredient and this coven, or the whole batch is refused. Every id is read before anything is written, and a jar of another coven or ingredient, a deleted one, and an id that is not one are the same refusal. Every bad row's issues come back in one `ValidationError`, their paths prefixed by list and position (`create.0.input.quantityOnHand`, `update.1.input.lowStockThreshold`, `create.2.variantId` for a form already held) so a form can place each on its row. An empty batch writes nothing and opens no transaction.
+- **Batch reads.** `stockOf` answers one array per ref in order, with one read per coven named plus a role lookup each; a coven the caller may not read gets a `Forbidden` in its slot while the rest stands. The compendium-forms batch reads a retired entry like a live one while the coven's cupboard names it, through that coven's proof as `heldBy`, which the SQL checks against the cupboard row; an entry the cupboard does not name, or an id that names nothing, gets `NotFound` in its slot. It costs one forms read per coven and one cupboard read per entry that came back with no forms, which few do.
+- **Reading a jar for a write.** A write reads the jar through its live form and ingredient first, because the writer's by-id methods know the jar's own tombstone and not its ingredient's, and an ingredient delete leaves the jar beside it.
+- **Spell measure.** `liveStockOfForms` reads the live jars of many forms in one read for the grimoire save; the caller has checked the proof, and every role that writes a spell also reads stock (`src/modules/coven/services/access-control.ts`).

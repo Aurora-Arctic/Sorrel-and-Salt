@@ -8,14 +8,10 @@ import type { UserRow } from '../types';
 
 // What an admin's change to a user, and an admin's batch read of users, are
 // made of, written once for the role service, coven creation's approval and
-// the admin invitations (MB.210). Internal to the module; the index exports
+// the admin invitations. Internal to the module; the index exports
 // no part of it.
 
-/**
- * Whether the session's role is `admin`, read off the user's row by the
- * request. For a caller answering a batch, which refuses slot by slot rather
- * than throwing; anything else asks `assertSiteAdmin`, which returns the proof.
- */
+/** Whether the session's role is `admin`, for a caller answering a batch that refuses slot by slot; otherwise use `assertSiteAdmin`. */
 export function isSiteAdmin(session: Session): boolean {
   return session.role === 'admin';
 }
@@ -36,12 +32,7 @@ export async function liveUser(userId: string): Promise<UserRow> {
   return user;
 }
 
-/**
- * An admin's change as the privilege trigger records it (MB.195): `via:
- * 'admin'`, with `note`, the confirmation's optional reason, trimmed and a
- * blank one as none — the same note an admin invitation stores for its
- * acceptance to record.
- */
+/** An admin's change as the privilege trigger records it: `via: 'admin'`, with the confirmation's optional `note`, trimmed, blank as none. */
 export function adminDeclaration(note: string | undefined): PrivilegeDeclaration {
   return { via: 'admin', note: note?.trim() || undefined };
 }

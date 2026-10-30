@@ -7,7 +7,7 @@ workspace-scoped table, or, inside the repository,
 `findPageInTiers(memberships, table, order, page, where?)` for a two-tier one
 (MB.206), and `findPageInScope(table, scope, order, page, where?)` for a
 finder that spells its own scope because none of the others' types admit its
-table: `invitations`' site tier, two-tier but no compendium row (MB.115). `order` is a list of sort parts, each ascending, or a `ListOrder`:
+table: `invitations`' site tier, two-tier but no compendium row (MB.115). `findPageInReadableSpells(membership, table, order, page, where?)` pages `spells` or a `spell_id` table, which the others refuse because a spell's visibility must be read too: it ANDs M10.6's `readableSpells` in place of the workspace predicate (M10.9; [`spell-visibility.md`](spell-visibility.md)). `order` is a list of sort parts, each ascending, or a `ListOrder`:
 the parts with the join, threshold and carried values below. Each finder ANDs
 the same soft-delete and workspace predicates as `findMany` and
 `findManyInWorkspace` — the two-tier one `readableInTiers` — and adds a
@@ -112,9 +112,8 @@ from … [join …] where …   -- no order, no limit
   finder, the compendium's, the ledger's and the user list's
   (`findUserCount`, MB.115) call one under their own filter (MB.206).
 
-A spell's page, the counterpart of `findManySpells` under the visibility rule,
-is added by the grimoire task that first needs it, as its own finder, like
-the other spell finders.
+A spell's page under the visibility rule is its own finder,
+`findPageInReadableSpells` (M10.9), like the other spell finders.
 
 A page over rows no one table holds writes its own bounds under the same
 rules: `findVocabularySuggestions` and `findCommonNameSuggestions` key a

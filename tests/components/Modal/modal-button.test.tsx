@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { createRef } from 'react';
+import { describe, expect, it, vi } from 'vitest';
 import { ModalButton } from '@/components/Modal';
 
 // A button that opens a modal and takes the focus back when it closes, which
@@ -30,21 +31,11 @@ describe('ModalButton', () => {
     expect(trigger()).not.toHaveFocus();
   });
 
-  it.each([
-    [
-      'its Close button',
-      () => fireEvent.click(within(dialog()).getByRole('button', { name: 'Close' })),
-    ],
-    ['Escape', () => fireEvent(dialog(), new Event('cancel', { cancelable: true }))],
-    [
-      'its contents’ own close',
-      () => fireEvent.click(within(dialog()).getByRole('button', { name: 'Done' })),
-    ],
-  ])('gives the focus back to the button when closed by %s', async (_way, closeIt) => {
+  it('gives the focus back to the button when closed', async () => {
     open();
     expect(trigger()).not.toHaveFocus();
 
-    closeIt();
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Close' }));
 
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(trigger()).toHaveFocus();
@@ -64,5 +55,24 @@ describe('ModalButton', () => {
     // The dialog took the focus; a tip around it would have opened on that.
     expect(dialog()).toBeInTheDocument();
     expect(screen.queryByRole('tooltip')).toBeNull();
+  });
+
+  it("hands its button to the owner's ref, runs onOpen on the press, and still takes the focus back", async () => {
+    const ref = createRef<HTMLButtonElement>();
+    const onOpen = vi.fn();
+    render(
+      <ModalButton ref={ref} onOpen={onOpen} label="Open Ledger" className="btn" title="The Ledger">
+        {() => <button type="button">Done</button>}
+      </ModalButton>,
+    );
+    expect(ref.current).toBe(trigger());
+    expect(onOpen).not.toHaveBeenCalled();
+
+    fireEvent.click(trigger());
+    expect(onOpen).toHaveBeenCalledOnce();
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Close' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(trigger()).toHaveFocus();
   });
 });

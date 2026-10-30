@@ -21,6 +21,15 @@ validation error and `data` is absent. Depth counts field levels, so `{ ok }`
 is 1, and is pinned in the file although 7 is not the package default.
 Introspection queries (`__schema`) do not count towards it.
 
+**A fragment spread counts as a level of its own.** armor's `flattenFragments`
+is off, its default, so `steps { ...Step }` puts the fragment's fields two levels
+deeper than writing them out beneath `steps` would. The type checker cannot see this: M10.15's save
+mutations spread a step fragment whose deepest field sat 8 levels down, and
+every save was refused. `tests/guards/document-depth.test.ts` sends each
+operation codegen typed through these protections over the committed SDL, so a
+browser document past the limit fails in the diff that writes it. Keep the
+limit, and write a deep selection out instead of spreading it.
+
 **Cost belongs to the complexity plugin, not to armor.** armor's own cost
 check is off (`costLimit: { enabled: false }`). It runs at validation, before
 variables are bound, so it multiplied a subtree by a _literal_ `first` only:
@@ -69,6 +78,6 @@ depth or cost limit. It runs depth and cost at `production` only, since
 neither limit reads the environment, each next to the same query shape just
 inside the limit, to show that the refusal comes from the limit, and prices a
 variable `first` the same as a literal one. `tests/graphql/pagination.test.ts`
-pins the pricing itself. `route.test.ts` checks that local development answers
-introspection and suggests a misspelt field; that production does neither, and
-serves no IDE, is `tests/e2e/graphql.spec.ts`'s, against `next start`.
+pins the pricing itself. That production answers no introspection and suggests no field, and serves no
+IDE, is `tests/e2e/graphql.spec.ts`'s, against `next start`. Local
+development's half is developer tooling and has no test (M14.27).

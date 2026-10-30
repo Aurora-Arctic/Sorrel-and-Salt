@@ -7,7 +7,7 @@ import type { SetNameMutation, SetNameMutationVariables } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
-// The account page's Name section (MB.88). The mutation is answered by MSW in
+// The account page's Name section. The mutation is answered by MSW in
 // the shape /api/graphql answers (tests/support/msw/graphql.ts), so a refusal
 // is read through the route's own error mapping (claude-docs/components/name-form.md).
 
@@ -36,12 +36,12 @@ describe('NameForm', () => {
     expect(nameField()).toHaveValue('Ada Fixture');
   });
 
-  it('has nothing to save until the name is changed', () => {
+  // Whether Save is off until there is something to save is FormActions' rule
+  // (tests/components/Field/form-actions.test.tsx); what counts as a change is
+  // this form's: the server trims the name.
+  it('does not count outer whitespace as a change to the name', () => {
     renderForm(<NameForm name="Ada Fixture" />);
 
-    expect(save()).toBeDisabled();
-
-    // Outer whitespace is not a change: the server trims it away.
     fireEvent.change(nameField(), { target: { value: ' Ada Fixture ' } });
     expect(save()).toBeDisabled();
 
@@ -61,19 +61,6 @@ describe('NameForm', () => {
     // The saved name is the new baseline, as the server stored it.
     expect(nameField()).toHaveValue('Ada Renamed');
     expect(save()).toBeDisabled();
-  });
-
-  it('is busy while the save is in flight', async () => {
-    acceptSetName();
-    renderForm(<NameForm name="Ada Fixture" />);
-
-    fireEvent.change(nameField(), { target: { value: 'Ada Renamed' } });
-    const busy = save();
-    submit();
-
-    expect(busy).toHaveAttribute('aria-busy', 'true');
-    expect(busy).toBeDisabled();
-    await screen.findByRole('status');
   });
 
   it('puts a refusal on `name` beside the field', async () => {

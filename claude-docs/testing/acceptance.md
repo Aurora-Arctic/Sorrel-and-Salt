@@ -9,11 +9,11 @@ checklist of the v1 user stories, one line each:
 ```
 [x] Story 1: Sign in with an account I already have, so I don't manage another password.
 [ ] Story 2: As a newly signed-in user, be told plainly what I can do next, … — FAILING
-[ ] Story 3: Create a workspace once I hold creation rights, … — FAILING (flaky)
+[ ] Story 3: Create a workspace once I hold creation rights, … — FLAKY (failed, then passed on retry)
 [-] Story 12: View my stock … — skipped
 [ ] Story 28: … — no test yet
 
-1 of 52 stories passing · 2 failing · 1 skipped · 48 without a test
+1 of 63 stories passing · 2 failing · 1 skipped · 59 without a test
 ```
 
 That is DESIGN.md §11's "live progress report against §10 rather than a
@@ -26,7 +26,7 @@ decisions make it hold:
   meaning to the checklist. `tests/e2e/stories/README.md` has the file table.
 - **The story list is read out of DESIGN.md §10, not copied.**
   `tests/support/stories.ts` parses the numbered list between
-  "## 10. User stories" and the next section (52 today, 1–34 and 47–64), so a
+  "## 10. User stories" and the next section (63 today, 1–34, 47–64 and 76–86), so a
   story added to §10 joins the checklist without a harness edit. The harness
   has no tests of its own (MB.224): a broken checklist is seen by whoever runs
   it.
@@ -34,14 +34,18 @@ decisions make it hold:
   `tests/support/story-sections.ts` maps a story number to a name such as
   `Coven - Spells - Ingredients`, and the checklist (terminal and CI) groups the
   stories under those names, in name order. The map is separate from §10 so the
-  spec stays plain prose. `tests/guards/story-sections.test.ts` fails when a
-  story in §10 has no section, so a new story needs a line there.
+  spec stays plain prose. Nothing checks the map since M14.27 deleted its
+  guard: a story in §10 with no section is listed under "Other", so a new
+  story still wants a line there.
 - **A story's status is the state of every test tagged with it.** Any failure
   is _failing_; otherwise any skip is _skipped_; otherwise _passing_. An
   interrupted test reads as failing, so it can never look green.
-- **A flaky story is a failing story.** Retries stay on in CI (one) so the run
-  completes, but a test that passed only on its retry counts as failed, and its
-  line ends ` — FAILING (flaky)`. A flake is a bug to fix, not to tolerate.
+- **A flaky story is not a passing story.** Retries stay on in CI (one) so the
+  run completes, but a test that passed only on its retry counts as failed: its
+  box stays unticked, the tally counts it among the failing, and its line ends
+  ` — FLAKY (failed, then passed on retry)`, or in the PR comment
+  ` — **flaky** (failed, then passed on retry)`. A flake is a bug to fix, not
+  to tolerate.
 - **A test with no tag fails the run.** A test under `stories/` without an
   `@story-N` tag is listed under "No story tag" and the reporter makes the
   run fail. This replaces review of `describe` names. A tag naming a number
@@ -86,7 +90,13 @@ image and one database image, and it runs beside the other jobs rather than
 after them. It calls `playwright.yml` with
 `suite: stories`, which switches the run command, the summariser
 (`.github/scripts/summarize-stories.mjs`), the check name and the comment
-thread (marker `stories`), and skips the coverage artifact. It is never a
+thread (marker `stories`). Its comment carries the story suite's own coverage
+figure in its summary line (M14.28); the per-file table is the merged
+comment's alone, and the coverage artifact is named
+`playwright-coverage-stories`. The `playwright-coverage` job then merges
+this suite's coverage with the gate suite's and posts the merged figure in a
+"Playwright Coverage" comment of its own (`testing/coverage.md`, "The merged
+report"); like the suite, it is never a required check. It is never a
 required check, and the run step carries `continue-on-error: true` (a job that
 calls a workflow cannot carry it), so a red scaffold or an unfinished story
 shows in the PR's Stories comment, read from `steps.run.outcome`, without

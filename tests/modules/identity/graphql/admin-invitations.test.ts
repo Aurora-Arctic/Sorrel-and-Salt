@@ -15,13 +15,8 @@ import type {
   DeclineInvitationByIdResult,
 } from './types';
 
-// MB.70's three mutations, the transport's half
-// (claude-docs/testing/layer-ownership.md): an admin's answer, which carries
-// no token and no link, the session as the actor, and one refusal per error
-// code, read as the browser reads them. Which callers, addresses and links the
-// services refuse is services/admin-invitations.test.ts's and
-// services/invitation-acceptance.test.ts's; a signed-out caller and the scope
-// are tests/db/graphql-query-scopes.test.ts's.
+// The three mutations, the transport's half (claude-docs/testing/layer-ownership.md): an admin's answer, which carries no token and no link, the session as the actor, and one refusal per error code.
+// Which callers, addresses and links the services refuse is services/admin-invitations.test.ts's and services/invitation-acceptance-by-token.test.ts's; a signed-out caller and the scope are tests/db/graphql-query-scopes.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
 
@@ -135,7 +130,7 @@ describe('Mutation.createAdminInvitation', () => {
     ]);
   });
 
-  // M11.20: the role is the admin's choice, and the transport carries it through.
+  // The role is the admin's choice, and the transport carries it through.
   it('answers the curator role it was asked to invite to', async () => {
     const { sender } = recordingSender();
 
@@ -221,9 +216,9 @@ describe('Mutation.acceptInvitation', () => {
 
 const ACCEPT_BY_ID = `mutation ($id: ID!) { acceptInvitationById(id: $id) { id acceptedAt } }`;
 
-// M10.32, the transport's half: the answer, and one error code per refusal. Whose
+// The transport's half: the answer, and one error code per refusal. Whose
 // address admits, and every dead state, are
-// services/invitation-acceptance.test.ts's.
+// services/invitation-acceptance-by-token.test.ts's.
 describe('Mutation.acceptInvitationById', () => {
   const grantee = { id: GRANTEE, role: 'user' as const };
   const stranger = { id: '00000000-0000-0000-0000-0000000000f2', role: 'user' as const };
@@ -285,9 +280,9 @@ describe('Mutation.acceptInvitationById', () => {
 
 const DECLINE_BY_ID = `mutation ($id: ID!) { declineInvitationById(id: $id) { id declinedAt acceptedAt } }`;
 
-// M10.34, the transport's half: the answer, `Invitation.declinedAt`, and one
+// The transport's half: the answer, `Invitation.declinedAt`, and one
 // error code per refusal. Whose address admits, and every dead state, are
-// services/invitation-acceptance.test.ts's.
+// services/invitation-acceptance-by-token.test.ts's.
 describe('Mutation.declineInvitationById', () => {
   const grantee = { id: GRANTEE, role: 'user' as const };
   const stranger = { id: '00000000-0000-0000-0000-0000000000f2', role: 'user' as const };

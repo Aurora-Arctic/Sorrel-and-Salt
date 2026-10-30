@@ -57,10 +57,6 @@ describe('the forms parameter', () => {
     expect(entries.forms.toVariable(['Oil', 'Tincture'])).toEqual(['Oil', 'Tincture']);
     expect(entries.forms.toVariable([])).toBeUndefined();
   });
-
-  it('no longer reads the old single form parameter', () => {
-    expect(COMPENDIUM_PARAMS.read({ form: 'Oil' }).forms).toEqual([]);
-  });
 });
 
 describe('the deities parameter', () => {
@@ -160,7 +156,7 @@ describe('the toxic parameter', () => {
   });
 });
 
-describe('the No Form parameter (M12.30)', () => {
+describe('the No Form parameter', () => {
   it('reads 1 as on and anything else as off, and writes only the on', () => {
     expect(COMPENDIUM_PARAMS.read({ withoutForms: '1' }).withoutForms).toBe(true);
     expect(COMPENDIUM_PARAMS.read({ withoutForms: 'true' }).withoutForms).toBe(false);
@@ -181,13 +177,36 @@ describe('the No Form parameter (M12.30)', () => {
   });
 });
 
-describe('the classification parameter', () => {
-  it('has left the table, so the address no longer reads or writes it', () => {
-    expect(Object.keys(entries)).not.toContain('nomenclature');
-    expect(COMPENDIUM_PARAMS.read({ nomenclature: 'unknown' })).not.toHaveProperty('nomenclature');
-    expect(COMPENDIUM_PARAMS.variables(COMPENDIUM_PARAMS.read({}))).not.toHaveProperty(
-      'nomenclature',
+describe('the Reviewed parameter', () => {
+  const reviewed = entries.reviewed;
+
+  it('reads 1 as reviewed and 0 as needs review, and anything else as no filter', () => {
+    expect(reviewed.read('1')).toBe('reviewed');
+    expect(reviewed.read('0')).toBe('needs_review');
+    expect(reviewed.read('true')).toBe('');
+    expect(reviewed.read(undefined)).toBe('');
+  });
+
+  it('round-trips through the address as 1 or 0, and no filter as nothing', () => {
+    for (const setting of ['reviewed', 'needs_review'] as const) {
+      const href = COMPENDIUM_PARAMS.href(PATH, { reviewed: setting });
+      const query = Object.fromEntries(new URL(href, 'http://x').searchParams);
+      expect(COMPENDIUM_PARAMS.read(query).reviewed).toBe(setting);
+    }
+    expect(COMPENDIUM_PARAMS.href(PATH, { reviewed: 'reviewed' })).toBe(
+      '/admin/compendium?reviewed=1',
     );
+    expect(COMPENDIUM_PARAMS.href(PATH, { reviewed: 'needs_review' })).toBe(
+      '/admin/compendium?reviewed=0',
+    );
+    expect(COMPENDIUM_PARAMS.href(PATH, { reviewed: '' })).toBe('/admin/compendium');
+  });
+
+  it('is the reviewed variable, true or false, and absent for no filter', () => {
+    expect(reviewed.variable).toBe('reviewed');
+    expect(reviewed.toVariable('reviewed')).toBe(true);
+    expect(reviewed.toVariable('needs_review')).toBe(false);
+    expect(reviewed.toVariable('')).toBeUndefined();
   });
 });
 
@@ -205,6 +224,53 @@ describe('the whole table', () => {
       zodiac: [],
       celestialBodies: [],
       toxic: '',
+      reviewed: '',
+      covens: [],
+      covensNot: false,
     });
+  });
+});
+
+describe('the covens parameter', () => {
+  it('reads repeated coven ids, repeats dropped', () => {
+    expect(entries.covens.read(['w-id', 'v-id', 'w-id'])).toEqual(['w-id', 'v-id']);
+    expect(entries.covens.read(undefined)).toEqual([]);
+  });
+
+  it('round-trips through the address as repeated parameters', () => {
+    const href = COMPENDIUM_PARAMS.href('/compendium', { covens: ['w-id', 'v-id'] });
+    expect(href).toBe('/compendium?covens=w-id&covens=v-id');
+    const params = new URL(href, 'http://x').searchParams;
+    expect(COMPENDIUM_PARAMS.read({ covens: params.getAll('covens') }).covens).toEqual([
+      'w-id',
+      'v-id',
+    ]);
+  });
+
+  it('is the covenIds variable, and none when empty', () => {
+    expect(entries.covens.variable).toBe('covenIds');
+    expect(entries.covens.toVariable(['w-id'])).toEqual(['w-id']);
+    expect(entries.covens.toVariable([])).toBeUndefined();
+  });
+});
+
+describe('the covensNot parameter (Not In)', () => {
+  it('is written 1 for Not In, and absent for In', () => {
+    expect(COMPENDIUM_PARAMS.href('/compendium', { covensNot: true })).toBe(
+      '/compendium?covensNot=1',
+    );
+    expect(COMPENDIUM_PARAMS.href('/compendium', { covensNot: false })).toBe('/compendium');
+  });
+
+  it('reads 1 as Not In, and anything else as In', () => {
+    expect(entries.covensNot.read('1')).toBe(true);
+    expect(entries.covensNot.read(undefined)).toBe(false);
+    expect(entries.covensNot.read('yes')).toBe(false);
+  });
+
+  it('is the covensNot variable, and none for In', () => {
+    expect(entries.covensNot.variable).toBe('covensNot');
+    expect(entries.covensNot.toVariable(true)).toBe(true);
+    expect(entries.covensNot.toVariable(false)).toBeUndefined();
   });
 });

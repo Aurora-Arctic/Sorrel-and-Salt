@@ -71,7 +71,7 @@ attached at all.
 | 9323  | Playwright trace viewer                              | devcontainer.json only                                                                                                    |
 | 9324  | Playwright UI mode                                   | devcontainer.json only                                                                                                    |
 | 51204 | Vitest UI (`@vitest/ui` default port)                | devcontainer.json only                                                                                                    |
-| 61000 | Ladle workshop                                       | pre-existing (M0.30), `workshop` service                                                                                  |
+| 61000 | Storybook workshop                                   | pre-existing (M0.30), `workshop` service                                                                                  |
 | 4444  | `playwright run-server` (remote browser)             | `playwright-server` service (Docker/docker-compose.yaml, profile `e2e`) — dialed by the runner, never opened in a browser |
 | 7900  | Playwright display — codegen, `page.pause()` (MB.23) | devcontainer.json, `playwright-server` service — a page you open, unlike 4444                                             |
 
@@ -206,7 +206,7 @@ live or just examined after the fact:
   actions. Served on port 9324, viewed from the host browser, via
   `playwright test --ui --ui-host 0.0.0.0 --ui-port 9324` (the `--ui-host`
   is required — UI mode's server binds `localhost` by default, same
-  reasoning as `ladle serve`'s `--host 0.0.0.0`).
+  reasoning as `storybook dev`'s `--host 0.0.0.0`).
 - **`--debug`** (`npm run e2e:debug`) — Playwright's own step-through
   Inspector, opened via `PWDEBUG=1`-style `page.pause()` semantics.
 

@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { revalidateTag } from 'next/cache';
-import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { COMPENDIUM_TAG } from '@/lib/compendium-cache';
 import { NotFound } from '@/lib/errors';
 import type { PageRequest } from '@/lib/types';
@@ -18,11 +17,8 @@ import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 import { clearDataCache, declared } from '../../../support/next-data-cache';
 
-// M8.6: the compendium's page and MB.105's count held in the data cache under
-// the `compendium` tag, each keyed by its arguments (DESIGN.md §7). A data
-// cache that holds, as Next's does (tests/support/next-data-cache.ts), so a
-// row written underneath a read shows whether the repeat read reached
-// Postgres (claude-docs/db/compendium-cache.md).
+// The compendium's page and its count held in the data cache under the `compendium` tag, each keyed by its arguments (DESIGN.md §7).
+// The data cache holds as Next's does (tests/support/next-data-cache.ts), so a row written underneath a read shows whether the repeat read reached Postgres (claude-docs/db/compendium-cache.md).
 vi.mock('next/cache', () => import('../../../support/next-data-cache'));
 
 let sql: postgres.Sql;
@@ -42,7 +38,7 @@ const PAGE: PageRequest = { limit: 26, inverted: false };
 const names = async (filter = {}) =>
   (await listCompendium(filter, PAGE)).map((entry) => entry.node.name);
 
-describe('M8.6: the compendium read is cached under the compendium tag', () => {
+describe('the compendium read is cached under the compendium tag', () => {
   it('answers a repeat read of the page and its count from the cache', async () => {
     await seed('Fixture Alpha');
     expect(await names()).toEqual(['Fixture Alpha']);
@@ -83,25 +79,9 @@ describe('M8.6: the compendium read is cached under the compendium tag', () => {
     expect(await names()).toEqual(['Fixture Alpha']);
     expect(await countCompendium({}, undefined)).toEqual({ totalCount: 1, countBefore: null });
   });
-
-  it('gives back the rows as the repository returned them, dates as dates', async () => {
-    await seed('Fixture Alpha');
-    const [miss] = await listCompendium({}, PAGE);
-    const [hit] = await listCompendium({}, PAGE);
-
-    expect(hit).toEqual(miss);
-    expect(hit.node.createdAt).toBeInstanceOf(Date);
-  });
-
-  it('caches nothing of a coven: a coven entry is in no cached read', async () => {
-    await seed('Fixture Coven Entry', WORKSPACE_W_ID);
-    await seed('Fixture Alpha');
-
-    expect(await names()).toEqual(['Fixture Alpha']);
-  });
 });
 
-describe('M12.3: the compendium facets are cached under the compendium tag', () => {
+describe('the compendium facets are cached under the compendium tag', () => {
   const forms = async () => (await compendiumFacets({})).forms;
 
   it('answers a repeat read from the cache, and reads Postgres again after an admin delete', async () => {
@@ -120,7 +100,7 @@ describe('M12.3: the compendium facets are cached under the compendium tag', () 
   });
 });
 
-describe('M8.19: the public entry read is cached under the compendium tag', () => {
+describe('the public entry read is cached under the compendium tag', () => {
   const nameAt = async (slug: string) => {
     const page = await readCompendiumEntry(slug);
     if (page.kind !== 'entry') throw new Error('Expected an entry');

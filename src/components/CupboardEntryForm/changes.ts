@@ -10,7 +10,7 @@ import type {
 
 // What the form sends: only the fields that changed, each as the new value
 // or null for the compendium's. Apart from the component so the rule is read
-// in one place (claude-docs/components/cupboard-entry-form.md, "What is sent").
+// in one place (claude-docs/components/cupboard-entry-form.md, "What a save sends").
 
 export const TEXT_FIELDS: readonly TextField[] = ['label', 'description', 'safetyNotes'];
 export const LIST_FIELDS: readonly ListFieldName[] = [
@@ -85,11 +85,9 @@ export function isOwn(
 }
 
 /**
- * The fields that changed. A field handed back sends null when the coven held
- * an override; a text field cleared sends null, as the server reads blank; a
- * field the coven did not override sends its value only once it differs from
- * the compendium's; one it did sends its value once it differs from its own.
+ * The fields that changed: null for a field handed back or a text field cleared; a value once it differs from the compendium's (or, if overridden, its own).
  * An emptied list is sent as `[]`: the coven cleared it on purpose.
+ * (claude-docs/components/cupboard-entry-form.md, "What a save sends").
  */
 export function changesOf(
   values: CupboardValues,

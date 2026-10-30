@@ -19,24 +19,11 @@ import type {
 } from './types';
 import { FIELD_NOUNS, UNNAMED_FORM, texts } from './values';
 
-// What a folded section's line says (MB.115, the owner's call as drawn): what
-// has been entered in it, in its fields' order, parts joined by a middle dot.
-// A list of one is named and a longer one counted, "Mercury · 2 colours";
-// categories are always counted, since their names are another query's; the
-// forms are always named, being what the section is for; the description and
-// the safety notes are their own first words, cut by the line's ellipsis. An
-// empty section says so. Each section's summary is a component of its own
-// watching its own fields, so a keystroke re-renders one line, not the form
-// (claude-docs/components/ingredient-form.md, "Sections"). A variant's
-// sections read the same way, through the same lines below, from the
-// variant's own values. A variant's card line, what the variant carries, is
-// built from the same parts.
+// What a folded section's line says: what has been entered in it, in its fields' order, joined by a
+// middle dot. Each summary watches its own fields; a variant's card line uses the same parts
+// (claude-docs/components/ingredient-form.md, "Sections").
 
-/**
- * What a line says of an empty section, or a variant carrying nothing: one
- * wording for both, where the card said "No details yet" before MB.115's
- * consolidation.
- */
+/** What a line says of an empty section, or a variant carrying nothing: one wording for both. */
 const NOTHING = 'Nothing yet';
 
 /** A list of one by its entry, of more by its count: "Mercury", "2 colours"; none, nothing. */
@@ -213,10 +200,8 @@ export function SectionSummary({ section }: SectionSummaryProps): ReactElement {
 }
 
 /**
- * The closed line of a variant's section `section`, read from the variant's
- * values, which its card already watches. Its Identity is its Form, as the
- * card's own line reads it, "Dried leaf (Plant part)"; the rest read as the
- * ingredient's sections of the same name do.
+ * The closed line of a variant's section `section`, read from the variant's values. Its Identity
+ * is its Form, "Dried leaf (Plant part)"; the rest read as the ingredient's sections do.
  */
 export function variantSectionSummary(
   section: VariantSectionKey,

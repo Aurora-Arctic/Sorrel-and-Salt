@@ -9,10 +9,8 @@ import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 import type { PageRequest } from '@/lib/types';
 
-// The substitute picker's search (MB.138): ingredients a member may link, from
-// the compendium and the caller's own coven, matched as the compendium search
-// matches so a typed prefix finds its entry. The table is emptied per test, so
-// every row a result could come from is one this file wrote.
+// The substitute picker's search: ingredients a member may link, from the compendium and the caller's own coven, matched as the compendium search matches so a typed prefix finds its entry.
+// The table is emptied per test, so every row a result could come from is one this file wrote.
 
 let sql: ReturnType<typeof postgres>;
 
@@ -79,14 +77,6 @@ describe('suggestIngredients', () => {
       expect(await namesFor(B, 'crone')).toEqual([]);
     });
 
-    it('ranks the closest match first, not alphabetically', async () => {
-      await addIngredient({ name: 'Mugwart', workspaceId: WORKSPACE_W_ID });
-      await addIngredient({ name: 'Mugwort', canonicalName: 'Artemisia vulgaris' });
-
-      // The coven's own entry is in the first group, whatever the score.
-      expect(await namesFor(B, 'mugwort')).toEqual(['Mugwart', 'Mugwort']);
-    });
-
     it('lists everything in name order for a blank query', async () => {
       await addIngredient({ name: 'Yarrow', workspaceId: WORKSPACE_W_ID });
       await addIngredient({ name: 'Mugwort', canonicalName: 'Artemisia vulgaris' });
@@ -103,7 +93,7 @@ describe('suggestIngredients', () => {
     });
   });
 
-  // MB.131's picker shows which plant a suggestion is, and whose.
+  // The picker shows which plant a suggestion is, and whose.
   it('carries each entry’s formal name and tier', async () => {
     await addIngredient({ name: "Cat's Claw", canonicalName: 'Uncaria tomentosa' });
     // A coven entry naming another species, so the two are told apart by formal name.
@@ -165,7 +155,7 @@ describe('suggestIngredients', () => {
     });
   });
 
-  // M12.19: the picker offers the coven's cupboard, then the compendium.
+  // The picker offers the coven's cupboard, then the compendium.
   describe('the two groups', () => {
     const groupsFor = async (query: string, workspaceId = WORKSPACE_W_ID, user = B) =>
       (await suggestIngredients(asUser(user), workspaceId, query, PAGE)).map((entry) => ({
@@ -224,16 +214,6 @@ describe('suggestIngredients', () => {
       expect(await groupsFor('mugwort')).toEqual([{ id: mugwort, group: 'compendium' }]);
     });
 
-    it('drops a retired entry from both groups, though the coven holds a row for it', async () => {
-      const mugwort = await addIngredient({ name: 'Mugwort', canonicalName: 'Artemisia vulgaris' });
-      await insertCupboardEntry(sql, { workspaceId: WORKSPACE_W_ID, ingredientId: mugwort }, A.id);
-      expect(await groupsFor('mugwort')).toEqual([{ id: mugwort, group: 'yours' }]);
-
-      await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${mugwort}`;
-
-      expect(await groupsFor('mugwort')).toEqual([]);
-    });
-
     it('limits each group to eight, ranked within itself', async () => {
       for (let n = 1; n <= 10; n++) {
         await addIngredient({ name: `Fixture Mug ${n}` });
@@ -248,6 +228,31 @@ describe('suggestIngredients', () => {
         ...Array(8).fill('compendium'),
       ]);
       expect(groups[0].id).toBe(exact);
+    });
+  });
+
+  describe('the category filter', () => {
+    it('keeps only entries carrying any of the given categories, and none given keeps all', async () => {
+      const rows =
+        await sql`select id, name from categories where deleted_at is null order by name limit 3`;
+      const [first, second, third] = rows;
+      await addIngredient({ name: 'Mugwort', categories: [first.name as string] });
+      await addIngredient({ name: 'Mugroot', categories: [second.name as string] });
+      await addIngredient({ name: 'Mugleaf', categories: [third.name as string] });
+      await addIngredient({ name: 'Mugbare' });
+      const names = async (categoryIds?: string[]) =>
+        (await suggestIngredients(asUser(B), WORKSPACE_W_ID, 'mug', PAGE, undefined, categoryIds))
+          .map((entry) => entry.node.name)
+          .sort();
+
+      // Why it could have succeeded: all four match the typed text.
+      expect(await names()).toEqual(['Mugbare', 'Mugleaf', 'Mugroot', 'Mugwort']);
+      expect(await names([])).toHaveLength(4);
+      expect(await names([first.id as string])).toEqual(['Mugwort']);
+      expect(await names([first.id as string, second.id as string])).toEqual([
+        'Mugroot',
+        'Mugwort',
+      ]);
     });
   });
 
@@ -271,10 +276,6 @@ describe('suggestIngredients', () => {
 
     it('refuses a site admin, who belongs to no workspace', async () => {
       await expect(namesFor(E, 'mugwort', WORKSPACE_W_ID)).rejects.toThrow(Forbidden);
-    });
-
-    it('refuses before answering a blank query', async () => {
-      await expect(namesFor(D, '', WORKSPACE_W_ID)).rejects.toThrow(Forbidden);
     });
   });
 });

@@ -46,6 +46,8 @@ on:
 
 permissions:
   contents: read
+  # For the compendium seed's REFUSED comment on the deploying PR (M14.7).
+  pull-requests: write
 
 jobs:
   migrate:
@@ -252,7 +254,39 @@ jobs:
           npm run db:seed:astrology 2>&1 | tee -a seed.log
           npm run db:seed:deities 2>&1 | tee -a seed.log
           npm run db:seed:sources 2>&1 | tee -a seed.log
-          npm run db:seed:compendium 2>&1 | tee -a seed.log
+          npm run db:seed:compendium -- --adopt 2>&1 | tee -a seed.log
+          npm run db:seed:demo-coven 2>&1 | tee -a seed.log
+
+      # The compendium seed's per-entry lines (report.ts's formatReport), each
+      # with its `  differs:` line, go into the job summary on every run, in a
+      # collapsed block, so drift a run reports as PENDING is seen without
+      # opening the raw step log (M14.1). Built here and handed to the shared
+      # action's `details` input rather than changing the action.
+      - name: Collect the compendium entry lines
+        id: seed-entries
+        if: always() && steps.guard.outputs.enabled == 'true' && inputs.seed-reference
+        run: |
+          touch seed.log
+          grep -E '^(UPDATED|PENDING|REFUSED|ADOPTED|RETIRED|SKIPPED) |^  differs: ' seed.log > seed-entries.log || true
+          totals=$(grep -E '^inserted [0-9]+, skipped [0-9]+' seed.log | tail -n 1 || true)
+          count=$(grep -cE '^(UPDATED|PENDING|REFUSED|ADOPTED|RETIRED|SKIPPED) ' seed-entries.log || true)
+          {
+            if [ "$count" -gt 0 ]; then
+              echo "<details><summary>Compendium entries: $count listed${totals:+ ($totals)}</summary>"
+              echo ''
+              echo '```'
+              cat seed-entries.log
+              echo '```'
+              echo ''
+              echo '</details>'
+            elif [ -n "$totals" ]; then
+              echo "Compendium entries: none updated, pending, refused, adopted or retired ($totals)."
+            else
+              echo 'Compendium entries: the compendium seed printed no report.'
+            fi
+          } > seed-entries.md
+          # A fixed delimiter is safe: every line above is grep-filtered or ours.
+          { echo "details<<SEED_ENTRIES_EOF"; cat seed-entries.md; echo SEED_ENTRIES_EOF; } >> "$GITHUB_OUTPUT"
 
       - name: Write seed job summary
         if: always() && steps.guard.outputs.enabled == 'true' && inputs.seed-reference
@@ -262,3 +296,38 @@ jobs:
           outcome: ${{ steps.seed.outcome }}
           log-file: seed.log
           summary: ${{ steps.seed.outcome == 'success' && 'Category, form, planet, zodiac and deity vocabularies, their sources and the compendium seeded' || 'Seed failed' }}
+          details: ${{ steps.seed-entries.outputs.details }}
+
+      # A refused compendium update exits 1 (M14.7). The REFUSED lines name
+      # the entries and what differs, so they go back to the pull request the
+      # deploying commit came from, where whoever marked the file reads them.
+      # A commit no PR carries (a direct push) gets the job summary alone.
+      - name: Find the deploying pull request
+        id: deploying-pr
+        if: always() && steps.seed.outcome == 'failure'
+        uses: actions/github-script@v9
+        with:
+          script: |
+            const { data } = await github.rest.repos.listPullRequestsAssociatedWithCommit({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              commit_sha: context.sha,
+            });
+            core.setOutput('number', data[0]?.number ?? '');
+
+      - name: Collect the refused entries
+        if: always() && steps.seed.outcome == 'failure' && steps.deploying-pr.outputs.number != ''
+        run: |
+          grep -e '^REFUSED ' -e '^  differs:' seed.log > seed-refused.log \
+            || echo 'The seed failed before any entry was refused; see the job summary.' > seed-refused.log
+
+      - name: Comment the refused entries on the pull request
+        if: always() && steps.seed.outcome == 'failure' && steps.deploying-pr.outputs.number != ''
+        uses: ./.github/actions/pr-comment
+        with:
+          check-name: Compendium seed (${{ inputs.environment }})
+          marker-slug: seed-compendium
+          pr-number: ${{ steps.deploying-pr.outputs.number }}
+          outcome: failure
+          log-file: seed-refused.log
+          summary: The compendium seed refused an update; the entries and what differs are below.

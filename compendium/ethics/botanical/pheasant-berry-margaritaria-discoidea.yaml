@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/pheasant-berry-margaritaria-discoidea
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species
+    value: Least Concern (IUCN 3.1)
+    listedAs: Margaritaria discoidea
+    scope: global
+    nameBasis: stated
+    source: wikipedia-margaritaria-discoidea
+    locator: 'taxobox, "Conservation status": "Least Concern (IUCN 3.1)"'

@@ -1,21 +1,14 @@
-import { getNamedType, isObjectType, type GraphQLObjectType } from 'graphql';
 import { beforeAll, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { FIXTURE_WORKSPACES, WORKSPACE_W_ID } from '@/db/seed/standard';
-import { schema } from '@/graphql/schema';
 import type { Session } from '@/lib/session';
 import { A, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { run } from '../../../support/graphql/run';
 import type { UsersQueryResult } from './types';
 
-// MB.52's `users` query, the admin user list's GraphQL half: the same service
-// the page calls, its nodes the ordinary `User`, so `email` resolves through
-// the scope it already carries rather than a second path around it
-// (claude-docs/auth/admin-users.md, "The user list"). This file holds a page,
-// the filters reaching the service, and `providers`' scope;
-// who is refused the list is services/user-list.test.ts's, and a signed-out
-// caller tests/db/graphql-query-scopes.test.ts's.
+// The `users` query, the admin user list's GraphQL half: the same service the page calls, its nodes the ordinary `User`, so `email` resolves through the scope it already carries (claude-docs/auth/admin-users.md, "The user list").
+// This file holds a page, the filters reaching the service, and `providers`' scope; who is refused the list is services/user-list.test.ts's, and a signed-out caller tests/db/graphql-query-scopes.test.ts's.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -117,22 +110,6 @@ describe('Query.users', () => {
     expect(users.edges.map((edge) => edge.node.name)).toEqual(
       Array.from({ length: 10 }, (_, index) => `Listed Fixture 0${index}`),
     );
-  });
-
-  // One `User`, so `email`'s scope is the one `me` already passes through.
-  it('lists the ordinary User type, whose email carries its scope', () => {
-    const typeOf = (type: GraphQLObjectType, field: string): GraphQLObjectType => {
-      const named = getNamedType(type.getFields()[field]?.type);
-      if (!isObjectType(named)) throw new Error(`${type.name}.${field} is not an object`);
-      return named;
-    };
-    const query = schema.getQueryType();
-    if (!query) throw new Error('no Query type');
-
-    const node = typeOf(typeOf(typeOf(query, 'users'), 'edges'), 'node');
-
-    expect(node).toBe(schema.getType('User'));
-    expect(typeOf(query, 'me')).toBe(node);
   });
 });
 

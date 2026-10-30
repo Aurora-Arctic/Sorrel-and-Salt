@@ -7,7 +7,10 @@ import { tableFacts } from '../support/db/table-metadata';
 import * as invitations from '@/modules/coven/schema/invitations';
 import * as workspaces from '@/modules/coven/schema/workspaces';
 import * as spellCategories from '@/modules/grimoire/schema/spell-categories';
-import * as spellIngredients from '@/modules/grimoire/schema/spell-ingredients';
+import * as spellSteps from '@/modules/grimoire/schema/spell-steps';
+import * as spellWorkingDeductions from '@/modules/grimoire/schema/spell-working-deductions';
+import * as spellWorkingParticipants from '@/modules/grimoire/schema/spell-working-participants';
+import * as spellWorkings from '@/modules/grimoire/schema/spell-workings';
 import * as spells from '@/modules/grimoire/schema/spells';
 import * as adminRoleChangePauses from '@/modules/identity/schema/admin-role-change-pauses';
 import * as auth from '@/modules/identity/schema/auth';
@@ -27,26 +30,15 @@ import * as retiredIngredientSlugs from '@/modules/ingredients/schema/retired-in
 import * as astrology from '@/modules/vocabulary/schema/astrology';
 import * as categories from '@/modules/vocabulary/schema/categories';
 import * as deities from '@/modules/vocabulary/schema/deities';
+import * as deityOtherNames from '@/modules/vocabulary/schema/deity-other-names';
 import * as ingredientForms from '@/modules/vocabulary/schema/ingredient-forms';
 
-// One comparison of the Drizzle schema against the migrated database, table by
-// table, instead of a foreign-key, NOT NULL, type and index case in every module
-// schema test: a schema file edited without its migration, or a migration
-// without its schema file, fails here. What a table's rows may hold — its
-// CHECKs, identity and tier rules — is its module schema test's
-// (claude-docs/testing/db-harness.md, "The db test harness"). A schema file
-// missing from the imports below leaves its table in the catalogue and out of
-// the code's set, which the first test fails.
+// One comparison of the Drizzle schema against the migrated database, table by table: a schema file edited without its migration, or the reverse, fails here.
+// A table's row rules are its module schema test's (claude-docs/testing/db-harness.md, "The db test harness"). A schema file missing from the imports below leaves its table out of the code's set, which the first test fails.
 
-// The expand/contract window (CLAUDE.md rule 10): a drop is two PRs, the first
-// removing the declaration and the second the object, so between them the
-// migrated database holds what the schema no longer declares. An undeclare
-// task adds its line here and the drop task removes it, so the window is
-// declared rather than tolerated; a line outliving its drop fails below
-// (claude-docs/testing/db-harness.md, "The db test harness"). A `view` is the
-// old name a renamed table leaves behind for the deploy before it, its `table`
-// and `name` both the view's (claude-docs/db/expand-contract.md, "Renaming a
-// table").
+// The expand/contract window (CLAUDE.md rule 10): a drop is two PRs, so between them the migrated database holds what the schema no longer declares; the undeclare task adds its line here and the drop task removes it, and a line outliving its drop fails below
+// (claude-docs/testing/db-harness.md, "The db test harness"). A `view` is the old name a renamed table leaves for the deploy before it, with `table` and `name` both the view's (claude-docs/db/expand-contract.md, "Renaming a table").
+// A pending column the code still declares is compared like any other: only the database side of an undeclared one is set aside.
 const PENDING_DROPS: readonly {
   table: string;
   kind: 'column' | 'index' | 'check' | 'foreignKey' | 'table' | 'view';
@@ -65,7 +57,10 @@ const MODULES = [
   invitations,
   workspaces,
   spellCategories,
-  spellIngredients,
+  spellSteps,
+  spellWorkingDeductions,
+  spellWorkingParticipants,
+  spellWorkings,
   spells,
   adminRoleChangePauses,
   auth,
@@ -85,6 +80,7 @@ const MODULES = [
   astrology,
   categories,
   deities,
+  deityOtherNames,
   ingredientForms,
 ];
 
@@ -109,10 +105,7 @@ const ON_DELETE: Record<string, string> = {
 const byKey = <T extends { name: string }>(rows: T[]) =>
   [...rows].sort((a, b) => a.name.localeCompare(b.name));
 
-/**
- * Drizzle's type name as `format_type` prints it: Postgres spells a bare
- * `timestamp` out in full and closes up a numeric's precision and scale.
- */
+/** Drizzle's type name as `format_type` prints it: Postgres spells a bare `timestamp` out in full and closes up a numeric's precision and scale. */
 const asCatalogued = (type: string) =>
   type.replace(/, /g, ',').replace(/^timestamp(\(\d+\))?$/, 'timestamp$1 without time zone');
 
@@ -201,11 +194,8 @@ async function migrated(name: string) {
     select conname as name from pg_constraint
     where conrelid = ${name}::regclass and contype = 'c'
   `;
-  // An index backing a primary key or unique constraint is the constraint's,
-  // not one the schema file's index list declares. A foreign key records the
-  // index it points at in `conindid` too, so only the table's own key and
-  // unique constraints count: MB.217's composite keys point at
-  // `ingredient_variants_id_ingredient_id_unique`, a declared index.
+  // An index backing a primary key or unique constraint is the constraint's, not one the schema file declares. A foreign key records its target index in `conindid` too,
+  // so only the table's own key and unique constraints count: the composite keys point at `ingredient_variants_id_ingredient_id_unique`, a declared index.
   const indexes = await sql<{ name: string; unique: boolean; partial: boolean }[]>`
     select ic.relname as name, i.indisunique as unique, i.indpred is not null as partial
     from pg_index i
@@ -225,21 +215,24 @@ async function migrated(name: string) {
   };
 }
 
-/** The migrated facts less what `PENDING_DROPS` declares is on its way out. */
-async function migratedAndKept(name: string) {
+/** The migrated facts less what `PENDING_DROPS` declares: on its way out and no longer declared by the code. */
+async function migratedAndKept(name: string, code: ReturnType<typeof declared>) {
   const all = await migrated(name);
+  const nameOf = (row: { name: string } | string) => (typeof row === 'string' ? row : row.name);
   const kept = <T extends { name: string } | string>(
     rows: T[],
     kind: 'column' | 'index' | 'check' | 'foreignKey',
+    stillDeclared: readonly ({ name: string } | string)[],
   ) => {
+    const declaredNames = new Set(stillDeclared.map(nameOf));
     const pending = pendingIn(name, kind);
-    return rows.filter((row) => !pending.has(typeof row === 'string' ? row : row.name));
+    return rows.filter((row) => !pending.has(nameOf(row)) || declaredNames.has(nameOf(row)));
   };
   return {
-    columns: kept(all.columns, 'column'),
-    foreignKeys: kept(all.foreignKeys, 'foreignKey'),
-    checks: kept(all.checks, 'check'),
-    indexes: kept(all.indexes, 'index'),
+    columns: kept(all.columns, 'column', code.columns),
+    foreignKeys: kept(all.foreignKeys, 'foreignKey', code.foreignKeys),
+    checks: kept(all.checks, 'check', code.checks),
+    indexes: kept(all.indexes, 'index', code.indexes),
   };
 }
 
@@ -283,7 +276,7 @@ describe('the Drizzle schema against the migrated database', () => {
     '%s: columns, types, foreign keys, CHECK names and indexes match',
     async (name) => {
       const code = declared(byName.get(name) as PgTable);
-      const database = await migratedAndKept(name);
+      const database = await migratedAndKept(name, code);
 
       expect(code.columns.length).toBeGreaterThan(0);
       expect(database).toEqual(code);

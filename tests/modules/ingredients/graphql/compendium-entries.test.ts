@@ -4,11 +4,10 @@ import type postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { schema } from '@/graphql/schema';
 import type { Session } from '@/lib/session';
-import { A, B, E, asUser } from '../../../support/as-user';
+import { A, B, E, F, asUser } from '../../../support/as-user';
 import { curatedFormId } from '../../../support/db/curated-ids';
 import { useTestDatabase } from '../../../support/db/database';
 import { liveFolkNames } from '../../../support/db/folk-names';
-import { insertCupboardEntry } from '../../../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import {
   type IngredientFixture,
@@ -20,13 +19,9 @@ import {
 import { run } from '../../../support/graphql/run';
 import type { WorkspaceIngredientNode } from './types';
 
-// Story 18 over the wire (M5.5): the site admin's three compendium writes.
-// This file holds the transport's half (claude-docs/testing/layer-ownership.md):
-// the SDL's own refusals, the loaders cleared between two writes in one
-// request, `endRedirect` reaching the service, and one refusal per error code
-// per mutation, read as the browser reads it. Who is refused, and every
-// collision, are services/compendium-entries.test.ts's; a signed-out caller
-// and a non-admin at the `admin` scope are tests/db/graphql-query-scopes.test.ts's.
+// Over the wire: the site admin's three compendium writes (the transport's half, claude-docs/testing/layer-ownership.md).
+// That is the SDL's own refusals, the loaders cleared between two writes in one request, `endRedirect` reaching the service, and one refusal per error code per mutation.
+// Who is refused is services/compendium-entries.test.ts's, collisions are services/compendium-entry-slugs.test.ts's, and signed-out and non-admin scope refusals are tests/db/graphql-query-scopes.test.ts's.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -107,10 +102,7 @@ const earthy = (name: string) => ({
   variants: [formOf('Earth', earth)],
 });
 
-/**
- * The whole entry as the update input takes it: every field sent, and an
- * empty value where `input` has none.
- */
+/** The whole entry as the update input takes it: every field sent, and an empty value where `input` has none. */
 function whole(input: Record<string, unknown>): Record<string, unknown> {
   const empty: Record<string, unknown> = {
     canonicalName: '',
@@ -205,7 +197,7 @@ describe('createCompendiumIngredient', () => {
 
 describe('updateCompendiumIngredient', () => {
   // An update replaces the entry, so a field the input left out would be
-  // cleared: the categories above all, which no form field may show (MB.159).
+  // cleared: the categories above all, which no form field may show.
   it('refuses an input that leaves a field out, changing nothing', async () => {
     const id = await seed({ categories: ['Protection'] });
     // Why it could have cleared something: the entry is filed under a category.
@@ -293,7 +285,7 @@ describe('updateCompendiumIngredient', () => {
     expect(await rowOf(id)).toEqual(before);
   });
 
-  // MB.82: an address another entry moved off redirects to it for a window,
+  // An address another entry moved off redirects to it for a window,
   // and taking it is the admin's to confirm.
   describe('onto an address another entry moved off, inside its window', () => {
     let movedId: string;
@@ -368,66 +360,45 @@ describe('deleteCompendiumIngredient', () => {
   });
 });
 
-describe('compendiumEntryUsers', () => {
-  const USERS = 'query ($id: ID!) { compendiumEntryUsers(id: $id) }';
+describe('setCompendiumEntryReviewed', () => {
+  const REVIEWED =
+    'mutation ($id: ID!, $reviewed: Boolean!) { setCompendiumEntryReviewed(id: $id, reviewed: $reviewed) { id } }';
 
-  it('answers the number of covens for a curator, and FORBIDDEN for a member of one of them', async () => {
+  it('marks and clears the entry for a curator, answering it, and is FORBIDDEN for a member', async () => {
     const id = await seed();
-    await insertCupboardEntry(sql, { workspaceId: WORKSPACE_W_ID, ingredientId: id }, A.id);
+    // Why the mark below is the mutation's: the seeded row has none.
+    expect((await rowOf(id)).curator_reviewed_at).toBeNull();
 
-    const curator = await run<{ compendiumEntryUsers: number }>(asUser(E), USERS, { id });
-    expect(curator.data).toEqual({ compendiumEntryUsers: 1 });
-    const member = await run(asUser(B), USERS, { id });
+    const marked = await run(asUser(F), REVIEWED, { id, reviewed: true });
+    expect(marked).toEqual({ data: { setCompendiumEntryReviewed: { id } } });
+    expect(await rowOf(id)).toMatchObject({ curator_reviewed_by: F.id });
+
+    const member = await run(asUser(B), REVIEWED, { id, reviewed: false });
     expect(member.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+
+    await run(asUser(F), REVIEWED, { id, reviewed: false });
+    expect(await rowOf(id)).toMatchObject({ curator_reviewed_at: null, curator_reviewed_by: null });
   });
 
-  it("is NOT_FOUND for a coven's ingredient", async () => {
+  it('shows anyone the date of the mark, signed in or not, and never who set it', async () => {
+    const id = await seed();
+    const READ = 'query ($id: ID!) { ingredient(id: $id) { reviewedAt } }';
+    expect(await run(null, READ, { id })).toEqual({ data: { ingredient: { reviewedAt: null } } });
+
+    await run(asUser(F), REVIEWED, { id, reviewed: true });
+    // Precondition: the row holds the mark the read below must reflect.
+    const { curator_reviewed_at: at } = await rowOf(id);
+    expect(at).not.toBeNull();
+
+    const seen = await run<{ ingredient: { reviewedAt: string } }>(null, READ, { id });
+    expect(new Date(seen.data!.ingredient.reviewedAt).getTime()).toBe(new Date(at).getTime());
+  });
+
+  it("is NOT_FOUND for a coven's ingredient, which stays unmarked", async () => {
     const id = await seed({ workspaceId: WORKSPACE_W_ID, nomenclature: 'none' });
 
-    expect((await run(asUser(E), USERS, { id })).errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
-  });
-});
-
-// MB.219 over the wire: a compendium entry's forms through the update input,
-// answered back on `Ingredient.variants`, and a form the compendium refuses
-// pathed to it. The matching and the curated rules are the service file's.
-describe('variants', () => {
-  const VARIANTS = `mutation ($id: ID!, $input: CompendiumIngredientUpdateInput!) {
-    updateCompendiumIngredient(id: $id, input: $input) { variants { form formChoice { id } } }
-  }`;
-
-  it('replaces its forms with the ones sent, answering each with its pick', async () => {
-    const id = await insertIngredient(sql, makeIngredient({ name: 'Testwort' }), A.id);
-    const oil = await curatedFormId(sql, 'Oil');
-
-    const result = await run<{ updateCompendiumIngredient: WorkspaceIngredientNode }>(
-      asUser(E),
-      VARIANTS,
-      { id, input: whole({ ...testwort(), variants: [formOf('Herb', herb), formOf('Oil', oil)] }) },
-    );
-
-    expect(result.errors).toBeUndefined();
-    expect(result.data?.updateCompendiumIngredient.variants).toEqual([
-      { form: 'Herb', formChoice: { id: herb } },
-      { form: 'Oil', formChoice: { id: oil } },
-    ]);
-  });
-
-  it('answers a typed form as VALIDATION pathed to that form, changing nothing', async () => {
-    const id = await insertIngredient(sql, makeIngredient({ name: 'Testwort' }), A.id);
-
-    const result = await run(asUser(E), VARIANTS, {
-      id,
-      input: whole({ ...testwort(), variants: [formOf('Herb', herb), formOf('Testform', '')] }),
-    });
-
-    expect(result.data).toBeNull();
-    expect(result.errors?.[0]?.extensions).toMatchObject({
-      code: 'VALIDATION',
-      fieldErrors: [{ path: ['variants', 1, 'form'] }],
-    });
-    const forms = await sql`
-      select form from ingredient_variants where ingredient_id = ${id} and deleted_at is null`;
-    expect(forms).toEqual([{ form: 'Testform' }]);
+    const result = await run(asUser(F), REVIEWED, { id, reviewed: true });
+    expect(result.errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
+    expect((await rowOf(id)).curator_reviewed_at).toBeNull();
   });
 });

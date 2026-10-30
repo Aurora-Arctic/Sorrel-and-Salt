@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/sassafras-sassafras-albidum
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Sassafras albidum
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-sassafras-albidum
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Sassafras albidum", Stritch, L., 2018, 10.2305/IUCN.UK.2018-1.RLTS.T62020487A62020489.en'

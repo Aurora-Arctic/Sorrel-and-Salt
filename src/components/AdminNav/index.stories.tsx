@@ -1,36 +1,38 @@
-import type { Story } from '@ladle/react';
-import type { ReactElement } from 'react';
-import { AdminFrame as Frame } from '../../../.ladle/admin-frame';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactElement, ReactNode } from 'react';
+import { AdminFrame as Frame } from '../../../.storybook/admin-frame';
 import { AdminContents } from '.';
 
-// Render-only; behaviour is asserted in tests/components/AdminNav. It takes
-// one prop, `managesPeople`: an admin sees every page, a curator all but
-// People (M11.20). The workshop's `usePathname`
-// stub answers `/admin/users` (.ladle/navigation.ts), the People page's
-// Users tab, so People is the current page in every story. Each sits in the
-// admin layout as it is (`AdminFrame`): the nav in the context row led by
-// "Admin", above the `.page-column` column that holds the page.
-export default {
-  title: 'Admin / Admin Nav',
-};
+// Render-only; behaviour is asserted in tests/components/AdminNav. `managesPeople`
+// is the one prop. The workshop's `usePathname` stub answers `/admin/users`
+// (.storybook/navigation.ts), so People is current. Each story sits in `AdminFrame`.
+const meta = {
+  title: 'Admin / Nav',
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // Wider than a tablet: six tabs along the row, People set apart by a hairline
 // and marked by weight and the heavy rule. The narrower shapes are
 // SectionNav's stories.
-export const Default: Story = () => <Frame />;
+const defaultNode = <Frame />;
 
-export const Phone: Story = () => <Frame />;
-Phone.meta = { width: 375 };
+// Other pages current: the nav marks whichever page the address belongs to.
+const categoriesCurrentNode = <Frame open="/admin/category-groups" />;
+
+const astrologyCurrentNode = <Frame open="/admin/zodiac-signs" />;
+
+const invitationsCurrentNode = <Frame open="/admin/invitations" />;
 
 // A curator's nav: the five curation pages, and no People. Opened on the
 // compendium, since a curator never reaches the People page.
-export const Curator: Story = () => <Frame open="/admin/compendium" managesPeople={false} />;
+const curatorNode = <Frame open="/admin/compendium" managesPeople={false} />;
 
-// The `/admin` index under the nav: a lede, then the table of contents in
-// the nav's sections. The page is a server component behind the guard, so
-// its heading and lede are copied here; the contents are the real part.
+// The `/admin` index under the nav: a lede, then the contents in the nav's
+// sections. The page is a server component, so its heading and lede are copied
+// here. Opened at `/admin`, where no page is current.
 const Index = ({ managesPeople = true }: { managesPeople?: boolean }): ReactElement => (
-  <Frame managesPeople={managesPeople}>
+  <Frame shell open="/admin" managesPeople={managesPeople}>
     <main>
       <h1>Admin</h1>
       <p className="lede">
@@ -43,10 +45,30 @@ const Index = ({ managesPeople = true }: { managesPeople?: boolean }): ReactElem
   </Frame>
 );
 
-export const IndexPage: Story = () => <Index />;
-
-export const IndexPagePhone: Story = () => <Index />;
-IndexPagePhone.meta = { width: 375 };
+const indexPageNode = <Index />;
 
 // The index as a curator reads it: the Compendium section alone.
-export const IndexPageCurator: Story = () => <Index managesPeople={false} />;
+const indexPageCuratorNode = <Index managesPeople={false} />;
+
+const STATES: Record<string, ReactNode> = {
+  'People Current': defaultNode,
+  'Categories Current': categoriesCurrentNode,
+  'Astrology Current': astrologyCurrentNode,
+  'Invitations Current': invitationsCurrentNode,
+  Curator: curatorNode,
+  'Index Page': indexPageNode,
+  'Index Page Curator': indexPageCuratorNode,
+};
+
+export const States: Story = {
+  args: { state: 'People Current' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div>{state}</div>,
+};
+
+// Narrow, where the nav moves to the bar at the foot of the window. Its own
+// story: a width is pinned for the whole story, not for a state.
+export const NarrowPinned: Story = {
+  render: () => <Frame open="/admin/compendium" />,
+  globals: { viewport: { value: 'w375', isRotated: false } },
+};

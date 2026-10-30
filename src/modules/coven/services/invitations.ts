@@ -20,10 +20,8 @@ import { workspaces } from '../schema/workspaces';
 import type { WorkspaceRole } from '../types';
 import { assertMembership } from './membership';
 
-// M7.3: an owner invites an address into a coven with a role, the workspace
-// tier of `invitations` (claude-docs/db/invitations.md, "Inviting into a
-// coven"). Who may invite is this service's; the token's hash, the expiry and
-// the workspace the row names are the repository's named write's.
+// An owner invites an address into a coven with a role: the workspace tier of `invitations` (claude-docs/db/invitations.md,
+// "Coven invitation service details"). Who may invite is this service's; the token, expiry and workspace are the repository's.
 
 /** The roles an invitation may grant: the database's check, said again where it can explain itself. */
 const INVITABLE: readonly WorkspaceRole[] = ['viewer', 'member'];
@@ -33,19 +31,11 @@ function isInvitable(role: WorkspaceRole): role is InvitableRole {
 }
 
 /**
- * Invites `email` into the coven with `role`: a pending invitation, stamped as
- * the session's user, whose token is mailed to the address through `sender`
- * and stored as its hash alone. Answers the row, which carries no token. A
- * failed send is the transport's to log: the invitation stays pending and can
- * be revoked and sent again.
- *
- * A second invitation to an address already invited is allowed, as the admin
- * tier's is: each mail carries its own link, and any one accepts.
+ * Invites `email` into the coven with `role`: a pending invitation whose token is mailed through `sender` and stored as its hash
+ * alone; a second invitation to the address replaces the pending one (claude-docs/db/invitations.md, "Coven invitation service details").
  *
  * @throws {Forbidden} the caller is not an owner of the coven (`member: invite`).
- * @throws {ValidationError} on `role`: owner, which is granted afterwards on
- * the members page. On `email`: malformed, unmailable, or a live member's
- * already.
+ * @throws {ValidationError} on `role`: owner. On `email`: malformed, unmailable, or a live member's already.
  */
 export async function createInvitation(
   session: Session,
@@ -78,11 +68,12 @@ export async function createInvitation(
   if (!workspace) throw new ValidationError([{ path: ['workspaceId'], message: 'No such coven' }]);
 
   const token = newToken();
-  const [row] = await withAudit(session, (write) =>
-    write.insertInvitation(membership, { email, role, token }),
-  );
-  // After the commit, so a mailed link always names a row.
-  // The mail names who sent it; the session holds the id alone, so the name is read here.
+  // The waiting invitation to this address is withdrawn in the write that creates the new one.
+  const [row] = await withAudit(session, async (write) => {
+    await write.revokePendingInvitationsTo(membership, email);
+    return write.insertInvitation(membership, { email, role, token });
+  });
+  // After the commit, so a mailed link always names a row. The session holds the id alone, so the sender's name is read here.
   const inviter = await findOneById(users, session.userId);
   await sender.workspaceInvitation(email, token, {
     name: workspace.name,
@@ -93,11 +84,8 @@ export async function createInvitation(
 }
 
 /**
- * One page of the coven's pending invitations, newest first, for the members
- * page (M7.6). Owners only: the rows carry the addresses of people who have
- * not joined, and members now read the roll (M6.13), so the check is
- * `member: invite`, never `member: read`. A pending invitation outlives its
- * inviter's demotion or removal, as the admin tier's does.
+ * One page of the coven's pending invitations, newest first, for the members page. Owners only: the rows carry the addresses of
+ * people who have not joined, so the check is `member: invite`, never `member: read`.
  *
  * @throws {Forbidden} the caller is not an owner of the coven.
  */
@@ -111,9 +99,7 @@ export async function listPendingWorkspaceInvitations(
 }
 
 /**
- * How many invitations `listPendingWorkspaceInvitations` pages, and how many
- * come before `start`, a page's first row, none on an empty page: the list's
- * "Page X of Y".
+ * How many invitations `listPendingWorkspaceInvitations` pages, and how many come before `start`: "Page X of Y".
  *
  * @throws {Forbidden} the caller is not an owner of the coven.
  */
@@ -127,16 +113,11 @@ export async function countPendingWorkspaceInvitations(
 }
 
 /**
- * Withdraws a pending invitation of the coven, stamped as the owner: its link
- * is dead from now on and the row stays for the audit. An invitation already
- * revoked or lapsed is no longer pending, so it is answered as not found, as
- * the admin tier's is.
+ * Withdraws a pending invitation of the coven, stamped as the owner: its link is dead from now on and the row stays for the audit.
  *
  * @throws {Forbidden} the caller is not an owner of the coven.
- * @throws {NotFound} no invitation of this coven has this id, or it is no
- * longer pending.
- * @throws {ValidationError} on `id`: the invitation was accepted, so the
- * person is a member and is removed on the members page instead.
+ * @throws {NotFound} no invitation of this coven has this id, or it is no longer pending.
+ * @throws {ValidationError} on `id`: the invitation was accepted, so the person is removed on the members page instead.
  */
 export async function revokeWorkspaceInvitation(
   session: Session,

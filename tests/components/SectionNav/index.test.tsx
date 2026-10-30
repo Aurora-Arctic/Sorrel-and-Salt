@@ -1,7 +1,6 @@
 import type { Route } from 'next';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import FormIcon from '@/components/FormIcon';
 import type { SectionNavItem } from '@/components/SectionNav/types';
 import { currentHrefs, hrefs } from '../../support/links';
 
@@ -15,10 +14,8 @@ vi.mock('next/navigation', () => ({
 
 const { default: SectionNav } = await import('@/components/SectionNav');
 
-// The section nav (MB.7; claude-docs/components/section-nav.md): a row of
-// tabs that is a bottom bar on a phone, with the sections past the fourth
-// behind a More button. Which tabs show at which width is the stylesheet's,
-// so a test sees every tab and, shut, no More list.
+// The section nav (claude-docs/components/section-nav.md): a row of tabs that is a bottom bar on a phone, with the sections past the fourth behind a More button.
+// Which tabs show at which width is the stylesheet's, so a test sees every tab and, shut, no More list.
 
 const ITEMS: readonly SectionNavItem[] = [
   { label: 'Overview', href: '/coven/fixture-coven' as Route, icon: 'overview', exact: true },
@@ -53,30 +50,14 @@ describe('SectionNav', () => {
   });
 
   it.each([
-    // An exact entry is current only at its own address.
-    ['/coven/fixture-coven', ['/coven/fixture-coven']],
-    ['/coven/fixture-coven/members', []],
-    // Any other is current beneath its address, and on its `matches`.
-    ['/admin/categories', ['/admin/categories']],
+    // A `matches` address marks the section it belongs to; `isAtPath` owns the rest.
     ['/admin/category-groups', ['/admin/categories']],
-    ['/admin/users/some-user', ['/admin/users']],
-    ['/admin/forms-archive', []],
   ])('marks only the section at %s as current', (path, expected) => {
     pathname.mockReturnValue(path);
 
     render(<SectionNav label="Test" sections={ITEMS} />);
 
     expect(currentHrefs(row())).toEqual(expected);
-  });
-
-  // One mark means "a form" everywhere: the Forms tab wears the generic form
-  // icon, the salt spoon, not a mark of its own (M12.7).
-  it('draws the generic form icon on the Forms tab', () => {
-    const { container: spoon } = render(<FormIcon name={null} />);
-    render(<SectionNav label="Test" sections={ITEMS} />);
-
-    const forms = within(nav()).getByRole('link', { name: 'Forms' });
-    expect(forms.querySelector('svg')!.innerHTML).toBe(spoon.querySelector('svg')!.innerHTML);
   });
 
   it('draws no More button when the sections fit', () => {

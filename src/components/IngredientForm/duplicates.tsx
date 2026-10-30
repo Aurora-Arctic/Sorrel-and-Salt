@@ -1,5 +1,6 @@
 'use client';
 
+import NewTabHint from '@/components/LinkHint/new-tab-hint';
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   type MouseEvent,
@@ -31,23 +32,9 @@ import type { Duplicate, DuplicateWarning, IngredientFormValues, NameFieldProps 
 // add where this one hands the entry to the form.
 import '../AddIcon/index.scss';
 
-// Story 16's "did you mean": the name asks MB.11's possibleDuplicates once
-// the typing settles, on the debounce the other lookups wait on, and each
-// near match is listed beneath the field by its label and formal name, linked
-// to its entry, with a + at the row's right for a compendium entry the coven
-// does not hold, which adds it to the coven the form is adding to (M12.48, in
-// place of M12.20's Use It), and for one it holds, its own entries too, the
-// eye, whose Quick Look opens the entry's details over the form (M12.48, in
-// place of M12.20's Open It). The list
-// is a list, one match a row, never a sentence with buttons run into it (the
-// owner's call at the cupboard review). It has
-// to be answered: a save asks about the very name it is sending, settled or
-// not, and while a match shows the save is held, the warning turns to an
-// error on the name, and the focus goes to Create Anyway, which sets the
-// matches aside so the next save goes. An edit's
-// warning only names the matches: renaming makes nothing new, so its save
-// is never held and it offers no Create Anyway (MB.115, the owner's call)
-// (claude-docs/components/ingredient-form.md, "The duplicate warning").
+// The "did you mean": once typing settles the name asks `possibleDuplicates`, and each near match
+// is listed under the field with a + or an eye. A save is held while a match shows; an edit's never
+// is (claude-docs/components/ingredient-form.md, "The duplicate warning").
 
 const PossibleDuplicatesDocument = graphql(`
   query PossibleDuplicates($workspaceId: ID, $name: String!, $first: Int) {
@@ -67,7 +54,7 @@ const PossibleDuplicatesDocument = graphql(`
   }
 `);
 
-// The compendium entries whose name is the typed one exactly (M12.20): asked
+// The compendium entries whose name is the typed one exactly: asked
 // when a save is sent, since only a save is held on the answer.
 const CompendiumMatchesDocument = graphql(`
   query CompendiumMatches($workspaceId: ID!, $name: String!, $first: Int) {
@@ -93,21 +80,16 @@ const EXACT_ROWS = 5;
 /** Matches a warning lists: the closest few, best first. */
 const DUPLICATE_ROWS = 3;
 
-/** The shortest name the field asks about: one letter resembles half the compendium (the owner's call). */
+/** The shortest name the field asks about: one letter resembles half the compendium. */
 const MIN_ASKED = 2;
 
 const lookup = (workspaceId: string | null, name: string) =>
   graphqlQuery(PossibleDuplicatesDocument, { workspaceId, name, first: DUPLICATE_ROWS });
 
 /**
- * The warning for the name as typed: the matches it shows, whether a save is
- * held on them, and the two things that move it on — a save's `check`, and
- * `dismiss`. The form owns it, since its save waits on it; `NameField` draws it.
- * A null coven asks about the compendium alone, and `omit` is the entry being
- * edited, which its own name always matches. `opened` is the name the form
- * opened with: until the name has been typed in, nothing is asked or held, so
- * an edit that leaves the name alone never warns; once typed in, it asks as
- * any name does, back at the opened name too (MB.115, the owner's calls).
+ * The warning for the name as typed: its matches, whether a save is held on them, and a save's
+ * `check` and `dismiss`. A null coven asks the compendium alone; `omit` is the entry being edited
+ * (claude-docs/components/ingredient-form.md, "How the duplicate list behaves").
  */
 export function useDuplicateWarning(
   workspaceId: string | null,
@@ -117,14 +99,13 @@ export function useDuplicateWarning(
 ): DuplicateWarning {
   const client = useQueryClient();
   const typed = text.trim();
-  // Typed in since the form opened, or since a save moved `opened` on: set
-  // during render, as React allows for a component's own state, so the first
-  // keystroke already asks.
+  // Typed in since the form opened: set during render, as React allows for a
+  // component's own state, so the first keystroke already asks. A save moving
+  // `opened` on to the name typed keeps it, so a list showing stays showing.
   const [baseline, setBaseline] = useState(opened);
   const [edited, setEdited] = useState(false);
   if (baseline !== opened) {
     setBaseline(opened);
-    setEdited(false);
   } else if (!edited && typed !== opened.trim()) {
     setEdited(true);
   }
@@ -145,7 +126,7 @@ export function useDuplicateWarning(
   // The name a save was held on. Another name lifts the hold, so a match
   // arriving as it is typed never takes the focus; its save asks again.
   const [heldFor, setHeldFor] = useState<string | null>(null);
-  // The compendium entries named exactly as the held save's name (M12.20).
+  // The compendium entries named exactly as the held save's name.
   const [exact, setExact] = useState<Duplicate[]>([]);
   const matches =
     name === ''
@@ -203,11 +184,8 @@ export function useDuplicateWarning(
   };
 
   /**
-   * After a match's + has added it (M12.48, the owner's report): the cached
-   * answers still say the coven lacks it, and would for their stale time, so
-   * every lookup of both kinds is asked again rather than only this name's,
-   * since another name typed in this form may find it too. The held save's
-   * exact matches are state, not cache, so the entry is marked held there.
+   * After a match's + has added it: every lookup of both kinds is asked again, since the cached
+   * answers still say the coven lacks it (claude-docs/components/ingredient-form.md, "How the duplicate list behaves").
    */
   const added = async (id: string): Promise<void> => {
     setExact((now) =>
@@ -268,7 +246,7 @@ const LEAVING_CLASS = 'ingredient-form__match--leaving';
 const settleRows = (rows: readonly Row[]): Row[] =>
   rows.flatMap(({ match, phase }) => (phase === 'leaving' ? [] : [{ match, phase: 'present' }]));
 
-/** The rows for a new answer, by place: a place beyond the last answer enters, one beyond this answer leaves holding what it had, a leaving one asked for again is back, and one showing another entry now keeps the old to fade out (the owner's call), unless the shapes cover the change. */
+/** The rows for a new answer, by place: a place beyond the last answer enters, one beyond this answer leaves holding what it had, a leaving one asked for again is back, and one showing another entry now keeps the old to fade out, unless the shapes cover the change. */
 const rowsFor = (rows: readonly Row[], matches: readonly Duplicate[], covered = false): Row[] => [
   ...matches.map((match, place): Row => {
     const was = rows[place];
@@ -295,10 +273,8 @@ const settledHeightOf = (list: HTMLUListElement): number => {
   );
   const last = staying[staying.length - 1];
   if (!last) return 0;
-  // From the edges as drawn, not the whole-pixel offsets, and with the row's
-  // own end margin (typography-base's `li`), which the list's resting height
-  // holds: a target short of that height slid the list up a little and let
-  // it back down at the end (the owner's finding).
+  // From the edges as drawn, with the row's own end margin, which the list's resting height holds
+  // (claude-docs/components/ingredient-form.md, "How the duplicate list behaves").
   return (
     last.getBoundingClientRect().bottom -
     list.getBoundingClientRect().top +
@@ -307,13 +283,9 @@ const settledHeightOf = (list: HTMLUListElement): number => {
 };
 
 /**
- * The list's rows as slots by place, and the list's slide between answers
- * (the owner's calls, 2026-10-18): a dropped row fades out whole while the
- * list's bottom slides up over it, and a new row fades in as the bottom
- * slides down to show it, so the box never jumps. The height slides from the
- * list's last measured height to its settled one, set on the list itself,
- * the way a height that is otherwise `auto` can be moved; the rows are
- * settled by the slide's end, or by the net. Reduced motion settles at once.
+ * The list's rows as slots by place, and its slide between answers: a dropped row fades out as
+ * the bottom slides up over it, a new row fades in as it slides down. Reduced motion settles at
+ * once (claude-docs/components/ingredient-form.md, "How the duplicate list behaves").
  */
 function useSlidingRows(
   matches: readonly Duplicate[],
@@ -329,13 +301,8 @@ function useSlidingRows(
   // The answer the rows were last built for, by id: the array itself is new
   // every render. Set during render, as the hook above sets its own state.
   const [builtFor, setBuiltFor] = useState('');
-  // Where the shapes are, by their own transition events: `fading` in,
-  // `in`, or off. An answer back while they fade in waits under them, and is
-  // shown once they are in, so the change is never seen; one back with them
-  // in changes the rows under them; one back before they began shows through
-  // the rows' own cross-fade (the owner's finding, 2026-10-18: an answer
-  // landing mid-fade showed the old rows a moment, then the new outright).
-  // Under reduced motion no transition runs, so every answer shows at once.
+  // Where the shapes are, by their own transition events: `fading` in, `in`, or off. An answer
+  // back mid-fade waits, so the change is never seen (claude-docs/components/ingredient-form.md, "How the duplicate list behaves").
   const [shapes, setShapes] = useState<'off' | 'fading' | 'in'>('off');
   const [held, setHeld] = useState<Held | null>(null);
   const key = matches.map((match) => match.id).join(' ');
@@ -380,10 +347,8 @@ function useSlidingRows(
   // starts from where the rows last stood; and the answer last slid for.
   const restHeight = useRef<number | null>(null);
   const slidFor = useRef('');
-  // The list's height is set for a slide and let go only once the rows it
-  // slid for are settled: let go as the leaving rows are asked out, the list
-  // stood a frame at its auto height with them still in the flow, a jump at
-  // the very end (the owner's finding).
+  // The list's height is let go only once the rows it slid for are settled, else the list jumps
+  // a frame at its auto height at the very end.
   const sliding = useRef(false);
 
   const letGo = (list: HTMLUListElement) => {
@@ -489,7 +454,7 @@ const titleOf = ({ name, canonicalName }: Duplicate) =>
 /**
  * What the notice says. Colour alone must not mark a held save, so the words
  * change with the state: a question while typing, then, once Save was pressed
- * and held, that the save waits and why (MB.120).
+ * and held, that the save waits and why.
  */
 function sentenceFor(blocking: boolean, asking: boolean, exactCount: number): string {
   if (asking) {
@@ -504,14 +469,6 @@ function sentenceFor(blocking: boolean, asking: boolean, exactCount: number): st
 const isHeld = (match: Duplicate): boolean => !match.isGlobal || match.inCupboard === true;
 
 /**
- * One list of the warning's matches, sliding between answers on its own
- * (`useSlidingRows`), and drawn while it has a row, the leaving ones too.
- * Under a `heading`, the list is named by it, an `h4` beneath the form's
- * Identity section's `h3`, and the group opens by height round its first
- * rows and closes round its last, as the region does round the whole notice,
- * so a group arriving or leaving under a warning already shown never jumps.
- */
-/**
  * What a row offers at its right: the control, the same drawn as text alone
  * for a row fading out over its successor, and the skeleton shape it stands
  * as while another answer is on its way.
@@ -522,6 +479,11 @@ interface Choice {
   shape: 'icon';
 }
 
+/**
+ * One list of the warning's matches, sliding between answers on its own (`useSlidingRows`), drawn
+ * while it has a row, the leaving ones too. A `heading` names the list, an `h4` beneath the form's
+ * Identity `h3` (claude-docs/components/ingredient-form.md, "How the duplicate list behaves").
+ */
 function MatchList({
   slide,
   list,
@@ -616,17 +578,14 @@ function MatchList({
 
 /**
  * Where a +'s add has got to: sending, the check held after it worked, and the eye it turns into
- * (M12.48, the owner's call, 2026-10-21).
+ *.
  */
 type PlusPhase = 'busy' | 'added' | 'eye';
 
 /**
  * The + of a compendium match the coven does not hold, and the Quick Look eye it becomes once the
- * add has worked: one button throughout, so the focus stays on it. While the add is sent it shows
- * the spinner; then AddIcon's check, held `ADDED_HOLD_MS`; then the check fades into the eye, the
- * stack AddIcon draws when its check fades back to the plus, and under reduced motion the eye
- * simply takes the check's place. Once the eye is in, `onShown` asks for the row to move under In
- * This Coven, so the move never starts under the check.
+ * add has worked: one button throughout, so the focus stays on it. It shows the spinner, then
+ * AddIcon's check held `ADDED_HOLD_MS`, then the eye; `onShown` then asks for the row to move.
  */
 function PlusChoice({
   match,
@@ -720,10 +679,8 @@ export function NameField({
   const asking = blocking && exact.length > 0;
   const warningId = useId();
   const listed = asking ? exact : shown;
-  // Two groups where there is a cupboard (the owner's call): what the coven
-  // already holds, its own entries and the compendium entries it has used,
-  // then what is in the compendium alone, each in the answer's order. The
-  // admin's form has no coven, so its matches stand in one list, unheaded.
+  // Two groups where there is a cupboard: what the coven holds, then the compendium alone, each in
+  // the answer's order. The admin's form has no coven, so its matches stand in one list.
   const grouped = onUse !== undefined;
   const covenList = useRef<HTMLUListElement>(null);
   const compendiumList = useRef<HTMLUListElement>(null);
@@ -739,7 +696,7 @@ export function NameField({
   const drawn = rows.length > 0;
   const open = rows.some((row) => row.phase !== 'leaving');
 
-  // Each +'s add, by entry (M12.48, the owner's calls, 2026-10-21): the check holds, then the eye,
+  // Each +'s add, by entry: the check holds, then the eye,
   // then the row moves under In This Coven, the region busy while it does. The + buttons by entry,
   // so the focus follows from one to the eye in its new row.
   const [phases, setPhases] = useState<ReadonlyMap<string, PlusPhase>>(new Map());
@@ -815,14 +772,8 @@ export function NameField({
   });
 
   /**
-   * What a match offers. Its Quick Look where the page under the form has
-   * details to open (the admin's form, every match being the compendium's;
-   * the owner's call). Otherwise, for a match the coven holds, its own or a compendium entry it
-   * has used, the eye, which opens its details over the form, read in the page
-   * so nothing typed is lost (M12.48, the owner's call, in place of Open It).
-   * For a compendium match it does not hold: the +, which puts it in the
-   * cupboard the form is adding to, with no menu of covens (M12.48, the
-   * owner's call). Nothing where neither applies.
+   * What a match offers: its Quick Look where the page has details to open; else the eye for a
+   * match the coven holds, or the + for a compendium match it does not. Nothing where neither applies.
    */
   const choiceFor = (match: Duplicate): Choice | null => {
     const look = quickLookOf?.(match);
@@ -897,7 +848,7 @@ export function NameField({
       rel="noopener noreferrer"
     >
       {titleOf(match)}
-      <span className="visually-hidden"> (opens in a new tab)</span>
+      <NewTabHint />
     </a>
   );
 
@@ -920,37 +871,28 @@ export function NameField({
         describedBy={shown.length > 0 ? warningId : undefined}
         invalid={blocking}
         // The one sign of a lookup out: the region below draws nothing until an
-        // answer has something to show (the owner's call, 2026-10-18).
+        // answer has something to show.
         busy={pending}
         after={
-          // Always in the page, as a live region must be to be heard: the
-          // warning arrives after the typing, and nothing else says so. A
-          // status written out, where an `<output>` would hold phrasing
-          // content alone, and the notice inside takes no role of its own, so
-          // it is announced once (claude-docs/components/notice.md).
+          // Always in the page, as a live region must be to be heard. A status written out, as an
+          // `<output>` would hold phrasing content alone, and the notice inside takes no role of its
+          // own (claude-docs/components/notice.md).
           <div
             ref={region}
+            // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- this live region holds block content, which an output element would restyle
             role="status"
             className={`ingredient-form__duplicates${open ? ' ingredient-form__duplicates--open' : ''}`}
             aria-label="Possible duplicates"
             aria-busy={pending || moving !== null || undefined}
           >
-            {/* The region opens by height round its notice, which fades in
-              (the owner's call, 2026-10-18: the first warning landed too
-              abruptly). */}
+            {/* The region opens by height round its notice, which fades in. */}
             <div className="ingredient-form__duplicates-inner">
               {drawn && (
                 <Notice kind={blocking ? 'error' : 'warn'} block inRegion>
-                  {/* The id sits on the whole block, sentence and list, so the
-                  button described by it is read with the names. Plain anchors
-                  rather than <Link>, since the caller hands back a plain
-                  string, not a typed route; each in a new tab, so the form and
-                  its unsaved changes stay where they are (the owner's call at
-                  MB.115's review). While another name's answer is on its way
-                  each row cross-fades to the skeleton's shapes, as a tab's
-                  list wears them, after a short delay, so an answer back fast
-                  never flashes them and nothing moves (the owner's calls,
-                  2026-10-18, over a spinner). Both stay mounted for the fade. */}
+                  {/* The id sits on the whole block, so the button it describes is read with the
+                  names. Plain anchors, since the caller hands back a plain string, in a new tab so
+                  the form's unsaved changes stay. Both stay mounted for the skeleton's fade
+                  (claude-docs/components/ingredient-form.md, "How the duplicate list behaves"). */}
                   <div id={warningId} className="ingredient-form__matches">
                     <p>{sentenceFor(blocking, asking, exact.length)}</p>
                     <MatchList
@@ -968,12 +910,8 @@ export function NameField({
                       linkTo={linkTo}
                     />
                   </div>
-                  {/* One Create Anyway under either list (the owner's call,
-                  2026-10-18: the question's own button was Add Our Own), in
-                  the accent outline at the medium size. Described by the
-                  warning: a save that stops here moves the focus to it, and
-                  the focus should say why. None on an edit's warning, whose
-                  save is never held. */}
+                  {/* One Create Anyway under either list, in the accent outline at the medium size,
+                  described by the warning so the focus says why. None on an edit's warning. */}
                   {(asking || holds) && (
                     <button
                       ref={ref}

@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/gorse-ulex-europaeus
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Ulex europaeus
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-ulex-europaeus
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Ulex europaeus", Contu, 2017, 10.2305/IUCN.UK.2017-3.RLTS.T19891755A86138815.en'

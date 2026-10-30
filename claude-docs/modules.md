@@ -32,7 +32,8 @@ registers its types: `src/graphql/schema/index.ts` imports `@/modules/identity`,
 `FormSuggestion`, `DeitySuggestion`, `SuggestionClaimant` and the
 `celestialBodySuggestions`, `zodiacSuggestions`, `formSuggestions` and
 `deitySuggestions` connections, and `Deity` and `DeityTradition` with the
-`deityTraditionsById` and `ingredientFormsById` loaders (MB.167); `ingredients` has
+`deityTraditionsById` and `ingredientFormsById` loaders (MB.167) and the
+`otherNamesByDeity` loader (M14.23); `ingredients` has
 `Ingredient`, `IngredientDeity` and `IngredientDeityInput`, the `compendium`, `ingredient`, `possibleDuplicates` and
 `ingredientSuggestions` queries,
 the workspace ingredient mutations, the compendium's three (M5.5), and `CommonNameSuggestion` and
@@ -68,13 +69,13 @@ What stays outside a module, and why:
 Every table has exactly one owner. The services column is what exists today;
 a service lands in the module that owns the table it writes.
 
-| Module        | Tables                                                                                                                                                                                                                                                         | Services today                                                                                                                                                                                                  |
-| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `identity`    | `users`, `user_privilege_changes`, `admin_role_change_pauses`, `sessions`, `accounts`, `verifications`, `rate_limits`                                                                                                                                          | `admin-role.ts`, `admin-changes.ts`, `profile.ts`, `provisional-accounts.ts`, `workshop-access.ts`                                                                                                              |
-| `coven`       | `workspaces`, `workspace_members`, `invitations` (both tiers, MB.201)                                                                                                                                                                                          | `membership.ts`, `memberships.ts`, `access-control.ts`                                                                                                                                                          |
-| `vocabulary`  | `category_groups`, `categories`, `ingredient_form_groups`, `ingredient_forms`, `celestial_bodies`, `zodiac_signs`, `deity_traditions`, `deities` (MB.128)                                                                                                      | `categories.ts`, `category-groups.ts`, `ingredient-form-values.ts`, `ingredient-form-groups.ts`, `groups.ts`, `curated-values.ts`, `curated-writes.ts`, `curated-lists.ts`, `held-entries.ts`, `suggestions.ts` |
-| `ingredients` | `ingredients` (both tiers), `ingredient_folk_names`, `ingredient_substitutes`, `ingredient_deities`, `ingredient_categories`, `inventory_items`, `retired_ingredient_slugs`, `workspace_compendium_entries` (M12.13); `references`, `reference_links` (MB.152) | `duplicates.ts`, `common-names.ts`, `ingredient-children.ts`, `workspace-ingredients.ts`, `cupboard-entries.ts` (M12.14); `schema/units.ts` is the unit vocabulary                                              |
-| `grimoire`    | `spells`, `spell_ingredients`, `spell_categories`                                                                                                                                                                                                              | `spell-visibility.ts`                                                                                                                                                                                           |
+| Module        | Tables                                                                                                                                                                                                                                                         | Services today                                                                                                                                                                                                             |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `identity`    | `users`, `user_privilege_changes`, `admin_role_change_pauses`, `sessions`, `accounts`, `verifications`, `rate_limits`                                                                                                                                          | `admin-role.ts`, `admin-changes.ts`, `profile.ts`, `provisional-accounts.ts`, `workshop-access.ts`                                                                                                                         |
+| `coven`       | `workspaces`, `workspace_members`, `invitations` (both tiers, MB.201)                                                                                                                                                                                          | `membership.ts`, `memberships.ts`, `access-control.ts`                                                                                                                                                                     |
+| `vocabulary`  | `category_groups`, `categories`, `ingredient_form_groups`, `ingredient_forms`, `celestial_bodies`, `zodiac_signs`, `deity_traditions`, `deities` (MB.128)                                                                                                      | `categories.ts`, `category-groups.ts`, `ingredient-form-values.ts`, `ingredient-form-groups.ts`, `groups.ts`, `curated-values.ts`, `curated-writes.ts`, `curated-lists.ts`, `held-entries.ts`, `suggestions.ts`            |
+| `ingredients` | `ingredients` (both tiers), `ingredient_folk_names`, `ingredient_substitutes`, `ingredient_deities`, `ingredient_categories`, `inventory_items`, `retired_ingredient_slugs`, `workspace_compendium_entries` (M12.13); `references`, `reference_links` (MB.152) | `duplicates.ts`, `common-names.ts`, `ingredient-children.ts`, `workspace-ingredients.ts`, `cupboard-entries.ts` (M12.14); `schema/units.ts` is the unit vocabulary                                                         |
+| `grimoire`    | `spells`, `spell_steps`, `spell_categories`                                                                                                                                                                                                                    | `spell-visibility.ts`, `spells.ts` (M10.5), `validation/categories/summarize.ts` (M10.7, pure, browser-safe), `validation/categories/compare.ts` (M10.8, pure, browser-safe), `spell-reads.ts` and `step-views.ts` (M10.9) |
 
 **The compendium is a tier inside `ingredients`, not a module**: the
 `workspace_id IS NULL` tier of the one table, reached through `ingredients`'
@@ -271,7 +272,6 @@ through one of these.
 | `inTiers`                  | `predicates.ts`        | MB.206 | The compendium or the proofs' covens                                                         | both       |
 | `readableInTiers`          | `predicates.ts`        | MB.206 | `inTiers`, live rows only                                                                    | both       |
 | `readableIngredientParent` | `ingredient-parent.ts` | MB.206 | A child row's ingredient is readable                                                         | both       |
-| `readableVariantParent`    | `ingredient-parent.ts` | MB.218 | A row one form owns takes its ingredient's tier, through the form                            | both       |
 | `inUseIngredientParent`    | `ingredient-parent.ts` | M12.24 | `readableIngredientParent`, or a retired compendium entry the reading coven's cupboard names | both       |
 | `inUseVariantParent`       | `ingredient-parent.ts` | M12.24 | The same, through a form                                                                     | both       |
 | `findPageInTiers`          | `finders.ts`           | MB.206 | A cursor page (one that resumes from the last row) over `readableInTiers`                    | both       |
@@ -341,7 +341,7 @@ site tier, `workspace_id IS NULL` spelled for that table alone so that no
 invitation read calls `inCompendium`. It is listed because it spells the
 tier's predicate, and the extraction task leaves it behind.
 
-**MB.215: `ingredients` gains `ingredient_variants`.** The table of an ingredient's forms is `ingredients`' own, beside its other children, and `vocabulary` keeps `ingredient_forms`, the names a variant's form is picked from (DESIGN.md §5; MB.216). The vocabulary reaches variants as it reaches ingredients today: MB.220 points `IN_USE.ingredient_forms` and the `formId` filter at variants through the `TWO_TIER` registry, and a form's rename carries onto the compendium variants picking it, through the writer above, where it carried onto entries and moved their slugs. The seam gained MB.218's `readableVariantParent` and `findManyOfVariants`, each reading both tiers; both are in the tables above ([`design-decisions/mb.215-ingredient-variants.md`](design-decisions/mb.215-ingredient-variants.md)).
+**MB.215: `ingredients` gains `ingredient_variants`.** The table of an ingredient's forms is `ingredients`' own, beside its other children, and `vocabulary` keeps `ingredient_forms`, the names a variant's form is picked from (DESIGN.md §5; MB.216). The vocabulary reaches variants as it reaches ingredients today: MB.220 points `IN_USE.ingredient_forms` and the `formId` filter at variants through the `TWO_TIER` registry, and a form's rename carries onto the compendium variants picking it, through the writer above, where it carried onto entries and moved their slugs. The seam gained MB.218's `readableVariantParent` and `findManyOfVariants`, each reading both tiers; M12.24's `inUseVariantParent` took every caller of the first, which is gone, and the second is in the tables above ([`design-decisions/mb.215-ingredient-variants.md`](design-decisions/mb.215-ingredient-variants.md)).
 
 ## Where types live
 
@@ -472,3 +472,87 @@ which `tests/db/updated-at-trigger.test.ts` compares against the catalogue
 new file is picked up by `npm run db:generate` with no registration step. A
 `*.test.ts` file must never sit in `schema/`: the glob would hand it to
 drizzle-kit, which cannot load Vitest.
+
+## Vocabulary shared write steps
+
+`src/modules/vocabulary/services/curated-writes.ts` holds the steps every curated vocabulary's admin write is made of, so how a slug collision, a missing row or a group's move is refused is one edit across the seven services. They are shared steps rather than a descriptor factory: each service keeps its own exported functions and JSDoc, and its own `assertCurator(` and `expireCompendium()`, so the check and the expiry are read together. The file is internal to the module and the index exports no part of it.
+
+- A write that broke the vocabulary's slug index is a `ValidationError` on `name` (the slug is derived and has no field of its own), naming the row holding the address; any other error passes unchanged.
+- Reading a row by id answers `NotFound` for an id that is not a uuid, which names nothing and would be a driver error at the comparison.
+- A group's input is parsed with its group checked live (a foreign key admits a retired one); the refusal is the input schema's own words for a missing group, on its field.
+- A delete's `moveTo` is refused, beside the picker that names it, when none is named or it names the group itself or no other live group.
+- Rewriting a group whole follows the name into the slug of every live row under it whose slug carries the group's name; a category's carries none, so a category group's rename moves nothing. A move onto another row's address is refused on `name`, naming both, before the write and again after one the index refused.
+- Deleting a group first moves its live rows to the `moveTo` group, re-slugged where the slug carries the group's name, in the same transaction. The rows are read before the transaction, so one filed under the group in the instant between is left under a deleted one, which every read drops.
+
+## Library helpers
+
+Behaviour of four helpers in `src/lib` that the source cites.
+
+### Placing server issues on a form
+
+`placeServerIssues` in `graphql-failure.ts` puts every issue a failed save
+carries on a react-hook-form form. An issue that the form's `toField` names a
+field for goes beside that field; the rest go on the form's `root`, each
+distinct message once, joined into one sentence that the form's alert region
+shows. All are `type: 'server'`, so the next submit or an edit to the field
+clears them as it clears the resolver's own. It answers whether it set any
+error.
+
+- `toField` sees the whole issue, path and message, so each form keeps its own
+  reading of a path. A flat form names a field only for a one-segment path it
+  shows; the ingredient form follows a path into its lists.
+- `toField` may answer `false` for an issue the form takes up itself. That issue
+  is placed nowhere: the ingredient form's redirect question asks rather than
+  errs.
+- It places every error at once, where `readGraphqlFailure` reads the first, as
+  the admin forms do, so none carries its own copy of the loop.
+- It is generic over the field names, not the form's values. TypeScript cannot
+  work a form's values back out of its field paths, so a form's own `setError`
+  passes as it is.
+
+### Empty-list text
+
+`noMatchText` in `text.ts` is what an admin list says when it shows no rows. With
+a filter in force, `parts` names each filter as the caller phrases it (`“wort”`,
+`the role Admin`, `No Refs`) and the sentence says nothing matches them and how to
+see more: "No users match “ada” and the role Admin. Change or clear the filter
+to see more." With none, the list itself is empty and `emptyText` is the caller's
+own sentence.
+
+That sentence starts from `emptyList(things)`, "There are no users yet.", which every
+list with no rows at all uses, filtered or not, and a list may add a sentence after it
+saying how to begin ("Add one with Add Category."). An empty field says "No … recorded."
+instead ("No folk names recorded."), since a field is filled in rather than added to.
+
+`noun` is the plural, matched by a plural verb. One wording serves all six lists;
+before it the compendium said "No entry matches", the invitations "No invitation
+matches", the users "No users match", the group and value lists "No category
+matches that filter. Try another name." and the ledger "No admin changes for “x”."
+The plural reads true however many rows the list could have held, and naming each
+filter, not calling it "that filter", shows an admin which one to change.
+
+### Moving a page to another coven
+
+`pathInCoven` in `coven-path.ts` answers where the same page is in another
+workspace: `/coven/a/ingredients/x` becomes `/coven/b/ingredients/x` when the page
+said it opens there (`opens`), and `/coven/b/ingredients` when it did not. What
+lies beneath a section (an ingredient, a spell) belongs to the workspace it was
+opened in, unless the page vouched for the next, and would otherwise be a 404
+there.
+
+- Outside a workspace, or at its index, the answer is the new workspace's index.
+- A people page the viewer's role cannot open there steps back: invitations to the
+  members page beside it when members are readable (a member reads them and cannot
+  invite), anything else to the index.
+
+### Caching a compendium read
+
+`cachedCompendiumRead` in `compendium-cache.ts` holds `read` in the data cache
+under `COMPENDIUM_TAG`, keyed by `key` and its arguments, so each argument list is
+an entry of its own. Only a read every viewer sees alike may be wrapped. Its
+arguments are the whole key, so a session among them would be a cache per viewer,
+and one left out of them a leak. claude-docs/db/compendium-cache.md lists the
+reads.
+
+The value is stored as superjson, not left to Next's `JSON.stringify`, which would
+answer a hit's `Date` columns as strings while a miss answered them as dates.

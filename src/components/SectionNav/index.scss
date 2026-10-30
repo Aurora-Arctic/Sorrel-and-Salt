@@ -1,12 +1,9 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The section nav (MB.7; claude-docs/components/section-nav.md, "Styling").
-// One markup in three shapes, chosen here by the window's width and not the
-// nav's own: the nav is the window's bottom bar on a phone, so it is
-// measured against the window, as the shell's other bars are. Wider than
-// `$shell-phone-width` the sections that fit are tabs filling the context
-// row's height and the rest go behind More; at or under it the row becomes a bar along the window's foot.
+// The section nav (claude-docs/components/section-nav.md, "Styling"). One markup in three shapes
+// chosen by the window's width: above `$shell-phone-width` tabs fill the context row and the rest
+// go behind More; at or under it the row becomes a bar along the window's foot.
 
 // The row's own ground and the current tab's: a quiet fill, the same one a
 // hover takes, with the heavy accent rule telling the current tab, so
@@ -66,9 +63,7 @@
 
   // Inside the tab, where the row's edge would clip an outside ring.
   &:focus-visible {
-    @include focus-ring;
-
-    outline-offset: -2px;
+    @include focus-ring($placement: inset);
   }
 
   &[aria-current='page'] {
@@ -134,14 +129,9 @@
   }
 }
 
-// ---------------------------------------------------------------------------
-// Wider than the phone: as many leading tabs as fit the context row, the rest behind More
-// (Priority+). Which fit is measured in the browser, since the lead and the
-// labels set the room (section-links.tsx); the client part marks the others
-// `--extra`. The owner found four labelled tabs and More overflowing the row
-// from 642px up (MB.7's review, 2026-10-12), so the count is not fixed here.
-// ---------------------------------------------------------------------------
-// Takes the room the lead leaves, which is what the tabs are fitted to.
+// Wider than the phone: the leading tabs that fit the context row, the rest behind More, measured
+// in the browser (section-links.tsx), which marks the others `--extra`. The count is not fixed:
+// four labelled tabs and More overflow from 642px.
 .section-nav {
   flex: 1 1 0;
 }
@@ -152,16 +142,10 @@
   overflow: hidden;
 }
 
-// Wider than the phone, before the script has fitted the row (no `data-fit`),
-// the server's phone count of four is the wrong guess, so the row shows every
-// tab and hides More; the tabs that do not fit wrap onto further lines. The
-// list is taken out of the flow to fill the nav, whose height the context
-// row gives it, so those lines add no height and the list's clipping keeps
-// them out of sight. Waiting for the script instead flashed a folded row on
-// every load (MB.264). The phone never gets `data-fit`, so it is excluded by
-// width, at the script's own `TABLET_BAND`. The measuring render
-// (`data-measuring`) is the exception: it draws More so that its width is
-// read, and does not wrap, so the row is measured as it will be fitted.
+// Before the script has fitted the row (no `data-fit`) the server's phone count of four is the
+// wrong guess, so the row shows every tab and hides More, and the overflow wraps out of sight. The
+// phone never gets `data-fit`, so it is excluded by width, at the script's `TABLET_BAND`; the
+// measuring render (`data-measuring`) draws More so its width is read, and does not wrap.
 @media (min-width: #{$shell-phone-width + 0.01rem}) {
   .section-nav:not([data-fit], [data-measuring]) {
     position: relative;
@@ -212,12 +196,9 @@
   // rounded corners clip it, so the entries need no rounding of their own.
   padding: 0;
   overflow: hidden;
-  // The fade, the tip bubble's pattern: `hidden` is display none, which
-  // cannot animate, so the sheet stays displayed and `hidden` takes it out
-  // of sight and out of the accessibility tree with `visibility`, held
-  // until the opacity has faded. Over the theme's duration rather than the
-  // short one, which read as a snap. Said after the panel mixin, whose own
-  // theme transition would otherwise replace it.
+  // The fade, the tip bubble's pattern: `hidden` cannot animate, so `visibility` holds the sheet
+  // until the opacity has faded, over the theme's duration. Said after the panel mixin, whose own
+  // transition would otherwise replace it.
   display: block;
   visibility: hidden;
   opacity: 0;
@@ -263,11 +244,9 @@
   content: none;
 }
 
-// ---------------------------------------------------------------------------
-// Phone: a bar fixed along the foot of the window. Icon above label, equal
-// widths, the current one told by weight and a short accent rule above its
-// icon. The page clears it by `$bottom-bar-height` (AppShell's padding).
-// ---------------------------------------------------------------------------
+// Phone: a bar fixed along the window's foot, icon above label, equal widths, the current one
+// marked by weight and an accent rule. The page clears it by `$bottom-bar-height` (AppShell's
+// padding).
 @media (max-width: #{$shell-phone-width}) {
   .section-nav {
     position: fixed;
@@ -319,10 +298,9 @@
     line-height: 1.2;
   }
 
-  // The current tab takes no fill on the phone: the rule above its icon and
-  // its weight tell it, and a filled tab in a bar of one (the coven's
-  // Overview alone) would recolour the whole bar, so the coven's and the
-  // admin's bars would not match.
+  // The current tab takes no fill on the phone: the rule above its icon and its weight tell
+  // it, and a filled tab in a bar of one (the coven's Overview alone) would recolour the whole
+  // bar, so the coven's and the admin's bars would not match.
   .section-nav .section-nav__list > li > .section-nav__link[aria-current='page'] {
     background-color: transparent;
 
@@ -348,11 +326,10 @@
     border-radius: 0 0 $rule-heavy $rule-heavy;
   }
 
-  // Only on a More button standing in for a hidden page: it then wears that
-  // page's icon and label, and the small chevron is what says there is
-  // more behind it. Plain More already says so, and the bar's other tabs
-  // have none. Taken out of the flow of the column so the icon and label
-  // keep their place, the hit area and the label's size.
+  // Only on a More button standing in for a hidden page: it then wears that page's icon and
+  // label, and the small chevron is what says there is more behind it. Plain More already says
+  // so, and the bar's other tabs have none. Taken out of the flow of the column so the icon
+  // and label keep their place, the hit area and the label's size.
   .section-nav__chevron {
     display: none;
   }

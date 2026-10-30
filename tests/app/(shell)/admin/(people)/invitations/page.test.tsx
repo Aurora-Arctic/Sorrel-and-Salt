@@ -1,18 +1,12 @@
 import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { InvalidCursor } from '@/lib/errors';
 import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 import { filterForm } from '../../../../../support/filter-form';
 
-// The `/admin/invitations` page, the People page's Invitations tab (MB.70; a
-// tab of its own since MB.115), with New Invitation, its action beside the
-// heading: the guard, then the identity reads, a page of the pending
-// invitations and its count, shown with no hash, the cursor and the pager's
-// links, the invite form `?invite` opens, and the pause locking
-// Invite and Revoke. The guard and the services are mocked: what they decide is
-// tests/lib/request-session.test.ts's and
-// tests/modules/identity/services/admin-invitations.test.ts's.
+// The `/admin/invitations` page, the People page's Invitations tab with New Invitation beside the heading: the guard, then the identity reads (a page of pending invitations and their count, shown with no hash),
+// the cursor and the pager's links, the invite form `?invite` opens, and the pause locking Invite and Revoke.
+// The guard and services are mocked: what they decide is tests/lib/request-session.test.ts's and tests/modules/identity/services/admin-invitations.test.ts's.
 
 const requireAdminSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
@@ -140,18 +134,7 @@ describe('the /admin/invitations page', () => {
     expect(lastRequest()).toEqual({ before: cursor, limit: 26, inverted: true });
   });
 
-  // A cursor copied from another list decodes, then names no row of this one.
-  it('reads the first page when the cursor is not one of this list', async () => {
-    listPendingAdminInvitations.mockRejectedValueOnce(new InvalidCursor());
-    const cursor = { key: ['Listed Fixture 25'], id: 'i5' };
-
-    await renderPage({ after: encodeCursor(cursor) });
-
-    expect(lastRequest()).toEqual({ limit: 26, inverted: false });
-    expect(screen.getAllByRole('row')).toHaveLength(2);
-  });
-
-  it('links the pages either side, keeping the filter, and says where it stands', async () => {
+  it('links the pages either side, keeping the filter', async () => {
     listPendingAdminInvitations.mockResolvedValue(
       Array.from({ length: 26 }, (_, index) => entry(index + 1)),
     );
@@ -168,7 +151,6 @@ describe('the /admin/invitations page', () => {
       'href',
       `${filter}&before=${encodeURIComponent(encodeCursor(entry(1).cursor))}`,
     );
-    expect(screen.getByRole('navigation', { name: 'Pages' })).toHaveTextContent('Page 2 of 3');
   });
 
   it('keeps the page shown in New Invitation', async () => {

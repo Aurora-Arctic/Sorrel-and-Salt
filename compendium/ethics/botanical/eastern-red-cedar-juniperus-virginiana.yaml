@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/eastern-red-cedar-juniperus-virginiana
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List
+    value: Least Concern (IUCN 3.1)
+    listedAs: Juniperus virginiana
+    scope: global
+    nameBasis: stated
+    source: wikipedia-juniperus-virginiana
+    locator: taxobox, conservation status (status = LC, IUCN3.1)

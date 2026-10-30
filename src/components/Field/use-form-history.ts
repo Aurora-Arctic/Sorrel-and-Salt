@@ -21,12 +21,9 @@ import {
 } from './form-history';
 import type { FormHistory, HistoryAction, HistoryStep, UseFormHistoryOptions } from './types';
 
-// Undo and redo for a react-hook-form form (M12.9). react-hook-form stays the
-// one store of values: this hook watches its value changes, keeps a stack of
-// what each action changed, and puts values back with `setValue`. It is not
-// `reset`, which would clear the errors and the submit count and throw
-// registration away. claude-docs/design-decisions/m12.9-plan.md has the
-// argument; claude-docs/components/field.md, "Undo and redo", the use.
+// Undo and redo for a react-hook-form form. It stays the one store of values: this hook stacks what each
+// action changed and restores with `setValue`, not `reset`, which would clear errors and the submit count
+// (claude-docs/components/field.md, "Undo and redo").
 
 /** The events that start something new, as far as "the same action" goes. */
 const ACTION_EVENTS = ['pointerdown', 'keydown', 'input', 'change', 'click'] as const;
@@ -85,6 +82,7 @@ export function useFormHistory<V extends FieldValues>(
     enabled = true,
     ignore,
     skip,
+    prepare,
     onRestored,
     pauseMs = TYPING_PAUSE_MS,
     limit = HISTORY_LIMIT,
@@ -102,7 +100,6 @@ export function useFormHistory<V extends FieldValues>(
   }, []);
 
   const present = useRef<unknown>(undefined);
-  const defaultsSeen = useRef<unknown>(undefined);
   const restoring = useRef(false);
   // The newest step was recorded in the action still running.
   const tickOpen = useRef(false);
@@ -128,7 +125,6 @@ export function useFormHistory<V extends FieldValues>(
   // The recorder: one subscription to the form's values.
   useEffect(() => {
     present.current = cloneValues(getValues());
-    defaultsSeen.current = undefined;
     const closeAction = () => {
       tickOpen.current = false;
       typedInto.current = null;
@@ -161,7 +157,7 @@ export function useFormHistory<V extends FieldValues>(
 
     const unsubscribe = subscribe({
       formState: { values: true },
-      callback: ({ name, values, defaultValues }) => {
+      callback: ({ name, values }) => {
         if (restoring.current) return;
         if (name !== undefined && skip?.(name)) {
           // Interface state: kept current so the next diff starts from it, but never a step.
@@ -169,12 +165,12 @@ export function useFormHistory<V extends FieldValues>(
           return;
         }
         const previous = present.current;
-        const defaultsChanged =
-          defaultsSeen.current !== undefined && defaultsSeen.current !== defaultValues;
-        defaultsSeen.current = defaultValues;
-        if (name === undefined || defaultsChanged) {
-          // The form started itself over: its old steps no longer lead anywhere.
-          if (defaultsChanged || !sameValues(previous, values)) {
+        // A save moves the defaults without a named event, so only an event with no name is the
+        // form starting over.
+        if (name === undefined) {
+          // The form started itself over: its old steps lead nowhere. A save is the exception: it
+          // moves the baseline and leaves the values alone, so the steps still lead back.
+          if (!sameValues(previous, values)) {
             commit({ type: 'cleared' });
             sealed.current = true;
           }
@@ -243,7 +239,9 @@ export function useFormHistory<V extends FieldValues>(
           // Validated only once a submit has shown errors: before one the form is quiet.
           setValue(
             diff.name as never,
-            cloneValues(direction === 'undo' ? diff.before : diff.after) as never,
+            (prepare
+              ? prepare(diff.name, cloneValues(direction === 'undo' ? diff.before : diff.after))
+              : cloneValues(direction === 'undo' ? diff.before : diff.after)) as never,
             {
               shouldDirty: true,
               shouldValidate: isSubmitted,
@@ -262,7 +260,7 @@ export function useFormHistory<V extends FieldValues>(
       );
       pendingFocus.current = [focusOn || step.diffs[0].name];
     },
-    [setValue, getValues, isSubmitted, onRestored],
+    [setValue, getValues, isSubmitted, onRestored, prepare],
   );
 
   const undo = useCallback(() => {
@@ -277,6 +275,7 @@ export function useFormHistory<V extends FieldValues>(
     restore(step, 'undo');
     commit({ type: 'undone' });
     announce(`Undid change to ${label}`);
+    // oxlint-disable-next-line react/preserve-manual-memoization -- the React Compiler is off, so the hand-written dependency list stands as written
   }, [enabled, root, restore, commit, announce]);
 
   const redo = useCallback(() => {
@@ -291,6 +290,7 @@ export function useFormHistory<V extends FieldValues>(
     restore(step, 'redo');
     commit({ type: 'redone' });
     announce(`Redid change to ${label}`);
+    // oxlint-disable-next-line react/preserve-manual-memoization -- the React Compiler is off, so the hand-written dependency list stands as written
   }, [enabled, root, restore, commit, announce]);
 
   const clear = useCallback(() => {
@@ -342,39 +342,14 @@ export function useFormHistory<V extends FieldValues>(
     }
   });
 
-  // The chords, heard by native listeners on the document rather than a React
-  // `onKeyDown` prop on the form: a key handler on a non-interactive element
-  // is what the a11y lint refuses. Bubble phase, so an inner element's own
-  // native listener runs first.
-  //
-  // Why the document and not the form: after a click on a blank part of a
-  // dialog, focus sits on the page itself, outside the form, and a listener on
-  // the form never hears the key. So a chord is accepted when this form owns
-  // its target, or when the target is outside every form and this form was the
-  // last to hold focus (`held`, a ref so a re-registered listener keeps it,
-  // kept by a `focusin` listener).
-  //
-  // Owning is exclusive, so a chord can never undo twice: each root carries a
-  // `data-form-history` mark, and an element belongs only to the hook whose
-  // root is its nearest marked ancestor, so a nested form (a panel) takes its
-  // own chords and the form around it never hears them, whether or not it
-  // passes `ignore`. The form's own Undo and Redo buttons sit outside the
-  // root, so they count as owned too. `ignore` keeps its job: a target the
-  // form owns but does not govern is left alone.
-  //
-  // Ordering: React dispatches its synthetic handlers from the root container,
-  // so these listeners run BEFORE any React `onKeyDown` inside the form
-  // (Downshift's, a panel's). That is why the target checks read the DOM
-  // (`aria-expanded`) and do not wait for an inner React handler to set
-  // `defaultPrevented`.
-  //
-  // The current `enabled`, `ignore`, `undo` and `redo` are effect
-  // dependencies, so the listeners are registered again when one changes and
-  // never see a stale one.
+  // The chords are heard by native document listeners, as a React `onKeyDown` on the form runs after
+  // them; each root owns its nearest marked ancestor's chords, so one never undoes twice
+  // (claude-docs/components/field.md, "How the undo and redo chords are heard").
   const held = useRef(false);
   useEffect(() => {
     const element = root.current;
     if (!element) return;
+    // oxlint-disable-next-line react/immutability -- the ref is written inside a drag handler, after render, not during it
     element.dataset.formHistory = '';
     return () => {
       delete element.dataset.formHistory;
@@ -404,14 +379,9 @@ export function useFormHistory<V extends FieldValues>(
       const target = event.target as HTMLElement;
       const inside = owns(target);
       if (!inside && !(held.current && !target.closest('[data-form-history]'))) return;
-      // A text box that is a combobox owns its keys only while a person is
-      // arrowing through its list: Downshift sets a non-empty
-      // `aria-activedescendant` on the input while an option is highlighted,
-      // and an empty one otherwise. An open list with nothing highlighted (a
-      // click into the box opens it) lets the chord through. A select's toggle
-      // is a combobox but not a text box, and never owns Ctrl+Z: it highlights
-      // an item the moment it opens. Anything inside the listbox itself is
-      // still left alone.
+      // A text-box combobox owns its keys only while an option is highlighted (Downshift sets a non-empty
+      // `aria-activedescendant`); an open list with nothing highlighted lets the chord through. A select's
+      // toggle never owns Ctrl+Z, and anything inside the listbox is left alone.
       if (target.closest('[role="listbox"]')) return;
       const box = target.closest('[role="combobox"][aria-expanded="true"]');
       if (

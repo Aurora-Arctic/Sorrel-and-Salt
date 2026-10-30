@@ -7,20 +7,13 @@ import { FIRST_FIELD } from './fields';
 import type { ConfirmOverlayProps } from './types';
 import './index.scss';
 
-// A question a form asks before it acts, "Delete this?" or "Discard them?",
-// drawn as a card over the form rather than where its buttons were (MB.115,
-// the owner's call): one way of asking across the admin forms. In a modal it
-// goes into the modal's layer, centred in the part of the body in view
-// however far the form is scrolled, over a scrim, the form behind inert. Its
-// own markup holds no layout of the form's, so a form renders it beside its
-// buttons and the modal places it (claude-docs/components/modal.md, "Asking
-// over the form"). Outside a modal it stands in the form's flow.
+// A question a form asks before it acts ("Delete this?", "Discard them?"), drawn as a card over the
+// form. In a modal it goes into the modal's layer, centred in the part of the body in view; outside
+// one it stands in the form's flow (claude-docs/components/modal.md, "Asking over the form").
 
 /**
- * Whether the element can take the focus back: still in the page, and not held
- * inert. Asked of the element rather than `instanceof HTMLElement`, which is
- * false in a story Ladle draws into an iframe, its script running in the page
- * around the frame.
+ * Whether the element can take the focus back: in the page and not held inert. Asked of the
+ * element, not `instanceof HTMLElement`, which is false in a story Storybook draws into an iframe.
  */
 const canFocus = (element: Element | null): element is HTMLElement =>
   typeof (element as HTMLElement | null)?.focus === 'function' &&
@@ -56,23 +49,17 @@ function Card({
   const id = useId();
   const self = useRef<HTMLFieldSetElement>(null);
 
-  // As it comes, before the browser paints: the form behind held inert, and
-  // the focus on the safe answer, the question being what is to be answered.
-  // As it goes, the form live again first, so the focus can go back where it
-  // was — the button pressed, which stays beneath it, or the field Escape was
-  // pressed in — or, if that has gone, to the first field. A layout effect,
-  // so a question that gives way to another hands the focus over in one
-  // commit; and Strict Mode's second run takes and gives it back the same.
+  // As it comes, before paint: the form behind held inert, the focus on the safe answer. As it
+  // goes, the form live again first, so the focus can go back to where it was, else the first
+  // field. A layout effect, so a question giving way to another hands the focus over in one commit.
   useLayoutEffect(() => {
     const returnTo = self.current?.ownerDocument.activeElement ?? null;
     const scope = layer?.body.current ?? self.current?.closest('form') ?? null;
     const release = layer?.hold();
     safe.current?.focus({ preventScroll: true });
-    // Again after the browser's own turn: the event that opened the question
-    // (a pointer press on the backdrop or Close, Escape's close request) may
-    // still move the focus once its handler returns, after this commit. A
-    // question still up that has lost the focus takes it back, so Keep Editing
-    // has it every time, whichever way the question was opened.
+    // Again after the browser's own turn: the event that opened the question may still move the
+    // focus once its handler returns. A question still up that lost it takes it back, so Keep
+    // Editing has it every time.
     const again = requestAnimationFrame(() => {
       const card = self.current;
       if (card && !card.contains(card.ownerDocument.activeElement)) {

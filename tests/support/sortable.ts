@@ -1,10 +1,9 @@
 import { act, fireEvent } from '@testing-library/react';
 import { vi } from 'vitest';
 
-// Moving a sortable list's chips (MB.170) in happy-dom, which lays nothing out:
-// dnd-kit finds where a chip may go from each chip's box, so the chips are
-// given one, on one line, 100px apart and 80px wide, and their list a box
-// as wide as the row it lays them out in.
+// Moving a sortable list's chips in happy-dom, which lays nothing out: dnd-kit finds where a chip may go
+// from each chip's box, so the chips are given one, on one line, 100px apart and 80px wide, and their
+// list a box as wide as the row it lays them out in.
 
 /** Lays every chip out on one line, in its list's order; restore with `vi.restoreAllMocks`. */
 export function layOutChips() {
@@ -75,5 +74,66 @@ export async function dragByPointer(handle: HTMLElement, x: number) {
   fireEvent.pointerUp(document, { ...from, clientX: x });
   // The sensor swallows every click for 50ms after a drag, so that the drop
   // presses nothing; waited out, so that it swallows no later test's.
+  await act(() => new Promise<void>((resolve) => setTimeout(resolve, 60)));
+}
+
+/**
+ * Lays a spell's steps out in a column, in their list's order: each row
+ * 600px wide and 48px tall, 60px apart, and the list as tall as its rows.
+ * Restore as `layOutChips`.
+ */
+export function layOutRows() {
+  vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function (this: Element) {
+    if (this.classList.contains('spell-steps__list')) {
+      return new DOMRect(0, 0, 600, this.children.length * 60);
+    }
+    const row = this.closest('.spell-step');
+    if (!row?.parentElement) return new DOMRect(0, 0, 0, 0);
+    const at = Array.prototype.indexOf.call(row.parentElement.children, row);
+    return new DOMRect(0, at * 60, 600, 48);
+  });
+}
+
+/** Drags `handle` by pointer from its row's middle, up or down the column, to `y`. */
+export async function dragVertically(handle: HTMLElement, y: number) {
+  const { top, height } = handle.getBoundingClientRect();
+  const from = { clientX: 20, clientY: top + height / 2, isPrimary: true, button: 0 };
+  fireEvent.pointerDown(handle, from);
+  fireEvent.pointerMove(document, { ...from, clientY: from.clientY + 10 });
+  await tick();
+  fireEvent.pointerMove(document, { ...from, clientY: y });
+  await tick();
+  fireEvent.pointerUp(document, { ...from, clientY: y });
+  // The 50ms the sensor swallows clicks for, as `dragByPointer`.
+  await act(() => new Promise<void>((resolve) => setTimeout(resolve, 60)));
+}
+
+/**
+ * Drags `handle` by touch, up or down the column, to `y`: held `holdMs`
+ * before it moves, as a finger must hold before a touch drag starts.
+ */
+export async function touchDragVertically(handle: HTMLElement, y: number, holdMs: number) {
+  const { top, height } = handle.getBoundingClientRect();
+  const at = (clientY: number) => ({ touches: [{ clientX: 20, clientY }] });
+  const from = top + height / 2;
+  fireEvent.touchStart(handle, at(from));
+  if (holdMs <= 0) {
+    // A swipe is fired in one synchronous burst: awaiting between the touch and
+    // its moves would let a loaded machine take longer than the hold delay, and
+    // the swipe would then count as a held drag.
+    act(() => {
+      fireEvent.touchMove(document, at(from + 2));
+      fireEvent.touchMove(document, at(y));
+      fireEvent.touchEnd(document, { touches: [], changedTouches: [{ clientX: 20, clientY: y }] });
+    });
+    await act(() => new Promise<void>((resolve) => setTimeout(resolve, 60)));
+    return;
+  }
+  await act(() => new Promise<void>((resolve) => setTimeout(resolve, holdMs)));
+  fireEvent.touchMove(document, at(from + 2));
+  await tick();
+  fireEvent.touchMove(document, at(y));
+  await tick();
+  fireEvent.touchEnd(document, { touches: [], changedTouches: [{ clientX: 20, clientY: y }] });
   await act(() => new Promise<void>((resolve) => setTimeout(resolve, 60)));
 }

@@ -1,13 +1,9 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 
-// Better Auth's limiter through its real endpoint, counting in `rate_limits`
-// (claude-docs/auth/rate-limiting.md, "Rate limiting"). At NODE_ENV=production, as every
-// deploy is: outside it the limiter is off, and under test Better Auth falls
-// back to 127.0.0.1 for a request with no resolvable address rather than to
-// the `no-trusted-ip` bucket a deploy would use. Better Auth reads NODE_ENV
-// once, when it loads, so it is stubbed before the first import; `TEST`,
-// which Vitest sets and Better Auth also takes for "under test", is cleared.
+// Better Auth's limiter through its real endpoint, counting in `rate_limits` (claude-docs/auth/rate-limiting.md, "Rate limiting"). NODE_ENV=production, as every deploy: outside it the limiter is off.
+// Better Auth reads NODE_ENV once at load, so it is stubbed before the first import; `TEST`, which Vitest sets, is cleared.
+// Under test it falls back to 127.0.0.1 for an unresolvable address, not the deploy's `no-trusted-ip` bucket.
 
 vi.stubEnv('NODE_ENV', 'production');
 vi.stubEnv('TEST', '');

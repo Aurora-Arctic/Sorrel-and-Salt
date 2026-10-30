@@ -1,0 +1,151 @@
+@use './variables' as *;
+@use './mixins' as *;
+
+// The printed spell's layout, shared with the Spell Preview pane so the two cannot drift: the
+// head and the lead run across the top, the facts strip over both columns, then the Ingredients
+// summary in a narrow column beside the steps, and the note across under them. Applied to the
+// box that holds the head and the recipe body's parts (`.spell-recipe` on paper, the preview's
+// content column); the wrappers around the body dissolve, so that box is the one grid and each
+// part is placed on it by row and column.
+//
+// `$head` is the title's selector; `$columns: false` keeps the same rows and spacing in one
+// column, with the Ingredients above the steps, for the preview on a phone.
+@mixin recipe-columns($head: '.spell-recipe__head', $columns: true) {
+  display: grid;
+  gap: space(2);
+  align-items: start;
+
+  @if $columns {
+    grid-template-columns: $recipe-summary-width minmax(0, 1fr);
+    column-gap: space(6);
+  } @else {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .spell-recipe__columns,
+  .spell-recipe__main,
+  .spell-recipe__rest {
+    display: contents;
+  }
+
+  .last-edit {
+    grid-row: 1;
+    grid-column: 1 / -1;
+  }
+
+  // The page gives every `header` this margin under it (_layout.scss); stated here so a title that
+  // is not a `header` stands the same distance over the lead.
+  #{$head} {
+    grid-row: 2;
+    grid-column: 1 / -1;
+    margin-block-end: space(4);
+  }
+
+  .spell-recipe__lead,
+  .spell-recipe__facts-box,
+  .spell-recipe__note {
+    grid-column: 1 / -1;
+  }
+
+  .spell-recipe__lead {
+    grid-row: 3;
+    @include stack(2);
+    margin: 0;
+  }
+
+  // Clear of the categories above, and of the Ingredients and steps below.
+  .spell-recipe__facts-box {
+    grid-row: 4;
+    max-width: none;
+    margin-block: space(3) space(4);
+  }
+
+  .spell-recipe__summary {
+    grid-row: 5;
+    grid-column: 1;
+  }
+
+  // The steps under their Steps heading, or the line that stands in for them: a plain box
+  // with no margin, not the page's spaced `section`, so its heading sits level with Ingredients.
+  .spell-recipe__steps-section {
+    display: block;
+    margin: 0;
+    @if $columns {
+      grid-row: 5;
+      grid-column: 2;
+    } @else {
+      grid-row: 6;
+      grid-column: 1;
+    }
+  }
+
+  // Uncapped, as the facts box is, so the note's hairline runs the width the facts' does.
+  .spell-recipe__note {
+    max-width: none;
+    // Clear of the steps, over the grid's gap.
+    margin-block-start: space(3);
+
+    @if $columns {
+      grid-row: 6;
+    } @else {
+      grid-row: 7;
+    }
+  }
+
+  // The two headings alike and level, each a step over its list. The Steps heading is drawn here,
+  // taking back the screen's visually hidden box.
+  .spell-recipe__steps-section > :is(h2, h3) {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
+    font-size: $recipe-heading-size;
+  }
+
+  .spell-recipe__steps {
+    max-width: none;
+    margin-block-start: space(1);
+  }
+
+  .spell-recipe__summary {
+    display: block;
+    // The global section margin would drop the heading below the first step.
+    margin: 0;
+
+    :is(h2, h3) {
+      margin: 0;
+      font-size: $recipe-heading-size;
+    }
+
+    // Amounts in one column, names in another beside it, both set to the left so the amounts and
+    // the names each start on one line; each line shares the list's two columns (subgrid), and a
+    // line with no amount leaves its first cell empty.
+    ul {
+      display: grid;
+      grid-template-columns: max-content minmax(0, 1fr);
+      column-gap: space(4);
+      margin: space(1) 0 0;
+      padding-inline-start: 0;
+    }
+
+    li {
+      display: grid;
+      grid-column: 1 / -1;
+      grid-template-columns: subgrid;
+    }
+
+    .spell-recipe__need {
+      text-align: start;
+      font-weight: 500;
+      font-variant-numeric: tabular-nums;
+    }
+
+    // The ◆ hangs in the gutter the padding gave up, so with no gutter it goes too.
+    li::before {
+      content: none;
+    }
+  }
+}

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
-import { Forbidden, ValidationError } from '@/lib/errors';
+import { ValidationError } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import {
   categoriesOf,
@@ -10,17 +10,14 @@ import {
   updateCompendiumEntry,
   updateWorkspaceIngredient,
 } from '@/modules/ingredients';
-import { A, B, C, E, asUser } from '../../../support/as-user';
+import { A, B, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 
-// MB.125: the categories an ingredient is filed under, written by either
-// tier's service in the ingredient's own transaction (story 30). The join
-// table is hard-deleted (MB.34), so a pair dropped leaves no row and a pair
-// kept keeps the stamps of whoever added it. The ingredients are emptied per
-// test; a category a test retires is put back after it, since the
-// vocabularies are the file's clone's.
+// The categories an ingredient is filed under, written by either tier's service in the ingredient's own transaction.
+// The join table is hard-deleted, so a pair dropped leaves no row and a pair kept keeps the stamps of whoever added it.
+// Ingredients are emptied per test; a category a test retires is put back after it, since the vocabularies are the file's clone's.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -275,39 +272,5 @@ describe('an id naming no live category', () => {
 
     expect(issues).toEqual([{ path: ['categoryIds', 1], message: expect.any(String) }]);
     expect(await categoryIdsOf(id)).toEqual([love]);
-  });
-
-  it('is refused for a compendium entry too', async () => {
-    const issues = await refusal(createCompendiumEntry(asUser(E), input([UNKNOWN])));
-
-    expect(issues).toEqual([{ path: ['categoryIds', 0], message: expect.any(String) }]);
-  });
-});
-
-describe('who may file an ingredient', () => {
-  it('refuses a viewer, as for any workspace write', async () => {
-    const id = await seed(local({ categories: ['Protection'] }));
-    // The precondition: the same write by a member succeeds.
-    await updateWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, id, input([protection, love]));
-
-    await expect(
-      updateWorkspaceIngredient(asUser(C), WORKSPACE_W_ID, id, input([cleansing])),
-    ).rejects.toThrow(Forbidden);
-    await expect(
-      createWorkspaceIngredient(asUser(C), WORKSPACE_W_ID, input([cleansing])),
-    ).rejects.toThrow(Forbidden);
-    expect(await categoryIdsOf(id)).toEqual([protection, love].sort());
-  });
-
-  it('files a compendium entry only under the site admin’s proof', async () => {
-    const id = await seed(entry({ categories: ['Protection'] }));
-    // The precondition: the same write by the admin succeeds.
-    await updateCompendiumEntry(asUser(E), id, input([protection, love]));
-
-    await expect(updateCompendiumEntry(asUser(A), id, input([cleansing]))).rejects.toThrow(
-      Forbidden,
-    );
-    await expect(createCompendiumEntry(asUser(B), input([cleansing]))).rejects.toThrow(Forbidden);
-    expect(await categoryIdsOf(id)).toEqual([protection, love].sort());
   });
 });

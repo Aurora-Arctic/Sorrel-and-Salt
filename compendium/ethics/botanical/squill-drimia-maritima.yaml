@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/squill-drimia-maritima
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Drimia maritima
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-drimia-maritima
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Drimia maritima", Lansdown, R.V., 2018, 10.2305/IUCN.UK.2018-1.RLTS.T202953A18614115.en'

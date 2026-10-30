@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/mangosteen-garcinia-mangostana
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List
+    value: Data Deficient (IUCN 3.1)
+    listedAs: Garcinia mangostana
+    scope: global
+    nameBasis: stated
+    source: wikipedia-mangosteen
+    locator: taxobox, conservation status (status = DD, IUCN3.1)

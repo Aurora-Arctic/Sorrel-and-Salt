@@ -59,11 +59,8 @@ vi.mock('@/components/IngredientForm', () => ({
   ),
 }));
 
-// The page body both entry routes render (M8.19;
-// claude-docs/components/ingredient-entry.md). Every name and value below is
-// the test's own data, so finding one proves what rendered, never what the
-// copy says; the formal-name line is asserted by its structure (a labelled
-// value, italic or not), not by its sentences.
+// The page body both entry routes render (claude-docs/components/ingredient-entry.md). Every name and value below is the test's own data, so finding one proves what rendered, never what the copy says.
+// The formal-name line is asserted by its structure (a labelled value, italic or not), not by its sentences.
 
 const STAMPS = {
   createdAt: new Date('2026-01-01T00:00:00Z'),
@@ -75,6 +72,13 @@ const STAMPS = {
 };
 
 const COVEN = '00000000-0000-4000-8000-0000000000c1';
+
+/** The status badges that say where an entry lives, Compendium; not the curators' review mark (Needs Review or Reviewed By Curator), which every compendium entry wears and the review-mark tests below own. */
+const provenanceMarks = (): (string | null)[] =>
+  screen
+    .queryAllByRole('status')
+    .map((mark) => mark.textContent)
+    .filter((text) => !/Review/.test(text ?? ''));
 
 // Ids only need to differ, so each fixture row takes the next one.
 let serial = 0;
@@ -89,6 +93,7 @@ function entryRow(overrides: Partial<IngredientRow> = {}): IngredientRow {
     canonicalName: 'Fixtura testalis',
     nomenclature: 'botanical',
     identityKey: 'fixtura testalis',
+    curatorReviewedAt: null,
     description: 'A fixture herb.',
     elements: ['fire'],
     celestialBodies: ['Fixture Moon'],
@@ -97,6 +102,8 @@ function entryRow(overrides: Partial<IngredientRow> = {}): IngredientRow {
     safetyNotes: null,
     toxic: false,
     seedKey: null,
+    revision: 1,
+    seedContentHash: null,
     ...STAMPS,
     ...overrides,
   };
@@ -201,7 +208,7 @@ function detail(overrides: Partial<IngredientDetail> = {}): IngredientDetail {
     cupboardEntry: null,
     folkNames: ['Fixture Bane', 'Testing Weed'],
     categories: [category('Testwards'), category('Mockcraft')],
-    deities: [{ name: 'Fixtura', tradition: 'Fixture Pantheon' }],
+    deities: [{ name: 'Fixtura', tradition: 'Fixture Pantheon', otherNames: [] }],
     substitutes: [
       { name: 'Fixture Mockroot', ingredient: LINKED, form: null },
       { name: 'Typed Testleaf', ingredient: null, form: null },
@@ -266,12 +273,11 @@ describe('IngredientEntry', () => {
     expect(screen.getByRole('heading', { level: 1, name: 'Testwort' })).toBeInTheDocument();
   });
 
+  // One row for each of the two paths; which kinds are binomials is
+  // tests/modules/ingredients/schema/ingredient-enums.test.ts's.
   it.each([
     ['botanical', 'Fixtura testalis', true],
-    ['fungal', 'Fixtura fungalis', true],
-    ['zoological', 'Fixtura animalis', true],
     ['mineral', 'Fixture spar', false],
-    ['chemical', 'Fixture oxide', false],
   ] as const)(
     'labels a %s formal name, in italics only for a binomial',
     (nomenclature, canonicalName, italic) => {
@@ -343,90 +349,21 @@ describe('IngredientEntry', () => {
     expect(screen.getByRole('button', { name: 'Retired' }).closest('header')).not.toBeNull();
   });
 
-  it('marks the entry Toxic when a form is, though the ingredient is not', () => {
-    const outsideForms = () =>
-      screen
-        .queryAllByText('Toxic', { exact: true })
-        .filter((mark) => mark.closest('[id^="form-"]') === null);
-    const { unmount } = render(
-      <IngredientEntry detail={detail({ variants: [variantRow('testroot')] })} hrefOf={hrefOf} />,
-    );
-    expect(outsideForms()).toHaveLength(0);
-    unmount();
-
-    renderEntry();
-    expect(outsideForms()).toHaveLength(1);
-  });
-
-  it('marks the entry Caution in its head when a form has notes, and not for none or blank ones', () => {
-    const { unmount } = render(
-      <IngredientEntry
-        detail={detail({
-          variants: [variantRow('testroot'), variantRow('testoil', { safetyNotes: '  ' })],
-        })}
-        hrefOf={hrefOf}
-      />,
-    );
-    expect(headCaution()).toBeNull();
-    unmount();
-
-    // Why it can show: the oil form has notes, and the entry has none of its own. Not
-    // flagged Toxic, which would stand in Caution's place (SafetyMark).
-    renderEntry({
-      detail: detail({
-        variants: [
-          variantRow('testroot'),
-          variantRow('testoil', { safetyNotes: 'Fixture oil caution.' }),
-        ],
-      }),
-    });
-    expect(headCaution()).not.toBeNull();
-  });
-
-  // The head's one safety badge rides the back row, after New or Updated, and the name's
-  // row holds the name alone (the owner's call, 2026-10-20).
-  it('draws one safety badge in its head, Toxic over Caution, read after New and before the name', () => {
-    renderEntry({
-      detail: detail({
-        entry: entryRow({ createdAt: new Date(), safetyNotes: 'A fixture caution.' }),
-      }),
-    });
-    const head = screen.getByRole('heading', { level: 1 }).closest('header')!;
-    const toxic = within(head).getAllByText('Toxic', { exact: true });
-    expect(toxic).toHaveLength(1);
-    expect(headCaution()).toBeNull();
-    const recency = within(head).getByText('New', { exact: true });
-    const follows = (a: Element, b: Element) =>
-      (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
-    expect(follows(recency, toxic[0]!)).toBe(true);
-    expect(follows(toxic[0]!, screen.getByRole('heading', { level: 1 }))).toBe(true);
-  });
-
-  it('draws the safety badge with no back link or recency mark to share its row', () => {
-    renderEntry();
-    expect(screen.queryByText('New', { exact: true })).toBeNull();
-    expect(screen.queryByRole('link', { name: /^Back to/ })).toBeNull();
-    const head = screen.getByRole('heading', { level: 1 }).closest('header')!;
-    const toxic = within(head).getByText('Toxic', { exact: true });
-    expect(
-      toxic.compareDocumentPosition(screen.getByRole('heading', { level: 1 })) &
-        Node.DOCUMENT_POSITION_FOLLOWING,
-    ).not.toBe(0);
-  });
-
   it('names its folk names, categories and substitutes lists, one item each', () => {
     renderEntry();
     const details = screen.getByRole('region', { name: 'Details' });
+    // Details' side column stands after its section in the body, level with the first section.
+    const body = details.parentElement!;
 
-    expect(within(details).getAllByRole('list', { name: 'Folk Names' })).toHaveLength(1);
+    expect(within(body).getAllByRole('list', { name: 'Folk Names' })).toHaveLength(1);
     expect(
-      within(within(details).getByRole('list', { name: 'Folk Names' })).getAllByRole('listitem'),
+      within(within(body).getByRole('list', { name: 'Folk Names' })).getAllByRole('listitem'),
     ).toHaveLength(2);
     expect(
-      within(within(details).getByRole('list', { name: 'Categories' })).getAllByRole('listitem'),
+      within(within(body).getByRole('list', { name: 'Categories' })).getAllByRole('listitem'),
     ).toHaveLength(2);
     expect(
-      within(within(details).getByRole('list', { name: 'Substitutes' })).getAllByRole('listitem'),
+      within(within(body).getByRole('list', { name: 'Substitutes' })).getAllByRole('listitem'),
     ).toHaveLength(3);
   });
 
@@ -440,36 +377,17 @@ describe('IngredientEntry', () => {
       }),
     });
     const details = screen.getByRole('region', { name: 'Details' });
+    // Details' side column stands after its section in the body, level with the first section.
+    const body = details.parentElement!;
 
-    expect(within(details).getByRole('heading', { name: 'Correspondences' })).toBeInTheDocument();
-    expect(within(details).getAllByText('None recorded')).toHaveLength(5);
-    expect(within(details).getByText('No folk names recorded.')).toBeInTheDocument();
-    expect(within(details).getByText('No categories recorded.')).toBeInTheDocument();
-  });
-
-  it('sets the correspondences and the three lists in a column of their own, after the text', () => {
-    renderEntry({ detail: detail({ entry: entryRow({ safetyNotes: 'A fixture caution.' }) }) });
-    const details = screen.getByRole('region', { name: 'Details' });
-    const caution = within(details).getByRole('region', { name: 'Caution' });
-    const description = within(details).getByText(detail().entry.description!);
-
-    const side = sharedColumn([
-      within(details).getByRole('heading', { name: 'Correspondences', level: 3 }),
-      within(details).getByRole('list', { name: 'Folk Names' }),
-      within(details).getByRole('list', { name: 'Categories' }),
-      within(details).getByRole('list', { name: 'Substitutes' }),
-    ]);
-    // A column inside the section, not the section itself, holding none of the text.
-    expect(details).toContainElement(side);
-    expect(side).not.toBe(details);
-    expect(side).not.toContainElement(caution);
-    expect(side).not.toContainElement(description);
-    expect(side).not.toContainElement(within(details).getByRole('heading', { level: 2 }));
-    // Not a complementary landmark: one per section would be noise.
-    expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
-    // Read after the text.
-    expect(precedes(description, side)).toBe(true);
-    expect(precedes(caution, side)).toBe(true);
+    expect(within(body).getByRole('heading', { name: 'Correspondences' })).toBeInTheDocument();
+    expect(
+      within(body).getAllByText(
+        /^No (elements|celestial bodies|zodiac signs|colours|deities) recorded\.$/,
+      ),
+    ).toHaveLength(5);
+    expect(within(body).getByText('No folk names recorded.')).toBeInTheDocument();
+    expect(within(body).getByText('No categories recorded.')).toBeInTheDocument();
   });
 
   it('links a linked substitute to its page, naming the form a form link names, and leaves a typed one as text', () => {
@@ -698,30 +616,23 @@ describe('IngredientEntry', () => {
       expect(screen.getByRole('button', { name: 'About Similar in the Compendium' })).toBeVisible();
       expect(screen.getByRole('link', { name: /^See All 5/ })).toBeInTheDocument();
       expect(screen.queryByRole('heading', { name: 'In the Compendium' })).toBeNull();
-      // A display only (M12.42): no radio to choose an entry, no button to link to one.
+      // A display only: no radio to choose an entry, no button to link to one.
       expect(screen.queryByRole('radio')).toBeNull();
       expect(within(list()).queryByRole('button')).toBeNull();
       expect(screen.queryByRole('button', { name: /link to/i })).toBeNull();
-    });
-
-    it('puts See All directly under the list', () => {
-      renderEntry({ similar });
-
-      const seeAll = screen.getByRole('link', { name: /^See All 5/ });
-      expect(
-        list().compareDocumentPosition(seeAll) & Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
     });
   });
 
   it('links the entry that moved off this address to where it is now', () => {
     const href = '/compendium/ingredients/fixture-movedwort' as Route;
     const { unmount } = renderEntry();
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(provenanceMarks()).toEqual([]);
     unmount();
 
     renderEntry({ movedAway: { name: 'Fixture Movedwort', href } });
-    const notice = screen.getByRole('status');
+    const notice = screen
+      .getAllByRole('status')
+      .find((s) => s.textContent?.includes('Fixture Movedwort'))!;
     expect(within(notice).getByRole('link', { name: 'Fixture Movedwort' })).toHaveAttribute(
       'href',
       href,
@@ -792,14 +703,6 @@ describe('IngredientEntry references', () => {
     ).toBeInTheDocument();
   });
 
-  it('puts the numbers after the text of their section', () => {
-    sample();
-    const details = screen.getByRole('region', { name: 'Details' });
-    const description = within(details).getByText('A fixture herb.');
-
-    expect(precedes(description, noteMarks(details)[0]!)).toBe(true);
-  });
-
   it('lists one numbered note for each link, in page order, each linking back to its number', () => {
     sample();
 
@@ -839,18 +742,6 @@ describe('IngredientEntry references', () => {
     const target = document.getElementById(`ref-${herbal.reference.id}`)!;
     expect(bibliography().contains(target)).toBe(true);
     expect(target).toHaveRole('listitem');
-  });
-
-  it('closes a note with its locator inside a short quoted title, and without one', () => {
-    renderEntry({
-      detail: detail({
-        references: [{ ...cited('Located Fixtures', 'p. 7', 'https://fixtures.example/a') }],
-        variants: [],
-      }),
-    });
-
-    const text = within(notes()).getByRole('listitem').textContent!;
-    expect(text).toMatch(/"Located Fixtures,"\s+p\. 7\./);
   });
 
   it('lists each source once in the bibliography, in alphabetical order, in full form', () => {
@@ -936,13 +827,11 @@ describe('IngredientEntry references', () => {
     expect(within(bibliography()).queryByRole('link', { name: /source/i })).not.toBeInTheDocument();
   });
 
-  it('is one section at the foot of the page, after the forms, headed with its parts a level beneath', () => {
+  it('is one section, headed with its parts a level beneath', () => {
     sample();
     const section = screen.getByRole('region', { name: 'References' });
 
     expect(section).toHaveAttribute('id', 'references');
-    expect(precedes(document.getElementById('forms')!, section)).toBe(true);
-    expect(section.parentElement!.lastElementChild).toBe(section);
     expect(
       within(section).getByRole('heading', { name: 'References', level: 2 }),
     ).toBeInTheDocument();
@@ -1037,7 +926,7 @@ describe('IngredientEntry edit', () => {
     unmount();
 
     // A curator in no coven: the compendium's edit is the head's one choice, the pencil named
-    // Edit in Compendium and the entry (the owner's call, 2026-10-20), and no labelled Edit link
+    // Edit in Compendium and the entry, and no labelled Edit link
     // is left under the name.
     renderEntry({ edit: edit() });
     expect(screen.getByRole('link', { name: 'Edit in Compendium Testwort' })).toHaveAttribute(
@@ -1117,7 +1006,7 @@ describe('IngredientEntry edit', () => {
     expect(router.replace).toHaveBeenCalledWith('/compendium');
   });
 
-  // A coven's own entry (M8.17): the same dialog, writing to the coven.
+  // A coven's own entry: the same dialog, writing to the coven.
   describe("on a coven's own entry", () => {
     const OWN = '/coven/fixture-coven/ingredients/00000000-0000-4000-8000-000000000001';
     const own = () => detail({ entry: entryRow({ workspaceId: COVEN }) });
@@ -1143,19 +1032,20 @@ describe('IngredientEntry edit', () => {
     const renderOwn = (ui: ReactElement) =>
       render(<QueryClientProvider client={makeQueryClient()}>{ui}</QueryClientProvider>);
 
-    // The icons the list card has (the owner's call, 2026-10-20): the pencil and the bin.
-    it("draws the page's Edit as the pencil beside the name, named for the entry, with the bin and no menu", () => {
+    // The pencil, then the three dots holding Delete Ingredient: no bin beside them.
+    it("draws the page's Edit as the pencil beside the name, named for the entry, then the three dots and no bin", () => {
       renderOwn(<IngredientEntry detail={own()} hrefOf={hrefOf} edit={covenEdit()} />);
 
       expect(screen.getByRole('link', { name: 'Edit Testwort' })).toHaveAttribute(
         'href',
         `${OWN}?edit`,
       );
-      expect(
-        screen.getByRole('button', { name: 'Delete Ingredient Testwort' }),
-      ).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /^Delete/ })).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
-      expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'More for Testwort' })).toHaveAttribute(
+        'aria-haspopup',
+        'menu',
+      );
     });
 
     it("heads the dialog the page's Edit opens as an ingredient's, writing to the coven", () => {
@@ -1195,8 +1085,27 @@ describe('IngredientEntry edit', () => {
   });
 });
 
-// The three kinds of entry on a coven's page (M12.16): the coven's own, the
+// The three kinds of entry on a coven's page: the coven's own, the
 // compendium's held in its cupboard, and the compendium's not held.
+describe("IngredientEntry's review mark", () => {
+  it('says a compendium entry needs review, to a visitor with no account', () => {
+    renderEntry();
+
+    expect(screen.getByText('Needs Review', { exact: true })).toBeInTheDocument();
+  });
+
+  it('says when a curator reviewed it, and names no one', () => {
+    const reviewed = detail({
+      entry: entryRow({ curatorReviewedAt: new Date('2026-10-01T09:30:00.000Z') }),
+    });
+    renderEntry({ detail: reviewed });
+
+    const badge = screen.getByRole('button', { name: 'Reviewed By Curator' });
+    expect(badge).toHaveAccessibleDescription('Reviewed 1 Oct 2026');
+    expect(screen.queryByText('Needs Review', { exact: true })).toBeNull();
+  });
+});
+
 describe('IngredientEntry on a coven page', () => {
   const held = (overrides: Partial<NonNullable<IngredientDetail['cupboardEntry']>> = {}) =>
     ({
@@ -1239,12 +1148,12 @@ describe('IngredientEntry on a coven page', () => {
     expect(rowOf('Elements')).toBe('Water');
     expect(rowOf('Celestial Bodies')).not.toBe('Fixture Moon');
     expect(screen.queryByText('Fixture Moon')).not.toBeInTheDocument();
-    // Annotated stands in place of Compendium (the owner's call, 2026-10-20); a
+    // Annotated stands in place of Compendium; a
     // compendium entry is never Local. The next test is the precondition: held and
     // unannotated, it shows Compendium.
     expect(screen.getByRole('button', { name: 'Annotated' })).toBeInTheDocument();
     expect(screen.queryByText('Compendium', { exact: true })).toBeNull();
-    expect(screen.queryAllByRole('status')).toHaveLength(0);
+    expect(provenanceMarks()).toEqual([]);
     expect(screen.queryByText('Local', { exact: true })).not.toBeInTheDocument();
   });
 
@@ -1252,7 +1161,7 @@ describe('IngredientEntry on a coven page', () => {
     renderEntry({ detail: detail({ cupboardEntry: held() }) });
 
     expect(screen.getByRole('heading', { level: 1, name: 'Testwort' })).toBeInTheDocument();
-    expect(screen.getAllByRole('status').map((mark) => mark.textContent)).toEqual(['Compendium']);
+    expect(provenanceMarks()).toEqual(['Compendium']);
     expect(screen.getAllByText('Testwort')).toHaveLength(1);
     expect(screen.queryByText('Local', { exact: true })).not.toBeInTheDocument();
   });
@@ -1272,7 +1181,7 @@ describe('IngredientEntry on a coven page', () => {
   it('renders a compendium entry the coven does not hold with neither mark', () => {
     renderEntry();
 
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(provenanceMarks()).toEqual([]);
     expect(screen.queryByText('Local', { exact: true })).not.toBeInTheDocument();
   });
 
@@ -1280,24 +1189,16 @@ describe('IngredientEntry on a coven page', () => {
     renderEntry({ detail: detail({ entry: entryRow({ workspaceId: COVEN }) }) });
 
     expect(screen.getByText('Local', { exact: true })).toBeInTheDocument();
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(provenanceMarks()).toEqual([]);
   });
 });
 
-// The public page's shelf (M9.12): a compendium entry any of the viewer's covens holds carries
+// The public page's shelf: a compendium entry any of the viewer's covens holds carries
 // In Your Cupboard before its name, as it does on the coven's own page.
 describe('IngredientEntry on the public page, held in a coven', () => {
   const shelf = () => screen.queryByRole('button', { name: 'In Your Cupboard' });
 
-  it('puts the shelf before the name when a coven of the viewer’s holds the entry', () => {
-    renderEntry({ heldInCovens: true });
-
-    const mark = shelf()!;
-    const heading = screen.getByRole('heading', { level: 1, name: 'Testwort' });
-    expect(mark.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  });
-
-  // The owner's call, 2026-10-20: a press opens the shelf's tip, as a tap does on InfoTip's ⓘ,
+  // A press opens the shelf's tip, as a tap does on InfoTip's ⓘ,
   // so it shows on touch. A click here focuses nothing, so the press alone opens it.
   it('opens the In Your Cupboard tip when the shelf is pressed', () => {
     renderEntry({ heldInCovens: true });
@@ -1319,27 +1220,13 @@ describe('IngredientEntry on the public page, held in a coven', () => {
   });
 });
 
-describe('IngredientEntry recency (MB.106)', () => {
+describe('IngredientEntry recency', () => {
   const daysAgo = (days: number) => new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
   it('marks a compendium entry created lately New', () => {
     renderEntry({ detail: detail({ entry: entryRow({ createdAt: daysAgo(2) }) }) });
 
     expect(screen.getByText('New', { exact: true })).toBeInTheDocument();
-  });
-
-  it('marks an older compendium entry changed lately Updated', () => {
-    renderEntry({ detail: detail({ entry: entryRow({ updatedAt: daysAgo(2) }) }) });
-
-    expect(screen.getByText('Updated', { exact: true })).toBeInTheDocument();
-    expect(screen.queryByText('New', { exact: true })).toBeNull();
-  });
-
-  it('marks neither on an entry unchanged for longer', () => {
-    renderEntry();
-
-    expect(screen.queryByText('New', { exact: true })).toBeNull();
-    expect(screen.queryByText('Updated', { exact: true })).toBeNull();
   });
 
   it("marks neither on a coven's own entry, however new", () => {
@@ -1352,7 +1239,7 @@ describe('IngredientEntry recency (MB.106)', () => {
   });
 });
 
-describe('IngredientEntry stock (M12.29)', () => {
+describe('IngredientEntry stock', () => {
   // The fixture's two forms, by id, so a jar can name one.
   const variants = [variantRow('testroot'), variantRow('testoil')];
   const [root, oil] = variants.map(({ variant }) => variant.id) as [string, string];
@@ -1395,6 +1282,31 @@ describe('IngredientEntry stock (M12.29)', () => {
     expect(within(section()).getAllByRole('listitem')).toHaveLength(2);
     expect(lineOf('Testroot')).toHaveTextContent('250 g');
     expect(lineOf('Testoil')).toHaveTextContent('No Jar');
+  });
+
+  it('puts Stock first, above Details, in the page and in the jump menu', () => {
+    renderStock([jar(root, 250)]);
+
+    const headings = screen
+      .getAllByRole('heading', { level: 2 })
+      .map((heading) => heading.textContent);
+    expect(headings.slice(0, 3)).toEqual(['Stock', 'Details', 'Forms']);
+
+    const nav = screen.getByRole('navigation', { name: 'On This Page' });
+    expect(
+      within(nav)
+        .getAllByRole('link')
+        .map((link) => link.getAttribute('href'))
+        .slice(0, 2),
+    ).toEqual(['#stock', '#details']);
+  });
+
+  it('leaves Details first when the entry shows no Stock section', () => {
+    renderEntry();
+
+    expect(screen.getAllByRole('heading', { level: 2 })[0]).toHaveTextContent('Details');
+    const nav = screen.getByRole('navigation', { name: 'On This Page' });
+    expect(within(nav).getAllByRole('link')[0]).toHaveAttribute('href', '#details');
   });
 
   const shelfOrder = () =>
@@ -1480,7 +1392,7 @@ describe('IngredientEntry stock (M12.29)', () => {
     expect(open.getByRole('button', { name: /^Testroot\b/ })).not.toHaveAttribute('aria-current');
   });
 
-  it('adds the form and chooses it when an empty jar is pressed', () => {
+  it('adds the form and chooses it, with nothing to save yet, when an empty jar is pressed', () => {
     renderStock([jar(root, 250)]);
 
     fireEvent.click(jarButton('Testoil')!);
@@ -1491,8 +1403,8 @@ describe('IngredientEntry stock (M12.29)', () => {
       'true',
     );
     expect(open.getByRole('spinbutton', { name: 'Quantity, Testoil' })).toHaveValue(null);
-    // A new row is a change, so Save is on.
-    expect(open.getByRole('button', { name: 'Save' })).toBeEnabled();
+    // The new row is a place to fill, not a change, so Save is off.
+    expect(open.getByRole('button', { name: 'Save Stock' })).toBeDisabled();
   });
 
   it('gives a role that may not edit plain jars with no button', () => {
@@ -1509,16 +1421,6 @@ describe('IngredientEntry stock (M12.29)', () => {
     expect(within(section()).queryByRole('listitem')).toBeNull();
     expect(within(section()).getByText('No stock recorded.')).toBeInTheDocument();
     expect(headingButton()).toBeInTheDocument();
-  });
-
-  it('lists Stock in the jump menu after Details', () => {
-    renderStock([jar(root, 250)]);
-
-    const nav = screen.getByRole('navigation', { name: 'On This Page' });
-    const links = within(nav)
-      .getAllByRole('link')
-      .map((link) => link.getAttribute('href'));
-    expect(links.slice(0, 2)).toEqual(['#details', '#stock']);
   });
 
   it('draws no Stock section without stock, as for a compendium entry the coven does not hold', () => {

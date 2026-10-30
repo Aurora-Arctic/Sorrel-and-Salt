@@ -1,14 +1,17 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { useEffect, useRef, useState } from 'react';
+import type { ReactNode } from 'react';
 import { buildSearchSentence } from '../IngredientSearch/sentence';
 import SearchSentence from '.';
 
 // Render-only; behaviour is asserted in tests/components/SearchSentence. Invented
-// values (M12.4). The search buttons stand in for a list's navigation: `pending` is
+// values. The search buttons stand in for a list's navigation: `pending` is
 // true until the "results" come back.
-export default {
-  title: 'Admin / Search Sentence',
-};
+const meta = {
+  title: 'Ingredients / Search Sentence',
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<{ state?: ReactNode }>;
 
 const FULL = (query: string) =>
   buildSearchSentence({
@@ -68,14 +71,19 @@ function Searching({ wait, filtered = true }: { wait: number; filtered?: boolean
   );
 }
 
-// Settled: one closed line; press it to open the clauses.
-export const Settled: Story = () => <Searching wait={600} />;
+// One control chooses the state; each starts its own search on load and the control
+// remounts it (claude-docs/workshop.md, rule 5). Settled: one closed line. Slow
+// Search: results return after four seconds. Fast Search: before the clauses finish
+// typing. Nothing To Open: a search term and no filter, so a plain line.
+const STATES: Record<string, ReactNode> = {
+  Settled: <Searching wait={600} />,
+  'Slow Search': <Searching wait={4000} />,
+  'Fast Search': <Searching wait={600} />,
+  'Nothing To Open': <Searching wait={1500} filtered={false} />,
+};
 
-// New Search types the sentence out; the results come back after four seconds.
-export const SlowSearch: Story = () => <Searching wait={4000} />;
-
-// The results come back before the clauses are typed: they finish at a faster pace.
-export const FastSearch: Story = () => <Searching wait={600} />;
-
-// A search term and no filter: nothing to open, so a plain line.
-export const NothingToOpen: Story = () => <Searching wait={1500} filtered={false} />;
+export const States: Story = {
+  args: { state: 'Settled' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div>{state}</div>,
+};

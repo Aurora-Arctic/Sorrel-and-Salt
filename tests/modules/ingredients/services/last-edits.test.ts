@@ -5,15 +5,14 @@ import { Forbidden } from '@/lib/errors';
 import { lastEditsOf } from '@/modules/ingredients';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
+import { insertCupboardEntry } from '../../../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { insertStock } from '../../../support/db/insert-stock';
 import { variantIdOf } from '../../../support/db/read-variants';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 
-// M6.18: the latest edit a coven's card shows. The newest of the coven's live jars of the
-// entry and, for the coven's own entry, the entry's row; a compendium entry's own editor, an
-// admin, is never shown. The database stamps `updated_at` itself (a trigger), so each row's
-// time is its write order, and every case writes in the order it names.
+// The latest edit a coven's card shows: the newest of the coven's live jars of the entry and, for the coven's own entry, the entry's row. A compendium entry's own editor, an admin, is never shown.
+// The database stamps `updated_at` itself (a trigger), so each row's time is its write order, and every case writes in the order it names.
 
 // The query count, observed at the repository: the names are one read whatever the page holds.
 const repository = vi.hoisted(() => ({ findCoMemberNamesIncludingSoftDeleted: vi.fn() }));
@@ -169,6 +168,71 @@ describe('lastEditsOf', () => {
 
     const [edit] = await lastEditsOf(asUser(C), WORKSPACE_W_ID, [entry]);
     expect(edit?.by).toBe(A.name);
+  });
+
+  describe("a compendium entry's cupboard row", () => {
+    const stampOf = async (workspaceId: string) => {
+      const [row] = await sql`
+        select updated_at from workspace_compendium_entries where workspace_id = ${workspaceId}`;
+      return (row.updated_at as Date).toISOString();
+    };
+    const cupboardOf = async (entry: Seeded, author: string, workspaceId = WORKSPACE_W_ID) => {
+      await sql`select pg_sleep(0.01)`;
+      await insertCupboardEntry(
+        sql,
+        { workspaceId, ingredientId: entry.id, description: 'Annotated' },
+        author,
+      );
+    };
+
+    it('shows the annotating member and time when the coven holds no jar', async () => {
+      const entry = await seed(null, E.id, 'Compendiumwort');
+      await cupboardOf(entry, B.id);
+      // Precondition: no jar, so the cupboard row is the only coven stamp.
+      const [{ count }] = await sql`select count(*)::int from inventory_items`;
+      expect(count).toBe(0);
+
+      await expect(lastEditsOf(asUser(C), WORKSPACE_W_ID, [entry])).resolves.toEqual([
+        { by: B.name, at: await stampOf(WORKSPACE_W_ID) },
+      ]);
+    });
+
+    it('shows the newer of the annotation and the jars, whichever it is', async () => {
+      const entry = await seed(null, E.id, 'Compendiumwort');
+      await jarOf(entry, A.id);
+      await cupboardOf(entry, B.id);
+      let [edit] = await lastEditsOf(asUser(C), WORKSPACE_W_ID, [entry]);
+      expect(edit).toEqual({ by: B.name, at: await stampOf(WORKSPACE_W_ID) });
+
+      await jarOf(entry, A.id, 1);
+      [edit] = await lastEditsOf(asUser(C), WORKSPACE_W_ID, [entry]);
+      const [newest] = await sql`
+        select updated_at from inventory_items where variant_id = ${entry.forms[1]}`;
+      expect(edit).toEqual({ by: A.name, at: (newest.updated_at as Date).toISOString() });
+    });
+
+    it("never shows another coven's annotation of the same entry", async () => {
+      const entry = await seed(null, E.id, 'Compendiumwort');
+      await jarOf(entry, A.id);
+      await cupboardOf(entry, D.id, WORKSPACE_X_ID);
+      // Preconditions: X's row exists and is newer than W's only jar.
+      const [jar] = await sql`select updated_at from inventory_items`;
+      expect((await stampOf(WORKSPACE_X_ID)) > (jar.updated_at as Date).toISOString()).toBe(true);
+
+      const [edit] = await lastEditsOf(asUser(C), WORKSPACE_W_ID, [entry]);
+      expect(edit?.by).toBe(A.name);
+      // And with no jar and no row of W's, X's row alone gives no edit.
+      await sql`truncate inventory_items cascade`;
+      await expect(lastEditsOf(asUser(C), WORKSPACE_W_ID, [entry])).resolves.toEqual([null]);
+    });
+
+    it("never shows the compendium entry's own editor", async () => {
+      const entry = await seed(null, E.id, 'Compendiumwort');
+      await cupboardOf(entry, B.id);
+      expect(entry.updatedBy).toBe(E.id);
+      const [edit] = await lastEditsOf(asUser(C), WORKSPACE_W_ID, [entry]);
+      expect(edit?.by).not.toBe(E.name);
+    });
   });
 
   it("names every entry's editor with one read, however many entries", async () => {

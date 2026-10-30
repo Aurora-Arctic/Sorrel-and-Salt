@@ -1,19 +1,21 @@
-import type { Story } from '@ladle/react';
-import type { ReactElement } from 'react';
-import { Navigating } from '../../../.ladle/navigating';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactElement, ReactNode } from 'react';
+import { Navigating } from '../../../.storybook/navigating';
 import { PendingLink } from '../../lib/navigation';
 import type { NavigationTarget } from '../../lib/navigation';
 import SectionBody from '.';
+import { route } from '../../../.storybook/route';
 
 // Render-only; behaviour is asserted in tests/components/SectionBody. At rest it
-// shows its page; the skeleton stands in only while a navigation aimed at the
-// section is on its way. The Loading stories open with a link already pressed,
-// so the wait stays on screen (the workshop's navigation never arrives).
-export default {
+// shows its page; the skeleton shows only while a navigation aimed at the section
+// is on its way. The Loading stories open with a link pressed (it never arrives).
+const meta = {
   title: 'Shell / Section Body',
-};
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
-export const AtRest: Story = () => (
+const Resting = (
   <SectionBody region="coven" className="coven-layout">
     <main>
       <h1>Ingredients</h1>
@@ -22,51 +24,63 @@ export const AtRest: Story = () => (
   </SectionBody>
 );
 
-const Waiting = ({ name, target }: { name: string; target: NavigationTarget }): ReactElement => (
-  <Navigating press={name}>
-    <p>
-      <PendingLink href="/coven/fixture-coven" navigationTarget={target}>
-        {name}
-      </PendingLink>
-    </p>
-    <SectionBody region={target.region as 'coven' | 'admin'} className="coven-layout">
-      <main>
-        <h1>{name}</h1>
-      </main>
-    </SectionBody>
-  </Navigating>
-);
+// Each region has its own frame class, as its layout gives it: the coven's
+// `coven-layout`, the admin area's `page-column`.
+const FRAME = { coven: 'coven-layout', admin: 'page-column' } as const;
 
-// The coven's Ingredients: its heading, filter and cards in the wide column.
-export const LoadingList: Story = () => (
-  <Waiting
-    name="Ingredients"
-    target={{ region: 'coven', shape: 'cards', title: true, filter: true }}
-  />
-);
+const Waiting = ({ name, target }: { name: string; target: NavigationTarget }): ReactElement => {
+  const region = target.region as keyof typeof FRAME;
+  return (
+    <Navigating press={name}>
+      <p>
+        <PendingLink href={route('/coven/fixture-coven')} navigationTarget={target}>
+          {name}
+        </PendingLink>
+      </p>
+      <SectionBody region={region} className={FRAME[region]}>
+        <main>
+          <h1>{name}</h1>
+        </main>
+      </SectionBody>
+    </Navigating>
+  );
+};
 
-// The coven's Members: its heading with the tab row, then the table.
-export const LoadingTabs: Story = () => (
-  <Waiting name="Members" target={{ region: 'coven', shape: 'table', title: true, tabs: true }} />
-);
+// Resting is the page itself. The rest are a wait, each in the skeleton of the
+// destination it names: the coven's Ingredients (with and without an Add action),
+// Members, Overview, an ingredient's page, and the admin index. The account page
+// is aimed at the shell's body, not this one: see Main Body.
+const STATES: Record<string, ReactNode> = {
+  Resting,
+  'Loading List': (
+    <Waiting
+      name="Ingredients"
+      target={{ region: 'coven', shape: 'cards', title: true, filter: true }}
+    />
+  ),
+  'Loading List With Action': (
+    <Waiting
+      name="Grimoire"
+      target={{ region: 'coven', shape: 'cards', title: true, action: true, filter: true }}
+    />
+  ),
+  'Loading Tabs': (
+    <Waiting name="Members" target={{ region: 'coven', shape: 'table', title: true, tabs: true }} />
+  ),
+  'Loading With Menu': (
+    <Waiting
+      name="Overview"
+      target={{ region: 'coven', shape: 'page', frame: 'with-nav', head: 'eyebrow' }}
+    />
+  ),
+  'Loading Entry': (
+    <Waiting name="Testwort" target={{ region: 'coven', shape: 'page', frame: 'entry' }} />
+  ),
+  'Loading Contents': <Waiting name="Admin" target={{ region: 'admin', shape: 'contents' }} />,
+};
 
-// The coven's home: the page with its contents menu beside it.
-export const LoadingWithMenu: Story = () => (
-  <Waiting
-    name="Overview"
-    target={{ region: 'coven', shape: 'page', frame: 'with-nav', head: 'eyebrow' }}
-  />
-);
-
-// The account page: a title alone over its menu and panels.
-export const LoadingAccount: Story = () => (
-  <Waiting
-    name="Account"
-    target={{ region: 'coven', shape: 'page', frame: 'with-nav', head: 'title' }}
-  />
-);
-
-// The admin index: its heading and line, then titled lists of links (no cards).
-export const LoadingContents: Story = () => (
-  <Waiting name="Admin" target={{ region: 'admin', shape: 'contents' }} />
-);
+export const States: Story = {
+  args: { state: 'Resting' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div>{state}</div>,
+};

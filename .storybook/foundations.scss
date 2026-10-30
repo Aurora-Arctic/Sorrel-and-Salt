@@ -1,0 +1,377 @@
+@use 'sass:map';
+@use 'sass:meta';
+@use '../src/scss/variables' as *;
+@use '../src/scss/variables' as tokens;
+
+// Page chrome for ./foundations.tsx only: prose, primitives and colours come from the app's
+// partials, and each printed value is read from the partial's own map. Nested under `.fd`.
+
+$raw-palette: (soot, soot-raised, parchment, parchment-raised, chalk, iron-gall, sorrel, wax);
+
+.fd {
+  max-width: 60rem;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: space(7);
+
+  // --- swatches -------------------------------------------------------------
+  .fd-swatches {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+    gap: space(4) space(5);
+  }
+
+  .fd-swatch {
+    display: flex;
+    flex-direction: column;
+    gap: space(1);
+  }
+
+  .fd-swatch__bar {
+    height: 2.5rem;
+    border-radius: radius('sharp');
+    border: 1px solid $text-muted;
+  }
+
+  .fd-swatch__name {
+    font-size: type-size('small');
+    font-weight: 500;
+  }
+
+  .fd-swatch__hex {
+    font-size: type-size('caption');
+    color: $text-muted;
+    text-transform: uppercase;
+  }
+
+  .fd-swatch__role {
+    font-size: type-size('overline');
+    color: $text-muted;
+  }
+
+  @each $name in $raw-palette {
+    $value: map.get(meta.module-variables('tokens'), $name);
+
+    .fd-swatch__bar.fd-raw--#{$name} {
+      background: $value;
+    }
+
+    .fd-swatch__hex.fd-raw--#{$name}::after {
+      content: '#{$value}';
+    }
+  }
+
+  .fd-shadows {
+    display: flex;
+    flex-wrap: wrap;
+    gap: space(5);
+  }
+
+  .fd-shadow {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: space(1);
+    min-width: min(14rem, 100%);
+    min-height: 5rem;
+    padding: space(3);
+    border-radius: radius('control');
+    background-color: $surface-card;
+  }
+
+  .fd-shadow--elevated {
+    box-shadow: $shadow-elevated;
+  }
+
+  .fd-shadow--floating {
+    box-shadow: $shadow-floating;
+  }
+
+  // --- type, spacing, radii ---------------------------------------------------
+  .fd-text-roles {
+    margin-top: space(5);
+
+    h3 {
+      margin: 0;
+    }
+  }
+
+  .fd-type-sizes {
+    display: flex;
+    flex-direction: column;
+    gap: space(3);
+    margin-top: space(5);
+    padding-top: space(4);
+    border-top: 1px solid $text-muted;
+  }
+
+  .fd-type-size {
+    margin: 0;
+
+    &::before {
+      display: block;
+      color: $text-muted;
+      font-family: $font-mono;
+      font-size: type-size('overline');
+    }
+  }
+
+  @each $role, $size in $type-sizes {
+    .fd-type-size--#{$role} {
+      font-size: $size;
+
+      &::before {
+        content: "type-size('#{$role}') · #{$size}";
+      }
+    }
+  }
+
+  .fd-scale {
+    display: flex;
+    flex-direction: column;
+    gap: space(2);
+  }
+
+  .fd-scale__row {
+    display: grid;
+    grid-template-columns: 9rem 1fr;
+    align-items: center;
+    gap: space(3);
+
+    &::before {
+      color: $text-muted;
+      font-family: $font-mono;
+      font-size: type-size('caption');
+    }
+  }
+
+  .fd-scale__bar {
+    height: space(4);
+    background-color: $accent;
+  }
+
+  @each $step, $size in $space-steps {
+    .fd-space--#{$step} {
+      &::before {
+        content: 'space(#{$step}) · #{$size}';
+      }
+
+      .fd-scale__bar {
+        width: $size;
+      }
+    }
+  }
+
+  .fd-radii {
+    display: flex;
+    flex-wrap: wrap;
+    gap: space(4);
+  }
+
+  .fd-radius {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    // Wide enough for the role's own label, which has room on each side of it
+    // and stays on one line.
+    height: 3.5rem;
+    padding-inline: space(4);
+    border: 1px solid $text-muted;
+    white-space: nowrap;
+    background-color: $surface-page;
+
+    &::after {
+      color: $text-muted;
+      font-family: $font-mono;
+      font-size: type-size('overline');
+    }
+  }
+
+  @each $role, $size in $radii {
+    .fd-radius--#{$role} {
+      border-radius: $size;
+
+      &::after {
+        content: "radius('#{$role}') · #{$size}";
+      }
+    }
+  }
+
+  // --- primitives -------------------------------------------------------------
+  .fd-buttons,
+  .fd-notices {
+    display: flex;
+    flex-wrap: wrap;
+    gap: space(3);
+  }
+
+  .fd-notices {
+    flex-direction: column;
+  }
+
+  // Fields side by side, as a filter row spaces them.
+  .fd-switches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: space(3) space(5);
+  }
+
+  .fd-form {
+    max-width: 32rem;
+  }
+
+  .fd-groups {
+    display: flex;
+    flex-direction: column;
+    gap: space(3);
+  }
+
+  .fd-group-row {
+    display: flex;
+    align-items: center;
+    gap: space(3);
+    flex-wrap: wrap;
+  }
+
+  .fd-group-pair {
+    font-size: type-size('caption');
+    font-weight: 500;
+    color: $text-muted;
+  }
+
+  // --- page frame, link row, brands -------------------------------------------
+  .fd-frames {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
+    gap: space(5);
+  }
+
+  // The frame's own edge, dashed so it reads as a boundary and not a surface.
+  .fd-frame-stage {
+    border: 1px dashed $text-muted;
+    border-radius: radius('control');
+  }
+
+  // A fixed height in place of the window's, or each demo would fill a screen.
+  .page-frame {
+    min-height: 24rem;
+  }
+
+  // --- data table, pager, filter row, page header ------------------------------
+  .fd-tables,
+  .fd-pagers {
+    display: flex;
+    flex-direction: column;
+    gap: space(5);
+  }
+
+  // A phone's width, 375px, the narrowest a review signs off at, so a
+  // container query inside fires at any window size. The box's padding is
+  // the admin layout's gutter, so its content is about as wide as on the phone.
+  .fd-phone {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 375px;
+    padding: space(4);
+    border: 1px dashed $text-muted;
+    border-radius: radius('control');
+  }
+
+  // The page header's box also carries `.page-column`, the ancestor its
+  // full-width action keys off; it keeps the other boxes' place rather than
+  // the layout's centring, and its own padding outranks the layout's.
+  .fd-phone.page-column {
+    margin-inline: 0;
+  }
+
+  .fd-brands {
+    display: flex;
+    flex-wrap: wrap;
+    gap: space(6);
+
+    h3 {
+      margin: 0 0 space(4);
+    }
+  }
+
+  .fd-brand-parts,
+  .fd-marks {
+    display: flex;
+    flex-direction: column;
+    gap: space(2);
+    margin: space(4) 0 0;
+    padding: space(5);
+    list-style: none;
+
+    li {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: space(2) space(3);
+      margin: 0;
+    }
+
+    li::before {
+      content: none;
+    }
+  }
+
+  .fd-marks {
+    flex-flow: row wrap;
+    gap: space(3) space(5);
+  }
+
+  .fd-brand-part {
+    color: $text-muted;
+    font-size: type-size('caption');
+  }
+
+  // Every part a brand declares, in the map's order, read from the map.
+  @each $brand, $parts in $brand-palettes {
+    $printed: '';
+
+    @each $part, $value in $parts {
+      // A map cannot be interpolated, so a theme-split part is read apart
+      // theme by theme; declared first so the branches assign the outer one.
+      $shown: null;
+
+      @if meta.type-of($value) == map {
+        $shown: 'dark #{map.get($value, dark)}, light #{map.get($value, light)}';
+      } @else {
+        $shown: '#{$value}';
+      }
+
+      $separator: ' · ';
+
+      @if $printed == '' {
+        $separator: '';
+      }
+
+      $printed: '#{$printed}#{$separator}#{$part} #{$shown}';
+    }
+
+    .fd-brand-part--#{$brand}::after {
+      content: $printed;
+    }
+  }
+
+  // A distinct ground, so the raised surface's shadow and lift actually read.
+  .fd-stage {
+    display: flex;
+    padding: space(6);
+    border-radius: radius('control');
+    background-color: $surface-page;
+
+    // A phone's width has no room to spare: less ground around the card. The badges
+    // drop under the name by themselves, as the card's top row wraps.
+    @media (max-width: 30rem) {
+      padding: space(3);
+    }
+  }
+
+  // primitives-base's .modal sets no width; both demos share one.
+  .modal {
+    max-width: 24rem;
+  }
+}

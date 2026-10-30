@@ -72,12 +72,12 @@ outright, and the pair can be re-added afterwards — by a different member,
 whose stamps the new row carries (MB.226).
 
 **Why not `spell_ingredients`** (MB.110). It was the third, and is
-soft-deleted since `0029`: a spell is a record of a working, so a layer taken
+soft-deleted since `0029`: a spell is a recipe that keeps what went into its jar, so a layer taken
 out of it should be recoverable like every other delete
 ([`m5.3-spells-keep-deleted-ingredients.md`](../design-decisions/m5.3-spells-keep-deleted-ingredients.md)).
 The deciding argument above does not reach it. What reads through a layer does
 so by `existsIn` (MB.100), which ANDs the layer's `deleted_at IS NULL` by
 construction, so there is no filter left for a service to remember. What it
 cost is the surrogate key and the partial indexes, under
-["Layer order is the identity"](grimoire.md#layer-order-is-the-identity-and-what-that-costs-the-reorder)
+["Position is the identity"](grimoire.md#position-is-the-identity-and-what-that-costs-the-reorder)
 in the grimoire.

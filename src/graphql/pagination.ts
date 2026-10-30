@@ -24,8 +24,7 @@ declare global {
       Kind extends FieldKind = FieldKind,
     > {
       /**
-       * The one way to declare a list field (CLAUDE.md rule 8): a Relay
-       * connection whose resolver is handed a page rather than arguments.
+       * The one way to declare a list field (CLAUDE.md rule 8): a Relay connection whose resolver is handed a page.
        * `tests/guards/pagination.test.ts` fails a `.connection(` anywhere else.
        */
       pagedConnection: <Node, Args extends InputFieldMap = {}, Edge extends object = {}>(

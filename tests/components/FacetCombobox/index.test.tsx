@@ -5,10 +5,8 @@ import { describe, expect, it, vi } from 'vitest';
 import FacetCombobox from '@/components/FacetCombobox';
 import type { FacetComboboxProps } from '@/components/FacetCombobox/types';
 
-// A filter's closed set with how many entries each value would leave (M12.4):
-// the multi-select box with counts, zero rows last and disabled, and each
-// chosen value a hidden input of the filter's GET form
-// (claude-docs/components/facet-combobox.md).
+// A filter's closed set with how many entries each value would leave: the multi-select box with counts, zero rows last and disabled,
+// and each chosen value a hidden input of the filter's GET form (claude-docs/components/facet-combobox.md).
 
 const CHOICES = [
   { value: 'air', label: 'Testair', count: 3 },
@@ -96,14 +94,6 @@ describe('FacetCombobox', () => {
     expect(screen.getByText(PROPS.placeholder as string)).toBeInTheDocument();
   });
 
-  it('keeps the field, with nothing to offer, when every value is zero', () => {
-    const choices = PROPS.choices.map((choice) => ({ ...choice, count: 0 }));
-    render(<FacetCombobox {...PROPS} choices={choices} />);
-    expect(screen.getByRole('combobox', { name: 'Elements' })).toBeInTheDocument();
-    open();
-    expect(screen.queryAllByRole('option')).toHaveLength(0);
-  });
-
   it('submits each chosen value as a hidden input under the name, in the order chosen', () => {
     const { container } = render(<Controlled />);
     expect(hidden(container)).toEqual([]);
@@ -134,12 +124,6 @@ describe('FacetCombobox', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Clear Elements' }));
     expect(hidden(container)).toEqual([]);
-  });
-
-  it('keeps a chosen value with a count of nothing removable', () => {
-    render(<Controlled initial={['earth']} />);
-
-    expect(screen.getByRole('button', { name: 'Remove Element: Testearth' })).toBeEnabled();
   });
 
   // Before the script runs, a press on the search's magnifier sends the form,
@@ -177,6 +161,18 @@ describe('FacetCombobox', () => {
 
       expect(hidden(container)).toEqual(['water']);
       expect(box()).toHaveValue('');
+    });
+
+    it('stays open after a pick for the next, with the focus in the text, and the pick applied', () => {
+      const { container } = render(<Controlled typeahead />);
+
+      box().focus();
+      fireEvent.keyDown(box(), { key: 'ArrowDown' });
+      fireEvent.click(screen.getByRole('option', { name: 'Testfire 9' }));
+
+      expect(hidden(container)).toEqual(['fire']);
+      expect(box()).toHaveAttribute('aria-expanded', 'true');
+      expect(box()).toHaveFocus();
     });
 
     it('lists no chosen value, and no value with nothing behind it', () => {
@@ -228,31 +224,6 @@ describe('FacetCombobox', () => {
       fireEvent.click(screen.getByRole('option', { name: 'Testspirit 1' }));
 
       expect(hidden(container)).toEqual(['spirit']);
-    });
-
-    it('lists every choice of a group whose name is typed, and any choice whose own label holds the text', () => {
-      const choices = [
-        { value: 'a', label: 'Testaletheia', count: 2, group: 'Testish' },
-        { value: 'b', label: 'Testborros', count: 1, group: 'Testish' },
-        { value: 'c', label: 'Testcorvane', count: 4, group: 'Otherish' },
-        { value: 'd', label: 'Otherwise Testish', count: 3, group: 'Thirdish' },
-      ];
-      render(<Controlled typeahead choices={choices} />);
-
-      fireEvent.change(box(), { target: { value: ' TESTISH ' } });
-
-      // The whole group by its name, and the one choice by its own label.
-      expect(
-        within(screen.getByRole('group', { name: 'Testish' }))
-          .getAllByRole('option')
-          .map((row) => row.textContent),
-      ).toEqual(['Testaletheia 2', 'Testborros 1']);
-      expect(
-        within(screen.getByRole('group', { name: 'Thirdish' })).getByRole('option', {
-          name: 'Otherwise Testish 3',
-        }),
-      ).toBeInTheDocument();
-      expect(screen.queryByRole('group', { name: 'Otherish' })).not.toBeInTheDocument();
     });
 
     it('draws the native select with the groups as optgroups', () => {

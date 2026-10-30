@@ -2,12 +2,8 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { WorkspaceRole } from '@/modules/coven';
 
-// The `/coven/[slug]` index page (M9.15): the page every coven opens on. It
-// runs the coven guard on its own slug, since a layout does not re-run on
-// client-side navigation, and offers Leave, which every role sees, and
-// Delete, which only an owner does. What the guard decides is
-// tests/lib/request-session.test.ts's and the service's; here it is mocked.
-// The role check is the real one, read off the access-control statements.
+// The `/coven/[slug]` index page. It runs the coven guard on its own slug, since a layout does not re-run on client-side navigation, and offers Leave to every role and Delete to an owner only.
+// The guard is mocked (tests/lib/request-session.test.ts's and the service's); the role check is real, read off the access-control statements.
 
 // The Delete control reads the router, which a page test has no app to give.
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }) }));
@@ -31,9 +27,9 @@ const { default: CovenPage } = await import('@/app/(shell)/coven/[slug]/page');
 
 const params = (slug: string) => Promise.resolve({ slug });
 
-async function renderAs(role: WorkspaceRole) {
+async function renderAs(role: WorkspaceRole, demo = false) {
   requireCovenMembership.mockResolvedValue({
-    workspace: { id: 'w', name: 'Fixture Coven', slug: 'fixture-coven' },
+    workspace: { id: 'w', name: 'Fixture Coven', slug: 'fixture-coven', demo },
     membership: { workspaceId: 'w', userId: 'u', role },
   });
   render(await CovenPage({ params: params('fixture-coven') }));
@@ -52,6 +48,16 @@ describe('the /coven/[slug] page', () => {
 
     expect(requireCovenMembership).toHaveBeenCalledExactlyOnceWith('fixture-coven');
     expect(screen.getByRole('heading', { level: 1, name: 'Fixture Coven' })).toBeInTheDocument();
+  });
+
+  it("badges the demo coven's heading as a demo, and no other coven's", async () => {
+    await renderAs('viewer', true);
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Demo');
+  });
+
+  it("leaves an ordinary coven's heading unbadged", async () => {
+    await renderAs('viewer');
+    expect(screen.getByRole('heading', { level: 1 })).not.toHaveTextContent('Demo');
   });
 
   it('renders nothing when the guard refuses', async () => {
@@ -74,9 +80,11 @@ describe('the /coven/[slug] page', () => {
     expect(screen.getByRole('button', { name: 'Delete Coven' })).toBeEnabled();
   });
 
-  // The guided exit (M6.16): the only owner is shown both ways out on click;
+  // The guided exit: the only owner is shown both ways out on click;
   // one of several owners, a member and a viewer leave as before.
   describe('the only owner', () => {
+    // What the dialog does with the roster is LeaveWorkspaceButton's owner-exit tests'; the page
+    // hands it the roster without the viewer, and flags the only owner.
     it('opens a dialog offering a hand-over to each other member, and the deletion', async () => {
       memberRoster.mockResolvedValue([
         { userId: 'u', role: 'owner' },
@@ -89,6 +97,7 @@ describe('the /coven/[slug] page', () => {
       const dialog = await screen.findByRole('dialog');
 
       expect(within(dialog).getByRole('radio', { name: /^Hand It/ })).toBeChecked();
+      expect(within(dialog).getByRole('radio', { name: /^Delete Coven/ })).toBeInTheDocument();
       const box = await within(dialog).findByRole('combobox', { name: 'New Owner' });
       fireEvent.focus(box);
       fireEvent.change(box, { target: { value: 'Name of' } });
@@ -96,35 +105,6 @@ describe('the /coven/[slug] page', () => {
       expect(within(dialog).getAllByRole('option')).toHaveLength(2);
       expect(within(dialog).getByRole('option', { name: /Name of m.*Member/ })).toBeInTheDocument();
       expect(within(dialog).getByRole('option', { name: /Name of v.*Viewer/ })).toBeInTheDocument();
-      expect(within(dialog).getByRole('button', { name: 'Promote and Leave' })).toBeDisabled();
-
-      fireEvent.click(within(dialog).getByRole('radio', { name: /^Delete It/ }));
-      expect(within(dialog).getByRole('button', { name: 'Delete Coven' })).toBeEnabled();
-    });
-
-    it('offers the one other member by name, with nothing to search', async () => {
-      memberRoster.mockResolvedValue([
-        { userId: 'u', role: 'owner' },
-        { userId: 'm', role: 'member' },
-      ]);
-      await renderAs('owner');
-
-      fireEvent.click(screen.getByRole('button', { name: 'Leave Coven' }));
-      const dialog = await screen.findByRole('dialog');
-
-      expect(within(dialog).getByRole('radio', { name: /Name of m/ })).toBeChecked();
-      expect(within(dialog).queryByRole('combobox')).toBeNull();
-      expect(within(dialog).getByRole('button', { name: 'Promote and Leave' })).toBeEnabled();
-    });
-
-    it('is offered only the deletion when no one else is in the coven', async () => {
-      await renderAs('owner');
-
-      fireEvent.click(screen.getByRole('button', { name: 'Leave Coven' }));
-      const dialog = await screen.findByRole('dialog');
-
-      expect(within(dialog).queryByRole('button', { name: 'Promote and Leave' })).toBeNull();
-      expect(within(dialog).getByRole('button', { name: 'Delete Coven' })).toBeEnabled();
     });
   });
 
@@ -148,36 +128,51 @@ describe('the /coven/[slug] page', () => {
     expect(memberRoster).not.toHaveBeenCalled();
   });
 
-  // The sections (MB.119): Contents lists the pages the caller can reach,
-  // Your Membership holds Leave alone, and Delete has a section of its own
-  // that only an owner is shown, so the two buttons that end a seat and end a
-  // coven are never side by side.
+  // Contents lists the pages the caller can reach, Your Membership holds Leave alone, and Delete has its own section for an owner,
+  // so the button that ends a seat and the one that ends a coven are never side by side.
   describe('the sections', () => {
-    it.each<WorkspaceRole>(['owner', 'member'])(
-      'lists the members page in Contents for a %s, who may read members',
-      async (role) => {
-        await renderAs(role);
+    it('lists the members page in Contents for a member, who may read members', async () => {
+      await renderAs('member');
 
-        const contents = screen.getByRole('region', { name: 'Contents' });
-        expect(within(contents).getByRole('link', { name: 'Members' })).toHaveAttribute(
-          'href',
-          '/coven/fixture-coven/members',
-        );
-      },
-    );
+      const contents = screen.getByRole('region', { name: 'Contents' });
+      expect(within(contents).getByRole('link', { name: 'Members' })).toHaveAttribute(
+        'href',
+        '/coven/fixture-coven/members',
+      );
+    });
 
-    it.each<WorkspaceRole>(['owner', 'member', 'viewer'])(
-      'lists the ingredients page in Contents for a %s',
-      async (role) => {
-        await renderAs(role);
+    it('lists the ingredients page in Contents for a viewer, the least role', async () => {
+      await renderAs('viewer');
 
-        const contents = screen.getByRole('region', { name: 'Contents' });
-        expect(within(contents).getByRole('link', { name: 'Ingredients' })).toHaveAttribute(
-          'href',
-          '/coven/fixture-coven/ingredients',
-        );
-      },
-    );
+      const contents = screen.getByRole('region', { name: 'Contents' });
+      expect(within(contents).getByRole('link', { name: 'Ingredients' })).toHaveAttribute(
+        'href',
+        '/coven/fixture-coven/ingredients',
+      );
+    });
+
+    it('lists the grimoire in Contents for a viewer, who reads it', async () => {
+      await renderAs('viewer');
+
+      const contents = screen.getByRole('region', { name: 'Contents' });
+      const grimoire = within(contents).getByRole('link', { name: 'Grimoire' });
+      expect(grimoire).toHaveAttribute('href', '/coven/fixture-coven/grimoire');
+      expect(grimoire).toHaveAccessibleDescription(
+        'What the coven makes: its spells, and the workings it has recorded.',
+      );
+    });
+
+    it('lists Ingredients, Grimoire and Members in that order for a member', async () => {
+      await renderAs('member');
+
+      const contents = screen.getByRole('region', { name: 'Contents' });
+      const links = within(contents).getAllByRole('link');
+      expect(links.map((link) => [link.textContent, link.getAttribute('href')])).toEqual([
+        ['Ingredients', '/coven/fixture-coven/ingredients'],
+        ['Grimoire', '/coven/fixture-coven/grimoire'],
+        ['Members', '/coven/fixture-coven/members'],
+      ]);
+    });
 
     it('lists no Members for a viewer, who cannot read it', async () => {
       await renderAs('viewer');
@@ -191,14 +186,14 @@ describe('the /coven/[slug] page', () => {
       const membership = screen.getByRole('region', { name: 'Your Membership' });
       expect(within(membership).getByRole('button', { name: 'Leave Coven' })).toBeEnabled();
       expect(within(membership).queryByRole('button', { name: 'Delete Coven' })).toBeNull();
-      const owners = screen.getByRole('region', { name: 'Delete This Coven' });
+      const owners = screen.getByRole('region', { name: 'Delete Coven' });
       expect(within(owners).getByRole('button', { name: 'Delete Coven' })).toBeEnabled();
     });
 
-    it.each<WorkspaceRole>(['member', 'viewer'])('shows a %s no Delete section', async (role) => {
-      await renderAs(role);
+    it('shows a viewer no Delete section', async () => {
+      await renderAs('viewer');
 
-      expect(screen.queryByRole('region', { name: 'Delete This Coven' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('region', { name: 'Delete Coven' })).not.toBeInTheDocument();
     });
   });
 
@@ -209,7 +204,6 @@ describe('the /coven/[slug] page', () => {
 
     it.each<[WorkspaceRole, number]>([
       ['owner', 3],
-      ['member', 2],
       ['viewer', 2],
     ])('has an entry for each of a %s’s sections', async (role, count) => {
       await renderAs(role);

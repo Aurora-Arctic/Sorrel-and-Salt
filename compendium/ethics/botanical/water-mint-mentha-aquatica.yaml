@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/water-mint-mentha-aquatica
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Mentha aquatica
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-mentha-aquatica
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Mentha aquatica", de Belair, G., 2014, 10.2305/IUCN.UK.2014-2.RLTS.T164509A63304147.en'

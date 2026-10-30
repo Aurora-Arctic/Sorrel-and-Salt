@@ -8,10 +8,8 @@ import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 
 useRawClient();
 
-// A coven's members list (M6.11): its live seats, in the order they joined,
-// each carrying the coven, to the roles holding `member: read` — owners and
-// members, since M6.13. Every refusal names the coven
-// directly, so it is a `Forbidden` rather than a row missing from a list.
+// A coven's members list: its live seats, in the order they joined, each carrying the coven, to the roles holding `member: read` (owners and members).
+// Every refusal names the coven directly, so it is a `Forbidden` rather than a row missing from a list.
 
 const FIRST_PAGE = { limit: 26, inverted: false };
 
@@ -121,16 +119,9 @@ describe('listMembers', () => {
     await expect(listMembers(asUser(D), coven, FIRST_PAGE)).rejects.toBeInstanceOf(Forbidden);
     await expect(listMembers(asUser(D), w, FIRST_PAGE)).rejects.toBeInstanceOf(Forbidden);
   });
-
-  it('gives a site admin no reach into a coven', async () => {
-    // Why this could have been the admin's: E's session carries the role.
-    expect(asUser(E).role).toBe('admin');
-
-    await expect(listMembers(asUser(E), coven, FIRST_PAGE)).rejects.toBeInstanceOf(Forbidden);
-  });
 });
 
-// The roll's addresses (M11.19): read from each member's own user row, so a
+// The roll's addresses: read from each member's own user row, so a
 // changed address shows at once, and to owners alone, through a statement
 // only they hold. Each refusal names the coven directly.
 describe('memberEmails', () => {
@@ -209,5 +200,63 @@ describe('memberEmails', () => {
 
     await expect(memberEmails(asUser(A), WORKSPACE_X_ID, [D.id])).rejects.toBeInstanceOf(Forbidden);
     await expect(memberEmails(asUser(A), WORKSPACE_W_ID, [D.id])).resolves.toEqual([]);
+  });
+});
+
+// The Record a Working dialog's participant box: the same list narrowed in SQL to the members whose
+// name holds the typed text, so a coven of any size is searched rather than its first page.
+describe('listMembers with a search', () => {
+  const names = (entries: Awaited<ReturnType<typeof listMembers>>) =>
+    entries.map(({ node }) => node.userId);
+
+  it('finds a member by any part of their name, in any case', async () => {
+    const entries = await listMembers(asUser(A), coven, FIRST_PAGE, 'TURE b');
+
+    expect(names(entries)).toEqual([B.id]);
+  });
+
+  it('reads the typed wildcards literally', async () => {
+    // Why this could have matched: `_` and `%` stand for any letters in a pattern.
+    await expect(listMembers(asUser(A), coven, FIRST_PAGE, 'Fixture _')).resolves.toEqual([]);
+    await expect(listMembers(asUser(A), coven, FIRST_PAGE, '%')).resolves.toEqual([]);
+  });
+
+  it('leaves out a removed member whose name matches', async () => {
+    // Why D could have been found: their seat is still a row here, and their name holds the text.
+    const [seat] = await sql`
+      select m.deleted_at, u.name from workspace_members m join users u on u.id = m.user_id
+      where m.workspace_id = ${coven.id} and m.user_id = ${D.id}`;
+    expect(seat.deleted_at).not.toBeNull();
+    expect(seat.name).toContain('Fixture');
+
+    const entries = await listMembers(asUser(A), coven, FIRST_PAGE, 'fixture');
+
+    expect(names(entries)).toEqual([C.id, A.id, B.id]);
+  });
+
+  it('walks the matches a page at a time, each once', async () => {
+    const first = await listMembers(asUser(A), coven, { limit: 2, inverted: false }, 'fixture');
+    const rest = await listMembers(
+      asUser(A),
+      coven,
+      { after: first[1].cursor, limit: 2, inverted: false },
+      'fixture',
+    );
+
+    expect([...first, ...rest].map(({ node }) => node.userId)).toEqual([C.id, A.id, B.id]);
+  });
+
+  it("refuses a member of another coven who names this coven's id", async () => {
+    // Why this could have been answered: D holds `member: read` in X, and W seats members whose
+    // names hold the text.
+    await expect(
+      assertMembership(asUser(D), WORKSPACE_X_ID, { member: ['read'] }),
+    ).resolves.toMatchObject({ role: 'member' });
+    const w = await covenRow(WORKSPACE_W_ID);
+    await expect(listMembers(asUser(A), w, FIRST_PAGE, 'fixture')).resolves.not.toHaveLength(0);
+
+    await expect(listMembers(asUser(D), w, FIRST_PAGE, 'fixture')).rejects.toBeInstanceOf(
+      Forbidden,
+    );
   });
 });

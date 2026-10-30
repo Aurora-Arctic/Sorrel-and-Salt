@@ -90,7 +90,7 @@
   ["The compendium read"](compendium-read.md).
 - **`0029_spell-layers-soft-delete.sql`** (MB.110) makes `spell_ingredients`
   soft-deleted — see
-  ["Layer order is the identity"](grimoire.md#layer-order-is-the-identity-and-what-that-costs-the-reorder)
+  ["Position is the identity"](grimoire.md#position-is-the-identity-and-what-that-costs-the-reorder)
   under the grimoire.
   `drizzle-kit generate` wrote the statements and the file was reordered by
   hand, as 0017 was: the delete columns and the partial layer index first,
@@ -223,6 +223,11 @@
   for any row the deploy before MB.202 wrote after it. Its sidecar
   acknowledges both drops and says why production is not its gate:
   production is not live, the owner's call. See ["Expand/contract"](expand-contract.md).
+- **`0085_spells-unaccent-trgm.sql`** (M10.11) adds `spells_unaccent_trgm`,
+  the grimoire search's twin of 0027's indexes over `unaccent_immutable(title)`
+  and `unaccent_immutable(intent)`. `drizzle-kit generate` wrote the statement;
+  `IF NOT EXISTS` was added by hand, as 0027's was. See
+  ["The grimoire search"](grimoire.md#the-grimoire-search).
 - **A fill is tested until it ships, and no longer** (MB.226). While a
   migration is a branch's, a test may restore what it reads and re-run its
   own SQL, read off disk; once it is in `src/db/migrations/meta/_journal.json`

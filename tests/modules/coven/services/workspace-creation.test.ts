@@ -7,7 +7,7 @@ import { asManualFix } from '../../../support/db/privileges';
 
 useRawClient();
 
-// Creating a workspace (M6.7): gated on the flag alone, the creator written in
+// Creating a workspace: gated on the flag alone, the creator written in
 // as owner in the same transaction as the workspace, and a slug that stays
 // unique however many share a name.
 
@@ -101,7 +101,7 @@ describe('createWorkspace', () => {
 });
 
 describe('createWorkspace and the create page’s address', () => {
-  // `/coven/new` is the create page (M9.16), so a coven named "New" takes the
+  // `/coven/new` is the create page, so a coven named "New" takes the
   // next slug along rather than an address no link could ever reach.
   it('never gives a workspace the slug the create page sits at', async () => {
     const first = await createWorkspace(asUser(A), { name: 'New' });
@@ -110,5 +110,17 @@ describe('createWorkspace and the create page’s address', () => {
     expect(first.slug).toBe('new-2');
     expect(second.slug).toBe('new-3');
     expect(await sql`select id from workspaces where slug = 'new'`).toHaveLength(0);
+  });
+
+  // `?new=spell` and `?new=ingredient` open a dialog without naming a coven, so
+  // neither word is ever a coven's slug.
+  it.each([
+    ['Spell', 'spell'],
+    ['Ingredient', 'ingredient'],
+  ])('never gives a coven named %s the slug %s, a value of ?new', async (name, slug) => {
+    const created = await createWorkspace(asUser(A), { name });
+
+    expect(created.slug).toBe(`${slug}-2`);
+    expect(await sql`select id from workspaces where slug = ${slug}`).toHaveLength(0);
   });
 });

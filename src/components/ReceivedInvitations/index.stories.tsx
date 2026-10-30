@@ -1,14 +1,16 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import ReceivedInvitations from '.';
 import type { ReceivedInvitationEntry, ReceivedInvitationsProps } from './types';
 
 // Render-only; behaviour is asserted in tests/components/ReceivedInvitations.
-// Each story sits in the account page's Invitations section as the page writes
-// it, a panel in the narrow frame under its head: the list's stacked rows
-// depend on the panel's width.
-export default {
-  title: 'Account / Received Invitations',
-};
+// Each story sits in the account page's Invitations section, a panel in the narrow
+// frame, because the list's stacked rows depend on the panel's width.
+const meta = {
+  title: 'Account / Invitations Received',
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const ONE: ReceivedInvitationEntry = {
   id: 'i-1',
@@ -54,26 +56,28 @@ const Page = ({ invitations, ...rest }: ReceivedInvitationsProps) => (
   </main>
 );
 
-export const OneInvitation: Story = () => <Page invitations={[ONE]} />;
+const oneInvitationNode = <Page invitations={[ONE]} />;
 
-export const SeveralInvitations: Story = () => <Page invitations={SEVERAL} />;
+const defaultNode = <Page invitations={SEVERAL} />;
 
 // The section is always on the account page, so an empty list is drawn too.
-export const NoInvitations: Story = () => <Page invitations={[]} />;
+const emptyNode = <Page invitations={[]} />;
 
-export const SecondPage: Story = () => (
+const lastPageNode = (
   <Page invitations={SEVERAL} previousHref="/account?before=a" position={{ page: 2, pages: 2 }} />
 );
 
-// At a phone's width, in each theme, where the rows stack.
-export const OnePhoneDark: Story = () => <Page invitations={[ONE]} />;
-OnePhoneDark.meta = { theme: 'dark', width: 375 };
+const STATES_STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'One Invitation': oneInvitationNode,
+  Empty: emptyNode,
+  'Last Page': lastPageNode,
+};
 
-export const OnePhoneLight: Story = () => <Page invitations={[ONE]} />;
-OnePhoneLight.meta = { theme: 'light', width: 375 };
-
-export const SeveralPhoneDark: Story = () => <Page invitations={SEVERAL} />;
-SeveralPhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const SeveralPhoneLight: Story = () => <Page invitations={SEVERAL} />;
-SeveralPhoneLight.meta = { theme: 'light', width: 375 };
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
+  },
+  render: ({ state }) => <div>{state}</div>,
+};

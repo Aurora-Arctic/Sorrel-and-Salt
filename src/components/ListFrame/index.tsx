@@ -5,14 +5,9 @@ import { usePendingNavigation } from '../../lib/navigation';
 import SwapPanel from '../Skeleton/swap-panel';
 import type { ListBodyProps, ListFrameProps, ListNavigation, ListNavigationKind } from './types';
 
-// A list page's root, `.list-frame`, and the one record of whether another
-// of its pages is on its way (MB.115, the owner's call: "Filters should
-// trigger the same type of loading state as tabs"). The filter, as it
-// applies, and the pager's ends each navigate through it, so while the new
-// page reads the filter row greys out and the list beneath it, table and
-// pager, is the tabs' own skeleton; the new list fades in as a tab's content
-// does. A direct request renders on the server as before, with no skeleton
-// (claude-docs/components/list-frame.md).
+// A list page's root, `.list-frame`, and the record of whether another of its pages is coming. The
+// filter and pager ends navigate through it, so the row greys out and the list shows the tabs'
+// skeleton; a direct request has none (claude-docs/components/list-frame.md).
 
 /**
  * Whether a page of the list is on its way, and the way to open one.
@@ -22,15 +17,8 @@ import type { ListBodyProps, ListFrameProps, ListNavigation, ListNavigationKind 
 export const ListNavigationContext = createContext<ListNavigation | null>(null);
 
 /**
- * Holds the navigation the filter, the pager and the body share. A soft
- * navigation runs inside this transition, so `pending` stays true until Next
- * has rendered the new page; the filter's are always soft. A full load, a
- * pager's plain anchor on the lists that keep one, has no transition to
- * wait on: a flag holds `pending` from the press until the browser unloads
- * the page, the old page staying on screen until the new one's first paint,
- * and a `pageshow` from the back-forward cache drops it, so Back does not
- * land on a skeleton. A provider already above, the workshop's, is kept
- * rather than shadowed.
+ * Holds the navigation the filter, pager and body share; `pending` stays true until Next has rendered the new page
+ * (claude-docs/components/list-frame.md, "The navigation provider").
  */
 const ListFrame = ({ className, children }: ListFrameProps): ReactElement => {
   const outer = useContext(ListNavigationContext);
@@ -45,13 +33,12 @@ const ListFrame = ({ className, children }: ListFrameProps): ReactElement => {
   // The address of the navigation last started, read only while one is pending.
   const [target, setTarget] = useState<string>();
 
-  // A pager end's page: once the transition ends the new page has rendered, so
-  // bring the start of the list to the line the stuck search row leaves, if it
-  // is above that now. A plain `scrollIntoView`, so the site's smooth scroll
-  // and its reduced-motion rule apply, and the reader lands on the new page's
-  // first entries rather than the top of the page.
+  // A pager end's page: once the transition ends the new page has rendered, so bring the
+  // start of the list to the line the stuck search row leaves, if it is above that now. A
+  // plain `scrollIntoView`, so the site's smooth scroll and reduced-motion rule apply.
   useEffect(() => {
     if (moving) return;
+    // oxlint-disable-next-line react/set-state-in-effect -- the state follows an outside value (a timer, a measurement or a focus request), so it can only be set from an effect
     setHeldHeight(undefined);
     if (!keepPlace.current) return;
     keepPlace.current = false;
@@ -88,11 +75,10 @@ const ListFrame = ({ className, children }: ListFrameProps): ReactElement => {
       // A pager end keeps the reader at the list rather than Next's scroll to
       // the page top, which would bring the admin section menu back into view.
       keepPlace.current = way === 'page';
-      // The skeleton is far shorter than a page of cards, and a shorter
-      // document makes the browser pull the scroll position up (the section
-      // menu comes into view, then the list glides back down). So the body
-      // keeps the height it had at the press while the page is on its way;
-      // the new page renders without it, so a short last page is not padded.
+      // The skeleton is far shorter than a page of cards, and a shorter document makes the
+      // browser pull the scroll position up. So the body keeps the height it had at the press
+      // while the page is on its way; the new page renders without it, so a short last page
+      // is not padded.
       setHeldHeight(
         way === 'page'
           ? root.current?.querySelector('.list-frame__body')?.getBoundingClientRect().height

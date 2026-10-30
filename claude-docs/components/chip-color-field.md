@@ -13,7 +13,7 @@ Ark was the owner's choice of picker, for its built-in format switch, with `@col
 | `id`                                                            | The hex box's id, which the form's `<label>` names                                            |
 | `label`                                                         | The field's name, which also names the picker's parts: "Dark Theme Colour hue"                |
 | `column`                                                        | `colorDark` or `colorLight`: which ground the veil, the sample and the ratio use              |
-| `placeholder`                                                   | Shown, muted, in the empty hex box: GroupForm passes "Add hex"                                |
+| `placeholder`                                                   | Shown, muted, in the empty hex box: GroupForm passes "Add a hex"                              |
 | `value`, `onChange`, `onBlur`                                   | The hex as typed, whole or not, and its handlers, which react-hook-form's `Controller` passes |
 | `sample`                                                        | The sample chip's text                                                                        |
 | `others`                                                        | Every other group's colour in this theme, `{ name, hex }`, which the warning compares against |
@@ -43,8 +43,19 @@ What it looks like is the owner's calls. The area has a crosshair cursor. The ve
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/ChipColorField/index.stories.tsx) has six stories: `DarkTheme` and `LightTheme` on a seeded pair, `UnderTheFloor` (a hex fit for the light page, read on the dark card), `NearAnotherGroup`, a shade off another group's colour, and `PhoneDark` and `PhoneLight`, the dark-theme field at 375px in each page theme, its captions down to single letters.
+[`index.stories.tsx`](../../src/components/ChipColorField/index.stories.tsx) has two stories. `States` is a grid of Dark Theme and Light Theme (a seeded pair), Near Another Group (a shade off another group's colour), With Partner, Empty, Half A Hex, With Error, Lightness Format and Red Green Blue Format. `UnderTheFloor` is a hex fit for the light page, read on the dark card; it fails contrast on purpose, so it carries the `shows-low-contrast` tag.
 
 ## Testing
 
 `tests/components/ChipColorField/index.test.tsx` covers the hex box and the picker's named parts, the three formats and their channels, a channel committed by Enter and by leaving it, the channels following a whole hex and not half of one, the tooltip on the format toggle, Match from the partner and waiting for a whole one, the ratio in the box's description and none for half a hex, the warning naming the nearest group, following the colour and falling silent, and a passed error described first. The veil, its edge and the sample are presentation, owned by the workshop stories. The picker answers a channel a moment after the key, so that test waits for it.
+
+## What the field shows
+
+The field sets one of a category group's two chip colours. It is Ark's colour picker (an area, a hue slider, and the channels of a format the admin chooses) kept in step with the hex box the form validates. Around it the field shows the checks as the admin chooses:
+
+- a light veil over the colours that fall short of 4.5:1 on the colour's ground;
+- a button that sets the colour from its partner;
+- a sample chip with the ratio it reads there;
+- a warning when another group's colour in this theme is too close.
+
+The checks themselves belong to the schema; the field only shows them.

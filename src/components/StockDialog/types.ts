@@ -26,12 +26,7 @@ export interface StockDialogProps {
   forms: readonly StockForm[];
   /** The jars held, one per form at most. */
   jars: readonly StockJar[];
-  /**
-   * A form, by its variant id, to open on: it is the chosen one as the dialog
-   * opens. A form the coven holds no jar of is added as a new row first, as
-   * Add Form would, so a press on an empty jar on the entry page lands on its
-   * fields. Left out, the first jar is chosen.
-   */
+  /** A form, by its variant id, to open on; a form with no jar is added as a new row first. Left out, the first jar is chosen. */
   openOn?: string;
 }
 
@@ -40,6 +35,8 @@ export interface StockJarButtonProps extends StockDialogProps {
   /** The button's name, such as "Edit Stock, Rosemary, Dried Leaf". */
   ariaLabel: string;
   className?: string;
+  /** Called once the stock is saved, for a caller that shows figures the save changes. */
+  onSaved?: () => void;
   /** What the button shows. */
   children: ReactNode;
 }
@@ -60,6 +57,8 @@ export interface StockDialogValues {
 export interface StockDialogFormProps extends StockDialogProps {
   /** The modal's own close, so it fades out after a save. */
   close: () => void;
+  /** Called once the stock is saved, for a caller that shows figures the save changes. */
+  onSaved?: () => void;
 }
 
 /** Where each entry of the batch's lists came from among the rows, to place an issue back. */

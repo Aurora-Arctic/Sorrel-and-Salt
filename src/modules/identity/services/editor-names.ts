@@ -6,8 +6,8 @@ import { users } from '../schema/users';
 import { assertCurator } from './site-admin';
 import type { EditorName } from '../types';
 
-// The "last edited by" names of the admin curated lists (MB.260). Every
-// curation screen shows them, so a curator reads them too (M11.20), which
+// The "last edited by" names of the admin curated lists. Every
+// curation screen shows them, so a curator reads them too, which
 // `usersForAdmin` refuses: it hands back whole rows for the privilege
 // ledger. This read answers an id and a name and nothing else.
 

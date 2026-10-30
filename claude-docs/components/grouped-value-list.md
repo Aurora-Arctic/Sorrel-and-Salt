@@ -31,8 +31,10 @@ column before Edit is Updated (MB.260): who last edited the value and when
 
 A `GroupedValueListEntry` is the value's id, name, slug and description,
 plus `groupName`, `editHref`, `groupColors` where its group has a chip
-pair, and `groupIcon` for a form's group (its icon name, `null` for a group
-with none). Categories come by group then name (MB.126); forms are live forms
+pair, `groupIcon` for a form's group (its icon name, `null` for a group
+with none), and `otherNames` for a deity (M14.23), its other names
+alphabetically, which the Name cell lists on a muted caption-sized line under
+the name, "Also called Testrina, Tess"; a deity with none shows its name alone. Categories come by group then name (MB.126); forms are live forms
 under live groups, by name, as the service reads them — a form under a
 deleted group is no longer curated, so it is not listed. Deities are live
 deities under live traditions, by tradition name then name, on the same
@@ -115,7 +117,7 @@ for a rule only one kind's rows need.
   `groupedValuesHref(kind, { query, group })` and `useApplyFilter` pushes
   it softly; the loading state and the form's keying by the filter shown
   are the shared form's ([`filter-form.md`](filter-form.md#contracts)). In the workshop, `next/navigation` is stubbed
-  ([`workshop.md`](../workshop.md), "`.ladle/`").
+  ([`workshop.md`](../workshop.md), "`.storybook/`").
 - **Every action is an address.** Each row's Edit is its `editHref`, and the
   page's Add Category, Add Celestial Body and the rest, the tab's action beside the
   page's heading (`ValueAction` in `src/app/(shell)/admin/value-page.tsx`, from the
@@ -182,30 +184,25 @@ so the list adds no rule for either.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/GroupedValueList/index.stories.tsx),
-`Admin / Grouped Value List`. Each kind has the bare list in five states, and
-the filter reaches the admin pages, which the workshop does not serve. Each
-grouped kind has four invented groups, so typing in a story's group filter
+`Admin / Grouped Value List`. `States`, with a control that chooses, carries the bare list; and
+the filter reaches the admin pages, which the workshop does not serve. The
+category groups are four invented groups, so typing in a state's group filter
 shows its list narrowing.
 
-| Kind                                                                             | Stories                                                                                                                 |
-| -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Categories                                                                       | `CategoriesOnePageOfSeveral`, `CategoriesFirstPage`, `CategoriesFiltered`, `CategoriesNoMatch`, `CategoriesEmpty`       |
-| Forms                                                                            | `FormsOnePageOfSeveral`, `FormsFirstPage`, `FormsFiltered`, `FormsNoMatch`, `FormsEmpty`                                |
-| Deities, under invented traditions and slugged by `deitySlug`                    | `DeitiesOnePageOfSeveral`, `DeitiesFirstPage`, `DeitiesFiltered`, `DeitiesNoMatch`, `DeitiesEmpty`                      |
-| Celestial bodies and zodiac signs, the flat kinds with no group column or filter | `CelestialBodiesOnePageOfSeveral`, `Signs`, `CelestialBodiesFiltered`, `CelestialBodiesNoMatch`, `CelestialBodiesEmpty` |
+| State                       | Shows                                                                                                                                                                                         |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Default                     | The Categories page as the route draws it: the app shell, the admin row, the heading with its Categories and Groups toggle and Add Category, the Name and Group filters, and three categories |
+| First Page, Middle Page     | Categories, Next alone and "Page 1 of 2" beside it; and a middle page                                                                                                                         |
+| Filtered, No Matches, Empty | Categories with a filter, with a filter that matches nothing, and with no rows                                                                                                                |
+| Forms                       | A form's row, drawing its group's icon                                                                                                                                                        |
+| Deities                     | Deities under invented traditions, slugged by `deitySlug`, one with other names                                                                                                               |
+| Celestial Bodies            | A flat kind, with no group column or filter                                                                                                                                                   |
 
-A `…OnePageOfSeveral` story is a middle page, both pager ends live and "Page 2
-of 3" between them; a `…FirstPage` has Next alone, "Page 1 of 2" beside it.
-
-These stories stand for the page, in the admin layout's frame with the
+`Pending` is its own story: the page's pending state inside the admin frame. These stories stand for the page, in the admin layout's frame with the
 Categories page's heading and tabs, its Categories tab open, as
 `TabbedPage` draws them:
 
-- `PhoneDark` and `PhoneLight` at 375px: the tab's Add over the filtered list,
-  showing the stacked filter with Clear drawn, the Add as a plus and the rows
-  as cards.
-- `CategoriesPending`, with `PendingPhoneDark` and `PendingPhoneLight` at
-  375px: the same page with a filter applied and the list on its way. A
+- `Pending`: the same page with a filter applied and the list on its way. A
   `ListNavigationContext` holding one pending sits above the page, since the
   stub router goes nowhere, so the filter row is greyed and the tabs' skeleton
   is in place of the list ([`list-frame.md`](list-frame.md)).
@@ -242,3 +239,9 @@ onto its rows; the filter and cursor kept on the
 pager, each Edit, Add and the modal's way back; and the modal the address
 opens. How the list shows what it is given is this component's test's alone. `tests/e2e/admin.spec.ts` lists the
 seeded forms' first page and the celestial bodies', and filters the signs by part of a name.
+
+## The filter
+
+A curated vocabulary's filter is a name search and, for a grouped kind, its group, each applying as it changes. The group applies once a choice settles (a pick, its clear or leaving the box), never while typed, carrying the name typed but not yet searched. The name applies on the magnifier or Enter. `FilterForm` holds the form, Clear and the soft navigation; the filter holds what the fields say.
+
+The group is typed into once the page is hydrated, but the server draws a native `<select>` (`FilterSelectField`), so before hydration a press on the magnifier submits natively as `query=&group=`. The list keys the filter by the filter shown, so a page showing another, after Back for instance, draws it afresh from that one.

@@ -22,11 +22,8 @@ import { insertReference } from '../support/db/insert-reference';
 import { makeIngredient } from '../support/fixtures';
 import type { CompendiumWrite } from './types';
 
-// src/app/entry-values.ts: the values an edit modal opens with, for the
-// admin's compendium entry or a coven's own (M8.17), read from the database.
-// What they must hold is every value and link of the entry, so that saving the
-// form untouched sends the entry back as it was: an edit that changes nothing
-// changes nothing.
+// src/app/entry-values.ts: the values an edit modal opens with, for the admin's compendium entry or a coven's own.
+// They must hold every value and link of the entry, so saving the form untouched changes nothing.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -70,15 +67,12 @@ beforeAll(async () => {
     makeIngredient({ name: 'Mockwort', canonicalName: 'Fixtura mockalis' }),
     A.id,
   );
-  // A form of the substitute, which a substitute may name (MB.215).
+  // A form of the substitute, which a substitute may name.
   mockoil = await insertVariant(sql, mockwort, { form: 'Mockoil' }, A.id);
   book = await insertReference(sql, {}, E.id);
 });
 
-/**
- * Testwort with every relation an entry can hold, each curated value as the
- * admin picks it, and a form holding every relation a form can.
- */
+/** Testwort with every relation an entry can hold, each curated value as the admin picks it, and a form holding every relation a form can. */
 const everything = (): CompendiumWrite => ({
   name: 'Testwort',
   nomenclature: 'botanical',
@@ -129,16 +123,15 @@ const everything = (): CompendiumWrite => ({
 });
 
 async function rowOf(id: string) {
-  // `updated_at` is the trigger's, and moves on any write, a no-op included.
-  const [{ updated_at: _updated, ...row }] = await sql`select * from ingredients where id = ${id}`;
+  // `updated_at` is the trigger's and moves on any write, a no-op included.
+  // `curator_reviewed_at` moves on a curator's save, untouched or not (tests/modules/ingredients/services/compendium-review.test.ts).
+  // `revision` is the trigger's counter and rises on every update, a no-op included.
+  const [{ updated_at: _updated, curator_reviewed_at: _reviewed, revision: _revision, ...row }] =
+    await sql`select * from ingredients where id = ${id}`;
   return row;
 }
 
-/**
- * What the entry links, live, read past the services the values are read
- * through: so a link those values dropped would show here as one the save
- * took away, where comparing the values alone would miss it.
- */
+/** What the entry links, live, read past the services, so a link the values dropped shows as one the save took away. */
 async function childrenOf(id: string) {
   const [folkNames, substitutes, deities, references, categories, variants, variantReferences] =
     await Promise.all([

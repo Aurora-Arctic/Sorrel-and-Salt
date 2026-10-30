@@ -1,0 +1,24 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: zoological/grey-parrot-psittacus-erithacus
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species
+    value: Endangered (IUCN 3.1)
+    listedAs: Psittacus erithacus
+    scope: global
+    nameBasis: stated
+    source: wikipedia-grey-parrot
+    locator: 'taxobox, "Conservation status": "Endangered (IUCN 3.1)"'
+  - list: cites
+    name: CITES Appendices I, II and III, valid from 5 March 2026
+    value: Appendix I
+    listedAs: Psittacus erithacus
+    scope: global
+    nameBasis: stated
+    source: cites-appendices
+    locator: 'p. 34, Appendix I column, class AVES, order PSITTACIFORMES: "Psittacus erithacus", no annotation'
+animalPart:
+  - quote: Shrines may also include material from endangered species, including leopard hides, bird eggs, parrot feathers, insects, and elephant ivory.
+    source: wikipedia-west-african-vodun
+    locator: West African Vodún, section on shrines

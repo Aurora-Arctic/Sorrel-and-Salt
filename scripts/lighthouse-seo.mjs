@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Lighthouse's SEO category on the three public page kinds (MB.84): the home
+// Lighthouse's SEO category on the three public page kinds: the home
 // page, the compendium list and one current entry, signed out (or the entries
 // named with `--path`). Exits non-zero
 // unless every SEO audit that applies passes. Run by hand; it is no part of CI,
@@ -21,7 +21,7 @@
 //               devcontainer has none, and the Playwright servers open no
 //               DevTools port (they launch Chromium over a pipe), so it uses the
 //               `lighthouse-chrome` container instead (`make lighthouse-up` on
-//               the host, MB.84). .devcontainer/docker-compose.yml sets
+//               the host). .devcontainer/docker-compose.yml sets
 //               LIGHTHOUSE_CDP_HOST and LIGHTHOUSE_CDP_PORT, which are the
 //               defaults here, so there `--host` and `--port` are not needed.
 //   --host      the machine that Chrome's port is on (default localhost).

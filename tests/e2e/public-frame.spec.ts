@@ -1,14 +1,10 @@
-import type { Page } from '@playwright/test';
 import { test, expect } from './fixtures';
-import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
-// The chrome round the public compendium (MB.83), against the built server.
-// Story 63 walks a visitor in and on to Sign In; this proves what no story
-// walks: the chrome is in the HTML with no script, a signed-in request gets
-// the shell from the same layout, every response is marked noindex off
-// production, and the signed-out page holds at a phone's width.
+// The chrome round the public compendium, for what no story walks: it is in the HTML with no script, a
+// signed-in request gets the shell from the same layout, and the sticky bar leaves a scrolled-to control in
+// view. The current-page mark, noindex, the signed-out redirect and the phone width are other specs'.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -30,7 +26,7 @@ test.describe('without script', () => {
     );
     await expect(page.getByRole('navigation', { name: 'Site' })).toBeVisible();
     // The skip link's target is an empty span; the wrapper after it holds the layout's main.
-    await expect(page.locator('span#main[tabindex="-1"] + .public-frame__main main')).toBeVisible();
+    await expect(page.locator('span#main[tabindex="-1"] + .app-shell__main main')).toBeVisible();
   });
 });
 
@@ -47,42 +43,18 @@ test('a signed-in request gets the application shell from the same layout', asyn
   await expect(page.locator('span#main[tabindex="-1"] + .app-shell__main main')).toBeVisible();
 });
 
-// The Compendium link is the page you are on, told to a screen reader by aria-current
-// (MB.120) in the public bar and in the shell's alike. The visible mark is a rule drawn
-// as a border, so it survives forced colours.
-const compendiumLink = (page: Page) =>
-  page.getByRole('navigation', { name: 'Site' }).getByRole('link', { name: 'Compendium' });
-
-test('the signed-out bar marks the Compendium link as the current page', async ({ page }) => {
+// The public frame's bar is sticky, so a focused control or a jump target must land below it.
+// The page rules that do that were once the shell's alone; this proves the public page has them.
+test('the signed-out page keeps a scrolled-to control clear of the sticky bar', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 700 });
   await page.goto('/compendium');
-
-  await expect(compendiumLink(page)).toHaveAttribute('aria-current', 'page');
-});
-
-test('the signed-in shell marks the Compendium link as the current page', async ({ page }) => {
-  await signInAs(page, 'marked@public-frame.test', ['discord']);
-  await page.goto('/compendium');
-
-  await expect(compendiumLink(page)).toHaveAttribute('aria-current', 'page');
-});
-
-test('a response off production is marked noindex', async ({ request }) => {
-  const response = await request.get('/compendium');
-
-  expect(response.status()).toBe(200);
-  expect(response.headers()['x-robots-tag']).toBe('noindex');
-});
-
-test('a signed-out visitor is still sent from a coven to sign in', async ({ page }) => {
-  await page.goto('/coven/hearth');
-
-  await expect(page).toHaveURL(/\/sign-in/);
-});
-
-test('the signed-out page is accessible and holds at 375px', async ({ page }) => {
-  await page.setViewportSize({ width: 375, height: 812 });
-  await page.goto('/compendium');
-
-  await assertNoAccessibilityViolations(page);
-  await assertNoSidewaysScroll(page);
+  const bar = page.getByRole('banner');
+  await expect(bar).toBeVisible();
+  const barBottom = (await bar.boundingBox())!.y + (await bar.boundingBox())!.height;
+  const padding = await page.evaluate(
+    () => parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0,
+  );
+  expect(padding).toBeGreaterThan(barBottom);
 });

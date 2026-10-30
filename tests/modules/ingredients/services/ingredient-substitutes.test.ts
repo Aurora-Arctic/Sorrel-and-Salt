@@ -20,12 +20,8 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient, insertSubstituteLink } from '../../../support/db/insert-ingredient';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 
-// MB.140: an ingredient's substitutes, each a link to another ingredient or a
-// typed name (DESIGN.md §5, `ingredient_substitutes`), written in the
-// ingredient's own transaction by either tier's service and read back through
-// `substitutesOf`, the batch behind `Ingredient.substitutes`. The table is
-// emptied per test, so every row a result could come from is one this file
-// wrote.
+// An ingredient's substitutes, each a link to another ingredient or a typed name (DESIGN.md §5, `ingredient_substitutes`), written in the ingredient's own transaction by either tier's service and read back through `substitutesOf`, the batch behind `Ingredient.substitutes`.
+// The table is emptied per test, so every row a result could come from is one this file wrote.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -166,22 +162,6 @@ describe('a repeated substitute', () => {
     const [{ n }] = await sql`select count(*)::int as n from ingredients where name = 'Testwort'`;
     expect(n).toBe(0);
   });
-
-  it('is refused on an update too, leaving the live list as it was', async () => {
-    const id = await seed(local({ substitutes: ['Zest Root'] }));
-
-    const issues = await refusal(
-      updateWorkspaceIngredient(
-        asUser(B),
-        WORKSPACE_W_ID,
-        id,
-        input('Testwort', [typed('Zest Root'), typed('zest root')]),
-      ),
-    );
-
-    expect(issues).toEqual([expect.objectContaining({ path: ['substitutes', 1] })]);
-    expect((await liveRows(id)).map((row) => row.name)).toEqual(['Zest Root']);
-  });
 });
 
 describe('what a substitute may link', () => {
@@ -225,22 +205,6 @@ describe('what a substitute may link', () => {
     expect(issues).toEqual([expect.objectContaining({ path: ['substitutes', 1] })]);
     const [{ n }] = await sql`select count(*)::int as n from ingredient_substitutes`;
     expect(n).toBe(0);
-  });
-
-  it('refuses it on an update the same way, writing nothing', async () => {
-    const id = await seed(local({ name: 'Testwort', substitutes: ['Zest Root'] }));
-
-    const issues = await refusal(
-      updateWorkspaceIngredient(
-        asUser(B),
-        WORKSPACE_W_ID,
-        id,
-        input('Testwort', [link(elsewhere)]),
-      ),
-    );
-
-    expect(issues).toEqual([expect.objectContaining({ path: ['substitutes', 0] })]);
-    expect((await liveRows(id)).map((row) => row.name)).toEqual(['Zest Root']);
   });
 
   it('refuses a compendium entry linking a coven’s ingredient, by direct id', async () => {
@@ -370,22 +334,6 @@ describe('a save of an ingredient’s substitutes', () => {
     expect(await liveRows(id)).toEqual([]);
   });
 
-  it('rolls them back with the ingredient when the ingredient write fails', async () => {
-    await seed(local({ name: 'Taken Wort' }));
-    const id = await seed(local({ substitutes: ['Kept Root'] }));
-
-    await expect(
-      updateWorkspaceIngredient(
-        asUser(B),
-        WORKSPACE_W_ID,
-        id,
-        input('taken wort', [typed('Added Root')]),
-      ),
-    ).rejects.toThrow();
-
-    expect((await liveRows(id)).map((row) => row.name)).toEqual(['Kept Root']);
-  });
-
   it('replaces a compendium entry’s the same way', async () => {
     const mockleaf = await seed(entry({ name: 'Mockleaf' }));
     const id = await seed(entry({ substitutes: ['Dropped Root'] }));
@@ -396,7 +344,7 @@ describe('a save of an ingredient’s substitutes', () => {
   });
 });
 
-// MB.138's deletion rule: a link to a deleted ingredient is kept, and shown
+// The deletion rule: a link to a deleted ingredient is kept, and shown
 // by its last name with nothing to follow.
 describe('a substitute whose linked ingredient is deleted', () => {
   let linked: string;

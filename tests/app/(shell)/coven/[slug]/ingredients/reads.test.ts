@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CARD_PAGE_SIZE } from '@/lib/pagination';
 
-// The coven's Ingredients reads (M9.6). The services are mocked, since what they decide is
+// The coven's Ingredients reads. The services are mocked, since what they decide is
 // their own tests'. Here: the page size, the one batch per page for forms, categories and
 // jars, and what each edge keeps for the card.
 
@@ -72,7 +72,6 @@ describe('readCovenIngredients', () => {
   it('reads one page of the card size, counted, for the signed-in session and the coven', async () => {
     const page = await readCovenIngredients(COVEN, '{}', undefined, undefined, membership);
 
-    expect(CARD_PAGE_SIZE).toBe(24);
     expect(listWorkspaceIngredients).toHaveBeenCalledWith(
       session,
       COVEN,
@@ -98,23 +97,16 @@ describe('readCovenIngredients', () => {
     expect(page.jars).toEqual([[{ id: 'j1' }], []]);
   });
 
-  it("keeps each edge's cupboard entry, and draws a form's icon by its name", async () => {
+  it('keeps what each edge needs for the card: its cupboard entry, form icons, form names and variant ids', async () => {
     const page = await readCovenIngredients(COVEN, '{}', undefined, undefined, membership);
 
     expect(page.edges.map(({ cupboardEntry }) => cupboardEntry)).toEqual([null, { label: 'Ours' }]);
+    // A form's icon is drawn by its name.
     expect(page.variants[0][0].formChoice).toEqual({ group: { icon: 'leaf' } });
     expect(page.variants[1][0].formChoice).toBeNull();
-  });
-
-  it('names the form of every variant on the page, so a jar can say which form it holds', async () => {
-    const page = await readCovenIngredients(COVEN, '{}', undefined, undefined, membership);
-
+    // Every variant's form is named, so a jar can say which form it holds.
     expect(Object.fromEntries(page.formOf)).toEqual({ v1: 'Fixture Herb', v2: 'Fixture Oil' });
-  });
-
-  it("keeps each entry's variant ids beside its forms, for the stock dialog", async () => {
-    const page = await readCovenIngredients(COVEN, '{}', undefined, undefined, membership);
-
+    // The variant ids sit beside the forms, for the stock dialog.
     expect(page.variantIds).toEqual([['v1'], ['v2']]);
   });
 

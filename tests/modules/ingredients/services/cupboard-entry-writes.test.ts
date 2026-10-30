@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
-import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
+import { Forbidden, NotFound, StaleWrite, ValidationError } from '@/lib/errors';
 import {
   addCupboardEntry,
   annotateCupboardEntry,
@@ -23,10 +23,8 @@ import {
   variantInput,
 } from '../../../support/fixtures';
 
-// M12.15: the three writes of a coven's cupboard entry, and the two places
-// that keep the label rule (add/annotate here, own-row names in
-// workspace-ingredients.ts). Which role may do what is asserted beside the
-// precondition that would let the write through.
+// The three writes of a coven's cupboard entry, and the two places that keep the label rule (add/annotate here, own-row names in workspace-ingredients.ts).
+// Which role may do what is asserted beside the precondition that would let the write through.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -225,12 +223,42 @@ describe('annotateCupboardEntry', () => {
     });
   });
 
-  it('sets an array column, and a null hands it back', async () => {
-    await annotateCupboardEntry(asUser(B), WORKSPACE_W_ID, entry, { colors: ['Fixture red'] });
-    expect((await rowsOf(entry))[0].colors).toEqual(['Fixture red']);
+  it('refuses a save over a newer revision with StaleWrite and writes nothing', async () => {
+    const [opened] = await rowsOf(entry);
+    await annotateCupboardEntry(asUser(B), WORKSPACE_W_ID, entry, { description: 'theirs' });
+    const [moved] = await rowsOf(entry);
+    // The precondition: the row has moved past the revision A read.
+    expect(moved.revision).toBeGreaterThan(opened.revision);
 
-    await annotateCupboardEntry(asUser(B), WORKSPACE_W_ID, entry, { colors: null });
-    expect((await rowsOf(entry))[0].colors).toBeNull();
+    const refused = await annotateCupboardEntry(
+      asUser(A),
+      WORKSPACE_W_ID,
+      entry,
+      { description: 'mine' },
+      opened.revision as number,
+    ).catch((error: unknown) => error);
+    expect(refused).toBeInstanceOf(StaleWrite);
+    expect((refused as StaleWrite).currentRevision).toBe(moved.revision);
+    const [stored] = await rowsOf(entry);
+    expect(stored).toMatchObject({ description: 'theirs', revision: moved.revision });
+
+    // The same save at the revision now current goes through, so the refusal was the revision.
+    await annotateCupboardEntry(
+      asUser(A),
+      WORKSPACE_W_ID,
+      entry,
+      { description: 'mine' },
+      moved.revision as number,
+    );
+    expect((await rowsOf(entry))[0].description).toBe('mine');
+  });
+
+  it('writes over a newer revision when none is named', async () => {
+    const [opened] = await rowsOf(entry);
+    await annotateCupboardEntry(asUser(B), WORKSPACE_W_ID, entry, { description: 'theirs' });
+    expect((await rowsOf(entry))[0].revision).toBeGreaterThan(opened.revision);
+    await annotateCupboardEntry(asUser(A), WORKSPACE_W_ID, entry, { description: 'mine' });
+    expect((await rowsOf(entry))[0].description).toBe('mine');
   });
 
   it('refuses a viewer by direct id, with the row live and the viewer a member', async () => {
@@ -435,7 +463,7 @@ describe('createStock on a compendium form', () => {
     expect(stored[0]).toMatchObject({ id: row, label: 'Hedgewort' });
   });
 
-  // M12.28: a name match takes nothing from the compendium entry. The jar is
+  // A name match takes nothing from the compendium entry. The jar is
   // stored where the member put it, not on the coven's same-named entry.
   it("stores the jar on the compendium form, though the coven's own entry shares its identity and form", async () => {
     const own = await insertIngredient(

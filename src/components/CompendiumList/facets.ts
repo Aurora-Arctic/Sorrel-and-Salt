@@ -25,7 +25,7 @@ export interface DeityVocabulary {
 /**
  * What turns the service's counts into choices a filter can show: the
  * counts name a deity or a category by id and a form by its spelling, and
- * the page reads the rest once (M12.4).
+ * the page reads the rest once.
  */
 export interface FacetVocabularies {
   /** Each curated form's group icon, by the form's name folded to lower case. */
@@ -42,21 +42,25 @@ const SOURCE_LABELS = { local: 'Local', compendium: 'Compendium' } as const;
 /** The toxic strip's two settings as the facets name them, and what each says. */
 const TOXIC_LABELS = { toxic: 'Toxic', not_toxic: 'Not Toxic' } as const;
 
+/** The Reviewed strip's two settings as the facets name them, and what each says. */
+const REVIEW_LABELS = { reviewed: 'Reviewed', needs_review: 'Needs Review' } as const;
+
 /** Counts that carry no vocabulary of their own: the value is the label. */
 const named = ({ value, count }: FacetCount): FacetChoice => ({ value, label: value, count });
 
 /**
- * A coven's counts as the props its panel takes (M9.7): the compendium's kinds mapped as
- * `compendiumFacetCounts` maps them, and the Source strip and In Stock switch beside
- * them. A coven has no No Refs or No Form switch, so those counts read zero and nothing shows it. The
- * coven Ingredients page (M9.6) reads `workspaceIngredientFacets` and maps it here.
+ * A coven's counts as the props its panel takes: the compendium's kinds mapped as `compendiumFacetCounts`
+ * maps them, plus Source and In Stock. A coven has no No Refs or No Form switch, so those counts read zero.
  */
 export function covenFacetCounts(
   facets: WorkspaceIngredientFacets,
   vocabularies: FacetVocabularies,
 ): CompendiumFacetCounts {
   return {
-    ...compendiumFacetCounts({ ...facets, withoutReferences: 0, withoutForms: 0 }, vocabularies),
+    ...compendiumFacetCounts(
+      { ...facets, withoutReferences: 0, withoutForms: 0, reviewed: null },
+      vocabularies,
+    ),
     source: facets.source.map(({ value, count }) => ({
       value,
       label: SOURCE_LABELS[value],
@@ -68,11 +72,8 @@ export function covenFacetCounts(
 }
 
 /**
- * The service's counts as the props the compendium list takes (M12.4). A
- * deity or category whose id the vocabulary no longer holds is dropped: the
- * count was read a moment before a delete, and a choice with no name or slug
- * could not be offered or written to the address. Pure, so it is tested
- * against plain maps.
+ * The service's counts as the props the compendium list takes. A deity or category the vocabulary no
+ * longer holds is dropped (the count predates a delete). Pure, so it is tested against plain maps.
  */
 export function compendiumFacetCounts(
   facets: CompendiumFacets,
@@ -111,5 +112,12 @@ export function compendiumFacetCounts(
     })),
     withoutReferences: facets.withoutReferences,
     withoutForms: facets.withoutForms,
+    ...(facets.reviewed && {
+      reviewed: facets.reviewed.map(({ value, count }) => ({
+        value,
+        label: REVIEW_LABELS[value],
+        count,
+      })),
+    }),
   };
 }

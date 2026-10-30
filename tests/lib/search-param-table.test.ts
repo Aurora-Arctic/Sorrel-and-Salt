@@ -10,10 +10,9 @@ import {
   textParam,
 } from '@/lib/search-param-table';
 
-// The typed table of a search's parameters (M8.13): each entry is the name in
-// the address, how it is read, how it is written and the GraphQL variable it
-// becomes, and the table's read, href and variables go through every entry
-// alike, so a new filter is one new entry and no change to a caller.
+// The typed table of a search's parameters: each entry is the name in the address, how it is
+// read, how it is written and the GraphQL variable it becomes. Read, href and variables go
+// through every entry alike, so a new filter is one new entry and no change to a caller.
 const KINDS = ['earth', 'fire'] as const;
 
 const base = {
@@ -130,9 +129,8 @@ describe('the parameter table', () => {
   });
 });
 
-// A list of slugs in the address, turned into ids against a lookup the page
-// reads once (M8.11): the address stays readable, and a slug no live row holds
-// is dropped rather than refused.
+// A list of slugs in the address, turned into ids against a lookup the page reads once: the
+// address stays readable, and a slug no live row holds is dropped rather than refused.
 describe('a slug list entry', () => {
   const slugs = defineSearchParams({
     query: textParam('query', 'query'),
@@ -181,8 +179,8 @@ describe('a slug list entry', () => {
   });
 });
 
-// Free text in a list, for a vocabulary that is only an autofill (M12.4): a
-// form, a sign or a planet nobody has curated is still a valid value.
+// Free text in a list, for a vocabulary that is only an autofill: a form, a sign or a planet
+// nobody has curated is still a valid value.
 describe('a text list entry', () => {
   const texts = defineSearchParams({
     query: textParam('query', 'query'),

@@ -18,7 +18,7 @@ import { ingredientCategories } from '@/modules/ingredients/schema/ingredient-ca
 import { ingredientFolkNames } from '@/modules/ingredients/schema/ingredient-folk-names';
 import { ingredientVariants } from '@/modules/ingredients/schema/ingredient-variants';
 import { spellCategories } from '@/modules/grimoire/schema/spell-categories';
-import { spellIngredients } from '@/modules/grimoire/schema/spell-ingredients';
+import { spellSteps } from '@/modules/grimoire/schema/spell-steps';
 import { spells } from '@/modules/grimoire/schema/spells';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { type Membership, assertMembership } from '@/modules/coven';
@@ -35,7 +35,7 @@ import {
 
 useProbeTables();
 
-describe('soft-delete filtering (M1.20)', () => {
+describe('soft-delete filtering', () => {
   it('findMany excludes a soft-deleted row', async () => {
     const [kept] = await withAudit(session, (write) => write.insert(herbs, { name: 'Comfrey' }));
     const [gone] = await withAudit(session, (write) => write.insert(herbs, { name: 'Foxglove' }));
@@ -117,7 +117,7 @@ describe('soft-delete filtering (M1.20)', () => {
 // CLAUDE.md rule 5's second layer. The proofs below are real ones, minted by
 // `assertMembership` against the seeded cast: there is no other way to get one,
 // which is the property under test.
-describe('the Membership proof (M6.3)', () => {
+describe('the Membership proof', () => {
   let inW: Membership;
   let inX: Membership;
 
@@ -234,14 +234,9 @@ describe('the Membership proof (M6.3)', () => {
     });
   });
 
-  // The writers' half of the mechanism, once per family: the writes by
-  // condition, which AND the proof's workspace onto the caller's `where`
-  // (updateInWorkspace here, softDeleteInWorkspace the same `and`), and the
-  // writes by id, which share `inWorkspaceById` (softDeleteByIdInWorkspace
-  // here, updateByIdInWorkspace the same predicate). The readers' half is
-  // findOneByIdInWorkspace's above: findOneInWorkspace is the same
-  // findManyInWorkspace. Who may hold a proof of which workspace is each
-  // service's to prove, by direct id, in tests/modules/*/services/.
+  // The writers' half of the mechanism, once per family: the writes by condition AND the proof's workspace onto the caller's `where` (updateInWorkspace here, softDeleteInWorkspace the same `and`),
+  // and the writes by id share `inWorkspaceById` (softDeleteByIdInWorkspace here, updateByIdInWorkspace the same predicate). The readers' half is findOneByIdInWorkspace's above.
+  // Who may hold a proof of which workspace is each service's, by direct id, in tests/modules/*/services/.
   describe('a direct id belonging to another workspace', () => {
     it('is not updatable, and the row is left as it was', async () => {
       const [row] = await insertJar(inX, 'Nettle');
@@ -320,14 +315,14 @@ describe('the Membership proof (M6.3)', () => {
     expect(deleteAnUnscopedTableById).toBeInstanceOf(Function);
   });
 
-  // The same shape for M10.3's two extra scopes. A private spell excluded by a
-  // predicate the caller could simply not have written is absent; a private
-  // spell the generic finders will not compile against is impossible, and only
-  // the second survives the next service that forgets.
+  // The same shape for the two extra spell scopes. A private spell excluded by a predicate the caller
+  // could simply not have written is absent; a private spell the generic finders will not compile against
+  // is impossible, and only the second survives the next service that forgets.
   it('refuses the generic finders a spell and its contents at compile time', () => {
     const readSpellsWithoutTheVisibilityRule = (membership: Membership) =>
       // @ts-expect-error — `spells` carries `visibility`, so the generic scoped
-      // finder refuses it: findManySpells is the only way in.
+      // finder refuses it: findOneSpell and findPageInReadableSpells are the only
+      // ways in.
       findManyInWorkspace(membership, spells);
 
     const readOneSpellWithoutTheVisibilityRule = (membership: Membership) =>
@@ -335,10 +330,10 @@ describe('the Membership proof (M6.3)', () => {
       findOneInWorkspace(membership, spells, eq(spells.id, WORKSPACE_W_ID));
 
     const readLayersUnscoped = () =>
-      // @ts-expect-error — `spell_ingredients` carries no workspace_id and so
+      // @ts-expect-error — `spell_steps` carries no workspace_id and so
       // would pass as unscoped; the `spell_id` is what refuses it, because its
       // scope and its visibility are the parent spell's (findManyInSpell).
-      findMany(spellIngredients);
+      findMany(spellSteps);
 
     const readAssignmentsUnscoped = () =>
       // @ts-expect-error — the same for `spell_categories`.
@@ -347,7 +342,7 @@ describe('the Membership proof (M6.3)', () => {
     const readLayersThroughTheHatch = () =>
       // @ts-expect-error — the escape hatch takes the unscoped side too, where
       // every coven's layers would come back, removed ones and private spells' included.
-      findManyIncludingSoftDeleted(spellIngredients);
+      findManyIncludingSoftDeleted(spellSteps);
 
     const scopeAJoinTableByWorkspace = (membership: Membership) =>
       // @ts-expect-error — `spell_categories` has no workspace_id to AND on,
@@ -355,16 +350,14 @@ describe('the Membership proof (M6.3)', () => {
       findManyInWorkspace(membership, spellCategories);
 
     const readLayersAsAnIngredientsChildren = () =>
-      // @ts-expect-error — `spell_ingredients` carries an ingredient_id too, but
+      // @ts-expect-error — `spell_steps` carries an ingredient_id too, but
       // its reach is its spell's: read through a compendium entry, it would be
       // every coven's layers of that entry, private spells included.
-      findManyOfIngredients([], spellIngredients, [WORKSPACE_W_ID]);
+      findManyOfIngredients([], spellSteps, [WORKSPACE_W_ID]);
 
     const readLayersAsAHeldIngredientsChildren = (membership: Membership) =>
       // @ts-expect-error — nor are layers a held ingredient's children.
-      findManyOfSpellIngredientsIncludingSoftDeleted(membership, spellIngredients, [
-        WORKSPACE_W_ID,
-      ]);
+      findManyOfSpellIngredientsIncludingSoftDeleted(membership, spellSteps, [WORKSPACE_W_ID]);
 
     expect(readSpellsWithoutTheVisibilityRule).toBeInstanceOf(Function);
     expect(readOneSpellWithoutTheVisibilityRule).toBeInstanceOf(Function);
@@ -397,7 +390,7 @@ describe('the Membership proof (M6.3)', () => {
 
     const readVariantsUnscoped = () =>
       // @ts-expect-error — `ingredient_variants` is an ingredient's child too
-      // (MB.216): a form of a coven's entry is that coven's, so it is read
+      // : a form of a coven's entry is that coven's, so it is read
       // under its parent's tier or not at all.
       findMany(ingredientVariants);
 

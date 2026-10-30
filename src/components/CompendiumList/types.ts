@@ -9,7 +9,7 @@ import type { CardCategory } from '../CategoryChips/types';
 import type { PickerCategory } from '../CategoryPicker/types';
 import type { SearchCursor, SearchFilter } from '../../lib/search-param-table';
 import type { COVEN_PARAMS } from '../IngredientSearch/coven-params';
-import type { COMPENDIUM_PARAMS } from './params';
+import type { COMPENDIUM_PARAMS, REVIEW_SETTINGS } from './params';
 import type { UpdatedStamp } from '../DataTable/types';
 import type { ModalHeading, RouteModalLink } from '../Modal/types';
 import type { PagePosition, PagerHrefs } from '../../lib/types';
@@ -31,9 +31,9 @@ export interface CompendiumListEntry extends UpdatedStamp {
   /** Its categories, each with its group's colours: `[]` for an entry with none. */
   categories: readonly CardCategory[];
   editHref: Route;
-  /** The head of its edit modal, which a press shows at once while the form loads (M9.18). */
+  /** The head of its edit modal, which a press shows at once while the form loads. */
   editHeading: ModalHeading;
-  /** Its details modal over the list, `?entry=<slug>`, which the Quick Look eye left of its name opens (M12.5). */
+  /** Its details modal over the list, `?entry=<slug>`, which the Quick Look eye left of its name opens. */
   details: RouteModalLink;
 }
 
@@ -47,7 +47,7 @@ export interface CompendiumListProps extends Partial<PagerHrefs<Route>> {
   entries: readonly CompendiumListEntry[];
   /** The filter the page shows, which the form starts from and compares against. */
   filter: CompendiumListFilter;
-  /** What each filter offers, and how many entries each choice would list (M12.4). */
+  /** What each filter offers, and how many entries each choice would list. */
   facets: CompendiumFacetCounts;
   /** Every live category, which the Categories box offers and the address names by slug. */
   categories: readonly CompendiumCategoryChoice[];
@@ -57,6 +57,8 @@ export interface CompendiumListProps extends Partial<PagerHrefs<Route>> {
   position?: PagePosition;
   /** How many entries the filter finds in all, which the search sentence leads with. */
   total: number;
+  /** The cursor of the page shown, which a pick's Quick Look opens over and closes back to. */
+  cursor?: SearchCursor;
 }
 
 /** What turns the counts the panel asks for into choices: every live deity, and each curated form's group icon by its name folded to lower case. */
@@ -75,10 +77,9 @@ export interface CompendiumCategoryChoice extends PickerCategory {
 }
 
 /**
- * One choice a filter offers and how many entries the list would hold with it
- * chosen, the rest of the filter kept (M12.3, M12.4). `value` is what the
- * address carries for it, `?forms=Oil`, and `label` what a chip or an option
- * says. `V` is narrowed where the set is closed.
+ * One choice a filter offers and how many entries the list would hold with it chosen. `value` is what
+ * the address carries (`?forms=Oil`), `label` what a chip or option says; `V` is narrowed where the
+ * set is closed.
  */
 export interface FacetChoice<V extends string = string> {
   value: V;
@@ -106,13 +107,9 @@ export interface CategoryFacetChoice extends FacetChoice {
 }
 
 /**
- * Every filter's choices with their counts, read for the filter the page
- * shows (the compendium's `compendiumFacets`, public like the list). Each list
- * is in the order to offer them: forms, deities and categories most entries
- * first, then by label, and only the values some entry carries plus the ones
- * chosen, which sit at zero if none does; signs, celestial bodies and elements all of
- * them, zeros included, in the vocabulary's order; toxic as toxic, then not
- * toxic.
+ * Every filter's choices with their counts, for the filter the page shows. Forms, deities and
+ * categories come most entries first then by label, holding the values some entry carries plus those
+ * chosen; signs, bodies and elements hold all, zeros included, in the vocabulary's order.
  */
 export interface CompendiumFacetCounts {
   forms: FormFacetChoice[];
@@ -129,65 +126,74 @@ export interface CompendiumFacetCounts {
   /** How many entries have no live form, the No Form switch's count; the same with it on or off. */
   withoutForms: number;
   /**
-   * The coven's Source strip (M9.7): Local, then Compendium, zeros kept, each counted with
+   * The coven's Source strip: Local, then Compendium, zeros kept, each counted with
    * the strip's own choice left out. Left off by the public and admin lists, which have no
    * source, and by a coven panel whose counts have not been read.
    */
   source?: FacetChoice<IngredientSource>[];
+  /**
+   * The admin's Reviewed strip: Reviewed, then Needs Review, zeros kept, each counted
+   * with the strip's own choice left out. Left off for anyone who does not curate, whom the
+   * service gives no review counts.
+   */
+  reviewed?: FacetChoice<ReviewSetting>[];
   /** The coven's In Stock switch's count, the same with it on or off. Left off with `source`. */
   inStock?: number;
-  /** The coven's Low Stock Only switch's count (M9.8), read as inStock's is. */
+  /** The coven's Low Stock Only switch's count, read as inStock's is. */
   lowStockOnly?: number;
 }
 
+/** The Reviewed strip's two settings: marked reviewed by a curator, or not. */
+export type ReviewSetting = (typeof REVIEW_SETTINGS)[number];
+
 /**
- * The list's filter as asked: the name query, the forms, deities (by slug),
- * zodiac signs and celestial bodies an entry may hold, whether to show only the entries
- * that cite no reference, the elements it may hold, toxic or not toxic (blank
- * for either), and the categories it must all be filed under, or any of, by
- * slug. Read from the address by the parameter table (./params.ts), whose
- * entries it is made of.
+ * The list's filter as asked: name query, forms, deities (by slug), signs, bodies, elements, toxic or
+ * not (blank for either), the categories to match all of or any of (by slug), and whether to show only
+ * entries citing no reference. Read from the address by the parameter table (./params.ts).
  */
 export type CompendiumListFilter = SearchFilter<typeof COMPENDIUM_PARAMS.entries>;
 
 /**
- * The coven list's filter (M9.6): the compendium's, with the Source, In Stock and Low Stock Only
+ * The coven list's filter: the compendium's, with the Source, In Stock and Low Stock Only
  * choices only a coven has. Read from the address by `COVEN_PARAMS`.
  */
 export type CovenListFilter = SearchFilter<typeof COVEN_PARAMS.entries>;
 
 /**
  * Where the list stands: its filter, the cursor of the page a modal opens
- * over, and the entry whose details modal is open, `?entry=<slug>` (M12.5),
+ * over, and the entry whose details modal is open, `?entry=<slug>`,
  * which an edit modal stacked over the details keeps, so it closes back to them.
  */
 export type CompendiumPlace = Partial<CompendiumListFilter> & SearchCursor & { entry?: string };
 
-/** The dialog a coven list address opens over it (M8.17): an own entry's Edit, or a held compendium entry's Annotate. */
+/** The dialog a coven list address opens over it: an own entry's Edit, or a held compendium entry's Annotate. */
 export type CovenListDialog = { edit: string } | { annotate: string };
 
 /** What the filter form starts from: the page's filter, and the choices it offers. */
 export type CompendiumListFilterProps = Pick<
   CompendiumListProps,
-  'facets' | 'categories' | 'vocabulary'
+  'facets' | 'categories' | 'vocabulary' | 'cursor'
 > & {
   /**
    * The filter the page shows. A coven list's also carries its Source, In Stock and Low Stock Only
    * choices (`CovenListFilter`), which the other two lists leave out.
    */
-  filter: CompendiumListFilter &
+  filter: Omit<CompendiumListFilter, 'reviewed'> &
+    Partial<Pick<CompendiumListFilter, 'reviewed'>> &
     Partial<Pick<CovenListFilter, 'source' | 'inStock' | 'lowStockOnly'>>;
   /**
-   * Who the filter is for. The admin's (the default) opens an entry's edit modal on a pick, offers
-   * No Refs, and submits to `/admin/compendium`; the public one (M8.18) links a pick to the entry's
-   * page, has no No Refs, and submits to `/compendium`; a coven's (M9.6) submits to
-   * `/coven/<covenSlug>/ingredients`, links a pick to the entry's page there, suggests from the
-   * coven's cupboard, and adds Source, In Stock and Low Stock Only. A flag and plain data, not
-   * functions, since the filter is a client component its server page passes props to.
+   * Who the filter is for: the admin's (the default) offers No Refs; the public one submits to
+   * `/compendium`; a coven's to `/coven/<covenSlug>/ingredients`, suggesting from its cupboard and adding
+   * Source, In Stock and Low Stock Only. Plain data, as a client component's server page passes props.
    */
   audience?: 'admin' | 'public' | 'coven';
   /** The coven's address segment, for `audience="coven"`. */
   covenSlug?: string;
   /** The coven's id, for `audience="coven"`: the type-ahead and the live counts read it. */
   workspaceId?: string;
+  /**
+   * The signed-in viewer's covens, every membership, which In My Covens offers by name and the
+   * sentence names. The public list only; left out, the field is not drawn.
+   */
+  covens?: readonly { id: string; name: string }[];
 };

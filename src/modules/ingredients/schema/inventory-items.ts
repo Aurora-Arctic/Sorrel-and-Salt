@@ -16,14 +16,9 @@ export const inventoryUnit = pgEnum('inventory_unit', UNITS);
 
 export const unitDimension = pgEnum('unit_dimension', UNIT_DIMENSIONS);
 
-// "A row whose dimension contradicts its unit cannot be written" (§5), built
-// from the same map as the enums. Literal SQL for ingredients.ts's reason; only
-// this module's constants are interpolated. The first conjunct is not optional:
-// a CHECK passes on NULL, so without the `is null` biconditional a half-null
-// row would slip through (claude-docs/db/stock.md, "The dimension stored beside the unit").
-// `unit::text`, not `unit`: compared as the enum, each literal is cast to
-// `inventory_unit`, and Postgres refuses a value added in the same transaction
-// (55P04), which is how migration 0072 adds `fl_oz_us`.
+// "A row whose dimension contradicts its unit cannot be written" (§5), built from the same map as the enums. The `is null` biconditional is not optional:
+// a CHECK passes on NULL, so a half-null row would slip through (claude-docs/db/stock.md, "The dimension stored beside the unit").
+// `unit::text`, not `unit`: Postgres refuses an enum value added in the same transaction (55P04), as migration 0072 adds `fl_oz_us`.
 const UNIT_MATCHES_DIMENSION = sql.raw(
   [
     '(unit is null) = (unit_dimension is null)',
@@ -35,7 +30,7 @@ const UNIT_MATCHES_DIMENSION = sql.raw(
 );
 
 // What a workspace holds. Stock hangs off the ingredient, not the other way
-// round, which is also why `spell_ingredients` references `ingredients` and
+// round, which is also why `spell_steps` references `ingredients` and
 // not this table.
 export const inventoryItems = pgTable(
   'inventory_items',
@@ -47,7 +42,7 @@ export const inventoryItems = pgTable(
     ingredientId: uuid('ingredient_id')
       .notNull()
       .references(() => ingredients.id),
-    // The form the jar holds (MB.217): Rosemary herb and Rosemary oil are two
+    // The form the jar holds: Rosemary herb and Rosemary oil are two
     // rows. NOT NULL from the start, since no stock row exists anywhere yet.
     variantId: uuid('variant_id').notNull(),
     // Precision and scale from ./quantities.ts, which the Zod ceiling reads too.
@@ -75,7 +70,7 @@ export const inventoryItems = pgTable(
   },
   (table) => [
     check('inventory_items_unit_matches_dimension', UNIT_MATCHES_DIMENSION),
-    // What "already added" means, per form since MB.217. Partial per CLAUDE.md
+    // What "already added" means, per form. Partial per CLAUDE.md
     // rule 4: throwing a jar out is recoverable, so it must not reserve the form.
     liveUnique(
       'inventory_items_workspace_id_variant_id_unique',
@@ -84,7 +79,7 @@ export const inventoryItems = pgTable(
       table.variantId,
     ),
     // The variant and the ingredient beside it, as a pair, so no row holds
-    // another ingredient's form (MB.217).
+    // another ingredient's form.
     foreignKey({
       name: 'inventory_items_variant_fk',
       columns: [table.variantId, table.ingredientId],

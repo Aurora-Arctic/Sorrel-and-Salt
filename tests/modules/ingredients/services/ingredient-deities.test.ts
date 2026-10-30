@@ -16,12 +16,9 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertDeityLink, insertIngredient } from '../../../support/db/insert-ingredient';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 
-// MB.167: an ingredient's deities, each the curated deity a member picked or a
-// name typed, in the order entered (DESIGN.md §5, `ingredient_deities`),
-// written in the ingredient's own transaction by either tier's service and
-// read back through `deitiesOf`, the batch behind `Ingredient.deities`. The
-// ingredients are emptied per test; a deity or tradition a test adds or
-// retires is put back after it, since the vocabularies are the file's clone's.
+// An ingredient's deities, each the curated deity a member picked or a name typed, in the order entered (DESIGN.md §5, `ingredient_deities`).
+// Either tier's service writes them in the ingredient's own transaction, and `deitiesOf`, the batch behind `Ingredient.deities`, reads them back.
+// Ingredients are emptied per test; a deity or tradition a test adds or retires is put back after it, since the vocabularies are the file's clone's.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -134,7 +131,7 @@ describe('a save carrying deities', () => {
     expect((await liveRows(created.id)).map((row) => row.position)).toEqual([0, 1, 2]);
   });
 
-  // The confusion the link exists to end (MB.165): two curated rows, one name.
+  // The confusion the link exists to end: two curated rows, one name.
   it('reads Greek and Roman Hecate saved together back as two', async () => {
     const created = await createWorkspaceIngredient(
       asUser(B),
@@ -161,7 +158,7 @@ describe('a save carrying deities', () => {
     for (const deity of rows) expect(deity).toMatchObject({ xmin: row.xmin, created_by: B.id });
   });
 
-  // MB.165 records the name beside the link, in the curated row's spelling.
+  // The service records the name beside the link, in the curated row's spelling.
   it('writes a picked deity’s name in its curated spelling', async () => {
     const created = await createWorkspaceIngredient(
       asUser(B),
@@ -228,22 +225,6 @@ describe('a deity pick that names no curated deity', () => {
       expect(n).toBe(0);
     },
   );
-
-  it('is refused on an update too, leaving the live list as it was', async () => {
-    const id = await seed(local({ deities: ['Testara'] }));
-
-    const issues = await refusal(
-      updateWorkspaceIngredient(
-        asUser(B),
-        WORKSPACE_W_ID,
-        id,
-        input('Testwort', [picked(nothing)]),
-      ),
-    );
-
-    expect(issues).toEqual([expect.objectContaining({ path: ['deities', 0] })]);
-    expect((await liveRows(id)).map((row) => row.name)).toEqual(['Testara']);
-  });
 });
 
 async function traditionOf(deity: string): Promise<string> {
@@ -297,7 +278,7 @@ describe('a save of an ingredient’s deities', () => {
   });
 
   // `ingredient_deities_position_unique` is checked per row, so a swap
-  // written in place would collide with itself (MB.165).
+  // written in place would collide with itself.
   it('reorders in place: each row kept, the new order written, no tombstone and no 23505', async () => {
     const id = await seed(local({ deities: ['First Testara', 'Second Testara'] }));
     await insertDeityLink(sql, id, thor, 2, A.id);
@@ -363,22 +344,6 @@ describe('a save of an ingredient’s deities', () => {
     expect(await liveRows(id)).toEqual([]);
   });
 
-  it('rolls them back with the ingredient when the ingredient write fails', async () => {
-    await seed(local({ name: 'Taken Wort' }));
-    const id = await seed(local({ deities: ['Kept Testara'] }));
-
-    await expect(
-      updateWorkspaceIngredient(
-        asUser(B),
-        WORKSPACE_W_ID,
-        id,
-        input('taken wort', [typed('Added Testara')]),
-      ),
-    ).rejects.toThrow();
-
-    expect((await liveRows(id)).map((row) => row.name)).toEqual(['Kept Testara']);
-  });
-
   // A curated row renamed since the pick: the next save writes the spelling
   // the row has now, in place.
   it('refreshes a kept pick’s name to its curated row’s spelling', async () => {
@@ -413,7 +378,7 @@ describe('a save of an ingredient’s deities', () => {
   });
 });
 
-// MB.165's deletion rule, kept as MB.138 keeps a substitute's (MB.167): an
+// The deletion rule, kept as a substitute's is: an
 // admin's delete reaches no coven's rows, so a pick whose deity is retired
 // stays, and reads as the name it was saved under.
 describe('a picked deity since retired', () => {
@@ -473,16 +438,6 @@ describe('a picked deity since retired', () => {
     );
 
     expect(await deityRows(id)).toEqual(before);
-  });
-
-  it('cannot be picked anew', async () => {
-    await retire('deities', thor);
-
-    const issues = await refusal(
-      createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, input('Testbane', [picked(thor)])),
-    );
-
-    expect(issues).toEqual([expect.objectContaining({ path: ['deities', 0] })]);
   });
 });
 

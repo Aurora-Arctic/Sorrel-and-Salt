@@ -16,16 +16,12 @@ export interface AdminLayoutProps {
   children: ReactNode;
 }
 
-/** A tabbed page's layout (MB.115): the open tab's content, and its action from the `@action` slot. */
+/** A tabbed page's layout: the open tab's content, and its action from the `@action` slot. */
 export interface TabbedLayoutProps extends AdminLayoutProps {
   action: ReactNode;
 }
 
-/**
- * A list page's address as Next hands it over (MB.115, `list-page.ts`): any
- * parameter may come once, several times, or not at all. Each page's own
- * filter parameters sit beside these.
- */
+/** A list page's address as Next hands it over: each parameter may come once, many times or not at all. */
 export interface ListSearchParams {
   query?: string | string[];
   after?: string | string[];
@@ -52,11 +48,7 @@ export interface MissingNoticeProps {
   noun: string;
 }
 
-/**
- * A curated value page's address (`value-page.tsx`): the list's place, and
- * a grouped kind's group by slug, under `group` or, for the deities,
- * `tradition`.
- */
+/** A curated value page's address: the list's place, and a grouped kind's group by slug. */
 export interface ValueSearchParams extends ListSearchParams {
   group?: string | string[];
   tradition?: string | string[];
@@ -80,7 +72,9 @@ export interface ValueRow {
   description: string;
   /** The group it is filed under; none for a flat kind. */
   groupId?: string;
-  /** Its audit stamps, which the Updated column reads (MB.260). */
+  /** A deity's other names, alphabetically; none for the other kinds. */
+  otherNames?: readonly string[];
+  /** Its audit stamps, which the Updated column reads. */
   updatedBy: string;
   updatedAt: Date;
 }
@@ -102,10 +96,7 @@ export interface ValueFilter {
   groupId?: string;
 }
 
-/**
- * One kind's readers, from `@/modules/vocabulary` (`value-kinds.ts`), each
- * mapped onto the value page's own names, so the page reads every kind alike.
- */
+/** One kind's readers from `@/modules/vocabulary`, mapped onto the value page's own names. */
 export interface ValueKindSource {
   list: (filter: ValueFilter, page: PageRequest) => Promise<PageEntry<ValueRow>[]>;
   count: (filter: ValueFilter, start: Cursor | undefined) => Promise<PageCount>;
@@ -116,7 +107,7 @@ export interface ValueKindSource {
 
 /** What a value page's address opens: an add, or the value it edits. */
 export interface OpenedValue {
-  /** "Add Category", or the edited value's eyebrow and name, and a deity's tradition (MB.115). */
+  /** "Add Category", or the edited value's eyebrow and name, and a deity's tradition. */
   heading: ModalHeading;
   /** The value edited; none for an add. */
   value?: EditedGroupedValue;
@@ -126,15 +117,12 @@ export interface ValueDialogProps {
   kind: GroupedValueKind;
   /** The page the modal opened over, which closing it returns to. */
   closeHref: Route;
-  /** What the address opens; none when it opens nothing, or while a press's is on its way (M9.18). */
+  /** What the address opens; none when it opens nothing, or while a press's is on its way. */
   opened?: OpenedValue;
   groups: readonly GroupedValueGroupChoice[];
 }
 
-/**
- * A group page's address (`group-page.tsx`): the list's place, its `query`
- * read only by a kind that searches (`GroupKindPage.search`).
- */
+/** A group page's address: the list's place, and a `query` read only by a kind that searches. */
 export type GroupSearchParams = ListSearchParams;
 
 /** What a group route's `page.tsx` is handed, which it passes on to `GroupPage`. */
@@ -156,18 +144,14 @@ export interface GroupRow {
   colorLight?: string;
   /** A form group's icon name, `null` for none; absent for the other kinds. */
   icon?: FormGroupIcon | null;
-  /** Its audit stamps, which the Updated column reads (MB.260). */
+  /** Its audit stamps, which the Updated column reads. */
   updatedBy: string;
   updatedAt: Date;
 }
 
 /** One group vocabulary's page readers, from `@/modules/vocabulary`; its copy is the kind table's (`GroupList/kinds.ts`). */
 export interface GroupKindPage {
-  /**
-   * Whether the list takes a name search (MB.115): the traditions' alone. A
-   * kind without one reads no `query` from its address, so its readers are
-   * handed no filter and need take none.
-   */
+  /** Whether the list takes a name search (the traditions only); others read no `query`. */
   search: boolean;
   list: (page: PageRequest, filter?: GroupFilter) => Promise<PageEntry<GroupRow>[]>;
   count: (start: Cursor | undefined, filter?: GroupFilter) => Promise<PageCount>;
@@ -178,7 +162,7 @@ export interface GroupKindPage {
 
 /** What a group page's address opens: an add, or the group it edits. */
 export interface OpenedGroup {
-  /** "Add Category Group", or the edited group's eyebrow and name (MB.115). */
+  /** "Add Category Group", or the edited group's eyebrow and name. */
   heading: ModalHeading;
   /** The group edited; none for an add. */
   group?: EditedGroup;
@@ -190,7 +174,7 @@ export interface GroupDialogProps {
   kind: GroupKind;
   /** The page the modal opened over, which closing it returns to. */
   closeHref: Route;
-  /** What the address opens; none when it opens nothing, or while a press's is on its way (M9.18). */
+  /** What the address opens; none when it opens nothing, or while a press's is on its way. */
   opened?: OpenedGroup;
   groups: readonly GroupChoice[];
 }
@@ -200,8 +184,10 @@ export type TabbedPageKey = Exclude<keyof typeof ADMIN_PAGES, 'compendium'>;
 
 export interface AddActionProps {
   href: Route;
-  /** The head of the modal it opens, "Add Category", shown at once while the form loads (M9.18). */
+  /** The head of the modal it opens, "Add Category", shown at once while the form loads. */
   heading: ModalHeading;
+  /** True when the dialog draws its form from the address in the browser: a press uses `pushState`. */
+  drawnHere?: boolean;
   /** The label, "Add Category": the link's name at every width, and the tip over the plus at a phone's. */
   children: string;
 }

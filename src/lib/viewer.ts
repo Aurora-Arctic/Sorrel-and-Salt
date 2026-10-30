@@ -7,14 +7,9 @@ import type { Session } from './session';
 import { curates } from './site-roles';
 import type { ShellContext } from './types';
 
-// What the application shell draws and the coven layout's switcher lists: the
-// viewer, their covens, and how many coven invitations wait for them. Cached
-// per request, so the shell layout and the coven layout beneath it share one
-// set of lookups. It reads the user row, not the session, since accepting an
-// invitation sets `canCreateWorkspace` mid-session. It asks only that someone
-// is signed in: the shell layout draws it round an unverified account's email
-// page too, and the page beneath is what sends that account to the email page
-// (MB.256).
+// What the shell draws and the coven layout's switcher lists: the viewer, their covens and how many invitations wait. Cached per request so both layouts share
+// one set of lookups. Reads the user row, not the session, as accepting an invitation sets `canCreateWorkspace` mid-session. It asks only that someone is signed in,
+// as the shell also draws an unverified account's email page.
 
 /**
  * The viewer's own memberships, read once per request whoever asks: the shell, and the public
@@ -37,14 +32,16 @@ async function viewerFor(session: Session): Promise<ShellContext> {
     : 0;
   return {
     viewer: {
+      id: session.userId,
       name: me.name,
       canCurate: curates(session.role),
       canCreate: me.canCreateWorkspace,
       verified: me.emailVerified,
       pendingInvitations,
     },
-    // Alphabetical: the service's order is the database's, which looks random.
-    workspaces: memberships
+    // Alphabetical with the demo coven last: the service's order is the database's, which looks random.
+    workspaces: [...memberships]
+      .sort((a, b) => byCovenName(a.workspace, b.workspace))
       .map(({ role, workspace: { id, slug, name } }) => ({
         id,
         slug,
@@ -54,8 +51,7 @@ async function viewerFor(session: Session): Promise<ShellContext> {
         canInvite: rolePermits(role, { member: ['invite'] }),
         // The statement createWorkspaceIngredient asserts, so the button never offers a coven the save would refuse.
         canWrite: rolePermits(role, { ingredient: ['create'], inventory: ['update'] }),
-      }))
-      .sort(byCovenName),
+      })),
   };
 }
 
@@ -65,7 +61,7 @@ export const viewerOf = cache(async (): Promise<ShellContext> =>
 
 /**
  * `viewerOf()` for a page a signed-out visitor may open: `null` instead of
- * the redirect to sign in. For the public frame (MB.83) and nothing else.
+ * the redirect to sign in. For the public frame and nothing else.
  */
 export const viewerIfSignedIn = cache(async (): Promise<ShellContext | null> => {
   const session = await getSession();
@@ -74,7 +70,7 @@ export const viewerIfSignedIn = cache(async (): Promise<ShellContext | null> => 
 
 /**
  * The signed-in viewer's role in each of their covens, by coven id, or `null` signed out: for
- * the public entry page's cupboard choices (M9.12), each of which a different statement permits.
+ * the public entry page's cupboard choices, each of which a different statement permits.
  * The shell carries a coven's permissions as flags rather than its role, and this shares its read.
  */
 export const covenRolesIfSignedIn = cache(

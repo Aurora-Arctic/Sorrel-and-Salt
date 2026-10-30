@@ -2,24 +2,20 @@
 
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
-import { ClearIcon } from '../Combobox/icons';
+import { CrossIcon } from '../IconTip/icons';
 import { useFade } from './fade';
 import { useBadgePlace, useCalloutPlace } from './position';
 import { useAnnounce } from './status-region';
 import type { ClickFeedback, ClickFeedbackOptions } from './types';
 import './index.scss';
 
-// Design F, what a click outside a form says when it fails: the service's
-// sentence in a callout under the control, read as an alert; a badge on the
-// control that brings the callout back; and the control described by the
-// failure until a later try clears it. claude-docs/components/click-feedback.md;
-// the rule is claude-docs/design-decisions/m12.31-click-feedback-outside-forms.md §5.
+// What a click outside a form says when it fails: the service's sentence in an alert callout under the
+// control, a badge that brings it back, and the control described by the failure until a later try
+// clears it (claude-docs/components/click-feedback.md; claude-docs/design-decisions/m12.31-click-feedback-outside-forms.md §5).
 
 /**
- * The control's own document, which its listeners go on and its events are
- * raised on: in a story Ladle draws into an iframe the script runs in the page
- * around the frame, so the global `document` is not the one a key or a press
- * in the story reaches.
+ * The control's own document, for its listeners and events: in a story Storybook draws into an iframe,
+ * so the global `document` is not the one a key or press reaches.
  */
 const docOf = (node: Node | null | undefined): Document => node?.ownerDocument ?? document;
 
@@ -33,10 +29,8 @@ const OPENED = 'click-feedback:opened';
 const SIDES = ['Top', 'Right', 'Bottom', 'Left'] as const;
 
 /**
- * Whether the control shows no border, as a text button or a menu item: its
- * badge then goes beside it, having no corner to sit on. Read from the drawn
- * style rather than a class, since every `.btn` has a border, `.btn--quiet`
- * included.
+ * Whether the control shows no border (a text button or menu item), so its badge goes beside it. Read
+ * from the drawn style, since every `.btn` has a border, `.btn--quiet` included.
  */
 function borderless(node: HTMLElement): boolean {
   const style = (node.ownerDocument.defaultView ?? window).getComputedStyle(node);
@@ -244,7 +238,7 @@ export function useClickFeedback({ name }: ClickFeedbackOptions): ClickFeedback 
             aria-label="Dismiss"
             onClick={() => close(true)}
           >
-            <ClearIcon />
+            <CrossIcon />
           </button>
         </div>
       )}

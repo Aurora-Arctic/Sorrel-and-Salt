@@ -4,23 +4,17 @@ import { autoUpdate, flip, offset, shift, size, useFloating } from '@floating-ui
 import { type ReactElement, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { chipColors } from '../../lib/chip-colors';
 import { TIP_OPEN_DELAY_MS } from '../InfoTip/constants';
-import type { CardCategory } from './types';
+import CategoryTipChip from './category-tip-chip';
+import type { CardCategory, CategoryChipsProps } from './types';
 
 /** The least width the panel takes when the chip row is narrower. */
 const PANEL_MIN_PX = 192;
 /** Space kept between the panel and the window's edge. */
 const EDGE_PX = 8;
 
-// The card's +N button and the panel of categories behind it: a toggletip, so the card's
-// height never changes (the panel floats over the chip row). Focus opens it at once, and
-// a hover once the pointer has rested `TIP_OPEN_DELAY_MS`, as every tip does, so a
-// pointer crossing the card opens nothing. A click (a tap) pins it open at once, and a
-// second click closes it. Escape closes it and returns focus to the button; a press
-// outside or leaving (after a short grace, so the pointer can cross into the panel)
-// closes it too: WCAG 1.4.13, dismissible, hoverable and persistent. The hover's wait
-// and the leave's grace share one timer, so a leave cancels a pending open. A client
-// child of its own so `IngredientCard` stays server-compatible.
-// claude-docs/components/ingredient-card.md.
+// The card's +N button and the panel behind it: a toggletip floating over the chip row, so the card's
+// height never changes (WCAG 1.4.13). A client child so `IngredientCard` stays server-compatible
+// (claude-docs/components/category-chips.md, "The +N toggletip").
 
 const GRACE_MS = 120;
 
@@ -29,9 +23,11 @@ interface CategoryMoreProps {
   categories: readonly CardCategory[];
   /** The ingredient's label, for the accessible names. */
   label: string;
+  /** A chip's tip words, when the caller gives each chip a tip. */
+  tipOf?: CategoryChipsProps['tipOf'];
 }
 
-const CategoryMore = ({ categories, label }: CategoryMoreProps): ReactElement => {
+const CategoryMore = ({ categories, label, tipOf }: CategoryMoreProps): ReactElement => {
   const [open, setOpen] = useState(false);
   const [pinned, setPinned] = useState(false);
   const wrapper = useRef<HTMLSpanElement>(null);
@@ -151,6 +147,7 @@ const CategoryMore = ({ categories, label }: CategoryMoreProps): ReactElement =>
       </button>
       <span
         id={panelId}
+        // oxlint-disable-next-line react/refs -- the callback ref and handlers come from a hook and are only handed to the DOM, never read while rendering
         ref={refs.setFloating}
         style={floatingStyles}
         // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- a fieldset or details would add a legend or a disclosure; this is a plain labelled group
@@ -159,11 +156,20 @@ const CategoryMore = ({ categories, label }: CategoryMoreProps): ReactElement =>
         aria-hidden={!open}
         className={open ? 'category-more__panel is-open' : 'category-more__panel'}
       >
-        {categories.map(({ category, group }) => (
-          <span key={category.id} className="chip" style={chipColors(group)}>
-            {category.name}
-          </span>
-        ))}
+        {categories.map(({ category, group }) =>
+          tipOf ? (
+            <CategoryTipChip
+              key={category.id}
+              category={category}
+              group={group}
+              tip={tipOf(category)}
+            />
+          ) : (
+            <span key={category.id} className="chip" style={chipColors(group)}>
+              {category.name}
+            </span>
+          ),
+        )}
       </span>
     </span>
   );

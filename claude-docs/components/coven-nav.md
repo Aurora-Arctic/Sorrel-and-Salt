@@ -24,11 +24,15 @@ on the page you are on.
 | ----------- | --------------------------- | ----------- | ---------------------------- | -------- |
 | Overview    | `/coven/[slug]`             | overview    | every role                   | M9.15    |
 | Ingredients | `/coven/[slug]/ingredients` | ingredients | every role                   | M9.6     |
+| Grimoire    | `/coven/[slug]/grimoire`    | grimoire    | every role                   | M10.11   |
 | Members     | `/coven/[slug]/members`     | members     | roles holding `member: read` | M6.13    |
 
 Members stays the open section on `/coven/[slug]/invitations` too, since
-Invitations is a tab on the same page (its `matches`, M7.6). Today an owner and
-a member see all three sections and a viewer sees Overview and Ingredients.
+Invitations is a tab on the same page (its `matches`, M7.6). Members is
+`apart`, a group of its own behind a hairline, as People is in the admin nav:
+it is the coven's people, not its contents (M10.11). Today an owner and a
+member see all four sections and a viewer sees Overview, Ingredients and
+Grimoire.
 
 `sections.ts` holds the list as `covenSections(slug, canReadMembers)`, each
 entry a `SectionNavItem` ([`section-nav.md`](section-nav.md)). `index.tsx`
@@ -48,7 +52,7 @@ use the same mapping. What the target does is
 ## Contracts
 
 - **Each later section is added by the task that builds its page.**
-  Ingredients (M9.6, added) and Grimoire (M10.11) each add their row to
+  Ingredients (M9.6, added) and Grimoire (M10.11, added) each add their row to
   `sections.ts` in their own PR, with the icon already drawn,
   because `typedRoutes`, Next's check that a link points at a built page,
   refuses a link to a route the build does not contain. The coven's four
@@ -75,17 +79,25 @@ All of it is `SectionNav`'s ([`section-nav.md`](section-nav.md), "Styling").
 
 ## Stories
 
-`index.stories.tsx`, titled "Coven / Coven Nav", render-only, on the coven index:
+`index.stories.tsx`, titled "Coven / Nav", render-only, on the coven index (the toolbar viewport menu shows the nav at 375px, the bar along the foot of the screen). `States` is a grid:
 
-- `Default`: as a member sees it, Overview current, Ingredients and Members beside it.
-- `Viewer`: as a viewer sees it, Overview and Ingredients.
-- `Phone`: a member's nav at 375px, the bar along the foot of the screen.
+- Overview Current: as a member sees it, Overview current, Ingredients and Members beside it.
+- Ingredients Current, Members Current, and Members Current On Its Invitations Tab: the other pages as current.
+- Viewer: as a viewer sees it, Overview and Ingredients.
 
 The shapes the nav takes by width are `SectionNav`'s stories; the nav in its
-row is `ContextRow`'s `Coven` story and the workshop's shell frame.
+row is `ContextRow`'s Coven cell and the workshop's shell frame.
 
 ## Testing
 
 `tests/components/CovenNav/index.test.tsx`: the nav, named "Coven", links the
 index at the slug's address, marks it current there and not on a page beneath
 it, and links the ingredients page for every caller, and the members page only for one who may read members.
+
+## The sections list
+
+`sections.ts` is the one list the nav reads, in order. Three rules shape it.
+
+- A row is added together with the page it links to, because `typedRoutes` refuses a link to a route the build does not contain.
+- Grimoire counts as current on its Drafts tab too, which lies beneath it.
+- Members is shown by what the caller's role may do (`member: read`), never by a rank, so a viewer is not offered a page that answers 404. The layout passes that in as a boolean because the file loads in the workshop's browser build, where the server-only access-control module cannot.

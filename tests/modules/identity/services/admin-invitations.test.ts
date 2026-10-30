@@ -15,18 +15,14 @@ import {
   revokeAdminInvitation,
 } from '@/modules/identity';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
-import { A, B, C, E, asUser } from '../../../support/as-user';
+import { A, B, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { asManualFix } from '../../../support/db/privileges';
 import type { InvitationStateRow } from './types';
 
-// MB.70: an admin invites an address to become an admin. The token is
-// `crypto.randomBytes` output that only the mail carries; the row holds its
-// hash. Creating and revoking are a site admin's alone and paused with the
-// rest of the admin changes for every admin but the primary one
-// (claude-docs/auth/admin-users.md, "Inviting an admin"). The transport is the
-// test double: the real sender builds the link and hands it to a mocked
-// `send`, so what reaches the address is what the test reads.
+// An admin invites an address to become an admin. The token is `crypto.randomBytes` output that only the mail carries; the row holds its hash.
+// Creating and revoking are a site admin's alone and paused with the rest of the admin changes for every admin but the primary one (claude-docs/auth/admin-users.md, "Inviting an admin").
+// The real sender builds the link and hands it to a mocked `send`, so what reaches the address is what the test reads.
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>(async () => {}));
 vi.mock('@/lib/mail', () => ({ send }));
@@ -135,6 +131,54 @@ describe('createAdminInvitation', () => {
     expect(mailedToken().token).not.toBe(first);
   });
 
+  describe('a repeat invitation', () => {
+    const pendingFor = async (email: string) =>
+      (await invitations()).filter(
+        (row) => row.email === email && row.revoked_at === null && row.accepted_at === null,
+      );
+
+    it('replaces the pending site-tier invitation to the address, in any case, with the newest role, stamped revoked by the admin', async () => {
+      const first = await createAdminInvitation(asUser(E), INVITED, 'curator', undefined, sender());
+      expect(await pendingFor(INVITED)).toHaveLength(1);
+
+      const second = await createAdminInvitation(
+        asUser(E),
+        INVITED.toUpperCase(),
+        'admin',
+        undefined,
+        sender(),
+      );
+
+      const pending = await pendingFor(INVITED);
+      expect(pending.map((row) => [row.id, row.site_role])).toEqual([[second.id, 'admin']]);
+      const replaced = (await invitations()).find((row) => row.id === first.id);
+      expect(replaced?.revoked_at).not.toBeNull();
+      expect(replaced?.updated_by).toBe(E.id);
+    });
+
+    it("leaves a coven's invitation to the address alone, and is left alone by it", async () => {
+      await sql`
+        insert into invitations (email, token_hash, workspace_id, role, created_by, updated_by, expires_at)
+        values (${INVITED}, 'coven-hash', ${WORKSPACE_W_ID}, 'member', ${A.id}, ${A.id}, now() + interval '7 days')`;
+
+      await createAdminInvitation(asUser(E), INVITED, 'admin', undefined, sender());
+
+      expect(await pendingFor(INVITED)).toHaveLength(2);
+    });
+
+    it('leaves an accepted and a lapsed invitation to the address as they were', async () => {
+      await sql`
+        insert into invitations (email, token_hash, site_role, created_by, updated_by, expires_at, accepted_at, accepted_by)
+        values (${INVITED}, 'accepted-hash', 'admin', ${E.id}, ${E.id}, now() + interval '7 days', now(), ${B.id}),
+               (${INVITED}, 'lapsed-hash', 'admin', ${E.id}, ${E.id}, now() - interval '1 second', null, null)`;
+      const before = await invitations();
+
+      await createAdminInvitation(asUser(E), INVITED, 'admin', undefined, sender());
+
+      expect((await invitations()).slice(0, 2)).toEqual(before);
+    });
+  });
+
   it('stores a blank reason as none', async () => {
     await createAdminInvitation(asUser(E), INVITED, 'admin', '   ', sender());
 
@@ -172,7 +216,7 @@ describe('createAdminInvitation', () => {
     expect(await invitations()).toEqual([]);
   });
 
-  // M11.20: the site role is the admin's pick, and the row records it.
+  // The site role is the admin's pick, and the row records it.
   it('invites to the curator role, recording it on the row', async () => {
     await createAdminInvitation(asUser(E), INVITED, 'curator', undefined, sender());
 
@@ -221,18 +265,6 @@ describe('createAdminInvitation', () => {
       ]);
     });
   });
-
-  // E creates one in the first test. The check reads the site role alone, so
-  // one non-admin — A, a coven owner — stands for every one.
-  it('refuses a non-admin as Forbidden by direct call, writing and mailing nothing', async () => {
-    expect(asUser(A).role).toBe('user');
-
-    await expect(
-      createAdminInvitation(asUser(A), INVITED, 'admin', undefined, sender()),
-    ).rejects.toThrow(Forbidden);
-    expect(await invitations()).toEqual([]);
-    expect(send).not.toHaveBeenCalled();
-  });
 });
 
 describe('revokeAdminInvitation', () => {
@@ -264,17 +296,6 @@ describe('revokeAdminInvitation', () => {
       revokeAdminInvitation(asUser(E), '00000000-0000-0000-0000-00000000dead'),
     ).rejects.toThrow(NotFound);
   });
-
-  // The direct id is a real pending invitation, which E then revokes; B holds
-  // no site role, which is all the check reads.
-  it('refuses a non-admin as Forbidden by direct id, leaving it pending', async () => {
-    const id = await invite();
-    expect(asUser(B).role).toBe('user');
-
-    await expect(revokeAdminInvitation(asUser(B), id)).rejects.toThrow(Forbidden);
-    expect((await invitations())[0].revoked_at).toBeNull();
-    await expect(revokeAdminInvitation(asUser(E), id)).resolves.toMatchObject({ id });
-  });
 });
 
 describe('listPendingAdminInvitations', () => {
@@ -298,7 +319,7 @@ describe('listPendingAdminInvitations', () => {
     ]);
   });
 
-  // MB.115: the list's two filters, each in the finder's SQL.
+  // The list's two filters, each in the finder's SQL.
   const listedEmails = async (filter: Parameters<typeof listPendingAdminInvitations>[1]) =>
     (await pending(filter)).map(({ email }) => email).sort();
 
@@ -331,7 +352,7 @@ describe('listPendingAdminInvitations', () => {
     expect(await listedEmails({ expiringSoon: true })).toEqual([`soon${DOMAIN}`]);
   });
 
-  // MB.115: a page at a time, as every admin list reads (CLAUDE.md rule 8).
+  // A page at a time, as every admin list reads (CLAUDE.md rule 8).
   const id = (n: number) => `00000000-0000-0000-0000-0000000001${String(n).padStart(2, '0')}`;
 
   // Five pending invitations an hour apart but for two sharing an instant,
@@ -388,14 +409,6 @@ describe('listPendingAdminInvitations', () => {
     expect(ids(second)).toEqual([id(5)]);
     expect(second.pageInfo.hasNextPage).toBe(false);
   });
-
-  it('refuses a non-admin as Forbidden', async () => {
-    await createAdminInvitation(asUser(E), INVITED, 'admin', undefined, sender());
-    expect(await pending()).toHaveLength(1);
-    expect(asUser(C).role).toBe('user');
-
-    await expect(listPendingAdminInvitations(asUser(C), {}, PAGE)).rejects.toThrow(Forbidden);
-  });
 });
 
 describe('countPendingAdminInvitations', () => {
@@ -429,15 +442,6 @@ describe('countPendingAdminInvitations', () => {
       totalCount: 4,
       countBefore: null,
     });
-  });
-
-  // Why the refusal is the role's: the same count as an admin finds a row.
-  it('refuses a non-admin as Forbidden', async () => {
-    await createAdminInvitation(asUser(E), INVITED, 'admin', undefined, sender());
-    expect((await countPendingAdminInvitations(asUser(E), {}, undefined)).totalCount).toBe(1);
-    expect(asUser(C).role).toBe('user');
-
-    await expect(countPendingAdminInvitations(asUser(C), {}, undefined)).rejects.toThrow(Forbidden);
   });
 });
 

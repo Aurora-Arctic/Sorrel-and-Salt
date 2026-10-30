@@ -18,28 +18,22 @@ import {
   withSql,
 } from './coven-ingredients';
 
-// Stories 12 and 13: what a coven's members read of its ingredients and its
-// grimoire, and who last touched a jar. Story 12 is still a scaffold: the
-// pages it walks are built in Waves 11 and 12, and the task named in its
-// annotation turns its `fixme` into `test` and makes it pass.
+// What a coven's members read of its ingredients and its grimoire, and who last touched a jar. The first flow
+// is a `fixme` until its annotated task builds the pages it walks.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-/**
- * The grimoire's list of spells (M10.11), named after its page as the
- * ingredient list is. The name is this spec's choice; M10.11 confirms it.
- */
+/** The grimoire's list of spells, named after its page as the ingredient list is. */
 function grimoireList(page: Page): Locator {
-  return page.getByRole('list', { name: 'Grimoire' });
+  return page.getByRole('list', { name: 'Spells' });
 }
 
 /**
- * Every control in the page's main region that starts a write, by the verb
- * its name opens with: Add Ingredient, New Spell, Edit Stock, Delete Coven,
- * Remove a member, Invite. Matched by verb rather than listed by name, so a
- * write control a later task adds under one of these verbs is caught too.
+ * Every control in the page's main region that starts a write, by the verb its name opens with: Add
+ * Ingredient, New Spell, Edit Stock, Delete Coven, Remove a member, Invite. Matched by verb, so a new write
+ * control under one of these verbs is caught too.
  */
 const WRITE_VERB = /^(Add|New|Create|Edit|Delete|Remove|Invite|Change|Make|Save)\b/;
 
@@ -51,10 +45,8 @@ function writeControls(page: Page): Locator {
 }
 
 /**
- * A field a member edits stock or a spell's visibility with; a viewer is offered none.
- * The filter form, FilterForm's `search` landmark, is left out: its In Stock switch and
- * the like change nothing stored, so a viewer gets them too (M9.7). `:not(search *)` leaves
- * out anything inside it and still counts the same field anywhere else in `main`.
+ * A field a member edits stock or a spell's visibility with; a viewer is offered none. The filter form (the
+ * `search` landmark) is left out, since its switches change nothing stored; `:not(search *)` skips it.
  */
 function editingFields(page: Page): Locator {
   const main = page.getByRole('main');
@@ -66,16 +58,9 @@ function editingFields(page: Page): Locator {
     .or(main.getByLabel('Visibility').and(outsideFilter));
 }
 
-test.fixme(
+test(
   'a viewer reads the ingredients and the grimoire a member reads, and is offered no write and refused every one',
-  {
-    tag: '@story-12',
-    annotation: {
-      type: 'fixme',
-      description:
-        'M9.6 builds /coven/[slug]/ingredients and M10.11 /coven/[slug]/grimoire; the later of the two turns this on',
-    },
-  },
+  { tag: '@story-12' },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Twelve', 'story-12.test', {
       A: 'owner',
@@ -94,7 +79,14 @@ test.fixme(
       );
       const rosemary = await compendiumVariant(sql, 'Rosemary', 'Herb');
       await insertStock(sql, coven.id, rosemary, { quantity: 20, unit: 'g', threshold: 10 }, B);
-      const spellId = await insertSpell(sql, coven.id, 'Fixture Working', 'workspace', B);
+      const spellId = await insertSpell(
+        sql,
+        coven.id,
+        'Fixture Working',
+        'workspace',
+        B,
+        'complete',
+      );
       return { testwort, stockId, spellId };
     });
     const ingredientsPath = `/coven/${coven.slug}/ingredients`;
@@ -155,18 +147,18 @@ test.fixme(
     });
 
     await test.step('the viewer is refused at every write address', async () => {
-      // The people pages answer a viewer as a stranger (tests/e2e/coven.spec.ts),
-      // and so does the spell builder's address (M10.12): a page the viewer
-      // could only write through. There is no edit address for an ingredient
-      // row: M9.9 edits it in place and M8.17's modal opens from the row.
-      for (const path of [
-        `/coven/${coven.slug}/invitations`,
-        `/coven/${coven.slug}/members`,
-        `/coven/${coven.slug}/grimoire/new`,
-      ]) {
+      // The people pages answer a viewer as a stranger (tests/e2e/coven.spec.ts).
+      // There is no edit address for an ingredient row: stock is edited in place
+      // and the edit modal opens from the row.
+      for (const path of [`/coven/${coven.slug}/invitations`, `/coven/${coven.slug}/members`]) {
         const response = await page.goto(path);
         expect(response?.status(), path).toBe(404);
       }
+      // The spell builder is a dialog over the grimoire: its address
+      // shows a viewer the grimoire, and no dialog.
+      await page.goto(`/coven/${coven.slug}/grimoire?new=spell-${coven.slug}`);
+      await expect(page.getByRole('heading', { name: 'Grimoire' })).toBeVisible();
+      await expect(page.getByRole('dialog')).toHaveCount(0);
     });
 
     await test.step('every write sent straight to /api/graphql is refused, with nothing changed', async () => {
@@ -185,8 +177,7 @@ test.fixme(
           'mutation ($w: ID!, $id: ID!) { deleteIngredient(workspaceId: $w, id: $id) }',
           { w: coven.id, id: testwort.ingredientId },
         ],
-        // M9.4's stock removal, named by M9.10; its arguments are this
-        // spec's guess after deleteIngredient's, for M9.4 to confirm.
+        // The stock removal; its arguments follow deleteIngredient's.
         [
           'mutation ($w: ID!, $id: ID!) { deleteStock(workspaceId: $w, id: $id) }',
           { w: coven.id, id: stockId },
@@ -202,6 +193,43 @@ test.fixme(
         [
           'mutation ($w: ID!, $u: ID!) { updateMemberRole(workspaceId: $w, userId: $u, role: viewer) { role } }',
           { w: coven.id, u: B },
+        ],
+        ['mutation ($w: ID!) { createSpell(workspaceId: $w, input: {}) { id } }', { w: coven.id }],
+        [
+          'mutation ($w: ID!, $s: ID!) { recordWorking(workspaceId: $w, spellId: $s, input: { workedOn: "2026-10-01" }) { id } }',
+          { w: coven.id, s: spellId },
+        ],
+        // A folk-name change rides on the ingredient's own save, so it takes the ingredient's gate.
+        [
+          'mutation ($w: ID!, $id: ID!, $input: IngredientUpdateInput!) { updateIngredient(workspaceId: $w, id: $id, input: $input) { id } }',
+          {
+            w: coven.id,
+            id: testwort.ingredientId,
+            input: {
+              name: 'Testwort',
+              canonicalName: '',
+              nomenclature: 'none',
+              folkNames: ['Changed Root'],
+              categoryIds: [],
+              celestialBodies: [],
+              colors: [],
+              deities: [],
+              description: '',
+              elements: [],
+              references: [],
+              safetyNotes: '',
+              substitutes: [],
+              toxic: false,
+              variants: [],
+              zodiacSigns: [],
+            },
+          },
+        ],
+        [
+          'mutation ($w: ID!, $i: ID!) { saveStock(workspaceId: $w, ingredientId: $i, input: { create: [], update: [{ id: "' +
+            stockId +
+            '", input: { quantityOnHand: 99 } }], delete: [] }) { id } }',
+          { w: coven.id, i: testwort.ingredientId },
         ],
         ['mutation ($w: ID!) { deleteWorkspace(workspaceId: $w) }', { w: coven.id }],
       ];
@@ -233,6 +261,14 @@ test.fixme(
           [B]: 'member',
           [C]: 'viewer',
         });
+        const folkNames = await sql`
+          select name from ingredient_folk_names
+          where ingredient_id = ${testwort.ingredientId} and deleted_at is null`;
+        expect(folkNames.map((row) => row.name)).toEqual(['Fixture Root']);
+        const workings = await sql`select id from spell_workings where spell_id = ${spellId}`;
+        expect(workings).toHaveLength(0);
+        const spells = await sql`select id from spells where workspace_id = ${coven.id}`;
+        expect(spells).toHaveLength(1);
         const [workspace] = await sql`select deleted_at from workspaces where id = ${coven.id}`;
         expect(workspace.deleted_at).toBeNull();
       });
@@ -266,7 +302,7 @@ test(
     };
 
     await test.step('before the edit the card names A, who wrote the entry and its jar', async () => {
-      // Why this is story 13's case: the answer must move when B edits.
+      // The answer must move when B edits.
       await signInAgainAs(page, B);
       await page.goto(path);
       await expect(row).toContainText('Fixture A');
@@ -302,11 +338,9 @@ test(
 );
 
 /**
- * The card's `<time>` stands for `at`, the jar's own `updated_at`, to the
- * second: the attribute may drop the database's microseconds. The server's
- * HTML holds the short absolute date alone, and the browser swaps it for the
- * relative phrase once the page has loaded (M6.18); the full sentence is the tip. The server's HTML is
- * fetched from inside the page, so the request carries the page's session.
+ * The card's `<time>` stands for `at`, the jar's own `updated_at`, to the second (the attribute may drop the
+ * microseconds). The server's HTML holds the short absolute date, which the browser swaps for the relative
+ * phrase on load; it is fetched from inside the page so the request carries its session.
  */
 async function expectEditedAt(row: Locator, at: Date) {
   const time = editedAt(row);

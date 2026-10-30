@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ShellContext } from '@/lib/types';
 
-// The public frame's layout (MB.83): the session decides which chrome, and
+// The public frame's layout: the session decides which chrome, and
 // nothing here may redirect. The viewer read is mocked (tests/lib/viewer.test.ts
 // has it); AppShell's client parts are stood in for.
 

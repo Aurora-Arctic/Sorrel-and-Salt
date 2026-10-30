@@ -1,0 +1,126 @@
+@use './variables' as *;
+@use './mixins' as *;
+@use './recipe-columns' as *;
+
+// The one print stylesheet: the spell recipe page, the only view with print rules. Every rule
+// but the sheet's margin sits behind `:has(.spell-recipe)`, the page's own article, so no other
+// page prints differently; the Quick Look modal draws only the body and has no such article. A
+// browser without `:has()` simply prints the screen layout.
+
+// Every page's sheet margin, which the recipe's content width is worked out from (_variables.scss).
+// stylelint-disable-next-line plugin/use-baseline -- enhancement: a browser without `@page` prints with its own default margin, and the article is capped at the same content width either way
+@page {
+  margin: $print-page-margin;
+}
+
+// The recipe's sheet is A4, named so other pages print on the reader's own paper.
+// stylelint-disable-next-line plugin/use-baseline -- enhancement: a browser without named pages prints the recipe on its default sheet
+@page recipe {
+  size: a4;
+}
+
+@media print {
+  // Paper is light whatever the theme: the light tokens, so text is dark on white.
+  html:has(.spell-recipe) {
+    @include theme-light;
+
+    font-size: $print-root;
+    scroll-padding: 0;
+  }
+
+  // White paper, which a printer leaves bare, rather than the screen's ground.
+  body:has(.spell-recipe) {
+    // stylelint-disable-next-line plugin/use-baseline -- enhancement: a browser without named pages prints on its default sheet
+    page: recipe;
+    background: none;
+    color: $text-primary;
+
+    // Chrome that does nothing on paper. The Draft and Private badges stay in the head, so a printed
+    // draft is not taken for a finished spell; the Edited line goes.
+    .backdrop,
+    .skip-link,
+    .skip-target,
+    .app-shell__bar,
+    .section-nav,
+    .page-nav,
+    .spell-recipe__bar,
+    .spell-recipe__actions,
+    .spell-recipe__aside,
+    .spell-workings,
+    .last-edit,
+    .icon-tip__look,
+    [role='dialog'],
+    [role='tooltip'] {
+      display: none !important;
+    }
+
+    .app-shell__main {
+      padding: 0;
+    }
+
+    // The sheet's content width: what the paper gives, stated so a print emulation on a wide
+    // window lays the text out as the paper does.
+    .spell-recipe {
+      max-width: $print-content-width;
+      margin: 0;
+      padding: 0;
+    }
+
+    .spell-recipe > * {
+      max-width: none !important;
+    }
+
+    // The coven's name stands as plain text with nothing under it: no box, no chevron, no ground,
+    // no rule. The section nav beside it is gone, so the divider that told them apart goes too.
+    .context-row {
+      border-bottom: 0;
+      background: none;
+    }
+
+    .context-row__lead {
+      padding-right: 0;
+      margin-right: 0;
+
+      &::after {
+        content: none;
+      }
+    }
+
+    .workspace-switcher {
+      .input.combobox__control {
+        padding-inline: 0;
+        border-color: transparent;
+        border-width: 0;
+        background: none;
+      }
+
+      .combobox__indicators {
+        display: none;
+      }
+    }
+
+    // Two columns under a head that runs across, the layout the Spell Preview pane shares
+    // (_recipe-columns.scss).
+    .spell-recipe {
+      @include recipe-columns;
+    }
+
+    // A step's line at the body's size: the screen's caption size is too small for paper. It stays
+    // muted, under the amount and name.
+    .spell-recipe__steps .step-row__body,
+    .spell-recipe__steps .step-row__note .meta {
+      font-size: type-size('body');
+    }
+
+    // A step or a heading is not split across pages.
+    .step-row,
+    .spell-recipe__summary li {
+      break-inside: avoid;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+  }
+}

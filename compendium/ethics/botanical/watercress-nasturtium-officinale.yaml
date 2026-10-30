@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/watercress-nasturtium-officinale
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Nasturtium officinale
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-nasturtium-officinale
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Nasturtium officinale", 2020'

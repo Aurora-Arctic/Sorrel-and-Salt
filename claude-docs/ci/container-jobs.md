@@ -29,6 +29,7 @@ visible from the step that depends on them.
   workspace-relative log file, cache path or `--outputFile` resolves against
   the wrong one.
 
-**`checks.yml`'s `name: ${{ matrix.name }}` is load-bearing too.** Without it
-every leg reports as `checks / check (lint)` rather than `checks / lint` — the
-matrix's generated job name, not the leg's.
+**Each `checks.yml` job's `name:` is load-bearing too.** The job id and `name:`
+are both the check's name (`lint`, `format`, …), so the check reports as
+`checks / lint`. A job without `name:` would report its id, and a job
+renamed would strand a required check under the old name.

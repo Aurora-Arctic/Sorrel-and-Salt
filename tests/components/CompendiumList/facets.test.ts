@@ -9,7 +9,7 @@ import type { CompendiumFacets, WorkspaceIngredientFacets } from '@/modules/ingr
 
 // The service's counts name a deity or a category by id and a form by its
 // spelling; the list's props name them by what the address and a chip carry
-// (M12.4). Plain maps stand in for the vocabularies the page reads.
+// . Plain maps stand in for the vocabularies the page reads.
 const GROUP = { id: 'g-1', name: 'Fixture Wards', colorDark: '#4e8bc2', colorLight: '#0c5393' };
 const WARD: CompendiumCategoryChoice = {
   id: 'c-1',
@@ -47,6 +47,7 @@ const EMPTY: CompendiumFacets = {
   toxic: [],
   withoutReferences: 0,
   withoutForms: 0,
+  reviewed: null,
 };
 
 describe('the facet counts as the list takes them', () => {
@@ -102,7 +103,7 @@ describe('the facet counts as the list takes them', () => {
     ]);
   });
 
-  // M12.52: the service sorts every list in SQL, so the list keeps the order
+  // The service sorts every list in SQL, so the list keeps the order
   // it is given. Each input below is in neither count order nor label order,
   // so a re-sort by either would read differently.
   it('keeps forms, deities and categories in the order given, whatever their counts and labels', () => {
@@ -202,9 +203,27 @@ describe('the facet counts as the list takes them', () => {
     expect(counts.withoutReferences).toBe(7);
     expect(counts.withoutForms).toBe(5);
   });
+
+  it('names both review settings with their counts for a curator, and leaves the strip off without them', () => {
+    const counts = compendiumFacetCounts(
+      {
+        ...EMPTY,
+        reviewed: [
+          { value: 'reviewed', count: 2 },
+          { value: 'needs_review', count: 0 },
+        ],
+      },
+      VOCABULARIES,
+    );
+    expect(counts.reviewed).toEqual([
+      { value: 'reviewed', label: 'Reviewed', count: 2 },
+      { value: 'needs_review', label: 'Needs Review', count: 0 },
+    ]);
+    expect(compendiumFacetCounts(EMPTY, VOCABULARIES)).not.toHaveProperty('reviewed');
+  });
 });
 
-describe("a coven's facet counts as its panel takes them (M9.7)", () => {
+describe("a coven's facet counts as its panel takes them", () => {
   const covenCounts: WorkspaceIngredientFacets = {
     ...EMPTY,
     source: [

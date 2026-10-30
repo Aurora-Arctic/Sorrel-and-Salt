@@ -47,8 +47,14 @@ well would be a second copy to keep equal.
 - **While `pending` the sentence is typed in its place.** The lead reads "Searching
   for ingredients", the term and the clauses are typed after it, and the clauses
   slide open beneath. The old line is backspaced first (about half a second at
-  most), keeping the term if it did not change. The whole typed line is `aria-hidden`
-  and `inert`, so it is neither read nor focusable.
+  most), keeping the term if it did not change; a changed term is backspaced with
+  the rest and the new one typed a character at a time (MB.270). The props already
+  name the new search when `pending` rises (the list reads it from the address being
+  opened), so the old line is the one last on screen: the settled sentence the
+  component kept, or the typed line if a search starts before the last one has
+  settled. The edge is read before paint, so the new search never shows for a frame
+  first. The whole typed line is `aria-hidden` and `inert`, so it is neither read
+  nor focusable.
 - **On return** the lead is backspaced to "N ingredients" at the normal pace and the
   clauses still to type finish at four characters a tick (a fast search). The finished
   sentence is held for a second, then the clauses slide up into the closed line. Its
@@ -58,7 +64,8 @@ well would be a second copy to keep equal.
   links. The typed line is not announced, because announcing every character would
   be noise (WCAG 4.1.3, Status Messages).
 - **Reduced motion** turns the typing and the slide off: the line snaps to the
-  finished sentence and shuts, with no hold.
+  finished sentence and shuts, with no hold. A changed term switches straight to the
+  new one, never shown in part.
 - The chevron turns with `disclosure-chevron` and fades by opacity
   as a search starts and ends, so it never pops in or out.
 
@@ -68,3 +75,13 @@ well would be a second copy to keep equal.
 | ----------- | ------------------------------------------------------------------------------ |
 | `parts.ts`  | Cuts the fragments into the lead, the term and the clauses                     |
 | `typing.ts` | The editing: one character an edit towards a goal, and the animation's timings |
+
+## The sentence and its loading animation
+
+The sentence above a list says what the list is searching for. Settled, it is one closed line such as "12 ingredients matching rue", which opens to the clauses beneath it.
+
+While a search is on its way, the whole sentence is typed out in place as the loading animation. The count reads "Searching for ingredients" until the result returns, then is backspaced to the real count. The clauses finish typing, are held for a moment, and slide up into the closed line. The typed line is hidden from assistive technology, and a status region is given the finished sentence once, when the search returns.
+
+## Stories
+
+`src/components/SearchSentence/index.stories.tsx`, titled "Ingredients / Search Sentence": `States`, with the states Settled (one closed line), Slow Search (results after four seconds), Fast Search (results before the clauses finish typing) and Nothing To Open (a search term and no filter, so a plain line). Each starts its own search on load; New Search and Search Again start another.

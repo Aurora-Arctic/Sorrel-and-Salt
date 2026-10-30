@@ -2,7 +2,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { findManyInSpell, findOneSpell } from '@/db/repository';
 import { spellCategories } from '@/modules/grimoire/schema/spell-categories';
-import { spellIngredients } from '@/modules/grimoire/schema/spell-ingredients';
+import { spellSteps } from '@/modules/grimoire/schema/spell-steps';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden, NotFound } from '@/lib/errors';
 import type { Session } from '@/lib/session';
@@ -21,28 +21,9 @@ import { insertStock } from '../support/db/insert-stock';
 import { variantIdOf } from '../support/db/read-variants';
 import { makeIngredient, makeSpell, variantInput } from '../support/fixtures';
 
-// Story 19 — an outsider and a site admin both refused a coven's ingredients
-// and grimoire, by direct id and on every write, with a refusal that hands
-// neither of them the one bit rule 4 already withholds: whether the row is
-// even there. `tests/acceptance/README.md` names this file rather than a
-// `describe('Story 19: …')` block, that naming convention being
-// `tests/acceptance/`'s own.
-//
-// This is the per-entity sweep: every entity a coven holds, reached the way a
-// caller reaches it — an ingredient through the ingredients service
-// (getWorkspaceIngredient, updateWorkspaceIngredient), a jar of stock through
-// the stock service (getStock, updateStock), a spell's one write
-// through setSpellVisibility, and the grimoire's reads, which have no service
-// yet, through the repository's finders under a real Membership. The rule
-// behind each refusal is its service's, proved there by direct id for every
-// role (tests/modules/*/services/), and the Membership mechanism is
-// tests/db/repository/finders.test.ts's, once per finder family; what only
-// this file holds is the sweep itself, and the refusal that is the same for a
-// real id and a made-up one.
-//
-// Every actor below reaches for **W**, owned by A and worked in by B and C.
-// **D**'s own workspace is X — a real membership, just the wrong one — and
-// **E** is a site admin who belongs to none; neither buys a byte of W.
+// An outsider and a site admin are both refused a coven's ingredients and grimoire, by direct id and on every write, without learning whether the row exists (rule 4).
+// This is the per-entity sweep; each rule behind a refusal is its service's, and the Membership mechanism is tests/db/repository/finders.test.ts's.
+// Actors reach for **W** (owned by A, worked in by B and C); **D**'s own workspace is X and **E** is a site admin in none: neither buys a byte of W.
 
 let sql: ReturnType<typeof postgres>;
 
@@ -244,9 +225,9 @@ describe('Grimoire — the spell and what it is made of', () => {
     });
   });
 
-  describe('spell_ingredients and spell_categories, by direct spell id', () => {
+  describe('spell_steps and spell_categories, by direct spell id', () => {
     const JOIN_TABLES = [
-      { label: 'spell_ingredients', table: spellIngredients },
+      { label: 'spell_steps', table: spellSteps },
       { label: 'spell_categories', table: spellCategories },
     ] as const;
 
@@ -265,7 +246,9 @@ describe('Grimoire — the spell and what it is made of', () => {
     }
   });
 
-  describe('writes, through the one grimoire service that exists (setSpellVisibility)', () => {
+  // One grimoire write stands for the rest here; each grimoire service's own
+  // cross-coven refusals are in tests/modules/grimoire/services/.
+  describe('writes, through a grimoire service (setSpellVisibility)', () => {
     it('throws Forbidden for D rather than widening the spell', async () => {
       const spellId = await seedSpell();
 
@@ -293,13 +276,8 @@ describe('Grimoire — the spell and what it is made of', () => {
   });
 });
 
-// The compendium's writes check the site role alone (`assertSiteAdmin`), so
-// what has to hold beside them is that `assertMembership` neither
-// special-cases nor penalizes the admin role (membership.ts, "A site admin
-// gets no bypass"): E's refusal of each entity is the ordinary stranger's
-// refusal, and nothing about it can regress a capability checked on
-// `session.role`. Each service proves E's refusal once too; this is the sweep.
-// F, the curator (M11.20), is held to the same: curating buys no coven either.
+// The compendium's writes check the site role alone, so `assertMembership` must neither special-case nor penalize the admin role (membership.ts, "A site admin gets no bypass").
+// E's refusal of each entity is the ordinary stranger's, and F, the curator, is held to the same: curating buys no coven.
 describe('E’s and F’s site roles carry no bypass and no penalty from the membership check', () => {
   const stranger = asUser({ id: '00000000-0000-0000-0000-0000000000fe', role: 'user' });
 
@@ -320,7 +298,8 @@ describe('E’s and F’s site roles carry no bypass and no penalty from the mem
       (session, { stockId }) =>
         updateStock(session, WORKSPACE_W_ID, stockId, { quantityOnHand: 0 }),
     ],
-    // The grimoire's reads have no service yet: the proof is what they take.
+    // The proof the grimoire's reads take; readSpell and listGrimoire refuse D
+    // themselves in tests/modules/grimoire/services/spell-reads.test.ts.
     [
       'the proof W’s spells are read under',
       (session) => assertMembership(session, WORKSPACE_W_ID, { spell: ['read'] }),
@@ -370,9 +349,8 @@ describe('E’s and F’s site roles carry no bypass and no penalty from the mem
     },
   );
 
-  // Both halves of story 19 as narrowed in M9.19 sit in one test, so it fails
-  // if either changes: the admin may read which covens a user is in, and may
-  // still not read what those covens hold.
+  // Both halves sit in one test, so it fails if either changes: the admin may read which covens a user
+  // is in, and may still not read what those covens hold.
   it('lets E list D’s covens by name and role while refusing X’s ingredients by direct id', async () => {
     const ingredientId = await insertIngredient(
       sql,

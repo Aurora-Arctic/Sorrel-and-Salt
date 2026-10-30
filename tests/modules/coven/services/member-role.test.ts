@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest';
+import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
+import { findWorkspaceRole } from '@/db/repository';
 import { Forbidden } from '@/lib/errors';
 import { LastOwner, updateMemberRole } from '@/modules/coven';
 import { A, B, C, D, asUser } from '../../../support/as-user';
@@ -7,7 +9,7 @@ import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 
 useRawClient();
 
-// Changing a member's role (M9.14): owners only, any move between the three
+// Changing a member's role: owners only, any move between the three
 // roles, an existing member's row and nothing else.
 
 type Role = 'owner' | 'member' | 'viewer';
@@ -138,5 +140,20 @@ describe('updateMemberRole', () => {
       where workspace_id = ${covenId} and user_id = ${B.id}`;
     expect((row.joined_at as Date).toISOString()).toBe('2020-01-01T00:00:00.000Z');
     expect(row.updated_by).toBe(A.id);
+  });
+  it('refuses to re-role the system user, though another owner exists', async () => {
+    const covenId = await insertCoven('Fixture System Seat Coven', [
+      [A.id, 'owner'],
+      [BOOTSTRAP_USER_ID, 'owner'],
+    ]);
+    // Why the refusal is the system-seat rule's: A also owns the coven, so the last-owner guard alone would let this through.
+    await expect(findWorkspaceRole(A.id, covenId)).resolves.toBe('owner');
+    await expect(findWorkspaceRole(BOOTSTRAP_USER_ID, covenId)).resolves.toBe('owner');
+
+    await expect(updateMemberRole(asUser(A), covenId, BOOTSTRAP_USER_ID, 'viewer')).rejects.toThrow(
+      "The system user's seat can't be changed.",
+    );
+
+    expect(await roleOf(covenId, BOOTSTRAP_USER_ID)).toBe('owner');
   });
 });

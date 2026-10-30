@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { ReactElement } from 'react';
+import PageHeader from '../PageHeader';
 import type { WelcomeProps } from './types';
 import './index.scss';
 
@@ -10,13 +11,10 @@ import './index.scss';
 
 const Welcome = ({ landing }: WelcomeProps): ReactElement => (
   <div className="welcome">
-    <div className="header">
-      <h1 className="welcome__title">Sorrel &amp; Salt</h1>
-      <p className="welcome__lede lede">
-        A shared grimoire for a coven or a household: a compendium of ingredients, the stock you
-        keep, and the spells you make from it.
-      </p>
-    </div>
+    <PageHeader
+      title="Sorrel & Salt"
+      lede="A shared grimoire for a coven or a household: a compendium of ingredients, the stock you keep, and the spells you make from it."
+    />
     <p className="welcome__gate">
       Sorrel &amp; Salt is invite-only. Signing in gives you an account, but you need an invitation
       from someone who already uses it to get in.
@@ -31,7 +29,7 @@ const Welcome = ({ landing }: WelcomeProps): ReactElement => (
           Sign In
         </Link>
       )}
-      {/* The compendium is public (MB.80), so it is offered to everyone. */}
+      {/* The compendium is public, so it is offered to everyone. */}
       <Link className="btn btn--quiet" href="/compendium">
         Browse the Compendium
       </Link>

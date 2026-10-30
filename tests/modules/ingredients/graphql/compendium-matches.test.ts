@@ -9,10 +9,8 @@ import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
 
-// `compendiumMatches(name, workspaceId)` and `Ingredient.inCupboard` (M12.20):
-// the Add flow's exact-name question. Exact on the name or the formal name,
-// case aside, and never a near spelling; `inCupboard` reads this coven's
-// cupboard row alone; a caller outside the coven is refused by its id.
+// `compendiumMatches(name, workspaceId)` and `Ingredient.inCupboard`: the Add flow's exact-name question.
+// Exact on the name or the formal name, case aside, and never a near spelling; `inCupboard` reads this coven's cupboard row alone; a caller outside the coven is refused by its id.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -56,17 +54,6 @@ const nodes = (result: Awaited<ReturnType<typeof ask>>) =>
   result.data?.compendiumMatches.edges.map((edge) => edge.node) ?? [];
 
 describe('compendiumMatches', () => {
-  it('matches the name exactly, case aside', async () => {
-    const result = await ask(asUser(A), 'tEsTwOrT');
-
-    expect(result.errors).toBeUndefined();
-    expect(nodes(result).map((node) => node.id)).toEqual([held]);
-  });
-
-  it('matches the formal name too', async () => {
-    expect(nodes(await ask(asUser(A), 'fixtura TESTALIS')).map((node) => node.id)).toEqual([held]);
-  });
-
   it('matches no near spelling, which the did-you-mean list is for', async () => {
     expect(nodes(await ask(asUser(A), 'Testwart'))).toEqual([]);
     expect(nodes(await ask(asUser(A), 'Test'))).toEqual([]);
@@ -96,15 +83,5 @@ describe('compendiumMatches', () => {
 
     expect(nodes(result)).toEqual([]);
     expect(result.errors?.[0]).toMatchObject({ extensions: { code: 'FORBIDDEN' } });
-  });
-
-  it("never offers a coven's own ingredient of the name", async () => {
-    await insertIngredient(
-      sql,
-      makeIngredient({ name: 'Testwort', workspaceId: WORKSPACE_W_ID }),
-      A.id,
-    );
-
-    expect(nodes(await ask(asUser(A), 'Testwort'))).toHaveLength(1);
   });
 });

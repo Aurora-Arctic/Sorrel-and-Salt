@@ -4,7 +4,7 @@ import { sessionOf } from '../../../graphql/context-helpers';
 import { createInvitation, revokeWorkspaceInvitation } from '../services/invitations';
 import { WorkspaceRef } from './workspace';
 
-// The workspace tier of `Invitation` (M7.3): the fields `identity` cannot
+// The workspace tier of `Invitation`: the fields `identity` cannot
 // name, and the mutation that makes one. No field carries the token or a
 // link: the token exists only in the mail (claude-docs/db/invitations.md,
 // "Inviting into a coven").

@@ -110,23 +110,17 @@ component's stylesheet only when it draws the component.
 - **The index** lists each section's pages in a column without bullets, a
   link over its line in the muted ink, the line capped at `$measure`, since
   it is not a `<p>`.
+- **Its links are in the body ink (`$text-primary`), followed or not**, with
+  the accent on hover as every link has: the list reads as a table of
+  contents, and the default link colours would make the admin and coven
+  overviews differ by the browser's history.
 
 The nav sits in the layout's context row, led by "Admin", above the page's
 frame, the `.page-column` primitive (`styling.md`, "The page column").
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/AdminNav/index.stories.tsx),
-`Admin / Admin Nav`: `Default`, the row; `Phone` at 375px, the bottom bar; and
-`IndexPage` with `IndexPagePhone`, the `/admin` index under the nav, its
-heading and lede copied from the page and `AdminContents` real. `Curator` and `IndexPageCurator` show the same for a curator, with no People (M11.20). Each sits in
-the admin layout as it is, through the workshop's `AdminFrame`
-([`workshop.md`](../workshop.md), ".ladle/"): the context row led by "Admin"
-with the nav in it, above the `.page-column` column that holds the page. The
-tablet and More shapes are [`SectionNav`](section-nav.md)'s stories. The
-workshop's `usePathname` stub answers `/admin/users`, the People page's Users
-tab, so People is current in every story. Render-only, no test ids, no
-snapshots.
+[`index.stories.tsx`](../../src/components/AdminNav/index.stories.tsx), `Admin / Nav`: `States` has a control that chooses People Current, Categories Current, Astrology Current, Invitations Current, Curator (no People, M11.20), Index Page (the `/admin` index under the nav, inside the app shell's bar, its heading and lede copied from the page and `AdminContents` real) and Index Page Curator. `NarrowPinned` is the row at a phone's width. Each sits in the admin layout as it is, through the workshop's `AdminFrame` ([`workshop.md`](../workshop.md), ".storybook/"): the context row led by "Admin" with the nav in it, above the `.page-column` column that holds the page. The tablet and More shapes are [`SectionNav`](section-nav.md)'s stories. Render-only, no test ids, no snapshots.
 
 ## Testing
 
@@ -140,3 +134,15 @@ which width is presentation, the workshop's and the browser's.
 `tests/app/(shell)/admin/layout.test.tsx` checks the layout renders the nav only
 once the curator guard resolves, and sets `managesPeople` by role, and that the index links every page the nav does,
 in its order. `tests/e2e/admin.spec.ts` checks that an admin sees the nav, a curator sees it without People, and a non-admin's 403 page carries none of it.
+
+## Where the nav is drawn
+
+The `/admin` layout's nav sits in the context row beside the word Admin and, on a phone, in the bottom bar. It lists every admin page, in the sections the `/admin` index's table of contents shows too. It renders only inside the guarded layout, so only a curator or an admin sees it, and People only an admin. A page is linked at its first tab and is current on any of its tabs. The first page of each section after the first starts a group, which the row sets apart by a hairline.
+
+## One list of pages
+
+`sections.ts` holds every admin page, its tabs and its section. The nav, the `/admin` index and each tabbed page's layout all read it, so the three cannot drift. A list shares its page with the group list that organises it, a tab each, as Category Groups organise Categories. A vocabulary's tab is built from its kind table (`GroupList/kinds.ts`, `GroupedValueList/kinds.ts`), which holds its address. The other addresses are checked against the built routes (`typedRoutes`). A tab marked `filtered` opens with a filter, which its loading skeleton draws.
+
+## The wait for an admin page
+
+`target.ts` says what each admin page draws while it is on its way, keyed by the address the nav and the index link it at, its first tab. The admin area has its own body under its context row, so every wait belongs to the `admin` region and the row with its nav stays. The wait is the page that arrives: its heading, the action at the heading's end, its filter row, then the list. The index is sections of links and draws its own heading. A tabbed page draws its tab row between the heading and the action. The Compendium has one tab and so no row.

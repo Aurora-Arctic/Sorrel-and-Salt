@@ -9,6 +9,7 @@ import {
 } from '@/modules/identity';
 import EmailForm from '../../../components/EmailForm';
 import NameForm from '../../../components/NameForm';
+import PageHeader from '../../../components/PageHeader';
 import PageNav from '../../../components/PageNav';
 import ReceivedInvitations from '../../../components/ReceivedInvitations';
 import SignInMethods from '../../../components/SignInMethods';
@@ -23,20 +24,12 @@ import { configuredProviders } from '../../../lib/social-providers-config';
 import type { AccountPageProps } from './types';
 
 export const metadata: Metadata = {
-  title: 'Your Account — Sorrel & Salt',
+  title: 'Your Account',
 };
 
-// The one account page (MB.88): the name the site shows, the address it
-// writes to, the ways in, and the coven invitations waiting for that address
-// (M10.32), each a section on its own panel under its own
-// heading, reached from a nav of jump links: a column to the left of the sections on a
-// wide screen, a menu above them on a phone (the owner's calls, MB.88, MB.116
-// and MB.7). Sign Out is the shell's account menu's, not this page's. The page owns all four heads, so each section is a
-// region named by its heading. The ids are prefixed so no form's own id can
-// meet them. A link to add a provider lands back here, with `?error=` and
-// `?provider=` when it failed (claude-docs/auth/admin-bootstrap.md, "The
-// account page"). An unverified account never reaches it: `requireSession()`
-// sends it to the email page.
+// The one account page: name, address, ways in and waiting coven invitations, each its own section
+// under its own heading, with ids prefixed so no form's id meets them. A failed provider link returns
+// with `?error=` and `?provider=` (claude-docs/auth/admin-bootstrap.md, "The account page").
 export default async function AccountPage({ searchParams }: AccountPageProps) {
   const [session, params] = await Promise.all([requireSession(), searchParams]);
   const { after, before } = readPageCursors(params);
@@ -65,7 +58,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
 
   return (
     <main className="page-frame page-frame--narrow page-with-nav">
-      <h1>Your Account</h1>
+      <PageHeader title="Your Account" />
       <PageNav
         label="On This Page"
         entries={[
@@ -134,7 +127,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           <p className="lede">Covens that have invited this email address to join them.</p>
         </div>
         {/* The list is drawn even with no rows, so its own empty line is
-            live: the section is always on the page (M10.32). */}
+            live: the section is always on the page. */}
         <ReceivedInvitations
           invitations={invitations.edges.map(({ node }) => node)}
           position={invitations.position}

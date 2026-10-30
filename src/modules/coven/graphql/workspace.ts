@@ -8,6 +8,7 @@ import { updateMemberRole } from '../services/member-role';
 import { listMembers } from '../services/members';
 import { createWorkspace } from '../services/workspace-creation';
 import { deleteWorkspace } from '../services/workspace-deletion';
+import { workspaceById } from '../services/workspace-by-id';
 import type { MembershipWithWorkspace, WorkspaceRow } from '../types';
 
 const WorkspaceRoleEnum = builder.enumType('WorkspaceRole', {
@@ -40,7 +41,7 @@ export const WorkspaceMemberRef = builder
         nullable: true,
         resolve: (member) => (member.invitedBy ? { id: member.invitedBy } : null),
       }),
-      // The owner's alone (M11.19), on a field of its own rather than on
+      // The owner's alone, on a field of its own rather than on
       // `user`, a `CoMember` every member reads. Through `memberEmailsByMember`,
       // one read per page of members; anyone else gets `FORBIDDEN`.
       email: t.field({
@@ -60,19 +61,34 @@ export const WorkspaceMemberRef = builder
 
 // Here rather than in `WorkspaceRef`'s own fields, which are built before
 // `WorkspaceMemberRef` exists. A coven at a time: the service checks
-// `member: read` and reads one page (M6.11).
+// `member: read` and reads one page, narrowed by `query` when given.
 builder.objectField(WorkspaceRef, 'members', (t) =>
   t.pagedConnection({
     type: WorkspaceMemberRef,
     description:
-      "The coven's live members, in the order they joined, for the roles that may read them.",
-    resolve: (workspace, _args, page, context) => listMembers(sessionOf(context), workspace, page),
+      "The coven's live members, in the order they joined, for the roles that may read them: those whose name holds `query`, case-insensitively, when given.",
+    args: { query: t.arg.string({ required: false }) },
+    resolve: (workspace, { query }, page, context) =>
+      listMembers(sessionOf(context), workspace, page, query ?? undefined),
+  }),
+);
+
+// A coven by the id a page gave the browser, for the fields it reads afterwards (its members,
+// when a dialog opens). The service asks only for a seat; each field asks for its own permission.
+builder.queryField('workspace', (t) =>
+  t.field({
+    type: WorkspaceRef,
+    description:
+      'A coven the caller sits in, by id. Refused alike for a stranger and an id no coven holds.',
+    args: { id: t.arg.id({ required: true }) },
+    authScopes: { signedIn: true },
+    resolve: (_root, { id }, context) => workspaceById(sessionOf(context), id),
   }),
 );
 
 // On `User` from here rather than in identity, which may import no module.
-// A caller reads their own; a site admin reads anyone's, by name and role only
-// (M9.19), and the service answers a `Forbidden` for the rest.
+// A caller reads their own; a site admin reads anyone's, by name and role only,
+// and the service answers a `Forbidden` for the rest.
 builder.objectField(UserRef, 'memberships', (t) =>
   t.field({
     type: [WorkspaceMemberRef],

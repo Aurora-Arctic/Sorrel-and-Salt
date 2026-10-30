@@ -1,14 +1,20 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The page bar (M12.33): a thin strip along the bottom edge of the global bar,
+// The page bar: a thin strip along the bottom edge of the global bar,
 // with a segment sweeping across it while a navigation is on its way. The
 // component (navigation-bar.tsx) decides when it shows; this only draws it.
 // It is `hidden` until then, and the 100ms hold-back is the component's timer,
 // so no `animation-delay` is set here.
+//
+// It sits at the top of the window, and on the bottom edge of the site bar only on a
+// page that draws one: `/` shows the site name alone, with no bar, and a bar placed at
+// the site bar's height there floated part way down the page. The lowering is the
+// `:has()` rule below, so a browser without it keeps the bar at the top, which is right
+// for `/` and only a little high elsewhere.
 .navigation-bar {
   position: fixed;
-  top: calc(#{$top-inset} + #{$shell-bar-height} - 3px);
+  top: $top-inset;
   // Clear of the scrollbar's room while a modal holds the page (Modal/page-hold.ts).
   right: var(--scrollbar-width, 0);
   left: 0;
@@ -31,6 +37,11 @@
     @include reduced-motion {
       width: 100%;
     }
+  }
+
+  // A page with a site bar (AppShell's or PublicFrame's): the strip sits on its bottom edge.
+  :root:has(.app-shell__bar, .public-frame__bar) & {
+    top: calc(#{$top-inset} + #{$shell-bar-height} - 3px);
   }
 
   // Fading out: `hidden` and `data-leaving` together. `hidden` alone would

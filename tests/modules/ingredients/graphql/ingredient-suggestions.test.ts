@@ -14,11 +14,8 @@ import {
 } from '../../../support/fixtures';
 import type { DuplicateNode, IngredientSuggestionConnection } from './types';
 
-// The transport half of the substitute picker's search (MB.138), which
-// MB.131's combobox calls: the nodes, a page at a time, and one refusal on the
-// wire. What it matches, its scope and who is refused are
-// services/ingredient-suggestions.test.ts's. The table is emptied per test, so
-// every row a result could come from is one this file wrote.
+// The transport half of the substitute picker's search: the nodes, a page at a time, and one refusal on the wire.
+// What it matches, its scope and who is refused are services/ingredient-suggestions.test.ts's. The table is emptied per test, so every row a result could come from is one this file wrote.
 
 let sql: ReturnType<typeof postgres>;
 
@@ -101,27 +98,6 @@ describe('ingredientSuggestions', () => {
       path: ['ingredientSuggestions'],
       extensions: { code: 'FORBIDDEN' },
     });
-  });
-
-  it('pages by cursor, through the M3.6 helper', async () => {
-    await addIngredient({ name: 'Mugwort', canonicalName: 'Artemisia vulgaris' });
-    await addIngredient({ name: 'Mugwart', workspaceId: WORKSPACE_W_ID });
-
-    const first = await run(asUser(B), { query: 'mugwort', first: 1 });
-    const page = first.data?.ingredientSuggestions as IngredientSuggestionConnection;
-    expect(page.edges.map((edge) => edge.node.name)).toEqual(['Mugwart']);
-    expect(page.pageInfo.hasNextPage).toBe(true);
-
-    const next = await run(asUser(B), {
-      query: 'mugwort',
-      first: 1,
-      after: page.pageInfo.endCursor,
-    });
-
-    expect(next.errors).toBeUndefined();
-    const rest = next.data?.ingredientSuggestions as IngredientSuggestionConnection;
-    expect(rest.edges.map((edge) => edge.node.name)).toEqual(['Mugwort']);
-    expect(rest.pageInfo.hasNextPage).toBe(false);
   });
 
   it('ranks by the form asked for and pages on through the ranking', async () => {

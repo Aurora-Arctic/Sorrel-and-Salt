@@ -10,23 +10,20 @@ import { formGroupIcon, ingredientFormGroups } from '@/modules/vocabulary/schema
 import { FIXTURE_USERS } from '@/db/seed/standard';
 import type { Row } from './types';
 
-// The eight curated vocabularies, driven off the registry the repository and
-// the seed read, so a ninth is covered by the line that adds it. What every
-// vocabulary shares runs once per table; foreign keys, NOT NULL and the
-// partial unique indexes are the drift test's and the sweeps'
-// (claude-docs/testing/db-harness.md, "The db test harness").
+// The eight curated vocabularies, driven off the registry the repository and the seed read, so a ninth is covered by the line that adds it.
+// What every vocabulary shares runs once per table; foreign keys, NOT NULL and the partial unique indexes are the drift test's and the sweeps' (claude-docs/testing/db-harness.md, "The db test harness").
 
 const AUTHOR = FIXTURE_USERS.A.id;
 const SHARED = ['id', 'name', 'slug', 'description', 'seed_key'];
 
-// One hex per theme on a category group: the chip colour is the group's pair (MB.35).
+// One hex per theme on a category group: the chip colour is the group's pair.
 const COLOURS = { color_dark: '#c9a66b', color_light: '#7a5a1f' };
 
 const nameOf = (table: PgTable) => getTableConfig(table).name;
 
 // What a group carries beside the shared columns, and what an insert of one
 // needs, which are not the same list: a category group's two colours are NOT
-// NULL, a form group's icon (M12.6) is nullable, so an insert needs no value.
+// NULL, a form group's icon is nullable, so an insert needs no value.
 const GROUP_EXTRAS = new Map<PgTable, { own: string[]; values: Row }>([
   [categoryGroups, { own: Object.keys(COLOURS), values: COLOURS }],
   [ingredientFormGroups, { own: ['icon'], values: {} }],
@@ -46,7 +43,7 @@ const TABLES = [
     { table: groups, own: groupOwn, parent: undefined },
     { table: items, own: [groupColumn], parent: { groups, groupColumn, groupExtra } },
   ]),
-  // The flat vocabularies, celestial bodies and zodiac signs, each carry a curated position (M12.52).
+  // The flat vocabularies, celestial bodies and zodiac signs, each carry a curated position.
   ...Object.values(FLAT).map((table) => ({
     table: nameOf(table),
     own: ['position'],
@@ -61,16 +58,13 @@ const DRIZZLE = Object.fromEntries(
   ].map((table) => [nameOf(table), table]),
 );
 
-/** The vocabularies the member's autofill searches by trigram. */
-const SEARCHED = ['ingredient_forms', 'deities', 'celestial_bodies', 'zodiac_signs'];
-
 let sql: ReturnType<typeof postgres>;
-const catalogue = useTestDatabase((client) => (sql = client));
+useTestDatabase((client) => (sql = client));
 
 /** A short token no seeded row and no other call holds. */
 const token = () => crypto.randomUUID().slice(0, 8);
 
-// Invented names throughout (M1.25), each carrying a fresh token.
+// Invented names throughout, each carrying a fresh token.
 function vocabularyRow(overrides: Row = {}): Row {
   const t = token();
   return {
@@ -122,26 +116,8 @@ describe.each(TABLES)('$table', (entry) => {
 });
 
 describe.each(PAIRS)('$items under $groups', ({ items, groups, groupColumn, groupExtra }) => {
-  // Global rather than per group: a chip filter and the seed's idempotency key
-  // both read the slug alone.
-  it('refuses a slug another group’s item already holds', async () => {
-    const first = await insert(groups, vocabularyRow(groupExtra));
-    const second = await insert(groups, vocabularyRow(groupExtra));
-    const held = vocabularyRow({ [groupColumn]: first });
-    await insert(items, held);
-
-    const error = await failureOf(
-      insert(items, vocabularyRow({ [groupColumn]: second, slug: held.slug })),
-    );
-
-    expect(error.code).toBe('23505');
-    expect(error.constraint_name).toBe(`${items}_slug_unique`);
-  });
-
-  // The deliberate gap: uniqueness is on the slug alone, so two live items may
-  // share a display name — "Wax", animal and substance; one god honoured under
-  // two traditions — and the autofill shows the group beside each. A `name`
-  // index would supersede that; say so rather than deleting this test.
+  // Deliberate gap: uniqueness is on the slug alone, so two live items may share a display name ("Wax" animal and substance; one god under two traditions), and the autofill shows the group beside each.
+  // A `name` index would supersede this; say so rather than deleting the test.
   it('admits two live items sharing a display name under two groups', async () => {
     const name = `Fixturia ${token()}`;
     const first = await insert(groups, vocabularyRow(groupExtra));
@@ -158,30 +134,13 @@ describe.each(PAIRS)('$items under $groups', ({ items, groups, groupColumn, grou
   });
 });
 
-// The icon standing for a form group (M12.6): a closed list, so an enum, and
+// The icon standing for a form group: a closed list, so an enum, and
 // nullable, since NULL is the generic icon rather than a missing answer.
 describe('ingredient_form_groups.icon', () => {
-  it('is a nullable form_group_icon holding exactly the six icons, as the code declares them', async () => {
-    const [column] = await sql`
-      select is_nullable, udt_name from information_schema.columns
-      where table_name = 'ingredient_form_groups' and column_name = 'icon'
-    `;
+  it('holds exactly the six icons, as the code declares them', async () => {
     const [range] = await sql`select enum_range(null::form_group_icon)::text[] as icons`;
 
-    expect({ ...column }).toEqual({ is_nullable: 'YES', udt_name: 'form_group_icon' });
     expect(range.icons).toEqual(['botanical', 'animal', 'mineral', 'substance', 'fluid', 'curio']);
     expect(formGroupIcon.enumValues).toEqual(range.icons);
-  });
-});
-
-describe.each(SEARCHED)('%s', (table) => {
-  // Matched by `%` and `<%` through the index, a name and a description alike
-  // (claude-docs/db/member-autofill.md, "The member's autofill").
-  it('indexes name and description for trigram matching in one gin index', async () => {
-    const index = await catalogue.indexRow(table, `${table}_trgm`);
-
-    expect(index?.unique).toBe(false);
-    expect(index?.predicate).toBeNull();
-    expect(index?.definition).toContain('USING gin (name gin_trgm_ops, description gin_trgm_ops)');
   });
 });

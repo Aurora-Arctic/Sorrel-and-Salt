@@ -73,7 +73,7 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   "Revoke Invitation": "Revoke the invitation to <address>? Its link will say
   it was withdrawn." Once revoked, the page's status region says "The
   invitation to <address> is revoked."; a refusal is said in a callout under
-  Revoke, which keeps the focus ([`click-feedback.md`](click-feedback.md)). A locked control is `UserList/locked-control.tsx`'s `LockedControl`:
+  Revoke, which keeps the focus ([`click-feedback.md`](click-feedback.md)). The row's Revoke, live or locked, is `btn btn--quiet btn--small`; the red is the confirm's own. A locked control is `UserList/locked-control.tsx`'s `LockedControl`:
   `aria-disabled` with the reason in a tip and said again as an alert on a
   click. Each brings its own rules (`UserList/controls.scss`), so the section
   stands on its own in the workshop without the list's stylesheet (MB.115).
@@ -104,8 +104,8 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   this component's state, set by the form before it closes, so the notice
   outlasts `?invite` without the address riding in the URL; opening the
   form again clears it. No link is ever shown: the mutation answers none.
-- **No invitation waiting is a sentence**: "No admin invitations are
-  waiting." Under a filter it names the filters in use, as the user list's
+- **No invitation waiting is a sentence**: "There are no admin
+  invitations yet." Under a filter it names the filters in use, as the user list's
   and the compendium's do, through the one wording `noMatchText`
   (`src/lib/text.ts`): "No invitations match “fern” and Expires in 24 Hrs.
   Change or clear the filter to see more."
@@ -146,20 +146,7 @@ alert (MB.116).
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/AdminInvitations/index.stories.tsx),
-`Admin / Admin Invitations`, inside the admin layout's frame (the nav in its context row above the column) and the People
-page with its Invitations tab open and New Invitation beside the heading:
-`Pending`, `NoneWaiting`, `Filtered` (an Email and Expires in 24 Hrs
-applied, Clear offered, one invitation left), `NoMatch` (the
-empty state naming the filter), `OnePageOfSeveral` (a middle page of 25,
-both pager ends live and "Page 2 of 3" between them) with its phone pair
-`OnePageOfSeveralPhoneDark`/`OnePageOfSeveralPhoneLight`, where the pager's
-row wraps Next beneath Prev and the position, `Inviting` (the form open, its Reason's
-hint in a tip), `Paused` (both controls locked with the pause's reason),
-`PhoneDark`/`PhoneLight`, New Invitation across the line beneath the
-heading, the filter row stacked and the invitations as cards at 375px, and
-`FilteredPhoneDark`/`FilteredPhoneLight`, the filter applied at 375px. Invite and Revoke reach the network only when sent, so a send in the workshop
-fails into its alert. Render-only, no test ids, no snapshots.
+[`index.stories.tsx`](../../src/components/AdminInvitations/index.stories.tsx), `Admin / Invitations`, inside the admin layout's frame (the nav in its context row above the column) and the People page with its Invitations tab open and New Invitation beside the heading. `States` has a control that chooses: Default, Empty, Filtered (an Email and Expires in 24 Hrs applied, Clear offered, one invitation left), No Matches (the empty state naming the filter), Middle Page (a middle page of 25, both pager ends live and "Page 2 of 3" between them), Last Page (Previous live, Next not), Paused (both controls locked with the pause's reason), Revoke Refused (Revoke pressed and confirmed; no server answers, so the refusal shows) and Send Refused (an address typed and sent; the form's alert shows). `Inviting` is its own story: the form open, its Reason's hint in a tip. The toolbar viewport menu shows any of them at 375px, where New Invitation sits across the line beneath the heading, the filter row stacks, the invitations are cards and the pager's row wraps Next beneath Prev and the position. The "Invitation sent" notice and a refusal pathed to the Email field need a server, so no story reaches them. Render-only, no test ids, no snapshots.
 
 ## Tests
 
@@ -188,3 +175,17 @@ accepted and revoked rows, a page newest first with an instant's rows by id
 and the next cursor reading the rest, the filter narrowing every page, and
 the count. `tests/e2e/admin-invitations.spec.ts` invites, follows the mailed link and
 revokes against the built server, with axe.
+
+## The Invitations tab
+
+`/admin/invitations` is the People page's Invitations tab. It shows a filter by address and by expiry within 24 hours, a page of the pending invitations the filter leaves (address, site role granted, reason, expiry, Revoke), the pager, and the invite form that `?invite` opens over them. New Invitation is the tab's action, beside the heading. While admin changes are paused both are in view but locked for any admin but the primary one, with the pause as the reason. The confirmation and the locked control are the user list's own, each bringing its own rules.
+
+The region is named as a heading would name it, though it shows none: the page's heading and open tab already say what it holds, and the name keeps the sent notice and the rows findable as one. The sent notice is this component's state, set before the form closes, so it outlasts `?invite` and names the address without carrying it in one.
+
+## New Invitation
+
+New Invitation is a link to `?invite`, which opens the form over the list, or it is locked with the pause as its reason. It is a link rather than a button holding the form because the heading line and the list are rendered apart. It keeps the tab's filter and page and opens the modal at once, the form arriving with the navigation.
+
+## The filter
+
+The filter is on the shared `FilterForm`, as the user list's is. Only the email text is held in state, until the magnifier or Enter sends it. The Expires in 24 Hrs switch is uncontrolled and applies as it changes, carrying the email. Both open the first page softly, because the admin layout's guard runs on every page under `/admin`, and there is no Filter button. Before hydration the form submits natively (`email=`, `expiring=`), which the page reads the same as the bare flag. The list keys on the filter shown, so another page starts again from that one.

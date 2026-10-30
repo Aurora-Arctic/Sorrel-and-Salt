@@ -74,7 +74,7 @@ its mixin in `_mixins.scss`:
 ## GroupChip
 
 `<GroupChip name colors icon>` draws a group's name in a `.chip` (the full level, 2026-10-19) in its own
-colours when `colors` holds both `colorDark` and `colorLight`, and as plain
+colours when `colors` holds both `color`, and as plain
 text otherwise: a form group or a tradition carries none. An `icon` leads the
 name with a [`FormIcon`](form-icon.md): a form group's icon name, or `null`
 for a form group with none, which draws the generic spoon (M12.7). `icon`
@@ -89,12 +89,16 @@ list's Name cell and the value lists' group cell draw it.
 
 [`index.stories.tsx`](../../src/components/DataTable/index.stories.tsx), `Layout /
 Data Table`: `StackTable` over a few category groups, each in its `ListFrame`
-as an admin list holds it. `Default` has two groups in chips and two plain;
-`Roomy` adds the `data-table--roomy` class; `Empty` shows the empty-state
-sentence; `PhoneDark` and `PhoneLight` show the rows turned into cards at 375px.
+as an admin list holds it. `States` has a control that chooses: Default has two groups in chips and two plain;
+Roomy adds the `data-table--roomy` class; Empty shows the empty-state
+sentence; Foot Action And Icon Chip adds a foot action and an icon chip. The toolbar viewport menu shows the rows turned into cards at 375px.
 
 ## Testing
 
 No test of its own: each list's test asserts the table it draws — its rows,
 its columns and its empty state — by role and label, which covers the
 scaffold through every list that uses it.
+
+## The group chip
+
+A group's name is drawn in its own chip, as the category picker draws it, wherever the group carries both theme colours. A group without colours (a tradition has none) is plain text. A form group leads with its icon, or the generic icon where it has none; for a group of any other kind `icon` is `undefined` and no icon is drawn. The group list and the value list both use it as a table cell.

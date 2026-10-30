@@ -2,12 +2,9 @@ import type { ReactElement } from 'react';
 import type { SkeletonHead, SkeletonProps, SkeletonShape } from './types';
 import './index.scss';
 
-// The one skeleton every region wait uses (M12.33): placeholder shapes drawn
-// as the layout they stand in for, so the page does not snap from one to the
-// next. The shapes are for the eye alone, `aria-hidden`; a screen reader
-// hears the `<output>`, a status by its tag, saying "Loading", the only
-// announcement. Shown at once, never held back by `$loading-delay`.
-// claude-docs/components/skeleton.md
+// The one skeleton every region wait uses, shaped as the layout it stands in for. The shapes are
+// `aria-hidden`; the `<output>` saying "Loading" is the only announcement. Shown at once, never
+// held by `$loading-delay` (claude-docs/components/skeleton.md).
 const DEFAULT_COUNT: Record<SkeletonShape, number> = {
   table: 6,
   cards: 6,
@@ -65,25 +62,35 @@ const PageHead = ({
   </div>
 );
 
-// An ingredient's page below its head, as IngredientEntry lays it: Details,
-// its text beside a side column of headed lists, then Forms with a form's
-// section laid the same way. Bare bars on the page, with no card surface.
-const EntryPart = (): ReactElement => (
-  <div className="skeleton__entry-section">
+// An ingredient's page below its head, as IngredientEntry lays it: Stock, Details, its side
+// column of headed lists beside them, then Forms with a form's section laid the same way. Bare
+// bars on the page, with no card surface.
+const EntrySide = (): ReactElement => (
+  <div className="skeleton__entry-side">
+    {Array.from({ length: 4 }, (_, at) => (
+      <div key={at} className="skeleton__entry-block">
+        <span />
+        <span />
+      </div>
+    ))}
+  </div>
+);
+
+// `details` is the page's Details section, whose side column stands apart in the body
+// (`EntrySections`); a form's keeps its own inside.
+const EntryPart = ({ details = false }: { details?: boolean }): ReactElement => (
+  <div
+    className={
+      details ? 'skeleton__entry-section skeleton__entry-details' : 'skeleton__entry-section'
+    }
+  >
     <span className="skeleton__heading" />
     <div className="skeleton__entry-text">
       <span />
       <span />
       <span />
     </div>
-    <div className="skeleton__entry-side">
-      {Array.from({ length: 4 }, (_, at) => (
-        <div key={at} className="skeleton__entry-block">
-          <span />
-          <span />
-        </div>
-      ))}
-    </div>
+    {!details && <EntrySide />}
   </div>
 );
 
@@ -108,8 +115,9 @@ const StockPart = (): ReactElement => (
 // In the entry's body box, so Details' columns and the forms lay out as the page's do.
 const EntrySections = (): ReactElement => (
   <div className="skeleton__entry-body">
-    <EntryPart />
     <StockPart />
+    <EntryPart details />
+    <EntrySide />
     <div className="skeleton__entry-forms">
       <span className="skeleton__heading" />
       <EntryPart />
@@ -169,12 +177,13 @@ const Skeleton = ({
   menu = false,
   entry = false,
   head,
+  density,
   count,
 }: SkeletonProps): ReactElement => {
   const many = count ?? DEFAULT_COUNT[shape];
   const listed = shape === 'table' || shape === 'cards';
   return (
-    <div className={`skeleton skeleton--${shape}`}>
+    <div className={`skeleton skeleton--${shape}`} data-density={density}>
       <output className="visually-hidden">Loading</output>
       <div className="skeleton__shapes" aria-hidden="true">
         {listed && title && (
@@ -236,7 +245,8 @@ const Skeleton = ({
             </div>
           </>
         )}
-        {shape === 'line' && <span className="skeleton__line" />}
+        {shape === 'line' &&
+          Array.from({ length: many }, (_, line) => <span key={line} className="skeleton__line" />)}
         {shape === 'page' && (
           // The page's own grid when it has a menu (`.page-with-nav`), its
           // children in the page's order: head, menu, then the sections, so

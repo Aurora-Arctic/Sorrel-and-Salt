@@ -1,17 +1,14 @@
 'use client';
 
-import { type ReactElement, useRef, useState } from 'react';
+import { type ReactElement, useCallback, useRef, useState } from 'react';
 import IconTip from '../IconTip/icon-tip';
 import Modal from './modal';
 import type { ModalButtonProps } from './types';
 
 /**
- * A button that opens a modal, and the focus back on the button however the
- * modal closes: its Close, Escape, a click outside, or its contents' own
- * close (MB.119, lifted from InviteDialog). Modal restores nothing itself,
- * because its owner unmounts it rather than closing the `<dialog>` in place,
- * so the browser's own return never runs (claude-docs/components/modal.md,
- * "Focus"). A modal opened by its address is RouteModal's instead.
+ * A button that opens a modal, and the focus back on it however the modal closes. Modal restores
+ * nothing itself, as its owner unmounts it (claude-docs/components/modal.md, "Giving the focus back"). A modal
+ * opened by its address is RouteModal's instead.
  */
 export default function ModalButton({
   label,
@@ -22,18 +19,32 @@ export default function ModalButton({
   ariaLabel,
   tip,
   size,
+  ref,
+  onOpen,
   children,
 }: ModalButtonProps): ReactElement {
   const [open, setOpen] = useState(false);
-  const button = useRef<HTMLButtonElement>(null);
+  const button = useRef<HTMLButtonElement | null>(null);
+  // The button in both refs: this one for the focus's return, the owner's for its own use (a ClickFeedback anchor).
+  const buttonRef = useCallback(
+    (node: HTMLButtonElement | null) => {
+      button.current = node;
+      if (typeof ref === 'function') ref(node);
+      else if (ref) ref.current = node;
+    },
+    [ref],
+  );
 
   const trigger = (
     <button
-      ref={button}
+      ref={buttonRef}
       className={className}
       type="button"
       aria-label={ariaLabel}
-      onClick={() => setOpen(true)}
+      onClick={() => {
+        onOpen?.();
+        setOpen(true);
+      }}
     >
       {label}
     </button>

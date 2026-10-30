@@ -1,9 +1,23 @@
-import type { ReactElement } from 'react';
+import { createElement, type ReactElement } from 'react';
+import { SHAPES } from '../JarShelf/shapes';
+import type { ChevronIconProps } from './types';
 
-// The pencil every Edit control shows (MB.115): drawn at the icon size in
-// the control's own ink, and hidden from assistive technology, since the
-// control around it is what names it. The ingredient form's rows and the
-// admin lists' rows share it.
+// The pencil every Edit control shows, in the control's own ink and hidden from assistive technology, as the control around it names it.
+
+/** An X: close the pane it sits in. */
+export function CloseIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M3.5 3.5l9 9M12.5 3.5l-9 9"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
 
 /** A pencil: open this to change it. */
 export function PencilIcon(): ReactElement {
@@ -37,7 +51,42 @@ export function PlusIcon(): ReactElement {
   );
 }
 
-/** A tick: this is already held. A compendium card's In Every Cupboard (M9.12). */
+/** A cross: clear this, or no. Smaller than `CloseIcon`'s, to sit inside a field or a table cell. */
+export function CrossIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** A chevron pointing down: this opens a list or a panel below it. */
+export function ChevronIcon({
+  className = 'chevron-icon',
+  textSized = false,
+}: ChevronIconProps): ReactElement {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 16 16"
+      width={textSized ? '1em' : undefined}
+      height={textSized ? '1em' : undefined}
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path
+        d="M3.5 6l4.5 4.5L12.5 6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** A tick: this is already held, as a compendium card's In Every Cupboard shows. */
 export function CheckIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -53,15 +102,11 @@ export function CheckIcon(): ReactElement {
   );
 }
 
-/**
- * The mystic eye: look at this without leaving the list (M12.5's Quick
- * Look). An almond eye whose iris is a tilted waxing crescent, with a small
- * four-point star in the crescent's open side (the owner's pick, 2026-10-20).
- */
+/** The mystic eye: look at this without leaving the list (Quick Look); an almond eye whose iris is a tilted waxing crescent with a four-point star. */
 export function MysticEyeIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-      {/* Stroke 1, not the set's 1.5, on purpose: the owner asked for a thinner outline. */}
+      {/* Stroke 1, not the set's 1.5, on purpose: a thinner outline. */}
       <path
         d="M1 8C2.8 5 5.2 3.5 8 3.5S13.2 5 15 8C13.2 11 10.8 12.5 8 12.5S2.8 11 1 8z"
         fill="none"
@@ -100,8 +145,7 @@ export function LinkIcon(): ReactElement {
   );
 }
 
-// Undo and redo, mirror images on the same 16-unit box. Sized by attribute,
-// since a bare svg in a `.btn` has no size of its own.
+// Undo and redo, mirror images on the same 16-unit box, sized by attribute since a bare svg in a `.btn` has no size of its own.
 
 /** An arrow curving back: undo. */
 export function UndoIcon(): ReactElement {
@@ -135,7 +179,7 @@ export function RedoIcon(): ReactElement {
   );
 }
 
-/** Two overlapping sheets: copy what another holds into this. Restore Original and Copy From Ingredient wear it and the undo arrow (the owner's call, 2026-10-19). */
+/** Two overlapping sheets: copy what another holds into this; Restore Original and Copy From Ingredient wear it. */
 export function CopyIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -152,12 +196,8 @@ export function CopyIcon(): ReactElement {
 }
 
 /**
- * An open book with lines on its left page and a pencil over its right:
- * Annotate (M8.17), which writes the coven's notes over a compendium entry
- * rather than changing it, so not Edit's bare pencil. The owner's choice
- * (2026-10-19), drawn at stroke width 1.25 rather than the set's usual 1.5,
- * also the owner's call, so the book's lines sit apart at 16px; the pencil
- * is filled, with no stroke. Every Annotate control draws this one function.
+ * An open book with lines on its left page and a pencil over its right: Annotate, which writes the coven's notes over a compendium entry.
+ * Stroke 1.25, not the set's 1.5, so the lines sit apart at 16px; the pencil is filled.
  */
 export function AnnotateIcon(): ReactElement {
   return (
@@ -181,10 +221,7 @@ export function AnnotateIcon(): ReactElement {
   );
 }
 
-/**
- * Three dots stacked, ⋮: more choices, in a menu. A list card's More (M8.17,
- * the owner's call, 2026-10-20); a More drawn with words keeps its chevron.
- */
+/** Three dots stacked, ⋮: more choices, in a menu; a More drawn with words keeps its chevron. */
 export function DotsIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -195,7 +232,7 @@ export function DotsIcon(): ReactElement {
   );
 }
 
-/** A bin: delete or remove this. A list card's lone Delete or Remove (M8.17). */
+/** A bin: delete or remove this, a list card's lone Delete or Remove. */
 export function BinIcon(): ReactElement {
   return (
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -211,12 +248,7 @@ export function BinIcon(): ReactElement {
   );
 }
 
-/**
- * A jar with a cloth tied over its mouth, the cloth's hem wavy: the coven's
- * stock of an ingredient. Edit Stock (M9.9) wears it rather than the pencil,
- * which Edit already shows beside it in a card's foot, so stock has a mark of
- * its own there (the owner's pick, 2026-10-20).
- */
+/** A jar with a cloth tied over its mouth, the cloth's hem wavy: the coven's stock of an ingredient, worn by Edit Stock in place of the pencil. */
 export function StockIcon(): ReactElement {
   return (
     <svg className="stock-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -224,7 +256,92 @@ export function StockIcon(): ReactElement {
         d="M4.5 6V5.125Q4.5 4.125 5.5 4.125h5Q11.5 4.125 11.5 5.125V6M4.25 6h7.5M4.5 6L3.5 8.5M11.5 6l1 2.5M3.5 8.5q1.125.75 2.25 0t2.25 0 2.25 0 2.25 0M4 9.25v3a1.75 1.75 0 0 0 1.75 1.75h4.5A1.75 1.75 0 0 0 12 12.25v-3"
         fill="none"
         stroke="currentColor"
-        strokeWidth="1.2" // the owner's calls, 2026-10-21: thinner than the pencil's 1.5, as the jar is drawn larger
+        strokeWidth="1.2" // thinner than the pencil's 1.5, as the jar is drawn larger
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** Four corner brackets pointing outward: Preview, which opens a spell full screen. */
+export function PreviewIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M2.5 6V2.5H6M10 2.5h3.5V6M13.5 10v3.5H10M6 13.5H2.5V10"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** A cauldron with two leaves tumbling in: Record a Working. */
+export function CauldronIcon(): ReactElement {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      aria-hidden="true"
+      focusable="false"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.25"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {/* Stroke 1.25, not the set's 1.5: the rim and leaves stay open at button size. */}
+      <rect x="3.8" y="5.9" width="8.4" height="1.5" rx=".75" />
+      <path d="M4.5 7.4C2.2 8.4 1.6 10.6 3 12.3 4.1 13.6 6 14 8 14s3.9-.4 5-1.7c1.4-1.7.8-3.9-1.5-4.9" />
+      <path d="M5.4 14l-.8 1.2M10.6 14l.8 1.2" />
+      <path
+        transform="translate(5.9 3.05) rotate(-35) scale(.95)"
+        d="M0 -2c1.7 1 1.9 2.5 0 4-1.9-1.5-1.7-3 0-4z"
+      />
+      <path
+        transform="translate(10.4 3.05) rotate(35) scale(.88)"
+        d="M0 -2c1.7 1 1.9 2.5 0 4-1.9-1.5-1.7-3 0-4z"
+      />
+    </svg>
+  );
+}
+
+/** The jar shelf's round flask with a tick on its bulb: Complete Working. The flask is the shelf's own drawing, read from `SHAPES.flask` (its lid parts, and its body left open at the rim, as the shelf draws it); the tick is the icon's. */
+export function CompleteIcon(): ReactElement {
+  const { lid, body } = SHAPES.flask;
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      aria-hidden="true"
+      focusable="false"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {/* The shelf's 48-unit box scaled to fit the 16, its stroke widened to come out at the set's 1.5. */}
+      <g transform="translate(-1 0) scale(.375)" strokeWidth="4">
+        {lid.map((part, i) => createElement(part.el, { key: i, ...part.attrs }))}
+        <path d={body.replace(/z$/, '')} />
+        <path d="M16.8 28.5l5 5 9.6-10.5" />
+      </g>
+    </svg>
+  );
+}
+
+/** A printer: print this page. */
+export function PrintIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M4.5 6V2.5h7V6M4.5 11.5h-2v-5h11v5h-2M4.5 9.5h7v4h-7z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       />

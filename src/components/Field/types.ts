@@ -4,14 +4,11 @@ import type { FieldPath, FieldValues } from 'react-hook-form';
 /** What every field shares: what it is called, and what it is told about it. */
 export interface FieldProps {
   label: string;
-  /**
-   * Read after the label, out of sight: "Quantity, Flower". For a field drawn
-   * once per row, so two rows' fields never share a name (M9.9's StockDialog).
-   */
+  /** Read after the label, out of sight ("Quantity, Flower"), so a field drawn once per row has a name of its own. */
   labelSuffix?: string;
   /** What the field is for, behind an info tip beside the label. */
   hint?: string;
-  /** A state the field is in — why it is shut — as a line beneath the label, never tucked away. */
+  /** A line beneath the label saying a state the field is in, such as why it is shut. */
   note?: string;
   /** Marked required beside its label, and to assistive technology. */
   required?: boolean;
@@ -28,7 +25,7 @@ export interface FieldDescriptionInput {
   id: string;
   hint?: string;
   note?: string;
-  /** Another element read with the field: IngredientForm's duplicate warning. */
+  /** Another element read with the field, such as a duplicate warning. */
   describedBy?: string;
   /** The field's own error, from whichever side found it. */
   error?: string;
@@ -56,41 +53,40 @@ export interface FieldShellProps extends FieldProps, Omit<FieldDescription, 'ari
   children: ReactNode;
   /** Beneath the error: what a field adds of its own. */
   after?: ReactNode;
-  /** At the right end of the label row: a control acting on the field, a variant's Copy From Ingredient. */
+  /** At the right end of the label row: a control acting on the field. */
   action?: ReactNode;
+  /** A node elsewhere on the page where the error is drawn instead of beneath the control (a step row's Unit, across the whole row). */
+  errorInto?: HTMLElement | null;
   /** A class beside `field` on the block: a filter's type-ahead, `filter-row__choice`. */
   className?: string;
 }
 
-/**
- * A text field in a react-hook-form form: the ingredient form, its reference
- * panel's (MB.154), or an admin form. Its name is one of that form's paths.
- */
+/** A text field in a react-hook-form form; its name is one of that form's paths. */
 export interface TextFieldProps<V extends FieldValues = FieldValues> extends FieldProps {
   name: FieldPath<V>;
-  /** A short action shown, muted, while the field is empty: "Add a name". What the field is for is its `hint`. */
+  /** A short action shown, muted, while the field is empty: "Add a name". */
   placeholder?: string;
   /** A textarea, for prose. */
   multiline?: boolean;
-  /** A textarea's height in lines, where its prose runs longer than the primitive's 6rem holds. */
+  /** A textarea's height in lines, for prose longer than the 6rem default holds. */
   rows?: number;
-  /** The input's type, for a single line: a reference's days are `date`s, a jar's amounts `number`s (any decimal, read back as the text typed). */
+  /** The input's type for a single line; a `number` takes any decimal and is read back as the text typed. */
   type?: Extract<HTMLInputTypeAttribute, 'text' | 'date' | 'url' | 'number'>;
   /** Shut, for a field the rest of the form has ruled out; its note says why. */
   disabled?: boolean;
-  /** Fields whose errors this one's value decides as well, revalidated when it changes. */
+  /** Fields whose errors this one's value also decides, revalidated when it changes. */
   deps?: FieldPath<V>[];
-  /** Another element read with the field while it shows: the name's duplicate warning. */
+  /** Another element read with the field while it shows. */
   describedBy?: string;
-  /** Marked invalid by something other than its own error: the name's held duplicate warning. */
+  /** Marked invalid by something other than its own error. */
   invalid?: boolean;
-  /** Drawn beneath the field, after its error: the name's duplicate warning. */
+  /** Drawn beneath the field, after its error. */
   after?: ReactNode;
-  /** Its text is being looked up: a spinner at the input's right end, and the input `aria-busy`. A single line only. */
+  /** Its text is being looked up: a spinner at the input's right end and `aria-busy` on the input; a single line only. */
   busy?: boolean;
-  /** At the right end of the label row: a variant's Copy From Ingredient. */
+  /** At the right end of the label row. */
   action?: ReactNode;
-  /** How the text is tidied as the field is left: a reference's fields, as the server will store them. */
+  /** How the text is tidied as the field is left, matching what the server will store. */
   format?: (text: string) => string;
   /** The browser's autofill: `off` for a name, which Chrome otherwise takes for a person's. */
   autoComplete?: 'off';
@@ -101,7 +97,7 @@ export interface SelectOption {
   label: string;
   /** A mark drawn before the label, outside its accessible name: pass one hidden from assistive technology. */
   icon?: ReactNode;
-  /** Listed but not choosable: a coven that already holds the entry, in M9.12's picker. */
+  /** Listed but not choosable, such as a coven that already holds the entry. */
   disabled?: boolean;
   /** A second line under the option, read with it: why a disabled one is out. */
   note?: string;
@@ -113,25 +109,21 @@ export interface SelectFieldProps<V extends FieldValues = FieldValues> extends F
   /** A short action shown until a choice is made, and not itself a choice: "Choose a group". */
   placeholder?: string;
   options: readonly SelectOption[];
-  /**
-   * Chosen by typing, the list narrowing to the options whose label holds the
-   * text, rather than picked from the select-only box: a set long enough to
-   * want a search, the deities' traditions.
-   */
+  /** Chosen by typing, the list narrowing to labels holding the text, for a set long enough to want a search. */
   typeahead?: boolean;
   /** Shut, for a field the form has no use for yet: the select-only box only. */
   disabled?: boolean;
   deps?: FieldPath<V>[];
+  /** See `FieldShellProps.errorInto`. */
+  errorInto?: HTMLElement | null;
   /** Runs on a new choice, before the field and its `deps` revalidate. */
   onChange?: (value: string) => void;
 }
 
 /**
- * An on-or-off choice in a plain-state form: a list filter's No Refs or
- * Needs Approval. Held by the caller through `checked`, or left to the
- * native checkbox from `defaultChecked`, as a filter that applies on the
- * change leaves it. Not a react-hook-form field, since no such form has one
- * yet.
+ * An on-or-off choice in a plain-state form, such as a list filter's No Refs. Held by the caller
+ * through `checked`, or left to the native checkbox from `defaultChecked`. Not a react-hook-form
+ * field.
  */
 export interface SwitchFieldProps {
   /** The name beside the switch, and its accessible name. */
@@ -147,8 +139,14 @@ export interface SwitchFieldProps {
   onChange: (checked: boolean) => void;
   /** Shut: dashed, faded, its name dimmed. */
   disabled?: boolean;
-  /** Optional: what the switch is for, behind an info tip beside the label. */
+  /** A change is in flight: `aria-busy` on the toggle, which stays enabled (loading.md, "Control"). */
+  busy?: boolean;
+  /** What the switch is for, behind an info tip beside the label. */
   hint?: string;
+  /** A line under the toggle, read with it, saying what its state means. */
+  note?: string;
+  /** More of the note, behind an info tip beside it and still read with the toggle. */
+  noteTip?: string;
 }
 
 /** One choice of a `RadioGroupField`: its value, its name and what it means. */
@@ -176,13 +174,7 @@ export interface RadioGroupFieldProps<T extends string> {
   disabled?: boolean;
   /** A line for the whole group, read with it: what holds whichever is chosen. */
   note?: string;
-  /**
-   * How the options are laid out: `list`, one row each with its explanation
-   * (the default), or `strip`, one bar of icon-only segments with the chosen name
-   * beneath, for a choice that is seen rather than read, or `segmented`, one bar
-   * of text segments, each with its `count` when it has one. A radio underneath
-   * every way.
-   */
+  /** `list` (default): a row each with its explanation; `strip`: icon-only segments, chosen name beneath; `segmented`: text segments with any `count`. A radio underneath every way. */
   layout?: 'list' | 'strip' | 'segmented';
   /** An InfoTip beside the legend, for what the choices mean. */
   hint?: string;
@@ -206,6 +198,8 @@ export interface FormActionsProps {
   saveValue?: string;
   /** Save's description, a note above the row about what saving will do. */
   saveDescribedBy?: string;
+  /** Why Save is off, said in a tip and as its description; the button is then `aria-disabled` so it keeps focus. Left out, an off Save is plain `disabled`. */
+  saveReason?: string;
   /** Save as a plain button calling this, for a panel inside another form, rather than the form's submit. */
   onSave?: () => void;
   /** Cancel, drawn when given: the form's way out, through its discard guard. */
@@ -216,11 +210,7 @@ export interface FormActionsProps {
   onDelete?: () => void;
   /** Further saves, between Save and Cancel. */
   children?: ReactNode;
-  /**
-   * Something set apart at the row's far end in Delete's place, for a form
-   * whose further choices are not a delete: the Annotate dialog's More menu
-   * (M8.17). A form draws one or the other.
-   */
+  /** Set apart at the row's far end in Delete's place, for further choices that are not a delete; a form draws one or the other. */
   aside?: ReactNode;
 }
 
@@ -235,10 +225,7 @@ export interface ReasonFieldProps {
   className?: string;
 }
 
-/**
- * A list filter's search box (MB.115): its text held by the caller, and a
- * submit of its own, a magnifier named Search, at the box's end.
- */
+/** A list filter's search box: its text held by the caller, with a submit of its own (a magnifier named Search) at the box's end. */
 export interface SearchFieldProps {
   /** The base the field's ids grow from, as `fieldDescription` takes it; its own `useId()` when left out. */
   id?: string;
@@ -252,10 +239,7 @@ export interface SearchFieldProps {
   onChange: (value: string) => void;
 }
 
-/**
- * A list filter's closed set (MB.115): a native select, or with `typeahead`
- * a type-ahead once hydrated, whose blank choice is no filter.
- */
+/** A list filter's closed set: a native select, or with `typeahead` a type-ahead once hydrated; the blank choice is no filter. */
 export interface FilterSelectFieldProps {
   /** The name above the box, and its accessible name: "Role". */
   label: string;
@@ -329,15 +313,14 @@ export interface UseFormHistoryOptions {
   enabled?: boolean;
   /** True for a target whose chords the form leaves alone: a panel with a history of its own. */
   ignore?: (target: HTMLElement) => boolean;
-  /**
-   * Told the field names a step restored, with its diffs and the direction, before focus moves, so a
-   * folded section holding one can open. It may return a field name to focus instead of the first.
-   */
+  /** Told the names a step restored, its diffs and the direction, before focus moves, so a folded section can open; may return a name to focus instead of the first. */
   onRestored?: (
     names: string[],
     diffs: readonly HistoryDiff[],
     direction: 'undo' | 'redo',
   ) => string | void;
+  /** Adjusts a value just before an undo or redo writes it back, for values naming things that can stop existing; left out, it is written as recorded. */
+  prepare?: (name: string, value: unknown) => unknown;
   /** True for a name the history leaves out: interface state kept among the values. */
   skip?: (name: string) => boolean;
   /** How long a pause in typing ends its step. */

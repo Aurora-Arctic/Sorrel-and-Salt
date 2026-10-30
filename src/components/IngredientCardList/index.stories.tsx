@@ -1,23 +1,25 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import IngredientCard from '../IngredientCard';
 import { ENTRIES, jarLinesOf } from './story-fixtures';
 import IngredientCardList from '.';
+import { route } from '../../../.storybook/route';
 
-// Render-only; the wrapping and the density are asserted in tests/components/IngredientCardList.
-// The same nine entries in every grid, for the two pages that use the list: the public
-// compendium (M8.18: no marks of whose, no jars, no actions) and the coven's Ingredients
-// page (M9.6: marks, jar lines, Edit and Delete). The preview ignores `meta.width`, so set
-// the viewport to see the columns change.
-export default {
-  title: 'Surfaces / Ingredient Card List',
-};
+// Render-only; wrapping and density are asserted in tests/components/IngredientCardList.
+// The same nine entries for the public compendium (no marks, jars or actions) and
+// the coven's Ingredients page. The preview ignores `meta.width`; set the viewport.
+const meta = {
+  title: 'Ingredients / Ingredient Card List',
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const CompendiumCards = () => (
   <IngredientCardList label="Compendium">
     {ENTRIES.map((e) => (
       <IngredientCard
         key={e.slug}
-        href={`/compendium/ingredients/${e.slug}` as const}
+        href={route(`/compendium/ingredients/${e.slug}`)}
         label={e.label}
         formalName={e.formalName}
         nomenclature={e.nomenclature}
@@ -36,7 +38,7 @@ const CupboardCards = ({ density }: { density?: 'regular' | 'compact' }) => (
     {ENTRIES.map((e) => (
       <IngredientCard
         key={e.slug}
-        href={`/coven/test-coven/ingredients/${e.slug}` as const}
+        href={route(`/coven/test-coven/ingredients/${e.slug}`)}
         label={e.label}
         formalName={e.formalName}
         nomenclature={e.nomenclature}
@@ -51,7 +53,7 @@ const CupboardCards = ({ density }: { density?: 'regular' | 'compact' }) => (
             <button type="button" className="btn btn--small">
               Edit
             </button>
-            <button type="button" className="btn btn--small btn--destructive">
+            <button type="button" className="btn btn--destructive btn--small">
               Delete
             </button>
           </>
@@ -63,6 +65,18 @@ const CupboardCards = ({ density }: { density?: 'regular' | 'compact' }) => (
   </IngredientCardList>
 );
 
-export const CompendiumGrid: Story = () => <CompendiumCards />;
-export const CupboardGrid: Story = () => <CupboardCards />;
-export const CupboardGridCompact: Story = () => <CupboardCards density="compact" />;
+const defaultNode = <CompendiumCards />;
+const cupboardGridNode = <CupboardCards />;
+const cupboardGridCompactNode = <CupboardCards density="compact" />;
+
+const STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'Cupboard Grid': cupboardGridNode,
+  'Cupboard Grid Compact': cupboardGridCompactNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div>{state}</div>,
+};

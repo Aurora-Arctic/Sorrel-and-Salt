@@ -1,11 +1,14 @@
-import type { Story } from '@ladle/react';
-import type { ReactElement } from 'react';
-import { AdminTabbedFrame } from '../../../.ladle/admin-frame';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactElement, ReactNode } from 'react';
+import { AdminTabbedFrame } from '../../../.storybook/admin-frame';
+import { ShellFrame } from '../../../.storybook/shell-frame';
+import { ADMIN_PAGES } from '../AdminNav/sections';
+import TabbedPage from '../TabbedPage';
 import UserList, { PauseControl } from '.';
 import type { UserListEntry } from './types';
 
 /**
- * A row as the page builds it: its name opens the user's modal (M9.19), an
+ * A row as the page builds it: its name opens the user's modal, an
  * address the workshop does not serve, under the head the page gives it.
  */
 const listed = (user: Omit<UserListEntry, 'openHref' | 'heading'>): UserListEntry => ({
@@ -18,13 +21,14 @@ const listed = (user: Omit<UserListEntry, 'openHref' | 'heading'>): UserListEntr
   },
 });
 
-// Render-only; behaviour is asserted in tests/components/UserList. The filter
-// and the pager reach `/admin/users`, and each name's privilege changes icon
-// `/admin/privilege-changes` (MB.200), neither of which the workshop serves;
-// hover or focus an icon to see its tip.
-export default {
-  title: 'Admin / Users',
-};
+// Render-only; behaviour is asserted in tests/components/UserList. The filter, the
+// pager and each name's privilege changes icon reach `/admin/users` and
+// `/admin/privilege-changes`, which the workshop does not serve.
+const meta = {
+  title: 'Admin / User List',
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const USERS: readonly UserListEntry[] = [
   listed({
@@ -49,7 +53,7 @@ const USERS: readonly UserListEntry[] = [
     emailVerified: false,
     primaryAdmin: false,
   }),
-  // Approved, so the row offers Revoke rather than Approve (M5.8).
+  // Approved, so the row shows Yes and no control: Revoke is in the user modal alone.
   listed({
     id: 'u-cy',
     name: 'Cy Fixturewort',
@@ -57,30 +61,41 @@ const USERS: readonly UserListEntry[] = [
     role: 'user',
     canCreateWorkspace: true,
     createdAt: new Date('2026-06-07T08:09:10Z'),
-    // Facebook among them, so its mark shows (MB.63).
+    // Facebook among them, so its mark shows.
     providers: ['facebook', 'google'],
     emailVerified: true,
     primaryAdmin: false,
   }),
 ];
 
-// Each story sits inside the admin layout's frame and the People page, its
-// Users tab open, so the workshop shows what the page shows: the switch on
-// admin changes, where a story gives it, beside the heading as the tab's
-// action.
+// Each story sits inside the admin layout's frame and the People page, Users tab
+// open, with the switch on admin changes beside the heading where a story gives it.
 
-// The page as /admin/users draws it where impersonation is registered
-// (MB.53): the seven columns as signed off at MB.115, the facts no control
-// changes muted, Impersonate ruled in red at the right. Impersonate and Pause
-// Admin Changes each ask first; in the workshop the call reaches no server,
-// so confirming shows the refusal.
-export const Default: Story = () => (
+// The page as /admin/users draws it where impersonation is registered: seven columns,
+// facts no control changes muted, Impersonate red in its red-ruled column at the right.
+// Impersonate and Pause Admin Changes, the two red controls that destroy nothing, each ask first; the call reaches no server, so confirming
+// shows the refusal. Drawn in the app shell, so the phone shows the bottom bar.
+const defaultNode = (
+  <ShellFrame area="admin">
+    <TabbedPage
+      title={ADMIN_PAGES.people.label}
+      tabs={ADMIN_PAGES.people.tabs}
+      action={<PauseControl paused={false} canToggle={false} />}
+    >
+      <UserList users={USERS} query="" awaitingApproval={false} canImpersonate nextHref="#next" />
+    </TabbedPage>
+  </ShellFrame>
+);
+
+// The same page for the primary admin, the one admin who may pause: the switch
+// is a usable red Pause Admin Changes rather than the dashed, locked resting button.
+const primaryAdminNode = (
   <AdminTabbedFrame page="people" action={<PauseControl paused={false} canToggle />}>
     <UserList users={USERS} query="" awaitingApproval={false} canImpersonate nextHref="#next" />
   </AdminTabbedFrame>
 );
 
-export const Filtered: Story = () => (
+const FilteredView = () => (
   <AdminTabbedFrame page="people">
     <UserList
       users={USERS.filter((user) => !user.canCreateWorkspace)}
@@ -90,6 +105,8 @@ export const Filtered: Story = () => (
     />
   </AdminTabbedFrame>
 );
+
+const filteredNode = <FilteredView />;
 
 // A middle page of a list longer than one: the page's 25, by name, and the
 // pager beneath them, both ends live and where the page stands between.
@@ -119,35 +136,39 @@ const PageTwo = (): ReactElement => (
   </AdminTabbedFrame>
 );
 
-export const OnePageOfSeveral: Story = () => <PageTwo />;
+const middlePageNode = <PageTwo />;
 
-// A middle page at phone width: the pager beneath the last card.
-export const OnePageOfSeveralPhoneDark: Story = () => <PageTwo />;
-OnePageOfSeveralPhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const OnePageOfSeveralPhoneLight: Story = () => <PageTwo />;
-OnePageOfSeveralPhoneLight.meta = { theme: 'light', width: 375 };
-
-// Every filter in use, which the sentence names. Spread, since a `role` attribute reads to the linter as an ARIA role.
+// Every filter in use, which the sentence names. Spread, since a `role` attribute reads as an ARIA role.
 const EVERY_FILTER = { query: 'nobody', role: 'admin', awaitingApproval: true } as const;
 
-export const NoMatch: Story = () => (
+const roleFilterNode = (
+  <AdminTabbedFrame page="people">
+    <UserList
+      users={USERS.filter((user) => user.role === 'admin')}
+      query=""
+      role="admin"
+      awaitingApproval={false}
+    />
+  </AdminTabbedFrame>
+);
+
+const noMatchesNode = (
   <AdminTabbedFrame page="people">
     <UserList users={[]} {...EVERY_FILTER} />
   </AdminTabbedFrame>
 );
 
 // Where impersonation is not registered: no Impersonate column.
-export const WithoutImpersonation: Story = () => (
+const withoutImpersonationNode = (
   <AdminTabbedFrame page="people">
     <UserList users={USERS} query="" awaitingApproval={false} />
   </AdminTabbedFrame>
 );
 
-// MB.205: two users awaiting approval, one unverified and one verified. Approve
+// Two users awaiting approval, one unverified and one verified. Approve
 // on the first opens a confirmation warning that nobody has proved who holds
 // the address; on the second, none.
-export const UnverifiedApproval: Story = () => (
+const unverifiedApprovalNode = (
   <AdminTabbedFrame page="people">
     <UserList
       users={[
@@ -170,12 +191,11 @@ export const UnverifiedApproval: Story = () => (
   </AdminTabbedFrame>
 );
 
-// MB.59, M11.20: the primary admin, labelled, its Change Role in view but
-// unusable with the reason beside it; every other row's Change Role opens its
-// choice of the roles the user does not hold, a promotion warning on Bo's
-// unverified address. Dee is a curator, in bold as an admin is, with no
-// coven-creation control, since every curator holds it.
-export const AdminRoles: Story = () => (
+// The primary admin, labelled, with Change Role in view but unusable (reason
+// beside it). Every other row's Change Role opens the roles the user lacks, with
+// a promotion warning on Bo's unverified address. Dee is a curator, in bold as an
+// admin is, with no coven-creation control since every curator holds it.
+const adminRolesNode = (
   <AdminTabbedFrame page="people">
     <UserList
       users={[
@@ -210,9 +230,9 @@ export const AdminRoles: Story = () => (
   </AdminTabbedFrame>
 );
 
-// MB.63: the switch as the Users tab's action beside the heading, as /admin/users draws it. Paused, to the primary admin: the warning and a
-// usable Resume, and every row's control usable, since the pause exempts it.
-export const AdminChangesPaused: Story = () => (
+// The switch as the Users tab's action beside the heading, as /admin/users draws it.
+// Paused: the warning and a usable Resume, and every row's control usable.
+const adminChangesPausedNode = (
   <AdminTabbedFrame page="people" action={<PauseControl paused canToggle />}>
     <UserList
       users={USERS}
@@ -224,9 +244,8 @@ export const AdminChangesPaused: Story = () => (
 );
 
 // Paused, to another admin: the warning, Resume locked with its reason in a
-// tip, and every Change Role, Approve and coven-creation Revoke locked with
-// the pause's reason.
-export const AdminChangesNotPrimary: Story = () => (
+// tip, and every Change Role and Approve locked with the pause's reason.
+const adminChangesNotPrimaryNode = (
   <AdminTabbedFrame page="people" action={<PauseControl paused canToggle={false} />}>
     <UserList
       users={USERS}
@@ -237,25 +256,24 @@ export const AdminChangesNotPrimary: Story = () => (
   </AdminTabbedFrame>
 );
 
-// At phone width, the list as it ships: every row a card (`.data-table--stack`),
-// each fact led by its column's name, Impersonate across the card's foot.
-export const PhoneDark: Story = () => (
-  <AdminTabbedFrame page="people" action={<PauseControl paused={false} canToggle />}>
-    <UserList users={USERS} query="" awaitingApproval={false} canImpersonate nextHref="#next" />
-  </AdminTabbedFrame>
-);
-PhoneDark.meta = { theme: 'dark', width: 375 };
+const LISTED_STATES: Record<string, ReactNode> = {
+  'Without Filters': defaultNode,
+  'Primary Admin': primaryAdminNode,
+  'Awaiting Approval And Query': filteredNode,
+  'Middle Page': middlePageNode,
+  'Role Filter': roleFilterNode,
+  'No Matches': noMatchesNode,
+  'Without Impersonation': withoutImpersonationNode,
+  'Unverified Approval': unverifiedApprovalNode,
+  'Admin Roles': adminRolesNode,
+  'Admin Changes Paused': adminChangesPausedNode,
+  'Admin Changes Not Primary': adminChangesNotPrimaryNode,
+};
 
-export const PhoneLight: Story = () => (
-  <AdminTabbedFrame page="people" action={<PauseControl paused={false} canToggle />}>
-    <UserList users={USERS} query="" awaitingApproval={false} canImpersonate nextHref="#next" />
-  </AdminTabbedFrame>
-);
-PhoneLight.meta = { theme: 'light', width: 375 };
-
-// The filtered list at a phone's width, Clear beneath the fields.
-export const FilteredPhoneDark: Story = () => <Filtered />;
-FilteredPhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const FilteredPhoneLight: Story = () => <Filtered />;
-FilteredPhoneLight.meta = { theme: 'light', width: 375 };
+export const States: Story = {
+  args: { state: 'Without Filters' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(LISTED_STATES), mapping: LISTED_STATES },
+  },
+  render: ({ state }) => <div>{state}</div>,
+};

@@ -1,9 +1,7 @@
 import type postgres from 'postgres';
 
-// MB.195: the trigger on `users` refuses a privilege change that declares no
-// route, from any client. A test's setup changing `role` or
-// `can_create_workspace` by hand is a `psql` fix as far as the database can
-// tell, so it declares itself as one
+// The trigger on `users` refuses a privilege change that declares no route, from any client, so a test's
+// setup changing `role` or `can_create_workspace` by hand declares itself a `psql` fix
 // (claude-docs/design-decisions/mb.194-privilege-ledger-by-trigger.md).
 
 /** Runs `work` in one transaction that first declares the route `manual`, as a `psql` fix must. */

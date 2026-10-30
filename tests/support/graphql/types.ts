@@ -4,7 +4,12 @@ import type { Context } from '@/graphql/types';
 export interface WireError {
   message: string;
   path?: (string | number)[];
-  extensions?: { code?: string; fieldErrors?: { path: (string | number)[]; message: string }[] };
+  extensions?: {
+    code?: string;
+    fieldErrors?: { path: (string | number)[]; message: string }[];
+    /** On `STALE_WRITE`: the revision the row is at now. */
+    currentRevision?: number;
+  };
 }
 
 /** A GraphQL response body, as the browser receives it. */

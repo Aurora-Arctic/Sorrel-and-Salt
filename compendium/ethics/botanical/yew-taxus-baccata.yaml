@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/yew-taxus-baccata
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Taxus baccata
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-taxus-baccata
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Taxus baccata", 2013, 10.2305/IUCN.UK.2013-1.RLTS.T42546A2986660.en'

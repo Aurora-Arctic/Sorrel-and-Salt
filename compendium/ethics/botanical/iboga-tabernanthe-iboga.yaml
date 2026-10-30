@@ -1,0 +1,31 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/iboga-tabernanthe-iboga
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species
+    value: Least Concern (IUCN 3.1)
+    listedAs: Tabernanthe iboga
+    scope: global
+    nameBasis: stated
+    source: wikipedia-tabernanthe-iboga
+    locator: 'taxobox, "Conservation status": "Least Concern (IUCN 3.1)"'
+  - list: other
+    name: Gabon cultural protection law of 1994, as printed by Wikipedia
+    value: Export of iboga from Gabon is illegal
+    listedAs: Tabernanthe iboga
+    scope: Gabon
+    nameBasis: stated
+    source: wikipedia-tabernanthe-iboga
+    locator: 'legal status section: "Exportation of iboga from Gabon is illegal since the passage of a 1994 cultural protection law."'
+  - list: other
+    name: Wikipedia article text (no assessor named)
+    value: Harvesting and slow growth could have severely damaged the wild population
+    listedAs: Tabernanthe iboga
+    scope: unknown
+    nameBasis: stated
+    source: wikipedia-tabernanthe-iboga
+    locator: '"the destructive effects of harvesting and slow growth could have already severely damaged the wild iboga population."'
+questions:
+  - Wikipedia says 'the destructive effects of harvesting and slow growth could have already severely damaged the wild iboga population.' but names no assessor. Find the assessment, or drop the row? I recommend finding the assessment.
+  - 'The source does not say where the status "Harvesting and slow growth could have severely damaged the wild population" (Wikipedia article text (no assessor named)) applies, so its scope is recorded as unknown. Owner: say whether it is global or for one place, and whether to keep the row. Recommendation: keep it as unknown and do not remove the entry on it.'

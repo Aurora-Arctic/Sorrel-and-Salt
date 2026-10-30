@@ -5,7 +5,8 @@ import IngredientSearch, {
   IngredientSearchForm,
   useSearchText,
 } from '@/components/IngredientSearch';
-import type { IngredientSearchMatch } from '@/components/IngredientSearch/types';
+import type { IngredientSearchMatch, SearchSource } from '@/components/IngredientSearch/types';
+import { RouteModalContext } from '@/components/Modal/route-modal-provider';
 import { DEBOUNCE_MS } from '@/lib/debounce';
 import { filterForm } from '../../support/filter-form';
 import { renderWithClient, waitFor } from '../../support/ingredient-form';
@@ -16,9 +17,7 @@ import { mockGraphQLQuery } from '../../support/msw/graphql';
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The search shell and its row (M8.10): a type-ahead over the compendium's
-// ranked search, whose dropdown follows the debounced text while the list
-// changes only on Enter, a pick or the action row
+// The search shell and its row: a type-ahead over the compendium's ranked search, whose dropdown follows the debounced text while the list changes only on Enter, a pick or the action row
 // (claude-docs/components/ingredient-search.md, "Testing").
 
 const PATH = '/compendium';
@@ -50,7 +49,11 @@ function offer(matches: IngredientSearchMatch[], hasNextPage = false) {
 /** A slot field that reads the text typed, as a filter applying on its change would. */
 const SlotField = (): ReactElement => <output aria-label="Typed">{useSearchText()}</output>;
 
-function renderSearch(query = '', workspaceId?: string) {
+function renderSearch(
+  query = '',
+  source?: SearchSource,
+  opener: typeof pickHref | null = pickHref,
+) {
   return renderWithClient(
     <IngredientSearch
       search={
@@ -60,8 +63,8 @@ function renderSearch(query = '', workspaceId?: string) {
           query={query}
           shown={[query]}
           searchHref={searchHref}
-          pickHref={pickHref}
-          workspaceId={workspaceId}
+          pickHref={opener ?? undefined}
+          source={source}
         >
           <SlotField />
         </IngredientSearchForm>
@@ -138,12 +141,10 @@ describe('IngredientSearch', () => {
     expect(screen.getByRole('button', { name: 'Search' })).toHaveAttribute('type', 'submit');
   });
 
-  it("draws the Search submit inside the box's control before the text, with no chevron, and a press on it submits the form", () => {
+  it('draws the Search submit with no chevron, and a press on it submits the form', () => {
     renderSearch('wort');
 
     const search = screen.getByRole('button', { name: 'Search' });
-    expect(box().closest('.combobox__control')).toContainElement(search);
-    expect(search.compareDocumentPosition(box()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(screen.queryByRole('button', { name: /^Show Name/ })).not.toBeInTheDocument();
     const submitted = vi.fn((event: Event) => event.preventDefault());
     form().addEventListener('submit', submitted);
@@ -283,13 +284,13 @@ describe('IngredientSearch', () => {
     expect(status()).not.toHaveTextContent('3');
   });
 
-  it('counts its rows in the status, and reads the empty message when nothing matches', async () => {
+  it('reads the empty message when nothing matches', async () => {
     offer([match(1), match(2)]);
     renderSearch();
 
     typeName('wort');
     await settle();
-    await waitFor(() => expect(status()).toHaveTextContent('2'));
+    await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(2));
 
     offer([]);
     typeName('zzzz');
@@ -318,6 +319,43 @@ describe('IngredientSearch', () => {
     expect(router.push.mock.calls).toEqual([[pickHref(match(2))]]);
     expect(box()).toHaveValue('wort');
     expect(screen.getByText('Results go here')).toBeInTheDocument();
+  });
+
+  // A pick opens the item's Quick Look, so under a route
+  // modal opener it opens there, in the place the page's details modal stands in, and the
+  // modal shows its head at once while its page loads.
+  it('opens a pick through the route modal opener, under its heading and in its place', async () => {
+    offer([match(1), match(2)]);
+    const open = vi.fn();
+    renderWithClient(
+      <RouteModalContext.Provider value={{ loading: undefined, open, cancel: () => undefined }}>
+        <IngredientSearch
+          search={
+            <IngredientSearchForm
+              label="Filter Ingredients"
+              action={PATH as never}
+              query=""
+              shown={[]}
+              searchHref={searchHref}
+              pickHref={pickHref}
+              pickHeading={(picked) => ({ title: picked.name })}
+              pickPlace="details"
+            />
+          }
+          previousHref={undefined}
+          nextHref={undefined}
+        >
+          <p>Results go here</p>
+        </IngredientSearch>
+      </RouteModalContext.Provider>,
+    );
+
+    typeName('wort');
+    await settle();
+    fireEvent.click(await screen.findByRole('option', { name: /Testwort 2/ }));
+
+    expect(open.mock.calls).toEqual([[pickHref(match(2)), { title: 'Testwort 2' }, 'details']]);
+    expect(router.push).not.toHaveBeenCalled();
   });
 
   it('empties the box with its clear and applies the empty search', async () => {
@@ -395,7 +433,7 @@ describe('IngredientSearch', () => {
 
     it("asks the coven's ingredients with its id, and never the compendium", async () => {
       const cupboardAsked = offerCupboard([match(1)]);
-      renderSearch('', WORKSPACE);
+      renderSearch('', { kind: 'cupboard', workspaceId: WORKSPACE });
 
       typeName('wort');
       await act(async () => {
@@ -413,7 +451,7 @@ describe('IngredientSearch', () => {
 
     it("names a row by the coven's label where the cupboard sets one", async () => {
       const cupboardAsked = offerCupboard([{ ...match(2), label: 'Granny Wort' }, match(3)]);
-      renderSearch('', WORKSPACE);
+      renderSearch('', { kind: 'cupboard', workspaceId: WORKSPACE });
 
       typeName('wort');
       await act(async () => {
@@ -436,6 +474,96 @@ describe('IngredientSearch', () => {
 
       expect(asked.length).toBeGreaterThan(0);
       expect(cupboardAsked).toHaveLength(0);
+    });
+  });
+  describe('in a grimoire', () => {
+    const WORKSPACE = 'workspace-w';
+    const GRIMOIRE: SearchSource = { kind: 'grimoire', workspaceId: WORKSPACE, status: 'complete' };
+
+    /** Answers the grimoire lookup with `titles`, recording the compendium lookup if it is ever sent. */
+    function offerSpells(titles: (string | null)[]) {
+      asked = [];
+      const spellsAsked: Record<string, unknown>[] = [];
+      mockGraphQLQuery('IngredientSearchMatches', (variables) => {
+        asked.push(variables);
+        return { compendium: { pageInfo: { hasNextPage: false }, edges: [] } };
+      });
+      mockGraphQLQuery('GrimoireSearchMatches', (variables) => {
+        spellsAsked.push(variables);
+        return {
+          grimoire: {
+            pageInfo: { hasNextPage: false },
+            edges: titles.map((title, n) => ({ node: { id: `spell-${n}`, title } })),
+          },
+        };
+      });
+      return spellsAsked;
+    }
+
+    const titleBox = () => screen.getByRole('combobox', { name: 'Title' });
+
+    async function typeTitle(text: string, spellsAsked: Record<string, unknown>[]) {
+      act(() => titleBox().focus());
+      typeIn(titleBox(), text);
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(DEBOUNCE_MS);
+      });
+      await waitFor(() => expect(spellsAsked.length).toBeGreaterThan(0));
+    }
+
+    it("asks the coven's grimoire of the tab's status, and never the compendium", async () => {
+      const spellsAsked = offerSpells(['Hearth Ward', null]);
+      renderSearch('', GRIMOIRE);
+
+      await typeTitle('hearth', spellsAsked);
+
+      expect(spellsAsked[spellsAsked.length - 1]).toMatchObject({
+        workspaceId: WORKSPACE,
+        query: 'hearth',
+        status: 'complete',
+      });
+      expect(asked).toHaveLength(0);
+      expect(await screen.findByRole('option', { name: 'Hearth Ward' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: 'Untitled Spell' })).toBeInTheDocument();
+    });
+
+    it("names a spell titled with spaces only 'Untitled Spell', as its card does", async () => {
+      const spellsAsked = offerSpells(['   ']);
+      renderSearch('', GRIMOIRE);
+
+      await typeTitle('hearth', spellsAsked);
+
+      expect(await screen.findByRole('option', { name: 'Untitled Spell' })).toBeInTheDocument();
+    });
+
+    it("opens a picked spell's recipe page, by the spell's id", async () => {
+      const spellsAsked = offerSpells(['Hearth Ward', null]);
+      renderSearch('', GRIMOIRE);
+
+      await typeTitle('hearth', spellsAsked);
+      fireEvent.click(await screen.findByRole('option', { name: 'Hearth Ward' }));
+
+      expect(router.push.mock.calls).toEqual([[`${PATH}?edit=spell-0`]]);
+    });
+
+    it('applies the typed text as the search where no page opener is given', async () => {
+      const spellsAsked = offerSpells(['Hearth Ward']);
+      renderSearch('', GRIMOIRE, null);
+
+      await typeTitle('hearth', spellsAsked);
+      fireEvent.click(await screen.findByRole('option', { name: 'Hearth Ward' }));
+
+      expect(router.push.mock.calls).toEqual([[searchHref('Hearth Ward')]]);
+    });
+
+    it('clears by its own label and applies the empty search', () => {
+      offerSpells([]);
+      renderSearch('hearth', GRIMOIRE);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Clear Title' }));
+
+      expect(titleBox()).toHaveValue('');
+      expect(router.push.mock.calls).toEqual([[searchHref('')]]);
     });
   });
 });

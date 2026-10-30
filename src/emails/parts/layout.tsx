@@ -17,14 +17,9 @@ import type { Message } from '../../lib/types';
 import type { BaseEmailProps, MessageInput } from '../types';
 import type { EmailLayoutProps, InkProps, Part } from './types';
 
-// Every mail's frame: the site's palette, type and corner photographs
-// (claude-docs/email.md, "Design"). Dark is written inline, because clients
-// that ignore `prefers-color-scheme` (Gmail) also ignore most <style>; light
-// is the override in the one media query, for the clients that honour it.
-// Zoho Mail reads no <style> at all and, in its Night mode, inverts every
-// inline colour it can see — so the dark is written in the two forms it leaves
-// alone: a gradient for a background, and an anchor around every run of text
-// (MB.262; the measurements are in email.md).
+// Every mail's frame: the site's palette, type and corner photographs (claude-docs/email.md,
+// "Design"). Dark is inline, light the one media query's override; Zoho Mail's Night mode needs
+// dark written as a gradient and an anchor around text (measurements in email.md).
 
 const { dark, light } = EMAIL_THEMES;
 
@@ -85,17 +80,16 @@ function stylesheet(origin: string): string {
 }
 
 // How far the sorrel runs under the heading, in CSS pixels. Only the 32px bold
-// heading meets it, at 4.78:1 (measured in MB.118).
+// heading meets it, at 4.78:1.
 const OVERLAP = 56;
 
 // Word treats a unitless or fractional line height unreliably; this makes it keep the pixel one.
 // React's CSSProperties does not list the Word-only property, hence the cast.
 const EXACT_LINES = { msoLineHeightRule: 'exactly' } as CSSProperties;
 
-// The margin every Paragraph ends on. The salt's padding is built from it, so
-// the photograph meets the text block's edge and never an icon: measured in
-// MB.118, the light salt's darkest pixel holds the muted ink at 2.14:1 and the
-// link at 1.66:1, and no opacity fixes the link.
+// The margin every Paragraph ends on. The salt's padding is built from it, so the photograph meets
+// the text block's edge and never an icon: the light salt's darkest pixel holds the muted ink at
+// 2.14:1 and the link at 1.66:1, and no opacity fixes the link.
 const PARAGRAPH_GAP = 16;
 
 // The wordmark's row, top right, beside the sorrel.
@@ -125,6 +119,7 @@ const INK_BACKGROUND = 'linear-gradient(rgba(0,0,0,0),rgba(0,0,0,0))';
  */
 function Ink({ className, color, font, children }: InkProps) {
   return (
+    // oxlint-disable-next-line jsx-a11y/anchor-is-valid -- an anchor with no href is the point: it is text that Zoho Mail Night mode leaves uncoloured
     <a
       className={className}
       style={{ background: INK_BACKGROUND, color, fontFamily: font, textDecoration: 'none' }}
@@ -296,7 +291,7 @@ export function Paragraph({ children, muted = false }: { children: ReactNode; mu
   );
 }
 
-/** The one thing to do. The HTML has a button, with the link written out for a client that hides buttons; the text part has the link once. */
+/** The one thing to do: a button in the HTML (with the link written out for clients that hide buttons), the link once in the text. */
 export function Action({ href, label, part }: { href: string; label: string; part: Part }) {
   if (part === 'text') return <Paragraph>{href}</Paragraph>;
   return (
@@ -379,7 +374,7 @@ export function IgnoreNote({ when }: { when: string }) {
   return <Paragraph muted>{`${when}, you can ignore this email.`}</Paragraph>;
 }
 
-/** Renders a template once per part, so the text part is written for text rather than stripped from the HTML. */
+/** Renders a template once per part, so the text part is written for text, not stripped from the HTML. */
 export async function renderParts(
   email: (part: Part) => ReactElement,
 ): Promise<{ html: string; text: string }> {
@@ -403,12 +398,9 @@ export async function renderParts(
 }
 
 /**
- * A template's message function: `subject` and `to`, and the template
- * rendered to both parts `send` takes, so a caller never renders anything
- * itself. The template is handed `to` along with its own props and ignores
- * it: dropping it first would leave a generic `Omit` TypeScript cannot
- * prove is the template's props again. `subject` is a function when the
- * subject names something the message carries, such as a coven.
+ * A template's message function: `subject` and `to`, and the template rendered to both parts
+ * `send` takes. The template is handed `to` and ignores it, since dropping it first would leave
+ * an `Omit` TypeScript cannot prove is the props again. `subject` may be a function of the message.
  */
 export function defineMessage<Props extends BaseEmailProps>(
   subject: string | ((input: MessageInput<Props>) => string),

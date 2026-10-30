@@ -1,0 +1,8 @@
+// primitives-base hung off the preview body, as the app hangs it off `body`, at the same
+// specificity. The class is `where()`-wrapped so the scope adds none (preview.tsx adds it to the body).
+
+@use '../src/scss/primitives' as *;
+
+body:where(.workshop-app) {
+  @include primitives-base;
+}

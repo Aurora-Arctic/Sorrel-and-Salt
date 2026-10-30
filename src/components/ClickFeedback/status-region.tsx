@@ -4,12 +4,9 @@ import { createContext, useCallback, useContext, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import type { Announce } from './types';
 
-// The page's one polite status region: an `<output>`, whose role is `status`,
-// mounted with the page so a screen reader is already listening to it when the
-// first sentence arrives (a live region added with its text is often not
-// read). A control says what its click did through `announce`, rather than
-// each control keeping a region of its own (claude-docs/components/click-feedback.md,
-// "The status region").
+// The page's one polite status region, an `<output>` mounted with the page so a screen reader is
+// already listening when the first sentence arrives. Controls speak through `announce`
+// (claude-docs/components/click-feedback.md, "The status region").
 
 const NOTHING: Announce = () => undefined;
 

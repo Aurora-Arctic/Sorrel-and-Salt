@@ -12,29 +12,17 @@ import type { ShellWorkspace } from '../../lib/types';
 import IngredientForm from '../IngredientForm';
 import type { SavedIngredient } from '../IngredientForm/types';
 import Modal from '../Modal';
-import { NEW, closedHref, openHref } from './add-href';
+import { NEW, NEW_COMPENDIUM_ENTRY, askedCoven, closedHref, openHref } from './add-href';
 import AddIngredientMenu from './add-ingredient-menu';
 import type { AddDestination, AddIngredientButtonProps } from './types';
 
-// The bar's one global action (MB.7, M8.16). The places a new ingredient can go
-// are the compendium, for someone who curates, and each coven they may write
-// to. One place is a plain button; two or more make it a split button, the
-// main part opening the default place and the chevron a menu of them all. The
-// dialog for a coven names it in its head and cannot change it.
-//
-// A coven's dialog is opened by the page's address, as the admin pages' are
-// (the owner's call, 2026-10-18): `?new` on any page in the shell opens the
-// default coven's, `?new=<slug>` a named one's, so a reload keeps it, Back
-// leaves it and the address can be shared. The press writes the address with
-// the browser's own `pushState`, which Next's router follows, rather than a
-// navigation: nothing on the server needs re-reading to draw the form. On an
-// admin page `?new` is the page's own compendium dialog, so a coven chosen
-// there is a navigation to that coven's index with `?new`.
-// claude-docs/components/modal.md, "Add Ingredient".
+// The bar's one global action: a plain button for one place to add, a split button for two or more. A
+// coven's dialog opens at `?new=ingredient-coven-<slug>` by `pushState`; the compendium's New Entry
+// is a navigation (claude-docs/components/modal.md, "Add Ingredient").
 
 const LABEL = 'Add Ingredient';
-// The solid green at the medium size (the owner's call, M8.16): the bar's one
-// action, taller than a small button and shorter than a field.
+// The solid green at the medium size: the bar's one action, taller than a small
+// button and shorter than a field.
 const CLASSES = 'btn btn--solid btn--medium app-shell__add';
 const MORE_CLASSES = `${CLASSES} app-shell__add--more`;
 
@@ -61,21 +49,23 @@ function AddIngredientBody({
   workspace,
   close,
   onSaved,
+  onCreated,
 }: {
   workspace: ShellWorkspace;
   close: () => void;
   onSaved: (saved: SavedIngredient) => void;
+  onCreated: (saved: SavedIngredient) => void;
 }): ReactElement {
   return (
     <IngredientForm
       workspaceId={workspace.id}
       workspaceName={workspace.name}
+      onCreated={onCreated}
       onSaved={(saved, next) => {
         if (next !== 'open') return;
         onSaved(saved);
         close();
       }}
-      onCancel={close}
       duplicateHref={(match) => `/coven/${workspace.slug}/ingredients/${match.id}`}
       // A linked substitute that is a compendium entry opens its public page; a
       // coven's own has none to open from here.
@@ -85,10 +75,9 @@ function AddIngredientBody({
 }
 
 /**
- * Every place the viewer can add to, the compendium first, and which one the
- * bar's main part opens. On an admin page a curator's default is the
- * compendium; otherwise the coven the address names, else the first writable
- * one. A coven the viewer may only read is not a destination.
+ * Every place the viewer can add to, the compendium first: the bar's main part opens a curator's compendium
+ * on an admin page, otherwise the coven the address names, else the first writable one. A read-only coven is
+ * no destination.
  */
 function destinationsOf(
   viewer: AddIngredientButtonProps['viewer'],
@@ -98,6 +87,7 @@ function destinationsOf(
   all: AddDestination[];
   compendium: AddDestination[];
   covens: AddDestination[];
+  defaultCoven: ShellWorkspace | undefined;
   initial: AddDestination | undefined;
 } {
   const covens: AddDestination[] = workspaces
@@ -115,11 +105,13 @@ function destinationsOf(
   const slug = covenSlugOf(pathname);
   const named = covens.find((d) => d.kind === 'coven' && d.workspace.slug === slug);
   const onAdmin = pathname.startsWith('/admin') && compendium.length > 0;
+  const coven = named ?? covens[0];
   return {
     all,
     compendium,
     covens,
-    initial: onAdmin ? compendium[0] : (named ?? covens[0] ?? compendium[0]),
+    defaultCoven: coven?.kind === 'coven' ? coven.workspace : undefined,
+    initial: onAdmin ? compendium[0] : (coven ?? compendium[0]),
   };
 }
 
@@ -135,29 +127,37 @@ const AddIngredientButton = ({
   // Set by a save that opens the new entry's page: the dialog then closes on
   // that navigation, and the close must not write the address under it.
   const leaving = useRef(false);
+  // The coven whose dialog an autosave has already created its ingredient in: the dialog stays
+  // open after `?new` is replaced by the ingredient’s own `?edit=` address.
+  const [created, setCreated] = useState<ShellWorkspace | null>(null);
 
-  const { all, compendium, covens, initial } = destinationsOf(viewer, workspaces, pathname);
-  // The menu's groups, the side the viewer is on first: a coven's page the covens, any
-  // other page the compendium, as the bar has always led with it.
+  const { all, compendium, covens, defaultCoven, initial } = destinationsOf(
+    viewer,
+    workspaces,
+    pathname,
+  );
+  // The menu's groups, the side the viewer is on first: a coven's page the covens,
+  // any other page the compendium.
   const sections = sectionsFor(
     { compendium, coven: covens },
     covenSlugOf(pathname) ? 'coven' : 'compendium',
   );
   const onAdmin = pathname.startsWith('/admin');
-  // The coven whose dialog the address opens: `?new` the default coven,
-  // `?new=<slug>` that coven, and nothing for a slug the viewer cannot write
-  // to. An admin page's `?new` is its own dialog, never this one.
-  const asked = onAdmin ? null : params.get(NEW);
-  const defaultCoven = initial?.kind === 'coven' ? initial.workspace : undefined;
-  const adding =
+  // The coven whose dialog the address opens: `?new=ingredient` (or a bare `?new`
+  // off an admin page) the default coven, `?new=ingredient-coven-<slug>` that
+  // coven, and nothing for a slug the viewer cannot write to or any other value.
+  const asked = askedCoven(params.get(NEW), onAdmin);
+  const asking =
     asked === null
       ? null
-      : asked === ''
+      : asked === 'default'
         ? (defaultCoven ?? null)
         : (all.find(
             (d): d is Extract<AddDestination, { kind: 'coven' }> =>
               d.kind === 'coven' && d.workspace.slug === asked,
           )?.workspace ?? null);
+
+  const adding = asking ?? created;
 
   if (!viewer.verified) return null;
   if (!initial) return null;
@@ -167,14 +167,11 @@ const AddIngredientButton = ({
     // request: the route-modal provider that would open it at once sits below
     // the shell.
     if (destination.kind === 'compendium') {
-      navigate('/admin/compendium?new');
-    } else if (onAdmin) {
-      navigate(`/coven/${destination.workspace.slug}?${NEW}` as Route);
+      navigate(`/admin/compendium?${NEW}=${NEW_COMPENDIUM_ENTRY}` as Route);
     } else {
-      const slug =
-        destination.workspace.id === defaultCoven?.id ? undefined : destination.workspace.slug;
       leaving.current = false;
-      window.history.pushState(null, '', openHref(pathname, params, slug));
+      setCreated(null);
+      window.history.pushState(null, '', openHref(pathname, params, destination.workspace.slug));
     }
   };
 
@@ -182,6 +179,13 @@ const AddIngredientButton = ({
     // Replacing, so Back does not open it again, as RouteModal closes. A save
     // is on its way to the new entry's page, and a replace here would land
     // under that push and keep the page where it was.
+    if (created) {
+      setCreated(null);
+      if (!leaving.current) {
+        navigate(`/coven/${created.slug}/ingredients` as Route, { replace: true });
+      }
+      return;
+    }
     if (!leaving.current && params.has(NEW)) {
       window.history.replaceState(null, '', closedHref(pathname, params));
     }
@@ -215,6 +219,15 @@ const AddIngredientButton = ({
             <AddIngredientBody
               workspace={adding}
               close={done}
+              onCreated={(ingredient) => {
+                // Reloading reopens the ingredient in its own dialog on the coven’s list.
+                window.history.replaceState(
+                  null,
+                  '',
+                  `/coven/${adding.slug}/ingredients?edit=${ingredient.id}`,
+                );
+                setCreated(adding);
+              }}
               onSaved={(ingredient) => {
                 setSaved(savedMessage(ingredient));
                 // Save Ingredient opens the new ingredient's page, an address

@@ -3,33 +3,21 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import IngredientEntry from '../../../../../components/IngredientEntry';
 import { pageTitleOf } from '../../../../../components/IngredientEntry/page-title';
 import type { LinkedIngredient } from '../../../../../components/IngredientEntry/types';
-import { NotFound } from '../../../../../lib/errors';
+import { Forbidden, NotFound } from '../../../../../lib/errors';
+import { getSession } from '../../../../../lib/request-session';
+import ReviewMark from '../../../../../components/IngredientEntry/review-mark';
 import { entryJsonLd } from '../../../../../lib/json-ld';
 import { entryDescription, publicPageMetadata } from '../../../../../lib/page-metadata';
 import { viewerIfSignedIn } from '../../../../../lib/viewer';
 import { entryValues } from '@/app/entry-values';
-import { readCompendiumEntry } from '@/modules/ingredients';
+import { readCompendiumEntry, readCompendiumReview } from '@/modules/ingredients';
 import { publicCupboardOf } from './cupboard';
 import { covensHolding } from '@/app/plus-covens';
 import type { CompendiumEntryParams } from './types';
 
-// One compendium entry, at its public address (M8.19; MB.80): readable by
-// anyone, signed out included, and the address the coven's copy of the page
-// names as canonical. The (public) layout owns `<main>`, so this renders
-// none.
-//
-// The entry comes from `readCompendiumEntry`, a cached read that takes no
-// session, so nothing private can reach it. The page itself is drawn per
-// request: it asks `viewerIfSignedIn()`, which never redirects, to decide
-// whether to offer a curator Edit, and a signed-in person's cupboard choices
-// across the covens they may write in (M9.12, `cupboard.ts`). A visitor with
-// no session reads the page the same as ever. A member whose covens hold the
-// entry sees the In Your Cupboard shelf before its name, read once with the
-// choices (`covensHolding`); the choices change none of the page's other marks.
-//
-// An unknown slug and a coven entry's slug both answer 404, since the read
-// refuses them alike. A slug the entry has moved off answers 308 to its
-// current address; MB.84 pins that response's headers.
+// One compendium entry at its public address, readable signed out. The read is cached and sessionless,
+// but the page is drawn per request for a signed-in viewer's Edit and cupboard choices. An unknown or
+// coven slug answers 404; a moved slug answers 308.
 
 const addressOf = (slug: string) => `/compendium/ingredients/${slug}` as Route;
 
@@ -60,6 +48,19 @@ export async function generateMetadata({ params }: CompendiumEntryParams): Promi
 const hrefOf = ({ slug, workspaceId }: LinkedIngredient): Route | undefined =>
   workspaceId === null ? addressOf(slug) : undefined;
 
+// The curator's own review read. A refusal or a missing entry means no switch, never an error page.
+async function reviewOf(id: string) {
+  const curator = await getSession();
+  if (!curator) return undefined;
+  try {
+    const found = await readCompendiumReview(curator, id);
+    return { reviewedAt: found?.reviewedAt ?? null };
+  } catch (error) {
+    if (error instanceof Forbidden || error instanceof NotFound) return undefined;
+    throw error;
+  }
+}
+
 export default async function CompendiumEntryPage({ params, searchParams }: CompendiumEntryParams) {
   const { slug } = await params;
   const found = await entryAt(slug);
@@ -70,20 +71,27 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
   const { detail, movedAway } = found;
   const entry = detail.entry;
 
-  // Edit opens the compendium's edit modal over this page (M8.19), so the
-  // address carries a bare `?edit`. The form's values are read only for a
-  // curator who asks for them, since they are the longest read the page makes.
+  // A bare `?edit` opens the compendium's edit modal over this page. The form's values are read
+  // only for a curator who asks, as they are the longest read the page makes.
   const canEdit = shell?.viewer.canCurate === true;
   const own = addressOf(entry.slug);
   const search = await searchParams;
   const opened =
     canEdit && 'edit' in search
-      ? { id: entry.id, values: await entryValues(entry, null) }
+      ? {
+          id: entry.id,
+          values: await entryValues(entry, null),
+          revision: entry.revision,
+          updatedAt: entry.updatedAt.toISOString(),
+        }
       : undefined;
   // The covens of the viewer's that hold the entry, read once: the shelf mark before the
   // name says any does, and the cupboard choices say which. Someone in no coven has none to ask.
   const holding = shell?.workspaces.length ? await covensHolding(entry.id) : [];
   const covens = shell ? await publicCupboardOf(entry, own, search, holding) : undefined;
+  // The review switch's read, for a curator or admin only: per viewer, never in the cached read
+  // above, so a visitor's page is unchanged. One read serves the head's switch and the form's field.
+  const review = canEdit ? await reviewOf(entry.id) : undefined;
 
   return (
     <>
@@ -103,8 +111,22 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
                 closeHref: own,
                 deletedHref: '/compendium' as Route,
                 opened,
+                ...(review && {
+                  review: {
+                    reviewed: review.reviewedAt !== null,
+                    reviewedAt: review.reviewedAt?.toISOString() ?? null,
+                  },
+                }),
               }
             : undefined
+        }
+        reviewControl={
+          review && (
+            <ReviewMark
+              ingredientId={entry.id}
+              reviewedAt={review.reviewedAt?.toISOString() ?? null}
+            />
+          )
         }
         covens={covens}
         heldInCovens={holding.length > 0}

@@ -1,9 +1,16 @@
 'use client';
 
-import { type ReactElement, type ReactNode, useEffect, useRef, useState } from 'react';
+import {
+  type ReactElement,
+  type ReactNode,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import { useHydrated } from '../../lib/hydrated';
 import { useSlide } from '../../lib/use-slide';
-import { ChevronIcon } from '../Combobox/icons';
+import { ChevronIcon } from '../IconTip/icons';
 import { clausesText, type ClausePart, MATCHING, sentenceParts } from './parts';
 import {
   advance,
@@ -78,13 +85,9 @@ function tailNode(parts: readonly ClausePart[], shown: number, caret: ReactNode)
 }
 
 /**
- * The sentence above a list that says what it is searching for. Settled, it is one closed
- * line, "12 ingredients matching rue", that opens to the clauses beneath. While a search is
- * on its way the whole sentence is typed out in its place as the loading animation: the
- * count is "Searching for ingredients" until it comes back, then backspaced to the real one,
- * and the clauses finish typing, are held for a moment and slide up into the closed line.
- * The typed line is hidden from assistive technology; a status region is given the
- * finished sentence once, when the search returns (claude-docs/components/search-sentence.md).
+ * The sentence above a list saying what it searches for: one closed line, opening to its clauses, typed out while a search is in flight;
+ * a status region announces the finished sentence once (claude-docs/components/search-sentence.md).
+ * (claude-docs/components/search-sentence.md, "The sentence and its loading animation").
  */
 export default function SearchSentence({
   sentence,
@@ -112,23 +115,31 @@ export default function SearchSentence({
   const slide = useSlide('search-sentence__tail');
   const lineRef = useRef(line);
   const wasPending = useRef(false);
+  // The sentence last settled on screen. A list names the new search from the moment it starts,
+  // so at that edge the props already hold the new term and cannot say what the old line read.
+  const settled = useRef<Goal>({ lead: parts.lead, term: parts.term, clauses: fullClauses });
 
   const setLines = (next: Line) => {
     lineRef.current = next;
     setLine(next);
   };
 
-  // A search starting and a search returning are the two edges of `pending`.
-  useEffect(() => {
+  // A search starting and a search returning are the two edges of `pending`. Read before paint:
+  // the render where `pending` rises already draws the new search, which must not show for a frame.
+  useLayoutEffect(() => {
     if (pending && !wasPending.current) {
-      // The settled line is not kept in state, so the line to wipe is rebuilt from it.
-      setLines({
-        lead: parts.lead,
-        term: parts.term,
-        clauses: slide.state === 'closed' ? '' : fullClauses,
-        caret: 'clauses',
-      });
-      setWipe({ keepTerm: parts.term !== '' });
+      // The line to wipe is the one on screen: the settled sentence, or the typed line when a
+      // search starts before the last one has settled.
+      const old: Line =
+        phase === 'idle'
+          ? {
+              ...settled.current,
+              clauses: slide.state === 'closed' ? '' : settled.current.clauses,
+              caret: 'clauses',
+            }
+          : lineRef.current;
+      setLines(old);
+      setWipe({ keepTerm: old.term === parts.term });
       setReturned(false);
       setRush(false);
       setPhase('working');
@@ -140,6 +151,13 @@ export default function SearchSentence({
     wasPending.current = pending;
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- the edges of `pending` are the only trigger.
   }, [pending]);
+
+  // Kept only while no search is pending, so the edge above reads the line from before it rose.
+  useEffect(() => {
+    if (!pending && phase === 'idle') {
+      settled.current = { lead: parts.lead, term: parts.term, clauses: fullClauses };
+    }
+  });
 
   // The editing: a character a tick, the old line in about WIPE_MS. Reduced motion jumps to
   // the goal. The count and the term are always typed at that pace; clauses still to type

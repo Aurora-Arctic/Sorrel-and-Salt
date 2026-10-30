@@ -4,13 +4,11 @@ import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { entryRecency } from '@/lib/entry-recency';
 import {
   createCompendiumEntry,
-  getIngredient,
   updateCompendiumEntry,
   updateWorkspaceIngredient,
 } from '@/modules/ingredients';
 import { A, B, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
-import { insertReference } from '../../../support/db/insert-reference';
 import {
   type IngredientFixture,
   type Overrides,
@@ -20,11 +18,8 @@ import {
 } from '../../../support/fixtures';
 import { curatedFormId } from '../../../support/db/curated-ids';
 
-// MB.106: `updated_at` moves only when an entry really changed (migration
-// 0079), and a change to a child list (folk names, categories, references,
-// forms) moves the parent's, so the New/Updated marker reads it. Rows are
-// backdated with the trigger off (a plain update of the stamps is itself a
-// no-op to it), then the service under test is run.
+// `updated_at` moves only when an entry really changed (migration 0079), and a change to a child list (folk names, categories, references, forms) moves the parent's, so the New/Updated marker reads it.
+// Rows are backdated with the trigger off (a plain update of the stamps is itself a no-op to it), then the service under test is run.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -116,51 +111,22 @@ describe('saving a compendium entry', () => {
     expect(await recencyOf(created.id)).toBe('updated');
   });
 
-  it.each([
-    ['a folk name', { folkNames: ['Test Root'] }],
-    ['a reference', { __reference: true }],
-    ['a form', { variants: [makeVariant({ form: 'Herb', safetyNotes: 'Dilute.' })] }],
-  ] as [string, NonNullable<Parameters<typeof compendiumInput>[0]> | { __reference: true }][])(
-    'marks the entry Updated when only %s changed',
-    async (_what, change) => {
-      const created = await createCompendiumEntry(asUser(E), compendiumInput());
-      await backdate(created.id);
-      const input = compendiumInput('__reference' in change ? {} : change);
-      if ('__reference' in change) {
-        input.references = [{ referenceId: await insertReference(sql, {}, A.id) }];
-      }
-
-      await updateCompendiumEntry(asUser(E), created.id, input);
-
-      const after = await stampsOf(created.id);
-      // The row's own columns are the same, so only the touch can have moved it.
-      expect(after.updated_at.getFullYear()).not.toBe(2020);
-      expect(await recencyOf(created.id)).toBe('updated');
-    },
-  );
-
-  it('marks the entry Updated when only its categories changed', async () => {
-    const [{ id: category }] = await sql<{ id: string }[]>`
-      select id from categories where name = 'Protection' and deleted_at is null`;
+  // One child list stands for all: every child write ends at the same touch of the row
+  // in `writeChildren` (ingredient-rows.ts), so a folk name, reference, form or category alike.
+  it('marks the entry Updated when only a child list changed', async () => {
     const created = await createCompendiumEntry(asUser(E), compendiumInput());
     await backdate(created.id);
 
-    await updateCompendiumEntry(asUser(E), created.id, {
-      ...compendiumInput(),
-      categoryIds: [category],
-    });
+    await updateCompendiumEntry(
+      asUser(E),
+      created.id,
+      compendiumInput({ folkNames: ['Test Root'] }),
+    );
 
+    const after = await stampsOf(created.id);
+    // The row's own columns are the same, so only the touch can have moved it.
+    expect(after.updated_at.getFullYear()).not.toBe(2020);
     expect(await recencyOf(created.id)).toBe('updated');
-  });
-});
-
-describe('what the read carries for the marker', () => {
-  it('gives a compendium entry its two stamps', async () => {
-    const created = await createCompendiumEntry(asUser(E), compendiumInput());
-
-    const read = await getIngredient(null, created.id);
-
-    expect(entryRecency(read.createdAt, read.updatedAt)).toBe('new');
   });
 });
 

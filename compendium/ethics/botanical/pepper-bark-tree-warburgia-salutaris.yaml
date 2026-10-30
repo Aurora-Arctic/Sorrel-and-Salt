@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/pepper-bark-tree-warburgia-salutaris
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species
+    value: Endangered (IUCN 2.3)
+    listedAs: Warburgia salutaris
+    scope: global
+    nameBasis: stated
+    source: wikipedia-warburgia-salutaris
+    locator: 'taxobox, "Conservation status": "Endangered (IUCN 2.3)"'

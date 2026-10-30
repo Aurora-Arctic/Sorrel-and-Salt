@@ -9,17 +9,9 @@ import { FieldShell } from './shell';
 import type { FilterSelectFieldProps } from './types';
 
 /**
- * A list filter's closed set (MB.115): drawn by the server as a native
- * `<select>` whose blank first choice is no filter, so a press on the
- * search's magnifier before the script loads sends it, and once hydrated as
- * one of Combobox's boxes, so the row has one dropdown look (the owner's
- * call): the select-only box, or with `typeahead`, for a set long enough to
- * want a search, the type-ahead. A hidden input carries the same parameter
- * after. Each starts from the value the page shows and applies a choice
- * other than it, since the list draws its filter again from the filter it
- * shows. One width for every form of it, `filter-row__choice`, so
- * hydration moves nothing. Not `SelectField`, which is a react-hook-form
- * field: a filter has no form state, and its select must submit natively.
+ * A list filter's closed set: a native `<select>` from the server, so the search's magnifier sends it
+ * before the script loads, then one of Combobox's boxes. Not `SelectField`, which needs form state: a
+ * filter submits natively (claude-docs/components/field.md, "Switch, search and select fields for filters").
  */
 export function FilterSelectField({
   label,

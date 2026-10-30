@@ -1,11 +1,11 @@
 import 'server-only';
 import type { GroupedValueKind } from '../../../components/GroupedValueForm/types';
-import type { PageEntry } from '../../../lib/types';
 import {
   countAstrologyValues,
   countCategories,
   countDeities,
   countIngredientFormValues,
+  deityOtherNamesOf,
   getAstrologyValueBySlug,
   getCategoryBySlug,
   getDeityBySlug,
@@ -16,22 +16,11 @@ import {
   listIngredientFormValues,
 } from '@/modules/vocabulary';
 import { GROUP_READERS } from './group-readers';
-import type { ValueKindSource, ValueRow } from './types';
+import type { ValueKindSource } from './types';
 
-// Each curated value page's readers, from the vocabulary module: what tells
-// `/admin/categories` from `/admin/celestial-bodies` once the copy is the list's
-// (`GroupedValueList/kinds.ts`). Written once (MB.115) after five pages had
-// each carried the same reads under their own names. Every reader is mapped
-// onto the page's own names here, so `value-page.tsx` reads every kind alike:
-// the deities' service calls the group `traditionId`, and the astrology
-// services take the vocabulary first.
-
-/** One page's rows, each mapped onto the page's names. */
-const mapped = async <T>(
-  entries: Promise<PageEntry<T>[]>,
-  toRow: (node: T) => ValueRow,
-): Promise<PageEntry<ValueRow>[]> =>
-  (await entries).map((entry) => ({ ...entry, node: toRow(entry.node) }));
+// Each curated value page's readers, from the vocabulary module, mapped onto the page's own names
+// so `value-page.tsx` reads every kind alike: the deities' service calls the group `traditionId`,
+// and the astrology services take the vocabulary first (`GroupedValueList/kinds.ts` holds the copy).
 
 /** A flat vocabulary, read through the astrology services by its field. */
 const flat = (field: 'celestialBodies' | 'zodiacSigns'): ValueKindSource => ({
@@ -56,15 +45,20 @@ export const VALUE_KINDS: Record<GroupedValueKind, ValueKindSource> = {
   },
   // A deity's group is its tradition, by that name in its service.
   deity: {
-    list: ({ query, groupId }, page) =>
-      mapped(listDeities({ query, traditionId: groupId }, page), (deity) => ({
-        ...deity,
-        groupId: deity.traditionId,
-      })),
+    // Its other names in one read for the page, so its row can say them.
+    list: async ({ query, groupId }, page) => {
+      const entries = await listDeities({ query, traditionId: groupId }, page);
+      const otherNames = await deityOtherNamesOf(entries.map(({ node }) => node.id));
+      return entries.map((entry, i) => ({
+        ...entry,
+        node: { ...entry.node, groupId: entry.node.traditionId, otherNames: otherNames[i] },
+      }));
+    },
     count: ({ query, groupId }, start) => countDeities({ query, traditionId: groupId }, start),
     getBySlug: async (slug) => {
       const deity = await getDeityBySlug(slug);
-      return { ...deity, groupId: deity.traditionId };
+      const [otherNames] = await deityOtherNamesOf([deity.id]);
+      return { ...deity, groupId: deity.traditionId, otherNames };
     },
     readGroups: GROUP_READERS.deity,
   },

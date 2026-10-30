@@ -1,15 +1,18 @@
-import type { Story } from '@ladle/react';
-import { type ReactElement, useEffect, useRef } from 'react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { type ReactElement, type ReactNode, useEffect, useRef } from 'react';
 import AccountMenu from '.';
+import { WorkshopPathname } from '../../../.storybook/navigation';
+import { press } from '../../../.storybook/press';
+import { route } from '../../../.storybook/route';
 
-// Render-only; behaviour is asserted in tests/components/AccountMenu. The
-// panel hangs from the button's right edge, so each story sits at the right.
-// The wrapper keeps the menu at the top (`flex-start`), since stretched to the
-// wrapper's height the panel would open from the menu's bottom edge, and is tall
-// enough that the frame, which clips, holds the whole open panel.
-export default {
+// Render-only; behaviour is asserted in tests/components/AccountMenu. The panel
+// hangs from the button's right edge, so each story sits at the right, with a
+// tall `flex-start` wrapper so the clipping frame holds the open panel.
+const meta = {
   title: 'Shell / Account Menu',
-};
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const Right = ({ children }: { children: ReactElement }) => (
   <div
@@ -24,63 +27,74 @@ const Right = ({ children }: { children: ReactElement }) => (
   </div>
 );
 
-export const Closed: Story = () => (
-  <Right>
-    <AccountMenu name="Fixture Member" verified />
-  </Right>
-);
+const LINKS = [
+  { label: 'Your Coven', href: route('/coven/fixture-coven'), base: '/coven' },
+  { label: 'Admin', href: '/admin' as const, base: '/admin' },
+];
 
-// Opened once on mount, as a press on it would.
+// Opened once on mount, as a press on it would; `failSignOut` then presses Sign
+// Out, which the workshop does not serve, so it fails as a lost request does.
 const Opened = ({
-  verified,
+  name = 'Fixture Member',
+  verified = true,
   pendingInvitations,
+  failSignOut = false,
 }: {
-  verified: boolean;
+  name?: string;
+  verified?: boolean;
   pendingInvitations?: number;
+  failSignOut?: boolean;
 }): ReactElement => {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     ref.current?.querySelector('button')?.click();
-  }, []);
+    if (!failSignOut) return;
+    const later = setTimeout(() => press('Sign Out'), 100);
+    return () => clearTimeout(later);
+  }, [failSignOut]);
   return (
     <div ref={ref}>
       <Right>
         <AccountMenu
-          name="Fixture Member"
+          name={name}
           verified={verified}
           pendingInvitations={pendingInvitations}
-          links={[
-            { label: 'Your Coven', href: '/coven/fixture-coven', base: '/coven' },
-            { label: 'Admin', href: '/admin', base: '/admin' },
-          ]}
+          links={LINKS}
         />
       </Right>
     </div>
   );
 };
 
-export const Open: Story = () => <Opened verified />;
+// One control chooses the state, each a whole menu. Closed With Invitations
+// shows the dot on the disc for two waiting invitations. Open With One
+// Invitation reads "1 Coven Invitation". Open Unverified is Sign Out alone.
+const STATES: Record<string, ReactNode> = {
+  Closed: (
+    <Right>
+      <AccountMenu name="Fixture Member" verified />
+    </Right>
+  ),
+  Open: <Opened />,
+  'Closed With Invitations': (
+    <Right>
+      <AccountMenu name="Fixture Member" verified pendingInvitations={2} />
+    </Right>
+  ),
+  'Open With Invitations': <Opened pendingInvitations={2} />,
+  'Open With One Invitation': <Opened pendingInvitations={1} />,
+  'Open On The Admin Page': (
+    <WorkshopPathname.Provider value="/admin">
+      <Opened />
+    </WorkshopPathname.Provider>
+  ),
+  'Open With A Long Name': <Opened name="A Long Named Fixture Herbalist of the Circle" />,
+  'Sign Out Failed': <Opened failSignOut />,
+  'Open Unverified': <Opened verified={false} />,
+};
 
-// Two coven invitations waiting (M10.32): the dot on the disc, the count beside Your Account.
-export const ClosedWithInvitations: Story = () => (
-  <Right>
-    <AccountMenu name="Fixture Member" verified pendingInvitations={2} />
-  </Right>
-);
-
-export const OpenWithInvitations: Story = () => <Opened verified pendingInvitations={2} />;
-
-// The same at a phone's width, the avatar alone in the bar.
-export const OpenWithInvitationsPhone: Story = () => <Opened verified pendingInvitations={2} />;
-OpenWithInvitationsPhone.meta = { width: 375 };
-
-// Sign Out alone, the account page not yet being reachable.
-export const OpenUnverified: Story = () => <Opened verified={false} />;
-
-// A phone's width: the avatar alone, and the panel gains the links and the theme row.
-export const OpenPhone: Story = () => <Opened verified />;
-OpenPhone.meta = { width: 375 };
-
-// Seven hundred pixels, past the phone: the links in the panel, and no theme item.
-export const OpenAtSevenHundred: Story = () => <Opened verified />;
-OpenAtSevenHundred.meta = { width: 700 };
+export const States: Story = {
+  args: { state: 'Closed' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div>{state}</div>,
+};

@@ -1,0 +1,5 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/prickly-pear-opuntia
+status: needs-review
+questions:
+  - 'The CITES Appendices (valid from 5 March 2026) list the whole family: p. 64, Appendix II column, "CACTACEAE spp. (Except the species included in Appendix I and Pereskia spp., Pereskiopsis spp. and Quiabentia spp. which are not included in the Appendices)", with annotation #4. They do not print the genus Opuntia by name, and no Appendix I row prints it. Owner: say whether a family-wide listing may be recorded. Recommendation: yes, as list: cites with nameBasis: resolved, with annotation #4 quoted in the locator.'

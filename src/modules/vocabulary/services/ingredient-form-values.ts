@@ -25,18 +25,10 @@ import type {
   IngredientFormValueRow,
 } from '../types';
 
-// The curated form vocabulary: its reads, public reference data like every
-// curated vocabulary (MB.80), and its writes, a curator's or an admin's alone (M5.6a).
-// A compendium entry's forms are its variants, each a pick (MB.167, MB.215),
-// so a form a live entry's variant picked holds: its delete is refused, and
-// its rename is carried onto every such variant in the same write (MB.162). A
-// form is no part of an entry's identity or address since MB.215, so a rename
-// moves no slug. A coven's ingredient never holds a form and is never
-// rewritten: what it picked stays, and an admin writes nothing of a coven's
-// (M6.6).
+// The curated form vocabulary: public reads, and writes for a curator or an admin alone. A form a live entry's variant picked
+// holds, and a rename reaches the variant (claude-docs/db/form-vocabulary-seed.md, "Form value service details").
 
-// The list and its count, held in the data cache under the `compendium` tag
-// (claude-docs/db/compendium-cache.md).
+// The list and its count, held in the data cache under the `compendium` tag (claude-docs/db/compendium-cache.md).
 const cachedPage = cachedCompendiumRead('ingredient-form-page', findIngredientFormValues);
 const cachedCount = cachedCompendiumRead('ingredient-form-count', findIngredientFormValueCount);
 const list = cachedFilteredList(cachedPage, cachedCount, 'groupId');
@@ -49,13 +41,7 @@ const FORMS: CuratedVocabulary<typeof ingredientForms> = {
   addressHint: ' or group',
 };
 
-/**
- * One page of the curated form vocabulary under `filter`, for
- * `ingredientFormValues` and the admin page's list: a public read (MB.80), so
- * no session, and the finder decides what counts as curated — a live form
- * under a live group. A blank query is no query, and a group id that is not a
- * uuid names no group, so lists nothing, as `listCategories` reads its filter.
- */
+/** One page of the curated form vocabulary under `filter`: a public read, so no session. A blank query is no query. */
 export function listIngredientFormValues(
   filter: IngredientFormValueFilter,
   page: PageRequest,
@@ -63,11 +49,7 @@ export function listIngredientFormValues(
   return list.list(filter, page);
 }
 
-/**
- * How many forms `listIngredientFormValues` pages under `filter`, and how
- * many come before `start` — a page's first row, none on an empty page:
- * "Page X of Y".
- */
+/** How many forms `listIngredientFormValues` pages under `filter`, and how many come before `start`: "Page X of Y". */
 export function countIngredientFormValues(
   filter: IngredientFormValueFilter,
   start: Cursor | undefined,
@@ -89,10 +71,8 @@ export async function getIngredientFormValueBySlug(slug: string): Promise<Ingred
 /**
  * Adds a form, its slug derived from the name and the group's name.
  *
- * @throws {Forbidden} the caller is neither a curator nor an admin — checked before the
- * input is read.
- * @throws {ValidationError} the input breaks `IngredientFormValueInput`,
- * names no live group, or its slug is a live form's.
+ * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {ValidationError} the input breaks `IngredientFormValueInput`, names no live group, or its slug is a live form's.
  */
 export async function createIngredientFormValue(
   session: Session,
@@ -111,20 +91,11 @@ export async function createIngredientFormValue(
 }
 
 /**
- * Rewrites a form whole, its slug following the name and the group. Its
- * `seedKey` is left as it was, so a renamed seeded row is still the seed's
- * (MB.171).
- *
- * A rename carries the new name onto every live variant of a live compendium
- * entry picking the form, in the same transaction, as the variant's `form`
- * text. No entry's slug moves and no retirement is written: a form is no part
- * of an entry's address since MB.215. A change of group alone rewrites no
- * variant, since a variant holds the form's name and not its group.
+ * Rewrites a form whole, its slug following the name and the group, and carries a rename onto every live variant picking it
+ * (claude-docs/db/form-vocabulary-seed.md, "Form value service details"). Its `seedKey` is left as it was.
  *
  * @throws {Forbidden} the caller is neither a curator nor an admin.
- * @throws {ValidationError} as `createIngredientFormValue` throws it, the
- * row's own slug excepted; on `name`, a rename that would give an entry two
- * forms of one name, naming the entry.
+ * @throws {ValidationError} as `createIngredientFormValue` throws it, the row's own slug excepted; on `name`, a rename that would give an entry two forms of one name.
  * @throws {NotFound} no live form has this id.
  */
 export async function updateIngredientFormValue(
@@ -155,16 +126,9 @@ export async function updateIngredientFormValue(
 }
 
 /**
- * Soft-deletes a form no live compendium entry picked. A coven's ingredient
- * keeps its pick and stops reading it as one — the pick is the coven's, and
- * an admin writes nothing of a coven's (M6.6) — so its text moves into that
- * coven's in-use values.
+ * Soft-deletes a form no live compendium entry picked (claude-docs/db/form-vocabulary-seed.md, "Form value service details").
  *
- * The entries are read before the transaction, so an entry picking the form
- * in the instant between is left holding a deleted one, which reads as no pick.
- *
- * @throws {Forbidden} the caller is neither a curator nor an admin, or a live compendium
- * entry picked the form — the message names the entries.
+ * @throws {Forbidden} the caller is neither a curator nor an admin, or a live entry picked the form.
  * @throws {NotFound} no live form has this id.
  */
 export async function deleteIngredientFormValue(session: Session, id: string): Promise<void> {
@@ -187,10 +151,7 @@ export async function deleteIngredientFormValue(session: Session, id: string): P
   expireCompendium();
 }
 
-/**
- * The input parsed, its group checked live — a foreign key admits a retired
- * one — and the group's name, which the slug carries.
- */
+/** The input parsed, its group checked live, and the group's name, which the slug carries. */
 async function parseForm(
   input: IngredientFormValueInput,
 ): Promise<{ fields: IngredientFormValueInput; groupName: string }> {
@@ -202,16 +163,7 @@ async function parseForm(
   return { fields, groupName: parent.name };
 }
 
-/**
- * Refuses a rename that would give a live compendium entry two forms of one
- * name — the variant picking the form beside another already spelt as the new
- * name, which `ingredient_variants_form_unique` would refuse — on `name`,
- * naming each such entry. A change of case finds nothing, since the variant
- * renamed is excepted. Read before the write, and again after one the index
- * refused, since two admins can race: then `error` is that write's, and
- * anything but the variant index passes through untouched. A collision the
- * second read cannot place is refused in general terms.
- */
+/** Refuses a rename that would give a live compendium entry two forms of one name, on `name` (claude-docs/db/form-vocabulary-seed.md, "Form value service details"). */
 async function refuseDoubledForms(
   rename: { id: string; from: string; to: string },
   error?: unknown,

@@ -1,25 +1,22 @@
 'use client';
 
+import NewTabHint from '@/components/LinkHint/new-tab-hint';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 
 import { useQuery } from '@tanstack/react-query';
 import { createContext, type ReactElement, type ReactNode, useContext } from 'react';
 import { graphql } from '../../gql';
-import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlQuery } from '../../lib/graphql-client';
 import FormIcon from '../FormIcon';
 import Skeleton from '../Skeleton';
+import ReadFailure from './read-failure';
 import type { EntrySummary } from '../Combobox/types';
 import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS, labelOf } from './options';
 import type { EntryHref, SubstituteListEntry, SubstituteSummaryProps } from './types';
 import { tierOf } from './values';
 
-// A linked substitute's summary (MB.115, the owner's ask): what the
-// ingredient is, read when its chip is pressed and not before, so a list of
-// chips asks nothing until one is opened. One read of the `ingredient` query
-// through /api/graphql, which already serves an entry by id in the
-// compendium's tier or a coven's own and the compendium's, and never another
-// coven's (claude-docs/components/ingredient-form.md, "A linked substitute's
+// A linked substitute's summary: what the ingredient is, read when its chip is pressed and not
+// before, through /api/graphql (claude-docs/components/ingredient-form.md, "A linked substitute's
 // summary").
 
 const IngredientSummaryDocument = graphql(`
@@ -60,7 +57,7 @@ const IngredientSummaryDocument = graphql(`
  */
 export const EntryHrefContext = createContext<EntryHref | undefined>(undefined);
 
-/** The ingredient's values beside a form's, which add to them and never take away (MB.215). */
+/** The ingredient's values beside a form's, which add to them and never take away. */
 const joined = (own: readonly string[] | null, form: readonly string[] | null | undefined) => [
   ...new Set([...(own ?? []), ...(form ?? [])]),
 ];
@@ -88,12 +85,7 @@ export function SubstituteSummary({
   if (error) {
     return (
       <div className="entry-summary__status">
-        {/* The server's sentence, "No such ingredient" for one deleted since,
-            or else "That didn't work. Please try again." */}
-        <p role="alert">{readGraphqlFailure(error).alert}</p>
-        <button type="button" className="btn btn--small" onClick={() => void refetch()}>
-          Try Again
-        </button>
+        <ReadFailure error={error} onRetry={() => void refetch()} />
       </div>
     );
   }
@@ -135,7 +127,7 @@ export function SubstituteSummary({
           <span className="entry-summary__formal">{ingredient.canonicalName}</span>
         )}
       </p>
-      {/* Cut to its first lines on screen, the owner's call (MB.115); read
+      {/* Cut to its first lines on screen; read
           whole, since a screen reader has no ellipsis to see. */}
       {ingredient.description && (
         <p className="entry-summary__description">{ingredient.description}</p>
@@ -153,7 +145,8 @@ export function SubstituteSummary({
       {href && (
         // A new tab, so the form and its unsaved changes stay where they are.
         <a className="entry-summary__link" href={href} target="_blank" rel="noopener noreferrer">
-          Open Entry<span className="visually-hidden"> (opens in a new tab)</span>
+          See Entry
+          <NewTabHint />
         </a>
       )}
     </>

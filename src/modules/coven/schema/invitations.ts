@@ -10,15 +10,9 @@ import { idColumn, liveUnique } from '../../../db/schema-parts';
 // (claude-docs/db/invitations.md, "Invitations").
 const DEFAULT_LIFETIME = sql`now() + interval '7 days'`;
 
-// Every invitation, in two tiers as `ingredients` is (MB.201): a row naming a
-// workspace and a role invites into that coven, and a row with neither is a
-// site-tier invitation, which grants the site role it names, curator or admin
-// (M11.20), as a null workspace is a compendium entry. In `coven` with the workspace it mostly names; the admin
-// tier reaches it as admin curation reaches `ingredients`
-// (claude-docs/design-decisions/mb.201-two-tier-invitations.md). Only the
-// token's hash is stored, and there must never be a plaintext column. Marked
-// `namedWrites` (MB.198): the row is what authorises a membership or a grant,
-// so it is written only through its named insert, accept, decline and revoke.
+// Every invitation, in two tiers as `ingredients` is: a row naming a workspace and a role invites into that coven, and a row with
+// neither is a site-tier invitation granting the site role it names. Only the token's hash is stored, never plaintext, and the row is
+// written only through its named insert, accept, decline and revoke (claude-docs/design-decisions/mb.201-two-tier-invitations.md).
 export const invitations = namedWrites(
   pgTable(
     'invitations',
@@ -36,14 +30,14 @@ export const invitations = namedWrites(
       acceptedBy: uuid('accepted_by').references(() => users.id),
       // Who revoked is `updated_by`: revoking is the last write a row takes.
       revokedAt: timestamp('revoked_at'),
-      // The invitee's no (M10.34): a coven invitation only, answered once. Who
+      // The invitee's no: a coven invitation only, answered once. Who
       // declined is the address it was sent to, held verified by the session
       // that wrote it; the owner's Remove afterwards stamps `revoked_at`.
       declinedAt: timestamp('declined_at'),
       // Why the person is being invited; optional, and either tier may carry one.
       note: text('note'),
-      // The site role a site-tier invitation grants, `curator` or `admin`
-      // (M11.20); null on a coven invitation, which grants `role` instead.
+      // The site role a site-tier invitation grants, `curator` or `admin`;
+      // null on a coven invitation, which grants `role` instead.
       siteRole: userRole('site_role'),
       ...auditColumns,
     },

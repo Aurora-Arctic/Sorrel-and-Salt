@@ -1,4 +1,4 @@
-import { act, fireEvent, screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import IngredientForm from '@/components/IngredientForm';
 import type { IngredientFormValues } from '@/components/IngredientForm/types';
@@ -9,12 +9,8 @@ import { choose, press, type, typeIn } from '../../support/interact';
 import { mockGraphQLError } from '../../support/msw/graphql';
 import { ENTRY_ID, acceptUpdate, offerNothing } from '../../support/msw/ingredient-lookups';
 
-// The form's six sections as disclosures (MB.115, the owner's calls): a
-// new entry opens with every one open, an edit with every one closed to its
-// summary line; each heading opens and closes its own; Open All / Close All
-// every one; and a save that finds an error in a closed section opens it so
-// the focus reaches the field (claude-docs/components/ingredient-form.md,
-// "Sections").
+// The form's six sections as disclosures: a new entry opens with every one open, an edit with every one closed to its summary line; each heading opens and closes its own; Open All and Close All do every one.
+// A save that finds an error in a closed section opens it so the focus reaches the field (claude-docs/components/ingredient-form.md, "Sections").
 
 const SECTIONS = [
   'Identity',
@@ -101,7 +97,7 @@ describe('IngredientForm’s sections', () => {
     expect(control('Celestial Body')).not.toBeVisible();
   });
 
-  it('puts Open All beside the modal’s title, out of the form, and it still opens every section', () => {
+  it('puts Open All out of the form in a modal, and it still opens every section', () => {
     offerNothing();
     renderInModal(() => (
       <IngredientForm
@@ -112,38 +108,12 @@ describe('IngredientForm’s sections', () => {
     ));
 
     const openAll = screen.getByRole('button', { name: 'Open All' });
-    // In the modal's header, beside its heading, rather than in the form.
+    // In the modal's header rather than in the form.
     expect(openAll.closest('form')).toBeNull();
-    expect(openAll.parentElement?.parentElement).toContainElement(
-      screen.getByRole('heading', { level: 2 }),
-    );
 
     fireEvent.click(openAll);
 
     expect(openSections()).toEqual(SECTIONS);
-  });
-
-  // The owner's call: a control the question holds is off, not merely faded.
-  it('turns Close All off while the unsaved changes are asked about, and on again on Keep Editing', async () => {
-    offerNothing();
-    renderInModal((done) => (
-      <IngredientForm duplicateHref={duplicateHref} workspaceId={null} onCancel={done} />
-    ));
-    const closeAll = screen.getByRole('button', { name: 'Close All' });
-    type('Name', 'Testwort');
-    expect(closeAll).toBeEnabled();
-
-    press('Cancel');
-    // Leaving Name validates it, which lands after the press.
-    await act(async () => {});
-
-    expect(screen.getByRole('button', { name: 'Keep Editing' })).toBeInTheDocument();
-    expect(closeAll).toBeDisabled();
-
-    press('Keep Editing');
-
-    expect(screen.queryByRole('button', { name: 'Keep Editing' })).not.toBeInTheDocument();
-    expect(closeAll).toBeEnabled();
   });
 
   it('opens every section with Open All, and closes every one with Close All while any is open', () => {

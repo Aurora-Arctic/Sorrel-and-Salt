@@ -14,6 +14,7 @@ const USER: SeedUser = {
   name: 'Seed User',
   email: 'user@seed.sorrelandsalt.com',
   role: 'user',
+  emailVerified: true,
 };
 
 /** Idempotent by fixed id, not by truncating: a re-run is a no-op. */

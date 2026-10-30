@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, type NextResponse } from 'next/server';
 import {
   getRedirectUrl,
   getRewrittenUrl,
@@ -15,10 +15,9 @@ vi.mock('@/lib/request-session', () => ({ sessionFromHeaders }));
 
 const { config, proxy } = await import('@/proxy');
 
-// Route protection is deny-by-default: the proxy names what is public, so a
-// route nobody thought about is protected rather than open. The proxy's check is
-// optimistic — a cookie is present — and the page's requireSession() is the one
-// that asks the database (claude-docs/auth/route-protection.md, "Route protection").
+// Route protection is deny-by-default: the proxy names what is public, so a route nobody thought
+// about is protected rather than open. The proxy's check is optimistic (a cookie is present);
+// the page's requireSession() asks the database (claude-docs/auth/route-protection.md, "Route protection").
 
 const ORIGIN = 'http://localhost:8000';
 const USER_ID = '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f';
@@ -59,12 +58,9 @@ describe('the proxy matcher', () => {
     expect(matches(path)).toBe(true);
   });
 
-  // Imported assets ship under /_next/static/media, which is why the backdrop's
-  // images are imported rather than dropped into public/.
-  // Nothing in public/ is exempt: a file placed there is a protected page to
-  // the matcher — redirected to /sign-in, HTML where the browser asked for an
-  // image — until the PR that adds it also adds its entry. Pinned so a file
-  // with none is noticed; the crawler files and the favicon have theirs now.
+  // Imported assets ship under /_next/static/media, so the backdrop's images are imported
+  // rather than dropped into public/. Nothing in public/ is exempt: a file placed there is a
+  // protected page to the matcher (redirected to /sign-in, HTML where the browser asked for an image) until its own entry is added.
   it.each(['/favicon.ico', '/robots.txt', '/images/anything.webp'])(
     'still runs on a public-file path with no entry, %s',
     (path) => {
@@ -93,7 +89,7 @@ describe('public routes', () => {
     // A mail client fetches the mail's images and fonts with no cookie.
     '/email/images/salt-dark.png',
     '/email/fonts/lexend-latin.woff2',
-    // The one public surface (MB.80), and the files a crawler or browser asks for.
+    // The one public surface, and the files a crawler or browser asks for.
     '/compendium',
     '/compendium?category=herbs',
     '/compendium/ingredients/x',
@@ -138,8 +134,8 @@ describe('public routes', () => {
   });
 });
 
-// Staging is a public URL, so off production every response asks search
-// engines to index nothing (MB.83). The test is VERCEL_ENV, as impersonation's is.
+// Staging is a public URL, so off production every response asks search engines to index
+// nothing. The test is VERCEL_ENV, as impersonation's is.
 describe('X-Robots-Tag', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -218,82 +214,231 @@ describe('proxy', () => {
   });
 });
 
-// The staging workshop (claude-docs/workshop.md, "On staging"): the one path
-// where the proxy asks the database, because the static files under
-// public/workshop/ have no page of their own to call requireSession().
+// The staging workshop (claude-docs/workshop.md, "On staging"): Storybook's static build under
+// public/workshop/, and the one path where the proxy asks the database, because those files
+// have no page of their own to call requireSession().
 describe('the workshop', () => {
   const signedIn = (path: string) => request(path, `${SESSION_COOKIE}=t.s`);
+  const actAs = (role: Session['role']) =>
+    sessionFromHeaders.mockResolvedValue({ userId: USER_ID, role });
 
-  it('redirects a signed-out request to /sign-in without asking the database', async () => {
-    const response = await proxy(request('/workshop?story=theme-toggle--default'));
-
-    expect(getRedirectUrl(response)).toBe(
-      `${ORIGIN}/sign-in?next=${encodeURIComponent('/workshop?story=theme-toggle--default')}`,
+  /** The request goes on to a file under /workshop/: passed through, or sent there. */
+  function reachesTheWorkshop(response: NextResponse): boolean {
+    return (
+      response.headers.get('x-middleware-next') === '1' ||
+      (getRedirectUrl(response)?.startsWith(`${ORIGIN}/workshop/`) ?? false)
     );
+  }
+
+  /**
+   * Each refusal below is the gate reading who is asking, not a path the proxy never sees or a response that would have failed anyway:
+   * the same request with an admin's live session reaches the files.
+   */
+  async function expectAnAdminReaches(path: string) {
+    expect(matches(path)).toBe(true);
+    sessionFromHeaders.mockReset();
+    actAs('admin');
+    expect(reachesTheWorkshop(await proxy(signedIn(path)))).toBe(true);
+  }
+
+  const PATHS = [
+    '/workshop?path=/story/layout-theme-toggle--states',
+    '/workshop/index.html',
+    '/workshop/iframe.html?id=layout-theme-toggle--states&viewMode=story',
+    '/workshop/index.json',
+    '/workshop/sb-manager/runtime.js',
+  ];
+
+  it.each(PATHS)('redirects a signed-out request for %s to /sign-in', async (path) => {
+    const response = await proxy(request(path));
+
+    expect(getRedirectUrl(response)).toBe(`${ORIGIN}/sign-in?next=${encodeURIComponent(path)}`);
+    // The cookie-only check refuses it; the database is not asked.
     expect(sessionFromHeaders).not.toHaveBeenCalled();
+    await expectAnAdminReaches(path);
   });
 
-  // A cookie present but not live — expired, revoked, forged. The optimistic
+  // A cookie present but not live — expired, revoked, forged. The cookie-only
   // check alone would have let it through to the files.
   it('redirects a cookie Better Auth does not recognise to /sign-in', async () => {
     sessionFromHeaders.mockResolvedValue(null);
 
-    const response = await proxy(signedIn('/workshop'));
+    const response = await proxy(signedIn('/workshop/index.html'));
 
     expect(sessionFromHeaders).toHaveBeenCalledOnce();
-    expect(getRedirectUrl(response)).toBe(`${ORIGIN}/sign-in?next=%2Fworkshop`);
+    expect(getRedirectUrl(response)).toBe(`${ORIGIN}/sign-in?next=%2Fworkshop%2Findex.html`);
+    await expectAnAdminReaches('/workshop/index.html');
   });
 
-  // Could pass only by the gate not running: the cookie is real and the
-  // session live, so what refuses is the role and nothing else.
-  it.each(['/workshop', '/workshop/index.html', '/workshop/assets/index-B4mi58lY.js'])(
-    'refuses a signed-in non-admin at %s',
-    async (path) => {
-      sessionFromHeaders.mockResolvedValue({ userId: USER_ID, role: 'user' });
+  // The cookie is real and the session live, so what refuses is the role and
+  // nothing else. A curator curates the compendium and has no workshop.
+  describe.each(['user', 'curator'] as const)('a signed-in %s', (role) => {
+    it.each(['/workshop', ...PATHS])('is refused %s with a plain 403', async (path) => {
+      actAs(role);
 
       const response = await proxy(signedIn(path));
 
       expect(sessionFromHeaders.mock.calls[0]?.[0].get('cookie')).toBe(`${SESSION_COOKIE}=t.s`);
       expect(response.status).toBe(403);
-      expect(getRedirectUrl(response)).toBeNull();
-      expect(response.headers.get('x-middleware-next')).toBeNull();
+      expect(response.headers.get('content-type')).toMatch(/^text\/plain/);
+      expect(reachesTheWorkshop(response)).toBe(false);
       expect(getRewrittenUrl(response)).toBeNull();
-    },
-  );
+      await expectAnAdminReaches(path);
+    });
+  });
 
-  it.each(['/workshop/index.html', '/workshop/meta.json', '/workshop/assets/index-B4mi58lY.js'])(
-    'lets an admin through to %s',
-    async (path) => {
-      sessionFromHeaders.mockResolvedValue({ userId: USER_ID, role: 'admin' });
+  it.each([
+    '/workshop/index.html',
+    '/workshop/iframe.html?id=layout-theme-toggle--states&viewMode=story',
+    '/workshop/index.json',
+    '/workshop/project.json',
+    '/workshop/sb-manager/runtime.js',
+    '/workshop/assets/iframe-B4mi58lY.js',
+  ])('lets an admin through to %s', async (path) => {
+    actAs('admin');
 
-      const response = await proxy(signedIn(path));
+    const response = await proxy(signedIn(path));
 
-      expect(response.headers.get('x-middleware-next')).toBe('1');
-      expect(forwarded(response, RETURN_PATH_HEADER)).toBe(path);
-    },
-  );
+    expect(response.headers.get('x-middleware-next')).toBe('1');
+    expect(forwarded(response, RETURN_PATH_HEADER)).toBe(path);
+    // The precondition for the refusals above: the same path, signed out, is not served.
+    expect(reachesTheWorkshop(await proxy(request(path)))).toBe(false);
+  });
 
-  // Ladle routes by query string on one page; Next serves no directory index.
-  it('serves an admin the workshop page at the bare path, query kept', async () => {
-    sessionFromHeaders.mockResolvedValue({ userId: USER_ID, role: 'admin' });
+  // Storybook's build links its files relative to the page, so a page at /workshop would ask for
+  // /iframe.html; Next serves no directory index and its trailing-slash redirect sends /workshop/
+  // back to /workshop. So the bare path goes to the manager's file, where relative paths resolve.
+  it('sends an admin at the bare path to the manager page, query kept', async () => {
+    actAs('admin');
 
-    const response = await proxy(signedIn('/workshop?story=theme-toggle--default'));
+    const response = await proxy(signedIn('/workshop?path=/story/layout-theme-toggle--states'));
 
-    expect(getRewrittenUrl(response)).toBe(
-      `${ORIGIN}/workshop/index.html?story=theme-toggle--default`,
+    expect(response.status).toBe(307);
+    expect(getRedirectUrl(response)).toBe(
+      `${ORIGIN}/workshop/index.html?path=/story/layout-theme-toggle--states`,
     );
   });
 
-  // The workshop's own code runs on this origin with an admin's cookie; the
-  // policy is what stops it reaching /api/graphql.
-  it.each(['/workshop', '/workshop/assets/index-B4mi58lY.js'])(
-    "forbids the workshop's pages any fetch, at %s",
-    async (path) => {
-      sessionFromHeaders.mockResolvedValue({ userId: USER_ID, role: 'admin' });
+  /**
+   * Whether `policy`, on a page at `page`, lets scripts request `url`: CSP Level 3's `connect-src`, falling back to `default-src`.
+   * A scheme-less source takes the page's; a source ending `/` matches every path beneath it; an unknown keyword throws.
+   */
+  function connectAllows(
+    policy: string | null,
+    url: string,
+    page = `${ORIGIN}/workshop/index.html`,
+  ): boolean {
+    const directives = new Map(
+      (policy ?? '')
+        .split(';')
+        .map((directive) => directive.trim().split(/\s+/))
+        .filter(([name]) => name)
+        .map(([name, ...sources]) => [name!.toLowerCase(), sources]),
+    );
+    const sources = directives.get('connect-src') ?? directives.get('default-src');
+    if (!sources) return true;
+    const target = new URL(url);
+    const targetPath = decodeURIComponent(target.pathname);
+    return sources.some((source) => {
+      if (source === "'none'") return false;
+      const expression = new URL(
+        source.includes('://') ? source : `${new URL(page).protocol}//${source}`,
+      );
+      if (expression.origin !== target.origin) return false;
+      const path = decodeURIComponent(expression.pathname);
+      return path.endsWith('/') ? targetPath.startsWith(path) : targetPath === path;
+    });
+  }
 
-      const response = await proxy(signedIn(path));
+  // The proxy may see an address other than the one in the browser's bar: `next start` bound to
+  // 0.0.0.0, a Docker port mapping, or a host that ends TLS and forwards plain http. The policy
+  // must name the browser's address, or Storybook's own fetches are refused.
+  it.each<{ seen: string; headers: Record<string, string>; page: string }>([
+    {
+      seen: 'http://0.0.0.0:8200/workshop/index.html',
+      headers: { host: 'localhost:8000' },
+      page: 'http://localhost:8000/workshop/index.html',
+    },
+    {
+      seen: 'http://localhost:3000/workshop/index.html',
+      headers: {
+        host: 'localhost:3000',
+        'x-forwarded-host': 'staging.example',
+        'x-forwarded-proto': 'https',
+      },
+      page: 'https://staging.example/workshop/index.html',
+    },
+  ])('names the address the browser used, $page, not $seen', async ({ seen, headers, page }) => {
+    actAs('admin');
+    const response = await proxy(
+      new NextRequest(seen, { headers: { ...headers, cookie: `${SESSION_COOKIE}=t.s` } }),
+    );
+    const policy = response.headers.get('content-security-policy');
+    const origin = new URL(page).origin;
 
-      expect(response.headers.get('content-security-policy')).toBe("connect-src 'none'");
+    // Why it matters: a policy naming the address the proxy saw refuses the file.
+    expect(
+      connectAllows(
+        `connect-src ${new URL(seen).origin}/workshop/`,
+        `${origin}/workshop/index.json`,
+        page,
+      ),
+    ).toBe(false);
+    expect(connectAllows(policy, `${origin}/workshop/index.json`, page)).toBe(true);
+    expect(connectAllows(policy, `${origin}/api/graphql`, page)).toBe(false);
+  });
+
+  // The host is written into the header, so a value that is not a plain host
+  // could add a source of its own; the proxy falls back to the host it saw.
+  it.each(['evil.example *', 'localhost:8000; connect-src *'])(
+    'does not write the forwarded host %j into the policy',
+    async (forwardedHost) => {
+      actAs('admin');
+      const response = await proxy(
+        new NextRequest(`${ORIGIN}/workshop/index.html`, {
+          headers: { 'x-forwarded-host': forwardedHost, cookie: `${SESSION_COOKIE}=t.s` },
+        }),
+      );
+      const policy = response.headers.get('content-security-policy');
+
+      expect(connectAllows(policy, 'https://evil.example/x')).toBe(false);
+      expect(connectAllows(policy, `${ORIGIN}/api/graphql`)).toBe(false);
+      expect(connectAllows(policy, `${ORIGIN}/workshop/index.json`)).toBe(true);
+    },
+  );
+
+  // The workshop's own code runs on this origin with an admin's cookie. The
+  // policy lets it fetch Storybook's own files and nothing else on the origin.
+  describe.each(['/workshop', '/workshop/index.html', '/workshop/iframe.html'])(
+    "the admin's policy at %s",
+    (path) => {
+      const policy = async () => {
+        actAs('admin');
+        return (await proxy(signedIn(path))).headers.get('content-security-policy');
+      };
+
+      it.each([
+        '/workshop/index.json',
+        '/workshop/project.json',
+        '/workshop/iframe.html',
+        '/workshop/sb-addons/docs/manager-bundle.js',
+      ])("allows Storybook's own %s", async (file) => {
+        expect(connectAllows(await policy(), `${ORIGIN}${file}`)).toBe(true);
+      });
+
+      it.each([
+        `${ORIGIN}/api/graphql`,
+        `${ORIGIN}/api/auth/get-session`,
+        `${ORIGIN}/compendium`,
+        `${ORIGIN}/workshop`,
+        `${ORIGIN}/workshopping/index.json`,
+        'https://evil.example/workshop/index.json',
+        'http://localhost:8001/workshop/index.json',
+      ])('refuses %s', async (url) => {
+        // Without the policy the request would go: the refusal is the policy's.
+        expect(connectAllows(null, url)).toBe(true);
+        expect(connectAllows(await policy(), url)).toBe(false);
+      });
     },
   );
 

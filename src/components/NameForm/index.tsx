@@ -5,16 +5,14 @@ import { type FormEvent, type ReactElement, useId, useState } from 'react';
 import { graphql } from '../../gql';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
-import BusyButton from '../BusyButton';
-import { FieldShell, fieldDescription } from '../Field';
+import { FieldShell, FormActions, fieldDescription } from '../Field';
 import Notice from '../Notice';
 import type { NameFormProps } from './types';
 import './index.scss';
 
-// The account page's Name section (MB.88): the name the site shows, changed
-// through `setName`. A plain controlled input rather than react-hook-form, as
-// EmailForm is: one field, and every refusal is the server's.
-// See claude-docs/components/name-form.md.
+// The account page's Name section: the name the site shows, changed through `setName`. A
+// plain controlled input rather than react-hook-form, as EmailForm is: one field, and every
+// refusal is the server's. See claude-docs/components/name-form.md.
 
 const SetNameDocument = graphql(`
   mutation SetName($name: String!) {
@@ -81,19 +79,7 @@ const NameForm = ({ name }: NameFormProps): ReactElement => {
             {...aria}
           />
         </FieldShell>
-        <div className="form__actions">
-          {/* Offered only when there is something to save, and busy, saying
-              so, from the press to the answer — the owner's rule for every form. */}
-          <BusyButton
-            type="submit"
-            className="btn btn--solid"
-            disabled={unchanged || mutation.isPending}
-            busy={mutation.isPending}
-            busyLabel="Saving Name"
-          >
-            Save Name
-          </BusyButton>
-        </div>
+        <FormActions noun="Name" dirty={!unchanged} submitting={mutation.isPending} />
       </form>
     </div>
   );

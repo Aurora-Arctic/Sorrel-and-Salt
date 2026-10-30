@@ -11,12 +11,8 @@ import { variantIdOf } from '../../../support/db/read-variants';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 import { run as runOperation } from '../../../support/graphql/run';
 
-// The `workspaceIngredients` query (M9.4): a coven's ingredients, a page at a
-// time, with each entry's stock and categories batched and its cupboard row
-// read by the page itself. Which rows the list
-// holds, and who may read it, is services/workspace-ingredient-list.test.ts's;
-// this file holds the transport's half — the arguments reaching the read, the
-// page, one read per page, and the one refusal on the wire.
+// The `workspaceIngredients` query: a coven's ingredients, a page at a time, each entry's stock and categories batched and its cupboard row read by the page itself.
+// Which rows the list holds, and who may read it, is services/workspace-ingredient-list.test.ts's; here: the arguments reaching the read, the page, one read per page, and the one refusal on the wire.
 
 // The reads a page makes, counted at the repository.
 const repository = vi.hoisted(() => ({
@@ -108,11 +104,7 @@ async function names(variables: Record<string, unknown>): Promise<string[]> {
   return result.data?.workspaceIngredients.edges.map((edge) => edge.node.name) ?? [];
 }
 
-/**
- * W's own entry, linked to Hecate and listing a sign and a planet, and a
- * compendium entry in W's cupboard, W holding a jar of its oil, its oil flagged
- * toxic; each in Protection.
- */
+/** W's own entry, linked to Hecate and listing a sign and a planet, and a compendium entry in W's cupboard with a jar of its oil, flagged toxic; each in Protection. */
 let hecate: string;
 let own: string;
 let held: string;
@@ -190,7 +182,7 @@ describe('workspaceIngredients', () => {
     ]);
   });
 
-  // M8.12: both entries hold Protection and neither Cleansing, so only the
+  // Both entries hold Protection and neither Cleansing, so only the
   // mode decides whether the pair lists them.
   it('takes a categoryMode, all by default, and refuses a mode that is neither', async () => {
     const rows = await sql`
@@ -225,36 +217,15 @@ describe('workspaceIngredients', () => {
     expect(await names({ toxic: 'toxic' })).toEqual(['Heldwort']);
     expect(await names({ toxic: 'not_toxic' })).toEqual(['Covenwort']);
     expect(await names({ toxic: 'any' })).toEqual(['Covenwort', 'Heldwort']);
-  });
-
-  it('takes a source and inStock, and badges the local entry in every state', async () => {
-    const badges = async (variables: Record<string, unknown>) => {
-      const result = await run(asUser(B), variables);
-      expect(result.errors).toBeUndefined();
-      return result.data?.workspaceIngredients.edges.map(({ node }) => [node.name, node.isGlobal]);
-    };
-
-    // Why each could have answered both: both entries are listed unfiltered.
-    expect(await badges({})).toEqual([
-      ['Covenwort', false],
-      ['Heldwort', true],
-    ]);
-    expect(await badges({ source: 'local' })).toEqual([['Covenwort', false]]);
-    expect(await badges({ source: 'compendium' })).toEqual([['Heldwort', true]]);
-    // The local entry has no jar; the held one's has no quantity, so is held.
-    expect(await badges({ inStock: true })).toEqual([['Heldwort', true]]);
-    expect(await badges({ inStock: false })).toHaveLength(2);
-
-    // A jar with no quantity is held, never low.
+    // What each of these three matches is services/workspace-ingredient-list.test.ts's.
+    const compendium = await run(asUser(B), { source: 'compendium' });
+    expect(
+      compendium.data?.workspaceIngredients.edges.map(({ node }) => [node.name, node.isGlobal]),
+    ).toEqual([['Heldwort', true]]);
+    // The local entry has no jar; the held one's has no quantity, so is held, never low.
+    expect(await names({ inStock: true })).toEqual(['Heldwort']);
     expect(await names({ lowStockOnly: true })).toEqual([]);
-
-    await sql`update inventory_items set quantity_on_hand = 0 where id = ${jar}`;
-    expect(await names({ inStock: true })).toEqual([]);
-    expect(await names({ lowStockOnly: true })).toEqual(['Heldwort']);
-    expect(await names({ lowStockOnly: false })).toHaveLength(2);
-
-    const refused = await run(asUser(B), { source: 'both' });
-    expect(refused.errors).toHaveLength(1);
+    expect((await run(asUser(B), { source: 'both' })).errors).toHaveLength(1);
   });
 
   it("resolves a page's stock, its jars' forms and its categories in one read each", async () => {

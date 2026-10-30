@@ -1,7 +1,7 @@
 import type { UserRole } from '../../lib/session';
 import type { SelectOption } from '../Field/types';
 
-// The three site roles as every admin surface names them (MB.115, M11.20):
+// The three site roles as every admin surface names them:
 // the role filter's choices, the role column's text and the users page's
 // reading of `?role`, one list so the three cannot drift apart.
 

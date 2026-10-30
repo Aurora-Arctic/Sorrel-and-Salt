@@ -26,12 +26,13 @@ each use these two as they are, and none of them draws a warning of its own. In 
 
 `SafetyNoteProps` (`types.ts`):
 
-| Prop          | What it is                                                                                                                                                                                    |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `safetyNotes` | The ingredient's own notes, shown first. `null`, empty or blank counts as none                                                                                                                |
-| `variants`    | The forms the consumer shows (`SafetyVariant[]`): each one's notes follow, by name                                                                                                            |
-| `level`       | The Caution heading's level, 2–6, one below the heading it sits under; 3 if unset                                                                                                             |
-| `footnote`    | A line after the notes, inside the caution, for a consumer that shows no forms: the details modal names the forms that carry their own (M12.5). With it, the caution shows even with no notes |
+| Prop          | What it is                                                                                                                                                                                                     |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `safetyNotes` | The ingredient's own notes, shown first. `null`, empty or blank counts as none                                                                                                                                 |
+| `variants`    | The forms the consumer shows (`SafetyVariant[]`): each one's notes follow, by name                                                                                                                             |
+| `level`       | The Caution heading's level, 2–6, one below the heading it sits under; 3 if unset                                                                                                                              |
+| `compact`     | A small block for a crowded place (the spell builder's open step, 2026-10-28): the Caution heading is body-sized ink and runs on in the line with the notes. The bar and the word still say it. Off unless set |
+| `footnote`    | A line after the notes, inside the caution, for a consumer that shows no forms: the details modal names the forms that carry their own (M12.5). With it, the caution shows even with no notes                  |
 
 `CautionMarkProps`: `safetyNotes` (the ingredient's own) and `variants`; notes on
 either show the mark, and blank counts as none.
@@ -103,13 +104,19 @@ takes tokens only.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/SafetyNote/index.stories.tsx),
-under `Surfaces / Safety Note`:
+under `Feedback / Safety Note`:
 
-- `Note` shows the ingredient's notes alone.
-- `WithForms` adds two forms' notes; a third form has none, so it gets no line.
-- `Toxic` shows the mark.
-- `PhoneDark` and `PhoneLight` show the mark above the note at 375px, in each
-  theme.
+`States` is a grid:
+
+- Notes Only shows the ingredient's notes alone.
+- With Forms adds two forms' notes; a third form has none, so it gets no line.
+- Toxic shows the mark.
+- Compact is the spell builder's small caution, its heading run on in the line.
+- With Footnote adds the details modal's line after the notes; Footnote Only shows the
+  caution with no notes, for the footnote alone.
+- Caution Mark shows the caution mark for notes.
+- Safety Mark, Notes and Safety Mark, Toxic Form show the one mark `SafetyMark` picks: the
+  caution for notes alone, the toxic mark once a form is toxic.
 
 ## Testing
 

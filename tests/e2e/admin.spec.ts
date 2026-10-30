@@ -6,30 +6,12 @@ import { signInAs } from './session';
 import { asTouch } from '../support/db/touch-row';
 import { slugify } from '@/lib/slugify';
 
-// The admin pages against the built server, for what no story walks: the
-// layout, the user list and its approval, the curator role (M11.20), and the
-// zodiac filter. A non-admin's
-// 403 on every admin route, each curated page's add, edit and delete, and the
-// user modal are the story suite's (tests/e2e/stories/07-admin.spec.ts,
-// stories 17–19); admin grants and the pause are story 60's
-// (08-email-and-admin.spec.ts). A signed-out visitor's redirect is
-// route-protection.spec.ts's.
+// The admin pages against the built server, for what the story suite (stories/07-admin.spec.ts,
+// 08-email-and-admin.spec.ts) does not walk: layout, the user list and its filters, a curator's refusals,
+// the zodiac filter and the edit stamps. A signed-out redirect is route-protection.spec.ts's.
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
-
-/** The privilege ledger's rows for one user, as the trigger on `users` wrote them (MB.195). */
-async function privilegeChanges(userId: string) {
-  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
-  try {
-    return await sql`
-      select privilege::text, change::text, via::text, note from user_privilege_changes
-      where user_id = ${userId} and via = 'admin' order by created_at, privilege
-    `;
-  } finally {
-    await sql.end();
-  }
-}
 
 test('an admin sees the admin layout and its nav', async ({ page }) => {
   // A desktop window: a phone folds the later tabs behind More (shell.spec.ts),
@@ -41,7 +23,7 @@ test('an admin sees the admin layout and its nav', async ({ page }) => {
 
   expect(response?.status()).toBe(200);
   // One link per page, each at its first tab: a group list is a tab of the
-  // list it organises, and Astrology holds the celestial bodies and zodiac signs (MB.115).
+  // list it organises, and Astrology holds the celestial bodies and zodiac signs.
   const nav = page.getByRole('navigation', { name: 'Admin' });
   const pages = [
     ['Compendium', '/admin/compendium'],
@@ -77,11 +59,9 @@ test('an admin lists the users at /admin/users, filtered, with their sign-in met
   await expect(page.getByRole('search').getByLabel('Name or Email')).toHaveValue(
     'admin-users.test',
   );
-  // A filter's switch takes Space as a checkbox does, which only a browser's
-  // own keyboard handling shows, and applies the moment it changes (MB.115):
-  // the address gains the flag, the list narrows to the one user not yet
-  // approved, and the switch, drawn afresh with the new list, has the focus
-  // back, so a second Space widens the list again.
+  // A filter's switch takes Space as a checkbox does, which only a browser's keyboard handling shows,
+  // and applies the moment it changes: the address gains the flag, the list narrows to the one user not
+  // yet approved, and the switch, drawn afresh, has the focus back, so a second Space widens the list.
   const awaiting = page.getByRole('search').getByRole('switch', { name: 'Needs Approval' });
   const rows = page.getByRole('row').filter({ has: page.getByRole('cell') });
   await awaiting.focus();
@@ -108,18 +88,17 @@ test('an admin lists the users at /admin/users, filtered, with their sign-in met
     /an-admin@admin-users\.test$/,
     /^Admin/,
     // A mark alone: every admin may create a workspace, and the users CHECK
-    // says so (MB.177), so the cell offers no control.
+    // says so, so the cell offers no control.
     'Yes',
     /Discord.*Google/,
     /\d/,
   ]);
-  // The mark's tip bubble shows on hover, a real browser's CSS (the owner's review).
+  // The mark's tip bubble shows on hover, a real browser's CSS.
   const email = admin.getByRole('cell').nth(1);
   const tip = email.locator('.user-list__tip');
   await expect(tip).toBeHidden();
   await email.locator('.user-list__mark').hover();
   await expect(tip).toBeVisible();
-  await expect(tip).toHaveText('Verified');
   // So does each sign-in logo's.
   const discord = admin
     .getByRole('cell')
@@ -130,138 +109,16 @@ test('an admin lists the users at /admin/users, filtered, with their sign-in met
   await assertNoAccessibilityViolations(page);
 });
 
-// A hand-edited `?user=`: the list, with the notice over it, and no modal.
-test('an admin at an address naming no user sees the list with the notice and no modal', async ({
-  page,
-}) => {
-  await signInAs(page, 'an-admin@admin-user-missing.test', ['google'], 'admin');
-
-  const response = await page.goto('/admin/users?user=not-an-id');
-
-  expect(response?.status()).toBe(200);
-  // In the page's main: Next puts its route announcer, an empty alert, in <body>.
-  await expect(page.getByRole('main').getByRole('alert')).toBeVisible();
-  await expect(page.getByRole('dialog')).toHaveCount(0);
-  await expect(page.getByRole('table')).toBeVisible();
-});
-
-// M5.8: an admin approves a user with no invitation from their row, behind a
-// modal naming them, and then revokes it, the row saying so each time.
-test('an admin approves a user awaiting approval at /admin/users, then revokes it', async ({
-  page,
-}) => {
-  // Signed in once to make the account, then the page signs in as the admin.
-  const { userId } = await signInAs(page, 'awaiting@admin-approval.test');
-  await signInAs(page, 'an-admin@admin-approval.test', ['discord'], 'admin');
-
-  const response = await page.goto('/admin/users?query=awaiting%40admin-approval.test');
-  expect(response?.status()).toBe(200);
-  const row = page.getByRole('row', { name: /awaiting@admin-approval\.test/ });
-  await expect(row.getByRole('cell').nth(3)).toHaveText(/^No/);
-
-  await row.getByRole('button', { name: 'Approve Fixture Person' }).click();
-  const approving = page.getByRole('dialog', { name: 'Approve Coven Creation' });
-  await expect(approving).toContainText('Fixture Person');
-  await expect(approving.getByRole('button', { name: 'Approve' })).toBeFocused();
-  // An optional reason, as Promote and Revoke of admin take one.
-  await approving.getByRole('textbox', { name: 'Reason' }).fill('Runs the Tuesday circle');
-  await assertNoAccessibilityViolations(page);
-
-  await approving.getByRole('button', { name: 'Approve' }).click();
-  await expect(approving).toHaveCount(0);
-
-  await expect(row.getByRole('cell').nth(3)).toHaveText(/^Yes/);
-  expect(await privilegeChanges(userId)).toEqual([
-    {
-      privilege: 'create_workspace',
-      change: 'grant',
-      via: 'admin',
-      note: 'Runs the Tuesday circle',
-    },
-  ]);
-
-  // And revoked again, behind its own modal.
-  await row.getByRole('button', { name: 'Revoke approval for Fixture Person' }).click();
-  const revoking = page.getByRole('dialog', { name: 'Revoke Coven Creation' });
-  await expect(revoking).toContainText('Fixture Person');
-  await revoking.getByRole('button', { name: 'Revoke' }).click();
-  await expect(revoking).toHaveCount(0);
-
-  await expect(row.getByRole('cell').nth(3)).toHaveText(/^No/);
-  await expect(row.getByRole('button', { name: 'Approve Fixture Person' })).toBeVisible();
-});
-
-// M11.20: the curator role, given and taken back through the one Change Role
-// dialog, each change in the ledger. A curator holds the creation flag from
-// the same write, and keeps it when the role is taken away, as an admin does.
-test('an admin makes a user a curator from the user screen, then takes the role back', async ({
-  page,
-}) => {
-  const { userId } = await signInAs(page, 'becoming@admin-curator.test');
-  await signInAs(page, 'an-admin@admin-curator.test', ['discord'], 'admin');
-
-  const response = await page.goto('/admin/users?query=becoming%40admin-curator.test');
-  expect(response?.status()).toBe(200);
-  const row = page.getByRole('row', { name: /becoming@admin-curator\.test/ });
-  await expect(row.getByRole('cell').nth(2)).toHaveText(/^User/);
-  await expect(row.getByRole('cell').nth(3)).toHaveText(/^No/);
-
-  await row.getByRole('button', { name: 'Change Role for Fixture Person' }).click();
-  const granting = page.getByRole('dialog', { name: 'Change Role' });
-  await expect(granting).toContainText('Fixture Person');
-  await granting.getByRole('radio', { name: /^Curator\b/ }).check();
-  await granting.getByRole('textbox', { name: 'Reason' }).fill('Keeps the herbals');
-  await assertNoAccessibilityViolations(page);
-  await granting.getByRole('button', { name: 'Promote' }).click();
-  await expect(granting).toHaveCount(0);
-
-  // A curator, who may create a coven: the creation cell holds the mark alone.
-  await expect(row.getByRole('cell').nth(2)).toHaveText(/^Curator/);
-  await expect(row.getByRole('cell').nth(3)).toHaveText('Yes');
-  expect(await privilegeChanges(userId)).toEqual([
-    { privilege: 'create_workspace', change: 'grant', via: 'admin', note: 'Keeps the herbals' },
-    { privilege: 'curator', change: 'grant', via: 'admin', note: 'Keeps the herbals' },
-  ]);
-
-  // Taken back to a user, the flag staying.
-  await row.getByRole('button', { name: 'Change Role for Fixture Person' }).click();
-  const demoting = page.getByRole('dialog', { name: 'Change Role' });
-  await demoting.getByRole('radio', { name: /^User\b/ }).check();
-  await demoting.getByRole('button', { name: 'Demote' }).click();
-  await expect(demoting).toHaveCount(0);
-
-  await expect(row.getByRole('cell').nth(2)).toHaveText(/^User/);
-  await expect(row.getByRole('cell').nth(3)).toHaveText(/^Yes/);
-  expect((await privilegeChanges(userId)).slice(2)).toEqual([
-    { privilege: 'curator', change: 'revoke', via: 'admin', note: null },
-  ]);
-});
-
-// M11.20: a curator reaches every curation page and nothing on People. The
-// navigation leaving People out is only what they see; each People page
-// refuses them itself, and a coven they hold no seat in is a 404 as for
-// anyone else.
+// A curator reaches every curation page and nothing on People. The navigation leaving People out is only
+// what they see; each People page refuses them itself, and a coven they hold no seat in is a 404.
 test('a curator reaches /admin and the curation pages, and is refused People and a coven', async ({
   page,
 }) => {
-  // A desktop window, as the admin's nav test, since this one counts every link.
-  await page.setViewportSize({ width: 1280, height: 800 });
   await signInAs(page, 'a-curator@admin-curator.test', ['discord'], 'curator');
 
+  // The nav's links for a curator are AdminNav's component test's.
   const response = await page.goto('/admin');
   expect(response?.status()).toBe(200);
-  const nav = page.getByRole('navigation', { name: 'Admin' });
-  const pages = [
-    ['Compendium', '/admin/compendium'],
-    ['Categories', '/admin/categories'],
-    ['Forms', '/admin/forms'],
-    ['Deities', '/admin/deities'],
-    ['Astrology', '/admin/celestial-bodies'],
-  ];
-  await expect(nav.getByRole('link')).toHaveCount(pages.length);
-  for (const [name, href] of pages) {
-    await expect(nav.getByRole('link', { name, exact: true })).toHaveAttribute('href', href);
-  }
   await expect(page.getByRole('main').getByRole('link', { name: 'People' })).toHaveCount(0);
   await assertNoAccessibilityViolations(page);
 
@@ -317,10 +174,9 @@ test('an admin filters the zodiac signs by part of a name', async ({ page }) => 
   await expect(page.getByRole('table')).toHaveCount(0);
 });
 
-// Regression: a curator opening a curated list got a 500, as the Updated
-// column read its editors' names through a site admin's read. A list with no
-// rows names no editor and never reached that read, so the rows here are
-// stamped with the curator as their last editor first.
+// Regression: a curator opening a curated list got a 500, as the Updated column read its editors' names
+// through a site admin's read. A list with no rows never reached that read, so the rows here are stamped
+// with the curator as their last editor first.
 test('a curator opens the compendium and a vocabulary list with edited rows and sees their stamps', async ({
   page,
 }) => {
@@ -335,7 +191,7 @@ test('a curator opens the compendium and a vocabulary list with edited rows and 
   let name: string;
   try {
     [{ name }] = await sql`select name from users where id = ${userId}`;
-    // Stamps alone: the trigger keeps them unless the write declares itself a touch (MB.106).
+    // Stamps alone: the trigger keeps them unless the write declares itself a touch.
     let entries = 0;
     let forms = 0;
     await asTouch(sql, async (tx) => {

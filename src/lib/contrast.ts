@@ -1,12 +1,7 @@
 import type { GroupColorColumn } from './types';
 
-// WCAG 2.1 contrast, for the floor a category group's colours are held to on
-// write (M5.6b): each against the harder of its own theme's two surfaces, the
-// dark card and the light page, since an unselected chip's label is the colour
-// itself on whatever holds it and clearing the harder surface clears the
-// other (MB.36; claude-docs/styling.md, "Chips, badges and the solid-fill
-// rule"). Shared by the schema, so the form refuses before the request, and
-// the picker's preview, so the admin sees the ratio while choosing.
+// WCAG 2.1 contrast for the floor a category group's colours are held to on write: each against the harder of its theme's two surfaces, as a chip's label
+// is the colour itself (claude-docs/styling.md, "Chips, badges and the solid-fill rule"). Shared by the schema and the picker's preview.
 
 /**
  * The surface each colour is checked against: `$soot-raised` and

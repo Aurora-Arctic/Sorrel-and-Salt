@@ -91,14 +91,12 @@ icon.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/PrivilegeLedger/index.stories.tsx),
-`Admin / Privilege Ledger`: `Everything`, `OneUser` (searched by address),
-`OneUserAdminOnly` (and by privilege), `Empty` and `EmptyForASearch`, on
-invented people, each story's rows what its filter would show: every route, a
+`Admin / Privilege Ledger`: `States`, with a control that chooses First Page (everything), Middle Page, Last Page, One User (searched by address),
+One User Admin Only (and by privilege), Empty and No Matches, on
+invented people, each state's rows what its filter would show: every route, a
 note on a role grant and the flag it set at one instant, a deleted subject and
-the seed's actor, unlinked. `PhoneDark` and `PhoneLight` show the page's
-header and every change as a card at 375px, inside the admin layout's frame and the People page with its Privilege Changes tab open,
-and `FilteredPhoneDark` and `FilteredPhoneLight` `OneUserAdminOnly` there, with
-Clear offered.
+the seed's actor, unlinked. Each sits inside the admin layout's frame and the People page with its Privilege Changes tab open;
+at 375px, from the toolbar viewport menu, the header and every change show as a card.
 Render-only, no test ids, no snapshots.
 
 ## Testing
@@ -112,3 +110,7 @@ with neither, the row starting again from a filter shown anew, no table when the
 `tests/app/(shell)/admin/(people)/privilege-changes/page.test.tsx` covers what the page hands
 it, and `tests/e2e/admin/privilege-changes.spec.ts` the page against the built
 server, with axe.
+
+## The filter
+
+The ledger's filter is built in the shared `FilterForm`, as the user list's is. Only the search text (part of the subject's name or email) is held in the form, and it is sent when the magnifier or Enter is pressed. The Privilege dropdown is a select-only box once the page has hydrated (`FilterSelectField`). It starts from the filter shown and applies the moment a choice is picked, softly and from the first page, carrying the search text along, so there is no Filter button. Before hydration the server's native select submits, with "All Privileges" sent as `privilege=`, which the page reads as no privilege.

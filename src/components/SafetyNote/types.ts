@@ -20,18 +20,23 @@ export interface SafetyNoteProps {
   /** The ingredient's own notes, shown first; blank counts as none. */
   safetyNotes?: string | null;
   /**
-   * The forms the consumer shows (MB.215): each one's notes follow the
-   * ingredient's, under the form's name. A form without notes takes no line.
+   * The forms the consumer shows: each one's notes follow the ingredient's, under the form's
+   * name. A form without notes takes no line.
    */
   variants?: readonly SafetyVariant[];
   /** The Caution heading's level, one below the heading it sits under. Defaults to 3. */
   level?: SafetyHeadingLevel;
   /**
-   * A line after the notes, inside the caution, for a consumer that shows no
-   * forms: the details modal names the forms that carry their own (M12.5).
-   * It shows the caution by itself when there are no notes.
+   * A line after the notes, inside the caution, for a consumer that shows no forms: the
+   * details modal names the forms that carry their own. It shows the caution by itself when
+   * there are no notes.
    */
   footnote?: ReactNode;
+  /**
+   * A small block for a crowded place, the spell builder's open step: the heading runs on in
+   * the line with the notes, in body type. The word and the bar still say it, not colour alone.
+   */
+  compact?: boolean;
 }
 
 export interface ToxicMarkProps {

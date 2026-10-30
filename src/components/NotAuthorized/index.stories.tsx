@@ -1,26 +1,27 @@
-import type { Story } from '@ladle/react';
-import type { ReactElement } from 'react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { ShellFrame } from '../../../.storybook/shell-frame';
+import Backdrop from '../Backdrop';
 import NotAuthorized from '.';
 
-// Render-only; behaviour is asserted in tests/components/NotAuthorized. It
-// takes no props: every signed-in non-admin sees the same page. Every story
-// sits in the page's real frame, `forbidden.tsx`'s `main.page-frame`
-// (claude-docs/workshop.md).
-export default {
+// Render-only; behaviour is asserted in tests/components/NotAuthorized. It takes no props.
+const meta = {
   title: 'Pages / Not Authorized',
+} satisfies Meta;
+export default meta;
+type Story = StoryObj;
+
+// The 403 page `forbidden.tsx` draws for a signed-in non-admin: its real `main.page-frame`, inside
+// the shell of an account with no coven to write in, so no Add Ingredient, and the layout's corner
+// Backdrop.
+export const Default: Story = {
+  render: () => (
+    <>
+      <ShellFrame area="none" open="/admin" workspaces={[]} viewer={{ canCreate: false }}>
+        <main className="page-frame">
+          <NotAuthorized />
+        </main>
+      </ShellFrame>
+      <Backdrop />
+    </>
+  ),
 };
-
-const Page = (): ReactElement => (
-  <main className="page-frame">
-    <NotAuthorized />
-  </main>
-);
-
-export const Default: Story = () => <Page />;
-
-// A phone's width, in each theme.
-export const PhoneDark: Story = () => <Page />;
-PhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const PhoneLight: Story = () => <Page />;
-PhoneLight.meta = { theme: 'light', width: 375 };

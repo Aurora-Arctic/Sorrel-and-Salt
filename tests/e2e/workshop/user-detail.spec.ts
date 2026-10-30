@@ -1,20 +1,16 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 
-// The user modal's Change Role and Approve, refused, say so in the click
-// feedback's callout under the control rather than a notice in the dialog
-// (the owner's exception to M12.31's rule 6, 2026-10-20;
-// claude-docs/components/user-detail.md). Measured in the story, where every
-// press is refused, since the workshop serves no GraphQL: the callout must
-// stand over the dialog's content, clipped by none of its boxes, and Escape
-// must close it and leave the dialog open. What it says and where the focus
-// goes are in tests/components/UserDetail.
+// The user modal's Change Role and Approve, refused, say so in the click feedback's callout under the control
+// (claude-docs/components/user-detail.md). Measured in the story, where every press is refused: the callout
+// stands over the dialog's content and Escape closes it, leaving the dialog open.
 
 const WIDTHS = [1280, 375] as const;
-const SHOTS = process.env.M12_31_SHOTS;
 
 async function openDialog(page: Page, width: number): Promise<Locator> {
   await page.setViewportSize({ width, height: 800 });
-  await page.goto('/?story=admin--user-detail--in-a-modal&mode=preview&theme=dark');
+  await page.goto(
+    '/iframe.html?id=admin-user-detail--in-a-modal&viewMode=story&globals=theme:dark',
+  );
   const dialog = page.getByRole('dialog', { name: 'Bo Fixturewort' });
   await expect(dialog).toBeVisible();
   await page.evaluate(async () => {
@@ -87,9 +83,6 @@ for (const width of WIDTHS) {
       expect(under!.x).toBeGreaterThanOrEqual(box!.x);
       expect(under!.x + under!.width).toBeLessThanOrEqual(box!.x + box!.width);
       await expectOnTop(alert);
-      if (SHOTS && name === 'Change Role') {
-        await page.screenshot({ path: `${SHOTS}/userdetail-callout-${width}.png` });
-      }
 
       // Escape closes the callout, not the dialog; the focus back on the control.
       await expect(button).toBeFocused();
@@ -115,12 +108,8 @@ for (const width of WIDTHS) {
   }
 }
 
-// As the owner reviews it: the story in Ladle's own page rather than its bare
-// preview, where an iframed story (`meta.iframed`) is drawn into an iframe by
-// script running in the page around it. The callout must find its dialog
-// across that boundary, at the widths a review is held at. Not at a phone's:
-// there Ladle's page gives the frame a strip above its story list, too short
-// to press in, and the bare preview above stands for the phone.
+// The story in Storybook's own page, where an iframe draws it, at the widths a review is held at: the callout
+// must find its dialog across that boundary. Not at a phone's, where the strip is too short to press in.
 const SIZES = [
   [1512, 982],
   [1440, 900],
@@ -131,14 +120,16 @@ const SIZES = [
 
 for (const [width, height] of SIZES) {
   for (const { name, control, confirm } of CONTROLS) {
-    test(`${name} refused in Ladle's frame at ${width}×${height}: the callout inside the dialog`, async ({
+    test(`${name} refused in Storybook's frame at ${width}×${height}: the callout inside the dialog`, async ({
       page,
     }) => {
       await page.setViewportSize({ width, height });
-      await page.goto('/?story=admin--user-detail--in-a-modal&theme=dark');
-      const frame = page.frameLocator('iframe').first();
+      await page.goto('/?path=/story/admin-user-detail--in-a-modal&globals=theme:dark');
+      const frame = page.frameLocator('#storybook-preview-iframe').first();
       const dialog = frame.getByRole('dialog', { name: 'Bo Fixturewort' });
-      await expect(dialog).toBeVisible();
+      // A fresh `storybook dev` compiles the first story on its first load, and in CI
+      // that takes longer than the 5 s default.
+      await expect(dialog).toBeVisible({ timeout: 30_000 });
       const button = dialog.getByRole('button', { name: control, exact: true });
       await button.click();
       await confirm(dialog);
@@ -161,9 +152,6 @@ for (const [width, height] of SIZES) {
           dialogLeft: box.x,
         }),
       });
-      if (SHOTS && name === 'Change Role') {
-        await page.screenshot({ path: `${SHOTS}/frame-userdetail-${width}x${height}.png` });
-      }
 
       expect(under.x).toBeGreaterThanOrEqual(box.x);
       expect(under.x + under.width).toBeLessThanOrEqual(box.x + box.width);
@@ -171,18 +159,18 @@ for (const [width, height] of SIZES) {
   }
 }
 
-// In Ladle's frame the callout's listeners must hear the frame's own keys and
+// In Storybook's frame the callout's listeners must hear the frame's own keys and
 // presses, not the page's around it: Escape closes the callout alone, and a
 // press elsewhere in the dialog closes it.
 for (const { name, control, confirm } of CONTROLS) {
-  test(`${name} refused in Ladle's frame: Escape closes the callout alone, a press elsewhere in the dialog closes it`, async ({
+  test(`${name} refused in Storybook's frame: Escape closes the callout alone, a press elsewhere in the dialog closes it`, async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
-    await page.goto('/?story=admin--user-detail--in-a-modal&theme=dark');
-    const frame = page.frameLocator('iframe').first();
+    await page.goto('/?path=/story/admin-user-detail--in-a-modal&globals=theme:dark');
+    const frame = page.frameLocator('#storybook-preview-iframe').first();
     const dialog = frame.getByRole('dialog', { name: 'Bo Fixturewort' });
-    await expect(dialog).toBeVisible();
+    await expect(dialog).toBeVisible({ timeout: 30_000 });
     const button = dialog.getByRole('button', { name: control, exact: true });
     await button.click();
     await confirm(dialog);

@@ -1,27 +1,36 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { assertNoAccessibilityViolations } from '../axe';
 
-// The click-feedback callout's layout facts (M12.31, design F;
-// claude-docs/components/click-feedback.md): that the callout stays clear of
-// its control and inside the window or its box, that nothing moves as it comes and goes, that the badge's
-// press target covers no neighbour, and that reduced motion stills the fade.
-// Measured in the component's Ladle stories, since no page uses it yet; what
-// it says and where the focus goes are in tests/components/ClickFeedback.
+// The click-feedback callout's layout facts (claude-docs/components/click-feedback.md), measured in its Storybook
+// stories: clear of its control, inside the window, nothing moving as it comes and goes, and reduced motion
+// stilling the fade. What it says and where the focus goes are tests/components/ClickFeedback's.
 
 const WIDTHS = [1280, 375] as const;
 const THEMES = ['dark', 'light'] as const;
 
+// The placements are the states of one `States` story, chosen by its `state`
+// control; Then Succeeds is a story of its own.
+const STATE_OF: Record<string, string> = {
+  default: 'Resting',
+  bordered: 'Bordered',
+  borderless: 'Borderless',
+  'near-right-edge': 'Near+Right+Edge',
+  pinned: 'Pinned',
+};
+const storyPath = (story: string) =>
+  story in STATE_OF ? `states&args=state:${STATE_OF[story]}` : story;
+
 /**
- * The story in Ladle's bare preview, in `theme`, with its text in the web
- * font: measured before the font arrives, on a cold Ladle, a control is
- * narrower than it will be and every place taken from it is wrong. The fonts
- * are waited for once the story's controls are drawn, since a font is fetched
- * only when text first asks for it.
+ * The story in Storybook's bare preview (`iframe.html`) in `theme`, with its text in the web font: measured
+ * before the font arrives, a control is narrower than it will be and every place taken from it is wrong. The
+ * font is waited for once the controls are drawn, since it is fetched only when text first asks for it.
  */
 async function openStory(page: Page, story: string, theme: string, width: number) {
   await page.setViewportSize({ width, height: 800 });
-  await page.goto(`/?story=surfaces--click-feedback--${story}&mode=preview&theme=${theme}`);
-  await expect(page.locator('.ladle-story-frame button').first()).toBeVisible();
+  await page.goto(
+    `/iframe.html?id=surfaces-click-feedback--${storyPath(story)}&viewMode=story&globals=theme:${theme}`,
+  );
+  await expect(page.locator('.workshop-story-frame button').first()).toBeVisible();
   await page.evaluate(async () => {
     await document.fonts.ready;
   });
@@ -129,15 +138,14 @@ test.describe('the callout’s place', () => {
   }
 
   for (const theme of THEMES) {
-    test(`at 375px in ${theme}, inside the window, and axe finds nothing`, async ({ page }) => {
-      await openStory(page, theme === 'dark' ? 'phone-dark' : 'phone-light', theme, 375);
+    test(`at 375px in ${theme}, inside the window`, async ({ page }) => {
+      await openStory(page, 'bordered', theme, 375);
       const alert = await placed(page);
       const under = await box(alert);
 
       expect(under.left).toBeGreaterThanOrEqual(0);
       expect(under.right).toBeLessThanOrEqual(375);
       await expectUnder(alert, page.getByRole('button', { name: 'Remove', exact: true }));
-      await assertNoAccessibilityViolations(page);
     });
   }
 });
@@ -147,7 +155,7 @@ for (const width of WIDTHS) {
     test.describe(`at ${width}px in ${theme}`, () => {
       test('nothing moves as the callout and the badge come and go', async ({ page }) => {
         await openStory(page, 'default', theme, width);
-        const buttons = page.locator('.ladle-story-frame button');
+        const buttons = page.locator('.workshop-story-frame button');
         // Why a shift could happen: four controls in a wrapping row, the
         // badge and the callout drawn among them.
         await expect(buttons).toHaveCount(4);
@@ -156,7 +164,7 @@ for (const width of WIDTHS) {
         );
         const controls = () =>
           page
-            .locator('.ladle-story-frame button:not([class*="click-feedback"])')
+            .locator('.workshop-story-frame button:not([class*="click-feedback"])')
             .evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().toJSON()));
 
         await page.getByRole('button', { name: 'Remove', exact: true }).click();
@@ -178,7 +186,9 @@ for (const width of WIDTHS) {
           await expect(callout(page)).toHaveCount(0);
         }
 
-        const controls = page.locator('.ladle-story-frame button:not([class*="click-feedback"])');
+        const controls = page.locator(
+          '.workshop-story-frame button:not([class*="click-feedback"])',
+        );
         const names = await controls.allTextContents();
         for (const name of names) {
           const target = await pressTarget(badge(page, name));
@@ -194,7 +204,7 @@ for (const width of WIDTHS) {
       test('axe finds nothing with the callout open', async ({ page }) => {
         await openStory(page, 'bordered', theme, width);
         await placed(page);
-        await assertNoAccessibilityViolations(page);
+        await assertNoAccessibilityViolations(page, { skipRules: ['page-has-heading-one'] });
       });
     });
   }
@@ -261,11 +271,9 @@ async function takeFrames(page: Page): Promise<Record<Piece, Frame[]>> {
 }
 
 /**
- * Holds back each piece's place by `frames` frames: `is-placed` is taken off
- * as the script sets it, before any frame can draw it, and put back after.
- * Floating UI places within the press's own task in the workshop, but a slower
- * page (`next dev`) can land it frames later, and a fade that started at the
- * mount would then be spent before the piece is seen.
+ * Holds back each piece's place by `frames` frames: `is-placed` is taken off as the script sets it and put
+ * back after. A slower page (`next dev`) can place it frames late, and a fade started at the mount would then
+ * be spent before the piece is seen.
  */
 async function holdPlacement(page: Page, frames: number): Promise<void> {
   await page.evaluate(

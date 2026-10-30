@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from 'msw/http';
 import { server } from '../support/msw/server';
 import { send } from '@/lib/mail';
 import type { Captured } from './types';
@@ -14,7 +14,7 @@ const MESSAGE = {
 const MAILPIT_URL = 'http://mailpit.test:8025';
 const MAILTRAP_SANDBOX_ID = '4242';
 
-// Every request `send` makes, whatever its URL. MSW's `onUnhandledRequest:
+// Every request `send` makes, whatever its URL. MSW's `onUnhandledFrame:
 // 'error'` is not enough to prove nothing was sent: `send` swallows errors by
 // design, so an unhandled request would be logged and the test would pass.
 let requests: Captured[];
@@ -80,9 +80,8 @@ afterEach(() => {
 });
 
 describe('send, per transport', () => {
-  // The placeholder a provider that shared no address is stored under
-  // (MB.54) lives under `.invalid`, which RFC 2606 reserves: nothing can
-  // receive it, so no transport is ever asked to try.
+  // The placeholder a provider that shared no address is stored under lives under `.invalid`,
+  // which RFC 2606 reserves: nothing can receive it, so no transport is ever asked to try.
   it('refuses a recipient under .invalid before choosing a transport', async () => {
     configure('resend');
 

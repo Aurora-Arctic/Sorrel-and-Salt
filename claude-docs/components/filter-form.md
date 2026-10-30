@@ -29,6 +29,9 @@ a full page load.
 | `action`     | The page itself, the path its list's `href.ts` exports: what the form submits to natively before hydration, and the unfiltered first page Clear opens    |
 | `searchHref` | Builds the address the search's submit opens: the filter shown with the search box's text, trimmed, from the first page, usually through `listHref`      |
 | `shown`      | Each value of the filter the page shows: Clear is drawn while any is set                                                                                 |
+| `clear`      | Draw Clear while a filter is shown. Default true; a row with its own Clear All turns it off                                                              |
+| `sorrel`     | Draw the layer a sticky row fills itself with, so the corner sorrel shows through it. Default false                                                      |
+| `className`  | Joins the form's class: a row whose panel opens under it sets `position: relative`                                                                       |
 | `children`   | The fields, a `SearchField` first (or `IngredientSearch`'s box, see [`ingredient-search.md`](ingredient-search.md)), each with the `name` the page reads |
 
 Beside the component, `index.tsx` exports `useApplyFilter()`, which returns
@@ -174,13 +177,11 @@ its hover and press look.
 [`index.stories.tsx`](../../src/components/FilterForm/index.stories.tsx),
 `Admin / Filter Form`: the categories list's own filter, `GroupedValueListFilter`, a name
 search and a type-ahead group select (a `FilterSelectField`) applying through `useApplyFilter`, on
-the workshop's invented groups. `Default`, with `PhoneDark` and `PhoneLight`, a
-page showing no filter, so no Clear; `Filtered`, with `FilteredPhoneDark`
-and `FilteredPhoneLight`, a page showing one, Clear at the row's end. Each
+the workshop's invented groups. The `States` story has a `state` control: `No Filter`, a
+page showing no filter, so no Clear; `Filtered`, a page showing one, Clear at the row's end; `Without Clear` and `With Sorrel`, the row without Clear and with the sorrel in it. `Narrow` stays a story of its own, at a phone's width. Each
 sits in a `ListFrame`, whose navigation it needs; the workshop's router goes
 nowhere, so a change shows nothing on its way here. The row greyed over a
-list on its way is GroupedValueList's `CategoriesPending`,
-`PendingPhoneDark` and `PendingPhoneLight`.
+list on its way is GroupedValueList's `Pending`.
 
 ## Testing
 
@@ -210,3 +211,13 @@ the server (`drawnOnServer`, beside the rows).
 
 Where the row's fields stand, and Clear at its end, is presentation, the
 workshop's (rule 4): the stories above at desktop and phone widths.
+
+## What the form does
+
+A list's filter is a toolbar that applies as it changes: a select or a switch on its change, a type-ahead once a choice settles, and the search on its own submit (the magnifier, `SearchField`) or Enter. Each opens the new filter from the first page as a soft navigation through the list's `ListFrame`, so while the list reads, the row greys out as a tabbed page's tabs do.
+
+It is a GET form to the page itself, so before hydration the search's submit still sends every field. Clear is a plain link to the page itself, drawn only while the page shows a filter. The caller holds the fields; the form holds the form, Clear and the navigation.
+
+## Focus after a filter applies
+
+The list keys its filter by the filter shown, so the row that applied is thrown away and a new one drawn. The control to focus again is remembered by its place among the row's controls (`-1` for none). A place is used rather than an id because `useId` numbers a browser-drawn row afresh, and Clear, which comes and goes, is last. The slot is module state because the filter's handlers sit above the FilterForm a context would come from; one list navigates at a time, so one slot is enough.

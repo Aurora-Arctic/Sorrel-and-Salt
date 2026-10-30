@@ -1,8 +1,0 @@
-// primitives-base scoped to the frame, so a story gets the same classes a page
-// does; inside `:where()` for the reason typography.scss gives.
-
-@use '../src/scss/primitives' as *;
-
-:where(.ladle-story-frame) {
-  @include primitives-base;
-}

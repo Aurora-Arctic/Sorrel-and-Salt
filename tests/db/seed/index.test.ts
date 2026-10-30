@@ -11,15 +11,13 @@ import { seedDeities } from '@/db/seed/deities';
 import { seedForms } from '@/db/seed/forms';
 import { seedSources } from '@/db/seed/sources';
 import { seedCompendium } from '@/db/seed/compendium';
-import { COMPENDIUM } from '@/db/seed/compendium/index';
+import { loadCompendium } from '@/db/seed/compendium/load';
+import type { SeedDatabase } from '@/db/seed/types';
+import { fixtureFiles } from './compendium/files-fixture';
 import type { SeedEntry, UserRow } from './types';
 
-// The shape every production seed shares, asserted here once over all of them
-// (MB.183) and in no per-seed file: the bootstrap user inserted and published as the acting user,
-// every row stamped as it, a second run a no-op, and nothing an admin deleted
-// brought back. The handle is this file's own; that the seed writes through
-// it rather than a client of its own is enforced by lint, not here —
-// claude-docs/db/seed-module.md, "The seed module".
+// The shape every production seed shares, asserted once over all of them: the bootstrap user inserted and published as the acting user, every row stamped as it, a second run a no-op, and nothing an admin deleted brought back.
+// The handle is this file's own; that the seed writes through it rather than a client of its own is enforced by lint (claude-docs/db/seed-module.md, "The seed module").
 
 const PROBE = 'seed_probe_acting_user';
 
@@ -74,10 +72,8 @@ beforeAll(async () => {
     ).map((row) => row.table_name),
   );
 
-  // Records, per inserted row, what `app.current_user_id` held inside the
-  // inserting transaction; it is transaction-local and gone by the time a test
-  // could read it. One function, a trigger on every table, so the one probe
-  // watches every seed's own rows and not only the bootstrap user's.
+  // Records, per inserted row, what `app.current_user_id` held inside the inserting transaction; it is transaction-local and gone by the time a test could read it.
+  // One function, a trigger on every table, so the one probe watches every seed's own rows and not only the bootstrap user's.
   await sql`create table ${sql(PROBE)} (table_name text not null, acting_user text)`;
   await sql.unsafe(`
     create function ${PROBE}() returns trigger language plpgsql as $$
@@ -111,7 +107,7 @@ describe('seed(db, { scenario: "minimal" })', () => {
     await seed(db, { scenario: 'minimal' });
   });
 
-  // MB.58: the system user is a creator, not an admin, so a bare install has none.
+  // The system user is a creator, not an admin, so a bare install has none.
   it('produces exactly one system user and one user, and no admin', async () => {
     const users = await allUsers();
     expect(users.map((u) => u.id)).toEqual([BOOTSTRAP_USER_ID, MINIMAL_USER_ID]);
@@ -131,54 +127,78 @@ describe('resolveScenario', () => {
   });
 });
 
-// Every entry point opens with `beginSeedTransaction`, so each inserts the
-// bootstrap row when it is missing — the reference-data seeds alone, on staging
-// and production. From wherever, it is no admin (MB.58): it has no OAuth
-// account and nobody can sign in as it, so as an admin it would only be a
-// revocable row on /admin/users.
-//
-// Each entry names the tables it is the seed of: the ones it fills from empty.
-// The six that `migrate.yml` runs on staging and production; the dev-only
-// scenarios are a developer's to see working.
-const SEED_ENTRIES: SeedEntry[] = [
-  { name: 'the category seed', run: seedCategories, tables: ['category_groups', 'categories'] },
-  { name: 'the form seed', run: seedForms, tables: ['ingredient_form_groups', 'ingredient_forms'] },
-  { name: 'the astrology seed', run: seedAstrology, tables: ['celestial_bodies', 'zodiac_signs'] },
-  { name: 'the deity seed', run: seedDeities, tables: ['deity_traditions', 'deities'] },
-  {
-    // A source links rows the two vocabularies wrote, so alone it has nothing to link.
-    name: 'the sources seed, after the vocabularies it links',
-    run: async (db) => {
-      await seedDeities(db);
-      await seedAstrology(db);
-      await seedSources(db);
+// Every entry point opens with `beginSeedTransaction`, which inserts the bootstrap row when it is missing.
+// That row is no admin: it has no OAuth account and nobody can sign in as it, so as an admin it would only be a revocable row on /admin/users.
+// Each entry names the tables it fills from empty: the six `migrate.yml` runs on staging and production; the dev-only scenarios are a developer's to see working.
+const SEED_ENTRIES: SeedEntry[] = (
+  [
+    {
+      name: 'the category seed',
+      seed: seedCategories,
+      tables: ['category_groups', 'categories'],
     },
-    tables: ['references', 'reference_links'],
-  },
-  {
-    // On the production list, after everything it picks from and the sources
-    // it may share a work with (MB.243 moved it off the invented fixture).
-    name: 'the compendium seed, after the vocabularies and sources',
-    run: async (db) => {
-      await seedCategories(db);
-      await seedForms(db);
-      await seedAstrology(db);
-      await seedDeities(db);
-      await seedSources(db);
-      await seedCompendium(db, COMPENDIUM);
+    {
+      name: 'the form seed',
+      seed: seedForms,
+      tables: ['ingredient_form_groups', 'ingredient_forms'],
     },
-    tables: [
-      'ingredients',
-      'ingredient_variants',
-      'ingredient_folk_names',
-      'ingredient_deities',
-      'ingredient_categories',
-      'ingredient_substitutes',
-      'references',
-      'reference_links',
-    ],
+    {
+      name: 'the astrology seed',
+      seed: seedAstrology,
+      tables: ['celestial_bodies', 'zodiac_signs'],
+    },
+    {
+      name: 'the deity seed',
+      seed: seedDeities,
+      tables: ['deity_traditions', 'deities', 'deity_other_names'],
+    },
+    {
+      // A source links rows the two vocabularies wrote, so alone it has nothing to link.
+      name: 'the sources seed, after the vocabularies it links',
+      prepare: async (db) => {
+        await seedDeities(db);
+        await seedAstrology(db);
+      },
+      seed: seedSources,
+      tables: ['references', 'reference_links'],
+    },
+    {
+      // On the production list, after everything it picks from and the sources it may share a work with.
+      // The fill sweep reads the real files under `compendium/`, so every table it names is proved filled.
+      // The other three sweeps read the two-entry fixture, since what they prove does not grow with the files and the real list costs seconds a run.
+      name: 'the compendium seed, after the vocabularies and sources',
+      prepare: async (db) => {
+        await seedCategories(db);
+        await seedForms(db);
+        await seedAstrology(db);
+        await seedDeities(db);
+        await seedSources(db);
+      },
+      seed: async (db, options) => {
+        await seedCompendium(db, fixtureFiles(), options);
+      },
+      fillSeed: async (db) => {
+        await seedCompendium(db);
+      },
+      tables: [
+        'ingredients',
+        'ingredient_variants',
+        'ingredient_folk_names',
+        'ingredient_deities',
+        'ingredient_categories',
+        'ingredient_substitutes',
+        'references',
+        'reference_links',
+      ],
+    },
+  ] satisfies Omit<SeedEntry, 'run'>[]
+).map((entry: Omit<SeedEntry, 'run'>) => ({
+  ...entry,
+  run: async (db: SeedDatabase) => {
+    await entry.prepare?.(db);
+    await entry.seed(db);
   },
-];
+}));
 
 describe('the shape every seed shares', () => {
   beforeEach(async () => {
@@ -186,9 +206,9 @@ describe('the shape every seed shares', () => {
   });
 
   // Precondition of the compendium entry: an empty list would pass every sweep below by writing nothing.
-  it('runs the compendium seed over a list that holds entries', () => {
-    expect(COMPENDIUM.length).toBeGreaterThan(0);
-    expect(COMPENDIUM.flatMap((shard) => shard.entries).length).toBeGreaterThan(0);
+  it('runs the compendium seed over files that hold approved entries', () => {
+    const { files } = loadCompendium();
+    expect(files.filter((file) => file.status === 'approved').length).toBeGreaterThan(0);
   });
 
   // One run, read three ways: the bootstrap row it inserted, the stamps on
@@ -196,11 +216,12 @@ describe('the shape every seed shares', () => {
   // insert — each with the precondition that the rows are this run's.
   it.each(SEED_ENTRIES)(
     '$name fills its tables from empty as the bootstrap user: a plain user, the stamp on every row, the acting user of every insert',
-    async ({ run, tables: own }) => {
+    async ({ prepare, seed: seedOf, fillSeed, tables: own }) => {
       // Precondition: the truncated clone really starts empty, so these rows are this run's.
       for (const table of ['users', ...own]) expect(await countOf(table), table).toBe(0);
 
-      await run(db);
+      await prepare?.(db);
+      await (fillSeed ?? seedOf)(db);
 
       const [system] = (await allUsers()).filter((u) => u.id === BOOTSTRAP_USER_ID);
       expect(system).toMatchObject({ email: 'admin@seed.sorrelandsalt.com', role: 'user' });
@@ -274,6 +295,27 @@ describe('the shape every seed shares', () => {
         expect(await countOf(table), `${table} gained a row`).toBe(before.get(table));
         expect(await countOf(table, 'where deleted_at is not null'), table).toBe(1);
       }
+    },
+  );
+  // The hand-started seed workflow runs each seed with --dry-run
+  // first. A dry run does all its reads and writes, then rolls its
+  // transaction back, so every table reads as it did before.
+  it.each(SEED_ENTRIES)(
+    '$name writes nothing on a dry run, anywhere',
+    async ({ prepare, seed: seedOf }) => {
+      await prepare?.(db);
+      const before = await snapshot();
+      const inserts = await countOf(PROBE);
+
+      await seedOf(db, { dryRun: true });
+
+      expect(await snapshot()).toEqual(before);
+      expect(await countOf(PROBE), 'no insert outlived the dry run').toBe(inserts);
+
+      // Precondition: the same run without --dry-run writes, so an unchanged
+      // database is the dry run's doing and not an empty seed's.
+      await seedOf(db);
+      expect(await snapshot()).not.toEqual(before);
     },
   );
 });

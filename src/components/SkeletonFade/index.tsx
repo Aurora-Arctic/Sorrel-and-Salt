@@ -1,18 +1,13 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactElement, ReactNode } from 'react';
 import { ARRIVE_MS } from '../../lib/navigation/timing';
 import './index.scss';
 
-// The skeleton's way out (M12.33): when a wait ends, the bodies (`MainBody`,
-// `SectionBody`) do not drop the skeleton at once but keep the last one over
-// the page that has arrived, and it fades away while the page shows through.
-// A client part, since the timer is the browser's. A fade rather than the
-// page fading in, since wrapping the arriving page would put a box round it
-// that the section layouts' flex columns would feel; the overlay is out of
-// layout and unmounts when it has gone.
-// claude-docs/components/skeleton-fade.md
+// The skeleton's way out: the bodies keep the last skeleton over the arrived page and fade it away, as an out-of-layout overlay, not by wrapping the page
+// (claude-docs/components/skeleton-fade.md).
+// (claude-docs/components/skeleton-fade.md, "The fade out").
 
 /**
  * The skeleton to keep over the page for the length of its fade-out, or null.
@@ -21,7 +16,7 @@ import './index.scss';
  * starting mid-fade takes it back at once.
  */
 export function useLeavingSkeleton(shown: ReactElement | null): ReactElement | null {
-  const last = useRef<ReactElement | null>(null);
+  const [kept, setKept] = useState<ReactElement | null>(null);
   const [wasShown, setWasShown] = useState(false);
   const [leaving, setLeaving] = useState<ReactElement | null>(null);
   const isShown = shown !== null;
@@ -30,12 +25,9 @@ export function useLeavingSkeleton(shown: ReactElement | null): ReactElement | n
   // overlay and the page never shows bare for a frame.
   if (isShown !== wasShown) {
     setWasShown(isShown);
-    setLeaving(isShown ? null : last.current);
+    if (isShown) setKept(shown);
+    setLeaving(isShown ? null : kept);
   }
-
-  useEffect(() => {
-    if (shown) last.current = shown;
-  });
 
   useEffect(() => {
     if (!leaving) return undefined;
@@ -49,6 +41,35 @@ export function useLeavingSkeleton(shown: ReactElement | null): ReactElement | n
 /** The host's class: the box the overlay is placed against, clipped while it fades. */
 export const skeletonFadeHost = (leaving: boolean): string =>
   leaving ? 'skeleton-fade-host skeleton-fade-host--fading' : 'skeleton-fade-host';
+
+/**
+ * The props holding the page during a wait: mounted at full height, unseen (`visibility`, not `display: none`) and `inert`, because Back needs the scroll position kept
+ * (claude-docs/components/skeleton-fade.md, "Holding the page during a wait").
+ */
+export const heldPage = (waiting: boolean, className?: string) => ({
+  className: [className, waiting && 'skeleton-held'].filter(Boolean).join(' ') || undefined,
+  inert: waiting || undefined,
+  'aria-hidden': waiting || undefined,
+});
+
+/**
+ * The waiting skeleton over the held page: laid over its whole height and
+ * pinned under the bar, so it is in the window wherever the page was scrolled
+ * to. `className` is the frame the skeleton stands in.
+ */
+export const SkeletonCover = ({
+  className,
+  children,
+}: {
+  className?: string;
+  children: ReactNode;
+}): ReactElement => (
+  <div className="skeleton-cover">
+    <div className={className ? `skeleton-cover__pin ${className}` : 'skeleton-cover__pin'}>
+      {children}
+    </div>
+  </div>
+);
 
 /**
  * The skeleton kept over the arrived page, out of layout and out of the

@@ -7,7 +7,7 @@ import './index.scss';
 // The pre-paint script in src/app/pre-paint-scripts.tsx reads this key inline; keep in sync.
 export const STORAGE_KEY = 'theme';
 
-// The one theme write; the Ladle decorator calls it too.
+// The one theme write; the Storybook decorator calls it too.
 export const applyTheme = (theme: 'light' | 'dark'): void => {
   document.documentElement.setAttribute('data-theme', theme);
   try {

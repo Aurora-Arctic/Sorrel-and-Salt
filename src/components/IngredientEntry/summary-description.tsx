@@ -1,21 +1,11 @@
 'use client';
 
 import { useId, useLayoutEffect, useRef, useState, type ReactElement } from 'react';
+import { ChevronIcon } from '../IconTip/icons';
 
-// The details modal's description (M12.5): the page's own paragraph, cut to its
-// first six lines, up from four, with Show More opening the rest in place (the owner's
-// calls, 2026-10-20; claude-docs/components/ingredient-entry.md, "The details modal").
-// The cut is the script's: without JavaScript there is no clip and the whole
-// text shows, and the toggle shows only when the text overflows six lines, so
-// a short description stands whole with no button. Not a `<details>`: its
-// summary would stand above the text, where this bar follows the lines it opens.
-//
-// A clip box round the paragraph holds the cut. Its height is set in pixels, from
-// six of the paragraph's own line heights, and moves to the text's full height
-// and back on a transition (summary.scss), because `auto` cannot be animated and
-// the grid-rows trick cannot stop short of the whole text. It is let go to
-// `auto` once open, so the text reflows freely. The bar is the one button the
-// whole way, so a press leaves the focus where it was.
+// The details modal's description: the page's paragraph cut to its first six lines, Show More
+// opening the rest in place. The cut is the script's, so without JavaScript the whole text shows
+// (claude-docs/components/ingredient-entry.md, "Structure").
 
 const LINES = 6;
 
@@ -40,6 +30,7 @@ export default function SummaryDescription({ text }: { text: string }): ReactEle
 
   // Measured before paint, so the bar and the cut arrive together.
   useLayoutEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- the state follows an outside value (a timer, a measurement or a focus request), so it can only be set from an effect
     setMounted(true);
   }, []);
   useLayoutEffect(() => {
@@ -103,23 +94,7 @@ export default function SummaryDescription({ text }: { text: string }): ReactEle
           onClick={toggle}
         >
           {open ? 'Show Less' : 'Show More'}
-          <svg
-            className="ingredient-summary__more-chevron"
-            viewBox="0 0 16 16"
-            width="1em"
-            height="1em"
-            aria-hidden="true"
-            focusable="false"
-          >
-            <path
-              d="M3.5 6l4.5 4.5L12.5 6"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <ChevronIcon className="ingredient-summary__more-chevron" textSized />
         </button>
       )}
     </div>

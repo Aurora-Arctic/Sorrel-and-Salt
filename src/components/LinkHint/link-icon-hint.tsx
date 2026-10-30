@@ -6,12 +6,9 @@ import Spinner from '../Spinner';
 import { useLinkPending } from './use-link-pending';
 import './index.scss';
 
-// The chain icon of a link that wears one, which turns into the loading ring
-// while the link is pending (M12.33, the owner's call): the link then needs no
-// dot beside it. Both sit in one 1em box, so nothing shifts; the stylesheet
-// hides the icon only once `$loading-delay` has passed, as the ring appears,
-// so a quick navigation changes nothing. Decorative, like the dot.
-// claude-docs/components/link-hint.md
+// The chain icon of a link that wears one, turning into the loading ring while pending, in one 1em
+// box so nothing shifts. The stylesheet hides the icon only after `$loading-delay`, so a quick
+// navigation changes nothing (claude-docs/components/link-hint.md).
 export default function LinkIconHint(): ReactElement {
   const pending = useLinkPending();
   return (

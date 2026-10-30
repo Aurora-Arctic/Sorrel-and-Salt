@@ -12,11 +12,8 @@ import type { IngredientFormValueRow } from '../types';
 import { curatedVocabularyWrites } from './curated';
 import { IngredientFormGroupRef } from './ingredient-form-groups';
 
-// `IngredientFormValue`, not `IngredientForm`: one row is one permitted value
-// of `ingredient_variants.form`, and `IngredientForm` is the entry-form component
-// (DESIGN.md §7). Public (MB.80), so no scope and no session in the readers;
-// tests/db/graphql-query-scopes.test.ts holds every other query to its refusal.
-// The writes are the site admin's (M5.6a).
+// `IngredientFormValue`, not `IngredientForm`: one row is one permitted value of `ingredient_variants.form`, and `IngredientForm` is the entry-form component (DESIGN.md §7).
+// Public, so no scope in the readers; tests/db/graphql-query-scopes.test.ts holds every other query to its refusal. The writes are the site admin's.
 
 export const IngredientFormValueRef = curatedVocabularyWrites({
   ref: builder.objectRef<IngredientFormValueRow>('IngredientFormValue'),
@@ -28,7 +25,7 @@ export const IngredientFormValueRef = curatedVocabularyWrites({
     loader: (loaders) => loaders.ingredientFormGroupsById,
   },
   // The slug follows the name and the group. No `endRedirect`: a rename moves
-  // no compendium entry's address since MB.220, so ends no redirect.
+  // no compendium entry's address, so ends no redirect.
   services: {
     create: createIngredientFormValue,
     update: updateIngredientFormValue,

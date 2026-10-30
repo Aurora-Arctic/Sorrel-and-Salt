@@ -1,0 +1,419 @@
+import type { Route } from 'next';
+import { render, screen, within } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+import SpellRecipeAside from '@/components/SpellRecipe/aside';
+import SpellWorkings from '@/components/SpellWorkings';
+import SpellRecipe from '@/components/SpellRecipe';
+import SpellRecipeBody from '@/components/SpellRecipe/body';
+import SpellRecipeSummary from '@/components/SpellRecipe/summary';
+import type { RecipeStep, SpellRecipeProps } from '@/components/SpellRecipe';
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
+  usePathname: () => '/here',
+}));
+
+// (claude-docs/components/spell-recipe.md): the page body is presentational, so each
+// case is props in and what rendered out. The spells are the test's own data.
+
+const instruction = (id: string, body: string): RecipeStep => ({ kind: 'instruction', id, body });
+const ingredient = (
+  id: string,
+  over: Partial<Extract<RecipeStep, { kind: 'ingredient' }>> = {},
+): RecipeStep => ({
+  kind: 'ingredient',
+  id,
+  name: 'Testwort',
+  form: null,
+  formal: null,
+  variantId: null,
+  quantity: null,
+  unit: null,
+  look: null,
+  safety: null,
+  oneOff: false,
+  deleted: false,
+  body: null,
+  ...over,
+});
+
+const props = (over: Partial<SpellRecipeProps> = {}): SpellRecipeProps => ({
+  title: 'Fixture Working',
+  intent: 'To keep the testwort fresh.',
+  status: 'complete',
+  visibility: 'workspace',
+  categories: [],
+  lastEdit: null,
+  note: null,
+  steps: [],
+  back: { href: '/coven/fixture-coven/grimoire' as Route, label: 'Grimoire' },
+  ...over,
+});
+
+describe('SpellRecipe', () => {
+  it('names the page by the title and links back to the grimoire', () => {
+    render(<SpellRecipe {...props()} />);
+    expect(screen.getByRole('heading', { level: 1, name: 'Fixture Working' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Back to Grimoire/ })).toHaveAttribute(
+      'href',
+      '/coven/fixture-coven/grimoire',
+    );
+  });
+
+  it('calls a spell with no title Untitled Spell', () => {
+    render(<SpellRecipe {...props({ title: null, status: 'draft' })} />);
+    expect(screen.getByRole('heading', { level: 1, name: 'Untitled Spell' })).toBeInTheDocument();
+  });
+
+  it('numbers the steps in the order given, with the amount on an ingredient step', () => {
+    render(
+      <SpellRecipe
+        {...props({
+          steps: [
+            instruction('a', 'Light the candle.'),
+            ingredient('b', { quantity: '2', unit: 'tsp' }),
+          ],
+        })}
+      />,
+    );
+    const items = within(screen.getByRole('list', { name: 'Steps' })).getAllByRole('listitem');
+    expect(items[0]).toHaveTextContent('1.');
+    expect(items[0]).toHaveTextContent('Light the candle.');
+    expect(items[1]).toHaveTextContent('2.');
+    expect(items[1]).toHaveTextContent('2 tsp');
+    expect(items[1]).toHaveTextContent('Testwort');
+  });
+
+  it('lists each form once, in the order of its first step, with the total it needs, above the steps', () => {
+    render(
+      <SpellRecipe
+        {...props({
+          steps: [
+            instruction('a', 'Stir.'),
+            ingredient('b', {
+              name: 'Fixture Moss',
+              variantId: 'v1',
+              form: 'dried_leaf',
+              quantity: '1.5',
+              unit: 'tsp',
+            }),
+            ingredient('c', {
+              name: 'Testwort',
+              formal: 'Testus wortus',
+              variantId: 'v2',
+              quantity: '1',
+            }),
+            ingredient('d', {
+              name: 'Fixture Moss',
+              variantId: 'v1',
+              form: 'dried_leaf',
+              quantity: '1',
+              unit: 'tsp',
+            }),
+          ],
+        })}
+      />,
+    );
+    const summary = screen.getByRole('list', { name: 'Ingredients' });
+    const items = within(summary).getAllByRole('listitem');
+    expect(items).toHaveLength(2);
+    expect(items[0]).toHaveTextContent('2.5 tsp');
+    expect(items[0]).toHaveTextContent('Fixture Moss');
+    expect(items[1]).toHaveTextContent('Testwort');
+    expect(items[1]).toHaveTextContent('Testus wortus');
+    const steps = screen.getByRole('list', { name: 'Steps' });
+    expect(summary.compareDocumentPosition(steps) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("adds a form's amounts in one dimension in its first step's unit, and lists amounts that cross dimensions", () => {
+    render(
+      <SpellRecipe
+        {...props({
+          steps: [
+            ingredient('a', { name: 'Fixture Moss', variantId: 'v1', quantity: '1', unit: 'tbsp' }),
+            ingredient('b', { name: 'Fixture Moss', variantId: 'v1', quantity: '3', unit: 'tsp' }),
+            ingredient('c', { name: 'Testwort', variantId: 'v2', quantity: '1', unit: 'g' }),
+            ingredient('d', { name: 'Testwort', variantId: 'v2', quantity: '1', unit: 'tsp' }),
+          ],
+        })}
+      />,
+    );
+    const items = within(screen.getByRole('list', { name: 'Ingredients' })).getAllByRole(
+      'listitem',
+    );
+    expect(items[0]).toHaveTextContent('2 tbsp');
+    expect(items[1]).toHaveTextContent('1 g + 1 tsp');
+  });
+
+  it('draws no Ingredients list for a spell with no ingredient step', () => {
+    render(<SpellRecipe {...props({ steps: [instruction('a', 'Stir.')] })} />);
+    expect(screen.queryByRole('list', { name: 'Ingredients' })).toBeNull();
+  });
+
+  it('draws the facts that are set as a strip, and leaves out blank ones', () => {
+    render(
+      <SpellRecipe
+        {...props({
+          jarDescription: '4 oz jar',
+          sealWaxColor: '  ',
+          moonPhase: 'Waxing Crescent',
+          dayOfWeek: null,
+        })}
+      />,
+    );
+    const terms = screen.getAllByRole('term').map((term) => term.textContent);
+    expect(terms).toEqual(['Jar', 'Moon Phase']);
+    expect(screen.getByText('4 oz jar')).toBeInTheDocument();
+    expect(screen.getByText('Waxing Crescent')).toBeInTheDocument();
+  });
+
+  it('draws the moon phase with its drawing, and a phase with no drawing as its text alone', () => {
+    const { rerender } = render(<SpellRecipe {...props({ moonPhase: 'Waxing Crescent' })} />);
+    const phase = () => screen.getByText(/Waxing Crescent|Blue Moon/).closest('dd')!;
+    expect(phase().querySelector('svg[aria-hidden="true"]')).not.toBeNull();
+
+    rerender(<SpellRecipe {...props({ moonPhase: 'Blue Moon' })} />);
+    expect(phase().querySelector('svg')).toBeNull();
+  });
+
+  it('shows every category as a chip, with none folded behind a +N button', () => {
+    const categories = Array.from({ length: 4 }, (_, i) => ({
+      category: { id: `c${i}`, name: `Fixture Category ${i + 1}` },
+      group: { colorDark: '#112233', colorLight: '#445566' },
+    }));
+    render(<SpellRecipe {...props({ categories })} />);
+
+    const list = screen.getByRole('list', { name: 'Categories' });
+    expect(within(list).getAllByRole('listitem')).toHaveLength(4);
+    expect(screen.queryByRole('button', { name: /more categories/i })).toBeNull();
+  });
+
+  it("draws an ingredient step's body and an instruction step's text", () => {
+    render(
+      <SpellRecipe
+        {...props({
+          steps: [
+            ingredient('a', { body: 'Crush it first' }),
+            ingredient('b', { name: 'Fixture Moss', body: null }),
+            instruction('c', 'Stir.'),
+          ],
+        })}
+      />,
+    );
+
+    expect(screen.getByText('Crush it first')).toBeInTheDocument();
+    expect(screen.getByText('Stir.')).toBeInTheDocument();
+  });
+
+  it('draws no facts strip when none is set', () => {
+    render(<SpellRecipe {...props()} />);
+    expect(screen.queryByRole('term')).toBeNull();
+  });
+
+  it('shows the formal name beside a label two ingredients share', () => {
+    render(
+      <SpellRecipe {...props({ steps: [ingredient('a', { formal: 'Testus officinalis' })] })} />,
+    );
+    expect(
+      within(screen.getByRole('list', { name: 'Steps' })).getByText(/Testus officinalis/),
+    ).toBeInTheDocument();
+  });
+
+  it('names an ingredient plainly in its step, with no Quick Look eye, which the side column carries, and marks a one-off One-Off', () => {
+    render(
+      <SpellRecipe
+        {...props({
+          steps: [
+            ingredient('a', {
+              look: {
+                href: '/coven/fixture-coven/ingredients?entry=i1' as Route,
+                name: 'Testwort',
+                canonicalName: null,
+                nomenclature: 'none',
+              },
+            }),
+            ingredient('b', { name: 'Fixture Moss', form: 'fresh', oneOff: true }),
+          ],
+        })}
+      />,
+    );
+    const steps = screen.getByRole('list', { name: 'Steps' });
+    expect(within(steps).queryAllByRole('link')).toHaveLength(0);
+    expect(within(steps).getByText('Testwort')).toBeInTheDocument();
+    expect(within(steps).getByText(/Fixture Moss \(Fresh\)/)).toBeInTheDocument();
+    const oneOff = within(steps).getByRole('button', { name: 'One-Off' });
+    expect(oneOff).toHaveAccessibleDescription(
+      'Used in this spell only; not kept in your cupboard.',
+    );
+  });
+
+  it('marks a toxic ingredient Toxic and one with safety notes Caution, and a one-off neither', () => {
+    render(
+      <SpellRecipe
+        {...props({
+          steps: [
+            ingredient('a', { safety: { toxic: true } }),
+            ingredient('b', { name: 'Fixture Rue', safety: { safetyNotes: 'Wash hands.' } }),
+            ingredient('c', { name: 'Fixture Moss', oneOff: true }),
+          ],
+        })}
+      />,
+    );
+    const steps = screen.getByRole('list', { name: 'Steps' });
+    const rows = within(steps).getAllByRole('listitem');
+    expect(within(rows[0]!).getByText('Toxic')).toBeInTheDocument();
+    expect(within(rows[1]!).getByText('Caution')).toBeInTheDocument();
+    expect(within(rows[2]!).queryByText(/Toxic|Caution/)).toBeNull();
+  });
+
+  it('shows the note, with no heading, and none when blank', () => {
+    const { rerender } = render(<SpellRecipe {...props({ note: 'Best at dusk.' })} />);
+    expect(screen.getByText('Best at dusk.')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Note' })).toBeNull();
+    rerender(<SpellRecipe {...props({ note: '  ' })} />);
+    expect(screen.queryByText('Best at dusk.')).toBeNull();
+  });
+
+  it('draws no Edit or Delete control of its own, and draws the action it is given', () => {
+    const { rerender } = render(<SpellRecipe {...props()} />);
+    expect(screen.queryByRole('link', { name: /Edit/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Delete/ })).toBeNull();
+    rerender(<SpellRecipe {...props({ action: <a href="/x">Edit Spell</a> })} />);
+    expect(screen.getByRole('link', { name: 'Edit Spell' })).toBeInTheDocument();
+  });
+
+  it('badges a draft and a private spell', () => {
+    render(<SpellRecipe {...props({ status: 'draft', visibility: 'private' })} />);
+    expect(screen.getByText('Draft')).toBeInTheDocument();
+    expect(screen.getByText('Private')).toBeInTheDocument();
+  });
+
+  it('says who last edited the spell above the title (the owner, 2026-10-29)', () => {
+    render(
+      <SpellRecipe
+        {...props({ lastEdit: { by: 'Fixture Author', at: '2026-10-01T12:00:00.000Z' } })}
+      />,
+    );
+    const edited = screen.getByText(/Fixture Author/);
+    const title = screen.getByRole('heading', { level: 1, name: 'Fixture Working' });
+    expect(edited.compareDocumentPosition(title) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('draws the aside it is given after the body, and none otherwise', () => {
+    const { rerender } = render(<SpellRecipe {...props({ note: 'Best at dusk.' })} />);
+    expect(screen.queryByRole('complementary')).toBeNull();
+    rerender(
+      <SpellRecipe
+        {...props({
+          note: 'Best at dusk.',
+          aside: <section aria-label="Fixture Aside">Beside</section>,
+        })}
+      />,
+    );
+    const aside = screen.getByRole('complementary', { name: 'The Cupboard' });
+    expect(within(aside).getByRole('region', { name: 'Fixture Aside' })).toBeInTheDocument();
+    const note = screen.getByText('Best at dusk.');
+    expect(note.compareDocumentPosition(aside) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  describe('jump menu', () => {
+    const linksOf = () =>
+      within(screen.getByRole('navigation', { name: 'On This Page' })).getAllByRole('link');
+    const aside = <SpellRecipeAside steps={[]} doors={[]} intended={[]} groups={[]} />;
+    const workings = (
+      <SpellWorkings workings={[]} completeAction={() => null} editAction={() => null} />
+    );
+
+    it('lists the sections the page draws, each link pointing at one that exists', () => {
+      render(<SpellRecipe {...props({ steps: [instruction('s1', 'Stir.')], aside, workings })} />);
+      expect(linksOf().map((link) => link.textContent)).toEqual([
+        'Steps',
+        'Category Match',
+        'In the Cupboard',
+        'Workings',
+      ]);
+      // The two jar links are nested under one group label, and the group is narrow-only whole.
+      const group = within(screen.getByRole('navigation', { name: 'On This Page' })).getByRole(
+        'list',
+        { name: 'The Cupboard' },
+      );
+      expect(within(group).getAllByRole('link')).toHaveLength(2);
+      expect(group.parentElement).toHaveClass('page-nav__narrow');
+      for (const link of linksOf()) {
+        const target = document.getElementById(link.getAttribute('href')!.slice(1));
+        expect(target, link.textContent ?? '').not.toBeNull();
+      }
+    });
+
+    it('comes after the intent and the categories in the source, and before the steps', () => {
+      render(
+        <SpellRecipe
+          {...props({
+            categories: [
+              {
+                category: { id: 'c1', name: 'Testwort Lore' },
+                group: { colorDark: '#112233', colorLight: '#445566' },
+              },
+            ],
+            steps: [instruction('s1', 'Stir.')],
+            aside,
+            workings,
+          })}
+        />,
+      );
+      const nav = screen.getByRole('navigation', { name: 'On This Page' });
+      const follows = (a: Node, b: Node) =>
+        Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+      expect(follows(screen.getByText('To keep the testwort fresh.'), nav)).toBe(true);
+      expect(follows(screen.getByRole('list', { name: 'Categories' }), nav)).toBe(true);
+      expect(follows(nav, screen.getByRole('list', { name: 'Steps' }))).toBe(true);
+    });
+
+    it('puts the side column before Workings in the source, as the menu lists them', () => {
+      render(<SpellRecipe {...props({ steps: [instruction('s1', 'Stir.')], aside, workings })} />);
+      const side = screen.getByRole('complementary', { name: 'The Cupboard' });
+      const section = screen.getByRole('region', { name: 'Workings' });
+      // The menu names them in this order, so the keyboard and a screen reader meet them so too.
+      expect(
+        linksOf()
+          .map((link) => link.textContent)
+          .slice(-2),
+      ).toEqual(['In the Cupboard', 'Workings']);
+      expect(side.compareDocumentPosition(section) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    it('leaves out an entry whose section is not drawn', () => {
+      render(<SpellRecipe {...props({ steps: [] })} />);
+      expect(screen.queryByRole('navigation', { name: 'On This Page' })).toBeNull();
+    });
+
+    it('keeps Steps and Workings when there is no side column', () => {
+      render(<SpellRecipe {...props({ steps: [instruction('s1', 'Stir.')], workings })} />);
+      expect(linksOf().map((link) => link.textContent)).toEqual(['Steps', 'Workings']);
+    });
+  });
+});
+
+describe("SpellRecipeBody and SpellRecipeSummary under a dialog's title", () => {
+  it('draw Steps and Ingredients at the level given, one below the title they sit under', () => {
+    const steps = [ingredient('s1')];
+    render(
+      <SpellRecipeBody
+        {...props({ steps })}
+        level={3}
+        beforeSteps={<SpellRecipeSummary steps={steps} level={3} />}
+      />,
+    );
+    expect(screen.getByRole('heading', { level: 3, name: 'Steps' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 3, name: 'Ingredients' })).toBeInTheDocument();
+  });
+
+  it("draw them at level 2 by default, under the page's h1", () => {
+    const steps = [ingredient('s1')];
+    render(
+      <SpellRecipeBody {...props({ steps })} beforeSteps={<SpellRecipeSummary steps={steps} />} />,
+    );
+    expect(screen.getByRole('heading', { level: 2, name: 'Steps' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Ingredients' })).toBeInTheDocument();
+  });
+});

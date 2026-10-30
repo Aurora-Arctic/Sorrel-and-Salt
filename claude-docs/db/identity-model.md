@@ -20,7 +20,10 @@ What follows describes all three as built.
   columns (`description`, `elements[]`, `celestialBodies[]`, `zodiacSigns[]`,
   `colors[]`, `safetyNotes`), `toxic` (M11.21; a yes/no, default no, and
   each form carries its own, which never unions with this one — DESIGN.md
-  §5), `seedKey` (MB.241), + audit. `seedKey` is the
+  §5), `seedKey` (MB.241), `revision` (M13.23; `integer NOT NULL DEFAULT 1`, raised by
+  one by the `bump_revision` trigger on every update, the same counter and
+  function `spells` uses, ["Revision (M13.15)"](grimoire.md); one column guards the
+  whole ingredient form, children included), + audit. `seedKey` is the
   key the compendium seed (MB.242) gives an entry it writes, so an entry an
   admin renames is not seeded again beside itself; it is null on every other
   row, the `standard` fixture's included (DESIGN.md §5, "`seedKey`"). `name` is the display label —
@@ -409,11 +412,10 @@ before the two indexes are created. Run the pre-flight query before
 deploying it; it must return no row:
 `select workspace_id, lower(coalesce(canonical_name, name)), count(*) from
 ingredients where deleted_at is null group by 1, 2 having count(*) > 1`.
-`tests/db/migrations/0062-ingredient-variants-fill.test.ts` re-runs the
-migration's own guard, and retires once `0062` is in production's journal
-(claude-docs/testing/layer-ownership.md, "What a test may assert", rule 7).
-Its fill tests retired with MB.223, which dropped the `form` column the fill
-reads, so no migrated database can run the fill again.
+The migration's data tests retired once `0062` reached production's journal
+(claude-docs/testing/layer-ownership.md, "What a test may assert", rule 7;
+M14.27). Its fill tests had already retired with MB.223, which dropped the
+`form` column the fill reads, so no migrated database can run the fill again.
 
 **MB.217: what names a variant, as built.** Migration `0063_variant-children.sql`
 gives four tables a `variant_id` held to their `ingredient_id` by a composite
@@ -462,3 +464,17 @@ been a variant since `0062` (`0064_drop-form-and-canonical-key.ack.md`). The
 drift test's `PENDING_DROPS` is empty again, both services' `refuseCollision`
 map the identity-key indexes alone, and `ingredientSlug` takes the label and
 the formal name.
+
+## Ingredient table details
+
+Notes that used to sit as comments on `src/modules/ingredients/schema/ingredients.ts`.
+
+- **Identity key.** `identityKey` is the formal name, falling back to the label, and never the form. The generated column's expression and the finder's comparison come from one builder, so the key has one spelling. The column names are raw because they name columns of the table still being built; every function in the key is IMMUTABLE and no enum cast is involved, which is what makes a stored generated column legal. The text is the migrations' own, byte for byte, so `db:generate` sees no change. GENERATED ALWAYS means Postgres refuses a direct write, and Drizzle omits generated columns from `$inferInsert`, so TypeScript refuses first.
+- **Slug.** The public address is `ingredientSlug` of the label and the formal name (src/lib/slugify.ts), with no form. It has no default: one in SQL would be a second slug rule, so a row written earlier keeps its form in the slug until its next save.
+- **Nomenclature.** The database has no default: the workspace-local Zod variant supplies `none` and the compendium variant makes the admin answer. The CHECK has three cases: `none` carries no formal name, a named kind must, and `unknown` takes either. Zod enforces it too, so the CHECK is never what a user sees. A second CHECK stops a blank formal name keying nothing.
+- **Toxic flag.** The ingredient's flag is its own and is never read into a form or out of one; each form carries its own (DESIGN.md §5, "The toxic flag is the one exception").
+- **Seed hash.** `seedHash` is the sha256 of the seeded fields of the markdown file the entry was last written from, so the seed can tell a changed file from an unchanged one and apply a correction. Null until the seed writes it, and always null on a coven's own entry. It is not a stamp: the trigger leaves `updated_at` alone when only this changes (migration 0081). A hash is 64 lower-case hex characters or nothing, because a truncated or upper-cased one would never equal a file's and would queue a correction forever.
+- **Review mark.** `reviewedAt` and `reviewedBy` are set together or both null, since one without the other says nothing a reader can trust. A reviewed entry is one the seed never overwrites. Only the review service writes them, and like the hash they are never a change to the content, so the trigger ignores both.
+- **Seed key.** `seedKey` is the key the compendium seed gives the entry it writes, so an entry an admin renames is not seeded again beside itself. The `standard` fixture keys on identity and writes none.
+- **Indexes.** The formal name is unique once per tier whatever the form, as two indexes: a constraint carries no WHERE and `nullsNotDistinct()` exists only on constraints. Label uniqueness is the workspace tier only: inside one drawer an ambiguous label is a mistake, in the compendium it is the point. The slug index for the workspace tier carries no tier predicate, as DESIGN.md §5 writes it, because a null `workspace_id` collides with nothing in a btree.
+- **Trigram indexes.** One multicolumn `gin_trgm_ops` index serves a predicate on either column alone (asserted by EXPLAIN in ingredients-trigram.test.ts). It is not partial. A match must be written `name % $1` under a per-transaction `pg_trgm.similarity_threshold`, never `similarity(name, $1) > 0.4`, which no trigram index can answer. The folded twin goes through `unaccent_immutable` (migration 0026) for the compendium search's accent-insensitive `<%`; only an expression index lets a fold reach a trigram index. It sits beside the raw one because the fuzzy finders still match the raw columns.

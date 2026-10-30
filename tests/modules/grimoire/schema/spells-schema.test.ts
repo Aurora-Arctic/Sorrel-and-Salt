@@ -6,26 +6,28 @@ import { type SpellOverrides, makeSpell, spellColumns } from '../../../support/f
 import { spellStatus, spellVisibility, spells } from '@/modules/grimoire/schema/spells';
 import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 
-// §5's columns, `visibility` included as of M10.3 — claude-docs/db/grimoire.md,
+// §5's columns, `visibility` included — claude-docs/db/grimoire.md,
 // "The grimoire".
+// `revision` is the counter a save names to detect a clash.
 const OWN_COLUMNS = [
   'id',
   'workspace_id',
   'title',
   'intent',
-  'jar_size',
+  'jar_description',
   'seal_wax_color',
   'moon_phase',
   'day_of_week',
-  'instructions',
+  'note',
   'status',
   'visibility',
+  'revision',
 ];
 
 describe('spells schema', () => {
   const { byName } = tableFacts(spells);
 
-  // The full six: story 54's delete is recoverable. Only two join tables take four (MB.34).
+  // The full six: story 54's delete is recoverable. Only two join tables take four.
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual([...OWN_COLUMNS, ...AUDIT_COLUMNS].sort());
   });
@@ -39,9 +41,7 @@ let sql: ReturnType<typeof postgres>;
 useTestDatabase((client) => (sql = client));
 
 // The factory writes the row; this file supplies the coven and the author.
-// `status` and `visibility` are dropped so each column's own default is what
-// the tests observe — a value spelled out in the insert would make "defaults
-// to draft" assert what it just wrote. `cast` and `share` take those paths.
+// `status` and `visibility` are dropped so each column's own default is what the tests observe; a value spelled out would make "defaults to draft" assert what it just wrote.
 async function record(overrides: SpellOverrides = {}): Promise<string> {
   const {
     status: _status,
@@ -88,14 +88,23 @@ describe('spells table', () => {
     expect(row.title).toBe('Hearth Guard');
     for (const column of [
       'intent',
-      'jar_size',
+      'jar_description',
       'seal_wax_color',
       'moon_phase',
       'day_of_week',
-      'instructions',
+      'note',
     ]) {
       expect(row[column]).toBeNull();
     }
+  });
+
+  // The single free-text note on a spell, beside its steps.
+  it('holds a note', async () => {
+    const id = await record({ note: 'Keep by the hearth.' });
+
+    const [row] = await sql`select note from spells where id = ${id}`;
+
+    expect(row.note).toBe('Keep by the hearth.');
   });
 
   // A title identifies nothing: neither the coven nor the title is unique.
@@ -120,7 +129,7 @@ describe('spells table', () => {
 
   // In the column, so a spell written by any path — a seed, a fixture, a
   // service that never mentions visibility — joins the shared grimoire
-  // rather than disappearing into its author's (M10.3).
+  // rather than disappearing into its author's.
   it('defaults a new spell to workspace visibility', async () => {
     const id = await record();
 
@@ -148,5 +157,40 @@ describe('spells table', () => {
     // 22P02 is invalid_text_representation — the enum refusing the cast.
     expect(status.code).toBe('22P02');
     expect(visibility.code).toBe('22P02');
+  });
+});
+
+// Autosave writes a draft on the first keystroke, before the member
+// may have named it, so a title is required only to complete a spell
+// (claude-docs/db/grimoire.md, "The grimoire").
+describe('a spell with no title', () => {
+  const CHECK_COMPLETE_HAS_TITLE = 'spells_complete_has_title';
+
+  async function untitled(status: 'draft' | 'complete'): Promise<string> {
+    const [inserted] = await sql`
+      insert into spells (workspace_id, title, status, created_by, updated_by)
+      values (${COVEN}, null, ${status}::spell_status, ${AUTHOR}, ${AUTHOR})
+      returning id
+    `;
+    return inserted.id as string;
+  }
+
+  it('inserts as a draft', async () => {
+    const id = await untitled('draft');
+
+    const [row] = await sql`select title, status::text from spells where id = ${id}`;
+
+    expect(row).toEqual({ title: null, status: 'draft' });
+  });
+
+  it('is refused as complete', async () => {
+    // Why the refusal is the title's: the same row with a title completes.
+    await cast('complete');
+
+    const error = await failureOf(untitled('complete'));
+
+    // 23514 is check_violation.
+    expect(error.code).toBe('23514');
+    expect(error.constraint_name).toBe(CHECK_COMPLETE_HAS_TITLE);
   });
 });

@@ -396,6 +396,11 @@ The names in code still say "admin invitation" for both roles: an admin is
 who sends one, and renaming the mutation and the services would buy no
 behaviour.
 
+- **A repeat invitation replaces the pending one** (MB.269). Inviting an address
+  that already has a pending site-tier invitation, admin or curator, stamps that
+  one revoked, as the admin, in the same write that creates the new one, so one
+  is pending and its role is the one that applies. A coven's invitation to the
+  address is not touched ([`db/invitations.md`](../db/invitations.md)).
 - **One service each way, two checks.** `createAdminInvitation(session,
 email, siteRole, note, sender)` and `revokeAdminInvitation(session, id)`
   (`src/modules/identity/services/admin-invitations.ts`) assert the site role
@@ -603,3 +608,13 @@ half is `tests/app/admin/(people)/privilege-changes/page.test.tsx`, story 61's
 browser flow is `tests/e2e/stories/08-email-and-admin.spec.ts`'s, and
 `tests/e2e/admin/privilege-changes.spec.ts` reads the page, its filters and
 the history icon link against the built server, with axe.
+
+## Admin invitation service details
+
+`src/modules/identity/services/admin-invitations.ts` is the site tier of `invitations`: an admin invites an address to become an admin or a curator. The names still say "admin invitation", since an admin is who sends one. Who may invite, the role ladder and the pause are this service's; the token's hash, the expiry and the pending predicate are the repository's named writes'. Accepting is `invitation-acceptance.ts`'s.
+
+- Inviting stamps the admin, mails the token through `sender` after the commit (so a mailed link always names a row) and stores its hash alone. `note` is the optional reason, a blank one stored as none, which accepting records on the ledger row. A failed send is the transport's to log: the invitation stays pending and can be withdrawn and sent again.
+- A second invitation to an address already invited replaces the pending site-tier one, stamped revoked by the admin in the same write, so a failed insert leaves it pending. A coven's invitation to the address is left alone.
+- It is refused when the session's role is not `admin`, or when the primary admin has paused admin changes and the caller is another admin. The email is refused when malformed, unmailable, or a live account's that holds the role or above, which accepting would leave as it is.
+- Withdrawing kills the link from now on, and it says so.
+- The list is open to every admin, paused or not, since it is where an invitation is seen. `email` narrows by a trimmed fragment of the address and `expiringSoon` keeps only those lapsing within `EXPIRING_SOON_HOURS`, both in the finder's SQL.

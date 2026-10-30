@@ -1,0 +1,14 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/chives-allium-schoenoprasum
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Allium schoenoprasum
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-allium-schoenoprasum
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: (no assessment named)'
+questions:
+  - 'The assessment Wikipedia names for Allium schoenoprasum is not identified by title (the cited assessment is titled "null"). Raw status_ref: Maxted, N. & Rhodes, L. (2016). ''''Allium schoenoprasum. The IUCN Red List of Threatened Species'''' 2016: e.T172256A19391728. {{doi|10.2305/IUCN.UK.2016-3.RLTS.T172256A19391728.en}} Downloaded on 05 January 2019.. Recommendation: do not list until the assessment is read for Allium schoenoprasum.'

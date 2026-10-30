@@ -2,8 +2,7 @@
 @use '../../scss/mixins' as *;
 @use '../Backdrop/sorrel' as *;
 
-// Tokens and primitives only (signed off in MB.120, 2026-10-20): the action
-// beneath the filter row takes the row's own spacing
+// Tokens and primitives only: the action beneath the filter row takes the row's own spacing
 // (claude-docs/components/ingredient-search.md).
 
 .ingredient-search__action {
@@ -12,24 +11,13 @@
   margin-block-end: space(3);
 }
 
-// The search row sticks once scrolled to (the owner's call, 2026-10-19), with the Filters
-// button, Clear All and the tray, which opens inside the form and so travels with it. The
-// sticky box is the `<search>`, whose parent `.list-frame` spans the results; the form
-// inside would stop at its own end. `--sticky-top` is set by the frame (AppShell, PublicFrame).
-// Opaque so the cards do not show through: the fill is the sorrel layer below, not this box. The padding above is the row's own air when stuck;
-// the negative margin of the same size cancels it at rest, so the page lays out as without it.
-// Below the controls the row's box ends at the controls while the tray is shut, and the
-// `space(2)` between the row and the cards is a margin outside it. Opening the tray rolls that
-// space into the box as padding (the margin shrinks by as much, so the page does not move), under
-// the tray's own slide, and closing rolls it back; the stuck row thus never shows an empty strip
-// under its controls. The tray is anchored to the form inside, not to this box, so none of it
-// moves the tray from the input. While stuck (`data-stuck`, set by StuckMark) the row wears the
-// floating shadow, faded in and out.
+// The search row sticks once scrolled to, with the Filters button, Clear All and the tray; the sticky
+// box is the opaque `<search>`
+// (claude-docs/components/ingredient-search.md, "The sticky box").
 $stuck-pad: space(4);
 
-// The page's side gutter, the same from a phone up and in the shell and the public frame: the
-// layer below reaches across it, so a card scrolled under the row does not show its shadow
-// beside the row. No wider, or the page would scroll sideways.
+// The page's side gutter, the same in the shell and the public frame; no wider, or the page would
+// scroll sideways.
 $page-gutter: space(4);
 
 .ingredient-search {
@@ -44,14 +32,9 @@ $page-gutter: space(4);
   z-index: layer('sticky-row');
   margin-block: calc(-1 * #{$stuck-pad}) space(2);
   padding-block: $stuck-pad 0;
-  // The 8px under the row follows the tray's edge, not its clock. The tray (FacetPanel's
-  // `.facet-panel__clip`, `--slide-ms`, set on the clip inside and so unreadable here) slides
-  // 350ms on `ease`, and its edge covers hundreds of px; 8px rolling over all 350ms looked slow
-  // beside it. On `ease` a ~400px tray's edge has moved 8px by 12ms (250 to 550px: 10 to 17ms),
-  // so it opens in 12ms. Closing, the edge is within 8px of the row for the last ~64ms (55 to
-  // 79ms over the same heights), so the space waits 350 - 64 = 286ms and rolls up then, on
-  // `ease-out`, the shape of that tail. This rule times the way back to closed, the open rule
-  // below the way out of it (a transition takes the timing of the state it ends in).
+  // The 8px under the row follows the tray's edge, not the tray's 350ms clock, so it opens in 12ms
+  // and waits 286ms before rolling up on close (claude-docs/components/ingredient-search.md, "The
+  // sticky box").
   transition:
     box-shadow $modal-fade,
     padding-block-end 64ms ease-out 286ms,
@@ -61,9 +44,7 @@ $page-gutter: space(4);
     transition: none;
   }
 
-  // `--open` is on the clip from just after the tray starts to open until it starts to close,
-  // the same two moments its rows grow and shrink in (useSlide). Before the script the tray is
-  // in the flow with the class, so the space is already inside the box.
+  // `--open` is on the clip from just after the tray starts to open until it starts to close.
   &:has(.facet-panel__clip--open) {
     margin-block-end: 0;
     padding-block-end: space(2);
@@ -82,18 +63,9 @@ $page-gutter: space(4);
   }
 }
 
-// The row's fill, and the sorrel the fill would otherwise hide. A sticky box is its own
-// stacking context, so no z-index can put the real sorrel between the fill and the controls;
-// the row draws a copy instead (claude-docs/components/backdrop.md, "The copy in the search
-// row"). A direct child of the `<search>`, not of the form, whose `container-type` would
-// become the containing block of the fixed copies. `z-index: -1` paints it above the box's
-// own background and beneath the controls. A solid `mask-image` cuts the fixed copies to the row
-// and makes the layer a stacking context, so they blend with its page colour, as the real one
-// does with the page's. A mask, not a `clip-path`: a clip's edge is anti-aliased at a half pixel
-// (an odd-width window centres the page on one), and there the copies drew a lighter one-pixel line
-// over the real sorrel; the mask's edge matches it. It is on this layer and never on the `<search>`, which would cut
-// off the stuck shadow and the tray. It reaches a gutter past the row either side, so a card
-// under the row (its hover shadow carries 20px) shows no shadow beside it.
+// The row's fill, and a copy of the sorrel the fill would hide, as a sticky box is its own stacking
+// context; a solid `mask-image` cuts the copies to the row
+// (claude-docs/components/ingredient-search.md, "The space under the row").
 .ingredient-search > search > .filter-sorrel {
   position: absolute;
   inset: 0 calc(-1 * #{$page-gutter});
@@ -142,13 +114,9 @@ $page-gutter: space(4);
   pointer-events: none;
 }
 
-// On a phone the row is two lines (the MB.120 review, item 6; the owner's call, 2026-10-20): the
-// search box on the first, the Filters button and Clear All sharing the second (the primitive's
-// narrow-row rule, in `_primitives.scss`), and the two lines stick together as the desktop row
-// does. The Filters button grows to fill the second line (the owner's call, 2026-10-20), taking
-// all of it when Clear All is not drawn, and Clear All is pushed to the line's end, as the
-// primitive does Clear for the other filter rows. Scoped here, so those rows are unchanged. The
-// container query is that rule's own, so the two agree on what narrow means.
+// On a phone the row is two lines: the search box, then the Filters button and Clear All sharing
+// the second, the Filters button growing to fill it. Scoped here, so other filter rows are
+// unchanged (claude-docs/components/ingredient-search.md, "The phone row").
 @container filter-row (max-width: #{$narrow-column}) {
   .ingredient-search .facet-panel__button {
     flex: 1 1 auto;
@@ -159,36 +127,23 @@ $page-gutter: space(4);
   }
 }
 
-// A focus or a jump that scrolls a control into view lands it below the stuck row, not
-// under it: the bar (the shell's alone), the row's own height, and a step of air. The root
-// is the scroll container, which cannot read the frames' `--sticky-top`, set below it. The
-// first `space(2)` is the gap under the row, a margin when the tray is shut and padding when
-// it is open, so a jump lands in the same place either way.
-html:has(.app-shell .ingredient-search) {
+// A focus or a jump lands a control below the stuck row, not under it: the bar, the row's own
+// height and a step of air. The root cannot read the frames' `--sticky-top`
+// (claude-docs/components/ingredient-search.md, "Scroll margin").
+html:has(:is(.app-shell, .public-frame) .ingredient-search) {
   scroll-padding-top: calc(
     #{$top-inset} + #{$shell-bar-height} + #{$control-height} + #{$stuck-pad} + #{space(2)} +
       #{space(4)}
   );
 }
 
-html:has(.public-frame .ingredient-search) {
-  scroll-padding-top: calc(#{$control-height} + #{$stuck-pad} + #{space(2)} + #{space(4)});
-}
-
-// Under the narrow column the row is two controls tall plus the row's gap, so the root leaves one
-// more control and gap of room. The query is the container query's width on the window: the
-// column (`$narrow-column`) plus the page's two gutters.
+// Under the narrow column the row is two controls tall plus its gap, so the root leaves one more
+// control and gap of room.
 @media (max-width: calc(#{$narrow-column} + 2 * #{space(4)})) {
-  html:has(.app-shell .ingredient-search) {
+  html:has(:is(.app-shell, .public-frame) .ingredient-search) {
     scroll-padding-top: calc(
       #{$top-inset} + #{$shell-bar-height} + 2 * #{$control-height} + #{space(3)} + #{$stuck-pad} +
         #{space(2)} + #{space(4)}
-    );
-  }
-
-  html:has(.public-frame .ingredient-search) {
-    scroll-padding-top: calc(
-      2 * #{$control-height} + #{space(3)} + #{$stuck-pad} + #{space(2)} + #{space(4)}
     );
   }
 }

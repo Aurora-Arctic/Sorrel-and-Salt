@@ -1,7 +1,8 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { type Query, QueryClient, queryOptions } from '@tanstack/react-query';
 import { type GraphQLFormattedError, getOperationAST, print } from 'graphql';
-import { GraphQLClientError } from './graphql-client-error';
+import { apiPath } from './api-path';
+import { GraphQLClientError, StaleWriteError } from './graphql-client-error';
 import type { VariablesArg } from './types';
 
 // The browser's half of the API: a small fetch wrapper sends a codegen document and
@@ -34,7 +35,7 @@ async function send<TResult, TVariables extends object>(
   // a story or test can stand in for `window.fetch` after the module loads.
   const response = await fetch(
     // `new URL` resolves the relative path against the page's origin.
-    new URL(ENDPOINT, window.location.origin).href,
+    new URL(apiPath(ENDPOINT), window.location.origin).href,
     {
       method: 'POST',
       headers: {
@@ -57,6 +58,11 @@ async function send<TResult, TVariables extends object>(
   // Typed by the result alone: `VariablesArg` has already held the variables
   // to the document's own at the call site. A partial answer never resolves.
   if (!response.ok || body?.errors?.length || body?.data == null) {
+    const stale = body?.errors?.find(({ extensions }) => extensions?.code === 'STALE_WRITE');
+    const currentRevision = stale?.extensions?.currentRevision;
+    if (typeof currentRevision === 'number') {
+      throw new StaleWriteError({ status: response.status, errors: body?.errors, currentRevision });
+    }
     throw new GraphQLClientError({ status: response.status, errors: body?.errors });
   }
   return body.data;
@@ -64,7 +70,8 @@ async function send<TResult, TVariables extends object>(
 
 /**
  * Runs one typed document against /api/graphql. Rejects with
- * `GraphQLClientError` on any GraphQL error, so a partial answer never reads as whole.
+ * `GraphQLClientError` on any GraphQL error, so a partial answer never reads as whole,
+ * and with its `StaleWriteError` subclass when the answer is STALE_WRITE.
  */
 export function graphqlRequest<TResult, TVariables extends object>(
   document: TypedDocumentNode<TResult, TVariables>,
@@ -76,7 +83,7 @@ export function graphqlRequest<TResult, TVariables extends object>(
 /**
  * A save that creates a row, or with its `id` updates that one, through the
  * two documents given: the admin vocabulary forms' `if (id) update else
- * create`, written once for every kind they declare (MB.115).
+ * create`, written once for every kind they declare.
  */
 export function saveRequest<Input extends object>(
   create: TypedDocumentNode<unknown, { input: Input }>,
@@ -134,7 +141,7 @@ export function throwWhenEmpty(_error: unknown, query: Pick<Query, 'state'>): bo
 
 /**
  * The client's defaults. Mutations keep TanStack's own — no retry, and errors
- * returned to the caller, because a form renders them field by field (MB.43).
+ * returned to the caller, because a form renders them field by field.
  */
 export function makeQueryClient(): QueryClient {
   return new QueryClient({

@@ -4,17 +4,9 @@ import { describe, expect, inject, it } from 'vitest';
 
 import { fromRoot } from '../support/paths';
 
-// The browser floor is Baseline Widely Available (claude-docs/styling.md,
-// "Binding rules"; claude-docs/design-decisions/m10.24-browser-floor.md). The
-// stylelint rule holds the CSS. This holds the JavaScript the browser runs:
-// a web API that is not yet in all four engines for 30 months may be used only
-// behind a `typeof` or `in` check on the same line, so an older engine skips it
-// instead of throwing.
-//
-// The list is hand-kept and prunes itself. Each entry names a `web-features`
-// id, and the test reads that feature's date from the package: once the
-// feature is widely available the test fails with "delete this entry", so
-// nothing here outlives the reason for it. An empty list is a pass.
+// The browser floor is Baseline Widely Available (claude-docs/styling.md, "Binding rules"; claude-docs/design-decisions/m10.24-browser-floor.md); stylelint holds the CSS and this holds the JavaScript:
+// a web API not yet in all four engines for 30 months may be used only behind a `typeof` or `in` check on the same line, so an older engine skips it instead of throwing.
+// The list is hand-kept and prunes itself: each entry names a `web-features` id and the test fails with "delete this entry" once that feature is widely available. An empty list is a pass.
 
 interface PastTheFloor {
   /** What the API looks like in source. */
@@ -32,6 +24,7 @@ const PAST_THE_FLOOR: PastTheFloor[] = [
   { feature: 'promise-try', pattern: /\bPromise\.try\b/ },
   { feature: 'regexp-escape', pattern: /\bRegExp\.escape\b/ },
   { feature: 'float16array', pattern: /\bFloat16Array\b|\bMath\.f16round\b/ },
+  { feature: 'navigation', pattern: /\bwindow\.navigation\b/ },
 ];
 
 /** Server-only by CLAUDE.md rules 1 and 2: the browser never receives them. */
@@ -40,7 +33,7 @@ const SOURCE = /^src\/.*\.tsx?$/;
 /** A feature check on the line: `typeof Promise.try`, `'try' in Promise`. */
 const FEATURE_CHECK = /\btypeof\b|['"][\w$]+['"]\s+in\s/;
 
-describe('M10.24: the browser floor in client-reachable source', () => {
+describe('the browser floor in client-reachable source', () => {
   const clientFiles = inject('repoFiles').filter(
     (file) => SOURCE.test(file) && !SERVER_ONLY.some((server) => server.test(file)),
   );

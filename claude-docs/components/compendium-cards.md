@@ -4,22 +4,24 @@
 
 ## Props
 
-| Prop                                                    | What it does                                                                                   |
-| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| `entries`                                               | One `CompendiumCardEntry` per card: name, slug, formal name, categories, forms, safety notes   |
-| `filter`, `facets`, `categories`, `vocabulary`, `total` | The same filter state the admin list takes; see [`compendium-list.md`](compendium-list.md)     |
-| `previousHref`, `nextHref`, `position`                  | The pager's links and "Page X of Y"                                                            |
-| `action`                                                | The foot of each card: `add` or `none`                                                         |
-| `workspaceId`                                           | The default coven, which the plus adds to; `add` with none draws no plus and no check          |
-| `covens`                                                | The covens the viewer may write in, as `{ id, name }`, for the menu when there are two or more |
-| `entries[].held`                                        | Every writable coven holds the entry, and the check shows (M9.12)                              |
-| `entries[].heldIn`                                      | The ids of the writable covens that hold the entry, which the menu shows disabled              |
-| `entries[].editHref`, `entries[].editHeading`           | A curator's Edit in Compendium on the card, and the head of the dialog it opens (M8.17)        |
-| `entries[].places`                                      | The covens that hold the entry and let the viewer do something about it, for the three dots    |
+| Prop                                                    | What it does                                                                                                    |
+| ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `entries`                                               | One `CompendiumCardEntry` per card: name, slug, formal name, categories, forms, safety notes                    |
+| `filter`, `facets`, `categories`, `vocabulary`, `total` | The same filter state the admin list takes; see [`compendium-list.md`](compendium-list.md)                      |
+| `previousHref`, `nextHref`, `position`                  | The pager's links and "Page X of Y"                                                                             |
+| `action`                                                | The foot of each card: `add` or `none`                                                                          |
+| `workspaceId`                                           | The default coven, which the plus adds to; `add` with none draws no plus and no check                           |
+| `covens`                                                | The covens the viewer may write in, as `{ id, name }`, for the menu when there are two or more                  |
+| `myCovens`                                              | Every coven the viewer is a member of, viewers included, as `{ id, name }`: In My Covens offers them (M12.55)   |
+| `entries[].holding`                                     | The names of the viewer's covens that hold the entry, any role: the count and tip on the plus or check (M12.55) |
+| `entries[].held`                                        | Every writable coven holds the entry, and the check shows (M9.12)                                               |
+| `entries[].heldIn`                                      | The ids of the writable covens that hold the entry, which the menu shows disabled                               |
+| `entries[].editHref`, `entries[].editHeading`           | A curator's Edit in Compendium on the card, and the head of the dialog it opens (M8.17)                         |
+| `entries[].places`                                      | The covens that hold the entry and let the viewer do something about it, for the three dots                     |
 
 ## Contracts
 
-- Each card is a plain link to `/compendium/ingredients/<slug>`. The Quick Look eye at its bottom left, when the entry carries `details`, opens the entry's details modal over the results instead (M12.5). Two entries sharing a label are told apart by the formal-name line the card draws.
+- Each card is a plain link to `/compendium/ingredients/<slug>`: a press anywhere on the card off its controls opens the entry, the gaps between the foot's buttons and the New or Updated mark included (MB.272; the stretched link and what passes a click through to it are [`ingredient-card.md`](ingredient-card.md), "The whole card is the link"). The +N button, Quick Look, the plus or check, Edit in Compendium and the dots keep their own action and never open the entry. Text on the card cannot be selected by dragging, since the drag starts on the link. Proved in `tests/e2e/card-click.spec.ts`. The Quick Look eye at its bottom left, when the entry carries `details`, opens the entry's details modal over the results instead (M12.5). Two entries sharing a label are told apart by the formal-name line the card draws.
 - The list is regular density, never compact. That is deliberate (the owner’s call, 2026-10-20): the public compendium shows full cards and the coven’s Ingredients list shows compact ones, so the public compendium has no Compact switch. It sits in `ListFrame` through `IngredientSearch shape="cards"`, so a page on its way draws `ListBody shape="cards"`.
 - The filter is `CompendiumListFilter audience="public"`: no Classification facet and no No Refs or No Form control. Those are the curators' to-do lists ([`compendium-list.md`](compendium-list.md)).
 - The foot of a card is one row, chosen by the page from the visitor. Up to three icons share the card's right end (`actions` on `IngredientCard`), in this order (the owner's call, 2026-10-20): the plus or check, a curator's pencil (Edit in Compendium), and the three dots (More, below). Each shows only where the viewer may do it, and a card with none has no foot on the right. The left end (`startActions`) is left to the Quick Look eye (M12.5). Where each sits is layout, so no test asserts it.
@@ -45,6 +47,19 @@
 
 `?withoutReferences=1` and `?withoutForms=1` are dropped before the address is read, so it lists what the unfiltered page lists. `generateMetadata` marks a filtered view `noindex` with the canonical address `/compendium`; the unfiltered list and its pages stay indexable.
 
+**In My Covens (M12.55).** The page passes `myCovens`, every coven the viewer is a member of, a viewer's included, in the switcher's order, and the cards hand it to the filter, which draws In My Covens and its choice in the right half of the line Forms and Toxic hold ([`compendium-list.md`](compendium-list.md), "In My Covens"). A visitor and an account in no coven get none, and the field is not drawn. With no coven in the address and no `covensNot`, the page reads the cached `readCompendium` and `readFacets`, sessionless, exactly as before. With one or more, or with `covensNot=1` (Not In), it reads the session and calls `readCompendiumHeldIn` and `readFacetsHeldIn` (`src/app/compendium-reads.ts`), which pass `covenIds` to the ingredients module's `listCompendiumHeldIn`, `countCompendiumHeldIn` and `compendiumFacetsHeldIn`. Those prove each id by membership and drop any the viewer is not in, so a foreign coven's id, edited into the address, filters nothing; with no id proved they are the cached reads. Under Not In (`covensNot`) the list holds the entries none of the proved covens holds, and with no coven in the address at all the proved set is every coven the viewer is a member of, viewers included. If the address names covens and every one is dropped, the coven filter applies nothing under Not In as under In, so a foreign id never changes the result. The narrowed reads are per request and never cached (rule 6), and the coven condition is part of the list's SQL (rule 7), so the facet counts count only the narrowed entries. The field itself shows no count per coven: those would be per viewer, and the rest of the panel's counts come from the cached read (the owner's call, 2026-10-23). "Held" means a live `workspace_compendium_entries` row and nothing else. Stock adds nothing to that: `createStock` and `saveStock` insert the row beside a coven's first jar of a compendium form, and `removeCupboardEntry` refuses while the coven holds a jar of it, so a coven with stock of an entry always holds it.
+
+## The holding count
+
+The plus and the check show how many of the viewer's covens hold the entry (M12.55). The page asks `heldCompendiumEntryIdsIn` over every membership, viewers included, not only the writable ones, and gives each entry `holding`, the names of the covens whose cupboard holds it, in the switcher's order. `held` and `heldIn` still count the writable covens alone, so the check and the menu's disabled items are unchanged, and the menu still lists only the covens the viewer may write in. The page asks nothing when the viewer has no coven they may write in, since then there is no plus or check to carry the count.
+
+`AddIcon` and `HeldMark` take `holding` and draw it through `src/components/AddIcon/holding.tsx`:
+
+- **The badge.** `HoldingCount` draws the number at the mark's top right (`.add-icon__count`), `aria-hidden`, since the name says it in words. At zero it draws nothing.
+- **The words.** `holdingText` adds ". In 2 covens: Hearthside, Moonwell" (". In 1 coven: Hearthside" for one) to the accessible name and the tip alike, after the entry's name, so the words on screen are the name (WCAG 2.5.3). At zero it adds nothing, and the tip is as before (the owner's call, 2026-10-23).
+
+The badge is drawn with tokens only (`$font-body`, the caption size, weight 500) and has had no design review. Tests: `tests/components/AddIcon/index.test.tsx` ("the holding covens (M12.55)"), `tests/components/CompendiumCards/index.test.tsx` ("the viewer’s covens (M12.55)") and `tests/app/(public)/compendium/held.test.tsx` ("for the holding count and In My Covens").
+
 ## Styling
 
 The cards have no stylesheet of their own. The card is [`IngredientCard`](ingredient-card.md)'s and the grid [`IngredientCardList`](ingredient-card-list.md)'s; the plus and the check are [`AddIcon`](add-icon.md)'s (`.add-icon`, `.add-icon--held`), the pencil and the dots [`IconTip`](icon-tip.md)'s. `index.tsx` imports `CompendiumList/index.scss`, because the filter and the empty sentence (`emptyText`, `.compendium-list__empty`) are [`CompendiumList`](compendium-list.md)'s own and bring their look with them (MB.120).
@@ -53,6 +68,14 @@ The cards have no stylesheet of their own. The card is [`IngredientCard`](ingred
 
 ## Stories and tests
 
-Stories: `Can Add`, `In Several Covens`, `Held`, `Can Add And Edit`, `Can Add Edit And More`, `Curator Can Edit`, `Viewer Only`, `Mid List` and `Empty`. Tests: `tests/components/CompendiumCards/index.test.tsx` and `tests/app/(public)/compendium/page.test.tsx`; the browser flow is `tests/e2e/public-compendium.spec.ts`.
+Stories: one `States` story, drawn inside the app shell (the signed-out header of a visitor with no session for Default, With Markers, Last Page and Empty, which show no account-only control) under the page's Reference eyebrow, Compendium heading and lede, with a control that chooses Default, Can Add, Held, In Several Covens, Can Add Edit And More, Curator Can Edit, Middle Page, With Markers (New and Updated), Last Page and Empty. Tests: `tests/components/CompendiumCards/index.test.tsx` and `tests/app/(public)/compendium/page.test.tsx`; the browser flow is `tests/e2e/public-compendium.spec.ts`.
 
 Each `CompendiumCardEntry` carries `recency` (`new`, `updated` or null), worked out by the page with `entryRecency` and shown by the card's `EntryMarks` (MB.106).
+
+## The More menu on a card
+
+A compendium card's three dots come after the plus and, for a curator, Edit in Compendium. The menu holds Edit Stock first (the coven card's own dialog, opened at once for one coven and after a question of which for several), then Annotate, Make It Ours and Remove, in the dialogs the entry page shares. The plus and Edit in Compendium are not in the menu, so `choicesFor`'s Compendium section is empty and left out, and the coven's choices sit under the one "Coven" label every More draws. The menu is drawn only when it holds a choice. The Quick Look window carries `leaveHref`, where a remove leads.
+
+## The held mark
+
+The check means that every coven the viewer may write in holds this entry. It is a status mark, not a link; the details modal's In Your Cupboards list carries the links. Its tip names the covens ("In Every Cupboard: Testwort, Formalis testis") so a list of buttons tells one card's check from the next. It is a button only to carry the tip: the tip opens on hover, on focus (WCAG 2.1.1) and on a press, so a tap shows it on touch. The press does nothing else.

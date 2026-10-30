@@ -13,13 +13,9 @@ import { roleLabel, SITE_ROLE_ACCESS } from './roles';
 import { unverifiedWarning } from './warning';
 import type { RoleControlProps } from './types';
 
-// The row's Change Role beside the role it changes (MB.59; one control since
-// M11.20, which added the curator), as the members page's is (M6.13): a modal
-// naming the user asks which role they move to, every role but the one they
-// hold, with an optional reason the ledger keeps. The primary admin's stays
-// in view but cannot be used, its reason in a tip that opens as InfoTip's does
-// and said again when it is tried; so does every one while admin changes are
-// paused, to an admin the pause binds (MB.63)
+// The row's Change Role (one control for every role, curator included): a modal asks which role the
+// user moves to, with an optional ledger reason. The primary admin's, and every one while admin
+// changes are paused, stays in view but locked, its reason in a tip
 // (claude-docs/components/user-list.md).
 
 const SetUserRoleDocument = graphql(`
@@ -46,7 +42,7 @@ const RoleControl = ({
   const [chosen, setChosen] = useState<UserRole>(options[0]!);
   const label = 'Change Role';
   const accessibleName = `${label} for ${name}`;
-  const openClass = 'btn btn--small btn--quiet';
+  const openClass = 'btn btn--quiet btn--small';
   // The primary admin's own reason first: it holds whether or not changes are paused.
   const reason = primaryAdmin
     ? PRIMARY_ADMIN_REFUSAL
@@ -65,7 +61,7 @@ const RoleControl = ({
   }
   // Up the list is a promotion, down it a demotion; the confirm says which,
   // green for one and red for the other, as the choice is made. Only a
-  // promotion vouches for the address, so only it warns (MB.205).
+  // promotion vouches for the address, so only it warns.
   const promoting = outranks(chosen, role);
   return (
     <ConfirmedAction
@@ -100,7 +96,7 @@ const RoleControl = ({
       announcement={`${name} is now ${roleLabel(chosen)}.`}
       inModal={inModal}
       // Beside its fact in the user's modal, not in a button row: a refusal
-      // there is the callout too (the owner's call, 2026-10-20).
+      // there is the callout too.
       refusalInModal="callout"
       send={(note) => graphqlRequest(SetUserRoleDocument, { userId, role: chosen, note })}
     />

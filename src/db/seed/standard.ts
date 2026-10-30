@@ -1,5 +1,6 @@
 import { and, eq, inArray, isNull, max, ne } from 'drizzle-orm';
 import { applyAudit } from '../audit';
+import { BOOTSTRAP_USER_ID } from '../bootstrap';
 import { BOOTSTRAP_SESSION } from './bootstrap-admin';
 import { users } from '../../modules/identity/schema/users';
 import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
@@ -7,7 +8,6 @@ import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
 import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient-folk-names';
 import { ingredientCategories } from '../../modules/ingredients/schema/ingredient-categories';
-import { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
 import { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
 import { deities } from '../../modules/vocabulary/schema/deities';
 import { ingredientForms } from '../../modules/vocabulary/schema/ingredient-forms';
@@ -24,32 +24,34 @@ import {
   insertMissingReturningIds,
   requireFrom,
 } from './idempotent';
+import {
+  identityOf,
+  ingredientIdByIdentity,
+  insertMissingCupboardEntries,
+  insertMissingStock,
+  insertMissingVariants,
+  pickOf,
+} from './coven-content';
 import type { PickedTable } from '../vocabularies';
 import type {
   FixtureUser,
+  NamedIngredient,
+  SeedCupboardEntry,
   SeedDatabase,
   SeedIngredient,
-  SeedVariant,
   SeedMembership,
+  SeedStock,
   SeedTransaction,
   SeedWorkspace,
 } from './types';
 
-// The `standard` scenario: six fixture users, workspaces W and X, and a
-// populated compendium. The cast is fixed, not generated, so `asUser(A)` is the
-// same person in every suite. The compendium is deliberately awkward — five
-// "Cat's Claw" rows, mineral varieties, `none` and `unknown` — because tidy
-// data exercises nothing the identity model exists for
-// (claude-docs/db/standard-scenario.md, "The compendium is awkward on purpose"). Writes go through
-// the handle `seed()` was given, not `withAudit` — see minimal.ts.
+// The `standard` scenario: six fixture users, workspaces W and X, and a deliberately awkward compendium
+// (five "Cat's Claw" rows, mineral varieties, `none` and `unknown`). Writes use the handle `seed()` was given, not `withAudit`. (claude-docs/db/standard-scenario.md, "The compendium is awkward on purpose")
 
 /**
- * A owns W, B is a member of W, C a viewer in W, D a member of unrelated X, E a
- * site admin in no workspace, F a site curator in no workspace (M11.20).
- * `canCreateWorkspace` follows the invite gate: A–D earned it by membership,
- * and E and F, never invited, hold it by their roles, since the users CHECK
- * requires it of every role but `user` (MB.177, M11.20). `…0003`–`…0008`
- * continue the bootstrap's series.
+ * A owns W, B is a member, C a viewer, D a member of unrelated X, E a site admin and F a site curator in no
+ * workspace, G an unverified account. A–D hold `canCreateWorkspace` by membership, E and F by their roles
+ * (the users CHECK requires it of every role but `user`).
  */
 export const FIXTURE_USERS = {
   A: {
@@ -94,7 +96,15 @@ export const FIXTURE_USERS = {
     role: 'curator',
     canCreateWorkspace: true,
   },
-} satisfies Record<'A' | 'B' | 'C' | 'D' | 'E' | 'F', FixtureUser>;
+  G: {
+    id: '00000000-0000-0000-0000-000000000009',
+    name: 'Fixture G',
+    email: 'g@seed.sorrelandsalt.com',
+    role: 'user',
+    canCreateWorkspace: false,
+    emailVerified: false,
+  },
+} satisfies Record<'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G', FixtureUser>;
 
 /** W — the workspace A owns and B and C work in. */
 export const WORKSPACE_W_ID = '00000000-0000-0000-0001-000000000001';
@@ -117,15 +127,116 @@ const MEMBERSHIPS: SeedMembership[] = [
   // workspace", and a curator none, is only assertable against one in none.
 ];
 
+export const STANDARD_CUPBOARD: SeedCupboardEntry[] = [
+  // Rosemary the coven grows, under its own label and its own description.
+  {
+    entry: { name: 'Rosemary', canonicalName: 'Salvia rosmarinus' },
+    label: 'Garden Rosemary',
+    description: 'Cut from the bush by the back door, dried in bunches over the stove.',
+  },
+  // In the cupboard and not annotated: the row alone.
+  { entry: { name: 'Ginger', canonicalName: 'Zingiber officinale' } },
+  // Mugwort under the coven's label, with a safety note and a second celestial body.
+  {
+    entry: { name: 'Mugwort', canonicalName: 'Artemisia vulgaris' },
+    label: 'Hedgerow Mugwort',
+    safetyNotes: 'Not for anyone pregnant. Keep the smoke away from the cat.',
+    celestialBodies: ['Moon', 'Neptune'],
+  },
+  // Lavender with a description, an element the compendium lacks and a sign of its own.
+  {
+    entry: { name: 'Lavender', canonicalName: 'Lavandula angustifolia' },
+    description: 'Grown along the south wall and stripped into paper bags in July.',
+    elements: ['air', 'water'],
+    zodiacSigns: ['Pisces'],
+  },
+  // Only a safety note over the compendium's own text.
+  {
+    entry: { name: 'Comfrey', canonicalName: 'Symphytum officinale' },
+    safetyNotes: 'Never taken internally here. The leaf is for poultices and the compost heap.',
+  },
+  // An empty element list is an answer: the coven says Sea Salt has none.
+  {
+    entry: { name: 'Sea Salt', canonicalName: 'Sodium chloride' },
+    label: 'Kitchen Salt',
+    elements: [],
+    colors: ['grey', 'white'],
+  },
+];
+
+/** A compendium entry by its formal name, for a jar. */
+const held = (name: string, canonicalName: string): NamedIngredient => ({
+  tier: 'compendium',
+  entry: { name, canonicalName },
+});
+
 /**
- * Every entry declares a `nomenclature`. The awkward ones are the point: five
- * "Cat's Claw" rows told apart only by their formal names, two mineral varieties,
- * three `none` and one `unknown`, two entries worked with more than one
- * element, comfrey beside foxglove, one carrying a safety note that matters,
- * and Rosemary in two forms, its oil adding a description and a safety note
- * of its own. Every form, celestial body, zodiac sign and deity names a curated row in
- * that row's own spelling (MB.162); the uncurated `rhizome` is a coven's, in
- * demo.ts.
+ * W's stock in `standard`, with fixed ids in a block of their own; `demo` adds jars in the free ids. Every entry
+ * named is in `STANDARD_CUPBOARD`, since a jar on a compendium variant needs its entry's cupboard row.
+ */
+export const STANDARD_STOCK: SeedStock[] = [
+  // Rosemary in two forms: two jar lines on one card, in two dimensions.
+  {
+    id: '00000000-0000-0000-0003-000000000003',
+    ingredient: held('Rosemary', 'Salvia rosmarinus'),
+    form: 'Herb',
+    quantity: '60.000',
+    unit: 'g',
+    source: 'The bush by the back door',
+  },
+  {
+    id: '00000000-0000-0000-0003-000000000004',
+    ingredient: held('Rosemary', 'Salvia rosmarinus'),
+    form: 'Oil',
+    quantity: '45.000',
+    unit: 'ml',
+  },
+  // Counted rather than weighed.
+  {
+    id: '00000000-0000-0000-0003-000000000007',
+    ingredient: held('Ginger', 'Zingiber officinale'),
+    form: 'Root',
+    quantity: '6.000',
+    unit: 'piece',
+    acquiredDate: '2026-09-30',
+  },
+  // Below the default 10 g, so the Low badge shows.
+  {
+    id: '00000000-0000-0000-0003-000000000008',
+    ingredient: held('Mugwort', 'Artemisia vulgaris'),
+    form: 'Herb',
+    quantity: '4.000',
+    unit: 'g',
+  },
+  // Held and never weighed: no quantity and no unit, so no threshold either.
+  {
+    id: '00000000-0000-0000-0003-000000000009',
+    ingredient: held('Lavender', 'Lavandula angustifolia'),
+    form: 'Flower',
+  },
+  // Below a threshold the coven set (50 g), where the default would be 10 g.
+  {
+    id: '00000000-0000-0000-0003-000000000010',
+    ingredient: held('Comfrey', 'Symphytum officinale'),
+    form: 'Leaf',
+    quantity: '30.000',
+    unit: 'g',
+    lowStockThreshold: '50.000',
+  },
+  {
+    id: '00000000-0000-0000-0003-000000000011',
+    ingredient: held('Sea Salt', 'Sodium chloride'),
+    form: 'Salt',
+    quantity: '500.000',
+    unit: 'g',
+    source: 'Bought by the sack',
+  },
+];
+
+/**
+ * Every entry declares a `nomenclature`. The awkward ones are the point: five "Cat's Claw" rows told apart
+ * only by formal name, two mineral varieties, `none` and `unknown` entries, and Rosemary in two forms.
+ * Every form, body, sign and deity names a curated row in that row's spelling; the uncurated `rhizome` is a coven's, in demo.ts.
  */
 export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
   {
@@ -169,7 +280,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     name: 'Rosemary',
     canonicalName: 'Salvia rosmarinus',
     nomenclature: 'botanical',
-    // The one entry with two forms (MB.222): the oil adds its own description
+    // The one entry with two forms: the oil adds its own description
     // and a safety note the herb does not need.
     variants: [
       { form: 'Herb' },
@@ -419,16 +530,9 @@ export async function seedStandard(db: SeedDatabase): Promise<void> {
 }
 
 /**
- * The same scenario inside a transaction the caller already opened: `demo`
- * writes its grimoire alongside these rows, so a half-applied scenario cannot
- * be a grimoire referencing rows that are not there. Assumes the GUC is
- * published and the bootstrap user exists.
- *
- * `restoreDeletedDeityPicks` is `standard`'s reset of its fixtures: on, a
- * compendium deity pick an admin deleted comes back on the next run. `demo`
- * turns it off, since a person explores it and a deletion there is theirs —
- * claude-docs/db/standard-scenario.md, "A reseed of standard puts a deity
- * pick back; demo does not".
+ * The same scenario inside a caller's transaction, so `demo` writes its grimoire alongside these rows. Assumes
+ * the GUC is published and the bootstrap user exists. `restoreDeletedDeityPicks` brings back a deity pick an admin
+ * deleted (`standard` resets its fixtures; `demo` does not, since a deletion there is the explorer's own). (claude-docs/db/standard-scenario.md, "A reseed of standard puts a deity pick back; demo does not")
  */
 export async function seedStandardContent(
   tx: SeedTransaction,
@@ -460,13 +564,14 @@ export async function seedStandardContent(
   await insertMissingFolkNames(tx, ingredientIds);
   await insertMissingDeities(tx, ingredientIds, restoreDeletedDeityPicks);
   await insertMissingCategoryAssignments(tx, ingredientIds, await categoryIdByName(tx));
+  const coven = { workspaceId: WORKSPACE_W_ID, authorId: BOOTSTRAP_USER_ID };
+  await insertMissingCupboardEntries(tx, coven, STANDARD_CUPBOARD);
+  await insertMissingStock(tx, coven, STANDARD_STOCK, await ingredientIdByIdentity(tx, coven));
 }
 
 /**
- * The live rows of a two-tier vocabulary by folded name, for the compendium's
- * picks (MB.167): every compendium form and deity is a pick of a curated row,
- * as an admin's would be. A name two live rows share has no one row to pick,
- * so it is thrown rather than guessed; the literal then names its row.
+ * The live rows of a two-tier vocabulary by folded name, for the compendium's picks. A name two live rows share
+ * has no one row to pick, so it throws rather than guesses.
  */
 async function pickedIdByName(
   tx: SeedTransaction,
@@ -490,24 +595,12 @@ async function pickedIdByName(
 /** A name as the unique indexes on `lower(name)` compare it. */
 const lowerCase = (name: string) => name.toLowerCase();
 
-function pickOf(ids: Map<string, string>, name: string, what: string): string {
-  return requireFrom(
-    ids,
-    name.toLowerCase(),
-    () => `The seed picks the ${what} "${name}", which no one live row is called.`,
-  );
-}
-
 // Idempotent the way seedCategories is: inserts what is missing by identity,
 // ignoring `deleted_at` so a soft-deleted entry is not quietly restored, and
 // updates nothing already present.
 
-// The cast holds its privileges from its first insert, so the trigger on
-// `users` records them, by the seed's route, `bootstrap` (MB.195). A–D's and
-// F's grants are stamped as the seed's own user, which inserts them. E
-// is inserted alone and as itself, so its two grants are stamped as E, as a
-// primary admin's promotion is stamped as that admin; its `users` row is
-// still the seed's, as every seeded row is.
+// The cast holds its privileges from its first insert, so the `users` trigger records them by the seed's route,
+// `bootstrap`. E is inserted as itself, so its two grants are stamped as E; the others as the seed's user.
 async function insertMissingUsers(tx: SeedTransaction): Promise<void> {
   const { E, ...cast } = FIXTURE_USERS;
 
@@ -521,7 +614,10 @@ async function insertMissingFixtureUsers(
   tx: SeedTransaction,
   wanted: readonly FixtureUser[],
 ): Promise<void> {
-  await insertMissingBy(tx, users, wanted, { columns: ['id'], toRow: (user) => user });
+  await insertMissingBy(tx, users, wanted, {
+    columns: ['id'],
+    toRow: (user) => ({ emailVerified: true, ...user }),
+  });
 }
 
 async function insertMissingWorkspaces(tx: SeedTransaction): Promise<void> {
@@ -536,21 +632,6 @@ async function insertMissingMemberships(tx: SeedTransaction): Promise<void> {
     columns: ['workspaceId', 'userId'],
     toRow: (membership) => membership,
   });
-}
-
-/**
- * An entry's identity as the seed keys it: its formal name, or its label
- * without one, lower-cased (MB.222) — what `identity_key` holds, which the
- * identity indexes keep once per tier. Keyed on that rather than the label, so
- * an entry an admin or a member relabelled is still the one the seed wrote,
- * and is not inserted again beside itself, which the index would refuse. A
- * row's key is the generated column itself; a literal's is folded here, where
- * JavaScript's lower-casing agrees with Postgres's on the seed's ASCII names.
- * It says nothing about the tier, so a caller builds its map from one tier's
- * rows.
- */
-export function identityOf(entry: { name: string; canonicalName?: string | null }): string {
-  return (entry.canonicalName ?? entry.name).toLowerCase();
 }
 
 /**
@@ -603,16 +684,9 @@ async function insertMissingIngredients(tx: SeedTransaction): Promise<Map<string
 }
 
 /**
- * The backfill a slug without its form needs (MB.220), run on every seed over
- * the seed's own entries, `ingredientIds`: each live entry's slug re-derived
- * from its label and formal name and written where it differs, so a reseed
- * with nothing to change writes nothing. A compendium entry's old slug is
- * retired, to redirect for 180 days as an admin's save retires one (MB.82); a
- * coven's retires nothing, since no route reads it. A rewrite in SQL would be
- * a second slug rule (0025's precedent), so the seed is the backfill for its
- * own rows, and every other row moves at its next save. A slug another live
- * row of the tier already holds is left as it is, so a reseed never fails on
- * a row an admin wrote.
+ * The slug backfill run on every seed over its own entries: each live entry's slug is re-derived and written
+ * where it differs, so a reseed with nothing to change writes nothing. A compendium entry's old slug is retired
+ * for the 180-day redirect; a slug another live row holds is left alone, so a reseed never fails on an admin's row. (claude-docs/db/standard-scenario.md, "Slug backfill")
  */
 export async function reslugIngredients(
   tx: SeedTransaction,
@@ -667,16 +741,9 @@ export async function reslugIngredients(
 }
 
 /**
- * The two compendium retirements `standard` holds on purpose (MB.82), one of
- * each redirect the public entry page answers. `entry` names the entry that
- * keeps the row, as its literal does; `name` and `canonicalName` are what the
- * retired slug derives from, so no slug is written down beside the rule.
- *
- * - Rosemary: the slug it had under its older formal name. Nobody holds it, so
- *   it redirects (308) to Rosemary's current address.
- * - Hidcote Lavender: the slug it was first entered under, the species' own.
- *   The species entry holds it now, so that address shows the species with a
- *   notice that Hidcote Lavender moved away.
+ * The two compendium retirements `standard` holds on purpose, one per redirect the public entry page answers.
+ * Rosemary's old slug redirects (308) to its current address; Hidcote Lavender's old slug is held by the species
+ * entry, whose page shows a notice that Hidcote Lavender moved away. (claude-docs/db/standard-scenario.md, "Retired slugs")
  */
 const RETIRED_COMPENDIUM_SLUGS: {
   entry: { name: string; canonicalName: string };
@@ -696,12 +763,8 @@ const RETIRED_COMPENDIUM_SLUGS: {
 ];
 
 /**
- * Writes `RETIRED_COMPENDIUM_SLUGS`, each keyed on its entry and slug, since
- * the table's slug index is not unique and a reseed would otherwise stack
- * copies. `retired_at` defaults to the run's instant, so the 180-day window
- * runs from the last run that wrote the row. A compendium write hard-deletes
- * lapsed rows, and the next reseed then writes them again; that is fine for
- * fixtures (claude-docs/db/standard-scenario.md).
+ * Writes `RETIRED_COMPENDIUM_SLUGS`, keyed on entry and slug (the slug index is not unique, so a reseed would
+ * stack copies). `retired_at` defaults to the run's instant, so the 180-day window runs from the last write. (claude-docs/db/standard-scenario.md, "Retired slugs")
  */
 export async function insertMissingRetiredSlugs(
   tx: SeedTransaction,
@@ -725,41 +788,6 @@ export async function insertMissingRetiredSlugs(
     toRow: ({ ingredientId, slug }) => ({ ingredientId, workspaceId: null, slug }),
   });
 }
-
-/**
- * Each entry's forms as its variants (MB.222), `entries` naming the entry's
- * id beside the forms its literal lists, so every seeded layer can name one.
- * `formIds` picks each form by name from the curated rows, as an admin's
- * compendium form is a pick (MB.162); without it a form is typed, as a
- * coven's may be. Keyed as the variant's unique index keys it, the entry and
- * the folded form; a variant an admin removed counts as present, so it is not
- * restored, and one already there is not rewritten.
- */
-export async function insertMissingVariants(
-  tx: SeedTransaction,
-  entries: readonly { ingredientId: string; variants: readonly SeedVariant[] }[],
-  formIds?: Map<string, string>,
-): Promise<void> {
-  if (entries.length === 0) return;
-  const wanted = entries.flatMap(({ ingredientId, variants }) =>
-    variants.map((variant) => ({
-      ...variant,
-      ingredientId,
-      formId: formIds ? pickOf(formIds, variant.form, 'form') : null,
-    })),
-  );
-
-  await insertMissingBy(tx, ingredientVariants, wanted, {
-    columns: ['ingredientId', 'form'],
-    fold: { form: (form) => form.trim().toLowerCase() },
-    where: inArray(
-      ingredientVariants.ingredientId,
-      entries.map((entry) => entry.ingredientId),
-    ),
-    toRow: (variant) => ({ ...variant, form: variant.form.trim() }),
-  });
-}
-
 function ingredientIdFor(entry: SeedIngredient, ingredientIds: Map<string, string>): string {
   return requireFrom(
     ingredientIds,
@@ -788,19 +816,9 @@ async function insertMissingFolkNames(
 }
 
 /**
- * Each entry's deities, picked in the literal's order. Keyed on the case-folded
- * name the row holds rather than the pick, over the live rows: a database that
- * ran MB.166's fill already holds these deities as typed names at these
- * positions, and a pick beside each would take a position its typed twin
- * holds. Over every row instead when `restoreDeleted` is off, so a deleted
- * pick counts as present.
- *
- * A missing pick goes after every live pick of its entry, in the literal's
- * order, rather than at its literal index (MB.192): the service renumbers the
- * picks it keeps, so a pick removed from anywhere but the end leaves its index
- * held by the pick below it. On an entry with no live pick that is the literal
- * index, and no live row moves, so a second run moves nothing —
- * claude-docs/db/standard-scenario.md.
+ * Each entry's deities, picked in the literal's order, keyed on the case-folded name
+ * the row holds. A missing pick goes after the entry's live picks, so a second run
+ * moves nothing (claude-docs/db/standard-scenario.md, "A reseed of `standard` puts a deity pick back; `demo` does not")
  */
 async function insertMissingDeities(
   tx: SeedTransaction,
@@ -860,7 +878,7 @@ async function insertMissingCategoryAssignments(
     })),
   );
 
-  // Hard-deleted (MB.34): the four-column stamp set, so `applyAudit` stamps
+  // Hard-deleted: the four-column stamp set, so `applyAudit` stamps
   // fewer columns.
   await insertMissingBy(tx, ingredientCategories, wanted, {
     columns: ['ingredientId', 'categoryId'],

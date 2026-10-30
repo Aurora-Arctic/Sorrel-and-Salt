@@ -172,7 +172,7 @@ link. `referencesOf` renders each citation and files the
 batch's answers alphabetically, `byCitation` in `src/lib/citation.ts`;
 `referencesByIngredient` batches it behind `Ingredient.references`. A
 variant's links (MB.217's `ingredientVariantId`) are read as an ingredient's,
-through `readableVariantParent`, the variant live and its ingredient readable
+through `inUseVariantParent`, the variant live and its ingredient readable
 (MB.218); `referencesOfVariants` and `referencesByVariant` sit behind
 `IngredientVariant.references`.
 
@@ -407,9 +407,9 @@ wrote — the same fields, to the letter — is linked by the compendium, never
 written twice, and a work an admin soft-deleted is neither re-inserted nor
 linked anew.
 
-A shard names a source by a **handle**. The works several shards cite, the
+An entry file names a source by a **handle**. The works many entries cite, the
 owner's library books, are declared once in `src/db/seed/compendium/works.ts`
-as the edition in hand; a shard's per-entry pages, a Wikipedia revision or a
+as the edition in hand; a file's per-entry pages, a Wikipedia revision or a
 web page, are its own `sources`. Each citation on an entry or a form becomes
 one `reference_links` row, `ingredient_id` for the entry and
 `ingredient_variant_id` for the form, carrying the citation's locator (`p. 71`,
@@ -417,8 +417,25 @@ one `reference_links` row, `ingredient_id` for the entry and
 admin's "unsourced" filter counts the entry's own links and its forms'.
 
 Which fields a citation backs (`supports`) is the guard's to check and is not
-stored: a link says which work supports the row, and the shard doc
-(`claude-docs/db/compendium-seed/<shard>.md`) says which fields each source
-gave. The links are written once, with the entry, as everything beneath an
+stored: a link says which work supports the row, and the entry file's
+`supports` list (`compendium/ingredients/<nomenclature>/<slug>.md`) says which
+fields each source gave. The links are written once, with the entry, as everything beneath an
 entry is ([`compendium-seed/README.md`](compendium-seed/README.md), "Write-once,
 and how a correction lands").
+
+## Reference service details
+
+`src/modules/ingredients/services/references.ts` writes and reads references, kept once in their tier and linked from every row they support.
+
+- Two tiers, as ingredients are: a null `workspaceId` is the compendium's, written under the `Curator` proof alone, and a coven's is written under its `Membership`, whoever links it. A member who cites a compendium reference reads it and cannot change it. Nothing deletes one in v1.
+- An update replaces the row rather than merging into it, so every optional field left out is cleared; the edit reaches every row citing the reference, which is the point of keeping a source once. A coven's reference is in no cached read; the compendium-tier write revalidates the `compendium` tag like every admin mutation.
+- Reading one by id returns the compendium's without a coven, and with one that coven's own or the compendium's, never another coven's, whose existence is private. The tiers are the picker's, read under the same `ingredient: ['read']`, so it returns no row the picker would not offer.
+- The picker matches authors, title and container, best match first. A blank query, or one under the compendium search's `MIN_QUERY_LENGTH`, offers all by title. Without a coven it offers the compendium's alone, which is all a compendium entry may cite.
+- An id that is not a uuid names nothing and would be a driver error at the comparison.
+
+## Reference links schema details
+
+- **Adding a sixth sourced table** is one entry in `SOURCED` in `src/modules/ingredients/schema/reference-links.ts`: its column, its partial unique index and the widened CHECK are built from the list. The migration `db:generate` then writes drops and re-adds `reference_links_one_row`, and that DROP CONSTRAINT takes an `.ack.md` sidecar (rule 10). The repository's `findReferencesOf` and `citesNothing` take a key of the registry and read its table, so reading the new links costs nothing more; writing them is still code of its own, as the ingredient services and the sources seed each write the links they own.
+- **Why one table.** A nullable key per sourced table under one `num_nonnulls` CHECK, as a spell's layers do, rather than a join table per table, which would cost a table, a trigger, a finder and a loader each.
+- **Indexes.** One live link per reference per row, partial per rule 4. Each leads on its sourced id, so a read of one row's links uses it and no plain parent index is built beside them. None leads on `reference_id`: nothing reads from a reference back to its links, and a reference is never hard-deleted.
+- **The `references` table.** Every field is text as Chicago prints it (`authors` with its role, `published` at a year's or a season's precision), because name order and dates are not mechanical across sources; only the two days are `date`s. There is no unique index: nothing short of a librarian identifies a source, so the seed is idempotent by the rendered citation instead.

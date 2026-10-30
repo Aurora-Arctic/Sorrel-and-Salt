@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/amla-phyllanthus-emblica
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in the Wikipedia taxobox
+    value: Least Concern
+    listedAs: Phyllanthus emblica
+    scope: global
+    nameBasis: stated
+    source: wikipedia-phyllanthus-emblica
+    locator: 'taxobox "Conservation status": Least Concern (IUCN 3.1)'

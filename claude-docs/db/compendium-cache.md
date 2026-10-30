@@ -29,6 +29,26 @@ give a row's `createdAt` back as a string where the miss gave a `Date`. The
 wrapper stores `superjson.stringify` of the result and parses it on every
 read, hit or miss, so both answer the same types.
 
+### The deployment key part (MB.274)
+
+Every key `cachedCompendiumRead` builds ends in the deployment's own id, so a
+new deployment reads under fresh keys and its first read of each entry goes
+to Postgres. The seed (`npm run db:seed`) runs outside Next and cannot expire
+the tag, and Vercel keeps the data cache from one deployment to the next, so
+without the part a seeded change stayed hidden for up to an hour.
+
+The part is `VERCEL_DEPLOYMENT_ID`, or `VERCEL_GIT_COMMIT_SHA` when that is
+empty (the project's "Enable access to System Environment Variables" setting
+is off). Vercel's system environment variables page lists both as available
+at build and at runtime, so nothing is stamped in through `next.config.ts`.
+With neither set (local runs, tests) there is no part, and the keys are the
+bare `key`. The tag is unchanged, so an admin's write still expires every
+entry under the current deployment.
+
+**Reseeding locally under a running server still needs a restart.** The key
+part is fixed there, so the cache keeps serving what it held until the hour
+runs out or an admin saves a compendium edit.
+
 ### What is cached
 
 Thirteen reads, every one taking no session and filtering to the compendium

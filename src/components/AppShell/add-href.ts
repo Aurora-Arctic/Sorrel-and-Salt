@@ -1,17 +1,89 @@
-// The addresses that open and close a coven's Add Ingredient dialog (M8.16): `?new` the
-// default coven's, `?new=<slug>` a named one's. Apart from the button so that another
-// control can open the same dialog by the same address (the empty list's first add, M9.11)
-// without a second dialog. claude-docs/components/modal.md, "Add Ingredient".
+// The addresses that open and close a coven's Add Ingredient dialog and read a grimoire's New Spell:
+// `?new=ingredient-coven-<slug>`, `?new=ingredient`, `?new=spell-<slug>`. Apart from the button so another
+// control can open the same dialog (claude-docs/components/modal.md, "Add Ingredient").
 
-/** The address parameter that opens a coven's dialog. */
+import {
+  NEW_COMPENDIUM_ENTRY,
+  NEW_COVEN_INGREDIENT_PREFIX,
+  NEW_INGREDIENT,
+  NEW_SPELL,
+  NEW_SPELL_PREFIX,
+} from '../../lib/coven-path';
+
+/** The address parameter that opens a dialog. */
 export const NEW = 'new';
 
-/** The address with `?new`, or `?new=<slug>` for a coven other than the default, over its other parameters. */
-export function openHref(pathname: string, params: URLSearchParams, slug?: string): string {
+export {
+  NEW_COMPENDIUM_ENTRY,
+  NEW_COVEN_INGREDIENT_PREFIX,
+  NEW_INGREDIENT,
+  NEW_SPELL,
+  NEW_SPELL_PREFIX,
+};
+
+/** The slug after a prefix, or `null` when the value does not start with it or names no slug. */
+function slugAfter(value: string, prefix: string): string | null {
+  return value.startsWith(prefix) && value.length > prefix.length
+    ? value.slice(prefix.length)
+    : null;
+}
+
+/**
+ * Which Add Ingredient dialog a value of `?new` asks for: `default` for the default coven's,
+ * a slug for a named coven's, and `null` for none, as for a spell's value, the compendium's or
+ * no `?new`. A bare `?new` is the default coven's only off the admin pages.
+ */
+export function askedCoven(value: string | null, onAdmin = false): 'default' | string | null {
+  if (value === null) return null;
+  if (value === NEW_INGREDIENT || (value === '' && !onAdmin)) return 'default';
+  return slugAfter(value, NEW_COVEN_INGREDIENT_PREFIX);
+}
+
+/**
+ * Which coven's New Spell a value of `?new` asks for: `current` for the grimoire the page is
+ * on (`?new=spell`), a slug for a named coven's (`?new=spell-<slug>`), and `null` for none.
+ */
+export function askedSpell(value: string | null): 'current' | string | null {
+  if (value === null) return null;
+  if (value === NEW_SPELL) return 'current';
+  return slugAfter(value, NEW_SPELL_PREFIX);
+}
+
+/** The value of `?new` that opens a coven's Add Ingredient. */
+export function covenIngredientValue(slug: string): string {
+  return `${NEW_COVEN_INGREDIENT_PREFIX}${slug}`;
+}
+
+/** The value of `?new` that opens a coven's New Spell. */
+export function spellValue(slug: string): string {
+  return `${NEW_SPELL_PREFIX}${slug}`;
+}
+
+/** Whether a value of `?new` opens New Spell over this coven's grimoire. */
+export function opensNewSpell(value: string | null, slug: string): boolean {
+  const asked = askedSpell(value);
+  return asked === 'current' || asked === slug;
+}
+
+/**
+ * Where `?new=spell-<slug>` sends a page that is not that coven's grimoire: the grimoire,
+ * with New Spell open. `null` when the page is already there or the value names no coven.
+ * New Spell is a dialog over the grimoire, never drawn on another page.
+ */
+export function newSpellElsewhere(value: string | null, pathname: string): string | null {
+  const asked = askedSpell(value);
+  if (asked === null || asked === 'current') return null;
+  const grimoire = `/coven/${asked}/grimoire`;
+  if (pathname === grimoire || pathname.startsWith(`${grimoire}/`)) return null;
+  return `${grimoire}?${NEW}=${spellValue(asked)}`;
+}
+
+/** The address with `?new=ingredient-coven-<slug>`, over its other parameters. */
+export function openHref(pathname: string, params: URLSearchParams, slug: string): string {
   const rest = new URLSearchParams(params);
   rest.delete(NEW);
-  const lead = rest.toString();
-  return `${pathname}?${lead ? `${lead}&` : ''}${NEW}${slug ? `=${encodeURIComponent(slug)}` : ''}`;
+  rest.set(NEW, covenIngredientValue(slug));
+  return `${pathname}?${rest}`;
 }
 
 /** The address with `?new` dropped. */

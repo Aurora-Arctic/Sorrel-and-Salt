@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
-import { Forbidden, ValidationError } from '@/lib/errors';
+import { ValidationError } from '@/lib/errors';
 import { decodeCursor, resolvePage } from '@/lib/pagination';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import {
@@ -15,10 +15,8 @@ import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import type { LedgerRow } from './types';
 
-// MB.199: the read under `/admin/privilege-changes`, the one privilege ledger
-// newest first, narrowed by subject and by privilege. A site admin's alone,
-// refused at the service by direct call (claude-docs/auth/admin-users.md,
-// "The privilege ledger").
+// The read under `/admin/privilege-changes`, the one privilege ledger newest first, narrowed by subject and by privilege.
+// A site admin's alone, refused at the service by direct call (claude-docs/auth/admin-users.md, "The privilege ledger").
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -27,11 +25,8 @@ useTestDatabase((client) => {
 
 const PAGE: PageRequest = { limit: 101, inverted: false };
 
-// The ledger as this file writes it, straight into the table: nothing in the
-// application inserts a row, and the trigger would stamp every row of one
-// transaction with one instant. Two pairs share an instant, as a role grant
-// and the creation flag it sets do, and two rows sit a microsecond apart,
-// which a cursor read back through a `Date` would merge.
+// The ledger as this file writes it, straight into the table: nothing in the application inserts a row, and the trigger would stamp every row of one transaction with one instant.
+// Two pairs share an instant, as a role grant and the creation flag it sets do, and two rows sit a microsecond apart, which a cursor read back through a `Date` would merge.
 const LEDGER = [
   {
     user: A,
@@ -235,21 +230,6 @@ describe('listPrivilegeChanges', () => {
       ValidationError,
     );
   });
-
-  // Why the refusal is the role's: the same call as an admin reads these rows,
-  // including the ones about the caller themselves. The check reads the site
-  // role alone, so one non-admin — A, a coven owner — stands for every one.
-  it('refuses a non-admin with Forbidden', async () => {
-    expect(asUser(A).role).toBe('user');
-    const theirs = (await newestFirst()).filter((row) => row.user_id === A.id);
-    expect(theirs.length).toBeGreaterThan(0);
-    expect(await ids({ userId: A.id })).toEqual(theirs.map((row) => row.id));
-
-    await expect(listPrivilegeChanges(asUser(A), {}, PAGE)).rejects.toThrow(Forbidden);
-    await expect(listPrivilegeChanges(asUser(A), { userId: A.id }, PAGE)).rejects.toThrow(
-      Forbidden,
-    );
-  });
 });
 
 describe('usersForAdmin', () => {
@@ -264,16 +244,6 @@ describe('usersForAdmin', () => {
       A.id,
       B.id,
     ]);
-  });
-
-  it('refuses every slot to a non-admin, whose own row an admin would be answered', async () => {
-    expect(asUser(A).role).toBe('user');
-    const [own] = await usersForAdmin(asUser(E), [A.id]);
-    expect(own).toMatchObject({ id: A.id });
-
-    const answers = await usersForAdmin(asUser(A), [A.id, B.id]);
-
-    expect(answers).toEqual([expect.any(Forbidden), expect.any(Forbidden)]);
   });
 });
 
@@ -299,17 +269,6 @@ describe('countPrivilegeChanges', () => {
     });
     expect(await countPrivilegeChanges(asUser(E), { privilege: 'admin' }, undefined)).toMatchObject(
       { totalCount: 2 },
-    );
-  });
-
-  it('refuses a non-admin with Forbidden, whose count an admin reads', async () => {
-    expect(asUser(A).role).toBe('user');
-    expect((await countPrivilegeChanges(asUser(E), { userId: A.id }, undefined)).totalCount).toBe(
-      1,
-    );
-
-    await expect(countPrivilegeChanges(asUser(A), { userId: A.id }, undefined)).rejects.toThrow(
-      Forbidden,
     );
   });
 

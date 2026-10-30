@@ -7,8 +7,9 @@ import { workspaces } from '../schema/workspaces';
 import type { MembershipWithWorkspace, WorkspaceRole } from '../types';
 import { assertNotLastOwner } from './last-owner';
 import { assertMembership } from './membership';
+import { assertNotSystemSeat } from './system-seat';
 
-// M9.14: an owner moves a member between viewer, member and owner, either way.
+// An owner moves a member between viewer, member and owner, either way.
 // It changes an existing member's row and nothing else — a pending invitation
 // is not a member, and ownership never comes through one (DESIGN.md §5).
 
@@ -20,7 +21,7 @@ import { assertMembership } from './membership';
  * they joined.
  *
  * @throws {Forbidden} the caller is not an owner of the workspace, or `userId`
- * is not a live member of it.
+ * is not a live member of it or is the system user.
  * @throws {LastOwner} the change would leave the workspace without an owner.
  */
 export async function updateMemberRole(
@@ -32,6 +33,7 @@ export async function updateMemberRole(
   const membership = await assertMembership(session, workspaceId, { member: ['update'] });
   // An id that cannot name a user is a stranger, as a wrong one is.
   if (!RowId.safeParse(userId).success) throw new Forbidden();
+  assertNotSystemSeat(userId);
 
   const updated = await withAudit(session, async (write) => {
     await assertNotLastOwner(write, membership, userId, role);

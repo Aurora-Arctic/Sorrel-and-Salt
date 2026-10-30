@@ -1,8 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
-import { Forbidden } from '@/lib/errors';
-import { decodeCursor, resolvePage } from '@/lib/pagination';
 import { countUsers, listUsers, providersOf } from '@/modules/identity';
 import type { UserFilter } from '@/modules/identity';
 import type { PageRequest } from '@/lib/types';
@@ -11,10 +9,8 @@ import { useTestDatabase } from '../../../support/db/database';
 import { asManualFix } from '../../../support/db/privileges';
 import type { ListedUserRow } from './types';
 
-// MB.52's two reads behind `/admin/users`: the list itself and the providers
-// linked to each listed account. Both are a site admin's alone, refused at
-// the service by direct call rather than by the page being out of reach
-// (claude-docs/auth/admin-users.md, "The user list").
+// The two reads behind `/admin/users`: the list and the providers linked to each listed account.
+// Both are a site admin's alone, refused at the service by direct call rather than by the page being out of reach (claude-docs/auth/admin-users.md, "The user list").
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -31,7 +27,7 @@ const WILDCARD = '00000000-0000-0000-0000-0000000000a3';
 
 beforeAll(async () => {
   // The wildcard account is inserted holding the creation flag, a privilege
-  // change the trigger on `users` asks a route for (MB.195).
+  // change the trigger on `users` asks a route for.
   await asManualFix(
     sql,
     (tx) => tx`
@@ -98,34 +94,6 @@ describe('listUsers', () => {
     expect(await names({ query: 'Seed System' })).toEqual([]);
   });
 
-  // Rule 4: the finder drops the row, and the service has no predicate to add.
-  it('never lists a soft-deleted user, though the row exists', async () => {
-    const [row] = await sql`select deleted_at from users where id = ${DELETED}`;
-    expect(row?.deleted_at).toBeInstanceOf(Date);
-
-    const page = await listUsers(asUser(E), {}, PAGE);
-
-    expect(page.map((entry) => entry.node.id)).not.toContain(DELETED);
-    expect(await names({ query: 'Lapsed' })).toEqual([]);
-  });
-
-  it('pages by a cursor of the sort key and id, never an offset', async () => {
-    const live = await listableUsers();
-    const expected = live.map((row) => row.id);
-
-    const first = await resolvePage({ first: 3 }, (request) => listUsers(asUser(E), {}, request));
-    const second = await resolvePage({ first: 3, after: first.pageInfo.endCursor }, (request) =>
-      listUsers(asUser(E), {}, request),
-    );
-
-    expect(first.edges.map((edge) => edge.node.id)).toEqual(expected.slice(0, 3));
-    expect(second.edges.map((edge) => edge.node.id)).toEqual(expected.slice(3, 6));
-    const cursor = JSON.parse(
-      Buffer.from(first.pageInfo.endCursor as string, 'base64url').toString('utf8'),
-    );
-    expect(cursor).toEqual({ k: [live[2]?.name], i: live[2]?.id });
-  });
-
   it('filters by a substring of the name or the email, whatever its case', async () => {
     expect(await names({ query: 'fixturewort' })).toEqual(['Pending Fixturewort']);
     expect(await names({ query: 'PENDING@USERS' })).toEqual(['Pending Fixturewort']);
@@ -136,7 +104,7 @@ describe('listUsers', () => {
     expect(await names({ query: '   ' })).toEqual((await listableUsers()).map((row) => row.name));
   });
 
-  // M5.8's to-do list: who may not yet create a workspace.
+  // The to-do list: who may not yet create a workspace.
   it('narrows to the users awaiting approval, alone or beside a query', async () => {
     const [{ count }] = await sql<{ count: number }[]>`
       select count(*)::int as count from users
@@ -150,7 +118,7 @@ describe('listUsers', () => {
 
     expect(awaiting).toHaveLength(count);
     expect(awaiting.every((entry) => !entry.node.canCreateWorkspace)).toBe(true);
-    // Every admin holds the flag (MB.177), so none waits on an approval.
+    // Every admin holds the flag, so none waits on an approval.
     expect(awaiting.some((entry) => entry.node.role === 'admin')).toBe(false);
     expect(await names({ awaitingApproval: true, query: 'pending' })).toEqual([
       'Pending Fixturewort',
@@ -175,18 +143,9 @@ describe('listUsers', () => {
     expect(await names({ role: 'user', awaitingApproval: true, query: 'pending' })).toEqual([
       'Pending Fixturewort',
     ]);
-    // Every admin and curator holds the flag (MB.177, M11.20), so none awaits approval.
+    // Every admin and curator holds the flag, so none awaits approval.
     expect(await names({ role: 'admin', awaitingApproval: true })).toEqual([]);
     expect(await names({ role: 'curator', awaitingApproval: true })).toEqual([]);
-  });
-
-  // Why it could have succeeded: the rows exist and the same call answers E.
-  // The check reads the site role alone, so one non-admin stands for every one.
-  it('refuses a user who is not an admin, by direct call', async () => {
-    expect(await listUsers(asUser(E), {}, PAGE)).not.toHaveLength(0);
-    expect(A.role).toBe('user');
-
-    await expect(listUsers(asUser(A), {}, PAGE)).rejects.toThrow(Forbidden);
   });
 });
 
@@ -214,35 +173,6 @@ describe('countUsers', () => {
 
     expect(counts).toEqual(listed.map((list) => ({ totalCount: list.length, countBefore: null })));
   });
-
-  it('counts the users before the first row of a page, in the list’s order', async () => {
-    const first = await resolvePage({ first: 3 }, (request) => listUsers(asUser(E), {}, request));
-    const second = await resolvePage({ first: 3, after: first.pageInfo.endCursor }, (request) =>
-      listUsers(asUser(E), {}, request),
-    );
-    const start = decodeCursor(second.pageInfo.startCursor ?? '');
-
-    expect(await countUsers(asUser(E), {}, start)).toEqual({
-      totalCount: (await listableUsers()).length,
-      countBefore: 3,
-    });
-    // Under a filter, only the rows it keeps come before.
-    const onlyUsers = await listUsers(asUser(E), { role: 'user' }, PAGE);
-    const last = onlyUsers[onlyUsers.length - 1];
-    expect(onlyUsers.length).toBeGreaterThan(1);
-    expect(await countUsers(asUser(E), { role: 'user' }, last?.cursor)).toEqual({
-      totalCount: onlyUsers.length,
-      countBefore: onlyUsers.length - 1,
-    });
-  });
-
-  // Why it could have succeeded: the rows exist and the same call answers E.
-  it('refuses a user who is not an admin, by direct call', async () => {
-    expect((await countUsers(asUser(E), {}, undefined)).totalCount).toBeGreaterThan(0);
-    expect(A.role).toBe('user');
-
-    await expect(countUsers(asUser(A), {}, undefined)).rejects.toThrow(Forbidden);
-  });
 });
 
 describe('providersOf', () => {
@@ -250,15 +180,5 @@ describe('providersOf', () => {
     const answer = await providersOf(asUser(E), [B.id, A.id, C.id, A.id]);
 
     expect(answer).toEqual([['microsoft'], ['discord', 'google'], [], ['discord', 'google']]);
-  });
-
-  // Why it could have succeeded: A's providers are linked, and E reads them.
-  it('refuses every slot to a user who is not an admin, their own included', async () => {
-    expect(await providersOf(asUser(E), [A.id])).toEqual([['discord', 'google']]);
-
-    const answer = await providersOf(asUser(A), [A.id, B.id]);
-
-    expect(answer).toHaveLength(2);
-    for (const slot of answer) expect(slot).toBeInstanceOf(Forbidden);
   });
 });

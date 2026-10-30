@@ -1,15 +1,6 @@
 import type { CSSProperties, ReactElement, ReactNode } from 'react';
 
-/**
- * The panel that holds a box's listbox and, beneath it, its message when
- * there is nothing to list: the one element that is placed, so the two move
- * together. Unwrapped (a typed box that says nothing, `empty={false}`), it
- * is the listbox alone, placed itself, as it always was. Downshift counts
- * only the input, the toggle and the listbox as inside, and closes on a
- * press anywhere else, the message included. The popup does not scroll:
- * Downshift scrolls a highlighted row into view within the listbox element,
- * so the listbox is the scroller and the popup only the panel.
- */
+/** The one placed panel holding a box's listbox and, beneath it, its empty message, so the two move together (claude-docs/components/combobox.md, "The popup"). */
 export function Popup({
   wrapped,
   popupRef,

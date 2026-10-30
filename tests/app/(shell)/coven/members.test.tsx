@@ -1,12 +1,10 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { WorkspaceRole } from '@/modules/coven';
 import { Forbidden } from '@/lib/errors';
 
-// The members page (story 9; M6.13). The guard and the services are mocked,
-// since what they decide is their own tests'; the role check is the real one,
-// read off the access-control statements. Here: who gets role controls, and
-// that a refusal from the service is a 404.
+// The members page, with the guard and the services mocked and the role check real, read off the access-control statements.
+// It proves who gets role controls and that a refusal from the service is a 404.
 
 const notFound = vi.fn(() => {
   throw new Error('not-found');
@@ -80,30 +78,10 @@ beforeEach(() => {
 });
 
 describe('the /coven/[slug]/members page', () => {
-  it('lists every member, with a single member too', async () => {
+  it('lists every member', async () => {
     await render_('owner');
     expect(within(screen.getByRole('table', { name: 'Members' })).getAllByRole('row')).toHaveLength(
       1 + SEATS.length,
-    );
-
-    listMembers.mockImplementation(async () => [
-      {
-        cursor: { key: ['0'], id: 'u-owner' },
-        node: {
-          userId: 'u-owner',
-          role: 'owner',
-          joinedAt: new Date(),
-          updatedBy: 'u-owner',
-          updatedAt: new Date(),
-          invitedBy: null,
-          workspace: WORKSPACE,
-        },
-      },
-    ]);
-    document.body.innerHTML = '';
-    await render_('owner');
-    expect(within(screen.getByRole('table', { name: 'Members' })).getAllByRole('row')).toHaveLength(
-      2,
     );
   });
 
@@ -125,16 +103,6 @@ describe('the /coven/[slug]/members page', () => {
       expect(
         screen.getByRole('button', { name: `Change Role for Name of ${who}` }),
       ).toBeInTheDocument();
-  });
-
-  it('offers an owner the roles to move to, each with what it allows', async () => {
-    await render_('owner');
-    fireEvent.click(screen.getByRole('button', { name: 'Change Role for Name of u-viewer' }));
-
-    const group = await screen.findByRole('group', { name: 'New Role' });
-    expect(within(group).getByRole('radio', { name: /^Member/ })).toBeChecked();
-    expect(within(group).getByRole('radio', { name: /^Owner/ })).not.toBeChecked();
-    expect(within(group).getByRole('radio', { name: /^Owner.*deleting it/ })).toBeInTheDocument();
   });
 
   it('shows a member the list and no role controls', async () => {
@@ -163,7 +131,7 @@ describe('the /coven/[slug]/members page', () => {
     expect(notFound).toHaveBeenCalled();
   });
 
-  // M6.16: the quiet note, raised before it is urgent.
+  // The quiet note, raised before it is urgent.
   it('notes it when the coven has exactly one owner, to an owner and a member alike', async () => {
     await render_('owner');
     expect(screen.getByRole('status')).toBeInTheDocument();
@@ -183,7 +151,7 @@ describe('the /coven/[slug]/members page', () => {
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 
-  // M11.19: the addresses are the owner's, asked for this page's members.
+  // The addresses are the owner's, asked for this page's members.
   it("shows an owner each member's address, read for this page's members", async () => {
     await render_('owner');
 

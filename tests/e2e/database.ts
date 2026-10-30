@@ -2,10 +2,9 @@ import { cloneDatabase, databaseUrl, dropDatabase, seedTemplate } from '../suppo
 import { SESSION_COOKIE, signed } from './session-cookie';
 import { E2E_SLOTS, currentSlot, serverUrl, slotPort } from './slots';
 
-// One database per worker slot, which that slot's server reads: global-setup.ts
-// builds the seeded template once per run and clones every slot's database
-// from it, each db-touching spec file recreates its own slot's in its
-// `beforeAll`, and global-teardown.ts drops the template.
+// One database per worker slot, which that slot's server reads: global-setup.ts builds the seeded template
+// once per run and clones every slot's database from it, each db-touching spec file recreates its own
+// slot's in `beforeAll`, and global-teardown.ts drops the template.
 const E2E_TEMPLATE = 'sorrel_e2e_template';
 /** The configured-providers server's, which no spec reseeds. */
 export const CONFIGURED_PROVIDERS_DATABASE = 'sorrel_e2e_providers';
@@ -23,7 +22,7 @@ export function e2eDatabaseUrl(database = slotDatabase(currentSlot())): string {
 
 /** Once per run. */
 export async function seedE2eTemplate(): Promise<void> {
-  await seedTemplate(E2E_TEMPLATE);
+  await seedTemplate(E2E_TEMPLATE, { demoCoven: true });
 }
 
 /** Once per run, after the template: every slot's database, the providers server's and the cache server's. */
@@ -35,19 +34,11 @@ export async function cloneE2eDatabases(): Promise<void> {
 }
 
 /**
- * Between spec files: the calling worker's slot database back to the seeded
- * baseline, and the slot's server told so. `DROP DATABASE ... WITH (FORCE)`
- * kills the server's pooled connections, but the server learns of it only when
- * its event loop reads each socket's close. A request landing first writes its
- * query to a dead socket and fails (CONNECTION_CLOSED, EPIPE or 57P01), a 500
- * on whichever test is first to load a page. So a burst of session lookups, the
- * query every signed-in page opens with, goes to the server before this
- * returns: each dead connection fails here, where nothing is watching, and the
- * pool replaces it. The burst repeats until every request answers 200. Not a
- * pause: no wait is long enough to promise the close has been read. If five
- * bursts in a row still fail, it throws, naming the status codes of the last
- * burst, so that a different server fault surfaces here rather than as a
- * confusing 500 in the file's first test.
+ * Between spec files: the worker's slot database back to the seeded baseline, and the slot's server told so.
+ * `DROP DATABASE ... WITH (FORCE)` kills the server's pooled connections, but the server learns of it only when
+ * its event loop reads each socket's close; a request landing first fails (CONNECTION_CLOSED, EPIPE or 57P01).
+ * So bursts of session lookups go out before this returns, each dead connection failing here, until every
+ * request answers 200; after five failing bursts it throws with the last statuses.
  */
 export async function recreateE2eDatabase(): Promise<void> {
   const slot = currentSlot();

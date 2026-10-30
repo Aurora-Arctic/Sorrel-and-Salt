@@ -1,12 +1,7 @@
 import { type CSSProperties, type TransitionEvent, useEffect, useState } from 'react';
 
-// A section that slides open and shut by height (grid rows, 0fr to 1fr), the Baseline way
-// to animate an `auto` height. Its content is in the page, whole, from the first frame of
-// the slide down until the height transition has ended: it is never faded and never
-// unmounted early, so the text stays readable through the slide. The state stays
-// "closing" (so a `<details>` or `<dialog>` keeps its `open`) until the transition's own end
-// event; a timer a little longer than the transition is only the net for a transition that
-// never ran. Reduced motion goes straight to the end state.
+// A section that slides open and shut by height (grid rows, 0fr to 1fr), the Baseline way to animate `auto`. Its content is in the page, whole, throughout, never faded or
+// unmounted early. The state stays "closing" until the transition's own end event, so a `<details>` or `<dialog>` keeps its `open`; a longer timer is the net for one that never ran.
 
 /** The slide's length; the same number is the CSS transition, set through `--slide-ms`. */
 export const SLIDE_MS = 350;

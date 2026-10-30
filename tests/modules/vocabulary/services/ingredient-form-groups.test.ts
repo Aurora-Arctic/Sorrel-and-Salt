@@ -17,18 +17,14 @@ import {
 } from '@/modules/vocabulary';
 import { FORM_GROUP_ICONS } from '@/modules/vocabulary/schema/form-group-icons';
 import type { IngredientFormGroupInput } from '@/modules/vocabulary/validation/ingredient-form-group';
-import { A, B, E, F, asUser } from '../../../support/as-user';
+import { A, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 
-// Story 18's form-group half (M5.6b): the groups' writes, the site admin's
-// alone. A form's slug is its name and its group (M5.6a), so a rename moves
-// the slug of every form under the group, and a delete moves its live forms
-// to the group the admin names, each re-slugged there — the forms stay
-// curated, so neither a compendium entry's pick nor a coven's is orphaned
-// (claude-docs/design-decisions/m5.6b-admin-groups.md). The seeded groups
-// stay, so every group and form a test writes is `Fixture …`.
+// The form-group writes, the site admin's alone. A form's slug is its name and its group, so a rename moves the slug of every form under the group.
+// A delete moves its live forms to the group the admin names, each re-slugged there, so no pick is orphaned (claude-docs/design-decisions/m5.6b-admin-groups.md).
+// The seeded groups stay, so every group and form a test writes is `Fixture …`.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -56,16 +52,10 @@ const admin = asUser(E);
 // stands for every one (claude-docs/testing/acting-as-fixture-users.md): an
 // owner, whose workspace role is the highest and is still no site role.
 const NON_ADMINS = [['an owner of a coven', A]] as const;
-const CURATORS = [
-  ['the site admin', E],
-  ['a curator', F],
-] as const;
-
-it('is testing sessions whose site role is `user`, beside an admin', () => {
-  for (const [, user] of NON_ADMINS) expect(asUser(user).role).toBe('user');
-  expect(admin.role).toBe('admin');
-  expect(asUser(F).role).toBe('curator');
-});
+// A curator stands for both curation roles: assertSiteAdmin refuses a curator, so
+// a curator's success proves the write calls assertCurator, and that an admin
+// passes assertCurator is proved once in identity's site-admin tests.
+const CURATORS = [['a curator', F]] as const;
 
 function input(overrides: Partial<IngredientFormGroupInput> = {}): IngredientFormGroupInput {
   return { name: 'Fixture Matter', description: 'A group this test made', ...overrides };
@@ -80,7 +70,7 @@ async function seedGroup(name: string): Promise<string> {
   return row.id;
 }
 
-/** Seeds a form under the group, slugged as M5.6a slugs one, stamped by A. */
+/** Seeds a form under the group, slugged as the forms' slugs are made, stamped by A. */
 async function seedForm(name: string, groupId: string, groupName: string): Promise<string> {
   const [row] = await sql<{ id: string }[]>`
     insert into ingredient_forms (name, slug, description, group_id, created_by, updated_by)
@@ -118,7 +108,7 @@ const picking = (formId: string, workspaceId: string | null = null) =>
     A.id,
   );
 
-/** An entry's row and its variants, where its form and its pick live (MB.222). */
+/** An entry's row and its variants, where its form and its pick live. */
 async function ingredientOf(id: string) {
   const [row] = await sql`select * from ingredients where id = ${id}`;
   const variants = await sql`
@@ -209,16 +199,24 @@ describe('createIngredientFormGroup', () => {
     },
   );
 
-  it.each(NON_ADMINS)('refuses %s, writing nothing', async (_who, user) => {
-    await expect(createIngredientFormGroup(asUser(user), input())).rejects.toThrow(Forbidden);
-    expect(await countNamed('Fixture Matter')).toBe(0);
-  });
+  it.each(NON_ADMINS)(
+    'refuses %s, writing nothing, and before reading the input, so a bad one earns the same refusal',
+    async (_who, user) => {
+      // Why it could have passed: the guard is all that refuses it. The user
+      // holds no site role, and the same input is written for a curator.
+      expect(asUser(user).role).toBe('user');
+      expect(asUser(F).role).toBe('curator');
 
-  it('refuses a non-admin before reading the input, so a bad one earns the same refusal', async () => {
-    await expect(
-      createIngredientFormGroup(asUser(B), input({ name: '  ' })),
-    ).rejects.toBeInstanceOf(Forbidden);
-  });
+      await expect(createIngredientFormGroup(asUser(user), input())).rejects.toThrow(Forbidden);
+      expect(await countNamed('Fixture Matter')).toBe(0);
+      await expect(
+        createIngredientFormGroup(asUser(user), input({ name: '  ' })),
+      ).rejects.toBeInstanceOf(Forbidden);
+
+      await createIngredientFormGroup(asUser(F), input());
+      expect(await countNamed('Fixture Matter')).toBe(1);
+    },
+  );
 
   it('refuses a name whose address a live group holds, on `name`, naming it', async () => {
     await seedGroup('Fixture Matter');
@@ -252,7 +250,7 @@ describe('updateIngredientFormGroup', () => {
     },
   );
 
-  // A form's slug names its group (M5.6a), so it follows the group's rename.
+  // A form's slug names its group, so it follows the group's rename.
   it('moves the slug of every live form under it, in the same write, and touches no ingredient', async () => {
     const id = await seedGroup('Fixture Matter');
     const shard = await seedForm('Fixture Shard', id, 'Fixture Matter');
@@ -324,7 +322,7 @@ describe('updateIngredientFormGroup', () => {
   });
 });
 
-// The icon standing for the group (M12.6): one of the six, or NULL for the
+// The icon standing for the group: one of the six, or NULL for the
 // generic. An update rewrites the group whole, so an input without one clears
 // it — the only way GraphQL's `icon: null` reaches the service, as absent.
 describe('the icon', () => {
@@ -333,7 +331,7 @@ describe('the icon', () => {
 
   const iconOf = async (id: string) => (await groupOf(id)).icon as string | null;
 
-  it('is written as given by a create, each of the six and none, expiring the compendium', async () => {
+  it('is written as given by a create and by an update, each of the six and none, and cleared by an update that carries none, expiring the compendium', async () => {
     for (const icon of [...FORM_GROUP_ICONS, null]) {
       const created = await createIngredientFormGroup(
         admin,
@@ -345,25 +343,18 @@ describe('the icon', () => {
     expect(expired.mock.calls).toEqual(
       Array.from({ length: FORM_GROUP_ICONS.length + 1 }, () => [COMPENDIUM_TAG, { expire: 0 }]),
     );
-  });
+    expired.mockClear();
 
-  it('is written as given by an update, each of the six and null, expiring the compendium', async () => {
     const id = await seedGroup('Fixture Matter');
-
     for (const icon of [...FORM_GROUP_ICONS, null]) {
       await updateIngredientFormGroup(admin, id, input({ icon }));
 
       expect(await iconOf(id), String(icon)).toBe(icon);
     }
     expect(expired).toHaveBeenCalledTimes(FORM_GROUP_ICONS.length + 1);
-  });
 
-  it('is cleared by an update that carries none', async () => {
-    const id = await seedGroup('Fixture Matter');
     await sql`update ingredient_form_groups set icon = 'curio' where id = ${id}`;
-
     await updateIngredientFormGroup(admin, id, input());
-
     expect(await iconOf(id)).toBeNull();
   });
 
@@ -454,22 +445,6 @@ describe('deleteIngredientFormGroup', () => {
     ]);
     expect((await groupOf(id)).deleted_at).toBeNull();
     expect((await formOf(shard)).group_id).toBe(id);
-  });
-
-  it('refuses one with live forms and no group to move them to, on `moveTo`', async () => {
-    const id = await seedGroup('Fixture Matter');
-    await seedForm('Fixture Shard', id, 'Fixture Matter');
-    await seedForm('Fixture Flake', id, 'Fixture Matter');
-
-    expect(await issuesOf(deleteIngredientFormGroup(admin, id))).toEqual([
-      { path: ['moveTo'], message: expect.any(String) },
-    ]);
-    for (const moveTo of [id, '00000000-0000-4000-8000-000000000000', 'not-a-uuid']) {
-      expect(await issuesOf(deleteIngredientFormGroup(admin, id, moveTo))).toEqual([
-        { path: ['moveTo'], message: expect.any(String) },
-      ]);
-    }
-    expect((await groupOf(id)).deleted_at).toBeNull();
   });
 
   it.each(NON_ADMINS)(

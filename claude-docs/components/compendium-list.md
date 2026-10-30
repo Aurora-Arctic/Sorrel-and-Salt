@@ -22,7 +22,7 @@ resolves through, rather than one read per row.
 | Prop           | What it is                                                                                                                                                                                                     |
 | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `entries`      | This page's `CompendiumListEntry` rows, in the service's order                                                                                                                                                 |
-| `filter`       | `{ query, forms, withoutReferences, withoutForms, elements, categories, categoryMode, deities, zodiac, celestialBodies, toxic }`, as asked                                                                     |
+| `filter`       | `{ query, forms, withoutReferences, withoutForms, elements, categories, categoryMode, deities, zodiac, celestialBodies, toxic, reviewed }`, as asked; `reviewed` (M14.8) on the admin list only                |
 | `categories`   | Every live category the Categories picker offers, `{ id, slug, name, group }` each                                                                                                                             |
 | `facets`       | `CompendiumFacetCounts`: each facet's choices as `{ value, label, count }`, under the filter shown (`facets.ts`)                                                                                               |
 | `vocabulary`   | `{ deities, formIcons }`: every live deity with its id, slug, name and tradition, and each curated form's group icon by folded name. The open panel needs them to turn a live answer back into labelled counts |
@@ -48,6 +48,7 @@ different groups, so the page offers each name once, whatever its case.
 ## Contracts
 
 - **The public page shares the filter.** `CompendiumListFilter` takes `audience` (`'admin'`, the default, or `'public'`). The public audience filters at `/compendium`, draws no No Refs control and no Classification facet, and words its empty sentence through the exported `emptyText(..., whenEmpty)`. The cards that page draws are [`compendium-cards.md`](compendium-cards.md).
+- **In My Covens, on the public page alone (M12.55).** `CompendiumListFilter` takes `covens`, the viewer’s covens as `{ id, name }`, every membership a viewer’s included, and hands them to [`FacetPanel`](facet-panel.md), which draws In My Covens on the line with Forms and Toxic, after both, with its In / Not In choice beside it (the owner's call, 2026-10-23; Forms and Toxic one half and In My Covens and the choice the other from the tablet width, stacked Forms, Toxic, In My Covens below it, as every line of the panel is), as a combobox of the covens by name with no counts. Picked, the list holds only the entries a cupboard of any one of them holds (a live `workspace_compendium_entries` row); none picked filters nothing. The address carries the ids as a repeated `covens` parameter (`COMPENDIUM_PARAMS.covens`, `textListParam('covens', 'covenIds')`), which counts as a filter, so the page is `noindex`. Beside the field a Covens choice chip turns it to Not In, kept in the address as `covensNot=1` (`COMPENDIUM_PARAMS.covensNot`) and absent for In: with covens picked the list holds only the entries none of them holds, and with none picked only the entries none of the viewer's covens holds, every membership counted. Removing the last picked coven switches the choice back to In (the owner's call, 2026-10-23), so the address drops `covensNot` with it; only Not In chosen with none picked reads "not held in any of my covens". The live counts ask `compendiumFacets` with `covensNot` too. The sentence names them "held in A or B", or under Not In "not held in A or B", or "not held in any of my covens" with none picked ([`ingredient-search.md`](ingredient-search.md), "The search sentence"). The page passes no `covens` for a visitor or an account in no coven, and the admin and coven lists pass none, so the field is not drawn there. How the page reads the narrowed list is [`compendium-cards.md`](compendium-cards.md), "In My Covens".
 - **A coven’s Ingredients page shares it too (M9.6).** `audience="coven"`, with `covenSlug` and `workspaceId`, filters at `/coven/<slug>/ingredients` (`covenIngredientsHref`, `href.ts`), is labelled Filter Ingredients, and draws no No Refs control and no Classification facet. The filter it is given also carries `source`, `inStock` and `lowStockOnly`, so the panel draws Source, In Stock and Low Stock Only. The name search suggests from the coven’s cupboard and a pick opens `/coven/<slug>/ingredients/<id>`. The live counts ask `workspaceIngredientFacets` (the `CovenFacetCounts` document) with `workspaceId`, and the sentence names the three choices. The cards are [`coven-cards.md`](coven-cards.md).
 
 - **The filter is a GET form to `/admin/compendium`** (`COMPENDIUM_PATH`, `href.ts`; MB.178),
@@ -69,9 +70,12 @@ different groups, so the page offers each name once, whatever its case.
   builds the address from the filter shown with the name typed (trimmed) and every facet
   set over it (`hrefFor`, through `COMPENDIUM_PARAMS.changed`, which drops the cursor).
   The lists are repeated parameters, categories and deities are slugs, No Refs is
-  `withoutReferences=1`, No Form (M12.30, the entries with no live form) is `withoutForms=1`, and `categoryMode` is written only from two categories up.
-  Picking a name in the dropdown instead opens that entry's `?edit=` modal over the filter
-  as shown, the text typed not applied (the owner's call, M8.10).
+  `withoutReferences=1`, No Form (M12.30, the entries with no live form) is `withoutForms=1`, Reviewed (M14.8, the admin's) is `reviewed=1` or `reviewed=0`, and `categoryMode` is written only from two categories up.
+  Picking a name in the dropdown instead opens that entry's Quick Look (`?entry=`) over the
+  list as shown, the filter and the page (`cursor`) kept and the text typed not applied, on
+  all three lists: by slug on the admin's, by id on the public and the coven's lists, as
+  each list's eye opens it (the owner's rule of 2026-10-27, from the M10.11 review; it replaced M8.10's `?edit=` modal on the
+  admin list). Closing it goes back to the same page.
 - **Before hydration** the dialog is drawn open inside the form, each facet a native
   control under the name the parameter table reads (forms and the other lists as
   `<select multiple>`, categories as the native `Categories` select, Match and Toxic as
@@ -118,8 +122,8 @@ different groups, so the page offers each name once, whatever its case.
   there because it is the entry's identity: two rows can share a label,
   never a formal name.
 - **An empty list says why, with no table.** With no filter the compendium
-  itself is empty, and the paragraph says how to begin it: "The compendium is
-  empty. Add the first entry with Add Ingredient." A filtered list with no
+  itself is empty, and the paragraph says how to begin it: "There are no
+  ingredients yet. Add the first with Add Ingredient." A filtered list with no
   rows names each filter in use, so an admin sees what to change, then says
   to change or clear it: "No entries match “wort”, the form “Oil”, the
   classification Botanical and No Refs. Change or clear the
@@ -134,6 +138,10 @@ different groups, so the page offers each name once, whatever its case.
 
 **MB.215: the Form column lists the entry's forms.** Once an entry's forms are its variants (DESIGN.md §5), MB.222 made the Form column list its live forms, "Herb, Oil", with the em dash for an entry with none, and its rows carry their forms rather than one. Each Edit is named for the entry's label and formal name rather than its form, since identity is the formal name alone. An entry with no form is flagged on the admin's to-do list (M8.18; [`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
 
+## The Reviewed filter (M14.8)
+
+The admin list filters by a curator's review mark: the panel's Reviewed chip ([`facet-panel.md`](facet-panel.md)) writes `?reviewed=1` for the entries a curator has reviewed and `?reviewed=0` for the ones still needing review, and the sentence names it ("reviewed by a curator", "needing review"). The admin page passes the curator's session to `listCompendium`, `countCompendium` and `compendiumFacets`, since the service refuses the filter, and leaves out the counts, for anyone who does not curate ([`../db/compendium-read.md`](../db/compendium-read.md)). The public list and a coven's list carry no `reviewed`. The entry's own mark and the switch that sets it are in its details ([`ingredient-entry.md`](ingredient-entry.md), "The details modal").
+
 ## The panel's counts
 
 While something is held, the options, segments and chips show what the filter as held
@@ -145,6 +153,7 @@ as variables, built through `COMPENDIUM_PARAMS.variables` from the `categories` 
 never shown, and keeps the previous answer on screen while the next comes. The chips show
 their placeholder while the ask is out. `compendiumFacetCounts` turns the answer into the
 same labelled counts the page draws, using `vocabulary` for deity names and form icons.
+With covens held, the variables carry `covenIds`, and the service proves each id against the session the request carries, so the counts are of the entries those covens hold; with none, the answer is the cached, public one.
 The ask is off while the held filter equals the applied one, so the page's own counts
 show then. A failed ask leaves the page's counts in place. No resolver needed a
 DataLoader: the query is one request per ask.
@@ -168,19 +177,11 @@ mineral's or a chemical's name is not, and the row does not carry its kind.
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/CompendiumList/index.stories.tsx),
-`Admin / Compendium List`: `OnePageOfSeveral`, `FirstPage`, `Filtered`,
-`NoMatch` and `Empty`, and `PhoneDark` and `PhoneLight`, the middle page at
-375px with every row a card, and `FilteredPhoneDark` and `FilteredPhoneLight`,
-`Filtered` at 375px with the Filters button and Clear All. The filter shows a deity, categories, forms and elements. Every story is the page as
-`/admin/compendium` draws it: the admin layout's frame with the Compendium
-page current in its nav, then a `main` holding the page header with Add
-Ingredient, then the list. The filter reaches `/admin/compendium`, which the
-workshop does not serve. Render-only, no test ids, no snapshots.
+[`index.stories.tsx`](../../src/components/CompendiumList/index.stories.tsx), `Ingredients / Compendium List`: one story, `States`, with a control that chooses Default (a middle page), First Page, Filtered, Chosen Values Counted, No Matches, Empty, Zodiac And Bodies Chosen, Without Forms, Match All Categories, Last Page, Single Page and Filter Panel Open. At 375px, from the toolbar viewport menu, every row is a card and Filtered shows the Filters button and Clear All. The filter shows a deity, categories, forms and elements. Every state is the page as `/admin/compendium` draws it: the admin layout's frame with the Compendium page current in its nav, then a `main` holding the page header with Add Ingredient, then the list. The filter reaches `/admin/compendium`, which the workshop does not serve. Render-only, no test ids, no snapshots.
 
 ## Testing
 
-`tests/components/CompendiumList/index.test.tsx` covers the rows, the Edit links and their names, no table when there are none, the Filters count (chosen values, not the name), Clear All only while a facet is in use, the form the server drew sending the name and every facet (categories included), the address a panel change or the Search submit pushes (name typed and every facet carried, No Refs as `1`, Match left out below two categories), a picked name opening its modal over the filter shown, the loading state (list gone, row `aria-busy`, controls `aria-disabled`, a second change refused), a change held until Apply Filters applies them all in one push, Escape applying and a close with no change pushing nothing, a count in the panel updating after a change before Apply, Clear All applying at once, the form kept through a facet change and drawn afresh for a new name, the panel following the address, the sentence naming deities (with the tradition only for a shared name) and categories without links, and `compendiumHref`. The browser flows are `tests/e2e/admin-compendium.spec.ts`. `tests/app/(shell)/admin/compendium/page.test.tsx`
+`tests/components/CompendiumList/index.test.tsx` covers the rows, the Edit links and their names, no table when there are none, `compendiumHref`, and what the list does while a filter or a page is on its way: the loading state (list gone, row `aria-busy`, controls `aria-disabled`, a second change refused), the list left in place while a name is typed, and the sentence typed for a filter but left settled for a pager press. `tests/components/CompendiumList/filter.test.tsx` renders the filter row and its sentence without the table, through `IngredientSearch` as the list does, and covers the rest: the form the server drew sending the name and every facet (categories included), the address a panel change or the Search submit pushes (name typed and every facet carried, No Refs and No Form as `1`, Match left out below two categories), a picked name opening its modal over the filter shown, a change held until Apply Filters applies them all in one push, a close with no change pushing nothing, a count in the panel updating after a change before Apply, Clear All applying at once, the form kept through a facet change and drawn afresh for a new name, the panel following the address, In My Covens, and the sentence naming deities (with the tradition only for a shared name) and categories. The Filters count and when Clear All is drawn are FacetPanel's (`tests/components/FacetPanel/index.test.tsx`). The fixtures and the row's controls both files use are `tests/support/compendium-list.tsx`. The browser flows are `tests/e2e/admin-compendium.spec.ts`. `tests/app/(shell)/admin/compendium/page.test.tsx`
 covers the page's side: `?forms=` read trimmed into the list and its count,
 blank as none, the facet read under the same variables as the list, deities mapped from slugs to ids, zodiac, celestial bodies and toxic, kept on every Edit, the pager, Add Ingredient and the
 redirect, and the forms read past their first page, each name once. The Categories picker (M8.11) is covered in the component test (entries shown, an unknown slug not shown, hidden inputs, repeated slugs applied and removed, the typed name carried, other controls keeping the categories, one announcement, focus kept) and, on the page, by slugs mapped to ids, an unknown slug dropped, and the categories read past their first page.
@@ -191,3 +192,36 @@ redirect, and the forms read past their first page, each name once. The Categori
 - **The Categories column has a floor where the table is wide.** At a frame of 75rem or more the column is at least 16.75rem of content (plus the cell inset), measured against the widest row of chips any of the 313 seeded entries shows with the final compact, dot-less chips: Aspen's Ancestor Work and Communication with its +8 button, 266px (16.625rem), rounded up to the next 0.25rem. Narrower, the floor does not apply and the table scrolls instead of wrapping the chips; as a card the rule never applies.
 - **A row stays on one line while the table is a table** (2026-10-19, the owner's call). The table takes `data-table--nowrap`, so no cell wraps and the table scrolls sideways in its frame. That class alone does not hold the two flex rows, so the Form column's `.compendium-list__forms` and the Categories cell's chip row are set to `flex-wrap: nowrap` too (the chip rule is scoped to the Categories cell, so cards elsewhere still wrap). As a card (the frame under `$table-stack-width`) the cells, the forms and the chips all wrap again.
 - **The dot between forms is centred on the form's own box** (`inset-block: 0; margin-block: auto`), and the table's form wrapper is a flex box so that box is as tall as the form. Measured in Chromium: the dot's centre equals the icon's centre on the card and in the table; the lowercase x-height centre sits 0.5px (card) and 1.5px (table) lower.
+
+## The compendium page
+
+`src/app/(public)/compendium/page.tsx` draws the list per request over the cached reads (`readCompendium` and the rest take no session), so every card and link is in the server HTML. The viewer is asked only for the foot of each card, and never redirects (M8.18, MB.80).
+
+- **Curator Edit (M8.17).** A curator (`canCurate`) gets Edit on each card, which opens the compendium's edit dialog over the results from `?edit=<slug>` and closes back to the same search. `?edit=` is read only once the viewer is known to curate; for anyone else it opens nothing and reads nothing. The list's reads stay the cached, sessionless ones, keyed by the address alone (rule 6).
+- **Filters the page drops (M14.8).** The address carries the admin list's filters bar three: No Refs, No Form and Reviewed are the curators' to-do lists, so `?withoutReferences=1`, `?withoutForms=1` and `?reviewed=` are dropped before the table reads them. The services refuse a review filter from anyone who does not curate, so dropping it is what keeps the page from failing on one.
+- **In My Covens and Not In (M12.55).** In My Covens narrows the list to the entries the viewer's picked covens hold, any role. Not In (`?covensNot=1`) narrows it to the entries none of them holds, or with none picked, none of the viewer's covens. Only then, and only with a session, the list and its counts are read through the uncached held-in reads, which prove each coven and drop the rest (reading the cached ones when every coven is dropped). Otherwise, and for a visitor whatever the address says, the reads are the cached ones. Each card's plus or check counts and names every coven of the viewer's that holds the entry, including the ones they only view.
+- **Quick Look (M12.5).** Each card's Quick Look, for anyone, opens the entry's details over the results from `?entry=<id>`, read by id with no session through the public entry page's cached read: the compendium as the compendium has it, with no coven's label, annotations or held state. An id naming no compendium entry (a coven's own included) opens nothing and says nothing. A curator's Edit in the details opens the edit dialog over them and closes back to them.
+
+## The filter row
+
+The filter row is the name search, then the Filters (n) button with its Clear All link and the panel of facets it opens. Above the results sits the search sentence that says what the list is searching for.
+
+The panel covers the results, so a change in it is held and nothing applies until it shuts. Apply Filters, Escape and every other close apply the held facets in one soft navigation (Back steps through, reload restores), and nothing held is thrown away. While the panel is open its counts follow the held filter (`live-facets.ts`) and the list and the sentence do not move. Clear All, which sits where the page is in view, applies at once.
+
+Before hydration the panel is drawn open inside the GET form. Each facet is a native control under the name the parameter table reads, and Apply Filters (or Enter in the search box) submits them all.
+
+Picking a name in the search box's dropdown opens that entry's Quick Look over the list as it is shown, with its page kept and the typed text not applied. This holds for every list with a Quick Look. The row has no Clear of its own.
+
+A coven's list (`audience="coven"`) is the same row on `COVEN_PARAMS`. It adds the Source, In Stock and Low Stock Only choices, reads its live counts from the coven's cupboard, and suggests from it.
+
+## Facet choices and their order
+
+`types.ts` carries every filter's choices with their counts, read for the filter the page shows (the compendium's `compendiumFacets`, public like the list). Each list is in the order to offer them. Forms, deities and categories go most entries first, then by label, and hold only the values some entry carries plus the ones chosen, which sit at zero if no entry carries them. Signs, celestial bodies and elements list all of them, zeros included, in the vocabulary's order. Toxic comes as toxic, then not toxic.
+
+## The empty list
+
+The empty list names the filters in use so an admin sees what to change: "No entries match “wort”, the form “Oil” and the element Fire. Change or clear the filter to see more." With no filter it says how to begin the compendium. It is a node because the values are bold. `noMatchText` stays the string form for the other admin lists, and both build from `noMatchLead` and `NO_MATCH_ADVICE`.
+
+## The Categories column floor
+
+The Categories column has a floor width: the widest row of chips any seeded entry shows, measured in Chromium at a 16px root with the final compact, dot-less chips. That row is Aspen's Ancestor Work and Communication with its +8 button and the row's 4px gaps, 266px (16.625rem), rounded up to the next 0.25rem. The cell's own inset is added on each side. The floor applies only where the table is wide. Below that the table scrolls rather than wraps its chips, so the floor keeps the column from being squeezed under them. As a card (under `$table-stack-width`) it never applies and the chips wrap.

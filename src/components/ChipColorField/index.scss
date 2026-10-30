@@ -1,21 +1,9 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// Every rule here that overrides a primitive's own property — an input's width
-// or padding, a button's padding, a hint's colour or margin — is scoped under
-// the field: the app emits the primitives under `body`, which outranks a lone
-// class, where the workshop wraps them in `:where()` and hides the difference.
-//
-// The colour picker's own layout and geometry: the area, its veil, edge and
-// label, the hue slider, the grid of channels, hex, format toggle and Match,
-// the two sample grounds and the field's notices. Each ground is its theme's
-// harder surface whatever the page's theme, since that is the surface the
-// ratio beneath it is measured on (MB.36), and the veil's label sits over
-// colours of every kind, so it carries a ground of its own.
-//
-// A raw length here is the picker's own geometry, on no scale: the area's
-// height, the thumbs, the hatching, the hex column and the rules. Each says
-// so where it is set (claude-docs/styling.md, "Spacing").
+// The colour picker's layout and geometry. A rule overriding a primitive is scoped under the field,
+// as the app emits primitives under `body`; raw lengths are the picker's own, on no scale
+// (claude-docs/components/chip-color-field.md, "Styling"; claude-docs/styling.md, "Spacing").
 
 // The veil's sentence, under the field's label and just above the area.
 .chip-color-field .chip-color-field__veil-hint {
@@ -28,9 +16,7 @@
 }
 
 .chip-color-field__picker {
-  display: flex;
-  flex-direction: column;
-  gap: space(2);
+  @include stack(2);
 }
 
 // The picker sizes nothing itself: the area takes the field's width and a
@@ -52,9 +38,8 @@
   border-radius: inherit;
 }
 
-// The low-contrast side, veiled in its ground: strong enough to read as off
-// limits at a glance, with the colours still faintly through it (the
-// owner's calls).
+// The low-contrast side, veiled in its ground: strong enough to read as off limits
+// at a glance, with the colours still faintly through it.
 .chip-color-field__veil {
   position: absolute;
   inset: 0;
@@ -63,10 +48,9 @@
   pointer-events: none;
 }
 
-// A fine hatching through each veil, a shade off its ground in the ground's
-// own direction: darker on the dark card, lighter on the light page (the
-// owner's call). Drawn under the veil's own opacity, so it stays faint. The
-// line and its spacing are the hatching's own geometry, on no scale.
+// A fine hatching through each veil, a shade off its ground in the ground's own
+// direction: darker on the dark card, lighter on the light page. Drawn under the
+// veil's own opacity, so it stays faint.
 .chip-color-field__veil--dark {
   background-image: repeating-linear-gradient(135deg, $soot 0 1.5px, transparent 1.5px 7px);
 }
@@ -79,8 +63,8 @@
   );
 }
 
-// The veil's edge: a fine solid line in its veil's own key, iron-gall on the
-// dark card's veil and chalk on the light page's (the owner's call).
+// The veil's edge: a fine solid line in its veil's own key, iron-gall on the dark
+// card's veil and chalk on the light page's.
 .chip-color-field__edge {
   position: absolute;
   inset: 0;
@@ -114,7 +98,7 @@
   border-radius: radius('pill');
   background: $shadow-dark;
   color: $chalk;
-  // A size up from a caption, so it reads across the area at a glance (the owner's call).
+  // A size up from a caption, so it reads across the area at a glance.
   font-size: type-size('body');
   font-weight: 500;
   font-variant-numeric: tabular-nums;
@@ -165,11 +149,9 @@
   transform: translate(-50%, -50%);
 }
 
-// One grid for the controls: the three channels share what the divider and
-// the hex leave, each captioned under its box; under them the format toggle
-// across the channels' span, and Match under the hex (the owner's calls).
-// The hex holds its line at every width: its column is the picker's own
-// width, the seven characters of "#5d8ab1" whole, on no scale.
+// One grid for the controls: three channels sharing what the divider and hex leave, the format toggle
+// across their span, and Match under the hex. The hex holds its line at every width: its column is
+// the width of "#5d8ab1" whole.
 .chip-color-field__controls {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr)) auto 5.75rem;
@@ -180,8 +162,7 @@
 .chip-color-field .chip-color-field__format {
   grid-column: 1 / 4;
   inline-size: 100%;
-  // The format at the left, the arrows at the right edge, as a select draws
-  // its own (the owner's call).
+  // The format at the left, the arrows at the right edge, as a select draws its own.
   justify-content: space-between;
 }
 
@@ -204,9 +185,7 @@
 }
 
 .chip-color-field__channel {
-  display: flex;
-  flex-direction: column;
-  gap: space(1);
+  @include stack(1);
   min-inline-size: 0;
 }
 
@@ -214,7 +193,7 @@
 // the site reads alike. Ark marks an open tooltip `data-state="open"` where
 // InfoTip sets `is-open`; this is that state, with its fade both ways.
 .chip-color-field__tooltip-positioner {
-  z-index: 10;
+  z-index: layer('floating');
 }
 
 .chip-color-field__tooltip {
@@ -252,9 +231,8 @@
   font-variant-numeric: tabular-nums;
 }
 
-// The rule between the channels and the hex the form validates, the full
-// height of the controls, inputs and buttons both (the owner's call), at the
-// medium weight, between a hairline and `$rule-heavy`.
+// The rule between the channels and the hex the form validates, the full height of
+// the controls, at the medium weight, between a hairline and `$rule-heavy`.
 .chip-color-field__divider {
   grid-column: 4;
   grid-row: 1 / 3;
@@ -269,19 +247,17 @@
 .chip-color-field__ground {
   display: flex;
   flex-wrap: wrap;
-  // The samples centred on their ground (the owner's call).
+  // The samples centred on their ground.
   justify-content: center;
   align-items: center;
   gap: space(2);
-  // Room around each panel and inside it, a step over the controls' own
-  // spacing (the owner's call).
-  // 1.5rem above, and 0.5rem below, close over the ratio that captions it
-  // (the owner's calls).
+  // Room around each panel and inside it, a step over the controls' own spacing: 1.5rem
+  // above, and 0.5rem below, close over the ratio that captions it.
   margin-block: space(5) space(2);
   padding: space(4);
   border-radius: radius('surface');
-  // Lifted off the modal, which sets the dark card apart from a dark modal
-  // whose surface it shares; in each panel's own theme (the owner's call).
+  // Lifted off the modal, which sets the dark card apart from a dark modal whose
+  // surface it shares; in each panel's own theme.
   box-shadow: var(--shadow-floating);
 }
 
@@ -314,7 +290,7 @@
   display: none;
 }
 
-// The ratio, centred under the sample panel it measures (the owner's call).
+// The ratio, centred under the sample panel it measures.
 .chip-color-field .chip-color-field__ratio {
   margin-inline: auto;
   text-align: center;

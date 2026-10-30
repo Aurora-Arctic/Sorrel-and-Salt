@@ -17,19 +17,10 @@ import type {
   MovedRows,
 } from '../types';
 
-// The steps every curated vocabulary's admin write is made of, written once so
-// that how a slug collision, a missing row or a group's move is refused is one
-// edit across the seven services (MB.210). Shared steps rather than a
-// descriptor factory, on the owner's call: each service keeps its own exported
-// functions and JSDoc, and its own `assertCurator(` and `expireCompendium()`,
-// so the check and the expiry are read together. Internal to the module; the
-// index exports no part of it.
+// The steps every curated vocabulary's admin write is made of, shared so that how a slug collision, a missing row or a group's move
+// is refused is one edit (claude-docs/modules.md, "Vocabulary shared write steps"). Internal to the module.
 
-/**
- * A write that broke the vocabulary's slug index, as a `ValidationError` on
- * `name` — the slug is derived and has no field of its own (MB.43) — naming
- * the row holding the address; any other error unchanged.
- */
+/** A write that broke the vocabulary's slug index, as a `ValidationError` on `name` naming the row holding the address; any other error unchanged. */
 export async function refuseSlugCollision(
   vocabulary: CuratedVocabulary,
   error: unknown,
@@ -52,8 +43,7 @@ export async function refuseSlugCollision(
 /**
  * The live row `id` names in the vocabulary.
  *
- * @throws {NotFound} none does — an id that is not a uuid included, which
- * names nothing and would be a driver error at the comparison.
+ * @throws {NotFound} none does, an id that is not a uuid included.
  */
 export async function liveRow<TTable extends CuratedTable>(
   vocabulary: CuratedVocabulary<TTable>,
@@ -64,11 +54,7 @@ export async function liveRow<TTable extends CuratedTable>(
   return row;
 }
 
-/**
- * The input parsed, its group checked live — a foreign key admits a retired
- * one — and the group, whose name a form's or a deity's slug carries. The
- * refusal is the input schema's own words for a missing group, on its field.
- */
+/** The input parsed, its group checked live, and the group, whose name a form's or a deity's slug carries. */
 export async function parseUnderLiveParent<
   Schema extends ZodType<Record<Column, string>>,
   Column extends string,
@@ -85,11 +71,7 @@ export async function parseUnderLiveParent<
   return { fields, parent: row };
 }
 
-/**
- * The live group a delete's `count` rows move to, or the refusal on `moveTo`
- * when none is named, or it names the group itself or no other live group.
- * On `moveTo`, beside the picker that names it.
- */
+/** The live group a delete's `count` rows move to, or the refusal on `moveTo` when none is named or it names no other live group. */
 export async function moveTarget<TTable extends GroupTable>(
   group: CuratedGroup<TTable>,
   id: string,
@@ -115,14 +97,10 @@ export async function moveTarget<TTable extends GroupTable>(
 }
 
 /**
- * Rewrites a group whole, its slug following the name, and on a rename the
- * slug of every live row under it whose slug carries the group's name, in the
- * same transaction; a category's carries none, so a category group's rename
- * moves nothing. A move onto another row's address is refused on `name`,
- * naming both, before the write and again after one the index refused.
+ * Rewrites a group whole, its slug following the name, and on a rename the slug of every live row under it whose slug carries the
+ * group's name (claude-docs/modules.md, "Vocabulary shared write steps").
  *
- * @throws {ValidationError} as above, or the group's own slug is a live
- * group's.
+ * @throws {ValidationError} a move onto another row's address, or the group's own slug is a live group's.
  * @throws {NotFound} no live group has this id.
  */
 export async function updateGroup<TTable extends GroupTable>(
@@ -146,8 +124,7 @@ export async function updateGroup<TTable extends GroupTable>(
   await refuseCollidingMoves(members, moves, refuse);
 
   return withAudit(session, async (write) => {
-    // Widened to the three group tables: the writer cannot type a write to a
-    // table still generic, so the row is narrowed back to `group`'s on return.
+    // Widened to the three group tables, as the writer cannot type a write to a generic table; narrowed back on return.
     const [row] = await write.updateById(group.table as GroupTable, id, { ...fields, slug });
     if (!row) throw new NotFound(`No such ${group.noun}`);
     for (const { row: member, slug: moved } of moves) {
@@ -161,16 +138,9 @@ export async function updateGroup<TTable extends GroupTable>(
 }
 
 /**
- * Soft-deletes a group, first moving its live rows to the group `moveTo`
- * names, each re-slugged under it where its slug carries the group's name, in
- * the same transaction. A group with no live row needs no `moveTo`.
+ * Soft-deletes a group, first moving its live rows to the group `moveTo` names (claude-docs/modules.md, "Vocabulary shared write steps").
  *
- * The rows are read before the transaction, so one filed under the group in
- * the instant between is left under a deleted one, which every read drops.
- *
- * @throws {ValidationError} on `moveTo`, the group has live rows and `moveTo`
- * names no other live group, or a row would move onto another row's address,
- * naming both.
+ * @throws {ValidationError} on `moveTo`, a missing target, or a row that would move onto another row's address.
  * @throws {NotFound} no live group has this id.
  */
 export async function deleteGroup(

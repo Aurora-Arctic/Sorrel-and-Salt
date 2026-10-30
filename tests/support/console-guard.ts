@@ -1,13 +1,8 @@
 import { afterEach, beforeEach } from 'vitest';
 
-// The `dom` project fails a test that logs a console error or warning it did
-// not declare (installed by setup-dom.ts). A log is a symptom — React's
-// duplicate-key warning, an act() warning, MSW refusing an unhandled request —
-// so it is a failure by default, not noise to scroll past.
-//
-// The console methods are replaced by hand rather than spied with `vi.spyOn`:
-// a `restoreMocks`/`vi.restoreAllMocks()` would otherwise switch the guard off,
-// and a test's own spy restores to this wrapper instead of to the bare console.
+// The `dom` project fails a test that logs a console error or warning it did not declare (installed by
+// setup-dom.ts). The console methods are replaced by hand, not spied: `vi.restoreAllMocks()` would switch a
+// spy guard off, and a test's own spy would restore to this wrapper rather than the bare console.
 
 type Level = 'error' | 'warn';
 type Declaration = { level: Level; pattern: RegExp; matched: boolean };

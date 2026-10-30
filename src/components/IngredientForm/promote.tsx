@@ -8,13 +8,9 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import { ConfirmQuestion } from '../Modal';
 import { DiscardAskingContext } from './remove-question';
 
-// Making a folk name the ingredient's display name (M12.1): the mutation, the
-// hook that sends it, and the question that always comes first. Written for
-// either tier, a compendium entry (a null `workspaceId`) or a coven's
-// ingredient, though only the compendium's form edits yet (a coven's edit is
-// M8.17). The swap itself is the server's, in one transaction; the form is
-// left holding what it answers (claude-docs/components/ingredient-form.md,
-// "Promoting a folk name").
+// Making a folk name the ingredient's display name: the mutation, the hook that sends it and the
+// question that always comes first, for either tier. The swap is the server's, in one transaction
+// (claude-docs/components/ingredient-form.md, "Promoting a folk name").
 
 const PromoteFolkNameDocument = graphql(`
   mutation PromoteFolkName($workspaceId: ID, $id: ID!, $folkNameId: ID!) {
@@ -87,11 +83,9 @@ export interface PromoteFolkNameQuestionProps {
 type Step = 'confirm' | 'also' | null;
 
 /**
- * Always asks before a folk name becomes the display name. With changes
- * unsaved it offers Save & Promote, which runs the form's own save first
- * and promotes only if that landed, and Discard & Promote, which puts the
- * form back to its saved values; Cancel sends nothing. Steps aside while the
- * form's unsaved-changes question asks, as a removal's does.
+ * Always asks before a folk name becomes the display name. With changes unsaved it offers Save &
+ * Promote (the form's own save first, promoting only if that landed) and Discard & Promote;
+ * Cancel sends nothing. Steps aside while the unsaved-changes question asks, as a removal's does.
  */
 export function PromoteFolkNameQuestion({
   promotion,
@@ -124,10 +118,9 @@ export function PromoteFolkNameQuestion({
   return (
     <ConfirmQuestion
       asked={folkName !== null && !discardAsking}
-      // Four tiers, told apart by type as well as space: the question as the
-      // card's heading, naming no name, since the panel beneath names both;
-      // the swap on a tinted panel; the compendium's reach as a muted aside;
-      // and, ruled off above the buttons, the question they answer.
+      // Four tiers, told apart by type as well as space: the question as the card's heading; the
+      // swap on a tinted panel; the compendium's reach as a muted aside; and, ruled off above the
+      // buttons, the question they answer.
       question={
         <span className="promote-question__title">Make this folk name the display name?</span>
       }
@@ -135,11 +128,11 @@ export function PromoteFolkNameQuestion({
         <>
           <dl className="promote-question__swap">
             <div>
-              <dt>New display name</dt>
+              <dt>New Display Name</dt>
               <dd>{folkName?.value}</dd>
             </div>
             <div>
-              <dt>Becomes a folk name</dt>
+              <dt>Becomes a Folk Name</dt>
               <dd>{displayName}</dd>
             </div>
           </dl>
@@ -154,7 +147,6 @@ export function PromoteFolkNameQuestion({
         </>
       }
       tone="solid"
-      keepLabel="Cancel"
       confirmLabel={dirty ? 'Save & Promote' : 'Promote'}
       busyLabel="Promoting"
       busy={step === 'confirm'}

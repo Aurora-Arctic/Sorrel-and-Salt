@@ -3,20 +3,16 @@ import StackTable from '../DataTable';
 import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
 import { workspaceRoleLabel } from '../UserDetail/roles';
+import { emptyList } from '../../lib/text';
 import { inUtc } from '../../lib/utc';
 import AcceptControl from './accept-control';
 import DeclineControl from './decline-control';
 import type { ReceivedInvitationsProps } from './types';
 import './index.scss';
 
-// The coven invitations addressed to the signed-in account, in the account
-// page's Invitations section (M10.32): coven, role, who sent it and what they
-// wrote, expiry, with Accept and Decline (M10.34) on each, each saying a
-// refusal in a callout under itself (M12.31). No region of its own: the
-// page's section is the region, named by its heading. The page reads them
-// through a service filtered to the session's own verified address; nothing
-// here decides who may see a row
-// (claude-docs/components/received-invitations.md).
+// The coven invitations addressed to the signed-in account, in the account page's Invitations
+// section, with Accept and Decline on each. The service filters to the session's verified address;
+// nothing here decides who may see a row (claude-docs/components/received-invitations.md).
 
 const ReceivedInvitations = ({
   invitations,
@@ -59,7 +55,7 @@ const ReceivedInvitations = ({
             },
             {
               heading: 'Answer',
-              // At a card's top right, beside the coven (the owner's call, M10.32).
+              // At a card's top right, beside the coven.
               action: 'corner',
               cell: (invitation) => (
                 <div className="received-invitations__answer">
@@ -71,7 +67,7 @@ const ReceivedInvitations = ({
           ]}
           rows={invitations}
           rowKey={(invitation) => invitation.id}
-          empty="No invitations are waiting."
+          empty={emptyList('invitations')}
           className="data-table--nowrap"
         />
         <Pager previousHref={previousHref} nextHref={nextHref} position={position} soft />

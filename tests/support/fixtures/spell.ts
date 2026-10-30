@@ -2,29 +2,29 @@ import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { toColumns } from './columns';
 import { mergeFixture, stated } from './merge';
 import type {
-  SpellLayerFixture,
-  SpellLayerOverrides,
+  SpellStepFixture,
+  SpellStepOverrides,
   SpellFixture,
   SpellOverrides,
   Overrides,
 } from './types';
 
-// A jar: the spell row, the categories it intends, and the stack inside it.
-// The categories here are the *assigned* ones; derived categories are computed
-// from the ingredients, so a fixture has none to give.
+// A jar: the spell row, the categories it intends, and the steps of its
+// recipe. The categories here are the *assigned* ones; derived categories are
+// computed from the ingredients, so a fixture has none to give.
 
 // Invented, like every name a fixture supplies on its own (CLAUDE.md, Testing).
 const DEFAULT_LAYER_NAME = 'Fixture Ash';
-// Custom rather than linked, so `makeSpell()` is insertable with no ingredient
-// inserted first.
-const DEFAULT_LAYER: SpellLayerFixture = {
+// A layer, custom rather than linked, so `makeSpell()` is insertable with no
+// ingredient inserted first.
+const DEFAULT_STEP: SpellStepFixture = {
   ingredientId: null,
   name: DEFAULT_LAYER_NAME,
   form: 'ash',
   quantity: '1.000',
   unit: 'pinch',
-  note: null,
-  layerOrder: 1,
+  body: null,
+  position: 1,
 };
 
 const DEFAULTS: SpellFixture = {
@@ -32,87 +32,88 @@ const DEFAULTS: SpellFixture = {
   workspaceId: WORKSPACE_W_ID,
   title: 'Hearth Warding Jar',
   intent: null,
-  jarSize: null,
+  jarDescription: null,
   sealWaxColor: null,
   moonPhase: null,
   dayOfWeek: null,
-  instructions: null,
-  // Both restated rather than left to the column: a fixture arriving
-  // `complete` would be a finished spell in every test that never mentioned
-  // status, and one arriving `private` would be a spell only its author can
-  // read in every test that never mentioned visibility.
+  note: null,
+  // Both restated rather than left to the column, so a fixture is not a finished or shared spell in every
+  // test that never mentioned status or visibility.
   status: 'draft',
   visibility: 'workspace',
   categories: [],
-  layers: [DEFAULT_LAYER],
+  steps: [DEFAULT_STEP],
 };
 
 /**
  * Defaulted layers take distinct names:
- * `spell_ingredients_spell_id_custom_name_unique` folds `Salt` onto `salt`
- * within one jar.
+ * `spell_steps_spell_id_custom_name_unique` folds `Salt` onto `salt` within
+ * one jar.
  */
-function defaultLayerName(layerOrder: number): string {
-  return layerOrder === 1 ? DEFAULT_LAYER_NAME : `${DEFAULT_LAYER_NAME} ${layerOrder}`;
+function defaultLayerName(position: number): string {
+  return position === 1 ? DEFAULT_LAYER_NAME : `${DEFAULT_LAYER_NAME} ${position}`;
 }
 
 /**
- * One layer, at the depth its position gives it. Naming an ingredient makes it
- * a linked layer, which clears the default name and form — `num_nonnulls`
- * admits one of the two, and `spell_ingredients_form_only_on_custom` refuses
- * a form beside an id — unless the caller stated them, which is how a test
- * writes the row a check exists to reject.
+ * One step, at the place its index gives it. Naming an ingredient makes it a linked layer and clears the
+ * default name and form; a `body` and no identity makes it an instruction and clears name, form and amount.
+ * Stating the field undoes either, so a test can write the row a check rejects.
  */
-function makeLayer(overrides: SpellLayerOverrides, index: number): SpellLayerFixture {
-  const layerOrder = index + 1;
-  const defaults: SpellLayerFixture = {
-    ...DEFAULT_LAYER,
-    name: defaultLayerName(layerOrder),
-    layerOrder,
+function makeStep(overrides: SpellStepOverrides, index: number): SpellStepFixture {
+  const position = index + 1;
+  const defaults: SpellStepFixture = {
+    ...DEFAULT_STEP,
+    name: defaultLayerName(position),
+    position,
   };
-  const layer = mergeFixture(defaults, overrides as Overrides<SpellLayerFixture>);
+  const step = mergeFixture(defaults, overrides as Overrides<SpellStepFixture>);
 
-  if (stated(overrides, 'ingredientId') && layer.ingredientId !== null) {
-    if (!stated(overrides, 'name')) layer.name = null;
-    if (!stated(overrides, 'form')) layer.form = null;
+  if (stated(overrides, 'ingredientId') && step.ingredientId !== null) {
+    if (!stated(overrides, 'name')) step.name = null;
+    if (!stated(overrides, 'form')) step.form = null;
+  }
+  if (
+    stated(overrides, 'body') &&
+    step.body !== null &&
+    !stated(overrides, 'ingredientId') &&
+    !stated(overrides, 'name')
+  ) {
+    step.name = null;
+    if (!stated(overrides, 'form')) step.form = null;
+    if (!stated(overrides, 'quantity')) step.quantity = null;
+    if (!stated(overrides, 'unit')) step.unit = null;
   }
 
-  // The depth is the position; the override type cannot say otherwise.
-  layer.layerOrder = layerOrder;
+  // The place is the index; the override type cannot say otherwise.
+  step.position = position;
 
-  return layer;
+  return step;
 }
 
 /**
- * One spell.
- *
- * ```ts
- * makeSpell()                                      // a draft in W, one custom layer
- * makeSpell({ categories: ['Warding'] })           // intending warding and nothing else
- * makeSpell({ layers: [{ ingredientId: mugwort }] }) // a stack of one linked layer
- * ```
+ * One spell, as in `makeSpell({ steps: [{ body: 'Stir.' }] })`, one instruction.
  */
 export function makeSpell(overrides: SpellOverrides = {}): SpellFixture {
-  const { layers, ...rest } = overrides;
+  const { steps, ...rest } = overrides;
   const spell = mergeFixture(DEFAULTS, rest as Overrides<SpellFixture>);
 
-  if (layers !== undefined) {
-    spell.layers = layers.map(makeLayer);
+  if (steps !== undefined) {
+    spell.steps = steps.map(makeStep);
   }
 
   return spell;
 }
 
 /**
- * The fixture as an insert into `spells`; categories and layers are other
+ * The fixture as an insert into `spells`; categories and steps are other
  * tables' rows, and the audit stamps are the session's (rule 3).
  */
 export function spellColumns(fixture: SpellFixture): Record<string, unknown> {
-  const { categories: _categories, layers: _layers, ...row } = fixture;
+  const { categories: _categories, steps: _steps, ...row } = fixture;
   return toColumns(row);
 }
 
-/** One layer as an insert into `spell_ingredients`; the spell id is the caller's to add. */
-export function spellLayerColumns(layer: SpellLayerFixture): Record<string, unknown> {
-  return toColumns(layer);
+/** One step as an insert into `spell_steps`; the spell id is the caller's to add. */
+export function spellStepColumns(step: SpellStepFixture): Record<string, unknown> {
+  return toColumns(step);
 }

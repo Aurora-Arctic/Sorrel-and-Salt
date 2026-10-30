@@ -1,5 +1,6 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import postgres from 'postgres';
+import { beforeEach, describe, expect, it } from 'vitest';
+import type postgres from 'postgres';
+import { useTestDatabase } from '../../../support/db/database';
 import { slugify } from '@/lib/slugify';
 import { E, asUser } from '../../../support/as-user';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
@@ -7,21 +8,13 @@ import { makeIngredient } from '../../../support/fixtures';
 import { run as send } from '../../../support/graphql/run';
 import type { AstrologyValueConnection, AstrologyValueNode } from './types';
 
-// `celestialBodies` and `zodiacSigns`: the two curated astrology vocabularies as
-// `CelestialBody` and `ZodiacSign`, a page at a time, answered to a signed-out
-// visitor (MB.80), and MB.95's six admin writes. This file holds the
-// transport's half (claude-docs/testing/layer-ownership.md): a page and its
-// count, the query reaching the read, and per write one refusal per error
-// code, read as the browser reads it. Which roles are refused, a rename
-// carried onto the entries and every collision are services/astrology.test.ts's;
-// a signed-out caller refused at every field, and a non-admin at the `admin`
-// scope, are tests/db/graphql-query-scopes.test.ts's.
+// `celestialBodies` and `zodiacSigns` over the wire: the two curated astrology vocabularies, a page at a time, readable signed out, and the six admin writes.
+// This is the transport's half (claude-docs/testing/layer-ownership.md): a page and its count, and per write one refusal per error code. Roles, renames and collisions are services/astrology.test.ts's;
+// signed-out and non-admin scope refusals are tests/db/graphql-query-scopes.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string);
-});
+useTestDatabase((client) => (sql = client));
 
 const VOCABULARIES = [
   {
@@ -39,6 +32,11 @@ const VOCABULARIES = [
 ] as const;
 
 describe.each(VOCABULARIES)('$query', ({ query, type, table, field }) => {
+  // Both go through one builder loop, so celestial bodies run every test and zodiac
+  // signs run the read and the create, which prove the loop's per-vocabulary
+  // names; the refusals and the other writes need no second copy.
+  const full = query === 'celestialBodies';
+
   const FIELDS = 'id name slug description';
   const CREATE = `mutation ($input: ${type}Input!) { create${type}(input: $input) { ${FIELDS} } }`;
   const UPDATE = `mutation ($id: ID!, $input: ${type}Input!) {
@@ -97,20 +95,22 @@ describe.each(VOCABULARIES)('$query', ({ query, type, table, field }) => {
       expect(ids).toEqual(expected.map((row) => row.id));
     });
 
-    it('narrows its edges and its count by a name fragment, read literally', async () => {
-      await seed('Fixture 100% Bright');
-      await seed('Fixture 100x Bright');
+    if (full) {
+      it('narrows its edges and its count by a name fragment, read literally', async () => {
+        await seed('Fixture 100% Bright');
+        await seed('Fixture 100x Bright');
 
-      const result = await send<Record<string, AstrologyValueConnection>>(null, LIST, {
-        query: ' 100% ',
+        const result = await send<Record<string, AstrologyValueConnection>>(null, LIST, {
+          query: ' 100% ',
+        });
+
+        expect(result.errors).toBeUndefined();
+        expect(result.data?.[query].totalCount).toBe(1);
+        expect(result.data?.[query].edges.map((edge) => edge.node.name)).toEqual([
+          'Fixture 100% Bright',
+        ]);
       });
-
-      expect(result.errors).toBeUndefined();
-      expect(result.data?.[query].totalCount).toBe(1);
-      expect(result.data?.[query].edges.map((edge) => edge.node.name)).toEqual([
-        'Fixture 100% Bright',
-      ]);
-    });
+    }
   });
 
   describe(`create${type}`, () => {
@@ -127,90 +127,94 @@ describe.each(VOCABULARIES)('$query', ({ query, type, table, field }) => {
       });
     });
 
-    it('answers a slug collision as VALIDATION on `name`', async () => {
-      await seed('Fixture Body');
+    if (full) {
+      it('answers a slug collision as VALIDATION on `name`', async () => {
+        await seed('Fixture Body');
 
-      const result = await send(asUser(E), CREATE, { input: input('Fixture-Body') });
+        const result = await send(asUser(E), CREATE, { input: input('Fixture-Body') });
 
-      expect(result.errors?.[0]?.extensions).toMatchObject({
-        code: 'VALIDATION',
-        fieldErrors: [{ path: ['name'] }],
+        expect(result.errors?.[0]?.extensions).toMatchObject({
+          code: 'VALIDATION',
+          fieldErrors: [{ path: ['name'] }],
+        });
       });
-    });
+    }
   });
 
-  describe(`update${type}`, () => {
-    it('rewrites one for a site admin, answering its new slug', async () => {
-      const id = await seed('Fixture Old');
+  if (full) {
+    describe(`update${type}`, () => {
+      it('rewrites one for a site admin, answering its new slug', async () => {
+        const id = await seed('Fixture Old');
 
-      const result = await send<Record<string, AstrologyValueNode>>(asUser(E), UPDATE, {
-        id,
-        input: input('Fixture New'),
+        const result = await send<Record<string, AstrologyValueNode>>(asUser(E), UPDATE, {
+          id,
+          input: input('Fixture New'),
+        });
+
+        expect(result.errors).toBeUndefined();
+        expect(result.data?.[`update${type}`]).toMatchObject({ id, slug: 'fixture-new' });
+        expect((await rowOf(id)).name).toBe('Fixture New');
       });
 
-      expect(result.errors).toBeUndefined();
-      expect(result.data?.[`update${type}`]).toMatchObject({ id, slug: 'fixture-new' });
-      expect((await rowOf(id)).name).toBe('Fixture New');
-    });
+      it("answers a rename onto another row's address as VALIDATION on `name`, leaving it as it was", async () => {
+        const id = await seed('Fixture Kept');
+        await seed('Fixture Taken');
+        const before = await rowOf(id);
 
-    it("answers a rename onto another row's address as VALIDATION on `name`, leaving it as it was", async () => {
-      const id = await seed('Fixture Kept');
-      await seed('Fixture Taken');
-      const before = await rowOf(id);
+        const result = await send(asUser(E), UPDATE, { id, input: input('Fixture-Taken') });
 
-      const result = await send(asUser(E), UPDATE, { id, input: input('Fixture-Taken') });
-
-      expect(result.data).toBeNull();
-      expect(result.errors?.[0]?.extensions).toMatchObject({
-        code: 'VALIDATION',
-        fieldErrors: [{ path: ['name'] }],
+        expect(result.data).toBeNull();
+        expect(result.errors?.[0]?.extensions).toMatchObject({
+          code: 'VALIDATION',
+          fieldErrors: [{ path: ['name'] }],
+        });
+        expect(await rowOf(id)).toEqual(before);
       });
-      expect(await rowOf(id)).toEqual(before);
+
+      it('answers an unknown id as NOT_FOUND', async () => {
+        const result = await send(asUser(E), UPDATE, { id: 'not-a-uuid', input: input() });
+
+        expect(result.data).toBeNull();
+        expect(result.errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
+      });
     });
 
-    it('answers an unknown id as NOT_FOUND', async () => {
-      const result = await send(asUser(E), UPDATE, { id: 'not-a-uuid', input: input() });
+    describe(`delete${type}`, () => {
+      it('soft-deletes one for a site admin, answering its id', async () => {
+        const id = await seed('Fixture Doomed');
 
-      expect(result.data).toBeNull();
-      expect(result.errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
+        const result = await send<Record<string, string>>(asUser(E), DELETE, { id });
+
+        expect(result.errors).toBeUndefined();
+        expect(result.data?.[`delete${type}`]).toBe(id);
+        expect((await rowOf(id)).deleted_by).toBe(E.id);
+      });
+
+      it('answers an unknown id as NOT_FOUND', async () => {
+        const result = await send(asUser(E), DELETE, { id: 'not-a-uuid' });
+
+        expect(result.data).toBeNull();
+        expect(result.errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
+      });
+
+      it('answers a held value as FORBIDDEN, the row left live', async () => {
+        const id = await seed('Fixture Body');
+        await insertIngredient(
+          sql,
+          makeIngredient({
+            name: 'Testwort',
+            nomenclature: 'none',
+            variants: [],
+            [field]: ['Fixture Body'],
+          }),
+          E.id,
+        );
+
+        const result = await send(asUser(E), DELETE, { id });
+
+        expect(result.errors?.[0]).toMatchObject({ extensions: { code: 'FORBIDDEN' } });
+        expect((await rowOf(id)).deleted_at).toBeNull();
+      });
     });
-  });
-
-  describe(`delete${type}`, () => {
-    it('soft-deletes one for a site admin, answering its id', async () => {
-      const id = await seed('Fixture Doomed');
-
-      const result = await send<Record<string, string>>(asUser(E), DELETE, { id });
-
-      expect(result.errors).toBeUndefined();
-      expect(result.data?.[`delete${type}`]).toBe(id);
-      expect((await rowOf(id)).deleted_by).toBe(E.id);
-    });
-
-    it('answers an unknown id as NOT_FOUND', async () => {
-      const result = await send(asUser(E), DELETE, { id: 'not-a-uuid' });
-
-      expect(result.data).toBeNull();
-      expect(result.errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
-    });
-
-    it('answers a held value as FORBIDDEN, the row left live', async () => {
-      const id = await seed('Fixture Body');
-      await insertIngredient(
-        sql,
-        makeIngredient({
-          name: 'Testwort',
-          nomenclature: 'none',
-          variants: [],
-          [field]: ['Fixture Body'],
-        }),
-        E.id,
-      );
-
-      const result = await send(asUser(E), DELETE, { id });
-
-      expect(result.errors?.[0]).toMatchObject({ extensions: { code: 'FORBIDDEN' } });
-      expect((await rowOf(id)).deleted_at).toBeNull();
-    });
-  });
+  }
 });

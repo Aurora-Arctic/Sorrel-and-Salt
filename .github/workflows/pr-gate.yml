@@ -7,34 +7,41 @@ name: PR Gate
 # `github.workflow`, the name above, which this does not touch.
 run-name: >-
   ${{ github.event.pull_request.title }}${{
-  github.event.action == 'edited' && ' · edit: waits, then cancels itself unless retargeted or the commit is ungated'
-  || github.event.action == 'closed' && ' · close: cancels the runs for this PR, then itself'
+  github.event.action == 'edited' && ' · edit: waits, then stands down (ends green, runs nothing) unless retargeted or the commit is ungated'
+  || github.event.action == 'closed' && ' · close: cancels the runs for this PR, then stands down'
   || '' }}
 
 # The gate on every PR into `main`, `staging` or `release/*`. format, audit
 # and gitflow always run; the rest are path-filtered by `changes`.
 # claude-docs/ci/aggregating-workflows.md, "Aggregating workflows" is the walkthrough.
 #
-# NO JOB HERE MAY CARRY A JOB-LEVEL `if:`. It makes GitHub report the check
-# under a bare name ("checks" instead of "checks / lint") that never
-# satisfies the required check, permanently blocking the PR. Every job runs
-# unconditionally and passes its filter result down as a workflow_call input.
+# A run that stands down ends green and runs nothing: `changes` sets its
+# `stand-down` output and every other job's `if:` reads it, so each reports
+# skipped. A job that calls a reusable workflow carries that `if:` on the
+# caller. A false `if:` there reports one bare check ("checks", skipped), which
+# never overwrites a required inner name such as "checks / lint". What would
+# overwrite one is a caller that runs with its inner jobs skipped, so no caller
+# runs on a stand-down, and a skipped required check passes. A run that does
+# not stand down leaves every `if:` true and gates in full: its callers always
+# run and pass their filter result down as a workflow_call input.
+# (claude-docs/design-decisions/mb.39-job-level-if-and-check-names.md)
 #
 # `edited` is in the trigger types so retargeting a PR's base re-runs the gate
 # against the new one. Every other edit — a title or a description —
 # changes nothing the gate checks, so its run must not cancel the run in
 # flight: the group's cancel excludes `edited`, the run waits its turn, and
-# `changes` cancels it unless the payload carries `changes.base` or no other
+# `changes` stands it down unless the payload carries `changes.base` or no other
 # run of this gate has tested the PR's head commit. That second case is a
 # push's run that was still waiting when the edit came: GitHub holds one
 # pending run per group, so the edit's run replaced it before it started.
 # `closed` is there so closing a PR cancels its runs: the close starts a run
-# in the PR's group below, which cancels the rest, and then cancels itself in
-# `changes`. GitHub fires `edited` on a closed PR too, and that run cancels
-# itself the same way.
-# Every job `needs: changes`, so a run that cancels itself starts nothing
-# else: a job that had started would leave a cancelled check run under its own
-# name, newer than the real run's, and a required check reads the newest.
+# in the PR's group below, which cancels the rest, and then stands down in
+# `changes`. GitHub fires `edited` on a closed PR too, and that run stands
+# down the same way.
+# Every job `needs: changes`, so a run that stands down starts nothing else.
+# It never cancels itself: a cancelled `changes` or job would leave a
+# cancelled check run under its own name, newer than the real run's, and the
+# PR would read as unstable.
 # `build-db-image` is built once here rather than nested in vitest.yml and
 # playwright.yml, which would pay twice for an identical image, and
 # `build-e2e-image` once for both Playwright suites.
@@ -64,12 +71,13 @@ jobs:
   changes:
     runs-on: ubuntu-26.04
     # Replaces the workflow's set for this job: paths-filter lists the PR's
-    # files through the API, and the first step cancels the run.
+    # files through the API, and the first step lists this gate's runs.
     permissions:
-      actions: write
+      actions: read
       contents: read
       pull-requests: read
     outputs:
+      stand-down: ${{ steps.stand-down.outputs.stand-down || 'false' }}
       lint: ${{ steps.filter.outputs.lint }}
       typecheck: ${{ steps.filter.outputs.typecheck }}
       build: ${{ steps.filter.outputs.build }}
@@ -81,15 +89,17 @@ jobs:
       stories: ${{ steps.filter.outputs.stories }}
       workshop: ${{ steps.filter.outputs.workshop }}
     steps:
-      # A step-level `if:`, so the header's rule holds. Every other job needs
-      # this one, so nothing else starts. `changes.base` is in the payload only
-      # when the edit retargeted the PR; that run goes on to gate. An edit's
-      # run also gates when no other run of this gate for this PR has tested
-      # the head commit — finished other than cancelled or skipped, or still
-      # going — since that commit's own run was replaced while it waited (see
-      # the header). A run whose `pull_requests` comes back empty counts as
+      # Decides whether this run stands down (see the header). `changes.base`
+      # is in the payload only when the edit retargeted the PR; that run goes
+      # on to gate. An edit's run also gates when no other run of this gate for
+      # this PR has tested the head commit — finished other than cancelled or
+      # skipped, or still going — since that commit's own run was replaced
+      # while it waited. A run whose `pull_requests` comes back empty counts as
       # not covering, so the doubt costs a run rather than an untested commit.
-      - name: Cancel this run if the PR is closed, or was edited without a retarget and its commit is gated
+      # Any other event leaves the step skipped and the output empty, read as
+      # `false`.
+      - name: Stand down if the PR is closed, or was edited without a retarget and its commit is gated
+        id: stand-down
         if: github.event.pull_request.state == 'closed' || (github.event.action == 'edited' && github.event.changes.base == null)
         env:
           GH_TOKEN: ${{ github.token }}
@@ -97,6 +107,7 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
+          stand_down=true
           if [ "$CLOSED" != true ]; then
             workflow_id=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" --jq .workflow_id)
             covering=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/$workflow_id/runs?head_sha=$HEAD_SHA&event=pull_request&per_page=100" \
@@ -107,16 +118,13 @@ jobs:
               ] | length")
             if [ "$covering" = 0 ]; then
               echo "No run of this gate has tested $HEAD_SHA, so this edit's run gates it."
-              exit 0
+              stand_down=false
             fi
           fi
-          gh run cancel "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY"
-          # The cancel is asynchronous; the sleep is killed when it lands,
-          # usually in seconds, so this job never finishes and hands the check
-          # jobs an output to start on. 30s is only the bound.
-          sleep 30
+          echo "stand-down=$stand_down" >> "$GITHUB_OUTPUT"
 
       - name: Determine changed-file categories
+        if: steps.stand-down.outputs.stand-down != 'true'
         uses: dorny/paths-filter@v4
         id: filter
         with:
@@ -137,6 +145,7 @@ jobs:
               - '.github/scripts/summarize-lint.sh'
               - 'Docker/Dockerfile.node'
               - '.oxlintrc.json'
+              - 'knip.json'
               - '**/*.ts'
               - '**/*.tsx'
               - '**/*.js'
@@ -182,7 +191,7 @@ jobs:
             # script as SQL. `*.sql` keeps Drizzle's meta/*.json out too.
             destructive_ddl_migrations:
               - 'src/db/migrations/*.sql'
-            # `tests/**`, `.ladle/config.mjs` and the configs are not under
+            # `tests/**`, `.storybook/main.ts` and the configs are not under
             # `src/**`, and a test-only PR is exactly what this job runs.
             # tests/e2e/ is Playwright's and nothing Vitest runs imports it.
             # The db image's inputs too, so a Postgres bump is tested on its own PR.
@@ -197,7 +206,7 @@ jobs:
               - 'src/**'
               - 'tests/**'
               - '!tests/e2e/**'
-              - '.ladle/config.mjs'
+              - '.storybook/main.ts'
               - 'vitest.config.mts'
               - 'codegen.ts'
               - 'package.json'
@@ -212,6 +221,8 @@ jobs:
               - 'Docker/Dockerfile.postgres'
               - 'Docker/postgres-init/**'
               - '.github/scripts/summarize-playwright.mjs'
+              - '.github/scripts/merge-playwright-coverage.mjs'
+              - '.github/workflows/playwright-coverage.yml'
               - '.github/scripts/lib/**'
               - 'Docker/Dockerfile.e2e'
               - 'src/**'
@@ -231,6 +242,8 @@ jobs:
               - 'Docker/Dockerfile.postgres'
               - 'Docker/postgres-init/**'
               - '.github/scripts/summarize-stories.mjs'
+              - '.github/scripts/merge-playwright-coverage.mjs'
+              - '.github/workflows/playwright-coverage.yml'
               - 'Docker/Dockerfile.e2e'
               - 'src/**'
               - 'tests/e2e/**'
@@ -240,14 +253,14 @@ jobs:
               - 'next.config.ts'
               - 'package.json'
               - 'package-lock.json'
-            # The workshop specs measure a component in its Ladle story: the
-            # e2e image for the browser, Ladle's own config and stories, and
+            # The workshop specs measure a component in its workshop story: the
+            # e2e image for the browser, the workshop config (Storybook's) and stories, and
             # the components under src/**. No database and no Next build.
             workshop:
               - *shared
               - '.github/workflows/build-e2e-image.yml'
               - 'Docker/Dockerfile.e2e'
-              - '.ladle/**'
+              - '.storybook/**'
               - '**/*.stories.tsx'
               - 'src/**'
               - 'tests/e2e/workshop/**'
@@ -260,10 +273,12 @@ jobs:
   # image. claude-docs/ci/aggregating-workflows.md, "Aggregating workflows".
   build-image:
     needs: [changes]
+    if: needs.changes.outputs.stand-down != 'true'
     uses: ./.github/workflows/build-image.yml
 
   checks:
     needs: [build-image, changes, gitflow]
+    if: needs.changes.outputs.stand-down != 'true'
     concurrency:
       group: pr-gate-checks-${{ github.event.pull_request.number }}
       cancel-in-progress: true
@@ -271,7 +286,6 @@ jobs:
     with:
       image: ${{ needs.build-image.outputs.image }}
       pr-number: ${{ github.event.pull_request.number }}
-      # No job-level `if:` — see the header.
       run-lint: ${{ needs.changes.outputs.lint == 'true' }}
       run-typecheck: ${{ needs.changes.outputs.typecheck == 'true' }}
       run-build: ${{ needs.changes.outputs.build == 'true' }}
@@ -284,10 +298,12 @@ jobs:
   # Built once for vitest and playwright.
   build-db-image:
     needs: [changes]
+    if: needs.changes.outputs.stand-down != 'true'
     uses: ./.github/workflows/build-db-image.yml
 
   vitest:
     needs: [build-image, build-db-image, changes, gitflow]
+    if: needs.changes.outputs.stand-down != 'true'
     concurrency:
       group: pr-gate-vitest-${{ github.event.pull_request.number }}
       cancel-in-progress: true
@@ -296,16 +312,17 @@ jobs:
       image: ${{ needs.build-image.outputs.image }}
       db-image: ${{ needs.build-db-image.outputs.image }}
       pr-number: ${{ github.event.pull_request.number }}
-      # No job-level `if:` — see the header.
       should-run: ${{ needs.changes.outputs.vitest == 'true' }}
 
   # The `testing` image is Alpine and carries no browser.
   build-e2e-image:
     needs: [changes]
+    if: needs.changes.outputs.stand-down != 'true'
     uses: ./.github/workflows/build-e2e-image.yml
 
   playwright:
     needs: [build-e2e-image, build-db-image, changes, gitflow]
+    if: needs.changes.outputs.stand-down != 'true'
     concurrency:
       group: pr-gate-playwright-${{ github.event.pull_request.number }}
       cancel-in-progress: true
@@ -314,7 +331,6 @@ jobs:
       image: ${{ needs.build-e2e-image.outputs.image }}
       db-image: ${{ needs.build-db-image.outputs.image }}
       pr-number: ${{ github.event.pull_request.number }}
-      # No job-level `if:` — see the header.
       should-run: ${{ needs.changes.outputs.playwright == 'true' }}
 
   # The story suite (M9.1), on the same images as `playwright` and beside it,
@@ -323,6 +339,7 @@ jobs:
   # without blocking a merge (claude-docs/testing/acceptance.md).
   stories:
     needs: [build-e2e-image, build-db-image, changes, gitflow]
+    if: needs.changes.outputs.stand-down != 'true'
     concurrency:
       group: pr-gate-stories-${{ github.event.pull_request.number }}
       cancel-in-progress: true
@@ -332,17 +349,45 @@ jobs:
       db-image: ${{ needs.build-db-image.outputs.image }}
       pr-number: ${{ github.event.pull_request.number }}
       suite: stories
-      # No job-level `if:` — see the header.
       should-run: ${{ needs.changes.outputs.stories == 'true' }}
 
+  # The gate suite's and the story suite's JavaScript coverage, merged (M14.28):
+  # playwright-coverage.yml downloads whichever coverage artifacts the two
+  # uploaded and posts a "Playwright Coverage" comment. Never a required check
+  # (it carries `continue-on-error`, and nothing waits on it). Its `if:`
+  # keeps a failed suite from skipping the merge, and stays false on a stand-down.
+  # It is a called workflow, not a job here, so that a run which stands down
+  # leaves it skipped like the other called workflows.
+  playwright-coverage:
+    needs: [build-image, changes, playwright, stories]
+    # `!cancelled()` ignores a skipped need, so the stand-down is named here.
+    if: ${{ !cancelled() && needs.changes.outputs.stand-down != 'true' }}
+    concurrency:
+      group: pr-gate-playwright-coverage-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    # `actions: read` lets the called workflow ask the run which artifacts it holds.
+    permissions:
+      actions: read
+      contents: read
+      packages: read
+      pull-requests: write
+    uses: ./.github/workflows/playwright-coverage.yml
+    with:
+      image: ${{ needs.build-image.outputs.image }}
+      pr-number: ${{ github.event.pull_request.number }}
+      should-run: ${{ needs.changes.outputs.playwright == 'true' || needs.changes.outputs.stories == 'true' }}
+      # The stories job passes whatever its stories did, so its run step's outcome is read too.
+      suites-failed: ${{ needs.playwright.result == 'failure' || needs.stories.result == 'failure' || needs.stories.outputs.outcome == 'failure' }}
+
   # The workshop specs (tests/e2e/workshop/, M12.31): a component measured in
-  # its Ladle story, `npm run e2e:workshop`. In the e2e image, as playwright.yml
-  # runs, for its browser; Ladle is the one server, so no database and no
+  # its workshop story, `npm run e2e:workshop`. In the e2e image, as playwright.yml
+  # runs, for its browser; Storybook is the one server, so no database and no
   # build. Never a required check: `continue-on-error`, so a red run shows
   # without blocking a merge. Under its own `workshop` filter, by a step-level
   # `if:` (see the header).
   workshop:
     needs: [build-e2e-image, changes, gitflow]
+    if: needs.changes.outputs.stand-down != 'true'
     concurrency:
       group: pr-gate-workshop-${{ github.event.pull_request.number }}
       cancel-in-progress: true
@@ -360,7 +405,7 @@ jobs:
         working-directory: /app
         shell: bash
     env:
-      # playwright.workshop.config.ts starts a fresh Ladle and retries under it.
+      # playwright.workshop.config.ts starts a fresh Storybook and retries under it.
       CI: true
     steps:
       - name: Checkout into /app
@@ -373,6 +418,7 @@ jobs:
   # Every check job `needs: gitflow`, so a wrong source branch burns no CI time.
   gitflow:
     needs: [changes]
+    if: needs.changes.outputs.stand-down != 'true'
     concurrency:
       group: pr-gate-gitflow-${{ github.event.pull_request.number }}
       cancel-in-progress: true

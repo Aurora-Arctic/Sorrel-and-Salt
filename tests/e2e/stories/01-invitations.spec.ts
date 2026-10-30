@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import type { Page } from '@playwright/test';
 import postgres from 'postgres';
 import { test, expect } from '../fixtures';
@@ -6,25 +6,14 @@ import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from '../axe'
 import { e2eDatabaseUrl, recreateE2eDatabase } from '../database';
 import { latestMessageTo } from '../mailpit';
 import { signInAgainAs, signInAs } from '../session';
+import { newToken } from '@/lib/invitation-token';
 import { slugify } from '@/lib/slugify';
 
-// Stories 4 to 7, walked in a browser: an owner invites by mail from the
-// coven's Invitations page, only the verified holder of the address gets in,
-// a pending invitation can be revoked, and a dead link — expired, revoked or
-// already used — is refused with a reason of its own, naming no coven and
-// making no seat. The link is read from the mail, the only place its token
-// ever is. Users, the coven and its seats are set up by SQL and `signInAs`
-// (MB.101); each story's own step goes through the page.
-//
-// A refusal is proved twice: the control is absent, and the request it would
-// have sent, made from the same browser by hand, is refused too — then the
-// state a user can see (the pending list, the roll, the 404) shows nothing
-// changed. That request is the browser's own `/api/graphql` call, the one
-// path a page's controls have to the server (CLAUDE.md rule 1).
-//
-// Serial is the choice for a file whose tests chain: one test's mailed link
-// (invitedPath) and refusals (usedRefusal, revokedRefusal) are read by later
-// ones, and the roll counts assume each earlier acceptance has happened.
+// Inviting by mail, accepting, revoking and the dead-link refusals: only the verified holder of the address gets
+// in. The link is read from the mail, the only place its token is. A refusal is proved twice: the control is
+// absent, and the same request made by hand to `/api/graphql` is refused too. Each test arranges the invitation it
+// needs in the database (`seedInvitation`), so any one runs alone; the step a story proves stays a browser flow.
+// Serial, as every test shares the one coven and its roll counts are read before and after.
 test.describe.configure({ mode: 'serial' });
 
 const COVEN_NAME = 'Fixture Invitation Coven';
@@ -42,14 +31,6 @@ const people = {
 };
 let covenId = '';
 
-/** The first invitation, which its holder accepts by the link (stories 4 and 6). */
-const invited = { ...blank(), email: address('invited') };
-let invitedPath = '';
-/** What the used link says to its holder, once accepted. */
-let usedRefusal = '';
-/** What the revoked link says to its holder. */
-let revokedRefusal = '';
-
 async function withSql<T>(work: (sql: postgres.Sql) => Promise<T>): Promise<T> {
   const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
   try {
@@ -60,8 +41,8 @@ async function withSql<T>(work: (sql: postgres.Sql) => Promise<T>): Promise<T> {
 }
 
 /**
- * A verified account at `email` signed in on `page`, named so its row on the
- * members roll can be told from the rest: `signInAs` names everyone alike.
+ * A verified account at `email` signed in on `page`, named so its row on the members roll can be told from
+ * the rest: `signInAs` names everyone alike.
  */
 async function signInNamed(page: Page, email: string, name: string): Promise<Person> {
   const { userId } = await signInAs(page, email);
@@ -90,10 +71,8 @@ async function messagesTo(to: string): Promise<number> {
 }
 
 /**
- * Sends a GraphQL operation from the page, as the browser's own client does,
- * so the request carries this browser's session and nothing else: what a
- * user with the address bar and the developer tools could send. Answers the
- * response body.
+ * Sends a GraphQL operation from the page as the browser's own client does, carrying this browser's session
+ * and nothing else. Answers the response body.
  */
 async function sendFromPage(
   page: Page,
@@ -134,6 +113,42 @@ const ACCEPT_INVITATION_BY_ID = `mutation ($id: ID!) {
   acceptInvitationById(id: $id) { id }
 }`;
 
+type InvitationState = 'pending' | 'accepted' | 'revoked' | 'expired';
+
+/**
+ * An invitation to the coven written straight to the database, with a token of its own: a precondition, never the
+ * step a story proves. An accepted one only stamps the row; the seat, if a test needs it, is its own insert.
+ */
+async function seedInvitation(
+  email: string,
+  role: 'viewer' | 'member',
+  state: InvitationState = 'pending',
+): Promise<{ id: string; path: string }> {
+  const token = newToken();
+  const owner = people.owner.id;
+  const [row] = await withSql(
+    (sql) => sql`
+      insert into invitations (email, token_hash, workspace_id, role, created_by, updated_by,
+        expires_at, revoked_at, accepted_at, accepted_by)
+      values (${email}, ${createHash('sha256').update(token).digest('hex')}, ${covenId}, ${role}, ${owner},
+        ${owner},
+        ${state === 'expired' ? sql`now() - interval '1 hour'` : sql`now() + interval '7 days'`},
+        ${state === 'revoked' ? sql`now()` : null}, ${state === 'accepted' ? sql`now()` : null},
+        ${state === 'accepted' ? owner : null})
+      returning id`,
+  );
+  return { id: row.id as string, path: `/invite/${token}` };
+}
+
+/**
+ * What the signed-in holder's own dead link says in `state`: a spent invitation written for their address, read
+ * at its link, so one reason is told from another without quoting any.
+ */
+async function deadLinkRefusal(page: Page, email: string, state: InvitationState): Promise<string> {
+  const { path } = await seedInvitation(email, 'member', state);
+  return refusalAt(page, path);
+}
+
 /** The invitation's id, which no page shows to anyone but an owner's controls. */
 async function invitationIdFor(email: string): Promise<string> {
   const [row] = await withSql(
@@ -146,10 +161,7 @@ async function invitationIdFor(email: string): Promise<string> {
 /** The token a mailed path carries. */
 const tokenOf = (path: string) => path.slice('/invite/'.length);
 
-/**
- * The owner sends an invitation from the coven's Invitations page, through
- * Invite and its dialog, and the new row is listed pending.
- */
+/** The owner sends an invitation from the coven's Invitations page through Invite and its dialog; the row lists pending. */
 async function ownerInvites(page: Page, email: string, role: 'Viewer' | 'Member'): Promise<void> {
   await signInAgainAs(page, people.owner.id);
   await page.goto(`/coven/${COVEN_SLUG}/invitations`);
@@ -169,10 +181,7 @@ const pendingRow = (page: Page, email: string) =>
     .getByRole('row')
     .filter({ hasText: email });
 
-/**
- * Waits for the Invitations tab to be the open one: with nothing pending
- * there is no table to wait for, only the empty state.
- */
+/** Waits for the Invitations tab to be open: with nothing pending there is only the empty state to wait for. */
 const expectInvitationsTab = (page: Page) =>
   expect(
     page.getByRole('navigation', { name: 'Members' }).getByRole('link', { name: 'Invitations' }),
@@ -181,10 +190,7 @@ const expectInvitationsTab = (page: Page) =>
 const rollRow = (page: Page, name: string) =>
   page.getByRole('table', { name: 'Members' }).getByRole('row').filter({ hasText: name });
 
-/**
- * The owner's roll: its rows, and none for `absent`. The roll is what a seat
- * is to a user, so "no seat was made" is read here.
- */
+/** The owner's roll: its rows, and none for `absent`, so "no seat was made" is read here. */
 async function ownerReadsRoll(page: Page, absent?: string): Promise<number> {
   await signInAgainAs(page, people.owner.id);
   await page.goto(`/coven/${COVEN_SLUG}/members`);
@@ -196,9 +202,8 @@ async function ownerReadsRoll(page: Page, absent?: string): Promise<number> {
 }
 
 /**
- * A dead link, opened by a signed-in reader: the refusal is shown, there is
- * no Accept, and the coven is not named. Answers the refusal's words, so a
- * caller can tell one reason from another without asserting any of them.
+ * A dead link opened by a signed-in reader: the refusal shows, there is no Accept, and the coven is not named.
+ * Answers the refusal's words so a caller can tell one reason from another.
  */
 async function refusalAt(page: Page, path: string): Promise<string> {
   await page.goto(path);
@@ -209,10 +214,7 @@ async function refusalAt(page: Page, path: string): Promise<string> {
   return (await refusal.textContent()) ?? '';
 }
 
-/**
- * A holder whose link is dead tries Accept's own request by hand: refused,
- * and still no seat — the coven is a 404 to them, as to any stranger.
- */
+/** A holder with a dead link tries Accept's request by hand: refused, no seat, and the coven is a 404 to them. */
 async function directAcceptRefused(page: Page, path: string): Promise<void> {
   const answer = await sendFromPage(page, ACCEPT_INVITATION, { token: tokenOf(path) });
   expect(answer.errors?.length).toBeGreaterThan(0);
@@ -220,10 +222,8 @@ async function directAcceptRefused(page: Page, path: string): Promise<void> {
 }
 
 /**
- * Where `/coven`, the landing, sends this browser, read from its redirect.
- * Only the navigation's own response counts: the shell's brand links to the
- * landing, so Next prefetches it from every page as a 200 (an RSC fetch),
- * and one still in flight would answer here instead of the 307.
+ * Where `/coven`, the landing, sends this browser, read from its redirect. Only the navigation's own response
+ * counts: the shell's brand link makes Next prefetch the landing as a 200, which could answer instead of the 307.
  */
 async function landingRedirect(page: Page): Promise<string | undefined> {
   const redirected = page.waitForResponse(
@@ -287,7 +287,8 @@ test(
     await expect(dialog.getByRole('radio', { name: /Owner/ })).toHaveCount(0);
     await assertNoAccessibilityViolations(page);
 
-    await dialog.getByRole('textbox', { name: 'Email Address' }).fill(invited.email);
+    const invited = address('invited-by-dialog');
+    await dialog.getByRole('textbox', { name: 'Email Address' }).fill(invited);
     await dialog.getByRole('radio', { name: 'Member' }).check();
     await dialog.getByRole('button', { name: 'Send Invitation' }).click();
     const done = dialog.getByRole('button', { name: 'Done' });
@@ -295,27 +296,27 @@ test(
 
     // The mail went to that address alone, and the link in it is not on the
     // page that sent it.
-    const message = await latestMessageTo(invited.email);
-    expect(message.to).toEqual([invited.email]);
+    const message = await latestMessageTo(invited);
+    expect(message.to).toEqual([invited]);
     expect(await messagesTo(people.owner.email)).toBe(0);
-    invitedPath = await mailedInvitePath(invited.email);
+    const invitedPath = await mailedInvitePath(invited);
     expect(await page.content()).not.toContain(tokenOf(invitedPath));
     await done.click();
     await expect(dialog).toHaveCount(0);
 
     // Listed pending, at the role chosen, with its Revoke.
-    const row = pendingRow(page, invited.email);
+    const row = pendingRow(page, invited);
     await expect(row).toBeVisible();
     await expect(row.getByRole('cell', { name: 'Member', exact: true })).toBeVisible();
     await expect(
-      row.getByRole('button', { name: `Revoke the invitation to ${invited.email}` }),
+      row.getByRole('button', { name: `Revoke the invitation to ${invited}` }),
     ).toBeVisible();
     await assertNoAccessibilityViolations(page);
     await assertNoSidewaysScroll(page, { restore: true });
 
     // Nor is it on the list, read again from the server.
     await page.reload();
-    await expect(pendingRow(page, invited.email)).toBeVisible();
+    await expect(pendingRow(page, invited)).toBeVisible();
     expect(await page.content()).not.toContain(tokenOf(invitedPath));
 
     // Owner as a role, sent by hand past the dialog, is refused: nothing is
@@ -327,7 +328,7 @@ test(
     });
     expect(answer.errors?.length).toBeGreaterThan(0);
     await page.reload();
-    await expect(pendingRow(page, invited.email)).toBeVisible();
+    await expect(pendingRow(page, invited)).toBeVisible();
     await expect(pendingRow(page, ownerRole)).toHaveCount(0);
     expect(await messagesTo(ownerRole)).toBe(0);
   },
@@ -337,7 +338,8 @@ test(
   'a member and a viewer have no Invite and no Revoke, the Invitations page is a 404 to them, and the requests sent by hand are refused',
   { tag: ['@story-4', '@story-5'] },
   async ({ page }) => {
-    const pendingId = await invitationIdFor(invited.email);
+    const invited = { email: address('pending-for-members') };
+    const { id: pendingId } = await seedInvitation(invited.email, 'member');
     // Why either could have succeeded: the invitation is there, pending, for
     // the owner to see and revoke.
     await signInAgainAs(page, people.owner.id);
@@ -401,6 +403,9 @@ test(
   'a signed-in account whose verified address differs is refused at the link, with no Accept and no coven named, and is offered nothing on the account page',
   { tag: '@story-4' },
   async ({ page }) => {
+    const invited = { email: address('pending-for-stranger') };
+    const { path: invitedPath } = await seedInvitation(invited.email, 'member');
+    const before = await ownerReadsRoll(page);
     const stranger = await signInNamed(page, address('stranger'), 'Fixture Stranger');
     // Verified, signed in, holding the live link: only the address is wrong.
     const [row] = await withSql(
@@ -427,7 +432,7 @@ test(
     expect(byId.errors?.length).toBeGreaterThan(0);
     expect((await page.goto(`/coven/${COVEN_SLUG}`))?.status()).toBe(404);
 
-    expect(await ownerReadsRoll(page, stranger.name)).toBe(1 + 3);
+    expect(await ownerReadsRoll(page, stranger.name)).toBe(before);
   },
 );
 
@@ -435,7 +440,8 @@ test(
   'the invited account accepts from the link and lands in the coven at the invited role, and may now create a coven',
   { tag: ['@story-4', '@story-6'] },
   async ({ page }) => {
-    Object.assign(invited, await signInNamed(page, invited.email, 'Fixture Invitee'));
+    const invited = await signInNamed(page, address('invited'), 'Fixture Invitee');
+    const { path: invitedPath } = await seedInvitation(invited.email, 'member');
 
     // Before: no seat — the coven is a 404 to them — and no right to create
     // one: the landing offers no Create Coven, and the create page no form.
@@ -468,10 +474,8 @@ test(
       rollRow(page, invited.name).getByRole('cell', { name: 'Member', exact: true }),
     ).toBeVisible();
 
-    // The landing now goes straight into the coven. The redirect is read
-    // rather than followed: the session rides as an extra request header
-    // (tests/e2e/session.ts), which the browser drops from a redirect it
-    // follows, so the followed request would arrive signed out.
+    // The landing now goes straight into the coven. The redirect is read rather than followed, so the
+    // assertion is on where the landing sends the browser.
     expect(await landingRedirect(page)).toBe(`/coven/${COVEN_SLUG}`);
 
     // The creation right came with it: the switcher offers Create Coven, and
@@ -490,11 +494,22 @@ test(
   'an accepted invitation is no longer pending, offers no Revoke, and its link is refused as used',
   { tag: ['@story-5', '@story-7'] },
   async ({ page }) => {
-    const acceptedId = await invitationIdFor(invited.email);
+    // An accepted invitation: its holder holds the seat it gave, written as acceptance leaves it.
+    const invited = await signInNamed(page, address('accepted'), 'Fixture Accepted');
+    const { id: acceptedId, path: invitedPath } = await seedInvitation(
+      invited.email,
+      'member',
+      'accepted',
+    );
+    await withSql(
+      (sql) => sql`
+        insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
+        values (${covenId}, ${invited.id}, 'member', ${people.owner.id}, ${people.owner.id})`,
+    );
 
     // The owner sees the new member on the roll, at the invited role, and the
     // invitation gone from the pending list with its Revoke.
-    expect(await ownerReadsRoll(page)).toBe(1 + 4);
+    await ownerReadsRoll(page);
     await expect(rollRow(page, invited.name).getByRole('cell', { name: /^Member/ })).toBeVisible();
     await page.goto(`/coven/${COVEN_SLUG}/invitations`);
     await expectInvitationsTab(page);
@@ -505,7 +520,7 @@ test(
 
     // The holder's link is spent.
     await signInAgainAs(page, invited.id);
-    usedRefusal = await refusalAt(page, invitedPath);
+    const usedRefusal = await refusalAt(page, invitedPath);
     await assertNoAccessibilityViolations(page);
     await assertNoSidewaysScroll(page, { restore: true });
 
@@ -543,7 +558,7 @@ test(
     await confirm.getByRole('button', { name: 'Revoke', exact: true }).click();
     await expect(confirm).toHaveCount(0);
     await expect(pendingRow(page, gone)).toHaveCount(0);
-    // Its Revoke went with the row: the page's heading has the focus (M8.17).
+    // Its Revoke went with the row: the page's heading has the focus.
     await expect(page.getByRole('main').getByRole('heading', { level: 1 })).toBeFocused();
     await page.reload();
     await expectInvitationsTab(page);
@@ -552,8 +567,8 @@ test(
 
     // Its holder, verified at the invited address, so only the link is at fault.
     const holder = await signInNamed(page, gone, 'Fixture Revoked');
-    revokedRefusal = await refusalAt(page, path);
-    expect(revokedRefusal).not.toBe(usedRefusal);
+    const revokedRefusal = await refusalAt(page, path);
+    expect(revokedRefusal).not.toBe(await deadLinkRefusal(page, holder.email, 'accepted'));
     await assertNoAccessibilityViolations(page);
     await directAcceptRefused(page, path);
 
@@ -582,7 +597,7 @@ test(
 
     // The page still open offers Accept, and its press is refused: the
     // service's sentence in a callout from Accept, which keeps the focus, and
-    // a badge on Accept that brings it back once closed (design F, M12.31).
+    // a badge on Accept that brings it back once closed.
     const accept = page.getByRole('button', { name: 'Accept Invitation', exact: true });
     await accept.click();
     const callout = page.getByRole('main').getByRole('alert');
@@ -600,6 +615,8 @@ test(
 
     const expiredRefusal = await refusalAt(page, path);
     expect(expiredRefusal.trim()).toBe(pressedRefusal);
+    const revokedRefusal = await deadLinkRefusal(page, holder.email, 'revoked');
+    const usedRefusal = await deadLinkRefusal(page, holder.email, 'accepted');
     expect(new Set([expiredRefusal, revokedRefusal, usedRefusal]).size).toBe(3);
     await assertNoAccessibilityViolations(page);
     await directAcceptRefused(page, path);
@@ -623,8 +640,15 @@ test(
     await expect(page.getByRole('main').getByRole('status')).toBeVisible();
     await expect(page.getByRole('textbox', { name: 'Name' })).toHaveCount(0);
 
-    // Never opening the mail: the invitation is listed on the account page.
-    await page.goto('/account#account-invitations');
+    // Never opening the mail: the bar's account button counts the invitation, and its badge in the
+    // panel is a working link. A click proves the badge is drawn at size: a badge clipped to a pixel
+    // takes no pointer, so the click fails rather than lands.
+    const banner = page.getByRole('banner');
+    await banner
+      .getByRole('button', { name: 'Fixture Account Invitee, 1 coven invitation' })
+      .click();
+    await banner.getByRole('link', { name: '1 Coven Invitation' }).click();
+    await expect(page).toHaveURL(/\/account#account-invitations$/);
     const accept = page
       .getByRole('table', { name: 'Your Invitations' })
       .getByRole('button', { name: `Accept the invitation to ${COVEN_NAME}` });
@@ -642,7 +666,7 @@ test(
     await expect(page.getByRole('textbox', { name: 'Name' })).toBeVisible();
 
     // The mailed link is the same invitation, now used.
-    expect(await refusalAt(page, path)).toBe(usedRefusal);
+    expect(await refusalAt(page, path)).toBe(await deadLinkRefusal(page, holder.email, 'accepted'));
 
     // The owner's roll shows them, at the invited role.
     await ownerReadsRoll(page);

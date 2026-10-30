@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/pellitory-anacyclus-pyrethrum
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: VU
+    listedAs: Anacyclus pyrethrum
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-anacyclus-pyrethrum
+    locator: 'Taxobox: status = VU, status_system = IUCN3.1; its status_ref reads: "Anacyclus pyrethrum", Rankou, H.; Ouhammou, A.; Taleb, M.; Manzanilla, V.; and others, 2015, T202924A53798702'

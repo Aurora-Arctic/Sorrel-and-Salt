@@ -253,6 +253,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.247 | The compendium seed: resins, woods and other ingredients                                                                 | Wave 9   | MB.249                 |
 | MB.248 | The compendium seed: stones and metals                                                                                   | Wave 14  | MB.249                 |
 | MB.249 | Close the compendium seed                                                                                                | Wave 14  | —                      |
+| MB.250 | ~~Add the compendium roster addendum~~ — **retired into M14.14, not done**                                               | —        | —                      |
 | MB.251 | Call the planets Celestial Bodies wherever a person reads them                                                           | Wave 8   | MB.253, MB.254         |
 | MB.252 | The celestial bodies table and columns, beside the planet ones                                                           | Wave 9   | MB.253                 |
 | MB.253 | Read and write celestial bodies under their own names                                                                    | Wave 9   | MB.254                 |
@@ -270,6 +271,13 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.265 | Admin Pages Fail Axe's Title Check Under Load                                                                            | Bugfixes | —                      |
 | MB.266 | Curators Reach the Admin Curated Lists Again                                                                             | Bugfixes | —                      |
 | MB.267 | Story 18 and the Sign-In Panel Test Pass Every CI Run                                                                    | Bugfixes | —                      |
+| MB.270 | The Search Sentence Types a Changed Term                                                                                 | Bugfixes | —                      |
+| MB.271 | The Back Link Returns to the Same Results and Place                                                                      | Bugfixes | —                      |
+| MB.272 | A Click Anywhere on an Ingredient Card Opens Its Entry                                                                   | Bugfixes | —                      |
+| MB.273 | Claude Design Previews Render in a Narrower, Shorter Frame Than Storybook                                                | Bugfixes | —                      |
+| MB.274 | Seeded Compendium Content Stays Stale After a Deploy                                                                     | Bugfixes | —                      |
+| MB.275 | Lint Warnings Pile Up Because Nothing Fails on Them                                                                      | Bugfixes | —                      |
+| MB.276 | An Admin's Compendium Edit Saves Whatever the Autosave Timing                                                            | Bugfixes | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -1044,6 +1052,8 @@ _Story:_ As a reader, I want the plants from A to Cn in the compendium with thei
 
 Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-decisions/mb.240-plan.md)), the first of six content shards built side by side by separate research lanes after MB.242. It writes `src/db/seed/compendium/plants-a-cn.ts` and `claude-docs/db/compendium-seed/plants-a-cn.md`, 112 entries, the rows `candidates.md` gives this shard (the plan's `plants-a-c`, renamed when the list moved the plant split points to Co, L and R for balance). **It merges first** of the six, because it switches the `SEED_ENTRIES` sweep from the fixture shard to `COMPENDIUM` and adds the precondition that `COMPENDIUM` is not empty; the others conflict with it on one line of `compendium/index.ts`. The 6 hours are an estimate, from MB.127's rate (216 rows and their sources in 2.5h, about 96 KB an hour): about 270 KB of literal and doc is about 3 hours, doubled for reading before citing and for sourcing every field; the pilot's measured time re-calibrates it before the lane is briefed.
 
+**From M14.10 it writes markdown files** (M14.10 ended the freeze M14.4 set). Each entry it writes is one file, `compendium/ingredients/<nomenclature>/<slug>.md`, with its per-entry sources under `compendium/sources/` and a `nameBasis` on every citation ([`design-decisions/m14.4-compendium-markdown-files.md`](../design-decisions/m14.4-compendium-markdown-files.md)); nothing is written under `src/db/seed/compendium/`, and the shard's doc is not continued, since it moved to `claude-docs/archive/compendium-seed-shards/`. The files' citations take the place of the doc's one source line per entry, and its "What is left out, and why" goes in the pull request body ([`compendium-seed/README.md`](../db/compendium-seed/README.md), "What a source is recorded in").
+
 The lane brief is the README's: every field value traces to a source read during the task, the owner's book by page or a fetched page by URL; a claim with no source is left out; no page, URL, edition or year is invented; `accessed` is the real fetch date; no prose is copied from any source; descriptions are 100 to 250 words, in British spelling, written fresh; shared works are named by their `works.ts` handle; a substitute links only an identity in this shard or an earlier one; every formal name is checked against POWO or Mindat as the entry is written, since the candidate list's are Wikipedia's. Every entry carries at least its primary form; a further form only where a source attaches something to it. An entry that cannot be sourced at depth goes to the doc's "What is left out, and why".
 
 **It sets the toxic flags as it seeds** (M14.1, the owner's call on 2026-10-16). Each entry it writes after M14.1's mechanism lands is flagged `toxic: true` where a source read during the task says any part of it is poisonous, and each form where a source says that form is, cited with `toxic` in `supports`, under M14.1's rule. The entries of a part merged before then are flagged by M14.1.
@@ -1070,6 +1080,8 @@ _Story:_ As a reader, I want the plants from Co to K in the compendium with thei
 
 Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-decisions/mb.240-plan.md)), the second content shard, built beside MB.243 by its own research lane after MB.242 and merged after MB.243. It writes `src/db/seed/compendium/plants-co-k.ts` and `claude-docs/db/compendium-seed/plants-co-k.md`, 116 entries, the rows `candidates.md` gives this shard, under MB.243's lane brief. The 6 hours are an estimate on MB.243's calibration.
 
+**From M14.10 it writes markdown files** (M14.10 ended the freeze M14.4 set). Each entry it writes is one file, `compendium/ingredients/<nomenclature>/<slug>.md`, with its per-entry sources under `compendium/sources/` and a `nameBasis` on every citation ([`design-decisions/m14.4-compendium-markdown-files.md`](../design-decisions/m14.4-compendium-markdown-files.md)); nothing is written under `src/db/seed/compendium/`, and the shard's doc is not continued, since it moved to `claude-docs/archive/compendium-seed-shards/`. The files' citations take the place of the doc's one source line per entry, and its "What is left out, and why" goes in the pull request body ([`compendium-seed/README.md`](../db/compendium-seed/README.md), "What a source is recorded in").
+
 **It sets the toxic flags as it seeds** (M14.1, the owner's call on 2026-10-16). Each entry it writes after M14.1's mechanism lands is flagged `toxic: true` where a source read during the task says any part of it is poisonous, and each form where a source says that form is, cited with `toxic` in `supports`, under M14.1's rule. The entries of a part merged before then are flagged by M14.1.
 
 **Its safety notes record hazards only, and agree with the flag** (the owner, 2026-10-21). A `safetyNotes` value, on an entry or on a form, states a hazard: something a source says can harm. It never says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards. That is not a caution, and where a source says only that, the field is left empty. A note that mixes a safe claim with a hazard keeps the hazard and loses the safe clause. And where a sourced note says the entry, or a form, is poisonous, toxic or fatal if swallowed, that entry or form carries `toxic: true`, cited under M14.1's rule, so the note and the flag never disagree. A note about a dose, a drug interaction or pregnancy on its own sets no flag.
@@ -1094,6 +1106,8 @@ _Story:_ As a reader, I want the plants from L to Q in the compendium with their
 
 Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-decisions/mb.240-plan.md)), the third content shard, built beside MB.243 by its own research lane after MB.242 and merged after MB.243. It writes `src/db/seed/compendium/plants-l-q.ts` and `claude-docs/db/compendium-seed/plants-l-q.md`, 104 entries, the rows `candidates.md` gives this shard, under MB.243's lane brief. The 6 hours are an estimate on MB.243's calibration.
 
+**From M14.10 it writes markdown files** (M14.10 ended the freeze M14.4 set). Each entry it writes is one file, `compendium/ingredients/<nomenclature>/<slug>.md`, with its per-entry sources under `compendium/sources/` and a `nameBasis` on every citation ([`design-decisions/m14.4-compendium-markdown-files.md`](../design-decisions/m14.4-compendium-markdown-files.md)); nothing is written under `src/db/seed/compendium/`, and the shard's doc is not continued, since it moved to `claude-docs/archive/compendium-seed-shards/`. The files' citations take the place of the doc's one source line per entry, and its "What is left out, and why" goes in the pull request body ([`compendium-seed/README.md`](../db/compendium-seed/README.md), "What a source is recorded in").
+
 **It sets the toxic flags as it seeds** (M14.1, the owner's call on 2026-10-16). Each entry it writes after M14.1's mechanism lands is flagged `toxic: true` where a source read during the task says any part of it is poisonous, and each form where a source says that form is, cited with `toxic` in `supports`, under M14.1's rule. The entries of a part merged before then are flagged by M14.1.
 
 **Its safety notes record hazards only, and agree with the flag** (the owner, 2026-10-21). A `safetyNotes` value, on an entry or on a form, states a hazard: something a source says can harm. It never says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards. That is not a caution, and where a source says only that, the field is left empty. A note that mixes a safe claim with a hazard keeps the hazard and loses the safe clause. And where a sourced note says the entry, or a form, is poisonous, toxic or fatal if swallowed, that entry or form carries `toxic: true`, cited under M14.1's rule, so the note and the flag never disagree. A note about a dose, a drug interaction or pregnancy on its own sets no flag.
@@ -1117,6 +1131,8 @@ _Acceptance criteria:_
 _Story:_ As a reader, I want the plants from R to Z in the compendium with their forms, correspondences and safety notes, each traced to a source, so that the reference I consult says nothing it cannot back.
 
 Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-decisions/mb.240-plan.md)), the fourth content shard, built beside MB.243 by its own research lane after MB.242 and merged after MB.243. It writes `src/db/seed/compendium/plants-r-z.ts` and `claude-docs/db/compendium-seed/plants-r-z.md`, 98 entries, the rows `candidates.md` gives this shard, under MB.243's lane brief. The 6 hours are an estimate on MB.243's calibration.
+
+**From M14.10 it writes markdown files** (M14.10 ended the freeze M14.4 set). Each entry it writes is one file, `compendium/ingredients/<nomenclature>/<slug>.md`, with its per-entry sources under `compendium/sources/` and a `nameBasis` on every citation ([`design-decisions/m14.4-compendium-markdown-files.md`](../design-decisions/m14.4-compendium-markdown-files.md)); nothing is written under `src/db/seed/compendium/`, and the shard's doc is not continued, since it moved to `claude-docs/archive/compendium-seed-shards/`. The files' citations take the place of the doc's one source line per entry, and its "What is left out, and why" goes in the pull request body ([`compendium-seed/README.md`](../db/compendium-seed/README.md), "What a source is recorded in").
 
 **It sets the toxic flags as it seeds** (M14.1, the owner's call on 2026-10-16). Each entry it writes after M14.1's mechanism lands is flagged `toxic: true` where a source read during the task says any part of it is poisonous, and each form where a source says that form is, cited with `toxic` in `supports`, under M14.1's rule. The entries of a part merged before then are flagged by M14.1.
 
@@ -1159,6 +1175,8 @@ _Story:_ As a reader, I want the stones, crystals and metals in the compendium w
 
 Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-decisions/mb.240-plan.md)), the sixth content shard, built beside MB.243 by its own research lane after MB.242 and merged after MB.243. It writes `src/db/seed/compendium/stones-and-metals.ts` and `claude-docs/db/compendium-seed/stones-and-metals.md`, 136 entries, the rows `candidates.md` gives this shard, under MB.243's lane brief. A mineral variety is `<Species> var. <variety>` as `standard` writes `Quartz var. amethyst`, with Mindat as the reference for names, and a metal is `chemical`. The 8 hours are an estimate on MB.243's calibration, scaled to the shard's size.
 
+**From M14.10 it writes markdown files** (M14.10 ended the freeze M14.4 set). Each entry it writes is one file, `compendium/ingredients/<nomenclature>/<slug>.md`, with its per-entry sources under `compendium/sources/` and a `nameBasis` on every citation ([`design-decisions/m14.4-compendium-markdown-files.md`](../design-decisions/m14.4-compendium-markdown-files.md)); nothing is written under `src/db/seed/compendium/`, and the shard's doc is not continued, since it moved to `claude-docs/archive/compendium-seed-shards/`. The files' citations take the place of the doc's one source line per entry, and its "What is left out, and why" goes in the pull request body ([`compendium-seed/README.md`](../db/compendium-seed/README.md), "What a source is recorded in").
+
 **It sets the toxic flags as it seeds** (M14.1, the owner's call on 2026-10-16). Each entry it writes after M14.1's mechanism lands is flagged `toxic: true` where a source read during the task says any part of it is poisonous, and each form where a source says that form is, cited with `toxic` in `supports`, under M14.1's rule. The entries of a part merged before then are flagged by M14.1.
 
 **Its safety notes record hazards only, and agree with the flag** (the owner, 2026-10-21). A `safetyNotes` value, on an entry or on a form, states a hazard: something a source says can harm. It never says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards. That is not a caution, and where a source says only that, the field is left empty. A note that mixes a safe claim with a hazard keeps the hazard and loses the safe clause. And where a sourced note says the entry, or a form, is poisonous, toxic or fatal if swallowed, that entry or form carries `toxic: true`, cited under M14.1's rule, so the note and the flag never disagree. A note about a dose, a drug interaction or pregnancy on its own sets no flag.
@@ -1183,25 +1201,31 @@ _Story:_ As the owner, I want the seeded compendium counted against the candidat
 
 Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-decisions/mb.240-plan.md)), the last of the ten. It starts after each shard's final part has merged, not merely after each shard's first PR: five shards, `plants-a-cn`, `plants-co-k`, `plants-l-q`, `plants-r-z` and `stones-and-metals`, merged as part 1 only, as each one's doc under `claude-docs/db/compendium-seed/` says, and only `resins-woods-and-other` is whole. It also starts after M14.1, which flags the entries a source calls poisonous, and counts the flagged entries and forms beside the seeded totals. It reconciles the seeded totals against `candidates.md`; gathers the six shards' "What is left out" sections into one view in the README; records the final count in DESIGN.md §14 and the wave file; confirms on staging that the admin compendium page's unsourced filter lists no seeded entry; and adds a note to the `SEED_SCENARIO` and `db:reset` docs that `npm run db:seed:compendium` populates a local compendium. Whether it stays separate or folds into MB.248 is open with the owner.
 
+**From M14.10 it reads the markdown files.** `COMPENDIUM` and the TypeScript shards are gone: the tests above run over the `approved` files `loadCompendium()` returns, and a correction reaches staging as a file marked with `npm run seed:mark` (M14.7). The shard docs with the "What is left out" sections of the parts merged before M14.10 are in `claude-docs/archive/compendium-seed-shards/`; the parts after carry theirs in their pull request bodies.
+
+**MB.249 may read `claude-docs/archive/compendium-seed-shards/`.** This is a one-off exception to the archive's rule that nothing reads it, which the owner granted on 2026-10-23, so that the close can count the entries the shard docs left out. No other task reads that folder.
+
 **It checks the safety notes across every shard** (the owner, 2026-10-21). Two rules hold over the whole seed, and this task shows they do. A `safetyNotes` value records a hazard only: none, on an entry or a form, says the thing is safe, generally regarded as safe (GRAS), non-toxic or free of known hazards, and where a source says only that the field is empty. A note that mixes a safe claim with a hazard ("generally regarded as safe; avoid in pregnancy") keeps the hazard and loses the safe clause. And a note and the `toxic` flag agree: an entry or form whose note says it is poisonous, toxic or fatal if swallowed is flagged. Both can be checked by a test over the full `COMPENDIUM` rather than by reading: a note that makes a safety claim fails, whether or not a hazard sits beside it, while a phrase that states a hazard ("not safe in pregnancy") is not a safety claim and passes; and a note matching poison-wording on an unflagged entry or form fails. The task chooses the patterns and names their few exceptions in the PR body. Any entry an earlier part left in breach is repaired here, by the route the staging repair below takes, since the seed writes an entry once; the repair drops the safe clause from a mixed note and keeps the hazard text, and a note that only says "safe" becomes empty.
 
 **Staging is brought back in line with the literal.** The seed writes an entry once and skips it, with everything beneath it, on every later run (`claude-docs/db/compendium-seed/README.md`, "Write-once, and how a correction lands"). So an edit to a shard's literal made after a deploy seeded that entry never reaches staging. Two edits made during MB.115 are of that kind: commit `2aa282b5` rewrote 1,078 seed locator lines from "s.v." to "under", and `f007a51b` relinked Almond's Nut form from Apricot as a whole to Apricot's Seed form, since a form's linked substitute now names a form ([`design-decisions/mb.115-variant-substitutes-name-a-form.md`](../design-decisions/mb.115-variant-substitutes-name-a-form.md)). Any entry staging seeded before those commits still holds the old locators and the whole-ingredient link. This task lists what differs on staging and repairs it, by one of two routes, chosen and argued in the PR body: a correction list an admin works through on staging's compendium page, which is the README's own rule for a correction, or a one-off step that re-applies those two edits to entries already present. Staging's database has not been read for this entry, so the size of the drift is unknown until the task lists it.
 
 **The deploy and the seed say what they did.** `.github/workflows/deploy.yml` re-seeds only when a file on its watch list changed, and the list omits `src/db/seed/standard.ts`, which `compendium.ts` and `compendium/guard.ts` import `identityOf` from; the task adds it. `scripts/db-seed.ts` prints one fixed line for the compendium, so a deploy log cannot tell how many entries a run added; the seed prints the entries it inserted and the entries it skipped. And a seeded entry can stay out of the public pages for up to an hour, because the compendium reads are cached under the `compendium` tag for `COMPENDIUM_REVALIDATE_SECONDS` (3600, `src/lib/compendium-cache.ts`) and only an admin write clears the tag; the tag is revalidated after a seed run, and how is part of this task's scoping.
 
+**It closes the addendum too** (the owner, 2026-10-23). The roster widened to 1,111 rows (M14.14), and the reconciliation, the left-out view and the final count cover the addendum shards M14.16 to M14.21 as well, so it starts after each of their final parts has merged.
+
 The hours were re-estimated on review on 2026-10-12, from 1: the staging repair, the deploy and seed changes and two more tests join the reconciliation. They remain an estimate.
 
 Tests are written first:
 
 - every seeded entry has at least one live `reference_links` row on its `ingredient_id`
-- the seeded entries reconcile against `claude-docs/db/compendium-seed/candidates.md`, each candidate row seeded or listed as left out, read from the doc itself (no test reads it today)
+- the seeded entries reconcile against `claude-docs/db/compendium-seed/candidates.md`, each candidate row seeded or listed as left out in `compendium/left-out.md`, read from the doc itself (no test reads it today)
 - no seeded `safetyNotes` value, on an entry or a form, makes a safety claim (safe, GRAS, non-toxic or free of known hazards), whether or not it also names a hazard; a phrase that states a hazard, such as "not safe in pregnancy", passes
 - no seeded entry or form is unflagged while its `safetyNotes` value says it is poisonous, toxic or fatal if swallowed
 - the "runs after the standard scenario" test in `tests/db/seed/compendium.test.ts`, which runs `seedCompendium` once, runs it twice and asserts the second run inserts nothing
 
 _Acceptance criteria:_
 
-- The seeded, left-out and candidate counts are recorded and reconcile
+- The seeded, left-out and candidate counts are recorded and reconcile, the addendum shards M14.16 to M14.21 included
 - The entries and forms flagged toxic are counted beside them
 - Across every shard, no `safetyNotes` value makes a safety claim, and a mixed note keeps its hazard text with the safe clause removed; every entry or form whose note calls it poisonous, toxic or fatal if swallowed is flagged `toxic`
 - The tests above are green over the full `COMPENDIUM`
@@ -1211,6 +1235,8 @@ _Acceptance criteria:_
 - A compendium seed run prints how many entries it inserted and how many it skipped
 - An entry a seed run adds shows on the public compendium without waiting for the hour's revalidation
 - Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
+
+**MB.250 — Retired into M14.14 on 2026-10-23.** The roster addendum it described is M14.14's work, widened by the owner from 614 to 1,111 rows. Its branch `feature/mb.250-compendium-roster-addendum` (commit 1c8ac0cbe) is superseded, and its mineral rule and notes were carried into the candidate list and `compendium/left-out.md`.
 
 **MB.251 — Call the planets Celestial Bodies wherever a person reads them** · 3h
 
@@ -1646,6 +1672,148 @@ _Acceptance criteria:_
 - A regression test reproduces the sign-in panel's getSnapshot warning before the fix, and the panel's test passes twenty consecutive runs with none
 - Docs: `claude-docs/components/sign-in-panel.md`, "Last used", says how the read stays stable
 
+**MB.270 — The Search Sentence Types a Changed Term** · 1.5h
+
+_Story:_ As anyone searching the compendium or a coven's ingredients, I want the search sentence to type out my new search term, so that the sentence reads as one animation instead of half typing and half jumping.
+
+Found on 2026-10-23, locally, every time, signed out on `/compendium` and as a member on a coven's Ingredients page; cosmetic. Steps to reproduce:
+
+1. Open `/compendium` signed out, or a coven's Ingredients page as a member.
+2. Search for "sage" and wait for the sentence to finish typing.
+3. Change the search to "rose" by typing in the search box.
+
+Actual: the sentence's lead words and clauses type out, but "rose" appears whole, with no typing.
+Expected: "sage" is wiped and "rose" is typed out; a term that did not change stays put.
+
+Cause found in the code: while a search is pending, `src/components/CompendiumList/filter.tsx` builds the sentence from the target address, and the pending-edge effect in `src/components/SearchSentence/index.tsx` rebuilds the old line from that same new term, so the old and new lines hold the same term and the term is never typed.
+
+_Acceptance criteria:_
+
+- A regression test fails before the fix: after the term changes from one value to another, the old term is wiped and the new one is typed character by character.
+- A term that did not change between two searches stays on screen and is not retyped.
+- Under reduced motion the sentence still switches straight to the new line.
+- `claude-docs/components/search-sentence.md` matches the behaviour.
+
+**MB.271 — The Back Link Returns to the Same Results and Place** · 3h
+
+_Story:_ As anyone browsing ingredients, I want "Back to …" on an ingredient page to take me to the search, filters and page I came from, at the card I opened, so that I don't have to search again.
+
+Found on 2026-10-23, locally, for every kind of user; wrong result. Steps to reproduce:
+
+1. As any user, open a coven's Ingredients page or `/compendium`.
+2. Search or set a filter, go to page 2 of the results, and scroll down.
+3. Open an ingredient's card.
+4. Press the "Back to …" link on the ingredient page.
+
+Actual: the list opens unfiltered, on page 1, at the top.
+Expected: the same search, filters and page, scrolled so the card that was opened is where it was.
+
+Cause: the back link is the bare list address in `src/app/(public)/compendium/ingredients/[slug]/page.tsx` and `src/app/(shell)/coven/[slug]/ingredients/[id]/page.tsx`, and the cards in `src/components/CompendiumCards/index.tsx` carry no return address.
+
+_Acceptance criteria:_
+
+- A regression test fails before the fix: the back link from an entry opened from a filtered, paged list carries that list's search, filters and cursor.
+- On return, the opened card is in view at the position it had.
+- The return address only ever points at the list route the entry belongs to; a crafted address to another origin or route falls back to the bare list.
+- Opened directly, with no list before it, the back link is the bare list, as today.
+- A Playwright spec walks the steps above on both the compendium and a coven's Ingredients page.
+
+**MB.272 — A Click Anywhere on an Ingredient Card Opens Its Entry** · 2.5h
+
+_Story:_ As anyone searching ingredients, I want a click anywhere on an ingredient card to open its entry, so that I don't have to aim for the name.
+
+Found on 2026-10-23, locally, for every kind of user, every time (assumed: it is how the cards are built); wrong result. Steps to reproduce:
+
+1. As any user, open `/compendium` or a coven's Ingredients page.
+2. Click a card's empty space or its description, not its name.
+
+Actual: nothing happens; only the name opens the entry.
+Expected: a click anywhere on the card opens the entry, the same as clicking its name. The + button, stock controls, chips and the Quick Look icon each still do their own thing. The card shows a hover and focus style saying it is clickable.
+
+The name link is in `src/components/CompendiumCards/index.tsx` and `src/components/IngredientCard/index.tsx`. The fix is the stretched-link pattern: the name stays the one real link, its `::after` covers the card, and the other controls sit above it. Wrapping the card in one `<a>` is ruled out: HTML does not allow a button inside a link, and a screen reader would read the whole card as the link's name (Pickering, _Inclusive Components_, "Cards"; Soueidan, "Nested Links"; MDN, the `<a>` element).
+
+_Acceptance criteria:_
+
+- A regression test fails before the fix: on both cards, a click on the card outside the name navigates to the entry.
+- The + button, stock controls, chips and the Quick Look icon still do their own action, and none of them navigates.
+- The name is still the card's only link, so its accessible name is the ingredient's name, and tab order is unchanged.
+- Each other control keeps a target of at least 24 × 24 px (WCAG 2.5.8).
+- A Playwright spec clicks a card's body and its + on `/compendium`, and its body and its stock control on a coven's Ingredients page.
+- Docs: `claude-docs/components/compendium-cards.md` and `claude-docs/components/ingredient-card.md`.
+
+**MB.273 — Claude Design Previews Render in a Narrower, Shorter Frame Than Storybook** · 3h
+
+_Story:_ As a designer using the Sorrel & Salt project in Claude Design, I want each component preview to look the same as its Storybook render, so that I can trust what the cards show.
+
+Found on 2026-10-23, locally, during the M12.53 design sync (the upload of every component to Claude Design), every time; cosmetic. Steps to reproduce:
+
+1. On a checkout of the feature branch, build the Claude Design bundle (the steps are in `.design-sync/NOTES.md`).
+2. Run `compare.mjs` against the Storybook reference in `.design-sync/sb-reference` on CompendiumList, AdminNav, CovenCards, ProviderMark, ContextRow, Welcome, SectionNav, PublicFrame, IngredientEntry and EntryMarks.
+3. Open each component's side-by-side sheet.
+
+Actual: the preview frame is about 48px narrower than Storybook's and capped at 700px tall. Columns and links are cut (the CompendiumList Categories column, the AdminNav Deities link), cards and chips wrap (the third CovenCards card, the ProviderMark Facebook chip), the bottom of tall stories is cut off (ContextRow, Welcome, IngredientEntry, EntryMarks), and SectionNav moves extra links into More in four stories. In PublicFrame "Loading The Compendium", Storybook is captured before the story's link press takes effect, so its reference shows no loading state.
+Expected: each preview renders at the Storybook frame's width and height and behaves the same, so every one of these stories grades "match".
+
+The owner accepted these "close" grades for M12.53 and asked for this follow-up.
+
+_Acceptance criteria:_
+
+- A regression check fails before the fix: a scoped `compare.mjs` run grades at least one listed story "close", and the cause is the frame size or the capture timing.
+- Every listed story grades "match" after the fix, except three that grade "close" and that the owner accepted on 2026-10-24. Welcome States: Storybook captures the whole page, 96px taller than the window, and the preview is captured at window height. IngredientEntry States: Storybook is 2011px tall against the 2000px capture cap. PublicFrame Loading The Compendium: Storybook's reference shows no skeleton while the preview shows the one the story means to show; the cause is not frame size or timing, and is open. Applied: scoped CSS that cancels the preview body's 24px padding on single-story pages for eleven components (`.design-sync/preview-host.scss`), and `viewport` overrides for CompendiumList, EntryMarks, ContextRow and IngredientEntry (`.design-sync/config.json`).
+- The fix and its reason are recorded in `.design-sync/NOTES.md`, and no other component's grade drops below what it is today.
+- The fixed components are re-uploaded to the Claude Design project, with `_ds_sync.json` written last.
+
+**MB.274 — Seeded Compendium Content Stays Stale After a Deploy** · 2h
+
+_Story:_ As a developer shipping a change to the compendium seed, I want the first page load after the deploy to show the seeded content, so that a seed change is live the moment its deployment is.
+
+The compendium's shared reads are cached by `cachedCompendiumRead` in `src/lib/compendium-cache.ts`, under one tag with a one-hour timer (`COMPENDIUM_REVALIDATE_SECONDS`). Only an admin's write through `/api/graphql` clears that tag. The seed (`npm run db:seed`) is a script that runs outside Next.js, so it cannot clear it. Vercel keeps this cache from one deployment to the next, so for up to an hour after a deploy that seeded, both the public compendium pages and the admin's screens show the content from before the seed. The fix adds the deployment's id to every cache key, so each new deployment reads under fresh keys and its first read of each entry goes to Postgres. Vercel's `VERCEL_DEPLOYMENT_ID` is the likely source. It has not been checked yet; if it is not set while the app runs, the build stamps in the commit hash instead.
+
+Found on 2026-10-24, by reading the code and Vercel's docs, and seen locally, on staging and on production; wrong result. Steps to reproduce:
+
+1. Edit a seeded compendium entry's file under `compendium/` (for example, change its description), marked for update with `seedUpdate`.
+2. Push it to staging.
+3. The Deploy workflow's `migrate` job runs the reference seed, then the `deploy` job ships a new deployment.
+4. Within an hour of the deploy, open that entry's page at `/compendium/ingredients/<slug>` on staging, signed out.
+
+Actual: the page shows the content from before the seed until the one-hour timer runs out or an admin saves any compendium edit.
+Expected: the first load after the deploy shows the seeded content.
+
+Locally the same thing happens when `npm run db:seed` runs under a running server. This task does not fix that case: locally the key part stays fixed, and a restart clears the cache.
+
+_Acceptance criteria:_
+
+- A regression test, written first and failing before the fix, shows that a cached compendium read made under one deployment id is read from Postgres again under a different id.
+- Every key `cachedCompendiumRead` builds includes the deployment id, which comes from Vercel's own deployment variable when the app runs there, or else from the commit hash stamped in at build time.
+- Local and test runs with neither value use one fixed key part, and the existing cache tests still pass unchanged.
+- An admin write still clears every cached entry under the current deployment.
+- Docs: `claude-docs/db/compendium-cache.md` says how the key part is built, and that reseeding locally under a running server still needs a restart.
+
+**MB.275 — Lint Warnings Pile Up Because Nothing Fails on Them** · 6h
+
+_Story:_ As a developer on this repo, I want lint to report only warnings still worth reading, and to fail on the kinds we have agreed are bugs, so that a real problem is not buried under 142 old ones.
+
+Found on 2026-10-29 in CI run 40927631845 (PR #1321). The linter, oxlint, exits 0 on warnings, so `npm run lint` passes in CI and in pre-commit however many it prints, and GitHub shows only the first 10 as annotations; the rest pile up on staging unseen. On staging, oxlint 1.89.0 prints 142 warnings across 73 files and no errors: 33 unused imports and variables, 17 console calls (16 of them deliberate output in CLI scripts under `.design-sync/` and `.github/scripts/`), 59 React warnings, of which about 15 are real (handlers called during render, state set in an effect when it can be worked out during render, missing effect dependencies) and the rest flag intended patterns (dnd-kit callbacks, floating-ui callback refs, test harnesses), and 32 accessibility warnings, 3 of them real. The owner chose which rules become errors; every other rule stays a warning. The plan is `claude-docs/design-decisions/mb.275-plan.md`.
+
+Steps to reproduce:
+
+1. Check out staging.
+2. Run `npm run lint`.
+
+Actual: 142 warnings across 73 files, and the command exits 0.
+Expected: 0 warnings, and a new hit on a promoted rule fails lint.
+
+_Acceptance criteria:_
+
+- Regression check: a planted unused import, and a planted missing effect dependency, each make `npm run lint` exit non-zero, and it exits 0 without them; run once and recorded in the PR body
+- `npm run lint` on the branch prints 0 warnings and 0 errors
+- `.oxlintrc.json` makes these `"error"`: `no-unused-vars`, `no-console` (with `.design-sync/**` and `.github/scripts/**` added to the scripts override), `no-unsafe-optional-chaining`, `react-hooks/exhaustive-deps`, `react/set-state-in-effect`, the jsx-a11y interaction rules (`click-events-have-key-events`, `no-static-element-interactions`, `no-noninteractive-element-interactions`, `interactive-supports-focus`, `no-noninteractive-tabindex`), `control-has-associated-label` and `anchor-is-valid`
+- These stay warnings: `react/refs`, `react/immutability`, `prefer-tag-over-role`, and `aria-role` with `ignoreNonDOM` set; the React Compiler rules (`react/globals`, `react/preserve-manual-memoization`, `react/incompatible-library`) stay warnings in `src/` and are off under `tests/**`
+- Every `oxlint-disable` added says why on the same line
+- Each behaviour change (`cupboard-actions`, `card-more`, `SkeletonFade`, `StockDialog`, the SpellBuilder steps, `use-navigation`) is covered by a component test that leaves the same state as before, and `npm run test:coverage` passes
+- The e2e specs covering those components pass, one run each
+- `claude-docs/commands.md`, or the lint doc it points to, records which rules are errors and why
+
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
 
 Merged before this file carried per-task hours; sized after the fact from the merged diff. The reduced-motion swap of the toggle's facets, and the workshop story that simulates the preference.
@@ -1683,13 +1851,24 @@ _Acceptance criteria:_
 - The stale comment at `src/db/audit.ts:3-5` is corrected — it cites M2.1, and `users` lands in M2.3
 - No retrofit migration is needed for any table created after this task
 
-**MB.6 — Spell recipe view page** · 2h
+**MB.6 — Spell recipe view page** · 3h
 
 _Story 56 — As a workspace member, I want to read a saved spell on its own page, so that I can follow it without opening the builder._
 
-`/coven/[slug]/grimoire/[id]`, added to §9's route table by this audit. M10.22 and CLAUDE.md both reference "the spell recipe view" and story 56 is about _reading_ a spell, but §9 had no spell detail route — `/grimoire/new` is the builder, and you cannot print a saved spell from it. This is the page M10.22 attaches print styles to. Two ingredients sharing a display label render with their formal name alongside it, since the page has no hover affordance to disambiguate them the way a card's tooltip can.
+`/coven/[slug]/grimoire/[id]`, added to §9's route table by this audit. M10.22 and CLAUDE.md both reference "the spell recipe view" and story 56 is about _reading_ a spell, but §9 had no spell detail route — `/grimoire/new` is the builder, and you cannot print a saved spell from it. This is the page M10.22 attaches print styles to. Two ingredients sharing a display label render with their formal name alongside it, since the page has no hover affordance to disambiguate them.
 
-**Amended 2026-10-16 by the spell steps and workings plan** ([`design-decisions/m13.1-plan.md`](../design-decisions/m13.1-plan.md)): the page renders the spell's numbered steps in `position` order, an ingredient step with its quantity and unit and an instruction-only step as its text, plus an Ingredients summary above them, the ingredient steps in order, for gathering before starting (M13.1). It shows the spell's `note`, and it is the page M13.7's Record a Working control and M13.8's Workings section attach to.
+The page also carries:
+
+- `requireSession()`, called in the page, since the `(shell)` layout does not.
+- The grimoire's `SpellCard` gains its link to this page, through `PendingLink` as `IngredientCard`'s name does: M10.11 left the card unlinked, since a link with no page behind it would ship broken ([`components/spell-card.md`](../components/spell-card.md), "No link yet").
+- `LastEdit` under the title ([`components/last-edit.md`](../components/last-edit.md)).
+- No Edit or Delete control: a control with nothing behind it would ship as a dead button. M13.10 adds the Edit control with the spell builder's modal at `?edit=<id>` (M10.12), M13.11 adds the Delete control with `deleteSpell`, and M13.20 adds the Duplicate control with `duplicateSpell` (decided in the Wave 13 review, 2026-10-23, on the review agent's finding).
+- If the sections run past one screen, a jump menu on the pattern of the ingredient entry page (`PageNav`, `src/components/PageNav/`, used by `IngredientEntry`; [`components/page-nav.md`](../components/page-nav.md)).
+- A `Skeleton` of shape `page`, through a `PARTS_OF_SECTION` entry in `src/lib/coven-path.ts`, so the loading shape matches.
+- The steps are drawn with `StepRow`, the presentation component M13.3 adds under `src/components/` (M13.3 lands before this task). This page renders it read-only, with no editing controls.
+- Picking a spell from the grimoire search's suggestions opens its recipe page, through `IngredientSearch`'s `pickHref`. Once M13.21 builds the spell's Quick Look, a pick opens that instead, under the owner's rule of 2026-10-27 that a pick opens the item's Quick Look, as an ingredient pick does (M13.21). Until this task a pick applies the title as the search (M10.11). `pick()` in `src/components/IngredientSearch/search-box.tsx` falls back to the search when a row carries no `match`, and a spell suggestion row carries none today, so this task gives spell rows a `match` holding the spell's id as well as passing `pickHref` (added 2026-10-27, from the M10.11 review).
+
+**Amended 2026-10-16 by the spell steps and workings plan** ([`design-decisions/m13.1-plan.md`](../design-decisions/m13.1-plan.md)): the page renders the spell's numbered steps in `position` order, an ingredient step with its quantity and unit and an instruction-only step as its text. The page has no on-screen Ingredients summary: its In Coven Inventory panel lists each form once, with the amount needed, for gathering (owner, 2026-10-29). The print layout has its own summary (M10.22). It shows the spell's `note`, and it is the page M13.7's Record a Working control and M13.8's Workings section attach to. **Amended 2026-10-29 by the owner:** the print summary (M10.22) lists each form once, in the order of the step that first uses it, with the total quantity the spell needs across its steps (`needOf`, as In Coven Inventory adds it), and no stock marks, jar supply or buttons.
 
 _Acceptance criteria:_
 
@@ -1697,9 +1876,14 @@ _Acceptance criteria:_
 - Visibility is enforced in SQL: a private spell is reachable only by its author
 - A non-member receives 404, consistent with the rest of `/coven/[slug]`
 - Steps render numbered in `position` order, an ingredient step with its quantity and unit
-- The Ingredients summary lists the ingredient steps in order
+- The page draws no on-screen Ingredients summary; the In Coven Inventory panel lists each form once with the amount needed
 - Two ingredients sharing a label are disambiguated by their formal name, not by hover
-- A custom, one-off ingredient (MB.40) renders its own name and form in layer order with the rest, marked as one-off, and links to no ingredient page
+- A custom, one-off ingredient (MB.40) renders its own name and form in `position` order with the rest, marked as one-off, and links to no ingredient page
+- The page calls `requireSession()` and shows `LastEdit` under the title
+- A spell's card in the grimoire list links to this page
+- Picking a spell from the grimoire search's suggestions opens this page, through `IngredientSearch`'s `pickHref` (M13.21 later moves the pick to the spell's Quick Look)
+- The page has no Edit or Delete control; M13.10 and M13.11 each add their own
+- The loading skeleton is shape `page`
 - The page is the only view M10.22 styles for print
 
 **MB.7 — Application nav shell** · 16h
@@ -1744,17 +1928,19 @@ _Acceptance criteria:_
 
 _Story:_ As a developer, I want one validation schema for spells so that the builder and the mutation cannot disagree about what is valid.
 
-M4.5 covers ingredient and category only. M10.10 needs the spell equivalent.
+M4.5 covers ingredient and category only. M10.10 needs the spell equivalent. It creates `src/modules/grimoire/validation/`, following the layout of `src/modules/ingredients/validation/` (one file per schema, a `types.ts` for the inferred types); M13.2 extends it.
 
-**Amended 2026-10-16 by the spell steps and workings plan** ([`design-decisions/m13.1-plan.md`](../design-decisions/m13.1-plan.md)): the layer list becomes one ordered `steps` list (M13.1). A step is `{ body?, ingredientId + variantId? | name + form?, quantity?, unit?, note? }`: at least one of an instruction (`body`) or an identity, at most one identity, and `quantity`, `unit` and `note` only beside an identity. The spell gains its free-text `note`.
+**Amended 2026-10-16 by the spell steps and workings plan** ([`design-decisions/m13.1-plan.md`](../design-decisions/m13.1-plan.md)): the layer list becomes one ordered `steps` list (M13.1). A step is `{ body?, ingredientId + variantId | name + form?, quantity?, unit?, note? }`: at least one of an instruction (`body`) or an identity, at most one identity, and `quantity`, `unit` and `note` only beside an identity. A linked ingredient always names its variant, as `spell_steps_variant_with_ingredient` requires (MB.215). The spell gains its free-text `note`.
+
+**Amended 2026-10-25 by the autosave plan** ([`design-decisions/m13.14-plan.md`](../design-decisions/m13.14-plan.md)): the title is optional while `status` is `draft` and required when it is `complete`, as a `superRefine` over the pair that mirrors M13.15's CHECK (`status <> 'complete' OR title IS NOT NULL`), so the database never refuses what validation passed. The update input takes `expectedRevision: number | null`. The step schema is unchanged.
 
 _Acceptance criteria:_
 
 - One schema shared by client and server
 - Covers title, visibility, note, steps, quantities and units
 - A step carries an instruction, an identity, or both, and never neither; `quantity`, `unit` and `note` on an instruction-only step are rejected, and a blank instruction is rejected, mirroring M13.1's CHECKs
-- A layer is `{ ingredientId }` or `{ name, form? }` and never both or neither (MB.40); `form` beside `ingredientId` is rejected, and a blank `name` or `form` is rejected — the table's four CHECKs, mirrored so the CHECK is never what a user sees
-- Unit validation imports M9.2's shared unit-to-dimension module rather than keeping its own list
+- A step that lays an ingredient is `{ ingredientId }` or `{ name, form? }` and never both or neither (MB.40); `form` beside `ingredientId` is rejected, and a blank `name` or `form` is rejected — the table's four CHECKs, mirrored so the CHECK is never what a user sees
+- Unit validation imports the shared unit module rather than keeping its own list: `dimensionOf`, `Unit` and `UnitDimension` from `src/modules/ingredients/schema/units.ts`
 - Rejects a visibility value outside `private` and `workspace`
 
 **MB.9 — `ingredientsById` DataLoader** · 1h
@@ -2363,7 +2549,7 @@ _Story:_ As a developer, I want one workflow to describe how a check runs, so th
 
 Three more go with them. `merge-queue.yml` re-expresses `pr-gate.yml`'s whole job graph for a merge queue that is not enabled — M7.A.1 is explicitly trigger-based and a prerequisite for nothing — so it is deleted and restored from git history when that trigger fires. `composite-actions-check.yml` is a workflow testing the composite actions that exist to de-duplicate the workflows. `timer-start`/`timer-elapsed` are 46 lines across 12 workflows to print an elapsed time into a summary.
 
-**The `should-run` indirection survives the collapse and is not cosmetic.** `pr-gate` passes it from the paths-filter output instead of putting an `if:` on the job, because a job-level `if:` makes GitHub report a differently-named bare check that never satisfies a required status check and leaves the PR stuck. Every matrix leg runs; a leg whose flag is false exits after checkout.
+**The path-filter flag is passed in, not an `if:` on the calling job.** `pr-gate` passes it from the paths-filter output instead of putting an `if:` on the job, because a false `if:` on the job that calls a reusable workflow makes GitHub report one bare check name in place of `checks / lint` (verified by MB.39: [`mb.39-job-level-if-and-check-names.md`](../design-decisions/mb.39-job-level-if-and-check-names.md)). MB.39 later split the matrix into plain jobs, each with its own `if: inputs.run-<leg>`, so a filtered-off leg is skipped before its container is pulled.
 
 _Acceptance criteria:_
 
@@ -2510,7 +2696,9 @@ _Story:_ As a developer, I want to know whether the rule the whole CI filtering 
 
 Probe on a throwaway branch, PR'd into a `scratch/**` base so `pr-gate.yml` — which triggers only on `main`/`staging`/`release/**` — never fires: a `workflow_call` file with both shapes (a matrix job with `if: matrix.should-run`, and two plain jobs with `if: inputs.run-*`, the `vitest.yml` shape), and a caller triggered on `pull_request: branches: ['scratch/**']`. Whether `matrix` is even available to `jobs.<id>.if` is part of what the run answers — a startup failure naming an unrecognized `matrix` value settles the matrix half on its own.
 
-**Adoption is not in this task.** Its scope depends on the answer, and turning `if:` on across the gate is a change to the gate rather than a finding about it.
+**Result.** The rule holds for a job that calls a reusable workflow, is false for a job inside one, and a matrix job cannot use `matrix` in its job-level `if:`. A `skipped` check satisfies a required status check, and a required check that never reports blocks the pull request. Evidence: [`mb.39-job-level-if-and-check-names.md`](../design-decisions/mb.39-job-level-if-and-check-names.md).
+
+**Adoption is in this task.** At the owner's decision (2026-10-30) MB.39 adopts the inner-job `if:` for the plain jobs: `vitest.yml`'s four jobs and `playwright.yml`'s job carry `if: inputs.should-run`, and their step-level gating is removed. It also splits `checks.yml`'s matrix into eight plain jobs, each path-filtered leg carrying `if: inputs.run-<leg>`, because a matrix leg cannot skip itself and a leg left out of the matrix would never report. No `pr-gate.yml` job that calls a reusable workflow carries an `if:`.
 
 _Acceptance criteria:_
 
@@ -2520,6 +2708,9 @@ _Acceptance criteria:_
 - Live GitHub settings are unchanged unless the user authorised a scratch ruleset; a permissions-blocked write is reported, not routed around
 - The scratch branches and workflows are gone, and `gh api repos/:owner/:repo/rulesets` shows the same three rulesets with the same rule types as before
 - If the rule holds, it is recorded as **verified** with the evidence — a negative result is the deliverable just as much as a positive one
+- `vitest-dom`, `vitest-node`, `vitest-db`, the `vitest` merge and `playwright` carry a job-level `if:` on `inputs.should-run`, with no step-level `should-run` gating left in `vitest.yml` or `playwright.yml`; `vitest / vitest` and `playwright / playwright` keep their names, and `e2e-cache.yml`'s call still runs the job
+- `checks.yml` is eight plain jobs whose check names are identical to the matrix's (`lint`, `format`, `typecheck`, `codegen`, `build`, `destructive-ddl`, `migration-order`, `audit`); `lint`, `typecheck`, `build`, `destructive-ddl` and `migration-order` carry `if: inputs.run-<leg>`, and `pr-gate.yml`'s call is unchanged
+- The record names the ruleset probe: the 403 on ruleset writes, that the owner made the changes in the web UI, and that none of the three real rulesets requires a status check today
 
 **MB.40 — Custom one-off spell ingredients (schema)** · 2h
 
@@ -2766,7 +2957,7 @@ Comments are 28% of the lines in scope — 7,905 of 27,847 across 203 tracked fi
 
 **The rule is a division of labour, not a length limit**: the comment keeps the conclusion and `claude-docs/` the argument, as [`README.md`](../README.md)'s "Comments in code" now states it. It inverts nothing there: a summary still gives its reason in a clause and stands on its own. CLAUDE.md had **no rule about comments at all**, which is why the prose grew — so the convention lands first, and the sweep cites it.
 
-**What brevity may not cost** is that section's list, kept whatever its length; in this sweep it also covers oxlint's `overrides` replacing rather than merging, a job-level `if:` renaming a check and permanently blocking a PR, the Ladle `@type` JSDoc and shebangs.
+**What brevity may not cost** is that section's list, kept whatever its length; in this sweep it also covers oxlint's `overrides` replacing rather than merging, a false job-level `if:` on a calling job reporting a bare check name, the Ladle `@type` JSDoc and shebangs.
 
 **The dangling citations are the finding, and there are fourteen.** Scoping expected four; the guard found `.ladle/` citing m0.30, m0.32 and m0.34 as well, plus `tests/app/api/auth/[...all]/route.test.ts` citing `claude-docs/transcripts/auth.md`, which has never existed — so a hand-verification of the real OAuth URL shape is described as "recorded" nowhere. Thirteen of the fourteen resolve only under `claude-docs/archive/`, and were cited **without** the `archive/` prefix: the path was wrong and the destination is out of bounds, README.md having declared the archive never-read. Those comments are long precisely because the live doc was never written, so the prose moves into `styling.md`, `workshop.md` and `testing.md` and the citations are repointed.
 
@@ -3847,9 +4038,9 @@ _Acceptance criteria:_
 
 **MB.110 — Make spell layers soft-deletable** · 3h
 
-_Story:_ As a workspace member, I want an ingredient I take out of a spell to be recoverable, so that editing a record of a working never loses part of it.
+_Story:_ As a workspace member, I want an ingredient I take out of a spell to be recoverable, so that editing a spell never loses part of it.
 
-A table task, minted by M5.3. `spell_ingredients` is one of MB.34's three hard-deleted join tables; a spell is a record of a working, so a layer leaves it only when a user removes it, and then softly. The table takes the full `...auditColumns`, gaining `deleted_at` and `deleted_by`; `ingredient_categories` and `spell_categories` stay hard-deleted, so "the three join tables" becomes two in CLAUDE.md rules 3 and 4, DESIGN.md §5, db.md's "Hard delete on the three join tables", `tests/support/db/table-metadata.ts` and `audit-columns.test.ts`. A removed layer must not hold its slot, so the `(spell_id, layer_order)` primary key gives way to a surrogate `id`, with `(spell_id, layer_order)` a partial unique index over live rows, and the two existing partial indexes gain `deleted_at IS NULL`. That is destructive DDL — a primary key and two indexes dropped, a `NOT NULL` column added — so the migration carries an `.ack.md` sidecar, and the task decides whether the index swap needs MB.107's two-PR split. It lands while the table is still empty in production and before Wave 13 writes a layer. M5.3's spell finders read the layer through `existsIn`, which filters a removed layer as soon as the column exists, so they need no change.
+A table task, minted by M5.3. `spell_ingredients` is one of MB.34's three hard-deleted join tables; a spell is a recipe that keeps what went into its jar, so a layer leaves it only when a user removes it, and then softly. The table takes the full `...auditColumns`, gaining `deleted_at` and `deleted_by`; `ingredient_categories` and `spell_categories` stay hard-deleted, so "the three join tables" becomes two in CLAUDE.md rules 3 and 4, DESIGN.md §5, db.md's "Hard delete on the three join tables", `tests/support/db/table-metadata.ts` and `audit-columns.test.ts`. A removed layer must not hold its slot, so the `(spell_id, layer_order)` primary key gives way to a surrogate `id`, with `(spell_id, layer_order)` a partial unique index over live rows, and the two existing partial indexes gain `deleted_at IS NULL`. That is destructive DDL — a primary key and two indexes dropped, a `NOT NULL` column added — so the migration carries an `.ack.md` sidecar, and the task decides whether the index swap needs MB.107's two-PR split. It lands while the table is still empty in production and before Wave 13 writes a layer. M5.3's spell finders read the layer through `existsIn`, which filters a removed layer as soon as the column exists, so they need no change.
 
 _Acceptance criteria:_
 
@@ -4097,7 +4288,7 @@ _Acceptance criteria:_
 - A safety note stands out from the rest of an entry without relying on colour alone
 - The card grid holds its layout from phone width to a wide screen
 
-**MB.121 — Design review: the workspace ingredients page** · 3h
+**MB.121 — Design review: the workspace ingredients page** · 6h
 
 _Story:_ As a coven member, I want the ingredients page to make stock easy to scan and edit, so that keeping it current is quick.
 
@@ -4109,6 +4300,8 @@ A section review designs what the section's building tasks left at the tokens an
 
 **Amended by M12.29 (2026-10-21):** the scope gains the entry page's Stock section (`JarShelf`, M12.29): the shelf, its Low and Out jars and their tips, the Edit Stock button and the empty "No stock recorded." state. M12.29 put the section in a `.panel` box as an interim trial, and this review removes it: the Stock section is the only boxed section on the entry page, and the jar's shine is drawn in the card colour, so it fades on a card-coloured panel. Drop `panel` from the wrapper in `IngredientEntry/stock-section.tsx`, and set the section apart, if it still needs it, in a way the entry page's other sections can share. The review also checks the section for repetition (DRY: one shared helper or mixin where the shelf, the stock badge and the Edit Stock dialog repeat a style, a string or a piece of markup), for UX (pressing a jar, the amount tip, and editing with no stock), and for accessibility (names and descriptions of the jar and amount buttons, keyboard order, focus, and colour that is never the only cue).
 
+**Amended by M12.53 (2026-10-23):** M12.53 merged each component's data-only stories into one `States` story, but eight components still have a story named `Default`: `FormIcon`, `MenuButton`, `Spinner`, `SearchSentence`, `IngredientForm`, `FilterForm`, `CardDensitySwitch` and `JarLines`. This review merges each one into a `States` story, sorted first, the same way M12.53 did for the rest (`claude-docs/workshop.md`). A component whose only story has nothing to merge with keeps `Default`.
+
 _Left by MB.115:_ A list builds on the admin section's pieces rather than its own: `IngredientCard` for its rows (corrected by the Wave 12 review; the admin lists use `StackTable`, a table that turns each row into a card on a narrow screen, `components/data-table.md`), `FilterForm` and `Pager` for narrowing and paging it, with `FilterSelectField` for a filter's choice, a native select until the page's script loads, then the forms' own dropdown, or a type-ahead for a long list, and `BusyButton` for a button whose request is in flight.
 
 _Acceptance criteria:_
@@ -4117,6 +4310,10 @@ _Acceptance criteria:_
 - No page in the section scrolls sideways at 375px, and its body copy keeps to the reading measure
 - Contrast holds at 4.5:1 in both themes, and no raw hue or size is added outside `_variables.scss`
 - Every page in the section is axe clean with visible keyboard focus, and its e2e specs and stories pass
+- Accessibility: the workspace ingredients page, `IngredientCard`, `StockFields`, the stock dialogs and the entry page's Stock section (`JarShelf`) pass an axe check in Playwright (`@axe-core/playwright`) in both themes. Each page also gets a keyboard-only and a screen-reader pass against WCAG 2.2 AA, and every failure found is fixed or filed as a task
+- UX, with research: the review is backed by published UX guidance for jar lines, stock badges, filters and the Edit Stock dialog (for example Nielsen Norman Group, the GOV.UK Design System, the WAI-ARIA Authoring Practices and Baymard). Each change it makes or rejects names its source, in Chicago form. Wikipedia is acceptable; academic or practitioner sources are preferred
+- Storybook and /design-sync: a separate agent, not the one doing the design review, updates every Storybook story that the review's changes affect, covering new states, changed props and removed variants (the stories follow the `States`-first convention). That same separate agent then runs `/design-sync`, so the Claude Design project matches, and every changed story grades `match` or `close`
+- `FormIcon`, `MenuButton`, `Spinner`, `SearchSentence`, `IngredientForm`, `FilterForm`, `CardDensitySwitch` and `JarLines` each have a `States` story sorted first, and none of them has a `Default` story unless it has nothing to merge
 - Each component's doc updates its Styling section, and its stories show the reviewed design
 - A jar being edited reads differently from one at rest, and an unsaved change shows
 - The empty state says what to do next
@@ -4138,31 +4335,38 @@ _Acceptance criteria:_
 
 See **MB.7**.
 
-**MB.123 — Design review: the grimoire** · 3h
+**MB.123 — Design review: the grimoire** · 11h
 
 _Story:_ As a coven member, I want building and reading a spell to feel crafted, so that the grimoire is a pleasure to use.
 
-Minted during M5.4. Reviews the grimoire once its print layout lands: the grimoire list (M10.11), `SpellBuilder` with its fields, visibility control, intent categories, layers and reordering (M10.12 to M10.16), the intent-versus-derived comparison panel (M10.17), the safety and out-of-stock warnings (M10.18, M10.19), draft and complete (M10.20), and the recipe view (MB.6) with its print layout (M10.22), the one print style on the site.
+Minted during M5.4. Reviews the grimoire once its print layout lands: the grimoire list (M10.11), `SpellBuilder` with its fields, visibility control, intent categories, steps and reordering (M10.12 to M10.16), the intent-versus-derived comparison panel (M10.17), the safety and out-of-stock warnings (M10.18, M10.19), draft and complete (M10.20), and the recipe view (MB.6) with its print layout (M10.22), the one print style on the site.
 
 **Amended 2026-10-16 by the spell steps and workings plan** ([`design-decisions/m13.1-plan.md`](../design-decisions/m13.1-plan.md)): the review also covers the step editor (M13.3), the Record a Working dialog with its deduction preview (M13.7), and the recipe page's Workings section (M13.8). M13.9 follows it.
 
+The review list also covers: `SpellCard` and the card list's empty states (M10.11), the `Skeleton` shapes for the list and the recipe page, the focus ring (M12.45), click feedback (M12.31), the tooltip triage (M12.43, a tooltip only for a rule or format trap) and the recipe page's Duplicate control (M13.20). After a step is added, removed or reordered, focus placement and the `aria-live` message are asserted in the story spec, since axe does not check them.
+
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
 
-_Left by MB.115:_ The grimoire list builds on the admin section's pieces rather than its own: `StackTable` for its rows, a table that turns each row into a card on a narrow screen (`components/data-table.md`), `FilterForm` and `Pager` for narrowing and paging it, with `FilterSelectField` for a filter's choice, a native select until the page's script loads, then the forms' own dropdown, or a type-ahead for a long list, and `BusyButton` for a button whose request is in flight. A question asked before a step that cannot be undone, such as deleting a spell, is `ConfirmQuestion`, drawn over the form (`components/modal.md`).
+_Left by MB.115:_ The grimoire list builds on the admin section's pieces rather than its own. It was first scoped as a `StackTable` (the default export of `src/components/DataTable/index.tsx`, not a component of its own; `components/data-table.md`) for its rows, but M10.11 now builds it as cards in the `CovenCards` pattern (`SpellCard`), so this review covers the card list, not a table. It still uses `FilterForm` and `Pager` for narrowing and paging it, with `FilterSelectField` (`src/components/Field/filter-select-field.tsx`) for a filter's choice, a native select until the page's script loads, then the forms' own dropdown, or a type-ahead for a long list, and `BusyButton` for a button whose request is in flight. A question asked before a step that cannot be undone, such as deleting a spell, is `ConfirmQuestion`, drawn over the form (`components/modal.md`).
 
 _Acceptance criteria:_
 
-- The owner signs off the section's design, in both themes and at phone width, recorded as a comment on this issue
+- The owner signs off the section's design, in both themes and at phone width, recorded as a comment on this issue. The owner signs off per decision on a private sign-off page, and the decisions are recorded in [`design-decisions/mb.123-design-review-the-grimoire.md`](../design-decisions/mb.123-design-review-the-grimoire.md)
 - No page in the section scrolls sideways at 375px, and its body copy keeps to the reading measure
 - Contrast holds at 4.5:1 in both themes, and no raw hue or size is added outside `_variables.scss`
 - Every page in the section is axe clean with visible keyboard focus, and its e2e specs and stories pass
+- Accessibility: the grimoire list, `SpellCard`, `SpellBuilder` with its step editor, the Record a Working dialog and the recipe page pass an axe check in Playwright (`@axe-core/playwright`) in both themes. Each page also gets a keyboard-only and a screen-reader pass against WCAG 2.2 AA, and every failure found is fixed or filed as a task
+- UX, with research: the review is backed by published UX guidance for step reordering, the comparison panel, the warnings and the deduction preview (for example Nielsen Norman Group, the GOV.UK Design System, the WAI-ARIA Authoring Practices and Baymard). Each change it makes or rejects names its source, in Chicago form. Wikipedia is acceptable; academic or practitioner sources are preferred
+- Storybook and /design-sync: a separate agent, not the one doing the design review, updated every Storybook story that the review's changes affect, covering new states, changed props and removed variants (the stories follow the `States`-first convention), and the workshop build and check pass (`workshop:build`, `workshop:check`, 390 of 390 story loads clean). The owner runs `/design-sync` at the end, so the Claude Design project matches, and every changed story grades `match` or `close`
 - Each component's doc updates its Styling section, and its stories show the reviewed design
 - The recipe view's print layout is reviewed on paper or as a PDF as well as on screen
 - Reordering steps reads clearly by keyboard as well as by pointer
 - The deduction preview reads plainly, and a shortfall or a step not deducted is told apart without colour alone
 - The comparison panel reads without relying on colour alone
 
-**MB.124 — Design review: error, loading and empty states, and the whole site** · 3h
+**Amended 2026-10-30 by the review itself** ([`design-decisions/mb.123-design-review-the-grimoire.md`](../design-decisions/mb.123-design-review-the-grimoire.md), plan in [`design-decisions/mb.123-plan.md`](../design-decisions/mb.123-plan.md)): the review changed three rules. The destructive-controls rule in `.claude/rules/components.md` (Delete and Remove live in the edit dialog; a row's Remove or Revoke is drawn plain; red also marks the two high-risk controls, Impersonate and Pause Admin Changes). The page-head rule in `claude-docs/styling.md`, guarded by `tests/guards/page-heads.test.ts`. The stylelint token rules in `.stylelintrc.json`. It also added a non-blocking knip leg to CI. The estimate is now 11h. That figure is the wall-clock time of the agent run (a floor), not an estimate of human hours.
+
+**MB.124 — Design review: error, loading and empty states, and the whole site** · 7h
 
 _Story:_ As a user, I want errors, loading and empty pages to look as finished as the rest, and the whole site to feel like one thing, so that nothing looks broken.
 
@@ -4174,7 +4378,7 @@ _Left by MB.116:_ `Notice` is the one way to show an error, a warning or a succe
 
 _Left by MB.115:_ `BusyButton` is the one busy state for a button. The `.data-table`, `.pager` and `.filter-row` primitives are on the Foundations story. Stacking order is still written as raw `z-index` values, one per component; a `$layers` map of them is this review's to make. Each admin table's first cell is still a `td`: making it a row header, `th scope="row"`, was held back from MB.115 because it changes what the tables' tests count as cells.
 
-_Left by MB.119:_ Floating panels open at three widths: the coven switcher at 12rem with its list at 15rem (`$switcher-min-width` and `$switcher-list-min-width` in `WorkspaceSwitcher/index.scss`), and the account menu at 13rem. Settling on one width for a floating panel is this review’s to decide. `ConfirmedAction` still lives inside `UserList/`. Moving it into its own directory, with its CSS split out and its own story and doc, is this review’s too. So is one shared row of confirm and safe buttons for `ConfirmedAction`'s inner `Answers`, the modal's `ConfirmQuestion` and its `DiscardQuestion`, which each draw their own today.
+_Left by MB.119:_ Floating panels open at three widths: the coven switcher at 12rem with its list at 15rem (`$switcher-min-width` and `$switcher-list-min-width` in `WorkspaceSwitcher/index.scss`), and the account menu at 13rem. Settling on one width for a floating panel is this review’s to decide. `ConfirmedAction` still lives inside `UserList/`. Moving it into its own directory, with its CSS split out and its own story and doc, is this review’s too. So is one shared row of confirm and safe buttons for `ConfirmedAction`'s inner `Answers`, the modal's `ConfirmQuestion` and its `DiscardQuestion`, which each draw their own today. That row also replaces the five hand-written confirms the grimoire review found, each a `Modal` with a bold-name question, a `BusyButton` and a quiet Cancel: `SpellRecipe/delete-spell.tsx`, `SpellWorkings/delete-working.tsx`, `IngredientEntry/delete-entry.tsx`, and Make It Ours and Remove from Cupboard in `IngredientEntry/cupboard-writes.tsx`; they become one `ConfirmDialog` beside `ConfirmQuestion` ([`design-decisions/mb.123-design-review-the-grimoire.md`](../design-decisions/mb.123-design-review-the-grimoire.md)).
 
 _Acceptance criteria:_
 
@@ -4182,6 +4386,9 @@ _Acceptance criteria:_
 - No page in the section scrolls sideways at 375px, and its body copy keeps to the reading measure
 - Contrast holds at 4.5:1 in both themes, and no raw hue or size is added outside `_variables.scss`
 - Every page in the section is axe clean with visible keyboard focus, and its e2e specs and stories pass
+- Accessibility: the 403, 404 and 500 pages, the skeletons and the empty states, and a read of the whole site pass an axe check in Playwright (`@axe-core/playwright`) in both themes. Each page also gets a keyboard-only and a screen-reader pass against WCAG 2.2 AA, and every failure found is fixed or filed as a task
+- UX, with research: the review is backed by published UX guidance for error pages, skeletons, empty states and floating panels (for example Nielsen Norman Group, the GOV.UK Design System, the WAI-ARIA Authoring Practices and Baymard). Each change it makes or rejects names its source, in Chicago form. Wikipedia is acceptable; academic or practitioner sources are preferred
+- Storybook and /design-sync: a separate agent, not the one doing the design review, updates every Storybook story that the review's changes affect, covering new states, changed props and removed variants (the stories follow the `States`-first convention). That same separate agent then runs `/design-sync`, so the Claude Design project matches, and every changed story grades `match` or `close`
 - Each component's doc updates its Styling section, and its stories show the reviewed design
 - The 403, 404 and 500 pages share one design, and a thrown one looks the same drawn by the browser as the unmatched 404 drawn by the server
 - Every skeleton matches the layout it stands in for
@@ -5391,3 +5598,26 @@ _Acceptance criteria:_
 - The warning is read with the confirmation by assistive technology, asserted by role and label queries, and the component's story shows the unverified case
 - The Playwright admin spec covers approving an unverified user through the warning, with `@axe-core/playwright` clean, run against the e2e container
 - `components/user-list.md` describes the warning
+
+**MB.276 — An Admin's Compendium Edit Saves Whatever the Autosave Timing** · 3h
+
+_Story:_ As a site admin editing a compendium entry, I want the Save Ingredient button to reflect what is unsaved whatever the autosave timing, so that the edit flow behaves the same on a slow machine as on a fast one and story 18 passes first time.
+
+The ingredient form saves on a pause (`src/components/IngredientForm`, the autosave that creates at the first named save and updates on a pause). In `tests/e2e/stories/07-admin.spec.ts` (around line 398) story 18 fills Name, Description, adds the Oil form and its Safety Notes, then waits for Save Ingredient to be enabled. On a slow runner the pause-save lands first, so nothing is left to save, Save stays disabled, and the story times out at 60 s. Either the form must keep Save meaningful after an autosave, if the design says so, or the story must prove the flow in a way the autosave timing cannot break; the task decides which and states why.
+
+Found on 2026-10-30 on the PR gate's stories job: flaky (failed, then passed on retry) on PR #1344; failed both attempts on PR #1358's run; passes locally on the same branch. A wrong result, seen sometimes, as a site admin, under Admin & Compendium. Steps to reproduce:
+
+1. Run the story suite on CI's runner (the PR gate's stories job)
+2. Story 18 signs in as a site admin and opens `/admin/compendium`
+3. It adds the entry "Aaa Testwort", then opens its Edit Ingredient dialog and presses Open All
+4. It fills Name, Description, adds the Oil form and fills its Safety Notes, taking longer than the autosave pause on a slow runner (assumed)
+5. It waits for Save Ingredient to be enabled
+
+Actual: Save Ingredient stays disabled for 60 s and the story times out; on a fast run it passes, so the story is flaky. Expected: Save Ingredient is enabled while the form holds unsaved changes, and the story passes first time on every runner.
+
+_Acceptance criteria:_
+
+- A regression test that fails before the fix: a test under `tests/components/IngredientForm/` (or the story itself under a forced autosave pause) that shows Save Ingredient disabled with the user's edits already autosaved, and the chosen behaviour afterwards
+- Story 18 passes first time on CI's runner in two consecutive PR-gate runs, with no retry
+- The chosen behaviour is stated in `claude-docs/components/ingredient-form.md` ("Autosave") and, if the form changes, in that doc's form save rules
+- No other story's timing is changed to make it pass

@@ -1,0 +1,38 @@
+--- /tmp/compare.orig.mjs
++++ .ds-sync/storybook/compare.mjs
+@@ -164,6 +164,11 @@
+ const cmpDir = join(OUT, '_screenshots', 'compare');
+ const rawDir = join(cmpDir, 'raw');
+ const cacheDir = resolve('.design-sync', '.cache', 'compare');
++// fork (.design-sync/NOTES.md, "compare settleMs"): cfg.overrides.<Name>.settleMs waits that long after
++// networkidle on both sides, for a story whose own timer (FacetPanel's 500ms menu click) outlasts it.
++let SETTLE_MS = 0;
++let SETTLE_CFG = {};
++try { SETTLE_CFG = JSON.parse(readFileSync(resolve('.design-sync', 'config.json'), 'utf8')).overrides ?? {}; } catch { /* no config */ }
+ mkdirSync(rawDir, { recursive: true });
+ mkdirSync(cacheDir, { recursive: true });
+ // Self-defending: even a sloppy `git add .design-sync` can't commit the cache.
+@@ -173,6 +178,7 @@
+ const pre = new Map();
+ const migrationPool = [];
+ for (const c of comps) {
++  SETTLE_MS = SETTLE_CFG[c.name]?.settleMs ?? 0;
+   const gradeKey = gradeKeyFor(c);
+   let prevCapture = null;
+   let grade = null;
+@@ -331,6 +337,7 @@
+       document.fonts?.ready,
+       ...[...document.images].map((i) => i.decode().catch(() => {})),
+     ])).catch(() => {});
++    if (SETTLE_MS) await page.waitForTimeout(SETTLE_MS);
+   }
+   let dsErrs = [];
+   dsPage.on('pageerror', (e) => dsErrs.push(String(e).split('\n')[0]));
+@@ -368,6 +375,7 @@
+   }
+ 
+   for (const c of comps) {
++    SETTLE_MS = SETTLE_CFG[c.name]?.settleMs ?? 0;
+     const gradePath = join(cacheDir, `${c.name}.grade.json`);
+     const capturePath = join(cacheDir, `${c.name}.json`);
+     const { gradeKey, prevCapture, fullyGraded } = pre.get(c.name);

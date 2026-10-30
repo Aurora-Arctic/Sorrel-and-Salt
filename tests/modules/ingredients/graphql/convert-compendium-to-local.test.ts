@@ -11,10 +11,8 @@ import { variantIdOf } from '../../../support/db/read-variants';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
 
-// convertCompendiumEntryToLocal over the wire (M12.23): the own entry and
-// what it could not carry as the payload answers them, and the viewer refused
-// at the field. Every rule of what is copied, what moves and what is refused
-// is services/convert-compendium-to-local.test.ts's.
+// convertCompendiumEntryToLocal over the wire: the own entry and what it could not carry as the payload answers them, and the viewer refused at the field.
+// Every rule of what is copied, what moves and what is refused is services/convert-compendium-to-local.test.ts's.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

@@ -1,4 +1,14 @@
-import { pgEnum, pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  pgEnum,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
 import { users } from '../../identity/schema/users';
 import { auditColumns } from '../../identity/schema/users';
 import { idColumn, liveUnique } from '../../../db/schema-parts';
@@ -6,22 +16,30 @@ import { idColumn, liveUnique } from '../../../db/schema-parts';
 // Declared viewer, member, owner. Nothing compares two roles: each carries its
 // own permission statements (../services/access-control.ts), so the order here
 // is documentation. `owner` is not invitable — `invitations` carries the
-// CHECK (MB.201).
+// CHECK.
 export const workspaceRole = pgEnum('workspace_role', ['viewer', 'member', 'owner']);
 
-// No `kind` column and no automatic workspace: every workspace takes members
-// and is deleted by an owner. Only the URL segment says coven.
+// No `kind` column: every workspace takes members, and an owner deletes it.
+// The one exception is the demo coven, marked by `demo` rather than a kind,
+// which is seeded on every environment and cannot be deleted. Only the URL
+// segment says coven.
 export const workspaces = pgTable(
   'workspaces',
   {
     id: idColumn(),
     name: text('name').notNull(),
     slug: text('slug').notNull(),
+    // True on the one demo coven; the index below allows at most one live row.
+    demo: boolean('demo').notNull().default(false),
     ...auditColumns,
   },
   (table) => [
     // Partial per CLAUDE.md rule 4: the slug is what /coven/[slug] routes on.
     liveUnique('workspaces_slug_unique', table, table.slug),
+    // Partial on `demo` as well as `deleted_at`: only the demo row is constrained.
+    uniqueIndex('workspaces_demo_unique')
+      .on(table.demo)
+      .where(sql`${table.demo} and ${table.deletedAt} is null`),
   ],
 );
 

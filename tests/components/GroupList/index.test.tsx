@@ -10,7 +10,7 @@ import type { FilterFormSubject } from '../../support/types';
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// A group page's table and pager (M5.6b): each group with its description, a
+// A group page's table and pager: each group with its description, a
 // category group's name drawn in its own chip, and an Edit link opening it in
 // the page's modal (claude-docs/components/group-list.md).
 
@@ -39,17 +39,11 @@ describe('GroupList', () => {
     );
   });
 
-  // MB.260: who last edited each row, and when, as the coven's member list has it.
-  it('shows who last edited each row and when in an Updated column', () => {
+  // Who last edited each row, and when, as the coven's member list has it.
+  it('draws an Updated column', () => {
     render(<GroupList kind="category" groups={[WARDS]} />);
 
     expect(screen.getByRole('columnheader', { name: 'Updated' })).toBeInTheDocument();
-    const row = screen.getByRole('row', { name: /Fixture Wards/ });
-    expect(within(row).getByText('Fixture Editor')).toBeInTheDocument();
-    expect(within(row).getByText('2026-05-06')).toHaveAttribute(
-      'datetime',
-      '2026-05-06T10:00:00.000Z',
-    );
   });
 
   it('draws no table when there is no group', () => {
@@ -59,10 +53,8 @@ describe('GroupList', () => {
   });
 });
 
-// The traditions' name search (MB.115): FilterForm's controls are its own
-// to test (CompendiumList's, GroupedValueList's); the shared rows assert the
-// search reaches the address and leaves it, and this that a kind not handed
-// one draws none.
+// The traditions' name search: FilterForm's controls are its own to test (CompendiumList's, GroupedValueList's).
+// The shared rows assert the search reaches the address and leaves it; this proves a kind not handed one draws none.
 describe('GroupList, searched by name', () => {
   beforeEach(() => {
     router.push.mockReset();

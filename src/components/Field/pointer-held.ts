@@ -3,13 +3,8 @@
 import { useRef, useSyncExternalStore } from 'react';
 
 /**
- * Whether a pointer (mouse, pen or finger) is pressed down somewhere on the
- * page. A field's error is drawn when it is left, and pressing another
- * control leaves it on the press: the error line then pushes everything below
- * down before the button comes up, so the click lands on whatever slid under
- * it. `useSettledWhilePressed` keeps what is drawn as it was until the
- * release. Reserving room for the error line instead would leave a gap under
- * every field (claude-docs/components/field.md, "Errors wait for the pointer").
+ * Whether a pointer is pressed down on the page. A field error drawn on a press would shift the button before the click lands, so
+ * `useSettledWhilePressed` holds what is drawn until release (claude-docs/components/field.md, "Errors wait for the pointer").
  */
 let held = false;
 const listeners = new Set<() => void>();
@@ -53,17 +48,14 @@ export function usePointerHeld(): boolean {
 }
 
 /**
- * `value` as it stood when the current press began, for as long as the press
- * lasts; `value` itself otherwise. What is drawn from it neither appears nor
- * goes while a button is down, so nothing moves under the pointer: an error
- * already showing stays, one just raised waits for the release. Merely hiding
- * errors during a press would take a showing one away and move the controls
- * the other way. The ref is written during the render, which is safe here
- * because the write is the value the render already has.
+ * `value` as it stood when the current press began, for as long as it lasts; `value` otherwise. The ref is written during render, which is safe
+ * because the write is the value the render already has (claude-docs/components/field.md, "Errors wait for the pointer").
  */
 export function useSettledWhilePressed<T>(value: T): T {
   const held = usePointerHeld();
   const settled = useRef(value);
+  // oxlint-disable-next-line react/refs -- the ref is read once, in a state initialiser or after a held pointer, never to draw something else
   if (!held) settled.current = value;
+  // oxlint-disable-next-line react/refs -- the ref is read once, in a state initialiser or after a held pointer, never to draw something else
   return settled.current;
 }

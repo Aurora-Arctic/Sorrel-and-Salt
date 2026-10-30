@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/christs-thorn-ziziphus-spina-christi
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species
+    value: Least Concern (IUCN 3.1)
+    listedAs: Ziziphus spina-christi
+    scope: global
+    nameBasis: stated
+    source: wikipedia-ziziphus-spina-christi
+    locator: 'taxobox, "Conservation status": "Least Concern (IUCN 3.1)"'

@@ -1,43 +1,29 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
+@use '../../scss/jar-motion' as *;
 
-// The jar shelf (M12.29), from the owner's approved mock (Fillets bracket). The
-// jars stand on a thin plank, each with a concave bracket at either end under
-// it. The drawing is 35.52 by 29.97px (32 by 27 made 11% bigger, the owner, 2026-10-21);
-// the plank sits at the foot of its box, so its y is the cell's top padding plus
-// 29.97px, and the brackets are placed at the same y. claude-docs/components/jar-shelf.md.
+// The jar shelf: jars stand on a thin plank with a concave bracket at either end under each
+// (claude-docs/components/jar-shelf.md, "Shelf geometry").
 
-// The cell's top padding, the drawing's height, and the bracket's size: the plank
-// and the brackets are placed from them, so they cannot drift from the drawing.
-// (The first four are tokens, shared with the entry's loading skeleton.)
+// The cell's top padding, the drawing's height and the bracket's size, from which the plank and
+// brackets are placed so they cannot drift.
 $-top: $jar-top;
 $-drawing-width: $jar-drawing-width;
 $-drawing-height: $jar-drawing-height;
 $-plank: $jar-plank;
 $-bracket: 7px;
-// The hover (the owner, 2026-10-21): how far the name grows, and how long the jar's
-// shake lasts. Neither has a token. The name's own transition is `$motion-short`.
-$-name-grow: 1.15;
-$-shake-duration: 500ms;
 
 .jar-shelf {
-  // `$items: false`: the mixin's `> li::before { content: none }` (bullets off) is more specific
-  // than `.jar-shelf__jar::before` and so blanked each cell's left fillet, leaving only the
-  // right one. The cell sets its own `margin: 0` below.
+  // `$items: false`: the mixin's `> li::before { content: none }` is more specific than
+  // `.jar-shelf__jar::before` and would blank the left fillet.
   @include list-reset(0, false);
 
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(#{$jar-cell-min}, 1fr));
   align-items: start;
 
-  // The shelf's outer ends carry no fillet (the owner, 2026-10-21). Each cell draws the
-  // two halves of its brackets OUTSIDE itself (see `__jar::before` and `::after`), and the
-  // shelf clips sideways at its own edge. The columns have no gap and fill the width, so
-  // the first and last column of every row sit on that edge: the half a row's end would
-  // draw is cut off, and the brackets between jars, drawn by both neighbours, stay whole.
-  // `clip`, not `hidden`: it makes no scroll box. The clip is sideways only, so nothing
-  // above or below is cut, and the Out and Low tips are `position: fixed` and escape it.
-  // Where `overflow: clip` is not understood the outer halves simply show.
+  // The outer ends carry no fillet: each cell draws its brackets' halves outside itself and the shelf clips sideways (`clip`, not `hidden`)
+  // (claude-docs/components/jar-shelf.md, "Shelf geometry").
   overflow-x: clip;
 
   @media (max-width: 30rem) {
@@ -52,21 +38,17 @@ $-shake-duration: 500ms;
   justify-items: center;
   gap: space(2);
   min-width: 0;
-  // The side padding leaves room for the name to grow on hover (1.15, about 6px a side on a
-  // full-width name) without crossing the cell's edge, where the shelf's clip would cut it.
+  // The side padding leaves room for the name to grow on hover (1.15) without the shelf's clip
+  // cutting it.
   padding: $-top space(2) space(3);
 
   // The plank, a background and not a box, so the cell is one element.
   background: linear-gradient($text-primary, $text-primary) 0 calc(#{$-top} + #{$-drawing-height}) /
     100% $-plank no-repeat;
 
-  // The fillets: a square at the plank's top with a quarter circle cut out of its
-  // outer corner, so the plank seems to curve down into a bracket between two jars.
-  // Each cell draws its brackets' halves just OUTSIDE its own edges (the left half of the
-  // bracket on its right, the right half of the one on its left), so the half at a row's
-  // end falls outside the shelf and is clipped (`.jar-shelf`), with no row-counting.
-  // The fillets, not typography-base's ◆: its shape cleared first, in this
-  // rule, so the sizes below win over the clearing. (The ::after has none to clear.)
+  // The fillets: a square at the plank's top with a quarter circle cut from its outer corner, drawn
+  // just outside each cell's edges so the half at a row's end is clipped by `.jar-shelf` with no
+  // row-counting (claude-docs/components/jar-shelf.md, "Shelf geometry").
   &::before,
   &::after {
     @include list-marker-cleared;
@@ -89,13 +71,13 @@ $-shake-duration: 500ms;
     background: radial-gradient(circle at 100% 100%, transparent 6.4px, #{$text-primary} $-bracket);
   }
 
-  // The shelf's last cell has nothing after it to finish its bracket, and when it ends a
-  // short row it is not on the clipped edge, so its outside half is left off.
+  // The shelf's last cell has nothing after it to finish its bracket, so its outside half is left
+  // off.
   &:last-child::after {
     content: none;
   }
 
-  svg {
+  > svg {
     display: block;
     transform-origin: 50% 100%;
     width: $-drawing-width;
@@ -123,9 +105,8 @@ $-shake-duration: 500ms;
   text-align: center;
 }
 
-// A jar the coven can edit. The button is reset to bare text and its `::after`
-// stretched over the whole cell, so the drawing and the amount press it too; a Low or
-// Out amount is raised above the stretch to keep its own press and tip.
+// A jar the coven can edit: the button is reset to bare text and its `::after` is stretched over
+// the whole cell, with a Low or Out amount raised above it.
 .jar-shelf__press {
   @include button-reset;
 
@@ -140,108 +121,40 @@ $-shake-duration: 500ms;
   &:focus-visible {
     outline: 0;
 
-    // Inset, so the ring stays inside the cell: the outset one would be cut by the
-    // shelf's sideways clip on the first and last column.
+    // Inset, so the ring stays inside the cell and the shelf's sideways clip does not cut it.
     &::after {
       @include focus-ring($text-primary, $focus-ring-strength, inset);
     }
   }
 }
 
-// The hover on a jar the coven can edit (the owner, 2026-10-21): the drawing shakes
-// once, gently, and the name grows a little. Only where there is a button, so a
-// viewer's shelf is still, and only on a device that really hovers, so a touch screen
-// is not left with a jar stuck mid-shake. Keyboard focus does both too (the owner,
-// 2026-10-21), as `:focus-visible` so a mouse click does not repeat it; those rules sit
-// outside the hover query, since a keyboard on a touch device has no hover to wait for.
-// The shake moves the whole `svg`, not the level inside it, which has its own
-// transform transition (`__rise`). The drawing pivots on its base, the plank.
-.jar-shelf__press .jar-shelf__name {
-  // Inline-block, since a transform has no effect on an inline box. The scale grows
-  // from the middle of the name and moves nothing around it.
-  display: inline-block;
-  transition: transform $motion-short ease-out;
-}
+// The hover and focus on an editable jar, shared with the recipe page's jar lines
+// (claude-docs/components/jar-line.md, "Hover, focus and motion").
+@include jar-press-motion('.jar-shelf__jar', '.jar-shelf__press', '> svg', '.jar-shelf__name');
+@include jar-shake-keyframes;
 
-@media (hover: hover) {
-  .jar-shelf__press:hover .jar-shelf__name {
-    transform: scale($-name-grow);
-  }
-
-  .jar-shelf__jar:has(.jar-shelf__press:hover) svg {
-    animation: jar-shelf-shake $-shake-duration ease-out;
-  }
-
-  @include reduced-motion {
-    .jar-shelf__jar:has(.jar-shelf__press:hover) svg {
-      animation: none;
-    }
-  }
-}
-
-// Keyboard focus on a jar the coven can edit: the same shake and growth as the hover.
-// `:focus-visible` and not `:focus`, which a click would set as well as the hover.
-.jar-shelf__jar:has(.jar-shelf__press:focus-visible) {
-  svg {
-    animation: jar-shelf-shake $-shake-duration ease-out;
-  }
-
-  .jar-shelf__name {
-    transform: scale($-name-grow);
-  }
-}
-
-// Reduced motion: no shake and no transition on the name, which still changes size.
-@include reduced-motion {
-  .jar-shelf__press .jar-shelf__name {
-    transition: none;
-  }
-
-  .jar-shelf__jar:has(.jar-shelf__press:focus-visible) svg {
-    animation: none;
-  }
-}
-
-// A wobble that dies away: a few degrees to one side and the other, each swing
-// smaller than the last, then still. Degrees, not a token: no token holds an angle.
-@keyframes jar-shelf-shake {
-  0% {
-    transform: rotate(0);
-  }
-
-  20% {
-    transform: rotate(-6deg);
-  }
-
-  40% {
-    transform: rotate(4.5deg);
-  }
-
-  60% {
-    transform: rotate(-3deg);
-  }
-
-  80% {
-    transform: rotate(1.5deg);
-  }
-
-  100% {
-    transform: rotate(0);
-  }
-}
-
-// The amount of a Low or Out jar as the button that opens its tip (M12.29, the owner's
-// call, 2026-10-21): it looks like the text it is, with no box and no tint, and shows the
-// help cursor. Raised above the press's stretch so it takes its own press and hover.
+// The amount of a Low or Out jar as the button that opens its tip: text with no box or tint and the
+// help cursor, raised above the press's stretch.
 .jar-shelf__amount-tip {
   @include button-reset(help);
 
   position: relative;
   z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: space(1);
 
   &:focus-visible {
     @include focus-ring;
   }
+}
+
+// The badge's Low or Out drawing before the amount, one caption line tall in the amount's ink, so
+// the state is a symbol as well as a colour.
+.jar-shelf__amount-icon {
+  inline-size: 1em;
+  block-size: 1em;
+  flex: none;
 }
 
 // The drawing's paint. Ink is the text colour, the level and wave the accent.
@@ -271,11 +184,9 @@ $-shake-duration: 500ms;
   fill-opacity: 0.12;
 }
 
-// A faceted jar's two bands, one a step darker than the glass and one lighter, as the
-// mock drew them, from the text and card colours since no token of their own exists.
-// TODO(owner): in the dark theme the two swap (the text colour is the light one
-// there), so the bands read as facets there and not as light and shade. Say if
-// they should be tokens of their own, one pair per theme.
+// A faceted jar's two bands, a step darker and lighter than the glass, from the text and card
+// colours since no token exists; they swap roles in the dark theme
+// (claude-docs/components/jar-shelf.md, "Paint").
 .jar-shelf__shade {
   fill: color-mix(in srgb, $text-primary 8%, transparent);
 }
@@ -311,6 +222,46 @@ $-shake-duration: 500ms;
   }
 }
 
+// The spell jar's ingredient bands: two tints of the one ink, alternating, with a thin line along
+// each boundary.
+.jar-shelf__band {
+  transition: transform 0.4s ease;
+
+  @include reduced-motion {
+    transition: none;
+  }
+}
+
+.jar-shelf__band-fill {
+  fill: $text-primary;
+}
+
+.jar-shelf__band--0 .jar-shelf__band-fill {
+  opacity: 0.08;
+}
+
+.jar-shelf__band--1 .jar-shelf__band-fill {
+  opacity: 0.18;
+}
+
+// A layer drawn in its category group's colours, read from custom properties as a chip does: 55%
+// light theme, 65% dark, so the top line stays legible.
+.jar-shelf__band .jar-shelf__band-fill--group {
+  fill: light-dark(
+    color-mix(in srgb, var(--band-light) 55%, transparent),
+    color-mix(in srgb, var(--band-dark) 65%, transparent)
+  );
+  opacity: 1;
+}
+
+// Only the top band draws a line, the level line, with none between layers.
+.jar-shelf__band-edge {
+  fill: none;
+  stroke: $accent;
+  stroke-width: 1.2;
+  opacity: 0.9;
+}
+
 // A form with no jar: the same vessel in dashes, its corks and cloths left off.
 .jar-shelf__jar--empty {
   .jar-shelf__glass,
@@ -330,56 +281,52 @@ $-shake-duration: 500ms;
   }
 }
 
-// A jar that is low or out is told by the jar and its amount, not a boxed badge (the owner's
-// call, 2026-10-21, mock 4B). Both are drawn after the base paint above so they win by
-// order as well as by the extra class.
+// A Low or Out jar is told by the jar and its amount, not a boxed badge, drawn after the base paint so they win by order as well as the extra class.
 //
-// Low: the glass, the level and the wave in the warning amber, and the threshold mark
-// solid, a little heavier, as the line the level has fallen to.
+// Low: the glass, level and wave in the warning amber, the threshold mark solid and a little heavier.
 .jar-shelf__jar--low {
   .jar-shelf__glass {
-    stroke: $warning;
+    stroke: $stock-low-ink;
   }
 
   .jar-shelf__level {
-    fill: $warning;
+    fill: $stock-low-ink;
     opacity: 0.3;
   }
 
   .jar-shelf__wave {
-    stroke: $warning;
+    stroke: $stock-low-ink;
     opacity: 1;
   }
 
   .jar-shelf__mark {
-    stroke: $warning;
+    stroke: $stock-low-ink;
     stroke-width: 1.4;
     stroke-dasharray: none;
   }
 
   .jar-shelf__amount {
-    color: $warning;
+    color: $stock-low-ink;
     font-weight: 500;
   }
 }
 
-// Out: the glass, lid and facets in solid red, never dashed, so it cannot be read as the
-// dashed outline of a form with no jar, and the glass faintly tinted. The jar is already
-// empty; the wave, mark, cork and cloth are left off. The red is the Out of Stock badge's ink.
+// Out: the glass, lid and facets in solid red, never dashed, so it is not read as the dashed
+// outline of a form with no jar; wave, mark, cork and cloth left off.
 .jar-shelf__jar--out {
   .jar-shelf__glass,
   .jar-shelf__lid,
   .jar-shelf__facet {
-    stroke: #{badge-token('out-of-stock', 'fg')};
+    stroke: $stock-out-ink;
     stroke-dasharray: none;
     opacity: 1;
   }
 
   .jar-shelf__glass {
-    fill: color-mix(in srgb, #{badge-token('out-of-stock', 'fg')} 14%, transparent);
+    fill: color-mix(in srgb, $stock-out-ink 14%, transparent);
   }
 
-  // The wave is left off too (the owner, 2026-10-21): an empty jar has no surface to ripple.
+  // The wave is left off: an empty jar has no surface to ripple.
   .jar-shelf__wave,
   .jar-shelf__mark,
   .jar-shelf__cork,
@@ -388,7 +335,7 @@ $-shake-duration: 500ms;
   }
 
   .jar-shelf__amount {
-    color: #{badge-token('out-of-stock', 'fg')};
+    color: $stock-out-ink;
     font-weight: 500;
   }
 }

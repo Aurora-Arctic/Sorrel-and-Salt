@@ -1,9 +1,10 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import type { Route } from 'next';
 import { ComboboxMultiSelect, ComboboxSelect } from '../Combobox';
-import { GROUP_NAMES, asSlugs } from '../../../.ladle/fixtures';
-import { Reopenable } from '../../../.ladle/reopenable';
+import { GROUP_NAMES, asSlugs } from '../../../.storybook/fixtures';
+import { Reopenable } from '../../../.storybook/reopenable';
 import Modal, {
   ConfirmQuestion,
   DiscardQuestion,
@@ -12,17 +13,18 @@ import Modal, {
   useDiscardGuard,
 } from '.';
 import { RouteModalContext } from './route-modal-provider';
-import { usePressOnMount } from '../../../.ladle/press';
+import { usePressOnMount } from '../../../.storybook/press';
 
-// Render-only; behaviour is asserted in tests/components/Modal. The owner
-// closes it by unmounting it, so the story keeps an Open button to bring it
-// back after Close or Escape; a story with no state of its own stands on
-// `Reopenable` (.ladle/reopenable.tsx), which does the same.
-export default {
+// Render-only; behaviour is asserted in tests/components/Modal. The owner closes
+// it by unmounting it, so the story keeps an Open button; a story with no state of
+// its own stands on `Reopenable` (.storybook/reopenable.tsx).
+const meta = {
   title: 'Surfaces / Modal',
-};
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
-export const WithAForm: Story = () => {
+const DefaultView = () => {
   const [open, setOpen] = useState(true);
   return (
     <>
@@ -52,58 +54,16 @@ export const WithAForm: Story = () => {
     </>
   );
 };
+const defaultNode = <DefaultView />;
 
 // In its own iframe: `showModal()` puts the dialog in the top layer, which in
-// the workshop's own document would cover Ladle's sidebar too.
-WithAForm.meta = { iframed: true };
-
-// The wide size, for a long form (M5.5): the compendium entry's is the first.
-export const Wide: Story = () => {
-  const [open, setOpen] = useState(true);
-  return (
-    <>
-      <button type="button" className="btn btn--solid" onClick={() => setOpen(true)}>
-        Open
-      </button>
-      {open && (
-        <Modal title="Add Ingredient" size="wide" onClose={() => setOpen(false)}>
-          <form className="form" onSubmit={(event) => event.preventDefault()}>
-            <div className="field">
-              <label className="field__label" htmlFor="story-wide-name">
-                Name
-              </label>
-              <input id="story-wide-name" className="input" defaultValue="Testwort" />
-            </div>
-            <div className="field">
-              <label className="field__label" htmlFor="story-wide-formal">
-                Formal Name
-              </label>
-              <input id="story-wide-formal" className="input" defaultValue="Fixtura testalis" />
-            </div>
-            <div className="modal__actions">
-              <button type="submit" className="btn btn--solid">
-                Save Ingredient
-              </button>
-              <button type="button" className="btn" onClick={() => setOpen(false)}>
-                Cancel
-              </button>
-            </div>
-          </form>
-        </Modal>
-      )}
-    </>
-  );
-};
-
-Wide.meta = { iframed: true };
-
+// the workshop's own document would cover Storybook's sidebar too.
 /**
- * An edit dialog's head (MB.115): the eyebrow says what it does to what
- * kind, the title which entry, by the name it was saved under, and a
- * qualifier after it, here a binomial in its italics. The name wraps rather
- * than pushing the × out, as the phone stories show.
+ * An edit dialog's head: the eyebrow says the action, the title which entry, and a
+ * qualifier follows it (here a binomial in italics). The name wraps rather than
+ * pushing the × out, as the phone stories show.
  */
-export const Editing: Story = () => {
+const EditingView = () => {
   const [open, setOpen] = useState(true);
   return (
     <>
@@ -135,18 +95,9 @@ export const Editing: Story = () => {
   );
 };
 
-export const EditingDark: Story = () => <Editing />;
-export const EditingLight: Story = () => <Editing />;
-export const EditingPhoneDark: Story = () => <Editing />;
-export const EditingPhoneLight: Story = () => <Editing />;
+const editingNode = <EditingView />;
 
-Editing.meta = { iframed: true };
-EditingDark.meta = { iframed: true, theme: 'dark' };
-EditingLight.meta = { iframed: true, theme: 'light' };
-EditingPhoneDark.meta = { iframed: true, theme: 'dark', width: 375 };
-EditingPhoneLight.meta = { iframed: true, theme: 'light', width: 375 };
-
-// A modal a button opens (MB.119): however it closes, Close, Escape, a click
+// A modal a button opens: however it closes, Close, Escape, a click
 // outside or Done, the focus ring is back on the button.
 const ButtonModal = () => (
   <ModalButton label="Open" className="btn btn--solid" title="Add Category">
@@ -160,24 +111,19 @@ const ButtonModal = () => (
   </ModalButton>
 );
 
-export const OpenedByAButton: Story = () => <ButtonModal />;
-
-OpenedByAButton.meta = { iframed: true };
+const openedByAButtonNode = <ButtonModal />;
 
 // The same, pressed open as the story mounts, so the dialog itself shows.
-export const OpenedByAButtonOpen: Story = () => {
+const OpenedByAButtonOpenView = () => {
   usePressOnMount('Open');
   return <ButtonModal />;
 };
+const openedByAButtonOpenNode = <OpenedByAButtonOpenView />;
 
-OpenedByAButtonOpen.meta = { iframed: true };
-
-// The address-driven wrapper the admin pages open: the workshop's router goes
-// nowhere, but reports where it was sent (.ladle/navigation.ts), which
-// `Reopenable` answers by unmounting it, as the changed address does in the
-// app. Close, Escape and Done fade it out and leave Open Again. Done stands
-// for a form's save.
-export const OpenedByItsAddress: Story = () => (
+// The address-driven wrapper the admin pages open. The workshop's router reports
+// where it was sent (.storybook/navigation.ts) and `Reopenable` unmounts it. Close,
+// Escape and Done fade it out and leave Open Again; Done stands for a save.
+const openedByItsAddressNode = (
   <Reopenable>
     {() => (
       <RouteModal
@@ -197,13 +143,10 @@ export const OpenedByItsAddress: Story = () => (
   </Reopenable>
 );
 
-OpenedByItsAddress.meta = { iframed: true };
-
-// A route modal pressed open while its page is on its way (M9.18): the
-// pressed row's head over the form's skeleton, through a provider whose
-// navigation never arrives, since the workshop's router goes nowhere. Close
-// still leaves it, as the press being forgotten would in the app.
-export const Loading: Story = () => (
+// A route modal pressed open while its page is on its way: the pressed row's head
+// over the form's skeleton, through a provider whose navigation never arrives.
+// Close still leaves it.
+const LoadingView = () => (
   <Reopenable>
     {() => (
       <RouteModalContext.Provider
@@ -218,19 +161,13 @@ export const Loading: Story = () => (
     )}
   </Reopenable>
 );
-export const LoadingPhoneDark: Story = () => <Loading />;
-export const LoadingPhoneLight: Story = () => <Loading />;
 
-Loading.meta = { iframed: true };
-LoadingPhoneDark.meta = { iframed: true, theme: 'dark', width: 375 };
-LoadingPhoneLight.meta = { iframed: true, theme: 'light', width: 375 };
+const loadingNode = <LoadingView />;
 
 /**
- * A form with a change, asked on opening whether to discard it, as Cancel,
- * Close, Escape or a click outside would ask (MB.115): over the form, which
- * is dimmed and held until it is answered. Escape, Close or a click outside
- * now flashes it, as each try while asking does. Keep Editing goes back to
- * the form, whose Cancel asks again; Discard Changes closes.
+ * A form with a change, asked on opening whether to discard it, as Cancel, Close,
+ * Escape or a click outside would ask. The form is dimmed until answered, and each
+ * further try flashes the question. Keep Editing returns; Discard Changes closes.
  */
 function ChangedForm({ close }: { close: () => void }) {
   const [name, setName] = useState('Testwort Renamed');
@@ -269,7 +206,7 @@ function ChangedForm({ close }: { close: () => void }) {
   );
 }
 
-export const AskingToDiscardChanges: Story = () => {
+const AskingToDiscardChangesView = () => {
   const [open, setOpen] = useState(true);
   return (
     <>
@@ -285,15 +222,84 @@ export const AskingToDiscardChanges: Story = () => {
   );
 };
 
-AskingToDiscardChanges.meta = { iframed: true };
+const askingToDiscardChangesNode = <AskingToDiscardChangesView />;
 
-// The question at a phone's width in each theme: its card fills the width
-// in view, and its buttons stack, full width, as the form's own do under 28rem.
-export const PhoneDark: Story = () => <AskingToDiscardChanges />;
-export const PhoneLight: Story = () => <AskingToDiscardChanges />;
+// The head's other parts, one story each beside the plain dialog (Modal/types.ts).
+const HeadView = () => {
+  const [open, setOpen] = useState(true);
+  return (
+    <>
+      <button type="button" className="btn btn--solid" onClick={() => setOpen(true)}>
+        Open
+      </button>
+      {open && (
+        <Modal
+          topEnd={<span className="badge">Updated</span>}
+          aboveName={<span>Last edited by Ada Fixturewort</span>}
+          formalName={<span className="binomial">Fixtura testalis</span>}
+          formalActions={
+            <button type="button" className="btn btn--quiet">
+              Edit
+            </button>
+          }
+          title="Testwort"
+          under={<span className="badge">Safe</span>}
+          onClose={() => setOpen(false)}
+        >
+          <p>The entry's own text.</p>
+        </Modal>
+      )}
+    </>
+  );
+};
 
-PhoneDark.meta = { iframed: true, theme: 'dark', width: 375 };
-PhoneLight.meta = { iframed: true, theme: 'light', width: 375 };
+const withEveryHeadPartNode = <HeadView />;
+
+const DestinationView = () => {
+  const [open, setOpen] = useState(true);
+  return (
+    <>
+      <button type="button" className="btn btn--solid" onClick={() => setOpen(true)}>
+        Open
+      </button>
+      {open && (
+        <Modal title="Add Ingredient" destination="Whitethorn Coven" onClose={() => setOpen(false)}>
+          <p>Where the add lands is named over the title.</p>
+        </Modal>
+      )}
+    </>
+  );
+};
+
+const withADestinationNode = <DestinationView />;
+
+const ListedView = () => {
+  const [open, setOpen] = useState(true);
+  return (
+    <>
+      <button type="button" className="btn btn--solid" onClick={() => setOpen(true)}>
+        Open
+      </button>
+      {open && (
+        <Modal
+          title="Edit Stock"
+          size="listed"
+          readingBody
+          foot={
+            <button type="button" className="btn">
+              See in Your Cupboard
+            </button>
+          }
+          onClose={() => setOpen(false)}
+        >
+          <p>A body to read, with a bar beneath it that never moves.</p>
+        </Modal>
+      )}
+    </>
+  );
+};
+
+const listedWithAFootNode = <ListedView />;
 
 // The shared form groups, the first three, by slug as a picker's values are.
 const PICKS = asSlugs(GROUP_NAMES.form.slice(0, 3)).map(({ slug, name }) => ({
@@ -302,10 +308,9 @@ const PICKS = asSlugs(GROUP_NAMES.form.slice(0, 3)).map(({ slug, name }) => ({
 }));
 
 /**
- * A form asked to confirm a delete over itself: Delete, destructive, and
- * Keep It, the focus on it. A press of Delete leaves it busy, "Deleting",
- * as a delete in flight does, since this one never lands; Keep It closes
- * the question.
+ * A form asked to confirm a delete over itself: Delete (destructive) and Cancel,
+ * focused. Delete leaves it busy, "Deleting", since this one never lands; Cancel
+ * closes the question.
  */
 function DeletingForm() {
   const [asked, setAsked] = useState(true);
@@ -335,7 +340,7 @@ function DeletingForm() {
   );
 }
 
-export const AskingToConfirm: Story = () => (
+const askingToConfirmNode = (
   <Reopenable>
     {(close) => (
       <Modal eyebrow="Edit Group" title="Fixture Healing" onClose={close}>
@@ -345,11 +350,9 @@ export const AskingToConfirm: Story = () => (
   </Reopenable>
 );
 
-AskingToConfirm.meta = { iframed: true };
-
 // A picker and a multi-picker in a modal: Escape on an open list closes the
-// list alone, and a second Escape, the list shut, closes the modal (MB.115).
-export const WithPickers: Story = () => {
+// list alone, and a second Escape, the list shut, closes the modal.
+const WithPickersView = () => {
   const [open, setOpen] = useState(true);
   const [group, setGroup] = useState('');
   const [colours, setColours] = useState<string[]>([]);
@@ -395,5 +398,27 @@ export const WithPickers: Story = () => {
     </>
   );
 };
+const withPickersNode = <WithPickersView />;
 
-WithPickers.meta = { iframed: true };
+const MODAL_STATES: Record<string, ReactNode> = {
+  Plain: defaultNode,
+  Editing: editingNode,
+  'Opened By A Button': openedByAButtonNode,
+  'Opened By A Button And Pressed': openedByAButtonOpenNode,
+  'Opened By Its Address': openedByItsAddressNode,
+  Loading: loadingNode,
+  'Asking To Discard Changes': askingToDiscardChangesNode,
+  'With Every Head Part': withEveryHeadPartNode,
+  'With A Destination': withADestinationNode,
+  'Listed With A Foot': listedWithAFootNode,
+  'Asking To Confirm': askingToConfirmNode,
+  'With Pickers': withPickersNode,
+};
+
+export const States: Story = {
+  args: { state: 'Plain' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(MODAL_STATES), mapping: MODAL_STATES },
+  },
+  render: ({ state }) => <div>{state}</div>,
+};

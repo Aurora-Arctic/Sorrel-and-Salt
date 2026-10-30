@@ -1,0 +1,105 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The rules every specimen card in a list shares, IngredientCard's and SpellCard's, written once so
+// the two cards stay alike: the whole card as the title's link, the title block, the badge row under
+// it, and the compact look. Each card passes its own class names; what only one card has stays in its
+// own stylesheet. claude-docs/components/ingredient-card.md, "Styling".
+
+// `$card`, `$heading` and `$title` are the card's article, its title block and its heading. `$ring`
+// is `card-link()`'s: false for a card that draws the focus ring itself.
+@mixin specimen-card($card, $heading, $title, $ring: true) {
+  // The pointer promises a press only on a card whose title links somewhere.
+  #{$card}:has(#{$title} a) {
+    cursor: pointer;
+  }
+
+  #{$card} #{$title} a {
+    @include card-link($ring);
+  }
+
+  // The title block fills the top row; a long word breaks anywhere rather than widen the card.
+  #{$heading} {
+    flex: 1 1 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  // The pending dot takes only its start margin on the line, its width hanging into the gap beside
+  // the corner, so it never wraps alone under a title that just fits. Hidden but for a slow navigation.
+  #{$title} .link-hint {
+    margin-inline-end: -0.6em;
+  }
+
+  // The badges, a row under the title. Its zero width and full minimum keep it the block's width while
+  // adding nothing to the block's narrowest width, so a wide badge never pushes the corner down.
+  #{$card} #{$heading} > .specimen__badges {
+    inline-size: 0;
+    min-inline-size: 100%;
+    margin-block: space(2) 0;
+    align-items: center;
+  }
+
+  // The medium badge size, which holds a badge 24px tall.
+  #{$card} .badge {
+    @include badge-size('medium');
+  }
+
+  // The plain category chips pass a click through to the title link's overlay. Only the chips' `li`s,
+  // not the row: the +N item keeps its press, hover and focus (CategoryChips). A plain chip is text.
+  #{$card} .specimen__chips > li:not(.category-more-item) {
+    pointer-events: none;
+  }
+}
+
+// The compact look's shared part: the same padding, gap, title step, badge and chip size on both cards.
+// Included under the list's density selector, which already outranks every regular rule above.
+@mixin specimen-card-compact($card, $heading, $title) {
+  #{$card} {
+    padding: space(3) space(4);
+    gap: space(2);
+  }
+
+  // Title: h4's size, one step under the regular card's h3.
+  #{$title} {
+    font-size: heading-size(4);
+    line-height: 1.15;
+  }
+
+  // One step, 8px both ways, so a wrapped badge row sits 8px under the title as it does above the chips.
+  #{$card} .specimen__top {
+    gap: space(2);
+  }
+
+  // Badges: the sides tighten and the gaps close. The height stays at 24px, the smallest target a
+  // tipped badge may have.
+  #{$card} .specimen__badges {
+    gap: space(1);
+
+    .badge {
+      @include badge-size('small');
+    }
+  }
+
+  #{$card} #{$heading} > .specimen__badges {
+    margin-block-start: space(1);
+  }
+
+  // Chips: tighter inside and between. The chip row has no control in it.
+  #{$card} .specimen__chips {
+    gap: space(1);
+
+    .chip {
+      font-size: type-size('overline');
+      padding: $chip-padding-compact-card;
+    }
+  }
+
+  #{$card} .specimen__foot {
+    padding-top: space(2);
+  }
+
+  #{$card} .specimen__actions {
+    margin-top: space(2);
+  }
+}

@@ -41,10 +41,9 @@ function readLedgerPage(
   );
 }
 
-// The page and GraphQL's `privilegeChanges` end at the same service, paged by
-// the same helper (CLAUDE.md rule 1, rule 8), numbered as every admin list is
-// (MB.132); the users a page names are one read beside it. Cached so a second
-// render in the request reads once.
+// The page and GraphQL's `privilegeChanges` end at the same service, paged by the same helper
+// (rules 1 and 8) and numbered as every admin list is; the users a page names are one read beside
+// it. Cached so a second render in the request reads once.
 const readLedger = cache(
   async (
     session: Session,
@@ -90,10 +89,8 @@ const readLedger = cache(
   },
 );
 
-// The privilege ledger (MB.200): every change to who is an admin and who may
-// create a coven, newest first, for the admin who suspects misuse. One page,
-// filtered by the subject's name or email and by privilege, rather than a
-// page per privilege
+// The privilege ledger: every change to who is an admin and who may create a coven, newest first.
+// One page, filtered by the subject's name or email and by privilege
 // (claude-docs/auth/admin-users.md, "The privilege ledger").
 export default async function AdminPrivilegeChangesPage({
   searchParams,

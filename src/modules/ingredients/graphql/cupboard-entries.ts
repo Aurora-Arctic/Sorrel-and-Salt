@@ -19,13 +19,10 @@ import type {
   DroppedOnConvert,
 } from '../types';
 import { isAnnotated } from '../validation/cupboard-merge';
-import { IngredientElementEnum, IngredientRef } from './ingredient';
+import { EXPECTED_REVISION, IngredientElementEnum, IngredientRef } from './ingredient';
 
-// A coven's cupboard entry over the wire (M12.14): the coven's own say over
-// one compendium entry, read beside the entry rather than merged into it, so
-// a client can show both. Who may read it is the cupboard-entry service's
-// check, through the loader (claude-docs/graphql/schema.md, "Cupboard
-// entries: CupboardEntry and Ingredient.cupboardEntry").
+// A coven's cupboard entry over the wire: the coven's own say over one compendium entry, read beside the entry so a client can show both.
+// Who may read it is the service's check, through the loader (claude-docs/graphql/schema.md, "Cupboard entries: CupboardEntry and Ingredient.cupboardEntry").
 
 export const CupboardEntryRef = builder.objectRef<CupboardEntryNode>('CupboardEntry').implement({
   description:
@@ -42,6 +39,9 @@ export const CupboardEntryRef = builder.objectRef<CupboardEntryNode>('CupboardEn
     celestialBodies: t.exposeStringList('celestialBodies', { nullable: true }),
     zodiacSigns: t.exposeStringList('zodiacSigns', { nullable: true }),
     colors: t.exposeStringList('colors', { nullable: true }),
+    revision: t.exposeInt('revision', {
+      description: 'Raised by one on every save; a save names the revision it was written against.',
+    }),
     annotated: t.boolean({
       description: 'True when the coven has set any of the seven overrides.',
       resolve: (entry) => isAnnotated(entry),
@@ -80,7 +80,7 @@ builder.objectField(IngredientRef, 'inCupboard', (t) =>
   }),
 );
 
-// The Add flow's question (M12.20): the exact matches, a page at a time.
+// The Add flow's question: the exact matches, a page at a time.
 builder.queryField('compendiumMatches', (t) =>
   t.pagedConnection({
     type: IngredientRef,
@@ -92,7 +92,7 @@ builder.queryField('compendiumMatches', (t) =>
   }),
 );
 
-// The three writes (M12.15). The resolvers refuse only a missing session; who
+// The three writes. The resolvers refuse only a missing session; who
 // may write which coven's cupboard is the service's check.
 
 const CupboardEntryInputRef = builder.inputType('CupboardEntryInput', {
@@ -110,9 +110,8 @@ const CupboardEntryInputRef = builder.inputType('CupboardEntryInput', {
 });
 
 /**
- * The written row with the compendium entry's own name beside it, as the read
- * answers. `read` fetches the entry where the loader cannot: the loader reads
- * live entries only, and a coven annotates a retired entry it still holds.
+ * The written row with the compendium entry's own name beside it. `read` fetches the entry where the loader cannot:
+ * the loader reads live entries only, and a coven annotates a retired entry it still holds.
  */
 async function nodeOf(
   row: CupboardEntryRow,
@@ -159,14 +158,25 @@ builder.mutationField('annotateCupboardEntry', (t) =>
       workspaceId: t.arg.id({ required: true }),
       ingredientId: t.arg.id({ required: true }),
       input: t.arg({ type: CupboardEntryInputRef, required: true }),
+      expectedRevision: t.arg.int({ required: false, description: EXPECTED_REVISION }),
     },
     authScopes: { signedIn: true },
     // The name is read through `getIngredient`, which reaches a retired entry
     // the coven still holds (claude-docs/db/workspace-compendium-entries.md,
     // "When the compendium retires the entry"); the loader would miss it.
-    resolve: async (_root, { workspaceId, ingredientId, input }, { loaders, ...context }) =>
+    resolve: async (
+      _root,
+      { workspaceId, ingredientId, input, expectedRevision },
+      { loaders, ...context },
+    ) =>
       nodeOf(
-        await annotateCupboardEntry(sessionOf(context), workspaceId, ingredientId, input),
+        await annotateCupboardEntry(
+          sessionOf(context),
+          workspaceId,
+          ingredientId,
+          input,
+          expectedRevision ?? null,
+        ),
         loaders,
         () => getIngredient(sessionOf(context), ingredientId, workspaceId),
       ),

@@ -11,12 +11,9 @@ import {
 } from 'react';
 import type { CovenSwitchRegistration } from './types';
 
-// The coven layout holds the switcher and cannot see the page beneath it, so a
-// page that knows which covens it opens in (an ingredient's, whose row it has
-// read) says so through this context and the switcher reads it when a coven is
-// picked. Two contexts, so the page, which only writes, is not drawn again each
-// time the registration changes. Nothing registered, or no provider (stories,
-// tests), is the section-only fallback. See claude-docs/components/workspace-switcher.md.
+// A page that knows which covens it opens in registers them here, and the switcher reads them when
+// a coven is picked. Two contexts, so the writing page is not redrawn on each registration; none
+// registered is the section-only fallback (claude-docs/components/workspace-switcher.md).
 
 const Read = createContext<CovenSwitchRegistration | null>(null);
 const Write = createContext<Dispatch<SetStateAction<CovenSwitchRegistration | null>>>(() => {});

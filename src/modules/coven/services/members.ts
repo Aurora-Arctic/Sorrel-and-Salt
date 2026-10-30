@@ -9,7 +9,9 @@ import type { MemberEmail, MemberKey, MembershipWithWorkspace, WorkspaceRow } fr
 
 /**
  * One page of a coven's live members, in the order they joined, each carrying
- * the coven: `Workspace.members`, and the members page (M6.13). One read for
+ * the coven: `Workspace.members`, and the members page. `query` narrows it
+ * to the members whose name holds the text, in any case, for the participant
+ * box of Record a Working. One read for
  * the check and one for the page. A coven at a time rather than batched across
  * covens, since no page lists two covens' members at once
  * (claude-docs/design-decisions/m6.11-members-without-a-loader.md).
@@ -21,15 +23,16 @@ export async function listMembers(
   session: Session,
   workspace: WorkspaceRow,
   page: PageRequest,
+  query?: string,
 ): Promise<PageEntry<MembershipWithWorkspace>[]> {
   const membership = await assertMembership(session, workspace.id, { member: ['read'] });
-  const entries = await findMemberPage(membership, page);
+  const entries = await findMemberPage(membership, page, query?.trim() || undefined);
   return entries.map(({ node, ...entry }) => ({ ...entry, node: { ...node, workspace } }));
 }
 
 /**
  * Every live member of a coven with their role, read to the end through the
- * same check as `listMembers` (M6.16). For the pages that must count owners or
+ * same check as `listMembers`. For the pages that must count owners or
  * name who could be made one, which a single page of the list cannot say once
  * a coven outgrows it.
  *
@@ -46,7 +49,7 @@ export async function memberRoster(
 /**
  * The address of each of these users who sits in the coven, read off their
  * own user row so a changed address shows at once:
- * the owner's Email column on the members page (M11.19). A
+ * the owner's Email column on the members page. A
  * separate read rather than a wider `CoMember`, which every member reads.
  * Users outside the coven are left out, not refused. One read for the check
  * and one for the addresses.
@@ -65,10 +68,8 @@ export async function memberEmails(
 }
 
 /**
- * `memberEmails` for a batch of members across covens, one answer per key:
- * the address, null for someone the coven no longer seats, or the
- * `Forbidden` the coven's check gave, so one coven refused leaves another
- * answered. One check and one read per coven named.
+ * `memberEmails` for a batch of members across covens, one answer per key: the address, null for someone no longer seated,
+ * or the coven's `Forbidden`, so one refused coven leaves another answered.
  */
 export async function emailsOfMembers(
   session: Session,

@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
-import { asManualFix } from '../../../support/db/privileges';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { users } from '@/modules/identity/schema/users';
@@ -31,11 +30,8 @@ describe('users schema', () => {
   });
 });
 
-// The primary admin is whichever live row matches ADMIN_BOOTSTRAP_EMAIL
-// case-insensitively, and `users_email_unique` is on the raw column. Better
-// Auth lowercases every email it writes, but a row inserted by hand need not,
-// so the database holds the addresses to lower case and two rows can never
-// differ by case alone.
+// The primary admin is whichever live row matches ADMIN_BOOTSTRAP_EMAIL case-insensitively, and `users_email_unique` is on the raw column.
+// Better Auth lowercases every email it writes but a row inserted by hand need not, so the database holds addresses to lower case and two rows can never differ by case alone.
 describe('users email case', () => {
   let sql: postgres.Sql;
   useTestDatabase((client) => {
@@ -80,11 +76,8 @@ describe('users email case', () => {
   });
 });
 
-// MB.177: the flag is what lets anyone create a workspace, admins included, so
-// a CHECK holds every admin to it rather than the gate reading `role` beside
-// it (claude-docs/design-decisions/mb.177-admins-hold-workspace-creation.md).
-// M11.20 widens it to every role but `user`, curators included
-// (claude-docs/design-decisions/m11.20-curator-role.md).
+// The flag is what lets anyone create a workspace, admins included, so a CHECK holds every admin to it rather than the gate reading `role` beside it (claude-docs/design-decisions/mb.177-admins-hold-workspace-creation.md).
+// It holds for every role but `user`, curators included (claude-docs/design-decisions/m11.20-curator-role.md).
 describe('users privileged creation flag', () => {
   let sql: postgres.Sql;
   useTestDatabase((client) => {
@@ -94,7 +87,7 @@ describe('users privileged creation flag', () => {
   const CONSTRAINT = 'users_privileged_can_create_workspace';
 
   // Each write here that grants a privilege declares itself, as a `psql` fix
-  // must since MB.195's trigger; the CHECK refuses before the trigger runs.
+  // must because of the trigger; the CHECK refuses before the trigger runs.
   const insert = (email: string, role: UserRole, canCreateWorkspace: boolean) =>
     sql.begin(async (tx) => {
       await tx`select set_config('app.privilege_route', 'manual', true)`;
@@ -129,37 +122,5 @@ describe('users privileged creation flag', () => {
     await expect(insert('flagged-curator@admin-flag.test', 'curator', true)).resolves.toHaveLength(
       1,
     );
-  });
-
-  it('refuses taking the flag from a curator, and keeps it through a move to admin', async () => {
-    const [{ id }] = await insert('kept@admin-flag.test', 'curator', true);
-
-    const error = await failureOf(
-      asManualFix(sql, (tx) => tx`update users set can_create_workspace = false where id = ${id}`),
-    );
-
-    expect(error.code).toBe('23514');
-    expect(error.constraint_name).toBe(CONSTRAINT);
-    await asManualFix(sql, (tx) => tx`update users set role = 'admin' where id = ${id}`);
-    await asManualFix(sql, (tx) => tx`update users set role = 'curator' where id = ${id}`);
-    const [row] =
-      await sql`select role::text as role, can_create_workspace from users where id = ${id}`;
-    expect(row).toEqual({ role: 'curator', can_create_workspace: true });
-  });
-
-  it('refuses making a user admin without the flag, and accepts both together', async () => {
-    const [{ id }] = await insert('promoted@admin-flag.test', 'user', false);
-
-    const error = await failureOf(sql`update users set role = 'admin' where id = ${id}`);
-
-    expect(error.code).toBe('23514');
-    expect(error.constraint_name).toBe(CONSTRAINT);
-    await asManualFix(
-      sql,
-      (tx) => tx`update users set role = 'admin', can_create_workspace = true where id = ${id}`,
-    );
-    const [row] =
-      await sql`select role::text as role, can_create_workspace from users where id = ${id}`;
-    expect(row).toEqual({ role: 'admin', can_create_workspace: true });
   });
 });

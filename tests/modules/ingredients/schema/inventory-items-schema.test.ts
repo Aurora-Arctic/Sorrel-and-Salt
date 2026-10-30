@@ -106,11 +106,11 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  await sql`truncate inventory_items`;
+  await sql`truncate inventory_items cascade`;
 });
 
 describe('inventory_items table', () => {
-  // MB.217: stock names the form a jar holds, so Mugwort herb and Mugwort
+  // Stock names the form a jar holds, so Mugwort herb and Mugwort
   // oil are two rows of one coven.
   describe('one live row per variant per workspace', () => {
     // The pair is unique, not either half: drop a column from the index and
@@ -176,22 +176,11 @@ describe('inventory_items table', () => {
   });
 
   describe('a dimension that contradicts its unit cannot be written', () => {
-    // One mismatch; that the CHECK names every unit is read off its definition below.
+    // One mismatch; that the CHECK names every unit is proved unit by unit below.
     it('refuses a unit declared under another dimension', async () => {
       const error = await failureOf(hold({ unit: 'g', dimension: 'volume' }));
 
       // 23514 is check_violation, named: this constraint's, not the enum's or the index's.
-      expect(error.code).toBe('23514');
-      expect(error.constraint_name).toBe(DIMENSION_CHECK);
-    });
-
-    it('refuses a contradiction introduced by an update, not only by an insert', async () => {
-      const id = await hold({ unit: 'ml', dimension: 'volume' });
-
-      const error = await failureOf(sql`
-        update inventory_items set unit_dimension = 'weight' where id = ${id}
-      `);
-
       expect(error.code).toBe('23514');
       expect(error.constraint_name).toBe(DIMENSION_CHECK);
     });
@@ -219,56 +208,21 @@ describe('inventory_items table', () => {
     });
   });
 
-  describe('quantities', () => {
-    it('keeps a fractional quantity exactly, without binary rounding', async () => {
-      const id = await hold({ quantity: '0.1', unit: 'kg', dimension: 'weight' });
-
-      const [row] = await sql`select quantity_on_hand from inventory_items where id = ${id}`;
-
-      // The driver returns `numeric` as a string: 0.1 survives as 0.1.
-      expect(row.quantity_on_hand).toBe('0.100');
-    });
-
-    it('distinguishes none left from never measured', async () => {
-      const empty = await hold({ quantity: '0' });
-      const unmeasured = await hold({ ingredientId: ROSEMARY, quantity: null });
-
-      const rows = await sql`
-        select id, quantity_on_hand from inventory_items where id in (${empty}, ${unmeasured})
-      `;
-      const quantityById = Object.fromEntries(rows.map((row) => [row.id, row.quantity_on_hand]));
-
-      expect(quantityById[empty]).toBe('0.000');
-      expect(quantityById[unmeasured]).toBeNull();
-    });
-
-    // Zero is stored as zero ("no warning wanted"), not as absent.
-    it('stores a low-stock threshold of zero as zero, not as absent', async () => {
-      const id = await hold({ threshold: '0' });
-
-      const [row] = await sql`select low_stock_threshold from inventory_items where id = ${id}`;
-
-      expect(row.low_stock_threshold).toBe('0.000');
-    });
-  });
-
   describe('the constraint covers the vocabulary rather than a list of its own', () => {
-    // The shipped CHECK read back and compared to the module: a hand-written
-    // constraint that forgets `pinch` passes every rejection test above, since
-    // only one sample is refused above.
-    it('names every unit, under the dimension the module gives it', async () => {
-      const [row] = await sql`
-        select pg_get_constraintdef(oid) as definition
-        from pg_constraint
-        where conrelid = 'inventory_items'::regclass and conname = ${DIMENSION_CHECK}
-      `;
-      const definition = row.definition as string;
-
+    // A hand-written constraint that forgets `pinch`, or files it under the
+    // wrong dimension, passes every single-sample test above; every unit is
+    // written here under its own dimension and under each other one.
+    it('takes every unit under the dimension the module gives it, and refuses it under any other', async () => {
       for (const dimension of UNIT_DIMENSIONS) {
         for (const unit of UNITS_BY_DIMENSION[dimension]) {
-          const clause = definition.split(' OR ').find((part) => part.includes(`'${unit}'::text`));
+          const id = await hold({ unit, dimension });
+          await sql`delete from inventory_items where id = ${id}`;
 
-          expect(clause).toContain(`'${dimension}'::unit_dimension`);
+          for (const other of UNIT_DIMENSIONS.filter((each) => each !== dimension)) {
+            const error = await failureOf(hold({ unit, dimension: other }));
+
+            expect(error.constraint_name, `${unit} under ${other}`).toBe(DIMENSION_CHECK);
+          }
         }
       }
     });

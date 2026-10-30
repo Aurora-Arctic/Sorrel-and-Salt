@@ -1,6 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { HttpResponse } from 'msw';
+import { HttpResponse } from 'msw/http';
 import type { Route } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import CupboardActions from '@/components/IngredientEntry/cupboard-actions';
@@ -19,13 +19,9 @@ import { server } from '../../support/msw/server';
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// Which cupboard choices a compendium entry offers (M12.17, M12.23;
-// claude-docs/components/ingredient-entry.md): the page decides from the
-// member's permissions, the choices follow whether the coven holds the entry, and they are drawn
-// as the list cards draw them (the owner's call, 2026-10-20): a main icon (Annotate on a
-// coven's page, Edit in Compendium on the compendium's) and the three dots for what is further,
-// Remove among it beside Make It Ours (the owner's call, 2026-10-20), the bin only where Remove is
-// the one choice left.
+// Which cupboard choices a compendium entry offers (claude-docs/components/ingredient-entry.md): the page decides from the member's permissions and the choices follow whether the coven holds the entry.
+// They are drawn as the list cards draw them: a main icon (Annotate on a coven's page, Edit in Compendium on the compendium's) and the three dots for the rest,
+// with Remove beside Make It Ours, and no bin even where Remove is the one choice left.
 
 const ANNOTATE = {
   href: '/coven/fixture-coven/ingredients/fixture?annotate' as Route,
@@ -101,12 +97,8 @@ function choices(): string[] {
   return shownChoices();
 }
 
-/** The bin where Remove is the one choice left, else an item of the three dots' menu. */
+/** An item of the three dots' menu. */
 function choose(name: string): void {
-  if (name === 'Remove' && button('Remove Testwort')) {
-    fireEvent.click(screen.getByRole('button', { name: 'Remove Testwort' }));
-    return;
-  }
   fireEvent.click(screen.getByRole('button', { name: 'More for Testwort' }));
   fireEvent.click(within(screen.getByRole('menu')).getByRole('menuitem', { name }));
 }
@@ -114,25 +106,19 @@ function choose(name: string): void {
 describe('CupboardActions', () => {
   beforeEach(() => router.push.mockClear());
 
-  // The icons at the end of the name's row (the owner's call, 2026-10-20), the cards' own: on a
+  // The icons at the end of the name's row, the cards' own: on a
   // coven's page the main one is Annotate, a link to the page's `?annotate`, named for the entry
-  // with its tip; then the three dots, a menu. No plain Annotate or Edit.
-  it('draws Annotate as the main icon, a link named for the entry with its tip, then the three dots', async () => {
+  // (its tip is IconTip's to prove); then the three dots, a menu. No plain Annotate or Edit.
+  it('draws Annotate as the main icon, a link named for the entry, then the three dots', async () => {
     renderActions({ held: true });
 
     const annotate = screen.getByRole('link', { name: 'Annotate Testwort' });
     expect(annotate).toHaveAttribute('href', ANNOTATE.href);
     expect(screen.queryByRole('link', { name: 'Annotate' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^Edit/ })).not.toBeInTheDocument();
-    fireEvent.mouseEnter(annotate);
-    // After the 300ms a hover waits for (IconTip).
-    expect(await screen.findByRole('tooltip', { hidden: true })).toHaveTextContent('Annotate');
-    fireEvent.mouseLeave(annotate);
 
     const more = screen.getByRole('button', { name: 'More for Testwort' });
     expect(more).toHaveAttribute('aria-haspopup', 'menu');
-    // Opening the menu shuts the tip from IconTip's MutationObserver, a step after the
-    // press: inside an async act, so that update is awaited rather than left outside it.
     await act(async () => {
       fireEvent.click(more);
     });
@@ -141,7 +127,7 @@ describe('CupboardActions', () => {
     expect(button('Remove Testwort')).not.toBeInTheDocument();
   });
 
-  // Adding is the plus's alone (the owner's call, 2026-10-20): the old Add to Cupboard is gone.
+  // Adding is the plus's alone: the old Add to Cupboard is gone.
   it('offers no Add without a plus while the coven lacks the entry, though its role may add', () => {
     // Why Add could have shown: the role may add (`canAdd`) and the coven lacks the entry.
     expect(BASE.canAdd && !BASE.held).toBe(true);
@@ -150,8 +136,8 @@ describe('CupboardActions', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
-  // The dots draw the labelled section even though every choice is the coven's (the owner's call,
-  // 2026-10-20): the lone Coven section, and no Compendium one for an empty side.
+  // The dots draw the labelled section even though every choice is the coven's:
+  // the lone Coven section, and no Compendium one for an empty side.
   it('puts Make It Ours and Remove in the three dots, in a Coven section, not Add, once the coven holds it', () => {
     renderActions({ held: true });
 
@@ -164,15 +150,13 @@ describe('CupboardActions', () => {
     expect(button('Remove Testwort')).not.toBeInTheDocument();
   });
 
-  // A lone choice is its own icon (the owner's call, 2026-10-20), so a member who may remove but
-  // not make it ours has the bin, and no menu of one.
-  it('draws Remove as the bin, with no three dots, where it is the one choice left', () => {
-    // Why the dots could have shown: with Make It Ours permitted too they do (the test above).
-    expect(BASE.canMakeOurs).toBe(true);
+  // The page always draws the three dots, so a member who may remove but
+  // not make it ours finds Remove in a menu of one, never a bin beside it.
+  it('draws Remove in the three dots, with no bin, where it is the one choice left', () => {
     renderActions({ held: true, canMakeOurs: false });
 
-    expect(button('Remove Testwort')).toBeInTheDocument();
-    expect(button('More for Testwort')).not.toBeInTheDocument();
+    expect(button('Remove Testwort')).not.toBeInTheDocument();
+    expect(choices()).toEqual(['Remove']);
   });
 
   describe("a curator's Edit in Compendium", () => {
@@ -220,12 +204,11 @@ describe('CupboardActions', () => {
     expect(button('Remove Testwort')).not.toBeInTheDocument();
   });
 
-  it('draws no Make It Ours without its permission, and so no three dots', () => {
+  it('draws no Make It Ours without its permission', () => {
     renderActions({ held: true, canMakeOurs: false });
 
     expect(screen.getByRole('link', { name: 'Annotate Testwort' })).toBeInTheDocument();
-    expect(button('Remove Testwort')).toBeInTheDocument();
-    expect(button('More for Testwort')).not.toBeInTheDocument();
+    expect(choices()).not.toContain('Make It Ours');
   });
 
   it('draws nothing for a viewer', () => {
@@ -246,15 +229,6 @@ describe('CupboardActions', () => {
 
     expect(screen.queryByRole('link', { name: /^(Annotate|Edit)/ })).not.toBeInTheDocument();
     expect(button('More for Testwort')).toBeInTheDocument();
-  });
-
-  it("offers Annotate as a link to the page's ?annotate address", () => {
-    renderActions({ held: true, annotate: ANNOTATE });
-
-    expect(screen.getByRole('link', { name: 'Annotate Testwort' })).toHaveAttribute(
-      'href',
-      ANNOTATE.href,
-    );
   });
 
   it('offers Annotate alone as a link, not a button, where it is the one write permitted', () => {
@@ -319,10 +293,8 @@ describe('CupboardActions', () => {
     await waitFor(() => expect(button('More for Testwort')).toHaveFocus());
   });
 
-  // The entry's page heading takes the focus once the re-read says the coven no
-  // longer holds it: Remove went with its menu, and the control left may be
-  // another element (M8.17, after M12.31's follow-up 5). Until then the
-  // confirmation stays, busy, as ConfirmedAction's does.
+  // The entry's page heading takes the focus once the re-read says the coven no longer holds it, because Remove went with its menu and the control left may be another element.
+  // Until then the confirmation stays, busy, as ConfirmedAction's does.
   it("reads the page again once the entry is removed, and closes onto the page's heading when the re-read drops it", async () => {
     mockGraphQLMutation<RemoveCupboardEntryMutation, Record<string, unknown>>(
       'RemoveCupboardEntry',
@@ -441,7 +413,7 @@ describe('CupboardActions', () => {
     expect(button('Show the error for More for Testwort')).toBeInTheDocument();
   });
 
-  it('anchors a Remove refusal on the bin where Remove is the one choice, so the callout follows it', async () => {
+  it('anchors a Remove refusal on the three dots where Remove is the one choice, so the callout follows it', async () => {
     mockGraphQLError('RemoveCupboardEntry', {
       code: 'VALIDATION',
       fieldErrors: [{ path: ['ingredientId'], message: 'Fixture refusal: a jar is held' }],
@@ -453,8 +425,8 @@ describe('CupboardActions', () => {
 
     expect(await screen.findByRole('alert')).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    expect(button('Remove Testwort')).toHaveFocus();
-    expect(button('Show the error for Remove Testwort')).toBeInTheDocument();
+    expect(button('More for Testwort')).toHaveFocus();
+    expect(button('Show the error for More for Testwort')).toBeInTheDocument();
   });
 
   it('asks before making it ours, in a dialog, and changes nothing on the way out', async () => {
@@ -547,11 +519,9 @@ describe('CupboardActions', () => {
     );
   });
 
-  // The plus beside the pencil on a coven's page too (the owner's call, 2026-10-20): the page's
-  // `plus` names every coven the viewer may add in and which of them hold the entry.
-  // Edit Stock on the coven's own page (M9.12; the owner's call, 2026-10-21): first in the dots,
-  // this coven's dialog at once with no coven to choose, for a coven that holds the entry and
-  // where the role may update stock. The page hands over the stock only then.
+  // The plus beside the pencil on a coven's page too: the page's `plus` names every coven the viewer may add in and which of them hold the entry.
+  // Edit Stock on the coven's own page is first in the dots and opens this coven's dialog at once with no coven to choose,
+  // for a coven that holds the entry and where the role may update stock; the page hands over the stock only then.
   describe('Edit Stock', () => {
     const FLOWER = '00000000-0000-4000-8000-0000000000f1';
     const STOCK: StockData = {

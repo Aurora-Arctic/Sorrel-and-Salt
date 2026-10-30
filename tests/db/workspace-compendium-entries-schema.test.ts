@@ -6,11 +6,8 @@ import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient } from '../support/fixtures/ingredient';
 import { FIXTURE_USERS, WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 
-// The table's two live uniques (CLAUDE.md rule 4): one presence per coven and
-// compendium entry, and one label per coven, case folded. Each is proved live
-// and then freed by a soft delete; the catalogue sweep in
-// partial-unique-indexes.test.ts proves the predicate for every index alike,
-// this file proves what the label index is keyed on.
+// The table's two live uniques (CLAUDE.md rule 4): one presence per coven and compendium entry, and one label per coven, case folded.
+// This file proves what each index is keyed on; partial-unique-indexes.test.ts proves for all that a soft delete frees the slot.
 
 const AUTHOR = FIXTURE_USERS.A.id;
 
@@ -41,11 +38,8 @@ const outcomeOf = (work: Promise<unknown>) =>
       error.code === '23505' ? error.constraint_name : error.message,
   );
 
-const softDelete = (id: string) =>
-  sql`update workspace_compendium_entries set deleted_at = now(), deleted_by = ${AUTHOR} where id = ${id}`;
-
 describe('workspace_compendium_entries', () => {
-  it('holds an entry once per coven, and again after the first is soft-deleted', async () => {
+  it('holds an entry once per coven', async () => {
     const first = await insertCupboardEntry(
       sql,
       { workspaceId: WORKSPACE_W_ID, ingredientId: testwort },
@@ -65,13 +59,10 @@ describe('workspace_compendium_entries', () => {
     expect(
       await outcomeOf(insertCupboardEntry(sql, { ...entry, workspaceId: WORKSPACE_X_ID }, AUTHOR)),
     ).toBe('admitted');
-
-    await softDelete(first);
-    expect(await outcomeOf(insertCupboardEntry(sql, entry, AUTHOR))).toBe('admitted');
   });
 
-  it('holds a label once per coven whatever its case, and again after a soft delete', async () => {
-    const first = await insertCupboardEntry(
+  it('holds a label once per coven whatever its case', async () => {
+    await insertCupboardEntry(
       sql,
       { workspaceId: WORKSPACE_W_ID, ingredientId: mockwort, label: 'Mockleaf' },
       AUTHOR,
@@ -94,10 +85,6 @@ describe('workspace_compendium_entries', () => {
     expect(await outcomeOf(other(null))).toBe('admitted');
     await softDeleteLive(WORKSPACE_W_ID, testwort);
     expect(await outcomeOf(other(null))).toBe('admitted');
-
-    await softDelete(first);
-    await softDeleteLive(WORKSPACE_W_ID, testwort);
-    expect(await outcomeOf(other('mockleaf'))).toBe('admitted');
   });
 });
 

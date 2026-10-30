@@ -33,6 +33,16 @@ the creation service still refuses a user without the right
   the slug, so a second coven with the same name lands at `-2`, and one named
   "New" lands at `new-2`, since `/coven/new` is this page.
 
+## Leaving with a name typed
+
+With a name typed, the form asks before it is left (M13.14, story 32):
+closing the tab or reloading raises the browser's own question, and a link
+or any other in-app navigation asks "You have unsaved changes. Discard
+them?" with Discard Changes and Keep Editing, in a dialog titled "Discard
+Changes?" over the page, not in the form's card (the owner's call). It is `useDiscardGuard`, as the modal forms use
+([`modal.md`](modal.md), "Unsaved changes"), given `!empty && !busy`, so
+nothing asks while the coven is being made or on the way to it.
+
 ## Two error surfaces
 
 As in NameForm ([`name-form.md`](name-form.md), "Two error surfaces"), a
@@ -65,8 +75,8 @@ the tokens is MB.119's, the coven section's design review.
 
 ## Stories
 
-`index.stories.tsx`, titled "Coven / Create Coven Form": `Empty`, `PhoneDark` and `PhoneLight`, each inside the
-page's real frame, panel and heading.
+`index.stories.tsx`, titled "Coven / Create Coven Form": `States`, with a control that chooses Empty, Name Typed, Needs an Invitation or Refused After Submitting, inside the app shell and the
+page's real frame, panel and heading. The toolbar viewport menu shows it at 375px.
 
 ## Testing
 

@@ -8,13 +8,13 @@ The traditions' list has a name search; the category and form groups' have none.
 
 `GroupListProps` (`types.ts`):
 
-| Prop                       | What it is                                                                                                                                |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `kind`                     | `'category'`, `'form'` or `'tradition'`                                                                                                   |
-| `groups`                   | The page's groups: `{ id, name, slug, description, editHref, updatedBy, updatedAt }`, plus `colorDark`, `colorLight` for a category group |
-| `previousHref`, `nextHref` | The pager's links, none at either end                                                                                                     |
-| `position`                 | Where this page stands, `{ page, pages }`, for the pager's "Page X of Y"; none says nothing of it                                         |
-| `filter`                   | `{ query }`, the name search the page shows, `''` for none; absent, the list draws no search at all                                       |
+| Prop                       | What it is                                                                                                              |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `kind`                     | `'category'`, `'form'` or `'tradition'`                                                                                 |
+| `groups`                   | The page's groups: `{ id, name, slug, description, editHref, updatedBy, updatedAt }`, plus `color` for a category group |
+| `previousHref`, `nextHref` | The pager's links, none at either end                                                                                   |
+| `position`                 | Where this page stands, `{ page, pages }`, for the pager's "Page X of Y"; none says nothing of it                       |
+| `filter`                   | `{ query }`, the name search the page shows, `''` for none; absent, the list draws no search at all                     |
 
 `groupsHref(kind, place, dialog?)` builds `/admin/category-groups`, `/admin/form-groups` or `/admin/deity-traditions` with the page's search and cursor, and `?new` or `?edit=<slug>` for a modal, through the shared `listHref` (`src/lib/list-href.ts`): `/admin/deity-traditions?query=wort&after=c&new`. A blank search is written as none. `groupsPath(kind)` is the bare page, which the search submits to and Clear opens. Each kind's address, table name, row nouns, Add label and the value kind it holds are `kinds.ts`'s `KINDS`, the one table the form, the page and the nav's tabs read too (`GroupForm` takes its nouns from it and from the held kind's in [`grouped-value-list.md`](grouped-value-list.md)).
 
@@ -39,29 +39,29 @@ The table takes the `data-table--roomy` modifier: while it is a table, its cells
 ## Stories
 
 [`index.stories.tsx`](../../src/components/GroupList/index.stories.tsx),
-`Admin / Group List`, has eleven stories. The bare list, at the workshop's own
+`Admin / Group List`: one story, `States`, with a control that chooses, at the workshop's own
 width:
 
-- `CategoryGroups`: three invented groups in seeded pairs.
-- `FormGroups`: two groups with a next page and no search.
-- `Traditions`: three invented traditions under an empty search.
-- `TraditionsSearched`: searched by a fragment, Clear drawn.
-- `TraditionsNoMatch`: the no-match message.
-- `Empty` and `TraditionsEmpty`: the empty messages, the traditions' naming
+- Default: the Groups tab of the Categories page as the route draws it (the app shell, the admin row, the heading with its toggle and Add Category Group), over three invented category groups in seeded pairs.
+- Form Groups: two groups with a next page and no search.
+- Traditions: three invented traditions under an empty search.
+- Traditions Searched: searched by a fragment, Clear drawn.
+- Traditions No Matches: the no-match message.
+- Empty and Traditions Empty: the empty messages, the traditions' naming
   them.
 
-The phone stories stand for the page, which draws a group list only inside its
+The states stand for the page, which draws a group list only inside its
 tabbed page ([`tabbed-page.md`](tabbed-page.md)): the admin layout's frame, the
 page's heading, tabs and Add, with the Groups or Deity Traditions tab open.
-
-- `PhoneDark` and `PhoneLight`: the category groups on the Categories page at
-  375px, each row a card.
-- `TraditionsSearchedPhoneDark` and `TraditionsSearchedPhoneLight`: the
-  searched traditions on the Deities page at 375px, the field across the row
-  with its magnifier and Clear beneath it.
 
 Render-only, no test ids, no snapshots.
 
 ## Testing
 
 `tests/components/GroupList/index.test.tsx` covers the rows and their Edit links, no table when there is no group, a form group's icon or the spoon beside its name and a category group's none, through the shared filter rows (`tests/support/filter-form.tsx`, [`filter-form.md`](filter-form.md)) the search opening its first page on Search with the query in the address, Clear opening the bare page and drawn only while a search is shown, no search for a kind not handed one, and `groupsHref`, the search ahead of the cursor and a blank one written as none. What the search matches is `findGroupPage`'s, in `tests/db/repository/vocabularies.test.ts`. The chip's colours and the cards are presentation, owned by the stories, and paging is Pager's. The pages' half is `tests/app/(shell)/admin/group-page.test.tsx` ([`group-form.md`](group-form.md), "Testing").
+
+## What the list shows
+
+A group page's table and pager serve every group vocabulary, a deity's traditions included. The component only renders: the page reads one page of groups through the service. A category group's name is drawn in its own chip, which is how a reader meets the pair of colours. A name search heads the list for a kind whose page hands it a `filter`: the traditions (thirty-five in the seed), not the category or form groups (eight and six).
+
+Each Edit is an address, and the page opens its modal from the URL, so a modal can be linked to and Back closes it. The table turns each row into a card at phone width.

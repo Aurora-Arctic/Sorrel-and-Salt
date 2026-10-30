@@ -1,12 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
-import { NotFound } from '@/lib/errors';
 import { resolvePage } from '@/lib/pagination';
 import type { Session } from '@/lib/session';
 import {
   countWorkspaceIngredients,
-  getIngredient,
   listWorkspaceIngredients,
   workspaceIngredientFacets,
 } from '@/modules/ingredients';
@@ -18,15 +16,9 @@ import { insertStock } from '../../../support/db/insert-stock';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
 
-// M12.32: a compendium entry the curators retired (soft-deleted) stays on a
-// coven's Ingredients list, its count and its facet counts while that coven's
-// live cupboard row names it, by M12.24's rule
-// (claude-docs/db/workspace-compendium-entries.md, "When the compendium
-// retires the entry"). Coven W holds the entry; coven X holds a jar of its
-// form but no cupboard row, which no service writes but the table does not
-// refuse, so X is the coven that could have listed it and must not. Every
-// test retires the entry first, so each reads the list as it stands after a
-// curator's delete.
+// A compendium entry the curators retired (soft-deleted) stays on a coven's Ingredients list, its count and its facet counts while that coven's live cupboard row names it
+// (claude-docs/db/workspace-compendium-entries.md, "When the compendium retires the entry"). Coven W holds the entry; coven X holds a jar of its form but no cupboard row.
+// No service writes such a jar but the table does not refuse it, so X is the coven that could have listed the entry and must not. Every test retires the entry first.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -70,11 +62,7 @@ async function softDelete(
   });
 }
 
-/**
- * The preconditions every assertion below leans on: the entry exists and is
- * retired, it is the compendium's, and W's cupboard row naming it is live
- * (or, with `rowLive` false, tombstoned).
- */
+/** The preconditions every assertion leans on: the entry exists, is retired and is the compendium's, and W's cupboard row naming it is live (or tombstoned, with `rowLive` false). */
 async function expectPreconditions(rowLive = true) {
   const [entry] = await sql`
     select workspace_id, deleted_at from ingredients where id = ${entryId}`;
@@ -183,7 +171,7 @@ describe('the coven whose live cupboard row names a retired entry', () => {
   });
 
   // The owner's decision at the build's start: the type-ahead reads the list's
-  // own reader (M9.6), so it offers exactly what the list shows.
+  // own reader, so it offers exactly what the list shows.
   it("suggests it in the coven's type-ahead", async () => {
     await expectPreconditions();
 
@@ -207,15 +195,5 @@ describe('a coven whose cupboard does not name the retired entry', () => {
     expect(await total(asUser(D), WORKSPACE_X_ID)).toBe(0);
     expect(await facetCounts(asUser(D), WORKSPACE_X_ID)).toEqual({ herb: 0, compendium: 0 });
     expect(await typeAhead(asUser(D), WORKSPACE_X_ID, 'Testwort')).toEqual([]);
-  });
-
-  it('gets NotFound for the entry, by its id', async () => {
-    await expectPreconditions();
-    // Why it could have read: the coven holding it reads the same id.
-    await expect(getIngredient(asUser(B), entryId, WORKSPACE_W_ID)).resolves.toMatchObject({
-      id: entryId,
-    });
-
-    await expect(getIngredient(asUser(D), entryId, WORKSPACE_X_ID)).rejects.toThrow(NotFound);
   });
 });

@@ -12,12 +12,9 @@ const CompendiumEntryUsersDocument = graphql(`
 `);
 
 /**
- * How many covens hold the compendium entry, said inside the curator's delete
- * question (M12.25): a count, never a coven's name. Mounted only while the
- * question is asked, so the read goes out when it opens, and it says nothing
- * until the number has arrived, so a count of none is never guessed. It is
- * not kept after the question closes: the next one asks again. A failed read
- * leaves the question unadorned, since the delete itself needs no count.
+ * How many covens hold the compendium entry, said inside the curator's delete question: a count,
+ * never a coven's name. Mounted only while the question is asked and read afresh each time, it says
+ * nothing until the number arrives, so none is never guessed; a failed read leaves it bare.
  */
 export function DeleteUsers({ id }: { id: string }): ReactElement | null {
   const { data } = useQuery({
@@ -27,10 +24,13 @@ export function DeleteUsers({ id }: { id: string }): ReactElement | null {
   });
   if (data === undefined) return null;
   return (
-    <p role="status">
-      {data.compendiumEntryUsers === 1
-        ? 'Used by 1 coven.'
-        : `Used by ${data.compendiumEntryUsers} covens.`}
+    // The paragraph keeps the text styling and block box a bare <output> would lose.
+    <p>
+      <output>
+        {data.compendiumEntryUsers === 1
+          ? 'Used by 1 coven.'
+          : `Used by ${data.compendiumEntryUsers} covens.`}
+      </output>
     </p>
   );
 }

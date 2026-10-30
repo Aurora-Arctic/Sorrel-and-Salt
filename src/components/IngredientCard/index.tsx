@@ -11,18 +11,9 @@ import { isBinomial } from '@/modules/ingredients/schema/ingredient-enums';
 import type { IngredientCardProps } from './types';
 import './index.scss';
 
-// One ingredient in a list, for the public compendium (M8.18) and the coven's
-// Ingredients page (M9.6) alike: its name as the card's link (a Quick Look eye at
-// the foot's left on the coven's list, M12.5), the formal
-// name and the forms beneath it (two entries can share a label, and these tell
-// them apart), the marks, and a slot for jar lines. Presentational:
-// it takes props only and works out nothing from the data, so the marks and the
-// stock badge are each the project's one presentation, used
-// as they are and never restyled here. claude-docs/components/ingredient-card.md.
-// New or Updated sits just left of the safety badge in the card's top-right corner, or in
-// the corner itself without one (the owner's call, 2026-10-20); EntryMarks draws it before
-// the badges. The badge row under the formal name was the alternative offered and is gone
-// (MB.120, item 28).
+// One ingredient in a list, for the public compendium and the coven's Ingredients page: the name as the
+// card's link, formal name and forms beneath, the marks and a slot for jar lines. Props only; New or
+// Updated sits left of the safety badge (claude-docs/components/ingredient-card.md).
 
 const IngredientCard = ({
   href,
@@ -53,10 +44,8 @@ const IngredientCard = ({
     (safetyNotes ?? '').trim() !== '' ||
     variants.some((v) => v.toxic || (v.safetyNotes ?? '').trim() !== '');
   const cornered = safe || recency != null;
-  // The first word apart, so the safety badge beside the name drops below it only
-  // once that word would have to break to fit (the owner's call, 2026-10-20): the
-  // name block's narrowest width is this word's (index.scss). Spans do not change
-  // the link's name.
+  // The first word apart, so the safety badge beside the name drops below only once that word would have
+  // to break to fit (index.scss). Spans do not change the link's name.
   const [, first = label, rest = ''] = /^(\S+)(.*)$/s.exec(label) ?? [];
 
   const jars = children != null && children !== false;
@@ -73,7 +62,7 @@ const IngredientCard = ({
         <div className="specimen__top">
           <div className="ingredient-card__heading">
             <Heading className="ingredient-card__name">
-              {/* The entry page draws its own frame while it loads, so the link names it (M12.33). */}
+              {/* The entry page draws its own frame while it loads, so the link names it. */}
               <PendingLink href={href} navigationTarget={ingredientLinkTarget(href)}>
                 <span className="ingredient-card__first">{first}</span>
                 {rest} <LinkHint />
@@ -91,8 +80,7 @@ const IngredientCard = ({
                 )}
               </p>
             )}
-            {/* Every badge but the safety one, as a row under the formal name (the
-              owner's call, 2026-10-20). */}
+            {/* Every badge but the safety one, as a row under the formal name. */}
             {marked && (
               <div className="specimen__badges">
                 <EntryMarks kind={kind} retired={retired} provenance={false} safety={false} />
@@ -101,7 +89,7 @@ const IngredientCard = ({
           </div>
           {/* The card's top-right corner, beside the name: the one safety badge, Toxic
             over Caution, always at the very corner, and New or Updated just left of it,
-            or in the corner itself without one (the owner's call, 2026-10-20). After
+            or in the corner itself without one. After
             the row above in the document: read last, as the row's red mark is, and
             where it lands when it wraps below. */}
           {cornered && (
@@ -149,7 +137,7 @@ const IngredientCard = ({
           // grid row end on the same line.
           <div className="specimen__foot">
             {jars && <div className="specimen__stock">{children}</div>}
-            {/* Who last changed the stock, under the jar lines and above the actions (M6.18). */}
+            {/* Who last changed the stock, under the jar lines and above the actions. */}
             {edited && <LastEdit by={lastEdit.by} at={lastEdit.at} />}
             {(hasActions || hasStart) && (
               <div className="specimen__actions">

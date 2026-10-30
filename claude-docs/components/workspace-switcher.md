@@ -4,13 +4,13 @@
 belongs to (Story 8, M6.9). It is `ComboboxSelect` ([`combobox.md`](combobox.md),
 "The select-only box"), so the keyboard (arrows, Enter, Escape, type-ahead) and
 the ARIA come from Downshift. It is a client component. On screen the word is
-_coven_: the box is named "Coven", its placeholder is "Select Coven", and its
+_coven_: the box is named "Coven", its placeholder is "Choose a coven", and its
 create choice "Create Coven"; code and these docs say workspace.
 
 ## Props
 
 `workspaces`: `SwitcherWorkspace[]`, every workspace the viewer is a member of,
-in the order to list them. Each is `{ slug, name, canReadMembers, canInvite }`:
+in the order to list them (alphabetical, the demo coven last). Each is `{ slug, name, canReadMembers, canInvite }`:
 the two flags say what the viewer's role there may open (member: read, and
 member: invite, an owner's alone), so the switcher can step back from a people
 page the next coven would 404. The caller already holds the memberships (the
@@ -26,7 +26,7 @@ with a Create Coven choice (M9.16). It defaults to false.
 - **The current workspace is read from the address, never kept.** The value is
   `covenSlugOf(usePathname())` (`src/lib/coven-path.ts`). Nothing is stored in
   session, cookie or local state, so two tabs in two workspaces cannot disagree
-  through it. Outside `/coven/…` the box shows "Select Coven".
+  through it. Outside `/coven/…` the box shows "Choose a coven".
 - **A choice keeps the page when the page exists in the other workspace**
   (M9.12, the owner's call, 2026-10-21). `pathInCoven(pathname, slug, options)`
   decides, in this order:
@@ -60,7 +60,7 @@ with a Create Coven choice (M9.16). It defaults to false.
 - **Create Coven goes to the create page.** Its value is
   `NEW_COVEN_PATH`, `/coven/new`, which no slug can equal because a slug
   holds no slash. Choosing it goes there rather than to a section. On that
-  page the box shows "Select Coven", since `covenSlugOf` reads `new` as
+  page the box shows "Choose a coven", since `covenSlugOf` reads `new` as
   no workspace. Hiding the choice from a viewer without the right is
   presentation: the creation service is the gate
   ([`create-workspace-form.md`](create-workspace-form.md)).
@@ -140,7 +140,7 @@ a switch superseded by another click cannot steal focus later.
 
 ## Stories
 
-`index.stories.tsx`, titled "Coven / Coven Switcher": `InWorkspace`, `OutsideWorkspace`, `CanCreate`, `Phone`. The workshop's
+`index.stories.tsx`, titled "Coven / Coven Switcher": `States`, a grid of In Workspace, Outside Workspace and Can Create. The workshop's
 router goes nowhere, so a choice only closes the list.
 
 ## Testing
@@ -155,3 +155,21 @@ clearing; `tests/modules/ingredients/services/covens-opening-entry.test.ts` whic
 covens an entry opens in (live, retired, own, by direct id, an admin);
 `tests/e2e/coven-switcher.spec.ts` the walk through the real layout. Axe is asserted
 in Playwright once a `/coven` page renders the switcher (M6.10, MB.7).
+
+## What the switcher is
+
+The switcher is a select over the viewer's workspaces, called covens on screen. Which one is current is read off the address and never kept in state, so two tabs in two workspaces do not interfere. Choosing another goes to the same page there when the page said it opens there, otherwise to the same section. The list is the caller's, since the layout already holds the memberships. A viewer holding creation rights gets one more choice, after the workspaces, that goes to the create page. Its value is that page's path, which no slug can equal since a slug holds no slash. While the switch is on its way the box shows the pick, the one thing held in state, and is busy, and the coven's body draws the destination's skeleton.
+
+## Keeping the focus across the switch
+
+The `[slug]` layout, and with it the switcher, remounts when the coven changes, and the focus that was on the box would drop to the page. A module variable is set when a switch to another coven starts and read once by the next switcher to mount. A module variable survives the remount as component state cannot, and unlike `sessionStorage` it dies with the page, so a reload never refocuses. A switch that ends without a remount (a refusal) clears it.
+
+The variable holds the slug of the coven picked, not a bare yes. A superseded switch (Compendium clicked mid-switch) leaves its slug behind, and a switcher that mounts anywhere but that coven reads it as stale, clears it and takes no focus.
+
+## The name as the context row's lead
+
+The chosen name is set as the context row's lead: the display face with a chevron inside a hairline border, so the row reads "Whitethorn Coven" and the name is also the control. The Combobox's select is restyled from `index.scss` rather than given a variant, since every part of it is reached by its own class, and the compound `.input.combobox__control` is outweighed by one more class. It looks the same on a phone as on a desktop. A long name wraps to two lines rather than being cut.
+
+## The demo coven
+
+The demo coven reads as its name alone, "Sorrel & Salt Demo", in its option and in the closed box: the name carries the word. The Demo badge sits in the coven page heading, not here.

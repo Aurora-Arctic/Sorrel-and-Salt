@@ -53,10 +53,13 @@ describe('MainBody', () => {
     expect(screen.queryByRole('status')).toBeNull();
   });
 
-  it('swaps the page for one status in a main landmark while a main navigation is pending', async () => {
+  // The page is held beneath the skeleton, not removed, so it is
+  // proved out of reach rather than absent: inert, and its landmark hidden.
+  it('puts the page out of reach under one status in a main landmark while a main navigation is pending', async () => {
     renderBody();
     await act(async () => go({ region: 'main', shape: 'page' }));
-    expect(screen.queryByText('The old page')).toBeNull();
+    expect(screen.getByText('The old page').closest('[inert]')).not.toBeNull();
+    expect(screen.getAllByRole('main')).toHaveLength(1);
     expect(screen.getAllByRole('status')).toHaveLength(1);
     expect(screen.getByRole('main').contains(screen.getByRole('status'))).toBe(true);
   });
@@ -91,7 +94,7 @@ describe('MainBody', () => {
     expect(screen.getAllByRole('status')).toHaveLength(1);
   });
 
-  // The skeleton stays over the arrived page for the fade (M12.33), out of reach
+  // The skeleton stays over the arrived page for the fade, out of reach
   // of assistive technology and the pointer, and leaves with no layout of its own.
   describe('when the page arrives', () => {
     beforeEach(() => {

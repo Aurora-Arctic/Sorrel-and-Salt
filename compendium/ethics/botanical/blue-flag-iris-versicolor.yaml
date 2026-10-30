@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/blue-flag-iris-versicolor
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Iris versicolor
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-iris-versicolor
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Iris versicolor", Maiz-Tome, L., 2016, 10.2305/IUCN.UK.2016-1.RLTS.T64315086A67729756.en'

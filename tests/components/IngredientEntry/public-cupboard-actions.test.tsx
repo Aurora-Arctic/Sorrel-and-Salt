@@ -13,12 +13,9 @@ import { mockGraphQLMutation } from '../../support/msw/graphql';
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The cupboard choices on the public entry page (M9.12), across every coven the viewer may
-// write in (claude-docs/components/ingredient-entry.md, "On the public page"): the card's plus
-// while any lacks the entry, just before the other icons and never one of their choices; the
-// compendium's Edit as the main icon for a curator, never in the three dots; the held choices
-// in the dots and the bin while a holding coven permits them, acting in that coven alone, or
-// asking which where several do.
+// The cupboard choices on the public entry page, across every coven the viewer may write in (claude-docs/components/ingredient-entry.md, "On the public page").
+// The card's plus shows while any coven lacks the entry, just before the other icons and never among their choices; a curator's Edit is the main icon and never in the dots;
+// the held choices sit in the dots while a holding coven permits them, acting in that coven alone or asking which where several do.
 
 const PAGE = '/compendium/ingredients/testwort' as Route;
 
@@ -103,12 +100,8 @@ function choices(): string[] {
   return shownChoices();
 }
 
-/** The bin where Remove is the one choice left, else an item of the three dots' menu. */
+/** An item of the three dots' menu. */
 function choose(name: string): void {
-  if (name === 'Remove' && screen.queryByRole('button', { name: 'Remove Testwort' })) {
-    fireEvent.click(screen.getByRole('button', { name: 'Remove Testwort' }));
-    return;
-  }
   fireEvent.click(screen.getByRole('button', { name: 'More for Testwort' }));
   fireEvent.click(within(screen.getByRole('menu')).getByRole('menuitem', { name }));
 }
@@ -149,27 +142,19 @@ describe('CupboardActions on the public page', () => {
     expect(screen.queryByRole('link')).toBeNull();
   });
 
-  // The compendium's Edit is the page's main icon for a curator (the owner's call, 2026-10-20):
+  // The compendium's Edit is the page's main icon for a curator:
   // its own link, named for the compendium it changes, never folded into the three dots.
-  it("draws a curator's Edit in Compendium as the main icon, a link with its tip, the other choices in the dots", async () => {
+  it("draws a curator's Edit in Compendium as the main icon, a link, the other choices in the dots", async () => {
     show(props([place(1, { held: true })], { edit: EDIT }));
 
     const edit = screen.getByRole('link', { name: 'Edit in Compendium Testwort' });
     expect(edit).toHaveAttribute('href', `${PAGE}?edit`);
     expect(screen.queryByRole('link', { name: 'Annotate Testwort' })).not.toBeInTheDocument();
-    fireEvent.mouseEnter(edit);
-    // After the 300ms a hover waits for (IconTip).
-    expect(await screen.findByRole('tooltip', { hidden: true })).toHaveTextContent(
-      'Edit in Compendium',
-    );
-    fireEvent.mouseLeave(edit);
-    // Opening the menu shuts the tip from IconTip's MutationObserver, a step after the
-    // press: inside an async act, so that update is awaited rather than left outside it.
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'More for Testwort' }));
     });
-    // Only the coven's choices are left, in the one Coven section the dots always draw (the
-    // owner's call, 2026-10-20), Remove among them and so no bin.
+    // Only the coven's choices are left, in the one Coven section the dots always draw,
+    // Remove among them and so no bin.
     expect(shownChoices()).toEqual(['Annotate', 'Make It Ours', 'Remove']);
     const menu = screen.getByRole('menu', { name: 'More for Testwort' });
     expect(within(menu).getByRole('group', { name: 'Coven' })).toBeInTheDocument();
@@ -212,7 +197,7 @@ describe('CupboardActions on the public page', () => {
     expect(screen.queryByRole('button', { name: /^(More|Remove)/ })).toBeNull();
   });
 
-  // The plus, as the compendium card has it (the owner's calls, 2026-10-20): just before the
+  // The plus, as the compendium card has it: just before the
   // pencil, and Add to Cupboard is no longer one of the pencil's choices.
   describe('the plus', () => {
     it('is a menu of both covens where one holds the entry, the holder disabled, with no Add in the dots', async () => {
@@ -385,6 +370,7 @@ describe('CupboardActions on the public page', () => {
           closeHref: PAGE,
           opened: {
             workspaceId: place(2).workspaceId,
+            revision: 3,
             overrides: {
               label: 'Their Testwort',
               description: null,
@@ -403,7 +389,7 @@ describe('CupboardActions on the public page', () => {
     expect(within(dialog).getByRole('textbox', { name: 'Label' })).toHaveValue('Their Testwort');
   });
 
-  // Edit Stock, first in the dots (the owner's call, 2026-10-21): the coven card's own dialog,
+  // Edit Stock, first in the dots: the coven card's own dialog,
   // for a coven that holds the entry and where the role may update stock.
   describe('Edit Stock', () => {
     it('goes first in the dots for a holding coven that may update stock', () => {

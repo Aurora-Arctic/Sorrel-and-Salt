@@ -1,40 +1,21 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import type { Route } from 'next';
+import { compendiumHref } from '../CompendiumList/href';
+import { detailsHeading } from '../IngredientEntry/details';
 import CompendiumCards from '.';
 import type { CompendiumCardEntry, CompendiumCardsProps } from './types';
-import type { CompendiumFacetCounts, CompendiumListFilter } from '../CompendiumList/types';
+import { ShellFrame } from '../../../.storybook/shell-frame';
+import { FIXTURE_COVEN } from '../../../.storybook/fixtures';
+import { NO_FACETS, NO_FILTER } from '../../../.storybook/compendium-fixtures';
 
 // Render-only; what shows and when is asserted in tests/components/CompendiumCards. The
 // filter navigates to /compendium, which the workshop does not serve.
-export default {
-  title: 'Surfaces / Compendium Cards',
-};
-
-const NO_FILTER: CompendiumListFilter = {
-  query: '',
-  forms: [],
-  withoutReferences: false,
-  withoutForms: false,
-  elements: [],
-  categories: [],
-  categoryMode: 'all',
-  deities: [],
-  zodiac: [],
-  celestialBodies: [],
-  toxic: '',
-};
-
-const NO_FACETS: CompendiumFacetCounts = {
-  forms: [],
-  deities: [],
-  categories: [],
-  zodiac: [],
-  celestialBodies: [],
-  elements: [],
-  toxic: [],
-  withoutReferences: 0,
-  withoutForms: 0,
-};
+const meta = {
+  title: 'Ingredients / Compendium Cards',
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const entry = (
   name: string,
@@ -51,6 +32,23 @@ const entry = (
   variants: forms.map((form) => ({ form, formChoice: { group: { icon: 'botanical' } } })),
   toxic: false,
   safetyNotes: null,
+  recency: null,
+  // The Quick Look eye every card carries on the site.
+  details: {
+    href: compendiumHref({ entry: slug }),
+    heading: detailsHeading({
+      name,
+      canonicalName,
+      nomenclature: canonicalName ? 'botanical' : 'none',
+    }),
+  },
+});
+
+// An entry as a curator sees it: Edit opens the compendium's edit dialog.
+const withEdit = (entry: CompendiumCardEntry): CompendiumCardEntry => ({
+  ...entry,
+  editHref: `/compendium?edit=${entry.slug}` as Route,
+  editHeading: { eyebrow: 'Edit Compendium Entry', title: entry.name },
 });
 
 // Two entries share a label; the formal-name line tells them apart. The last has no form.
@@ -78,14 +76,12 @@ const BASE: CompendiumCardsProps = {
 };
 
 // Someone who can add to one coven: the plus at each card's bottom right adds the entry to it
-// directly, until M9.12's dialog asks for a quantity. The workshop serves no /api/graphql,
+// directly, with no quantity asked. The workshop serves no /api/graphql,
 // so a press shows its refusal.
-export const CanAdd: Story = () => (
-  <CompendiumCards {...BASE} action="add" workspaceId={WORKSPACE_ID} />
-);
+const canAddNode = <CompendiumCards {...BASE} action="add" workspaceId={WORKSPACE_ID} />;
 
 // The coven already holds the first two: a check link in the plus's place, the last still a plus.
-export const Held: Story = () => (
+const heldNode = (
   <CompendiumCards
     {...BASE}
     action="add"
@@ -97,7 +93,7 @@ export const Held: Story = () => (
 // Someone who may write in two covens: the plus is a menu of both. The first card is in the
 // first coven already, so its menu shows that coven disabled; the last is in both, and shows
 // the check.
-export const InSeveralCovens: Story = () => (
+const inSeveralCovensNode = (
   <CompendiumCards
     {...BASE}
     action="add"
@@ -112,46 +108,30 @@ export const InSeveralCovens: Story = () => (
   />
 );
 
-// A curator who can add too: the plus, then Edit, side by side at the right of the foot.
-export const CanAddAndEdit: Story = () => (
-  <CompendiumCards
-    {...BASE}
-    action="add"
-    workspaceId={WORKSPACE_ID}
-    entries={ENTRIES.map((entry) => ({
-      ...entry,
-      editHref: `/compendium?edit=${entry.slug}` as Route,
-      editHeading: { eyebrow: 'Edit Compendium Entry', title: entry.name },
-    }))}
-  />
-);
-
 // A curator who is also a member of a coven that holds the entries: the foot's three icons, the
 // plus (a check where every coven holds it), Edit in Compendium, and the three dots, which hold
-// Annotate, Make It Ours and Remove (the owner's call, 2026-10-20).
-export const CanAddEditAndMore: Story = () => (
+// Annotate, Make It Ours and Remove.
+const canAddEditAndMoreNode = (
   <CompendiumCards
     {...BASE}
     action="add"
     workspaceId={WORKSPACE_ID}
     entries={ENTRIES.map((entry, at) => ({
-      ...entry,
+      ...withEdit(entry),
       held: at === 0,
       heldIn: at === 0 ? [WORKSPACE_ID] : [],
-      editHref: `/compendium?edit=${entry.slug}` as Route,
-      editHeading: { eyebrow: 'Edit Compendium Entry', title: entry.name },
       places:
         at === 0
           ? [
               {
                 workspaceId: WORKSPACE_ID,
-                covenSlug: 'fixture-coven',
-                name: 'Fixture Coven',
+                covenSlug: FIXTURE_COVEN.slug,
+                name: FIXTURE_COVEN.name,
                 canAnnotate: true,
                 canMakeOurs: true,
                 canRemove: true,
                 annotateHref:
-                  `/compendium/ingredients/${entry.slug}?annotate=fixture-coven` as Route,
+                  `/compendium/ingredients/${entry.slug}?annotate=${FIXTURE_COVEN.slug}` as Route,
               },
             ]
           : undefined,
@@ -159,24 +139,15 @@ export const CanAddEditAndMore: Story = () => (
   />
 );
 
+/** A curator's cards, each with Edit. */
+const curatorCanEditNode = <CompendiumCards {...BASE} entries={ENTRIES.map(withEdit)} />;
+
 // An account that only views, or a visitor with no account (who signs in through the header):
 // nothing beneath the card.
-/** A curator's cards, each with Edit, which opens the compendium's edit dialog (M8.17). */
-export const CuratorCanEdit: Story = () => (
-  <CompendiumCards
-    {...BASE}
-    entries={ENTRIES.map((entry) => ({
-      ...entry,
-      editHref: `/compendium?edit=${entry.slug}` as Route,
-      editHeading: { eyebrow: 'Edit Compendium Entry', title: entry.name },
-    }))}
-  />
-);
-
-export const ViewerOnly: Story = () => <CompendiumCards {...BASE} />;
+const defaultNode = <CompendiumCards {...BASE} />;
 
 // A page with a neighbour on each side.
-export const MidList: Story = () => (
+const middlePageNode = (
   <CompendiumCards
     {...BASE}
     action="add"
@@ -187,4 +158,59 @@ export const MidList: Story = () => (
   />
 );
 
-export const Empty: Story = () => <CompendiumCards {...BASE} entries={[]} total={0} />;
+// Two entries the marker reaches: one new this month, one changed this month.
+const withMarkersNode = (
+  <CompendiumCards
+    {...BASE}
+    entries={[{ ...ENTRIES[0], recency: 'new' }, { ...ENTRIES[1], recency: 'updated' }, ENTRIES[2]]}
+  />
+);
+
+// The last page: Previous is live, Next is not.
+const lastPageNode = (
+  <CompendiumCards {...BASE} position={{ page: 3, pages: 3 }} previousHref="/compendium?before=x" />
+);
+
+const emptyNode = <CompendiumCards {...BASE} entries={[]} total={0} />;
+
+const STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'Can Add': canAddNode,
+  Held: heldNode,
+  'In Several Covens': inSeveralCovensNode,
+  'Can Add Edit And More': canAddEditAndMoreNode,
+  'Curator Can Edit': curatorCanEditNode,
+  'Middle Page': middlePageNode,
+  'With Markers': withMarkersNode,
+  'Last Page': lastPageNode,
+  Empty: emptyNode,
+};
+
+const VISITOR_NODES: ReactNode[] = [defaultNode, withMarkersNode, lastPageNode, emptyNode];
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  // The page around the list, as src/app/(public)/compendium/page.tsx draws it: the frame, then the
+  // eyebrow, heading and lede. A state with no plus, Edit or coven foot is what a visitor with no
+  // session sees, so it has the signed-out header; the rest need an account, so they have the shell.
+  render: ({ state }) => (
+    <ShellFrame
+      area="none"
+      open="/compendium"
+      signedOut={VISITOR_NODES.includes(state as ReactNode)}
+    >
+      <main className="page-column">
+        <header className="header">
+          <p className="eyebrow">Reference</p>
+          <h1>Compendium</h1>
+          <p className="lede">
+            Ingredients for spellwork: their formal and folk names, categories, deities and forms,
+            with the sources behind them.
+          </p>
+        </header>
+        <div>{state}</div>
+      </main>
+    </ShellFrame>
+  ),
+};

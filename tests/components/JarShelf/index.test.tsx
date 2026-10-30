@@ -6,7 +6,7 @@ import { LIQUID, pick } from '@/components/JarShelf/pick';
 import { BOTTLES, JARS } from '@/components/JarShelf/shapes';
 import type { ShelfForm } from '@/components/JarShelf/types';
 
-// The shelf of drawn jars on the entry page (M12.29): which vessel a form gets, how full it
+// The shelf of drawn jars on the entry page: which vessel a form gets, how full it
 // stands, and what the shelf says for a form with a jar and one without. The press that opens
 // Edit Stock is proved with the entry, in tests/components/IngredientEntry.
 
@@ -163,29 +163,12 @@ describe('JarShelf', () => {
     );
   });
 
-  it('keeps the amount button for a viewer, who has no Edit Stock press', () => {
-    render(
-      <JarShelf
-        forms={[
-          {
-            variantId: 'v1',
-            form: 'seed',
-            jar: { id: 'j1', quantity: 4, unit: 'g', threshold: 10 },
-          },
-        ]}
-        seed="Testwort"
-      />,
-    );
-
-    expect(screen.queryByRole('button', { name: /^Edit Stock/ })).toBeNull();
-    expect(screen.getByRole('button', { name: '4 g, Low Stock' })).toBeInTheDocument();
-  });
-
   it('hides every drawing from a screen reader and gives each its own clip', () => {
     const { container } = render(<JarShelf forms={FORMS} seed="Testwort" />);
 
+    // Four jars, and the Out of Stock symbol beside the oil's amount.
     const drawings = container.querySelectorAll('svg');
-    expect(drawings).toHaveLength(4);
+    expect(drawings).toHaveLength(5);
     for (const drawing of drawings) expect(drawing).toHaveAttribute('aria-hidden', 'true');
     const ids = [...container.querySelectorAll('clipPath')].map((clip) => clip.id);
     expect(new Set(ids).size).toBe(ids.length);

@@ -106,10 +106,9 @@ shimmer becomes the loading standard's slow opacity pulse, not a still shape.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/ListFrame/index.stories.tsx),
-`Layout / List Frame`: `Default`, a small table and its pager, and
-`Pending`, the same with a page on its way, and `PendingCards`, the card skeleton. A whole list on its way, filter
+`Layout / List Frame`: `States`, with a control that chooses Default (a small table and its pager), Pending (the same with a page on its way) and Pending Cards (the card skeleton). A whole list on its way, filter
 row and all, inside its tabbed page, is GroupedValueList's
-`CategoriesPending` with `PendingPhoneDark` and `PendingPhoneLight`
+`Pending`
 ([`grouped-value-list.md`](grouped-value-list.md)).
 
 ## Testing
@@ -124,3 +123,11 @@ either kind, the full load's Back from the cache included, `Pager`'s, each
 rendering the pager in a `ListFrame`. `tests/support/navigating.tsx` holds a
 mocked `push` pending as the App Router does, and its `arrives` promise lets
 a test settle it.
+
+## Navigation modes
+
+A list moves to another of its pages in one of three ways. `soft` is a client-side navigation inside a transition. `page` is a soft one for a pager end, which keeps the reader at the list instead of scrolling to the page top. `full` is a whole page load, which runs the admin layout's guard again (see `pager.md`).
+
+## The navigation provider
+
+The provider holds the navigation the filter, the pager and the body share. A soft navigation runs inside its transition, so `pending` stays true until Next has rendered the new page. A full load has no transition: a flag holds `pending` from the press until the browser unloads the page, and a `pageshow` from the back-forward cache drops it, so Back does not land on a skeleton. A provider already above, the workshop's, is kept rather than shadowed.

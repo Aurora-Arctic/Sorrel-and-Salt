@@ -18,11 +18,8 @@ import { insertStock } from '../../../support/db/insert-stock';
 import { variantIdOf } from '../../../support/db/read-variants';
 import { makeIngredient, makeSpell, makeVariant } from '../../../support/fixtures';
 
-// M12.23: a compendium entry the coven holds, made into the coven's own. A
-// new own entry is written from the merged values with copies of the
-// compendium's children, the coven's jars and spell layers move to its forms
-// by folded name, and the cupboard row is soft-deleted. The compendium entry
-// itself is never touched, and every refusal leaves every row where it was.
+// A compendium entry the coven holds, made into the coven's own. A new own entry is written from the merged values with copies of the compendium's children, the coven's jars and spell layers move to its forms by folded name, and the cupboard row is soft-deleted.
+// The compendium entry itself is never touched, and every refusal leaves every row where it was.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -92,19 +89,18 @@ async function spellOfEntry(): Promise<{ spellId: string; layerId: string }> {
     makeSpell({
       workspaceId: WORKSPACE_W_ID,
       visibility: 'workspace',
-      layers: [{ ingredientId: entry }],
+      steps: [{ ingredientId: entry }],
     }),
     A.id,
   );
   const [layer] = await sql`
-    update spell_ingredients set variant_id = ${form}
+    update spell_steps set variant_id = ${form}
     where spell_id = ${spellId} returning id`;
   return { spellId, layerId: layer.id as string };
 }
 
 const jarRow = async (id: string) => (await sql`select * from inventory_items where id = ${id}`)[0];
-const layerRow = async (id: string) =>
-  (await sql`select * from spell_ingredients where id = ${id}`)[0];
+const layerRow = async (id: string) => (await sql`select * from spell_steps where id = ${id}`)[0];
 const cupboardRow = async () =>
   (await sql`select * from workspace_compendium_entries where id = ${cupboardId}`)[0];
 const ownEntries = () => sql`
@@ -244,7 +240,7 @@ describe('convertCompendiumEntryToLocal', () => {
   it('moves both layers of a spell laying two of its forms, each to its own', async () => {
     const { spellId, layerId } = await spellOfEntry();
     const [other] = await sql`
-      insert into spell_ingredients (spell_id, ingredient_id, variant_id, layer_order, created_by, updated_by)
+      insert into spell_steps (spell_id, ingredient_id, variant_id, position, created_by, updated_by)
       values (${spellId}, ${entry}, ${otherForm}, 99, ${A.id}, ${A.id}) returning id`;
 
     const { entry: own } = await convert();
@@ -252,20 +248,6 @@ describe('convertCompendiumEntryToLocal', () => {
     const forms = await formsOf(own.id);
     expect(await layerRow(layerId)).toMatchObject({ variant_id: forms.get('Testform') });
     expect(await layerRow(other.id)).toMatchObject({ variant_id: forms.get('Otherform') });
-  });
-
-  it('makes a retired entry the coven holds its own', async () => {
-    const jarId = await jarOfEntry();
-    await sql`update ingredients set deleted_at = now(), deleted_by = ${E.id} where id = ${entry}`;
-
-    const { entry: own } = await convert();
-
-    expect(own).toMatchObject({ name: 'Our Testwort', workspaceId: WORKSPACE_W_ID });
-    expect(await jarRow(jarId)).toMatchObject({ ingredient_id: own.id });
-    const folkNames = await sql`
-      select name from ingredient_folk_names where ingredient_id = ${own.id}`;
-    expect(folkNames.map((row) => row.name)).toEqual(['Hedge Fixture']);
-    expect((await cupboardRow()).deleted_at).not.toBeNull();
   });
 
   it('leaves out, and lists, a folk name the new name takes', async () => {

@@ -1,16 +1,18 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { type ReactElement, type ReactNode } from 'react';
-import { WorkshopPathname } from '../../../.ladle/navigation';
+import { usePressOnMount } from '../../../.storybook/press';
+import { WorkshopPathname } from '../../../.storybook/navigation';
 import AdminNav from '../AdminNav';
 import CovenNav from '../CovenNav';
 
-// Render-only; behaviour is asserted in tests/components/SectionNav. The
-// workshop's `usePathname` stub answers whatever the wrapping provider says.
-// The shape is chosen by the window's width, so the narrow stories set the
-// workshop's own width (`meta.width`) rather than a frame's.
-export default {
+// Render-only; behaviour is asserted in tests/components/SectionNav. The workshop's
+// `usePathname` stub answers whatever the wrapping provider says. The window's
+// width chooses the shape, so narrow stories set `meta.width`, not a frame's.
+const meta = {
   title: 'Navigation / Section Nav',
-};
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // A stand-in for the context row the layouts put the nav in: a hairline-edged
 // row of the row's height, the nav stretched along it. On a phone the nav
@@ -32,63 +34,71 @@ const Row = ({ path, children }: { path: string; children: ReactNode }): ReactEl
   </WorkshopPathname.Provider>
 );
 
-// Wide: Grimoire-style tabs, as a member sees them (Overview and Members),
-// with Overview current.
-export const Coven: Story = () => (
-  <Row path="/coven/fixture-coven">
-    <CovenNav slug="fixture-coven" canReadMembers />
+const coven = (path: string, canReadMembers: boolean) => (
+  <Row path={path}>
+    <CovenNav slug="fixture-coven" canReadMembers={canReadMembers} />
   </Row>
 );
 
-// Wide: six tabs, a hairline between Astrology and People, Categories
-// current (on its Groups tab's address).
-export const Admin: Story = () => (
-  <Row path="/admin/category-groups">
-    <AdminNav managesPeople />
+const admin = (path: string, managesPeople = true) => (
+  <Row path={path}>
+    <AdminNav managesPeople={managesPeople} />
   </Row>
 );
 
-// Tablet: the tabs that fit, the rest behind More (measured, so a story in Ladle shows what its width allows).
-export const AdminTablet: Story = () => (
-  <Row path="/admin/category-groups">
-    <AdminNav managesPeople />
-  </Row>
-);
-AdminTablet.meta = { width: 700 };
+// Wide: the tabs a member sees, then a viewer's (no Members), then the admin's
+// six tabs with a hairline between Astrology and People.
+const SECTION_STATES: Record<string, ReactNode> = {
+  'Coven Overview Current': coven('/coven/fixture-coven', true),
+  'Coven Ingredients Current': coven('/coven/fixture-coven/ingredients', true),
+  'Coven Members Current': coven('/coven/fixture-coven/members', true),
+  'Coven As A Viewer': coven('/coven/fixture-coven', false),
+  'Admin Categories Current': admin('/admin/category-groups'),
+  'Admin Compendium Current': admin('/admin/compendium'),
+  'Admin Astrology Current': admin('/admin/zodiac-signs'),
+  'Admin People Current': admin('/admin/users'),
+  'Admin As A Curator': admin('/admin/compendium', false),
+};
 
-// Tablet, on a page that is behind More: More names it and carries the mark.
-export const AdminOnAHiddenPage: Story = () => (
-  <Row path="/admin/users">
-    <AdminNav managesPeople />
-  </Row>
-);
-AdminOnAHiddenPage.meta = { width: 700 };
+export const States: Story = {
+  args: { state: 'Coven Overview Current' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(SECTION_STATES), mapping: SECTION_STATES },
+  },
+  render: ({ state }) => <div>{state}</div>,
+};
 
-// Phone: the bar along the foot of the window, in each theme.
-export const AdminPhoneDark: Story = () => (
-  <Row path="/admin/forms">
-    <AdminNav managesPeople />
-  </Row>
-);
-AdminPhoneDark.meta = { theme: 'dark', width: 375 };
+// Tablet, on a page that is behind More: More names it and carries the mark. The
+// width stays pinned (700px) because this state exists only at tablet width: wider
+// shows every link, narrower moves the nav to the bottom bar.
+export const AdminOnAHiddenPage: Story = {
+  render: () => admin('/admin/users'),
+  globals: { viewport: { value: 'w700', isRotated: false } },
+};
 
-export const AdminPhoneLight: Story = () => (
-  <Row path="/admin/forms">
-    <AdminNav managesPeople />
-  </Row>
-);
-AdminPhoneLight.meta = { theme: 'light', width: 375 };
+// Tablet with More pressed: the links behind it in a sheet.
+const MoreOpen = ({ path }: { path: string }): ReactElement => {
+  usePressOnMount('More');
+  return admin(path);
+};
 
-export const AdminPhoneOnAHiddenPage: Story = () => (
-  <Row path="/admin/celestial-bodies">
-    <AdminNav managesPeople />
-  </Row>
-);
-AdminPhoneOnAHiddenPage.meta = { width: 375 };
+export const TabletMoreOpen: Story = {
+  render: () => <MoreOpen path="/admin/compendium" />,
+  globals: { viewport: { value: 'w700', isRotated: false } },
+};
 
-export const CovenPhone: Story = () => (
-  <Row path="/coven/fixture-coven">
-    <CovenNav slug="fixture-coven" canReadMembers />
-  </Row>
-);
-CovenPhone.meta = { width: 375 };
+// A phone: the nav leaves the row for the bar at the foot of the window.
+export const PhoneBottomBar: Story = {
+  render: () => coven('/coven/fixture-coven', true),
+  globals: { viewport: { value: 'w375', isRotated: false } },
+};
+
+export const PhoneAdminBottomBar: Story = {
+  render: () => admin('/admin/compendium'),
+  globals: { viewport: { value: 'w375', isRotated: false } },
+};
+
+export const PhoneMoreOpen: Story = {
+  render: () => <MoreOpen path="/admin/compendium" />,
+  globals: { viewport: { value: 'w375', isRotated: false } },
+};

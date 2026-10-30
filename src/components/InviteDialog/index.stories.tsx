@@ -1,34 +1,97 @@
-import type { Story } from '@ladle/react';
-import { type ReactElement, useEffect, useRef } from 'react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactElement, ReactNode } from 'react';
+import type { RequestHandler } from 'msw';
+import { CreateInvitationDocument } from '@/gql/graphql';
+import { answerMutation, refusal, useMockHandlers } from '../../../.storybook/mock-api';
+import { press, setInputValue, submitForm, useSteps } from '../../../.storybook/press';
 import InviteDialog from '.';
 
-// Render-only; behaviour is asserted in tests/components/InviteDialog. In the
-// workshop the call reaches no server, so sending shows the failure.
-export default {
+// Render-only; behaviour is asserted in tests/components/InviteDialog. Sending
+// is answered by the workshop's fake API (.storybook/mock-api.ts): accepted,
+// refused as a whole, or refused for the address alone, as the state asks.
+const meta = {
   title: 'Coven / Invite Dialog',
-};
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const WORKSPACE = '00000000-0000-0000-0000-000000000001';
 
-export const Default: Story = () => <InviteDialog workspaceId={WORKSPACE} />;
-
-// Pressed already, as after a click on Invite: the dialog over the page.
-const Pressed = (): ReactElement => {
-  const root = useRef<HTMLDivElement>(null);
-  useEffect(() => root.current?.querySelector('button')?.click(), []);
-  return (
-    <div ref={root}>
-      <InviteDialog workspaceId={WORKSPACE} />
-    </div>
-  );
+const typeEmail = (address: string) => () => {
+  const input = document.querySelector<HTMLInputElement>('input[type="email"]');
+  if (input) setInputValue(input, address);
 };
 
-export const Open: Story = () => <Pressed />;
-export const OpenPhoneDark: Story = () => <Pressed />;
-export const OpenPhoneLight: Story = () => <Pressed />;
+const SENT = [
+  answerMutation(CreateInvitationDocument, () => ({ createInvitation: { id: 'invitation-1' } })),
+];
+const REFUSED = [
+  answerMutation(CreateInvitationDocument, () =>
+    refusal({ message: 'You cannot invite people to this coven.', code: 'FORBIDDEN' }),
+  ),
+];
+const ADDRESS_REFUSED = [
+  answerMutation(CreateInvitationDocument, () =>
+    refusal({
+      message: 'Validation failed',
+      code: 'VALIDATION',
+      fieldErrors: [
+        { path: ['email'], message: 'That address is already a member of this coven.' },
+      ],
+    }),
+  ),
+];
 
-// A modal draws in the page's own document, so its stories sit in a frame of
-// their own (claude-docs/workshop.md).
-Open.meta = { iframed: true };
-OpenPhoneDark.meta = { iframed: true, theme: 'dark', width: 375 };
-OpenPhoneLight.meta = { iframed: true, theme: 'light', width: 375 };
+// Driven as a person would: Invite pressed, then whatever the state needs.
+const Driven = ({
+  steps = [],
+  answers = SENT,
+}: {
+  steps?: readonly (() => void)[];
+  answers?: readonly RequestHandler[];
+}): ReactElement => {
+  useMockHandlers(answers);
+  useSteps([() => press('Invite'), ...steps], 120);
+  return <InviteDialog workspaceId={WORKSPACE} />;
+};
+
+const INVITE_STATES: Record<string, ReactNode> = {
+  Closed: <InviteDialog workspaceId={WORKSPACE} />,
+  Open: <Driven />,
+  'Member Role Chosen': (
+    <Driven
+      steps={[() => document.querySelector<HTMLInputElement>('input[value="member"]')?.click()]}
+    />
+  ),
+  'Address Refused Before Sending': (
+    <Driven steps={[typeEmail('not an address'), () => submitForm('form.form')]} />
+  ),
+  'Invitation Sent': (
+    <Driven steps={[typeEmail('testwort@example.test'), () => submitForm('form.form')]} />
+  ),
+  // A refusal of the whole request lands in the alert.
+  'Send Failed': (
+    <Driven
+      answers={REFUSED}
+      steps={[typeEmail('testwort@example.test'), () => submitForm('form.form')]}
+    />
+  ),
+  // A refusal that names the address lands under the field.
+  'Address Refused By The Server': (
+    <Driven
+      answers={ADDRESS_REFUSED}
+      steps={[typeEmail('fern@example.test'), () => submitForm('form.form')]}
+    />
+  ),
+};
+
+// One story with a control to choose the state: the open ones are dialogs, too
+// big to sit beside the others (claude-docs/workshop.md, rule 5). A modal draws
+// in the page's own document, so the story sits in a frame of its own.
+export const States: Story = {
+  args: { state: 'Closed' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(INVITE_STATES), mapping: INVITE_STATES },
+  },
+  render: ({ state }) => <div>{state}</div>,
+};

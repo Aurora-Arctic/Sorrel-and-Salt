@@ -2,10 +2,8 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import LeaveWorkspaceButton from '@/components/LeaveWorkspaceButton';
 
-// The only owner's Leave (M6.16): the page hands the button the members who
-// could take over, and pressing it asks what happens to the coven, a
-// hand-over or a deletion, never only one. The requests are mocked; what the
-// service decides is its own tests'.
+// The only owner's Leave: the page hands the button the members who could take over, and pressing it asks what happens to the coven, a hand-over or a deletion, never only one.
+// The requests are mocked; what the service decides is its own tests'.
 
 const { replace, refresh, graphqlRequest } = vi.hoisted(() => ({
   replace: vi.fn(),
@@ -24,7 +22,8 @@ const SUCCESSORS = [
 ];
 
 const handOver = (dialog: HTMLElement) => within(dialog).getByRole('radio', { name: /^Hand It/ });
-const deleteIt = (dialog: HTMLElement) => within(dialog).getByRole('radio', { name: /^Delete It/ });
+const deleteIt = (dialog: HTMLElement) =>
+  within(dialog).getByRole('radio', { name: /^Delete Coven/ });
 
 /** Types into the New Owner box and picks the named member from its list. */
 function choose(dialog: HTMLElement, name: string) {
@@ -174,7 +173,7 @@ describe('LeaveWorkspaceButton for the only owner', () => {
   });
 
   // A refusal asked over the dialog is said beside Delete, a plain notice
-  // inside the dialog, never a callout over it (the owner's call).
+  // inside the dialog, never a callout over it.
   it('says a refused deletion beside Delete, inside the dialog, which stays open', async () => {
     graphqlRequest.mockRejectedValue(new Error('Forbidden'));
     const dialog = await openDialog();
@@ -203,35 +202,5 @@ describe('LeaveWorkspaceButton for the only owner', () => {
     expect(within(dialog).queryByRole('button', { name: 'Promote and Leave' })).toBeNull();
     expect(within(dialog).queryByRole('combobox')).toBeNull();
     expect(within(dialog).getByRole('button', { name: 'Delete Coven' })).toBeEnabled();
-  });
-
-  it('closes on Cancel with nothing sent', async () => {
-    const dialog = await openDialog();
-
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
-
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-    expect(graphqlRequest).not.toHaveBeenCalled();
-  });
-
-  it.each([
-    [
-      'Cancel',
-      (dialog: HTMLElement) =>
-        fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' })),
-    ],
-    [
-      'Escape',
-      (dialog: HTMLElement) => fireEvent(dialog, new Event('cancel', { cancelable: true })),
-    ],
-  ])('gives focus back to Leave Coven when the dialog closes by %s', async (_way, closeIt) => {
-    const dialog = await openDialog();
-    const leave = screen.getByRole('button', { name: 'Leave Coven' });
-    expect(leave).not.toHaveFocus();
-
-    closeIt(dialog);
-
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-    expect(leave).toHaveFocus();
   });
 });

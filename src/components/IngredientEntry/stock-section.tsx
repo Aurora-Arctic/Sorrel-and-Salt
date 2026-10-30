@@ -5,15 +5,9 @@ import type { ShelfForm } from '../JarShelf/types';
 import StockDialog from '../StockDialog';
 import type { EntryStock } from './types';
 
-// The entry page's Stock section (M12.29): a shelf of drawn jars, one per form of the
-// entry, under a heading that carries the card's Edit Stock button for a role that may
-// edit. A form the coven holds a jar of draws it with its level; a form with none draws
-// an empty one. The shelf follows the forms' order, as the Forms section below does, except
-// that the forms with no jar go after every form with one (the owner, 2026-10-21), each
-// group keeping the forms' order; a jar holding 0 is still a jar and keeps its place. It
-// takes each form from the entry's own variants, so the page passes only the jars. A jar
-// whose form is gone from the entry has nothing to be drawn under and is left out.
-// claude-docs/components/ingredient-entry.md, "Stock".
+// The entry page's Stock section: a shelf of drawn jars, one per form, under a heading carrying
+// Edit Stock for a role that may edit; forms with no jar go after those with one
+// (claude-docs/components/ingredient-entry.md, "Structure").
 
 export default function StockSection({
   stock,
@@ -53,8 +47,8 @@ export default function StockSection({
 
   return (
     <section id="stock" className="ingredient-entry__section" aria-labelledby="stock-heading">
-      {/* One box for the head and the shelf. The `panel` class is interim (MB.121's review removes it); the div can stay. */}
-      <div className="ingredient-entry__stock-panel panel">
+      {/* The head and the shelf, spaced as one stack, in no box. */}
+      <div className="ingredient-entry__stock-panel">
         <div className="ingredient-entry__stock-head">
           <h2 id="stock-heading">Stock</h2>
           {stock.mayEdit && (
@@ -69,7 +63,7 @@ export default function StockSection({
           )}
         </div>
         {/* The wrapper always renders, so the empty line sits in the text column too. */}
-        <div className="ingredient-entry__stock">
+        <div>
           {forms.length > 0 ? (
             <JarShelf
               forms={forms}

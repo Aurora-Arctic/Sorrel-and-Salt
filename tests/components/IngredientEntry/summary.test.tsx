@@ -5,11 +5,8 @@ import type { CategoryDetail, IngredientDetail, VariantDetail } from '@/modules/
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { entryDetail } from '../../support/entry-detail';
 
-// The details modal's body (M12.5; claude-docs/components/ingredient-entry.md,
-// "The details modal"): the entry page's Details section cut to the owner's
-// choice, the caution and the categories, the folk names and the
-// correspondences, drawn by the page's own blocks. Every value is the test's own
-// data, so finding one proves what rendered.
+// The details modal's body (claude-docs/components/ingredient-entry.md, "The details modal"): the entry page's Details section cut down to the caution, categories, folk names and correspondences, drawn by the page's own blocks.
+// Every value is the test's own data, so finding one proves what rendered.
 
 const STAMPS = {
   createdAt: new Date('2026-01-01T00:00:00Z'),
@@ -76,7 +73,7 @@ function full(overrides: Partial<IngredientDetail> = {}): IngredientDetail {
     ...base,
     folkNames: ['Fixture Bane'],
     categories: [category('c1', 'Testwards')],
-    deities: [{ name: 'Fixtura', tradition: 'Fixture Pantheon' }],
+    deities: [{ name: 'Fixtura', tradition: 'Fixture Pantheon', otherNames: [] }],
     substitutes: [{ name: 'Fixture Swapleaf', ingredient: null, form: null }],
     variants: [variant('testoil', 'Fixture oil caution.'), variant('testroot', null)],
     ...overrides,
@@ -103,6 +100,26 @@ describe('IngredientSummary', () => {
     ).toBeInTheDocument();
     expect(rowOf('Celestial Bodies')).toBe('Fixture Moon');
     expect(rowOf('Deities')).toBe('Fixtura (Fixture Pantheon)');
+  });
+
+  // A curated deity's other names follow its tradition, so a reader
+  // who knows it by another name finds it; a typed name has none to show.
+  it('names each deity with its tradition and its other names', () => {
+    render(
+      <IngredientSummary
+        detail={full({
+          deities: [
+            { name: 'Fixtura', tradition: 'Fixture Pantheon', otherNames: ['Fixtra', 'Testura'] },
+            { name: 'Mockis', tradition: null, otherNames: ['Mockon'] },
+            { name: 'Testis', tradition: null, otherNames: [] },
+          ],
+        })}
+      />,
+    );
+
+    expect(rowOf('Deities')).toBe(
+      'Fixtura (Fixture Pantheon; also called Fixtra, Testura), Mockis (also called Mockon), Testis',
+    );
   });
 
   it('names the forms that carry a caution of their own, and no form when none does', () => {
@@ -221,7 +238,7 @@ describe('IngredientSummary', () => {
     expect(rowOf('Celestial Bodies')).toBe('Fixture Sun');
   });
 
-  it("draws no caution and no empty block for a sparse entry: no 'None recorded', no empty heading", () => {
+  it('draws no caution and no empty block for a sparse entry: no empty correspondence row, no empty heading', () => {
     render(
       <IngredientSummary
         detail={full({
@@ -240,13 +257,17 @@ describe('IngredientSummary', () => {
     expect(screen.queryByRole('heading', { name: 'Folk Names' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Categories' })).not.toBeInTheDocument();
     // One line says so, so the body is not left blank.
-    expect(screen.getByText('Nothing recorded yet.')).toBeInTheDocument();
-    expect(screen.queryByText('None recorded')).not.toBeInTheDocument();
+    expect(screen.getByText('No details recorded.')).toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        /^No (elements|celestial bodies|zodiac signs|colours|deities) recorded\.$/,
+      ),
+    ).not.toBeInTheDocument();
   });
 
   it('says nothing is recorded only when every section is empty', () => {
     const { unmount } = render(<IngredientSummary detail={full()} />);
-    expect(screen.queryByText('Nothing recorded yet.')).not.toBeInTheDocument();
+    expect(screen.queryByText('No details recorded.')).not.toBeInTheDocument();
     unmount();
 
     // A caution alone is something recorded.
@@ -262,7 +283,7 @@ describe('IngredientSummary', () => {
       />,
     );
     expect(screen.getByRole('region', { name: 'Caution' })).toBeInTheDocument();
-    expect(screen.queryByText('Nothing recorded yet.')).not.toBeInTheDocument();
+    expect(screen.queryByText('No details recorded.')).not.toBeInTheDocument();
     unmount2();
 
     // So is a description alone.
@@ -278,7 +299,7 @@ describe('IngredientSummary', () => {
       />,
     );
     expect(screen.getByText('Fixture lone description.')).toBeInTheDocument();
-    expect(screen.queryByText('Nothing recorded yet.')).not.toBeInTheDocument();
+    expect(screen.queryByText('No details recorded.')).not.toBeInTheDocument();
   });
 
   it("keeps a block's filled rows and drops its empty ones", () => {
@@ -300,10 +321,7 @@ describe('IngredientSummary', () => {
       vi.restoreAllMocks();
     });
 
-    /**
-     * The paragraph's measured overflow: happy-dom lays nothing out, so its height and
-     * its line height (six of which are the cut) are the test's.
-     */
+    /** The paragraph's measured overflow: happy-dom lays nothing out, so its height and its line height (six of which are the cut) are the test's. */
     function measures(scrollHeight: number, lineHeight = 24): void {
       vi.spyOn(HTMLElement.prototype, 'scrollHeight', 'get').mockReturnValue(scrollHeight);
       const real = window.getComputedStyle.bind(window);
@@ -443,7 +461,7 @@ describe('IngredientSummary', () => {
         />,
       );
       // The links are where the entry is held, not something recorded of it.
-      expect(screen.getByText('Nothing recorded yet.')).toBeInTheDocument();
+      expect(screen.getByText('No details recorded.')).toBeInTheDocument();
       expect(
         within(screen.getByRole('list', { name: 'In Your Cupboards' })).getAllByRole('link'),
       ).toHaveLength(2);
@@ -466,7 +484,7 @@ describe('IngredientSummary', () => {
       // A compendium page passes no jars: no quantity, no stock state, no badge.
       expect(screen.queryByText(/Unmeasured|Not Stocked/)).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /Stock/ })).not.toBeInTheDocument();
-      // After the caution in the document (the owner's call, 2026-10-20), so also after the description.
+      // After the caution in the document, so also after the description.
       const caution = screen.getByRole('region', { name: 'Caution' });
       expect(
         caution.compareDocumentPosition(screen.getByRole('heading', { name: 'Forms' })) &
@@ -502,7 +520,7 @@ describe('IngredientSummary', () => {
       expect(seed).toHaveTextContent('0 g');
       expect(within(seed).getByRole('button', { name: 'Out of Stock' })).toBeInTheDocument();
       // No jar: the coven holds the form in no jar, which is not out of stock. Nothing shows
-      // on screen (the owner's call, 2026-10-20), but the line's text, which a screen reader
+      // on screen, but the line's text, which a screen reader
       // reads, still says so.
       const root = lineOf('testroot');
       expect(within(root).getByText('Not Stocked')).toBeInTheDocument();
@@ -526,7 +544,7 @@ describe('IngredientSummary', () => {
         <IngredientSummary detail={full({ ...bare, variants: [variant('testroot', null)] })} />,
       );
       expect(screen.getByRole('list', { name: 'Forms' })).toHaveTextContent(formLabel('testroot'));
-      expect(screen.queryByText('Nothing recorded yet.')).not.toBeInTheDocument();
+      expect(screen.queryByText('No details recorded.')).not.toBeInTheDocument();
     });
   });
 });

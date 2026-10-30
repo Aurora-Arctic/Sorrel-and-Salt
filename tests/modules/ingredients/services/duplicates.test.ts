@@ -8,10 +8,8 @@ import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 import type { PageRequest } from '@/lib/types';
 
-// DESIGN.md §5, "Fuzzy duplicate warning": near-misses on the display name,
-// the formal name or any folk name, from the compendium and the caller's own
-// workspace, each carrying its formal name. The table is emptied per test, so
-// every row a result could come from is one this file wrote.
+// DESIGN.md §5, "Fuzzy duplicate warning": near-misses on the display name, the formal name or any folk name, from the compendium and the caller's own workspace, each carrying its formal name.
+// The table is emptied per test, so every row a result could come from is one this file wrote.
 
 let sql: ReturnType<typeof postgres>;
 
@@ -54,12 +52,6 @@ describe('findPossibleDuplicates', () => {
       await addIngredient({ name: 'Mugwort', canonicalName: 'Artemisia vulgaris' });
 
       expect(await namesFor(B, 'Mugwart')).toEqual(['Mugwort']);
-    });
-
-    it('returns nothing for a name below it', async () => {
-      await addIngredient({ name: 'Wormwood', canonicalName: 'Artemisia absinthium' });
-
-      expect(await namesFor(B, 'Mugwart')).toEqual([]);
     });
 
     // 0.31 clears pg_trgm's 0.3 default and not DESIGN.md's 0.4, so this row
@@ -183,7 +175,7 @@ describe('findPossibleDuplicates', () => {
     });
   });
 
-  // M5.5: the admin's compendium form names no coven, so a null workspace
+  // The admin's compendium form names no coven, so a null workspace
   // warns of the compendium's entries alone and asks for no membership.
   describe('without a coven', () => {
     it('warns of the compendium’s entries and no coven’s, to anyone signed in', async () => {

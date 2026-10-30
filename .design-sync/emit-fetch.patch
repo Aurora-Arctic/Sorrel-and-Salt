@@ -1,0 +1,20 @@
+--- .ds-sync/lib/emit.mjs
++++ .ds-sync/lib/emit.mjs
+@@ -144,6 +144,8 @@
+   <div class="ds-grid" id="g"></div>
+   <script src="../../../_vendor/react.js"></script>
+   <script src="../../../_vendor/react-dom.js"></script>
++  <!-- design-sync: forward window.fetch so the preview fake fetch (window.__dsFetch) also reaches clients that capture fetch at bundle load -->
++  <script>var nf=window.fetch;window.__dsRealFetch=nf;window.fetch=function(){return (window.__dsFetch||nf).apply(this,arguments)}</script>
+   <script src="../../../_ds_bundle.js"></script>${decoratorScript}
+   <script src="../../../_preview/${name}.js"></script>
+   <script>
+@@ -219,6 +221,8 @@
+   </template>
+   <script src="../../../_vendor/react.js"></script>
+   <script src="../../../_vendor/react-dom.js"></script>
++  <!-- design-sync: forward window.fetch so the preview fake fetch (window.__dsFetch) also reaches clients that capture fetch at bundle load -->
++  <script>var nf=window.fetch;window.__dsRealFetch=nf;window.fetch=function(){return (window.__dsFetch||nf).apply(this,arguments)}</script>
+   <script src="../../../_ds_bundle.js"></script>${decoratorScript}
+   <script>
+     var h=React.createElement, C=window.${GLOBAL}.${name};

@@ -2,7 +2,7 @@ import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { EditLink } from '../IconTip';
 import type { ReactElement } from 'react';
 import StackTable, { GroupChip, updatedColumn } from '../DataTable';
-import { noMatchText } from '../../lib/text';
+import { emptyList, noMatchText } from '../../lib/text';
 import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
 import GroupedValueListFilter from './filter';
@@ -10,17 +10,9 @@ import { KINDS } from './kinds';
 import type { GroupedValueListProps } from './types';
 import './index.scss';
 
-// A curated vocabulary's filter, table and pager: grouped — `/admin/categories`'
-// (M5.6, MB.178), `/admin/forms`' (M5.6a) and `/admin/deities`' (MB.132) — or
-// flat, with no group column or group filter, `/admin/celestial-bodies`' and
-// `/admin/zodiac-signs`' (MB.95, folded in at MB.115). One for every such
-// vocabulary, as GroupList is for their groups. Render-only: the page reads
-// one page of the vocabulary under the address's filter through the service
-// and hands it here. The filter is a GET form to the page itself, so a
-// filtered page is an address. Each Edit is an address — the page opens its
-// modal from the URL, as it does for the Add beside its heading — so a modal
-// can be linked to and Back closes it. On a phone the table turns into cards
-// (claude-docs/components/grouped-value-list.md).
+// A curated vocabulary's filter, table and pager: grouped (categories, forms, deities) or flat, with no
+// group column or filter (celestial bodies, zodiac signs); render-only. Filter and each Edit are
+// addresses, so Back closes a modal (claude-docs/components/grouped-value-list.md).
 
 const GroupedValueList = ({
   kind,
@@ -43,7 +35,7 @@ const GroupedValueList = ({
       filter.query && `“${filter.query}”`,
       group && filter.group && `the ${group.label.toLowerCase()} ${groupName}`,
     ].filter((part): part is string => Boolean(part)),
-    `There are no ${plural} yet. Add one with Add ${label}.`,
+    `${emptyList(plural)} Add one with Add ${label}.`,
   );
   return (
     // The kind's modifier, so a rule one kind's rows need — the category
@@ -62,7 +54,22 @@ const GroupedValueList = ({
             whose groups are drawn in chips taller than a line of text. */}
         <StackTable
           columns={[
-            { heading: 'Name', cell: (entry) => shown(entry.name) },
+            {
+              heading: 'Name',
+              // A deity's other names under its name, since the filter and the picker
+              // find it by them too.
+              cell: (entry) =>
+                entry.otherNames && entry.otherNames.length > 0 ? (
+                  <>
+                    {shown(entry.name)}{' '}
+                    <span className="grouped-value-list__other-names">
+                      Also called {entry.otherNames.join(', ')}
+                    </span>
+                  </>
+                ) : (
+                  shown(entry.name)
+                ),
+            },
             group && {
               heading: group.label,
               cell: (entry) => (

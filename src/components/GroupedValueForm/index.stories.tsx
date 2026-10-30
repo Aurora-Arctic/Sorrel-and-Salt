@@ -1,20 +1,23 @@
-import type { Story } from '@ladle/react';
-import { GROUP_NAMES, asOptions } from '../../../.ladle/fixtures';
-import { usePressOnMount } from '../../../.ladle/press';
-import { Reopenable } from '../../../.ladle/reopenable';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
+import { UpdateCategoryDocument } from '@/gql/graphql';
+import { answerMutation, refusal, useMockHandlers } from '../../../.storybook/mock-api';
+import { FIXTURE_GROUP_ID, GROUP_NAMES, asOptions } from '../../../.storybook/fixtures';
+import { InModal } from '../../../.storybook/in-modal';
+import { setInputValue, submitForm, usePressOnMount, useSteps } from '../../../.storybook/press';
 import { FORM_GROUP_ICONS } from '../../modules/vocabulary/schema/form-group-icons';
-import Modal from '../Modal';
 import GroupedValueForm from '.';
 
-// Render-only; behaviour is asserted in tests/components/GroupedValueForm.
-// Every kind, the flat celestial bodies and signs among them (MB.115).
-// The workshop has no API, so a save answers with the form's generic error.
-// Shown in the modal the admin pages open it in.
-export default {
+// Render-only; behaviour is asserted in tests/components/GroupedValueForm. The fake
+// API (.storybook/mock-api.ts) refuses the saving states, one beside a field and one
+// above. Shown in the admin modal. One story per kind: category, form, deity, flat.
+const meta = {
   title: 'Admin / Grouped Value Form',
-};
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
-// Enough of each to narrow: every group field is typed into (MB.115).
+// Enough of each to narrow: every group field is typed into.
 const CATEGORY_GROUPS = asOptions(GROUP_NAMES.category);
 // A form group's choices draw its icon: the first two their own, one none (the generic).
 const FORM_GROUPS = asOptions(GROUP_NAMES.form).map((group, index) => ({
@@ -25,163 +28,149 @@ const TRADITIONS = asOptions(GROUP_NAMES.tradition);
 
 const done = () => {};
 
-export const AddingACategory: Story = () => (
-  <Reopenable>
-    {(close) => (
-      <Modal title="Add Category" onClose={close}>
-        <GroupedValueForm kind="category" groups={CATEGORY_GROUPS} onDone={done} />
-      </Modal>
-    )}
-  </Reopenable>
+const addingACategoryNode = (
+  <InModal title="Add Category">
+    <GroupedValueForm kind="category" groups={CATEGORY_GROUPS} onDone={done} />
+  </InModal>
 );
 
-export const EditingACategory: Story = () => (
-  <Reopenable>
-    {(close) => (
-      <Modal eyebrow="Edit Category" title="Testcraft" onClose={close}>
-        <GroupedValueForm
-          kind="category"
-          value={{
-            id: '5a0e3c2b-7d6f-4e1a-9b8c-0f1e2d3c4b5a',
-            name: 'Testcraft',
-            description: 'An invented category, for the workshop.',
-            groupId: CATEGORY_GROUPS[1].id,
-          }}
-          groups={CATEGORY_GROUPS}
-          onDone={done}
-        />
-      </Modal>
-    )}
-  </Reopenable>
+const EditingACategoryView = () => (
+  <InModal eyebrow="Edit Category" title="Testcraft">
+    <GroupedValueForm
+      kind="category"
+      value={{
+        id: FIXTURE_GROUP_ID,
+        name: 'Testcraft',
+        description: 'An invented category, for the workshop.',
+        groupId: CATEGORY_GROUPS[1].id,
+      }}
+      groups={CATEGORY_GROUPS}
+      onDone={done}
+    />
+  </InModal>
 );
 
-export const AddingAForm: Story = () => (
-  <Reopenable>
-    {(close) => (
-      <Modal title="Add Form" onClose={close}>
-        <GroupedValueForm kind="form" groups={FORM_GROUPS} onDone={done} />
-      </Modal>
-    )}
-  </Reopenable>
+const editingACategoryNode = <EditingACategoryView />;
+
+const addingAFormNode = (
+  <InModal title="Add Form">
+    <GroupedValueForm kind="form" groups={FORM_GROUPS} onDone={done} />
+  </InModal>
 );
 
-// Rename it to see the note by Save that the rename carries onto the compendium.
-export const EditingAForm: Story = () => (
-  <Reopenable>
-    {(close) => (
-      <Modal eyebrow="Edit Form" title="Testwort Shard" onClose={close}>
-        <GroupedValueForm
-          kind="form"
-          value={{
-            id: '5a0e3c2b-7d6f-4e1a-9b8c-0f1e2d3c4b5a',
-            name: 'Testwort Shard',
-            description: 'An invented form, for the workshop.',
-            groupId: FORM_GROUPS[0].id,
-          }}
-          groups={FORM_GROUPS}
-          onDone={done}
-        />
-      </Modal>
-    )}
-  </Reopenable>
+// A form filed under a group that draws its own icon.
+const editingAFormNode = (
+  <InModal eyebrow="Edit Form" title="Testleaf">
+    <GroupedValueForm
+      kind="form"
+      value={{
+        id: FIXTURE_GROUP_ID,
+        name: 'Testleaf',
+        description: 'An invented form, for the workshop.',
+        groupId: FORM_GROUPS[0].id,
+      }}
+      groups={FORM_GROUPS}
+      onDone={done}
+    />
+  </InModal>
 );
 
-export const AddingADeity: Story = () => (
-  <Reopenable>
-    {(close) => (
-      <Modal title="Add Deity" onClose={close}>
-        <GroupedValueForm kind="deity" groups={TRADITIONS} onDone={done} />
-      </Modal>
-    )}
-  </Reopenable>
+// The other flat kind.
+const addingAZodiacSignNode = (
+  <InModal title="Add Zodiac Sign">
+    <GroupedValueForm kind="zodiacSign" onDone={done} />
+  </InModal>
 );
+
+// A rename sent and refused for the name: the server's sentence shows beside it.
+const NAME_TAKEN = [
+  answerMutation(UpdateCategoryDocument, () =>
+    refusal({
+      message: 'Validation failed',
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['name'], message: 'A category called Testcraft Two already exists.' }],
+    }),
+  ),
+];
+// ...and refused as a whole: the sentence shows above the fields.
+const NOT_ALLOWED = [
+  answerMutation(UpdateCategoryDocument, () =>
+    refusal({ message: 'You cannot change categories right now.', code: 'FORBIDDEN' }),
+  ),
+];
+const SaveRefusedView = ({ answers }: { answers: typeof NAME_TAKEN }) => {
+  useMockHandlers(answers);
+  useSteps([
+    () =>
+      setInputValue(
+        document.querySelector<HTMLInputElement>('input[name="name"]')!,
+        'Testcraft Two',
+      ),
+    () => submitForm('form'),
+  ]);
+  return <EditingACategoryView />;
+};
+const saveRefusedNode = <SaveRefusedView answers={NAME_TAKEN} />;
+const saveFailedNode = <SaveRefusedView answers={NOT_ALLOWED} />;
+
+// Saved while empty: each missing field says so.
+const SavingEmptyView = () => {
+  useSteps([() => submitForm('form')]);
+  return addingACategoryNode;
+};
+const savingEmptyNode = <SavingEmptyView />;
 
 // Rename it to see the note by Save that the rename carries onto the
 // compendium, and the head keep the name it was saved under, its tradition
-// after it, as a deity's pills name it (MB.115).
-export const EditingADeity: Story = () => (
-  <Reopenable>
-    {(close) => (
-      <Modal eyebrow="Edit Deity" title="Testra" qualifier="Fixtural" onClose={close}>
-        <GroupedValueForm
-          kind="deity"
-          value={{
-            id: '5a0e3c2b-7d6f-4e1a-9b8c-0f1e2d3c4b5a',
-            name: 'Testra',
-            description: 'An invented deity, for the workshop.',
-            groupId: TRADITIONS[0].id,
-          }}
-          groups={TRADITIONS}
-          onDone={done}
-        />
-      </Modal>
-    )}
-  </Reopenable>
+// after it, as a deity's pills name it.
+const editingADeityNode = (
+  <InModal eyebrow="Edit Deity" title="Testra" qualifier="Fixtural">
+    <GroupedValueForm
+      kind="deity"
+      value={{
+        id: FIXTURE_GROUP_ID,
+        name: 'Testra',
+        description: 'An invented deity, for the workshop.',
+        groupId: TRADITIONS[0].id,
+        otherNames: ['Testrina', 'Tess'],
+      }}
+      groups={TRADITIONS}
+      onDone={done}
+    />
+  </InModal>
 );
 
-export const AddingACelestialBody: Story = () => (
-  <Reopenable>
-    {(close) => (
-      <Modal title="Add Celestial Body" onClose={close}>
-        <GroupedValueForm kind="celestialBody" onDone={done} />
-      </Modal>
-    )}
-  </Reopenable>
-);
-
-// A flat kind has no group field. Rename it to see the note by Save that the
-// rename carries onto the compendium.
-export const EditingAZodiacSign: Story = () => (
-  <Reopenable>
-    {(close) => (
-      <Modal eyebrow="Edit Zodiac Sign" title="Fixture Ram" onClose={close}>
-        <GroupedValueForm
-          kind="zodiacSign"
-          value={{
-            id: '5a0e3c2b-7d6f-4e1a-9b8c-0f1e2d3c4b5a',
-            name: 'Fixture Ram',
-            description: 'An invented sign, for the workshop.',
-          }}
-          onDone={done}
-        />
-      </Modal>
-    )}
-  </Reopenable>
+// A flat kind has no group field.
+const addingACelestialBodyNode = (
+  <InModal title="Add Celestial Body">
+    <GroupedValueForm kind="celestialBody" onDone={done} />
+  </InModal>
 );
 
 // Delete pressed once drawn, as a person would: the question over the form,
-// dimmed and held beneath it until Delete or Keep It answers (MB.115).
-export const AskingToDelete: Story = () => {
-  usePressOnMount('Delete Category');
-  return <EditingACategory />;
+// dimmed and held beneath it until Delete or Cancel answers.
+export const AskingToDelete: Story = {
+  render: () => {
+    usePressOnMount('Delete Category');
+    return <EditingACategoryView />;
+  },
 };
 
-// At a phone's width in each theme: the modal inset from the screen's edge,
-// and the form under 28rem of its own width, so its buttons stack. Type into
-// Group to see its list narrow beneath it, inside the modal.
-export const PhoneDark: Story = () => <EditingACategory />;
-export const PhoneLight: Story = () => <EditingACategory />;
+const STATES: Record<string, ReactNode> = {
+  'Adding A Category': addingACategoryNode,
+  'Editing A Category': editingACategoryNode,
+  'Adding A Form': addingAFormNode,
+  'Editing A Form': editingAFormNode,
+  'Editing A Deity': editingADeityNode,
+  'Adding A Celestial Body': addingACelestialBodyNode,
+  'Adding A Zodiac Sign': addingAZodiacSignNode,
+  'Save Refused For The Name': saveRefusedNode,
+  'Save Refused As A Whole': saveFailedNode,
+  'Saving Empty': savingEmptyNode,
+};
 
-// An edit's head in each theme, at a desktop's width and a phone's (MB.115).
-export const EditingADeityDark: Story = () => <EditingADeity />;
-export const EditingADeityLight: Story = () => <EditingADeity />;
-export const EditingADeityPhoneDark: Story = () => <EditingADeity />;
-export const EditingADeityPhoneLight: Story = () => <EditingADeity />;
-
-// Each in its own iframe, so the modal's top layer covers the story's frame
-// rather than Ladle's sidebar.
-AddingACategory.meta = { iframed: true };
-EditingACategory.meta = { iframed: true };
-AddingAForm.meta = { iframed: true };
-EditingAForm.meta = { iframed: true };
-AddingADeity.meta = { iframed: true };
-EditingADeity.meta = { iframed: true };
-AddingACelestialBody.meta = { iframed: true };
-EditingAZodiacSign.meta = { iframed: true };
-AskingToDelete.meta = { iframed: true };
-PhoneDark.meta = { iframed: true, theme: 'dark', width: 375 };
-PhoneLight.meta = { iframed: true, theme: 'light', width: 375 };
-EditingADeityDark.meta = { iframed: true, theme: 'dark' };
-EditingADeityLight.meta = { iframed: true, theme: 'light' };
-EditingADeityPhoneDark.meta = { iframed: true, theme: 'dark', width: 375 };
-EditingADeityPhoneLight.meta = { iframed: true, theme: 'light', width: 375 };
+export const States: Story = {
+  args: { state: 'Adding A Category' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div>{state}</div>,
+};

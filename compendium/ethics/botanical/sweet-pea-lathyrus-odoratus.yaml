@@ -1,0 +1,14 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/sweet-pea-lathyrus-odoratus
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: CR
+    listedAs: Lathyrus odoratus
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-lathyrus-odoratus
+    locator: 'Taxobox: status = CR, status_system = IUCN3.1; its status_ref reads: "Lathyrus odoratus", Rowe, J., Shehadeh, A., Maxted, N., Donnini, D. & Branca, F., 2019, 10.2305/IUCN.UK.2019-2.RLTS.T176367A61528477.en'
+questions:
+  - 'Approved by the owner 2026-10-29: the entry stays under the cultivated exception to the no-endangered-species rule (M14.29), because its source says the trade supply is cultivated. Nothing more to ask.'

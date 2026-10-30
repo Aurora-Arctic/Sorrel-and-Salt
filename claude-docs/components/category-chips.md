@@ -4,17 +4,21 @@ An entry's categories as a row of chips: the first `CATEGORY_CHIP_LIMIT` (2) sho
 
 ## Props
 
-| Prop         | Meaning                                                                                  |
-| ------------ | ---------------------------------------------------------------------------------------- |
-| `categories` | Each category with its group's colours; none draws no row                                |
-| `label`      | The entry's label, for the +N button's and the panel's accessible names                  |
-| `compact`    | The tighter chip size for a table cell; the card keeps the regular one (default `false`) |
+| Prop         | Meaning                                                                                                                                                                                                                                                                                                 |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `categories` | Each category with its group's colours; none draws no row                                                                                                                                                                                                                                               |
+| `label`      | The entry's label, for the +N button's and the panel's accessible names                                                                                                                                                                                                                                 |
+| `showAll`    | Draw every chip with no +N button (default `false`). The spell recipe (M13.21) and Category Match's Carried and Missing rows use it; the Extra row passes `limit={8}` instead                                                                                                                           |
+| `limit`      | How many chips show before +N, in place of the default of two (ignored with `showAll`): Category Match's Extra row draws eight                                                                                                                                                                          |
+| `tipOf`      | Optional: a function from a category to the words of its tip. Given, every chip (and those behind +N) is a button carrying that tip, opened by hover, focus and tap, and described by it for a screen reader; not given, chips are plain text (the default). The spell builder's Category Match uses it |
+| `compact`    | The tighter chip size for a table cell; the card keeps the regular one (default `false`)                                                                                                                                                                                                                |
+| `absent`     | Draws the chips hollow (no fill, a dashed muted border, muted text), for categories that are named but not there: Category Match's Missing row (default `false`)                                                                                                                                        |
 
 `CardCategory` and `CATEGORY_CHIP_LIMIT` live here; the card re-exports the type. The chips are full-level chips ([`styling.md`](../styling.md), "Category chips"), plain text and not links; the list is named "Categories".
 
 ## The +N toggletip
 
-`category-more.tsx` is a client child, so `CategoryChips` stays server-compatible. Focus opens the panel at once, and a hover once the pointer has rested 300ms, as every tip does (`TIP_OPEN_DELAY_MS`, the owner's call, 2026-10-20; [`info-tip.md`](info-tip.md), "Behaviour"), so a pointer crossing the row opens nothing; a pointer that leaves sooner opens nothing either, since the wait and the leave's grace share one timer. A click (a tap) pins it open at once and a second click closes it. Escape closes it and returns focus to the button; a press outside, or the pointer leaving (after a 120ms grace, WCAG 1.4.13), closes it too. It fades at `$tip-fade`. The button has no dot, and its name carries the count ("3 more categories for Testwort").
+`category-tip-chip.tsx` is the chip with a tip: an `IconTip` around a button (so focus and a tap reach it) plus a visually hidden copy of the words that the button points at with `aria-describedby`; also a client child. `category-more.tsx` is a client child, so `CategoryChips` stays server-compatible. Focus opens the panel at once, and a hover once the pointer has rested 300ms, as every tip does (`TIP_OPEN_DELAY_MS`, the owner's call, 2026-10-20; [`info-tip.md`](info-tip.md), "Behaviour"), so a pointer crossing the row opens nothing; a pointer that leaves sooner opens nothing either, since the wait and the leave's grace share one timer. A click (a tap) pins it open at once and a second click closes it. Escape closes it and returns focus to the button; a press outside, or the pointer leaving (after a 120ms grace, WCAG 1.4.13), closes it too. It fades at `$tip-fade`. The button has no dot, and its name carries the count ("3 more categories for Testwort").
 
 The panel is `position: fixed`, placed by Floating UI beneath the chip row (the Combobox's list does the same), as wide as the row and at least 12rem. It is not absolute because the admin table's frame scrolls and would clip or stretch around an absolute panel. It flips above near the window's foot and follows the row only while open. Because it floats, it never changes its row's or card's height. It stands at the `floating` layer, above the rows beneath and their Edit pencils; the card lifts itself with `isolation` and `z-index` while a panel is open (no transform, so fixed placement holds).
 
@@ -37,4 +41,4 @@ primitive.
 
 ## Stories
 
-"Surfaces / Category Chips": within the limit, with more, in a scrolling frame, and both sizes.
+`src/components/CategoryChips/index.stories.tsx`, titled "Ingredients / Category Chips": `States`, a grid of No Categories, Exactly At The Limit (two chips), One In The More Button, Several In The More Button, More Panel Open (the +N panel pressed open), In A Scrolling Frame (as the admin table holds it, the panel not clipped) and Sizes (the regular size the card wears and the compact one the table does).

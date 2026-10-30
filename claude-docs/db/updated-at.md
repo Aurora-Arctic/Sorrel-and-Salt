@@ -27,10 +27,17 @@ disambiguate.
   now keeps the row's old `updated_at` and `updated_by`, so "when was this last
   changed" can be read from the column (the compendium's New and Updated
   markers, the sitemap's `lastModified`). "Changes nothing" compares the row as
-  JSON with three things left out: `updated_at` and `updated_by`, because
-  `withAudit` sends both on every write; and generated columns (an ingredient's
-  `identity_key`), because Postgres computes those after a BEFORE trigger runs,
-  so `NEW` holds none of them. A no-op keeps both: `updated_by` stays the person who last really changed the row, so a
+  JSON with five things left out: `updated_at` and `updated_by`, because
+  `withAudit` sends both on every write; an ingredient's seed and review
+  state, `seed_content_hash`, `curator_reviewed_at` and `curator_reviewed_by`
+  (M14.5, `0081_compendium-seed-state-expand.sql`), because a seed run or a
+  review mark changes nothing a reader sees; `revision` (M13.15,
+  `0084_spells-revision-and-draft-title.sql`), because the `bump_revision`
+  trigger moves it on every update and, by name order, runs first; and
+  generated columns (an ingredient's `identity_key`), because Postgres
+  computes those after a BEFORE trigger runs, so `NEW` holds none of them.
+  `revision` is the database's own counter of writes, not part of what the
+  row says (claude-docs/db/grimoire.md, "Revision (M13.15)"). A no-op keeps both: `updated_by` stays the person who last really changed the row, so a
   different user re-saving unchanged takes no credit, and a fixture that writes a stamp
   alone must also change a real column or publish `app.touch_row`. The one write that must move `updated_at` with nothing
   else changing is touching a parent whose child rows changed

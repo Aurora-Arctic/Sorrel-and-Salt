@@ -93,11 +93,21 @@ no Neon connection and no host Node-version juggling.
     "Delivery").
   - **`workshop`** — behind the **`workshop` compose profile**, so a bare
     `make docker-up` does not start it. Same build stage; runs
-    `npm run workshop -- --host 0.0.0.0` (`ladle serve` binds `localhost`
-    otherwise) and publishes **61000** (serve) and **61002** (pinned HMR socket).
-    `--host` reaches the page server only; the HMR socket binds every interface
-    because `.ladle/config.mjs` sets `hmrHost: ''` (`claude-docs/workshop.md`,
-    "`.ladle/`"). Does not depend on `postgres`.
+    `npm run workshop` (Storybook, which the script already binds to every
+    interface with `--host 0.0.0.0`) and publishes **61000** alone: the live-reload
+    socket shares that port, so no second port is published. A browser on the host
+    reaches it as `localhost:61000`, a name Vite always accepts; the Playwright
+    browser reaches it as `devcontainer`, which `.storybook/main.ts` allows.
+    The service sets `GIT_CONFIG_COUNT`, `GIT_CONFIG_KEY_0` and
+    `GIT_CONFIG_VALUE_0` so git trusts `/app` (`safe.directory`) in this container
+    only: the container's user does not own the host-mounted `/app`, git refuses it
+    ("dubious ownership"), and Storybook's change detection (`git rev-parse`)
+    would fail. No config file is written.
+    No file-watch polling is set; if edits on the host stop
+    showing up, set `CHOKIDAR_USEPOLLING=1` on the service. Does not depend on
+    `postgres`. **After the move to Storybook
+    (M12.53) the container needs a rebuilt image**; its packages reinstall on
+    start (below, and `workshop.md`, "Rebuilding the workshop container").
   - **`studio`** (MB.21) — behind the **`studio` compose profile**, same
     build stage; runs `npm run db:studio` (`drizzle-kit studio --host
 0.0.0.0 --port 4983`, reading `drizzle.config.ts`) and publishes
@@ -147,13 +157,35 @@ no Neon connection and no host Node-version juggling.
     images on first mount. `db-init` runs to completion before `app` starts and
     so could not actually race it — it gets its own anyway, because "one per
     service" is the rule that makes that reasoning unnecessary. All persist across `docker compose restart` and
-    `make docker-down`; only `make docker-rebuild` clears them.
+    `make docker-down`; `make docker-rebuild` clears them.
+    - **A lock-file change reinstalls by itself.** Docker fills a named volume
+      from the image only when the volume is first created, so afterwards the
+      volume hides the packages of a rebuilt image, and a branch that adds a
+      package would start without it. `Docker/ensure-deps.sh` is the
+      `entrypoint` of every service that mounts one of these volumes (`db-init`,
+      `app`, `workshop`, `studio`, `e2e`, `playwright-server` and `devcontainer`).
+      It compares the SHA-256 hash of `package-lock.json` with the one saved at
+      `node_modules/.lock-sha256`; if they differ, or the file is missing, it
+      runs `npm ci`, saves the new hash, and then runs the service's command.
+      `Dockerfile.node` and `Dockerfile.e2e` save the same hash after their own
+      `npm ci`, so a fresh volume copies it and nothing installs twice. `npm ci`
+      empties the contents of `node_modules` but not the directory, so it works
+      on a mount point. Setting `entrypoint` clears the image's `CMD`, so every
+      wrapped service names its `command` in compose (`app` writes out
+      `npm run dev`). A failed install stops the container, except on
+      `devcontainer`, which sets `ENSURE_DEPS_ON_FAILURE=warn`: there the script
+      prints a warning, saves no hash (so the next start retries) and starts
+      anyway, so an offline start still opens the editor. The script reads the lock file only: it does not rebuild
+      the image, so a change to a Dockerfile, or a browser a new Playwright
+      version needs (those live in the image, outside `node_modules`), still
+      needs a rebuild. `playwright-audit` and `lighthouse-chrome` mount no
+      `node_modules` volume and are not wrapped.
     - **A new named volume over a path the app writes needs a matching
       `mkdir` + `chown node:node` in `Docker/Dockerfile.node`.** A fresh named
       volume mounts root-owned while `next dev` runs as `node`, so adding one
       (a `.next` volume, say) without that fails silently.
-  - **Ladle's preview port 61001 is deliberately not published** — only 61000
-    (serve) and 61002 (HMR) are.
+  - **The workshop publishes 61000 only.** Storybook's page and live-reload
+    socket share it (M12.53); the old Ladle ports (61001, 61002) are gone.
   - **`Docker/Dockerfile.e2e`** has two stages as of MB.23:
     `e2e` (named, previously the file's only stage — `node:26.6.0-bookworm-slim`
     plus `npm ci` and Chromium's headless shell, headless, what CI and
@@ -229,7 +261,8 @@ NAME=<spec>` (MB.23) — starts `playwright-server` if needed, then `exec`s
   block on a migration run, and the devcontainer is where
   `npm run db:reset` is run from when the database does need rebuilding. It
   has its own
-  `node_modules` volume, no published ports, and `command: sleep infinity` —
+  `node_modules` volume (reinstalled by `ensure-deps.sh` when the lock file
+  changes, like the others), no published ports, and `command: sleep infinity` —
   which only sticks because `devcontainer.json` sets **`overrideCommand: false`**;
   without that the lifecycle re-pins the container to `npm run dev`.
   `devcontainer.json` forwards ten ports — **8000** (`next dev`), **8001**

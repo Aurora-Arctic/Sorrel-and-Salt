@@ -5,9 +5,8 @@ import type { PagerEndProps, PagerProps } from './types';
 import './index.scss';
 
 // A paged list's Prev and Next, centred under it on the `.pager` primitive
-// (claude-docs/components/pager.md). An end with no page is disabled rather
-// than hidden, the owner's call in M5.6, so neither control moves from one
-// page to the next. A list of one page has no pager at all.
+// (claude-docs/components/pager.md). An end with no page is disabled rather than hidden, so
+// neither control moves from one page to the next. A list of one page has no pager at all.
 
 const PagerEnd = ({ href, soft, label }: PagerEndProps): ReactElement => {
   // An anchor cannot be `disabled`: a link with no address and

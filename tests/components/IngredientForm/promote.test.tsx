@@ -17,10 +17,8 @@ import { openSections } from '../../support/ingredient-sections';
 import { press, type } from '../../support/interact';
 import { ENTRY_ID, WORKSPACE_ID, offerNothing } from '../../support/msw/ingredient-lookups';
 
-// Promoting a folk name (M12.1): the control on a saved folk name's chip, the
-// question it always asks, and what the form is left holding, tried on the
-// compendium's edit; the coven tier is tried on the question and its hook,
-// and the control on a coven's edit is coven-edit.test.tsx's.
+// Promoting a folk name: the control on a saved folk name's chip, the question it always asks, and what the form is left holding, tried on the compendium's edit.
+// The coven tier is tried on the question and its hook; the control on a coven's edit is coven-edit.test.tsx's.
 
 const HEDGE_ID = '5a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c01';
 const BANE_ID = '5a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c02';
@@ -56,6 +54,7 @@ function acceptPromote(oldName = 'Testwort'): Sent {
       updateCompendiumIngredient: {
         id: String(variables.id),
         name: variables.input.name,
+        revision: 1,
         slug: 'testwort',
       },
     };
@@ -156,7 +155,8 @@ describe('promoting a folk name in the compendium form', () => {
   });
 
   describe('on a clean form', () => {
-    it('asks first, and sends nothing on Cancel', async () => {
+    // Its Cancel is the question's own case, below.
+    it('asks first, sending nothing until it is answered', async () => {
       const sent = acceptPromote();
       renderForm();
 
@@ -165,9 +165,6 @@ describe('promoting a folk name in the compendium form', () => {
       expect(button('Promote')).toBeInTheDocument();
       noButton('Save & Promote');
       expect(button('Cancel')).toHaveFocus();
-      press('Cancel');
-
-      noButton('Promote');
       await act(async () => {});
       expect(sent.promotes).toHaveLength(0);
       expect(textbox('Name')).toHaveValue('Testwort');

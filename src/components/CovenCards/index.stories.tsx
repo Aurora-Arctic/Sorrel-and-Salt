@@ -1,42 +1,34 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import type { Route } from 'next';
 import CovenCards from '.';
 import type { CovenCardEntry, CovenCardsProps } from './types';
 import type { CompendiumFacetCounts } from '../CompendiumList/types';
+import {
+  NO_FACETS as COMPENDIUM_NO_FACETS,
+  NO_FILTER as COMPENDIUM_NO_FILTER,
+} from '../../../.storybook/compendium-fixtures';
+import PageHeader from '../PageHeader';
+import { ShellFrame } from '../../../.storybook/shell-frame';
+import { route } from '../../../.storybook/route';
 
 // Render-only; what shows and when is asserted in tests/components/CovenCards. The filter
 // navigates to /coven/<slug>/ingredients, which the workshop does not serve.
-export default {
-  title: 'Surfaces / Coven Cards',
-};
+const meta = {
+  title: 'Ingredients / Coven Cards',
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const NO_FILTER: CovenCardsProps['filter'] = {
-  query: '',
-  forms: [],
-  withoutReferences: false,
-  withoutForms: false,
-  elements: [],
-  categories: [],
-  categoryMode: 'all',
-  deities: [],
-  zodiac: [],
-  celestialBodies: [],
-  toxic: '',
+  ...COMPENDIUM_NO_FILTER,
   source: '',
   inStock: false,
   lowStockOnly: false,
 };
 
 const NO_FACETS: CompendiumFacetCounts = {
-  forms: [],
-  deities: [],
-  categories: [],
-  zodiac: [],
-  celestialBodies: [],
-  elements: [],
-  toxic: [],
-  withoutReferences: 0,
-  withoutForms: 0,
+  ...COMPENDIUM_NO_FACETS,
   source: [
     { value: 'local', label: 'Local', count: 2 },
     { value: 'compendium', label: 'Compendium', count: 1 },
@@ -71,6 +63,9 @@ const ENTRIES = [
     kind: 'own',
     canonicalName: 'Fixtura testalis',
     nomenclature: 'botanical',
+    // A note on the ingredient shows the Caution badge; the line beneath the jars is its latest edit.
+    safetyNotes: 'Dilute before use.',
+    lastEdit: { by: 'Fixture A', at: new Date().toISOString() },
     variants: [
       { form: 'Dried Leaf', formChoice: { group: { icon: 'botanical' } } },
       { form: 'Oil', formChoice: { group: { icon: 'botanical' } } },
@@ -96,100 +91,33 @@ const BASE: CovenCardsProps = {
   canAdd: true,
 };
 
-export const Default: Story = () => <CovenCards {...BASE} />;
-
 // A viewer: the same jar lines, and no way to add.
-export const ForAViewer: Story = () => <CovenCards {...BASE} canAdd={false} />;
+const forAViewerNode = <CovenCards {...BASE} canAdd={false} />;
 
 // A page with a neighbour on each side.
-export const MidList: Story = () => (
+const middlePageNode = (
   <CovenCards
     {...BASE}
     position={{ page: 2, pages: 3 }}
-    previousHref="/coven/fixture-coven/ingredients"
-    nextHref="/coven/fixture-coven/ingredients?after=x"
+    previousHref={route('/coven/fixture-coven/ingredients')}
+    nextHref={route('/coven/fixture-coven/ingredients?after=x')}
   />
 );
 
-// An empty cupboard: a member is offered the first add, a viewer reads the sentence alone.
-export const Empty: Story = () => <CovenCards {...BASE} entries={[]} total={0} />;
+// An empty cupboard: a member is offered the first add, a viewer is told which roles can add.
+const emptyNode = <CovenCards {...BASE} entries={[]} total={0} />;
 
-export const EmptyForAViewer: Story = () => (
-  <CovenCards {...BASE} entries={[]} total={0} canAdd={false} />
-);
+const emptyForAViewerNode = <CovenCards {...BASE} entries={[]} total={0} canAdd={false} />;
 
 // A search that matched nothing: the region says only what to do, pointing at the filter row's
 // clears (the search sentence above already names the search), and hands the search to the Compendium.
-export const NoMatches: Story = () => (
+const noMatchesNode = (
   <CovenCards {...BASE} entries={[]} total={0} filter={{ ...NO_FILTER, query: 'Knitbone' }} />
 );
 
-// A member's view: Edit in the foot of the coven's own entry, none on the compendium's (M8.17).
-export const WithEdit: Story = () => (
-  <CovenCards
-    {...BASE}
-    entries={ENTRIES.map((shown) =>
-      shown.kind === 'own'
-        ? {
-            ...shown,
-            editHref: `/coven/fixture-coven/ingredients?edit=${shown.id}`,
-            editHeading: { eyebrow: 'Edit Ingredient', title: shown.label },
-          }
-        : shown,
-    )}
-  />
-);
-
-// A member's view of compendium entries the cupboard holds: Annotate, with its own icon, in
-// each one's foot, and Edit on the coven's own (M8.17).
-export const WithAnnotate: Story = () => (
-  <CovenCards
-    {...BASE}
-    entries={ENTRIES.map((shown) =>
-      shown.kind === 'own'
-        ? {
-            ...shown,
-            editHref: `/coven/fixture-coven/ingredients?edit=${shown.id}`,
-            editHeading: { eyebrow: 'Edit Ingredient', title: shown.label },
-          }
-        : { ...shown, annotateHref: `/coven/fixture-coven/ingredients?annotate=${shown.id}` },
-    )}
-  />
-);
-
-// A member's full foot (M8.17): Edit or Annotate, then More, the vertical dots, with Delete
-// on the coven's own entry and Make It Ours and Remove on a compendium entry.
-export const WithMore: Story = () => (
-  <CovenCards
-    {...BASE}
-    entries={ENTRIES.map((shown) =>
-      shown.kind === 'own'
-        ? {
-            ...shown,
-            editHref: `/coven/fixture-coven/ingredients?edit=${shown.id}`,
-            editHeading: { eyebrow: 'Edit Ingredient', title: shown.label },
-            mayDelete: true,
-          }
-        : {
-            ...shown,
-            annotateHref: `/coven/fixture-coven/ingredients?annotate=${shown.id}`,
-            mayMakeOurs: true,
-            mayRemove: true,
-          },
-    )}
-  />
-);
-
-// A role that may delete and nothing more: the coven's own entry's only choice is its bin.
-export const WithLoneBin: Story = () => (
-  <CovenCards
-    {...BASE}
-    entries={ENTRIES.map((shown) => (shown.kind === 'own' ? { ...shown, mayDelete: true } : shown))}
-  />
-);
-
-// A member's foot with the stock (M9.9): Edit or Annotate, the Edit Stock pencil, then More.
-// The jar lines stay, a badge per jar; the forms line is gone from every coven card.
+// A member's full foot: Edit or Annotate, then the Edit Stock pencil. A compendium entry adds More,
+// holding Make It Ours and Remove; the coven's own entry has no More, since its Delete is in Edit
+// Ingredient. The jar lines stay, a badge per jar; no coven card has a forms line.
 const STOCK: Record<string, CovenCardEntry['stock']> = {
   'own-1': {
     forms: [
@@ -203,21 +131,20 @@ const STOCK: Record<string, CovenCardEntry['stock']> = {
   },
 };
 
-export const WithStock: Story = () => (
+const withStockNode = (
   <CovenCards
     {...BASE}
     entries={ENTRIES.map((shown) =>
       shown.kind === 'own'
         ? {
             ...shown,
-            editHref: `/coven/fixture-coven/ingredients?edit=${shown.id}`,
+            editHref: route(`/coven/fixture-coven/ingredients?edit=${shown.id}`),
             editHeading: { eyebrow: 'Edit Ingredient', title: shown.label },
-            mayDelete: true,
             stock: STOCK[shown.id],
           }
         : {
             ...shown,
-            annotateHref: `/coven/fixture-coven/ingredients?annotate=${shown.id}`,
+            annotateHref: route(`/coven/fixture-coven/ingredients?annotate=${shown.id}`),
             mayMakeOurs: true,
             mayRemove: true,
             stock: { forms: [{ variantId: `${shown.id}-v`, label: 'Coarse' }], jars: [] },
@@ -225,3 +152,33 @@ export const WithStock: Story = () => (
     )}
   />
 );
+
+// A member of the coven, as the site shows the page to one: every foot control, Caution, and the
+// latest edit. The viewer's state keeps the plain entries.
+const defaultNode = withStockNode;
+
+export const WithStock: Story = { render: () => withStockNode };
+
+const STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'For A Viewer': forAViewerNode,
+  'Middle Page': middlePageNode,
+  Empty: emptyNode,
+  'Empty For A Viewer': emptyForAViewerNode,
+  'No Matches': noMatchesNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  // The page around the list, as src/app/(shell)/coven/[slug]/ingredients/page.tsx draws it: the
+  // shell with the coven switcher and nav, then the Ingredients heading.
+  render: ({ state }) => (
+    <ShellFrame area="coven" open="/coven/fixture-coven/ingredients">
+      <main>
+        <PageHeader title="Ingredients" />
+        <div>{state}</div>
+      </main>
+    </ShellFrame>
+  ),
+};

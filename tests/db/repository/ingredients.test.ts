@@ -34,10 +34,8 @@ import { makeIngredient, makeVariant } from '../../support/fixtures';
 import type { ConnectionArgs, Page, PageCount } from '@/lib/types';
 import type { Walk } from './types';
 
-// The compendium read's two finders (claude-docs/db/compendium-read.md, "The compendium
-// read"): the public list under its filters, and one row by id in the
-// compendium or a proof's coven. Every expected order comes from SQL, because
-// the database collates `en_US.utf8` and JS does not.
+// The compendium read's two finders (claude-docs/db/compendium-read.md, "The compendium read"): the public list under its filters, and one row by id in the compendium or a proof's coven.
+// Every expected order comes from SQL, because the database collates `en_US.utf8` and JS does not.
 
 let sql: ReturnType<typeof postgres>;
 
@@ -98,11 +96,7 @@ async function walkForwards(filter: IngredientFilter, size: number): Promise<Wal
   return walk;
 }
 
-/**
- * Every page of `filter` at `size`, from the last, which asks for the
- * remainder as the pager's Last does, so each page lines up with the one the
- * forward walk reaches. Counts come back in page order.
- */
+/** Every page of `filter` at `size`, from the last (which asks for the remainder as the pager's Last does) so each page lines up with the forward walk; counts come back in page order. */
 async function walkBackwards(filter: IngredientFilter, size: number): Promise<Walk> {
   const { totalCount } = await findCompendiumCount(filter, undefined);
   const walk: Walk = { ids: [], counts: [] };
@@ -144,7 +138,7 @@ describe('findCompendiumPage', () => {
     expect(page.edges).toHaveLength(3);
   });
 
-  // M8.14: the card declares no sort of its own. Rows sharing a label keep a
+  // The card declares no sort of its own. Rows sharing a label keep a
   // stable order because the id breaks the tie, across page boundaries too.
   it('keeps rows sharing a label in id order, a page of one apart', async () => {
     for (const canonicalName of ['Fixtura una', 'Fixtura duo', 'Fixtura tres']) {
@@ -170,7 +164,7 @@ describe('findCompendiumPage', () => {
 
   describe('search', () => {
     beforeEach(async () => {
-      // No forms: the search reaches a form too (MB.218), and the fixture's
+      // No forms: the search reaches a form too, and the fixture's
       // default `Testform` would answer a `testoil` query below.
       await add('Fixture Mugwort', {
         nomenclature: 'botanical',
@@ -248,7 +242,7 @@ describe('findCompendiumPage', () => {
       expect(page.edges.every((edge) => edge.score !== null)).toBe(true);
     });
 
-    // The search reaches an entry's forms (MB.218): a word in a variant's form
+    // The search reaches an entry's forms: a word in a variant's form
     // or description finds the entry, still one row however many forms match.
     describe('through a variant', () => {
       let mugwortId: string;
@@ -331,19 +325,9 @@ describe('findCompendiumPage', () => {
     const QUERY = 'mugwort';
 
     /**
-     * The answer key, written independently of the finder: every live
-     * compendium row's best weighted field — the label at 1, the formal name
-     * at 0.9, a live folk name at 0.8, a live variant's form at 0.6 and its
-     * description at 0.2 — counting a field only where its word similarity is
-     * 0.5 or better, best first, then by where that field holds the query,
-     * then by name and id. A field scores its word similarity, or 1 where it
-     * holds the query verbatim, case and accents folded. Its position is the
-     * character the verbatim query starts at, or 2147483647 where it holds
-     * none, so a fuzzy hit follows every verbatim one at its score; an entry
-     * takes the position of its best-scoring field, the earliest among equal
-     * ones. The weights, the containment rule and the position rule are
-     * restated here on purpose rather than imported, and each number is cast
-     * to `real` as the finder's are, so a product rounds as the finder's does.
+     * The answer key, written independently of the finder: every live compendium row's best weighted field (label 1, formal name 0.9, a live folk name 0.8, a live variant's form 0.6 and description 0.2),
+     * counting a field only at word similarity 0.5 or better, best first, then by where that field holds the query, then name and id. A field scores its word similarity, or 1 where it holds the query verbatim, case and accents folded.
+     * Its position is where the verbatim query starts, or 2147483647 where it holds none, so a fuzzy hit follows every verbatim one at its score. The weights and rules are restated on purpose, and each number is cast to `real` as the finder's are.
      */
     async function rankedOrder(
       query: string,
@@ -519,10 +503,8 @@ describe('findCompendiumPage', () => {
     });
 
     it('ranks the label above the formal name, the folk name, the form and the description', async () => {
-      // The preconditions: the near-miss label matches, but neither as a whole
-      // word nor holding the query, so its rank sits between the folk name's
-      // and the form's; and the entry with the formal name does not match by
-      // its label, so it is found by the formal name alone.
+      // The preconditions: the near-miss label matches, but neither as a whole word nor holding the query, so its rank sits between the folk name's and the form's;
+      // the entry with the formal name does not match by its label, so it is found by the formal name alone.
       const [similarity] = await sql<{ nearMiss: number; label: number }[]>`
         select word_similarity(${QUERY}, 'Fixture Quandly') as "nearMiss",
                word_similarity(${QUERY}, 'Fixture Kettlebrim') as label`;
@@ -723,7 +705,7 @@ describe('findCompendiumPage', () => {
       expect(await namesOf({ categoryIds: [] })).toHaveLength(3);
     });
 
-    // A form's pair names the ingredient too (MB.217), so the filter finds
+    // A form's pair names the ingredient too, so the filter finds
     // an entry by a category one of its forms adds; the pairs are hard-deleted
     // and outlive a soft-deleted form, so only a live form's count.
     it('finds an entry by a category a live form adds, and not by one only a deleted form held', async () => {
@@ -752,7 +734,7 @@ describe('findCompendiumPage', () => {
     });
   });
 
-  // Any (M8.12) reads the same pairs as one set: an entry matches a category
+  // Any reads the same pairs as one set: an entry matches a category
   // filed on it or on a live form, and the mode alone changes the result.
   describe('categoryMode', () => {
     let protection: string;
@@ -806,8 +788,8 @@ describe('findCompendiumPage', () => {
     });
   });
 
-  // The text, on any of an entry's live forms (MB.222), any of the listed
-  // forms (M11.22): an entry holding two of them is found once.
+  // The text, on any of an entry's live forms, any of the listed
+  // forms: an entry holding two of them is found once.
   describe('forms', () => {
     beforeEach(async () => {
       await add('Fixture Both', {
@@ -890,7 +872,7 @@ describe('findCompendiumPage', () => {
     });
   });
 
-  // The pick, not the text (MB.167), on any of an entry's forms (MB.220): what
+  // The pick, not the text, on any of an entry's forms: what
   // a form's delete reads, so only the entries holding a live variant that
   // picked this row answer, not every entry spelling it.
   describe('formId', () => {
@@ -948,10 +930,8 @@ describe('findCompendiumPage', () => {
     });
   });
 
-  // A deity is a pick too (MB.167): what a deity's delete reads (MB.132), so
-  // only the entries holding a live link to a listed row answer, not every
-  // entry spelling it, nor one that picked a namesake. Any listed deity
-  // (M11.22): an entry linking two of them is found once.
+  // A deity is a pick too: what a deity's delete reads, so only entries holding a live link to a listed row answer, not every entry spelling it nor one that picked a namesake.
+  // An entry linking two listed deities is found once.
   describe('deityIds', () => {
     let hecate: string;
     let hermes: string;
@@ -1026,7 +1006,7 @@ describe('findCompendiumPage', () => {
     });
   });
 
-  // M8.13: the element filter. An entry's `elements` holds any of the five,
+  // The element filter. An entry's `elements` holds any of the five,
   // alone or among others; any one listed matches, by array overlap.
   describe('elements', () => {
     beforeEach(async () => {
@@ -1064,7 +1044,7 @@ describe('findCompendiumPage', () => {
       ]);
     });
 
-    // MB.215: a property true of only some forms lives on those forms, so a live
+    // A property true of only some forms lives on those forms, so a live
     // form holding the element makes the entry hold it (the toxic filter's reading).
     describe('held on a form', () => {
       beforeEach(async () => {
@@ -1110,9 +1090,9 @@ describe('findCompendiumPage', () => {
     });
   });
 
-  // The lists hold spellings, not picks (MB.162): what a celestial body's or a sign's
-  // delete and rename read (MB.95), matched entry by entry under the
-  // suggestions' fold, any listed value (M11.22).
+  // The lists hold spellings, not picks: what a celestial body's or a sign's
+  // delete and rename read, matched entry by entry under the
+  // suggestions' fold, any listed value.
   describe('celestialBodies and zodiacSigns', () => {
     beforeEach(async () => {
       await add('Fixture Held', { celestialBodies: ['Venus', 'Mars'], zodiacSigns: ['Taurus'] });
@@ -1193,8 +1173,8 @@ describe('findCompendiumPage', () => {
     });
   });
 
-  // M11.21's two flags, read together (M11.22): an entry is toxic when its
-  // own flag or a live form's is on, and not toxic when neither is.
+  // The two toxic flags, read together: an entry is toxic when its own flag or a live form's is on, and
+  // not toxic when neither is.
   describe('toxic', () => {
     beforeEach(async () => {
       await add('Fixture Own Flag', { toxic: true });
@@ -1261,7 +1241,7 @@ describe('findCompendiumPage', () => {
     });
   });
 
-  // OR within a kind, AND across kinds (M11.22): each row below matches one
+  // OR within a kind, AND across kinds: each row below matches one
   // kind alone, and only one matches both.
   describe('across kinds', () => {
     beforeEach(async () => {
@@ -1352,11 +1332,8 @@ describe('findCompendiumCount', () => {
     hermes = byName.get('Hermes') as string;
   });
 
-  // Seven herbs that `mugwrot` finds at 0.5 — every other one filed under
-  // Protection, Venus, Aries and Hecate, the rest under Mars, Taurus and
-  // Hermes, the first two flagged toxic — and five roots it does not, the
-  // first two on a toxic form; then a soft-deleted and a coven's row that
-  // every filter below would otherwise count.
+  // Seven herbs that `mugwrot` finds at 0.5 (alternately filed under Protection, Venus, Aries and Hecate, or Mars, Taurus and Hermes; the first two flagged toxic) and five roots it does not (the first two on a toxic form);
+  // then a soft-deleted row and a coven's that every filter below would otherwise count.
   beforeEach(async () => {
     for (let n = 1; n <= 7; n += 1) {
       const odd = n % 2 === 1;
@@ -1481,11 +1458,8 @@ describe('findOneIngredient', () => {
     localId = await add('Fixture Local', { workspaceId: WORKSPACE_W_ID });
   });
 
-  // The mechanism, once: the proofs AND a workspace row's coven onto the
-  // read, and the compendium tier answers beside them. Who may hold which
-  // proof, and the soft-delete filter of every reader built on this finder,
-  // are the services' (tests/modules/ingredients/services/compendium.test.ts,
-  // and the READS tables of compendium-entries and workspace-ingredients).
+  // The mechanism, once: the proofs AND a workspace row's coven onto the read and the compendium tier answers beside them.
+  // Who may hold which proof, and the soft-delete filter of every reader on this finder, are the services' (tests/modules/ingredients/services/compendium.test.ts).
   it("answers a workspace row under its own coven's proof only, the compendium under any", async () => {
     // Why the refusals below could have passed wrongly: the row is there, and
     // the right proof reaches it.
@@ -1502,7 +1476,7 @@ describe('findOneIngredient', () => {
   });
 });
 
-// An ingredient's forms are its children (MB.216, MB.218): read through
+// An ingredient's forms are its children: read through
 // `findManyOfIngredients` under the parent's tier, never by a bare id, and
 // reached by the search only where the parent is readable.
 describe('a variant read under its ingredient', () => {
@@ -1576,7 +1550,7 @@ describe('a variant read under its ingredient', () => {
     expect(await childrenOf([inW], variantId)).toEqual(NONE);
   });
 
-  // The union rule (MB.215): an ingredient's lists are its own rows, a form's
+  // The union rule: an ingredient's lists are its own rows, a form's
   // its additions, and no read answers the one for the other.
   it("keeps an ingredient's own rows and its variant's apart", async () => {
     const ownCategories = await findManyOfIngredients([inW], ingredientCategories, [localId]);
@@ -1632,7 +1606,7 @@ describe('form ranking of the picker', () => {
   });
 });
 
-// The entry a colliding write names (MB.220): keyed on the formal name alone,
+// The entry a colliding write names: keyed on the formal name alone,
 // or the label without one, whatever the form.
 describe('findCompendiumEntryByIdentity', () => {
   let entryId: string;
@@ -1677,7 +1651,7 @@ describe('findCompendiumEntryByIdentity', () => {
   });
 });
 
-// The coven's twin of the above, under the proof (MB.220).
+// The coven's twin of the above, under the proof.
 describe('findWorkspaceIngredientByIdentity', () => {
   it("finds the proof's coven's live ingredient holding the formal name, and never another tier's", async () => {
     const identity = { name: 'Another label', canonicalName: 'Fixtura testalis' };
@@ -1707,10 +1681,8 @@ describe('findWorkspaceIngredientByIdentity', () => {
   });
 });
 
-// A celestial body's or a sign's rename carried onto the compendium's lists (MB.95):
-// each entry folding to the old spelling becomes the new one, in place, and
-// nothing else in the list or the row moves — a celestial body or sign is no part of
-// an entry's identity or slug.
+// A celestial body's or sign's rename carried onto the compendium's lists: each entry folding to the old spelling becomes the new one in place, and nothing else moves,
+// since a celestial body or sign is no part of an entry's identity or slug.
 describe('write.carryAstrologyRename', () => {
   const rowOf = async (id: string) => (await sql`select * from ingredients where id = ${id}`)[0];
   const rename = (field: 'celestialBodies' | 'zodiacSigns', from: string, to: string) =>
@@ -1843,7 +1815,7 @@ describe('write.carryDeityRename', () => {
 });
 
 // A curated form's rename carried onto the compendium's variants picking it
-// (M5.6a, MB.220): the text, in place, and nothing of the entry's address.
+// : the text, in place, and nothing of the entry's address.
 describe('write.carryFormRename', () => {
   const picked = (form: string, formId?: string) => [
     makeVariant(formId === undefined ? { form } : { form, formId }),

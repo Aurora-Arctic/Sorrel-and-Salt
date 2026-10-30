@@ -8,12 +8,9 @@ import { notSoftDeleted, scopedTo } from './predicates';
 import { existsIn, selectFrom } from './select';
 import type { AuditWriter, StockRow, WriterContext } from './types';
 
-// A coven's stock: one `inventory_items` row per form it holds (M9.3). Read
-// through the form and its ingredient, both live and readable under the
-// proof, so the jar M5.3's ingredient delete leaves in place is in no read,
-// and neither is the jar of a form deleted since. Not the generic
-// `findOneByIdInWorkspace`, which knows the row's own tombstone and no other
-// (claude-docs/db/stock.md, "The stock service").
+// A coven's stock: one `inventory_items` row per form it holds. Read through the form and its ingredient, both live and
+// readable under the proof, so a jar left by an ingredient delete is in no read; the generic `findOneByIdInWorkspace`
+// knows only the row's own tombstone (claude-docs/db/stock.md, "The stock service").
 
 /** The coven's one live jar with this id, of a live form of a live ingredient. */
 export async function findStockById(
@@ -24,7 +21,7 @@ export async function findStockById(
   return row;
 }
 
-/** The coven's live jars with these ids: M9.9's `saveStock` resolves a batch of them in one read. */
+/** The coven's live jars with these ids: `saveStock` resolves a batch of them in one read. */
 export function findStockByIds(
   membership: Membership,
   ids: readonly string[],
@@ -33,7 +30,7 @@ export function findStockByIds(
   return findManyStock(membership, inArray(inventoryItems.id, [...ids]));
 }
 
-/** The coven's live jars of these ingredients, every form of each: M9.4's `Ingredient.stock` batch. */
+/** The coven's live jars of these ingredients, every form of each: the `Ingredient.stock` batch. */
 export function findStockOfIngredients(
   membership: Membership,
   ingredientIds: readonly string[],
@@ -43,10 +40,20 @@ export function findStockOfIngredients(
 }
 
 /**
- * The coven's live jars under `where`, each of a live form of an ingredient
- * the proof may read, or of a retired compendium entry its cupboard still
- * names (`inUseVariantParent`, M12.24), so the coven goes on reading, changing
- * and emptying the jars of an entry it uses.
+ * The coven's live jars of these forms, at most one each: the spell save's
+ * unit check reads every step's jar in one read.
+ */
+export function findStockOfVariants(
+  membership: Membership,
+  variantIds: readonly string[],
+): Promise<StockRow[]> {
+  if (variantIds.length === 0) return Promise.resolve([]);
+  return findManyStock(membership, inArray(inventoryItems.variantId, [...variantIds]));
+}
+
+/**
+ * The coven's live jars under `where`, each of a live form of an ingredient the proof may read, or of a retired compendium
+ * entry its cupboard still names (`inUseVariantParent`), so the coven keeps reading and changing an entry it uses.
  */
 function findManyStock(membership: Membership, where: SQL): Promise<StockRow[]> {
   return selectFrom(
@@ -61,32 +68,26 @@ function findManyStock(membership: Membership, where: SQL): Promise<StockRow[]> 
 }
 
 /**
- * The first number of the two-number advisory lock a coven's stock saves take
- * (the second is a hash of the coven's id). A fixed namespace keeps it from
- * meeting any other advisory lock, now or later. Exported so a test can hold
- * the very lock the writer waits on.
+ * The first number of the two-number advisory lock a coven's stock saves take (the second hashes the coven's id). A fixed
+ * namespace keeps it from meeting any other advisory lock; exported so a test can hold the lock the writer waits on.
  */
 export const COVEN_STOCK_LOCK_NAMESPACE = 0x53544b31;
 
 /**
- * The locked reads a conversion decides on (M12.21, M12.23), in the writer's
- * transaction so they see what the write has just made and hold what it
- * moves. Jars are locked in id order, so two writes moving the same jars
- * queue on the first rather than each holding one the other wants.
+ * The locked reads a conversion decides on, in the writer's transaction so they see what the write just made. Jars lock in id
+ * order, so two writes moving the same jars queue rather than each holding one the other wants.
  */
 export function stockWrites({
   tx,
+  update,
 }: WriterContext): Pick<
   AuditWriter,
-  'lockCovenStock' | 'lockJarsOfIngredient' | 'lockLiveVariants'
+  'lockCovenStock' | 'lockJarsOfIngredient' | 'lockLiveVariants' | 'decrementStock'
 > {
   return {
-    // An advisory lock, not a row lock: a write moving or counting jars and a
-    // create adding one share no row to lock (the jar being added does not
-    // exist yet). It is taken first in every transaction that adds, counts or
-    // moves the coven's jars, so whichever comes second waits and sees the
-    // first, and the order matches the row locks below, which cannot then
-    // deadlock on it. Released at commit.
+    // An advisory lock, not a row lock: a write moving or counting jars and a create adding one share no row to lock. Taken
+    // first in every transaction that adds, counts or moves the coven's jars, so the second waits and sees the first and the
+    // row locks below cannot deadlock on it. Released at commit.
     lockCovenStock: async (membership) => {
       await tx.execute(
         sql`select pg_advisory_xact_lock(${COVEN_STOCK_LOCK_NAMESPACE}, hashtext(${membership.workspaceId}))`,
@@ -108,6 +109,29 @@ export function stockWrites({
         ),
         { lockIn: tx, lockOrder: ingredientVariants.id },
       ),
+    decrementStock: async (membership, inventoryItemId, amount) => {
+      const [jar] = await selectFrom(
+        inventoryItems,
+        and(
+          scopedTo(membership, inventoryItems),
+          notSoftDeleted(inventoryItems),
+          eq(inventoryItems.id, inventoryItemId),
+        ),
+        { lockIn: tx, lockOrder: inventoryItems.id },
+      );
+      if (!jar || jar.quantityOnHand == null) return { taken: 0 };
+      // Thousandths, the column's scale, so the subtraction is exact.
+      const held = Math.round(Number(jar.quantityOnHand) * 1000);
+      const taken = Math.min(Math.max(Math.round(amount * 1000), 0), held);
+      if (taken > 0) {
+        await update(
+          inventoryItems,
+          { quantityOnHand: ((held - taken) / 1000).toFixed(3) },
+          eq(inventoryItems.id, jar.id),
+        );
+      }
+      return { taken: taken / 1000 };
+    },
     lockJarsOfIngredient: (membership, ingredientId) =>
       selectFrom(
         inventoryItems,

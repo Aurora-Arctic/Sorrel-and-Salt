@@ -7,11 +7,11 @@ with a "Edit" tooltip. Make it larger outside the form though." The directory
 also holds what every Edit control shares: the pencil, and the list rows'
 Edit link.
 
-| File            | What it holds                                                                                                                                                                                                                                                                                                                                                                                                     |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `icon-tip.tsx`  | `IconTip`, the default export: a wrapper that gives the one control in it a tip                                                                                                                                                                                                                                                                                                                                   |
-| `edit-link.tsx` | `EditLink`, a list row's Edit: the larger pencil, as a link, wearing the tip (both it and `AnnotateLink` take an optional `className` in place of the default `icon-tip__edit`); `AnnotateLink`; and `QuickLookLink`, an entry's Quick Look eye                                                                                                                                                                   |
-| `icons.tsx`     | `PencilIcon`, the pencil every Edit control draws, the ingredient form's as well, `PlusIcon`, the shared Add's plus, `CheckIcon`, a tick for a compendium card's In Every Cupboard (M9.12), `LinkIcon`, `UndoIcon` and `RedoIcon` (the history buttons' and Restore Original), and `CopyIcon` (Copy From Ingredient), `MysticEyeIcon` (Quick Look), and `StockIcon`, a jar with a cloth tied over it (Edit Stock) |
+| File            | What it holds                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `icon-tip.tsx`  | `IconTip`, the default export: a wrapper that gives the one control in it a tip                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `edit-link.tsx` | `EditLink`, a list row's Edit: the larger pencil, as a link, wearing the tip (both it and `AnnotateLink` take an optional `className` in place of the default `icon-tip__edit`); `AnnotateLink`; and `QuickLookLink`, an entry's Quick Look eye                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `icons.tsx`     | `PencilIcon`, the pencil every Edit control draws, the ingredient form's as well, `PlusIcon`, the shared Add's plus, `CheckIcon`, a tick for a compendium card's In Every Cupboard (M9.12) and a yes in the user tables, `CrossIcon`, a cross for a box's clear, a row's remove and a no in the user tables, `ChevronIcon`, the chevron every box, menu button and Show More draws (its user gives it a class, `chevron-icon` by default, and `textSized` sizes it at 1em where no stylesheet does), `LinkIcon`, `UndoIcon` and `RedoIcon` (the history buttons' and Restore Original), and `CopyIcon` (Copy From Ingredient), `MysticEyeIcon` (Quick Look), `CloseIcon` (an X; the Preview pane's Close), `StockIcon`, a jar with a cloth tied over it (Edit Stock), `CauldronIcon`, a cauldron with two leaves, drawn at stroke 1.25 (Record a Working), and `CompleteIcon`, the jar shelf's round flask (read from `SHAPES.flask`) with a tick on its bulb (Complete on a draft working), and `PrintIcon`, a printer (the recipe page's lone Print, for a role whose menu would hold nothing else) |
 
 ## The props contract
 
@@ -48,7 +48,7 @@ follows `href` as before.
 - **The admin lists' Edit**: `GroupList`, `GroupedValueList` (every value
   page: categories, forms, deities, celestial bodies, zodiac signs) and
   `CompendiumList`, each through `EditLink`.
-- **The buttons beside them** (`icon-button.tsx`, the owner's calls, 2026-10-20), shared by the coven cards' foot, the entry page's icons and the Quick Look window, so the places cannot differ: `BinButton` (the bin, tipped with its verb, "Delete Ingredient" or "Remove"), `AnnotateButton` (Annotate as a button, where a press asks which coven first), `QuickLookButton` (the Quick Look eye as a button, in `.icon-tip__look`, for the coven's Add Ingredient form, whose held duplicates open their details over the form in the page; [`ingredient-form.md`](ingredient-form.md), "Quick Look in the warning", M12.48) and `MoreMenu` (the three dots, a [`MenuButton`](menu-button.md) taking items or sections, named "More for <entry>"). `CompendiumEditLink` is the pencil for the compendium's own edit on the entry page, named and tipped "Edit in Compendium". Each is named "<verb> <entry>" in hidden text, with the verb as the tip, and takes the entry's name as the card names it (`cardName`, "Name, Formal").
+- **The buttons beside them** (`icon-button.tsx`, the owner's calls, 2026-10-20), shared by the coven cards' foot, the entry page's icons and the Quick Look window, so the places cannot differ: `RecordButton` (the cauldron, tipped "Record a Working" and named "Record a Working of" and the spell, as Preview and More carry the spell's name), `BinButton` (the bin, tipped with its verb, "Delete Ingredient" or "Remove"), `AnnotateButton` (Annotate as a button, where a press asks which coven first), `QuickLookButton` (the Quick Look eye as a button, in `.icon-tip__look`; `size="small"` adds `.icon-tip__look--small`, the mark at `$glyph-size` in a `$icon-size` (24px) box, for the spell builder's step rows and inventory lines, 2026-10-29; for the coven's Add Ingredient form, whose held duplicates open their details over the form in the page; [`ingredient-form.md`](ingredient-form.md), "Quick Look in the warning", M12.48) `PreviewButton` (the corner-brackets icon on a spell's recipe page, named "Preview Spell <title>"; owner, 2026-10-30). `PreviewButton` wears `icon-tip__edit--plain`, the text colour, as the page's pencil does; `RecordButton` keeps the accent green. Print is an item of the page's `MoreMenu`, not a button. and `MoreMenu` (the three dots, a [`MenuButton`](menu-button.md) taking items or sections, named "More for <entry>"). `CompendiumEditLink` is the pencil for the compendium's own edit on the entry page, named and tipped "Edit in Compendium". Each is named "<verb> <entry>" in hidden text, with the verb as the tip, and takes the entry's name as the card names it (`cardName`, "Name, Formal").
 - **Edit Stock on a coven's card and its Quick Look window** (M9.9), through [`StockDialog`](stock-dialog.md): `StockIcon`, a jar with a cloth tied over its mouth and a wavy hem, not the pencil, which Edit beside it already wears (the owner's pick, 2026-10-20), in `.icon-tip__edit` (the accent green; Edit and Annotate beside it wear `icon-tip__edit--plain`, the text colour, passed to `EditLink` and `AnnotateLink` as `className` by the coven card's foot only), first in the foot, tipped "Edit Stock" through `ModalButton`'s `tip` so the tip wraps the button and never the dialog it opens, named "Edit Stock, <ingredient>". Staged removal in the dialog uses `BinButton` (verb "Remove", named by the form).
 - **Annotate on a coven's list** (`CovenCards`), through `AnnotateLink`:
   `AnnotateIcon`, an open book with a filled pencil,
@@ -190,7 +190,11 @@ Tokens and three mixins in `_mixins.scss`, so every Edit matches:
   text and a transparent ground, the mark at `$glyph`, in the muted ink and
   `$text-primary` when pointed at or focused. `$icon-size` around
   `$glyph-size` (1.5rem around 1rem, WCAG 2.2's 24px target) by default; a
-  round `$radius` and a help `$cursor` make InfoTip's ⓘ and the crown.
+  round `$radius` and a help `$cursor` make InfoTip's ⓘ and the crown. A
+  button takes the shared focus ring (`focus-ring`; MB.121, where the keyboard
+  pass found the browser's default ring on them); an icon link keeps the
+  accent ring the typography gives every link, so the rule names a button
+  alone, through `:where(button)` to keep its weight a class's.
 - **`icon-button-remove`**: the × and the bin's answer, the wax and a tint
   of it 20% into the card, as the combobox's chip-remove and the form's
   remove icons wear.
@@ -199,7 +203,7 @@ Tokens and three mixins in `_mixins.scss`, so every Edit matches:
 - **Sizes**: the ingredient form keeps the 24px box and 1rem icon beside
   its fields' text; a list row's `EditLink` (`.icon-tip__edit`) takes
   `$icon-size-large` around `$glyph-size-large`, 2rem around 1.25rem,
-  and so does a list card's lone bin (`.icon-tip__remove`), in the remove
+  and so does a lone bin (`.icon-tip__remove`), in the remove
   answer's colours. The Quick Look eye keeps that box but draws its glyph at 4/3 of the
   pencil's.
 - **Contrast**: the accent on the page, on the card (banded rows, stacked
@@ -215,11 +219,10 @@ Tokens and three mixins in `_mixins.scss`, so every Edit matches:
 ## Stories
 
 [`index.stories.tsx`](../../src/components/IconTip/index.stories.tsx),
-`Layout / Icon Tip`, filed by kind rather than place, as the pencil is used in
-the admin lists and the ingredient form alike: `InAListRow`, three banded rows
+`Forms / Icon Tip`, filed by kind rather than place, as the pencil is used in
+the admin lists and the ingredient form alike. `States` is a grid of every glyph the icons file draws (Annotate, Bin, Cauldron, Check, Chevron, Close, Complete, Copy, Cross, Dots, Link, Mystic Eye, Pencil, Plus, Preview, Print, Redo, Stock and Undo), then the tip on each control (Edit Link, Compendium Edit Link, Annotate Link, Quick Look Link, Bin Button, Annotate Button, Quick Look Button, More Menu). `InAListRow` is three banded rows
 of a list's own table, with the pencil in an unlabelled last column at the
-row's end, so it shows on the page and on the card, and the `PhoneDark` /
-`PhoneLight` pair, the rows as cards with the pencil at each card's top
+row's end, so it shows on the page and on the card. At 375px, from the toolbar viewport menu, the rows are cards with the pencil at each card's top
 right. Hover or focus a pencil to see its tip. The form's pencils are in the
 ingredient form's stories, and every list's in its own.
 
@@ -233,3 +236,48 @@ and the modal second, the tip kept out of the accessibility tree, and
 `EditLink`'s role and name. Each list's test finds its Edit links by their
 names, and the ingredient form's tests its buttons, so a renamed control
 fails there.
+
+## Placement
+
+`placement` is `side` (the default, left of the control), `below` (its right edge on the control's) or `above` (centred over it).
+
+- `side` suits every Edit, which stands at the end of its line, so to its left is room the line already has.
+- `above` suits a segment of the radio strip, where a tip to the side would cover the next segment and one below would cover the chosen name printed under the bar.
+- `below` suits a mark at a row's right end with rows beneath it, such as the account menu's count, where a tip to the left would cover the row's words and one centred under it would run past the edge a menu panel clips at.
+
+In a table row the tip is centred above the control, because level with it the tip covered the row's own text. A phone card keeps the left. The placement is a flat property on the wrapper rather than JavaScript's guess, since only the container query knows which the table is showing.
+
+## Tip behaviour
+
+The tip's text is drawn for a sighted user and never read aloud, since the control's own name says it. `opensOnPress` opens the tip on a press, for a status mark whose button does nothing else. It opens rather than toggles, and is not for a control with its own press.
+
+The tip wrapper is also the tip's anchor, kept to ask whether a menu is open under it. Hover is read on the wrapper rather than the control, so any control can be the child without its props being taken over, and focus bubbles there too. A focus inside the control's own menu also bubbles there and is ignored, since the open menu says what the control does. A closing tip is no longer open but still in the page for the fade, and a timer clears it.
+
+The tip is `fixed`, so a table frame's sideways scroll clips nothing. It fades in from its starting style over `$icon-tip-fade` rather than every other tip's `$tip-fade`. It takes no pointer: the tip is heard on its control alone and closes the moment the pointer leaves, so a bubble that caught the pointer would only cover what is beneath it. The wrapper is middle-aligned, so a mark taller than its row's text sits level with it rather than on its baseline.
+
+## The controls built on it
+
+- `EditLink` is a list row's icon link into a dialog. A press opens the row's modal at once under the given heading, over a skeleton while the form loads, and the link still works as an address. It is named by its verb and the row's name in hidden text.
+- Edit in Compendium, on a compendium entry for an admin or a curator, is named and tipped "Edit in Compendium" so it cannot be taken for a coven's own choice.
+- Annotate in a coven's list wears `AnnotateIcon`, an open book with a pencil, not Edit's pencil, since it writes the coven's notes over a compendium entry. Its stroke is 1.25 rather than the set's 1.5 so the lines sit apart at 16px, and the pencil is filled.
+- `QuickLookLink` is the eye beside an entry's name, in its own class as it sits in the name's line. `QuickLookButton` serves where the details open in the page rather than at an address, such as over the Add Ingredient form's held duplicates.
+- `MoreButton` is the three dots: a menu of further choices, as flat items (a spell's) or in labelled sections (an entry's Compendium and Coven). A Delete or Remove of something that has an edit dialog is in that dialog and is not drawn beside More; only a thing with no edit dialog draws a lone bin, which asks first ([`.claude/rules/components.md`](../../.claude/rules/components.md), "Destructive controls"). A More drawn with words keeps its chevron.
+- The icon controls that are buttons rather than links are shared by the coven cards' foot, the entry page and the Quick Look window so the places cannot differ.
+
+## The icons
+
+Every line icon on a 16-unit box is drawn at stroke 1.5 unless its drawing needs another, and then the icon's comment says why. The exceptions are the eye's outline at 1, the jar at 1.2, and Annotate and the cauldron at 1.25. The stock badge's marks, the spell builder's supply marks, the source form's page and pencil, and the InfoTip ring are 1.5 like the rest. The icons on a 24-unit box (the section nav's and the form icons, at 1.6) and the shelf mark on a 32-unit box (1.2) keep their own strokes.
+
+The mystic eye (Quick Look) is an almond eye whose iris is a tilted waxing crescent with a four-point star. The copy icon is two overlapping sheets, for Restore Original and Copy From Ingredient. The undo and redo icons are mirror images on the same 16-unit box, sized by attribute since a bare `svg` in a `.btn` has no size of its own. The jar icon is a jar with a cloth tied over its mouth, the cloth's hem wavy, worn by Edit Stock in place of the pencil. Its stroke is 1.2 as the jar is drawn larger.
+
+## Ink and size
+
+The Edit pencil beside Complete on a draft working's row (`EditButton`'s `plain`) uses the same `$text-primary`, while Complete keeps the green.
+
+A coven card foot's Edit and Annotate icons use `$text-primary` (chalk on the dark page, the body text on the light one, where pure white would vanish on a card) in place of the accent green, which its Edit Stock pencil keeps. The hover and focus tint stays the edit pencil's.
+
+The three dots use `$card-more-ink` wherever they stand (a card's foot, the entry page, the Quick Look window), at rest and pressed alike, where the pencil and bin beside them keep their green and wax. The compendium card's Edit in Compendium wears the same ink (`icon-tip__edit--ink`). Its hover and focus tint stays the edit pencil's green and the focus ring is the link's own.
+
+The Quick Look eye is `$glyph-size-large` * 4 / 3 in the same 2rem box as the pencil, so the foot's height and the eye's line with the pencil stay put. `math.div` is used since Sass has dropped `/` for division. In the card foot it takes the dots' ink, set after the green so it wins.
+
+The action icons of a card's foot, an entry page's head and the Quick Look window's head are 13% larger than the large size (`$action-icon-size`): the pencils (Edit, Annotate, Edit Stock), the plus and its held check, the bin, the three dots and the eye. The eye's mark is 11% past the pencil's there, and the jar of Edit Stock is 11% past the others, each in the same box. The same classes in a list row, a table or a form stay at `$icon-size-large`. Each place that works a gap out from the box (the stock lines' badge inset, the entry's title room, the window's controls row) reads `$action-icon-size` too.

@@ -1,18 +1,15 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { eq } from 'drizzle-orm';
 import postgres from 'postgres';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import { A, E, asUser } from '../../../support/as-user';
-import { findOpenAdminRoleChangePause, withAudit, type AuditWriter } from '@/db/repository';
+import { findOpenAdminRoleChangePause, withAudit } from '@/db/repository';
 import { assertSiteAdmin } from '@/modules/identity';
 import { adminRoleChangePauses } from '@/modules/identity/schema/admin-role-change-pauses';
 import type { NamedWrites } from '@/db/types';
 import type { PauseRow } from './types';
 
-// MB.62: M2.9's pause switch, table half. One row per pause rather than one
-// row of settings, so no migration has to seed a row it has no user to stamp
-// with, and every pause keeps who began it and who ended it
+// The pause switch, table half. One row per pause rather than one row of settings, so no migration seeds a row it has no user to stamp with, and every pause keeps who began it and who ended it
 // (claude-docs/design-decisions/mb.62-pause-ledger.md).
 
 const ENDED_TOGETHER = 'admin_role_change_pauses_ended_together';
@@ -98,11 +95,8 @@ describe('admin_role_change_pauses table', () => {
   });
 });
 
-// The repository's surface is three named calls under the `SiteAdmin` proof:
-// the open pause, opening one, and ending it. The table is marked
-// `namedWrites` (MB.198), so every generic write is refused it at compile
-// time: a pause cannot be backdated, reopened or deleted, and its ended pair
-// is stamped from the session rather than passed.
+// The repository's surface is three named calls under the `SiteAdmin` proof: the open pause, opening one, and ending it.
+// The table is marked `namedWrites`, so every generic write is refused at compile time: a pause cannot be backdated, reopened or deleted, and its ended pair is stamped from the session.
 describe('the repository', () => {
   const admin = assertSiteAdmin(asUser(E));
 
@@ -136,37 +130,8 @@ describe('the repository', () => {
     expect(await findOpenAdminRoleChangePause(admin)).toBeUndefined();
   });
 
-  // No body runs: each `@ts-expect-error` fails `npm run typecheck` the
-  // moment its constraint is loosened, which a runtime assertion cannot see.
-  it('carries the namedWrites mark, and so is refused every generic write at compile time', () => {
-    // The mark itself, as a type: a table that lost it fails this assignment.
-    const marked: NamedWrites = adminRoleChangePauses;
-    const id = ADMIN;
-    const where = eq(adminRoleChangePauses.createdBy, id);
-
-    const writes = [
-      (write: AuditWriter) =>
-        // @ts-expect-error — the mark: no generic insert, so a pause cannot open already ended.
-        write.insert(adminRoleChangePauses, { endedAt: new Date(), endedBy: id }),
-      (write: AuditWriter) =>
-        // @ts-expect-error — the mark: no generic update, so the ended pair is the resume's to stamp.
-        write.update(adminRoleChangePauses, { endedAt: null }, where),
-      (write: AuditWriter) =>
-        // @ts-expect-error — nor by id.
-        write.updateById(adminRoleChangePauses, id, { endedBy: id }),
-      (write: AuditWriter) =>
-        // @ts-expect-error — the mark: no soft delete, though the table carries deleted_at.
-        write.softDelete(adminRoleChangePauses, where),
-      (write: AuditWriter) =>
-        // @ts-expect-error — nor by id.
-        write.softDeleteByIds(adminRoleChangePauses, [id]),
-      (write: AuditWriter) =>
-        // @ts-expect-error — the mark: no hard delete, which deleted_at alone refuses too.
-        write.delete(adminRoleChangePauses, where),
-    ];
-
-    // And nothing at runtime: the cast adds no property for drizzle-kit to see.
-    expect(marked.$writes).toBeUndefined();
-    expect(writes).toHaveLength(6);
+  // The compile-time half of the mark is admin-role-change-pauses-schema.type-check.ts.
+  it('adds no property to the table for drizzle-kit to see', () => {
+    expect((adminRoleChangePauses as NamedWrites).$writes).toBeUndefined();
   });
 });

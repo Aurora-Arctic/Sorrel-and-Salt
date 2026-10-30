@@ -22,11 +22,7 @@ export interface CuratedRow {
 /** A loader a write leaves stale, by its name on the request context. */
 export type LoaderName = keyof Loaders;
 
-/**
- * A curated input as its services take it: the name and description every
- * vocabulary's carries, the parent's id under `Key` where the rows are filed
- * under one, and the vocabulary's own fields, nulls made absent.
- */
+/** A curated input as its services take it: the name and description, the parent's id under `Key` where rows are filed under one, and the vocabulary's own fields, nulls made absent. */
 export type CuratedInput<Extra extends InputFieldMap, Key extends string> = {
   name: string;
   description: string;
@@ -64,11 +60,7 @@ export interface CuratedVocabulary<
     update: (session: Session, id: string, input: CuratedInput<Extra, Key>) => Promise<Row>;
     delete: (session: Session, id: string, moveTo?: string) => Promise<void>;
   };
-  /**
-   * Present when a delete moves the rows filed under this one to `moveTo`
-   * first: the loaders that move leaves stale, cleared after the delete
-   * beside `clears`.
-   */
+  /** Present when a delete moves the rows filed under this one to `moveTo` first: the loaders that move leaves stale, cleared after the delete beside `clears`. */
   moveTo?: readonly LoaderName[];
   /** The loaders an update or a delete leaves stale, cleared after either. */
   clears: readonly LoaderName[];

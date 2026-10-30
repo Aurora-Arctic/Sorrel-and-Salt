@@ -9,7 +9,7 @@ const MATCHES_SHOWN = 3;
 
 /**
  * The compendium entries an own entry of a coven is, or may be, for the entry
- * page to link (M12.22): the first few by name, and how many there are in all.
+ * page to link: the first few by name, and how many there are in all.
  *
  * - An own entry with a formal name is matched on that name: `same` entries are
  *   those sharing its identity, and a compendium entry that merely shares the

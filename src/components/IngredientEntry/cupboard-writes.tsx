@@ -13,18 +13,11 @@ import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
 import CovenChoice from './coven-choice';
 import type { CupboardQuestionProps, CupboardWritesOptions, CupboardWrites } from './types';
 
-// Make It Ours (M12.23) and Remove (M12.17), the two writes a coven's member
-// makes to a compendium entry it holds, shared by the entry page's More and bin
-// and the Annotate dialog's More menu (M8.17), so the two ask the same
-// confirmation and land in the same place. The entry page asks in a dialog; the
-// Annotate dialog asks in its form's own confirmation card, as its Delete and Link
-// do, rather than a dialog inside a dialog (the owner's call, 2026-10-20).
+// Make It Ours and Remove, the two writes a coven's member makes to a compendium entry it holds,
+// shared by the entry page and the Annotate dialog so the two ask the same confirmation and land in
+// the same place (claude-docs/components/ingredient-entry.md, "What the cupboard actions draw").
 
-/**
- * The Annotate dialog's menu of further cupboard writes. "More", the owner's
- * call of 2026-10-19: the dialog's foot already says Save and Cancel, and the
- * entry page's "Edit" would name the dialog itself.
- */
+/** The Annotate dialog's menu of further cupboard writes, named "More" because its foot already says Save and Cancel (claude-docs/components/ingredient-entry.md, "What the cupboard actions draw"). */
 export const CUPBOARD_MENU_LABEL = 'More';
 
 const RemoveCupboardEntryDocument = graphql(`
@@ -57,7 +50,7 @@ export const MAKE_IT_OURS_DETAILS =
   "You get a copy with your annotations. Your jars and spells move to the copy. Updates in the Compendium won't affect it.";
 
 /** Remove's confirmation, which says what goes with the entry. */
-export function RemoveQuestion({ name }: { name: string }): ReactElement {
+export function RemoveFromCupboardQuestion({ name }: { name: string }): ReactElement {
   return (
     <>
       Remove <strong>{name}</strong> from your cupboard? Your annotations get deleted too.
@@ -65,12 +58,7 @@ export function RemoveQuestion({ name }: { name: string }): ReactElement {
   );
 }
 
-/**
- * Make It Ours asked in a dialog, as Leave Coven asks (the owner's call,
- * 2026-10-19), on the entry page. With `covens`, the dialog first asks which
- * coven, in the dropdown Add's picker uses, above the question (M9.12), inside
- * the `.form` stack that spaces the picker's field.
- */
+/** Make It Ours asked in a dialog, as Leave Coven asks; with `covens` it first asks which coven, inside the `.form` stack that spaces the picker's field. */
 export function MakeItOursDialog({
   name,
   write,
@@ -126,7 +114,7 @@ export function RemoveDialog({
         <div className={covens ? 'form' : undefined}>
           {covens && <CovenChoice {...covens} />}
           <p>
-            <RemoveQuestion name={name} />
+            <RemoveFromCupboardQuestion name={name} />
           </p>
           <div className="modal__actions">
             <BusyButton
@@ -153,18 +141,7 @@ export function RemoveDialog({
   );
 }
 
-/**
- * The two writes, with what follows each: a remove leads to `removedHref`,
- * replacing the history entry so Back does not return to what is gone; where
- * there is none it reads the page again. Either way it stays busy, as
- * ConfirmedAction does, and its confirmation closes with what the remove
- * changed (the page it leaves, or the re-read that says the coven no longer
- * holds the entry), so the focus goes to the heading of the page then showing
- * in that one step. Closed before, it would give the focus to Edit, which the
- * change then takes away with it. Make It Ours
- * leads to the own entry it wrote. A refusal, which names its remedy, closes
- * the confirmation and goes to `onRefused` as the service wrote it.
- */
+/** The two writes with what follows each: a remove leads to `removedHref` or reads the page again, a refusal goes to `onRefused` (claude-docs/components/ingredient-entry.md, "What the cupboard actions draw"). */
 export function useCupboardWrites({
   workspaceId,
   covenSlug,

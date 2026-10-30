@@ -2,16 +2,20 @@
 
 import type { ReactElement, Ref } from 'react';
 import MenuButton from '../MenuButton';
-import type { MenuButtonChoices } from '../MenuButton/types';
+import type { MenuButtonChoices, MenuButtonProps } from '../MenuButton/types';
 import IconTip from './icon-tip';
-import { AnnotateIcon, BinIcon, DotsIcon, MysticEyeIcon } from './icons';
+import {
+  AnnotateIcon,
+  BinIcon,
+  CauldronIcon,
+  DotsIcon,
+  MysticEyeIcon,
+  PencilIcon,
+  PreviewIcon,
+} from './icons';
 
-// The icon controls that are a button rather than a link, shared by the coven cards' foot and
-// the entry page and Quick Look window's row (the owner's call, 2026-10-20: an entry's actions
-// follow the cards' conventions), so the places cannot differ: the bin, the annotate icon that
-// asks which coven first, and the three dots that open a menu. Each is named by its verb and the
-// entry in hidden text, with the verb as its tip, as the dialog links beside them are.
-// claude-docs/components/icon-tip.md.
+// The icon controls that are a button rather than a link, shared by the coven cards' foot, the entry page and the Quick Look window so the places cannot differ
+// (claude-docs/components/icon-tip.md).
 
 /** The bin: a Delete or a Remove, in the wax a remove control wears, as a lone choice of the More. */
 export const BinButton = ({
@@ -37,6 +41,32 @@ export const BinButton = ({
   </IconTip>
 );
 
+/** The pencil as a button, where Edit opens a dialog in the page rather than going to an address. */
+export const EditButton = ({
+  name,
+  onClick,
+  plain = false,
+  ref,
+}: {
+  name: string;
+  /** The text ink in place of the accent green. */
+  plain?: boolean;
+  onClick: () => void;
+  ref?: Ref<HTMLButtonElement>;
+}): ReactElement => (
+  <IconTip tip="Edit">
+    <button
+      ref={ref}
+      type="button"
+      className={plain ? 'icon-tip__edit icon-tip__edit--plain' : 'icon-tip__edit'}
+      onClick={onClick}
+    >
+      <PencilIcon />
+      <span className="visually-hidden">Edit {name}</span>
+    </button>
+  </IconTip>
+);
+
 /** Annotate as a button, where a press asks which coven first; the one coven's is `AnnotateLink`. */
 export const AnnotateButton = ({
   name,
@@ -55,12 +85,34 @@ export const AnnotateButton = ({
   </IconTip>
 );
 
-/**
- * Quick Look as a button, where the details open in the page rather than at an address: the
- * Add Ingredient form's held duplicates (M12.48), whose details open over the form so nothing
- * typed is lost. Everywhere else the eye is `QuickLookLink`.
- */
+/** Quick Look as a button, where the details open in the page rather than at an address, such as over the Add Ingredient form's held duplicates; elsewhere the eye is `QuickLookLink`. */
 export const QuickLookButton = ({
+  name,
+  onClick,
+  size,
+  ref,
+}: {
+  name: string;
+  onClick: () => void;
+  /** `small`: the eye at 1rem in a 24px box, for a row already full (a spell's steps). */
+  size?: 'small';
+  ref?: Ref<HTMLButtonElement>;
+}): ReactElement => (
+  <IconTip tip="Quick Look">
+    <button
+      ref={ref}
+      type="button"
+      className={size === 'small' ? 'icon-tip__look icon-tip__look--small' : 'icon-tip__look'}
+      onClick={onClick}
+    >
+      <MysticEyeIcon />
+      <span className="visually-hidden">Quick Look {name}</span>
+    </button>
+  </IconTip>
+);
+
+/** Preview as a button: a spell's pane for following it as it is worked, in the text colour, named "Preview Spell" and the spell. */
+export const PreviewButton = ({
   name,
   onClick,
   ref,
@@ -69,29 +121,47 @@ export const QuickLookButton = ({
   onClick: () => void;
   ref?: Ref<HTMLButtonElement>;
 }): ReactElement => (
-  <IconTip tip="Quick Look">
-    <button ref={ref} type="button" className="icon-tip__look" onClick={onClick}>
-      <MysticEyeIcon />
-      <span className="visually-hidden">Quick Look {name}</span>
+  <IconTip tip="Preview">
+    <button
+      ref={ref}
+      type="button"
+      className="icon-tip__edit icon-tip__edit--plain"
+      onClick={onClick}
+    >
+      <PreviewIcon />
+      <span className="visually-hidden">Preview Spell {name}</span>
     </button>
   </IconTip>
 );
 
-/**
- * The three dots: a menu of the entry's further choices, in the ink of the page rather than the
- * green of Edit, as the card has it. Only where there are more choices than the icons beside it
- * already offer, always drawn in labelled Compendium and Coven sections through `choicesFor`, even
- * where it holds only one kind (the owner's call, 2026-10-20). A lone Delete or Remove is not a
- * menu of one: the caller draws it as the bin instead and does not render this.
- */
+/** Record a Working as a button: a spell's cauldron, tipped "Record a Working" and named "Record a Working of" and the spell, opening the dialog that records one, in the accent green. */
+export const RecordButton = ({
+  name,
+  onClick,
+  ref,
+}: {
+  name: string;
+  onClick: () => void;
+  ref?: Ref<HTMLButtonElement>;
+}): ReactElement => (
+  <IconTip tip="Record a Working">
+    <button ref={ref} type="button" className="icon-tip__edit" onClick={onClick}>
+      <CauldronIcon />
+      <span className="visually-hidden">Record a Working of {name}</span>
+    </button>
+  </IconTip>
+);
+
+/** The three dots: a menu of further choices, in the page's ink, as flat items or in labelled sections (an entry's Compendium and Coven); a lone Delete or Remove is the bin instead. */
 export const MoreMenu = ({
   name,
   ref,
   ...choices
-}: MenuButtonChoices & {
-  name: string;
-  ref?: Ref<HTMLButtonElement>;
-}): ReactElement => (
+}: MenuButtonChoices &
+  Pick<MenuButtonProps, 'busy' | 'busyLabel'> & {
+    name: string;
+    ref?: Ref<HTMLButtonElement>;
+  }): ReactElement => (
   <IconTip tip="More">
     <MenuButton
       ref={ref}

@@ -1,18 +1,21 @@
-import { beginSeedTransaction } from './idempotent';
-import { deitySlug } from '../../lib/slugify';
+import { eq } from 'drizzle-orm';
+import { beginSeedTransaction, insertStamped } from './idempotent';
+import { deitySlug, slugify } from '../../lib/slugify';
 import { seedTwoTierVocabulary } from './two-tier-vocabulary';
 import { TWO_TIER } from '../vocabularies';
-import type { SeedDatabase, SeedDeity, SeedDeityTradition, SeedTransaction } from './types';
+import { deities } from '../../modules/vocabulary/schema/deities';
+import { deityOtherNames } from '../../modules/vocabulary/schema/deity-other-names';
+import type {
+  SeedDatabase,
+  SeedRunOptions,
+  SeedDeity,
+  SeedDeityTradition,
+  SeedTransaction,
+} from './types';
 
-// MB.127's deity vocabulary: thirty-five traditions and the deities filed
-// under them, a starting set an admin may edit. Reference data, not a
-// scenario — migrate.yml seeds it alone, so it inserts the bootstrap user
-// itself. Transcribed from the seed doc's two tables, which review holds in
-// step with it since MB.225 retired the test that compared them; the doc,
-// not this file, is where a row is argued and sourced. Names are copied as
-// written, never title-cased (`Manannan mac Lir`), and no slug is written
-// down — a deity's is its name and its tradition's (MB.132), derived here and
-// re-derived on every seed (claude-docs/db/deity-vocabulary-seed.md, "The deity vocabulary seed").
+// The deity vocabulary: 88 traditions and the deities under them, a starting set an admin may edit. Reference data, so it inserts
+// the bootstrap user itself. Transcribed by hand from the seed doc, where a row is argued; names are copied as written, and a slug is derived
+// here and re-derived on every seed (claude-docs/db/deity-vocabulary-seed.md, "The deity vocabulary seed").
 
 /** The doc's traditions, in its order, which nothing reads — traditions list alphabetically. */
 export const DEITY_TRADITIONS: SeedDeityTradition[] = [
@@ -174,6 +177,260 @@ export const DEITY_TRADITIONS: SeedDeityTradition[] = [
     description:
       'Figures of Italian folk witchcraft as Charles Leland recorded it, honoured in Stregheria and modern practice.',
   },
+  {
+    name: 'Arara',
+    description:
+      'The Arara religion of Cuba, which grew in the late nineteenth century among descendants of people from the Dahomey kingdom of West Africa.',
+  },
+  {
+    name: 'Winti',
+    description:
+      'The Afro-Surinamese religion of Suriname, joining African beliefs brought mainly by enslaved Akan, Fon and Kongo people.',
+  },
+  {
+    name: 'Bwiti',
+    description:
+      'The spiritual discipline of the Punu, Mitsogo and Fang peoples of Gabon, joining animism, ancestor worship and, in some forms, Christianity.',
+  },
+  {
+    name: 'Buddhist',
+    description:
+      'Buddhism, the Indian religion and philosophy based on teachings attributed to the Buddha, who lived in the 6th or 5th century BCE.',
+  },
+  {
+    name: 'Jain',
+    description:
+      'Jainism, the Indian religion that teaches spiritual purity through disciplined nonviolence to all living creatures, guided by 24 tirthankaras.',
+  },
+  {
+    name: 'Theravada Buddhist',
+    description:
+      'Theravada, the oldest existing school of Buddhism, which keeps the Buddha’s teaching in the Pali Canon.',
+  },
+  {
+    name: 'Shugendo',
+    description:
+      'An Esoteric Buddhist religion of ascetic practice that began in Nara-period Japan.',
+  },
+  {
+    name: 'Tripuri',
+    description:
+      'The Tibeto-Burman-speaking people of the Indian state of Tripura and of Bangladesh, descended from the inhabitants of the Tripura kingdom.',
+  },
+  {
+    name: 'Aboriginal Australian',
+    description:
+      'The Indigenous peoples of the Australian mainland and many of its islands, formed over time into as many as 500 linguistic and territorial groups.',
+  },
+  {
+    name: 'Maori',
+    description:
+      'The Indigenous Polynesian people of mainland New Zealand, descended from East Polynesian settlers.',
+  },
+  {
+    name: 'Polynesian',
+    description:
+      'The closely related peoples native to Polynesia, the islands within the Polynesian Triangle in the Pacific Ocean.',
+  },
+  {
+    name: 'Melanesian',
+    description:
+      'The Indigenous inhabitants of Melanesia, in an area stretching from New Guinea to the Fiji Islands.',
+  },
+  {
+    name: 'Malay',
+    description:
+      'The Austronesian people native to the Malay Peninsula, eastern Sumatra and coastal Borneo.',
+  },
+  {
+    name: 'Javanese',
+    description:
+      'The Austronesian people native to the central and eastern parts of the island of Java, in Indonesia.',
+  },
+  {
+    name: 'Sundanese',
+    description:
+      'The Austronesian people native to the western part of the island of Java, in Indonesia.',
+  },
+  {
+    name: 'Tongan',
+    description: 'The Polynesian people native to Tonga, an archipelago in the Pacific Ocean.',
+  },
+  {
+    name: 'Samoan',
+    description:
+      'The Indigenous Polynesian people of the Samoan Islands, an archipelago in Polynesia.',
+  },
+  {
+    name: 'Fijian',
+    description:
+      'The Austronesian people native to Fiji, the major Indigenous people of the Fiji Islands of Melanesia.',
+  },
+  {
+    name: 'Mazatec',
+    description:
+      'The Indigenous people of Mexico who live in the Sierra Mazateca in Oaxaca and in nearby parts of Puebla and Veracruz.',
+  },
+  {
+    name: 'Chumash',
+    description:
+      'The Native American people of the central and southern coastal regions of California.',
+  },
+  {
+    name: 'Moche',
+    description: 'The civilisation that flourished in northern Peru from about 100 to 800 AD.',
+  },
+  {
+    name: 'Nazca',
+    description:
+      'The culture that flourished from about 100 BC to 800 AD beside the arid southern coast of Peru.',
+  },
+  {
+    name: 'Chavin',
+    description:
+      'The pre-Columbian civilisation of the northern Andean highlands of Peru, from about 900 to 250 BCE.',
+  },
+  {
+    name: 'Olmec',
+    description:
+      'The early Mesoamerican civilisation of the Mexican states of Veracruz and Tabasco, from roughly 1200 to 400 BC.',
+  },
+  {
+    name: 'Tongva',
+    description:
+      'The Indigenous people of California from the Los Angeles Basin and the Southern Channel Islands.',
+  },
+  {
+    name: 'Taino',
+    description:
+      'The Indigenous peoples of most of the West Indies, in the Caribbean, whose culture descendants and revivalist communities continue.',
+  },
+  {
+    name: 'Quechua',
+    description:
+      'The Indigenous peoples of South America who speak the Quechuan languages, which originated among the Indigenous people of Peru.',
+  },
+  {
+    name: 'Ojibwe',
+    description:
+      'The Anishinaabe people whose homeland covers much of the Great Lakes region and the northern plains.',
+  },
+  {
+    name: 'Potawatomi',
+    description:
+      'The Indigenous North American tribe of the Great Plains, the upper Mississippi River and the western Great Lakes region, who speak an Algonquian language.',
+  },
+  {
+    name: 'Menominee',
+    description: 'The Native American tribe of Wisconsin and the Upper Peninsula of Michigan.',
+  },
+  {
+    name: 'Dakota',
+    description:
+      'The Native American tribe and First Nations band government that forms two of the three main subcultures of the Sioux.',
+  },
+  {
+    name: 'Lakota',
+    description:
+      'The Native American people also known as the Teton Sioux, with lands in North and South Dakota.',
+  },
+  {
+    name: 'Blackfeet',
+    description:
+      'The linguistically related groups of the Blackfoot Confederacy, the Blackfoot or Blackfeet people.',
+  },
+  {
+    name: 'Zuni',
+    description: 'The Native American Pueblo people of the Zuni River valley, in New Mexico.',
+  },
+  { name: 'Hopi', description: 'The Native Americans who live mainly in northeastern Arizona.' },
+  {
+    name: 'Cherokee',
+    description:
+      'One of the Indigenous peoples of the Southeastern Woodlands of the United States.',
+  },
+  {
+    name: 'Muscogee',
+    description:
+      'The group of related Indigenous peoples of the Southeastern Woodlands of the United States, also known as Creek.',
+  },
+  {
+    name: 'Tlingit',
+    description:
+      'The Indigenous people of the Pacific Northwest Coast of North America, who speak a Na-Dene language.',
+  },
+  {
+    name: 'Tsimshian',
+    description:
+      'The Indigenous people of the Pacific Northwest Coast of North America, mostly in coastal British Columbia.',
+  },
+  {
+    name: 'Haida',
+    description:
+      'The Indigenous people of the Pacific Northwest Coast of North America, whose traditional territory includes Haida Gwaii.',
+  },
+  {
+    name: 'Inuit',
+    description:
+      'The culturally and historically similar Indigenous peoples of the Arctic and Subarctic regions of North America and Russia.',
+  },
+  {
+    name: 'Khoikhoi',
+    description: 'The traditionally nomadic pastoralist Indigenous population of Southern Africa.',
+  },
+  {
+    name: 'Malagasy',
+    description:
+      'The Austronesian-speaking people and nation Indigenous to the island country of Madagascar.',
+  },
+  {
+    name: 'Swazi',
+    description:
+      'The Bantu ethnic group native to Southern Africa, in Eswatini and South Africa’s Mpumalanga province.',
+  },
+  {
+    name: 'Taita',
+    description: 'The Bantu-speaking ethnic group of Taita-Taveta County, in Kenya.',
+  },
+  {
+    name: 'Maasai',
+    description: 'The Eastern Nilotic ethnic group native to Kenya and northern Tanzania.',
+  },
+  {
+    name: 'Basotho',
+    description:
+      'The Sotho-Tswana ethnic group Indigenous to Southern Africa, in Lesotho, South Africa, Botswana and Namibia.',
+  },
+  {
+    name: 'Tuareg',
+    description:
+      'The Amazigh ethnic group of nomadic pastoralists who live mainly in the Sahara, from southwestern Libya to southern Algeria, Niger, Mali and Burkina Faso.',
+  },
+  {
+    name: 'Bedouin',
+    description:
+      'The semi-nomadic Arab tribes who have historically lived in the desert regions of the Arabian Peninsula, North Africa, the Levant and Mesopotamia.',
+  },
+  {
+    name: 'Jewish',
+    description:
+      'The Jewish people, an ethnoreligious group and nation originating in the Israelites of ancient Israel and Judah, and their religion, Judaism.',
+  },
+  {
+    name: 'Christian',
+    description:
+      'Christianity, the Abrahamic religion based on the Bible and the teachings of Jesus.',
+  },
+  {
+    name: 'Scottish Gaelic',
+    description:
+      'The Gaels of Scotland, whose Gaelic language and culture extended from Ireland into western Scotland.',
+  },
+  {
+    name: 'Navajo',
+    description:
+      'The Navajo, an Athabaskan-speaking people of the United States, most of whom live in Arizona and New Mexico; they call themselves Diné.',
+  },
 ];
 
 /** The doc's deities, in its order: each tradition's run in the traditions' order. */
@@ -211,6 +468,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Asclepius',
     tradition: 'Greek',
+    otherNames: ['Asklepios'],
     description:
       'Greek god of medicine and healing, whose staff bears a serpent; also Asklepios, Roman Aesculapius.',
   },
@@ -235,6 +493,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Dionysus',
     tradition: 'Greek',
+    otherNames: ['Dionysos'],
     description:
       'Greek god of wine, the vine, ivy, ecstasy and theatre; also Dionysos, Roman Bacchus.',
   },
@@ -246,6 +505,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Gaia',
     tradition: 'Greek',
+    otherNames: ['Gaea', 'Ge'],
     description: 'Greek primordial goddess of the Earth, mother of all; also Gaea, Ge.',
   },
   {
@@ -257,6 +517,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Hecate',
     tradition: 'Greek',
+    otherNames: ['Hekate'],
     description:
       'Greek goddess of witchcraft, crossroads, keys, the night and the dead; also Hekate, Trivia.',
   },
@@ -269,6 +530,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Hephaestus',
     tradition: 'Greek',
+    otherNames: ['Hephaistos'],
     description:
       'Greek god of the forge, fire, smiths and metalwork; also Hephaistos, Roman Vulcan.',
   },
@@ -291,12 +553,14 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Hyacinthus',
     tradition: 'Greek',
+    otherNames: ['Hyakinthos', 'Hyacinthos'],
     description:
       'Greek divine youth beloved of Apollo, from whose blood the hyacinth sprang, honoured as a hero at Amyclae; also Hyakinthos.',
   },
   {
     name: 'Hygieia',
     tradition: 'Greek',
+    otherNames: ['Hygeia'],
     description:
       'Greek goddess of health, cleanliness and the prevention of illness, daughter of Asclepius; also Hygeia, Roman Salus.',
   },
@@ -325,6 +589,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Persephone',
     tradition: 'Greek',
+    otherNames: ['Kore'],
     description:
       'Greek queen of the underworld and maiden of spring, daughter of Demeter, bound by the pomegranate; also Kore, Roman Proserpina.',
   },
@@ -356,6 +621,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Bacchus',
     tradition: 'Roman',
+    otherNames: ['Liber'],
     description: 'Roman god of wine, revelry and the grape harvest; also Liber, Greek Dionysus.',
   },
   {
@@ -373,6 +639,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Cupid',
     tradition: 'Roman',
+    otherNames: ['Amor'],
     description: 'Roman god of love and desire, with bow and arrows; also Amor, Greek Eros.',
   },
   {
@@ -411,6 +678,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Jupiter',
     tradition: 'Roman',
+    otherNames: ['Jove'],
     description:
       'Roman king of the gods, god of the sky, thunder, oaths and the oak; also Jove, Greek Zeus.',
   },
@@ -437,6 +705,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Pluto',
     tradition: 'Roman',
+    otherNames: ['Dis Pater'],
     description: 'Roman god of the underworld and its wealth; also Dis Pater, Greek Hades.',
   },
   {
@@ -490,18 +759,21 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Amun',
     tradition: 'Egyptian',
+    otherNames: ['Amon', 'Amen'],
     description:
       'Egyptian king of the gods, the hidden one, joined with the Sun as Amun-Ra; also Amon, Amen.',
   },
   {
     name: 'Anubis',
     tradition: 'Egyptian',
+    otherNames: ['Anpu', 'Inpu'],
     description:
       'Egyptian jackal-headed god of embalming, cemeteries and the guiding of souls; also Anpu, Inpu.',
   },
   {
     name: 'Bastet',
     tradition: 'Egyptian',
+    otherNames: ['Bast'],
     description: 'Egyptian cat goddess of the home, protection, joy, women and perfume; also Bast.',
   },
   {
@@ -530,12 +802,14 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Isis',
     tradition: 'Egyptian',
+    otherNames: ['Aset'],
     description:
       'Egyptian goddess of magic, healing, motherhood and the throne, wife of Osiris; also Aset.',
   },
   {
     name: 'Maat',
     tradition: 'Egyptian',
+    otherNames: ["Ma'at"],
     description:
       "Egyptian goddess of truth, justice, balance and cosmic order, whose feather weighs the heart; also Ma'at.",
   },
@@ -548,12 +822,14 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Nephthys',
     tradition: 'Egyptian',
+    otherNames: ['Nebet-Het'],
     description:
       'Egyptian goddess of mourning, night, the dead and protection, sister of Isis; also Nebet-Het.',
   },
   {
     name: 'Nut',
     tradition: 'Egyptian',
+    otherNames: ['Nuit'],
     description:
       'Egyptian goddess of the sky, whose body arches over the earth and swallows the Sun each night.',
   },
@@ -571,24 +847,28 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Ra',
     tradition: 'Egyptian',
+    otherNames: ['Re'],
     description:
       'Egyptian god of the Sun and creation, sailing his barque across the sky; also Re.',
   },
   {
     name: 'Sekhmet',
     tradition: 'Egyptian',
+    otherNames: ['Sakhmet'],
     description:
       'Egyptian lioness goddess of war, plague and healing, the Eye of Ra; also Sakhmet.',
   },
   {
     name: 'Set',
     tradition: 'Egyptian',
+    otherNames: ['Seth', 'Sutekh'],
     description:
       'Egyptian god of storms, the desert, chaos and foreigners, slayer of Osiris; also Seth, Sutekh.',
   },
   {
     name: 'Thoth',
     tradition: 'Egyptian',
+    otherNames: ['Djehuty'],
     description:
       'Egyptian ibis-headed god of writing, knowledge, magic, the Moon and the reckoning of time; also Djehuty.',
   },
@@ -622,6 +902,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Lilith',
     tradition: 'Akkadian & Babylonian',
+    otherNames: ['Lilitu'],
     description:
       'Akkadian and Babylonian night spirit of storms and childbirth, carried into Jewish folklore and honoured as a goddess in modern practice; also Lilitu.',
   },
@@ -636,24 +917,28 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Anat',
     tradition: 'Canaanite & Phoenician',
+    otherNames: ['Anath'],
     description:
       'Canaanite goddess of war and fierce protection, sister and consort of Baal; also Anath.',
   },
   {
     name: 'Asherah',
     tradition: 'Canaanite & Phoenician',
+    otherNames: ['Athirat'],
     description:
       'Canaanite mother goddess and consort of El, worshipped at sacred trees and poles; also Athirat.',
   },
   {
     name: 'Astarte',
     tradition: 'Canaanite & Phoenician',
+    otherNames: ['Ashtoreth', 'Ashtart'],
     description:
       'Phoenician and Canaanite goddess of love, fertility, war and the evening star; also Ashtoreth, Ashtart.',
   },
   {
     name: 'Baal',
     tradition: 'Canaanite & Phoenician',
+    otherNames: ['Hadad'],
     description: 'Canaanite god of storms, rain and the fertility they bring; also Hadad.',
   },
 
@@ -661,12 +946,14 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Anahita',
     tradition: 'Persian',
+    otherNames: ['Aredvi Sura Anahita'],
     description:
       'Persian goddess of the waters, fertility, healing and wisdom; also Aredvi Sura Anahita.',
   },
   {
     name: 'Mithra',
     tradition: 'Persian',
+    otherNames: ['Mithras'],
     description:
       'Persian god of covenants, light and the rising sun, and of the Roman mysteries as Mithras.',
   },
@@ -675,6 +962,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Baldur',
     tradition: 'Norse',
+    otherNames: ['Balder', 'Baldr'],
     description:
       'Norse god of light, beauty and goodness, slain by a mistletoe dart; also Balder, Baldr.',
   },
@@ -686,17 +974,20 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Freya',
     tradition: 'Norse',
+    otherNames: ['Freyja'],
     description: 'Norse goddess of love, beauty, fertility, war and seidr magic; also Freyja.',
   },
   {
     name: 'Freyr',
     tradition: 'Norse',
+    otherNames: ['Frey', 'Yngvi'],
     description:
       "Norse god of fertility, sunshine, rain and the harvest's plenty, brother of Freya; also Frey, Yngvi.",
   },
   {
     name: 'Frigg',
     tradition: 'Norse',
+    otherNames: ['Frigga'],
     description:
       'Norse queen of the gods, goddess of marriage, the home and foresight, wife of Odin; also Frigga.',
   },
@@ -709,6 +1000,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Idun',
     tradition: 'Norse',
+    otherNames: ['Idunn', 'Iduna'],
     description:
       'Norse goddess of youth and spring, keeper of the apples that keep the gods young; also Idunn, Iduna.',
   },
@@ -720,12 +1012,14 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Njord',
     tradition: 'Norse',
+    otherNames: ['Njordr'],
     description:
       'Norse god of the sea, seafaring, wind and wealth, father of Freya and Freyr; also Njordr.',
   },
   {
     name: 'Odin',
     tradition: 'Norse',
+    otherNames: ['Woden', 'Wotan'],
     description:
       'Norse all-father, god of wisdom, poetry, the runes, magic, war and death; also Woden, Wotan.',
   },
@@ -743,12 +1037,14 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Thor',
     tradition: 'Norse',
+    otherNames: ['Donar', 'Thunor'],
     description:
       'Norse god of thunder, storms, strength and the protection of people, wielding the hammer Mjolnir; also Donar, Thunor.',
   },
   {
     name: 'Tyr',
     tradition: 'Norse',
+    otherNames: ['Tiw'],
     description:
       'Norse god of law, justice, oaths and war, who gave his hand to bind Fenrir; also Tiw.',
   },
@@ -757,18 +1053,21 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Berchta',
     tradition: 'Anglo-Saxon & Continental Germanic',
+    otherNames: ['Perchta', 'Bertha'],
     description:
       "Continental Germanic and Alpine goddess of spinning, the Twelve Nights and the household's order; also Perchta, Bertha.",
   },
   {
     name: 'Eostre',
     tradition: 'Anglo-Saxon & Continental Germanic',
+    otherNames: ['Ostara'],
     description:
       'Anglo-Saxon goddess of spring and the dawn, named by Bede, whom Easter recalls; also Ostara.',
   },
   {
     name: 'Holda',
     tradition: 'Anglo-Saxon & Continental Germanic',
+    otherNames: ['Holle', 'Hulda'],
     description:
       'Continental Germanic goddess of winter, spinning and the hearth, who shakes snow from her featherbed; also Holle, Hulda.',
   },
@@ -783,6 +1082,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Aengus',
     tradition: 'Irish',
+    otherNames: ['Angus', 'Oengus'],
     description:
       'Irish god of love, youth and poetic inspiration, son of the Dagda; also Angus, Oengus.',
   },
@@ -795,18 +1095,21 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Airmed',
     tradition: 'Irish',
+    otherNames: ['Airmid'],
     description:
       "Irish goddess of healing and herbalism, who gathered the herbs that grew from her brother Miach's grave; also Airmid.",
   },
   {
     name: 'Boann',
     tradition: 'Irish',
+    otherNames: ['Boand'],
     description:
       'Irish goddess of the river Boyne, of poetry, fertility and knowledge; also Boand.',
   },
   {
     name: 'Brigid',
     tradition: 'Irish',
+    otherNames: ['Brighid', 'Brigit', 'Bride'],
     description:
       'Irish goddess of poetry, healing, smithcraft, fire and holy wells, honoured at Imbolc; also Brighid, Brigit, Bride.',
   },
@@ -819,11 +1122,13 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Danu',
     tradition: 'Irish',
+    otherNames: ['Anu', 'Dana'],
     description: 'Irish mother goddess of the Tuatha De Danann; also Anu, Dana.',
   },
   {
     name: 'Dian Cecht',
     tradition: 'Irish',
+    otherNames: ['Diancecht'],
     description:
       'Irish god of healing and physician to the Tuatha De Danann, father of Airmed; also Diancecht.',
   },
@@ -848,6 +1153,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Ogma',
     tradition: 'Irish',
+    otherNames: ['Oghma'],
     description:
       'Irish god of eloquence, strength and writing, said to have made the ogham alphabet; also Oghma.',
   },
@@ -867,6 +1173,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Cerridwen',
     tradition: 'Welsh',
+    otherNames: ['Ceridwen', 'Kerridwen'],
     description:
       'Welsh enchantress and goddess of the cauldron, transformation, inspiration and herbal brewing; also Ceridwen, Kerridwen.',
   },
@@ -892,12 +1199,14 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Belenus',
     tradition: 'Gaulish & British',
+    otherNames: ['Belenos', 'Bel'],
     description:
       'Gaulish and British god of light, the Sun and healing springs; also Belenos, Bel.',
   },
   {
     name: 'Cernunnos',
     tradition: 'Gaulish & British',
+    otherNames: ['Kernunnos'],
     description: 'Gaulish horned god of animals, the wild, fertility and wealth; also Kernunnos.',
   },
   {
@@ -935,12 +1244,14 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Mokosh',
     tradition: 'Slavic',
+    otherNames: ['Makosh'],
     description:
       "Slavic goddess of women, spinning, moist earth and fertility, the one goddess of Vladimir's pantheon; also Makosh.",
   },
   {
     name: 'Morana',
     tradition: 'Slavic',
+    otherNames: ['Marzanna', 'Morena', 'Marena'],
     description:
       'Slavic goddess of winter and death in Polish, Czech and Slovak rite, whose effigy is drowned in spring, and of spring and the waters in Ukrainian; also Marzanna, Morena, Marena.',
   },
@@ -952,6 +1263,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Veles',
     tradition: 'Slavic',
+    otherNames: ['Volos'],
     description: 'Slavic god of the underworld, cattle, wealth, waters and magic; also Volos.',
   },
 
@@ -959,6 +1271,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Laima',
     tradition: 'Baltic',
+    otherNames: ['Laime'],
     description:
       'Latvian and Lithuanian goddess of fate, birth and luck, linked with the linden; also Laime.',
   },
@@ -970,6 +1283,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Zemyna',
     tradition: 'Baltic',
+    otherNames: ['Zemynele'],
     description:
       'Lithuanian goddess of the earth and everything that grows from it; also Zemynele.',
   },
@@ -1009,6 +1323,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Ganesha',
     tradition: 'Hindu',
+    otherNames: ['Ganapati', 'Ganesh', 'Ganish'],
     description:
       'Hindu elephant-headed god of beginnings, wisdom and the removal of obstacles; also Ganapati.',
   },
@@ -1031,6 +1346,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Lakshmi',
     tradition: 'Hindu',
+    otherNames: ['Laxmi'],
     description:
       'Hindu goddess of wealth, fortune, prosperity and beauty, wife of Vishnu, honoured at Diwali; also Laxmi.',
   },
@@ -1042,11 +1358,13 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Saraswati',
     tradition: 'Hindu',
+    otherNames: ['Sarasvati'],
     description: 'Hindu goddess of knowledge, music, art, speech and learning; also Sarasvati.',
   },
   {
     name: 'Shiva',
     tradition: 'Hindu',
+    otherNames: ['Siva', 'Mahadeva'],
     description:
       'Hindu god of destruction, transformation, yoga and meditation, the auspicious one; also Siva, Mahadeva.',
   },
@@ -1072,6 +1390,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Xi Wangmu',
     tradition: 'Taoist',
+    otherNames: ['Xiwangmu', 'Hsi Wang Mu'],
     description:
       'Taoist Queen Mother of the West, goddess of immortality and keeper of the peaches of long life; also Xiwangmu, Hsi Wang Mu.',
   },
@@ -1080,6 +1399,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Kuan Yin',
     tradition: 'Chinese Buddhist',
+    otherNames: ['Guanyin', 'Kwan Yin', 'Kannon'],
     description:
       'Chinese Buddhist bodhisattva of compassion and mercy, honoured as a goddess in folk religion across East Asia; also Guanyin, Kwan Yin, Kannon.',
   },
@@ -1096,24 +1416,28 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Amaterasu',
     tradition: 'Japanese',
+    otherNames: ['Amaterasu Omikami'],
     description:
       'Japanese Shinto goddess of the Sun and the Plain of High Heaven, ancestor of the imperial line; also Amaterasu Omikami.',
   },
   {
     name: 'Benzaiten',
     tradition: 'Japanese',
+    otherNames: ['Benten'],
     description:
       'Japanese goddess of water, music, eloquence, wealth and knowledge, come from Saraswati; also Benten.',
   },
   {
     name: 'Inari',
     tradition: 'Japanese',
+    otherNames: ['Oinari'],
     description:
       'Japanese Shinto deity of rice, grain, agriculture, foxes and prosperity, whose shrines are kept by fox messengers; also Oinari.',
   },
   {
     name: 'Tsukuyomi',
     tradition: 'Japanese',
+    otherNames: ['Tsukiyomi'],
     description:
       'Japanese Shinto god of the Moon and the night, brother of Amaterasu; also Tsukiyomi.',
   },
@@ -1122,18 +1446,21 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Nyame',
     tradition: 'Akan',
+    otherNames: ['Onyame', 'Nyankopon', 'Onyankopon', 'Odomankoma'],
     description:
       'Akan supreme god of the sky, creator of the world and giver of rain and sunshine, born on Saturday; also Onyame, Nyankopon, Onyankopon, Odomankoma.',
   },
   {
     name: 'Asase Yaa',
     tradition: 'Akan',
+    otherNames: ['Asase Ya', 'Asaase Yaa', 'Aberewa', 'Asase Efua'],
     description:
       'Akan goddess of the earth, fertility and truth, second only to Nyame, whose Thursday no one tills; also Asase Ya, Asaase Yaa, Aberewa, Mother Earth, Fante Asase Efua.',
   },
   {
     name: 'Tano',
     tradition: 'Akan',
+    otherNames: ['Ta Kora', 'Tano Kora', 'Tando'],
     description:
       'Akan obosom of the Tano river and head of the river gods, god of thunder and of war among the Asante, son of Nyame and Asase Yaa; also Ta Kora, Tano Kora, Fante Tando.',
   },
@@ -1146,6 +1473,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Bosomtwe',
     tradition: 'Akan',
+    otherNames: ['Bosomtwi', 'Bosumtwi'],
     description:
       'Akan obosom of Lake Bosomtwe, son of Nyame and Asase Yaa, honoured in the form of an antelope; also Bosomtwi, Bosumtwi.',
   },
@@ -1154,18 +1482,21 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Chukwu',
     tradition: 'Igbo',
+    otherNames: ['Chineke', 'Chi Ukwu', 'Chukwu Okike', 'Obasi'],
     description:
       'Igbo supreme god and creator, who made the alusi and gives every person a chi; also Chineke, Chi Ukwu, Chukwu Okike, Obasi.',
   },
   {
     name: 'Ala',
     tradition: 'Igbo',
+    otherNames: ['Ani', 'Ana', 'Ale', 'Ali'],
     description:
       'Igbo alusi of the earth, fertility, morality and the dead, who holds the ancestors in her womb and judges by custom, honoured in mbari houses; also Ani, Ana, Ale, Ali.',
   },
   {
     name: 'Amadioha',
     tradition: 'Igbo',
+    otherNames: ['Amadiora', 'Kamalu', 'Kalu'],
     description:
       'Igbo alusi of thunder, lightning and justice, who strikes the oppressor, shown as a white ram; also Amadiora, Kamalu, Kalu.',
   },
@@ -1178,12 +1509,14 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Agwu',
     tradition: 'Igbo',
+    otherNames: ['Agwu Nsi'],
     description:
       'Igbo alusi of divination and medicine, patron of the dibia, who possesses the healer to show the cure; also Agwu Nsi.',
   },
   {
     name: 'Njoku Ji',
     tradition: 'Igbo',
+    otherNames: ['Ahiajoku', 'Ahiajioku', 'Ifejioku'],
     description:
       'Igbo alusi of the yam and its farming, guardian of the farm, honoured at the planting festival; also Ahiajoku, Ahiajioku, Ifejioku.',
   },
@@ -1192,30 +1525,35 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Nana Buluku',
     tradition: 'Fon & Ewe',
+    otherNames: ['Nana Buruku', 'Nana Buku', 'Nanan-bouclou'],
     description:
       "Fon and Ewe creator of the world, mother of Mawu and Lisa, who made all things and withdrew; also Nana Buruku, Nana Buku, Nanan-bouclou, Candomble's Nana.",
   },
   {
     name: 'Mawu-Lisa',
     tradition: 'Fon & Ewe',
+    otherNames: ['Mawu', 'Lisa', 'Mahu'],
     description:
       'Fon and Ewe twin creator vodun, Mawu of the Moon, night and gentleness and Lisa of the Sun, day and strength, spoken of as one; also Mawu, Lisa, Mahu.',
   },
   {
     name: 'Sagbata',
     tradition: 'Fon & Ewe',
+    otherNames: ['Sakpata', 'Shapata'],
     description:
       'Fon and Ewe vodun of the earth and of smallpox, who watches over fields and waters and punishes with disease, head of the earth pantheon; also Sakpata, Shapata, Yoruba Sopona.',
   },
   {
     name: 'Xevioso',
     tradition: 'Fon & Ewe',
+    otherNames: ['Hevioso', 'Heviosso', 'Sogbo', 'So'],
     description:
       'Fon and Ewe vodun of thunder, lightning and rain, who sends the fertilising rains and strikes liars and thieves with the thunderbolt, shown as a ram with a double axe; also Hevioso, Heviosso, Sogbo, So.',
   },
   {
     name: 'Gu',
     tradition: 'Fon & Ewe',
+    otherNames: ['Egu', 'Gou'],
     description:
       'Fon and Ewe vodun of iron, metalwork, tools and war, twin of Xevioso and counterpart of Yoruba Ogun; also Egu, Gou.',
   },
@@ -1228,6 +1566,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Dan',
     tradition: 'Fon & Ewe',
+    otherNames: ['Da', 'Dan Ayido Hwedo', 'Aido Hwedo'],
     description:
       'Fon and Ewe serpent vodun of the rainbow, riches and cool breezes, who carried Mawu-Lisa at the creation and coils beneath the earth; also Da, Dan Ayido Hwedo, Aido Hwedo, Haitian Damballah and Ayida Wedo.',
   },
@@ -1242,18 +1581,21 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Elegba',
     tradition: 'Yoruba',
+    otherNames: ['Eleggua', 'Eshu', 'Exu'],
     description:
       'Yoruba and Lucumi orisha of crossroads, roads and doorways, who opens the way; also Eleggua, Eshu, Exu.',
   },
   {
     name: 'Obatala',
     tradition: 'Yoruba',
+    otherNames: ['Oxala'],
     description:
       'Yoruba orisha of purity, wisdom, peace and creation, eldest of the orishas and sculptor of humankind; also Oxala.',
   },
   {
     name: 'Ogun',
     tradition: 'Yoruba',
+    otherNames: ['Ogoun', 'Ogum'],
     description:
       'Yoruba orisha of iron, metalwork, labour, war and the clearing of paths; also Ogoun, Ogum.',
   },
@@ -1265,30 +1607,35 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Osanyin',
     tradition: 'Yoruba',
+    otherNames: ['Osain', 'Ossaim'],
     description:
       'Yoruba orisha of herbs, leaves, medicine and healing, who holds the knowledge of every plant; also Osain, Ossaim.',
   },
   {
     name: 'Oshun',
     tradition: 'Yoruba',
+    otherNames: ['Ochun', 'Oxum'],
     description:
       'Yoruba orisha of rivers, fresh water, love, beauty, sweetness and fertility; also Ochun, Oxum.',
   },
   {
     name: 'Oya',
     tradition: 'Yoruba',
+    otherNames: ['Yansa', 'Iansa'],
     description:
       'Yoruba orisha of winds, storms, transformation and the cemetery gates; also Yansa, Iansa.',
   },
   {
     name: 'Shango',
     tradition: 'Yoruba',
+    otherNames: ['Chango', 'Xango'],
     description:
       'Yoruba orisha of thunder, lightning, fire, drumming and justice; also Chango, Xango.',
   },
   {
     name: 'Yemaya',
     tradition: 'Yoruba',
+    otherNames: ['Yemoja', 'Iemanja'],
     description: 'Yoruba orisha of the sea, motherhood and protection; also Yemoja, Iemanja.',
   },
 
@@ -1296,6 +1643,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Nzambi Mpungu',
     tradition: 'Kongo',
+    otherNames: ['Nzambi a Mpungu', 'Nzambi Ampungu', 'Nzambi'],
     description:
       "Kongo supreme god and creator, lord of the sky and the Sun's fire, who made the world and withdrew above it; also Nzambi a Mpungu, Nzambi Ampungu, Nzambi, and Palo's Nsambi, Sambia.",
   },
@@ -1308,12 +1656,14 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Simbi',
     tradition: 'Kongo',
+    otherNames: ['bisimbi', 'basimbi'],
     description:
       'Kongo spirits of water and the wild honoured as nature deities, the bisimbi of springs, pools and rocks who held the land before people came and guide the dead across the water; also bisimbi, basimbi, cymbee, the Simbi lwa of Haitian Vodou.',
   },
   {
     name: 'Kalunga',
     tradition: 'Kongo',
+    otherNames: ['Nzambi Kalunga'],
     description:
       'Kongo god and force of the beginning, the fire from which the world came, the ocean, and the watery line between the living and the dead; also Kalunga Line, Nzambi Kalunga.',
   },
@@ -1328,24 +1678,28 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Unkulunkulu',
     tradition: 'Zulu',
+    otherNames: ['Nkulunkulu'],
     description:
       'Zulu creator and first ancestor, the old, old one who came forth at the beginning and gave the first people fire, cattle and marriage; also uNkulunkulu, Nkulunkulu.',
   },
   {
     name: 'Umvelinqangi',
     tradition: 'Zulu',
+    otherNames: ['Mvelinqangi', 'iNkosi yeZulu'],
     description:
       'Zulu supreme being and Lord of the Sky, the first to come forth, god of thunder, lightning and the heavens, often identified with Unkulunkulu; also uMvelinqangi, Mvelinqangi, iNkosi yeZulu.',
   },
   {
     name: 'Nomkhubulwane',
     tradition: 'Zulu',
+    otherNames: ['Nomkhubulwana', 'Nomkubulwana', 'Inkosazana', 'iNkosazana yeZulu'],
     description:
       'Zulu princess of heaven, goddess of rain, the rainbow, spring, fertility and the crops, honoured by girls at her planting rite; also Nomkhubulwana, Nomkubulwana, Inkosazana, iNkosazana yeZulu.',
   },
   {
     name: 'Mamlambo',
     tradition: 'Zulu',
+    otherNames: ['uMamlambo', 'Momlambo', 'Nomhoyi'],
     description:
       'Zulu goddess of rivers, a great water serpent of the deep pools whose favour is both sought and feared; also uMamlambo, Momlambo, Nomhoyi.',
   },
@@ -1359,12 +1713,14 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Damballah',
     tradition: 'Haitian Vodou',
+    otherNames: ['Danbala', 'Damballa'],
     description:
       'Haitian Vodou serpent lwa of creation, wisdom, springs, waterfalls and peace; also Danbala, Damballa, from the Fon serpent Dan.',
   },
   {
     name: 'Erzulie',
     tradition: 'Haitian Vodou',
+    otherNames: ['Ezili'],
     description:
       'Haitian Vodou family of lwa of love, beauty, jealousy and motherhood, among them Erzulie Freda and Erzulie Dantor; also Ezili.',
   },
@@ -1376,6 +1732,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Papa Legba',
     tradition: 'Haitian Vodou',
+    otherNames: ['Legba'],
     description:
       'Haitian Vodou lwa of the crossroads, gatekeeper between the living and the lwa, who opens every ceremony; also Legba.',
   },
@@ -1414,6 +1771,7 @@ export const DEITIES: SeedDeity[] = [
   {
     name: 'Ixchel',
     tradition: 'Maya',
+    otherNames: ['Ix Chel', 'Chak Chel'],
     description:
       'Maya goddess of midwifery, medicine, weaving and fertility, the Moon in popular account; also Ix Chel, Chak Chel.',
   },
@@ -1488,14 +1846,524 @@ export const DEITIES: SeedDeity[] = [
     description:
       "Italian witch goddess of Leland's Aradia, or the Gospel of the Witches, daughter of Diana, who taught witchcraft to the oppressed.",
   },
+
+  // Greek
+  {
+    name: 'Achilles',
+    tradition: 'Greek',
+    description:
+      'Greek hero of the Trojan War, known as the greatest of the Greek warriors; son of the Nereid Thetis and Peleus, and central character of Homer’s Iliad.',
+  },
+  {
+    name: 'Amphitrite',
+    tradition: 'Greek',
+    description: 'Greek goddess and queen of the sea, consort of Poseidon; Roman Salacia.',
+  },
+  {
+    name: 'Ariadne',
+    tradition: 'Greek',
+    description:
+      'Cretan princess of Greek myth, daughter of King Minos, who helped Theseus escape the Minotaur and later married Dionysus.',
+  },
+  {
+    name: 'Eos',
+    tradition: 'Greek',
+    description:
+      'Greek goddess and personification of the dawn, who rose each morning from the edge of the river Oceanus.',
+  },
+  {
+    name: 'Hebe',
+    tradition: 'Greek',
+    description:
+      'Greek goddess of youth, or of the prime of life, and cup-bearer to the gods of Mount Olympus.',
+  },
+  {
+    name: 'Leto',
+    tradition: 'Greek',
+    description: 'Greek mother of Apollo and Artemis, daughter of the Titans Coeus and Phoebe.',
+  },
+  {
+    name: 'Nike',
+    tradition: 'Greek',
+    description:
+      'Greek personification of victory, goddess of victory in battle and in other contests.',
+  },
+  {
+    name: 'Nemesis',
+    tradition: 'Greek',
+    otherNames: ['Rhamnousia'],
+    description: 'Greek goddess who personified retribution for hubris, arrogance before the gods.',
+  },
+  {
+    name: 'Morpheus',
+    tradition: 'Greek',
+    description:
+      'God of sleep and dreams, who in Ovid’s Metamorphoses appears in dreams in human form.',
+  },
+  {
+    name: 'Prometheus',
+    tradition: 'Greek',
+    description:
+      'Greek Titan who stole fire from the Olympian gods and gave it to humanity, and is credited with creating and aiding humankind.',
+  },
+  {
+    name: 'Uranus',
+    tradition: 'Greek',
+    otherNames: ['Ouranos'],
+    description:
+      'Greek personification of the sky and one of the primordial deities, husband and son of Gaia and father of the first Titans.',
+  },
+  {
+    name: 'Hymen',
+    tradition: 'Greek',
+    otherNames: ['Hymenaios'],
+    description: 'Greek god of marriage ceremonies, who inspires feasts and song.',
+  },
+  {
+    name: 'Daphne',
+    tradition: 'Greek',
+    description:
+      'Greek figure of myth, a mortal woman or a nymph and daughter of a river god, who prayed for escape from Apollo’s pursuit and was turned into a tree.',
+  },
+  {
+    name: 'Medea',
+    tradition: 'Greek',
+    description:
+      'Greek sorceress, daughter of King Aeetes of Colchis and granddaughter of the sun god Helios, skilled in medicinal magic and often shown as a priestess of Hecate.',
+  },
+  {
+    name: 'Moirai',
+    tradition: 'Greek',
+    otherNames: ['Fates'],
+    description:
+      'Greek personifications of destiny, in some accounts three sisters, Clotho, Lachesis and Atropos; Roman Parcae.',
+  },
+  {
+    name: 'Erinyes',
+    tradition: 'Greek',
+    otherNames: ['Eumenides'],
+    description:
+      'Greek chthonic goddesses of vengeance, also called the Eumenides, the “gracious ones”.',
+  },
+  {
+    name: 'Charites',
+    tradition: 'Greek',
+    otherNames: ['Graces'],
+    description:
+      'Greek goddesses who personify beauty and grace, named by Hesiod Aglaia, Euphrosyne and Thalia.',
+  },
+  {
+    name: 'Cronus',
+    tradition: 'Greek',
+    otherNames: ['Cronos', 'Kronos'],
+    description:
+      'Greek leader and youngest of the Titans, who overthrew his father Uranus and ruled in the Golden Age until his son Zeus overthrew him.',
+  },
+  {
+    name: 'Eirene',
+    tradition: 'Greek',
+    description:
+      'Greek goddess and personification of peace, one of the Horae, daughter of Zeus and Themis.',
+  },
+
+  // Roman
+  {
+    name: 'Hercules',
+    tradition: 'Roman',
+    description:
+      'Roman form of the Greek divine hero Heracles, son of Jupiter and the mortal Alcmena, famous for superhuman strength and far-ranging adventures.',
+  },
+  {
+    name: 'Bellona',
+    tradition: 'Roman',
+    description: 'Roman goddess of war, embodying the destructive and brutal side of warfare.',
+  },
+  {
+    name: 'Bona Dea',
+    tradition: 'Roman',
+    description:
+      'The Roman “Good Goddess”, associated with chastity and fertility among married women, healing and the protection of the state.',
+  },
+  {
+    name: 'Lares',
+    tradition: 'Roman',
+    description:
+      'Guardian deities of Roman religion, believed to watch over and protect all that happened within the bounds of their place or function.',
+  },
+  {
+    name: 'Lucina',
+    tradition: 'Roman',
+    description:
+      'Title of the Roman goddess Juno, and sometimes Diana, as goddess of childbirth who safeguarded women in labour.',
+  },
+  {
+    name: 'Luna',
+    tradition: 'Roman',
+    description: 'Roman divine embodiment of the Moon, the female complement of the Sun god Sol.',
+  },
+  {
+    name: 'Fides',
+    tradition: 'Roman',
+    description: 'Roman goddess and embodiment of trust, faithfulness and good faith.',
+  },
+  {
+    name: 'Aurora',
+    tradition: 'Roman',
+    description: 'Roman goddess and personification of the dawn; Latin for dawn.',
+  },
+
+  // Egyptian
+  {
+    name: 'Atum',
+    tradition: 'Egyptian',
+    description:
+      'Primordial Egyptian god from whom all else arose, father of Shu and Tefnut and closely associated with the evening sun.',
+  },
+  {
+    name: 'Mut',
+    tradition: 'Egyptian',
+    description:
+      'Egyptian mother goddess, whose name means “mother”, regarded as a primal deity of the primordial waters of Nu.',
+  },
+  {
+    name: 'Nefertem',
+    tradition: 'Egyptian',
+    otherNames: ['Nefertum'],
+    description:
+      'Egyptian god who arose from the primal waters at the creation of the world and stood for the first sunlight and a delightful scent.',
+  },
+  {
+    name: 'Wepwawet',
+    tradition: 'Egyptian',
+    description:
+      'Egyptian jackal god of funerary rites, war and royalty, whose name means “opener of the ways” and whose cult centre was Asyut.',
+  },
+  {
+    name: 'Harpocrates',
+    tradition: 'Egyptian',
+    description:
+      'God of silence, secrets and confidentiality, adapted by the Greeks of Ptolemaic Alexandria from the Egyptian child god Horus.',
+  },
+
+  // Hindu
+  {
+    name: 'Brahma',
+    tradition: 'Hindu',
+    description:
+      'Hindu god called the Creator within the Trimurti beside Vishnu and Shiva, associated with creation, knowledge and the Vedas.',
+  },
+  {
+    name: 'Indra',
+    tradition: 'Hindu',
+    description:
+      'Vedic god of weather and king of the devas, the deity most often named in the Rigveda.',
+  },
+  {
+    name: 'Shakti',
+    tradition: 'Hindu',
+    description:
+      'The divine feminine energy of Hinduism, of which the many Hindu goddesses are personifications.',
+  },
+  {
+    name: 'Rama',
+    tradition: 'Hindu',
+    description:
+      'Hindu deity worshipped as an avatar of Vishnu, the ideal man and hero of the Ramayana.',
+  },
+  {
+    name: 'Yama',
+    tradition: 'Hindu',
+    otherNames: ['Dharmaraja'],
+    description:
+      'Hindu god of death and justice, who in the Vedic tradition was the first mortal to die.',
+  },
+  {
+    name: 'Varuna',
+    tradition: 'Hindu',
+    description:
+      'Hindu god who in the early Vedic era ruled the sky as god-sovereign, and chief of the Adityas.',
+  },
+  {
+    name: 'Dattatreya',
+    tradition: 'Hindu',
+    description:
+      'Hindu god and paradigmatic monk, a lord of yoga considered an avatar and combined form of Brahma, Vishnu and Shiva.',
+  },
+
+  // Norse
+  {
+    name: 'Ran',
+    tradition: 'Norse',
+    description:
+      'Norse goddess and personification of the sea, wife of Aegir, who uses a net to capture sea-goers.',
+  },
+  {
+    name: 'Aegir',
+    tradition: 'Norse',
+    description:
+      'Norse giant and personification of the sea, who hosts the gods in his halls and is associated with brewing ale.',
+  },
+  {
+    name: 'Norns',
+    tradition: 'Norse',
+    description:
+      'Norse group of deities who shape the course of human destinies, often three goddesses, Urd, Verdandi and Skuld.',
+  },
+
+  // Irish
+  {
+    name: 'Badb',
+    tradition: 'Irish',
+    description:
+      'Irish war goddess who takes the form of a crow and causes fear and confusion among soldiers.',
+  },
+  {
+    name: 'Banba',
+    tradition: 'Irish',
+    description:
+      'Irish matron goddess of Ireland, daughter of Delbaeth and Ernmas of the Tuatha De Danann.',
+  },
+  {
+    name: 'Macha',
+    tradition: 'Irish',
+    description:
+      'Irish sovereignty goddess associated with Ulster, Navan Fort and Armagh, said to be one of the three Morrigna.',
+  },
+  {
+    name: 'Cu Chulainn',
+    tradition: 'Irish',
+    description:
+      'Irish warrior hero and demigod of the Ulster Cycle, believed an incarnation of the god Lugh, who is also his father.',
+  },
+  {
+    name: 'Lir',
+    tradition: 'Irish',
+    otherNames: ['Ler'],
+    description: 'Irish sea god and personification of the sea, father of Manannan mac Lir.',
+  },
+
+  // Welsh
+  {
+    name: 'Don',
+    tradition: 'Welsh',
+    description:
+      'Welsh ancestor figure, mother of the Children of Don, among them Gwydion, Arianrhod and Gilfaethwy.',
+  },
+  {
+    name: 'Modron',
+    tradition: 'Welsh',
+    description:
+      'Welsh mother figure whose name means “mother”, mother of the hero Mabon ap Modron.',
+  },
+  {
+    name: 'Olwen',
+    tradition: 'Welsh',
+    description:
+      'Welsh heroine of Culhwch and Olwen in the Mabinogion, daughter of the giant Ysbaddaden.',
+  },
+  {
+    name: 'Llyr',
+    tradition: 'Welsh',
+    description: 'Welsh sea god, father of Bran, Branwen and Manawydan, related to the Irish Ler.',
+  },
+
+  // Gaulish & British
+  {
+    name: 'Brigantia',
+    tradition: 'Gaulish & British',
+    description:
+      'Goddess of Roman Britain and tutelary deity of the Brigantes, known from Latin votive inscriptions.',
+  },
+  {
+    name: 'Coventina',
+    tradition: 'Gaulish & British',
+    description:
+      'Romano-British goddess of wells and springs, known from inscriptions near Carrawburgh on Hadrian’s Wall.',
+  },
+
+  // Aztec
+  {
+    name: 'Centeotl',
+    tradition: 'Aztec',
+    description:
+      'Aztec deity of the staple crop, son of the earth goddess Tlazolteotl and the solar deity Piltzintecuhtli.',
+  },
+  {
+    name: 'Chicomecoatl',
+    tradition: 'Aztec',
+    description:
+      'Aztec goddess of agriculture, food, drink and human livelihood, “Seven Serpent”; female counterpart of Centeotl.',
+  },
+  {
+    name: 'Huitzilopochtli',
+    tradition: 'Aztec',
+    description:
+      'Aztec solar and war deity of sacrifice, patron god of the Aztecs and of their capital Tenochtitlan.',
+  },
+  {
+    name: 'Ixtlilton',
+    tradition: 'Aztec',
+    description: 'Aztec god of medicine and healing, a gentle god who came from an obsidian mask.',
+  },
+  {
+    name: 'Xiuhtecuhtli',
+    tradition: 'Aztec',
+    otherNames: ['Xiuhtecutli'],
+    description: 'Aztec god of fire, day and heat, the “Turquoise Lord” or “Lord of Fire”.',
+  },
+  {
+    name: 'Yacatecuhtli',
+    tradition: 'Aztec',
+    description:
+      'Aztec patron god of commerce and travellers, especially business travellers; his symbol is a bundle of sticks.',
+  },
+
+  // Buddhist
+  {
+    name: 'Buddha',
+    tradition: 'Buddhist',
+    description:
+      'Siddhartha Gautama, the wandering religious teacher of the 6th or 5th century BCE who founded Buddhism; “the awakened one”.',
+  },
+
+  // Jewish
+  {
+    name: 'Yahweh',
+    tradition: 'Jewish',
+    description:
+      'Ancient Semitic deity of the southeastern Levant who became the national god of the Iron Age kingdoms of Israel-Samaria and Judah.',
+  },
+
+  // Christian
+  {
+    name: 'Raphael',
+    tradition: 'Christian',
+    description:
+      'Archangel whose name means “God has healed”, first mentioned in the Book of Tobit and in 1 Enoch.',
+  },
+
+  // Persian
+  {
+    name: 'Zoroaster',
+    tradition: 'Persian',
+    otherNames: ['Zarathustra'],
+    description:
+      'Iranian religious reformer and spiritual founder of Zoroastrianism, traditionally believed to have authored the Gathas.',
+  },
+
+  // Akkadian & Babylonian
+  {
+    name: 'Tiamat',
+    tradition: 'Akkadian & Babylonian',
+    description:
+      'Mesopotamian cosmic ocean that mates with Abzu to produce the Babylonian pantheon in the Enuma Elish.',
+  },
+
+  // Sumerian
+  {
+    name: 'Belili',
+    tradition: 'Sumerian',
+    description:
+      'Mesopotamian goddess, a sister of Dumuzi in the texts on his death and a primordial deity paired with Alala.',
+  },
+
+  // Japanese
+  {
+    name: 'Izanami',
+    tradition: 'Japanese',
+    description:
+      'Japanese Shinto mother goddess, creator of both creation and death, who with her brother-husband Izanagi was among the last of seven generations of primordial deities.',
+  },
+
+  // Maya
+  {
+    name: 'Ek Chuah',
+    tradition: 'Maya',
+    description:
+      'Postclassic Maya merchant deity, known as God M in the classification of codical gods.',
+  },
+
+  // Hawaiian
+  {
+    name: 'Kanaloa',
+    tradition: 'Hawaiian',
+    description:
+      'Hawaiian god symbolised by the squid or the octopus, a complementary power to Kane.',
+  },
+  {
+    name: 'Kanehekili',
+    tradition: 'Hawaiian',
+    otherNames: ['Kane-hekili'],
+    description: 'Hawaiian god of thunder, brother of Pele and Hiiaka, born of Haumea.',
+  },
+
+  // Polynesian
+  {
+    name: 'Maui',
+    tradition: 'Polynesian',
+    description:
+      'Great culture hero and trickster of Polynesian mythology, very rarely worshipped and more a demigod and folk hero than a deity.',
+  },
+
+  // English folklore
+  {
+    name: 'Puck',
+    tradition: 'English folklore',
+    otherNames: ['Robin Goodfellow'],
+    description:
+      'Demon or fairy of English folklore, a domestic or nature sprite, also known as a goodfellow.',
+  },
+
+  // Inuit
+  {
+    name: 'Sedna',
+    tradition: 'Inuit',
+    description:
+      'Inuit goddess of the sea and marine animals, the Mother of the Sea, who rules Adlivun, the underworld.',
+  },
+
+  // Scottish Gaelic
+  {
+    name: 'Cailleach',
+    tradition: 'Scottish Gaelic',
+    otherNames: ['Cailleach Bheur', 'Beira'],
+    description:
+      'Divine hag of Gaelic myth, linked with the shaping of the landscape and with weather, especially storms and winter; in Scotland Beira, Queen of Winter.',
+  },
+  {
+    name: 'Seonaidh',
+    tradition: 'Scottish Gaelic',
+    otherNames: ['Shony', 'Shoney'],
+    description: 'Water spirit of the isle of Lewis, propitiated with a cup of ale.',
+  },
 ];
+
+const DEITY_BY_SLUG = new Map(DEITIES.map((deity) => [slugify(deity.name), deity.name]));
+const DEITIES_BY_OTHER_NAME = new Map<string, string[]>();
+for (const deity of DEITIES) {
+  for (const other of deity.otherNames ?? []) {
+    const key = slugify(other);
+    DEITIES_BY_OTHER_NAME.set(key, [...(DEITIES_BY_OTHER_NAME.get(key) ?? []), deity.name]);
+  }
+}
+
+/**
+ * The deities a compendium entry file means by `name`: the deity named so when one is, else every deity giving it as another
+ * name, so an entry keeps its source's spelling. A deity's own name wins (Legba is the Fon & Ewe vodun). One answer is a link;
+ * none or several is for the guard to refuse.
+ */
+export function deitiesNamed(name: string): string[] {
+  const key = slugify(name);
+  const own = DEITY_BY_SLUG.get(key);
+  return own === undefined ? (DEITIES_BY_OTHER_NAME.get(key) ?? []) : [own];
+}
 
 /**
  * Seeds the traditions, then the deities, in a transaction of its own. Writes
  * go through the handle the caller gives, not `withAudit` — see minimal.ts.
  */
-export async function seedDeities(db: SeedDatabase): Promise<void> {
-  await beginSeedTransaction(db, seedDeityVocabulary);
+export async function seedDeities(db: SeedDatabase, options: SeedRunOptions = {}): Promise<void> {
+  await beginSeedTransaction(db, seedDeityVocabulary, options);
 }
 
 /**
@@ -1512,4 +2380,57 @@ export async function seedDeityVocabulary(tx: SeedTransaction): Promise<void> {
     itemNoun: 'Deity',
     slugOf: deitySlug,
   });
+  await seedDeityOtherNames(tx);
+}
+
+/**
+ * Each deity's `otherNames`, on the live deity its seed key finds, so a renamed deity still takes them and a retired one takes none.
+ * A name the deity has ever held, or a live deity of the tradition holds, is passed over. Nothing present is updated; case folded as the index folds it.
+ */
+async function seedDeityOtherNames(tx: SeedTransaction): Promise<void> {
+  const live = await tx
+    .select({
+      id: deities.id,
+      seedKey: deities.seedKey,
+      traditionId: deities.traditionId,
+      deletedAt: deities.deletedAt,
+    })
+    .from(deities);
+  const held = await tx
+    .select({
+      deityId: deityOtherNames.deityId,
+      name: deityOtherNames.name,
+      deletedAt: deityOtherNames.deletedAt,
+      traditionId: deities.traditionId,
+      deityDeletedAt: deities.deletedAt,
+    })
+    .from(deityOtherNames)
+    .innerJoin(deities, eq(deities.id, deityOtherNames.deityId));
+
+  const byKey = new Map(
+    live
+      .filter((deity) => deity.deletedAt === null && deity.seedKey !== null)
+      .map((deity) => [deity.seedKey, deity]),
+  );
+  const everOnDeity = new Set(held.map((row) => `${row.deityId}|${row.name.toLowerCase()}`));
+  const liveInTradition = new Set(
+    held
+      .filter((row) => row.deletedAt === null && row.deityDeletedAt === null)
+      .map((row) => `${row.traditionId}|${row.name.toLowerCase()}`),
+  );
+
+  const rows: { deityId: string; name: string }[] = [];
+  for (const item of DEITIES) {
+    const deity = byKey.get(slugify(item.name));
+    if (!deity) continue;
+    for (const name of item.otherNames ?? []) {
+      const onDeity = `${deity.id}|${name.toLowerCase()}`;
+      const inTradition = `${deity.traditionId}|${name.toLowerCase()}`;
+      if (everOnDeity.has(onDeity) || liveInTradition.has(inTradition)) continue;
+      everOnDeity.add(onDeity);
+      liveInTradition.add(inTradition);
+      rows.push({ deityId: deity.id, name });
+    }
+  }
+  await insertStamped(tx, deityOtherNames, rows);
 }

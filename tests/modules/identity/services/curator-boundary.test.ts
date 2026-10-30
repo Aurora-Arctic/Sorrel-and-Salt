@@ -36,12 +36,8 @@ import { A, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { asManualFix } from '../../../support/db/privileges';
 
-// M11.20: a curator curates the compendium and reaches nothing on the people
-// page. Each row is called by direct id, as a forged request would call it,
-// so the menu hiding People is not what refuses. Each refusal is proven
-// against the same call succeeding for the caller it is meant for, and F is
-// proven to pass the curation check, so a row stays green only while the
-// people page's own guard refuses a curator
+// A curator curates the compendium and reaches nothing on the people page. Each row is called by direct id, as a forged request would call it, so the menu hiding People is not what refuses.
+// Each refusal is proven against the same call succeeding for the caller it is meant for, and F is proven to pass the curation check, so a row stays green only while the people page's own guard refuses a curator
 // (claude-docs/design-decisions/m11.20-curator-role.md).
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>(async () => {}));

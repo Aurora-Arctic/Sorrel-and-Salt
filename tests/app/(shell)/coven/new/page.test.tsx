@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeQueryClient } from '@/lib/graphql-client';
 import type { Session } from '@/lib/session';
 
-// The create-workspace page, `/coven/new` (M9.16). The session and the row are
+// The create-workspace page, `/coven/new`. The session and the row are
 // mocked; what they are is tests/lib/request-session.test.ts's and the
 // identity service's, and the creation gate is the coven service's.
 
@@ -50,14 +50,6 @@ beforeEach(() => {
 });
 
 describe('the /coven/new page', () => {
-  it('reads the right from the row for the signed-in user', async () => {
-    await renderPage(true);
-
-    expect(requireSession).toHaveBeenCalledOnce();
-    expect(getMe).toHaveBeenCalledExactlyOnceWith(SESSION);
-    expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
-  });
-
   it('shows the context row, with the switcher, to a user who already has a coven', async () => {
     await renderPage(true, [{ slug: 'fixture-coven', name: 'Fixture Coven' }]);
 
@@ -71,8 +63,11 @@ describe('the /coven/new page', () => {
     expect(screen.queryByRole('region', { name: 'Context' })).toBeNull();
   });
 
-  it('offers the form to a user holding creation rights', async () => {
+  it('reads the right from the row and offers the form to a user holding it', async () => {
     await renderPage(true);
+
+    expect(requireSession).toHaveBeenCalledOnce();
+    expect(getMe).toHaveBeenCalledExactlyOnceWith(SESSION);
 
     expect(screen.getByRole('textbox', { name: 'Name' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Create Coven' })).toBeInTheDocument();

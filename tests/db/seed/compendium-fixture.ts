@@ -1,8 +1,7 @@
 import type { SeedCompendiumShard } from '@/db/seed/types';
 
-// An invented two-entry shard for the compendium seed's tests (M1.25): no
-// plant, book or page here exists. Testwort carries every field and two
-// forms; Samplewort links it as a substitute, by identity and by form.
+// An invented two-entry shard for the compendium seed's tests: no plant, book or page here exists. Testwort carries every field and two forms; Samplewort links it as a substitute, by identity and by form.
+// Testwort and its Oil are flagged toxic, each with a citation naming the flag; its Herb and Samplewort are not.
 
 /** A description of `count` words, so the guard's word bounds are what a test chooses. */
 export function wordsOf(count: number): string {
@@ -39,6 +38,7 @@ export const FIXTURE_SHARD: SeedCompendiumShard = {
       zodiacSigns: ['Capricorn'],
       colors: ['green'],
       safetyNotes: 'An invented caution.',
+      toxic: true,
       folkNames: ['Fixture Herb', 'Proofleaf'],
       deities: ['Hecate', 'Artemis'],
       categories: ['Protection', 'Warding'],
@@ -54,6 +54,7 @@ export const FIXTURE_SHARD: SeedCompendiumShard = {
             'zodiacSigns',
             'colors',
             'safetyNotes',
+            'toxic',
             'folkNames',
             'deities',
             'categories',
@@ -69,11 +70,12 @@ export const FIXTURE_SHARD: SeedCompendiumShard = {
           form: 'Oil',
           description: wordsOf(40),
           safetyNotes: 'An invented caution for the oil.',
+          toxic: true,
           categories: ['Healing'],
           references: [
             {
               source: 'fixture-page',
-              supports: ['form', 'description', 'safetyNotes', 'categories'],
+              supports: ['form', 'description', 'safetyNotes', 'toxic', 'categories'],
             },
           ],
         },

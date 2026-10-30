@@ -1,0 +1,45 @@
+// The design sync's preview page is a card whose own <style> sets `body{background:#fff}`,
+// after the library sheet. The workshop leaves the page colour to the body (story-frame.scss
+// makes the frame transparent around the app shell), so a shell story's cream text sat on
+// white. `html > body` outranks that bare `body` rule whatever the order, and follows the
+// theme the decorator sets on <html>, which defaults to dark as .storybook/preview.tsx does.
+@use '../src/scss/variables' as *;
+
+html > body {
+  background-color: $surface-page;
+  color: $text-primary;
+}
+
+// The sync's preview page pads the body 24px and makes `.ds-single` a containing block for
+// `position:fixed` (transform:translateZ(0)). With the app shell on the page, the workshop frame
+// stops clipping (story-frame.scss), so fixed bars (ImpersonationBanner, the phone bar) sat 24px
+// down and the shell was offset. A -24px margin puts the box back at the viewport edge.
+.ds-single:has(.app-shell) {
+  margin: -24px;
+}
+
+// The same cancelling margin for the stories whose frame (`.workshop-story-frame`, 3rem of
+// gutter) the workshop measures from the viewport edge, but which hold no `.app-shell`. The
+// preview page's 24px body padding left each about 48px narrower and 24px lower than in
+// Storybook, so tables wrapped, nav folded into More and cards stacked (MB.273). The card's
+// own page (no `ds-solo` on <html>) keeps its padding. The selector names the component by its
+// preview script, so no other component's capture moves: a rule on every `.ds-single` would
+// re-frame all of them.
+:root.ds-solo {
+  body:is(
+      :has(script[src$='/AdminNav.js']),
+      :has(script[src$='/CompendiumList.js']),
+      :has(script[src$='/ContextRow.js']),
+      :has(script[src$='/CovenCards.js']),
+      :has(script[src$='/EntryMarks.js']),
+      :has(script[src$='/IngredientEntry.js']),
+      :has(script[src$='/ProviderMark.js']),
+      :has(script[src$='/PublicFrame.js']),
+      :has(script[src$='/SectionNav.js']),
+      :has(script[src$='/ThemeToggle.js']),
+      :has(script[src$='/Welcome.js'])
+    )
+    .ds-single {
+    margin: -24px;
+  }
+}

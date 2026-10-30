@@ -13,17 +13,17 @@ import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
 import StackTable from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
-import { noMatchText } from '../../lib/text';
+import { emptyList, noMatchText } from '../../lib/text';
 import type { UserListEntry, UserListFilterProps, UserListProps } from './types';
 import './index.scss';
 
-// `/admin/users`' filter, table and pager (MB.52). Render-only: the page reads
+// `/admin/users`' filter, table and pager. Render-only: the page reads
 // the list through the identity service and hands this one page of it. The
 // filter is a GET form to the page itself, so a filtered page is an address
 // (claude-docs/components/user-list.md).
 
 /**
- * The empty list, naming the filters in use (MB.115, on the owner's call), so
+ * The empty list, naming the filters in use, so
  * an admin sees what to change: "No users match “ada” and the role Admin.
  * Change or clear the filter to see more."
  */
@@ -33,14 +33,14 @@ function noMatch({ query, role, awaitingApproval }: UserListFilterProps): string
     role && `the role ${roleLabel(role)}`,
     awaitingApproval && 'Needs Approval',
   ].filter((filter): filter is string => Boolean(filter));
-  return noMatchText('users', filters, 'There are no users yet.');
+  return noMatchText('users', filters, emptyList('users'));
 }
 
 /**
- * The columns, in the owner's order (MB.59). Impersonate is last, and only
+ * The columns, in table order. Impersonate is last, and only
  * where impersonation is registered: an action, its cell unlabelled as a
  * card, at the card's top right beside the name. `changesPaused`: admin
- * changes are paused and the viewer is not the primary admin (MB.63).
+ * changes are paused and the viewer is not the primary admin.
  */
 const columns = (
   canImpersonate: boolean,
@@ -48,9 +48,9 @@ const columns = (
 ): readonly (StackColumn<UserListEntry> | false)[] => [
   {
     heading: 'Name',
-    // The way into their privilege history (MB.200), then the name, on every
+    // The way into their privilege history, then the name, on every
     // row: an admin's changes are the ones most worth reading. The name opens
-    // the user's modal, their covens and Impersonate (M9.19).
+    // the user's modal, their covens and Impersonate.
     cell: (user) => (
       <span className="user-list__name">
         <HistoryLink email={user.email} name={user.name} />
@@ -60,7 +60,7 @@ const columns = (
   },
   {
     heading: 'Email',
-    // Whether the address is verified, then the address, in one cell (the owner's call).
+    // Whether the address is verified, then the address, in one cell.
     cell: (user) => (
       <span className="user-list__email">
         <Mark
@@ -74,11 +74,9 @@ const columns = (
   },
   {
     heading: 'Role',
-    // An admin's or a curator's role in bold, on the owner's call: the rows to
-    // notice. On the right, the control that changes it (MB.59, M11.20), as
-    // Coven Creation holds its own: one column rather than a second saying the
-    // same thing. The primary admin is marked by a crown with a tip, and its
-    // Change Role's tip says why it cannot be used.
+    // An admin's or curator's role in bold, with the control that changes it on the right: one
+    // column, as Coven Creation holds its own. The primary admin carries a crown with a tip, and
+    // its Change Role's tip says why it cannot be used.
     cell: (user) => (
       <div className="user-list__role">
         <span className="user-list__role-name">
@@ -105,22 +103,19 @@ const columns = (
   },
   {
     heading: 'Coven Creation',
-    // Whether they may, and beside it the control that changes it (M5.8);
-    // none on an admin's or a curator's row, whom the users CHECK holds to the
-    // flag (MB.177, M11.20).
+    // Whether they may, and Approve beside a No; Revoke is the user modal's alone, so the
+    // row is an index into it. None on an admin's or a curator's row, whom the users CHECK
+    // holds to the flag.
     cell: (user) => (
       <div className="user-list__creation">
         <Mark value={user.canCreateWorkspace} label={user.canCreateWorkspace ? 'Yes' : 'No'} />
-        {user.role !== 'user' ? null : (
-          // Keyed by the action, so the refresh after a change mounts a fresh
-          // control for the other one rather than keeping this one's busy state.
+        {user.role === 'user' && !user.canCreateWorkspace && (
           <CreationControl
-            key={user.canCreateWorkspace ? 'revoke' : 'approve'}
             userId={user.id}
             name={user.name}
             emailVerified={user.emailVerified}
             paused={changesPaused}
-            action={user.canCreateWorkspace ? 'revoke' : 'approve'}
+            action="approve"
           />
         )}
       </div>
@@ -128,7 +123,7 @@ const columns = (
   },
   {
     heading: 'Sign-In Methods',
-    // Logos, empty when none, on the owner's call: a blank reads as none.
+    // Logos, empty when none: a blank reads as none.
     // This and Signed Up are facts no control changes, so muted (index.scss).
     className: 'user-list__fact',
     cell: (user) => (
@@ -148,7 +143,7 @@ const columns = (
       </time>
     ),
   },
-  // Not on an admin's row: the endpoint refuses one (MB.53). Ruled in red,
+  // Not on an admin's row: the endpoint refuses one. Ruled in red,
   // as acting as someone else is the table's one dangerous control.
   canImpersonate && {
     heading: 'Impersonate',
@@ -196,6 +191,6 @@ const UserList = ({
 
 export default UserList;
 
-// The pause switch, which the page puts beside its heading (MB.63): part of
+// The pause switch, which the page puts beside its heading: part of
 // this list's controls, so it lives here, but drawn outside the list.
 export { default as PauseControl } from './pause-control';

@@ -1,23 +1,17 @@
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { recreateE2eDatabase } from './database';
-import { signInAs } from './session';
 
-// `fullyParallel` splits this file across workers, each running `beforeAll`
-// and a share of the tests against its own slot's database (MB.112). That is
-// the reseed every db-touching spec file opens with, and all this file needs:
-// a test signs in its own user when it needs one and reads only seed rows, so
-// no test waits on another (M11.18; claude-docs/testing/e2e.md, "Reseeding between spec files").
+// `fullyParallel` splits this file across workers, each reseeding its own slot's database in `beforeAll`;
+// a test signs in its own user and reads only seed rows, so none waits on another
+// (claude-docs/testing/e2e.md, "Reseeding between spec files").
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-// The front door, signed out (MB.57): reachable without a redirect, nothing
-// pushing it sideways at a phone's width, and axe-clean in both themes — the
-// one spec that checks this template so (claude-docs/testing/e2e.md). Signed
-// in, it swaps only the way in, for the landing of the visitor's role; where
-// its links go is tests/app/page.test.tsx's.
+// The front door, signed out: reachable without a redirect, nothing sideways at a phone's width, and
+// axe-clean in both themes. Signed in, it swaps only the way in (links are tests/app/page.test.tsx's).
 test('the entry page renders signed out, without a redirect', async ({ page }) => {
   await page.goto('/');
 
@@ -59,19 +53,6 @@ test("the entry page's backdrop images are served, hashed, under /_next/static",
   }
 });
 
-// Signed in, the way in is the landing a sign-in with no return path gets
-// (MB.113): followed here for an admin, to the admin area.
-test('the entry page continues a signed-in admin to the admin area', async ({ page }) => {
-  await signInAs(page, 'an-admin@entry-page.test', ['discord'], 'admin');
-  await page.goto('/');
-
-  await expect(page.getByRole('link', { name: 'Sign In' })).toHaveCount(0);
-  await page.getByRole('link', { name: 'Continue' }).click();
-
-  await expect(page).toHaveURL(/\/admin$/);
-  await expect(page.getByRole('heading', { level: 1, name: 'Admin' })).toBeVisible();
-});
-
 // Facebook appends `#_=_` to the redirect URI, and a fragment survives every
 // redirect whose Location carries none, so it reaches whatever page a sign-in
 // lands on; the root layout strips exactly that one before first paint.
@@ -81,4 +62,29 @@ test("strips Facebook's #_=_ fragment and no other", async ({ page }) => {
 
   await page.goto('/#top');
   expect(new URL(page.url()).hash).toBe('#top');
+});
+
+// Highlighted text swaps the page's two colours, so it keeps the page's own contrast in both themes
+// and is never the accent green.
+test('selected text swaps the page ink and ground in each theme', async ({ page }) => {
+  await page.goto('/');
+  for (const colorScheme of ['dark', 'light'] as const) {
+    await page.emulateMedia({ colorScheme });
+    const colours = await page.evaluate(() => {
+      const page = getComputedStyle(document.body);
+      const picked = getComputedStyle(document.body, '::selection');
+      const root = getComputedStyle(document.documentElement);
+      return {
+        ink: root.getPropertyValue('--text-primary').trim(),
+        ground: root.getPropertyValue('--surface-page').trim(),
+        selectionBackground: picked.backgroundColor,
+        selectionInk: picked.color,
+        pageInk: page.color,
+        pageGround: page.backgroundColor,
+      };
+    });
+    expect(colours.selectionBackground).toBe(colours.pageInk);
+    expect(colours.selectionInk).not.toBe(colours.selectionBackground);
+    expect(colours.selectionInk).toBe(colours.pageGround);
+  }
 });

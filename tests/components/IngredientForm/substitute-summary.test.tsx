@@ -14,11 +14,8 @@ import { renderWithClient } from '../../support/ingredient-form';
 import { mockGraphQLError, mockGraphQLQuery } from '../../support/msw/graphql';
 import { WORKSPACE_ID } from '../../support/msw/ingredient-lookups';
 
-// A substitute list's chips (MB.115, the owner's ask): a linked ingredient's
-// chip is a button that opens a summary of it, read through /api/graphql on
-// opening, and a typed name's is plain text that opens nothing. How the panel
-// opens and shuts — a second press, Escape, a press outside — is Combobox's
-// (tests/components/Combobox/index.test.tsx, "with a summary").
+// A substitute list's chips: a linked ingredient's chip is a button that opens a summary of it, read through /api/graphql on opening, and a typed name's is plain text that opens nothing.
+// How the panel opens and shuts (a second press, Escape, a press outside) is Combobox's (tests/components/Combobox/index.test.tsx, "with a summary").
 
 const MOCKWORT_ID = '0d4f2c1a-6b3e-4a5d-8c7f-9e0a1b2c3d4e';
 const DRIED_LEAF_ID = '71c2d3e4-f5a6-4b7c-8d9e-0f1a2b3c4d5e';
@@ -49,7 +46,7 @@ const MOCKWORT: IngredientSummaryQuery['ingredient'] = {
   celestialBodies: ['Moon'],
   zodiacSigns: null,
   colors: [],
-  // The form adds a celestial body of its own to the ingredient's (MB.215).
+  // The form adds a celestial body of its own to the ingredient's.
   variants: [
     {
       id: DRIED_LEAF_ID,
@@ -149,7 +146,7 @@ describe('a substitute list’s chips', () => {
 
     fireEvent.click(opener());
 
-    const link = await within(summary()).findByRole('link');
+    const link = await within(summary()).findByRole('link', { name: /^See Entry/ });
     expect(link).toHaveAttribute('href', '/admin/compendium?edit=mockwort-fixtura-vulgaris');
     expect(link).toHaveAttribute('target', '_blank');
   });

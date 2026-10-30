@@ -4,12 +4,9 @@ import { SelectField, TextField } from '../Field';
 import type { StockFieldsProps, StockFormValues } from './types';
 import { UNIT_OPTIONS } from './units';
 
-// A jar's three amounts, for whichever react-hook-form form holds a jar: the
-// StockDialog's chosen jar (M9.9), under its row's `prefix` ("rows.0"), and the add
-// dialog (M9.12) at the form's top level. They sit in the form's gap like any
-// fields, so the form draws them between its alert and its actions. Changing
-// the unit never converts the quantity or the threshold: the numbers stay as
-// typed, and the unit says what they are measured in.
+// A jar's three amounts for any react-hook-form form that holds a jar: under a row's `prefix`
+// ("rows.0") in the StockDialog, or at the form's top level in the add dialog. Changing the
+// unit never converts the quantity or the threshold: the numbers stay as typed.
 // claude-docs/components/stock-fields.md.
 export default function StockFields<V extends FieldValues = StockFormValues>({
   prefix,
@@ -28,7 +25,7 @@ export default function StockFields<V extends FieldValues = StockFormValues>({
         labelSuffix={form}
         disabled={disabled}
         type="number"
-        placeholder="Add amount"
+        placeholder="Add an amount"
         autoComplete="off"
       />
       <SelectField<V>
@@ -37,7 +34,7 @@ export default function StockFields<V extends FieldValues = StockFormValues>({
         labelSuffix={form}
         disabled={disabled}
         hint="Changing the unit keeps the numbers as typed. It does not convert them."
-        placeholder="Choose unit"
+        placeholder="Choose a unit"
         options={UNIT_OPTIONS}
       />
       <TextField<V>
@@ -47,7 +44,7 @@ export default function StockFields<V extends FieldValues = StockFormValues>({
         disabled={disabled}
         type="number"
         hint="The jar is badged Low Stock at this amount or below. Zero turns the badge off."
-        placeholder="Add level"
+        placeholder="Add a level"
         autoComplete="off"
       />
     </>

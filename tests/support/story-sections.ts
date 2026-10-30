@@ -1,8 +1,5 @@
-// The part of the site each v1 story walks, as "Area - Page - Part". A story's
-// wording in DESIGN.md §10 says what a user wants; this says where in the site
-// to look when it fails. Kept here, not in DESIGN.md, so the spec's list stays
-// plain prose; tests/guards/story-sections.test.ts fails when a §10 story has
-// no section here, or this names a number §10 does not list.
+// The part of the site each v1 story walks, as "Area - Page - Part": where in the site to look when a story
+// fails. A story without a section here is listed under "Other".
 
 export const STORY_SECTIONS: Readonly<Record<number, string>> = {
   1: 'Account - Sign In',
@@ -57,4 +54,15 @@ export const STORY_SECTIONS: Readonly<Record<number, string>> = {
   62: 'Admin - People - Invitations',
   63: 'Compendium - Public',
   64: 'Compendium - References',
+  76: 'Coven - Spells - Workings',
+  77: 'Coven - Spells - Ingredients',
+  78: 'Coven - Spells - Workings',
+  79: 'Coven - Spells - Workings',
+  80: 'Coven - Spells - Ingredients',
+  82: 'Coven - Spells',
+  83: 'Coven - Spells - Quick Look',
+  84: 'Coven - Spells',
+  85: 'Coven - Spells - Preview',
+  86: 'Coven - Spells - Preview',
+  81: 'Coven - Spells',
 };

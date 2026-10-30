@@ -18,7 +18,7 @@ path — a seed, a fixture, a service that never mentions visibility — joins t
 shared grimoire. The failure mode of the other default is silent: a spell
 nobody but its author can see, in a coven that cannot tell it is missing.
 
-### Reading: three finders, and why the generic ones refuse
+### Reading: one predicate, nine finders, and why the generic ones refuse
 
 `readableSpells(membership)` is the predicate, and the only one: the coven from
 the proof, `deleted_at IS NULL`, and `visibility = 'workspace' OR created_by =
@@ -26,11 +26,55 @@ membership.userId`. Both halves come out of the proof, so there is no id a
 caller could pass that disagrees with the check that minted it — the argument
 `scopedTo` already makes one layer down.
 
-| Finder                                        | Reads                                                       |
-| --------------------------------------------- | ----------------------------------------------------------- |
-| `findManySpells(membership)`                  | every spell of the coven this member may read               |
-| `findOneSpell(membership, spellId)`           | one by id, `undefined` when it is another's private spell   |
-| `findManyInSpell(membership, table, spellId)` | a spell's rows in `spell_ingredients` or `spell_categories` |
+`readableSpells` is exported from `src/db/repository/spells.ts` for the
+repository's own finders, M13.5's and M13.6's workings among them, and not from
+the repository's `index.ts`: above the repository nothing builds SQL (MB.33),
+so a service has nothing to do with a condition. It builds that condition and
+runs nothing; what the condition admits is proved over every finder by
+`tests/db/repository/readable-spells.test.ts`.
+
+Eight finders read through it, six of them in `spells.ts`:
+
+| Finder                                                                             | Reads                                                                          |
+| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `findOneSpell(membership, spellId)`                                                | one by id, `undefined` when it is another's private spell                      |
+| `findManyInSpell(membership, table, spellId)`                                      | a spell's rows in `spell_steps` or `spell_categories`                          |
+| `findManyInSpells(membership, table, spellIds)`                                    | the same for many spells in one statement, a loader's batch (M10.9)            |
+| `findPageInReadableSpells(membership, table, order, page, where?)` (`finders.ts`)  | a cursor page of `spells` or a `spell_id` table (M10.9)                        |
+| `findGrimoirePage(membership, page, query)` (`grimoire.ts`)                        | the grimoire's page in `query.order`, of `query.status`, through the one above |
+| `findIngredientsInSpellsIncludingSoftDeleted(membership, ingredientIds)`           | the ingredients a readable spell holds ("What a spell holds", below)           |
+| `findManyOfSpellIngredientsIncludingSoftDeleted(membership, table, ingredientIds)` | those ingredients' folk names or category links, through the one above         |
+| `findFormsInSpellsIncludingSoftDeleted(membership, ingredientIds)`                 | those ingredients' forms, deleted or not (M10.9)                               |
+
+One writer reads through the same rule (M13.11): `write.softDeleteSpell(membership, spellId)`
+marks a spell deleted only where `readableSpells` admits it, so a member deleting another's
+private spell by id writes nothing and is answered `[]`, as `findOneSpell` answers `undefined`.
+Its steps go first, through `write.softDeleteStepsOfSpell`, scoped to the coven through their
+live spell: once the spell is marked, the steps' `EXISTS` no longer reaches them.
+
+**Proved as one matrix, held by one guard (M10.6).**
+`tests/db/repository/readable-spells.test.ts` runs every relationship against
+both visibilities — the author, the owner, another member, a viewer, the author
+after demotion to viewer, a member of another coven by direct id, and the author
+of a soft-deleted spell — and requires `findOneSpell` and `findManyInSpell` over
+both child tables to give the same answer in each cell.
+A site admin and a site curator are refused at the service, because
+`assertMembership` refuses anyone outside the coven before a finder runs: its
+site-admin arm is proved in `tests/modules/coven/services/membership.test.ts`,
+and `tests/db/workspace-isolation.test.ts` sweeps both roles across the
+grimoire's read check and `setSpellVisibility`. The lint rule
+`sorrel/spell-visibility-read-in-one-place` (`lint/source-sweeps.js`) reads
+`src/` as text and fails a
+spell's visibility compared anywhere outside `readableSpells`: the column in a
+query, the word in a raw `sql` template, or a JavaScript comparison of a
+fetched row. The JavaScript check covers only `src/db/` and `src/modules/`,
+where read decisions live: a component or a GraphQL resolver compares
+`spell.visibility` to draw a private badge or a read-only control (M10.11,
+M10.13) on a spell the service has already let the viewer read, which is a
+display decision rather than who may read it. It allows two helpers beside the predicate, `visibilityIn` and `visibilityText` (M13.22: the grimoire's Visibility facet, which only narrows what `readableSpells` lets through), and one comparison, `setSpellVisibility`'s check of the
+spell it has already read, which decides a write rather than who reads.
+`spellStepWrites` scopes by coven alone and skips visibility on purpose: it
+moves steps because their form is going, whoever may read the spell.
 
 The generic finders refuse all three tables, and that refusal is the point.
 `spells` carries `visibility`, so `findManyInWorkspace` will not compile
@@ -58,46 +102,52 @@ the parent is filtered twice, and neither copy is the other's to forget.
 
 ### What a spell holds (M5.3)
 
-A spell is a record of a working, so an ingredient soft-deleted after it went
+A spell is a recipe that keeps what went into its jar, so an ingredient soft-deleted after it went
 into the jar is still in it: shown as it was, its categories still counted
 toward the spell's derived categories, its safety notes still warning. The
-data already holds that — `spell_ingredients` points at the row, its foreign
+data already holds that — `spell_steps` points at the row, its foreign
 key is `NO ACTION`, and a soft delete touches no layer. What would lose it is
 the read, since every other finder filters a deleted ingredient and `existsIn`
-filters a deleted parent by construction. So two finders in `spells.ts` are
+filters a deleted parent by construction. So three finders in `spells.ts` are
 named exceptions to CLAUDE.md rule 4, each ending `…IncludingSoftDeleted` so
 the call site says what it is:
 
-| Finder                                                                             | Reads                                                                                 |
-| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| `findIngredientsInSpellsIncludingSoftDeleted(membership, ingredientIds)`           | the ingredients among the ids that a spell this member may read holds, deleted or not |
-| `findManyOfSpellIngredientsIncludingSoftDeleted(membership, table, ingredientIds)` | the live folk names or category links of those ingredients                            |
+| Finder                                                                             | Reads                                                                                    |
+| ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `findIngredientsInSpellsIncludingSoftDeleted(membership, ingredientIds)`           | the ingredients among the ids that a spell this member may read holds, deleted or not    |
+| `findManyOfSpellIngredientsIncludingSoftDeleted(membership, table, ingredientIds)` | the live folk names or category links of those ingredients                               |
+| `findFormsInSpellsIncludingSoftDeleted(membership, ingredientIds)`                 | the forms of those ingredients, deleted or not, so a step keeps the form it laid (M10.9) |
 
-**Only the ingredient's tombstone is skipped.** The spell must be readable and
+**Only the ingredient's tombstone is skipped, and the form's.** The spell must be readable and
 live (`readableSpells`), and the layer live (`existsIn` over
-`spell_ingredients`, which filters a removed layer by construction). The ingredient must be in the compendium
+`spell_steps`, which filters a removed layer by construction). The ingredient must be in the compendium
 or the proof's coven: a layer's foreign key checks the id alone, so a W spell
 linking X's ingredient is a row the schema accepts and the finder withholds. A
 child's own tombstone still filters, so a folk name removed before the delete
-stays removed. The children's finder reaches its parents through the first —
+stays removed. The forms are the one child read past its own tombstone,
+through the third finder, so a step whose form alone was deleted still shows
+it; a deleted form's category pairs need no hatch, since
+`ingredient_categories` has no `deleted_at` and a form's soft delete leaves them.
+The two children's finders reach their parents through the first —
 two statements rather than one — because a deleted parent's tier cannot be
 tested through `existsIn`, and a raw subquery is what MB.100 removed.
 
-Both take ingredient ids rather than a spell id. The layers come from
+All three take ingredient ids rather than a spell id. The layers come from
 `findManyInSpell`, and their `ingredientId`s batch into the first, which is
 the loader key M10.9's resolution needs; a custom layer names no ingredient to
-ask about. `findManyOfIngredients` refuses `spell_ingredients` at compile time
+ask about. `findManyOfIngredients` refuses `spell_steps` at compile time
 since M5.3: the table carries an `ingredient_id`, and read through a
 compendium entry it would have been every coven's layers of that entry,
-private spells included. The soft-delete guard pins both hatches' shape
+private spells included. The soft-delete guard pins all three hatches' shape
 (["Soft-delete filtering"](soft-delete.md)); the argument, and v2's revision-pinned layers,
 are [`m5.3-spells-keep-deleted-ingredients.md`](../design-decisions/m5.3-spells-keep-deleted-ingredients.md).
 
 ### Writing: the one-way rule
 
 `src/modules/grimoire/services/spell-visibility.ts`'s `setSpellVisibility(session, workspaceId,
-spellId, visibility)`. `private` may be widened to `workspace`; `workspace` may
-never be narrowed back, for §5's reason. The narrowing is refused with a
+spellId, visibility)`. `private` may be widened to `workspace`; a **complete** spell's `workspace` may
+never be narrowed back, for §5's reason. A draft moves either way (M10.20), and
+the check reads the status the row holds before the write. The narrowing is refused with a
 `Forbidden` **carrying a message that says so**, not the bare one: the caller
 holds the permission, and a two-word refusal would send them looking for a
 role they already have. The rule governs visibility and not existence — a
@@ -110,8 +160,13 @@ get is `NotFound` rather than a refusal that confirms the spell exists.
 Restating the visibility a spell already has is permitted: it is not a
 narrowing, and refusing it would make an idempotent call an error.
 
-M10.6 adds the pure `resolveSpellVisibility()` and the exhaustive transition
-matrix; this is the half that runs against the database.
+M10.6 adds the read half: the exported `readableSpells` predicate, the read
+matrix and the guard, all under "Reading" above. The transitions are proved in
+`tests/modules/grimoire/services/spell-visibility.test.ts`. A shared spell's
+deletion is proved in the repository by the matrix file, which soft-deletes a
+`workspace` spell through `softDeleteByIdInWorkspace` under `withAudit` and
+finds it gone from every finder; the service that deletes a spell is M13.11's
+`deleteSpell`.
 
 ### `updateByIdInWorkspace`, and why it exists
 
@@ -144,3 +199,31 @@ proof's clause, so another coven's row and a compendium row are written
 nothing and returned as nothing. Like `updateByIdInWorkspace` it admits
 `spells`, whose visibility its type cannot see, so a spell's delete reads
 `findOneSpell` first, as `setSpellVisibility` does.
+
+### The spell service (M10.5)
+
+`src/modules/grimoire/services/spells.ts` is where a coven's members meet the
+grimoire. Owners and members hold `spell: create` and `update`, a viewer holds
+`read` alone, and `assertMembership` refuses everyone else, a site admin
+included.
+
+| Call                               | Does                                                                                                |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `createSpell` / `updateSpell`      | write the spell, its whole recipe and its assigned categories; `updateSpell` widens visibility only |
+| `listGrimoire` / `readSpell`       | read a page, or one spell without its steps (`spell-reads.ts`)                                      |
+| `addSpellStep` / `updateSpellStep` | write a one-off ingredient or an instruction, only on a spell the caller reads                      |
+
+A call that names a spell reads it first as the caller. A private spell of
+someone else, and a spell of another coven, both come back `NotFound`, so the
+refusal does not confirm the spell exists. A step has no scope of its own, so
+the spell read is what makes it writable exactly when its spell is readable.
+
+`stepsOfSpells`, `Spell.steps`' batch, resolves each linked step's ingredient
+through `findIngredientsInSpellsIncludingSoftDeleted` and marks one deleted
+since with `deleted: true`. The list's paging is M10.9's. M10.10's saves link a step to
+an ingredient, checking the link only when it is new: a step may lay a live
+form of a live ingredient in the compendium or this coven, and a saved step
+whose ingredient was deleted since keeps it. `updateSpell` changes the
+visibility under the same one-way rule as `setSpellVisibility`, through the
+same check (`services/visibility-rule.ts`), so a save cannot make a shared
+spell private. [grimoire.md](grimoire.md), "Saving a recipe", has the rest.

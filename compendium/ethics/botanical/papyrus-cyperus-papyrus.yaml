@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/papyrus-cyperus-papyrus
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Cyperus papyrus
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-cyperus-papyrus
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Papyrus Sedge Cyperus papyrus", 2018, 10.2305/IUCN.UK.2018-2.RLTS.T164158A120152171.en'

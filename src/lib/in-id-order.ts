@@ -1,8 +1,6 @@
 /**
- * One answer per id in the order given, as a DataLoader's batch is answered:
- * the row carrying the id, or `missing(id)` where none does. `rows` comes from
- * one read of the ids in no particular order, and is indexed once, so a batch
- * costs one pass over each list rather than a search per id.
+ * One answer per id in the order given, as a DataLoader's batch is answered: the row carrying the id, or `missing(id)`. `rows` is one unordered read,
+ * indexed once, so a batch costs one pass per list.
  */
 export function inIdOrder<Row extends { id: string }, Missing>(
   ids: readonly string[],

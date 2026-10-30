@@ -568,6 +568,104 @@
       "when": 1792604719436,
       "tag": "0080_astrology-position-expand",
       "breakpoints": true
+    },
+    {
+      "idx": 81,
+      "version": "7",
+      "when": 1792737838320,
+      "tag": "0081_compendium-seed-state-expand",
+      "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1792809160001,
+      "tag": "0082_deity-other-names",
+      "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
+      "when": 1792810977828,
+      "tag": "0083_spell-steps-expand",
+      "breakpoints": true
+    },
+    {
+      "idx": 84,
+      "version": "7",
+      "when": 1793120994011,
+      "tag": "0084_spells-revision-and-draft-title",
+      "breakpoints": true
+    },
+    {
+      "idx": 85,
+      "version": "7",
+      "when": 1793137921414,
+      "tag": "0085_spells-unaccent-trgm",
+      "breakpoints": true
+    },
+    {
+      "idx": 86,
+      "version": "7",
+      "when": 1793145935307,
+      "tag": "0086_spells-jar-description",
+      "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "7",
+      "when": 1793226184471,
+      "tag": "0087_spell-steps-repeat-forms",
+      "breakpoints": true
+    },
+    {
+      "idx": 88,
+      "version": "7",
+      "when": 1793230432882,
+      "tag": "0088_spell-steps-note-into-body",
+      "breakpoints": true
+    },
+    {
+      "idx": 89,
+      "version": "7",
+      "when": 1793232216747,
+      "tag": "0089_drop-spell-steps-old-columns",
+      "breakpoints": true
+    },
+    {
+      "idx": 90,
+      "version": "7",
+      "when": 1793296938677,
+      "tag": "0090_retire-endangered-entries",
+      "breakpoints": true
+    },
+    {
+      "idx": 91,
+      "version": "7",
+      "when": 1793317070543,
+      "tag": "0091_spell-workings",
+      "breakpoints": true
+    },
+    {
+      "idx": 92,
+      "version": "7",
+      "when": 1793317071544,
+      "tag": "0092_ingredients-revision",
+      "breakpoints": true
+    },
+    {
+      "idx": 93,
+      "version": "7",
+      "when": 1793339120442,
+      "tag": "0093_cupboard-entries-revision",
+      "breakpoints": true
+    },
+    {
+      "idx": 94,
+      "version": "7",
+      "when": 1793379183819,
+      "tag": "0094_workspaces-demo-flag",
+      "breakpoints": true
     }
   ]
 }

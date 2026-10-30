@@ -9,13 +9,9 @@ import {
   declineInvitationById,
 } from '../services/invitation-acceptance';
 
-// MB.70's admin invitation and the one accept (MB.202). No field carries the
-// token or a link: the token exists only in the mail, and the row holds its
-// hash, which is not exposed either (claude-docs/auth/admin-users.md,
-// "Inviting an admin"). The workspace tier's `workspace` and `role` are added
-// from `coven` (M7.3), since `identity` cannot name a `Workspace`. The names
-// still say "admin invitation" for the site tier, which since M11.20 may
-// invite a curator as well: `siteRole` says which.
+// The admin invitation and the one accept. No field carries the token or a link: the token exists only in the mail and the
+// row holds its hash (claude-docs/auth/admin-users.md, "Inviting an admin"). The workspace tier's `workspace` and `role`
+// are added from `coven`. "Admin invitation" also covers a curator invite: `siteRole` says which.
 
 const INVITABLE_SITE_ROLES = ['curator', 'admin'] as const satisfies readonly InvitableSiteRole[];
 
@@ -102,7 +98,7 @@ builder.mutationField('acceptInvitation', (t) =>
   }),
 );
 
-// The account page's accept (M10.32): a coven invitation by the id the page
+// The account page's accept: a coven invitation by the id the page
 // lists, for a person whose mail never arrived. The same service checks, the
 // session's verified address matched in SQL, and the site tier out of reach.
 builder.mutationField('acceptInvitationById', (t) =>
@@ -116,7 +112,7 @@ builder.mutationField('acceptInvitationById', (t) =>
   }),
 );
 
-// The account page's Decline (M10.34): the accept by id's checks, and the
+// The account page's Decline: the accept by id's checks, and the
 // invitation stamped declined rather than accepted; nothing is granted.
 builder.mutationField('declineInvitationById', (t) =>
   t.field({

@@ -1,0 +1,43 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The Share With the Coven switch, label and note start-aligned as the ingredient form's Toxic switch
+// is, rather than centred as the primitive's filter-bar switch is.
+.working-form .switch {
+  align-items: flex-start;
+
+  .field__label {
+    text-align: start;
+  }
+}
+
+// The deduction preview: one `JarLine` per step, as the recipe page's In the Cupboard panel draws it.
+.working-deductions {
+  @include stack(3);
+
+  // No ◆ beside the jars: the jar is each line's mark.
+  @include list-reset;
+
+  // A long name wraps here: the preview has the room, and a cut name hides which step it is.
+  .jar-line__name {
+    overflow: visible;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+
+  // The parts wrap whole onto the next line, so on a phone a unit never sits alone under its number.
+  .jar-line__words {
+    flex-wrap: wrap;
+    font-size: type-size('small');
+    font-variant-numeric: tabular-nums;
+
+    b {
+      font-weight: 500;
+      color: $text-primary;
+    }
+  }
+}
+
+.working-deductions__short {
+  color: $warning;
+}

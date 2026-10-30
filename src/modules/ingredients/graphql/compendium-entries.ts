@@ -4,22 +4,19 @@ import {
   countCompendiumEntryUsers,
   createCompendiumEntry,
   deleteCompendiumEntry,
+  setCompendiumEntryReviewed,
   updateCompendiumEntry,
 } from '../services/compendium';
 import { clearIngredientChildren } from '../loaders/ingredient-children';
-import { IngredientRef } from './ingredient';
+import { EXPECTED_REVISION, IngredientRef } from './ingredient';
 import { ingredientInputFields } from './ingredient-input';
 
-// The compendium's three writes (M5.5), the site admin's alone: scoped here
-// and refused again by the service, which is the real gate, as M5.6's
+// The compendium's writes, a curator's or an admin's: scoped here
+// and refused again by the service, which is the real gate, as the
 // category writes are. Neither input names a tier or a stamp — the
 // compendium is the mutation, and the stamps are the session's.
 
-/**
- * A compendium entry as the admin's form sends it: `IngredientInput`'s fields,
- * with `nomenclature` required, since the compendium declares one for every
- * entry and the shared schema gives it no default here.
- */
+/** A compendium entry as the admin's form sends it: `IngredientInput`'s fields with `nomenclature` required, as the compendium declares one for every entry. */
 const CompendiumIngredientInput = builder.inputType('CompendiumIngredientInput', {
   fields: (t) => ingredientInputFields(t, { tier: 'compendium', whole: false }),
 });
@@ -27,7 +24,7 @@ const CompendiumIngredientInput = builder.inputType('CompendiumIngredientInput',
 // An update replaces the entry, so a field left out would be cleared — the
 // categories above all, which the form may not show. Non-null makes leaving
 // one out a schema error, and "" or [] clears one, as `IngredientUpdateInput`
-// does for a coven's (MB.159).
+// does for a coven's.
 const CompendiumIngredientUpdateInput = builder.inputType('CompendiumIngredientUpdateInput', {
   description: 'The whole entry, replacing the row. Every field is sent, and "" or [] clears one.',
   fields: (t) => ingredientInputFields(t, { tier: 'compendium', whole: true }),
@@ -60,13 +57,23 @@ builder.mutationField('updateCompendiumIngredient', (t) =>
       id: t.arg.id({ required: true }),
       input: t.arg({ type: CompendiumIngredientUpdateInput, required: true }),
       endRedirect: t.arg.boolean({ required: false, description: END_REDIRECT }),
+      expectedRevision: t.arg.int({
+        required: false,
+        description: EXPECTED_REVISION,
+      }),
     },
     authScopes: { curator: true },
-    resolve: async (_root, { id, input, endRedirect }, { loaders, ...context }) => {
-      const row = await updateCompendiumEntry(sessionOf(context), id, {
-        ...input,
-        endRedirect: endRedirect ?? undefined,
-      });
+    resolve: async (
+      _root,
+      { id, input, endRedirect, expectedRevision },
+      { loaders, ...context },
+    ) => {
+      const row = await updateCompendiumEntry(
+        sessionOf(context),
+        id,
+        { ...input, endRedirect: endRedirect ?? undefined },
+        expectedRevision ?? null,
+      );
       clearIngredientChildren(loaders, row);
       return row;
     },
@@ -86,7 +93,26 @@ builder.mutationField('deleteCompendiumIngredient', (t) =>
   }),
 );
 
-// The delete confirm's number (M12.25): a read, curator-scoped here and
+// The curator's review mark: set or cleared by hand, curator-scoped
+// here and refused again by the service. It answers the entry and never the
+// mark, which `Ingredient` does not carry: the admin page reads it through
+// the service, and a client refreshes after the write.
+builder.mutationField('setCompendiumEntryReviewed', (t) =>
+  t.field({
+    type: IngredientRef,
+    description:
+      'Marks the entry reviewed by a curator, or clears the mark so it needs review. Curators and admins only.',
+    args: {
+      id: t.arg.id({ required: true }),
+      reviewed: t.arg.boolean({ required: true }),
+    },
+    authScopes: { curator: true },
+    resolve: (_root, { id, reviewed }, context) =>
+      setCompendiumEntryReviewed(sessionOf(context), id, reviewed),
+  }),
+);
+
+// The delete confirm's number: a read, curator-scoped here and
 // refused again by the service. A count only, so no coven is named.
 builder.queryField('compendiumEntryUsers', (t) =>
   t.int({

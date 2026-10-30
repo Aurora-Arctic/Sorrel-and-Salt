@@ -1,0 +1,235 @@
+{
+  "projectId": "1ba6570a-0293-4da4-941f-fc4077df5334",
+  "shape": "storybook",
+  "storybookConfigDir": ".storybook",
+  "pkg": "sorrel-and-salt",
+  "globalName": "SorrelAndSalt",
+  "storybookStatic": ".design-sync/sb-reference",
+  "buildCmd": "vite build --config .design-sync/vite.config.ts && tsc -p .design-sync/tsconfig.dts.json && cp .design-sync/dist-package.json dist/package.json && cp .design-sync/dist-index.mjs dist/index.mjs",
+  "entry": "dist/index.mjs",
+  "titleMap": {
+    "Emails / Verify Email": null,
+    "Emails / Coven Invitation": null,
+    "Emails / Admin Invitation": null,
+    "Foundations": null,
+    "Feedback / Main Body": null,
+    "Feedback / Navigation Bar": null,
+    "Feedback / Pending Link": null,
+    "Account / Invitations Received": "ReceivedInvitations",
+    "Admin / Chip Colour Field": "ChipColorField",
+    "Admin / Invitations": "AdminInvitations",
+    "Admin / Nav": "AdminNav",
+    "Coven / Nav": "CovenNav",
+    "Coven / Coven Switcher": "WorkspaceSwitcher",
+    "Coven / Create Coven Form": "CreateWorkspaceForm",
+    "Coven / Delete Coven Button": "DeleteWorkspaceButton",
+    "Coven / Invitations Sent": "PendingInvitations",
+    "Coven / Leave Coven Button": "LeaveWorkspaceButton",
+    "Sign In / Panel": "SignInPanel",
+    "Sign In / Sign-In Methods": "SignInMethods",
+    "Forms / Field": null,
+    "Feedback / Skeleton Fade": null,
+    "Surfaces / Click Feedback": null
+  },
+  "libOverrides": {
+    "source-storybook.mjs": "titleMap keys may be whole story titles (Admin / Nav and Coven / Nav share a last segment); the decorator bundle takes the story loaders so .storybook/preview.tsx can import .scss",
+    "story-imports.mjs": "previews compile msw/browser to a fetch-wrapping fake and msw to the real core, so .storybook/mock-api.ts answers a story's requests in a preview page (the bundled stub makes msw inert); _ds_bundle.js unaffected",
+    "preview-gen-storybook.mjs": "a preview of a story module that imports mock-api starts the fake worker and runs the story's beforeEach before render; compose() never does"
+  },
+  "storyImports": {
+    "loaders": {
+      ".scss": "empty"
+    },
+    "shim": [
+      "src/lib/navigation",
+      "components/Modal/route-modal-provider",
+      "ClickFeedback/status-region",
+      "CovenSwitchTargets/context",
+      "TabbedPage/tab-switch",
+      "node_modules/react-hook-form/",
+      "node_modules/@tanstack/react-query/",
+      "next/dist/client/components/navigation",
+      "shared/lib/hooks-client-context.shared-runtime",
+      "shared/lib/app-router-context.shared-runtime"
+    ]
+  },
+  "cssEntry": "sorrel-and-salt.css",
+  "overrides": {
+    "EmailForm": {
+      "cardMode": "column"
+    },
+    "NameForm": {
+      "cardMode": "column"
+    },
+    "AdminInvitations": {
+      "cardMode": "single",
+      "primaryStory": "Inviting"
+    },
+    "AdminNav": {
+      "cardMode": "column"
+    },
+    "GroupForm": {
+      "cardMode": "single",
+      "primaryStory": "States"
+    },
+    "GroupList": {
+      "cardMode": "column"
+    },
+    "GroupedValueForm": {
+      "cardMode": "single",
+      "primaryStory": "States"
+    },
+    "GroupedValueList": {
+      "cardMode": "column"
+    },
+    "UserDetail": {
+      "cardMode": "single",
+      "primaryStory": "States"
+    },
+    "UserList": {
+      "cardMode": "column"
+    },
+    "CreateWorkspaceForm": {
+      "cardMode": "column"
+    },
+    "LeaveWorkspaceButton": {
+      "cardMode": "single",
+      "primaryStory": "Open",
+      "viewport": "1000x1300"
+    },
+    "Combobox": {
+      "cardMode": "single",
+      "primaryStory": "EmptyMessage",
+      "viewport": "900x900"
+    },
+    "InfoTip": {
+      "cardMode": "single",
+      "primaryStory": "States"
+    },
+    "CardDensitySwitch": {
+      "cardMode": "column"
+    },
+    "CategoryChips": {
+      "cardMode": "single",
+      "primaryStory": "States",
+      "viewport": "1000x900"
+    },
+    "CompendiumList": {
+      "cardMode": "column",
+      "viewport": "900x713"
+    },
+    "CovenCards": {
+      "cardMode": "column"
+    },
+    "CupboardEntryForm": {
+      "cardMode": "single",
+      "primaryStory": "States"
+    },
+    "EntryMarks": {
+      "cardMode": "column",
+      "viewport": "900x955"
+    },
+    "FacetPanel": {
+      "cardMode": "column",
+      "settleMs": 1000
+    },
+    "IngredientCardList": {
+      "cardMode": "column",
+      "viewport": "1000x1200"
+    },
+    "IngredientForm": {
+      "cardMode": "single",
+      "primaryStory": "AskingToDeleteInModal",
+      "viewport": "900x2000"
+    },
+    "LastEdit": {
+      "cardMode": "column"
+    },
+    "StockDialog": {
+      "cardMode": "single",
+      "primaryStory": "States"
+    },
+    "Backdrop": {
+      "cardMode": "single",
+      "primaryStory": "States"
+    },
+    "ImpersonationBanner": {
+      "cardMode": "single",
+      "primaryStory": "Default"
+    },
+    "PageHeader": {
+      "cardMode": "column"
+    },
+    "TabbedPage": {
+      "cardMode": "column"
+    },
+    "ThemeToggle": {
+      "cardMode": "single",
+      "primaryStory": "States"
+    },
+    "ErrorPage": {
+      "cardMode": "single",
+      "primaryStory": "States"
+    },
+    "IngredientEntry": {
+      "cardMode": "single",
+      "primaryStory": "QuickLook",
+      "viewport": "900x2000"
+    },
+    "InvitationAcceptance": {
+      "cardMode": "single",
+      "primaryStory": "AcceptRefused"
+    },
+    "Welcome": {
+      "cardMode": "single",
+      "primaryStory": "States"
+    },
+    "AppShell": {
+      "cardMode": "column"
+    },
+    "ContextRow": {
+      "cardMode": "column",
+      "viewport": "900x1015"
+    },
+    "PublicFrame": {
+      "cardMode": "column"
+    },
+    "SignInMethods": {
+      "cardMode": "single",
+      "primaryStory": "FailedRemove"
+    },
+    "SignInPanel": {
+      "cardMode": "single",
+      "primaryStory": "Pending"
+    },
+    "Modal": {
+      "cardMode": "single",
+      "primaryStory": "States"
+    },
+    "Notice": {
+      "viewport": "1000x850"
+    },
+    "IngredientCard": {
+      "viewport": "1000x2000"
+    },
+    "CompendiumCards": {
+      "viewport": "1000x1200"
+    },
+    "IconTip": {
+      "viewport": "900x1990"
+    },
+    "MenuButton": {
+      "viewport": "900x760"
+    },
+    "ChipColorField": {
+      "viewport": "900x3060"
+    },
+    "PrivilegeLedger": {
+      "viewport": "1000x1100"
+    },
+    "ReceivedInvitations": {
+      "viewport": "900x860"
+    }
+  },
+  "readmeHeader": ".design-sync/conventions.md"
+}

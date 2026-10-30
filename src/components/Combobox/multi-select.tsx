@@ -4,19 +4,14 @@ import { useMultipleSelection, useSelect, type UseSelectStateChangeOptions } fro
 import { type MouseEvent, type ReactElement, useState } from 'react';
 import { ComboboxEntry } from './entry';
 import { keepEscapeInList } from './escape';
-import { ChevronIcon, ClearIcon } from './icons';
+import { ChevronIcon, CrossIcon } from '../IconTip/icons';
 import { EmptyMessage, Popup } from './popup';
 import { useListPosition } from './position';
 import { chipsRoom } from './room';
 import type { ComboboxChoice, ComboboxMultiSelectProps } from './types';
 
-// A closed set holding several values: the select-only box, on Downshift's
-// `useSelect` with `useMultipleSelection`, the pairing Downshift documents
-// for a multi-select. The values chosen are a list's chips inside the
-// control, ahead of the box, each with its x, and a clear and the chevron on
-// the right, react-select's multi-select. Nothing is typed, and the list
-// offers only what is not yet chosen. See claude-docs/components/combobox.md,
-// "The multi-select box".
+// A closed set holding several values: the select-only box on Downshift's `useSelect` with `useMultipleSelection`, the chips inside the control ahead of the box
+// (claude-docs/components/combobox.md, "The multi-select box").
 
 const selectTypes = useSelect.stateChangeTypes;
 const CHOOSING: readonly string[] = [
@@ -28,7 +23,7 @@ const CHOOSING: readonly string[] = [
 /** What the open list says with every choice made: the one place it is worded. */
 const EVERY_CHOICE = 'Every option is already chosen';
 
-/** What a disabled zero-count row says beside its count (M12.4). */
+/** What a disabled zero-count row says beside its count. */
 
 export function ComboboxMultiSelect({
   id,
@@ -50,26 +45,20 @@ export function ComboboxMultiSelect({
   'aria-invalid': invalid,
 }: ComboboxMultiSelectProps): ReactElement {
   const chosen = values.flatMap((value) => choices.filter((choice) => choice.value === value));
-  // The rows offered: those not yet chosen, and when asked, only those with something
-  // behind them (a count above 0), a disabled one (the caller's) after the rest, the order
-  // otherwise kept. Last so that the arrow keys and the highlight that follows a choice meet
-  // every chooseable row first.
+  // The rows offered: those not yet chosen, only those with a count above 0 when asked, a disabled row after the rest, so the arrows meet every chooseable row first.
   const unchosen = choices.filter(
     (choice) => !values.includes(choice.value) && !(hideZeros && choice.count === 0),
   );
   const left = [...unchosen.filter((c) => !c.disabled), ...unchosen.filter((c) => c.disabled)];
   const choosable = left.filter((choice) => !choice.disabled).length;
-  // What the last change did, for a screen reader: a chip appears or goes,
-  // and nothing else says so. The list fields' own announcement.
+  // What the last change did, for a screen reader, since a chip appearing or going says nothing itself.
   const [announcement, setAnnouncement] = useState('');
 
   const { getDropdownProps, addSelectedItem, removeSelectedItem, setSelectedItems } =
     useMultipleSelection<ComboboxChoice>({
       selectedItems: chosen,
       itemToKey: (choice) => choice?.value ?? null,
-      // Held at none: the chips are not Downshift's to focus, since each
-      // already has its x in the tab order, as every list's entry does. The
-      // hook keeps Backspace in the box, which takes the last.
+      // Held at none: the chips are not Downshift's to focus, as each has its x in the tab order; the hook keeps Backspace in the box.
       activeIndex: -1,
       onSelectedItemsChange: ({ type, selectedItems }) => {
         onChange(selectedItems.map((choice) => choice.value));
@@ -84,9 +73,7 @@ export function ComboboxMultiSelect({
       },
     });
 
-  // A choice keeps the list open for the next, as Downshift's multi-select
-  // does, with the row below it under the highlight; a list with nothing
-  // left to offer opens to say so, as the typed box says it found nothing.
+  // A choice keeps the list open for the next; a list with nothing left to offer opens to say so.
   const keepChoosing = (
     state: { highlightedIndex: number },
     { type, changes }: UseSelectStateChangeOptions<ComboboxChoice>,
@@ -120,13 +107,11 @@ export function ComboboxMultiSelect({
       },
     });
 
-  // Found by its id rather than held in a ref: the caller's ref and
-  // Downshift's two already share the box.
+  // Found by its id rather than held in a ref, as the caller's ref and Downshift's two already share the box.
   const focusBox = () => document.getElementById(id)?.focus();
   const empty = chosen.length === 0;
 
-  // The control is the box: a press on its padding or its chevron opens the
-  // list as a press on the box does. An x and the clear are their own.
+  // The control is the box: a press on its padding or its chevron opens the list; an x and the clear are their own.
   const pressControl = (event: MouseEvent<HTMLDivElement>) => {
     if ((event.target as HTMLElement).closest('button, [role="combobox"]')) return;
     event.preventDefault();
@@ -134,15 +119,12 @@ export function ComboboxMultiSelect({
     toggleMenu();
   };
 
-  // Floated as the suggesting box's is, so a modal holding it does not stretch (M5.6).
+  // Floated as the suggesting box's is, so a modal holding it does not stretch.
   const { setControl, setList, listStyle, placement } = useListPosition(isOpen);
 
   return (
     <div className={isOpen ? 'combobox is-open' : 'combobox'} ref={setControl}>
-      {/* Presentational, as the typed box's control is: the box inside is
-          what a reader and the keyboard reach, and the chips' x and the
-          clear sit beside it rather than inside it, so that a press or a key
-          on them is never the box's. */}
+      {/* Presentational: the box inside is what a reader and the keyboard reach, and the chips' x and the clear sit beside it. */}
       <div
         role="presentation"
         className={['input combobox__control combobox__control--select', invalid && 'is-invalid']
@@ -155,8 +137,7 @@ export function ComboboxMultiSelect({
             <ul className="combobox__entries">
               {chosen.map((choice, index) => (
                 <ComboboxEntry
-                  // The position joins the value: a repeat can be loaded (the form
-                  // refuses it only on save), and two chips must not share a key.
+                  // The position joins the value, as a repeat can be loaded and two chips must not share a key.
                   key={`${index}-${choice.value}`}
                   value={choice.label}
                   icon={choice.icon}
@@ -188,17 +169,13 @@ export function ComboboxMultiSelect({
               }),
             )}
           >
-            {/* What it holds, read as a select reads its choice: the chips
-                are beside the box, not in it. */}
+            {/* What it holds, read as a select reads its choice, as the chips are beside the box. */}
             {chosen.length > 0 && (
               <span className="visually-hidden">
                 {chosen.map((choice) => choice.label).join(', ')}
               </span>
             )}
-            {/* The placeholder stays after the chips while there is a choice
-                left, prompting for the next (the owner's call at MB.115's
-                review), and goes once every choice is made. Beside chips it
-                is for the eye alone: read, it would sound like a choice. */}
+            {/* The placeholder stays after the chips while a choice is left, aria-hidden beside chips as read it would sound like a choice. */}
             {left.length > 0 && (
               <span className="is-placeholder" aria-hidden={chosen.length > 0 || undefined}>
                 {placeholder}
@@ -211,8 +188,7 @@ export function ComboboxMultiSelect({
           </div>
         </div>
         <div className="combobox__indicators">
-          {/* Drawn while empty too, hidden, so the control keeps one width
-              whether anything is chosen (MB.115), as the typed box's clear. */}
+          {/* Drawn while empty too, hidden, so the control keeps one width. */}
           <button
             type="button"
             className={empty ? 'combobox__indicator is-empty' : 'combobox__indicator'}
@@ -225,7 +201,7 @@ export function ComboboxMultiSelect({
               focusBox();
             }}
           >
-            <ClearIcon />
+            <CrossIcon />
           </button>
           <span
             className={empty ? 'combobox__separator is-empty' : 'combobox__separator'}
@@ -236,9 +212,7 @@ export function ComboboxMultiSelect({
           </span>
         </div>
       </div>
-      {/* Always in the page, as Downshift asks; empty and hidden while closed.
-          The popup is what is placed, so a message beneath the listbox moves
-          with it: the typed box's own markup. */}
+      {/* Always in the page, as Downshift asks; the popup is what is placed. */}
       <Popup
         wrapped
         popupRef={setList}
@@ -271,8 +245,7 @@ export function ComboboxMultiSelect({
                     </span>
                   )}
                   {choice.label}
-                  {/* The space is a text node of the label's own: an accessible
-                      name drops the one a span begins with. */}
+                  {/* The space is a text node of the label's own, as a span's leading one is dropped from the name. */}
                   {choice.count !== undefined && (
                     <>
                       {' '}

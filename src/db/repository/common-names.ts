@@ -9,17 +9,9 @@ import { claimantList, readSuggestionPage } from './suggestion-page';
 import type { CommonNameSuggestion } from './types';
 
 /**
- * One page of what a common-name field offers: the display names and live
- * folk names of live ingredients in the compendium or a coven one of
- * `memberships` proves that match `query`, folded to `lower(btrim(name))` and
- * offered once each, alphabetically. No proofs reads the compendium alone,
- * which is the admin's compendium form (M5.5). Each names the in-scope
- * ingredients answering to it, formal names first. A formal name is not a
- * common name and is not read. A blank `query` matches everything.
- *
- * Each arm matches its own column by `%` or `<%`, so each can reach its own
- * trigram index; the fold happens after (claude-docs/db/member-autofill.md,
- * "The member's autofill").
+ * One page of what a common-name field offers: display and live folk names of live
+ * ingredients in the compendium or the `memberships`' covens that match `query`,
+ * folded and offered once each. No proofs reads the compendium alone. (claude-docs/db/compendium-read.md, "Tier-scoped reads")
  */
 export async function findCommonNameSuggestions(
   memberships: readonly Membership[],
@@ -52,7 +44,8 @@ export async function findCommonNameSuggestions(
   // An ingredient whose label and a folk name fold alike claims the name once.
   const source = sql`(
     select 2 as tier, null as id, mode() within group (order by ${spelling}) as value,
-      null as description, null as group_name, null as group_icon, ${fold}, ${fold} as tiebreak,
+      null as description, null as group_name, null as group_icon, null as matched_name,
+      ${fold}, ${fold} as tiebreak,
       ${claimantList(name, canonicalName, id)} filter (where ${first}) as claimants
     from (
       select *, lower(${spelling}) as ${fold},

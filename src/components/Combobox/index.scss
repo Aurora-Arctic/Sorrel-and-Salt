@@ -1,21 +1,13 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The control is the form's `.input` primitive, opened up to hold a list's
-// entries ahead of the text, with the indicators on its right and the list
-// beneath it — react-select's multi-select layout, on the tokens and the
-// primitives rather than its own theme (claude-docs/components/combobox.md,
-// "Styling"). Rows that wrap sit a step further apart than the items in a
-// row, the owner's call in MB.170: a step of space read as one block.
+// The control is the form's `.input` primitive, opened up to hold a list's entries ahead of the text, with the indicators on its right and the list beneath it
+// (claude-docs/components/combobox.md, "Styling"). Rows that wrap sit a step further apart than the items in a row.
 
-// The text's line inside the control: the control's height less its 1px
-// edge and its padding, so a bare box stands at $control-height, level with a
-// text field and a button. A typed box, a select's value and the qualifier's
-// hidden copy all take it.
+// The text's line inside the control: its height less the 1px edge and the padding, so a bare box stands at $control-height; a typed box, a select's value and the qualifier's hidden copy take it.
 $text-height: calc(#{$control-height} - 2px - #{2 * space(1)});
 
-// The same line in a compact field (`.field--compact`, M9.9), off its
-// shorter box.
+// The same line in a compact field (`.field--compact`), off its shorter box.
 $text-height-compact: calc(#{$control-height-compact} - 2px - #{2 * space(1)});
 
 // The least width a text slot keeps in a row: a few letters' room, or beside
@@ -28,12 +20,8 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   min-width: 0;
 }
 
-// `.input`'s edge, fill and states, as a flex row that wraps: the entries,
-// then the text, then the indicators. The padding comes down a step so the
-// entries sit inside it at the control's height. Compounded with `.input`,
-// whose primitive is `body .input` in the app: a lone class loses to it, and
-// every box stood 8px over $control-height there, while the workshop's
-// unweighted frame scope hid it (M5.5).
+// `.input`'s edge, fill and states, as a flex row that wraps: the entries, the text, then the indicators; compounded with `.input` so a lone class does not lose to `body .input`
+// (claude-docs/components/combobox.md, "Control").
 .input.combobox__control {
   display: flex;
   flex-wrap: wrap;
@@ -54,10 +42,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   }
 }
 
-// The select-only box: the control itself takes the focus and the press,
-// so it draws its own ring, and points rather than shows a caret. Weighted
-// with `.input` as the control above is, or that rule's caret wins over the
-// whole box, text and padding alike.
+// The select-only box: the control takes the focus and press, so it draws its own ring and points rather than shows a caret; weighted with `.input` or that rule's caret wins.
 .input.combobox__control--select {
   cursor: pointer;
 
@@ -117,9 +102,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
     line-height: $text-height-compact;
   }
 
-  // The open list in the box's own caption size, as the text it would put in
-  // the box (the owner's call, 2026-10-20). The list is the field's child, not
-  // portalled, so the field's class reaches it.
+  // The open list in the box's own caption size; the list is the field's child, not portalled, so the field's class reaches it.
   .combobox__option {
     font-size: type-size('caption');
   }
@@ -193,11 +176,8 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   color: $text-muted;
 }
 
-// The text's slot in the row, a one-cell grid: the box takes the rest of the
-// row, as it always has. With a qualifier it is as wide as the text instead,
-// the cell sized by a hidden copy of the value in the box's own font and
-// padding, so the qualifier follows the text (MB.169). The track can shrink
-// below its content, so a long text gives way inside the control.
+// The text's slot, a one-cell grid: the box takes the rest of the row, or, with a qualifier, is as wide as a hidden copy of the value so the qualifier follows the text
+// (claude-docs/components/combobox.md, "Text slot").
 .combobox__text {
   display: grid;
   // The text's own few letters' room, as `.combobox__input`'s, or beside
@@ -229,10 +209,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   }
 }
 
-// What a pick leaves out of the text, a picked form's group (MB.169):
-// straight after the text, "Wax (Animal)", in the muted ink a row's note
-// reads in, and never cut off, since it is a word or two and the text beside
-// it gives way first. A press on it is a press on the text.
+// What a pick leaves out of the text, a picked form's group: straight after the text, "Wax (Animal)", in the muted ink a row's note reads in, never cut off; a press on it is a press on the text.
 .combobox__qualifier {
   flex: none;
   color: $text-muted;
@@ -240,13 +217,8 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   cursor: text;
 }
 
-// The qualifier's detail, in InfoTip's bubble and its fade, above the control
-// with its left edge on the qualifier's (the owner's call at M6.16's review,
-// 2026-10-12, over MB.115's right edge), so the detail reads as the
-// qualifier's own. Placed by `useTip` against the qualifier, and kept on the
-// screen: on a phone it is shifted back inside the window rather than centred
-// over the control, as it was before the shared placement. It wraps within
-// the measure. Not beneath the box: the list opens there.
+// The qualifier's detail, in InfoTip's bubble and fade, above the control with its left edge on the qualifier's, placed by `useTip` and not beneath the box, where the list opens
+// (claude-docs/components/combobox.md, "Qualifier detail").
 .combobox__qualifier-tip {
   @include tip-above(1, false);
 
@@ -256,10 +228,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   overflow-wrap: anywhere;
 }
 
-// The clear and the separator with nothing to clear: hidden, but holding
-// their room, so the control is one width empty or full (MB.115, the owner's
-// call). The markup takes them out of the accessibility tree and the tab
-// order; `visibility` takes them from the eye and the pointer.
+// The clear and the separator with nothing to clear: hidden but holding their room, so the control is one width empty or full; `visibility` takes them from the eye and the pointer.
 .combobox__indicator.is-empty,
 .combobox__separator.is-empty {
   visibility: hidden;
@@ -283,24 +252,14 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
     @include focus-ring;
   }
 
-  // The chevron turns over while the list is open, as the account menu's
-  // does. `aria-expanded` sits on the input, button or control beside the
-  // indicator, never above it, so a selector on it cannot reach the chevron;
-  // the root carries `is-open` while the list is open, and the flip waits on it.
+  // The chevron turns while the list is open; `aria-expanded` sits beside the indicator, so the flip waits on the root's `is-open`.
   .chevron-icon {
     @include chevron-flip('.combobox.is-open');
   }
 }
 
-// The list, floating beneath the control at its width, on the card surface
-// with the floating shadow. Hidden rather than unmounted while closed, since
-// Downshift keeps its ref.
-// Placed by `useListPosition` (position.ts), its position, width and side
-// set inline as there is room; here, its look, and no taller than 20rem —
-// the eight seeded category groups without a scroll (M5.6, the owner's call),
-// a measure of rows rather than a step of space — or
-// the room it has, `--combobox-list-room`. A row never scrolls it sideways:
-// an unbroken text — an address — breaks anywhere instead (MB.154).
+// The list, floating beneath the control at its width on the card surface with the floating shadow, hidden rather than unmounted while closed since Downshift keeps its ref
+// (claude-docs/components/combobox.md, "List").
 .combobox__list {
   z-index: 1;
   display: none;
@@ -308,9 +267,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   max-height: min(20rem, var(--combobox-list-room, 20rem));
   overflow: hidden auto;
 
-  // No padding above or below the rows: the first and last rows' highlight
-  // meets the panel's edge, with no strip it never covers (the owner's call,
-  // 2026-10-20).
+  // No padding above or below the rows: the first and last rows' highlight meets the panel's edge.
   @include list-reset(0, false);
   @include floating-panel;
 
@@ -319,14 +276,8 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   }
 }
 
-// With an empty message the popup is the placed, bordered panel; the
-// listbox inside it is a plain list with no panel of its own. Without one,
-// the list above is the panel, as it always was. The popup does not scroll:
-// Downshift scrolls the highlighted row into view within the listbox
-// element, so a scroller outside it (the popup) is never moved and an
-// arrowed-to row stays hidden. The listbox is the scroller, as above, and
-// reads `--combobox-list-room`, which the placement sets on the popup and
-// the listbox inherits.
+// With an empty message the popup is the placed, bordered panel and the listbox inside is the scroller, reading the `--combobox-list-room` the placement sets
+// (claude-docs/components/combobox.md, "The popup's styling").
 .combobox__popup {
   z-index: 1;
   display: none;
@@ -409,12 +360,9 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
     background-color: $fill-highlight;
   }
 
-  // A category's row marked in its group's colour on the theme's side, as its
-  // entry is filled: a bar set in from the row's edges, so each row's reads as
-  // its own, drawn as a background so its widening on hover moves nothing and
-  // the highlight's wash still shows.
+  // A category's row marked in its group's colour on the theme's side, as a bar set in from the row's edges, drawn as a background so a hover widening moves nothing.
   &.is-coloured {
-    $bar: light-dark(var(--chip-light), var(--chip-dark));
+    $bar: group-colour();
 
     background-image: linear-gradient($bar, $bar);
     // Its left edge level with the group heading's text.
@@ -440,12 +388,8 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   }
 }
 
-// The rows at the panel's top and bottom edges take its inner corners, so a
-// highlight there follows the curve rather than a square inside it (the
-// owner's call, 2026-10-20). A row is a list's direct child, or the last
-// group's last; one row alone is both first and last, and rounds all four. A
-// group's heading, not a row, is the top of a grouped list. The panel's 1px
-// edge is `floating-panel`'s, on the list or, inset, on the popup.
+// The rows at the panel's top and bottom edges take its inner corners, so a highlight follows the curve; one row alone rounds all four, and a group's heading is the top of a grouped list
+// (claude-docs/components/combobox.md, "Rows at the edges").
 .combobox__list > .combobox__option:first-child {
   border-start-start-radius: calc(#{radius('surface')} - 1px);
   border-start-end-radius: calc(#{radius('surface')} - 1px);
@@ -467,8 +411,8 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 
   svg {
     flex: none;
-    width: 1rem;
-    height: 1rem;
+    width: $glyph-size;
+    height: $glyph-size;
     color: $accent;
   }
 }
@@ -483,9 +427,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   margin-inline-end: space(1);
 }
 
-// The chosen choice's mark ahead of the type-ahead box's text (M12.7):
-// spaced by the values' own gap rather than the row mark's margin, and a
-// press on it is a press on the text, as on the qualifier.
+// The chosen choice's mark ahead of the type-ahead box's text: spaced by the values' own gap, and a press on it is a press on the text.
 .combobox__lead {
   display: inline-flex;
   flex: none;
@@ -494,8 +436,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   cursor: text;
 }
 
-// A row's count after its label, "Oil 12" (M12.4): part of the option's name, a
-// small muted number with no brackets, as the facet panel's counts are.
+// A row's count after its label, "Oil 12": part of the option's name, a small muted number with no brackets, as the facet panel's counts are.
 .combobox__count {
   color: $text-muted;
   font-size: type-size('caption');
@@ -505,9 +446,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   }
 }
 
-// A row shown but not pickable (M12.4): the pointer says so, and no wash
-// follows it. Its text keeps its ink (4.5:1 muted on the card), the note
-// beside the count saying why; the row is truly disabled, not dimmed.
+// A row shown but not pickable: the pointer says so, no wash follows it, and its text keeps its ink (4.5:1 muted on the card) with the note beside the count saying why.
 .combobox__option.is-disabled {
   cursor: not-allowed;
 
@@ -521,17 +460,20 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   color: $text-muted;
   font-size: type-size('caption');
 
+  // With `meta` after it the line is kept to one, ending in an ellipsis.
+  &--meta {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
   .is-highlighted & {
     color: $text-primary;
   }
 }
 
-// An entry a list holds, inside the control ahead of the text: a filled,
-// square-cornered chip in react-select's shape, neutral since a free-text
-// entry has no group to take a colour from. The x's own target stands in for
-// the right-hand padding; it never shrinks, the text gives way. Positioned
-// for a tooltip. The entries are a list with no margins, bullets or gap of
-// typography-base's.
+// An entry a list holds, inside the control ahead of the text: a filled, square-cornered chip in react-select's shape, neutral as a free-text entry has no group colour
+// (claude-docs/components/combobox.md, "Entry chip").
 .combobox__entries {
   display: flex;
   flex-wrap: wrap;
@@ -540,10 +482,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   // rather than pushing past it: a flex item's own minimum is its content.
   min-width: 0;
   max-width: 100%;
-  // A step more room above the chips than the box's own padding, the owner's
-  // call during MB.169: without it the first of several rows sat against the
-  // top edge. On the list rather than the control, so one row still fits the
-  // text's line and the box stays at $control-height (MB.154).
+  // A step more room above the chips than the box's own padding, on the list so one row still fits the text's line and the box stays at $control-height.
   @include list-reset(space(1) 0, false);
 }
 
@@ -567,19 +506,16 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
     content: none;
   }
 
-  // In its group's colours, the full level (2026-10-19): the wash chip() draws, read from
-  // the pair chipColors() sets (claude-docs/styling.md, "Category chips"). Not the mixin
-  // itself, which draws a pill: the shape, padding and x stay the plain chip's, so a row
-  // mixes the two without a jump. The entry has no border, so the edge is an inset ring.
+  // In its group's colours: the wash chip() draws, read from the pair chipColors() sets (claude-docs/styling.md, "Category chips"),
+  // keeping the plain chip's shape and x, with an inset ring for an edge.
   &.is-coloured {
-    $group: light-dark(var(--chip-light), var(--chip-dark));
+    $group: group-colour();
 
     @include chip-wash($group);
     box-shadow: inset 0 0 0 1px color-mix(in srgb, $group 35%, $surface-card);
   }
 
-  // The neutral chips of a faceted filter (M12.4): no fill, an ink border. A
-  // category chip keeps its group's fill, which the entry never marks outlined.
+  // The neutral chips of a faceted filter: no fill, an ink border; a category chip keeps its group's fill.
   &.is-outlined {
     @include outlined-chip;
   }
@@ -594,12 +530,8 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
     padding-left: space(1);
   }
 
-  // The chip being moved, plain to see once picked up, the owner's call
-  // during MB.170: the accent 22% into the card, opaque so it hides what it
-  // passes over, a 2px accent edge and the floating shadow, lifted over the
-  // chips it passes. The edge
-  // stands in for an error's while it is held; the error's comes back on the
-  // drop, and its handle still reads it meanwhile.
+  // The chip being moved: the accent 22% into the card, opaque, with a 2px accent edge and the floating shadow
+  // (claude-docs/components/combobox.md, "Dragged chip").
   &.is-dragging,
   &.is-dragging.is-invalid {
     z-index: 1;
@@ -620,10 +552,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   }
 }
 
-// An action on the entry, before its x (M12.1: promote a folk name): the x's
-// 24px target and glyph, square, and in the accent a pointer or the focus
-// warms, since it makes rather than takes away. Its IconTip wrapper is
-// the chip's flex item.
+// An action on the entry, before its x (promote a folk name): the x's 24px target and glyph, square, in the accent a pointer or focus warms, inside the chip's flex item.
 .combobox__entry > .icon-tip {
   display: inline-flex;
   flex: none;
@@ -654,10 +583,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   }
 }
 
-// `$icon-size`: WCAG 2.2's 24px minimum target, inside a chip too short for
-// 44px.
-// Its hover is the warning's wash and ink, as react-select's remove is, faded
-// in and drawn on focus too, as `.btn`'s is.
+// `$icon-size`: WCAG 2.2's 24px minimum target, inside a chip too short for 44px; its hover is the warning's wash and ink, faded in and drawn on focus too, as `.btn`'s is.
 .combobox__entry-remove {
   @include icon-button($icon-size, $glyph-size, 0 radius('sharp') radius('sharp') 0);
   @include icon-button-remove;
@@ -694,10 +620,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   min-width: 0;
 }
 
-// A sortable entry's handle (MB.170): its grip and its text, one button the
-// chip moves by, unboxed so that the chip still reads as one. It shrinks with
-// the chip, so the text inside it can still be cut off. `touch-action` is
-// dnd-kit's ask, so that a drag by touch moves the chip rather than the page.
+// A sortable entry's handle: its grip and its text as one unboxed button the chip moves by, shrinking with the chip; `touch-action` is dnd-kit's ask so a touch drag moves the chip.
 .combobox__entry-handle {
   @include button-reset(grab);
 
@@ -749,14 +672,8 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   }
 }
 
-// A linked entry's text, a button that opens its summary (MB.115): led by a
-// link mark in the accent and underlined, so it reads as something to press
-// and is told from a typed entry, plain text with no mark, by shape rather
-// than colour. The text keeps the body ink, since the accent clears only 3:1
-// on the chip's wash, the mark's floor, and takes the accent's hover,
-// which clears 4.5:1, when pointed at (tests/scss/tokens.test.ts). Unboxed,
-// so the chip still reads as one, and it shrinks with the chip so the text
-// inside it can be cut off.
+// A linked entry's text, a button that opens its summary: led by an accent link mark and underlined, the text in the body ink since the accent clears only 3:1 on the chip's wash
+// (claude-docs/components/combobox.md, "Linked entry"; tests/scss/tokens.test.ts).
 .combobox__entry-open {
   @include button-reset;
 
@@ -792,9 +709,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
     }
   }
 
-  // No underline at rest: the link mark ahead of the text is what tells a
-  // linked chip from a typed one (the owner's call, 2026-10-19). Open, the text
-  // is underlined: the panel beneath is this chip's.
+  // No underline at rest, as the link mark tells a linked chip from a typed one; underlined while open, as the panel beneath is this chip's.
   &[aria-expanded='true'] .combobox__entry-text {
     text-decoration: underline;
     text-decoration-thickness: $rule-medium;
@@ -813,10 +728,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   height: $glyph-size;
 }
 
-// A linked entry's summary: the open list's floating surface and edge,
-// placed by `useListPosition` beneath the chip, or above it when there is
-// more room there, as wide as its words up to a tip's measure and scrolled
-// within the room it has. Its text wraps, unlike the chip's.
+// A linked entry's summary: the open list's floating surface and edge, placed beneath the chip or above it, as wide as its words up to a tip's measure; its text wraps.
 .combobox__entry-summary {
   z-index: 2;
   // A `<dialog>`: the browser's own inset, margin and colours give way to
@@ -838,8 +750,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   @include floating-panel;
 }
 
-// A chip's leading mark (M12.4), a form group's glyph: decorative, clear of
-// the text, and as tall as the text beside it.
+// A chip's leading mark, a form group's glyph: decorative, clear of the text, as tall as the text beside it.
 .combobox__entry-icon {
   display: inline-flex;
   flex: none;
@@ -864,10 +775,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   margin-inline-start: space(1);
   white-space: nowrap;
 
-  // Where the count will be while a search runs. The shape and the shimmer
-  // are the list skeleton's (`skeleton-shimmer`, _primitives.scss); the fill
-  // is the chip's own ink at low strength, since a chip is a solid colour the
-  // quiet fill would vanish on. Pulses under reduced motion.
+  // Where the count will be while a search runs: the list skeleton's shape and shimmer in the chip's own ink at low strength; it pulses under reduced motion.
   &.is-pending {
     display: inline-block;
     width: 1.75ch;
@@ -885,19 +793,14 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   }
 }
 
-// The entry's text, cut off with an ellipsis where the control ends; the
-// tooltip shows the rest (MB.133).
+// The entry's text, cut off with an ellipsis where the control ends; the tooltip shows the rest.
 .combobox__entry-text {
   min-width: 0;
 
   @include truncate;
 }
 
-// A cut-off entry's whole text, in InfoTip's bubble and its fade, above the
-// chip from its left edge, as wide as its words up to InfoTip's own measure,
-// past the chip and the control alike, the owner's call during MB.126: only
-// being cut off is wrong. `useTip` shifts it back onto the screen. An unbroken
-// text breaks anywhere to stay inside the measure.
+// A cut-off entry's whole text, in InfoTip's bubble and fade, above the chip from its left edge, as wide as its words, past the chip and the control; `useTip` shifts it onto the screen.
 .combobox__entry-tip {
   @include tip-above;
 
@@ -906,8 +809,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   overflow-wrap: anywhere;
 }
 
-// What the chip leaves out, on its own line beneath the text (MB.164). The
-// bubble's own colour, since a muted one is not checked against its ground.
+// What the chip leaves out, on its own line beneath the text, in the bubble's own colour since a muted one is not checked against its ground.
 .combobox__entry-detail {
   display: block;
   font-size: type-size('caption');

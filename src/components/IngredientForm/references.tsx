@@ -17,6 +17,7 @@ import {
   useFormContext,
   useFormState,
   useWatch,
+  type FieldError as FormFieldError,
 } from 'react-hook-form';
 import { renderShortCitation, shortCitationText } from '@/lib/short-citation';
 import { formatLocator } from '@/modules/ingredients/validation/reference-format';
@@ -25,7 +26,7 @@ import type { ReferenceSuggestionsQuery } from '../../gql/graphql';
 import Combobox from '../Combobox';
 import IconTip from '../IconTip';
 import InfoTip from '../InfoTip';
-import { FieldError } from '../Field';
+import { FieldError, FieldShell, fieldDescription } from '../Field';
 import { EditIcon, RemoveIcon, SourceEditIcon } from './icons';
 import ReferencePanel from './reference-panel';
 import { RemoveQuestion } from './remove-question';
@@ -40,22 +41,14 @@ import type {
 } from './types';
 import { draftOf, sourceTierOf } from './values';
 
-// The References field (MB.154): one search over the compendium's sources and
-// this coven's, each picked becoming a one-line row beneath the box — its
-// Chicago short form and its locator, described by its whole citation —
-// which its edit opens to the citation whole, its tier and the Locator box; and a panel for a source not
-// yet written. Typed text is a search and never an entry, so the list's last
-// row is "New Reference", which opens the panel, rather than what was typed
-// (MB.115, the owner's call). An open row's Edit Source opens the same panel
-// on that source, where the form may change it (MB.115). Only each source's
-// id and locator are sent (claude-docs/components/ingredient-form.md, "The
-// references" and "Editing a source").
+// The References field: one search over the compendium's sources and this coven's, each pick a
+// one-line row beneath the box (claude-docs/components/ingredient-form.md, "The references"). Typed
+// text is a search and never an entry: the last row, "New Reference", opens the panel.
 
 /**
- * What the form holds of a source: its id and tier, its full citation, and
- * the fields its short form is made from. One fragment for the search and
- * the panel's two saves, so a row reads the same whichever way it came.
- * Defined before its first use, as codegen reads the documents in order.
+ * What the form holds of a source: its id and tier, its full citation, and the fields its short
+ * form is made from. One fragment for the search and the panel's two saves. Defined before its
+ * first use, as codegen reads the documents in order.
  */
 export const ReferenceRowFragment = graphql(`
   fragment ReferenceRow on Reference {
@@ -103,7 +96,7 @@ const IGNORE_ENTER = () => {};
 
 /**
  * The ingredient's references, or at `at` a variant's own, citing that form
- * alone (MB.215).
+ * alone.
  */
 export function ReferencesField({
   workspaceId,
@@ -128,20 +121,20 @@ export function ReferencesField({
   const errorId = `${id}-error`;
   const editSourceId = (row: string) => `${id}-${row}-edit-source`;
   const boxElement = useRef<HTMLInputElement | null>(null);
-  // The box and its button together, which an open list spans (MB.154).
+  // The box and its button together, which an open list spans.
   // Held as state, through its callback ref, so the box is told once it exists.
   const [boxRow, setBoxRow] = useState<HTMLDivElement | null>(null);
   const [active, setActive] = useState(false);
   // What the last add or removal did, for a screen reader, as a list's says.
   const [announcement, setAnnouncement] = useState('');
   // The row open to change, by its field-array key: one at a time, the rest
-  // a line each (MB.115). Its Locator takes the focus as it opens.
+  // a line each. Its Locator takes the focus as it opens.
   const [openRow, setOpenRow] = useState<string | null>(null);
   const focusLocator = useRef(false);
   useEffect(() => {
     if (openRow === null || !focusLocator.current) return;
     focusLocator.current = false;
-    document.getElementById(`${id}-${openRow}-locator`)?.focus();
+    document.getElementById(`${id}-${openRow}-locator-control`)?.focus();
   }, [openRow, id]);
   const focusBox = () => boxElement.current?.focus();
   // The source the panel is editing, and the row it was opened from, whose
@@ -154,11 +147,9 @@ export function ReferencesField({
     document.getElementById(focusAfterPanel.current)?.focus();
     focusAfterPanel.current = null;
   }, [panelOpen, openRow]);
-  // A source just added opens at once, its Locator focused, since a page is
-  // what it most often needs next (MB.115, the owner's call). The field
-  // array keys the new row on a later render, so the add says how many rows
-  // to wait for, and the render that has them opens the last: state adjusted
-  // during render, React's pattern, rather than set from an effect.
+  // A source just added opens at once, its Locator focused. The field array keys the new row on a
+  // later render, so the add says how many rows to wait for and the render that has them opens the
+  // last: state adjusted during render rather than set from an effect.
   const [opensAt, setOpensAt] = useState<number | null>(null);
   if (opensAt !== null && fields.length === opensAt) {
     setOpensAt(null);
@@ -181,13 +172,16 @@ export function ReferencesField({
   const rowErrors = fields.map(
     (_, index): string | undefined =>
       [
-        get(errors, `${list}.${index}.value`)?.message,
-        get(errors, `${list}.${index}.locator`)?.message,
+        get<unknown, FormFieldError | undefined>(errors, `${list}.${index}.value`)?.message,
+        get<unknown, FormFieldError | undefined>(errors, `${list}.${index}.locator`)?.message,
       ]
         .filter(Boolean)
         .join(' ') || undefined,
   );
-  const boxError: string | undefined = get(errors, box)?.message;
+  const boxError: string | undefined = get<unknown, FormFieldError | undefined>(
+    errors,
+    box,
+  )?.message;
   const message = [
     ...fields.flatMap((row, index) =>
       rowErrors[index]
@@ -315,8 +309,7 @@ export function ReferencesField({
           onPick={pick}
           onCommit={IGNORE_ENTER}
           // No onRemoveLast: Backspace and Delete in the empty box take no
-          // row, unlike the chip lists; only a row's ×, which asks (the
-          // owner's call, 2026-10-16).
+          // row, unlike the chip lists; only a row's ×, which asks.
           suggestions={suggestions}
           listAnchor={boxRow}
           action={{ label: 'New Reference', onSelect: openPanel }}
@@ -333,8 +326,10 @@ export function ReferencesField({
         <ul className="ingredient-form__references">
           {fields.map((row, index) => {
             const citationId = `${id}-${row.id}`;
-            const locatorId = `${citationId}-locator`;
-            const locatorHintId = `${locatorId}-hint`;
+            const { aria: _aria, ...locatorField } = fieldDescription({
+              id: `${citationId}-locator`,
+              hint: LOCATOR_HINT,
+            });
             const detailId = `${citationId}-detail`;
             const invalid = rowErrors[index] !== undefined;
             const open = openRow === row.id || locatorErrors[index];
@@ -414,7 +409,7 @@ export function ReferencesField({
                   {/* Its tier, and beside it the edit of the source itself:
                       a page with a pencil, not the row's own pencil, since
                       it changes the source for every entry citing it where
-                      the pencil opens this row (MB.115). Named for the
+                      the pencil opens this row. Named for the
                       source, as the pencil is. Absent where the source is
                       not this form's to change, which the tier line then
                       says. */}
@@ -441,18 +436,17 @@ export function ReferencesField({
                   {/* Read with the source it locates, then what a locator is:
                       a column of bare "Locator"s is no help to a screen
                       reader. The tip beside the label, as every field's is. */}
-                  <div className="ingredient-form__locator field__label-row">
-                    <label className="field__label" htmlFor={locatorId}>
-                      Locator
-                    </label>
-                    <InfoTip id={locatorHintId} label="Locator">
-                      {LOCATOR_HINT}
-                    </InfoTip>
+                  <FieldShell
+                    label="Locator"
+                    hint={LOCATOR_HINT}
+                    {...locatorField}
+                    className="ingredient-form__locator"
+                  >
                     <input
-                      id={locatorId}
+                      id={locatorField.controlId}
                       className="input"
                       placeholder="Add a locator"
-                      aria-describedby={[citationId, locatorHintId, invalid && errorId]
+                      aria-describedby={[citationId, locatorField.hintId, invalid && errorId]
                         .filter(Boolean)
                         .join(' ')}
                       aria-invalid={invalid || undefined}
@@ -469,7 +463,7 @@ export function ReferencesField({
                         },
                       })}
                     />
-                  </div>
+                  </FieldShell>
                 </div>
               </li>
             );

@@ -1,19 +1,30 @@
-import type { Story } from '@ladle/react';
-import type { ReactElement } from 'react';
-import { usePressOnMount } from '../../../.ladle/press';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactElement, ReactNode } from 'react';
+import { usePressOnMount } from '../../../.storybook/press';
 import InfoTip from '.';
 
 // Render-only; behaviour is asserted in tests/components/InfoTip. Each story
-// opens its tip itself, as a tap on the ⓘ would; hover, focus or a tap opens it
-// again once it closes. The tip places itself above its nearest positioned
-// ancestor, a form field's `.field__label-row`, so the story gives it one,
-// with room above for the tip to open into.
-export default {
+// opens its tip itself. The tip places itself above its nearest positioned
+// ancestor (a field's `.field__label-row`), so the story gives it one, with room.
+const meta = {
   title: 'Forms / Info Tip',
-};
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
-const Field = (): ReactElement => {
-  usePressOnMount('About Classification');
+const HINT =
+  'Botanical for a plant, mineral for a stone, and so on. "Unknown" if you are not sure which, with or without a formal name. "None" takes no formal name.';
+// Several sentences, to see a tip that runs long.
+const LONG = [HINT, HINT, HINT].join(' ');
+
+const Field = ({
+  open = true,
+  children,
+}: {
+  open?: boolean;
+  children?: ReactNode;
+}): ReactElement => {
+  usePressOnMount(open ? 'About Classification' : 'Nothing To Press');
   return (
     <div className="field" style={{ maxWidth: '32rem', marginTop: '5rem' }}>
       <div className="field__label-row">
@@ -21,8 +32,7 @@ const Field = (): ReactElement => {
           Classification
         </label>
         <InfoTip id="story-tip" label="Classification">
-          Botanical for a plant, mineral for a stone, and so on. &ldquo;Unknown&rdquo; if you are
-          not sure which, with or without a formal name. &ldquo;None&rdquo; takes no formal name.
+          {children}
         </InfoTip>
       </div>
       <input id="story-control" className="input" aria-describedby="story-tip" />
@@ -30,11 +40,16 @@ const Field = (): ReactElement => {
   );
 };
 
-export const BesideALabel: Story = () => <Field />;
+const INFO_STATES: Record<string, ReactNode> = {
+  Open: <Field>{HINT}</Field>,
+  Closed: <Field open={false}>{HINT}</Field>,
+  'Long Text': <Field>{LONG}</Field>,
+};
 
-// A phone's width, in each theme: the tip capped at the window.
-export const PhoneDark: Story = () => <Field />;
-PhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const PhoneLight: Story = () => <Field />;
-PhoneLight.meta = { theme: 'light', width: 375 };
+export const States: Story = {
+  args: { state: 'Open' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(INFO_STATES), mapping: INFO_STATES },
+  },
+  render: ({ state }) => <div>{state}</div>,
+};

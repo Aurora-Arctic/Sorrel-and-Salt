@@ -1,0 +1,103 @@
+@use './variables' as *;
+@use './mixins' as *;
+
+// The parts of the site's top bar that AppShell and PublicFrame draw alike, written once so a
+// change to the bar reaches both. `$block` is the frame's class (`app-shell`, `public-frame`):
+// the bar's inner row, the brand and its initials, and the end group, with the
+// narrow-window media queries that shorten the row and swap the name for its initials. What
+// differs between the two frames stays in each frame's own stylesheet. The site nav is one class,
+// `.app-shell__nav`, in AppShell's sheet, which both frames use (`SiteNav`).
+// claude-docs/components/public-frame.md, "Styling", sets out both lists.
+@mixin frame-bar($block) {
+  // The top edge a sticky row of a page (IngredientSearch’s search row) holds at: just under
+  // this bar.
+  .#{$block} {
+    --sticky-top: calc(#{$top-inset} + #{$shell-bar-height});
+  }
+
+  .#{$block}__bar {
+    position: sticky;
+    // Below the impersonation banner where it takes room in the flow (touch).
+    top: $top-inset;
+    z-index: layer('shell');
+    box-sizing: border-box;
+    height: $shell-bar-height;
+    border-bottom: 1px solid $hairline;
+    background-color: $surface-card;
+  }
+
+  // The layout layer gives every `header` a bottom margin, and this bar is one. Zeroed: a context
+  // row meets the bar edge to edge, and a page with none has its own padding, which with the
+  // margin as well made a page that fits the window scroll by it.
+  .#{$block} .#{$block}__bar {
+    margin-bottom: 0;
+  }
+
+  .#{$block}__bar-inner {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: space(3);
+    max-width: $wide-column;
+    height: 100%;
+    margin-inline: auto;
+    padding-inline: space(4);
+  }
+
+  .#{$block}__brand {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    min-height: $control-height;
+    // A step of air on the right, between the name and the nav.
+    padding-right: space(1);
+    color: $text-primary;
+
+    @include heading-face;
+
+    font-size: $brand-size;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+
+    &:focus-visible {
+      @include focus-ring;
+    }
+  }
+
+  .#{$block}__brand-short {
+    display: none;
+  }
+
+  .#{$block}__end {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: space(2);
+    margin-left: auto;
+  }
+
+  @media (max-width: $shell-phone-width) {
+    .#{$block}__bar-inner {
+      gap: space(2);
+      padding-inline: space(2);
+    }
+  }
+
+  // Narrower than the phone width: the initials stand in for the name, which stays for a
+  // screen reader.
+  @media (max-width: $shell-brand-width) {
+    .#{$block}__brand {
+      justify-content: center;
+      min-width: $control-height;
+    }
+
+    .#{$block}__brand-full {
+      @include visually-hidden;
+    }
+
+    .#{$block}__brand-short {
+      display: inline;
+    }
+  }
+}

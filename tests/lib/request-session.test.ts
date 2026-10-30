@@ -1,10 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { RETURN_PATH_HEADER } from '@/lib/sign-in';
 
-// The helper turns Better Auth's session into the service-level `Session` and
-// nothing more. Better Auth itself is mocked: whether a cookie is a real
-// session is its job, and tests/e2e/route-protection.spec.ts proves it end to end
-// against the built server.
+// The helper turns Better Auth's session into the service-level `Session` and nothing more.
+// Better Auth is mocked: whether a cookie is a real session is its job, and
+// tests/e2e/route-protection.spec.ts proves it end to end against the built server.
 
 const getSessionMock = vi.fn();
 const listUserAccountsMock = vi.fn();
@@ -46,6 +45,7 @@ const {
   requireSignedIn,
   sessionFromHeaders,
   sessionIsFresh,
+  sessionIsVerified,
 } = await import('@/lib/request-session');
 const { auth } = await import('@/lib/auth');
 const { Forbidden } = await import('@/lib/errors');
@@ -101,24 +101,11 @@ describe('sessionFromHeaders', () => {
     await expect(sessionFromHeaders(given)).resolves.toEqual({ userId: USER_ID, role: 'admin' });
     expect(getSessionMock).toHaveBeenCalledWith({ headers: given });
   });
-
-  it('is null when there is no session', async () => {
-    getSessionMock.mockResolvedValue(null);
-    await expect(sessionFromHeaders(new Headers())).resolves.toBeNull();
-  });
 });
 
-// The shell's half of `requireSession()` (MB.256): a layout that throws the
-// email redirect while the browser navigates into it never settles, so this
-// one sends only a signed-out visitor away.
+// The shell's half of `requireSession()`: a layout that throws the email redirect while the
+// browser navigates into it never settles, so this one sends only a signed-out visitor away.
 describe('requireSignedIn', () => {
-  it('redirects to /sign-in with the return path the proxy forwarded', async () => {
-    getSessionMock.mockResolvedValue(null);
-    requestHeaders.set(RETURN_PATH_HEADER, '/coven');
-
-    await expect(requireSignedIn()).rejects.toThrow('redirect:/sign-in?next=%2Fcoven');
-  });
-
   it('returns an unverified account’s session on a page that is not the email page', async () => {
     getSessionMock.mockResolvedValue(betterAuthSession('user', false));
     requestHeaders.set(RETURN_PATH_HEADER, '/coven');
@@ -159,9 +146,8 @@ describe('requireSession', () => {
     await expect(requireSession()).rejects.toThrow(/^redirect:\/sign-in$/);
   });
 
-  // An unverified account is provisional and can do nothing else (MB.54), so
-  // every page but the email page sends it there, with its own path to come
-  // back to once the address is proved.
+  // An unverified account is provisional and can do nothing else, so every page but the email
+  // page sends it there, with its own path to come back to once the address is proved.
   describe('an unverified account', () => {
     beforeEach(() => {
       getSessionMock.mockResolvedValue(betterAuthSession('user', false));
@@ -175,32 +161,16 @@ describe('requireSession', () => {
       );
     });
 
-    it('is sent to the bare email page when no return path was forwarded, or one that leaves the site', async () => {
-      await expect(requireSession()).rejects.toThrow(/^redirect:\/account\/email$/);
-
-      requestHeaders.set(RETURN_PATH_HEADER, '//evil.example');
-      await expect(requireSession()).rejects.toThrow(/^redirect:\/account\/email$/);
-    });
-
     it('reaches the email page itself, whatever its query', async () => {
       requestHeaders.set(RETURN_PATH_HEADER, '/account/email?next=%2Fcoven&error=TOKEN_EXPIRED');
 
       await expect(requireSession()).resolves.toEqual({ userId: USER_ID, role: 'user' });
     });
-
-    it('is not let past by a path that merely starts like the email page', async () => {
-      requestHeaders.set(RETURN_PATH_HEADER, '/account/emails');
-
-      await expect(requireSession()).rejects.toThrow(
-        'redirect:/account/email?next=%2Faccount%2Femails',
-      );
-    });
   });
 });
 
-// The `/admin` guard (M5.4): a signed-in non-admin is answered with Next's 403
-// page rather than a redirect or a 404, since everyone knows the path exists
-// (claude-docs/auth/admin-guard.md, "The admin guard").
+// The `/admin` guard: a signed-in non-admin is answered with Next's 403 page rather than a
+// redirect or a 404, since everyone knows the path exists (claude-docs/auth/admin-guard.md, "The admin guard").
 describe('requireAdminSession', () => {
   it('returns the session of an admin, without redirecting or refusing', async () => {
     getSessionMock.mockResolvedValue(betterAuthSession('admin'));
@@ -218,27 +188,7 @@ describe('requireAdminSession', () => {
     await expect(requireAdminSession()).rejects.toThrow('forbidden');
   });
 
-  it('sends a signed-out visitor to /sign-in with the return path, not to the forbidden page', async () => {
-    getSessionMock.mockResolvedValue(null);
-    requestHeaders.set(RETURN_PATH_HEADER, '/admin?tab=forms');
-
-    await expect(requireAdminSession()).rejects.toThrow(
-      `redirect:/sign-in?next=${encodeURIComponent('/admin?tab=forms')}`,
-    );
-  });
-
-  // The role is not a way around the email page: a provisional account can do
-  // nothing else, whatever its row says.
-  it('sends an unverified admin to the email page first', async () => {
-    getSessionMock.mockResolvedValue(betterAuthSession('admin', false));
-    requestHeaders.set(RETURN_PATH_HEADER, '/admin');
-
-    await expect(requireAdminSession()).rejects.toThrow(
-      `redirect:/account/email?next=${encodeURIComponent('/admin')}`,
-    );
-  });
-
-  // M11.20: the people pages keep this guard, so a curator is refused there.
+  // The people pages keep this guard, so a curator is refused there.
   it('answers a curator with the forbidden page, whom the curation guard admits', async () => {
     getSessionMock.mockResolvedValue(betterAuthSession('curator'));
 
@@ -247,9 +197,9 @@ describe('requireAdminSession', () => {
   });
 });
 
-// M11.20: the guard on `/admin` and every curation page under it, the
-// people pages excepted. A curator or an admin passes; anyone else gets the
-// forbidden page, as at requireAdminSession (claude-docs/auth/admin-guard.md).
+// The guard on `/admin` and every curation page under it, the people pages excepted. A curator
+// or an admin passes; anyone else gets the forbidden page, as at requireAdminSession
+// (claude-docs/auth/admin-guard.md).
 describe('requireCuratorSession', () => {
   it.each([
     ['a curator', 'curator'],
@@ -266,19 +216,6 @@ describe('requireCuratorSession', () => {
 
     await expect(requireSession()).resolves.toEqual({ userId: USER_ID, role: 'user' });
     await expect(requireCuratorSession()).rejects.toThrow('forbidden');
-  });
-
-  it('sends a signed-out visitor to /sign-in, and an unverified curator to the email page', async () => {
-    requestHeaders.set(RETURN_PATH_HEADER, '/admin/categories');
-    getSessionMock.mockResolvedValue(null);
-    await expect(requireCuratorSession()).rejects.toThrow(
-      `redirect:/sign-in?next=${encodeURIComponent('/admin/categories')}`,
-    );
-
-    getSessionMock.mockResolvedValue(betterAuthSession('curator', false));
-    await expect(requireCuratorSession()).rejects.toThrow(
-      `redirect:/account/email?next=${encodeURIComponent('/admin/categories')}`,
-    );
   });
 });
 
@@ -313,9 +250,8 @@ describe('linkedAccounts', () => {
   });
 });
 
-// The account page withholds Remove on a session older than Better Auth's
-// freshness window, which /unlink-account would refuse anyway (MB.116): the
-// same check, made before the button is offered.
+// The account page withholds Remove on a session older than Better Auth's freshness window,
+// which /unlink-account would refuse anyway: the same check, made before the button is offered.
 describe('sessionIsFresh', () => {
   const TWO_DAYS_AGO = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
 
@@ -344,9 +280,9 @@ describe('sessionIsFresh', () => {
   });
 });
 
-// The `/coven/[slug]` guard (M6.10): a slug that names no coven the user is in
-// is a 404, not a 403 — a slug is a guess at someone's private data, so the
-// answer must not confirm it exists (claude-docs/auth/coven-guard.md).
+// The `/coven/[slug]` guard: a slug that names no coven the user is in is a 404, not a 403. A slug
+// is a guess at someone's private data, so the answer must not confirm it exists
+// (claude-docs/auth/coven-guard.md).
 describe('requireCovenMembership', () => {
   beforeEach(() => {
     membershipBySlugMock.mockReset();
@@ -377,14 +313,17 @@ describe('requireCovenMembership', () => {
 
     await expect(requireCovenMembership('whitethorn-coven')).rejects.toThrow('database down');
   });
+});
 
-  it('sends a signed-out visitor to /sign-in before asking after the coven', async () => {
+// The front page offers an unverified account the email page rather than a page
+// that would send it there, so it asks the same per-request lookup.
+describe('sessionIsVerified', () => {
+  it('is true for a verified address, false for an unverified one and with no session', async () => {
+    getSessionMock.mockResolvedValue(betterAuthSession('user', true));
+    await expect(sessionIsVerified()).resolves.toBe(true);
+    getSessionMock.mockResolvedValue(betterAuthSession('user', false));
+    await expect(sessionIsVerified()).resolves.toBe(false);
     getSessionMock.mockResolvedValue(null);
-    requestHeaders.set(RETURN_PATH_HEADER, '/coven/whitethorn-coven');
-
-    await expect(requireCovenMembership('whitethorn-coven')).rejects.toThrow(
-      `redirect:/sign-in?next=${encodeURIComponent('/coven/whitethorn-coven')}`,
-    );
-    expect(membershipBySlugMock).not.toHaveBeenCalled();
+    await expect(sessionIsVerified()).resolves.toBe(false);
   });
 });

@@ -31,10 +31,10 @@ import {
   stockEditor,
   withSql,
 } from './coven-ingredients';
+import { editIngredientControl, editIngredientDialog } from './ingredient-dialogs';
 
 // Stories 20–27: the coven's ingredient list at /coven/[slug]/ingredients,
-// and everything a member does from it. The page is M9.6's, and every
-// story here walks it. Each story writes its own coven, so one story's rows
+// and everything a member does from it. Every story here walks it. Each story writes its own coven, so one story's rows
 // never decide another's counts.
 
 test.beforeAll(async () => {
@@ -85,7 +85,7 @@ test(
         { quantity: 4, unit: 'piece', threshold: 3 },
         coven.users.A,
       );
-      // A local entry with no jar of it yet is listed too (M6.18 names its case).
+      // A local entry with no jar of it yet is listed too.
       await localIngredient(sql, coven.id, coven.users.A, {
         name: 'Fixture Unstocked',
         nomenclature: 'none',
@@ -110,7 +110,7 @@ test(
     const cards = cardsIn(list);
 
     await test.step('every entry is in the one list, in label order', async () => {
-      // Sorted on (lower(name), identity_key, id), M8.14's order.
+      // Sorted on (lower(name), identity_key, id).
       const order = ["Cat's Claw", 'Fixture Unstocked', 'Rosemary', 'Selenite', 'Testwort'];
       await expect(cards).toHaveCount(order.length);
       for (const [index, name] of order.entries()) {
@@ -120,7 +120,7 @@ test(
 
     await test.step('each lists its form in Quick Look, and a shared label shows its formal name on its card', async () => {
       await expect(rowOf(list, "Cat's Claw")).toContainText('Uncaria tomentosa');
-      // The forms are Quick Look's since M9.9, which took the forms line off the card.
+      // The forms are Quick Look's, not the card's.
       const forms: [string, string][] = [
         ['Rosemary', 'Herb'],
         ['Selenite', 'Crystal'],
@@ -158,7 +158,7 @@ test(
     });
 
     await test.step('the coven nav marks Ingredients as the page, and the page passes axe at 375px', async () => {
-      // M9.6 adds the Ingredients row to CovenNav (claude-docs/components/coven-nav.md).
+      // CovenNav carries the Ingredients row (claude-docs/components/coven-nav.md).
       await expect(
         page.getByRole('navigation', { name: 'Coven' }).getByRole('link', { name: 'Ingredients' }),
       ).toHaveAttribute('aria-current', 'page');
@@ -319,11 +319,9 @@ test(
         await expect(lowBadge(rowOf(list, name))).toHaveCount(0);
         await expect(outBadge(rowOf(list, name))).toHaveCount(0);
       }
-      // Each badge is a drawing alone, named in full for a screen reader, and its
-      // tip says the state in words: not a colour alone. The tip is an icon tip, kept out
-      // of the accessibility tree, so it is found with `includeHidden`, in its badge's row
-      // (the page's hidden info tips, and a card's last-edit tip, are tooltips too, so the
-      // query names the stock tip by its words). Axe holds their contrast.
+      // Each badge is a drawing alone, named in full for a screen reader, and its tip says the state in words,
+      // not a colour alone. The tip is an icon tip, hidden from the accessibility tree, so it is found with
+      // `includeHidden` in its badge's row, by its words. Axe holds their contrast.
       const tipIn = (row: Locator, words: string) =>
         row.getByRole('tooltip', { includeHidden: true }).filter({ hasText: words });
       await outBadge(rowOf(list, 'Rosemary')).focus();
@@ -339,7 +337,7 @@ test(
     });
 
     await test.step('the low-stock filter keeps the low rows, in the address', async () => {
-      // M9.8's `lowStockOnly`, a switch as the admin's Without References is
+      // `lowStockOnly`, a switch as the admin's Without References is
       // (claude-docs/components/compendium-list.md); "Low Stock Only" is this spec's choice.
       const panel = await openFilters(page);
       await panel.getByRole('switch', { name: 'Low Stock Only' }).click();
@@ -403,14 +401,14 @@ async function jarsOf(coven: Coven, name: string) {
 }
 
 test(
-  "a member edits an ingredient's stock in one dialog, by mouse or keyboard, adding and removing forms, and a refused save keeps what was typed",
+  "a member edits an ingredient's stock in one dialog, by mouse or keyboard, adding and removing forms",
   { tag: '@story-24' },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Story 24', 'story-24.test', {
       A: 'owner',
       C: 'viewer',
     });
-    const { testwortStock, rosemaryOil } = await withSql(async (sql) => {
+    const { testwortStock } = await withSql(async (sql) => {
       const testwort = await localIngredient(sql, coven.id, coven.users.A);
       const testwortStock = await insertStock(
         sql,
@@ -422,9 +420,7 @@ test(
       await stockJars(sql, coven, [
         { name: 'Rosemary', form: 'Herb', quantity: 20, unit: 'g', threshold: 10 },
       ]);
-      // Rosemary's other form, which the coven does not hold yet.
-      const rosemaryOil = await compendiumVariant(sql, 'Rosemary', 'Oil');
-      return { testwortStock, rosemaryOil };
+      return { testwortStock };
     });
     const path = listPath(coven);
     await signInAgainAs(page, coven.users.A);
@@ -495,7 +491,7 @@ test(
       ]);
       // With every form held there is nothing left to add. The card reads again once the dialog
       // has closed, and the dialog is drawn from what the card was given.
-      // The card's own Oil jar line (the forms are Quick Look's since M9.9, off the card).
+      // The card's own Oil jar line (the forms are Quick Look's, not the card's).
       await expect(
         rowOf(list, 'Rosemary')
           .getByRole('listitem')
@@ -568,38 +564,6 @@ test(
       expect(await stockOf(testwortStock)).toEqual({ quantity: 6, unit: 'piece', threshold: 3 });
     });
 
-    await test.step('a refused save keeps what was typed and says which form it was', async () => {
-      const editor = stockEditor(rowOf(list, 'Rosemary'), 'Rosemary');
-      await editor.open.click();
-      await editor.add('Oil');
-      await editor.jar('Oil').quantity.fill('12');
-      // Why it is refused: another member stocked Oil while the dialog was open, and a form is
-      // held once, so this add finds it held (the batch's own message, on that row).
-      await withSql(async (sql) => {
-        await insertStock(
-          sql,
-          coven.id,
-          rosemaryOil,
-          { quantity: 1, unit: 'ml', threshold: 0 },
-          coven.users.A,
-        );
-      });
-      await editor.save.click();
-
-      // The refusal is the form's own, said on its jar, which is chosen to show it.
-      await expect(editor.jar('Oil').group).toContainText('already holds this form');
-      await expect(editor.dialog).toBeVisible();
-      await expect(editor.jar('Oil').quantity).toHaveValue('12');
-      // The refusal wrote nothing of the batch.
-      expect(await jarsOf(coven, 'Rosemary')).toEqual([
-        { form: 'Herb', quantity: 0.5, unit: 'kg', threshold: 0.1 },
-        { form: 'Oil', quantity: 1, unit: 'ml', threshold: 0 },
-      ]);
-      await editor.cancel.click();
-      await page.getByRole('button', { name: 'Discard Changes' }).click();
-      await expect(editor.dialog).toHaveCount(0);
-    });
-
     await test.step('a save that fails on the network puts nothing on the page and explains', async () => {
       // The network fails the write and nothing else, so the page's own
       // reads still answer: a failure the member could meet on a train.
@@ -663,6 +627,59 @@ test(
   },
 );
 
+// Its own test, not a step of the one above: that test ran close to the 30 s
+// timeout on CI, and this case needs only a held jar and a form not yet held.
+test(
+  "a member's refused stock save keeps what was typed and says which form it was",
+  { tag: '@story-24' },
+  async ({ page }) => {
+    const coven = await seedCoven(page, 'Fixture Coven Story 24 Refusal', 'story-24-refusal.test', {
+      A: 'owner',
+    });
+    const rosemaryOil = await withSql(async (sql) => {
+      await stockJars(sql, coven, [
+        { name: 'Rosemary', form: 'Herb', quantity: 20, unit: 'g', threshold: 10 },
+      ]);
+      // Rosemary's other form, which the coven does not hold yet.
+      return compendiumVariant(sql, 'Rosemary', 'Oil');
+    });
+    await signInAgainAs(page, coven.users.A);
+    await page.goto(listPath(coven));
+    const list = ingredientList(page);
+    await expect(rowOf(list, 'Rosemary')).toBeVisible();
+
+    const editor = stockEditor(rowOf(list, 'Rosemary'), 'Rosemary');
+    await editor.open.click();
+    await editor.add('Oil');
+    await editor.jar('Oil').quantity.fill('12');
+    // Why it is refused: another member stocked Oil while the dialog was open, and a form is
+    // held once, so this add finds it held (the batch's own message, on that row).
+    await withSql(async (sql) => {
+      await insertStock(
+        sql,
+        coven.id,
+        rosemaryOil,
+        { quantity: 1, unit: 'ml', threshold: 0 },
+        coven.users.A,
+      );
+    });
+    await editor.save.click();
+
+    // The refusal is the form's own, said on its jar, which is chosen to show it.
+    await expect(editor.jar('Oil').group).toContainText('already holds this form');
+    await expect(editor.dialog).toBeVisible();
+    await expect(editor.jar('Oil').quantity).toHaveValue('12');
+    // The refusal wrote nothing of the batch.
+    expect(await jarsOf(coven, 'Rosemary')).toEqual([
+      { form: 'Herb', quantity: 20, unit: 'g', threshold: 10 },
+      { form: 'Oil', quantity: 1, unit: 'ml', threshold: 0 },
+    ]);
+    await editor.cancel.click();
+    await page.getByRole('button', { name: 'Discard Changes' }).click();
+    await expect(editor.dialog).toHaveCount(0);
+  },
+);
+
 test(
   "deleting the coven's own ingredient asks first, naming it; Cancel keeps it, Delete removes its card in place and marks it deleted, and a viewer is offered no Delete",
   { tag: '@story-25' },
@@ -692,14 +709,12 @@ test(
     await expect(cardsIn(list)).toHaveCount(2);
     await markDocument(page);
 
-    // A coven's own entry's card carries M8.17's bin, named for the entry
-    // ("Delete Ingredient Testwort, Fixtura testalis"), which asks in a dialog
-    // named for the delete it is: Delete Ingredient, M5.3's `deleteIngredient`.
-    const bin = rowOf(list, 'Testwort').getByRole('button', {
-      name: 'Delete Ingredient Testwort, Fixtura testalis',
-      exact: true,
-    });
-    const question = page.getByRole('dialog', { name: 'Delete Ingredient', exact: true });
+    // A coven's own entry's Delete is in its Edit Ingredient dialog, not on its card; the
+    // dialog's Delete Ingredient asks over the form, the `deleteIngredient` mutation.
+    const edit = editIngredientControl(rowOf(list, 'Testwort'), 'Testwort', 'Fixtura testalis');
+    const dialog = editIngredientDialog(page, 'Testwort', 'Fixtura testalis');
+    const bin = dialog.getByRole('button', { name: 'Delete Ingredient', exact: true });
+    const question = dialog.getByRole('group', { name: /^Delete/ });
     const deletedAt = async (id: string) => {
       const [row] = await withSql(
         (sql) => sql<{ deleted_at: Date | null }[]>`
@@ -708,7 +723,11 @@ test(
       return row.deleted_at;
     };
 
-    await test.step('the Delete asks first, naming the item, and Cancel changes nothing', async () => {
+    await test.step('the card carries no Delete, and the Edit Ingredient dialog asks first, naming the item, and Cancel changes nothing', async () => {
+      // The precondition: the card offers Edit, whose dialog holds the Delete.
+      await expect(edit).toBeVisible();
+      await expect(rowOf(list, 'Testwort').getByRole('button', { name: /^Delete/ })).toHaveCount(0);
+      await edit.click();
       await bin.click();
       await expect(question).toContainText('Testwort');
       await assertNoAccessibilityViolations(page);
@@ -720,15 +739,15 @@ test(
       expect(await deletedAt(testwort.ingredientId)).toBeNull();
     });
 
-    await test.step('confirmed, the card goes without a reload, the focus goes to the heading, and the removal is announced', async () => {
+    await test.step('confirmed, the dialog and the card go without a reload, the focus goes to the heading, and the removal is announced', async () => {
       await bin.click();
       await question.getByRole('button', { name: 'Delete', exact: true }).click();
 
-      await expect(question).toHaveCount(0);
+      await expect(dialog).toHaveCount(0);
       await expect(rowOf(list, 'Testwort')).toHaveCount(0);
       await expect(rowOf(list, 'Fixture Keptwort')).toHaveCount(1);
       expect(await stillSameDocument(page)).toBe(true);
-      // The bin went with its card, so the focus goes to the page's heading.
+      // The dialog and its card went, so the focus goes to the page's heading.
       await expect(page.getByRole('heading', { level: 1, name: 'Ingredients' })).toBeFocused();
       // The page's one status region carries the item the delete removed.
       await expect(page.getByRole('status').filter({ hasText: 'Testwort' })).toHaveCount(1);
@@ -855,11 +874,9 @@ test(
     const cards = cardsIn(list);
     await expect(cards).toHaveCount(4);
 
-    // M9.7's three states as a choice chip in the Filters panel, a `group` by
-    // role (All, Local and Compendium), and in-stock-only as a switch, as the
-    // admin's No Refs is (claude-docs/components/facet-panel.md). A change in
-    // the panel is held until Apply Filters. Found whether the panel is open or
-    // shut, so what it holds can be read after a reload without opening it.
+    // The three states are a choice chip in the Filters panel, a `group` by role (All, Local and Compendium),
+    // and in-stock-only is a switch (claude-docs/components/facet-panel.md). A change is held until Apply
+    // Filters. They are found whether the panel is open or shut, so a reload can read them.
     const panel = page.getByRole('dialog', { name: 'Filters', includeHidden: true });
     const source = panel.getByRole('group', { name: 'Source', includeHidden: true });
     const inStock = panel.getByRole('switch', { name: /^In Stock/, includeHidden: true });

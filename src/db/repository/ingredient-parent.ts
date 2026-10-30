@@ -13,12 +13,9 @@ import { existsIn, existsInIncludingSoftDeleted } from './select';
 // any table and names none.
 
 /**
- * The ingredient `childColumn` names is readable, as `readableInTiers` reads
- * one, and holds `where` too: how a child table with no `workspace_id` of its
- * own takes its parent's tier, so a caller naming another coven's ingredient
- * gets no rows rather than a filter applied after the fetch (rule 7). A
- * correlated `EXISTS`, whose builder ANDs the parent's tombstone filter; `where`
- * reads the parent as `ingredients`, so a child compares its own tier with it.
+ * The ingredient `childColumn` names is readable as `readableInTiers` reads one, and holds `where`: how a child table with no
+ * `workspace_id` takes its parent's tier, so another coven's ingredient gets no rows, not a filter after the fetch (rule 7). A correlated
+ * `EXISTS` that ANDs the parent's tombstone filter; `where` reads the parent as `ingredients`.
  */
 export function readableIngredientParent(
   memberships: readonly Membership[],
@@ -32,39 +29,9 @@ export function readableIngredientParent(
 }
 
 /**
- * The live variant `variantColumn` names belongs to a readable ingredient, as
- * `readableIngredientParent` reads one, which holds `where` too: how a row one
- * form of an ingredient owns takes the ingredient's tier (MB.218). Through the
- * variant rather than the row's own `ingredient_id`, so the form's tombstone
- * hides its rows as the ingredient's hides the ingredient's; the composite
- * key MB.217 built holds the two ids to one ingredient either way.
- */
-export function readableVariantParent(
-  memberships: readonly Membership[],
-  variantColumn: AnyPgColumn,
-  where?: SQL,
-): SQL {
-  return existsIn(
-    ingredientVariants,
-    and(
-      eq(ingredientVariants.id, variantColumn),
-      readableIngredientParent(memberships, ingredientVariants.ingredientId, where),
-    ),
-  );
-}
-
-/**
- * `readableIngredientParent`, or a compendium entry the curators have retired
- * while `heldBy`'s coven has a live cupboard entry naming it (M12.24): an
- * entry a coven still uses, which the compendium no longer lists. The tier is
- * checked whatever the tombstone, so a cupboard row naming a coven's own
- * ingredient, which the table does not refuse, admits nothing. One `EXISTS`
- * over the parent, which is why it skips `existsIn`'s tombstone filter and
- * puts it back on the first arm. `where` reads the parent as `ingredients`,
- * as `readableIngredientParent`'s does; a retired entry's tier is the
- * compendium's (claude-docs/db/workspace-compendium-entries.md, "When the
- * compendium retires the entry"). No `heldBy` is `readableIngredientParent`
- * itself, so a finder takes the proof as an optional last argument.
+ * `readableIngredientParent`, or a compendium entry the curators have retired while
+ * `heldBy`'s coven has a live cupboard entry naming it. One `EXISTS` over the parent,
+ * so it skips `existsIn`'s tombstone filter and restores it on the first arm. (claude-docs/db/write-path.md, "Reads that take no proof")
  */
 export function inUseIngredientParent(
   memberships: readonly Membership[],
@@ -96,10 +63,8 @@ export function inUseIngredientParent(
 }
 
 /**
- * `readableVariantParent`, or a live form of a retired compendium entry
- * `heldBy`'s cupboard names, as `inUseIngredientParent` admits one: the
- * entry's forms and jars stay readable to the covens that use it. The form's
- * own tombstone still filters. No `heldBy` is `readableVariantParent`'s read.
+ * The live variant `variantColumn` names belongs to an ingredient `inUseIngredientParent` admits: how a row one form owns takes the
+ * ingredient's tier, through the variant so the form's tombstone hides its rows. With no `heldBy` it is the plain tier read.
  */
 export function inUseVariantParent(
   memberships: readonly Membership[],

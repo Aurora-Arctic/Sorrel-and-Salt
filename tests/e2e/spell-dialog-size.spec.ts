@@ -1,0 +1,81 @@
+import { expect } from '@playwright/test';
+import { test } from './fixtures';
+import { recreateE2eDatabase } from './database';
+import { signInAgainAs } from './session';
+import { seedCoven } from './stories/coven-ingredients';
+
+// New Spell opens the dialog already holding the form, so the centred dialog does not grow and jump under the
+// pointer (it was 518px then 720px at 1280 by 800). Proved by state: the form is there from the first frame
+// and the dialog's height never changes.
+test.use({ reducedMotion: 'no-preference' });
+test.beforeAll(async () => {
+  await recreateE2eDatabase();
+});
+
+for (const viewport of [
+  { width: 1280, height: 800 },
+  { width: 390, height: 844 },
+]) {
+  test(`New Spell opens at its full size, the form in its first frame, at ${viewport.width}px`, async ({
+    page,
+  }) => {
+    const coven = await seedCoven(
+      page,
+      `Fixture Dialog ${viewport.width}`,
+      `dialog-${viewport.width}.test`,
+      { A: 'owner' },
+    );
+    await signInAgainAs(page, coven.users.A);
+    await page.setViewportSize(viewport);
+    await page.goto(`/coven/${coven.slug}/grimoire`);
+    await page.getByRole('heading', { name: 'Grimoire', level: 1 }).waitFor();
+    // The Filters button exists only once the page has hydrated. Until then the grimoire's
+    // filter panel is a `<dialog>` drawn open, and New Spell's press is not yet the script's.
+    await expect(page.getByRole('button', { name: /^Filters/ })).toBeVisible();
+
+    // Every frame from the press on: the modal dialog's height, and whether it holds the form.
+    // `:modal` matches only a dialog opened over the page, never the filter panel.
+    await page.evaluate(() => {
+      const w = window as unknown as { frames: { height: number; form: boolean }[] };
+      w.frames = [];
+      const start = performance.now();
+      const tick = () => {
+        const dialog = document.querySelector<HTMLDialogElement>('dialog:modal');
+        if (dialog) {
+          w.frames.push({
+            height: Math.round(dialog.getBoundingClientRect().height),
+            form: dialog.querySelector('input[name="title"]') !== null,
+          });
+        }
+        if (performance.now() - start < 2000) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    });
+    await page.getByRole('link', { name: 'New Spell' }).click();
+    await expect(page.getByRole('dialog', { name: 'New Spell' })).toBeVisible();
+    await page.waitForTimeout(2100);
+
+    const frames = await page.evaluate(
+      () => (window as unknown as { frames: { height: number; form: boolean }[] }).frames,
+    );
+    // The precondition: the dialog was caught open, over many frames.
+    expect(frames.length).toBeGreaterThan(10);
+    expect(frames.every(({ form }) => form)).toBe(true);
+    expect(new Set(frames.map(({ height }) => height)).size).toBe(1);
+
+    // The default column (32rem of content and the dialog's 3rem of padding, 560px), held to the
+    // window's gap on a phone.
+    const width = await page
+      .getByRole('dialog', { name: 'New Spell' })
+      .evaluate((dialog) => Math.round(dialog.getBoundingClientRect().width));
+    if (viewport.width >= 1280) expect(width).toBe(560);
+    else expect(width).toBeLessThan(viewport.width);
+
+    // The Jar is one column at every width: the jar details above the steps.
+    const details = await page.getByRole('group', { name: 'Jar Details' }).boundingBox();
+    const list = await page.getByRole('heading', { name: 'What Goes In' }).boundingBox();
+    if (!details || !list) throw new Error('The Jar draws no column');
+    expect(list.y).toBeGreaterThan(details.y);
+    expect(Math.abs(list.x - details.x)).toBeLessThan(40);
+  });
+}

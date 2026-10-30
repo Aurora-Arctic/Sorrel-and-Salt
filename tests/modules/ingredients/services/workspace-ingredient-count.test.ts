@@ -13,7 +13,7 @@ import { variantIdOf } from '../../../support/db/read-variants';
 import { type IngredientFixture, makeIngredient } from '../../../support/fixtures';
 import type { Overrides } from '../../../support/fixtures';
 
-// The count behind the coven list's "Page X of Y" (M9.6): the same rows as
+// The count behind the coven list's "Page X of Y": the same rows as
 // `listWorkspaceIngredients`, counted under the same proof.
 
 let sql: postgres.Sql;
@@ -47,15 +47,13 @@ async function seed(): Promise<void> {
 }
 
 describe('countWorkspaceIngredients', () => {
-  it.each([
-    ['owner', A],
-    ['member', B],
-    ['viewer', C],
-  ])("counts the coven's own entries and held compendium entries for its %s", async (_, user) => {
+  // The viewer stands for every role: reading is one permission owner, member
+  // and viewer all hold (tests/modules/coven/services/access-control.test.ts).
+  it("counts the coven's own entries and held compendium entries for its viewer", async () => {
     await seed();
 
     await expect(
-      countWorkspaceIngredients(asUser(user), WORKSPACE_W_ID, {}, undefined),
+      countWorkspaceIngredients(asUser(C), WORKSPACE_W_ID, {}, undefined),
     ).resolves.toEqual({ totalCount: 3, countBefore: null });
   });
 

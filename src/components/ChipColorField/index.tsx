@@ -21,17 +21,9 @@ import Notice from '../Notice';
 import type { ChipColorFieldProps, FormatOption, PickerColor, PickerFormat } from './types';
 import './index.scss';
 
-// One of a category group's two chip colours (M5.6b): Ark's colour picker —
-// an area, a hue slider and the channels of a format the admin chooses — kept
-// in step with the hex box the form validates, a light veil of the colour's
-// own ground over the colours that fall short of 4.5:1 on it, labelled
-// "< 4.5:1" inside (the owner's calls),
-// a button setting the colour from its partner,
-// a sample chip on that ground
-// with the ratio it reads there (MB.36), and a warning when another group's
-// colour in this theme is too close to tell apart. The checks themselves are
-// the schema's; this shows them while the admin chooses rather than after a
-// save (claude-docs/components/chip-color-field.md).
+// One of a category group's two chip colours: Ark's picker kept in step with the hex box the form
+// validates, with a veil under 4.5:1, a copy-partner button, a sample chip with its ratio and a
+// too-close warning. The checks are the schema's (claude-docs/components/chip-color-field.md).
 
 const GROUND = { colorDark: 'the dark card', colorLight: 'the light page' } as const;
 
@@ -123,10 +115,9 @@ const ChipColorField = ({
   'aria-required': required,
 }: ChipColorFieldProps): ReactElement => {
   const hex = HEX_COLOR.test(value) ? value.toLowerCase() : undefined;
-  // The picker keeps its own colour rather than re-reading the hex each
-  // time: a hex forgets the hue of a grey, so a drag through the grey edge of
-  // the area would otherwise snap the hue to red. A hex from outside — typed,
-  // or filled from the partner — replaces it; half a hex leaves it be.
+  // The picker keeps its own colour, since a hex forgets a grey's hue and a drag through the grey edge
+  // would snap the hue to red. A hex from outside (typed, or the partner's) replaces it; half a hex
+  // leaves it be.
   const [color, setColor] = useState<PickerColor>(() => parseColor(hex ?? '#808080'));
   if (hex && hex !== hexOf(color)) setColor(parseColor(hex));
   const [format, setFormat] = useState<PickerFormat>('hsba');
@@ -142,7 +133,7 @@ const ChipColorField = ({
   // The area is laid out in HSL for HSL and in HSB otherwise, as the picker lays it.
   const space = format === 'hsla' ? 'hsl' : 'hsb';
   const labelPoint = useMemo(() => failingLabelPoint(hue, column, space), [hue, column, space]);
-  // The veil's edge, drawn as a fine line in the ground's own ink (the owner's call).
+  // The veil's edge, drawn as a fine line in the ground's own ink.
   const edge = useMemo(() => contrastBoundary(hue, column, space), [hue, column, space]);
   const veil = useMemo(() => {
     const region = failingRegion(hue, column, space);
@@ -151,7 +142,7 @@ const ChipColorField = ({
   const partnerHex = partner && HEX_COLOR.test(partner) ? partner.toLowerCase() : undefined;
 
   const near = hex ? nearColor(hex, others) : undefined;
-  // A ratio at the floor or over it reads in the accent green (the owner's call).
+  // A ratio at the floor or over it reads in the accent green.
   const passes = hex !== undefined && chipContrast(column, hex) >= MIN_CHIP_CONTRAST;
   const ratioId = `${id}-ratio`;
   const nearId = `${id}-near`;
@@ -162,7 +153,7 @@ const ChipColorField = ({
 
   return (
     <div className="chip-color-field">
-      {/* Under the field's label, saying what the veil below means (the owner's call). */}
+      {/* Under the field's label, saying what the veil below means. */}
       {labelPoint && (
         <p id={lineId} className="field__hint chip-color-field__veil-hint">
           Colours under the veil are too faint on {GROUND[column]} (under 4.5:1).
@@ -230,9 +221,9 @@ const ChipColorField = ({
               aria-label={`${label} hue`}
             />
           </ColorPicker.ChannelSlider>
-          {/* One grid: the three channels, the divider and the hex across the
-              top, each captioned under its box; under them the format toggle
-              spanning the channels and Match under the hex (the owner's calls). */}
+          {/* One grid: the three channels, the divider and the hex across the top, each
+              captioned under its box; under them the format toggle spanning the channels
+              and Match under the hex. */}
           <div className="chip-color-field__controls">
             {channels.map(({ channel, name }) => (
               <label key={channel} className="chip-color-field__channel">
@@ -287,7 +278,7 @@ const ChipColorField = ({
               <Tooltip.Trigger asChild>
                 <button
                   type="button"
-                  className="btn btn--small btn--quiet chip-color-field__format"
+                  className="btn btn--quiet btn--small chip-color-field__format"
                   aria-label={`${label} Format: ${current.name}. Switch to ${next.name}`}
                   onClick={() => setFormat(next.format)}
                 >
@@ -304,7 +295,7 @@ const ChipColorField = ({
             {/* The pair's rule, on demand: the same hue fitted to this ground. */}
             <button
               type="button"
-              className="btn btn--small btn--quiet chip-color-field__match"
+              className="btn btn--quiet btn--small chip-color-field__match"
               disabled={!partnerHex}
               aria-label={`Match ${PARTNER_NAME[column]} Theme Colour`}
               onClick={() => partnerHex && onChange(pairedColor(partnerHex, column))}
@@ -335,22 +326,20 @@ const ChipColorField = ({
           {`${formatRatio(chipContrast(column, hex))}:1 on ${GROUND[column]}`}
         </p>
       )}
-      {/* A refusal of this colour, in the error notice: the contrast floor
-          missed, or the pair's hues too far apart (the owner's call). The
-          `.notice` markup by hand rather than `Notice`: this is the field's
-          described error, read with the hex box through its
-          `aria-describedby`, and `Notice`'s error would add `role="alert"`,
-          so a screen reader would read it twice. */}
+      {/* A refusal of this colour, in the error notice: the contrast floor missed, or
+          the pair's hues too far apart. The `.notice` markup by hand rather than
+          `Notice`: this is the field's described error, read with the hex box through
+          `aria-describedby`, and `Notice`'s error adds `role="alert"`, so a screen
+          reader would read it twice. */}
       {error && (
         <p id={errorId} className="notice notice--error chip-color-field__notice">
           {error}
         </p>
       )}
-      {/* The site's warning notice: the ochre bar, tint and triangle, seen
-          but short of an error, since the save still goes through (the
-          owner's call). Quiet, so an `<output>`: always present, empty and
-          hidden when there is nothing to say, so a warning that appears is
-          announced without interrupting. */}
+      {/* The site's warning notice: seen but short of an error, since the save still
+          goes through. Quiet, so an `<output>`: always present, empty and hidden when
+          there is nothing to say, so a warning that appears is announced without
+          interrupting. */}
       <Notice
         kind="warn"
         quiet

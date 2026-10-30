@@ -3,7 +3,7 @@ import { sessionOf } from '../../../graphql/context-helpers';
 import { findPossibleDuplicates } from '../services/duplicates';
 import { IngredientRef } from './ingredient';
 
-// M5.10's "did you mean": M4.7's duplicate lookup, a page at a time. The
+// The "did you mean" duplicate lookup, a page at a time. The
 // resolver refuses only a missing session; which covens a caller may ask about
 // is the service's check (claude-docs/graphql/schema.md, "possibleDuplicates").
 
@@ -11,7 +11,7 @@ builder.queryField('possibleDuplicates', (t) =>
   t.pagedConnection({
     type: IngredientRef,
     args: {
-      // Null reads the compendium alone: the admin's compendium form names no coven (M5.5).
+      // Null reads the compendium alone: the admin's compendium form names no coven.
       workspaceId: t.arg.id({ required: false }),
       name: t.arg.string({ required: true }),
     },

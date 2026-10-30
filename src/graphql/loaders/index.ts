@@ -1,4 +1,10 @@
 import { memberEmailsByMember, membershipsByUser } from '@/modules/coven';
+import {
+  assignedCategoriesBySpell,
+  derivedCategoriesBySpell,
+  stepsBySpell,
+  workingCountBySpell,
+} from '@/modules/grimoire';
 import { providersByUser, usersById, usersByIdForAdmin } from '@/modules/identity';
 import {
   categoriesByIngredient,
@@ -19,6 +25,7 @@ import {
   deityTraditionsById,
   ingredientFormGroupsById,
   ingredientFormsById,
+  otherNamesByDeity,
 } from '@/modules/vocabulary';
 import type { Session } from '../../lib/session';
 import type { Built, LoaderFactory } from './types';
@@ -48,6 +55,11 @@ const LOADERS = {
   ingredientFormGroupsById,
   ingredientFormsById,
   deityTraditionsById,
+  otherNamesByDeity,
+  stepsBySpell,
+  workingCountBySpell,
+  assignedCategoriesBySpell,
+  derivedCategoriesBySpell,
 } satisfies Record<string, LoaderFactory<never, unknown>>;
 
 export type Loaders = Built<typeof LOADERS>;

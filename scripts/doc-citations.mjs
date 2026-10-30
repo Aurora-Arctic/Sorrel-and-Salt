@@ -27,11 +27,8 @@ export function unwrap(section) {
 }
 
 /**
- * Tracked files plus untracked ones git would not ignore, so a citation is
- * caught in the diff that adds it. `src/db/migrations/` is excluded: drizzle
- * hashes each migration's content, so fixing a comment there is not the
- * harmless edit it looks like. A pathspec's `*` crosses `/`, so
- * `.claude/*.md` reaches every rule and skill file.
+ * Tracked files plus untracked ones git would not ignore, so a citation is caught in the diff that adds it. `src/db/migrations/` is excluded, as drizzle hashes each
+ * migration's content. A pathspec's `*` crosses `/`, so `.claude/*.md` reaches every rule and skill file.
  */
 export function citingFiles(root) {
   const args = ['-c', 'safe.directory=*', 'ls-files', '--cached', '--others', '--exclude-standard'];
@@ -68,10 +65,8 @@ export function sectionCitesIn(text) {
 }
 
 /**
- * A summary split by section, `db.md` beside `db/`, keeps every heading as its
- * index (claude-docs/README.md). Matched on the exact name, so a case-insensitive
- * filesystem does not take `TASKS.md` for the index of `tasks/`. A path whose
- * directory does not exist is no index; the guard fails it as missing.
+ * A summary split by section, `db.md` beside `db/`, keeps every heading as its index (claude-docs/README.md). Matched on the exact name, so a case-insensitive
+ * filesystem does not take `TASKS.md` for the index of `tasks/`; a path with no directory is no index.
  */
 export function isSplitIndex(root, path) {
   const name = basename(path, '.md');

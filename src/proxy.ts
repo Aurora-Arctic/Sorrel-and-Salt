@@ -20,15 +20,15 @@ const PUBLIC_ROUTES = [
   '/sign-in',
   '/invite/*', // accepting an invitation
   '/email/*', // public/email/: a mail client fetches its images and fonts with no cookie
-  '/compendium', // the one public surface (MB.80), read by anyone, indexed by search engines
+  '/compendium', // the one public surface, read by anyone, indexed by search engines
   '/compendium/*',
   // What a crawler or a browser asks for with no cookie and no page to ask it.
-  // The icon and manifest files are M11.16's and do not exist yet: they are listed
-  // ahead of it so the first favicon request is never redirected to sign-in.
+  // The icon and manifest files are listed ahead of their existence so the first favicon request
+  // is never redirected to sign-in.
   '/robots.txt',
   '/sitemap.xml',
   '/llms.txt',
-  '/.well-known/*', // ai-catalog.json and ard.json (M12.2)
+  '/.well-known/*', // ai-catalog.json and ard.json
   '/favicon.ico',
   '/icon.png',
   '/icon.svg',
@@ -43,7 +43,7 @@ function isPublic(pathname: string): boolean {
 }
 
 /**
- * The staging component workshop: Ladle's static build, written to
+ * The staging component workshop: Storybook's static build, written to
  * public/workshop/ by the staging deploy alone. Static files have no page to
  * call `requireSession()`, so this is the one prefix where the proxy asks the
  * database itself. See claude-docs/workshop.md, "On staging".
@@ -52,6 +52,38 @@ const WORKSHOP = '/workshop';
 
 function isWorkshop(pathname: string): boolean {
   return pathname === WORKSHOP || pathname.startsWith(`${WORKSHOP}/`);
+}
+
+/**
+ * The workshop's Content Security Policy: its scripts may fetch, by `fetch`,
+ * XHR or WebSocket, only files under /workshop/ on the address the browser
+ * used. Storybook reads its own `index.json` and `project.json` that way, so
+ * `'none'` would break it. A source with a path ending `/` matches that prefix
+ * alone, so /api/graphql and every other path stay refused, though the
+ * scripts carry an admin's cookie. Not `'self'`, which cannot take a path.
+ * Nothing else is restricted: the manager frames its own `iframe.html`, and
+ * no header here or in next.config.ts forbids framing.
+ */
+function workshopPolicy(request: NextRequest): string {
+  return `connect-src ${browserHost(request)}${WORKSHOP}/`;
+}
+
+/** A host, with an optional port: nothing that could end the CSP source. */
+const HOST = /^(?:[a-z0-9.-]+|\[[0-9a-f:.]+\])(?::\d+)?$/i;
+
+/**
+ * The host in the browser's address bar, for the policy above. Not
+ * `nextUrl.host`, which is the address the server was reached on: `next
+ * start` bound to 0.0.0.0, or a container port behind a mapping, and the
+ * policy then refuses Storybook's own files. A forwarding host names the
+ * public one in `x-forwarded-host`, as Next's own Server Actions check reads
+ * it. No scheme, so the source takes the page's, http or https, wherever TLS
+ * ends. A value that is not a plain host falls back to `nextUrl.host`.
+ */
+function browserHost(request: NextRequest): string {
+  const named =
+    request.headers.get('x-forwarded-host')?.split(',')[0]?.trim() ?? request.headers.get('host');
+  return named && HOST.test(named) ? named : request.nextUrl.host;
 }
 
 /** A refusal for this workshop request, or `null` to let it through. */
@@ -90,23 +122,22 @@ async function route(request: NextRequest): Promise<NextResponse> {
   headers.set(RETURN_PATH_HEADER, returnPath);
   if (!workshop) return NextResponse.next({ request: { headers } });
 
-  // Ladle is one page routed by query string, and Next serves no directory index.
+  // Storybook links its files relative to the page, so the manager must be
+  // served from under /workshop/: at bare /workshop, ./iframe.html would be
+  // /iframe.html. Not a rewrite, which keeps the browser's URL, and not
+  // /workshop/, which Next's trailing-slash redirect sends back here.
   const response =
     pathname === WORKSHOP
-      ? NextResponse.rewrite(new URL(`${WORKSHOP}/index.html${search}`, request.url), {
-          request: { headers },
-        })
+      ? NextResponse.redirect(new URL(`${WORKSHOP}/index.html${search}`, request.url))
       : NextResponse.next({ request: { headers } });
-  // The workshop's scripts run on this origin with an admin's cookie; they
-  // fetch nothing, so nothing — /api/graphql included — is reachable from them.
-  response.headers.set('Content-Security-Policy', "connect-src 'none'");
+  response.headers.set('Content-Security-Policy', workshopPolicy(request));
   return response;
 }
 
 /**
  * Anything but a production deploy tells search engines to index nothing,
  * because staging is a public URL that would otherwise be indexed as a
- * duplicate of the compendium (MB.83). `VERCEL_ENV`, not `NODE_ENV`, which is
+ * duplicate of the compendium . `VERCEL_ENV`, not `NODE_ENV`, which is
  * `production` on every deploy, staging included (the test impersonation
  * uses, src/lib/impersonation.ts). Unset locally, so a dev server is noindex too.
  */

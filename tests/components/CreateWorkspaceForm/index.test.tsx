@@ -11,11 +11,10 @@ const refresh = vi.fn();
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push, refresh }) }));
 
 const { default: CreateWorkspaceForm } = await import('@/components/CreateWorkspaceForm');
+const { NavigationProvider, usePendingNavigation } = await import('@/lib/navigation');
 
-// The create-workspace page's form (M9.16, Story 3). The mutation is answered
-// by MSW in the shape /api/graphql answers, so a refusal is read through the
-// route's own error mapping; that the service refuses a user without the
-// right is tests/modules/coven/services/workspace-creation.test.ts's.
+// The create-workspace page's form. MSW answers the mutation in the shape /api/graphql answers, so a refusal is read through the route's own error mapping.
+// That the service refuses a user without the right is tests/modules/coven/services/workspace-creation.test.ts's.
 
 function renderForm(ui: ReactNode = <CreateWorkspaceForm />) {
   return render(<QueryClientProvider client={makeQueryClient()}>{ui}</QueryClientProvider>);
@@ -44,7 +43,7 @@ beforeEach(() => {
 });
 
 describe('CreateWorkspaceForm', () => {
-  // Its label says it; a tip restating it went (the owner's call, 2026-10-20).
+  // Its label says it; a tip restating it went.
   it('gives the name field no tip, and describes it by nothing until it errs', () => {
     renderForm();
 
@@ -127,5 +126,63 @@ describe('CreateWorkspaceForm', () => {
       'Creating a coven needs an invitation',
     );
     expect(push).not.toHaveBeenCalled();
+  });
+
+  // Leaving with a name typed: the page sits in the site's
+  // NavigationProvider, as the providers put it.
+  describe('guarding a typed name', () => {
+    /** A link elsewhere on the page, as the site menu is. */
+    function Go() {
+      const navigation = usePendingNavigation();
+      return (
+        <button type="button" onClick={() => navigation.navigate('/compendium')}>
+          Compendium
+        </button>
+      );
+    }
+
+    function renderOnPage() {
+      renderForm(
+        <NavigationProvider>
+          <CreateWorkspaceForm />
+          <Go />
+        </NavigationProvider>,
+      );
+    }
+
+    /** A tab close or reload as the browser raises it: true when something cancelled it. */
+    function unload(): boolean {
+      const event = new Event('beforeunload', { cancelable: true });
+      window.dispatchEvent(event);
+      return event.defaultPrevented;
+    }
+
+    const link = () => screen.getByRole('button', { name: 'Compendium' });
+    const asking = () => screen.queryByRole('dialog', { name: 'Discard Changes?' });
+
+    // The guard's shape (Keep Editing, Discard Changes, a dialog outside the
+    // form) is proved once at tests/components/Modal/discard.test.tsx; this is
+    // the form's wiring of it.
+    it('holds a link and a tab close once a name is typed', () => {
+      renderOnPage();
+      fireEvent.change(nameField(), { target: { value: 'Fixture Coven' } });
+
+      expect(unload()).toBe(true);
+      fireEvent.click(link());
+
+      expect(asking()).toBeInTheDocument();
+      expect(push).not.toHaveBeenCalled();
+    });
+
+    it('lands in the new coven without asking', async () => {
+      acceptCreate('fixture-coven-2');
+      renderOnPage();
+
+      fireEvent.change(nameField(), { target: { value: 'Fixture Coven' } });
+      submit();
+
+      await waitFor(() => expect(push).toHaveBeenCalledExactlyOnceWith('/coven/fixture-coven-2'));
+      expect(asking()).toBeNull();
+    });
   });
 });

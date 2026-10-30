@@ -1,13 +1,8 @@
 import type { CitationFields } from '../../../lib/types';
 
-// The works more than one shard cites, declared once so every shard renders
-// the same citation and the seed writes one `references` row for each. Each
-// is the edition in the owner's library, as its own title and copyright pages
-// give it (claude-docs/db/compendium-seed/README.md, "The library"); a shard's
-// per-entry pages (a Wikipedia revision, a web page) are its own `SOURCES`.
-// A shard names a work here by its handle. Culpeper, read online, is cited as
-// the edition Project Gutenberg transcribes (MB.243); Grieve is cited page by
-// page in each shard's own sources, as `grieve-<heading>` (MB.247).
+// The works many entry files cite, declared once so every file renders one citation and the seed writes one `references` row each. Each is the edition
+// in the curator's library as its title and copyright pages give it (claude-docs/db/compendium-seed/README.md, "The library"); per-entry pages are files under
+// `compendium/sources/`. Culpeper is the edition Project Gutenberg transcribes; Grieve is cited page by page, as `grieve-<heading>`.
 export const WORKS = {
   'cunningham-herbs': {
     kind: 'book',

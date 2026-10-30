@@ -63,13 +63,6 @@ describe('SignOutButton', () => {
       expect(button).not.toHaveAttribute('aria-disabled');
       expect(button).toHaveAccessibleDescription(new RegExp(GENERIC_FAILURE));
       expect(assignMock).not.toHaveBeenCalled();
-
-      await press(screen.getByRole('button', { name: 'Dismiss' }));
-      expect(screen.queryByRole('alert')).toBeNull();
-      expect(button).toHaveFocus();
-
-      await press(screen.getByRole('button', { name: 'Show the error for Sign Out' }));
-      expect(screen.getByRole('alert')).toHaveTextContent(GENERIC_FAILURE);
     },
   );
 

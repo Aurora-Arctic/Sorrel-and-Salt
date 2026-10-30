@@ -1,10 +1,9 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The plus (Add to My Ingredients), M9.12: Edit's size and green, since adding is constructive.
-// The spinner a press shows takes the glyph's size, as `svg` does in the mixin. Its own block
-// rather than an IconTip element, as IconTip only wraps it (MB.120).
-// claude-docs/components/add-icon.md, "Styling".
+// The plus (Add to My Ingredients): Edit's size and green, since adding is constructive. The press
+// spinner takes the glyph's size. Its own block, as IconTip only wraps it
+// (claude-docs/components/add-icon.md, "Styling").
 .add-icon {
   @include icon-button($icon-size-large, $glyph-size-large);
   @include icon-button-edit;
@@ -15,10 +14,9 @@
   }
 }
 
-// The held check (In Every Cupboard), CompendiumCards' HeldMark, which stands in the plus's place:
-// the same box and green, but a status mark whose press only opens its tip (the owner's calls,
-// 2026-10-20), so no pointer and no wash under it: it acts on nothing. Worn alone, without
-// `.add-icon`, so the plus's wash on focus never reaches it.
+// The held check (In Every Cupboard), CompendiumCards' HeldMark, in the plus's place: the same box and
+// green, but a status mark whose press only opens its tip, so no pointer or wash. Worn without
+// `.add-icon`, so the plus's focus wash never reaches it.
 .add-icon--held {
   @include icon-button($icon-size-large, $glyph-size-large, $cursor: default);
 
@@ -30,12 +28,9 @@
   }
 }
 
-// The plus after an add (the owner's call, 2026-10-20): the spinner turns into the check, drawn
-// along its stroke, which holds, then cross-fades back to the plus (`returning`); AddIcon
-// sets `data-state` and times the hold. While the check shows, the plus wears the held mark's
-// look, no wash under it and the default cursor, so where the add left every coven holding the
-// entry the page's held mark takes its place with nothing moving. Under reduced motion nothing is
-// drawn or faded: the check and then the plus simply appear.
+// The plus after an add: the spinner turns into the check, which holds, then cross-fades back
+// (`returning`); AddIcon sets `data-state` and times the hold. While the check shows the plus wears
+// the held mark's look, so when every coven holds the entry nothing moves. Reduced motion: no fade.
 .add-icon[data-state] {
   cursor: default;
 
@@ -68,14 +63,14 @@
 }
 
 [data-state='returning'] .add-icon__check {
-  animation: add-icon-fade-out $arrive-duration ease-in both;
+  animation: fade-out $arrive-duration ease-in both;
 
   @include reduced-motion {
     animation: none;
   }
 }
 
-// The eye arrives the same way where the duplicate warning's + turns into Quick Look (M12.48).
+// The eye arrives the same way where the duplicate warning's + turns into Quick Look.
 .add-icon__plus,
 .add-icon__eye {
   @include arrived;
@@ -91,8 +86,21 @@
   }
 }
 
-@keyframes add-icon-fade-out {
-  to {
-    opacity: 0;
-  }
+// How many of the viewer's covens hold the entry, on the plus and the held check: a bare figure in
+// the mark's top corner, in its own green. Tokens only (claude-docs/components/compendium-cards.md,
+// "The holding count").
+.add-icon,
+.add-icon--held {
+  position: relative;
+}
+
+.add-icon__count {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-family: $font-body;
+  font-size: type-size('caption');
+  font-weight: 500;
+  line-height: 1;
+  pointer-events: none;
 }

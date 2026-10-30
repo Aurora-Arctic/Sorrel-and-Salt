@@ -1,0 +1,15 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+@use '../IngredientCard/specimen-card' as *;
+
+// The compact look: IngredientCard's padding, gap, title step, badge and chip size, from the shared
+// part (IngredientCard/_specimen-card.scss), and the intent a step smaller. Switched by the list's
+// `data-density` and the stored choice on <html>, so it works before React runs
+// (claude-docs/components/spell-card.md, "Compact").
+@mixin spell-card-compact {
+  @include specimen-card-compact('.spell-card', '.spell-card__heading', '.spell-card__title');
+
+  .spell-card__intent {
+    font-size: type-size('small');
+  }
+}

@@ -9,7 +9,7 @@ pgEnum that could not take a ninth group.
 
 - **`categories`** — `groupId` an FK to `category_groups`; §6 seeds 52.
   **No colour of its own** — see below.
-- **`category_groups`** — `colorDark` and `colorLight`; §6 seeds eight, and
+- **`category_groups`** — `color`; §6 seeds eight, and
   an admin may add more.
 - **`ingredient_forms`** — as in the [identity section](identity-model.md), with `groupId`
   (FK to `ingredient_form_groups`) in place of the earlier `group` text.
@@ -314,3 +314,22 @@ The owner's calls on the delete are
 [`design-decisions/m5.6b-admin-groups.md`](../design-decisions/m5.6b-admin-groups.md).
 Each write expires the `compendium` tag once it has committed (M8.7;
 ([`compendium-cache.md`](compendium-cache.md), "Expiring the tag")).
+
+## Category group service details
+
+`src/modules/vocabulary/services/category-groups.ts` holds the category groups: public reads, and writes for a curator or an admin alone (claude-docs/design-decisions/m5.6b-admin-groups.md).
+
+- Each colour is held to 4.5:1 against its own theme's harder surface by the input schema, on its own column.
+- A category's slug is its own name alone, so a group's rename touches no category. A group is deleted only once its live categories have somewhere to go: the admin names a group (`moveTo`) and they move there in the same write, since a category under a deleted group is read by nothing yet still holds its address. Their slugs and every link to them, a compendium entry's or a coven's, stay as they were. A group with no live category needs no `moveTo`.
+- The categories are read before the transaction, so one filed under the group in the instant between is left under a deleted one, which every read drops, as a category's own delete leaves an entry filed under it.
+- A rewrite leaves `seedKey` as it was.
+
+## Vocabulary schema details
+
+Facts the comments in `src/modules/vocabulary/schema/` and `validation/` cite.
+
+- **Not foreign key targets.** The astrology, deity and form vocabularies are deliberately not foreign key targets for the ingredient text columns that draw on them: a member must be able to write `Eris`, a god or `rhizome` before anyone curates it. A pick is keyed beside its text (`ingredient_deities.deity_id`, `ingredient_variants.form_id`). A parent key such as `traditionId` or `groupId` can be a real key because only an admin writes it.
+- **Astrology.** Two tables rather than one with a `kind`, so a suggestion query has no predicate to forget. One tier, no colour, and a nullable `position` that sets where a facet lists a row: calendar order for signs, Sun outward for bodies, null for any a curator adds, which sort after by name. The description is search surface served by the trigram index: Lilith's carries "Black Moon".
+- **Category groups.** A table rather than an enum so an admin can add a ninth without DDL. Two colours, because one hex cannot clear 4.5:1 on both grounds; stored as hexes because a runtime group has no build-time Sass token. No CHECK on the contrast: the service (and the form, before the request) validates, so the refusal can name the column and the ratio. Refused, never corrected, as `unitConvert` refuses. No order column: groups list alphabetically. The slug is unique alone because two groups may both display "Protection". A category's slug is unique globally rather than per group, because a chip filter and the seed's idempotency key both read the slug alone; it carries no `workspaceId` and no colour of its own, which makes assigned-versus-derived comparable.
+- **Deity traditions and deities.** A tradition is `ingredient_form_groups` in shape: a people or a religion, never a region; no colour (it labels a suggestion, not a chip); no order column; no trigram index. A deity's slug is unique globally rather than per tradition, and its display name is deliberately unindexed: one god honoured under two traditions is two rows, and the autofill tells them apart by tradition. The description and `deity_other_names` are search surface. Other names are rows rather than `text[]` because a `text` row takes a trigram index; full `auditColumns`, so removing one leaves a tombstone. The deity input's `otherNames` is the whole list the form shows, each trimmed, an absent list read as empty, because a save brings the stored names to the list sent; the schema has no refinement so the form can still `omit` and `extend` it.
+- **Forms and form groups.** A form group sections a dropdown rather than colouring a chip, so it has no colour pair; it carries the icon that stands for it, as data on the row, and a NULL `icon` is the generic icon. The icon is an enum rather than a CHECK because adding one is then `ALTER TYPE … ADD VALUE`, expand-only. The form slug is unique globally rather than per group, and the display name is unindexed: two live forms may both be "Wax". The trigram index lets the autofill match a description as well as a name: typing `salve` offers Ointment. The icon list is written once in `schema/form-group-icons.ts`, which imports nothing, so a client component can reach it; the generic icon is not in it. A group's input takes the icon as one of the six or none (null and absent both mean none, since the service writes the group whole).

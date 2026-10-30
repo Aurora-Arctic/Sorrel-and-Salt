@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/common-birch-betula-pubescens
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Betula pubescens
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-betula-pubescens
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Betula pubescens", Shaw, K.; Roy, S.; Wilson, B., 2014, e.T194521A116337224'

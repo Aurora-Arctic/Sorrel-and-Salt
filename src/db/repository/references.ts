@@ -23,26 +23,15 @@ import type {
   ReferenceRow,
 } from './types';
 
-// A reference and the links that cite it (MB.151; claude-docs/db/references.md).
+// A reference and the links that cite it (claude-docs/db/references.md).
 // Two tiers, as ingredients are: every read is the compendium's and the
 // proofs' covens', and a link reads only where the tier rule lets its row's
 // readers look, so a link written past the service's rule shows nothing.
 
 /**
- * The live links of these rows of the sourced table `key` names (MB.207's
- * `SOURCED`), each beside the live reference it cites. An ingredient's read
- * exactly when it is, as `findManyOfIngredients` reads it — live, and in the
- * compendium or a coven one of `memberships` proves — and only where the
- * reference is one its readers may read: the compendium's, or its own
- * coven's. A variant's the same, through the variant to its ingredient
- * (`readableVariantParent`, MB.218): a variant is a coven's where its
- * ingredient is, though it carries no `workspace_id`. Every other sourced table is global reference data, so its links
- * read while the row is live, and only to a compendium reference, the one
- * tier every reader shares. A link to a soft-deleted reference reads as
- * nothing and is left in place, so a restore returns it (DESIGN.md §5,
- * "Nothing deletes a reference in v1"). One statement for the whole batch:
- * the reference a left join read as an inner one, since the parent's
- * correlated subquery compares its tier with the reference's.
+ * The live links of these rows of the sourced table `key` names, each beside the
+ * live reference it cites, read only where the reader may read the reference:
+ * the compendium's or its own coven's. One statement for the whole batch. (claude-docs/db/write-path.md, "Reading the links that cite references")
  */
 export async function findReferencesOf(
   memberships: readonly Membership[],
@@ -100,14 +89,9 @@ export function findManyReferences(
 }
 
 /**
- * One page of the live references an ingredient may cite — the compendium's
- * and those of a coven one of `memberships` proves (MB.151) — whose authors,
- * title or container is word-similar to `query`, each side accent-folded as
- * the compendium search folds names, best match first and keyed `[-score,
- * title]`. No proofs reads the compendium's alone, which is what a compendium
- * entry may cite (M5.5). A blank `query` lists the tiers read by title. The
- * rendered citation exists only in TypeScript, so this matches the fields it
- * is rendered from (claude-docs/db/references.md).
+ * One page of the live references an ingredient may cite (the compendium's and those of a coven a proof in `memberships` names) whose
+ * authors, title or container is word-similar to `query`, accent-folded, best match first. No proofs reads the compendium's alone. A blank
+ * `query` lists by title. Matches the fields, as the rendered citation exists only in TypeScript (claude-docs/db/references.md).
  */
 export function findReferenceSuggestions(
   memberships: readonly Membership[],
@@ -125,11 +109,8 @@ export function findReferenceSuggestions(
 
   const { matches, similarity, contains } = foldedWordMatch(trimmed);
   const fields = [references.authors, references.title, references.container];
-  // A field's word similarity, or 1 where it matched and holds the query
-  // verbatim, as the compendium search scores a field before its weight: word
-  // similarity scores a fragment inside a longer word by the trigrams it
-  // shares. `greatest` skips nulls, so a source without authors or a
-  // container scores on what it has.
+  // A field's word similarity, or 1 where it holds the query verbatim, as the compendium search scores a field before its weight;
+  // `greatest` skips nulls, so a source scores on the fields it has.
   const scored = (field: AnyPgColumn) =>
     sql`greatest(${similarity(field)}, case when ${and(matches(field), contains(field))} then 1::real end)`;
   const score = sql<number>`greatest(${sql.join(fields.map(scored), sql`, `)})`;
@@ -159,10 +140,8 @@ export function cites(key: SourcedKey): SQL {
 }
 
 /**
- * A row of the sourced table `key` names with no reference it shows: no
- * live link to a live compendium reference, the bibliography a compendium
- * entry reads as empty — the admin's to-do list (M5.5). Correlated on the
- * outer row of that table.
+ * A row of the sourced table `key` names with no live link to a live compendium reference, which a compendium entry reads as an
+ * empty bibliography: the admin's to-do list. Correlated on that table's outer row.
  */
 export function citesNothing(key: SourcedKey): SQL {
   return not(cites(key));

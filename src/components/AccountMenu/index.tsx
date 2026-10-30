@@ -7,33 +7,15 @@ import { PendingLink } from '../../lib/navigation';
 import { siteLinkTarget } from '../AppShell/site-target';
 import { ACCOUNT_INVITATIONS_PATH, ACCOUNT_PATH } from '../../lib/sign-in';
 import IconTip from '../IconTip';
+import { ChevronIcon } from '../IconTip/icons';
 import SignOutButton from './sign-out-button';
 import { initialsOf } from './initials';
 import type { AccountMenuProps } from './types';
 import './index.scss';
 
-// The account button in the shell's bar and the panel it opens: Your Account,
-// with a link to the pending invitations beside it when there are any, and
-// Sign Out. The theme switch stays in the bar at every width (the owner's
-// call, M10.32). A disclosure, not an ARIA menu: `role="menu"` promises
-// arrow-key roving and a typeahead this does not have, and the panel holds
-// links and a button, which a menu's three item roles do not cover. The APG disclosure pattern is a button
-// with `aria-expanded` and `aria-controls` that shows a region, which is what
-// this is. The name is on the button alone; the panel does not repeat it.
-// See claude-docs/components/account-menu.md.
-
-const Chevron = (): ReactElement => (
-  <svg className="account-menu__chevron" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-    <path
-      d="M3.5 6l4.5 4.5L12.5 6"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
+// The account button in the shell's bar and its panel: Your Account, a link to pending invitations
+// when there are any, and Sign Out. A disclosure, not an ARIA menu: `role="menu"` promises arrow-key
+// roving and a typeahead this lacks (claude-docs/components/account-menu.md).
 
 // The account page: its sections beside the jump menu.
 const ACCOUNT_TARGET = { region: 'main', shape: 'page', frame: 'with-nav', head: 'title' } as const;
@@ -48,11 +30,10 @@ const AccountMenu = ({
   // An unverified account cannot reach the account page the count leads to.
   const pending = verified && pendingInvitations > 0;
   const invitations = `${pendingInvitations} Coven ${pendingInvitations === 1 ? 'Invitation' : 'Invitations'}`;
-  // The dot is seen and the tip drawn only; the button's name says it instead,
-  // set whole as a label since a flex button's children are blocks, which a
-  // browser joins with a space ("Name , 2 …"). It starts with the visible
-  // name, as WCAG 2.5.3 asks. The count's link is named by the same words.
-  const buttonLabel = pending ? `${name}, ${invitations.toLowerCase()}` : undefined;
+  // The dot is drawn only; the button's name carries the count as hidden text that repeats the visible
+  // name, whole, so a browser joins it with no stray space. Not an `aria-label`, which must repeat every
+  // visible word, the avatar's initials among them (axe's label-content-name-mismatch).
+  const fullName = pending ? `${name}, ${invitations.toLowerCase()}` : undefined;
   const pathname = usePathname();
   const panelId = useId();
   const root = useRef<HTMLDivElement>(null);
@@ -61,12 +42,9 @@ const AccountMenu = ({
   // A link press leaves the page; the panel should not outlive it.
   const close = (): void => setOpen(false);
 
-  // Open only: a closed menu listens for nothing. Escape is heard on the
-  // window, not the panel, so it works wherever the focus is, and it hands
-  // the focus back to the button the panel came from. The window rather than
-  // the document, so it hears an Escape after a failed Sign Out's callout,
-  // which listens on the document and takes the one it closes on
-  // (`defaultPrevented`): that Escape leaves the menu open.
+  // Open only: a closed menu listens for nothing. Escape is heard on the window so
+  // it works wherever the focus is and hears one after a failed Sign Out's callout,
+  // which takes its own Escape (`defaultPrevented`) and leaves the menu open.
   useEffect(() => {
     if (!open) return;
     const closeOnOutsidePress = (event: PointerEvent): void => {
@@ -93,7 +71,6 @@ const AccountMenu = ({
         className="account-menu__button"
         aria-expanded={open}
         aria-controls={panelId}
-        aria-label={buttonLabel}
         onClick={() => setOpen((was) => !was)}
       >
         <span className="account-menu__avatar" aria-hidden="true">
@@ -101,8 +78,11 @@ const AccountMenu = ({
           {pending && <span className="account-menu__dot" />}
         </span>
         {/* Hidden by size on a phone, not removed: the button keeps its name. */}
-        <span className="account-menu__name">{name}</span>
-        <Chevron />
+        <span className="account-menu__name" aria-hidden={pending || undefined}>
+          {name}
+        </span>
+        {fullName && <span className="account-menu__full-name">{fullName}</span>}
+        <ChevronIcon className="account-menu__chevron" />
       </button>
       {/* Always mounted and hidden when shut, so it can fade (the stylesheet). */}
       <ul id={panelId} className="account-menu__panel" hidden={!open}>
@@ -118,9 +98,8 @@ const AccountMenu = ({
             >
               Your Account
             </PendingLink>
-            {/* A link of its own beside Your Account, not inside it: a press on
-                the count opens the invitations, a press on the rest of the row
-                the account page (the owner's call, M10.32). */}
+            {/* A link of its own beside Your Account, not inside it: a press on the count
+                opens the invitations, a press on the rest of the row the account page. */}
             {pending && (
               <span className="account-menu__count">
                 <IconTip tip={`You Have ${invitations}`} placement="below">

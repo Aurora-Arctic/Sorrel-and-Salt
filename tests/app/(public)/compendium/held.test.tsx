@@ -1,10 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden } from '@/lib/errors';
 
-// What the public compendium page tells each card about the viewer's covens (M9.12): whether
-// every coven they may write in holds the entry, and which ones do. The cards, the cached reads and the viewer
-// are mocked; here: which coven is asked, for which entries, and that a visitor and a viewer are
-// asked nothing. The held read is per viewer and sits beside the cached ones (CLAUDE.md rule 6).
+// What the public compendium page tells each card about the viewer's covens: whether every coven they may write in holds the entry, and which ones do.
+// The cards, cached reads and viewer are mocked; a visitor and a viewer are asked nothing. The held read is per viewer and sits beside the cached ones (CLAUDE.md rule 6).
 
 vi.mock('next/navigation', () => ({ redirect: vi.fn() }));
 
@@ -134,9 +132,11 @@ describe('the public compendium page, for the cards’ held state', () => {
 
     const [held, free] = await entriesGiven();
 
+    // Every coven of the viewer's is asked, the one they only view too, for the holding count
+    // ; held and heldIn still count only the writable ones.
     expect(heldCompendiumEntryIdsIn).toHaveBeenCalledWith(
       expect.objectContaining({ userId: 'user-b' }),
-      ['w-1'],
+      ['w-view', 'w-1'],
       ['id-held', 'id-free'],
     );
     expect(propsGiven()).toMatchObject({
@@ -146,7 +146,7 @@ describe('the public compendium page, for the cards’ held state', () => {
     });
     expect(held).toMatchObject({ id: 'id-held', held: true, heldIn: ['w-1'] });
     expect(free).toMatchObject({ id: 'id-free', held: false, heldIn: [] });
-    // The check is a mark, not a link (the owner’s call, 2026-10-20): no address for it.
+    // The check is a mark, not a link: no address for it.
     for (const each of [held, free]) expect(each).not.toHaveProperty('heldHref');
   });
 
@@ -154,18 +154,22 @@ describe('the public compendium page, for the cards’ held state', () => {
     ['a visitor with no account', null],
     ['someone who only views', shell(coven('w-view', 'aaa', false))],
     ['someone in no coven', shell()],
-  ] as const)('reads nothing per viewer, and marks nothing, for %s', async (_who, viewer) => {
-    viewerIfSignedIn.mockResolvedValue(viewer);
+  ] as const)(
+    'reads nothing per viewer, and marks nothing and names no place, for %s',
+    async (_who, viewer) => {
+      viewerIfSignedIn.mockResolvedValue(viewer);
 
-    const entries = await entriesGiven();
+      const entries = await entriesGiven();
 
-    expect(heldCompendiumEntryIdsIn).not.toHaveBeenCalled();
-    expect(getSession).not.toHaveBeenCalled();
-    expect(propsGiven().workspaceId).toBeUndefined();
-    for (const each of entries) {
-      expect(each.held).toBeUndefined();
-    }
-  });
+      expect(heldCompendiumEntryIdsIn).not.toHaveBeenCalled();
+      expect(getSession).not.toHaveBeenCalled();
+      expect(propsGiven().workspaceId).toBeUndefined();
+      for (const each of entries) {
+        expect(each.held).toBeUndefined();
+        expect(each.places).toEqual([]);
+      }
+    },
+  );
 
   describe('for someone who may write in two covens', () => {
     const both = () =>
@@ -178,14 +182,14 @@ describe('the public compendium page, for the cards’ held state', () => {
         ]),
       );
 
-    it('asks about both writable covens in one read, and hands the cards both, the first the default', async () => {
+    it('asks about every coven in one read, and hands the cards both writable ones, the first the default', async () => {
       viewerIfSignedIn.mockResolvedValue(both());
       holding([], []);
 
       await entriesGiven();
 
       expect(heldCompendiumEntryIdsIn).toHaveBeenCalledOnce();
-      expect(heldCompendiumEntryIdsIn.mock.calls[0]![1]).toEqual(['w-1', 'w-2']);
+      expect(heldCompendiumEntryIdsIn.mock.calls[0]![1]).toEqual(['w-view', 'w-1', 'w-2']);
       expect(propsGiven()).toMatchObject({
         workspaceId: 'w-1',
         covens: [
@@ -206,7 +210,7 @@ describe('the public compendium page, for the cards’ held state', () => {
     });
   });
 
-  // The three dots (the owner's call, 2026-10-20): the covens that hold the entry, where the
+  // The three dots: the covens that hold the entry, where the
   // viewer's role lets them annotate, make it theirs or remove it.
   describe('the places the three dots act in', () => {
     const placesOf = (each: Record<string, unknown>) =>
@@ -275,18 +279,6 @@ describe('the public compendium page, for the cards’ held state', () => {
       ).toEqual([['w-1', STOCK]]);
       expect(placesOf(free)).toEqual([]);
     });
-
-    it('names no coven where the role permits nothing, and none for a visitor', async () => {
-      covenRolesIfSignedIn.mockResolvedValue(new Map([['w-1', 'viewer']]));
-      viewerIfSignedIn.mockResolvedValue(shell(coven('w-1', 'bbb', true)));
-      const [held] = await entriesGiven();
-      expect(placesOf(held)).toEqual([]);
-
-      viewerIfSignedIn.mockResolvedValue(null);
-      covenRolesIfSignedIn.mockResolvedValue(null);
-      const [visited] = await entriesGiven();
-      expect(placesOf(visited)).toEqual([]);
-    });
   });
 
   it('shows the plus rather than a wrong check when the coven refuses the read', async () => {
@@ -297,5 +289,49 @@ describe('the public compendium page, for the cards’ held state', () => {
 
     expect(entries.map((each) => each.held)).toEqual([false, false]);
     expect(entries.map((each) => each.heldIn)).toEqual([[], []]);
+  });
+});
+
+// How many of the viewer's covens hold each entry, any role, for the count on its plus or
+// check; and every coven of theirs for the filter's In My Covens, the ones they only view too.
+describe('the public compendium page, for the holding count and In My Covens', () => {
+  it('names every coven holding each entry, one the viewer only views included', async () => {
+    viewerIfSignedIn.mockResolvedValue(
+      shell(coven('w-view', 'aaa', false), coven('w-1', 'bbb', true)),
+    );
+    heldCompendiumEntryIdsIn.mockResolvedValue(
+      new Map([
+        ['w-view', new Set(['id-held', 'id-free'])],
+        ['w-1', new Set(['id-held'])],
+      ]),
+    );
+
+    const [held, free] = await entriesGiven();
+
+    expect(held).toMatchObject({ held: true, heldIn: ['w-1'], holding: ['aaa', 'bbb'] });
+    // Why the viewer’s coven could have been taken for a writable one: it holds the entry.
+    expect(free).toMatchObject({ held: false, heldIn: [], holding: ['aaa'] });
+  });
+
+  it('hands the filter every coven of the viewer’s, and none to a visitor or someone in no coven', async () => {
+    viewerIfSignedIn.mockResolvedValue(
+      shell(coven('w-view', 'aaa', false), coven('w-1', 'bbb', true)),
+    );
+    await entriesGiven();
+    expect(propsGiven().myCovens).toEqual([
+      { id: 'w-view', name: 'aaa' },
+      { id: 'w-1', name: 'bbb' },
+    ]);
+
+    // A viewer alone has no plus to count on, but the filter is theirs too.
+    viewerIfSignedIn.mockResolvedValue(shell(coven('w-view', 'aaa', false)));
+    await entriesGiven();
+    expect(propsGiven().myCovens).toEqual([{ id: 'w-view', name: 'aaa' }]);
+
+    for (const viewer of [null, shell()]) {
+      viewerIfSignedIn.mockResolvedValue(viewer);
+      await entriesGiven();
+      expect(propsGiven().myCovens).toEqual([]);
+    }
   });
 });

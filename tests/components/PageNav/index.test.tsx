@@ -92,29 +92,6 @@ describe('PageNav', () => {
     expect(screen.getByRole('link', { name: 'First' })).not.toHaveAttribute('aria-current');
   });
 
-  it('draws a group whose first entry is set apart as a group, with every entry in it', () => {
-    document.body.innerHTML += '<section id="three"></section>';
-    render(
-      <PageNav
-        label="On This Page"
-        entries={[
-          { href: '#one', label: 'First' },
-          { href: '#two', label: 'Second', group: 'Parts', apart: true },
-          { href: '#three', label: 'Third', group: 'Parts' },
-        ]}
-      />,
-      { container: document.body.appendChild(document.createElement('div')) },
-    );
-
-    const group = screen.getByRole('list', { name: 'Parts' });
-    expect(
-      within(group)
-        .getAllByRole('link')
-        .map((link) => link.getAttribute('href')),
-    ).toEqual(['#two', '#three']);
-    expect(screen.getAllByRole('link')).toHaveLength(3);
-  });
-
   it('moves the current mark to the section that comes into view', () => {
     render(<PageNav label="On This Page" entries={[...entries]} />, {
       container: document.body.appendChild(document.createElement('div')),

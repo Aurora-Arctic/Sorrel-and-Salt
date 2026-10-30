@@ -1,0 +1,88 @@
+// The app-surface frame the decorator wraps every story in; the padding is the
+// one plain length. claude-docs/workshop.md, ".storybook/".
+
+@use '../src/scss/variables' as *;
+@use '../src/scss/mixins' as *;
+
+.workshop-story-frame {
+  box-sizing: border-box;
+  // At least the window's height, so the ground fills it under a short story.
+  // The preview page's body has no height of its own, so a percentage cannot
+  // fill the window; the ground shows through wherever the frame stops.
+  min-height: 100vh;
+  // The story's gutter, a phone's own at phone width (3rem a side would leave a 375px story 279px).
+  padding: 3rem;
+
+  @media (max-width: 30rem) {
+    padding: space(4);
+  }
+
+  // Any transform makes this the containing block for `position: fixed`, so
+  // ThemeToggle pins to the frame rather than the viewport.
+  transform: translateZ(0);
+  // Clips like the viewport it stands in for.
+  overflow: hidden;
+  background-color: $surface-page;
+  color: $text-primary;
+  @include theme-transition(background-color, color);
+}
+
+@include reduced-motion {
+  .workshop-story-frame {
+    transition: none;
+  }
+}
+
+// A state that draws the whole app shell (ShellFrame, ./shell-frame.tsx) or the signed-out frame
+// (`.public-frame`): the frame steps aside while it holds one, since the site has no gutter round
+// the shell, and the phone's bottom bar is `position: fixed`. A transformed ancestor is the
+// containing block for a fixed box, so the default frame would pin the bar to the end of the page
+// rather than the screen. Per state, not per story: a story whose dropdown also holds states with
+// no shell keeps the frame for those. Not the default, because ThemeToggle and the skip link rely
+// on the frame's transform and clip to stay inside it; here the preview window is the viewport
+// they stand in for anyway. `:has()` is Baseline Widely Available, the floor in package.json.
+.workshop-story-frame:has(.app-shell, .public-frame) {
+  transform: none;
+  overflow: visible;
+  padding: 0;
+  // The page colour is the body's, as on the site: an opaque frame would sit over the Backdrop,
+  // whose `z-index: -1` paints above the body and beneath everything else.
+  background-color: transparent;
+}
+
+// The CSS half of the `reducedMotion` story pin (preview.tsx is the other).
+// A `!important` blanket, as the real media feature turns off every transition.
+.workshop-story-frame--reduced-motion,
+.workshop-story-frame--reduced-motion * {
+  transition: none !important;
+}
+
+// A story's own guide to what to try, set apart from the component beneath it.
+.story-guide {
+  margin-bottom: space(6);
+}
+
+// What a story stands in for, said beneath the component: where a page
+// would navigate, which the workshop has no page for.
+.story-note {
+  display: block;
+  margin-top: space(4);
+}
+
+// A mail's To and Subject lines above it, as a mail client lists them: the
+// label and its value on one line, the labels aligned in a column. A bare
+// <dl> would stack each label over an indented value.
+.email-preview__headers {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: space(1) space(3);
+  margin: 0;
+
+  dt {
+    color: $text-muted;
+  }
+
+  dd {
+    margin: 0;
+  }
+}

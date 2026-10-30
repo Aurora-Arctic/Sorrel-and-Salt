@@ -9,15 +9,13 @@ import {
   COMPENDIUM_CACHE_PORT,
   CONFIGURED_PROVIDERS_PORT,
   E2E_SLOTS,
-  plainSessionCookie,
   serverUrl,
   slotPort,
 } from './slots';
 
-// The servers an e2e run needs (M11.18), defined once so that playwright.config.ts,
-// playwright.stories.config.ts and scripts/e2e-servers.ts (`npm run e2e:servers`,
-// which leaves them running between runs) start the same servers with the same
-// environment.
+// The servers an e2e run needs, defined once so that playwright.config.ts, playwright.stories.config.ts
+// and scripts/e2e-servers.ts (`npm run e2e:servers`, which leaves them running between runs) start the
+// same servers with the same environment.
 
 const PROVIDER_ENV_VARS = [
   'GOOGLE_CLIENT_ID',
@@ -30,10 +28,9 @@ const PROVIDER_ENV_VARS = [
   'MICROSOFT_CLIENT_SECRET',
 ];
 
-// Blank rather than absent: Next never lets `.env.local` override a variable
-// that is already set, even to '', and clientCredentials() treats '' as
-// unset. Without this, a developer's real credentials would silently turn the
-// default server into the configured one.
+// Blank rather than absent: Next never lets `.env.local` override a variable that is already set, and
+// clientCredentials() treats '' as unset, so a developer's real credentials cannot turn this server into
+// the configured one.
 const UNCONFIGURED_PROVIDERS = Object.fromEntries(PROVIDER_ENV_VARS.map((name) => [name, '']));
 // Enough for a provider to count as configured, and useless to any real
 // authorization endpoint — which is why no test may click a provider button
@@ -42,7 +39,7 @@ const PLACEHOLDER_PROVIDERS = Object.fromEntries(
   PROVIDER_ENV_VARS.map((name) => [name, `e2e-placeholder-${name.toLowerCase()}`]),
 );
 
-export const serverEnv = (
+const serverEnv = (
   port: number,
   database: string,
   providers: Record<string, string>,
@@ -55,17 +52,14 @@ export const serverEnv = (
   // Every server serves that one build directory, so a data cache flushed to
   // it would hand one slot's cached reads to another slot's server.
   NEXT_ISR_FLUSH_TO_DISK: 'false',
-  // Under the audit alone, plain cookie names, so WebKit sends the session
-  // cookie `signInAs` puts in its jar over the plain-http origin a remote
-  // browser uses (src/lib/e2e-session-cookie.ts, MB.255).
-  ...(plainSessionCookie && { E2E_PLAIN_SESSION_COOKIE: 'true' }),
-  // Off, set rather than left absent: Next never lets `.env.local` override a
-  // variable that is already set, and a developer's `ENABLE_IMPERSONATION=true`
-  // would add an Impersonate button and a table column the specs do not expect
-  // (tests/e2e/admin.spec.ts; claude-docs/auth/impersonation.md).
+  // Plain cookie names on every e2e server, so a browser on a plain-http origin sends the session cookie `signInAs`
+  // puts in its jar, and keeps it through a redirect (src/lib/e2e-session-cookie.ts). A test-environment switch only.
+  E2E_PLAIN_SESSION_COOKIE: 'true',
+  // Off, set rather than left absent: Next never lets `.env.local` override a set variable, and a developer's
+  // `ENABLE_IMPERSONATION=true` would add an Impersonate button the specs do not expect (claude-docs/auth/impersonation.md).
   ENABLE_IMPERSONATION: 'false',
-  // CI's placeholder, here too, so a developer's own address in `.env.local`
-  // never names the primary admin a spec signs in as (MB.59).
+  // CI's placeholder, here too, so a developer's own address in `.env.local` never names the primary
+  // admin a spec signs in as.
   ADMIN_BOOTSTRAP_EMAIL: PRIMARY_ADMIN_EMAIL,
   // And held in no memory either, but on the compendium-cache server: a slot's
   // database is reseeded under its server, which a cache would not follow
@@ -84,12 +78,10 @@ export const slotServers = Array.from({ length: E2E_SLOTS }, (_, slot) => ({
   env: serverEnv(slotPort(slot), slotDatabase(slot), UNCONFIGURED_PROVIDERS),
 }));
 
-// One more `next start` over the same build, differing only in having every
-// OAuth provider configured — the sign-in page reads credentials per request,
-// so its two availability states need two servers — and in a database of its
-// own, since whichever slot ran beside it would otherwise reseed it.
+// One more `next start` over the same build with every OAuth provider configured (the sign-in page reads
+// credentials per request) and a database of its own, so no slot reseeds it.
 // claude-docs/components/sign-in-panel.md, "Testing".
-export const configuredProvidersServer = {
+const configuredProvidersServer = {
   command: 'npm run start',
   url: serverUrl(CONFIGURED_PROVIDERS_PORT),
   reuseExistingServer: !process.env.CI,
@@ -97,10 +89,9 @@ export const configuredProvidersServer = {
   env: serverEnv(CONFIGURED_PROVIDERS_PORT, CONFIGURED_PROVIDERS_DATABASE, PLACEHOLDER_PROVIDERS),
 };
 
-// One more, whose data cache holds (M8.6): the one place a spec sees a read
-// answered from the cache rather than Postgres. Its database is its own and
-// never reseeded, since a reseed would leave the cache behind it.
-export const compendiumCacheServer = {
+// One more, whose data cache holds: the one place a spec sees a read answered from the cache rather
+// than Postgres. Its database is its own and never reseeded, since a reseed would leave the cache behind it.
+const compendiumCacheServer = {
   command: 'npm run start',
   url: serverUrl(COMPENDIUM_CACHE_PORT),
   reuseExistingServer: !process.env.CI,

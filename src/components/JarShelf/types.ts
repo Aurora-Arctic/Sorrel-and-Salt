@@ -63,11 +63,7 @@ export interface ShelfForm {
 export interface JarShelfProps {
   /** Every form of the entry, in the order they are shown. */
   forms: readonly ShelfForm[];
-  /**
-   * What the vessels are drawn from, with each form: the entry's formal name,
-   * or its id when it has none. Nothing is stored; the same pair always
-   * draws the same vessel.
-   */
+  /** What the vessels are drawn from with each form: the entry's formal name, or its id when it has none. */
   seed: string;
   /** Present for a role that may edit stock: each jar becomes a button opening the dialog on it. */
   edit?: StockDialogProps;

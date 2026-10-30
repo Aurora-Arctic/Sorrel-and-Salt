@@ -6,12 +6,9 @@ import { ComboboxEntry } from '../Combobox/entry';
 import { matchesLabelOrGroup } from '../Combobox/match';
 import type { ComboboxChoice, ComboboxOption } from '../Combobox/types';
 
-// The typing form of the facet box (M12.4): the typed Combobox with the
-// chosen values as chips ahead of the text, for a set long enough to want
-// narrowing (Forms) or sorted under headings (Deities by tradition). The
-// select-style multi-select cannot type or group, so this is not an option on
-// it. It offers only what is not yet chosen and leaves a zero out. See
-// claude-docs/components/facet-combobox.md, "Typeahead".
+// The typing form of the facet box: the typed Combobox with the chosen values as chips, for a set long
+// enough to narrow or sorted under headings. It offers only what is not chosen, leaves a zero out, and a
+// pick leaves the list open (claude-docs/components/facet-combobox.md, "Contracts").
 
 export function FacetTypeahead({
   id,
@@ -83,9 +80,9 @@ export function FacetTypeahead({
         setText('');
       }}
       offerTyped={false}
+      keepOpen
       highlightFirst
       empty="No Matches"
-      noun={label.toLowerCase()}
       suggestions={{ options, pending: false }}
       onRemoveLast={() => onChange(values.slice(0, -1))}
       entries={

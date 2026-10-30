@@ -36,7 +36,7 @@ export interface SectionNavItem {
    * compendium's pages.
    */
   apart?: boolean;
-  /** What the page draws while it is on its way: its region and shape (M12.33). */
+  /** What the page draws while it is on its way: its region and shape. */
   target?: NavigationTarget;
 }
 

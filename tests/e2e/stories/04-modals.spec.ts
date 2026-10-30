@@ -32,14 +32,9 @@ import {
   shellEditControls,
 } from './ingredient-dialogs';
 
-// Stories 28–34: the add and edit dialogs of a coven's ingredient. Scaffolds:
-// M8.16 builds the add dialog's coven behaviour and unskips stories 28–32;
-// M8.17 built the coven edit and unskipped 33 and 34. M8.16 landed before the coven's list (M9.6), so stories 28–32 open the
-// dialog from pages that exist now,
-// the coven's home, its members page and /account, and read each save back
-// in SQL. Each story writes its own coven, and its ingredients' invented
-// names share no word, so the form's duplicate warning never holds a save
-// meant to go through.
+// The add and edit dialogs of a coven's ingredient: the add opens from the coven's home, its members page and
+// /account, and each save is read back in SQL. Each flow writes its own coven, and its ingredients' invented
+// names share no word, so the duplicate warning never holds a save meant to go through.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -54,10 +49,7 @@ function saveIngredient(dialog: Locator): Locator {
   return dialog.getByRole('button', { name: 'Save Ingredient', exact: true });
 }
 
-/**
- * The save's announcement (M8.16: "announces the save in the status region"),
- * found by the name it carries: the saved entry's own name is data, not copy.
- */
+/** The save's announcement, found by the name it carries: the saved entry's own name is data, not copy. */
 function savedStatus(page: Page, name: string): Locator {
   return page.getByRole('status').filter({ hasText: name });
 }
@@ -94,9 +86,8 @@ async function holdsFocus(scope: Locator): Promise<boolean> {
 }
 
 /**
- * Makes `userId` a member of `coven` in `role`, stamped by its owner, as
- * `seedCoven` writes its own members: a user `seedCoven` made for one coven
- * joins another without signing in again under a second address.
+ * Makes `userId` a member of `coven` in `role`, stamped by its owner as `seedCoven` writes its members, so a
+ * user made for one coven joins another without signing in again.
  */
 async function joinCoven(coven: Coven, userId: string, role: Role): Promise<void> {
   const owner = Object.values(coven.users)[0];
@@ -114,15 +105,12 @@ const CREATE = `mutation ($w: ID!, $name: String!) {
   createWorkspaceIngredient(workspaceId: $w, input: { name: $name, variants: [] }) { id }
 }`;
 
-// Story 28's covens: B writes to the first two and only views the third.
+// The covens of the first flow: B writes to the first two and only views the third.
 const FIRST = 'Fixture Coven Story 28';
 const SECOND = 'Fixture Second Coven Story 28';
 const VIEWED = 'Fixture Viewed Coven Story 28';
 
-/**
- * An add dialog's accessible name for `coven`: the whole phrase, "Add
- * Ingredient to <coven>". The coven's name is data, so it is escaped.
- */
+/** An add dialog's accessible name for `coven`: "Add Ingredient to <coven>", with the coven's name escaped as data. */
 function namesCoven(coven: string): RegExp {
   return new RegExp(`^Add Ingredient to ${coven.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`);
 }
@@ -146,7 +134,7 @@ test(
         await expect(shellAddIngredient(page)).toBeEnabled();
         const dialog = await openAddIngredient(page);
         // Opened by the address, so a reload keeps it and Back leaves it.
-        await expect(page).toHaveURL(/\?new$/);
+        await expect(page).toHaveURL(new RegExp(`\\?new=ingredient-coven-${coven.slug}$`));
         // In one coven, so there is nothing to choose: no chevron, and the
         // dialog names the coven it adds to.
         await expect(destinationMenu(page).toggle).toHaveCount(0);
@@ -154,10 +142,8 @@ test(
         await expect(nameField(dialog)).toBeVisible();
         if (path === '/account') await assertNoAccessibilityViolations(page);
 
-        // The page behind is inert while the dialog is open: walking back
-        // past the dialog's first control never reaches the bar's own. The
-        // dialog is drawn inside the bar, beside its button, so the bar's
-        // controls are what the banner holds outside the dialog.
+        // The page behind is inert while the dialog is open: walking back past the dialog's first control
+        // never reaches the bar's own, which the banner holds outside the dialog.
         for (let press = 0; press < 8; press += 1) {
           await page.keyboard.press('Shift+Tab');
           const onBar = (await holdsFocus(page.getByRole('banner'))) && !(await holdsFocus(dialog));
@@ -165,9 +151,9 @@ test(
         }
 
         // Untouched, so Escape closes at once, and the focus goes back to the button.
-        // From Cancel, which has no tip: the walk above can end on an ⓘ, whose tip
+        // From Close, which has no tip: the walk above can end on an ⓘ, whose tip
         // opens on focus and takes the first Escape for itself (info-tip.md).
-        await dialog.getByRole('button', { name: 'Cancel' }).focus();
+        await dialog.getByRole('button', { name: 'Close', exact: true }).focus();
         await page.keyboard.press('Escape');
         await expect(dialog).toHaveCount(0);
         await expect(page).not.toHaveURL(/[?&]new/);
@@ -303,7 +289,7 @@ test(
       await expect(dialog).toHaveCount(0);
     });
 
-    // M12.20: a name the compendium already bears is a question, not a copy.
+    // A name the compendium already bears is a question, not a copy.
     await test.step("a name the compendium bears asks first: Create Anyway saves the coven's own, its + puts the entry in the cupboard and turns into its Quick Look, the form left open", async () => {
       await withSql(async (sql) => {
         for (const name of ['Ostrelvine', 'Kaelmoss']) {
@@ -344,7 +330,7 @@ test(
       const before = page.url();
       await dialog.getByRole('button', { name: /^Add to My Ingredients: Kaelmoss/ }).click();
 
-      // M12.48: the + shows the check, then turns into the eye, and the row moves under In This
+      // The + shows the check, then turns into the eye, and the row moves under In This
       // Coven; the form stays open with what was typed, and the page is not left.
       await expect(
         dialog
@@ -434,8 +420,7 @@ test(
       const valid = await describedIds(name);
 
       // Left untouched, Name stays quiet: an error shows only once the field
-      // is both edited and left, or the form submitted (M8.16, the owner's
-      // call).
+      // is both edited and left, or the form submitted.
       await name.focus();
       await page.keyboard.press('Tab');
       await expect(name).not.toHaveAttribute('aria-invalid', 'true');
@@ -445,12 +430,13 @@ test(
       await page.keyboard.press('Tab');
       await expectFieldError(name, valid);
 
-      await name.fill('Dorvenmoss');
+      // A different name from the submit step's, since Close saves what is valid and a Dorvenmoss kept here would
+      // hold that step's save behind a similar-name question.
+      await name.fill('Thornvale');
       await page.keyboard.press('Tab');
       await expect(name).not.toHaveAttribute('aria-invalid', 'true');
 
       await dialog.getByRole('button', { name: 'Close', exact: true }).click();
-      await discardQuestion(dialog).discard.click();
       await expect(dialog).toHaveCount(0);
     });
 
@@ -470,7 +456,6 @@ test(
 
       await page.keyboard.press('Escape');
       await dialog.getByRole('button', { name: 'Close', exact: true }).click();
-      await discardQuestion(dialog).discard.click();
       await expect(dialog).toHaveCount(0);
     });
 
@@ -526,10 +511,21 @@ test(
       B: 'member',
     });
     await page.goto(`/coven/${coven.slug}`);
-    const dialog = await openAddIngredient(page);
-    const name = nameField(dialog);
+    // The ingredient dialogs save on Close instead of asking (M13.24), so the question is walked on an admin
+    // form, which still asks (claude-docs/components/modal.md, "Unsaved changes").
+    await signInAs(page, 'groups@story-32.test', ['discord'], 'admin');
+    await page.goto('/admin/category-groups');
+    await page.getByRole('link', { name: 'Add Group' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Add Category Group' });
+    await expect(dialog).toBeVisible();
+    const name = dialog.getByRole('textbox', { name: 'Name' });
     const question = discardQuestion(dialog);
     const close = dialog.getByRole('button', { name: 'Close', exact: true });
+    const savedGroups = () =>
+      withSql(
+        (sql) =>
+          sql`select id from category_groups where name = 'Halvenseed' and deleted_at is null`,
+      );
     await name.fill('Halvenseed');
 
     await test.step('Escape asks, and Keep Editing goes back to the field with its input', async () => {
@@ -546,7 +542,7 @@ test(
       await close.click();
       await expect(question.keep).toBeFocused();
       // Its ring drawn too: after a pointer press the browser drew none for a
-      // scripted focus, so the focus was there and could not be seen (M8.16).
+      // scripted focus, so the focus was there and could not be seen.
       await expect(question.keep).toHaveCSS('outline-style', 'solid');
       await question.keep.click();
       await expect(close).toBeFocused();
@@ -559,15 +555,63 @@ test(
       await expect(question.discard).toBeVisible();
       await question.discard.click();
       await expect(dialog).toHaveCount(0);
-      await expect(shellAddIngredient(page)).toBeFocused();
-      expect(await savedRows(coven.id, 'Halvenseed')).toHaveLength(0);
+      expect(await savedGroups()).toHaveLength(0);
     });
 
     await test.step('the discarded input is gone, so the next close asks nothing', async () => {
-      const reopened = await openAddIngredient(page);
-      await expect(nameField(reopened)).toHaveValue('');
+      await page.getByRole('link', { name: 'Add Group' }).click();
+      await expect(dialog).toBeVisible();
+      await expect(name).toHaveValue('');
       await page.keyboard.press('Escape');
-      await expect(reopened).toHaveCount(0);
+      await expect(dialog).toHaveCount(0);
+    });
+
+    // Leaving the page: a reload raises the browser's own question,
+    // whose wording is the browser's, and a link in the site asks the form's.
+    await test.step('a reload with unsaved input raises the browser’s question', async () => {
+      await page.getByRole('link', { name: 'Add Group' }).click();
+      await name.fill('Halvenseed');
+      const asked = page.waitForEvent('dialog').then(async (raised) => {
+        const kind = raised.type();
+        await raised.accept();
+        return kind;
+      });
+      await page.reload();
+      expect(await asked).toBe('beforeunload');
+      expect(await savedGroups()).toHaveLength(0);
+    });
+
+    await test.step('a link away from a page form with a typed name asks Discard or Keep Editing', async () => {
+      await signInAgainAs(page, coven.users.B);
+      await withSql((sql) =>
+        sql.begin(async (tx) => {
+          // A grant made by hand declares its route, as accounts-setup.ts's does:
+          // the privilege trigger refuses an undeclared change to the right.
+          await tx`select set_config('app.privilege_route', 'manual', true)`;
+          await tx`update users set can_create_workspace = true where id = ${coven.users.B}`;
+        }),
+      );
+      await page.goto('/coven/new');
+      const covenName = page.getByRole('textbox', { name: 'Name' });
+      await covenName.fill('Fixture Unmade Coven Story 32');
+      const away = page
+        .getByRole('navigation', { name: 'Site' })
+        .getByRole('link', { name: 'Compendium' });
+      const discard = page.getByRole('button', { name: 'Discard Changes' });
+      const keep = page.getByRole('button', { name: 'Keep Editing' });
+
+      await away.click();
+      // Its own dialog over the page, not a card in the page's form.
+      await expect(page.getByRole('dialog', { name: 'Discard Changes?' })).toBeVisible();
+      await expect(keep).toBeFocused();
+      await keep.click();
+      await expect(keep).toHaveCount(0);
+      await expect(page).toHaveURL(/\/coven\/new$/);
+      await expect(covenName).toHaveValue('Fixture Unmade Coven Story 32');
+
+      await away.click();
+      await discard.click();
+      await expect(page).toHaveURL(/\/compendium$/);
     });
   },
 );
@@ -667,19 +711,18 @@ test(
       await expect(editIngredientControl(row, 'Testwort', 'Fixtura testalis')).toBeFocused();
     });
 
-    await test.step('a change asks before it is discarded, and discarding saves nothing', async () => {
+    await test.step('a change is saved on Escape, which closes with no question', async () => {
       const row = rowOf(ingredientList(page), 'Testwort', 'Fixtura testalis');
       const dialog = await openEditIngredient(page, row, 'Testwort', 'Fixtura testalis');
       await dialog
         .getByRole('textbox', { name: 'Description', exact: true })
-        .fill('Changed, then dropped.');
+        .fill('Changed, then kept.');
       await page.keyboard.press('Escape');
-      await expect(discardQuestion(dialog).keep).toBeFocused();
-      await discardQuestion(dialog).discard.click();
       await expect(dialog).toHaveCount(0);
+      await expect(page.getByRole('button', { name: 'Discard Changes' })).toHaveCount(0);
       expect(await ingredientRow(ingredientId)).toEqual({
         name: 'Testwort',
-        description: TESTWORT.description,
+        description: 'Changed, then kept.',
       });
     });
 
@@ -703,7 +746,7 @@ test(
       await expect(editIngredientControl(row, 'Testwort', 'Fixtura testalis')).toHaveCount(0);
       await page.goto(`/coven/${coven.slug}/ingredients/${ingredientId}`);
       await expect(page.getByRole('heading', { level: 1, name: 'Testwort' })).toBeVisible();
-      // The page's Edit is an icon of its own (M8.17), which a viewer is not drawn.
+      // The page's Edit is an icon of its own, which a viewer is not drawn.
       await expect(
         page.getByRole('main').getByRole('link', { name: 'Edit Testwort', exact: true }),
       ).toHaveCount(0);
@@ -755,7 +798,7 @@ test(
         .getByRole('textbox', { name: 'Description', exact: true })
         .fill('Mended by fixture hands.');
       await saveIngredient(dialog).click();
-      // Closed: a coven's save closes its dialog, where the admin edit stays open (M8.17).
+      // Closed: a coven's save closes its dialog, where the admin edit stays open.
       await expect(dialog).toHaveCount(0);
 
       await expect(rowOf(list, 'Fixture Mendwort', 'Fixtura testalis')).toBeVisible();

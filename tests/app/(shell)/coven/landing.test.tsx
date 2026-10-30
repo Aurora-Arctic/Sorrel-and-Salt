@@ -1,12 +1,8 @@
 import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-// The `/coven` landing (M2.8, Story 2): a member goes into their first coven,
-// anyone else is told what they can do next, and someone with coven
-// invitations waiting is told so, with a link to the account page's
-// Invitations section, where they are listed (M10.32). The viewer is mocked:
-// who is a member, who may create and how many invitations wait are
-// tests/lib/viewer's, and which invitations are theirs the identity service's.
+// The `/coven` landing: a member goes into their first coven, anyone else is told what they can do next, and someone with invitations waiting is told so, with a link to the account page's Invitations section.
+// The viewer is mocked: who is a member, who may create and how many invitations wait are tests/lib/viewer's, and which are theirs the identity service's.
 
 const REDIRECTED = new Error('NEXT_REDIRECT');
 const redirect = vi.fn((_to: string): never => {
@@ -72,7 +68,7 @@ describe('the /coven landing', () => {
     expect(redirect).not.toHaveBeenCalled();
   });
 
-  it('tells someone with neither how to get in, with no create link', async () => {
+  it('tells someone with neither how to get in, with no create link, behind the session guard', async () => {
     asViewer(false);
 
     render(await CovenLandingPage());
@@ -81,34 +77,22 @@ describe('the /coven landing', () => {
     expect(screen.queryByRole('link', { name: 'Create Coven' })).not.toBeInTheDocument();
     expect(notice()).not.toBeInTheDocument();
     expect(redirect).not.toHaveBeenCalled();
-  });
-
-  it('is behind the session guard', async () => {
-    asViewer(false);
-
-    render(await CovenLandingPage());
-
     expect(requireSession).toHaveBeenCalled();
   });
 
-  it.each([
-    ['may create a coven', true],
-    ['may not create one', false],
-  ])(
-    'tells someone who %s that invitations wait, linking to the account page’s section',
-    async (_who, canCreate) => {
-      asViewer(canCreate, [], 2);
+  // The notice reads only the pending count, never the right to create, so one case covers both.
+  it('tells someone with pending invitations that they wait, linking to the account page’s section', async () => {
+    asViewer(false, [], 2);
 
-      render(await CovenLandingPage());
+    render(await CovenLandingPage());
 
-      const status = notice();
-      expect(status).toHaveTextContent('2');
-      expect(within(status as HTMLElement).getByRole('link')).toHaveAttribute(
-        'href',
-        '/account#account-invitations',
-      );
-      // The list itself is the account page's, never drawn here.
-      expect(screen.queryByRole('table')).not.toBeInTheDocument();
-    },
-  );
+    const status = notice();
+    expect(status).toHaveTextContent('2');
+    expect(within(status as HTMLElement).getByRole('link')).toHaveAttribute(
+      'href',
+      '/account#account-invitations',
+    );
+    // The list itself is the account page's, never drawn here.
+    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+  });
 });

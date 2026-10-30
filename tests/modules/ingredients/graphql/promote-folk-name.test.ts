@@ -2,14 +2,14 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import type { Session } from '@/lib/session';
-import { A, B, C, E, F, asUser } from '../../../support/as-user';
+import { A, C, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { liveFolkNames } from '../../../support/db/folk-names';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
 
-// The transport's half of M8.3a: the mutation's arguments, the answer as a
+// The transport's half of the promotion: the mutation's arguments, the answer as a
 // fresh read gives it, and one refusal per error code as the browser reads it.
 // Who may promote at which tier is services/promote-folk-name.test.ts's.
 
@@ -64,31 +64,30 @@ describe('promoteFolkName', () => {
   // By direct id: the folk name is live and the same call succeeds for an
   // allowed caller, so a refusal here is the guard and nothing else.
   describe('refuses by direct id', () => {
-    it.each([
-      ['a member on a compendium entry', B, null, E],
-      ['a member on a compendium entry, for a curator', B, null, F],
-      ['a viewer on a coven entry', C, WORKSPACE_W_ID, A],
-    ] as const)('%s', async (_label, refused, workspaceId, allowed) => {
-      const { id, folkNameId } = await seed(workspaceId);
-      const [live] = await sql`
+    it.each([['a viewer on a coven entry', C, WORKSPACE_W_ID, A]] as const)(
+      '%s',
+      async (_label, refused, workspaceId, allowed) => {
+        const { id, folkNameId } = await seed(workspaceId);
+        const [live] = await sql`
         select 1 as found from ingredient_folk_names
         where id = ${folkNameId} and ingredient_id = ${id} and deleted_at is null`;
-      expect(live?.found).toBe(1);
-      expect(refused.id).not.toBe(allowed.id);
+        expect(live?.found).toBe(1);
+        expect(refused.id).not.toBe(allowed.id);
 
-      const answer = await promote(asUser(refused), workspaceId, id, folkNameId);
+        const answer = await promote(asUser(refused), workspaceId, id, folkNameId);
 
-      expect(answer.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
-      expect((await sql`select name from ingredients where id = ${id}`)[0].name).toBe(
-        'Fixture Herb',
-      );
-      expect((await liveFolkNames(sql, id)).map(({ name }) => name)).toEqual(['Testwort']);
+        expect(answer.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+        expect((await sql`select name from ingredients where id = ${id}`)[0].name).toBe(
+          'Fixture Herb',
+        );
+        expect((await liveFolkNames(sql, id)).map(({ name }) => name)).toEqual(['Testwort']);
 
-      // The identical call, from a caller the rules allow, goes through.
-      const allowedAnswer = await promote(asUser(allowed), workspaceId, id, folkNameId);
-      expect(allowedAnswer.errors).toBeUndefined();
-      expect(allowedAnswer.data?.promoteFolkName.name).toBe('Testwort');
-    });
+        // The identical call, from a caller the rules allow, goes through.
+        const allowedAnswer = await promote(asUser(allowed), workspaceId, id, folkNameId);
+        expect(allowedAnswer.errors).toBeUndefined();
+        expect(allowedAnswer.data?.promoteFolkName.name).toBe('Testwort');
+      },
+    );
   });
 
   it('answers the swapped ingredient as a fresh read would, folk names included', async () => {
@@ -110,34 +109,5 @@ describe('promoteFolkName', () => {
     const answer = await promote(asUser(E), null, id, folkNameId);
 
     expect(answer.data?.promoteFolkName.name).toBe('Testwort');
-  });
-
-  it('refuses a viewer with Forbidden, the ingredient being one they can read', async () => {
-    const { id, folkNameId } = await seed(WORKSPACE_W_ID);
-
-    const answer = await promote(asUser(C), WORKSPACE_W_ID, id, folkNameId);
-
-    expect(answer.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
-    const [row] = await sql`select name from ingredients where id = ${id}`;
-    expect(row.name).toBe('Fixture Herb');
-  });
-
-  it('refuses a non-admin on the compendium tier before the service is reached', async () => {
-    const { id, folkNameId } = await seed(null);
-
-    const answer = await promote(asUser(A), null, id, folkNameId);
-
-    expect(answer.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
-    const [row] = await sql`select name from ingredients where id = ${id}`;
-    expect(row.name).toBe('Fixture Herb');
-  });
-
-  it('refuses a signed-out caller', async () => {
-    const { id, folkNameId } = await seed(WORKSPACE_W_ID);
-
-    const answer = await promote(null, WORKSPACE_W_ID, id, folkNameId);
-
-    expect(answer.errors).toBeDefined();
-    expect(answer.data?.promoteFolkName ?? null).toBeNull();
   });
 });

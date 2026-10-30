@@ -2,29 +2,23 @@ import type { Locator, Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { recreateE2eDatabase } from './database';
-import { signInAs, signInAgainAs } from './session';
+import { signInAs } from './session';
 import { makeIngredient } from '../support/fixtures/ingredient';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { ingredientSlug } from '@/lib/slugify';
 import {
   ingredientList,
   localIngredient,
+  nameSearch,
   rowOf,
   seedCoven,
   withSql,
 } from './stories/coven-ingredients';
-import { discardQuestion, editIngredientDialog } from './stories/ingredient-dialogs';
+import { editIngredientDialog } from './stories/ingredient-dialogs';
 
-// M12.5: an entry's details in a modal over its list, opened by the Quick Look
-// eye, left of the name on the admin Compendium list and at the card's foot on
-// a coven's Ingredients and the public compendium (claude-docs/components/ingredient-entry.md, "The details modal"). This
-// proves what no story walks: the eye opens the details and every close gives
-// it the focus back, the details show the entry's sections on every list, the name itself still reaches the entry's page, Edit
-// opens the edit modal over the details and closes back to them, a coven's
-// Edit is an owner's and a member's and not a viewer's, a save there shows in
-// the details and the list, an unsaved close asks first, and the open details
-// pass axe and hold at a phone's width. On the public compendium a visitor with no
-// account opens them too, and reads the entry's sections there.
+// An entry's details in a modal over its list, opened by the Quick Look eye (claude-docs/components/ingredient-entry.md,
+// "The details modal"), for what no story walks: every close returns focus, Edit opens over the details and
+// closes back, a coven's save shows in both, and the open details pass axe at a phone's width.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -43,14 +37,10 @@ const detailsDialog = (page: Page, name = NAME) => page.getByRole('dialog', { na
 
 /**
  * The details' Edit: the card's pencil, a link named as the card names it, "Edit Name, Formal"
- * (the owner's call, 2026-10-20: the window's icons follow the card's).
+ * (the window's icons follow the card's).
  */
 const editIn = (dialog: Locator, name = NAME) =>
   dialog.getByRole('link', { name: `Edit ${name}, ${FORMAL}`, exact: true });
-
-/** A coven's own entry's bin in the details, the card's, named as it names the entry. */
-const binIn = (dialog: Locator, name = NAME) =>
-  dialog.getByRole('button', { name: `Delete Ingredient ${name}, ${FORMAL}`, exact: true });
 
 test.describe('on the admin Compendium list', () => {
   const slug = ingredientSlug(NAME, FORMAL);
@@ -332,49 +322,27 @@ test.describe('on the admin Compendium list', () => {
 });
 
 test.describe("on a coven's Ingredients", () => {
-  test("Edit is an owner's and a member's, not a viewer's; a save shows in the details and the list, and an unsaved close asks first", async ({
+  // Who gets Edit and the unsaved close's question are the details-dialog component test's and
+  // stories/04-modals.spec.ts's; this is the real save behind the details.
+  test('a save from the details goes back to them, renamed there and on the list', async ({
     page,
   }) => {
     const coven = await seedCoven(page, 'Fixture Coven Details Modal', 'details-modal.test', {
       A: 'owner',
-      B: 'member',
-      C: 'viewer',
     });
     await withSql((sql) =>
       localIngredient(sql, coven.id, coven.users.A, {
         name: NAME,
         canonicalName: FORMAL,
-        safetyNotes: 'Fixture coven caution.',
-        folkNames: ['Fixture Covenbane'],
       }),
     );
     const listPath = `/coven/${coven.slug}/ingredients`;
     const details = detailsDialog(page);
 
-    await test.step('a viewer reads the details, with no Edit', async () => {
-      await signInAgainAs(page, coven.users.C);
-      await page.goto(listPath);
-      await quickLook(page).click();
-      // Why Edit could be there: the details are open, with their other action.
-      await expect(details.getByRole('link', { name: 'See in Your Cupboard' })).toBeVisible();
-      await expect(editIn(details)).toHaveCount(0);
-      // The entry's sections, read for the coven.
-      await expect(
-        details.getByRole('region', { name: 'Caution' }).getByText('Fixture coven caution.'),
-      ).toBeVisible();
-      await expect(
-        details.getByRole('list', { name: 'Folk Names' }).getByText('Fixture Covenbane'),
-      ).toBeVisible();
-    });
-
-    for (const key of ['B', 'A'] as const) {
-      await test.step(`${key === 'A' ? 'the owner' : 'a member'} gets Edit in the details`, async () => {
-        await signInAgainAs(page, coven.users[key]);
-        await page.goto(listPath);
-        await quickLook(page).click();
-        await expect(editIn(details)).toBeVisible();
-      });
-    }
+    // seedCoven leaves the owner signed in.
+    await page.goto(listPath);
+    await quickLook(page).click();
+    await expect(editIn(details)).toBeVisible();
 
     const RENAMED = 'Fixture Seenwort';
     const renamedDetails = detailsDialog(page, RENAMED);
@@ -391,63 +359,43 @@ test.describe("on a coven's Ingredients", () => {
       await expect(rowOf(ingredientList(page), RENAMED)).toHaveCount(1);
       await expect(rowOf(ingredientList(page), NAME)).toHaveCount(0);
     });
-
-    await test.step('closing an edit with a change asks before discarding it', async () => {
-      await editIn(renamedDetails, RENAMED).click();
-      const editing = editIngredientDialog(page, RENAMED, FORMAL);
-      await expect(editing).toBeVisible();
-      await editing.getByRole('button', { name: 'Open All' }).click();
-      await editing.getByRole('textbox', { name: 'Name', exact: true }).fill('Fixture Unsavedwort');
-
-      await editing.getByRole('button', { name: 'Close', exact: true }).click();
-      const question = discardQuestion(editing);
-      await expect(question.keep).toBeFocused();
-      await question.discard.click();
-
-      await expect(editing).toHaveCount(0);
-      await expect(renamedDetails).toBeVisible();
-      await expect(rowOf(ingredientList(page), RENAMED)).toHaveCount(1);
-    });
   });
 
-  test("a delete from the details closes them back onto the list, without the entry's row", async ({
+  // A pick from the search opens its Quick Look, not its page.
+  test('a pick from the search opens the details over the list, the filter kept, and a close gives the search box its focus back', async ({
     page,
   }) => {
-    const coven = await seedCoven(page, 'Fixture Coven Details Delete', 'details-delete.test', {
+    const coven = await seedCoven(page, 'Fixture Coven Details Pick', 'details-pick.test', {
       A: 'owner',
     });
-    const KEPT = 'Fixture Keptwort';
-    const gone = await withSql(async (sql) => {
-      await localIngredient(sql, coven.id, coven.users.A, {
-        name: KEPT,
-        canonicalName: 'Fixtura servata',
-      });
-      return localIngredient(sql, coven.id, coven.users.A, { name: NAME, canonicalName: FORMAL });
-    });
-    const listPath = `/coven/${coven.slug}/ingredients`;
-    const list = ingredientList(page);
+    const { ingredientId } = await withSql((sql) =>
+      localIngredient(sql, coven.id, coven.users.A, { name: NAME, canonicalName: FORMAL }),
+    );
+    await page.goto(`/coven/${coven.slug}/ingredients?source=local`);
+    // Hydrated first: before it, the box is a plain text field with no dropdown.
+    await page.waitForLoadState('networkidle');
 
-    // Why it could stay: the entry is on the list, live, and its details are open.
-    await page.goto(listPath);
-    await expect(rowOf(list, NAME)).toHaveCount(1);
-    await quickLook(page).click();
+    const search = nameSearch(page);
+    await search.fill('lookwort');
+    const option = page.getByRole('option', { name: new RegExp(`^${NAME}`) });
+    await expect(option).toBeVisible();
+    // Why the address below could have carried the typed text: it was not applied while typing.
+    await expect(page).not.toHaveURL(/query=/);
+    await option.click();
+
     const details = detailsDialog(page);
     await expect(details).toBeVisible();
-    await expect(page).toHaveURL(/[?&]entry=/);
-
-    await binIn(details).click();
-    const question = page.getByRole('dialog', { name: 'Delete Ingredient', exact: true });
-    await expect(question).toContainText(NAME);
-    await question.getByRole('button', { name: 'Delete', exact: true }).click();
-
-    await expect(details).toHaveCount(0);
-    await expect(page).toHaveURL((url) => url.pathname === listPath && !url.search);
-    await expect(rowOf(list, NAME)).toHaveCount(0);
-    await expect(rowOf(list, KEPT)).toHaveCount(1);
-    const [row] = await withSql(
-      (sql) => sql`select deleted_at from ingredients where id = ${gone.ingredientId}`,
+    await expect(page).toHaveURL(
+      new RegExp(`/coven/${coven.slug}/ingredients\\?.*entry=${ingredientId}(&|$)`),
     );
-    expect(row.deleted_at).not.toBeNull();
+    await expect(page).toHaveURL(/[?&]source=local(&|$)/);
+    await expect(page).not.toHaveURL(/query=/);
+
+    await page.keyboard.press('Escape');
+    await expect(details).toHaveCount(0);
+    await expect(page).not.toHaveURL(/entry=/);
+    await expect(page).toHaveURL(/[?&]source=local(&|$)/);
+    await expect(search).toBeFocused();
   });
 
   test('the open details pass axe and hold at a phone width', async ({ page }) => {
@@ -498,8 +446,6 @@ test.describe('on the public compendium', () => {
         userId,
       ),
     );
-    // The session rides a header or a cookie (holdSession); both go.
-    await page.context().setExtraHTTPHeaders({});
     await page.context().clearCookies();
     await page.goto(`/compendium?query=${encodeURIComponent(PUBLIC_NAME)}`);
     // Why it is a visitor's: the header offers Sign In.
@@ -518,9 +464,11 @@ test.describe('on the public compendium', () => {
       details.getByRole('list', { name: 'Folk Names' }).getByText('Fixture Peerbane'),
     ).toBeVisible();
     await expect(details.getByRole('heading', { name: 'Correspondences' })).toBeVisible();
-    // An empty block or row is left out here, where the page says "None recorded".
+    // An empty block or row is left out here, where the page says "No elements recorded.".
     await expect(details.getByRole('heading', { name: 'Categories' })).toHaveCount(0);
-    await expect(details.getByText('None recorded')).toHaveCount(0);
+    await expect(
+      details.getByText(/^No (elements|celestial bodies|zodiac signs|colours|deities) recorded\.$/),
+    ).toHaveCount(0);
     await expect(details.getByRole('link', { name: 'See in Compendium' })).toHaveAttribute(
       'href',
       `/compendium/ingredients/${ingredientSlug(PUBLIC_NAME, PUBLIC_FORMAL)}`,

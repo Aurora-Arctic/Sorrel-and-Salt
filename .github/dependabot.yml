@@ -19,6 +19,12 @@ updates:
         patterns:
           - 'better-auth'
           - '@better-auth/*'
+      # graphql-yoga's plugins pin a peer on its major version; bumped apart,
+      # npm ci fails with ERESOLVE (PR #1313).
+      graphql-yoga:
+        patterns:
+          - 'graphql-yoga'
+          - '@graphql-yoga/*'
 
   - package-ecosystem: github-actions
     directory: /

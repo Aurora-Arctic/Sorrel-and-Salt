@@ -1,11 +1,19 @@
 name: Checks
 
-# One matrix job for lint, format, typecheck, codegen, build, destructive-ddl,
-# migration-order and audit, each reporting as `checks / <name>`. workflow_call only, from
+# One plain job each for lint, unused, format, typecheck, codegen, build,
+# destructive-ddl, migration-order and audit, reporting as `checks / <name>`. workflow_call only, from
 # pr-gate.yml. claude-docs/ci/reusable-checks.md, "Reusable checks" is the walkthrough.
 #
-# vitest.yml and playwright.yml are not legs: a `services: postgres:` block
-# and artifact uploads are a different job shape, not a different script.
+# The jobs share their steps through .github/actions/run-check. A path-filtered
+# job carries a job-level `if:` on its `run-*` input, so a run the filter rules
+# out is skipped before it pulls its container; format, codegen and audit are
+# unfiltered. A job name is the check name, so each job sets `name:` to the
+# name the ruleset and the docs use. The `if:` reads the input as text so an
+# unset flag, which `act` leaves empty, still runs the check.
+# (claude-docs/design-decisions/mb.39-job-level-if-and-check-names.md)
+#
+# vitest.yml and playwright.yml are separate workflows: a `services: postgres:`
+# block and artifact uploads are a different job shape, not a different script.
 on:
   workflow_call:
     inputs:
@@ -30,33 +38,30 @@ on:
         required: false
         type: boolean
         default: false
-      # One flag per path-filtered leg, since pr-gate.yml filters them
-      # independently; format and audit are unfiltered. The flags skip work
-      # INSIDE the leg: a job-level `if:` on the calling job would make GitHub
-      # report a bare check name ("checks", not "checks / lint") that never
-      # satisfies a required check, leaving the PR stuck forever.
+      # One flag per path-filtered job, since pr-gate.yml filters them
+      # independently; format, codegen and audit are unfiltered.
       run-lint:
-        description: Set false to skip the lint run while still completing its leg under its normal name
+        description: Set false to skip the lint run before its job starts
         required: false
         type: boolean
         default: true
       run-typecheck:
-        description: Set false to skip the typecheck run while still completing its leg under its normal name
+        description: Set false to skip the typecheck run before its job starts
         required: false
         type: boolean
         default: true
       run-build:
-        description: Set false to skip the build while still completing its leg under its normal name
+        description: Set false to skip the build before its job starts
         required: false
         type: boolean
         default: true
       run-destructive-ddl:
-        description: Set false to skip the destructive-DDL scan while still completing its leg under its normal name
+        description: Set false to skip the destructive-DDL scan before its job starts
         required: false
         type: boolean
         default: true
       run-migration-order:
-        description: Set false to skip the migration-order check while still completing its leg under its normal name
+        description: Set false to skip the migration-order check before its job starts
         required: false
         type: boolean
         default: true
@@ -89,74 +94,174 @@ permissions:
   pull-requests: write
 
 jobs:
-  check:
-    # Dropping this renames every leg to `checks / check (<name>)`.
-    name: ${{ matrix.name }}
+  lint:
+    name: lint
+    if: ${{ format('{0}', inputs.run-lint) != 'false' }}
     runs-on: ubuntu-26.04
-    strategy:
-      # A cancelled leg reports cancelled, which a required check reads as
-      # unsatisfied — one failure would block the PR on five legs never run.
-      fail-fast: false
-      matrix:
-        include:
-          - name: lint
-            label: Lint
-            command: npm run lint
-            summarize: .github/scripts/summarize-lint.sh
-            comment: minimize
-          - name: format
-            label: Format Check
-            command: npm run format:check
-            summarize: .github/scripts/summarize-format.sh
-            comment: minimize
-          - name: typecheck
-            label: Typecheck
-            command: npm run typecheck
-            summarize: .github/scripts/summarize-typecheck.sh
-            comment: minimize
-          # Blocking and unfiltered. src/gql/ is committed generated output
-          # (claude-docs/graphql/client-types.md): a document added, changed or
-          # removed without `npm run codegen` leaves it stale, and `status`
-          # sees an added file as well as a changed or deleted one.
-          - name: codegen
-            label: Codegen
-            command: >-
-              npm run codegen &&
-              stale="$(git -c safe.directory='*' status --porcelain -- src/gql)" &&
-              { [ -z "$stale" ] || { printf 'src/gql is stale: run npm run codegen and commit it.\n%s\n' "$stale"; exit 1; }; }
-            summarize: ''
-            comment: minimize
-          # The workshop build is chained so a failed app build stops first.
-          # No PR comment: the check itself is the report.
-          - name: build
-            label: Build
-            command: npm run build && npm run workshop:build
-            summarize: ''
-            comment: ''
-          # Blocking. The script's own output is the report, so no summariser.
-          - name: destructive-ddl
-            label: Destructive DDL
-            command: npm run check:destructive-ddl
-            summarize: ''
-            comment: minimize
-          # Blocking. The checkout is the PR's merge commit, shallow, so the
-          # base is fetched for its journal; the script's output is the report.
-          - name: migration-order
-            label: Migration Order
-            command: >-
-              base="${MIGRATION_ORDER_BASE:-staging}" &&
-              git -c safe.directory='*' fetch --no-tags --depth=1 origin
-              "+refs/heads/${base}:refs/remotes/origin/${base}" &&
-              npm run check:migration-order -- --base "origin/${base}"
-            summarize: ''
-            comment: minimize
-          # Non-blocking and never a required check, hence `|| true`. Reports
-          # through its own step below.
-          - name: audit
-            label: Dependency Audit
-            command: 'npm audit --json > audit-results.json || true'
-            summarize: ''
-            comment: ''
+    container:
+      image: ${{ inputs.image }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      # The image's default user cannot write the runner's bind-mounted
+      # _temp/_runner_file_commands; actions/checkout fails EACCES without it.
+      options: --user root
+    defaults:
+      run:
+        working-directory: /app
+        # A `container:` job defaults to sh, which has no `set -o pipefail`.
+        shell: bash
+    steps:
+      - name: Checkout into /app
+        uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
+
+      - uses: ./.github/actions/run-check
+        with:
+          label: Lint
+          slug: lint
+          command: npm run lint
+          summarize: .github/scripts/summarize-lint.sh
+          comment: minimize
+          pr-number: ${{ inputs.pr-number }}
+          merge-queue: ${{ inputs.merge-queue }}
+
+  # Non-blocking and never a required check: the run-check step continues on
+  # error, so knip's findings reach the PR comment without failing the job.
+  # It shares lint's path filter.
+  unused:
+    name: unused
+    if: ${{ format('{0}', inputs.run-lint) != 'false' }}
+    runs-on: ubuntu-26.04
+    container:
+      image: ${{ inputs.image }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      # The image's default user cannot write the runner's bind-mounted
+      # _temp/_runner_file_commands; actions/checkout fails EACCES without it.
+      options: --user root
+    defaults:
+      run:
+        working-directory: /app
+        # A `container:` job defaults to sh, which has no `set -o pipefail`.
+        shell: bash
+    steps:
+      - name: Checkout into /app
+        uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
+
+      - uses: ./.github/actions/run-check
+        continue-on-error: true
+        with:
+          label: Unused Code (Non-Blocking)
+          slug: unused
+          command: npm run lint:unused
+          comment: minimize
+          pr-number: ${{ inputs.pr-number }}
+          merge-queue: ${{ inputs.merge-queue }}
+
+  format:
+    name: format
+    runs-on: ubuntu-26.04
+    container:
+      image: ${{ inputs.image }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      # The image's default user cannot write the runner's bind-mounted
+      # _temp/_runner_file_commands; actions/checkout fails EACCES without it.
+      options: --user root
+    defaults:
+      run:
+        working-directory: /app
+        # A `container:` job defaults to sh, which has no `set -o pipefail`.
+        shell: bash
+    steps:
+      - name: Checkout into /app
+        uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
+
+      - uses: ./.github/actions/run-check
+        with:
+          label: Format Check
+          slug: format
+          command: npm run format:check
+          summarize: .github/scripts/summarize-format.sh
+          comment: minimize
+          pr-number: ${{ inputs.pr-number }}
+          merge-queue: ${{ inputs.merge-queue }}
+
+  typecheck:
+    name: typecheck
+    if: ${{ format('{0}', inputs.run-typecheck) != 'false' }}
+    runs-on: ubuntu-26.04
+    container:
+      image: ${{ inputs.image }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      # The image's default user cannot write the runner's bind-mounted
+      # _temp/_runner_file_commands; actions/checkout fails EACCES without it.
+      options: --user root
+    defaults:
+      run:
+        working-directory: /app
+        # A `container:` job defaults to sh, which has no `set -o pipefail`.
+        shell: bash
+    steps:
+      - name: Checkout into /app
+        uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
+
+      - uses: ./.github/actions/run-check
+        with:
+          label: Typecheck
+          slug: typecheck
+          command: npm run typecheck
+          summarize: .github/scripts/summarize-typecheck.sh
+          comment: minimize
+          pr-number: ${{ inputs.pr-number }}
+          merge-queue: ${{ inputs.merge-queue }}
+
+  # Blocking and unfiltered. src/gql/ is committed generated output
+  # (claude-docs/graphql/client-types.md): a document added, changed or
+  # removed without `npm run codegen` leaves it stale, and `status`
+  # sees an added file as well as a changed or deleted one.
+  codegen:
+    name: codegen
+    runs-on: ubuntu-26.04
+    container:
+      image: ${{ inputs.image }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      # The image's default user cannot write the runner's bind-mounted
+      # _temp/_runner_file_commands; actions/checkout fails EACCES without it.
+      options: --user root
+    defaults:
+      run:
+        working-directory: /app
+        # A `container:` job defaults to sh, which has no `set -o pipefail`.
+        shell: bash
+    steps:
+      - name: Checkout into /app
+        uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
+
+      - uses: ./.github/actions/run-check
+        with:
+          label: Codegen
+          slug: codegen
+          command: >-
+            npm run codegen &&
+            stale="$(git -c safe.directory='*' status --porcelain -- src/gql)" &&
+            { [ -z "$stale" ] || { printf 'src/gql is stale: run npm run codegen and commit it.\n%s\n' "$stale"; exit 1; }; }
+          comment: minimize
+          pr-number: ${{ inputs.pr-number }}
+          merge-queue: ${{ inputs.merge-queue }}
+
+  # The workshop build is chained so a failed app build stops first.
+  # No PR comment: the check itself is the report.
+  build:
+    name: build
+    if: ${{ format('{0}', inputs.run-build) != 'false' }}
+    runs-on: ubuntu-26.04
     container:
       image: ${{ inputs.image }}
       credentials:
@@ -171,98 +276,131 @@ jobs:
         # A `container:` job defaults to sh, which has no `set -o pipefail`.
         shell: bash
     env:
-      # Build leg only. `npm run build` traces src/db/connection.ts (throws at
-      # import on an unset URL, issues no query) and src/lib/auth.ts (needs a
-      # secret at NODE_ENV=production, which the `build` script forces).
+      # `npm run build` traces src/db/connection.ts (throws at import on an
+      # unset URL, issues no query) and src/lib/auth.ts (needs a secret at
+      # NODE_ENV=production, which the `build` script forces).
       DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
       BETTER_AUTH_SECRET: local-dev-not-a-real-secret
       # auth.ts refuses to load without it at NODE_ENV=production. `.invalid`
       # is reserved (RFC 2606), so no real sign-in can ever match it.
       ADMIN_BOOTSTRAP_EMAIL: placeholder@admin-bootstrap.invalid
-      # destructive-ddl leg only. Always set: the script reads set-but-empty
-      # as "scan nothing" and unset as "diff the branch", which CI must never do.
-      DESTRUCTIVE_DDL_FILES: ${{ inputs.destructive-ddl-files }}
-      # migration-order leg only.
-      MIGRATION_ORDER_BASE: ${{ inputs.migration-order-base }}
     steps:
-      # One flag for this leg. Unset means run: `act` applies no workflow_call
-      # defaults, and must not pass a check it never ran.
-      - name: Resolve this leg's should-run flag
-        id: flags
-        env:
-          CHECK: ${{ matrix.name }}
-          RUN_LINT: ${{ inputs.run-lint }}
-          RUN_TYPECHECK: ${{ inputs.run-typecheck }}
-          RUN_BUILD: ${{ inputs.run-build }}
-          RUN_DESTRUCTIVE_DDL: ${{ inputs.run-destructive-ddl }}
-          RUN_MIGRATION_ORDER: ${{ inputs.run-migration-order }}
-        run: |
-          case "$CHECK" in
-            lint) flag="$RUN_LINT" ;;
-            typecheck) flag="$RUN_TYPECHECK" ;;
-            build) flag="$RUN_BUILD" ;;
-            destructive-ddl) flag="$RUN_DESTRUCTIVE_DDL" ;;
-            migration-order) flag="$RUN_MIGRATION_ORDER" ;;
-            # format, codegen and audit are unfiltered.
-            *) flag=true ;;
-          esac
-          echo "should-run=${flag:-true}" >> "$GITHUB_OUTPUT"
-
       - name: Checkout into /app
-        if: steps.flags.outputs.should-run == 'true'
         uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
 
-      # The brace group keeps `2>&1 | tee` on the whole command, not on `|| true`.
-      - name: Run ${{ matrix.name }}
+      - uses: ./.github/actions/run-check
+        with:
+          label: Build
+          slug: build
+          command: npm run build && npm run workshop:build
+
+  # Blocking. The script's own output is the report, so no summariser.
+  destructive-ddl:
+    name: destructive-ddl
+    if: ${{ format('{0}', inputs.run-destructive-ddl) != 'false' }}
+    runs-on: ubuntu-26.04
+    container:
+      image: ${{ inputs.image }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      # The image's default user cannot write the runner's bind-mounted
+      # _temp/_runner_file_commands; actions/checkout fails EACCES without it.
+      options: --user root
+    defaults:
+      run:
+        working-directory: /app
+        # A `container:` job defaults to sh, which has no `set -o pipefail`.
+        shell: bash
+    env:
+      # Always set: the script reads set-but-empty as "scan nothing" and unset
+      # as "diff the branch", which CI must never do.
+      DESTRUCTIVE_DDL_FILES: ${{ inputs.destructive-ddl-files }}
+    steps:
+      - name: Checkout into /app
+        uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
+
+      - uses: ./.github/actions/run-check
+        with:
+          label: Destructive DDL
+          slug: destructive-ddl
+          command: npm run check:destructive-ddl
+          comment: minimize
+          pr-number: ${{ inputs.pr-number }}
+          merge-queue: ${{ inputs.merge-queue }}
+
+  # Blocking. The checkout is the PR's merge commit, shallow, so the
+  # base is fetched for its journal; the script's output is the report.
+  migration-order:
+    name: migration-order
+    if: ${{ format('{0}', inputs.run-migration-order) != 'false' }}
+    runs-on: ubuntu-26.04
+    container:
+      image: ${{ inputs.image }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      # The image's default user cannot write the runner's bind-mounted
+      # _temp/_runner_file_commands; actions/checkout fails EACCES without it.
+      options: --user root
+    defaults:
+      run:
+        working-directory: /app
+        # A `container:` job defaults to sh, which has no `set -o pipefail`.
+        shell: bash
+    env:
+      MIGRATION_ORDER_BASE: ${{ inputs.migration-order-base }}
+    steps:
+      - name: Checkout into /app
+        uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
+
+      - uses: ./.github/actions/run-check
+        with:
+          label: Migration Order
+          slug: migration-order
+          command: >-
+            base="${MIGRATION_ORDER_BASE:-staging}" &&
+            git -c safe.directory='*' fetch --no-tags --depth=1 origin
+            "+refs/heads/${base}:refs/remotes/origin/${base}" &&
+            npm run check:migration-order -- --base "origin/${base}"
+          comment: minimize
+          pr-number: ${{ inputs.pr-number }}
+          merge-queue: ${{ inputs.merge-queue }}
+
+  # Non-blocking and never a required check, hence `|| true`. Reports
+  # through its own step below.
+  audit:
+    name: audit
+    runs-on: ubuntu-26.04
+    container:
+      image: ${{ inputs.image }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      # The image's default user cannot write the runner's bind-mounted
+      # _temp/_runner_file_commands; actions/checkout fails EACCES without it.
+      options: --user root
+    defaults:
+      run:
+        working-directory: /app
+        # A `container:` job defaults to sh, which has no `set -o pipefail`.
+        shell: bash
+    steps:
+      - name: Checkout into /app
+        uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
+
+      - name: Run audit
         id: run
-        if: steps.flags.outputs.should-run == 'true'
         run: |
           set -o pipefail
           {
-            ${{ matrix.command }}
+            npm audit --json > audit-results.json || true
           } 2>&1 | tee /app/output.log
 
-      # Regardless of outcome: a passing lint can still carry warnings.
-      - name: Summarize output
-        id: summarize
-        if: always() && matrix.summarize != '' && steps.flags.outputs.should-run == 'true'
-        run: bash ${{ matrix.summarize }}
-
-      # Skipped for audit, whose own step below writes both summary and
-      # comment — "passed" above a table of vulnerabilities would mislead.
-      - name: Write job summary
-        if: always() && matrix.name != 'audit' && steps.flags.outputs.should-run == 'true'
-        uses: ./.github/actions/job-summary
-        with:
-          check-name: ${{ matrix.label }}
-          outcome: ${{ steps.run.outcome }}
-          log-file: /app/output.log
-          summary: ${{ steps.summarize.outputs.summary }}
-          details: ${{ steps.summarize.outputs.details }}
-
-      # An empty `comment` skips the step; .github/actions/pr-comment has the modes.
-      # `!cancelled()`, not `always()`: the action reads a cancelled run as a
-      # failure, and a newer push cancels this one (claude-docs/ci/composite-actions.md).
-      - name: Comment on PR
-        if: ${{ !cancelled() && inputs.pr-number && matrix.comment != '' && steps.flags.outputs.should-run == 'true' }}
-        uses: ./.github/actions/pr-comment
-        with:
-          check-name: ${{ matrix.label }}
-          marker-slug: ${{ matrix.name }}
-          pr-number: ${{ inputs.pr-number }}
-          merge-queue: ${{ inputs.merge-queue }}
-          outcome: ${{ steps.run.outcome }}
-          log-file: /app/output.log
-          success-mode: ${{ matrix.comment }}
-          summary: ${{ steps.summarize.outputs.summary }}
-          details: ${{ steps.summarize.outputs.details }}
-
-      # The audit's own report: a [!WARNING] on a step that passed, which
-      # job-summary and pr-comment's pass/fail vocabulary cannot say. The
-      # script checks for a PR number itself, so the summary still appears
-      # under `act`.
+      # A [!WARNING] on a step that passed, which job-summary and pr-comment's
+      # pass/fail vocabulary cannot say. The script checks for a PR number
+      # itself, so the summary still appears under `act`.
       - name: Summarize and comment audit results
-        if: matrix.name == 'audit'
         uses: actions/github-script@v9
         env:
           PR_NUMBER: ${{ inputs.pr-number }}

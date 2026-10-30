@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/grape-vitis-vinifera
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Vitis vinifera
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-vitis-vinifera
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Vitis vinifera", ((Participants of the FFI/IUCN SSC Central Asian regional tree Red Listing workshop, Bishkek, Kyrgyzstan (11-13 July 2006) )), 2007'

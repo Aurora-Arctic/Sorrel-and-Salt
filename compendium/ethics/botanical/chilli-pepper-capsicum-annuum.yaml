@@ -1,0 +1,14 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/chilli-pepper-capsicum-annuum
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Capsicum annuum
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-capsicum-annuum
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: (no assessment named)'
+questions:
+  - 'The assessment Wikipedia names for Capsicum annuum is not identified by title (the cited assessment is titled "null"). Raw status_ref: Aguilar-Meléndez, A., Azurdia, C., Cerén-López, J., Menjívar, J. & Contreras, A. 2020. Capsicum annuum (amended version of 2019 assessment). The IUCN Red List of Threatened Species 2020: e.T100895534A172969027. https://dx.doi.org/10.2305/IUCN.UK.2020-2.RLTS.T100895534A172969027.en. Downloaded on 11 . Recommendation: do not list until the assessment is read for Capsicum annuum.'

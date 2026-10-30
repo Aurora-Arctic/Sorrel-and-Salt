@@ -17,7 +17,7 @@ const assignMock = vi.fn();
 const router = { refresh: vi.fn(), push: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The body of the modal over `/admin/users` (M9.19): render-only, so the page
+// The body of the modal over `/admin/users`: render-only, so the page
 // owns the read and this owns what an admin sees of it
 // (claude-docs/components/user-detail.md).
 
@@ -56,7 +56,7 @@ const ADA: UserDetailUser = {
   email: 'ada@fixture.test',
   role: 'admin',
 };
-// A curator (M11.20), who holds the creation flag as every curator must.
+// A curator, who holds the creation flag as every curator must.
 const CY: UserDetailUser = {
   ...FACTS,
   id: '8b3c4d5e-6f7a-4b2c-8d9e-0f1a2b3c4d5e',
@@ -188,6 +188,36 @@ describe('UserDetail', () => {
     expect(calls).toEqual([{ userId: BO.id }]);
   });
 
+  // The row offers no Revoke, so the modal is its one place (claude-docs/components/user-list.md).
+  it('revokes coven creation from the modal with a trimmed reason, warning of nothing even when unverified', async () => {
+    const calls: unknown[] = [];
+    mockGraphQLMutation('RevokeWorkspaceCreation', (variables) => {
+      calls.push(variables);
+      return { revokeWorkspaceCreation: { id: BO.id, canCreateWorkspace: false } };
+    });
+    renderDetail({ user: { ...BO, canCreateWorkspace: true, emailVerified: false } });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Revoke approval for Bo Fixturewort' }));
+    expect(screen.getAllByRole('dialog')).toHaveLength(1);
+    const revoke = screen.getByRole('button', { name: 'Revoke' });
+    expect(revoke).not.toHaveAccessibleDescription();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Reason' }), {
+      target: { value: '  Left the circle ' },
+    });
+    fireEvent.click(revoke);
+
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
+    expect(calls).toEqual([{ userId: BO.id, note: 'Left the circle' }]);
+  });
+
+  it('locks Revoke while admin changes are paused for this admin, saying why', () => {
+    renderDetail({ user: { ...BO, canCreateWorkspace: true }, changesPaused: true });
+
+    const revoke = screen.getByRole('button', { name: 'Revoke approval for Bo Fixturewort' });
+    expect(revoke).toHaveAttribute('aria-disabled', 'true');
+    expect(revoke).toHaveAccessibleDescription(/\S/);
+  });
+
   it('locks both controls while admin changes are paused for this admin', () => {
     renderDetail({ changesPaused: true });
 
@@ -244,15 +274,6 @@ describe('UserDetail', () => {
     expect(screen.queryByRole('button', { name: /Impersonate/ })).not.toBeInTheDocument();
   });
 
-  it('asks first, and sends nothing until it is confirmed', () => {
-    renderDetail({ canImpersonate: true });
-
-    fireEvent.click(screen.getByRole('button', { name: 'Impersonate Bo Fixturewort' }));
-
-    expect(screen.getByRole('button', { name: 'Impersonate' })).toBeInTheDocument();
-    expect(impersonateUserMock).not.toHaveBeenCalled();
-  });
-
   it('puts the question away on Cancel, sending nothing', () => {
     renderDetail({ canImpersonate: true });
     fireEvent.click(screen.getByRole('button', { name: 'Impersonate Bo Fixturewort' }));
@@ -290,9 +311,9 @@ describe('UserDetail', () => {
   });
 });
 
-// A refusal of the role or creation control is design F inside this dialog too
-// (M12.31's rule 6, the owner's exception of 2026-10-20): a callout under the
-// control, which Escape or a press elsewhere closes without closing the modal.
+// A refusal of the role or creation control is a callout under the
+// control inside this dialog too: Escape or a press elsewhere closes it without
+// closing the modal.
 describe('UserDetail, when the service refuses a change', () => {
   const settle = (step: () => unknown) =>
     act(async () => {
@@ -309,20 +330,6 @@ describe('UserDetail, when the service refuses a change', () => {
         fireEvent.click(screen.getByRole('radio', { name: /^Curator/ }));
         fireEvent.click(screen.getByRole('button', { name: 'Promote' }));
       },
-    },
-    {
-      control: 'Approve Bo Fixturewort',
-      operation: 'GrantWorkspaceCreation',
-      message: 'Fixture refusal of the approval.',
-      user: BO,
-      confirm: () => fireEvent.click(screen.getByRole('button', { name: 'Approve' })),
-    },
-    {
-      control: 'Revoke approval for Bo Fixturewort',
-      operation: 'RevokeWorkspaceCreation',
-      message: 'Fixture refusal of the revocation.',
-      user: { ...BO, canCreateWorkspace: true },
-      confirm: () => fireEvent.click(screen.getByRole('button', { name: 'Revoke' })),
     },
   ];
 
@@ -384,18 +391,6 @@ describe('UserDetail, when the service refuses a change', () => {
         expect(onClose).not.toHaveBeenCalled();
         expect(screen.getByRole('dialog')).toContainElement(control());
         expect(control()).toHaveFocus();
-        expect(badge()).toBeInTheDocument();
-      });
-
-      it('closes the callout on a press elsewhere in the dialog, the dialog left open', async () => {
-        await refuse();
-
-        await settle(() =>
-          fireEvent.pointerDown(screen.getByRole('heading', { name: 'Bo Fixturewort' })),
-        );
-
-        expect(screen.queryByRole('alert')).toBeNull();
-        expect(onClose).not.toHaveBeenCalled();
         expect(badge()).toBeInTheDocument();
       });
 

@@ -1,13 +1,8 @@
 import type { StockState } from '@/components/StockBadge/types';
 
-// One table of jar states, each with the badge it must show (M9.8, story 23).
-// The rule is written twice, as `stockState` in `src/components/StockBadge/` and
-// as `holdsJarLowOrOut` in the ingredients repository, and a change to one
-// without the other must fail. So the component test and the `lowStockOnly`
-// database test both walk this list: the first checks `stockState` gives
-// `expected`, the second checks the SQL filter keeps exactly the jars whose
-// `expected` is 'out' or 'low'. Names are invented and unique, so a jar can
-// stand in a list under its own entry. claude-docs/components/stock-badge.md.
+// One table of jar states, each with the badge it must show. The rule is written twice (`stockState` in
+// `src/components/StockBadge/` and `holdsJarLowOrOut` in the ingredients repository), so both tests walk this
+// list (claude-docs/components/stock-badge.md).
 
 export interface JarState {
   /** What the row of the table says, in words. */

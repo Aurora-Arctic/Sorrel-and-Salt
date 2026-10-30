@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/mandrake-mandragora-officinarum
+status: needs-review
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: EN
+    listedAs: Mandragora officinarum
+    scope: Europe
+    nameBasis: stated
+    source: wikipedia-iucn-mandragora-officinarum
+    locator: 'Taxobox: status = EN, status_system = IUCN3.1; its status_ref reads: "Mandragora officinarum (Europe assessment)", Bilz, M., 2011'

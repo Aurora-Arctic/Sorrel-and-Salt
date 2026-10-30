@@ -4,10 +4,8 @@ import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
 import PrePaintScripts from '@/app/pre-paint-scripts';
 
-// The root layout's four pre-paint scripts run from the server's HTML. A
-// document the browser renders itself — Next's recovery when `forbidden()` or
-// `notFound()` is thrown — must not get them: React creates such a script
-// inert and warns (claude-docs/auth/admin-guard.md, "The admin guard").
+// The root layout's four pre-paint scripts run from the server's HTML. A document the browser renders itself (Next's recovery when `forbidden()` or `notFound()` is thrown)
+// must not get them: React creates such a script inert and warns (claude-docs/auth/admin-guard.md, "The admin guard").
 
 describe('PrePaintScripts', () => {
   // Hydration starts from the server's snapshot, then re-renders from the
@@ -39,11 +37,11 @@ describe('PrePaintScripts', () => {
     document.documentElement.removeAttribute('data-js');
   });
 
-  // The Compact switch is on by default, so only a stored "regular" reaches <html>.
+  // The Compact switch is on by default, so only a stored "regular" reaches <html>. A stored
+  // "compact" and nothing stored take the same branch, so the "compact" row covers both.
   describe.each([
     ['regular', 'regular'],
     ['compact', null],
-    [null, null],
   ])('with %s stored for the card density', (stored, expected) => {
     it('sets the attribute only for a stored regular', () => {
       const container = document.createElement('div');

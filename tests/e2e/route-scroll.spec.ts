@@ -1,14 +1,10 @@
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
-import { slotUrl } from './slots';
 
-// A move to another page lands at the top (M12.33). The page has
-// `scroll-behavior: smooth` (src/app/globals.scss), and unless <html> carries
-// `data-scroll-behavior="smooth"` Next's own jump to the top glides, then its
-// scroll-into-view glides on and stops part-way down: 62px at a desktop's
-// width, 40px at a phone's. Real-browser behaviour, so no component test can
-// see it.
+// A move to another page lands at the top. With `scroll-behavior: smooth` (src/app/globals.scss), Next's own
+// jump glides and stops 40-62px short unless <html> carries `data-scroll-behavior="smooth"`; only a real
+// browser shows it.
 
 // The suite runs under reduced motion (playwright.config.ts), which turns the
 // smooth scrolling off and with it the bug; this is the one spec that needs it on.
@@ -19,14 +15,8 @@ const VIEWPORTS = [
   { name: 'phone', width: 390, height: 844 },
 ];
 
-test.beforeAll(async ({ browser, slot }) => {
+test.beforeAll(async () => {
   await recreateE2eDatabase();
-  const setup = await browser.newPage({ baseURL: slotUrl(slot) });
-  try {
-    await signInAs(setup, 'admin@route-scroll.test', ['discord'], 'admin');
-  } finally {
-    await setup.close();
-  }
 });
 
 for (const { name, ...viewport } of VIEWPORTS) {

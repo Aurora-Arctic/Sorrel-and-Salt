@@ -1,0 +1,372 @@
+import { QueryClientProvider } from '@tanstack/react-query';
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { Forbidden, NotFound } from '@/lib/errors';
+import { makeQueryClient } from '@/lib/graphql-client';
+import { mockGraphQLQuery } from '../../../../../../support/msw/graphql';
+import { offerCategories } from '../../../../../../support/msw/ingredient-lookups';
+
+// The spell recipe page, with the guard and services mocked (tests/modules/grimoire/services/spell-reads.test.ts proves a private spell reads as NotFound to anyone but its author).
+// It proves the page guards itself, a refusal is the 404, and what the services give is drawn.
+
+const SPELL_ID = '0f6d2c8e-3b1a-4e5f-9a7c-2d4b6e8f1a3c';
+const COVEN = { id: 'c0ffee00-0000-4000-8000-000000000001', slug: 'fixture-coven' };
+const session = { user: { id: 'fixture-user' } };
+const requireSession = vi.fn(async () => session);
+const requireCovenMembership = vi.fn();
+vi.mock('@/lib/request-session', () => ({ requireCovenMembership, requireSession }));
+vi.mock('next/navigation', () => ({
+  notFound: () => {
+    throw new Error('NEXT_NOT_FOUND');
+  },
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
+  usePathname: () => `/coven/fixture-coven/grimoire/${SPELL_ID}`,
+  useSearchParams: () => new URLSearchParams(),
+}));
+// The pane itself is proved by its own tests; here only what the page hands it.
+vi.mock('@/components/SpellPreview', () => ({
+  default: ({ demoNotice }: { demoNotice?: string }) =>
+    demoNotice ? <output>{demoNotice}</output> : null,
+}));
+vi.mock('@/app/compendium-reads', () => ({
+  readCategories: async () => [
+    {
+      id: 'cat-1',
+      slug: 'testwarding',
+      name: 'Testwarding',
+      description: null,
+      group: { id: 'g', name: 'G', colorDark: '#a0c4ff', colorLight: '#1d3557' },
+    },
+  ],
+}));
+
+const readSpell = vi.fn();
+const stepsOfSpells = vi.fn();
+const assignedCategoriesOf = vi.fn();
+// No workings: the recipe page's Workings list is read through these and is tested on its own.
+const listWorkingsPage = vi.fn(async () => []);
+const previewWorkingDeductions = vi.fn(async () => ({ deductions: [], warnings: [] }));
+vi.mock('@/modules/grimoire', () => ({
+  readSpell,
+  stepsOfSpells,
+  assignedCategoriesOf,
+  listWorkingsPage,
+  previewWorkingDeductions,
+}));
+const none = async (_s: unknown, refs: unknown[]): Promise<unknown[][]> => refs.map(() => []);
+const categoriesOf = vi.fn(none);
+const categoriesOfVariants = vi.fn(none);
+const stockOf = vi.fn(none);
+const variantsOf = vi.fn(none);
+vi.mock('@/modules/ingredients', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/modules/ingredients')>()),
+  categoriesOf,
+  categoriesOfVariants,
+  stockOf,
+  variantsOf,
+}));
+// The signed-in viewer, whom Record a Working names as its recorder.
+vi.mock('@/lib/viewer', () => ({
+  viewerOf: async () => ({ viewer: { id: 'fixture-user', name: 'Fixture Name' }, workspaces: [] }),
+}));
+const displayNamesOf = vi.fn();
+vi.mock('@/modules/identity', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/modules/identity')>()),
+  displayNamesOf,
+}));
+
+const { default: Page, generateMetadata } =
+  await import('@/app/(shell)/coven/[slug]/grimoire/[id]/page');
+
+const SPELL = {
+  id: SPELL_ID,
+  workspaceId: COVEN.id,
+  title: 'Fixture Working',
+  intent: 'To keep the testwort fresh.',
+  status: 'complete',
+  visibility: 'workspace',
+  note: 'Best on a dry night.',
+  updatedBy: 'fixture-user',
+  updatedAt: new Date('2026-09-01T12:00:00.000Z'),
+};
+const stepRow = {
+  spellId: SPELL_ID,
+  ingredientId: null,
+  variantId: null,
+  name: null,
+  form: null,
+  quantity: null,
+  unit: null,
+  body: null,
+  ingredient: null,
+  variant: null,
+};
+const params = (id = SPELL_ID, search: Record<string, string> = {}) => ({
+  params: Promise.resolve({ slug: 'fixture-coven', id }),
+  searchParams: Promise.resolve(search),
+});
+const draw = async (...args: Parameters<typeof params>) =>
+  render(
+    <QueryClientProvider client={makeQueryClient()}>
+      {await Page(params(...args))}
+    </QueryClientProvider>,
+  );
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  offerCategories([]);
+  mockGraphQLQuery('SpellBuilderSteps', ({ id }: { id: string }) => ({ spell: { id, steps: [] } }));
+  vi.stubGlobal('matchMedia', (query: string) => ({
+    matches: query.includes('min-width'),
+    media: query,
+    addEventListener: () => undefined,
+    removeEventListener: () => undefined,
+  }));
+  requireCovenMembership.mockResolvedValue({ workspace: COVEN, membership: { role: 'member' } });
+  readSpell.mockResolvedValue(SPELL);
+  stepsOfSpells.mockResolvedValue([
+    [
+      {
+        ...stepRow,
+        id: 's-b',
+        ingredientId: 'ing-1',
+        variantId: 'v-1',
+        quantity: '2',
+        unit: 'tsp',
+        ingredient: {
+          id: 'ing-1',
+          name: 'Testwort',
+          canonicalName: null,
+          nomenclature: 'none',
+          toxic: false,
+          safetyNotes: null,
+          deleted: false,
+        },
+        variant: { id: 'v-1', form: 'dried leaf', toxic: false, safetyNotes: null, deleted: false },
+      },
+      { ...stepRow, id: 's-a', body: 'Stir three times' },
+    ],
+  ]);
+  assignedCategoriesOf.mockResolvedValue([[{ id: 'cat-1' }]]);
+  displayNamesOf.mockResolvedValue(['Fixture Author']);
+});
+
+describe('the spell recipe page', () => {
+  it('guards itself: the coven, then the session, then reads the spell in that coven', async () => {
+    await draw();
+    expect(requireCovenMembership).toHaveBeenCalledWith('fixture-coven');
+    expect(requireSession).toHaveBeenCalled();
+    expect(readSpell).toHaveBeenCalledWith(session, COVEN.id, SPELL_ID);
+  });
+
+  it('draws the title, intent, categories, steps in the order given, and the note', async () => {
+    await draw();
+    expect(screen.getByRole('heading', { level: 1, name: 'Fixture Working' })).toBeInTheDocument();
+    expect(screen.getByText('To keep the testwort fresh.')).toBeInTheDocument();
+    // The body's list first; the side column's Category Match lists chips under the same name.
+    expect(screen.getAllByRole('list', { name: 'Categories' })[0]).toHaveTextContent('Testwarding');
+    const steps = within(screen.getByRole('list', { name: 'Steps' }));
+    expect(steps.getAllByRole('listitem').map((li) => li.textContent)).toEqual([
+      expect.stringContaining('Testwort'),
+      expect.stringContaining('Stir three times'),
+    ]);
+    expect(screen.getByText('Best on a dry night.')).toBeInTheDocument();
+    expect(screen.getAllByText(/Fixture Author/).length).toBeGreaterThan(0);
+  });
+
+  it("gives the side column's ingredient line the Quick Look eye, to this page's own address with ?entry=<id>, and the step none", async () => {
+    await draw();
+    const steps = within(screen.getByRole('list', { name: 'Steps' }));
+    expect(steps.queryByRole('link', { name: 'Quick Look Testwort' })).toBeNull();
+    const inventory = within(screen.getByRole('region', { name: 'In the Cupboard' }));
+    expect(inventory.getByRole('link', { name: 'Quick Look Testwort' })).toHaveAttribute(
+      'href',
+      `/coven/fixture-coven/grimoire/${SPELL_ID}?entry=ing-1`,
+    );
+  });
+
+  it('draws In the Cupboard and Category Match beside the recipe, read for this coven (the owner, 2026-10-29)', async () => {
+    categoriesOf.mockResolvedValueOnce([[{ id: 'cat-1', name: 'Testwarding' }]]);
+    stockOf.mockResolvedValueOnce([
+      [{ variantId: 'v-1', unit: 'tsp', quantityOnHand: '1', lowStockThreshold: null }],
+    ]);
+    await draw();
+    const aside = screen.getByRole('complementary');
+    const inventory = within(aside).getByRole('region', { name: 'In the Cupboard' });
+    expect(within(inventory).getByText('Testwort (Dried Leaf)')).toBeInTheDocument();
+    expect(within(inventory).getByText('need 2 tsp · have 1 tsp')).toBeInTheDocument();
+    expect(within(inventory).getByRole('button', { name: 'Not Enough' })).toBeInTheDocument();
+    const match = within(aside).getByRole('region', { name: 'Category Match' });
+    expect(within(match).getByText('Carried')).toBeInTheDocument();
+    expect(within(match).getByText('Testwarding')).toBeInTheDocument();
+    // Category Match stands over the inventory.
+    expect(
+      match.compareDocumentPosition(inventory) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(stockOf).toHaveBeenCalledWith(session, [
+      { ingredientId: 'ing-1', workspaceId: COVEN.id },
+    ]);
+  });
+
+  describe('the demo notice in the preview', () => {
+    const as = (role: 'owner' | 'viewer', demo: boolean) =>
+      requireCovenMembership.mockResolvedValue({
+        workspace: { ...COVEN, demo },
+        membership: { role },
+      });
+
+    it('hands a viewer of the demo coven the viewer sentence', async () => {
+      as('viewer', true);
+      await draw();
+      expect(screen.getByRole('status')).toHaveTextContent(/^This is a demo coven/);
+    });
+
+    it('hands an owner of the demo coven the owner sentence', async () => {
+      as('owner', true);
+      await draw();
+      expect(screen.getByRole('status')).toHaveTextContent(/^You own this coven as a site admin/);
+    });
+
+    it('hands an ordinary coven nothing', async () => {
+      as('viewer', false);
+      await draw();
+      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('editing', () => {
+    const as = (role: 'owner' | 'member' | 'viewer') =>
+      requireCovenMembership.mockResolvedValue({ workspace: COVEN, membership: { role } });
+    const SAVED = {
+      ...SPELL,
+      revision: 2,
+      jarDescription: null,
+      sealWaxColor: null,
+      moonPhase: null,
+      dayOfWeek: null,
+    };
+
+    it('gives a member an Edit link to ?edit=<id> on this page and opens no dialog until it is used', async () => {
+      as('member');
+      await draw();
+      const link = screen.getByRole('link', { name: 'Edit Fixture Working' });
+      expect(link).toHaveAttribute(
+        'href',
+        `/coven/fixture-coven/grimoire/${SPELL_ID}?edit=${SPELL_ID}`,
+      );
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('opens the spell in the dialog under ?edit=<its id>', async () => {
+      as('member');
+      readSpell.mockResolvedValue(SAVED);
+      await draw(SPELL_ID, { edit: SPELL_ID });
+      expect(
+        screen.getByRole('dialog', { name: 'Edit Spell, Fixture Working' }),
+      ).toBeInTheDocument();
+    });
+
+    it('gives a member the Delete Spell bin in the edit dialog, and a viewer, who gets no dialog, none', async () => {
+      as('member');
+      readSpell.mockResolvedValue(SAVED);
+      const { unmount } = await draw(SPELL_ID, { edit: SPELL_ID });
+      expect(
+        screen.getByRole('button', { name: 'Delete Spell Fixture Working' }),
+      ).toBeInTheDocument();
+      unmount();
+      as('viewer');
+      await draw(SPELL_ID, { edit: SPELL_ID });
+      expect(screen.queryByRole('button', { name: /^Delete Spell/ })).not.toBeInTheDocument();
+    });
+
+    it('shows a viewer no Edit link and opens no dialog under ?edit, though they read the same spell', async () => {
+      as('viewer');
+      await draw(SPELL_ID, { edit: SPELL_ID });
+      expect(
+        screen.getByRole('heading', { level: 1, name: 'Fixture Working' }),
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: /^Edit / })).not.toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('opens no dialog when ?edit names a different spell, which the page does not read', async () => {
+      as('member');
+      await draw(SPELL_ID, { edit: '9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d' });
+      expect(
+        screen.getByRole('heading', { level: 1, name: 'Fixture Working' }),
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(readSpell).not.toHaveBeenCalledWith(
+        session,
+        COVEN.id,
+        '9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d',
+      );
+    });
+
+    it("is the 404, with no dialog, for another member's private spell or another coven's", async () => {
+      as('member');
+      readSpell.mockRejectedValue(new NotFound('No such spell in this coven'));
+      await expect(Page(params(SPELL_ID, { edit: SPELL_ID }))).rejects.toThrow('NEXT_NOT_FOUND');
+      expect(readSpell).toHaveBeenCalledWith(session, COVEN.id, SPELL_ID);
+    });
+  });
+
+  describe('deleting', () => {
+    const as = (role: 'owner' | 'member' | 'viewer') =>
+      requireCovenMembership.mockResolvedValue({ workspace: COVEN, membership: { role } });
+
+    it('gives a member Delete Spell in the More menu, which asks in a dialog naming the spell', async () => {
+      as('member');
+      await draw();
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'More for Fixture Working' }));
+      fireEvent.click(await screen.findByRole('menuitem', { name: 'Delete' }));
+      expect(screen.getByRole('dialog', { name: 'Delete Spell' })).toHaveTextContent(
+        'Fixture Working',
+      );
+    });
+
+    it('shows a viewer no Delete, though they read the same spell', async () => {
+      as('viewer');
+      await draw();
+      expect(
+        screen.getByRole('heading', { level: 1, name: 'Fixture Working' }),
+      ).toBeInTheDocument();
+      // Print is the viewer's one choice, so it is a button and there is no menu to hold a Delete.
+      expect(screen.getByRole('button', { name: 'Print Fixture Working' })).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'More for Fixture Working' }),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
+    });
+  });
+
+  it('is the 404 when the guard refuses a non-member', async () => {
+    requireCovenMembership.mockRejectedValue(new Error('NEXT_NOT_FOUND'));
+    await expect(Page(params())).rejects.toThrow('NEXT_NOT_FOUND');
+    expect(readSpell).not.toHaveBeenCalled();
+  });
+
+  // The preconditions are the service's: it throws NotFound for another member's private spell
+  // and for another coven's, Forbidden for a non-member. Either is the page's 404.
+  it.each([new NotFound('No such spell in this coven'), new Forbidden('no')])(
+    'is the 404 when the service refuses the spell (%s)',
+    async (refusal) => {
+      readSpell.mockRejectedValue(refusal);
+      await expect(Page(params('someone-elses-private'))).rejects.toThrow('NEXT_NOT_FOUND');
+      expect(readSpell).toHaveBeenCalledWith(session, COVEN.id, 'someone-elses-private');
+      expect(stepsOfSpells).not.toHaveBeenCalled();
+    },
+  );
+
+  it('lets any other failure through rather than calling it a 404', async () => {
+    readSpell.mockRejectedValue(new Error('database down'));
+    await expect(Page(params())).rejects.toThrow('database down');
+  });
+
+  it('titles the tab by the spell, Untitled Spell for a draft with none', async () => {
+    expect(await generateMetadata(params())).toEqual({ title: 'Fixture Working' });
+    readSpell.mockResolvedValue({ ...SPELL, title: null, status: 'draft' });
+    expect(await generateMetadata(params())).toEqual({ title: 'Untitled Spell' });
+  });
+});

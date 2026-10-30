@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/alder-buckthorn-frangula-alnus
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Frangula alnus
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-frangula-alnus
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Frangula alnus", Walker, A., 2018, e.T164056A68082189'

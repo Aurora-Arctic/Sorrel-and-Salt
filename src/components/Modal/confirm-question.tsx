@@ -8,18 +8,9 @@ import { DiscardQuestion } from './discard';
 import type { ConfirmQuestionProps } from './types';
 
 /**
- * A form's yes-or-no question over itself (MB.115), written once for the
- * forms that each drew their own: "Delete "Fixture Healing"? …" with Delete,
- * destructive and busy "Deleting" until it is answered, and Keep It, the safe
- * answer the focus lands on. A `ConfirmOverlay`, so it is asked in the modal
- * over the form, centred however far the form is scrolled.
- *
- * Given the form's discard guard, it also settles which question shows: the
- * unsaved changes' while that one asks, since they are what a way out would
- * lose, and its own only while `asked`. And when `onConfirm` rejects, it
- * reads the refusal, the server's first sentence, and hands it to
- * `onRefused` for the form's alert: not a bad value in a box, but a refusal
- * naming its remedy (DESIGN.md §7).
+ * A form's yes-or-no question over itself: Delete (destructive, busy until answered) and Cancel,
+ * the safe answer the focus lands on. With the discard guard it yields to the unsaved changes'
+ * question; a rejected `onConfirm` hands the server's first sentence to `onRefused` (DESIGN.md §7).
  */
 export function ConfirmQuestion({
   question,
@@ -29,7 +20,7 @@ export function ConfirmQuestion({
   confirmLabel = 'Delete',
   busyLabel = 'Deleting',
   tone = 'destructive',
-  keepLabel = 'Keep It',
+  keepLabel = 'Cancel',
   busy,
   onConfirm,
   also,
@@ -88,8 +79,7 @@ export function ConfirmQuestion({
 }
 
 /**
- * Said, as a warning notice, in a confirmation shown over a form whose page
- * goes with the answer: Make It Ours's over the Annotate dialog (M8.17; the
- * owner's words, 2026-10-20).
+ * Said, as a warning notice, in a confirmation over a form whose page goes with the answer (Make It
+ * Ours's over the Annotate dialog).
  */
 export const UNSAVED_CHANGES_LOST = 'Changes you have not saved are lost.';

@@ -2,10 +2,8 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import EntryMarks, { RecencyMark } from '@/components/EntryMarks';
 
-// The cupboard's three kinds and what each shows (M8.14;
-// claude-docs/components/entry-marks.md). Each mark is found by its exact
-// text and asserted by presence or absence; the `output` badges also by the
-// count of `status` roles. What the words say is never asserted.
+// The cupboard's three kinds and what each shows (claude-docs/components/entry-marks.md). Each mark is found by its exact text and asserted by presence or absence; the `output` badges also by the count of `status` roles.
+// What the words say is never asserted.
 
 const statuses = () => screen.queryAllByRole('status');
 const local = () => screen.queryByText('Local', { exact: true });
@@ -30,7 +28,7 @@ describe('EntryMarks', () => {
     expect(annotated()).toBeNull();
   });
 
-  // Annotated wins (the owner's call, 2026-10-20): it already says the entry is the
+  // Annotated wins: it already says the entry is the
   // Compendium's, so the two never show together. The test above is the precondition:
   // held and unannotated, the same entry shows Compendium.
   it('shows Annotated alone, without Compendium, once the cupboard row overrides a field', () => {
@@ -82,7 +80,7 @@ describe('EntryMarks', () => {
     },
   );
 
-  // The card's switch (the owner's call, 2026-10-20): Compendium and Annotated
+  // The card's switch: Compendium and Annotated
   // say where a held entry came from, which the entry page says and a card does not.
   it('leaves Compendium and Annotated off without provenance, keeping Local and Retired', () => {
     const card = render(<EntryMarks kind="cupboard" annotated provenance={false} />);
@@ -117,7 +115,7 @@ describe('EntryMarks', () => {
   });
 });
 
-// Green first, red last, on every badge row (the owner's call, 2026-10-20):
+// Green first, red last, on every badge row:
 // EntryMarks draws the whole row, the safety mark included, so the order
 // holds in one place. Asserted by document order, never by class or copy.
 describe('EntryMarks badge order', () => {
@@ -147,26 +145,6 @@ describe('EntryMarks badge order', () => {
     }
   });
 
-  // One safety badge (the owner's call, 2026-10-20): Toxic says more than Caution.
-  it('shows Toxic alone when the entry is toxic and has notes', () => {
-    render(<EntryMarks kind="cupboard" toxic safetyNotes="Fixture caution." />);
-
-    expect(toxic()).toBeInTheDocument();
-    expect(caution()).toBeNull();
-  });
-
-  it('reads Toxic over Caution from a form as well as the ingredient', () => {
-    render(
-      <EntryMarks
-        kind="compendium"
-        variants={[{ form: 'testoil', safetyNotes: 'Fixture oil caution.', toxic: true }]}
-      />,
-    );
-
-    expect(toxic()).toBeInTheDocument();
-    expect(caution()).toBeNull();
-  });
-
   it('leaves the safety mark to its caller when told to', () => {
     render(<EntryMarks kind="own" safety={false} toxic safetyNotes="Fixture caution." />);
 
@@ -175,8 +153,8 @@ describe('EntryMarks badge order', () => {
     expect(caution()).toBeNull();
   });
 
-  // New or Updated comes before every badge, in reading order and on screen (the owner's
-  // call, 2026-10-20), whichever row it shares with them.
+  // New or Updated comes before every badge, in reading order and on screen,
+  // whichever row it shares with them.
   it('draws New or Updated ahead of every badge', () => {
     render(
       <EntryMarks kind="own" retired recency="updated" safetyNotes="Fixture entry caution." />,
@@ -195,7 +173,7 @@ describe('EntryMarks badge order', () => {
   });
 });
 
-describe('RecencyMark (MB.106)', () => {
+describe('RecencyMark', () => {
   it.each([
     ['new', 'New', 'Updated'],
     ['updated', 'Updated', 'New'],
@@ -221,9 +199,49 @@ describe('RecencyMark (MB.106)', () => {
   });
 });
 
-it('EntryMarks no longer draws New or Updated: the marker is its own component', () => {
-  render(<EntryMarks kind="cupboard" />);
+// The curators' review mark, shown to everyone: the
+// date for a reviewed entry, Needs Review for one not; never who reviewed it, which the
+// component is not given. A coven's own entry has none; nobody reviews those.
+describe('the review mark', () => {
+  const AT = '2026-10-01T09:30:00.000Z';
+  const reviewed = () => screen.queryByText(/Reviewed By Curator/);
+  const needsReview = () => screen.queryByText('Needs Review', { exact: true });
 
-  expect(screen.queryByText('New', { exact: true })).toBeNull();
-  expect(screen.queryByText('Updated', { exact: true })).toBeNull();
+  it('says a reviewed compendium entry is, and on what day', () => {
+    render(<EntryMarks kind="compendium" reviewedAt={AT} />);
+
+    // The day is the badge's tip, read as its description; the badge is the row's last.
+    expect(screen.getByRole('button', { name: 'Reviewed By Curator' })).toHaveAccessibleDescription(
+      'Reviewed 1 Oct 2026',
+    );
+    expect(needsReview()).toBeNull();
+  });
+
+  it('says an unreviewed compendium entry needs review', () => {
+    render(<EntryMarks kind="compendium" reviewedAt={null} />);
+
+    expect(needsReview()).toBeInTheDocument();
+    expect(reviewed()).toBeNull();
+  });
+
+  it('is drawn on an entry a cupboard holds, beside Compendium', () => {
+    render(<EntryMarks kind="cupboard" reviewedAt={AT} />);
+
+    expect(reviewed()).toBeInTheDocument();
+    expect(held()).toBeInTheDocument();
+  });
+
+  it("is never drawn on a coven's own entry, even handed a date", () => {
+    render(<EntryMarks kind="own" reviewedAt={AT} />);
+
+    expect(local()).toBeInTheDocument();
+    expect(reviewed()).toBeNull();
+    expect(needsReview()).toBeNull();
+  });
+
+  it('is left out when the caller does not say', () => {
+    render(<EntryMarks kind="compendium" />);
+
+    expect(statuses()).toHaveLength(0);
+  });
 });

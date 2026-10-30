@@ -2,19 +2,13 @@
 @use '../../scss/mixins' as *;
 @use './sorrel' as *;
 
-// Each photograph is tone and shape, not a picture: a grey image whose alpha
-// is the subject, with the ground it was shot on transparent. The theme
-// decides how the grey meets the page — `screen` lifts it out of soot,
-// `multiply` sinks it into parchment — so the salt is the bright thing and
-// the wood the dark thing on both, and nothing reads inverted. Each corner
-// is two of these, one per blend, and the theme tokens fade one out as the
-// other comes in. `z-index: -1` on a body child paints it above the page
-// colour and beneath every in-flow element
-// (claude-docs/components/backdrop.md, "Stacking").
+// Each photograph is a grey image whose alpha is the subject; the theme's blend (`screen` or `multiply`) and token fades pick the layer shown.
+// `z-index: -1` on a body child paints above the page colour and beneath every in-flow element
+// (claude-docs/components/backdrop.md, "The image is tone and shape, not a picture" and "Stacking").
 .backdrop {
   position: fixed;
   z-index: -1;
-  width: calc(var(--backdrop-width, clamp(8.75rem, 17.5vw, 13.75rem)) * var(--backdrop-scale, 1));
+  width: calc(var(--backdrop-width, #{$ornament-width}) * var(--backdrop-scale, 1));
   pointer-events: none;
   background-size: 100% 100%;
   background-repeat: no-repeat;
@@ -41,13 +35,9 @@
   opacity: $ornament-multiply;
 }
 
-// The images sit beside this file and are imported through it, so Next serves
-// them from /_next/static/media under a content hash: a rebuilt image is a
-// new URL, and no cache can keep showing the old one. Each keeps its
-// photograph's own proportions; `background-size: 100% 100%` relies on the
-// box matching them. The sorrel runs at three quarters of the
-// shared width: its subject fills more of its frame than the salt does. Its
-// shape and place are in _sorrel.scss, shared with the copy the search row draws.
+// The images are imported through this file so Next serves them under a content hash; each keeps its own proportions, which `background-size: 100% 100%` relies on.
+// The sorrel runs at three quarters of the salt's width; its shape and place are in _sorrel.scss
+// (claude-docs/components/backdrop.md, "Served under a content hash" and "Size and placement").
 .backdrop--sorrel {
   @include sorrel-shape;
 }
@@ -79,4 +69,34 @@
 // wrapper class is the hook, so the layout needs no route awareness.
 body:has(.welcome-page) .backdrop {
   --backdrop-width: clamp(20rem, 47.5vw, 45rem);
+}
+
+// On an entry page (a recipe, an ingredient) the ornaments leave their fixed corners for a band
+// kept empty at the page's foot, so no text ever passes beneath them; a recipe or entry inside a
+// dialog leaves the page behind it alone.
+body:has(.spell-recipe:not(dialog *), .ingredient-entry:not(dialog *)) {
+  position: relative;
+  padding-block-end: calc(#{$ornament-width} * 2 / 3 + #{space(4)});
+
+  .backdrop {
+    position: absolute;
+  }
+
+  .backdrop--sorrel {
+    top: auto;
+    bottom: 0;
+    animation: none;
+  }
+
+  .backdrop--salt {
+    bottom: 0;
+  }
+
+  // The section bar covers the body's last `$bottom-bar-height`; the band rises above it into the
+  // room the shell already keeps clear of it.
+  @media (max-width: #{$shell-phone-width}) {
+    &:has(.section-nav) :is(.backdrop--sorrel, .backdrop--salt) {
+      bottom: calc(#{$bottom-bar-height} + env(safe-area-inset-bottom, 0px));
+    }
+  }
 }

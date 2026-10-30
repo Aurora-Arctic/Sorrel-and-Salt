@@ -14,7 +14,7 @@ import DetailsDialog from '../../../components/IngredientEntry/details-dialog';
 import { EDIT_ENTRY_EYEBROW } from '../../../components/IngredientEntry/edit-heading';
 import IngredientSummary from '../../../components/IngredientEntry/summary';
 import { RouteModalProvider } from '../../../components/Modal/route-modal-provider';
-import { Forbidden } from '../../../lib/errors';
+import { Forbidden, NotFound } from '../../../lib/errors';
 import { listJsonLd } from '../../../lib/json-ld';
 import { publicPageMetadata } from '../../../lib/page-metadata';
 import { entryRecency } from '../../../lib/entry-recency';
@@ -22,9 +22,11 @@ import { pagerHrefs } from '../../../lib/list-href';
 import { readPageCursors } from '../../../lib/numbered-page';
 import { CARD_PAGE_SIZE } from '../../../lib/pagination';
 import { single } from '../../../lib/search-params';
+import PageHeader from '../../../components/PageHeader';
+import ReviewMark from '../../../components/IngredientEntry/review-mark';
 import { getSession } from '../../../lib/request-session';
 import { viewerIfSignedIn } from '../../../lib/viewer';
-import { heldCompendiumEntryIdsIn } from '../../../modules/ingredients';
+import { heldCompendiumEntryIdsIn, readCompendiumReview } from '../../../modules/ingredients';
 import { covensHolding, plusCovensOf } from '../../plus-covens';
 import CompendiumDialog from '../../(shell)/admin/compendium/compendium-dialog';
 import { readEntryStock, stockKey } from '../../entry-stock';
@@ -37,37 +39,21 @@ import {
   readCategories,
   readCompendium,
   readCompendiumDetails,
+  readCompendiumHeldIn,
   readDeities,
   readFacets,
+  readFacetsHeldIn,
   readFormIcons,
 } from '../../compendium-reads';
 import type { PublicCompendiumPageProps, PublicCompendiumSearchParams } from './types';
 
-// The compendium, for anyone (M8.18; MB.80): readable signed out and indexable. The (public)
-// layout owns `<main>`, so this renders none. The list is drawn per request, over the cached
-// reads (`readCompendium` and the rest take no session), so every card and every link is in
-// the server HTML. The viewer is asked only for the foot of each card, and never redirects.
-//
-// A curator (`canCurate`) also gets Edit on each card, which opens the compendium's edit dialog
-// over the results from `?edit=<slug>`, the admin Compendium's, and closes back to the same
-// search (M8.17). Only once the viewer is known to curate is `?edit=` read at all: for anyone
-// else it opens nothing and reads nothing. The list's reads stay the cached, sessionless ones,
-// keyed by the address alone, whoever asks (rule 6).
-//
-// The address carries the admin list's filters, bar two: No Refs and No Form are the curators'
-// to-do lists, so `?withoutReferences=1` and `?withoutForms=1` are dropped before the table
-// reads them, and list what the unfiltered page lists.
-//
-// Each card's Quick Look, for anyone, opens the entry's details over the results from
-// `?entry=<id>` (M12.5), read by id with no session through the public entry page's cached read,
-// so the compendium as the compendium has it, with no coven's label, annotations or held
-// state. An id that names no compendium entry, a coven's own included, opens nothing and says
-// nothing: the page is the page without it. A curator's Edit in the details opens the edit
-// dialog over them, and closes back to them.
+// The compendium, readable signed out and indexable. The (public) layout owns `<main>`, so this
+// renders none. Drawn per request over the cached, sessionless reads; the viewer is asked only for
+// each card's foot. What the address does: claude-docs/components/compendium-list.md, "The compendium page".
 
 /** The address as the table reads it: with the curators' own filter taken out. */
 const publicParams = (params: PublicCompendiumSearchParams): PublicCompendiumSearchParams => {
-  const { withoutReferences: _refs, withoutForms: _forms, ...rest } = params;
+  const { withoutReferences: _refs, withoutForms: _forms, reviewed: _reviewed, ...rest } = params;
   return rest;
 };
 
@@ -79,12 +65,7 @@ const isFiltered = (params: PublicCompendiumSearchParams) =>
   JSON.stringify(COMPENDIUM_PARAMS.read(publicParams(params))) !==
   JSON.stringify(COMPENDIUM_PARAMS.read({}));
 
-/**
- * A filtered view is a thin copy of the page: kept out of search results, with the unfiltered
- * page as the canonical address. The unfiltered list, and its pages, stay indexable. Every
- * view names the bare address as canonical: a canonical never carries a query string, and
- * the sitemap reaches each entry the later pages list.
- */
+/** A filtered view is a thin copy: kept out of search results, with the unfiltered page canonical. */
 export async function generateMetadata({
   searchParams,
 }: PublicCompendiumPageProps): Promise<Metadata> {
@@ -96,9 +77,8 @@ export async function generateMetadata({
 }
 
 /**
- * Which of these entries each of the viewer's writable covens already holds, by coven id. Per
- * viewer, so read here and never inside the cached compendium read (rule 6). A refusal reads as
- * nothing held: the plus is then offered, and the add itself says no.
+ * Which entries each of the viewer's covens holds, by coven id. Per viewer, never in the cached
+ * read (rule 6). A refusal reads as nothing held; the add itself says no.
  */
 async function heldEntryIds(workspaceIds: readonly string[], ids: readonly string[]) {
   const session = await getSession();
@@ -124,9 +104,13 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
   };
   const variables = JSON.stringify(COMPENDIUM_PARAMS.variables(filter, lookups));
   const entryId = single(params.entry);
+  // A coven picked under In My Covens, or Not In, by someone signed in: the reads narrowed to it.
+  const session = filter.covens.length > 0 || filter.covensNot ? await getSession() : null;
   const [page, counts, formIcons, viewer, shown] = await Promise.all([
-    readCompendium(variables, after, before, CARD_PAGE_SIZE),
-    readFacets(variables),
+    session
+      ? readCompendiumHeldIn(session, variables, after, before, CARD_PAGE_SIZE)
+      : readCompendium(variables, after, before, CARD_PAGE_SIZE),
+    session ? readFacetsHeldIn(session, variables) : readFacets(variables),
     readFormIcons(),
     viewerIfSignedIn(),
     entryId ? readCompendiumDetails(entryId) : undefined,
@@ -144,40 +128,59 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
   const hereWith = (edit: string) => compendiumHref(here, { edit }, PUBLIC_COMPENDIUM_PATH);
   const listWith = (edit: string) => compendiumHref(list, { edit }, PUBLIC_COMPENDIUM_PATH);
   const detailed = shown?.entry;
-  // The viewer's own covens that hold the open entry, for the details' links (M12.5) and its plus
-  // (M9.12): the one held read, per request and never inside the cached details read (rule 6).
+  // The viewer's own covens that hold the open entry, for the details' links and plus: the one
+  // held read, per request and never inside the cached details read (rule 6).
   const holding = detailed ? await covensHolding(detailed.id) : [];
   const detailsPlus = detailed ? await plusCovensOf(holding) : undefined;
-  // An old address opens the entry at its new one, keeping the search (MB.82).
+  // An old address opens the entry at its new one, keeping the search.
   if (edited?.kind === 'moved') redirect(hereWith(edited.slug));
   const editing = edited?.kind === 'entry' ? edited : undefined;
+  // The review switch's read, for a curator or admin only: per viewer, never inside the cached
+  // reads, so no review date reaches anyone else from here. The entry's own badge is in the cached read.
+  const reviewOf = async (id: string | undefined) => {
+    if (!canEdit || !id) return undefined;
+    const curator = await getSession();
+    if (!curator) return undefined;
+    try {
+      const review = await readCompendiumReview(curator, id);
+      return { reviewedAt: review?.reviewedAt.toISOString() ?? null };
+    } catch (error) {
+      if (error instanceof Forbidden || error instanceof NotFound) return undefined;
+      throw error;
+    }
+  };
+  // Nothing is awaited for anyone who cannot curate.
+  const [detailsReview, editReview] =
+    canEdit && (detailed || editing)
+      ? await Promise.all([reviewOf(detailed?.id), reviewOf(editing?.id)])
+      : [undefined, undefined];
   const chips = await readCardCategories(page.edges.map(({ node }) => node.id));
   const facets = compendiumFacetCounts(counts, {
     formIcons,
     deities: new Map(deities.map(({ id, ...deity }) => [id, deity])),
     categories: new Map(categories.map((category) => [category.id, category])),
   });
-  // Who may add, and to which covens: a role that may create an ingredient and stock it
-  // (`canWrite`, set in `viewerFor` from the per-role statement). The compendium names no coven
-  // in its address, so the default is M8.16's choice for a page without one: the first the viewer
-  // may write in, which the plus adds to at once when it is the only one, and which the picker
-  // starts on when there are several. A viewer-only account has none, and neither has a visitor
-  // with no account, who signs in through the header.
+  // Who may add, and to which covens: `canWrite` (set in `viewerFor`). The compendium names no coven
+  // in its address, so the default is the first the viewer may write in. A viewer-only account and a
+  // visitor have none. Every coven of the viewer's, any role, serves In My Covens and each plus.
+  const mine = viewer?.workspaces.map(({ id, name }) => ({ id, name })) ?? [];
   const writable = viewer?.workspaces.filter(({ canWrite }) => canWrite) ?? [];
   const covens = writable.map(({ id, name }) => ({ id, name }));
   const defaultCoven = writable[0];
   // What the role in each of those covens permits, for the three dots on the cards and in the
   // window: one read, per request, for both, and none for a visitor or a viewer.
   const cardCovens = defaultCoven ? await readCardCovens(writable) : [];
+  // Asked of every coven, not only the writable ones, for the holding count; read only where
+  // there is a plus or a check to count on.
   const held = defaultCoven
     ? await heldEntryIds(
-        covens.map(({ id }) => id),
+        mine.map(({ id }) => id),
         page.edges.map(({ node }) => node.id),
       )
     : undefined;
-  // The stock Edit Stock opens with (the owner's call, 2026-10-21): the forms and jars of each
-  // entry a coven holds where its role may update stock, for the cards and the open entry
-  // together. One read per service for the whole page, per viewer (rule 6).
+  // The stock Edit Stock opens with: the forms and jars of each entry a coven holds where its role
+  // may update stock, for the cards and the open entry together. One read per service, per viewer
+  // (rule 6).
   const stockers = new Set(cardCovens.filter(({ canStock }) => canStock).map((c) => c.workspaceId));
   const stock = await readEntryStock([
     ...page.edges.flatMap(({ node }) =>
@@ -218,9 +221,12 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
         href: compendiumHref({ ...list, entry: node.id }, undefined, PUBLIC_COMPENDIUM_PATH),
         heading: detailsHeading(node),
       },
-      // The check shows only where every coven holds it (a mark, not a link: the owner’s call,
-      // 2026-10-20).
-      ...(defaultCoven && { held: heldIn.length === writable.length, heldIn }),
+      // The check shows only where every coven holds it, as a mark rather than a link.
+      ...(defaultCoven && {
+        held: heldIn.length === writable.length,
+        heldIn,
+        holding: mine.filter(({ id }) => held?.get(id)?.has(node.id)).map(({ name }) => name),
+      }),
       // The three dots: the covens that hold it and let the viewer annotate, make it theirs or
       // remove it. None for a visitor, a viewer and a coven without the entry.
       places: cardPlacesOf(
@@ -248,17 +254,13 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
           dangerouslySetInnerHTML={{ __html: listJsonLd() }}
         />
       )}
-      {/* A head as the coven pages carry (MB.119): the eyebrow names the section, the lede says
-          what it is for. A `header` inside `main` is no banner landmark, and takes the layout's
-          space beneath it (signed off in MB.120, 2026-10-20). */}
-      <header className="header">
-        <p className="eyebrow">Reference</p>
-        <h1>Compendium</h1>
-        <p className="lede">
-          Ingredients for spellwork: their formal and folk names, categories, deities and forms,
-          with the sources behind them.
-        </p>
-      </header>
+      {/* A public page, so its head carries an eyebrow naming the section and a lede saying
+          what it is for, where the app's list pages have the heading alone. */}
+      <PageHeader
+        eyebrow="Reference"
+        title="Compendium"
+        lede="Ingredients for spellwork: their formal and folk names, categories, deities and forms, with the sources behind them."
+      />
       {missing && <MissingNotice noun="compendium entry" />}
       <CompendiumCards
         entries={entries}
@@ -268,15 +270,17 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
         vocabulary={{ deities, formIcons: Object.fromEntries(formIcons) }}
         position={page.position}
         total={page.totalCount}
+        cursor={{ after, before }}
         action={action}
         workspaceId={defaultCoven?.id}
         covens={covens}
+        myCovens={mine}
         {...pagerHrefs(page.pageInfo, (cursor) =>
           compendiumHref({ ...filter, ...cursor }, undefined, PUBLIC_COMPENDIUM_PATH),
         )}
       />
       {/* The details a Quick Look opens, in their own place beneath the edit dialog's, so a
-          curator's Edit in them opens over them (M12.5). */}
+          curator's Edit in them opens over them. */}
       <DetailsDialog
         closeHref={compendiumHref(list, undefined, PUBLIC_COMPENDIUM_PATH)}
         opened={
@@ -286,6 +290,11 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
             marks: detailsMarks(shown),
             pageHref: `/compendium/ingredients/${detailed.slug}` as Route,
             ...(detailsPlus && { plus: detailsPlus, ingredientId: detailed.id }),
+            ...(detailsReview && {
+              reviewLine: (
+                <ReviewMark ingredientId={detailed.id} reviewedAt={detailsReview.reviewedAt} />
+              ),
+            }),
             ...(canEdit && {
               editAction: {
                 href: hereWith(detailed.slug),
@@ -311,7 +320,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
         }
       />
       {canEdit && (
-        // Rendered for a curator whatever the address opens, so Edit opens it at once (M9.18).
+        // Rendered for a curator whatever the address opens, so Edit opens it at once.
         <CompendiumDialog
           place={here}
           path={PUBLIC_COMPENDIUM_PATH}
@@ -319,6 +328,12 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
             editing && {
               heading: editHeading(editing.values, EDIT_ENTRY_EYEBROW),
               entry: { id: editing.id, values: editing.values },
+              ...(editReview && {
+                review: {
+                  reviewed: editReview.reviewedAt !== null,
+                  reviewedAt: editReview.reviewedAt,
+                },
+              }),
             }
           }
         />

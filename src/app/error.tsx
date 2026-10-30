@@ -3,13 +3,9 @@
 import Link from 'next/link';
 import ErrorPage from '../components/ErrorPage';
 
-// The boundary for an error thrown while a page renders, with the 500 a
-// server error sends. Next's own redirect, `notFound()` and `forbidden()`
-// signals never reach an `error.tsx`, so a guard's redirect is not swallowed
-// here. Only the digest is shown: in production Next strips the message and
-// stack from a server error, and this page does not print either one
-// (claude-docs/components/error-page.md). `(shell)/error.tsx` re-exports it
-// so a signed-in page keeps the shell's bar.
+// The boundary for an error thrown while a page renders, with a 500. Next's redirect, `notFound()` and
+// `forbidden()` signals never reach it. Only the digest is shown, as production strips the message and
+// stack (claude-docs/components/error-page.md). `(shell)/error.tsx` re-exports it to keep the shell's bar.
 export default function ErrorBoundary({
   error,
   retry,

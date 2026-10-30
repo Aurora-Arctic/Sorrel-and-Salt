@@ -1,4 +1,4 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
@@ -21,10 +21,19 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 
-// Story 18's category half: the vocabulary's writes, which the site admin
-// makes and nobody else does, and the reads the admin page lists them by
-// (claude-docs/db/categories.md, "Category writes"). The seeded vocabulary
-// stays, so every row a test writes carries a name of its own.
+// The category writes, which only the site admin makes, and the reads the admin page lists them by (claude-docs/db/categories.md, "Category writes").
+// The seeded vocabulary stays, so every row a test writes carries a name of its own.
+
+// The page and count finders wrapped, passing through to the real ones, to see
+// whether a list reads at all. The filter that categories, forms and deities
+// share is proved here, once.
+const repository = vi.hoisted(() => ({ findCategoryPage: vi.fn(), findCategoryCount: vi.fn() }));
+vi.mock('@/db/repository', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/db/repository')>();
+  repository.findCategoryPage.mockImplementation(actual.findCategoryPage);
+  repository.findCategoryCount.mockImplementation(actual.findCategoryCount);
+  return { ...actual, ...repository };
+});
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -42,6 +51,8 @@ beforeAll(async () => {
 // Every row a test writes goes, so a name one test uses is free for the next:
 // the entries and their links, then the categories and groups named for it.
 beforeEach(async () => {
+  repository.findCategoryPage.mockClear();
+  repository.findCategoryCount.mockClear();
   await sql`truncate ingredients cascade`;
   await sql`delete from categories where name like 'Testcraft%'`;
   await sql`delete from category_groups where name like 'Fixture %'`;
@@ -53,16 +64,10 @@ const admin = asUser(E);
 // stands for every one (claude-docs/testing/acting-as-fixture-users.md): an
 // owner, whose workspace role is the highest and is still no site role.
 const NON_ADMINS = [['an owner of a coven', A]] as const;
-const CURATORS = [
-  ['the site admin', E],
-  ['a curator', F],
-] as const;
-
-it('is testing sessions whose site role is `user`, beside an admin', () => {
-  for (const [, user] of NON_ADMINS) expect(asUser(user).role).toBe('user');
-  expect(admin.role).toBe('admin');
-  expect(asUser(F).role).toBe('curator');
-});
+// A curator stands for both curation roles: assertSiteAdmin refuses a curator, so
+// a curator's success proves the write calls assertCurator, and that an admin
+// passes assertCurator is proved once in identity's site-admin tests.
+const CURATORS = [['a curator', F]] as const;
 
 function input(overrides: Partial<CategoryInput> = {}): CategoryInput {
   return { name: 'Testcraft', description: 'A category this test made', groupId, ...overrides };
@@ -87,10 +92,7 @@ const countNamed = async (name: string) => {
   return row.n as number;
 };
 
-/**
- * Files a fresh compendium entry, or W's own ingredient, under the category
- * named — by its label alone.
- */
+/** Files a fresh compendium entry, or W's own ingredient, under the category named, by its label alone. */
 const fileUnder = (category: string, name: string, workspaceId: string | null = null) =>
   insertIngredient(
     sql,
@@ -111,7 +113,7 @@ describe('listCategories', () => {
     // Why either could have been listed: both rows are there, the orphan live.
     expect((await rowOf(orphan)).deleted_at).toBeNull();
 
-    // The picker's order (MB.126): the group's name, then the category's.
+    // The picker's order: the group's name, then the category's.
     const expected = await sql<{ id: string }[]>`
       select c.id from categories c
       join category_groups g on g.id = c.group_id
@@ -210,7 +212,7 @@ describe('listCategories and countCategories under a filter', () => {
     ]);
   });
 
-  it('answers an empty page and a zero count for a group id that is not a uuid', async () => {
+  it('answers an empty page and a zero count for a group id that is not a uuid, reading nothing', async () => {
     await expect(
       listCategories({ groupId: 'not-a-uuid' }, { limit: 25, inverted: false }),
     ).resolves.toEqual([]);
@@ -218,6 +220,14 @@ describe('listCategories and countCategories under a filter', () => {
       totalCount: 0,
       countBefore: null,
     });
+    expect(repository.findCategoryPage).not.toHaveBeenCalled();
+    expect(repository.findCategoryCount).not.toHaveBeenCalled();
+
+    // Why it could have read: the same list with a real group id reads both.
+    await listCategories({ groupId }, { limit: 25, inverted: false });
+    await countCategories({ groupId }, undefined);
+    expect(repository.findCategoryPage).toHaveBeenCalled();
+    expect(repository.findCategoryCount).toHaveBeenCalled();
   });
 
   it('counts what the filtered page lists, and the rows before a page under it', async () => {
@@ -291,16 +301,24 @@ describe('createCategory', () => {
     },
   );
 
-  it.each(NON_ADMINS)('refuses %s, writing nothing', async (_who, user) => {
-    await expect(createCategory(asUser(user), input())).rejects.toThrow(Forbidden);
-    expect(await countNamed('Testcraft')).toBe(0);
-  });
+  it.each(NON_ADMINS)(
+    'refuses %s, writing nothing, and before reading the input, so a bad one earns the same refusal',
+    async (_who, user) => {
+      // Why it could have passed: the guard is all that refuses it. The user
+      // holds no site role, and the same input is written for a curator.
+      expect(asUser(user).role).toBe('user');
+      expect(asUser(F).role).toBe('curator');
 
-  it('refuses a non-admin before reading the input, so a bad one earns the same refusal', async () => {
-    await expect(createCategory(asUser(B), input({ name: '   ' }))).rejects.toBeInstanceOf(
-      Forbidden,
-    );
-  });
+      await expect(createCategory(asUser(user), input())).rejects.toThrow(Forbidden);
+      expect(await countNamed('Testcraft')).toBe(0);
+      await expect(createCategory(asUser(user), input({ name: '   ' }))).rejects.toBeInstanceOf(
+        Forbidden,
+      );
+
+      await createCategory(asUser(F), input());
+      expect(await countNamed('Testcraft')).toBe(1);
+    },
+  );
 
   it('refuses a name whose address a live category holds, on `name`, naming it', async () => {
     await seed('Testcraft Ward');
@@ -368,7 +386,7 @@ describe('updateCategory', () => {
     },
   );
 
-  // MB.171: the seed recognises its own rows by the key, so a renamed seeded
+  // The seed recognises its own rows by the key, so a renamed seeded
   // row must keep it or the next deploy reinserts the original beside it.
   it("keeps a seeded row's seed key through a rename", async () => {
     const [seeded] = await sql<{ id: string; seed_key: string }[]>`
@@ -514,7 +532,7 @@ describe('deleteCategory', () => {
     });
 
     // Two formal names under one label, since one formal name is one entry
-    // per tier (MB.216); the formal names tell them apart (MB.222).
+    // per tier; the formal names tell them apart.
     it('tells two entries sharing a label apart by their formal names', async () => {
       const id = await seed('Testcraft Namesakes');
       for (const canonicalName of ['Fixtura testalis', 'Fixtura alteralis']) {

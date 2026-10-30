@@ -1,6 +1,6 @@
 import { isObjectType } from 'graphql';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
+import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { schema } from '@/graphql/schema';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { sql, useRawClient } from '../../../support/db/probe-tables';
@@ -9,11 +9,8 @@ import { run } from '../../../support/graphql/run';
 
 useRawClient();
 
-// The transport's half of `Workspace.members` and `WorkspaceMember.user`
-// (M6.11): a member's name comes through MB.10's `usersById`, one read per
-// coven listed however many members it holds, and the refusal
-// reaches the wire as `FORBIDDEN`. Who may list a coven's members is the
-// service's, in tests/modules/coven/services/members.test.ts.
+// The transport's half of `Workspace.members` and `WorkspaceMember.user`: a member's name comes through `usersById`, one read per coven listed however many members it holds, and the refusal reaches the wire as `FORBIDDEN`.
+// Who may list a coven's members is the service's, in tests/modules/coven/services/members.test.ts.
 
 const repository = vi.hoisted(() => ({
   findCoMemberNamesIncludingSoftDeleted: vi.fn(),
@@ -132,6 +129,23 @@ describe('Workspace.members', () => {
   });
 });
 
+describe('Workspace.members(query:)', () => {
+  it('hands the query to the service, which answers only the members it matches', async () => {
+    const result = await run<{
+      workspace: { members: { edges: { node: { user: { id: string } } }[] } };
+    }>(
+      asUser(A),
+      `query ($id: ID!, $query: String) {
+        workspace(id: $id) { members(first: 10, query: $query) { edges { node { user { id } } } } }
+      }`,
+      { id: WORKSPACE_W_ID, query: B.name.slice(-3).toUpperCase() },
+    );
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data!.workspace.members.edges.map(({ node }) => node.user.id)).toEqual([B.id]);
+  });
+});
+
 describe('WorkspaceMember.invitedBy', () => {
   const INVITED = /* GraphQL */ `
     query {
@@ -214,10 +228,8 @@ describe('WorkspaceMember.user', () => {
   });
 });
 
-// The owner-only address (M11.19): its own field rather than a widened
-// `CoMember`, which every member reads. Who may read it is the service's, in
-// tests/modules/coven/services/members.test.ts; here, that a refusal reaches
-// the wire as FORBIDDEN, and one read per page of members.
+// The owner-only address is its own field rather than a widened `CoMember`, which every member reads. Who may read it is the service's (tests/modules/coven/services/members.test.ts);
+// here, a refusal reaches the wire as FORBIDDEN, and there is one read per page of members.
 describe('WorkspaceMember.email', () => {
   const EMAILS = /* GraphQL */ `
     query {
@@ -330,7 +342,7 @@ describe('WorkspaceMember.email', () => {
       }
     `;
     // Why this could have reached the roll: an admin reads anyone's covens
-    // (M9.19), so E is handed A's W.
+    // , so E is handed A's W.
     const covens = await run<{
       users: { edges: { node: { memberships: { workspace: { id: string } }[] } }[] };
     }>(
@@ -347,5 +359,41 @@ describe('WorkspaceMember.email', () => {
     expect(result.errors?.map((error) => error.extensions?.code)).toContain('FORBIDDEN');
     expect(JSON.stringify(result.data)).not.toContain(B.email);
     expect(repository.findMemberEmails).not.toHaveBeenCalled();
+  });
+});
+
+describe('Query.workspace', () => {
+  const BY_ID = /* GraphQL */ `
+    query ($id: ID!) {
+      workspace(id: $id) {
+        id
+        members(first: 10) {
+          edges {
+            node {
+              user {
+                id
+                name
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+  type ById = {
+    workspace: { id: string; members: { edges: { node: { user: { id: string } } }[] } };
+  };
+
+  it('lists a coven named by id to a member, and answers FORBIDDEN to a stranger', async () => {
+    const own = await run<ById>(asUser(A), BY_ID, { id: covenY });
+    expect(own.errors).toBeUndefined();
+    expect(own.data!.workspace.members.edges.map(({ node }) => node.user.id)).toEqual(
+      expect.arrayContaining([A.id, D.id]),
+    );
+
+    // B sits in W beside A but not in Y, which A's own call just read.
+    const stranger = await run(asUser(B), BY_ID, { id: covenY });
+
+    expect(stranger.errors?.map((error) => error.extensions?.code)).toEqual(['FORBIDDEN']);
   });
 });

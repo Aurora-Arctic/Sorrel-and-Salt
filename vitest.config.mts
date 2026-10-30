@@ -23,14 +23,17 @@ export const DB_FREE = [
   'tests/modules/**/validation/**',
   'tests/db/audit.test.ts',
   'tests/db/connection-url.test.ts',
-  'tests/db/seed/compendium-literals.test.ts',
+  'tests/db/seed/compendium-files.test.ts',
+  'tests/db/seed/compendium/**',
   'tests/modules/coven/schema/workspaces-schema.test.ts',
   'tests/modules/coven/services/access-control.test.ts',
   'tests/modules/identity/services/site-admin.test.ts',
   'tests/modules/identity/services/workshop-access.test.ts',
+  'tests/modules/ingredients/schema/ingredient-enums.test.ts',
   'tests/modules/ingredients/schema/units.test.ts',
   'tests/modules/ingredients/services/cupboard-entries.test.ts',
   'tests/modules/ingredients/units/**',
+  'tests/modules/grimoire/categories/**',
 ];
 
 const ROOT = fileURLToPath(new URL('.', import.meta.url));
@@ -139,9 +142,9 @@ export default defineConfig({
     // runs at the top of a setup file, not in a hook
     // (claude-docs/ci/runner-budget.md, "Where a gate run's time goes").
     testTimeout: 20_000,
-    // Worker threads rather than Vitest's default forked processes: a file
-    // that is given a fresh worker pays a thread's start-up, not a process's
-    // (about 5 to 10% of a coverage run at three workers, measured on M11.24).
+    // Worker threads for every project but `dom`: a file given a fresh worker pays a thread's start-up,
+    // not a process's. `dom` sets forked processes of its own, since under threads its tests run 10 to 50
+    // times slower in a full run than alone.
     pool: 'threads',
     // Quiet under Claude Code, which sets `CLAUDECODE=1` in its shell and
     // nothing else does: a session reads the per-file coverage table and the
@@ -209,6 +212,7 @@ export default defineConfig({
         extends: true,
         test: {
           name: 'dom',
+          pool: 'forks',
           // happy-dom, chosen over jsdom for speed (M11.25: claude-docs/design-decisions/m11.25-plan.md);
           // what it leaves out is declared in tests/support/setup-dom.ts.
           environment: 'happy-dom',

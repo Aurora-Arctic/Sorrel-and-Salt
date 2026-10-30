@@ -1,20 +1,21 @@
 ## The standard scenario (M1.22)
 
 `src/db/seed/standard.ts` implements DESIGN.md §"Seed data"'s second scenario:
-six fixture users, workspaces W and X, and a populated compendium. It is the
+seven fixture users, workspaces W and X, and a populated compendium. It is the
 fixture every authorization test reads against, which is why the cast is fixed
 rather than generated — `asUser(A)` (M1.26, `tests/support/as-user.ts`, which
 re-exports this module's own `FIXTURE_USERS`) has to mean the same person in
 every suite, and an id a test can name beats one this run happened to produce.
 
-| User | Id      | Role      | Where                        |
-| ---- | ------- | --------- | ---------------------------- |
-| A    | `…0003` | `user`    | owner of W                   |
-| B    | `…0004` | `user`    | member of W                  |
-| C    | `…0005` | `user`    | viewer in W                  |
-| D    | `…0006` | `user`    | member of unrelated X        |
-| E    | `…0007` | `admin`   | no workspace at all          |
-| F    | `…0008` | `curator` | no workspace at all (M11.20) |
+| User | Id      | Role      | Where                                   |
+| ---- | ------- | --------- | --------------------------------------- |
+| A    | `…0003` | `user`    | owner of W                              |
+| B    | `…0004` | `user`    | member of W                             |
+| C    | `…0005` | `user`    | viewer in W                             |
+| D    | `…0006` | `user`    | member of unrelated X                   |
+| E    | `…0007` | `admin`   | no workspace at all                     |
+| F    | `…0008` | `curator` | no workspace at all (M11.20)            |
+| G    | `…0009` | `user`    | no workspace; email unverified (MB.268) |
 
 The ids continue the series `…0001` (the bootstrap user, MB.5) and `…0002`
 (`minimal`'s plain user) opened; W and X take `…0001-…0001` and `…0001-…0002`,
@@ -28,6 +29,8 @@ asserted by M6.6) is only assertable against an admin who is in none, and W and
 X sharing no member is what makes a cross-workspace denial test say something.
 
 **F is the curator (M11.20)**: the fixture that proves a curator reaches the compendium's writes and refuses the people ones, and, like E, belongs to no workspace. F is seeded with the flag `true`, since the CHECK that replaced MB.177's (`users_privileged_can_create_workspace`) refuses any non-`user` role without it.
+
+**Every fixture user is seeded with a verified email address (MB.268).** An unverified account reaches no page but `/account/email`, so an unverified fixture could not be used to browse the dev site signed in. The seed's system user (`…0001`) is the one unverified user, left so on purpose: it gives the dev site an account to try the unverified path with ([`seed-module.md`](seed-module.md), "minimal").
 
 **`canCreateWorkspace` follows the invite gate rather than convenience.** A–D
 are seeded `true` because each is in a workspace, and under §5 that is how the
@@ -117,16 +120,50 @@ be (MB.162); without it, as for `demo`'s coven entries, a form is typed. It
 keys on the entry and the folded form, `(ingredient_id, lower(form))`, the
 variant's unique index, through `insertMissingBy`: a variant an admin removed
 counts as present and is not restored, and one already there is not
-rewritten. `tests/db/seed/demo.test.ts` proves, after a `demo` run with
-`standard` inside it, that every seeded entry holds exactly the live variants
-its literal names, Rosemary's `Herb` and `Oil` among them, and that a second run writes no variant.
+rewritten. Every seeded entry holds exactly the live variants its literal
+names, Rosemary's `Herb` and `Oil` among them, and a second run writes no variant.
 
-### No cupboard rows
+### W's cupboard
 
-`standard` seeds no `workspace_compendium_entries` rows (M12.26), and no coven
-ingredients: W and X start with empty cupboards, so a test that wants an entry
-in one inserts the row itself (`tests/support/db/insert-cupboard-entry.ts`).
-`demo` seeds W's ([demo-scenario.md](demo-scenario.md)).
+`standard` seeds six `workspace_compendium_entries` rows for W, five of them
+annotated, so a member of W who opens those compendium entries sees the Annotate
+action and an annotated entry (`STANDARD_CUPBOARD` in `src/db/seed/standard.ts`,
+written by `insertMissingCupboardEntries`, which keys on the coven and the entry
+and ignores `deleted_at`, so a row the coven removed stays removed):
+
+| Entry (formal name)                 | Row says                                                                             |
+| ----------------------------------- | ------------------------------------------------------------------------------------ |
+| Rosemary (_Salvia rosmarinus_)      | label `Garden Rosemary`, a description                                               |
+| Ginger (_Zingiber officinale_)      | none: held and not annotated                                                         |
+| Mugwort (_Artemisia vulgaris_)      | label `Hedgerow Mugwort`, a safety note, celestial bodies `Moon` and `Neptune`       |
+| Lavender (_Lavandula angustifolia_) | a description, elements `air` and `water`, zodiac sign `Pisces`                      |
+| Comfrey (_Symphytum officinale_)    | a safety note                                                                        |
+| Sea Salt (_Sodium chloride_)        | label `Kitchen Salt`, elements `[]` (cleared on purpose), colours `grey` and `white` |
+
+Only compendium entries `standard` itself seeds can be named, since the curated
+shards are `demo`'s. X and every coven a test creates start with an empty
+cupboard, and no coven has any of its own ingredients, so a test that wants an
+entry in one inserts the row itself
+(`tests/support/db/insert-cupboard-entry.ts`). Until now `standard` seeded no
+cupboard rows (M12.26), so that tests start from an empty cupboard; a test that
+holds one of the six entries in W needs a coven of its own. `demo` adds German
+Chamomile to W's rows ([demo-scenario.md](demo-scenario.md)).
+
+### W's stock
+
+`standard` seeds seven jars of stock for W (`STANDARD_STOCK` in `src/db/seed/standard.ts`, written by `insertMissingStock` in `src/db/seed/coven-content.ts`), so the ingredients page's jar lines and Edit Stock button (M9.9) have something to show. Every jar sits on an entry in W's cupboard above, since a jar on a compendium variant needs its entry's cupboard row (M12.13, decision 11). Their ids are fixed in a block of their own, `…0003-…`; `demo` keeps `…0001`, `…0002`, `…0005` and `…0006` for its own jars ([demo-scenario.md](demo-scenario.md), "W's stock").
+
+| Ingredient (form) | Id      | Quantity | Why it is there                                                                 |
+| ----------------- | ------- | -------- | ------------------------------------------------------------------------------- |
+| Rosemary (Herb)   | `…0003` | 60 g     | The first of Rosemary's two jar lines, with a source.                           |
+| Rosemary (Oil)    | `…0004` | 45 ml    | Its second form, in a second dimension: two jar lines on one card.              |
+| Ginger (Root)     | `…0007` | 6 piece  | Counted rather than weighed, with a date acquired.                              |
+| Mugwort (Herb)    | `…0008` | 4 g      | Under the default 10 g threshold, so the Low badge shows.                       |
+| Lavender (Flower) | `…0009` | none     | Held and never weighed: no quantity, no unit, so "Unmeasured" and no threshold. |
+| Comfrey (Leaf)    | `…0010` | 30 g     | Under a threshold of its own (50 g) in place of the default 10 g.               |
+| Sea Salt (Salt)   | `…0011` | 500 g    | A well-stocked jar, with a source.                                              |
+
+A jar that sets no threshold gets its unit's default, from `defaultThreshold` in `src/modules/ingredients/validation/default-threshold.ts`, the rule `createStock` reads too. Idempotency is the pair the live-unique index guards, W and the variant, ignoring `deleted_at`, so a jar the coven threw out stays out and one it edited is not written over. A test that inserts a jar on one of these six variants in W meets that index, so it needs a coven of its own or a different form. X and every coven a test creates start with no stock.
 
 ### One transaction, every vocabulary
 
@@ -215,3 +252,31 @@ So a last pick deleted is live again after the reseed, under a new id at the
 same position; a first pick removed through the service, once the pick below
 has taken its position, is live again at the end of the list, the pick below
 unmoved.
+
+The pick's position is chosen so that a second run moves nothing. `insertMissingDeities`
+matches a pick on the case-folded name the row holds, not on the deity picked,
+over the live rows: a database that ran the earlier fill already holds these
+deities as typed names at these positions, and a pick beside each would take a
+position its typed twin holds. With `restoreDeleted` off it reads every row, so a
+deleted pick counts as present. A missing pick goes after every live pick of its
+entry, in the literal's order, not at its literal index, because the service
+renumbers the picks it keeps and a pick removed from anywhere but the end leaves
+its index held by the pick below. On an entry with no live pick that is the
+literal index.
+
+### Slug backfill
+
+`reslugIngredients` runs on every seed over its own entries. Each live entry's slug
+is re-derived and written where it differs, so a reseed with nothing to change
+writes nothing. A compendium entry's old slug is retired for the 180-day redirect.
+A slug another live row holds is left alone, so a reseed never fails on an
+admin's row.
+
+### Retired slugs
+
+`insertMissingRetiredSlugs` writes the two retired slugs described under "The
+compendium is awkward on purpose": Rosemary's old slug, which answers a 308, and
+Hidcote Lavender's, which shows Lavender with a notice that Hidcote Lavender moved
+away. Both are keyed on the entry and slug, so a reseed writes nothing. The rows'
+`retired_at` defaults to the run's instant, so the 180-day window runs from the
+last write.

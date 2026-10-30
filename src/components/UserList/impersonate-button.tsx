@@ -10,18 +10,15 @@ import {
 } from './impersonation';
 import type { ImpersonateButtonProps } from './types';
 
-// The row's Impersonate (MB.53), asking first as every other row action does
-// (MB.115, on the owner's call): acting as someone else is the table's one
-// dangerous control, so the modal says what it means and how it ends. Better
-// Auth's endpoint is the guard: it refuses a non-admin and an admin target
-// whatever this shows. A success swaps the session cookie, so the next page
-// is a full load as the user, the confirm busy until it opens.
+// The row's Impersonate, asking first: acting as someone else is the table's one dangerous control.
+// Better Auth's endpoint is the guard, refusing a non-admin and an admin target. A success swaps
+// the session cookie, so the next page is a full load as the user.
 
 const ImpersonateButton = ({ userId, name }: ImpersonateButtonProps): ReactElement => (
   <ConfirmedAction
     label="Impersonate"
     accessibleName={`Impersonate ${name}`}
-    openClass="btn btn--small btn--destructive"
+    openClass="btn btn--destructive btn--small"
     title="Impersonate User"
     question={impersonationQuestion(name)}
     busy="Impersonating"

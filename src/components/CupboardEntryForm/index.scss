@@ -1,9 +1,6 @@
-// What the annotate form draws beyond the form primitives (_primitives.scss),
-// which own its fields and label rows: Restore Original at the right end of a
-// field's label row (`.field__label-action`, as Copy From Ingredient stands in
-// the ingredient form). A text field's and a multi-select's label row is a
-// full-width flex row; a list's legend shrinks to its words by default, so it
-// is given the row's full width (the owner's call, 2026-10-19).
+// What the annotate form draws beyond the form primitives (_primitives.scss): Restore Original at the
+// right end of a field's label row (`.field__label-action`), and a list's legend given the row's full
+// width, as it shrinks to its words by default.
 .cupboard-form {
   .fieldset__legend {
     width: 100%;

@@ -64,6 +64,11 @@ created, and only when that sign-in's provider vouches for the address
   route and stamped as the user; the promotion writes no ledger row itself
   (MB.195; [`db/write-path.md`](../db/write-path.md)). MB.59's grant and
   revoke make the same kind of write, declared `admin`.
+- **Every admin grant also seats the owner of the demo coven**, in the same
+  `withAudit` as the role write (`writeSiteRoleGrant`): the promotion here, the
+  MB.59 grant and an accepted admin invitation. See
+  [`db/demo-coven-seed.md`](../db/demo-coven-seed.md), "How an admin gains and
+  loses the seat".
 - **Changing the variable** and redeploying promotes the new address at
   its next qualifying sign-in or verification, even if that account
   already exists. The previous primary admin keeps `role: 'admin'` and
@@ -469,9 +474,13 @@ the tests [`tests.md`](tests.md).
   the card, a verified account gets a quiet button to the account page,
   reading "Continue to Account" (["The account page"](#the-account-page-mb88) below), where
   the same field changes the address on a visit to the account.
-- **No other page shows an unverified account anything.** `requireSession()`
+- **The front page offers it directly.** `/` is public, and for an unverified
+  signed-in account its Continue points at `/account/email?next=<landing>`
+  rather than at a page that would send it there.
+- **No other protected page shows an unverified account anything.** The public
+  pages, `/` and the compendium, are open to it. `requireSession()`
   sends a session whose row is unverified to
-  `/account/email?next=<its own path>` from every page but that one
+  `/account/email?next=<its own path>` from every protected page but that one
   (`isEmailPage`, exact on the pathname), so the after-hook's landing is
   not the only way there: a bookmark, a back button or a typed URL all end
   on the email page until the address is proved. A link followed inside the
@@ -528,7 +537,7 @@ component docs are [`components/name-form.md`](../components/name-form.md),
   [`components/account-menu.md`](../components/account-menu.md)):
   Better Auth's own sign-out, then a full load of `/` (MB.63, moved by MB.7).
 - **The email page stays, for the flows that are not a visit to the
-  account.** Every unverified sign-in lands there, it is the only page a
+  account.** Every unverified sign-in lands there, it is the only protected page a
   provisional account can reach, a mailed link lands on its confirmed view,
   and a link opened from the wrong browser is explained there. Its way
   across, offered to a verified account, is a quiet "Continue to Account"
@@ -634,6 +643,13 @@ tasks that build the rest:
     Postgres's own column defaults apply rather than a second
     `'user'`/`false` literal in application code. It never sets `role`,
     whatever the address.
+- **`databaseHooks.user.create.after`** is the sign-up's second write, under the
+  same exemption: it inserts a `viewer` `workspace_members` row for the new user in
+  the demo coven, stamped by the user as their own row is, with `invited_by`
+  null. It finds the coven through `findDemoWorkspace` and does nothing where
+  there is none (the `minimal` scenario). It never throws: a failed insert is
+  logged with the user id and the demo coven seed's backfill seats the account
+  at its next run. It does not touch `canCreateWorkspace`.
 - **`user.additionalFields`** registers `role`, `canCreateWorkspace`,
   `verificationSentAt`, `createdBy` and `updatedBy` with Better Auth's user
   model: without it the adapter silently drops any key in the hook's data

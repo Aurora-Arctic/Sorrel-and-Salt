@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: 'Form Groups',
 };
 
-// The ingredient form groups (M5.6b), in the page shape every group vocabulary shares.
+// The ingredient form groups, in the page shape every group vocabulary shares.
 export default function AdminFormGroupsPage({ searchParams }: GroupRouteProps) {
   return GroupPage({ kind: 'form', searchParams });
 }

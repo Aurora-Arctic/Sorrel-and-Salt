@@ -1,3 +1,4 @@
+import type { Route } from 'next';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { useState } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -13,7 +14,7 @@ vi.mock('next/navigation', () => ({ usePathname: () => pathname(), useRouter: ()
 
 const { default: TabbedPage } = await import('@/components/TabbedPage');
 
-// A page in tabs (MB.115): its heading, a nav of links named for the page,
+// A page in tabs: its heading, a nav of links named for the page,
 // one per tab with the open one marked from the address, and the open tab's
 // content beneath (claude-docs/components/tabbed-page.md).
 
@@ -63,26 +64,8 @@ describe('TabbedPage', () => {
     expect(screen.getByText('Content')).toBeVisible();
   });
 
-  it("puts the tabs on the heading's line, between the heading and the action", () => {
-    render(
-      <TabbedPage title="People" tabs={TABS} action={<a href="/admin/users?pause">Pause</a>}>
-        <p>Content</p>
-      </TabbedPage>,
-    );
-
-    const heading = screen.getByRole('heading', { level: 1 });
-    const nav = screen.getByRole('navigation', { name: 'People' });
-    const action = screen.getByRole('link', { name: 'Pause' });
-    expect(nav.parentElement).toBe(heading.parentElement);
-    expect(heading.compareDocumentPosition(nav) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(nav.compareDocumentPosition(action) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  });
-
   it.each([
     ['/admin/users', ['/admin/users']],
-    ['/admin/invitations', ['/admin/invitations']],
-    // An address beneath a tab still marks it.
-    ['/admin/users/some-user', ['/admin/users']],
     // An address in none of the tabs marks none.
     ['/admin/compendium', []],
   ])('marks only the tab open at %s as the current page', (path, expected) => {
@@ -96,6 +79,35 @@ describe('TabbedPage', () => {
 
     expect(open()).toEqual(expected);
   });
+
+  // The grimoire's Drafts tab lies beneath Spells' address, so both are at the path on
+  // Drafts; the open tab is the most specific, while a tab stays open beneath its own address.
+  const NESTED = [
+    { href: '/coven/fixture-coven/grimoire' as Route, label: 'Spells' },
+    { href: '/coven/fixture-coven/grimoire/drafts' as Route, label: 'Drafts' },
+  ] as const;
+  it.each([
+    ['/coven/fixture-coven/grimoire/drafts', ['/coven/fixture-coven/grimoire/drafts']],
+    ['/coven/fixture-coven/grimoire/drafts/more', ['/coven/fixture-coven/grimoire/drafts']],
+    ['/coven/fixture-coven/grimoire', ['/coven/fixture-coven/grimoire']],
+    ['/coven/fixture-coven/grimoire/s1', ['/coven/fixture-coven/grimoire']],
+  ])(
+    'marks the most specific tab open at %s, when one tab lies beneath another',
+    (path, expected) => {
+      pathname.mockReturnValue(path);
+
+      render(
+        <TabbedPage title="Grimoire" tabs={NESTED}>
+          <p>Content</p>
+        </TabbedPage>,
+      );
+
+      const links = within(screen.getByRole('navigation', { name: 'Grimoire' })).getAllByRole(
+        'link',
+      );
+      expect(currentHrefs(links)).toEqual(expected);
+    },
+  );
 
   // Users is open; Invitations is pressed, and Next has not yet rendered it.
   const renderNavigating = () =>
@@ -186,16 +198,15 @@ describe('TabbedPage', () => {
     expect(users).not.toHaveAttribute('data-pressed');
   });
 
-  it.each([['ctrlKey'], ['metaKey'], ['shiftKey']] as const)(
-    'leaves a press with %s to the browser',
-    (key) => {
-      renderNavigating();
+  // Control, Meta and Shift all reach the one `opensElsewhere` check, which
+  // tests/lib/opens-elsewhere.test.ts proves; this proves the tab passes it.
+  it('leaves a press with a modifier key to the browser', () => {
+    renderNavigating();
 
-      fireEvent.click(tab('Invitations'), { [key]: true });
+    fireEvent.click(tab('Invitations'), { ctrlKey: true });
 
-      expect(router.push).not.toHaveBeenCalled();
-      expect(tabs().filter((link) => link.hasAttribute('aria-disabled'))).toEqual([]);
-      expect(within(panel()).getByRole('table', { name: 'Users' })).toBeVisible();
-    },
-  );
+    expect(router.push).not.toHaveBeenCalled();
+    expect(tabs().filter((link) => link.hasAttribute('aria-disabled'))).toEqual([]);
+    expect(within(panel()).getByRole('table', { name: 'Users' })).toBeVisible();
+  });
 });

@@ -1,10 +1,8 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-// The `/coven/[slug]` layout runs the coven guard on the slug in its own URL
-// segment and on nothing else. What the guard decides is
-// tests/lib/request-session.test.ts's and the service's; here it is mocked, to
-// prove the layout awaits it before rendering anything.
+// The `/coven/[slug]` layout runs the coven guard on the slug in its own URL segment and on nothing else.
+// The guard is mocked (tests/lib/request-session.test.ts's and the service's), to prove the layout awaits it before rendering anything.
 
 const requireCovenMembership = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireCovenMembership }));
@@ -53,14 +51,14 @@ describe('the /coven/[slug] layout', () => {
     );
 
     expect(requireCovenMembership).toHaveBeenCalledExactlyOnceWith('fixture-coven');
-    // The nav is the layout's, so every page beneath it has it without repeating it (M9.15).
+    // The nav is the layout's, so every page beneath it has it without repeating it.
     expect(screen.getByRole('navigation')).toBeInTheDocument();
     // The context row's lead: the switcher, on the coven the address names.
     expect(screen.getByRole('combobox', { name: 'Coven' })).toHaveTextContent('Fixture Coven');
     expect(screen.getByText('The page itself')).toBeInTheDocument();
   });
 
-  // M9.12: the switcher is the layout's and the page is its child, so the layout is what lets
+  // The switcher is the layout's and the page is its child, so the layout is what lets
   // the page tell the switcher where it also opens.
   it('lets a page beneath it tell the switcher which covens it opens in', async () => {
     requireCovenMembership.mockResolvedValue(ADMITTED);
@@ -83,6 +81,44 @@ describe('the /coven/[slug] layout', () => {
     expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle/ingredients/some-id');
   });
 
+  describe('the demo notice', () => {
+    const admit = (role: string, demo: boolean) =>
+      requireCovenMembership.mockResolvedValue({
+        workspace: { ...ADMITTED.workspace, demo },
+        membership: { ...ADMITTED.membership, role },
+      });
+    // A warning on the page from the start is a status, so it never interrupts.
+    const noticeWith = (text: RegExp) =>
+      screen.queryAllByRole('status').find((el) => text.test(el.textContent ?? '')) ?? null;
+    const demoNotice = () => noticeWith(/This is a demo coven/);
+    const ownerNotice = () => noticeWith(/You own this coven as a site admin/);
+    const renderLayout = async () =>
+      render(
+        await CovenLayout({ children: <p>The page itself</p>, params: params('fixture-coven') }),
+      );
+
+    it('tells a viewer of the demo coven it is a demo, and not the owner sentence', async () => {
+      admit('viewer', true);
+      await renderLayout();
+      expect(demoNotice()).toBeInTheDocument();
+      expect(ownerNotice()).not.toBeInTheDocument();
+    });
+
+    it('tells an owner of the demo coven what their changes do, and not the viewer sentence', async () => {
+      admit('owner', true);
+      await renderLayout();
+      expect(ownerNotice()).toBeInTheDocument();
+      expect(demoNotice()).not.toBeInTheDocument();
+    });
+
+    it.each(['viewer', 'owner'])('says nothing in an ordinary coven to a %s', async (role) => {
+      admit(role, false);
+      await renderLayout();
+      expect(demoNotice()).not.toBeInTheDocument();
+      expect(ownerNotice()).not.toBeInTheDocument();
+    });
+  });
+
   it('renders nothing when the guard refuses', async () => {
     requireCovenMembership.mockRejectedValue(new Error('not-found'));
 
@@ -97,6 +133,9 @@ describe('the /coven/[slug] layout', () => {
     const metadata = await generateMetadata({ params: params('fixture-coven') });
 
     expect(requireCovenMembership).toHaveBeenCalledExactlyOnceWith('fixture-coven');
-    expect(metadata.title).toMatchObject({ template: expect.stringContaining('Fixture Coven') });
+    expect(metadata.title).toEqual({
+      template: '%s | Fixture Coven | Sorrel & Salt',
+      default: 'Fixture Coven',
+    });
   });
 });

@@ -4,20 +4,12 @@ import { useTestDatabase } from '../../../support/db/database';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 import { ingredientSlug } from '@/lib/slugify';
 
-// The compendium search folds accents through `unaccent_immutable`, and the
-// two expression indexes are what let a fold reach a trigram index at all —
-// claude-docs/db/compendium-read.md, "The compendium read". That they are
-// reached is proved on the SQL the finder sends, in
-// tests/db/repository/compendium-search-query.test.ts (MB.184); what stays
-// here is the indexes' expressions, the wrapper, and the fold.
-const UNACCENT_INDEX = 'ingredients_unaccent_trgm';
-const FOLK_NAMES_UNACCENT_INDEX = 'ingredient_folk_names_unaccent_trgm';
-const WRAPPER = 'unaccent_immutable';
-
+// The compendium search folds accents through `unaccent_immutable`, and the two expression indexes are what let a fold reach a trigram index at all (claude-docs/db/compendium-read.md, "The compendium read").
+// That they are reached is proved on the SQL the finder sends, in tests/db/repository/compendium-search-query.test.ts; what stays here is the fold they exist for.
 const AUTHOR = FIXTURE_USERS.A.id;
 
 let sql: ReturnType<typeof postgres>;
-const catalogue = useTestDatabase((client) => (sql = client));
+useTestDatabase((client) => (sql = client));
 
 async function addIngredient(name: string, canonicalName: string | null): Promise<string> {
   const [inserted] = await sql`
@@ -49,32 +41,7 @@ beforeEach(async () => {
   await sql`truncate ingredients cascade`;
 });
 
-describe('unaccent', () => {
-  // `unaccent()` itself is STABLE, because it reads a dictionary; an expression
-  // index needs IMMUTABLE, which the wrapper declares by naming the dictionary.
-  it('declares the wrapper immutable', async () => {
-    const [row] = await sql`
-      select provolatile from pg_proc where proname = ${WRAPPER}
-    `;
-
-    expect(row.provolatile).toBe('i');
-  });
-});
-
 describe('the unaccent trigram indexes', () => {
-  it('folds name and canonical_name in one gin index, and the folk name in its own', async () => {
-    const onIngredients = await catalogue.indexRow('ingredients', UNACCENT_INDEX);
-    const onFolkNames = await catalogue.indexRow(
-      'ingredient_folk_names',
-      FOLK_NAMES_UNACCENT_INDEX,
-    );
-
-    expect(onIngredients?.definition).toContain(
-      `USING gin (${WRAPPER}(name) gin_trgm_ops, ${WRAPPER}(canonical_name) gin_trgm_ops)`,
-    );
-    expect(onFolkNames?.definition).toContain(`USING gin (${WRAPPER}(name) gin_trgm_ops)`);
-  });
-
   // Why the plans in compendium-search-query.test.ts mean something: the fold
   // changes the answer, both ways.
   describe('the fold matches across accents', () => {

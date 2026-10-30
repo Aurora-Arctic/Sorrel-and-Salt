@@ -1,11 +1,9 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The box a fading skeleton is placed against. A plain block, so wearing it
-// permanently changes no layout; `SectionBody` puts the class on its own frame
-// instead of wrapping it. Clipped only while the skeleton fades, so a skeleton
-// taller than the page that arrived cannot lengthen the document for those
-// 200ms (`clip`, not `hidden`, so a sticky menu inside still sticks).
+// The box a fading skeleton is placed against: a plain block, so `SectionBody` puts the class on
+// its own frame. Clipped only while the skeleton fades, so a taller skeleton cannot lengthen the
+// document (`clip`, not `hidden`, so a sticky menu still sticks).
 .skeleton-fade-host {
   position: relative;
 }
@@ -14,12 +12,9 @@
   overflow: clip;
 }
 
-// The last skeleton over the arrived page, on the page's own ground so the
-// page shows through as it fades: the one keyframe `arrived` uses
-// (`list-frame-fade-in`, _primitives.scss) run backwards. Out of layout and
-// out of the pointer's way. The ground takes the host's padding, so the
-// skeleton stands where the waiting frame stood. Under reduced motion it is
-// gone at once, as `arrived` shows content at once.
+// The last skeleton over the arrived page, on the page's ground so it shows through as it fades:
+// `fade-in` (_primitives.scss) run backwards, out of layout and pointer reach. It takes
+// the host's padding; under reduced motion it is gone at once.
 .skeleton-fade {
   position: absolute;
   inset-block-start: 0;
@@ -28,20 +23,45 @@
   box-sizing: border-box;
   background-color: $surface-page;
   pointer-events: none;
-  animation: list-frame-fade-in $arrive-duration ease both reverse;
+  animation: fade-in $arrive-duration ease both reverse;
 
   @include reduced-motion {
     display: none;
   }
 
-  // It has already faded in once; it must not do so again as it is mounted.
-  // Nothing inside moves either: the fade is the one animation, on this
-  // element as a whole. The bars' shimmer (and, under reduced motion, their
-  // pulse) kept running through it, so each bar's highlight band sat in a
-  // different place from its neighbours' as the group faded, which read as
-  // parts fading at different rates. Frozen, every bar is the same fill.
+  // It has already faded in once, so it must not again on mount, and nothing inside moves: the
+  // bars' shimmer and pulse are frozen, since running through the fade they made parts fade at
+  // different rates.
   .skeleton,
   .skeleton * {
     animation: none;
   }
+}
+
+// A wait: the page stays where it was, at its full height, and the
+// skeleton is laid over it. `visibility` rather than `display: none`, which
+// would collapse the page and clamp the scroll before the browser saves it for
+// Back; `heldPage` puts the page out of reach as well (`inert`).
+.skeleton-held {
+  visibility: hidden;
+}
+
+// The box the cover is laid over, where the held frame is not itself the host
+// (`SectionBody`'s outer box). A plain block, so it changes no layout.
+.skeleton-cover-host {
+  position: relative;
+}
+
+// The waiting skeleton: over the held page's whole height, its frame pinned
+// just under the bar (the frames' `--sticky-top`), so it
+// is in the window however far down the page was scrolled. Unscrolled, it
+// sits at the page's top, where the swapped-in skeleton used to.
+.skeleton-cover {
+  position: absolute;
+  inset: 0;
+}
+
+.skeleton-cover__pin {
+  position: sticky;
+  top: var(--sticky-top, 0);
 }

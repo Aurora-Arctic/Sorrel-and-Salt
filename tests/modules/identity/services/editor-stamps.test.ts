@@ -2,13 +2,11 @@ import type postgres from 'postgres';
 import { describe, expect, it } from 'vitest';
 import { editorStamps } from '@/app/(shell)/admin/editors';
 import { Forbidden } from '@/lib/errors';
-import { A, B, E, F, asUser } from '../../../support/as-user';
+import { A, B, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 
-// Regression: every admin curated list stamped its rows through a read only
-// a site admin could make, so a curator (M11.20) opening /admin/compendium
-// got a 500. The stamps are called as the pages call them, against the
-// seeded users, for each role that may open a curation screen.
+// Regression: every admin curated list stamped its rows through a read only a site admin could make, so a curator opening /admin/compendium got a 500.
+// The stamps are called as the pages call them, against the seeded users, for each role that may open a curation screen.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -32,14 +30,6 @@ describe('editorStamps', () => {
   it('names each row’s editor for a curator', async () => {
     expect(asUser(F).role).toBe('curator');
     expect(await editorStamps(asUser(F), ROWS)).toEqual([
-      { updatedBy: B.name, updatedAt: AT },
-      { updatedBy: A.name, updatedAt: AT },
-    ]);
-  });
-
-  it('names each row’s editor for an admin', async () => {
-    expect(asUser(E).role).toBe('admin');
-    expect(await editorStamps(asUser(E), ROWS)).toEqual([
       { updatedBy: B.name, updatedAt: AT },
       { updatedBy: A.name, updatedAt: AT },
     ]);

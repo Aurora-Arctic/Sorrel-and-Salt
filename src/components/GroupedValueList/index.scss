@@ -1,13 +1,18 @@
 @use '../../scss/variables' as *;
-@use '../../scss/mixins' as *;
 
-// What the list has of its own. The root is `.list-frame`, the filter
-// `.filter-row` (through FilterForm), the table `.data-table` stacking into
-// cards on a phone (`.data-table--stack`, and `--roomy` for the categories,
-// whose chips stand taller than a line), the chip and the pager are
-// primitives too (`.chip`, `.pager`), and Edit is IconTip's pencil.
+// What the list has of its own: the root is `.list-frame`, the filter `.filter-row`, the table
+// `.data-table` stacking on a phone (`--roomy` for the categories' taller chips), the chip and pager
+// are primitives, and Edit is IconTip's pencil.
 
 // Running text that is not a `<p>`, so it takes the measure itself.
 .grouped-value-list__description {
   max-width: $measure;
+}
+
+// A deity's other names, a line of their own under its name, muted at the caption size
+// as the user list's read-only facts are.
+.grouped-value-list__other-names {
+  display: block;
+  color: $text-muted;
+  font-size: type-size('caption');
 }

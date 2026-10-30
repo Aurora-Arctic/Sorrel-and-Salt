@@ -1,14 +1,19 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import Link from 'next/link';
+import { ShellFrame } from '../../../.storybook/shell-frame';
+import Backdrop from '../Backdrop';
 import ErrorPage from '.';
 
 // Render-only; behaviour is asserted in tests/components/ErrorPage. Each story
 // carries its own `main.page-frame`, as the component does.
-export default {
+const meta = {
   title: 'Pages / Error Page',
-};
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
-export const NotFound: Story = () => (
+const notFound = (
   <ErrorPage title="Page Not Found" reason="There is nothing at this address.">
     <Link className="btn btn--quiet" href="/">
       Back to Sorrel &amp; Salt
@@ -16,7 +21,26 @@ export const NotFound: Story = () => (
   </ErrorPage>
 );
 
-export const SomethingWentWrong: Story = () => (
+// A signed-in visitor: `(shell)/not-found.tsx` re-exports the root page so the shell's bar stays.
+const defaultNode = (
+  <>
+    <ShellFrame area="none" open="/">
+      {notFound}
+    </ShellFrame>
+    <Backdrop />
+  </>
+);
+
+// A visitor with no session: the root page alone, with the layout's corner ornaments. It has no
+// frame: `src/app/not-found.tsx` sits outside the public layout, so there is no header either.
+const notFoundSignedOutNode = (
+  <>
+    {notFound}
+    <Backdrop />
+  </>
+);
+
+const SomethingWentWrongView = () => (
   <ErrorPage
     title="Something Went Wrong"
     reason="The page could not be shown. Trying again often works."
@@ -31,8 +55,16 @@ export const SomethingWentWrong: Story = () => (
   </ErrorPage>
 );
 
-export const PhoneDark: Story = () => <SomethingWentWrong />;
-PhoneDark.meta = { theme: 'dark', width: 375 };
+const somethingWentWrongNode = <SomethingWentWrongView />;
 
-export const PhoneLight: Story = () => <SomethingWentWrong />;
-PhoneLight.meta = { theme: 'light', width: 375 };
+const STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'Not Found Signed Out': notFoundSignedOutNode,
+  'Something Went Wrong': somethingWentWrongNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div>{state}</div>,
+};

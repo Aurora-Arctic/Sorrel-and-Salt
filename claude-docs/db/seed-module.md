@@ -103,7 +103,7 @@ group by the group's key, so a renamed group still takes it.
 `0047_refill-seed-keys` keys any bootstrap-created row still unkeyed, one
 seeded between the two deploys. The sources seed keys on it from MB.156 ([`mb.171-seed-keys.md`](../design-decisions/mb.171-seed-keys.md)).
 
-**The production compendium is a target, not a scenario** (MB.240). Its starting entries are seeded by `db:seed:compendium`, which MB.242 adds to `scripts/db-seed.ts` beside `categories`, `forms`, `astrology`, `deities` and `sources`, and which `migrate.yml` runs after them on staging and production. It is never folded into `standard`, since `standard` is cloned for every db test (`tests/support/seeded-database.ts`). It writes each entry once, keyed by a `seed_key` on `ingredients` (MB.241), and skips an entry already present together with everything beneath it, so a reseed undoes none of an admin's edits. The rules its entries are written to are [`compendium-seed/README.md`](compendium-seed/README.md).
+**The production compendium is a target, not a scenario** (MB.240). Its starting entries are seeded by `db:seed:compendium`, which MB.242 adds to `scripts/db-seed.ts` beside `categories`, `forms`, `astrology`, `deities` and `sources`, and which `migrate.yml` runs after them on staging and production. `db:seed:reference` (M14.26) runs all six in one transaction, for the hand-started `seed-environment.yml`, so a dry run of the six rolls back once. It is never folded into `standard`, since `standard` is cloned for every db test (`tests/support/seeded-database.ts`). It writes each entry once, keyed by a `seed_key` on `ingredients` (MB.241), and skips an entry already present together with everything beneath it, so a reseed undoes none of an admin's edits. The rules its entries are written to are [`compendium-seed/README.md`](compendium-seed/README.md).
 
 **`minimal`** (`src/db/seed/minimal.ts`): one system user, one user, empty
 compendium. The system user is the bootstrap user under the fixed
@@ -118,7 +118,12 @@ nobody can sign in as it (`tests/db/account-linking.test.ts` pins the refusal;
 admin role on it would grant nothing to anyone. `/admin/users` leaves it out
 (MB.52). The file and its exports keep their old names, since `deploy.yml` lists the file.
 The plain
-user is `MINIMAL_USER_ID` (`…0002`), created by the bootstrap user. Both
+user is `MINIMAL_USER_ID` (`…0002`), created by the bootstrap user, and is
+seeded **verified** (MB.268), as fixtures A–F in `standard` are: an
+unverified account reaches no page but `/account/email`, so a developer could
+browse the dev site as no seeded user otherwise. The system user stays
+unverified for the reason above; the dev site's unverified account to sign in
+as is `standard`'s fixture G. Both
 keep `canCreateWorkspace` false — a bare install has granted nothing. It is
 **idempotent by fixed id** (`ON CONFLICT (id) DO NOTHING`), not by
 truncating: a re-run adds nothing, and nothing is dropped — the reset that

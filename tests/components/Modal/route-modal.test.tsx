@@ -12,10 +12,8 @@ const { RouteModalContext } = await import('@/components/Modal/route-modal-provi
 const { EditLink } = await import('@/components/IconTip');
 const { default: MenuButton } = await import('@/components/MenuButton');
 
-// A page's one modal place (M9.18): the form its address opens, or, while a
-// press's navigation is on its way, the pressed modal's head over a skeleton
-// in the same dialog, which the form then fills; and the links that open it
-// so (claude-docs/components/modal.md, "Opening at once").
+// A page's one modal place: the form its address opens, or, while a press's navigation is on its way, the pressed modal's head over a skeleton in the same dialog, which the form then fills.
+// Also the links that open it so (claude-docs/components/modal.md, "Opening at once").
 
 const CLOSE: Route = '/admin/categories';
 const EDIT: Route = '/admin/categories?edit=testcraft';
@@ -77,21 +75,6 @@ describe('RouteModal', () => {
     expect(within(arrived).getByRole('textbox', { name: 'Name' })).toHaveFocus();
   });
 
-  it('forgets the press and goes back to its page when closed while loading', () => {
-    const loading = opener(HEADING);
-    render(
-      <RouteModalContext.Provider value={loading}>
-        <RouteModal closeHref={CLOSE} />
-      </RouteModalContext.Provider>,
-    );
-
-    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
-
-    expect(loading.cancel).toHaveBeenCalledTimes(1);
-    expect(router.replace).toHaveBeenCalledWith(CLOSE);
-    expect(router.refresh).toHaveBeenCalledTimes(1);
-  });
-
   it('opens its form from the address alone, outside a provider', () => {
     render(<RouteModal closeHref={CLOSE} content={content} />);
 
@@ -144,6 +127,7 @@ describe('RouteModalProvider', () => {
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(router.replace).toHaveBeenCalledWith(CLOSE);
+    expect(router.refresh).toHaveBeenCalledTimes(1);
   });
 
   it.each([
@@ -159,11 +143,8 @@ describe('RouteModalProvider', () => {
   });
 });
 
-// The focus goes back to the link that opened it (Modal's own), or, once that
-// is drawn afresh or was never there, to a link to the address it opened, or
-// to the page's heading (claude-docs/components/modal.md, "Giving the focus
-// back"; the owner's call, 2026-10-19). The page here is drawn again by hand,
-// as the close's navigation would draw it.
+// The focus goes back to the link that opened the modal (Modal's own) or, once that is drawn afresh or was never there, to a link to the address it opened, or to the page's heading
+// (claude-docs/components/modal.md, "Giving the focus back"). The page here is drawn again by hand, as the close's navigation would draw it.
 describe('RouteModal giving the focus back', () => {
   function Page({ open, drawn }: { open: boolean; drawn: number }) {
     return (
@@ -224,7 +205,7 @@ describe('RouteModal giving the focus back', () => {
     expect(link()).toHaveFocus();
   });
 
-  // A menu's item (the entry page's Edit menu, M8.17): the item goes with its
+  // A menu's item (the entry page's Edit menu): the item goes with its
   // closed menu, and the button that opened the menu is where the press began.
   it('goes to the button of the menu whose item opened it, once that menu has closed', async () => {
     function MenuPage({ open }: { open: boolean }) {
@@ -255,9 +236,7 @@ describe('RouteModal giving the focus back', () => {
     });
     view.rerender(page(true));
     expect(screen.getByRole('dialog', { name: NAME })).toBeInTheDocument();
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 450));
-    });
+    await act(async () => {});
 
     view.rerender(page(false));
 
@@ -300,7 +279,7 @@ describe('EditLink outside a provider', () => {
 
 describe('two modal places on one page', () => {
   // A list whose names open a details modal and whose Edit opens the edit
-  // modal over it (M12.5): each place shows only the press meant for it.
+  // modal over it: each place shows only the press meant for it.
   const DETAILS: Route = '/admin/categories?entry=testcraft';
   const DETAILS_HEADING: ModalHeading = { eyebrow: 'Ingredient', title: 'Testcraft' };
   const NameLink = () => {

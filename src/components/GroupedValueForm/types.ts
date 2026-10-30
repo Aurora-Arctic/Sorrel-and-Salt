@@ -4,10 +4,9 @@ import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons
 import type { z } from 'zod';
 
 /**
- * Which curated vocabulary the form writes. Three are grouped: the
- * categories, filed under category groups; the ingredient forms, filed under
- * form groups; and the deities, filed under traditions (MB.132). Two are
- * flat, filed under nothing: the celestial bodies and the zodiac signs (MB.95).
+ * Which curated vocabulary the form writes. Three are grouped: the categories, filed
+ * under category groups; the ingredient forms, under form groups; and the deities, under
+ * traditions. Two are flat, filed under nothing: the celestial bodies and the zodiac signs.
  */
 export type GroupedValueKind = 'category' | 'form' | 'deity' | 'celestialBody' | 'zodiacSign';
 
@@ -28,6 +27,12 @@ export interface GroupedValueValues {
   name: string;
   description: string;
   groupId: string;
+  /**
+   * A deity's other names, empty for every other kind. Under the ingredient form's `folkNames` key and
+   * `drafts.folkNames`, as the field is that form's `ListField`, so the list also refuses the value's own name.
+   */
+  folkNames: { value: string }[];
+  drafts: { folkNames: string };
 }
 
 /** The value being edited, as the form starts from it; a flat kind's has no group. */
@@ -36,13 +41,15 @@ export interface EditedGroupedValue {
   name: string;
   description: string;
   groupId?: string;
+  /** A deity's other names, alphabetically; absent for every other kind. */
+  otherNames?: readonly string[];
 }
 
 export interface GroupedValueFormProps {
   kind: GroupedValueKind;
   /** The value to edit; none adds one. */
   value?: EditedGroupedValue;
-  /** Every live group of the kind, alphabetical (MB.35); none for a flat kind. */
+  /** Every live group of the kind, alphabetical; none for a flat kind. */
   groups?: readonly GroupedValueGroupChoice[];
   /** Called once the value is saved or deleted, and on Cancel: the owner closes it. */
   onDone: () => void;
@@ -54,8 +61,8 @@ export interface GroupedValueGroupField {
   label: string;
   /** What the field shows until one is chosen: "Choose a group". */
   placeholder: string;
-  /** What the group does for the value, behind the field's info tip. */
-  hint: string;
+  /** The field's info tip, a filing rule its label does not say (a deity's tradition); absent where the label says it all. */
+  hint?: string;
 }
 
 /** What a kind's form says: its noun, its group field if it has one, and its confirmations. */
@@ -75,6 +82,8 @@ export interface GroupedValueCopy {
   deleteNote: string;
   /** What a rename says above the actions, for a kind whose rename reaches further than its row. */
   renameNote?: string;
+  /** The Other Names list's hint, for the kind that has the list: a deity. */
+  otherNamesHint?: string;
   /**
    * A field's key in the kind's input, where it is not the field's own: a
    * server refusal pathed to that key lands beside the field.
@@ -83,11 +92,12 @@ export interface GroupedValueCopy {
 }
 
 /**
- * What a kind's schema parses to: a name and a description, and the group
- * under the form's own name where the kind has one.
+ * What a kind's schema parses to: a name and a description, the group under
+ * the form's own name where the kind has one, and a deity's other names. The
+ * box's draft is never parsed.
  */
-export type GroupedValueParsed = Omit<GroupedValueValues, 'groupId'> &
-  Partial<Pick<GroupedValueValues, 'groupId'>>;
+export type GroupedValueParsed = Pick<GroupedValueValues, 'name' | 'description'> &
+  Partial<Pick<GroupedValueValues, 'groupId' | 'folkNames'>>;
 
 /** One kind as declared: its copy, its values schema, its input, and its three mutations. */
 export interface GroupedValueKindSpec<Input extends object> extends GroupedValueCopy {

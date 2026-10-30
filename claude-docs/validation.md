@@ -17,6 +17,8 @@ surface"):
 | ------------------------------------------------------------ | --------------------------------------------------- |
 | `src/modules/ingredients/validation/ingredient.ts`           | `LocalIngredientInput`, `CompendiumIngredientInput` |
 | `src/modules/ingredients/validation/stock.ts`                | `StockInput`                                        |
+| `src/modules/grimoire/validation/spell.ts`                   | `SpellInput`, `UpdateSpellInput`                    |
+| `src/modules/grimoire/validation/spell-step.ts`              | `SpellStepInput`                                    |
 | `src/modules/vocabulary/validation/category.ts`              | `CategoryInput`                                     |
 | `src/modules/vocabulary/validation/category-group.ts`        | `CategoryGroupInput`                                |
 | `src/modules/vocabulary/validation/ingredient-form-value.ts` | `IngredientFormValueInput`                          |
@@ -298,8 +300,7 @@ with "Choose a tradition". `IngredientFormValueInput` (M5.6a) is its shape for a
 since a form's rename moves no compendium entry's address.
 
 `IngredientFormGroupInput` (M5.6b) is the shape alone, refused with "Give
-the group a name" and "Describe the group"; so is `DeityTraditionInput`. `CategoryGroupInput` extends it with `colorDark` and
-`colorLight`, each a `#rrggbb` hex, case-insensitive and stored lower-cased,
+the group a name" and "Describe the group"; so is `DeityTraditionInput`. `CategoryGroupInput` extends it with `color`, each a `#rrggbb` hex, case-insensitive and stored lower-cased,
 refused otherwise with "Choose a colour, as a hex like #4e8bc2". Each is then
 held to 4.5:1 against its own theme's harder surface, the dark card or the
 light page (MB.36), through `chipContrast` in `src/lib/contrast.ts`, and

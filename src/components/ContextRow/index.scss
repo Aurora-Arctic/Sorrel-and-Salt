@@ -1,21 +1,14 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The card colour mixed 45% into the page: a step off the page, a step short
-// of the bar's own card, so the row reads as part of the shell and below it.
-// Local rather than a token, since this row is its only user, as TabbedPage's
-// `$segment-pill` is. It needs no row in `tests/scss/tokens.test.ts`: in both
-// themes the card is lighter than the page in every channel, so the mix's
-// luminance lies between theirs, and a text colour that test holds to 4.5:1
-// on the page and on the card clears it here too.
+// The card colour mixed 45% into the page, so the row reads as part of the shell. Local, as TabbedPage's
+// `$segment-pill` is: the card is lighter than the page in every channel in both themes, so text that
+// clears 4.5:1 on both clears it here.
 $context-row-ground: color-mix(in srgb, $surface-card 45%, $surface-page);
 
-// Full width, so its ground and its edge run the window; the inner column
-// holds the lead and the nav to the same width as the pages beneath.
-// A named region (a `section`), so the lead sits inside a landmark for the
-// axe region rule; the layout layer makes every `section` a flex column with
-// a margin, which would shrink the inner column to its content and centre
-// it, so both are put back to a plain band here.
+// Full width, so its ground and edge run the window while the inner column holds the pages' width. A
+// `section`, so the lead sits in a landmark (axe region rule); the layout layer's flex column and margin
+// on `section` would centre and shrink the column, so both are put back.
 .context-row {
   display: block;
   margin: 0;
@@ -33,8 +26,7 @@ $context-row-ground: color-mix(in srgb, $surface-card 45%, $surface-page);
   padding-inline: space(4);
 }
 
-// The lead and the nav are told apart by a hairline between them, centred
-// down the row with a step of air at each end.
+// A hairline between lead and nav, centred down the row with a step of air at each end.
 .context-row__lead {
   position: relative;
   display: flex;
@@ -57,8 +49,8 @@ $context-row-ground: color-mix(in srgb, $surface-card 45%, $surface-page);
   }
 }
 
-// The area's name as its home link: "Admin", to /admin. Set as the heading it
-// reads as, not as running-text link; the underline arrives on hover and focus.
+// The area's name as its home link: "Admin", to /admin. Set as the heading it reads
+// as; the underline arrives on hover and focus.
 .context-row__name {
   margin: 0;
   color: inherit;
@@ -69,10 +61,8 @@ $context-row-ground: color-mix(in srgb, $surface-card 45%, $surface-page);
     text-decoration: underline;
   }
 
-  // The h4's face and size, so "Admin" matches the coven row's switcher. The
-  // line height is its own, 1 rather than the h4's 1.25: the name is one line
-  // that never wraps, so leading would only add height, and the lead's
-  // padding already sets the air around it.
+  // The h4's face and size, so "Admin" matches the coven row's switcher; line height
+  // 1 rather than 1.25, since the name never wraps and the lead's padding sets the air.
   @include heading-face;
   font-size: heading-size(4);
   line-height: 1;
@@ -80,8 +70,7 @@ $context-row-ground: color-mix(in srgb, $surface-card 45%, $surface-page);
 }
 
 @media (max-width: $shell-phone-width) {
-  // A half step of air, the owner's measure for the phone: between the
-  // scale's first two steps, so derived from them.
+  // A half step of air for the phone: between the scale's first two steps, so derived from them.
   $phone-air: calc(#{space(3)} / 2);
 
   .context-row__inner {

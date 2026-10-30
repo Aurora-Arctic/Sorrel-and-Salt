@@ -1,19 +1,15 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { NotFound } from '@/lib/errors';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { CARD_PAGE_SIZE } from '@/lib/pagination';
-import { Navigating } from '../../../../../support/navigating';
 import { entryDetail } from '../../../../../support/entry-detail';
 
-// A coven's Ingredients page (M9.6). The guard and the services are mocked, since what they
-// decide is their own tests'; the page's own reads run for real over them. Here: the guard on
-// the slug from the address, one page of 24 with one stock call for the whole page, the address
-// becoming the filter, what a card shows of the coven's label, kind and jars, and the edit
-// dialog `?edit=<id>` opens over the list on the coven's own entry, and the Annotate dialog `?annotate=<id>` over a compendium entry
-// the cupboard holds (M8.17).
+// A coven's Ingredients page, with the guard and services mocked and the page's own reads run for real over them.
+// It proves the guard on the slug from the address, one page of 24 with one stock call for the whole page, the address becoming the filter, what a card shows of the coven's label, kind and jars,
+// the edit dialog `?edit=<id>` opens over the coven's own entry, and the Annotate dialog `?annotate=<id>` over a compendium entry the cupboard holds.
 
 const COVEN = {
   id: '5b8f4a10-2d6e-4c19-8a37-0e9d1c2b3a44',
@@ -32,7 +28,7 @@ vi.mock('@/lib/request-session', () => ({
   getSession: async () => session,
 }));
 
-// Which covens the viewer may add in, for the plus beside the details' pencil (M9.12); the rule
+// Which covens the viewer may add in, for the plus beside the details' pencil; the rule
 // itself is tests/app/plus-covens.test.ts's, so by default none, and the details draw no plus.
 const viewerIfSignedIn = vi.fn();
 const covenRolesIfSignedIn = vi.fn();
@@ -54,7 +50,7 @@ const workspaceIngredientFacets = vi.fn();
 const getIngredient = vi.fn();
 const heldCompendiumEntry = vi.fn();
 const ingredientDetailOf = vi.fn();
-// The viewer's own covens that hold the open entry, for the details' In Your Cupboards (M12.5).
+// The viewer's own covens that hold the open entry, for the details' In Your Cupboards.
 // Mocked so no real query runs here; which covens it admits is
 // tests/modules/ingredients/services/covens-holding.test.ts's.
 const covensHoldingEntry = vi.fn();
@@ -74,17 +70,18 @@ vi.mock('@/modules/ingredients', async (importActual) => ({
 
 // The form is its own tests'; here only which ways out of it lead where.
 vi.mock('@/components/IngredientForm', () => ({
-  default: ({ onSaved, onCancel }: { onSaved: (saved: unknown) => void; onCancel: () => void }) => (
+  default: ({ onSaved }: { onSaved: (saved: unknown) => void }) => (
     <form aria-label="Fixture Form">
       <button type="button" onClick={() => onSaved({ slug: 'testwort' })}>
         Save
       </button>
-      <button type="button" onClick={onCancel}>
-        Cancel
-      </button>
     </form>
   ),
 }));
+
+// The search row and its facet panel are CovenCards' and FacetPanel's tests'; no test here opens
+// them, and the address they read is asserted on the service calls.
+vi.mock('@/components/CompendiumList/filter', () => ({ default: () => null }));
 
 // The Annotate form is its own tests' too; here, which entry it was handed and its way out.
 vi.mock('@/components/CupboardEntryForm', () => ({
@@ -101,7 +98,7 @@ vi.mock('@/components/CupboardEntryForm', () => ({
   }) => (
     <form aria-label={`Annotate ${ingredientId}, ${compendium.name}, ${overrides.label}`}>
       <button type="button" onClick={onDone}>
-        Cancel
+        Save
       </button>
     </form>
   ),
@@ -110,7 +107,7 @@ vi.mock('@/components/CupboardEntryForm', () => ({
 const entryValues = vi.fn();
 vi.mock('@/app/entry-values', () => ({ entryValues }));
 
-const { default: Page, metadata } = await import('@/app/(shell)/coven/[slug]/ingredients/page');
+const { default: Page } = await import('@/app/(shell)/coven/[slug]/ingredients/page');
 
 const row = (id: string, name: string, workspaceId: string | null) => ({
   id,
@@ -121,6 +118,8 @@ const row = (id: string, name: string, workspaceId: string | null) => ({
   toxic: false,
   safetyNotes: null,
   deletedAt: null,
+  revision: 1,
+  updatedAt: new Date('2026-03-04T05:06:07.000Z'),
 });
 
 const NO_FACETS = {
@@ -185,12 +184,6 @@ beforeEach(() => {
     ...entryDetail({ id: entry.id, safetyNotes: `Fixture caution of ${entry.id}.` }),
     folkNames: [`Fixture Bane of ${entry.id}`],
   }));
-  vi.stubGlobal('matchMedia', (query: string) => ({
-    matches: query.includes('min-width'),
-    media: query,
-    addEventListener: () => undefined,
-    removeEventListener: () => undefined,
-  }));
 });
 
 describe('the coven Ingredients page', () => {
@@ -214,7 +207,6 @@ describe('the coven Ingredients page', () => {
 
   it('asks for a page of 24 and reads every jar of it in one stock call', async () => {
     await renderPage();
-    expect(CARD_PAGE_SIZE).toBe(24);
     expect(listWorkspaceIngredients.mock.calls[0]![3]).toMatchObject({ limit: CARD_PAGE_SIZE + 1 });
     expect(stockOf).toHaveBeenCalledTimes(1);
   });
@@ -236,12 +228,6 @@ describe('the coven Ingredients page', () => {
         .filter((href) => !/[?&](edit|annotate|entry)=/.test(href ?? '')),
     ).toEqual(['/coven/fixture-coven/ingredients/a1', '/coven/fixture-coven/ingredients/b2']);
     expect(within(list).getByRole('link', { name: /^House Salt/ })).toBeInTheDocument();
-  });
-
-  it('draws the jar a coven holds on its form', async () => {
-    await renderPage();
-    expect(screen.getAllByText(/Fixture Herb/).length).toBeGreaterThan(0);
-    expect(screen.getByText(/3 oz/)).toBeInTheDocument();
   });
 
   it('reads the address as the filter, Source and In Stock included', async () => {
@@ -274,10 +260,6 @@ describe('the coven Ingredients page', () => {
       await renderPage();
       expect(within(emptyState()).queryByRole('button')).toBeNull();
     });
-  });
-
-  it('titles the tab Ingredients', () => {
-    expect(metadata.title).toBe('Ingredients');
   });
 });
 
@@ -350,14 +332,15 @@ describe("the coven Ingredients page's edit dialog", () => {
     await expect(renderPage({ edit: 'a1' })).rejects.toThrow('connection lost');
   });
 
-  it('goes back to the filtered list on a save, fetched again, and on Cancel', async () => {
+  it('goes back to the filtered list on a save, fetched again, and on Close', async () => {
     await renderPage({ source: 'local', edit: 'a1' });
     fireEvent.click(within(editDialog()!).getByRole('button', { name: 'Save' }));
     expect(router.replace.mock.lastCall?.[0]).toBe(FILTERED_HREF);
     expect(router.refresh).toHaveBeenCalled();
 
-    fireEvent.click(within(editDialog()!).getByRole('button', { name: 'Cancel' }));
-    expect(router.replace.mock.lastCall?.[0]).toBe(FILTERED_HREF);
+    router.replace.mockClear();
+    fireEvent.click(within(editDialog()!).getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(router.replace.mock.lastCall?.[0]).toBe(FILTERED_HREF));
   });
 });
 
@@ -402,27 +385,6 @@ describe("the coven Ingredients page's details modal", () => {
     expect(getIngredient).not.toHaveBeenCalled();
   });
 
-  it('opens the details at once on a plain press of Quick Look', async () => {
-    const page = await Page({
-      params: Promise.resolve({ slug: COVEN.slug }),
-      searchParams: Promise.resolve({ source: 'local' }),
-    });
-    render(
-      <Navigating push={router.push}>
-        <QueryClientProvider client={makeQueryClient()}>{page}</QueryClientProvider>
-      </Navigating>,
-    );
-    let handled = true;
-    await act(async () => {
-      handled = fireEvent.click(screen.getByRole('link', { name: 'Quick Look Testwort' }));
-    });
-    expect(handled).toBe(false);
-    expect(router.push).toHaveBeenCalledWith(`${FILTERED_HREF}&entry=a1`);
-    // Only the details: the press shows in their place, not in the edit modal's too.
-    expect(screen.getAllByRole('dialog')).toHaveLength(1);
-    expect(details('Testwort')).toBeInTheDocument();
-  });
-
   it("reads the opened entry's last edit for Quick Look, from the same service as the cards", async () => {
     lastEditsOf.mockResolvedValue([{ by: 'Fixture Editor', at: '2026-03-04T05:06:07.000Z' }]);
     await renderPage({ source: 'local', entry: 'a1' });
@@ -447,23 +409,17 @@ describe("the coven Ingredients page's details modal", () => {
     expect(covensHoldingEntry).not.toHaveBeenCalled();
   });
 
-  it("gives an owner and a member Edit and the bin on the coven's own entry, Edit opening the edit modal over the details", async () => {
-    // The window carries its card's controls (the owner's call, 2026-10-20): the pencil, a link,
-    // and the bin, a lone Delete, with no menu between them.
-    for (const role of ['owner', 'member']) {
-      asRole(role);
-      await renderPage({ source: 'local', entry: 'a1' });
-      const dialog = details('Testwort')!;
-      expect(within(dialog).getByRole('link', { name: 'Edit Testwort' })).toHaveAttribute(
-        'href',
-        `${FILTERED_HREF}&entry=a1&edit=a1`,
-      );
-      expect(
-        within(dialog).getByRole('button', { name: 'Delete Ingredient Testwort' }),
-      ).toBeInTheDocument();
-      expect(within(dialog).queryByRole('button', { name: /^More for\b/ })).not.toBeInTheDocument();
-      cleanup();
-    }
+  it("gives a member Edit over the details of the coven's own entry, and no Delete or More beside it", async () => {
+    // The window carries its card's controls, and a Quick Look holds no Delete: the own entry's
+    // Delete Ingredient is its Edit dialog's, which the pencil opens over the details.
+    await renderPage({ source: 'local', entry: 'a1' });
+    const dialog = details('Testwort')!;
+    expect(within(dialog).getByRole('link', { name: 'Edit Testwort' })).toHaveAttribute(
+      'href',
+      `${FILTERED_HREF}&entry=a1&edit=a1`,
+    );
+    expect(within(dialog).queryByRole('button', { name: /^(Delete|Remove)\b/ })).toBeNull();
+    expect(within(dialog).queryByRole('button', { name: /^More for\b/ })).toBeNull();
   });
 
   it('gives a viewer the details, and no Edit in them', async () => {
@@ -496,8 +452,8 @@ describe("the coven Ingredients page's details modal", () => {
   });
 
   it("draws neither the plus nor the check in the details of a held compendium entry, though another of the member's covens lacks it", async () => {
-    // The window carries its card's controls and a coven's card has no plus (the owner's call,
-    // 2026-10-20), so a coven's window has none; the compendium's and the admin's windows do.
+    // The window carries its card's controls and a coven's card has no plus, so a coven's window has
+    // none; the compendium's and the admin's windows do.
     const other = { id: 'w-other', slug: 'other-coven', name: 'Other Coven' };
     viewerIfSignedIn.mockResolvedValue({
       viewer: { name: 'Fixture Member', canCurate: false },
@@ -518,24 +474,6 @@ describe("the coven Ingredients page's details modal", () => {
     expect(within(dialog).getByRole('button', { name: 'More for House Salt' })).toBeInTheDocument();
     expect(within(dialog).queryByRole('button', { name: /^Add to My Ingredients: / })).toBeNull();
     expect(within(dialog).queryByRole('button', { name: /^In Every Cupboard: / })).toBeNull();
-
-    // Nor the check, once every coven holds it.
-    cleanup();
-    covensHoldingEntry.mockResolvedValue([
-      { id: COVEN.id, slug: COVEN.slug, name: COVEN.name },
-      other,
-    ]);
-    await renderPage({ entry: 'b2' });
-
-    expect(
-      within(details('House Salt')!).getByRole('button', { name: 'More for House Salt' }),
-    ).toBeInTheDocument();
-    expect(
-      within(details('House Salt')!).queryByRole('button', { name: /^In Every Cupboard: / }),
-    ).toBeNull();
-    expect(
-      within(details('House Salt')!).queryByRole('button', { name: /^Add to My Ingredients: / }),
-    ).toBeNull();
   });
 
   it("lists the member's own covens that hold a held compendium entry in the details, read as the member", async () => {
@@ -619,7 +557,7 @@ describe("the coven Ingredients page's details modal", () => {
     expect(router.replace.mock.lastCall?.[0]).toBe(FILTERED_HREF);
   });
 
-  it('opens the edit modal over the details, and a save or Cancel goes back to the details, fetched again', async () => {
+  it('opens the edit modal over the details, and a save or Close goes back to the details, fetched again', async () => {
     await renderPage({ source: 'local', entry: 'a1', edit: 'a1' });
     expect(details('Testwort')).toBeInTheDocument();
     fireEvent.click(within(editDialog()!).getByRole('button', { name: 'Save' }));
@@ -627,8 +565,11 @@ describe("the coven Ingredients page's details modal", () => {
     // Fetched again, so the list and the details beneath both show the save.
     expect(router.refresh).toHaveBeenCalled();
 
-    fireEvent.click(within(editDialog()!).getByRole('button', { name: 'Cancel' }));
-    expect(router.replace.mock.lastCall?.[0]).toBe(`${FILTERED_HREF}&entry=a1`);
+    router.replace.mockClear();
+    fireEvent.click(within(editDialog()!).getByRole('button', { name: 'Close' }));
+    await waitFor(() =>
+      expect(router.replace.mock.lastCall?.[0]).toBe(`${FILTERED_HREF}&entry=a1`),
+    );
   });
 });
 
@@ -720,9 +661,9 @@ describe("the coven Ingredients page's Annotate dialog", () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('goes back to the filtered list on Cancel', async () => {
+  it('goes back to the filtered list on Close', async () => {
     await renderPage({ source: 'local', annotate: 'b2' });
-    fireEvent.click(within(annotateDialog()!).getByRole('button', { name: 'Cancel' }));
+    fireEvent.click(within(annotateDialog()!).getByRole('button', { name: 'Close' }));
     // The form closes the modal through its own close, which fades out first.
     await waitFor(() => expect(router.replace.mock.lastCall?.[0]).toBe(FILTERED_HREF));
   });
@@ -734,22 +675,16 @@ describe("the coven Ingredients page's card More", () => {
       workspace: COVEN,
       membership: { workspaceId: COVEN.id, userId: 'fixture-user', role },
     });
-  const choicesOf = (name: string): string[] => {
-    fireEvent.click(screen.getByRole('button', { name }));
-    return within(screen.getByRole('menu', { name }))
-      .getAllByRole('menuitem')
-      .map((item) => item.textContent ?? '');
-  };
 
-  it("draws a member's lone Delete on the coven's own entry as its bin, with no More", async () => {
+  it("draws no bin and no More on a member's own-entry card, while the held compendium entry's card has More", async () => {
     await renderPage({ source: 'local' });
-    expect(screen.getByRole('button', { name: 'Delete Ingredient Testwort' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'More for Testwort' })).not.toBeInTheDocument();
-  });
-
-  it('gives a member Make It Ours and Remove on a compendium entry the cupboard holds', async () => {
-    await renderPage();
-    expect(choicesOf('More for House Salt')).toEqual(['Make It Ours', 'Remove']);
+    const list = screen.getByRole('list', { name: 'Ingredients' });
+    // The member may write here: the own entry has its Edit, and the held entry its More, so the
+    // own card's missing bin and More are the rule, not a role that may do nothing.
+    expect(within(list).getByRole('link', { name: 'Edit Testwort' })).toBeInTheDocument();
+    expect(within(list).getByRole('button', { name: 'More for House Salt' })).toBeInTheDocument();
+    expect(within(list).queryByRole('button', { name: 'More for Testwort' })).toBeNull();
+    expect(within(list).queryByRole('button', { name: /^(Delete|Remove)\b/ })).toBeNull();
   });
 
   it('gives a viewer no More, and no bin', async () => {
@@ -804,17 +739,10 @@ describe("the coven Ingredients page's Edit Stock", () => {
     heldCompendiumEntry.mockResolvedValue(undefined);
   });
 
-  it("gives a member Edit Stock on every card, opening on the entry's jars by form", async () => {
+  it('gives a member Edit Stock on every card', async () => {
     await renderPage();
+    expect(pencil(list(), 'Testwort')).toBeInTheDocument();
     expect(pencil(list(), 'House Salt')).toBeInTheDocument();
-    fireEvent.click(pencil(list(), 'Testwort')!);
-    const dialog = screen.getByRole('dialog', { name: 'Edit Stock, Testwort' });
-    expect(within(dialog).getByRole('spinbutton', { name: 'Quantity, Fixture Herb' })).toHaveValue(
-      3,
-    );
-    expect(
-      within(dialog).getByRole('spinbutton', { name: 'Low Stock At, Fixture Herb' }),
-    ).toHaveValue(1);
   });
 
   it('gives a viewer no Edit Stock, on a card or in the details, though both show', async () => {

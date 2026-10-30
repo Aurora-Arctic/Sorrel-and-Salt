@@ -1,0 +1,50 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The "Back to …" link's look, shared by the ingredient entry page and the spell recipe page
+// (claude-docs/components/ingredient-entry.md, "The back link").
+.back-link {
+  // The chevron's drawing starts inside its box; this pulls the stroke to the column's edge.
+  margin-inline-start: -$back-chevron-pull;
+  display: inline-flex;
+  align-items: center;
+  gap: space(1);
+  color: $text-muted;
+  font-size: type-size('small');
+  text-decoration: none;
+  @include theme-transition(color);
+
+  @include reduced-motion {
+    transition: none;
+  }
+
+  // The chevron steps back and grows on hover and focus, in place of an underline, at twice the
+  // short motion; it holds still under reduced motion.
+  > svg {
+    flex: none;
+    transition: transform calc(#{$motion-short} * 2) ease-out;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: $text-primary;
+
+    > svg {
+      // A fifth of its own 1em box, so the step follows the link's size.
+      transform: translateX(-20%) scale(1.25);
+    }
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  @include reduced-motion {
+    > svg,
+    &:hover > svg,
+    &:focus-visible > svg {
+      transition: none;
+      transform: none;
+    }
+  }
+}

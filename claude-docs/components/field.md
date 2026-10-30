@@ -62,6 +62,7 @@ owner, 2026-10-20).
 | `SelectField`       | A closed set on Combobox's select-only box, or its type-ahead box, in a react-hook-form form                  |
 | `RadioGroupField`   | One choice from a few, each radio with a line saying what it means, in a `.fieldset`                          |
 | `SwitchField`       | An on-or-off choice as a slide toggle, its label above, in a plain-state form                                 |
+| `VisibilitySwitch`  | Who can see a spell or a working, on `SwitchField`; `brief` gives a short line and a tip, for a footer row    |
 | `FormActions`       | A form's row of actions: Save, any further saves, Cancel and Delete                                           |
 | `ReasonField`       | An admin change's optional Reason, in a plain-state form                                                      |
 | `SearchField`       | A list filter's search box, its submit a magnifier at the box's end                                           |
@@ -78,7 +79,7 @@ several saves passes `busy` for the one pressed, its `saveValue`, and the
 others as children, between Save and Cancel, as the ingredient form's Save &
 Add Another is. Save is the form's submit, or with `onSave` a plain button,
 for the reference panel, which sits inside the ingredient form's own `<form>`.
-Cancel, quiet, is drawn when `onCancel` is given and calls it: each form
+Save names its thing (`Save ${noun}`: Save Spell, Save Working, Save Stock, Save Ingredient). Cancel, quiet, is drawn only when `onCancel` is given and calls it, and only a dialog that does not save on close passes it: a form that saves on close (the ingredient form, the Annotate dialog, the spell builder) leaves it out, since Cancel would only close as Close does, while Record a Working and Edit Stock, which throw changes away on close, keep it: each such form
 passes its discard guard's `request` (claude-docs/components/modal.md,
 "Unsaved changes"), and `holdCancel` makes it wait while a save is in flight,
 as the panel's does. Delete, `.btn--destructive` and `.form__aside` at the far
@@ -224,18 +225,21 @@ before the script loads all come from the browser. Its segments are the bar's ow
 
 `SwitchField` (`SwitchFieldProps`) takes `label`, `name` and `value`, what
 it submits while on (`1`, or empty for a bare flag such as `awaiting=`),
-`onChange(checked)`, `disabled`, an optional `hint`, and either `checked`, held by the caller,
+`onChange(checked)`, `disabled`, an optional `hint`, an optional `note`, and either `checked`, held by the caller,
 or `defaultChecked`, the state it is first drawn in, the native checkbox
 holding it after. A list filter takes `defaultChecked`: the switch applies
 the filter on its change, and the new list draws the filter again, switch
 and all, from the filter it shows, so there is no state of the caller's to
 keep ([`filter-form.md`](filter-form.md)). It draws a `.field`
-block of its own rather than `FieldShell`, since it has no note or
-error and its label takes the press feedback. A `hint` puts the label in a
+block of its own rather than `FieldShell`, since it has no error and its
+label takes the press feedback. A `note` (M10.13) is a line under the
+toggle saying what its state means, in `.field__hint` and named in the
+toggle's `aria-describedby`, as `RadioGroupField`'s note is: the spell
+builder's Shared switch says by it who can see the spell. A `hint` puts the label in a
 `.field__label-row` beside an InfoTip, as `FieldShell` does, and names the
 tip in the toggle's `aria-describedby`; a filter switch takes none. The rest: the label above, tied to the
 toggle by `htmlFor`, and the toggle, a native checkbox with
-`role="switch"`, beneath it in `.switch__control`, centred under the label, which lines a filter bar's switch up among its boxes; the ingredient form sets its Toxic switches and their labels at the start of the column instead ([`ingredient-form.md`](ingredient-form.md), "Styling"). The label is its
+`role="switch"`, beneath it in `.switch__control`, centred under the label, which lines a filter bar's switch up among its boxes; the ingredient form sets its Toxic switches and their labels at the start of the column instead ([`ingredient-form.md`](ingredient-form.md), "Styling"), and the spell builder sets its Shared switch in the footer's row, the toggle before its label ([`spell-builder.md`](spell-builder.md), "Visibility"). The label is its
 accessible name and a click on it turns it; the label and the toggle are
 each marked `data-pressed` while a pointer holds them
 (`src/lib/press-feedback.ts`). It writes no `aria-checked`: the native
@@ -392,6 +396,7 @@ const history = useFormHistory(methods, { root, enabled: !discard.asking });
   undo time: its label, else its `aria-label`, else the legend of its fieldset.
 - **`skip(name)` keeps a name out of the history**, for state that is not an
   edit, such as the ingredient form's note that its reference panel is open.
+- **`prepare(name, value)` adjusts a value just before an undo or redo writes it back**, for a form whose values name things that can stop existing. Left out, nothing changes, so the other forms are untouched. The spell builder uses it to turn a step's saved id into none when a save has since deleted that step.
 - **A `reset` clears the history.** The hook sees the form's defaults change
   and starts over. A form that makes its saved values the new start another
   way calls `history.clear()`. `enabled: false` makes the chords, the buttons
@@ -435,12 +440,13 @@ accent when pointed at or focused.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/Field/index.stories.tsx), `Forms /
-Field`: `TextField` as `Default`, `Required`, `WithHint`, `WithNote`,
-`WithError`, `Multiline` and `Disabled`, each in a `FormProvider`;
-`RadioStrip`, the radio group as a strip of icons; `PlainShell`, the shell around a native input with an error; `Switch`,
+Field`: `States`, a grid of the text field in each shape (Plain, Required, Pending, With Hint, With Note, With Error, Multiline, Disabled, With Label Suffix, With Placeholder, Tall Multiline, Date Type, Number Type, With Action, With Content After The Error, Described By Another Element, Marked Invalid Without An Error) and the select in each (Select With Placeholder, With Option Icons, With A Disabled Option, Disabled, With Typeahead, Required With Hint), each in a `FormProvider`;
+`RadioStrip`, the radio group as a strip of icons, with `RadioGroup`, `RadioSegmented` and `RadioSegmentedDisabled`; `PlainShell`, the shell around a native input with an error; `Switch`,
 `SwitchField` off, on, and disabled off and on; `Actions`, `FormActions` with
 nothing to save, with something to save and Delete, saving, and renamed to
-Send Invitation; `Reason`,
+Send Invitation; `ActionsInUse`, the row at work in a form of one field (Save wakes when the field
+changes, holds busy, then settles; Cancel restores the field; Delete removes the form), its
+`status` set from the controls panel; `HistoryButtons`; `Reason`,
 `ReasonField`; `SearchBox`, `SearchField` in a form that goes nowhere; and
 `FilterSelect`, `FilterSelectField` as a select and as a type-ahead in a
 filter row.
@@ -466,3 +472,52 @@ server's markup. They cover `FilterSelectField` by the address each
 pick applies, its options and its name in the form, and the native select
 in the server's markup swapped once hydrated for the select-only box or
 the type-ahead.
+
+## How the undo and redo chords are heard
+
+`useFormHistory` listens for the chords with native listeners on the document, in the bubble phase, rather than a React `onKeyDown` prop on the form. A key handler on a non-interactive element is what the accessibility lint refuses, and an inner element's own native listener runs first. React dispatches its synthetic handlers from the root container, so these listeners also run before any React `onKeyDown` inside the form (Downshift's, a panel's). That is why the target checks read the DOM (`aria-expanded`) and do not wait for an inner handler to set `defaultPrevented`.
+
+The listener is on the document, not the form, because after a click on a blank part of a dialog focus sits on the page itself, outside the form, and a listener on the form never hears the key. A chord is accepted when this form owns its target, or when the target is outside every form and this form was the last to hold focus. That is `held`, a ref so a re-registered listener keeps it, kept by a `focusin` listener.
+
+Owning is exclusive, so a chord never undoes twice. Each root carries a `data-form-history` mark, and an element belongs only to the hook whose root is its nearest marked ancestor. A nested form (a panel) takes its own chords and the form around it never hears them, whether or not it passes `ignore`. The form's own Undo and Redo buttons sit outside the root, so they count as owned too. `ignore` keeps its job: a target the form owns but does not govern is left alone.
+
+A text box that is a combobox owns its keys only while a person is arrowing through its list. Downshift sets a non-empty `aria-activedescendant` on the input while an option is highlighted, and an empty one otherwise. An open list with nothing highlighted (a click into the box opens it) lets the chord through. A select's toggle is a combobox but not a text box, and never owns Ctrl+Z, because it highlights an item the moment it opens. Anything inside the listbox itself is still left alone.
+
+The current `enabled`, `ignore`, `undo` and `redo` are effect dependencies, so the listeners are registered again when one changes and never see a stale one.
+
+## The edited-fields record
+
+`edited-fields.ts` records every field the person has ever edited: one that has had a `change` event, kept even when its value later returns to the default. This is what "Errors wait for an edit and a leave" reads. react-hook-form's `dirtyFields` is not that record, because it unsets a field whose value goes back to its default, so a name typed and then deleted would read as never edited and its "Required" would stay unshown. `clear` empties the record when the form starts over (after a reset), so the restarted form is quiet again.
+
+It listens through the form's `subscribe` (pass `useForm`'s), asking for `values` so react-hook-form sends it the field name and event type of each input event. A `setValue` (undo and redo restore through it) carries no event type and so does not count as an edit by the person.
+
+`use-field.ts` decides whether the error on `name` is shown. After a submit, every error is. Before one, only a field the person has both left and edited is, so a field whose error came from another field's change (a classification pick raising the formal-name rule) stays quiet until it is edited and left itself. With no `edited` record the rule is touched alone. It is one rule, so no field and no section flag repeats it.
+
+## Radio groups
+
+`RadioGroupField` is one choice from a few, each with its own line of explanation: a native radio group in a `.fieldset`, its legend the group's name. It is native so the arrow keys move the choice and a screen reader hears "2 of 3". The explanation is the radio's description, read after its name. The caller holds the state, passed as `value`. A `note` is the group's own line, read with it, for what holds for every choice.
+
+`layout="strip"` draws the options as one bar of icon-only segments with the chosen name printed beneath, still a native radio underneath. `layout="segmented"` draws the same kind of bar with each choice's name in text and, if it has one, its count, as the compendium filter's Match and Toxic do.
+
+## Switch, search and select fields for filters
+
+**`SwitchField`** is a `.field` block, its label above and the toggle beneath at a control's height, as every other field in a filter row is laid out.
+
+- The toggle is a native checkbox with `role="switch"`, not a button. It therefore submits `name=value` with a GET form before hydration, keeps Space and its label's click, and its checked state is the switch's to a screen reader.
+- The label and the toggle are each marked `data-pressed` while a pointer holds them, since a phone shows `:active` late or not at all.
+- It is controlled by `checked`, or uncontrolled from `defaultChecked`, as a filter that applies on the change draws it. The new list draws it again from the filter it shows.
+- Enter turns it as a click does. A native checkbox flips on Space alone and Enter would only submit the form around it, so the key press is cancelled and answered with a click. That flips the checkbox and fires its change whether it is controlled or not, the one path a press takes.
+- A `hint` stands in an InfoTip beside the label, read with the toggle, as `FieldShell` draws one. A filter switch takes none. A `note` is a line under the toggle, read with it as `RadioGroupField`'s is: what its state means. A `noteTip` is the rest of that note behind an InfoTip beside it, its text listed in the toggle's description too.
+
+**`SearchField`** is drawn as one box, `.input.search-field`, holding a borderless input and the button, as Combobox's control holds its text and indicators, so the mark sits inside the edge rather than as a button beside it. The submit is the form's. The search applies by a press on the mark, which a first-time user can see, or by Enter, which a box in a form with a submit button sends natively.
+
+**`FilterSelectField`** is drawn by the server as a native `<select>` whose blank first choice is no filter. Once hydrated it is one of Combobox's boxes, so the row has one dropdown look: the select-only box, or with `typeahead`, for a set long enough to want a search, the type-ahead. A hidden input carries the same parameter after. Each starts from the value the page shows and applies a choice other than it, since the list draws its filter again from the filter it shows. It has one width for every form, `filter-row__choice`, so hydration moves nothing.
+
+## Form actions
+
+`FormActions` is written once for the admin forms and the ingredient form.
+
+- Save is off until there is something to save and busy from the press to the answer ("Saving Ingredient" with a spinner). Any further saves follow it. Cancel is quiet. Delete is destructive and set apart at the far end.
+- The row is `.form__actions` rather than `.modal__actions`: it wraps, so a third button never squeezes the row.
+- `aside` takes Delete's place for a form with other choices to set apart. Save is renamed where the form does something other than save: the admin invitation form's Send Invitation.
+- `saveReason` says why Save is off, in a tip on the button that opens on hover, focus and a tap (IconTip), and as its description. The button is then `aria-disabled` and not `disabled`, which would take it out of the tab order and give it no hover or focus to open the tip from. It looks the same, and the press does nothing.

@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/birch-betula-pendula
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Betula pendula
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-betula-pendula
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Betula pendula", 2014, 10.2305/IUCN.UK.2014-3.RLTS.T62535A3115662.en'

@@ -1,13 +1,16 @@
-import type { Story } from '@ladle/react';
-import EmailPreview, { WORKSHOP_ORIGIN } from '../../.ladle/EmailPreview';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
+import EmailPreview, { WORKSHOP_ORIGIN } from '../../.storybook/EmailPreview';
 import { adminInvitationMessage } from './admin-invitation';
 
 // Render-only; content is asserted in tests/emails/admin-invitation.test.tsx.
 // The link is invented and goes nowhere; the images and fonts come from the
 // workshop, which serves public/.
-export default {
+const meta = {
   title: 'Emails / Admin Invitation',
-};
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const URL = 'https://sorrelandsalt.com/invite/workshop-preview-token';
 
@@ -31,14 +34,20 @@ const curatorMessage = () =>
   });
 
 // Follows the toolbar's theme control, as the mail follows a reader's setting.
-export const Default: Story = () => <EmailPreview message={message} />;
+const defaultNode = <EmailPreview message={message} />;
 
-// Pinned dark: what Gmail and any client that ignores the setting shows.
-export const Dark: Story = () => <EmailPreview message={message} />;
-Dark.meta = { theme: 'dark' };
+// The same mail inviting to the curator role.
+const curatorNode = <EmailPreview message={curatorMessage} />;
 
-export const Light: Story = () => <EmailPreview message={message} />;
-Light.meta = { theme: 'light' };
+const STATES_STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  Curator: curatorNode,
+};
 
-// The same mail inviting to the curator role (M11.20).
-export const Curator: Story = () => <EmailPreview message={curatorMessage} />;
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
+  },
+  render: ({ state }) => <div>{state}</div>,
+};

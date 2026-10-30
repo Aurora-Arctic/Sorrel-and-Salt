@@ -8,7 +8,7 @@ import { assertMembership } from './membership';
 
 /**
  * The workspace a `/coven/[slug]` address names, and the caller's proof of
- * membership in it (M6.10). The slug is the only input: a workspace is named
+ * membership in it. The slug is the only input: a workspace is named
  * by the address alone, never by session state.
  *
  * Asks for `workspace: read`, which every role holds, so any member is

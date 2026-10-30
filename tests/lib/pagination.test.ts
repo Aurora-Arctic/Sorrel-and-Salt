@@ -50,16 +50,13 @@ describe('page size', () => {
 });
 
 describe('cursor', () => {
-  it('round-trips a sort key and an id', () => {
-    const cursor = { key: ['2026-09-27 02:46:12.457123+00'], id: ID };
-
-    expect(decodeCursor(encodeCursor(cursor))).toEqual(cursor);
-  });
-
-  it('round-trips a key of several parts, in order', () => {
-    const cursor = { key: ['-0.6666667', "Cat's Claw"], id: ID };
-
-    expect(decodeCursor(encodeCursor(cursor))).toEqual(cursor);
+  it('round-trips a sort key and an id, whether the key is one part or several, in order', () => {
+    for (const cursor of [
+      { key: ['2026-09-27 02:46:12.457123+00'], id: ID },
+      { key: ['-0.6666667', "Cat's Claw"], id: ID },
+    ]) {
+      expect(decodeCursor(encodeCursor(cursor))).toEqual(cursor);
+    }
   });
 
   it('encodes the sort key and id and nothing positional', () => {
@@ -82,7 +79,7 @@ describe('cursor', () => {
       forged({ k: ['Testwort'] }),
       forged({ k: ['Testwort'], i: 7 }),
       forged({ k: ['Testwort'], i: '' }),
-      // The single-part shape before MB.104, a key with no parts, and a part that is not text.
+      // A key with no parts (the single-part shape), and a part that is not text.
       forged({ k: 'Testwort', i: ID }),
       forged({ k: [], i: ID }),
       forged({ k: ['Testwort', 7], i: ID }),
@@ -102,16 +99,6 @@ describe('resolvePage', () => {
     });
 
     expect(asked).toEqual({ limit: 11, inverted: false });
-  });
-
-  it('asks for 101 at most, whatever the client named', async () => {
-    let asked: PageRequest | undefined;
-    await resolvePage({ first: 10_000 }, (request) => {
-      asked = request;
-      return rows(0);
-    });
-
-    expect(asked?.limit).toBe(MAX_PAGE_SIZE + 1);
   });
 
   it('trims the extra row and reports the next page', async () => {

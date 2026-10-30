@@ -8,11 +8,9 @@ import {
 } from './parts/layout';
 import type { AdminInvitationProps } from './types';
 
-// MB.70's mail: the one place an admin invitation's link exists outside the
-// reader's inbox, since only its token's hash is stored and no response
-// carries it (claude-docs/auth/admin-users.md, "Inviting an admin"). It names
-// the site role it grants, curator or admin (M11.20), in the subject as well,
-// so the inbox says which.
+// The one place an admin invitation's link exists outside the reader's inbox: only
+// its token's hash is stored (claude-docs/auth/admin-users.md, "Inviting an admin").
+// The subject names the site role it grants, curator or admin.
 
 /** The role as the mail names it, with its article: "an admin". */
 const ROLE: Record<AdminInvitationProps['siteRole'], { title: string; prose: string }> = {

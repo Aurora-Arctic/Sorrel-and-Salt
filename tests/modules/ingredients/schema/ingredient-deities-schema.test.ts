@@ -3,12 +3,10 @@ import postgres from 'postgres';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import { ingredientDeities } from '@/modules/ingredients/schema/ingredient-deities';
-import { ingredients } from '@/modules/ingredients/schema/ingredients';
-import { deities } from '@/modules/vocabulary/schema/deities';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 import type { DeityEntry } from './types';
 
-// DESIGN.md §5's `ingredient_deities` (MB.165): one row per deity an
+// DESIGN.md §5's `ingredient_deities`: one row per deity an
 // ingredient names, in the order entered, each a name and, when the member
 // picked a curated deity, a link to it.
 const OWN_COLUMNS = ['id', 'ingredient_id', 'deity_id', 'name', 'position'];
@@ -18,22 +16,12 @@ const LINK_INDEX = 'ingredient_deities_link_unique';
 const NAME_INDEX = 'ingredient_deities_name_unique';
 
 describe('ingredient_deities schema', () => {
-  const { byName, nonAuditForeignKeys } = tableFacts(ingredientDeities);
+  const { byName } = tableFacts(ingredientDeities);
 
   // The full six, as substitutes carry: a deity on an ingredient is content,
   // so removing one leaves a tombstone.
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual([...OWN_COLUMNS, ...AUDIT_COLUMNS].sort());
-  });
-
-  // §5: a deity's name is free text over the vocabulary, an FK on it would make
-  // an uncurated value unwritable; the pick is linked beside the name, and no
-  // key reaches a tradition (claude-docs/db/deity-vocabulary.md).
-  it('keys the parent and the pick, and never the name', () => {
-    expect(nonAuditForeignKeys.map((fk) => [fk.column, fk.foreignTable]).sort()).toEqual([
-      ['deity_id', deities],
-      ['ingredient_id', ingredients],
-    ]);
   });
 });
 
@@ -42,7 +30,7 @@ const AUTHOR = FIXTURE_USERS.A.id;
 let MUGWORT: string;
 let UNCARIA: string;
 // One invented god under two invented traditions: the Greek and Roman Hecate
-// case, without colliding with a row MB.129 seeds.
+// case, without colliding with a seeded row.
 let TESTRA_FIXTURAL: string;
 let TESTRA_MOCKISH: string;
 
@@ -139,7 +127,7 @@ describe('ingredient_deities table', () => {
       }
     });
 
-    // A link reads as its name once its deity is soft-deleted (MB.165): the
+    // A link reads as its name once its deity is soft-deleted: the
     // key still holds, and the name is the row's own.
     it('keeps a link, and its name, when the deity is soft-deleted', async () => {
       const kept = await addDeity(UNCARIA, {
@@ -155,7 +143,7 @@ describe('ingredient_deities table', () => {
     });
   });
 
-  // DESIGN.md §5: no repeats. MB.167's shared schema refuses a repeat first,
+  // DESIGN.md §5: no repeats. The shared schema refuses a repeat first,
   // so these indexes are the floor beneath it.
   describe('an ingredient names a deity once', () => {
     it('refuses a second live link to the same deity', async () => {

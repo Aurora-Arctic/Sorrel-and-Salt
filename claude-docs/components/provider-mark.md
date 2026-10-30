@@ -47,13 +47,12 @@ SignInPanel and the account page's sign-in methods both render it.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/ProviderMark/index.stories.tsx), `Surfaces /
-Provider Mark`: `Default` and `Light`, the four providers' marks with their names
-in each theme; `FacebookChip`, Facebook's mark as a brand button draws it, on
-its blue chip; and `UnavailableNote`, the note a button for an unavailable
-provider carries.
+Provider Mark`: `States`, a grid of Marks (the four providers' marks with their names;
+the toolbar's theme control shows each theme); Facebook Chip (Facebook's mark as a brand button draws it, on
+its blue chip); and Unavailable Note (the note a button for an unavailable
+provider carries).
 
 ## Testing
 
-None of its own: it is presentation, which the story (`Surfaces / Provider
-Mark`) and axe on the pages that show it own. The note's wiring is asserted
+None of its own: it is presentation, which the story (`Sign In / Provider Mark`) and axe on the pages that show it own. The note's wiring is asserted
 where a button names it.

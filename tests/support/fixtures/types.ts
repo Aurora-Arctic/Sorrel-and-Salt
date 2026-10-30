@@ -2,7 +2,7 @@ import type { z } from 'zod';
 import type { workspaceMembers, workspaces } from '@/modules/coven/schema/workspaces';
 import type { ingredientVariants } from '@/modules/ingredients/schema/ingredient-variants';
 import type { ingredients } from '@/modules/ingredients/schema/ingredients';
-import type { spellIngredients } from '@/modules/grimoire/schema/spell-ingredients';
+import type { spellSteps } from '@/modules/grimoire/schema/spell-steps';
 import type { spells } from '@/modules/grimoire/schema/spells';
 import type { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
 
@@ -54,10 +54,7 @@ export interface IngredientFixture extends Required<
     | 'toxic'
   >
 > {
-  /**
-   * Its forms, each a variant row with what it adds (MB.222): the form lives
-   * on the variant, never the ingredient row. `[]` is an entry with no form.
-   */
+  /** Its forms, each a variant row with what it adds; the form lives on the variant, never the ingredient row. `[]` is an entry with no form. */
   variants: VariantFixture[];
   folkNames: string[];
   /** Substitutes typed as names; a test links one with `insertSubstituteLink`. */
@@ -68,9 +65,8 @@ export interface IngredientFixture extends Required<
 }
 
 /**
- * One form of an ingredient (MB.215), as `insertIngredient` writes each of
- * the fixture's and `insertVariant` writes one more beside them: the form,
- * whatever it adds, and the categories and typed substitutes it owns (MB.217).
+ * One form of an ingredient, as `insertIngredient` writes each of the fixture's and `insertVariant`
+ * writes one more beside them: the form, whatever it adds, and the categories and typed substitutes it owns.
  */
 export type VariantFixture = Pick<typeof ingredientVariants.$inferInsert, 'form'> &
   Partial<
@@ -92,47 +88,48 @@ export type VariantFixture = Pick<typeof ingredientVariants.$inferInsert, 'form'
     substitutes?: string[];
   };
 
-/** One form as a write's input sends it (MB.219): every field but `id`, `""` or `[]` for none. */
+/** One form as a write's input sends it: every field but `id`, `""` or `[]` for none. */
 export type VariantInput = NonNullable<z.input<typeof LocalIngredientInput>['variants']>[number];
 
 /**
- * One layer of the stack: it points at an ingredient *or* names one of its own
- * (`num_nonnulls(ingredient_id, name) = 1`), with `form` only beside a name.
+ * One step of the recipe: an instruction (`body`), an ingredient, or both. A
+ * layer points at an ingredient *or* names one of its own
+ * (`num_nonnulls(ingredient_id, name) <= 1`), with `form` only beside a name.
  */
-export interface SpellLayerFixture extends Required<
+export interface SpellStepFixture extends Required<
   Pick<
-    typeof spellIngredients.$inferInsert,
-    'ingredientId' | 'name' | 'form' | 'quantity' | 'unit' | 'note' | 'layerOrder'
+    typeof spellSteps.$inferInsert,
+    'ingredientId' | 'name' | 'form' | 'quantity' | 'unit' | 'body' | 'position'
   >
 > {}
 
 /**
- * What a test says about a layer. `layerOrder` is the position in the array,
- * so it cannot be stated as well.
+ * What a test says about a step. `position` is the index in
+ * the array, so it cannot be stated as well.
  */
-export type SpellLayerOverrides = Omit<Overrides<SpellLayerFixture>, 'layerOrder'>;
+export type SpellStepOverrides = Omit<Overrides<SpellStepFixture>, 'position'>;
 
-/** A spell, plus the categories it intends and the layers it is built from. */
+/** A spell, plus the categories it intends and the steps of its recipe. */
 export interface SpellFixture extends Required<
   Pick<
     typeof spells.$inferInsert,
     | 'workspaceId'
     | 'title'
     | 'intent'
-    | 'jarSize'
+    | 'jarDescription'
     | 'sealWaxColor'
     | 'moonPhase'
     | 'dayOfWeek'
-    | 'instructions'
+    | 'note'
     | 'status'
     | 'visibility'
   >
 > {
   /** §6 categories by name — what the spell *intends*, never what its contents imply (§9). */
   categories: string[];
-  layers: SpellLayerFixture[];
+  steps: SpellStepFixture[];
 }
 
-export type SpellOverrides = Omit<Overrides<SpellFixture>, 'layers'> & {
-  layers?: SpellLayerOverrides[];
+export type SpellOverrides = Omit<Overrides<SpellFixture>, 'steps'> & {
+  steps?: SpellStepOverrides[];
 };

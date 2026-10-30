@@ -7,22 +7,17 @@ import { slotUrl } from './slots';
 import type { Page } from '@playwright/test';
 import { slugify } from '@/lib/slugify';
 
-// The coven page and its section nav against the built server (M9.15), and
-// the guard that fronts them (claude-docs/auth/coven-guard.md, "The coven
-// guard"): a member of any role opens the page, and a signed-in stranger
-// meets the same 404 as an address that names no coven at all. Each worker
-// builds the coven in its own database before its first test, so the tests
-// are independent and spread across workers.
+// The coven page and its section nav against the built server: a viewer opens the page with Leave and without
+// Delete, the keyboard reaches the nav, and the only owner's exit keeps its refusal inside the dialog. A
+// stranger's 404 (claude-docs/auth/coven-guard.md, "The coven guard") is coven-ingredients.spec.ts's.
 
 const COVEN_NAME = 'Fixture Coven';
 const COVEN_SLUG = slugify(COVEN_NAME);
 
-type Role = 'owner' | 'member' | 'viewer';
-const users: Record<Role | 'stranger', { id: string }> = {
+type Role = 'owner' | 'viewer';
+const users: Record<Role, { id: string }> = {
   owner: { id: '' },
-  member: { id: '' },
   viewer: { id: '' },
-  stranger: { id: '' },
 };
 
 test.beforeAll(async ({ browser, slot }) => {
@@ -38,7 +33,7 @@ test.beforeAll(async ({ browser, slot }) => {
   }
 });
 
-/** The coven holds its three members and no one else: the stranger has no seat. */
+/** The coven holds its owner and its viewer and no one else. */
 async function seedFixtureCoven(page: Page): Promise<void> {
   for (const key of Object.keys(users) as (keyof typeof users)[]) {
     users[key] = { id: (await signInAs(page, `${key}@coven-page.test`)).userId };
@@ -50,7 +45,7 @@ async function seedFixtureCoven(page: Page): Promise<void> {
       insert into workspaces (name, slug, created_by, updated_by)
       values (${COVEN_NAME}, ${COVEN_SLUG}, ${users.owner.id}, ${users.owner.id})
       returning id`;
-    for (const role of ['owner', 'member', 'viewer'] as const) {
+    for (const role of ['owner', 'viewer'] as const) {
       await sql`
         insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
         values (${coven.id}, ${users[role].id}, ${role}, ${users.owner.id}, ${users.owner.id})`;
@@ -59,37 +54,33 @@ async function seedFixtureCoven(page: Page): Promise<void> {
       select user_id, role::text from workspace_members
       where workspace_id = ${coven.id} and deleted_at is null`;
     expect(members.map((row) => [row.user_id, row.role]).sort()).toEqual(
-      (['owner', 'member', 'viewer'] as const).map((role) => [users[role].id, role]).sort(),
+      (['owner', 'viewer'] as const).map((role) => [users[role].id, role]).sort(),
     );
   } finally {
     await sql.end();
   }
 }
 
-for (const role of ['owner', 'member', 'viewer'] as const) {
-  test(`a ${role} opens the coven page with its nav, and Leave is offered to every role`, async ({
-    page,
-  }) => {
-    await signInAgainAs(page, users[role].id);
+test('a viewer opens the coven page with its nav, offered Leave and not Delete', async ({
+  page,
+}) => {
+  await signInAgainAs(page, users.viewer.id);
 
-    const response = await page.goto(`/coven/${COVEN_SLUG}`);
+  const response = await page.goto(`/coven/${COVEN_SLUG}`);
 
-    expect(response?.status()).toBe(200);
-    await expect(page.getByRole('heading', { level: 1, name: COVEN_NAME })).toBeVisible();
-    const nav = page.getByRole('navigation', { name: 'Coven' });
-    const overview = nav.getByRole('link', { name: 'Overview', exact: true });
-    await expect(overview).toHaveAttribute('href', `/coven/${COVEN_SLUG}`);
-    await expect(overview).toHaveAttribute('aria-current', 'page');
+  expect(response?.status()).toBe(200);
+  await expect(page.getByRole('heading', { level: 1, name: COVEN_NAME })).toBeVisible();
+  const nav = page.getByRole('navigation', { name: 'Coven' });
+  const overview = nav.getByRole('link', { name: 'Overview', exact: true });
+  await expect(overview).toHaveAttribute('href', `/coven/${COVEN_SLUG}`);
+  await expect(overview).toHaveAttribute('aria-current', 'page');
 
-    const main = page.getByRole('main');
-    await expect(main.getByRole('button', { name: 'Leave Coven', exact: true })).toBeEnabled();
-    // Delete is the owner's alone; the membership rows above are why a
-    // member's and a viewer's absence is a refusal and not an empty page.
-    const remove = main.getByRole('button', { name: 'Delete Coven', exact: true });
-    if (role === 'owner') await expect(remove).toBeEnabled();
-    else await expect(remove).toHaveCount(0);
-  });
-}
+  const main = page.getByRole('main');
+  await expect(main.getByRole('button', { name: 'Leave Coven', exact: true })).toBeEnabled();
+  // Delete is the owner's alone; the membership row above is why the
+  // viewer's absence of it is a refusal and not an empty page.
+  await expect(main.getByRole('button', { name: 'Delete Coven', exact: true })).toHaveCount(0);
+});
 
 test('real Tab presses reach the Overview link, and the page passes the scans', async ({
   page,
@@ -113,10 +104,8 @@ test('real Tab presses reach the Overview link, and the page passes the scans', 
   await assertNoSidewaysScroll(page);
 });
 
-// A refusal said inside the only owner's exit dialog, at a phone's width,
-// where the notice once pushed Cancel past the dialog's edge (M12.31). The
-// page offers this owner the exit dialog because the fixture's owner is its
-// only one.
+// A refusal said inside the only owner's exit dialog, at a phone's width, where the notice once pushed
+// Cancel past the dialog's edge. The fixture's owner is its only one, so the page offers the exit dialog.
 test("a refused deletion in the only owner's exit keeps Cancel inside the dialog at 375px", async ({
   page,
 }) => {
@@ -125,7 +114,7 @@ test("a refused deletion in the only owner's exit keeps Cancel inside the dialog
   await page.goto(`/coven/${COVEN_SLUG}`);
   await page.getByRole('main').getByRole('button', { name: 'Leave Coven', exact: true }).click();
   const dialog = page.getByRole('dialog');
-  await dialog.getByRole('radio', { name: /^Delete It/ }).check();
+  await dialog.getByRole('radio', { name: /^Delete Coven/ }).check();
   const remove = dialog.getByRole('button', { name: 'Delete Coven', exact: true });
   const cancel = dialog.getByRole('button', { name: 'Cancel', exact: true });
 

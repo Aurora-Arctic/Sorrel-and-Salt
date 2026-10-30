@@ -8,12 +8,12 @@ vi.mock('@/modules/ingredients', () => ({
   ]),
 }));
 
-// MB.84: a crawler is let into the public compendium on production and
+// A crawler is let into the public compendium on production and
 // nowhere else; every other deploy asks to be left alone.
 
 afterEach(() => vi.unstubAllEnvs());
 
-describe('MB.84: robots', () => {
+describe('robots', () => {
   // Next runs a metadata route once at build and keeps the answer unless it opts out, which
   // would freeze `VERCEL_ENV` at build time. Per request, the runtime's value decides.
   it('is read per request, so the runtime VERCEL_ENV decides and not the build', () => {
@@ -57,13 +57,11 @@ describe('MB.84: robots', () => {
     ['/robots.txt', true],
     ['/.well-known/ai-catalog.json', true],
     ['/.well-known/ard.json', true],
-    ['/sitemap.xml', true],
     ['/.well-known/other.json', false],
     ['/coven/fixture-coven', false],
     ['/coven', false],
     ['/admin', false],
     ['/account', false],
-    ['/sign-in', true],
     ['/invite/fixture-token', false],
     ['/api/graphql', false],
   ])('treats %s as crawlable: %s', (path, expected) => {

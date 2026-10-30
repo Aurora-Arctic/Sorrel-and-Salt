@@ -1,15 +1,12 @@
 'use client';
 
-import { type ReactElement, useEffect, useId, useState } from 'react';
+import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
 import type { PageNavEntry, PageNavItem, PageNavProps } from './types';
 import './index.scss';
 
-// A menu of jump links to a page's own sections, marking the one in view
-// (claude-docs/components/page-nav.md). The anchors do the jumping, so the
-// menu works before the script loads; the script only moves `aria-current`.
-// The server render marks the first entry. A group is set apart when its
-// first entry is: the entries are one flat array, so the group has no field
-// of its own to carry it.
+// A menu of jump links to a page's sections (claude-docs/components/page-nav.md). The anchors jump,
+// so it works before the script loads; the script only moves `aria-current`. A group is set apart
+// when its first entry is, as the entries are one flat array.
 
 function itemsOf(entries: readonly PageNavEntry[]): PageNavItem[] {
   const items: PageNavItem[] = [];
@@ -25,6 +22,7 @@ function itemsOf(entries: readonly PageNavEntry[]): PageNavItem[] {
 export default function PageNav({ label, entries }: PageNavProps): ReactElement {
   const [current, setCurrent] = useState(entries[0]?.href);
   const groupId = useId();
+  const nav = useRef<HTMLElement>(null);
 
   useEffect(() => {
     // No observer (an old browser): the server's mark stays.
@@ -42,7 +40,11 @@ export default function PageNav({ label, entries }: PageNavProps): ReactElement 
           if (change.isIntersecting) visible.add(change.target.id);
           else visible.delete(change.target.id);
         }
-        const first = entries.find((entry) => visible.has(entry.href.slice(1)));
+        // An entry the width hides has no box, so it is never the current one.
+        const shown = (entry: PageNavEntry) =>
+          !entry.narrowOnly ||
+          (nav.current?.querySelector(`a[href="${entry.href}"]`)?.getClientRects().length ?? 0) > 0;
+        const first = entries.find((entry) => visible.has(entry.href.slice(1)) && shown(entry));
         if (first) setCurrent(first.href);
       },
       // A band across the upper part of the window: a section counts once its
@@ -56,7 +58,14 @@ export default function PageNav({ label, entries }: PageNavProps): ReactElement 
   // `apart` is drawn by whatever stands at the top level: the entry's own item,
   // or for a group its item, never the entry again inside the group.
   const link = (entry: PageNavEntry, apart = entry.apart) => (
-    <li key={entry.href} className={apart ? 'page-nav__apart' : undefined}>
+    <li
+      key={entry.href}
+      className={
+        [apart && 'page-nav__apart', entry.narrowOnly && 'page-nav__narrow']
+          .filter(Boolean)
+          .join(' ') || undefined
+      }
+    >
       <a href={entry.href} aria-current={entry.href === current ? 'location' : undefined}>
         {entry.label}
       </a>
@@ -67,6 +76,7 @@ export default function PageNav({ label, entries }: PageNavProps): ReactElement 
   // nests a group, its label naming its list.
   return (
     <nav
+      ref={nav}
       className={
         entries.some((entry) => entry.group !== undefined)
           ? 'page-nav page-nav--grouped'
@@ -81,7 +91,15 @@ export default function PageNav({ label, entries }: PageNavProps): ReactElement 
           ) : (
             <li
               key={`group-${at}`}
-              className={item.entries[0]?.apart ? 'page-nav__apart' : undefined}
+              className={
+                [
+                  item.entries[0]?.apart && 'page-nav__apart',
+                  // A group of narrow-only entries is hidden whole, label included.
+                  item.entries.every((entry) => entry.narrowOnly) && 'page-nav__narrow',
+                ]
+                  .filter(Boolean)
+                  .join(' ') || undefined
+              }
             >
               <span className="page-nav__group" id={`${groupId}-${at}`}>
                 {item.label}

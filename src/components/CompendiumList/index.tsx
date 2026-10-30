@@ -10,7 +10,7 @@ import CategoryChips from '../CategoryChips';
 import FormIcon from '../FormIcon';
 import StackTable, { updatedColumn } from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
-import { NO_MATCH_ADVICE, noMatchLead } from '../../lib/text';
+import { NO_MATCH_ADVICE, emptyList, noMatchLead } from '../../lib/text';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS, labelOf } from '../IngredientForm/options';
 import IngredientSearch from '../IngredientSearch';
@@ -24,14 +24,9 @@ import type {
 } from './types';
 import './index.scss';
 
-// `/admin/compendium`'s filter, table and pager (M5.5), as the category
-// list's. Render-only: the page reads one page of the compendium under the
-// address's filter through the service and hands it here. The filter is a GET
-// form to the page itself, so a filtered page — the unknown kind, the
-// unsourced — is an address. Each Edit is an address too, the page opening its
-// modal from the URL, so a modal can be linked to and Back closes it. The
-// frame, filter row and pager are IngredientSearch's (M8.10); this list gives
-// it the filter and the table (claude-docs/components/compendium-list.md).
+// `/admin/compendium`'s filter, table and pager. Render-only: the page reads one page under the
+// address's filter, and each Edit is an address, so a modal can be linked to and Back closes it
+// (claude-docs/components/compendium-list.md).
 
 // None, rather than an empty cell: the to-do list tells an unconfirmed formal
 // name from no formal name by this column.
@@ -45,10 +40,8 @@ const nameOf = (entry: CompendiumListEntry): string => cardName(entry.name, entr
 const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
   {
     heading: 'Name',
-    // The Quick Look eye, opening the entry's details over the list (M12.5), to
-    // the left of the name (the owner's call, 2026-10-20); then the entry's own
-    // public page, by its stored slug (M8.19), which offers a curator Edit. The
-    // pencil still opens the edit modal from here.
+    // The Quick Look eye opens the entry's details over the list, left of the name; then the entry's
+    // public page by its stored slug, which offers a curator Edit. The pencil opens the edit modal here.
     cell: (entry) => (
       <>
         <DetailsLink opens={entry.details} name={nameOf(entry)} />{' '}
@@ -70,13 +63,9 @@ const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
   },
   {
     heading: 'Form',
-    // Each form led by its group's icon, the generic where it has none, the two held
-    // together as one unit that never wraps apart: the icon close to its name and the
-    // next form farther off (the owner's call, 2026-10-16). A dot is drawn between two
-    // forms by the `dotted-row` mixin, the card's mechanism, so a form that wraps
-    // starts its line at the cell's edge. The spoken comma ends the form before the
-    // dot and a space parts the two, which draws nothing in a flex row, so the cell's
-    // name reads "Herb, Oil" and a screen reader hears a list.
+    // Each form led by its group's icon (the generic where none), the two held as one unit that never wraps
+    // apart. The `dotted-row` mixin draws a dot between forms; the spoken comma ends a form before it and a
+    // space parts the two, so the cell reads "Herb, Oil" and a screen reader hears a list.
     cell: (entry) =>
       entry.forms.length ? (
         <span className="compendium-list__forms">
@@ -157,14 +146,8 @@ const joinedNames = (names: readonly string[], word: string): ReactNode =>
   ));
 
 /**
- * The empty list, naming the filters in use (MB.115, on the owner's call), so
- * an admin sees what to change: "No entries match “wort”, the form “Oil” and
- * the element Fire. Change or clear the filter to see more." With no
- * filter, the compendium itself is empty, and says how to begin it. The values
- * are bold, as the search sentence's are, and the whole sentence is muted. A
- * node rather than a string for that; `noMatchText` stays the string form
- * for the other admin lists, and both build from `noMatchLead` and
- * `NO_MATCH_ADVICE`.
+ * The empty list, naming the filters in use ("No entries match “wort”, the form “Oil”…"), or, with none,
+ * how to begin the compendium. A node, as the values are bold; `noMatchText` is the string form.
  */
 export function emptyText(
   {
@@ -183,7 +166,7 @@ export function emptyText(
   known: readonly CompendiumCategoryChoice[],
   facets: CompendiumFacetCounts,
   /** What an unfiltered empty list says: the admin's tells how to begin it. */
-  whenEmpty = 'The compendium is empty. Add the first entry with Add Ingredient.',
+  whenEmpty = `${emptyList('ingredients')} Add the first with Add Ingredient.`,
 ): ReactElement {
   // A deity by its name and tradition, the pair that tells two of one name apart.
   const deityNames = deities.flatMap((slug) => {
@@ -260,6 +243,7 @@ const CompendiumList = ({
   nextHref,
   position,
   total,
+  cursor,
 }: CompendiumListProps): ReactElement => (
   <IngredientSearch
     search={
@@ -272,6 +256,7 @@ const CompendiumList = ({
         categories={categories}
         vocabulary={vocabulary}
         total={total}
+        cursor={cursor}
       />
     }
     previousHref={previousHref}

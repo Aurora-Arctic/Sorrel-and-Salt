@@ -9,7 +9,7 @@ const entry = {
   folkNames: ['Fixture-weed', 'testwort'],
 };
 
-describe('MB.84: JSON-LD', () => {
+describe('JSON-LD', () => {
   it('never lets entry text end the script element', () => {
     const text = jsonLd({ name: '</script><b>' });
     expect(text).not.toContain('<');

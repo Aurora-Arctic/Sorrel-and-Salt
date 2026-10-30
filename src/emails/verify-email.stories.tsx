@@ -1,14 +1,17 @@
-import type { Story } from '@ladle/react';
-import EmailPreview, { WORKSHOP_ORIGIN } from '../../.ladle/EmailPreview';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
+import EmailPreview, { WORKSHOP_ORIGIN } from '../../.storybook/EmailPreview';
 import { verifyEmailMessage } from './verify-email';
 import type { ProviderId } from '../lib/types';
 
 // Render-only; content is asserted in tests/emails/verify-email.test.tsx. The
 // link is invented and goes nowhere; the images and fonts come from the
 // workshop, which serves public/.
-export default {
+const meta = {
   title: 'Emails / Verify Email',
-};
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const URL = 'https://sorrelandsalt.com/api/auth/verify-email?token=workshop.preview.token';
 
@@ -34,19 +37,27 @@ const change = () =>
   });
 
 // Follows the toolbar's theme control, as the mail follows a reader's setting.
-export const Default: Story = () => <EmailPreview message={oneProvider} />;
+const defaultNode = <EmailPreview message={oneProvider} />;
 
-export const TwoProviders: Story = () => <EmailPreview message={twoProviders} />;
+const twoProvidersNode = <EmailPreview message={twoProviders} />;
 
 // No linked account on record: the sentence stops at the address.
-export const NoProvider: Story = () => <EmailPreview message={noProvider} />;
+const noProviderNode = <EmailPreview message={noProvider} />;
 
-// An existing account asking for this address (MB.54): the first sentence changes.
-export const Change: Story = () => <EmailPreview message={change} />;
+// An existing account asking for this address: the first sentence changes.
+const changeNode = <EmailPreview message={change} />;
 
-// Pinned dark: what Gmail and any client that ignores the setting shows.
-export const Dark: Story = () => <EmailPreview message={oneProvider} />;
-Dark.meta = { theme: 'dark' };
+const STATES_STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'Two Providers': twoProvidersNode,
+  'No Provider': noProviderNode,
+  Change: changeNode,
+};
 
-export const Light: Story = () => <EmailPreview message={oneProvider} />;
-Light.meta = { theme: 'light' };
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
+  },
+  render: ({ state }) => <div>{state}</div>,
+};

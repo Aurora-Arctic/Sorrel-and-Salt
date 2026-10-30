@@ -7,6 +7,7 @@ import type {
   IngredientFacets,
   IngredientRow,
   ReferenceRow,
+  ReviewFacetValue,
   StockRow,
   WorkspaceIngredientFacets,
 } from '../../db/repository';
@@ -29,6 +30,7 @@ export type {
   IngredientFacets,
   IngredientRow,
   ReferenceRow,
+  ReviewFacetValue,
   StockRow,
   WorkspaceIngredientFacets,
 };
@@ -36,64 +38,34 @@ export type {
 // The vocabulary's own, which a category's loader answers with.
 export type { CategoryRow };
 
-/**
- * An ingredient as its children's loaders key it: the row a resolver already
- * holds. `workspaceId` says which proof to ask for; it is never the scope —
- * the read takes that from the proofs, so a key claiming the wrong tier is
- * answered with nothing.
- */
+/** An ingredient as its children's loaders key it; `workspaceId` picks the proof to ask for and is never the scope, so a key claiming the wrong tier gets nothing. */
 export type IngredientKey = Pick<IngredientRow, 'id' | 'workspaceId'>;
 
-/**
- * One live form of an ingredient as `Ingredient.variants` reads it (MB.218):
- * the variant's row, and the tier of the ingredient it was read under. A
- * variant has no `workspace_id` of its own, and its children's loaders need
- * one to know which proof to ask for, as an ingredient's do.
- */
+/** One live form of an ingredient as `Ingredient.variants` reads it: the row and the tier it was read under, which its children's loaders need to pick a proof. */
 export type IngredientVariantRow = typeof ingredientVariants.$inferSelect &
   Pick<IngredientRow, 'workspaceId'>;
 
-/**
- * A variant as its children's loaders key it, the row a resolver already
- * holds. `workspaceId` is its ingredient's, and says which proof to ask
- * for; it is never the scope, which the read takes through the variant to its
- * ingredient, as `IngredientKey` says of an ingredient's.
- */
+/** A variant as its children's loaders key it; `workspaceId` is its ingredient's, and never the scope. */
 export type VariantKey = Pick<IngredientVariantRow, 'id' | 'ingredientId' | 'workspaceId'>;
 
-/**
- * An ingredient's stock as `Ingredient.stock`'s loader keys it (M9.4): the
- * ingredient, and the coven whose jars of it are asked for. Unlike
- * `IngredientKey`'s, `workspaceId` is the argument the caller named, never
- * the row's own tier, and is always a coven: the compendium holds no stock.
- */
+/** An ingredient's stock as `Ingredient.stock`'s loader keys it; `workspaceId` is the coven the caller named, always a coven. */
 export interface StockKey {
   ingredientId: string;
   workspaceId: string;
 }
 
-/**
- * A compendium entry as `Ingredient.cupboardEntry`'s loader keys it (M12.14):
- * the entry, and the coven whose cupboard is asked about, the argument the
- * caller named, as `StockKey`'s is.
- */
+/** A compendium entry as `Ingredient.cupboardEntry`'s loader keys it: the entry and the coven named by the caller. */
 export interface CupboardEntryKey {
   ingredientId: string;
   workspaceId: string;
 }
 
-/**
- * A cupboard entry as `CupboardEntry` answers it on the wire (M12.14): the
- * row, with the compendium entry's own name beside the coven's label.
- */
+/** A cupboard entry as `CupboardEntry` answers it on the wire: the row, with the compendium entry's own name beside the coven's label. */
 export type CupboardEntryNode = CupboardEntryRow & { compendiumName: string };
 
 /**
- * What Make It Ours (M12.23) could not carry onto the coven's new own entry,
- * by name, each list sorted and without repeats. It copies everything, so it
- * lists only what the new entry could not hold: a folk name its new name took.
- * The other lists stay empty. The reverse direction, an own entry becoming a
- * compendium entry, is v2 (DESIGN.md §13, "Link to the Compendium").
+ * What Make It Ours could not carry onto the new own entry, by name, each list sorted and without repeats;
+ * only a folk name the new name took, so the other lists stay empty.
  */
 export interface DroppedOnConvert {
   forms: string[];
@@ -120,19 +92,15 @@ export type IngredientFields = Omit<
   'folkNames' | 'substitutes' | 'deities' | 'references' | 'variants'
 >;
 
-/** Where in the input an issue lands — `['variants', 1]` — as `ValidationIssue` paths it. */
+/** Where in the input an issue lands, such as `['variants', 1]`, as `ValidationIssue` paths it. */
 export type IssuePath = ValidationIssue['path'];
 
-/** One form of the ingredient as the schema parses it (MB.215). */
+/** One form of the ingredient as the schema parses it. */
 export type VariantEntry = NonNullable<LocalIngredientInput['variants']>[number];
 
 /**
- * One form as a save writes it, once `resolvePicks` has checked its pick and
- * its categories: every `""` and `[]` the input sent as none, as the row
- * holds it, and `at`, where the input sent it, `['variants', i]`, which every
- * issue about it is pathed beneath. The one form the top-level `form` stands
- * for when no list is sent is at `[]`, so its issues land on `form` and
- * `formId` as they did before variants (until MB.222).
+ * One form as a save writes it, once `resolvePicks` has checked its pick and categories: `""` and `[]` read as none,
+ * and `at` is where the input sent it. The single top-level `form` stands at `[]`.
  */
 export interface PickedVariant {
   id: string | null;
@@ -151,12 +119,7 @@ export interface PickedVariant {
   at: IssuePath;
 }
 
-/**
- * Whose child rows a write brings to a list (MB.219): the ingredient's own,
- * with no variant, or one of its forms', each still carrying the ingredient,
- * as the composite keys hold them (MB.217). `at` is where the input sent the
- * owner, which an issue about one of its rows is pathed beneath.
- */
+/** Whose child rows a write brings to a list: the ingredient's own (no variant) or one form's; `at` is where the input sent the owner. */
 export interface ChildOwner {
   ingredientId: string;
   variantId: string | null;
@@ -169,43 +132,30 @@ export interface PickedLists {
   variants: readonly VariantEntry[] | null | undefined;
 }
 
-/** The tier a write is in, which decides what a pick must be (MB.167). */
+/** The tier a write is in, which decides what a pick must be. */
 export type Tier = 'compendium' | 'coven';
 
 /** One `ingredient_deities` row as the table holds it. */
 export type DeityRecord = typeof ingredientDeities.$inferSelect;
 
-/**
- * One deity as a save writes it, once its pick is checked: the deity linked,
- * or none for a typed name, and the name the row holds — a curated pick's in
- * its row's spelling.
- */
+/** One deity as a save writes it: the deity linked (none for a typed name) and the name the row holds. */
 export interface PickedDeity {
   deityId: string | null;
   name: string;
 }
 
-/**
- * What `writeChildren` writes beside an ingredient's row: the parsed input's
- * lists, each absent one written as empty, the deities as `resolvePicks`
- * resolved them, and the deity rows the ingredient held before, which a
- * replace keeps where it lists them again — none on an add.
- */
+/** What `writeChildren` writes beside an ingredient's row: the input's lists (absent ones empty), the resolved deities, and the deity rows held before (none on an add). */
 export interface IngredientChildren extends Pick<
   LocalIngredientInput,
   'folkNames' | 'substitutes' | 'references' | 'categoryIds'
 > {
   deities: readonly PickedDeity[];
   heldDeities?: readonly DeityRecord[];
-  /** Its forms, each with its own children (MB.219); none on a write that names none. */
+  /** Its forms, each with its own children; none on a write that names none. */
   variants?: readonly PickedVariant[];
 }
 
-/**
- * One deity as `Ingredient.deities` reads it (MB.167): the name the row holds,
- * and the curated deity picked, null on a typed name and once that deity or
- * its tradition is retired, when the row reads as its name.
- */
+/** One deity as `Ingredient.deities` reads it: the name the row holds and the curated deity picked, null on a typed name or once the deity or its tradition is retired. */
 /** One live folk name as `Ingredient.folkNames` reads it: the row's id, so it can be promoted, and its text. */
 export interface FolkNameRow {
   id: string;
@@ -217,25 +167,14 @@ export interface IngredientDeityRow {
   deity: DeityRow | null;
 }
 
-/**
- * One substitute as `Ingredient.substitutes` reads it (DESIGN.md §7): the name
- * it shows — the linked ingredient's label, its last once deleted, or the
- * typed text — the ingredient to follow, null on typed text and on a deleted
- * link, and the form of it the link names, null when it names none or the
- * ingredient is gone (MB.218). The form is an id, read beneath the linked
- * ingredient like any of its variants, never by itself.
- */
+/** One substitute as `Ingredient.substitutes` reads it (DESIGN.md §7): the name shown, the ingredient to follow and the form the link names, each null on typed text or a deleted link. */
 export interface SubstituteRow {
   name: string;
   ingredient: IngredientRow | null;
   variantId: string | null;
 }
 
-/**
- * One reference as `Ingredient.references` reads it (DESIGN.md §7,
- * `ReferenceLink`): the source, and the locator the link carries — "p. 112" —
- * or null.
- */
+/** One reference as `Ingredient.references` reads it (DESIGN.md §7, `ReferenceLink`): the source and the locator such as "p. 112", or null. */
 export interface CitedReference {
   reference: ReferenceRow;
   locator: string | null;
@@ -247,10 +186,7 @@ export type IngredientValues = z.input<typeof LocalIngredientInput>;
 /** What the stock service parses: the row editor's values, or a mutation's input. */
 export type StockValues = z.input<typeof StockInput>;
 
-/**
- * What `saveStock` takes: the stock dialog's whole Save, three lists so a
- * delete cannot carry a quantity (M9.9).
- */
+/** What `saveStock` takes: the stock dialog's whole Save, in three lists so a delete cannot carry a quantity. */
 export interface SaveStockValues {
   create: { variantId: string; input: StockValues }[];
   update: { id: string; input: StockValues }[];
@@ -260,12 +196,13 @@ export interface SaveStockValues {
 /** What the reference service parses: the form's values, or a mutation's input. */
 export type ReferenceValues = z.input<typeof ReferenceInput>;
 
-/**
- * What a compendium write takes: the admin form's values, or a mutation's
- * input, and the admin's confirmation that the write may end another entry's
- * redirect.
- */
+/** What a compendium write takes: the form's values or a mutation's input, and the confirmation that it may end another entry's redirect. */
 export type CompendiumWrite = z.input<typeof CompendiumIngredientInput> & { endRedirect?: boolean };
+
+/** A compendium entry's review mark, as a curator reads it: when it was marked reviewed. */
+export interface CompendiumReview {
+  reviewedAt: Date;
+}
 
 /** What a compendium address answers: the entry there, or the slug it moved to. */
 export type CompendiumAddress =
@@ -277,41 +214,27 @@ export type CompendiumAddress =
     }
   | { kind: 'moved'; slug: string };
 
-/**
- * A category as the entry page shows it (M8.19): the row, and the group whose
- * colours its chip takes, read with it so the page needs no second lookup.
- */
+/** A category as the entry page shows it: the row and the group whose colours its chip takes. */
 export interface CategoryDetail {
   category: CategoryRow;
   group: CategoryGroupRow;
 }
 
-/**
- * A deity as the entry page shows it: its name, and the tradition the curated
- * deity sits in, null for a typed name and once the deity or its tradition
- * is retired.
- */
+/** A deity as the entry page shows it: its name, its tradition and its other names alphabetically; tradition is null for a typed name or a retired deity, other names none for a typed name. */
 export interface DeityDetail {
   name: string;
   tradition: string | null;
+  otherNames: string[];
 }
 
-/**
- * A substitute as the entry page shows it: the name, the ingredient to link
- * (null on typed text and on a deleted link, when the name is plain text),
- * and the form the link names, null when it names the ingredient whole.
- */
+/** A substitute as the entry page shows it: the name, the ingredient to link and the form it names, each null as `SubstituteRecord` says. */
 export interface SubstituteDetail {
   name: string;
   ingredient: Pick<IngredientRow, 'id' | 'slug' | 'workspaceId'> | null;
   form: string | null;
 }
 
-/**
- * One form of an ingredient as its page shows it (MB.215): the variant's row,
- * the icon of the curated form's group (null on an uncurated form), and the
- * lists that are the form's own, its references included.
- */
+/** One form of an ingredient as its page shows it: the row, its curated form group's icon (null if uncurated) and the form's own lists. */
 export interface VariantDetail {
   variant: IngredientVariantRow;
   icon: FormGroupIcon | null;
@@ -321,25 +244,12 @@ export interface VariantDetail {
   references: CitedReference[];
 }
 
-/**
- * An ingredient as its page shows it (M8.19): the row, the child lists that
- * are the ingredient's own, and one detail per live variant in form order.
- * Both routes render this one shape; the public one reads it from the cache.
- */
+/** An ingredient as its page shows it: the row, its own child lists and one detail per live variant in form order; both routes render this shape. */
 export interface IngredientDetail {
   entry: IngredientRow;
-  /**
-   * `entry` is a compendium entry the curators have retired, read because
-   * the coven's cupboard names it (M12.24): marked "No Longer in the
-   * Compendium". Always false on the public page, which reads no retired entry.
-   */
+  /** The entry is a compendium entry the curators retired, read because the coven's cupboard names it; always false on the public page. */
   retired: boolean;
-  /**
-   * The cupboard entry of the coven the page is read in, for a compendium
-   * entry that coven holds (M12.14); null on the public page, for a coven's
-   * own entry, and for one the coven does not hold. `entry` is the
-   * compendium's row as it is: `applyCupboardEntry` lays this over it.
-   */
+  /** The cupboard entry of the coven the page is read in, null on the public page and for entries the coven does not hold; `entry` is the compendium row, with `applyCupboardEntry` laying this over it. */
   cupboardEntry: CupboardEntryRow | null;
   /** Names only: the page displays them and promotes none. */
   folkNames: string[];
@@ -361,7 +271,7 @@ export type CompendiumEntryPage =
     }
   | { kind: 'moved'; slug: string };
 
-/** A compendium entry an own entry is or may be, as its page links it (M12.22). */
+/** A compendium entry an own entry is or may be, as its page links it. */
 export interface ReplacedCompendiumEntry {
   id: string;
   slug: string;
@@ -369,34 +279,28 @@ export interface ReplacedCompendiumEntry {
   canonicalName: string | null;
 }
 
-/**
- * The first few compendium entries an own entry is or may be, by name, and how
- * many there are in all (M12.22). `same` shares the entry's formal name's
- * identity, `similar` shares its label when it declares no formal name, and
- * `none` is for a compendium entry. A display only: nothing turns an own
- * entry into one of them in v1 (DESIGN.md §13, "Link to the Compendium").
- */
+/** The first few compendium entries an own entry is or may be, and how many in all; `same` shares the formal name's identity, `similar` the label, `none` is for a compendium entry. Display only (DESIGN.md §13, "Link to the Compendium"). */
 export interface CompendiumMatches {
   kind: 'same' | 'similar' | 'none';
   entries: ReplacedCompendiumEntry[];
   total: number;
 }
 
-/**
- * One of the viewer's own covens that holds a compendium entry, as the details modal's In Your
- * Covens block links to it (M12.5): enough to name the coven and build its entry's address.
- */
+/** One of the viewer's own covens that holds a compendium entry: enough to name the coven and build its entry's address. */
 export interface HoldingCoven {
   id: string;
   slug: string;
   name: string;
 }
 
-/**
- * The latest edit a coven's card shows (M6.18): who made it, by the display name the viewer may
- * read, and when, as an ISO 8601 moment. `by` is null where the viewer cannot name the editor.
- */
+/** The latest edit a coven's card shows: who made it (null where the viewer cannot name the editor) and when, as ISO 8601. */
 export interface LastEdit {
   by: string | null;
   at: string;
+}
+
+/** The In My Covens filter as the address gives it: the picked coven ids and whether the choice is Not In (no id means none of my covens). */
+export interface CovenPick {
+  covenIds: readonly string[];
+  covensNot?: boolean;
 }

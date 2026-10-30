@@ -13,7 +13,9 @@
 name: sorrel-and-salt
 
 volumes:
-  # The container's `npm ci` result; only `make docker-rebuild` clears it.
+  # The container's `npm ci` result. Docker/ensure-deps.sh, the entrypoint
+  # below, reinstalls when package-lock.json changes; `make docker-rebuild`
+  # also clears it.
   node_modules_devcontainer:
 
 services:
@@ -34,11 +36,17 @@ services:
       - ./claude-home:/home/node/.claude:cached
     init: true
     tty: true
+    # ensure-deps.sh first (see Docker/docker-compose.yaml); `entrypoint` clears
+    # the image's CMD, so the command is named below.
+    entrypoint: ['sh', '/app/Docker/ensure-deps.sh']
     # Idle PID 1; the editor runs `npm run dev` itself. Sticks only because
     # devcontainer.json sets `overrideCommand: false`.
     command: ['sleep', 'infinity']
     environment:
       NODE_ENV: development
+      # A failed `npm ci` (offline, say) prints a warning and starts anyway, so
+      # the editor still opens; every other service stops on a failed install.
+      ENSURE_DEPS_ON_FAILURE: warn
       DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
       # From `make docker-update-token`, via git-ignored Docker/.env; `:-`
       # keeps a missing file quiet and the CLI falls back to `/login`.

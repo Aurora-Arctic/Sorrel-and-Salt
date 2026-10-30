@@ -1,56 +1,25 @@
-import type { Story } from '@ladle/react';
-import type { ReactElement } from 'react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactElement, ReactNode } from 'react';
 import CardDensitySwitch from '.';
-import type {
-  CompendiumFacetCounts,
-  CompendiumListFilter as Filter,
-} from '../CompendiumList/types';
+import type { CompendiumListFilter as Filter } from '../CompendiumList/types';
 import CompendiumListFilter from '../CompendiumList/filter';
 import IngredientCard from '../IngredientCard';
 import IngredientCardList from '../IngredientCardList';
 import IngredientSearch from '../IngredientSearch';
 import PublicFrame from '../PublicFrame';
-import { WorkshopPathname } from '../../../.ladle/navigation';
+import { NO_FACETS, NO_FILTER } from '../../../.storybook/compendium-fixtures';
+import { WorkshopPathname } from '../../../.storybook/navigation';
 
 // Render-only; the attribute and the stored choice are asserted in tests/components/CardDensitySwitch.
-export default {
-  title: 'Ingredients / Card Density Switch',
-};
+const meta = {
+  title: 'Forms / Card Density Switch',
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
-// On by default. Toggling it sets `data-card-density` on the story frame's <html>
-// and writes localStorage, so it persists across stories until cleared.
-export const Default: Story = () => <CardDensitySwitch />;
-
-// The switch as the coven ingredients page draws it, in the search row at a phone's width
-// (MB.120, review item 6; the owner's call, 2026-10-20): the word beside its switch on the
-// Filters line, level with the button, and with Clear All showing it wraps beneath, at the
-// line's start. The real row (`CompendiumListFilter`, coven audience). Names are invented (M1.25).
-const NO_FILTER: Filter = {
-  query: '',
-  forms: [],
-  withoutReferences: false,
-  withoutForms: false,
-  elements: [],
-  categories: [],
-  categoryMode: 'all',
-  deities: [],
-  zodiac: [],
-  celestialBodies: [],
-  toxic: '',
-};
-
-const NO_FACETS: CompendiumFacetCounts = {
-  forms: [],
-  deities: [],
-  categories: [],
-  zodiac: [],
-  celestialBodies: [],
-  elements: [],
-  toxic: [],
-  withoutReferences: 0,
-  withoutForms: 0,
-};
-
+// The switch as the coven ingredients page draws it in the narrow search row
+// (`CompendiumListFilter`, coven audience): the word beside its switch on the
+// Filters line, wrapping beneath at the line's start when Clear All shows.
 const NAMES = ['Testwort', 'Fixture Salt', 'Sample Root'];
 
 const CovenSearchRow = ({ filter }: { filter: Filter }): ReactElement => (
@@ -97,19 +66,20 @@ const CovenSearchRow = ({ filter }: { filter: Filter }): ReactElement => (
 );
 
 // No filter chosen, so no Clear All: the switch shares the Filters line.
-export const CovenRowPhoneDark: Story = () => <CovenSearchRow filter={NO_FILTER} />;
-CovenRowPhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const CovenRowPhoneLight: Story = () => <CovenSearchRow filter={NO_FILTER} />;
-CovenRowPhoneLight.meta = { theme: 'light', width: 375 };
-
+const covenRowNode = <CovenSearchRow filter={NO_FILTER} />;
 // A form chosen, so Clear All is drawn and the switch wraps beneath.
-export const CovenRowFilteredPhoneDark: Story = () => (
-  <CovenSearchRow filter={{ ...NO_FILTER, forms: ['Oil'] }} />
-);
-CovenRowFilteredPhoneDark.meta = { theme: 'dark', width: 375 };
+const covenRowFilteredNode = <CovenSearchRow filter={{ ...NO_FILTER, forms: ['Oil'] }} />;
 
-export const CovenRowFilteredPhoneLight: Story = () => (
-  <CovenSearchRow filter={{ ...NO_FILTER, forms: ['Oil'] }} />
-);
-CovenRowFilteredPhoneLight.meta = { theme: 'light', width: 375 };
+// Switch: on by default. Toggling it sets `data-card-density` on the story frame's <html>
+// and writes localStorage, so it persists across stories until cleared.
+const STATES: Record<string, ReactNode> = {
+  Switch: <CardDensitySwitch />,
+  'Coven Row': covenRowNode,
+  'Coven Row Filtered': covenRowFilteredNode,
+};
+
+export const States: Story = {
+  args: { state: 'Switch' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div>{state}</div>,
+};

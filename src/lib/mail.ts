@@ -1,9 +1,6 @@
 import type { Message, Outgoing } from './types';
-// Outgoing mail, over HTTP to every target: SMTP from a Vercel function is
-// unreliable. A refused or failed send is logged and never thrown, so a
-// provider outage costs a resend rather than a sign-in or an invitation.
-// claude-docs/design-decisions/mb.61-email-verification-and-delivery.md,
-// "Delivery".
+// Outgoing mail, over HTTP to every target, as SMTP from a Vercel function is unreliable. A failed send is logged and never thrown, so an outage costs a resend,
+// not a sign-in (claude-docs/design-decisions/mb.61-email-verification-and-delivery.md, "Delivery").
 
 // A send never throws, so the log is how a refused or failed one is seen.
 /* oxlint-disable no-console */

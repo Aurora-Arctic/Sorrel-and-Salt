@@ -1,0 +1,63 @@
+import { type ReactElement, useId } from 'react';
+import { HALVES, LIT_PARTS, MARIA } from './icons';
+import type { MoonLayer, MoonPhaseIconProps } from './types';
+import './index.scss';
+
+// The moon beside a phase's name, on FormIcon's 24-unit square. Fills are theme tokens, not
+// `currentColor`; the outline is the text's ink. Waxing and Waning stack their half's lit parts at
+// rising strength (icons.tsx, HALVES). Hidden from assistive technology
+// (claude-docs/components/spell-builder.md, "The fields").
+
+const MoonPhaseIcon = ({ phase, className }: MoonPhaseIconProps): ReactElement | null => {
+  // An id per icon, so two on one page clip each to its own lit part; a
+  // half's layers add their index to it.
+  const clipId = useId();
+  // Own-property checks rather than an index: the field is free text, and a
+  // phase with no drawing draws nothing.
+  const has = (table: object): boolean => Object.prototype.hasOwnProperty.call(table, phase);
+  let layers: readonly MoonLayer[];
+  if (has(HALVES)) layers = HALVES[phase as keyof typeof HALVES];
+  else if (has(LIT_PARTS)) {
+    const single = phase as keyof typeof LIT_PARTS;
+    layers = LIT_PARTS[single] ? [[single, 1]] : [];
+  } else return null;
+  const shadowed = phase !== 'Dark Moon';
+  return (
+    <svg
+      className={className ? `moon-phase-icon ${className}` : 'moon-phase-icon'}
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+      focusable="false"
+    >
+      {shadowed && <circle className="moon-phase-icon__shadow" cx="12" cy="12" r="8" />}
+      {layers.map(([shape, opacity], i) => {
+        const lit = LIT_PARTS[shape];
+        const id = `${clipId}-${i}`;
+        // A full-strength layer leaves fill-opacity unset, as a single phase
+        // draws it.
+        const fillOpacity = opacity === 1 ? undefined : opacity;
+        return (
+          <g key={shape}>
+            <clipPath id={id}>{lit}</clipPath>
+            <g className="moon-phase-icon__lit" fillOpacity={fillOpacity}>
+              {lit}
+            </g>
+            <g
+              className="moon-phase-icon__maria"
+              clipPath={`url(#${id})`}
+              fillOpacity={fillOpacity}
+            >
+              {MARIA}
+            </g>
+          </g>
+        );
+      })}
+      {/* Last, over the lit part and the maria: thin and half-strength in the text's ink, so
+                the lit part's own edge is the shape seen. */}
+      <circle cx="12" cy="12" r="8" stroke="currentColor" strokeOpacity="0.5" strokeWidth="1" />
+    </svg>
+  );
+};
+
+export default MoonPhaseIcon;

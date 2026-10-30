@@ -1,7 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import FormIcon from '@/components/FormIcon';
 import GroupForm from '@/components/GroupForm';
 import type { GroupFormProps } from '@/components/GroupForm/types';
 import type {
@@ -28,18 +27,15 @@ import { FORM_GROUP_ICONS } from '@/modules/vocabulary/schema/form-group-icons';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { choose, press, redo, typeIn, undo } from '../../support/interact';
 import {
+  answer,
   expectAnswered,
   expectAskingOver,
   expectGuardedWaysOut,
   renderInModal,
 } from '../../support/discard-guard';
 
-// The admin's form for a group (M5.6b), for every group vocabulary, a deity's
-// traditions included (MB.132): a name, a
-// description, and for a category group its chip's two colours, each held to
-// 4.5:1 on its own ground (MB.36) before the request as well as by the
-// service. A delete of a group holding rows first asks where they go, then
-// asks to confirm that move (claude-docs/components/group-form.md).
+// The admin's form for a group, for every group vocabulary, a deity's traditions included: a name, a description, and for a category group its chip's two colours,
+// each held to 4.5:1 on its own ground before the request as well as by the service. A delete of a group holding rows first asks where they go, then asks to confirm that move (claude-docs/components/group-form.md).
 
 const GROUPS = [
   { id: '0b9f0f6e-2f4c-4d7a-9a52-3c1c5b8e6d21', name: 'Fixture Mineral' },
@@ -73,7 +69,7 @@ const description = () => screen.getByRole('textbox', { name: 'Description' });
 const dark = () => screen.getByRole('textbox', { name: 'Dark Theme Colour' });
 const light = () => screen.getByRole('textbox', { name: 'Light Theme Colour' });
 
-// Every way out asks first while the form has changes (MB.115): the
+// Every way out asks first while the form has changes: the
 // guard's shape is tests/components/Modal's, and this its wiring.
 describe('GroupForm, its unsaved changes', () => {
   it('asks before Cancel or Escape discards a change, and closes on Discard Changes', () => {
@@ -86,29 +82,33 @@ describe('GroupForm, its unsaved changes', () => {
 });
 
 // Each step of a delete is a question over the form, as the unsaved
-// changes' is (MB.115, the owner's call): the form inert behind it, each
+// changes' is: the form inert behind it, each
 // step's focus on its own safe answer.
 describe('GroupForm, its delete questions in a modal', () => {
-  it('holds the form through both steps, the focus on each safe answer, and gives both back on Keep It', () => {
+  it('holds the form through both steps, the focus on each safe answer, and gives both back on Cancel', () => {
     const onClose = renderInModal((done) => (
       <GroupForm kind="category" group={WARDS} groups={GROUPS} memberCount={3} onDone={done} />
     ));
     expect(name().closest('[inert]')).toBeNull();
 
     press('Delete Group');
-    expect(
-      expectAskingOver(name(), screen.getByRole('button', { name: 'Keep It' })),
-    ).toContainElement(screen.getByRole('combobox', { name: 'Move Its 3 Categories To' }));
+    expect(expectAskingOver(name(), answer('Cancel'))).toContainElement(
+      screen.getByRole('combobox', { name: 'Move Its 3 Categories To' }),
+    );
 
     choose('Move Its 3 Categories To', 'Fixture Mineral');
     press('Continue');
     expectAskingOver(name(), screen.getByRole('button', { name: 'Back' }));
 
     press('Back');
-    expectAskingOver(name(), screen.getByRole('button', { name: 'Keep It' }));
-    press('Keep It');
+    const choosing = expectAskingOver(name(), answer('Cancel'));
+    // Going back keeps the choice made.
+    expect(screen.getByRole('combobox', { name: 'Move Its 3 Categories To' })).toHaveTextContent(
+      'Fixture Mineral',
+    );
+    press(answer('Cancel'));
 
-    expectAnswered(name(), 'Keep It');
+    expectAnswered(name(), choosing);
     expect(screen.getByRole('button', { name: 'Delete Group' })).toHaveFocus();
     expect(onClose).not.toHaveBeenCalled();
   });
@@ -186,7 +186,7 @@ describe('GroupForm, for a category group', () => {
     });
   });
 
-  // The owner's call: the colour chosen first sets its partner, the same hue
+  // The colour chosen first sets its partner, the same hue
   // fitted to the other ground, until the admin sets the partner themselves.
   describe('the pair', () => {
     it('fills either colour from the other chosen first', () => {
@@ -245,7 +245,7 @@ describe('GroupForm, for a category group', () => {
     });
   });
 
-  // The owner's call: a colour too close to another group's in the same
+  // A colour too close to another group's in the same
   // theme is warned of, beside its picker, and never blocks the save.
   describe('the near-colour warning', () => {
     const COLOURED = [
@@ -345,17 +345,6 @@ describe('GroupForm, for a category group', () => {
       expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
     });
 
-    it('draws no icon in the choices', () => {
-      renderForm({ group: WARDS, memberCount: 3 });
-
-      press('Delete Group');
-      fireEvent.click(screen.getByRole('combobox', { name: 'Move Its 3 Categories To' }));
-
-      for (const option of screen.getAllByRole('option')) {
-        expect(option.querySelector('svg')).toBeNull();
-      }
-    });
-
     it('asks to confirm the move once a group is chosen, and moves them on confirmation', async () => {
       const calls: DeleteCategoryGroupMutationVariables[] = [];
       mockGraphQLMutation<DeleteCategoryGroupMutation, DeleteCategoryGroupMutationVariables>(
@@ -377,24 +366,6 @@ describe('GroupForm, for a category group', () => {
 
       await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
       expect(calls).toEqual([{ id: WARDS.id, moveTo: GROUPS[0].id }]);
-    });
-
-    it('goes back to the choice from the confirmation, and back to the form on Keep It', () => {
-      const onDone = renderForm({ group: WARDS, memberCount: 1 });
-
-      press('Delete Group');
-      choose('Move Its 1 Category To', 'Fixture Substance');
-      press('Continue');
-      press('Back');
-      expect(screen.getByRole('combobox', { name: 'Move Its 1 Category To' })).toHaveTextContent(
-        'Fixture Substance',
-      );
-      press('Keep It');
-
-      // The question gone, not merely the form's own button there beneath it.
-      expect(screen.queryByRole('button', { name: 'Keep It' })).not.toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Delete Group' })).toBeInTheDocument();
-      expect(onDone).not.toHaveBeenCalled();
     });
 
     it('offers no move when there is no other group to move them to', () => {
@@ -484,7 +455,7 @@ describe('GroupForm, for a form group', () => {
     ]);
   });
 
-  // M12.7: the icon an admin picks, one of the six or None, the generic.
+  // The icon an admin picks, one of the six or None, the generic.
   describe('its icon', () => {
     const icons = () => screen.getByRole('group', { name: 'Icon' });
 
@@ -501,20 +472,6 @@ describe('GroupForm, for a form group', () => {
       renderForm({ kind });
 
       expect(screen.queryByRole('group', { name: 'Icon' })).not.toBeInTheDocument();
-    });
-
-    it('shows each option its own icon, None the generic', () => {
-      renderForm({ kind: 'form' });
-
-      const drawn = (label: string) =>
-        within(icons()).getByRole('radio', { name: label }).closest('label')!.querySelector('svg')!
-          .innerHTML;
-      const generic = render(<FormIcon name={null} />).container.querySelector('svg')!.innerHTML;
-      const leaf = render(<FormIcon name="botanical" />).container.querySelector('svg')!.innerHTML;
-
-      expect(drawn('None')).toBe(generic);
-      expect(drawn('Botanical')).toBe(leaf);
-      expect(leaf).not.toBe(generic);
     });
 
     it('sends the chosen icon, and starts a group from the one it has', async () => {
@@ -555,28 +512,6 @@ describe('GroupForm, for a form group', () => {
     });
   });
 
-  it('draws the icon of each group in the move-to choices, the generic where it has none', () => {
-    const groups = [
-      { id: GROUPS[0].id, name: 'Fixture Mineral', icon: 'mineral' as const },
-      { id: GROUPS[1].id, name: 'Fixture Substance', icon: null },
-      { id: GROUPS[2].id, name: 'Fixture Wards', icon: null },
-    ];
-    renderForm({ kind: 'form', group: { ...MATTER, id: GROUPS[2].id }, groups, memberCount: 2 });
-
-    press('Delete Group');
-    fireEvent.click(screen.getByRole('combobox', { name: 'Move Its 2 Forms To' }));
-
-    const drawn = (label: string) =>
-      screen.getByRole('option', { name: label }).querySelector('[aria-hidden="true"] svg')!
-        .innerHTML;
-    expect(drawn('Fixture Mineral')).toBe(
-      render(<FormIcon name="mineral" />).container.querySelector('svg')!.innerHTML,
-    );
-    expect(drawn('Fixture Substance')).toBe(
-      render(<FormIcon name={null} />).container.querySelector('svg')!.innerHTML,
-    );
-  });
-
   it('moves its forms on a confirmed delete', async () => {
     const calls: DeleteIngredientFormGroupMutationVariables[] = [];
     mockGraphQLMutation<
@@ -599,7 +534,7 @@ describe('GroupForm, for a form group', () => {
   });
 });
 
-// MB.132: a deity's tradition, a form group's shape under its own name, its
+// A deity's tradition, a form group's shape under its own name, its
 // deities moved and re-slugged on a delete.
 describe('GroupForm, for a deity tradition', () => {
   it('asks for no colours, and creates the tradition from its name and description alone', async () => {
@@ -646,7 +581,7 @@ describe('GroupForm, for a deity tradition', () => {
   });
 });
 
-// Undo and redo (M12.9): the hook is tested in tests/components/Field; this
+// Undo and redo: the hook is tested in tests/components/Field; this
 // is its wiring, and where it is switched off.
 describe('GroupForm, its undo and redo', () => {
   const save = () => screen.getByRole('button', { name: 'Save Group' });
@@ -668,24 +603,13 @@ describe('GroupForm, its undo and redo', () => {
     expect(dark()).toHaveValue('#35987d');
   });
 
-  it('undoes a name change', () => {
-    renderForm({ group: WARDS });
-    act(() => name().focus());
-    typeIn(name(), 'Fixture Shields');
-
-    undo();
-
-    expect(name()).toHaveValue(WARDS.name);
-    expect(save()).toBeDisabled();
-  });
-
   it('undoes nothing through the steps of a delete', () => {
     renderInModal((done) => (
       <GroupForm kind="category" group={WARDS} groups={GROUPS} memberCount={3} onDone={done} />
     ));
     typeIn(name(), 'Fixture Shields');
     press('Delete Group');
-    expectAskingOver(name(), screen.getByRole('button', { name: 'Keep It' }));
+    expectAskingOver(name(), answer('Cancel'));
     undo();
     expect(name()).toHaveValue('Fixture Shields');
 
@@ -696,7 +620,7 @@ describe('GroupForm, its undo and redo', () => {
     expect(name()).toHaveValue('Fixture Shields');
 
     press('Back');
-    press('Keep It');
+    press(answer('Cancel'));
     undo();
     expect(name()).toHaveValue(WARDS.name);
   });

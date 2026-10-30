@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/sinicuichi-heimia-salicifolia
+status: approved
+listings:
+  - list: other
+    name: NatureServe (TNC)
+    value: G4 (TNC status in taxobox)
+    listedAs: Heimia salicifolia
+    scope: global
+    nameBasis: stated
+    source: wikipedia-heimia-salicifolia
+    locator: taxobox, status = G4, status_system = TNC

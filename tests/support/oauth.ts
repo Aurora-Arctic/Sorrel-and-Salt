@@ -1,19 +1,17 @@
 import { expect } from 'vitest';
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from 'msw/http';
 import type { SetupServer } from 'msw/node';
 import type { auth as Auth } from '@/lib/auth';
 import { socialSignInTarget } from '@/lib/sign-in';
 import type { ProviderId } from '@/lib/types';
 import type { Profile } from './types';
 
-// Drives Better Auth's real `/api/auth/*` endpoints with MSW standing in for
-// each provider, so what is under test is Better Auth's own flow with our
-// hooks attached, not a hand-built context. MSW intercepts only what the
-// server fetches; the requests into Better Auth are `auth.handler` calls.
+// Drives Better Auth's real `/api/auth/*` endpoints with MSW standing in for each provider, so what is under
+// test is Better Auth's own flow with our hooks attached. The requests into Better Auth are `auth.handler` calls.
 
 export const ORIGIN = 'http://localhost:8000';
 
-/** Where an unverified sign-in lands (MB.54) when it asked for no return path, as `signIn` does by default. */
+/** Where an unverified sign-in lands when it asked for no return path, as `signIn` does by default. */
 export const EMAIL_PAGE = '/account/email';
 
 /** Test credentials for all four providers, as the env `@/lib/auth` reads at import. */
@@ -26,13 +24,6 @@ export const PROVIDER_CREDENTIALS: Readonly<Record<string, string>> = {
   ),
   MICROSOFT_TENANT_ID: '',
 };
-
-/** Registers all four providers with test credentials; call before importing `@/lib/auth`. */
-export function stubProviderCredentials(stubEnv: (name: string, value: string) => void): void {
-  for (const [name, value] of Object.entries(PROVIDER_CREDENTIALS)) {
-    stubEnv(name, value);
-  }
-}
 
 // An unsigned JWT: Google and Microsoft decode the id token they received from
 // their own token endpoint without re-verifying it, which is what makes the
@@ -182,10 +173,8 @@ export async function signIn(
 export const LINK_LANDING = '/account';
 
 /**
- * One full link round trip from a signed-in browser: `/link-social` under
- * `cookie`, then the callback. `callbackCookie` stands in for whichever
- * session the browser carries when it lands, which is the starter's own
- * unless a test says otherwise. Returns the callback's redirect.
+ * One full link round trip from a signed-in browser: `/link-social` under `cookie`, then the callback.
+ * `callbackCookie` is the session the browser carries when it lands. Returns the callback's redirect.
  */
 export async function link(
   auth: typeof Auth,

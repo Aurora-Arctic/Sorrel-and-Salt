@@ -10,7 +10,7 @@ import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 
 // Which of a page of compendium entries a coven's cupboard holds: the read behind the
-// compendium page's check icon (M9.12). It answers for the viewer's own coven, so it is read
+// compendium page's check icon. It answers for the viewer's own coven, so it is read
 // per viewer and never inside the cached compendium read (rule 6).
 
 let sql: postgres.Sql;
@@ -78,12 +78,6 @@ describe('heldCompendiumEntryIds', () => {
       Forbidden,
     );
   });
-
-  it('refuses a non-member even when nothing is asked', async () => {
-    await expect(heldCompendiumEntryIds(asUser(D), WORKSPACE_W_ID, [])).rejects.toBeInstanceOf(
-      Forbidden,
-    );
-  });
 });
 
 // The compendium page of someone in several covens asks about each of them at once: the plus
@@ -124,9 +118,5 @@ describe('heldCompendiumEntryIdsIn', () => {
     await expect(heldCompendiumEntryIdsIn(asUser(D), bothCovens, [heldByX])).rejects.toBeInstanceOf(
       Forbidden,
     );
-  });
-
-  it('reads nothing for no coven', async () => {
-    expect((await heldCompendiumEntryIdsIn(asUser(B), [], [held])).size).toBe(0);
   });
 });

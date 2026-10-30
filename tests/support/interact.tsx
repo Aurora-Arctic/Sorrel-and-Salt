@@ -1,14 +1,8 @@
 import { act, fireEvent, screen, within } from '@testing-library/react';
 
-// What a person does to a form in a component test — press a button, pick a
-// choice from a list, type into a field — written once for every form's
-// tests, where each test file had its own copy (MB.115).
-//
-// The fields are found by their labels rather than by role and name: a role
-// query names every element of the role, which in the ingredient form's 25
-// fields is most of a test's time (MB.181). A required field's label ends in
-// a marker hidden from its accessible name, dropped here so the label is
-// written as the name is.
+// What a person does to a form in a component test (press, choose, type), written once for every form.
+// Fields are found by label, not role and name, as a role query names every element of the role, most of a
+// test's time in a 25-field form. A required field's marker, hidden from its accessible name, is dropped.
 
 /**
  * The element labelled `label` and matching `selector`, the selector keeping
@@ -21,11 +15,8 @@ export const byLabel = (label: string, selector: string) =>
   });
 
 /**
- * Presses the button named `name`, or the button given: focused first, as a
- * pointer press focuses it, so a form that reads where the focus went — a
- * guard asking before Cancel closes, say — sees what a browser would show it.
- * A button is given where its name is not enough to find it: one in a row,
- * or in a panel.
+ * Presses the button named `name`, or the button given where a name is not enough (one in a row or panel).
+ * Focused first, as a pointer press focuses it, so a form that reads where the focus went sees what a browser would.
  */
 export function press(button: string | HTMLElement): void {
   const pressed =

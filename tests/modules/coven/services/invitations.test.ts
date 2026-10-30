@@ -6,16 +6,15 @@ import { Forbidden, ValidationError } from '@/lib/errors';
 import { invitationSender } from '@/lib/invitation-mail';
 import type { Message } from '@/lib/types';
 import { createInvitation } from '@/modules/coven';
+import { acceptInvitation, acceptInvitationById } from '@/modules/identity';
 import { A, B, C, D, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
+import { asManualFix } from '../../../support/db/privileges';
 import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 import type { CovenInvitationStateRow } from './types';
 
-// M7.3: an owner invites an address into a coven as a viewer or a member. The
-// token is `crypto.randomBytes` output that only the mail carries; the row
-// holds its hash. The transport is the test double: the real sender builds the
-// link and hands it to a mocked `send`, so what reaches the address is what the
-// test reads. The failing transport is the real `send` over a failing `fetch`
+// An owner invites an address into a coven as a viewer or a member. The token is `crypto.randomBytes` output that only the mail carries, and the row holds its hash.
+// The transport is a test double: the real sender builds the link and hands it to a mocked `send`; the failing transport is the real `send` over a failing `fetch`
 // (claude-docs/db/invitations.md, "Inviting into a coven").
 
 const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>(async () => {}));
@@ -53,7 +52,7 @@ const invitations = () => sql<CovenInvitationStateRow[]>`
   from invitations order by created_at
 `;
 
-/** A coven with these members, through the raw client (MB.101). */
+/** A coven with these members, through the raw client. */
 async function insertCoven(
   name: string,
   members: [string, 'owner' | 'member' | 'viewer'][],
@@ -112,12 +111,6 @@ describe('createInvitation', () => {
     expect(send).toHaveBeenCalledOnce();
   });
 
-  it('honours a viewer role as it honours a member one', async () => {
-    await createInvitation(asUser(A), WORKSPACE_W_ID, { email: INVITED, role: 'viewer' }, sender());
-
-    expect((await invitations())[0]).toMatchObject({ role: 'viewer' });
-  });
-
   it('normalises the address as the admin tier does, and mails the normalised one', async () => {
     await createInvitation(
       asUser(A),
@@ -128,14 +121,6 @@ describe('createInvitation', () => {
 
     expect((await invitations())[0].email).toBe(INVITED);
     expect(send.mock.calls.map(([message]) => message.to)).toEqual([INVITED]);
-  });
-
-  it("invites into a coven that is its owner's first, with no other coven involved", async () => {
-    const covenId = await insertCoven('Fixture First Coven', [[D.id, 'owner']]);
-
-    await createInvitation(asUser(D), covenId, { email: INVITED, role: 'member' }, sender());
-
-    expect((await invitations())[0]).toMatchObject({ workspace_id: covenId, created_by: D.id });
   });
 
   // The precondition: A could invite, so the refusal is the role check's.
@@ -199,14 +184,119 @@ describe('createInvitation', () => {
     expect(send).not.toHaveBeenCalled();
   });
 
-  it('accepts a second pending invitation to an address already invited, each with a link of its own', async () => {
-    await createInvitation(asUser(A), WORKSPACE_W_ID, { email: INVITED, role: 'viewer' }, sender());
-    await createInvitation(asUser(A), WORKSPACE_W_ID, { email: INVITED, role: 'member' }, sender());
+  describe('a repeat invitation', () => {
+    const OTHER_COVEN = 'Fixture Second Coven';
+    const INVITEE_ID = 'a0000000-0000-0000-0000-00000000269a';
 
-    const rows = await invitations();
-    expect(rows.map((row) => row.role)).toEqual(['viewer', 'member']);
-    expect(new Set(rows.map((row) => row.token_hash)).size).toBe(2);
-    expect(send).toHaveBeenCalledTimes(2);
+    afterEach(async () => {
+      await sql`delete from workspace_members where user_id = ${INVITEE_ID}`;
+      await asManualFix(sql, async (tx) => {
+        await tx`delete from users where id = ${INVITEE_ID}`;
+      });
+    });
+
+    /** Invites `email` into `workspaceId`, as owner A, and answers the row. */
+    const invite = (email: string, role: 'viewer' | 'member', workspaceId = WORKSPACE_W_ID) =>
+      createInvitation(asUser(A), workspaceId, { email, role }, sender());
+
+    /** The rows of an address that are still pending. */
+    const pendingFor = async (email: string) =>
+      (await invitations()).filter(
+        (row) => row.email === email && row.revoked_at === null && row.accepted_at === null,
+      );
+
+    it('replaces the pending invitation to the same address and coven, the newest being the one left', async () => {
+      const first = await invite(INVITED, 'viewer');
+      // Why the first could have stayed: it is pending, and the same coven's.
+      expect(await pendingFor(INVITED)).toHaveLength(1);
+
+      const second = await invite(INVITED, 'member');
+
+      const pending = await pendingFor(INVITED);
+      expect(pending.map((row) => row.id)).toEqual([second.id]);
+      const [replaced] = (await invitations()).filter((row) => row.id === first.id);
+      expect(replaced.revoked_at).not.toBeNull();
+      expect(replaced.updated_by).toBe(A.id);
+    });
+
+    it("applies the new invitation's role, though it differs from the old one's", async () => {
+      await invite(INVITED, 'viewer');
+      await invite(INVITED, 'member');
+
+      expect((await pendingFor(INVITED)).map((row) => row.role)).toEqual(['member']);
+    });
+
+    it('matches the address in any case', async () => {
+      await invite(INVITED, 'viewer');
+      await invite(INVITED.toUpperCase(), 'member');
+
+      expect(await pendingFor(INVITED)).toHaveLength(1);
+    });
+
+    it('replaces nothing when the new invitation is refused', async () => {
+      await invite(INVITED, 'viewer');
+
+      await expect(invite(INVITED, 'owner' as 'member')).rejects.toThrow(ValidationError);
+
+      expect(await pendingFor(INVITED)).toHaveLength(1);
+    });
+
+    it("leaves another coven's pending invitation to the address alone", async () => {
+      const other = await insertCoven(OTHER_COVEN, [[A.id, 'owner']]);
+      // Why it could have been replaced: the same address, pending, and A owns both.
+      await invite(INVITED, 'viewer', other);
+
+      await invite(INVITED, 'member');
+
+      expect((await pendingFor(INVITED)).map((row) => row.workspace_id).sort()).toEqual(
+        [other, WORKSPACE_W_ID].sort(),
+      );
+    });
+
+    it("leaves a site-tier invitation to the address alone, as it leaves a coven's", async () => {
+      await sql`
+        insert into invitations (email, token_hash, site_role, created_by, updated_by, expires_at)
+        values (${INVITED}, 'site-hash', 'admin', ${A.id}, ${A.id}, now() + interval '7 days')`;
+
+      await invite(INVITED, 'member');
+
+      expect(await pendingFor(INVITED)).toHaveLength(2);
+    });
+
+    it.each([
+      ['an accepted', 'accepted_at = now(), accepted_by = ' + `'${B.id}'`],
+      ['a lapsed', "expires_at = now() - interval '1 second'"],
+    ])('leaves %s invitation to the address as it was', async (_what, stamp) => {
+      const old = await invite(INVITED, 'viewer');
+      await sql.unsafe(`update invitations set ${stamp} where id = '${old.id}'`);
+      const before = (await invitations()).find((row) => row.id === old.id);
+
+      await invite(INVITED, 'member');
+
+      const after = (await invitations()).find((row) => row.id === old.id);
+      expect(after).toEqual(before);
+    });
+
+    it('refuses the replaced link, by its token and by its id on the account page', async () => {
+      const as = { id: INVITEE_ID, role: 'user' as const };
+      await asManualFix(sql, async (tx) => {
+        await tx`
+          insert into users (id, name, email, email_verified, role, can_create_workspace, created_by, updated_by)
+          values (${as.id}, 'Fixture Invitee', ${INVITED}, true, 'user', false, ${as.id}, ${as.id})`;
+      });
+      const first = await invite(INVITED, 'viewer');
+      const firstToken = mailedTo(INVITED).token;
+      send.mockClear();
+      await invite(INVITED, 'member');
+      // Why the old link could have worked: the address is the account's, verified.
+      expect(firstToken).not.toBe(mailedTo(INVITED).token);
+
+      await expect(acceptInvitation(asUser(as), firstToken)).rejects.toThrow(Forbidden);
+      await expect(acceptInvitationById(asUser(as), first.id)).rejects.toThrow(Forbidden);
+      expect(
+        await sql`select 1 from workspace_members where user_id = ${as.id} and deleted_at is null`,
+      ).toHaveLength(0);
+    });
   });
 
   it('refuses an address that belongs to a live member of the coven, in any case, writing and mailing nothing', async () => {

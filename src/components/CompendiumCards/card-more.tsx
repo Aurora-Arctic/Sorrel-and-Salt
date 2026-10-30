@@ -1,7 +1,7 @@
 'use client';
 
 import type { Route } from 'next';
-import { type ReactElement, useEffect, useRef, useState } from 'react';
+import { type ReactElement, useRef, useState } from 'react';
 import { MoreMenu } from '../IconTip';
 import { ANNOTATE_HEADING } from '../IngredientEntry/annotate-heading';
 import AnnotatePicker from '../IngredientEntry/annotate-picker';
@@ -17,19 +17,9 @@ import { useOpenModalClick } from '../Modal';
 import Notice from '../Notice';
 import type { CompendiumCardMoreProps, CompendiumCardPlace } from './types';
 
-// The three dots on a compendium card (the owner's call, 2026-10-20), after the plus and, for a
-// curator, Edit in Compendium: what a signed-in member may do about the entry in the covens that
-// hold it. Annotate (a link to the entry's page with that coven's Annotate dialog open, or a
-// question of which coven where two or more may), Make It Ours and Remove, each asked in the
-// dialogs the entry page shares, and first of them Edit Stock (the owner's call, 2026-10-21): the
-// coven card's own dialog, opened at once for one coven that may update stock and after a question
-// of which for several, so the card and the page cannot differ. Add is the plus, and
-// Edit in Compendium its own icon, so neither is in here; the Compendium section `choicesFor`
-// would put first therefore has nothing in it today and is left out, and the menu draws the
-// coven's choices under the one "Coven" section label every More draws, though they are all the
-// coven's (the owner's call, 2026-10-20). Drawn only when it holds a choice, so a visitor, a viewer and a coven without the
-// entry see no dots. The Quick Look window made from the same component carries `leaveHref`,
-// where a remove leads to close it. claude-docs/components/compendium-cards.md.
+// The three dots on a compendium card: Edit Stock, Annotate, Make It Ours and Remove, in the dialogs
+// the entry page shares. Drawn only when it holds a choice; Quick Look carries `leaveHref`, where a
+// remove leads (claude-docs/components/compendium-cards.md, "The More menu on a card").
 
 type Asking = 'stock' | 'annotate' | 'own' | 'remove';
 type Can = 'canAnnotate' | 'canMakeOurs' | 'canRemove';
@@ -79,9 +69,7 @@ export default function CompendiumCardMore({
     list.some(({ workspaceId }) => workspaceId === targetPlace?.workspaceId);
   const gone =
     (asking === 'remove' && !stillThere(removers)) || (asking === 'own' && !stillThere(owners));
-  useEffect(() => {
-    if (gone) setAsking(undefined);
-  }, [gone]);
+  if (gone) setAsking(undefined);
 
   const ask = (what: Asking, list: readonly CompendiumCardPlace[]) => () => {
     setAlert(undefined);

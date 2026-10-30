@@ -10,18 +10,13 @@ import {
 } from '@/modules/vocabulary';
 import type { ValueGroupRow } from './types';
 
-// Each grouped kind's groups on one read, shared by the value page (the
-// filter, the modal's picker, the list's chips) and the group page (the
-// delete's move picker and a category group's colour warning), so the request
-// reads them once (MB.115). A file of its own, not `value-kinds.ts`, so the
-// group page does not reach every value reader to get three lists.
+// Each grouped kind's groups on one read, shared by the value page and the group page so the
+// request reads them once. A file of its own, not `value-kinds.ts`, so the group page does not
+// reach every value reader to get three lists.
 
 /**
- * Every group of a kind on one page of the maximum: eight category groups,
- * six form groups and thirty-five traditions are seeded, and an admin adds
- * one rarely (MB.35). The modal picks one by id, the filter by slug, and the
- * list names each, a category's in its chip. Cached, so the request reads
- * them once.
+ * Every group of a kind on one page of the maximum, as groups are few. The modal picks by id, the
+ * filter by slug. Cached, so the request reads them once.
  */
 const allGroups = <T extends ValueGroupRow>(list: (page: PageRequest) => Promise<PageEntry<T>[]>) =>
   cache(async (): Promise<ValueGroupRow[]> => {

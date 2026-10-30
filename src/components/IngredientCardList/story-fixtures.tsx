@@ -1,9 +1,7 @@
 import type { ReactNode } from 'react';
-import { StockBadge } from '../StockBadge';
 import type { EntryKind } from '../EntryMarks/types';
 import type { SafetyVariant } from '../SafetyNote/types';
 import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-enums';
-import { formLabel } from '@/modules/ingredients/validation/form-label';
 import JarLines from '../JarLines';
 import type { CardCategory } from '../IngredientCard/types';
 

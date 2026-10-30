@@ -26,7 +26,7 @@ for the pager's "Page X of Y".
   roll's Remove are: it names the address, sends `revokeInvitation` with the coven and the id, and
   refreshes the page, and the status region says "The invitation to <address> is revoked.". A
   refusal is said in a callout under the control, which keeps the focus
-  ([`click-feedback.md`](click-feedback.md)). It is `btn btn--small btn--destructive`.
+  ([`click-feedback.md`](click-feedback.md)). It is `btn btn--quiet btn--small`, plain as a row's control is; the red is the confirm's own.
 - **Remove** (`remove-control.tsx`, M10.34) is a `ConfirmedAction` too, titled "Remove Invitation":
   it asks to remove the declined invitation to the address from the list, then sends the same
   `revokeInvitation` mutation with the coven and the id, and refreshes the page, so the row leaves
@@ -50,9 +50,8 @@ styles a span inside the table, so it does not depend on any wrapper.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/PendingInvitations/index.stories.tsx),
-`Coven / Pending Invitations`: `Listed`, two pending rows; `WithDeclined`, a declined row among
-them with Remove in place of Revoke; `Empty`; and `WithDeclinedPhoneDark` and
-`WithDeclinedPhoneLight` at 375px. The Revoke and Remove questions open from their buttons and are
+`Coven / Invitations Sent`: `States`, with a control that chooses Default (two pending rows); With Declined (a declined row among
+them with Remove in place of Revoke); Empty, drawn in the app shell as the page shows it, with the coven switcher, the Members heading, the Members and Invitations toggle and Invite; Middle Page; Revoke Refused; and Remove Refused. The Revoke and Remove questions open from their buttons and are
 `ConfirmedAction`'s ([`user-list.md`](user-list.md)).
 
 ## Tests
@@ -60,3 +59,9 @@ them with Remove in place of Revoke; `Empty`; and `WithDeclinedPhoneDark` and
 `tests/components/PendingInvitations/index.test.tsx`: among the rest, Revoke and Remove each said in
 the status region once done, and each refusal said under its button, with the focus on it and the
 badge bringing it back.
+
+## What the table lists
+
+Under the members roll, the table lists the invitations an owner has sent and nobody has accepted: address, role and status, newest first, with its own pager. A pending invitation shows when it expires and offers Revoke. One the invitee declined shows when, and offers Remove.
+
+The table carries the name "Pending Invitations" and has no region around it to repeat that, because the page's heading and its open tab already say what the page is. The page draws the table for owners only and reads it through the services that check `member: invite`; nothing in the component decides who may see it.

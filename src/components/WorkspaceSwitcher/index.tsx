@@ -10,17 +10,9 @@ import { useCovenSwitchRegistration } from '../CovenSwitchTargets/context';
 import type { WorkspaceSwitcherProps } from './types';
 import './index.scss';
 
-// A select over the viewer's workspaces, called covens on screen. Which one is current is read off the
-// address, never kept in state, so two tabs in two workspaces do not
-// interfere; choosing another goes to the same page there when the page
-// said it opens there, otherwise to the same section (M9.12). The list is the
-// caller's: the layout already holds the memberships. A viewer holding
-// creation rights gets one more choice, after the workspaces, that goes to the
-// create page (M9.16); its value is that page's path, which no slug can equal
-// since a slug holds no slash. While the switch is on its way (M12.33) the
-// box shows the pick, which is the one thing held in state, and is busy; the
-// coven's body draws the destination's skeleton. See
-// claude-docs/components/workspace-switcher.md.
+// A select over the viewer's workspaces (covens on screen); the current one is read off the
+// address, so two tabs do not interfere. A viewer who may create gets a last choice whose value is
+// the create page's path, which no slug can equal (claude-docs/components/workspace-switcher.md).
 
 const CREATE = { value: NEW_COVEN_PATH, label: 'Create Coven', create: true };
 
@@ -29,15 +21,9 @@ function targetOf(path: string): NavigationTarget {
   return covenTarget(path);
 }
 
-// Set when a switch to another coven starts, read once by the next switcher to
-// mount. The `[slug]` layout, and with it this switcher, remounts when the
-// coven changes, and the focus that was on the box would drop to the page. A
-// module variable survives that remount, as component state cannot, and unlike
-// `sessionStorage` it dies with the page, so a reload never refocuses. A
-// switch that ends without a remount (a refusal) clears it, below. It holds
-// the slug of the coven picked, not a bare yes: a switch that was superseded
-// (Compendium clicked mid-switch) leaves its slug behind, and a switcher that
-// mounts anywhere but that coven reads it as stale, clears it and takes no focus.
+// Set when a switch starts and read once by the next switcher to mount, so focus survives the
+// `[slug]` layout's remount; a module variable survives it and, unlike `sessionStorage`, dies with
+// the page. It holds the picked slug; a switcher anywhere else clears it and takes no focus.
 let focusAfterSwitch: string | undefined;
 
 export default function WorkspaceSwitcher({
@@ -50,7 +36,10 @@ export default function WorkspaceSwitcher({
   const registration = useCovenSwitchRegistration();
   const [picked, setPicked] = useState<string>();
   const box = useRef<HTMLDivElement>(null);
-  const choices = workspaces.map(({ slug, name }) => ({ value: slug, label: name }));
+  const choices = workspaces.map(({ slug, name }) => ({
+    value: slug,
+    label: name,
+  }));
 
   useEffect(() => {
     if (focusAfterSwitch === undefined) return;
@@ -94,7 +83,7 @@ export default function WorkspaceSwitcher({
           navigate(href, { target: targetOf(href) });
         }}
         choices={canCreate ? [...choices, CREATE] : choices}
-        placeholder="Select Coven"
+        placeholder="Choose a coven"
       />
     </div>
   );

@@ -7,21 +7,18 @@ import { type FormEvent, type ReactElement, useEffect, useId, useState } from 'r
 import { graphql } from '../../gql';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
-import BusyButton from '../BusyButton';
-import { FieldShell, fieldDescription } from '../Field';
+import { FieldShell, FormActions, fieldDescription } from '../Field';
 import Notice from '../Notice';
+import PageHeader from '../PageHeader';
 import type { EmailFormProps } from './types';
 import './index.scss';
 
-// The `/account/email` page's one form, and the account page's Email section
-// (`embedded`, MB.88): show the account's address and its
-// verification state, and take a new one. Every submit sends mail rather than
-// writing the row — the address changes only when the mailed link is followed
-// — so the success message names what was typed, not what came back.
-// See claude-docs/components/email-form.md.
+// The `/account/email` page's form and the account page's Email section (`embedded`): the address, its
+// verification state, and a new one. Every submit sends mail rather than writing the row, so success
+// names what was typed (claude-docs/components/email-form.md).
 
-// A plain controlled input rather than react-hook-form: one field, and
-// DESIGN.md §7's resolver pattern arrives with the shared Zod schemas (M4.5).
+// A plain controlled input rather than react-hook-form: one field, and DESIGN.md §7's
+// resolver pattern arrives with the shared Zod schemas.
 
 const SetEmailDocument = graphql(`
   mutation SetEmail($email: String!, $next: String) {
@@ -71,8 +68,8 @@ const EmailForm = ({
   const [sentTo, setSentTo] = useState<string>();
   const [alert, setAlert] = useState(error);
   const [fieldError, setFieldError] = useState<string>();
-  // When the submit may be pressed again, as a clock time so a tab left in
-  // the background counts the real wait rather than the ticks it was awake for.
+  // When the submit may be pressed again, as a clock time so a tab left in the
+  // background counts the real wait.
   const [cooldownUntil, setCooldownUntil] = useState<number | undefined>(() =>
     waitSeconds > 0 ? Date.now() + waitSeconds * 1000 : undefined,
   );
@@ -118,18 +115,14 @@ const EmailForm = ({
     mutation.mutate(value);
   };
 
-  // Standalone, the page's head: the heading and, as its lede, the line
-  // saying where the address stands. Embedded, the section heads the form,
-  // so the line stands alone, and the page has no confirmed view: a followed
-  // link lands on the email page, never the account page.
+  // Standalone, the page's head: the heading and, as its lede, the line saying where
+  // the address stands. Embedded, the section heads the form, and there is no confirmed
+  // view: a followed link lands on the email page, never the account page.
   const head = (status: string) =>
     embedded ? (
       <p className="lede email-form__status">{status}</p>
     ) : (
-      <div className="header">
-        <h1>Your Email</h1>
-        <p className="lede email-form__status">{status}</p>
-      </div>
+      <PageHeader title="Your Email" lede={status} />
     );
 
   if (confirmed && !embedded) {
@@ -182,19 +175,13 @@ const EmailForm = ({
             {...aria}
           />
         </FieldShell>
-        <div className="form__actions">
-          {/* Busy, saying so, from the press to the answer, as NameForm's
-              save is — the owner's rule for every form. */}
-          <BusyButton
-            type="submit"
-            className="btn btn--solid"
-            disabled={nothingToDo || mutation.isPending || coolingDown}
-            busy={mutation.isPending}
-            busyLabel="Sending Confirmation"
-          >
-            {coolingDown ? `Send Again in ${secondsLeft}s` : 'Send Confirmation'}
-          </BusyButton>
-        </div>
+        <FormActions
+          noun="Confirmation"
+          label={coolingDown ? `Send Again in ${secondsLeft}s` : 'Send Confirmation'}
+          busyLabel="Sending Confirmation"
+          dirty={!nothingToDo && !coolingDown}
+          submitting={mutation.isPending}
+        />
       </form>
       {/* The way on for an account that can leave: an unverified one reaches
           no other page, so it is offered none. */}

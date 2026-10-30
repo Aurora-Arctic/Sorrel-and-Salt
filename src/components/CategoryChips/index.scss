@@ -80,10 +80,9 @@
   }
 }
 
-// The compact size (the admin table's, 2026-10-19): tighter padding and gap through the
-// `chip()` mixin's `$size`, at the card's font size, with the same wash, border and label
-// mix, so the contrast figures in styling.md hold. The +N button's visible pill is as short,
-// and its hit area is grown to 24px (WCAG 2.5.8) by a transparent pseudo-element.
+// The compact size (the admin table's): tighter padding and gap through the `chip()` mixin's `$size`,
+// with the same wash, border and label mix. The +N pill's hit area is grown to 24px (WCAG 2.5.8) by a
+// pseudo-element.
 .category-chips--compact {
   gap: space(1);
 
@@ -104,4 +103,27 @@
       inset-inline: 0;
     }
   }
+}
+
+// Absent chips (Category Match's Missing row): hollow, with a dashed border and muted text, so the
+// category is named but reads as not there. Muted text on the card surface is the row labels' pairing.
+.category-chips--absent .chip {
+  background-color: transparent;
+  border-style: dashed;
+  border-color: $text-muted;
+  color: $text-muted;
+}
+
+// A chip with a tip is a button that looks like the plain chip: the help cursor says there is
+// more behind it, and it takes the focus ring.
+.category-chips__tip-chip {
+  cursor: help;
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+.category-chips__tip-text {
+  @include visually-hidden;
 }

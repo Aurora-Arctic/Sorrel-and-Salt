@@ -65,7 +65,7 @@ row removes itself, is the control's own business and not this component's.
   does not close with it.
 - **Its listeners go on the control's own document** (`ownerDocument`), and
   what is ours is asked of the node rather than `instanceof Node`: a story
-  Ladle draws into an iframe runs its script in the page around the frame, so
+  Storybook draws into an iframe runs its script in the page around the frame, so
   the global `document` would hear neither the frame's keys nor its presses.
   The confirm overlay's focus return (`canFocus` in
   `src/components/Modal/confirm-overlay.tsx`) is asked the same way.
@@ -79,7 +79,7 @@ row removes itself, is the control's own business and not this component's.
 
 ## The status region
 
-`StatusRegionProvider`, in `src/app/layout.tsx` and the Ladle provider, draws
+`StatusRegionProvider`, in `src/app/layout.tsx` and the Storybook provider, draws
 one `<output>` (role `status`) with the page, so a screen reader is already
 listening when the first sentence arrives. The same sentence twice alternates a
 trailing no-break space, so it is read again. Without the provider `announce`
@@ -102,9 +102,9 @@ in one does not run past its edge (the owner's call, 2026-10-20): in the
 admin's user modal at a desktop's width, its start under Change Role's would
 leave the dialog, so its end stands under the button's end. The dialog is a
 measure only, and clips nothing of the fixed callout. The box is found and
-measured in the control's own document and window, since a story Ladle draws
-into an iframe (`meta.iframed`) runs its script in the page around the frame,
-where `instanceof Element` is false for the frame's nodes.
+measured in the control's own document and window, so a control drawn in
+another frame than the script's is measured where it sits: from outside the
+frame, `instanceof Element` is false for the frame's nodes.
 
 In a box narrower than the callout at its widest (20rem, or the screen less
 2rem), as that modal is on a phone, the callout narrows to the larger of the
@@ -142,9 +142,9 @@ half each way up and down.
 
 ## Fades
 
-The callout and the badge fade in and out at `$motion-short`, by two
-keyframes of their own, as MenuButton's menu does: `click-feedback-fade-in`
-and `click-feedback-fade-out`. Under reduced motion neither fades.
+The callout and the badge fade in and out at `$motion-short`, on the site's
+one `fade-in` and `fade-out` keyframes (`_primitives.scss`). Under reduced
+motion neither fades.
 
 Two things look simpler and do not work. The fade in starts only once the
 piece is placed (`is-placed`): a piece is hidden until Floating UI has placed
@@ -156,20 +156,34 @@ piece jumped to nothing instead of fading. A fading piece stays drawn, `inert` a
 animation ends or 400ms pass; whether it is open (`aria-expanded`, the focus
 going back) never waits for the fade.
 
+## Stories
+
+`src/components/ClickFeedback/index.stories.tsx`, titled "Surfaces / Click Feedback": `States`, with the states Resting, Bordered (the badge on the button's corner), Borderless (the badge beside the button), Near Right Edge (the callout's end under the control's end) and Pinned (a box too narrow for either alignment, so the callout is pinned inside it). Each state but Resting presses its button once drawn, so it opens on the refusal. `ThenSucceeds` is refused, then a later try succeeds, and the badge and the callout fade out. `tests/e2e/workshop/click-feedback.spec.ts` measures these stories.
+
 ## Tests
 
 - `tests/components/ClickFeedback/index.test.tsx` — opening, closing, focus,
   one alert at a time, the description, repeat reading, and the status region.
-- `tests/e2e/workshop/click-feedback.spec.ts` — measured in the Ladle stories,
+- `tests/e2e/workshop/click-feedback.spec.ts` — measured in the Storybook stories,
   since no page uses the component yet: the callout's place and both
   fallbacks, nothing moving as the callout and badge come and go, the badge's
   24px target covering no neighbour, the borderless badge beside its control,
   the fades and reduced motion, and axe, at 1280px and 375px in both themes.
 
-The workshop specs run in their own Playwright config against Ladle, with no
+The workshop specs run in their own Playwright config against Storybook, with no
 database: `npm run e2e:workshop`. Its server takes the slot block's next port
 (`WORKSHOP_PORT` in `tests/e2e/slots.ts`, 8102 by default, `E2E_PORT_BASE`
 plus 101), and its live-reload socket the one after (`WORKSHOP_HMR_PORT`,
 8103), not the review workshop's 61002; `npm run e2e` leaves them out.
 
 Not verified: a real screen reader, and any browser but Chromium.
+
+## Why the fades are two animations
+
+Each piece fades in at the short step once placed, and fades out by a keyframe of its own, as `MenuButton`'s menu does. Under reduced motion neither fades. The fade in waits for `is-placed`: started at the mount it would run while the piece is still hidden and be spent before it shows, on a page slow to place it. The fade out is a second animation name, not the first reversed, because a finished animation whose name stays is updated in place, so reversing it jumps to its start instead of running again.
+
+## The callout's boundary box
+
+`position.ts` keeps the callout inside a box: the nearest ancestor marked `data-tip-boundary`, as a tip's is, or the `<dialog>` the control sits in, else the screen. A dialog counts because a callout running past its edge reads as loose from it. The callout is `fixed`, so the dialog clips nothing of it and the box is a measure only. The dialog is found by asking the node rather than with `instanceof Element`: a story Storybook draws into an iframe runs its script in the page around it, whose `Element` the frame's nodes are not.
+
+In a box narrower than the callout at its widest (a dialog on a phone), the callout narrows to the larger of the rooms either alignment leaves it, so it still stands start or end under the control rather than pinned across the box. A box that holds it at its widest leaves it as it is, and there, room for neither alignment pins it. The width is set on the element, as Floating UI's `size` does, so the rects can be measured again at the new width.

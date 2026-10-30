@@ -4,13 +4,8 @@ import type { ReactElement, ReactNode } from 'react';
 import { useTip } from '../InfoTip/use-tip';
 import './index.scss';
 
-// A mark or a logo that says what it is in a tip bubble on hover (the provider
-// logos, and the yes-or-no marks whose column heading does not say it). The
-// bubble is the eye's copy, hidden from assistive technology, since the mark
-// carries its word as hidden text. It opens on hover only, as before it was
-// CSS's; it is placed by `useTip` so it stays on the screen, centred over the
-// mark where there is room. It takes no pointer, so it never blocks the row it
-// overlaps (claude-docs/components/user-list.md).
+// A mark or logo with a hover-only tip bubble, placed by `useTip`, hidden from assistive technology, taking no pointer
+// (claude-docs/components/user-list.md, "Marks, logos and links with tips").
 const Hint = ({
   className,
   label,
@@ -20,7 +15,7 @@ const Hint = ({
   label: string;
   children: ReactNode;
 }): ReactElement => {
-  const { open, show, showSoon, hideSoon, anchor, bubble, bubbleStyle } = useTip();
+  const { open, showSoon, hideSoon, anchor, bubble, bubbleStyle } = useTip();
 
   return (
     <span ref={anchor} className={className} onMouseEnter={showSoon} onMouseLeave={hideSoon}>

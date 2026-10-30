@@ -88,11 +88,7 @@ beforeEach(async () => {
   await sql`truncate pagination_probe_jars`;
 });
 
-/**
- * Sixty live leaves, thirty names each held twice — so half the page
- * boundaries fall between two rows sharing a sort key, and only the id
- * decides which side each lands on — plus one soft-deleted leaf.
- */
+/** Sixty live leaves with thirty names held twice, so half the page boundaries fall between rows sharing a sort key and only the id decides; plus one soft-deleted leaf. */
 async function seedLeaves() {
   await sql`
     insert into pagination_probe_leaves (name, created_by, updated_by)
@@ -290,11 +286,7 @@ describe('Keyset pagination through the repository', () => {
   });
 });
 
-/**
- * A key of two parts, the first computed: the name's length over three,
- * negated, so longer names come first and the part is a fraction a cursor
- * has to carry exactly — then the name. `real`, as the compendium's score is.
- */
+/** A two-part key: the name's length over three, negated (a `real` fraction a cursor must carry exactly, as the compendium's score is), then the name. */
 const COMPUTED: SortPart[] = [
   { expression: fragment`-(length(${leaves.name})::real / 3)`, type: 'real' },
   leaves.name,
@@ -326,10 +318,7 @@ describe('findPageCount', () => {
 });
 
 describe('Keyset pagination on a compound, computed key', () => {
-  /**
-   * Forty leaves over five lengths and fifteen names, so rows tie on the
-   * computed part, on both parts, and only the id tells them apart.
-   */
+  /** Forty leaves over five lengths and fifteen names, so rows tie on the computed part, on both, and only the id separates them. */
   async function seedTies() {
     await sql`
       insert into pagination_probe_leaves (name, created_by, updated_by)

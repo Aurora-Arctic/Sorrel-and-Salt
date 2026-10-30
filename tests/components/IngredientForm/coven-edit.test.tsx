@@ -10,7 +10,6 @@ import type {
 } from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { duplicateHref, renderWithClient, textbox, waitFor } from '../../support/ingredient-form';
-import { openSections } from '../../support/ingredient-sections';
 import { press, type } from '../../support/interact';
 import {
   ENTRY_ID,
@@ -19,10 +18,8 @@ import {
   offerNothing,
 } from '../../support/msw/ingredient-lookups';
 
-// The form editing a coven's own entry (M8.17): what an edit changes on the
-// coven tier, written once here. What an edit does in either tier — one save,
-// off until something changes, a rename's near match holding nothing — is
-// compendium.test.tsx's, and the form's every field index.test.tsx's.
+// The form editing a coven's own entry: what an edit changes on the coven tier, written once here.
+// What an edit does in either tier (one save, off until something changes, a rename's near match holding nothing) is compendium.test.tsx's, and every field of the form is index.test.tsx's.
 
 const FOLK_ID = '5a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c03';
 
@@ -35,7 +32,7 @@ const TESTWORT: IngredientFormValues = {
   folkNames: [{ value: 'Hedge Fixture', id: FOLK_ID }],
 };
 
-function renderEdit(props: Pick<IngredientFormProps, 'mayPromote' | 'onDeleted'> = {}) {
+function renderEdit(props: Pick<IngredientFormProps, 'onDeleted'> = {}) {
   const onSaved = vi.fn();
   offerNothing();
   renderWithClient(
@@ -104,21 +101,34 @@ describe("IngredientForm editing a coven's own entry", () => {
       },
     });
     expect(onSaved).toHaveBeenCalledWith(
-      { id: ENTRY_ID, name: 'Mockwort', slug: 'mockwort-fixtura-testalis' },
+      { id: ENTRY_ID, name: 'Mockwort', slug: 'mockwort-fixtura-testalis', revision: 1 },
       'open',
     );
   });
 
-  // Delete sits at the dialog's foot as the compendium's does (M8.17, moved
-  // from M9.10 by the owner, 2026-10-19), and deletes from this coven alone.
+  // Delete sits at the dialog's foot as the compendium's does,
+  // and deletes from this coven alone.
+  it('draws Delete Ingredient as the bin icon with no visible text, and it still opens the question', () => {
+    renderEdit();
+
+    const bin = screen.getByRole('button', { name: 'Delete Ingredient' });
+    expect(bin.querySelector('svg')).not.toBeNull();
+    expect(bin.className).toContain('icon-tip__remove');
+    expect(bin.className).not.toContain('btn');
+    // Its words are for assistive technology alone.
+    expect(bin.querySelector('.visually-hidden')).not.toBeNull();
+    press('Delete Ingredient');
+    expect(button('Cancel')).toBeInTheDocument();
+  });
+
   it('deletes the entry from the coven once confirmed, naming it, and says why when refused', async () => {
     const onDeleted = vi.fn();
     renderEdit({ onDeleted });
 
     press('Delete Ingredient');
-    expect(screen.getByText(/Testwort/, { selector: 'p' })).toBeInTheDocument();
-    expect(button('Keep It')).toHaveFocus();
-    press('Keep It');
+    expect(screen.getByRole('group', { name: /Testwort/ })).toBeInTheDocument();
+    expect(button('Cancel')).toHaveFocus();
+    press('Cancel');
     noButton('Delete');
 
     mockGraphQLError('DeleteWorkspaceIngredient', {
@@ -154,19 +164,5 @@ describe("IngredientForm editing a coven's own entry", () => {
     expect(textbox('Name')).toHaveAccessibleDescription(/Testwort is taken in this coven/);
     expect(textbox('Name')).toHaveValue('Mockwort');
     expect(onSaved).not.toHaveBeenCalled();
-  });
-
-  it('offers to promote a saved folk name when the page allows it', () => {
-    renderEdit({ mayPromote: true });
-    openSections('Identity');
-
-    expect(button('Make Hedge Fixture the Display Name')).toBeInTheDocument();
-  });
-
-  it('offers no promotion without the prop', () => {
-    renderEdit();
-    openSections('Identity');
-
-    noButton('Make Hedge Fixture the Display Name');
   });
 });

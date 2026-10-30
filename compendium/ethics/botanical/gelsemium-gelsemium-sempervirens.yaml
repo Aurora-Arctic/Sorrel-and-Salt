@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/gelsemium-gelsemium-sempervirens
+status: approved
+listings:
+  - list: other
+    name: NatureServe global rank, as printed in Wikipedia's taxobox
+    value: G5
+    listedAs: Gelsemium sempervirens
+    scope: global
+    nameBasis: stated
+    source: wikipedia-gelsemium-sempervirens
+    locator: 'Taxobox: status = G5, status_system = TNC'

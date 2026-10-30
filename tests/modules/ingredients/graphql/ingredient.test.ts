@@ -16,11 +16,8 @@ import { run as runOperation } from '../../../support/graphql/run';
 import { makeIngredient } from '../../../support/fixtures';
 import type { IngredientNode, IngredientVariantNode } from './types';
 
-// The `ingredient` detail query: a compendium entry for anyone, and a coven's
-// own entry for its members when they name the coven. Non-null: a miss is
-// `NOT_FOUND`, as every lookup here answers one. Which callers are refused at
-// which rows is services/compendium.test.ts's; this file holds the
-// transport's half — the coven forwarded, and one refusal per code on the wire.
+// The `ingredient` detail query: a compendium entry for anyone, and a coven's own entry for its members when they name the coven. Non-null: a miss is `NOT_FOUND`.
+// Which callers are refused at which rows is services/compendium.test.ts's; here: the coven forwarded, and one refusal per code on the wire.
 
 let sql: ReturnType<typeof postgres>;
 let compendiumId: string;
@@ -79,16 +76,16 @@ describe('ingredient', () => {
     });
   });
 
-  it("answers a coven's own entry to its members, viewers included, when they name the coven", async () => {
-    for (const member of [B, C]) {
-      const result = await run(asUser(member), { id: localId, workspaceId: WORKSPACE_W_ID });
+  // Which roles read the entry is services/compendium.test.ts's; a viewer, the
+  // narrowest reader, stands for them here.
+  it("answers a coven's own entry to a member who names the coven", async () => {
+    const result = await run(asUser(C), { id: localId, workspaceId: WORKSPACE_W_ID });
 
-      expect(result.errors).toBeUndefined();
-      expect(result.data?.ingredient).toMatchObject({ id: localId, isGlobal: false });
-    }
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.ingredient).toMatchObject({ id: localId, isGlobal: false });
   });
 
-  // The transport's half of M12.24: `retired` reaches the wire. Who reads a
+  // The transport's half of retirement: `retired` reaches the wire. Who reads a
   // retired entry is services/retired-entry.test.ts's.
   it('marks a retired entry retired to a coven whose cupboard names it', async () => {
     await insertCupboardEntry(
@@ -147,10 +144,8 @@ describe('ingredient', () => {
     });
   });
 
-  // The transport's half of `variants` (MB.218): each field reaches the wire,
-  // in form order, a form's own children through its loaders. Who may read
-  // them is the loader matrix's
-  // (tests/modules/ingredients/loaders/ingredient-children.test.ts).
+  // The transport's half of `variants`: each field reaches the wire, in form order, a form's own children through its loaders.
+  // Who may read them is the loader matrix's (tests/modules/ingredients/loaders/ingredient-children.test.ts).
   it('answers its variants in form order, each with its fields and children', async () => {
     const barkId = await curatedFormId(sql, 'Bark');
     const linkedId = await insertIngredient(
@@ -239,7 +234,7 @@ describe('ingredient', () => {
   });
 
   // `Substitute.variant` is the resolver's own: the linked ingredient's form,
-  // found among that ingredient's variants (MB.218).
+  // found among that ingredient's variants.
   it("answers a substitute's form, null without one and once that form is deleted", async () => {
     const formed = await insertIngredient(
       sql,

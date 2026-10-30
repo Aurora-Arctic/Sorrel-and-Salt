@@ -53,14 +53,14 @@ export interface CupboardEntryFormProps {
   compendium: CompendiumValues;
   /** The coven's overrides now. */
   overrides: CupboardOverrides;
+  /** The cupboard row's revision the page read, which the first save names so a change made since is not written over. */
+  revision?: number | null;
   /** Closes the modal the form is in. */
   onDone: () => void;
   /**
-   * Further choices at the foot, set apart in Delete's place: the Annotate
-   * dialog's Make It Ours and Remove (M8.17). Given the form's alert, for a
-   * refusal; whether it holds unsaved changes, which Make It Ours warns of; and
-   * whether its unsaved-changes question is asking, which a question of the
-   * aside's steps aside for, both being drawn in the one place.
+   * Further choices at the foot, in Delete's place: the Annotate dialog's Make It Ours
+   * and Remove. Given the form's alert, whether it holds unsaved changes, and whether
+   * its unsaved-changes question is asking, which the aside's steps aside for.
    */
   aside?: (form: {
     onRefused: (message: string) => void;

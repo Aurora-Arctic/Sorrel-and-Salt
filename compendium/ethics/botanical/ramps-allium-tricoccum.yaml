@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/ramps-allium-tricoccum
+status: approved
+listings:
+  - list: other
+    name: Quebec legislation
+    value: a threatened species in Quebec and protected under Quebec legislation; possession for personal use is limited to 50 bulbs or plants per year and commercial transactions are prohibited
+    listedAs: Allium tricoccum
+    scope: Quebec
+    nameBasis: stated
+    source: wikipedia-allium-tricoccum
+    locator: Conservation

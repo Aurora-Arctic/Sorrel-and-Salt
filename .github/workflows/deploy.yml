@@ -122,7 +122,11 @@ jobs:
             src/db/seed/sources.ts \
             src/db/seed/reference-rows.ts \
             src/db/seed/compendium.ts \
+            src/db/seed/demo-coven.ts \
+            src/db/seed/demo-coven-content.ts \
+            src/db/bootstrap.ts \
             src/db/seed/compendium/ \
+            compendium/ \
             src/db/seed/idempotent.ts \
             src/lib/citation.ts \
             claude-docs/db/deity-vocabulary-seed.md \
@@ -279,13 +283,14 @@ jobs:
             --file ".vercel/.env.${{ needs.resolve-target.outputs.environment }}.local" \
             --on-failure warn
 
-      # Staging only: the component workshop, as static files under public/
-      # for `vercel build` to pick up, served at /workshop behind the proxy's
-      # admin gate. `--base` must match the proxy's /workshop prefix, or every
-      # asset 404s (claude-docs/workshop.md, "On staging").
+      # Staging only: the component workshop (Storybook), as static files under
+      # public/ for `vercel build` to pick up, served at /workshop behind the
+      # proxy's admin gate. No base path: Storybook links its files relative to
+      # the page, and the proxy serves every page from under /workshop/
+      # (claude-docs/workshop.md, "On staging").
       - name: Build the workshop (staging)
         if: steps.guard.outputs.enabled == 'true' && needs.resolve-target.outputs.git_branch == 'staging'
-        run: npm run workshop:build -- --base /workshop/ --outDir public/workshop
+        run: npm run workshop:build -- --outDir public/workshop
 
       - name: Build
         if: steps.guard.outputs.enabled == 'true'

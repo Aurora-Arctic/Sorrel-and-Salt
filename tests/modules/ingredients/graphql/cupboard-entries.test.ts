@@ -10,12 +10,9 @@ import { makeIngredient } from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
 import type { CupboardEntryNode } from './types';
 
-// `Ingredient.cupboardEntry(workspaceId)` over the wire (M12.14): a coven's
-// own say over a compendium entry, read beside the entry. This file holds the
-// transport's half: the answer and its `annotated`, a reader and a viewer
-// answered, a coven the caller is not in refused at the field as
-// `Ingredient.stock` refuses, null where there is no row to read, and one
-// read for a page of entries, counted at the repository.
+// `Ingredient.cupboardEntry(workspaceId)` over the wire: a coven's own say over a compendium entry, read beside the entry.
+// The transport's half: the answer and its `annotated`, a reader and a viewer answered, a coven the caller is not in refused at the field as `Ingredient.stock` refuses,
+// null where there is no row to read, and one read for a page of entries, counted at the repository.
 const repository = vi.hoisted(() => ({ findCupboardEntriesOf: vi.fn() }));
 vi.mock('@/db/repository', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/db/repository')>();

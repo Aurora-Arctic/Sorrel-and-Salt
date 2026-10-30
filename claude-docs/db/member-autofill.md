@@ -133,6 +133,15 @@ an identity with the one being written, and a deity is no part of an
 ingredient's identity, so `DeitySuggestion` is `FormSuggestion` without
 them, and the claim join is not made.
 
+**A deity is found by its other names as well** (M14.23). For a deity
+query, `findVocabularySuggestions` also matches the deity's live
+`deity_other_names` by trigram, and a
+deity found only that way is tier 0 like a name match. `matched_name` is the
+closest such name, by `word_similarity` and then alphabetically, and is null
+when the deity's own name matched; every other vocabulary, and tier 2,
+selects it as null. Only a curated deity is matched by its other names: a
+value in use that equals one is still offered in tier 2 as itself.
+
 **The common-name autofill** (M4.7a) is `findCommonNameSuggestions(memberships,
 query, page)` in `src/db/repository/common-names.ts`, the read behind
 `commonNameSuggestions`, whose service is `suggestCommonNames` in
@@ -185,5 +194,5 @@ services answer — `suggestions.test.ts`,
 `common-name-suggestions.test.ts` hold the
 behaviour, each refusal and scope case with the precondition that made it
 possible; a soft-deleted ingredient's dropping out of each is the `READS`
-tables' in `workspace-ingredients.test.ts` and `compendium-entries.test.ts`
+tables' in `workspace-ingredient-deleted-reads.test.ts` and `compendium-entries.test.ts`
 (MB.187).

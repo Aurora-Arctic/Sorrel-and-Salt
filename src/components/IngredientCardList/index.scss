@@ -1,10 +1,9 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// As many columns as fit at `$ingredient-card-min` each, the width shared out
-// evenly (`1fr`), so a phone gets one card across and a desktop three or four.
-// `min(100%, ...)` keeps one column from overflowing a container narrower than
-// the minimum. The same grid draws the loading skeleton (`.skeleton__cards`).
+// As many columns as fit at `$ingredient-card-min` each, the width shared evenly, so a phone gets one
+// card across. `min(100%, ...)` keeps one column from overflowing a narrow container. The loading
+// skeleton uses the same grid (`.skeleton__cards`).
 .ingredient-card-list {
   @include list-reset;
 
@@ -19,14 +18,16 @@
     flex-direction: column;
   }
 
-  .ingredient-card {
+  // The grimoire lays its spell cards in this grid too, and a spell card's foot sits at its
+  // bottom by the specimen's own `margin-top: auto` once the card fills its item.
+  .ingredient-card,
+  .spell-card {
     flex: 1 1 auto;
   }
 
-  // Compact: a narrower column (more cards across) and a tighter gap, to go with the
-  // compact card the same attribute switches on (IngredientCard/_compact.scss).
-  // A stored Regular choice sets data-card-density="regular" on <html> (pre-paint script,
-  // CardDensitySwitch) and turns the compact look off.
+  // Compact: a narrower column and a tighter gap, to go with the compact card the same attribute switches
+  // on (IngredientCard/_compact.scss). A stored Regular choice sets data-card-density="regular" on <html>
+  // and turns it off.
   &[data-density='compact']:not(:root[data-card-density='regular'] *) {
     grid-template-columns: repeat(
       auto-fill,

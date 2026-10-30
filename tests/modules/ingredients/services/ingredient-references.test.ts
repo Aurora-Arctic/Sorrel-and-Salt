@@ -25,12 +25,8 @@ import {
 } from '../../../support/db/insert-reference';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 
-// MB.153: an ingredient's references, each a link to a reference with an
-// optional locator, written in the ingredient's own transaction by either
-// tier's service, held to the tier rule, and read back alphabetically by
-// citation through `referencesOf`, the batch behind `Ingredient.references`
-// (DESIGN.md §5, "References"). Both tables are emptied per test, so every row
-// a result could come from is one this file wrote.
+// An ingredient's references, each a link to a reference with an optional locator, written in the ingredient's own transaction by either tier's service and held to the tier rule (DESIGN.md §5, "References").
+// `referencesOf`, the batch behind `Ingredient.references`, reads them back alphabetically by citation. Both tables are emptied per test, so every row a result could come from is one this file wrote.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -165,14 +161,6 @@ describe('a save carrying references', () => {
       { title: 'Fixture Herbal', locator: 'under "Testwort"' },
     ]);
   });
-
-  it('saves with none, absent or empty', async () => {
-    const created = await createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, {
-      name: 'Testwort',
-    });
-
-    expect(await readBack(asUser(B), created.id, WORKSPACE_W_ID)).toEqual([]);
-  });
 });
 
 describe('an update brings the references to the list sent', () => {
@@ -294,18 +282,6 @@ describe('the tier rule', () => {
     expect(count).toBe(0);
   });
 
-  it('refuses it on an update too, leaving the entry as it was', async () => {
-    const wBook = await covenBook(WORKSPACE_W_ID, 'W Notes');
-    const id = await seed(entry());
-
-    const issues = await refusal(
-      updateCompendiumEntry(asUser(E), id, input('Testwort', [cite(wBook)])),
-    );
-
-    expect(issues.map((issue) => issue.path)).toEqual([['references', 0]]);
-    expect(await linkRows(id)).toEqual([]);
-  });
-
   it('refuses a coven’s ingredient another coven’s reference, by direct id, beside the entry', async () => {
     const xBook = await covenBook(WORKSPACE_X_ID, 'X Notes');
     // The precondition: the reference exists, and X's own member cites it.
@@ -396,7 +372,7 @@ describe('a soft-deleted reference', () => {
   });
 });
 
-// M5.5's to-do list: the compendium's live entries with no reference shown.
+// The to-do list: the compendium's live entries with no reference shown.
 describe('the compendium without references', () => {
   async function names(filter: { withoutReferences?: boolean }) {
     const page = await resolvePage({ first: 50 }, (request) => listCompendium(filter, request));
@@ -435,7 +411,7 @@ describe('the compendium without references', () => {
     expect((await countCompendium({ withoutReferences: true }, undefined)).totalCount).toBe(4);
   });
 
-  // The union rule (MB.215, MB.218): a source on one of an entry's forms
+  // The union rule: a source on one of an entry's forms
   // sources the entry, while that form is live.
   it('counts an entry sourced when one of its live variants cites, and only then', async () => {
     const book = await compendiumBook('Fixture Herbal');

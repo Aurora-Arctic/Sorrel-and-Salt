@@ -8,7 +8,9 @@ import {
   startTransition,
   useMemo,
   useOptimistic,
+  useState,
 } from 'react';
+import { LeaveGuardContext, leaveGuardSlot } from './leave-guard';
 import type { NavigateOptions, NavigationTarget } from './types';
 
 /** The navigation on its way: who started it, and where it is headed. */
@@ -24,19 +26,14 @@ export const ActiveNavigationContext = createContext<ActiveNavigation | undefine
 export const NavigationActionsContext = createContext<NavigationActions | null>(null);
 
 /**
- * Owns every navigation the site starts. It is mounted once, in the
- * providers, and never unmounts, so a wait can never be lost with the control
- * that began it: `MainBody` and `CovenBody` swap their children for a
- * skeleton, which unmounts the link that was pressed. The wait is an
- * optimistic value set inside the same transition as the router call; React
- * puts it back when that transition ends, on arrival, supersession or error,
- * so nothing here settles by hand. Where two navigations overlap the later
- * one's value shows, and the value goes when the last of them has ended.
- * claude-docs/design-decisions/m12.33-loading-standard.md
+ * Owns every navigation the site starts. It is mounted once and never unmounts, so
+ * a wait is never lost with the control that began it; React puts the optimistic
+ * wait back when the transition ends. A mounted form with unsaved changes is waited on first. (claude-docs/design-decisions/m12.33-loading-standard.md, "Navigation provider")
  */
 export function NavigationProvider({ children }: { children: ReactNode }): ReactElement {
   const router = useRouter();
   const [active, setActive] = useOptimistic<ActiveNavigation | undefined>(undefined);
+  const [guards] = useState(leaveGuardSlot);
 
   const actions = useMemo<NavigationActions>(
     () => ({
@@ -45,12 +42,14 @@ export function NavigationProvider({ children }: { children: ReactNode }): React
         // plain `push(href)`.
         const routerOptions =
           options?.scroll === undefined ? undefined : { scroll: options.scroll };
-        startTransition(() => {
-          setActive({ owner, target: options?.target });
-          const go = options?.replace ? router.replace : router.push;
-          if (routerOptions) go(href as never, routerOptions);
-          else go(href as never);
-        });
+        guards.leave(() =>
+          startTransition(() => {
+            setActive({ owner, target: options?.target });
+            const go = options?.replace ? router.replace : router.push;
+            if (routerOptions) go(href as never, routerOptions);
+            else go(href as never);
+          }),
+        );
       },
       refresh: (owner) => {
         startTransition(() => {
@@ -59,12 +58,14 @@ export function NavigationProvider({ children }: { children: ReactNode }): React
         });
       },
     }),
-    [router, setActive],
+    [router, setActive, guards],
   );
 
   return (
-    <NavigationActionsContext value={actions}>
-      <ActiveNavigationContext value={active}>{children}</ActiveNavigationContext>
-    </NavigationActionsContext>
+    <LeaveGuardContext value={guards}>
+      <NavigationActionsContext value={actions}>
+        <ActiveNavigationContext value={active}>{children}</ActiveNavigationContext>
+      </NavigationActionsContext>
+    </LeaveGuardContext>
   );
 }

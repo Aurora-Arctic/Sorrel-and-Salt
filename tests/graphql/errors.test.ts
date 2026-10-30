@@ -3,12 +3,11 @@ import { createYoga } from 'graphql-yoga';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { createBuilder } from '@/graphql/builder';
 import { maskedErrors } from '@/graphql/errors';
-import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
+import { Forbidden, NotFound, StaleWrite, ValidationError } from '@/lib/errors';
 
-// The route's mapping, run through a real Yoga instance so what is asserted is
-// the response body a browser receives. No production field throws each type
-// yet, so the schema is a throwaway; tests/app/api/graphql/route.test.ts
-// asserts the route itself carries the mapping.
+// The route's mapping, run through a real Yoga instance so what is asserted is the response
+// body a browser receives. The schema is a throwaway, since no production field throws each
+// type; tests/app/api/graphql/route.test.ts asserts the route itself carries the mapping.
 
 const ISSUES = [
   { path: ['canonicalName'], message: 'A botanical name is required' },
@@ -35,6 +34,11 @@ scratch.queryType({
     notFound: t.boolean({
       resolve: () => {
         throw new NotFound('No such spell');
+      },
+    }),
+    stale: t.boolean({
+      resolve: () => {
+        throw new StaleWrite(7, 'This was changed elsewhere');
       },
     }),
     crashed: t.boolean({
@@ -133,6 +137,20 @@ describe('service errors over GraphQL', () => {
     ]);
   });
 
+  it('answers a StaleWrite with STALE_WRITE and the revision the row is at now', async () => {
+    const { body } = await run('{ stale }');
+
+    expect(body.data).toBeNull();
+    expect(body.errors).toEqual([
+      {
+        message: 'This was changed elsewhere',
+        locations: [{ line: 1, column: 3 }],
+        path: ['stale'],
+        extensions: { code: 'STALE_WRITE', currentRevision: 7 },
+      },
+    ]);
+  });
+
   it('masks anything else: no message, no stack, no constraint name', async () => {
     const { body } = await run('{ crashed }');
     const serialised = JSON.stringify(body);
@@ -140,7 +158,9 @@ describe('service errors over GraphQL', () => {
     expect(body.data).toBeNull();
     expect(body.errors).toHaveLength(1);
     expect(body.errors[0].message).toBe('Unexpected error.');
-    expect(body.errors[0].extensions.code).not.toMatch(/^(VALIDATION|FORBIDDEN|NOT_FOUND)$/);
+    expect(body.errors[0].extensions.code).not.toMatch(
+      /^(VALIDATION|FORBIDDEN|NOT_FOUND|STALE_WRITE)$/,
+    );
     expect(serialised).not.toContain(CONSTRAINT);
     expect(serialised).not.toContain('duplicate key');
     expect(serialised).not.toMatch(/\bat \S+ \(/);

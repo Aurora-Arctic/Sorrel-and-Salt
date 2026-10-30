@@ -2,8 +2,9 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import { FormProvider, useForm } from 'react-hook-form';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Suggestions } from '@/components/Combobox/types';
-import { ListField } from '@/components/IngredientForm/fields';
+import { ListField, MultiSelectField } from '@/components/IngredientForm/fields';
 import type {
+  IngredientElement,
   IngredientFormInput,
   IngredientFormValues,
   ListOption,
@@ -13,16 +14,9 @@ import { press, type } from '../../support/interact';
 import { layOutChips, moveByKeyboard } from '../../support/sortable';
 import type { Variant } from './types';
 
-// The form's list field on its own (MB.181): one box to type in, its entries
-// inside it, on react-hook-form with the form's resolver, and no lookup — the
-// suggestions are given, as `LookupListField` gives them. The behaviour every
-// list shares runs on a plain list and a pick-only one, the two ways an entry
-// gets in; `ordered` and the folk names' own-name rule have their own
-// describes, and the six lists differ otherwise only in the shape a typed
-// entry is sent in, of which there are two. What the box, its chips and the sortable list do on their own is
-// Combobox's (tests/components/Combobox/index.test.tsx), and what needs the
-// whole form — the lookups wired, the payload — stays in index.test.tsx
-// (claude-docs/components/ingredient-form.md, "Testing").
+// The form's list field on its own: one box to type in, its entries inside it, on react-hook-form with the form's resolver, and no lookup (the suggestions are given, as `LookupListField` gives them).
+// The shared behaviour runs on a plain list and a pick-only one, the two ways an entry gets in; `ordered` and the folk names' own-name rule have their own describes, and the six lists otherwise differ only in the shape a typed entry is sent in, of which there are two.
+// What the box, chips and sortable list do on their own is Combobox's (tests/components/Combobox/index.test.tsx), and what needs the whole form (lookups wired, the payload) stays in index.test.tsx (claude-docs/components/ingredient-form.md, "Testing").
 
 /** The shapes the field takes; the form's six lists are these under their own names. */
 const PLAIN: Variant = {
@@ -61,11 +55,7 @@ const DEITIES: Variant = {
   ordered: true,
 };
 
-/**
- * The two shapes a list sends a typed entry in: the folk names, celestial bodies,
- * signs and colours as text, a deity or substitute as a name (DESIGN.md §5,
- * `ingredient_deities` and `ingredient_substitutes`).
- */
+/** The two shapes a list sends a typed entry in: the folk names, celestial bodies, signs and colours as text, a deity or substitute as a name (DESIGN.md §5, `ingredient_deities` and `ingredient_substitutes`). */
 const LISTS: (Omit<Variant, 'variant'> & { sent: (values: string[]) => unknown })[] = [
   { ...FOLK_NAME, sent: (values) => values },
   { ...PLAIN, sent: (values) => values.map((name) => ({ name })) },
@@ -78,11 +68,7 @@ const offer = (values: string[]): Suggestions<ListOption> => ({
   pending: false,
 });
 
-/**
- * One list field in a form of its own, given its entries as an edit would be.
- * A pick-only list is given a source, since a pick is its only way in; the
- * Name box is there for what a folk name is judged against.
- */
+/** One list field in a form of its own, given its entries as an edit would be. A pick-only list is given a source, since a pick is its only way in; the Name box is there for what a folk name is judged against. */
 function renderList(
   { name, legend, entry, ordered, pickOnly }: Omit<Variant, 'variant'>,
   {
@@ -149,7 +135,7 @@ function expectErrorOn(control: HTMLElement) {
 
 describe('ListField', () => {
   describe.each(VARIANTS)('the $variant list', (variant) => {
-    const { legend, entry, name, pickOnly } = variant;
+    const { legend, entry, pickOnly } = variant;
 
     it('starts with one empty box and no entries, Add offered only where text is added', () => {
       renderList(variant);
@@ -163,22 +149,23 @@ describe('ListField', () => {
       else expect(adds).toBeInTheDocument();
     });
 
-    it('adds an entry inside the box, ahead of the text, clearing and keeping the box focused, and says so', () => {
+    it('adds an entry, clearing and keeping the box focused, and says so', () => {
       renderList(variant);
 
       add(variant, '  First Fixture ');
 
       expect(entries(legend)).toEqual(['Remove First Fixture']);
-      const inside = box(entry).closest('.combobox__control') as HTMLElement;
-      expect(inside).toContainElement(removeButton('First Fixture'));
-      expect(
-        removeButton('First Fixture').compareDocumentPosition(box(entry)) &
-          Node.DOCUMENT_POSITION_FOLLOWING,
-      ).toBeTruthy();
       expect(box(entry)).toHaveValue('');
       expect(box(entry)).toHaveFocus();
       expect(changes(legend)).toHaveTextContent('First Fixture');
     });
+  });
+
+  // Once an entry is in, a plain list and a pick-only one share every path: removing,
+  // Backspace, Clear and an error on one entry run once, on the plain list.
+  describe('the plain list', () => {
+    const variant = PLAIN;
+    const { legend, entry, name } = variant;
 
     it('removes an entry from its x, returning the focus to the box, and says so', () => {
       renderList(variant);
@@ -227,7 +214,7 @@ describe('ListField', () => {
     });
 
     // Given the repeat, since the box refuses one at Add and the source
-    // never offers one (MB.174): an error names an entry by its index, and
+    // never offers one: an error names an entry by its index, and
     // reads on the box through the list's one error element.
     it('marks an error on the entry it names alone, and clears it once that entry is removed', async () => {
       const onSubmit = renderList(variant, {
@@ -303,7 +290,7 @@ describe('ListField', () => {
     });
   });
 
-  // MB.174: a list refuses a repeat at the box, as the schema would at save,
+  // A list refuses a repeat at the box, as the schema would at save,
   // and says why in its one error element; the source leaves out what the
   // list holds, and the typed row is withheld for a repeat.
   describe('a repeat at a box with a source', () => {
@@ -342,7 +329,7 @@ describe('ListField', () => {
     });
   });
 
-  // MB.162: a pick-only list's entries are curated rows picked, so the box
+  // A pick-only list's entries are curated rows picked, so the box
   // offers those alone and refuses what is typed and not picked.
   describe('a repeat at a pick-only box', () => {
     const { entry, legend } = PICK_ONLY;
@@ -398,6 +385,26 @@ describe('ListField', () => {
     });
   });
 
+  // A list takes several picks in one visit to its list, as the
+  // multi-select does; Escape still closes it.
+  it('keeps the list open after a pick, with the focus in the box, for the next', () => {
+    const { entry, legend } = PICK_ONLY;
+    renderList(PICK_ONLY);
+
+    box(entry).focus();
+    fireEvent.keyDown(box(entry), { key: 'ArrowDown' });
+    fireEvent.click(screen.getByRole('option', { name: 'First Fixture' }));
+
+    expect(entries(legend)).toEqual(['Remove First Fixture']);
+    expect(box(entry)).toHaveAttribute('aria-expanded', 'true');
+    expect(box(entry)).toHaveFocus();
+    fireEvent.click(screen.getByRole('option', { name: 'Second Fixture' }));
+    expect(entries(legend)).toEqual(['Remove First Fixture', 'Remove Second Fixture']);
+
+    fireEvent.keyDown(box(entry), { key: 'Escape' });
+    expect(box(entry)).toHaveAttribute('aria-expanded', 'false');
+  });
+
   // The ingredient's own name is no folk name: refused at the box as a
   // repeat is, and left out of the source, as the name is typed.
   it('refuses a folk name repeating the name, at the box, and offers it from no source', () => {
@@ -421,7 +428,7 @@ describe('ListField', () => {
     expectErrorOn(box(entry));
   });
 
-  // MB.174: the source leaves out what the list holds, by the schema's key —
+  // The source leaves out what the list holds, by the schema's key —
   // a link by its id, text folded among the typed entries — and the typed
   // row is withheld for text the list would refuse.
   describe('a source beside the listed entries', () => {
@@ -507,7 +514,9 @@ describe('ListField', () => {
       expect(
         screen.queryByRole('option', { name: 'Mockwort This coven’s entry' }),
       ).not.toBeInTheDocument();
-      expect(typedRow('mockwort')).toBeInTheDocument();
+      // The suggestion reads as what was typed, so no typed row repeats it:
+      // Enter with nothing highlighted still adds the name as typed text.
+      expect(typedRow('mockwort')).not.toBeInTheDocument();
       fireEvent.keyDown(box(entry), { key: 'Enter' });
       expect(entries(legend)).toEqual(['Remove Mockwort', 'Remove mockwort']);
 
@@ -520,7 +529,7 @@ describe('ListField', () => {
     });
   });
 
-  // MB.170: an ordered list's entries move, each by its handle; an unordered
+  // An ordered list's entries move, each by its handle; an unordered
   // one's have none to move by.
   describe('moving an entry', () => {
     const { entry, legend } = ORDERED;
@@ -617,8 +626,8 @@ describe('ListField', () => {
     });
   });
 
-  // Given the repeat, since the lookup never offers a listed deity (MB.174):
-  // the error names the pick as its pill reads, with its tradition (MB.169).
+  // Given the repeat, since the lookup never offers a listed deity:
+  // the error names the pick as its pill reads, with its tradition.
   it('refuses the same deity picked twice, beside the repeat, named with its tradition', async () => {
     const greek = {
       value: 'Hecate',
@@ -636,7 +645,7 @@ describe('ListField', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  // MB.140: a substitute links an ingredient or names one, and a refused
+  // A substitute links an ingredient or names one, and a refused
   // link is named as its pill reads, by its formal name too.
   it('marks a refused link beside its pill, named by its formal name too', async () => {
     const linked = {
@@ -659,6 +668,64 @@ describe('ListField', () => {
     expect(box(PLAIN.entry)).toHaveAccessibleDescription(
       expect.stringContaining('Mockleaf (Fixtura testalis)'),
     );
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+});
+
+// The pick-only multi-select beside the lists, given its elements as an edit would be:
+// drawn as chips in the order held, and a repeat refused on the control itself.
+describe('MultiSelectField, given its values', () => {
+  function renderElements(elements: IngredientElement[]) {
+    const onSubmit = vi.fn();
+    const Harness = () => {
+      const methods = useForm<IngredientFormValues, unknown, IngredientFormInput>({
+        defaultValues: { ...EMPTY_VALUES, name: 'Testwort', elements },
+        resolver: ingredientResolver,
+      });
+      return (
+        <FormProvider {...methods}>
+          <form onSubmit={methods.handleSubmit(onSubmit)}>
+            <MultiSelectField
+              name="elements"
+              label="Element"
+              placeholder="Choose elements"
+              options={[
+                { value: 'earth', label: 'Earth' },
+                { value: 'air', label: 'Air' },
+                { value: 'fire', label: 'Fire' },
+                { value: 'water', label: 'Water' },
+                { value: 'spirit', label: 'Spirit' },
+              ]}
+            />
+            <button type="submit">Save Ingredient</button>
+          </form>
+        </FormProvider>
+      );
+    };
+    render(<Harness />);
+    return onSubmit;
+  }
+
+  it('prefills them as chips, in the order held, and offers only the rest', () => {
+    renderElements(['water', 'earth']);
+
+    expect(
+      screen
+        .getAllByRole('button', { name: /^Remove / })
+        .map((button) => button.getAttribute('aria-label')),
+    ).toEqual(['Remove Water', 'Remove Earth']);
+    fireEvent.click(box('Element'));
+    expect(screen.getAllByRole('option')).toHaveLength(3);
+    expect(screen.queryByRole('option', { name: 'Water' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: 'Earth' })).not.toBeInTheDocument();
+  });
+
+  it('shows a repeat the schema refuses on the Element control', async () => {
+    const onSubmit = renderElements(['fire', 'fire']);
+
+    save();
+
+    await waitFor(() => expectErrorOn(box('Element')));
     expect(onSubmit).not.toHaveBeenCalled();
   });
 });

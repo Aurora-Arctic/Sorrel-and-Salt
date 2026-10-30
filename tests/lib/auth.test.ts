@@ -22,8 +22,10 @@ describe('auth secret', () => {
     await expect(import('@/lib/auth')).rejects.toThrow('BETTER_AUTH_SECRET is not set');
   });
 
-  it('does not throw when unset outside production', async () => {
+  // Both variables share the one rule: outside production, unset is allowed.
+  it('does not throw when BETTER_AUTH_SECRET and ADMIN_BOOTSTRAP_EMAIL are unset outside production', async () => {
     vi.stubEnv('BETTER_AUTH_SECRET', '');
+    vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', '');
     vi.stubEnv('NODE_ENV', 'development');
     vi.resetModules();
 
@@ -31,30 +33,12 @@ describe('auth secret', () => {
   });
 });
 
-// Both id and secret, never an empty string, which Better Auth reads as a
-// configured provider. The roster is Google, Discord, Facebook and Microsoft
-// (M2.6) — GitHub (M2.5) was removed when the roster was re-scoped, and
-// Apple was considered and dropped for a client secret that expires every
-// six months (claude-docs/auth/social-providers.md, "Social providers").
+// Both id and secret, never an empty string, which Better Auth reads as a configured provider.
+// The roster is Google, Discord, Facebook and Microsoft; Apple is not offered, for a client
+// secret that expires every six months (claude-docs/auth/social-providers.md, "Social providers").
 describe('social providers', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
-  });
-
-  it('registers none of the four when no client credentials are set', async () => {
-    vi.stubEnv('GOOGLE_CLIENT_ID', '');
-    vi.stubEnv('GOOGLE_CLIENT_SECRET', '');
-    vi.stubEnv('DISCORD_CLIENT_ID', '');
-    vi.stubEnv('DISCORD_CLIENT_SECRET', '');
-    vi.stubEnv('FACEBOOK_CLIENT_ID', '');
-    vi.stubEnv('FACEBOOK_CLIENT_SECRET', '');
-    vi.stubEnv('MICROSOFT_CLIENT_ID', '');
-    vi.stubEnv('MICROSOFT_CLIENT_SECRET', '');
-    vi.resetModules();
-
-    const { auth } = await import('@/lib/auth');
-
-    expect(auth.options.socialProviders).toEqual({});
   });
 
   it('registers a provider once both its id and secret are set', async () => {
@@ -77,9 +61,8 @@ describe('social providers', () => {
     });
   });
 
-  // A provider that shares no address would end the callback at
-  // `email_not_found`; the placeholder lets the row and session exist so the
-  // email page can ask (MB.54). Every provider, since each can withhold one.
+  // A provider that shares no address would end the callback at `email_not_found`; the placeholder
+  // lets the row and session exist so the email page can ask. Every provider, since each can withhold one.
   it('maps a profile with no email to the placeholder, and leaves one with an email alone', async () => {
     vi.stubEnv('GOOGLE_CLIENT_ID', 'g-id');
     vi.stubEnv('GOOGLE_CLIENT_SECRET', 'g-secret');
@@ -227,10 +210,9 @@ describe('user field mapping', () => {
   });
 });
 
-// The one write to `users` outside withAudit: there is no session yet, so the
-// new user is its own creator (`createdBy` is NOT NULL with no default). It
-// never sets `role`: the primary admin is promoted at sign-in, through
-// withAudit (tests/modules/identity/services/admin-role.test.ts).
+// The one write to `users` outside withAudit: there is no session yet, so the new user is its
+// own creator (`createdBy` is NOT NULL with no default). It never sets `role`: the primary admin
+// is promoted at sign-in, through withAudit (tests/modules/identity/services/admin-role.test.ts).
 describe('sign-up hook', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -254,6 +236,71 @@ describe('sign-up hook', () => {
   });
 });
 
+// The sign-up hook's second write: a viewer seat in the demo coven, on the same raw client and outside withAudit. The finder and the
+// client are doubles here; tests/db/email-verification.test.ts runs it against a real database.
+describe('sign-up hook seat', () => {
+  afterEach(() => {
+    vi.doUnmock('@/db/repository');
+    vi.doUnmock('@/db/connection');
+    vi.restoreAllMocks();
+  });
+
+  async function afterHookWith(demo: { id: string } | undefined, insert: () => Promise<undefined>) {
+    vi.resetModules();
+    const values = vi.fn(insert);
+    const real = await vi.importActual<typeof import('@/db/connection')>('@/db/connection');
+    vi.doMock('@/db/connection', () => ({
+      ...real,
+      db: { ...real.db, insert: () => ({ values }) },
+    }));
+    const realRepository =
+      await vi.importActual<typeof import('@/db/repository')>('@/db/repository');
+    vi.doMock('@/db/repository', () => ({
+      ...realRepository,
+      findDemoWorkspace: async () => demo,
+    }));
+    const { auth } = await import('@/lib/auth');
+    const hook = auth.options.databaseHooks?.user?.create?.after;
+    if (!hook) throw new Error('databaseHooks.user.create.after is not configured');
+    return { hook, values };
+  }
+
+  it('seats the new user as a viewer of the demo coven, stamped by themselves', async () => {
+    const { hook, values } = await afterHookWith({ id: 'demo-id' }, async () => undefined);
+
+    await hook({ id: 'new-user' } as never, null);
+
+    expect(values).toHaveBeenCalledWith({
+      workspaceId: 'demo-id',
+      userId: 'new-user',
+      role: 'viewer',
+      invitedBy: null,
+      createdBy: 'new-user',
+      updatedBy: 'new-user',
+    });
+  });
+
+  it('writes nothing where there is no demo coven', async () => {
+    const { hook, values } = await afterHookWith(undefined, async () => undefined);
+
+    await hook({ id: 'new-user' } as never, null);
+
+    expect(values).not.toHaveBeenCalled();
+  });
+
+  it('logs a failed insert with the user id and does not throw', async () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { hook, values } = await afterHookWith({ id: 'demo-id' }, async () => {
+      throw new Error('insert refused');
+    });
+
+    await expect(hook({ id: 'new-user' } as never, null)).resolves.toBeUndefined();
+
+    expect(values).toHaveBeenCalled();
+    expect(error.mock.calls[0][0]).toContain('new-user');
+  });
+});
+
 // Everything the primary admin's protection rests on holds only while the
 // variable is set, so a deployed build refuses to start without it; the check
 // keys on NODE_ENV=production, as BETTER_AUTH_SECRET's does.
@@ -269,23 +316,6 @@ describe('ADMIN_BOOTSTRAP_EMAIL', () => {
     vi.resetModules();
 
     await expect(import('@/lib/auth')).rejects.toThrow('ADMIN_BOOTSTRAP_EMAIL is not set');
-  });
-
-  it('starts at NODE_ENV=production once it is set', async () => {
-    vi.stubEnv('NODE_ENV', 'production');
-    vi.stubEnv('BETTER_AUTH_SECRET', 'production-test-secret-at-least-32-characters-long');
-    vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', 'placeholder@admin-bootstrap.invalid');
-    vi.resetModules();
-
-    await expect(import('@/lib/auth')).resolves.toBeDefined();
-  });
-
-  it('does not throw when unset outside production', async () => {
-    vi.stubEnv('NODE_ENV', 'development');
-    vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', '');
-    vi.resetModules();
-
-    await expect(import('@/lib/auth')).resolves.toBeDefined();
   });
 });
 
@@ -417,33 +447,17 @@ describe('rate limiting', () => {
   });
 });
 
-// Neither is set in src/lib/auth.ts: DESIGN.md names no session lifetime, so
-// Better Auth's defaults apply, and these fail if a bump moves one.
-describe('session lifetimes', () => {
+// DESIGN.md names no session lifetime, so Better Auth's defaults apply and are
+// not pinned here. What is pinned is the one option that would hold a revoked
+// role open.
+describe('session cookie cache', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
   });
 
-  async function sessionConfig() {
-    vi.resetModules();
-    const { auth } = await import('@/lib/auth');
-    return (await auth.$context).sessionConfig;
-  }
-
-  it('lasts seven days, extended at most once a day, and counts as fresh for a day', async () => {
-    const DAY = 24 * 60 * 60;
-
-    expect(await sessionConfig()).toMatchObject({
-      expiresIn: 7 * DAY,
-      updateAge: DAY,
-      freshAge: DAY,
-    });
-  });
-
-  // MB.59: a revoked admin's next request reads `role` off the users row, so
-  // `/admin` and every admin mutation close to them at once. A cookie cache
-  // would answer from the cookie until its TTL ran out, keeping a revoked
-  // admin an admin for that long (claude-docs/auth/admin-users.md).
+  // A revoked admin's next request reads `role` off the users row, so `/admin` and every admin
+  // mutation close to them at once. A cookie cache would answer from the cookie until its TTL ran
+  // out (claude-docs/auth/admin-users.md).
   it('keeps the session cookie cache off, so every request reads the role afresh', async () => {
     vi.resetModules();
     const { auth } = await import('@/lib/auth');

@@ -48,16 +48,13 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     ".next-e2e/types/**/*.ts",
-    ".next-e2e/dev/types/**/*.ts"
+    ".next-e2e/dev/types/**/*.ts",
+    // The workshop (M12.53): its config, helpers and the stories that live
+    // beside the components are checked like any other source. `src/**` already
+    // reaches the component stories; the dot-directory is named because a
+    // `**` glob skips it otherwise.
+    ".storybook/**/*.ts",
+    ".storybook/**/*.tsx"
   ],
-  "exclude": [
-    "node_modules",
-    // *.stories.tsx pull @ladle/react's types, whose bundled app sources
-    // (typings-for-build/**/*.tsx) don't survive this repo's `strict` on their
-    // own and aren't reached by `skipLibCheck` because they ship as .tsx, not
-    // .d.ts. The workshop compiles stories through Vite/esbuild, which strips
-    // types, so `ladle build` still exercises them; only `tsc` steps back.
-    // M0.32 revisits when it adds the first real stories.
-    "src/**/*.stories.tsx"
-  ]
+  "exclude": ["node_modules"]
 }

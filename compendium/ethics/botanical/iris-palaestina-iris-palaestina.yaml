@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/iris-palaestina-iris-palaestina
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed by Wikipedia
+    value: Least Concern
+    listedAs: Iris palaestina
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iris-palaestina
+    locator: 'taxobox status LC (IUCN3.1); reference printed: Sawalha, K.M.S. et al. 2016, Iris palaestina, e.T13161814A18612445'

@@ -1,0 +1,86 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The recipe page's Workings section: a stack of rows, each a plain block under its date. The
+// section's gap is `.page-frame__section`'s; the top margin stays, as the recipe is no `.page-frame` column.
+
+.spell-workings {
+  margin-top: space(6);
+
+  // The heading with its Record a Working button at its end.
+  &__title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: space(2);
+
+    h2 {
+      margin: 0;
+    }
+  }
+
+  &__list {
+    display: grid;
+    gap: space(5);
+
+    // No margin, indent or typography-base's ◆ marker: each row is headed by its date.
+    @include list-reset;
+  }
+
+  &__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: space(2);
+
+    h3 {
+      margin: 0;
+      font-size: heading-size(4);
+      line-height: 1.25;
+    }
+
+    // The badges sit right after the date, and the buttons go to the far right.
+    .specimen__badges {
+      margin: 0;
+    }
+  }
+
+  // On a phone the buttons wrap under the date when the row is full.
+  &__actions {
+    margin-left: auto;
+    display: flex;
+    gap: space(2);
+    align-items: center;
+    justify-content: flex-end;
+  }
+
+  &__note {
+    margin: space(2) 0 0;
+  }
+
+  // What completing a draft would skip, clear of the date line above it.
+  &__warning {
+    margin-block-start: space(2);
+  }
+
+  // The small label over a complete working's lines, which names the list; clear of the note above.
+  // The metadata look (`.meta`), set here so its margin is not left to the order the sheets load in.
+  &__taken {
+    margin: space(3) 0 0;
+    color: $text-muted;
+    font-size: type-size('caption');
+  }
+
+  // Same reset as the list above: the global ◆ marker would otherwise lead each ingredient line.
+  &__deductions {
+    @include list-reset;
+
+    margin-top: space(1);
+  }
+
+  &__deduction {
+    display: flex;
+    justify-content: space-between;
+    gap: space(3);
+  }
+}

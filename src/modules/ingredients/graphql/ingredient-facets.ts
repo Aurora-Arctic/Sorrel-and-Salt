@@ -4,17 +4,13 @@ import type {
   CompendiumFacets,
   FacetCount,
   IngredientFacets,
+  ReviewFacetValue,
   WorkspaceIngredientFacets,
 } from '../types';
 import { IngredientElementEnum, IngredientSourceEnum, ToxicFilterEnum } from './ingredient';
 
-// M12.3's answer: how many entries each search filter value would list, for
-// the compendium (`compendiumFacets`, in compendium.ts, which adds the No Refs
-// count) and a coven's list (`workspaceIngredientFacets`, in
-// workspace-ingredient-list.ts). One small
-// object type per value type, so each `value` is typed as the argument it
-// would be sent back as (claude-docs/graphql/schema.md, "compendiumFacets and
-// workspaceIngredientFacets").
+// How many entries each search filter value would list, for the compendium (`compendiumFacets`) and a coven's list (`workspaceIngredientFacets`).
+// One small object type per value type, so each `value` is typed as the argument it is sent back as (claude-docs/graphql/schema.md, "compendiumFacets and workspaceIngredientFacets").
 
 const COUNT_DESCRIPTION =
   'How many entries the list would hold with this value as the only one chosen of its kind, the rest of the filter unchanged.';
@@ -156,6 +152,20 @@ export const IngredientFacetsRef = builder
     }),
   });
 
+export const ReviewFacetCountRef = builder
+  .objectRef<FacetCount<ReviewFacetValue>>('ReviewFacetCount')
+  .implement({
+    description: 'A Reviewed setting, and how many entries it would list (M14.8).',
+    fields: (t) => ({
+      value: t.boolean({
+        description:
+          'true for the reviewed entries, false for the ones needing review, as reviewed takes it.',
+        resolve: (count) => count.value === 'reviewed',
+      }),
+      count: t.exposeInt('count', { description: COUNT_DESCRIPTION }),
+    }),
+  });
+
 export const CompendiumFacetsRef = builder
   .objectRef<CompendiumFacets>('CompendiumFacets')
   .implement({
@@ -169,6 +179,13 @@ export const CompendiumFacetsRef = builder
       withoutForms: t.exposeInt('withoutForms', {
         description:
           'How many entries have no live form, under the rest of the filter: the same whether withoutForms is chosen or not.',
+      }),
+      reviewed: t.field({
+        type: [ReviewFacetCountRef],
+        nullable: true,
+        description:
+          'Reviewed, then needing review, under the rest of the filter, reviewed left out. Null to anyone but a curator or an admin: the review mark is theirs alone.',
+        resolve: (facets) => facets.reviewed,
       }),
     }),
   });

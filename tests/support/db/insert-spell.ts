@@ -1,5 +1,5 @@
 import type postgres from 'postgres';
-import { spellColumns, spellLayerColumns } from '../fixtures/spell';
+import { spellColumns, spellStepColumns } from '../fixtures/spell';
 import type { SpellFixture } from '../fixtures/types';
 
 // The one way a test seeds a spell it is not testing the writing of, on
@@ -7,15 +7,9 @@ import type { SpellFixture } from '../fixtures/types';
 // stamps and the GUC (claude-docs/testing/fixture-factories.md, "Fixture factories").
 
 /**
- * Writes `fixture`'s spell, its layers and its assigned categories, stamped by
- * `author`, and returns the spell's id. `author` is `created_by`, which is
- * whom a private spell is readable by. A layer names its ingredient by id and
- * nothing checks the id's tier, which is how a test writes the cross-coven
- * link a finder has to withhold. A linked layer lays its ingredient's first
- * live variant (MB.217), which the shared inserter wrote from the fixture's
- * variants; an ingredient with none leaves it null, for the CHECK to refuse.
- * Categories are named as §6 does; a name with no live row is a thrown error
- * naming it.
+ * Writes `fixture`'s spell, its steps and assigned categories, stamped by `author` (`created_by`), and returns
+ * the spell's id. A layer's ingredient id is not tier-checked, so a test can write a cross-coven link; an
+ * ingredient with no variant leaves the layer's variant null, for the CHECK to refuse.
  */
 export async function insertSpell(
   sql: postgres.Sql,
@@ -32,9 +26,9 @@ export async function insertSpell(
       returning id`;
     const id = row.id as string;
 
-    if (fixture.layers.length > 0) {
-      const linked = fixture.layers.flatMap((layer) =>
-        layer.ingredientId === null ? [] : [layer.ingredientId],
+    if (fixture.steps.length > 0) {
+      const linked = fixture.steps.flatMap((step) =>
+        step.ingredientId === null ? [] : [step.ingredientId],
       );
       const variants =
         linked.length === 0
@@ -44,14 +38,13 @@ export async function insertSpell(
               where ingredient_id in ${tx(linked)} and deleted_at is null
               order by ingredient_id, created_at, id`;
       const variantOf = new Map(variants.map((row) => [row.ingredient_id as string, row.id]));
-      const layers = fixture.layers.map((layer) => ({
-        ...spellLayerColumns(layer),
-        variant_id:
-          layer.ingredientId === null ? null : (variantOf.get(layer.ingredientId) ?? null),
+      const steps = fixture.steps.map((step) => ({
+        ...spellStepColumns(step),
+        variant_id: step.ingredientId === null ? null : (variantOf.get(step.ingredientId) ?? null),
         spell_id: id,
         ...stamps,
       }));
-      await tx`insert into spell_ingredients ${tx(layers)}`;
+      await tx`insert into spell_steps ${tx(steps)}`;
     }
 
     if (fixture.categories.length > 0) {

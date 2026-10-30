@@ -3,49 +3,36 @@ import type { ReactElement } from 'react';
 import { covenHome } from '../../lib/shell-home';
 import AccountMenu from '../AccountMenu';
 import ThemeToggle from '../ThemeToggle';
+import { ViewerIdProvider } from '../../lib/viewer-id';
 import AddIngredientButton from './add-ingredient-button';
+import BrandName from './brand-name';
 import MainBody from './main-body';
+import NewSpellElsewhere from './new-spell-elsewhere';
 import SiteNav from './site-nav';
 import type { AppShellProps, SiteLink } from './types';
 import './index.scss';
 
-// The frame around every signed-in page (MB.7): a skip link, the global bar,
-// and the page. The context row (the coven's switcher or "Admin", beside the
-// section nav) is the layouts' to render, since only they know which area the
-// page is in. A server component: it reads nothing itself, the viewer and
-// their covens come in as props from `src/app/(shell)/layout.tsx`, and only
-// the account menu and the current-page marking are client code.
-// See claude-docs/components/app-shell.md.
-
-const BRAND = 'Sorrel & Salt';
+// The frame around every signed-in page: a skip link, the global bar and the page. The layouts render
+// the context row, as only they know the area. A server component: only the account menu and the
+// current-page marking are client code (claude-docs/components/app-shell.md).
 
 const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement => {
-  // The Compendium is public (MB.80), so its link is everyone's, an
-  // unverified account's included: it leads to no page that sends them to the
-  // email page. The other two are for a verified curator or admin.
+  // The Compendium is public, so its link is everyone's, an unverified account's
+  // included: it leads to a page that never sends them to the email page. Your Coven is a
+  // verified account's who belongs to a coven, or who curates (a curator or admin in none
+  // is sent to /coven). Admin is a verified curator's or admin's alone.
   const compendium: SiteLink = { label: 'Compendium', href: '/compendium', base: '/compendium' };
-  const links: SiteLink[] =
-    viewer.verified && viewer.canCurate
-      ? [
-          compendium,
-          {
-            label: workspaces.length > 1 ? 'Your Covens' : 'Your Coven',
-            href: covenHome(workspaces),
-            base: '/coven',
-          },
-          { label: 'Admin', href: '/admin', base: '/admin' },
-        ]
-      : [compendium];
-  const brand = (
-    <>
-      <span className="app-shell__brand-full">{BRAND}</span>
-      {/* The initials stand in at a phone's width; the full name above stays
-          for a screen reader, which is why this one is hidden from it. */}
-      <span className="app-shell__brand-short" aria-hidden="true">
-        S&amp;S
-      </span>
-    </>
-  );
+  const curates = viewer.verified && viewer.canCurate;
+  const links: SiteLink[] = [compendium];
+  if (viewer.verified && (workspaces.length > 0 || viewer.canCurate)) {
+    links.push({
+      label: workspaces.length > 1 ? 'Your Covens' : 'Your Coven',
+      href: covenHome(workspaces),
+      base: '/coven',
+    });
+  }
+  if (curates) links.push({ label: 'Admin', href: '/admin', base: '/admin' });
+  const brand = <BrandName block="app-shell" />;
 
   return (
     <div className="app-shell">
@@ -54,30 +41,27 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
       </a>
       <header className="app-shell__bar">
         <div className="app-shell__bar-inner">
-          {/* Plain text while the address is unverified: every page the
-              brand could lead to would send the viewer back to the email page. */}
-          {viewer.verified ? (
-            <PendingLink
-              href="/"
-              className="app-shell__brand"
-              navigationTarget={{ region: 'main', shape: 'page' }}
-            >
-              {brand}
-            </PendingLink>
-          ) : (
-            <span className="app-shell__brand">{brand}</span>
-          )}
+          {/* The brand leads to `/`, which is public, so every viewer gets the link,
+              an unverified one included. */}
+          <PendingLink
+            href="/"
+            className="app-shell__brand"
+            navigationTarget={{ region: 'main', shape: 'page' }}
+          >
+            {brand}
+          </PendingLink>
           <SiteNav links={links} />
           <div className="app-shell__end">
             {/* The shell’s one global action; its target follows the area (add-ingredient-button.tsx). */}
             <AddIngredientButton viewer={viewer} workspaces={workspaces} />
+            <NewSpellElsewhere />
             <AccountMenu
               name={viewer.name}
               verified={viewer.verified}
               links={links}
               pendingInvitations={viewer.pendingInvitations}
             />
-            {/* In the bar at every width (the owner's call, M10.32). */}
+            {/* In the bar at every width. */}
             <span className="app-shell__theme">
               <ThemeToggle variant="inline" />
             </span>
@@ -93,7 +77,9 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
           click, and the next Tab would restart at the top of the page. */}
       <span id="main" className="skip-target" tabIndex={-1} />
       <div className="app-shell__main">
-        <MainBody>{children}</MainBody>
+        <ViewerIdProvider id={viewer.id}>
+          <MainBody>{children}</MainBody>
+        </ViewerIdProvider>
       </div>
     </div>
   );

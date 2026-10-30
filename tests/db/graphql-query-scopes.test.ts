@@ -9,15 +9,9 @@ import { A, E, F, asUser } from '../support/as-user';
 import { run } from '../support/graphql/run';
 import type { AdminWrite, Governed, ScopeProbe } from './types';
 
-// MB.80's line, drawn field by field: the compendium is the one public
-// surface, so its queries answer a null session and every other query
-// refuses one. Every `Query` field is classified here, and the first test
-// fails on one that is not, so a field added later has to say which side it
-// is on (claude-docs/graphql/schema.md, "Auth scopes"). Since MB.185 every
-// `Mutation` field is probed the same way, and every query taking a
-// `workspaceId` again with a null one, so that no resolver file needs a
-// signed-out test of its own: what a field's own tests stop repeating is
-// still made impossible here (claude-docs/design-decisions/mb.180-graphql-transport-half.md).
+// Only the compendium's queries answer a null session; every other query, and every mutation, refuses one.
+// Every `Query` field is classified here, and the first test fails on one that is not (claude-docs/graphql/schema.md, "Auth scopes").
+// Resolver files need no signed-out test of their own (claude-docs/design-decisions/mb.180-graphql-transport-half.md).
 
 let compendiumId: string;
 
@@ -93,7 +87,7 @@ const PROBES: Record<string, ScopeProbe> = {
     source: '{ compendiumFacets { forms { value count } } }',
     outcome: 'answers',
   },
-  // A curator's count (M12.25): the scope refuses a null session before the id is read.
+  // A curator's count: the scope refuses a null session before the id is read.
   compendiumEntryUsers: {
     source: `{ compendiumEntryUsers(id: "${NOWHERE}") }`,
     outcome: 'refuses',
@@ -182,6 +176,31 @@ const PROBES: Record<string, ScopeProbe> = {
     variables: { workspaceId: WORKSPACE_W_ID },
     outcome: 'refuses',
   },
+  grimoire: {
+    source: `query ($workspaceId: ID!) {
+      grimoire(workspaceId: $workspaceId, first: 1) { edges { node { id } } }
+    }`,
+    variables: { workspaceId: WORKSPACE_W_ID },
+    outcome: 'refuses',
+  },
+  spell: {
+    source:
+      'query ($id: ID!, $workspaceId: ID!) { spell(id: $id, workspaceId: $workspaceId) { id } }',
+    variables: { id: NOWHERE, workspaceId: WORKSPACE_W_ID },
+    outcome: 'refuses',
+  },
+  workingDeductionPreview: {
+    source: `query ($workspaceId: ID!, $spellId: ID!) {
+      workingDeductionPreview(workspaceId: $workspaceId, spellId: $spellId) { deductions { stepId } }
+    }`,
+    variables: { workspaceId: WORKSPACE_W_ID, spellId: NOWHERE },
+    outcome: 'refuses',
+  },
+  workspace: {
+    source: 'query ($id: ID!) { workspace(id: $id) { id } }',
+    variables: { id: WORKSPACE_W_ID },
+    outcome: 'refuses',
+  },
   deitySuggestions: suggestion('deitySuggestions'),
   formSuggestions: suggestion('formSuggestions'),
   celestialBodySuggestions: suggestion('celestialBodySuggestions'),
@@ -196,7 +215,7 @@ describe('a null session at every Query field', () => {
   it.each(Object.entries(PROBES))('%s: %o', expectOutcome);
 });
 
-// The compendium-only mode a null `workspaceId` asks for (M5.5) must not be
+// The compendium-only mode a null `workspaceId` asks for must not be
 // a way round the session: a suggestion field stays signed-in without a
 // coven, and `ingredient` still answers the compendium alone.
 const nullWorkspaceSuggestion = (field: string): ScopeProbe => ({
@@ -241,7 +260,7 @@ const NULL_WORKSPACE_PROBES: Record<string, ScopeProbe> = {
     variables: { workspaceId: null, id: NOWHERE },
     outcome: 'refuses',
   },
-  // The question the add form asks is always asked in some coven (M12.20).
+  // The question the add form asks is always asked in some coven.
   compendiumMatches: {
     source: `query ($workspaceId: ID!) {
       compendiumMatches(workspaceId: $workspaceId, name: "Testwort", first: 1) { edges { node { id } } }
@@ -257,7 +276,7 @@ const NULL_WORKSPACE_PROBES: Record<string, ScopeProbe> = {
     variables: { workspaceId: null },
     outcome: 'invalid',
   },
-  // A coven's ingredients are always some coven's (M9.4).
+  // A coven's ingredients are always some coven's.
   workspaceIngredients: {
     source: `query ($workspaceId: ID!) {
       workspaceIngredients(workspaceId: $workspaceId, first: 1) { edges { node { id } } }
@@ -265,12 +284,34 @@ const NULL_WORKSPACE_PROBES: Record<string, ScopeProbe> = {
     variables: { workspaceId: null },
     outcome: 'invalid',
   },
-  // Counted over the same rows as workspaceIngredients, so always some coven's (M12.3).
+  // Counted over the same rows as workspaceIngredients, so always some coven's.
   workspaceIngredientFacets: {
     source: `query ($workspaceId: ID!) {
       workspaceIngredientFacets(workspaceId: $workspaceId) { forms { value count } }
     }`,
     variables: { workspaceId: null },
+    outcome: 'invalid',
+  },
+  // A spell is always some coven's.
+  grimoire: {
+    source: `query ($workspaceId: ID!) {
+      grimoire(workspaceId: $workspaceId, first: 1) { edges { node { id } } }
+    }`,
+    variables: { workspaceId: null },
+    outcome: 'invalid',
+  },
+  spell: {
+    source:
+      'query ($id: ID!, $workspaceId: ID!) { spell(id: $id, workspaceId: $workspaceId) { id } }',
+    variables: { id: NOWHERE, workspaceId: null },
+    outcome: 'invalid',
+  },
+  // A working is always some coven's spell's.
+  workingDeductionPreview: {
+    source: `query ($workspaceId: ID!, $spellId: ID!) {
+      workingDeductionPreview(workspaceId: $workspaceId, spellId: $spellId) { deductions { stepId } }
+    }`,
+    variables: { workspaceId: null, spellId: NOWHERE },
     outcome: 'invalid',
   },
 };
@@ -286,10 +327,8 @@ describe('a null session and a null workspaceId at every Query field taking one'
   it.each(Object.entries(NULL_WORKSPACE_PROBES))('%s: %o', expectOutcome);
 });
 
-// Every write refuses a null session. The ids are NOWHERE, since a
-// signed-out caller is refused before any row is looked for, and the inputs
-// are the least each SDL type takes, so the refusal is the field's and not
-// the document's.
+// Every write refuses a null session before any row is looked for, so ids are NOWHERE
+// and inputs are the least each SDL type takes: the refusal is the field's, not the document's.
 
 const write = (source: string, variables?: Record<string, unknown>): ScopeProbe => ({
   source,
@@ -416,11 +455,38 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
     { input: WHOLE_INGREDIENT },
   ),
   deleteCompendiumIngredient: write(`mutation { deleteCompendiumIngredient(id: "${NOWHERE}") }`),
+  setCompendiumEntryReviewed: write(
+    `mutation { setCompendiumEntryReviewed(id: "${NOWHERE}", reviewed: true) { id } }`,
+  ),
   createReference: write(
     `mutation { createReference(workspaceId: "${WORKSPACE_W_ID}", input: ${REFERENCE}) { id } }`,
   ),
   promoteFolkName: write(
     `mutation { promoteFolkName(workspaceId: "${WORKSPACE_W_ID}", id: "${NOWHERE}", folkNameId: "${NOWHERE}") { id } }`,
+  ),
+  createSpell: write(
+    `mutation { createSpell(workspaceId: "${WORKSPACE_W_ID}", input: { status: complete }) { id } }`,
+  ),
+  updateSpell: write(
+    `mutation { updateSpell(workspaceId: "${WORKSPACE_W_ID}", id: "${NOWHERE}", input: { expectedRevision: null }) { id } }`,
+  ),
+  deleteSpell: write(
+    `mutation { deleteSpell(workspaceId: "${WORKSPACE_W_ID}", id: "${NOWHERE}") }`,
+  ),
+  duplicateSpell: write(
+    `mutation { duplicateSpell(workspaceId: "${WORKSPACE_W_ID}", id: "${NOWHERE}") { id } }`,
+  ),
+  recordWorking: write(
+    `mutation { recordWorking(workspaceId: "${WORKSPACE_W_ID}", spellId: "${NOWHERE}", input: { workedOn: "2026-10-01" }) { id } }`,
+  ),
+  updateWorking: write(
+    `mutation { updateWorking(workspaceId: "${WORKSPACE_W_ID}", id: "${NOWHERE}", input: { workedOn: "2026-10-01" }) { id } }`,
+  ),
+  completeWorking: write(
+    `mutation { completeWorking(workspaceId: "${WORKSPACE_W_ID}", id: "${NOWHERE}") { working { id } } }`,
+  ),
+  deleteWorking: write(
+    `mutation { deleteWorking(workspaceId: "${WORKSPACE_W_ID}", id: "${NOWHERE}") }`,
   ),
   updateReference: write(
     `mutation { updateReference(workspaceId: "${WORKSPACE_W_ID}", id: "${NOWHERE}", input: ${REFERENCE}) { id } }`,
@@ -478,27 +544,22 @@ describe('a null session at every Mutation field', () => {
   it.each(Object.entries(MUTATION_PROBES))('%s: %o', expectOutcome);
 });
 
-// M5.7's second check, field by field: every admin write carries the `admin`
-// scope, which refuses a signed-in user before the service is asked. The
-// service refuses them too, and its refusal is the gate (CLAUDE.md rule 1),
-// so a code alone cannot say which check spoke: the scope answers
-// `Forbidden`'s default message and `assertSiteAdmin` one of its own, and the
-// message is how this sweep knows the field refused on its own. Every write
-// is named as an admin write or one any session may reach, so a write added
-// later says which it is, and an admin write says what it governs.
+// Every admin write carries the `admin` scope, which refuses a signed-in user before the service is asked; the service refuses too, so the message tells which check spoke
+// (the scope answers `Forbidden`'s default message, `assertSiteAdmin` its own). Every write is named admin or any-session, so a new write must say which.
 const SCOPE_REFUSAL = new Forbidden().message;
 
 const ADMIN_WRITES: Record<string, AdminWrite> = {
   createCompendiumIngredient: { governs: 'compendium' },
   updateCompendiumIngredient: { governs: 'compendium' },
   deleteCompendiumIngredient: { governs: 'compendium' },
-  // A null `workspaceId` is the compendium's tier (MB.153); a coven's is the
+  setCompendiumEntryReviewed: { governs: 'compendium' },
+  // A null `workspaceId` is the compendium's tier; a coven's is the
   // member's, below.
   createReference: {
     governs: 'references',
     probe: write(`mutation { createReference(input: ${REFERENCE}) { id } }`),
   },
-  // A null `workspaceId` is the compendium's tier (M8.3a); a coven's is the
+  // A null `workspaceId` is the compendium's tier; a coven's is the
   // member's, below.
   promoteFolkName: {
     governs: 'compendium',
@@ -512,15 +573,15 @@ const ADMIN_WRITES: Record<string, AdminWrite> = {
       `mutation { updateReference(workspaceId: null, id: "${NOWHERE}", input: ${REFERENCE}) { id } }`,
     ),
   },
-  // M5.8: who may create a coven, granted and revoked by an admin.
+  // Who may create a coven, granted and revoked by an admin.
   grantWorkspaceCreation: { governs: 'workspace creation' },
   revokeWorkspaceCreation: { governs: 'workspace creation' },
-  // MB.59, M11.20: who is an admin or a curator, granted and revoked by an admin.
+  // Who is an admin or a curator, granted and revoked by an admin.
   setUserRole: { governs: 'site role' },
-  // MB.63: the primary admin's pause on those changes.
+  // The primary admin's pause on those changes.
   pauseAdminRoleChanges: { governs: 'site role' },
   resumeAdminRoleChanges: { governs: 'site role' },
-  // MB.70: inviting an address to become an admin, and withdrawing it.
+  // Inviting an address to become an admin, and withdrawing it.
   createAdminInvitation: { governs: 'site role' },
   revokeAdminInvitation: { governs: 'site role' },
   createCategory: { governs: 'categories' },
@@ -552,30 +613,30 @@ const ADMIN_WRITES: Record<string, AdminWrite> = {
 /** Writes any signed-in session's scope admits, the service deciding who may. */
 const OPEN_WRITES = [
   'setEmail',
-  // The invited address is what admits, which the service checks (MB.70).
+  // The invited address is what admits, which the service checks.
   'acceptInvitation',
-  // The session's own verified address is what admits, matched in SQL (M10.32).
+  // The session's own verified address is what admits, matched in SQL.
   'acceptInvitationById',
-  // The same address match decides a decline (M10.34).
+  // The same address match decides a decline.
   'declineInvitationById',
   'setName',
-  // The flag decides who may, which the service reads (M6.7).
+  // The flag decides who may, which the service reads.
   'createWorkspace',
-  // The owner's `member: update` decides, which the service checks (M9.14).
+  // The owner's `member: update` decides, which the service checks.
   'updateMemberRole',
-  // The owner's `workspace: delete` decides, which the service checks (M6.14).
+  // The owner's `workspace: delete` decides, which the service checks.
   'deleteWorkspace',
-  // `member: remove` decides removal, and leaving is the caller's own seat (M6.15).
-  // The owner's `member: invite` decides, which the service checks (M7.3).
+  // `member: remove` decides removal, and leaving is the caller's own seat.
+  // The owner's `member: invite` decides, which the service checks.
   'createInvitation',
-  // The owner's `member: invite` decides, which the service checks (M7.6).
+  // The owner's `member: invite` decides, which the service checks.
   'revokeInvitation',
   'removeMember',
   'leaveWorkspace',
   'createWorkspaceIngredient',
   'updateIngredient',
   'deleteIngredient',
-  // The coven's `inventory: update` decides, which the stock service checks (M9.4).
+  // The coven's `inventory: update` decides, which the stock service checks.
   'addIngredientToWorkspace',
   'updateStock',
   'saveStock',
@@ -587,6 +648,19 @@ const OPEN_WRITES = [
   'createReference',
   'updateReference',
   'promoteFolkName',
+  // The coven's `spell: create` and `spell: update` decide, which the spell service checks.
+  'createSpell',
+  'updateSpell',
+  // The coven's `spell: delete` decides, which the spell service checks.
+  'deleteSpell',
+  // The coven's `spell: create` decides, which the spell service checks.
+  'duplicateSpell',
+  // The coven's `working: create`, `update` and `delete` decide, which the working service checks; a change or a delete
+  // also needs the recorder, or for a change someone named on the working.
+  'recordWorking',
+  'updateWorking',
+  'completeWorking',
+  'deleteWorking',
 ];
 
 const adminProbe = (field: string): ScopeProbe =>
@@ -594,7 +668,7 @@ const adminProbe = (field: string): ScopeProbe =>
 
 describe('a signed-in non-admin at every admin write', () => {
   // E as the primary admin, so the pause's two writes, which the service
-  // allows the primary admin alone (MB.63), admit the admin past the scope.
+  // allows the primary admin alone, admit the admin past the scope.
   beforeEach(() => {
     vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', E.email);
   });
@@ -639,10 +713,8 @@ describe('a signed-in non-admin at every admin write', () => {
   });
 });
 
-// M11.20: the people page's writes are an admin's alone, and every other admin
-// write is curation, which a curator's scope admits as an admin's does. The
-// split is by what a write governs, so a write added to ADMIN_WRITES lands on
-// one side or the other without a list of its own.
+// The people page's writes are an admin's alone; every other admin write is curation, which a curator's scope admits.
+// A write added to ADMIN_WRITES lands on one side or the other.
 const PEOPLE_PAGE: readonly Governed[] = ['workspace creation', 'site role'];
 const governsPeople = (field: string) => PEOPLE_PAGE.includes(ADMIN_WRITES[field].governs);
 const PEOPLE_WRITES = Object.keys(ADMIN_WRITES).filter(governsPeople);

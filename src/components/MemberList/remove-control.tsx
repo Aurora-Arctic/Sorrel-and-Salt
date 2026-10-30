@@ -6,12 +6,9 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import ConfirmedAction from '../UserList/confirmed-action';
 import type { RemoveControlProps } from './types';
 
-// The members page's Remove at the end of a row (M6.15). It asks first,
-// naming the member, then sends `removeMember`; the page is read again and
-// the row is gone. The page shows it to owners only; the service is the
-// guard, and refuses removing the last owner, which a callout under the
-// control says (M12.31). A removal is said in the page's status region, as
-// the row goes (claude-docs/components/member-list.md).
+// The members page's Remove: it asks first, naming the member, then sends `removeMember`. Owners
+// only; the service refuses removing the last owner, said in a callout
+// (claude-docs/components/member-list.md).
 
 const RemoveMemberDocument = graphql(`
   mutation RemoveMember($workspaceId: ID!, $userId: ID!) {
@@ -23,7 +20,7 @@ const RemoveControl = ({ workspaceId, userId, name }: RemoveControlProps): React
   <ConfirmedAction
     label="Remove"
     accessibleName={`Remove ${name}`}
-    openClass="btn btn--small btn--destructive"
+    openClass="btn btn--quiet btn--small"
     title="Remove Member"
     question={
       <>

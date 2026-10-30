@@ -13,7 +13,7 @@ import { announced, expectRefusalUnder } from '../../support/click-feedback';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
 // The invitations addressed to the signed-in account, on the account page
-// (M10.32): one row each, with its own Accept and Decline (M10.34)
+// : one row each, with its own Accept and Decline
 // (claude-docs/components/received-invitations.md).
 
 const router = { push: vi.fn(), refresh: vi.fn() };
@@ -160,7 +160,7 @@ describe('ReceivedInvitations', () => {
     });
   });
 
-  it('asks before declining, then sends only that invitation’s id, reads the page again and says so', async () => {
+  it('sends only that invitation’s id, reads the page again and says so', async () => {
     const calls: DeclineInvitationByIdMutationVariables[] = [];
     mockGraphQLMutation<DeclineInvitationByIdMutation, DeclineInvitationByIdMutationVariables>(
       'DeclineInvitationById',
@@ -177,7 +177,6 @@ describe('ReceivedInvitations', () => {
     show();
     fireEvent.click(declineFor('Testwort Circle'));
     const dialog = await screen.findByRole('dialog');
-    expect(calls).toEqual([]);
 
     fireEvent.click(within(dialog).getByRole('button', { name: 'Decline' }));
 

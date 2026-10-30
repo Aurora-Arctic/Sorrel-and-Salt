@@ -4,30 +4,19 @@ import { seedTwoTierVocabulary } from './two-tier-vocabulary';
 import { TWO_TIER } from '../vocabularies';
 import type {
   SeedDatabase,
+  SeedRunOptions,
   SeedIngredientForm,
   SeedIngredientFormGroup,
   SeedTransaction,
 } from './types';
 
-// DESIGN.md §5's form vocabulary: six groups and every form, a starting set an
-// admin may edit. Reference data, not a scenario — migrate.yml seeds it alone,
-// so it inserts the bootstrap user itself. The groups answer "what are you
-// holding", not "how was it made": three by source (Botanical, Animal, Mineral),
-// three by state (Fluid, Curio, Substance), and no `Other` — an unfitting value
-// stays free text and surfaces for curation. No slug is written down; a group's
-// is `slugify(name)`, and a form's `formSlug` of its name and its group's
-// (M5.6a), since two live forms may share a name under two groups — a form's
-// seed key stays `slugify(name)`, as every database seeded before holds it.
-// Where a value fits two groups the seed takes one sense and leaves the other
-// row for an admin (claude-docs/db/form-vocabulary-seed.md, "The form
-// vocabulary seed").
+// The form vocabulary: six groups and every form, a starting set an admin may edit.
+// Reference data, not a scenario, so it inserts the bootstrap user itself. A group's
+// slug is `slugify(name)`; a form's is `formSlug` of its name and its group's. (claude-docs/db/compendium-seed/README.md, "The form vocabulary seed's groups")
 
 /**
- * §5's six groups in §5's order, which nothing reads — groups list
- * alphabetically — kept so the two compare by eye and by test. Each names the
- * icon that stands for it (M12.6), written only into a group the seed
- * inserts, so an admin's later choice survives a reseed; migration 0077
- * carried them onto databases seeded before.
+ * The six groups in order, which nothing reads (groups list alphabetically), kept so the two compare. Each names its icon, written only into a group the seed
+ * inserts, so an admin's later choice survives a reseed; migration 0077 carried them onto earlier databases.
  */
 export const FORM_GROUPS: SeedIngredientFormGroup[] = [
   {
@@ -357,15 +346,13 @@ export const FORMS: SeedIngredientForm[] = [
  * Seeds §5's groups, then its forms, in a transaction of its own. Writes go
  * through the handle the caller gives, not `withAudit` — see minimal.ts.
  */
-export async function seedForms(db: SeedDatabase): Promise<void> {
-  await beginSeedTransaction(db, seedFormVocabulary);
+export async function seedForms(db: SeedDatabase, options: SeedRunOptions = {}): Promise<void> {
+  await beginSeedTransaction(db, seedFormVocabulary, options);
 }
 
 /**
- * The same seed inside a transaction the caller opened, since `standard` writes
- * this vocabulary alongside the compendium drawing on it, then every live
- * form's slug brought to the rule. Assumes the GUC is published and the
- * bootstrap user exists.
+ * The same seed inside the caller's transaction, as `standard` writes this vocabulary alongside the compendium drawing on it, then every live form's slug
+ * is brought to the rule. Assumes the GUC is published and the bootstrap user exists.
  */
 export async function seedFormVocabulary(tx: SeedTransaction): Promise<void> {
   await seedTwoTierVocabulary(tx, {

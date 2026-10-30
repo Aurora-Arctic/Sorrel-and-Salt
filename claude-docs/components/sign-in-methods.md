@@ -31,11 +31,11 @@ Each provider is a `ProviderRow` (`provider-row.tsx`), in one of three
 states. Each state is told apart by its control and its words, never by
 colour alone:
 
-| State         | What the row shows                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `linked`      | The provider's mark, its name, and "Remove" in the wax, small (`.btn--destructive.btn--small`). With one method left the Remove is greyed (`aria-disabled`, still in the tab order) and a line beneath it, "Your only sign-in method", is its description: greyed rather than gone so the reason sits under the control it explains (the owner, 2026-10-11). From a stale session there is no Remove, and the line above the list says why. |
-| `addable`     | The mark, the name, and "Add", small and quiet (`.btn--quiet.btn--small`): a row's action, not a page's (the owner, 2026-10-11).                                                                                                                                                                                                                                                                                                            |
-| `unavailable` | The mark, faded with its button, the name, and "Add" greyed with `aria-disabled`, over the shared unavailable note.                                                                                                                                                                                                                                                                                                                         |
+| State         | What the row shows                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `linked`      | The provider's mark, its name, and "Remove", small and quiet (`.btn--quiet.btn--small`) as Add is; the red is the question's own Remove. With one method left the Remove is greyed (`aria-disabled`, still in the tab order) and a line beneath it, "Your only sign-in method", is its description: greyed rather than gone so the reason sits under the control it explains (the owner, 2026-10-11). From a stale session there is no Remove, and the line above the list says why. |
+| `addable`     | The mark, the name, and "Add", small and quiet (`.btn--quiet.btn--small`): a row's action, not a page's (the owner, 2026-10-11).                                                                                                                                                                                                                                                                                                                                                     |
+| `unavailable` | The mark, faded with its button, the name, and "Add" greyed with `aria-disabled`, over the shared unavailable note.                                                                                                                                                                                                                                                                                                                                                                  |
 
 No row carries a status word such as "Linked": a linked row is the one with
 Remove or its reason, and an unlinked one has Add (the owner's call, MB.116).
@@ -85,8 +85,15 @@ Remove: removal needs no credentials.
 "Remove &lt;Provider&gt;" is offered only while two or more are linked and
 the session is fresh. Better Auth refuses the last one anyway
 (`allowUnlinkingAll` is pinned off), so the rule only keeps the page honest,
-and the last row's greyed Remove says why in its description. It calls
-`unlinkAccount({ accountId })`. On success the row leaves the component's own
+and the last row's greyed Remove says why in its description. Remove asks
+first, in a modal titled Remove Sign-In Method: "Remove **&lt;Provider&gt;**
+from your sign-in methods? You can no longer sign in with it until you add it
+again.", the provider in bold with no quotes, over a red Remove and Cancel
+(the confirm shape every destructive question takes). Cancel sends nothing
+and gives the focus back to the row's Remove. The dialog's Remove calls
+`unlinkAccount({ accountId })` and stays open, busy, until the answer; then
+it closes, and the focus goes back to the row's control, the Add that
+replaced the Remove on a success. On success the row leaves the component's own
 copy of the list and the provider's Add returns, which is what is seen; the
 page's status region says "&lt;Provider&gt; was removed from your sign-in
 methods." (`announce`, [`click-feedback.md`](click-feedback.md), M12.31). There is no reload, so a list changed in another tab shows only
@@ -95,7 +102,7 @@ after one. On a refusal the error's `code` goes through
 `SESSION_NOT_FRESH` (the session grew stale while the page was open, or in
 another tab: sign in again), or the generic sentence, which a dropped
 connection also takes. The refusal is a callout under the Remove that
-stayed, the focus left on it. While a removal is in flight every other
+stayed, the focus back on it. While a removal is in flight every other
 Remove is `disabled`, so two cannot race to leave none; the pressed one is
 `aria-disabled` instead, so it keeps the focus, and refuses a second press
 itself. `.btn` greys out under
@@ -192,20 +199,20 @@ next, so no rule is drawn between them (the owner's call, MB.116).
 ## Stories
 
 [`index.stories.tsx`](../../src/components/SignInMethods/index.stories.tsx),
-each inside the page's real frame, section, panel and head: `OneLinked`,
-`TwoLinked`, `StaleSession` (the same two from a stale session), `WithError`
+each inside the page's real frame, section, panel and head: `States`, with a control that chooses Default,
+Two Linked, Stale Session (the same two from a stale session), Failed
 (a failed link in Microsoft's row, reading `linkErrorMessage` rather than a
-copied sentence), `SomeUnavailable`, `FailedRemove` (Remove Microsoft
-pressed on mount, failing into its callout, since the workshop serves no
-`/api/auth`), and `WholePage`, the whole `/account`
+copied sentence) and Some Unavailable; `PendingAdd`; `FailedRemove` (Remove Microsoft
+pressed on mount, then the red Remove in the Remove Sign-In Method question, the
+removal failing into its callout, since the workshop serves no `/api/auth`), and `WholePage`, with a control that chooses Whole Page, the whole `/account`
 page composed with fixture props, since the page is a server component.
 It is composed as `src/app/(shell)/account/page.tsx` composes it: a bare
 heading, `PageNav` with the same four entries, the Invitations section with
 none waiting, the `page-with-nav` class on the `main` so the wide two-column
 layout shows, and no Sign Out, which since
-MB.7 sits only in the account menu. `PhoneDark` and `PhoneLight` show the
-whole page at 375px in each theme, with every row state. The stories are
-titled "Account / Sign-In Methods".
+MB.7 sits only in the account menu. Every Row State shows the
+whole page with every row state. The stories are
+titled "Sign In / Sign-In Methods".
 
 ## Tests
 
@@ -229,3 +236,17 @@ titled "Account / Sign-In Methods".
   whose alert is in Microsoft's row.
 - The link and unlink flows themselves are asserted against Better Auth's
   endpoints in `tests/db/account-linking.test.ts`.
+
+## The list of ways in
+
+The account page lists every roster provider as linked or addable, and a linked one can be removed while another remains. Adding is Better Auth's `/link-social`, which leaves for the provider and lands back on the account page. Removing is `/unlink-account`, answered in place. A session too old for Better Auth to remove a method is offered a fresh sign-in in place of every Remove, rather than a press it would refuse. The section's heading and intro belong to the page, so the section is a named region like the other two.
+
+## A provider row
+
+A row is in one of three states, told apart by its control and its words rather than by hue.
+
+- Linked has Remove. Remove is greyed for the only method left, with a line saying why. From a stale session there is no Remove at all, since the list says why once.
+- Addable has Add.
+- Unavailable has a greyed Add with a note saying why.
+
+A press's failure is a callout under the control pressed. A failed link's callback error, which no press here raised, sits in the row beneath the controls as a `Notice`.

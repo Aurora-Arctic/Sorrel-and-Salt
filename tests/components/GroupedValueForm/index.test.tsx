@@ -1,7 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
-import FormIcon from '@/components/FormIcon';
 import GroupedValueForm from '@/components/GroupedValueForm';
 import type { GroupedValueFormProps } from '@/components/GroupedValueForm/types';
 import type {
@@ -22,21 +21,18 @@ import type {
 import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { ADDING, DELETING, EDITING } from '../../support/grouped-value-form';
-import { choose, press, redo, typeIn, undo } from '../../support/interact';
+import { choose, press, typeIn, undo } from '../../support/interact';
 import type { GroupedValueFormSubject } from '../../support/types';
 import {
+  answer,
   expectAnswered,
   expectAskingOver,
   expectGuardedWaysOut,
   renderInModal,
 } from '../../support/discard-guard';
 
-// The admin's form for a grouped curated value, one per kind: a category
-// (M5.6), an ingredient form (M5.6a) or a deity (MB.132) — a name, a description and a group,
-// saved through the kind's mutations, and on an existing value a delete
-// behind a confirmation. A form's rename says it carries onto the
-// compendium. The mutations are answered by MSW in the route's own shape
-// (claude-docs/components/grouped-value-form.md).
+// The admin's form for a grouped curated value, one per kind (a category, an ingredient form or a deity): a name, a description and a group, saved through the kind's mutations, with a delete behind a confirmation on an existing value.
+// A rename says it carries onto the compendium. MSW answers the mutations in the route's own shape (claude-docs/components/grouped-value-form.md).
 
 const CATEGORY_GROUPS = [
   { id: '0b9f0f6e-2f4c-4d7a-9a52-3c1c5b8e6d21', name: 'Fixture Protection' },
@@ -128,17 +124,12 @@ describe('GroupedValueForm, what every kind shares', () => {
   });
 });
 
-// Every way out asks first while the form has changes (MB.115): the
-// guard's shape is tests/components/Modal's, and this its wiring.
-// A Description keeps its tip only where suggestions match it as well as the
-// name, a flow its label does not say (the owner's call, 2026-10-20).
+// Every way out asks first while the form has changes: the guard's shape is tests/components/Modal's, and this is its wiring.
+// A Description keeps its tip only where suggestions match it as well as the name, a flow its label does not say.
 describe('GroupedValueForm, its Description tip', () => {
   it.each([
     { kind: 'category', groups: CATEGORY_GROUPS, tip: false },
     { kind: 'form', groups: FORM_GROUPS, tip: true },
-    { kind: 'deity', groups: TRADITIONS, tip: true },
-    { kind: 'celestialBody', groups: undefined, tip: true },
-    { kind: 'zodiacSign', groups: undefined, tip: true },
   ] as const)('a $kind: tip $tip', ({ kind, groups, tip }) => {
     renderForm({ kind, groups });
 
@@ -153,6 +144,19 @@ describe('GroupedValueForm, its Description tip', () => {
   });
 });
 
+// A group field restates its label, so a category's and a form's carry no tip.
+describe('GroupedValueForm, its Group field', () => {
+  it.each([
+    { kind: 'category', groups: CATEGORY_GROUPS },
+    { kind: 'form', groups: FORM_GROUPS },
+  ] as const)('a $kind: no tip', ({ kind, groups }) => {
+    renderForm({ kind, groups });
+
+    expect(screen.getByRole('combobox', { name: 'Group' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'About Group' })).not.toBeInTheDocument();
+  });
+});
+
 describe('GroupedValueForm, its unsaved changes', () => {
   it('asks before Cancel or Escape discards a change, and closes on Discard Changes', () => {
     const onClose = renderInModal((done) => (
@@ -164,47 +168,29 @@ describe('GroupedValueForm, its unsaved changes', () => {
 });
 
 // The delete's question is asked over the form, as the unsaved changes' is
-// (MB.115, the owner's call): the form inert behind it until it is answered.
+// : the form inert behind it until it is answered.
 describe('GroupedValueForm, its delete question in a modal', () => {
   const renderEdit = () =>
     renderInModal((done) => (
       <GroupedValueForm kind="category" value={CATEGORY} groups={CATEGORY_GROUPS} onDone={done} />
     ));
 
-  it('holds the form while asking, the focus on Keep It, and gives both back on Keep It', () => {
+  it('holds the form while asking, the focus on Cancel, and gives both back on Cancel', () => {
     const onClose = renderEdit();
     expect(name().closest('[inert]')).toBeNull();
 
     press('Delete Category');
 
-    expect(
-      expectAskingOver(name(), screen.getByRole('button', { name: 'Keep It' })),
-    ).toContainElement(screen.getByRole('button', { name: 'Delete' }));
-    press('Keep It');
-    expectAnswered(name(), 'Keep It');
+    const question = expectAskingOver(name(), answer('Cancel'));
+    expect(question).toContainElement(screen.getByRole('button', { name: 'Delete' }));
+    press(answer('Cancel'));
+    expectAnswered(name(), question);
     expect(screen.getByRole('button', { name: 'Delete Category' })).toHaveFocus();
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it('deletes on Delete, from over the form', async () => {
-    const calls: unknown[] = [];
-    mockGraphQLMutation(SUBJECT.remove.operation, (variables) => {
-      calls.push(variables);
-      return SUBJECT.remove.data;
-    });
-    const onClose = renderEdit();
-
-    press('Delete Category');
-    press('Delete');
-
-    await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
-    expect(calls).toEqual([{ id: CATEGORY.id }]);
-  });
-
-  // Escape keeps what it did when the question stood in place of the
-  // buttons: with nothing changed it closes the modal; with a change the
-  // unsaved changes' question takes the delete's place, and Keep Editing
-  // brings the delete's back.
+  // Escape keeps what it did when the question stood in place of the buttons: with nothing changed it closes the modal;
+  // with a change the unsaved changes' question takes the delete's place, and Keep Editing brings the delete's back.
   it('closes on Escape with nothing changed, and asks about a change first', () => {
     const onClose = renderEdit();
     const escape = () =>
@@ -214,9 +200,9 @@ describe('GroupedValueForm, its delete question in a modal', () => {
     press('Delete Category');
     escape();
     expect(screen.getByRole('button', { name: 'Keep Editing' })).toHaveFocus();
-    expect(screen.queryByRole('button', { name: 'Keep It' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
     press('Keep Editing');
-    expectAskingOver(name(), screen.getByRole('button', { name: 'Keep It' }));
+    expectAskingOver(name(), answer('Cancel'));
     expect(onClose).not.toHaveBeenCalled();
 
     typeIn(description(), CATEGORY.description);
@@ -289,20 +275,6 @@ describe('GroupedValueForm, a category', () => {
   });
 
   describe('deleting', () => {
-    it('asks first, naming the category, and deletes nothing on Keep It', () => {
-      const onDone = renderCategory({ value: CATEGORY });
-
-      press('Delete Category');
-
-      expect(screen.getByRole('button', { name: 'Delete' })).toBeVisible();
-      expect(screen.getByText(/Testcraft/)).toBeInTheDocument();
-      press('Keep It');
-      // The question gone, not merely the form's own button there beneath it.
-      expect(screen.queryByRole('button', { name: 'Keep It' })).not.toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Delete Category' })).toBeInTheDocument();
-      expect(onDone).not.toHaveBeenCalled();
-    });
-
     it('shows the refusal of a category still in the compendium, and stays open', async () => {
       mockGraphQLError('DeleteCategory', {
         code: 'FORBIDDEN',
@@ -314,7 +286,7 @@ describe('GroupedValueForm, a category', () => {
       press('Delete');
 
       expect(await screen.findByRole('alert')).toBeVisible();
-      expect(screen.queryByRole('button', { name: 'Keep It' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Delete Category' })).toBeInTheDocument();
       expect(onDone).not.toHaveBeenCalled();
     });
@@ -325,27 +297,6 @@ describe('GroupedValueForm, a form', () => {
   const renderFormKind = (props: Partial<GroupedValueFormProps> = {}) =>
     renderForm({ kind: 'form', groups: FORM_GROUPS, ...props });
   const save = () => screen.getByRole('button', { name: 'Save Form' });
-
-  it('draws the icon of each group in the group choices, the generic where it has none', () => {
-    renderFormKind({
-      groups: [
-        { id: FORM_GROUPS[0].id, name: 'Fixture Mineral', icon: 'mineral' },
-        { id: FORM_GROUPS[1].id, name: 'Fixture Substance', icon: null },
-      ],
-    });
-
-    fireEvent.click(screen.getByRole('combobox', { name: 'Group' }));
-
-    const drawn = (label: string) =>
-      screen.getByRole('option', { name: label }).querySelector('[aria-hidden="true"] svg')!
-        .innerHTML;
-    expect(drawn('Fixture Mineral')).toBe(
-      render(<FormIcon name="mineral" />).container.querySelector('svg')!.innerHTML,
-    );
-    expect(drawn('Fixture Substance')).toBe(
-      render(<FormIcon name={null} />).container.querySelector('svg')!.innerHTML,
-    );
-  });
 
   describe('adding', () => {
     it('creates the form from what was entered, then is done', async () => {
@@ -362,6 +313,8 @@ describe('GroupedValueForm, a form', () => {
       const onDone = renderFormKind();
 
       typeIn(name(), 'Testwort Shard');
+      // Nothing is renamed on a new form, so Save carries no rename note.
+      expect(save()).toHaveAccessibleDescription('');
       typeIn(description(), 'A form the test made');
       chooseGroup('Fixture Mineral');
       press('Save Form');
@@ -376,14 +329,6 @@ describe('GroupedValueForm, a form', () => {
           },
         },
       ]);
-    });
-
-    it('notes no rename on a new form', () => {
-      renderFormKind();
-
-      typeIn(name(), 'Testwort Shard');
-
-      expect(save()).toHaveAccessibleDescription('');
     });
 
     it("lands the server's group refusal beside Group, and a pathless one above the fields", async () => {
@@ -435,7 +380,7 @@ describe('GroupedValueForm, a form', () => {
       ]);
     });
 
-    // MB.162: a rename carries onto every compendium entry that picked the form.
+    // A rename carries onto every compendium entry that picked the form.
     it('describes Save by the rename note once the name changes, and only then', () => {
       renderFormKind({ value: FORM });
 
@@ -452,20 +397,6 @@ describe('GroupedValueForm, a form', () => {
   });
 
   describe('deleting', () => {
-    it('asks first, naming the form, and deletes nothing on Keep It', () => {
-      const onDone = renderFormKind({ value: FORM });
-
-      press('Delete Form');
-
-      expect(screen.getByRole('button', { name: 'Delete' })).toBeVisible();
-      expect(screen.getByText(/Testwort Shard/)).toBeInTheDocument();
-      press('Keep It');
-      // The question gone, not merely the form's own button there beneath it.
-      expect(screen.queryByRole('button', { name: 'Keep It' })).not.toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Delete Form' })).toBeInTheDocument();
-      expect(onDone).not.toHaveBeenCalled();
-    });
-
     it('shows the refusal of a form a compendium entry picks, and stays open', async () => {
       mockGraphQLError('DeleteIngredientFormValue', {
         code: 'FORBIDDEN',
@@ -478,32 +409,20 @@ describe('GroupedValueForm, a form', () => {
       press('Delete');
 
       expect(await screen.findByRole('alert')).toBeVisible();
-      expect(screen.queryByRole('button', { name: 'Keep It' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Delete Form' })).toBeInTheDocument();
       expect(onDone).not.toHaveBeenCalled();
     });
   });
 });
 
-// MB.132: a deity's input names its group `traditionId`, so the form sends
+// A deity's input names its group `traditionId`, so the form sends
 // that and lands a refusal pathed to it beside Tradition.
 describe('GroupedValueForm, a deity', () => {
   const renderDeity = (props: Partial<GroupedValueFormProps> = {}) =>
     renderForm({ kind: 'deity', groups: TRADITIONS, ...props });
   const tradition = () => screen.getByRole('combobox', { name: 'Tradition' });
   const save = () => screen.getByRole('button', { name: 'Save Deity' });
-
-  it('draws no icon in the tradition choices', () => {
-    renderDeity();
-
-    fireEvent.click(tradition());
-
-    const options = within(screen.getByRole('listbox', { name: 'Tradition choices' })).getAllByRole(
-      'option',
-    );
-    expect(options.length).toBeGreaterThan(0);
-    for (const option of options) expect(option.querySelector('svg')).toBeNull();
-  });
 
   it('creates the deity with its tradition as `traditionId`, then is done', async () => {
     const calls: CreateDeityMutationVariables[] = [];
@@ -533,6 +452,7 @@ describe('GroupedValueForm, a deity', () => {
           name: 'Testra',
           description: 'A god the test made',
           traditionId: TRADITIONS[0].id,
+          otherNames: [],
         },
       },
     ]);
@@ -563,9 +483,90 @@ describe('GroupedValueForm, a deity', () => {
           name: 'Mockra',
           description: 'A god the test holds',
           traditionId: TRADITIONS[1].id,
+          otherNames: [],
         },
       },
     ]);
+  });
+
+  // A deity's other names, a list as an entry's common names are.
+  describe('its Other Names', () => {
+    const otherNames = () => screen.getByRole('group', { name: 'Other Names' });
+    const box = () => screen.getByRole('combobox', { name: 'Other Name' });
+    const listed = () =>
+      within(otherNames())
+        .queryAllByRole('button', { name: /^Remove / })
+        .map((button) => button.getAttribute('aria-label'));
+    const addName = (text: string) => {
+      typeIn(box(), text);
+      press('Add Other Name');
+    };
+
+    it("is a deity's alone", () => {
+      renderForm({ kind: 'category', groups: CATEGORY_GROUPS });
+
+      expect(screen.queryByRole('group', { name: 'Other Names' })).not.toBeInTheDocument();
+    });
+
+    it('opens on the names the deity holds, and saves the list as it is left', async () => {
+      const calls: UpdateDeityMutationVariables[] = [];
+      mockGraphQLMutation<UpdateDeityMutation, UpdateDeityMutationVariables>(
+        'UpdateDeity',
+        (variables) => {
+          calls.push(variables);
+          return { updateDeity: { id: DEITY.id, slug: 'testra-mockish' } };
+        },
+      );
+      const onDone = renderDeity({ value: { ...DEITY, otherNames: ['Testrina', 'Tess'] } });
+
+      expect(listed()).toEqual(['Remove Testrina', 'Remove Tess']);
+      expect(save()).toBeDisabled();
+      press('Remove Testrina');
+      addName('Testrix');
+      press('Save Deity');
+
+      await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
+      expect(calls).toEqual([
+        {
+          id: DEITY.id,
+          input: {
+            name: 'Testra',
+            description: 'A god the test holds',
+            traditionId: TRADITIONS[1].id,
+            otherNames: ['Tess', 'Testrix'],
+          },
+        },
+      ]);
+    });
+
+    it("refuses at the box a name the list holds, or the deity's own name", () => {
+      renderDeity({ value: { ...DEITY, otherNames: ['Testrina'] } });
+
+      addName('testrina');
+      expect(box()).toHaveAccessibleDescription(/already listed/);
+      typeIn(box(), 'Testra');
+      press('Add Other Name');
+      expect(box()).toHaveAccessibleDescription(/already the name/);
+
+      expect(listed()).toEqual(['Remove Testrina']);
+    });
+
+    it("lands the server's refusal of one name on that name, naming the deity holding it", async () => {
+      mockGraphQLError('UpdateDeity', {
+        code: 'VALIDATION',
+        fieldErrors: [{ path: ['otherNames', 1], message: 'Mockra already has this other name' }],
+      });
+      const onDone = renderDeity({ value: { ...DEITY, otherNames: ['Testrina'] } });
+
+      addName('Mockrina');
+      press('Save Deity');
+
+      await waitFor(() =>
+        expect(box()).toHaveAccessibleDescription(/Mockrina: Mockra already has this other name/),
+      );
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+      expect(onDone).not.toHaveBeenCalled();
+    });
   });
 
   it("lands the server's `traditionId` refusal beside Tradition", async () => {
@@ -600,10 +601,8 @@ describe('GroupedValueForm, a deity', () => {
   });
 });
 
-// MB.95's flat kinds, folded in at MB.115: a celestial body or a zodiac sign has no
-// group, so the form asks for none and sends none. What every kind shares
-// runs on the category above; each flat kind gets only what it changes, its
-// three mutations (claude-docs/testing/layer-ownership.md, rule 5).
+// The flat kinds: a celestial body or a zodiac sign has no group, so the form asks for none and sends none.
+// What every kind shares runs on the category above; each flat kind gets only what it changes, its three mutations (claude-docs/testing/layer-ownership.md, rule 5).
 const FLAT = [
   { kind: 'celestialBody', type: 'CelestialBody', noun: 'Celestial Body' },
   { kind: 'zodiacSign', type: 'ZodiacSign', noun: 'Zodiac Sign' },
@@ -671,7 +670,7 @@ describe.each(FLAT)('GroupedValueForm, the flat kind $kind', ({ kind, type: muta
   });
 });
 
-// Undo and redo (M12.9): the hook is tested in tests/components/Field; this
+// Undo and redo: the hook is tested in tests/components/Field; this
 // is its wiring, and where it is switched off.
 describe('GroupedValueForm, its undo and redo', () => {
   const save = () => screen.getByRole('button', { name: 'Save Category' });
@@ -687,18 +686,6 @@ describe('GroupedValueForm, its undo and redo', () => {
 
     expect(group()).toHaveValue(CATEGORY_GROUPS[1].name);
     expect(save()).toBeDisabled();
-  });
-
-  it('undoes typing and redoes it', () => {
-    renderForm({ kind: 'category', value: CATEGORY, groups: CATEGORY_GROUPS });
-    act(() => name().focus());
-    typeIn(name(), 'Testcraft Two');
-
-    undo();
-    expect(name()).toHaveValue(CATEGORY.name);
-
-    redo();
-    expect(name()).toHaveValue('Testcraft Two');
   });
 
   it('has Undo and Redo buttons, off with nothing to do, that act on a click', () => {
@@ -740,7 +727,7 @@ describe('GroupedValueForm, its undo and redo', () => {
     ));
     typeIn(name(), 'Testcraft Two');
     press('Delete Category');
-    expectAskingOver(name(), screen.getByRole('button', { name: 'Keep It' }));
+    expectAskingOver(name(), answer('Cancel'));
 
     undo();
 

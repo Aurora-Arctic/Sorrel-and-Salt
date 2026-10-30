@@ -15,14 +15,9 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertDeityLink, insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 
-// Story 18's tradition half (MB.132): the deity traditions' writes, the site
-// admin's alone. A deity's slug is its name and its tradition (MB.132), so a
-// rename moves the slug of every deity under the tradition, and a delete first
-// moves its live deities to the tradition the admin names, each re-slugged
-// there — the deities stay curated, so neither a compendium entry's pick nor a
-// coven's is orphaned (claude-docs/design-decisions/mb.132-admin-deities.md).
-// The seeded traditions stay, so every tradition and deity a test writes is
-// `Fixture …`.
+// The deity tradition writes, the site admin's alone. A deity's slug is its name and its tradition, so a rename moves the slug of every deity under the tradition.
+// A delete first moves its live deities to the tradition the admin names, each re-slugged there, so no pick is orphaned (claude-docs/design-decisions/mb.132-admin-deities.md).
+// The seeded traditions stay, so every tradition and deity a test writes is `Fixture …`.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -42,16 +37,10 @@ const admin = asUser(E);
 // stands for every one (claude-docs/testing/acting-as-fixture-users.md): an
 // owner, whose workspace role is the highest and is still no site role.
 const NON_ADMINS = [['an owner of a coven', A]] as const;
-const CURATORS = [
-  ['the site admin', E],
-  ['a curator', F],
-] as const;
-
-it('is testing sessions whose site role is `user`, beside an admin', () => {
-  for (const [, user] of NON_ADMINS) expect(asUser(user).role).toBe('user');
-  expect(admin.role).toBe('admin');
-  expect(asUser(F).role).toBe('curator');
-});
+// A curator stands for both curation roles: assertSiteAdmin refuses a curator, so
+// a curator's success proves the write calls assertCurator, and that an admin
+// passes assertCurator is proved once in identity's site-admin tests.
+const CURATORS = [['a curator', F]] as const;
 
 function input(overrides: Partial<DeityTraditionInput> = {}): DeityTraditionInput {
   return { name: 'Fixture Folk', description: 'A tradition this test made', ...overrides };
@@ -66,7 +55,7 @@ async function seedTradition(name: string): Promise<string> {
   return row.id;
 }
 
-/** Seeds a deity under the tradition, slugged as MB.132 slugs one, stamped by A. */
+/** Seeds a deity under the tradition, slugged as a deity's slug is made, stamped by A. */
 async function seedDeity(name: string, traditionId: string): Promise<string> {
   const [tradition] = await sql<{ name: string }[]>`
     select name from deity_traditions where id = ${traditionId}`;
@@ -151,16 +140,24 @@ describe('createDeityTradition', () => {
     },
   );
 
-  it.each(NON_ADMINS)('refuses %s, writing nothing', async (_who, user) => {
-    await expect(createDeityTradition(asUser(user), input())).rejects.toThrow(Forbidden);
-    expect(await countNamed('Fixture Folk')).toBe(0);
-  });
+  it.each(NON_ADMINS)(
+    'refuses %s, writing nothing, and before reading the input, so a bad one earns the same refusal',
+    async (_who, user) => {
+      // Why it could have passed: the guard is all that refuses it. The user
+      // holds no site role, and the same input is written for a curator.
+      expect(asUser(user).role).toBe('user');
+      expect(asUser(F).role).toBe('curator');
 
-  it('refuses a non-admin before reading the input, so a bad one earns the same refusal', async () => {
-    await expect(createDeityTradition(asUser(A), input({ name: '   ' }))).rejects.toBeInstanceOf(
-      Forbidden,
-    );
-  });
+      await expect(createDeityTradition(asUser(user), input())).rejects.toThrow(Forbidden);
+      expect(await countNamed('Fixture Folk')).toBe(0);
+      await expect(
+        createDeityTradition(asUser(user), input({ name: '   ' })),
+      ).rejects.toBeInstanceOf(Forbidden);
+
+      await createDeityTradition(asUser(F), input());
+      expect(await countNamed('Fixture Folk')).toBe(1);
+    },
+  );
 
   it('refuses a name whose address a live tradition holds, on `name`, naming it', async () => {
     await seedTradition('Fixture Folk');
@@ -326,7 +323,7 @@ describe('deleteDeityTradition', () => {
     expect(await deityOf(retired)).toMatchObject({ tradition_id: id, updated_by: A.id });
   });
 
-  // The amendment to MB.162 for traditions, as M5.6b's for form groups: the
+  // As for form groups, on traditions: the
   // moved deities stay curated, so no entry's link is orphaned.
   it("is not refused by a compendium entry's pick, and leaves every pick curated and every link as it was", async () => {
     const id = await seedTradition('Fixture Leaving');

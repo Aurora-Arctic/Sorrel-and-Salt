@@ -5,11 +5,9 @@ import FilterForm from '../FilterForm';
 import IngredientSearchBox from './search-box';
 import type { IngredientSearchFormProps } from './types';
 
-// The search row (M8.10): FilterForm around the search box, then the
-// consumer's own fields. It holds the text typed, and shares it with the
-// fields through `useSearchText`, so a field that applies on its change
-// carries the name typed but not yet searched, as the compendium's filter
-// always has (claude-docs/components/ingredient-search.md).
+// The search row: FilterForm around the search box, then the consumer's own fields. It shares
+// the text typed with them through `useSearchText`, so a field that applies on change carries
+// the name typed but not yet searched (claude-docs/components/ingredient-search.md).
 
 const SearchText = createContext('');
 
@@ -26,7 +24,8 @@ export const IngredientSearchForm = ({
   searchHref,
   pickHref,
   pickHeading,
-  workspaceId,
+  pickPlace,
+  source,
   clear,
   className,
   children,
@@ -49,7 +48,8 @@ export const IngredientSearchForm = ({
           searchHref={searchHref}
           pickHref={pickHref}
           pickHeading={pickHeading}
-          workspaceId={workspaceId}
+          pickPlace={pickPlace}
+          source={source}
         />
         {children}
       </FilterForm>

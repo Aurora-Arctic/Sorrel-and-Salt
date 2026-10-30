@@ -7,10 +7,7 @@ import { FIXTURE_USERS } from '@/db/seed/standard';
 import { users } from '@/modules/identity/schema/users';
 import type { PrivilegeLedgerRow } from './types';
 
-// MB.195: `users` fills `user_privilege_changes` itself. A change to `role` or
-// `can_create_workspace` writes one row per column, its route read from
-// `app.privilege_route` and refused when none was declared, so neither a
-// service nor a `psql` session can change a privilege and leave no trace
+// `users` fills `user_privilege_changes` itself: a change to `role` or `can_create_workspace` writes one row per column, its route read from `app.privilege_route` and refused when none is declared
 // (claude-docs/design-decisions/mb.194-privilege-ledger-by-trigger.md).
 
 let sql: ReturnType<typeof postgres>;
@@ -161,7 +158,7 @@ describe('a change through withAudit', () => {
     expect(await ledger()).toEqual([]);
   });
 
-  // MB.177: being made admin sets the flag in the same write, so the reader
+  // Being made admin sets the flag in the same write, so the reader
   // sees both grants at one instant by one actor, by the one route.
   it('writes two rows, one per privilege, when a user lacking the flag is made admin', async () => {
     await withAudit(
@@ -200,7 +197,7 @@ describe('a change through withAudit', () => {
     ]);
   });
 
-  // M11.20: each of `admin` and `curator` is a privilege of its own, so a move
+  // Each of `admin` and `curator` is a privilege of its own, so a move
   // between the two is a revoke of one and a grant of the other.
   describe('the curator role', () => {
     const roleChange = (role: 'user' | 'curator' | 'admin') =>

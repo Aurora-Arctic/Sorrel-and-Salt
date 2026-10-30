@@ -39,22 +39,24 @@ design is in [`../design-decisions/mb.7-navigation.md`](../design-decisions/mb.7
 
 ## Lists
 
-| Doc                                                  | Component                                                                                                  |
-| ---------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| [`ingredient-search.md`](ingredient-search.md)       | The list shell for finding ingredients by name: a debounced dropdown, filters, action, pager               |
-| [`category-chips.md`](category-chips.md)             | The row of category chips with its +N panel, shared by the card and the admin table                        |
-| [`ingredient-card.md`](ingredient-card.md)           | One ingredient in a list: its name as the one link, formal name and forms, marks, caution, a jar-line slot |
-| [`ingredient-card-list.md`](ingredient-card-list.md) | The grid of ingredient cards every list page shares, with its card skeleton                                |
-| [`entry-marks.md`](entry-marks.md)                   | The Local, Compendium, Annotated and Retired badges, shared by the card and the entry page                 |
+| Doc                                                  | Component                                                                                                     |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| [`ingredient-search.md`](ingredient-search.md)       | The list shell for finding ingredients by name: a debounced dropdown, filters, action, pager                  |
+| [`category-chips.md`](category-chips.md)             | The row of category chips with its +N panel, shared by the card and the admin table                           |
+| [`ingredient-card.md`](ingredient-card.md)           | One ingredient in a list: its name as the one link, formal name and forms, marks, caution, a jar-line slot    |
+| [`ingredient-card-list.md`](ingredient-card-list.md) | The grid of ingredient cards every list page shares, with its card skeleton                                   |
+| [`entry-marks.md`](entry-marks.md)                   | The Local, Compendium, Annotated and Retired badges, shared by the card and the entry page                    |
+| [`spell-marks.md`](spell-marks.md)                   | A spell's or a working's Draft and Private badges, shared by the spell card, the recipe page and its workings |
 
 ## Stock
 
-| Doc                                  | Component                                                                                         |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------- |
-| [`stock-badge.md`](stock-badge.md)   | A jar's Low Stock or Out of Stock badge, and the threshold readout beside it on the jar line      |
-| [`stock-fields.md`](stock-fields.md) | A jar's quantity, unit and low-stock threshold fields, for whichever form holds a jar             |
-| [`stock-dialog.md`](stock-dialog.md) | The Edit Stock pencil on a coven card and the dialog that edits, adds and removes its jars        |
-| [`jar-shelf.md`](jar-shelf.md)       | The shelf of drawn jars, one per form, on the entry page's Stock section, each opening Edit Stock |
+| Doc                                  | Component                                                                                          |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------- |
+| [`stock-badge.md`](stock-badge.md)   | A jar's Low Stock or Out of Stock badge, and the threshold readout beside it on the jar line       |
+| [`stock-fields.md`](stock-fields.md) | A jar's quantity, unit and low-stock threshold fields, for whichever form holds a jar              |
+| [`stock-dialog.md`](stock-dialog.md) | The Edit Stock pencil on a coven card and the dialog that edits, adds and removes its jars         |
+| [`jar-shelf.md`](jar-shelf.md)       | The shelf of drawn jars, one per form, on the entry page's Stock section, each opening Edit Stock  |
+| [`jar-line.md`](jar-line.md)         | One line of a jar, name and words, shared by the recipe inventory and the Complete Working preview |
 
 ## Pages
 

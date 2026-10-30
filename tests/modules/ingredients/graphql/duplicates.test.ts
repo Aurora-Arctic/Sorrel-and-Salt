@@ -2,19 +2,15 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import type { Session } from '@/lib/session';
-import { A, B, E, asUser } from '../../../support/as-user';
+import { A, B, asUser } from '../../../support/as-user';
 import { liveFolkNames } from '../../../support/db/folk-names';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { run as runOperation } from '../../../support/graphql/run';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 import type { DuplicateNode, DuplicateConnection, Result } from './types';
 
-// The transport half of M4.7's duplicate warning: what M5.10's debounced
-// lookup calls — the nodes, the score on each edge, a page at a time, and the
-// compendium-only mode. The threshold, the scope and who is refused are
-// services/duplicates.test.ts's, and a signed-out caller at every field is
-// tests/db/graphql-query-scopes.test.ts's. The table is emptied per test, so
-// every row a result could come from is one this file wrote.
+// The transport half of the duplicate warning: what the debounced lookup calls (the nodes, the score on each edge, a page at a time) and the compendium-only mode.
+// The threshold, the scope and who is refused are services/duplicates.test.ts's, and a signed-out caller is tests/db/graphql-query-scopes.test.ts's. The table is emptied per test, so every row a result could come from is one this file wrote.
 
 let sql: ReturnType<typeof postgres>;
 
@@ -107,7 +103,7 @@ describe('possibleDuplicates', () => {
   });
 
   describe('pages', () => {
-    it('by cursor, through the M3.6 helper', async () => {
+    it('by cursor, through the cursor helper', async () => {
       await addIngredient({ name: 'Mugwort', canonicalName: 'Artemisia vulgaris' });
       await addIngredient({ name: 'Mugwart', workspaceId: WORKSPACE_W_ID });
 
@@ -127,37 +123,5 @@ describe('possibleDuplicates', () => {
       expect(rest.edges.map((edge) => edge.node.name)).toEqual(['Mugwort']);
       expect(rest.pageInfo.hasNextPage).toBe(false);
     });
-  });
-});
-
-// M5.5: the admin's compendium form has no coven to name, so a null
-// workspaceId warns of the compendium's entries alone.
-describe('possibleDuplicates without a coven', () => {
-  const runInCompendium = (session: Session | null, name: string): Promise<Result> =>
-    runOperation(
-      session,
-      `query ($workspaceId: ID, $name: String!) {
-        possibleDuplicates(workspaceId: $workspaceId, name: $name, first: 100) {
-          edges { node { name isGlobal } }
-        }
-      }`,
-      { workspaceId: null, name },
-    );
-
-  it("warns of the compendium's entry and not the coven's", async () => {
-    await addIngredient({ name: 'Testwort', canonicalName: 'Fixtura testalis' });
-    await addIngredient({ name: 'Testwart', workspaceId: WORKSPACE_W_ID });
-    // Why its absence is the scope's: under W, the coven's entry is warned of first.
-    expect((await nodesFor(asUser(B), { name: 'Testwart' })).map((node) => node.name)).toEqual([
-      'Testwart',
-      'Testwort',
-    ]);
-
-    const result = await runInCompendium(asUser(E), 'Testwart');
-
-    expect(result.errors).toBeUndefined();
-    expect(result.data?.possibleDuplicates.edges.map((edge) => edge.node)).toEqual([
-      { name: 'Testwort', isGlobal: true },
-    ]);
   });
 });

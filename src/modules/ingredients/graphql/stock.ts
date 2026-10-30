@@ -10,15 +10,11 @@ import { createStock, deleteStock, saveStock, updateStock } from '../services/st
 import type { StockRow } from '../types';
 import { IngredientRef, IngredientVariantRef } from './ingredient';
 
-// Story 14's jars over the wire (M9.4): what a coven holds of each form, the
-// three writes that change one jar and M9.9's `saveStock`, which changes an
-// ingredient's jars together, and `Ingredient.stock`, which reads it a page
-// at a time. The resolvers refuse only a missing session; who may read or
-// write which coven's jars is the stock service's check
-// (claude-docs/graphql/schema.md, "Stock: InventoryItem, Ingredient.stock and
-// the three stock writes").
+// The jars over the wire: what a coven holds of each form, the three single-jar writes, `saveStock` for an ingredient's jars together,
+// and `Ingredient.stock`, paged. The resolvers refuse only a missing session; the stock service checks the coven
+// (claude-docs/graphql/schema.md, "Stock: InventoryItem, Ingredient.stock and the stock writes").
 
-const InventoryUnitEnum = builder.enumType('InventoryUnit', { values: UNITS });
+export const InventoryUnitEnum = builder.enumType('InventoryUnit', { values: UNITS });
 
 const UnitDimensionEnum = builder.enumType('UnitDimension', {
   description: 'What a unit measures; conversion stays inside one.',
@@ -84,7 +80,7 @@ async function ingredientOf(
 }
 
 /**
- * M4.5's `StockInput` on the wire. A field left out keeps its value on an
+ * The `StockInput` on the wire. A field left out keeps its value on an
  * update and null clears it; `variantId` is the add's argument, not a field.
  */
 const StockInput = builder.inputType('StockInput', {

@@ -6,25 +6,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { TIP_OPEN_DELAY_MS } from './constants';
 import type { Tip, TipTiming } from './types';
 
-// A tip's open state as WCAG 1.4.13 asks it to behave: shown on hover, focus
-// or a tap, kept open while the pointer is over it, and closed on Escape,
-// blur, or the pointer leaving. Hover waits for the pointer to rest, so a
-// pointer crossing the page on its way somewhere else opens nothing; focus and
-// a tap are asked for on purpose and open at once. InfoTip's, and every other tip's beside a
-// control: UserList's, IconTip's beside every Edit pencil, and Combobox's entry
-// and qualifier tooltips
-// (claude-docs/components/info-tip.md, "Behaviour").
-//
-// It also places the bubble. A bubble pinned by CSS to one edge of its control
-// runs off the screen wherever the control's position varies, so each is
-// placed as it opens on Floating UI, the standard tool, as Combobox's list is
-// (Combobox/position.ts): on the side asked for, flipped to the other when
-// there is no room, and shifted along that side until it is inside the screen.
-// It is fixed, so no scrolling or clipping ancestor can cut it, and followed
-// only while open. Closed, or before the script has run, the stylesheet's
-// `position: fixed` at the origin keeps it out of the flow, invisible as ever
-// and its text still in the page (claude-docs/components/info-tip.md,
-// "Placement").
+// A tip's open state as WCAG 1.4.13 asks: shown on hover (after it rests), focus or tap, kept open while
+// the pointer is over it, closed on Escape, blur or leaving. Used by InfoTip, UserList, IconTip and
+// Combobox's tooltips (claude-docs/components/info-tip.md, "Behaviour" and "Placement").
 
 // Long enough to cross from the control onto the tip.
 const CLOSE_DELAY_MS = 150;
@@ -57,11 +41,9 @@ const SIDES = new Set<string>([
 ]);
 
 /**
- * The side a stylesheet asks for. `--tip-placement` is a custom property, so a
- * rule can set it for a whole region (the filter panel's tips open below) or
- * by a container query (a stacked table's), and it inherits to every tip
- * inside. Read as the tip opens, as `canOpen` is, since a media or container
- * query may have changed it since. Anything else, or none, is `fallback`.
+ * The side a stylesheet asks for through the inherited `--tip-placement`, so a rule can set it for a
+ * region (the filter panel's tips open below) or by container query. Read as the tip opens, as it may
+ * have changed; anything else, or none, is `fallback`.
  */
 function sideFor(anchor: Element | null | undefined, fallback: Placement): Placement {
   if (!anchor) return fallback;
@@ -81,16 +63,9 @@ const edges = ({ elements }: { elements: { reference: unknown } }) => {
 };
 
 /**
- * Whether the tip is open, and its three handlers. `canOpen` is asked as it
- * opens rather than watched: whether a Combobox entry's text fits changes with
- * the control's width, and only matters at the moment someone looks.
- *
- * `placement` is the side the bubble prefers, `top` unless a stylesheet's
- * `--tip-placement` says otherwise. `timing` sets how long a hover waits to
- * open (`showSoon`) and a leave to close (`hideSoon`); IconTip's bubble cannot be
- * hovered, so it closes with no wait. The caller hands `anchor` to the element
- * the bubble belongs to (the wrapper that hears the hover), `bubble` to the
- * bubble, and `bubbleStyle` to the bubble's `style`.
+ * Whether the tip is open, and its three handlers; `canOpen` is asked as it opens, not watched, as a
+ * Combobox entry's fit changes with its width. `placement` is the preferred side; `timing` sets the
+ * hover waits, none for IconTip. `anchor`, `bubble` and `bubbleStyle` go to the wrapper and bubble.
  */
 export function useTip(
   canOpen: () => boolean = ALWAYS,
@@ -146,11 +121,9 @@ export function useTip(
 
   useEffect(() => {
     if (!open) return;
-    // On the document: a tip opened by hover has no focus to listen from.
-    // Marked handled, so the Escape that closes a tip closes nothing else:
-    // inside a modal the `<dialog>` would take it as a close request too,
-    // shutting the modal or asking a changed form to discard (MB.115; the
-    // same as Combobox/escape.ts). With the tip shut, Escape is left alone.
+    // On the document, as a tip opened by hover has no focus to listen from. Marked handled, so the Escape
+    // that closes a tip closes nothing else, such as a modal's `<dialog>` or a changed form's discard
+    // (as Combobox/escape.ts does); with the tip shut, Escape is left alone.
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
       event.preventDefault();

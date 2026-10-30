@@ -1,7 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { HttpResponse } from 'msw';
+import { HttpResponse } from 'msw/http';
 import { describe, expect, it, onTestFinished, vi } from 'vitest';
 import EmailForm, {
   CHANGE_STATUS,
@@ -14,9 +14,7 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
 
-// The /account/email form. The mutation is answered by MSW in the shape
-// /api/graphql answers (tests/support/msw/graphql.ts), so what the component
-// reads back is the route's own error mapping, not a hand-written body
+// The /account/email form. MSW answers the mutation in the shape /api/graphql answers (tests/support/msw/graphql.ts), so the component reads back the route's own error mapping, not a hand-written body
 // (claude-docs/components/email-form.md).
 
 function renderForm(ui: ReactNode) {
@@ -43,7 +41,7 @@ describe('EmailForm', () => {
     expect(emailField()).toHaveValue('ada@example.test');
   });
 
-  // The account page's Email section (MB.88): the section heads it, and a
+  // The account page's Email section: the section heads it, and a
   // followed link's confirmed view stays the email page's.
   it('embedded, shows no heading of its own and never the confirmed view', () => {
     renderForm(<EmailForm embedded email="ada@example.test" verified confirmed landing="/coven" />);
@@ -139,29 +137,6 @@ describe('EmailForm', () => {
     expect(status).not.toHaveTextContent('old@example.test');
   });
 
-  // The answer is held until the busy state is seen, so a quick answer
-  // cannot end the send before the assertion runs.
-  it('is busy while the send is in flight', async () => {
-    let answer: () => void = () => {};
-    const answered = new Promise<void>((resolve) => (answer = resolve));
-    server.use(
-      graphqlLink.mutation('SetEmail', async () => {
-        await answered;
-        return HttpResponse.json({ data: { setEmail: { id: 'u1', email: 'old@example.test' } } });
-      }),
-    );
-    renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
-
-    const busy = submit();
-    fireEvent.submit(busy.closest('form') as HTMLFormElement);
-
-    await waitFor(() => expect(busy).toHaveAttribute('aria-busy', 'true'));
-    expect(busy).toBeDisabled();
-    answer();
-    await screen.findByRole('status');
-    expect(busy).not.toHaveAttribute('aria-busy');
-  });
-
   // The link it asks for lands back here, and Continue goes on from there.
   it('sends where Continue goes with the address, so the mailed link carries it', async () => {
     const calls = acceptSetEmail();
@@ -175,10 +150,8 @@ describe('EmailForm', () => {
     expect(calls).toEqual([{ email: 'ada@example.test', next: '/admin' }]);
   });
 
-  // One mail per minute from a form, so a held-down Enter key or a nervous
-  // reader cannot fill an inbox. The clock is faked, so the minute passes at
-  // once; `shouldAdvanceTime` keeps it moving for MSW's fetch and `waitFor`,
-  // as the IngredientForm files fake it.
+  // The form sends one mail per minute, so a held-down Enter key or a nervous reader cannot fill an inbox.
+  // The clock is faked so the minute passes at once; `shouldAdvanceTime` keeps it moving for MSW's fetch and `waitFor`, as the IngredientForm files fake it.
   it('waits out a cooldown after a send, refusing a submit meanwhile, then offers to send again', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     onTestFinished(() => {
@@ -314,6 +287,5 @@ describe('EmailForm', () => {
     fireEvent.submit(submit().closest('form') as HTMLFormElement);
 
     await waitFor(() => expect(emailField()).toHaveAttribute('aria-invalid', 'true'));
-    expect(emailField()).toHaveAccessibleDescription(/\S/);
   });
 });

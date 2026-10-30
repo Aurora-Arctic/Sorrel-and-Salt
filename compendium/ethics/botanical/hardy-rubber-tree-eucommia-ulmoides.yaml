@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/hardy-rubber-tree-eucommia-ulmoides
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species
+    value: Vulnerable (IUCN 3.1)
+    listedAs: Eucommia ulmoides
+    scope: global
+    nameBasis: stated
+    source: wikipedia-eucommia-ulmoides
+    locator: Infobox, Conservation status

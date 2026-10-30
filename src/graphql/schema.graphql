@@ -13,6 +13,15 @@ type Category {
   slug: String!
 }
 
+"""A spell's assigned categories set beside its ingredients', both ways."""
+type CategoryComparison {
+  """Assigned to the spell, but carried by no ingredient in it."""
+  intendedNotPresent: [Category!]!
+
+  """Carried by an ingredient in the spell, but not assigned to it."""
+  presentNotIntended: [Category!]!
+}
+
 type CategoryGroup {
   colorDark: String!
   colorLight: String!
@@ -95,6 +104,11 @@ type CompendiumFacets {
   """
   forms: [NameFacetCount!]!
 
+  """
+  Reviewed, then needing review, under the rest of the filter, reviewed left out. Null to anyone but a curator or an admin: the review mark is theirs alone.
+  """
+  reviewed: [ReviewFacetCount!]
+
   """toxic, then not_toxic, zeros included."""
   toxic: [ToxicFacetCount!]!
 
@@ -171,6 +185,12 @@ input CompendiumIngredientUpdateInput {
   zodiacSigns: [String!]!
 }
 
+"""A completed working, and the steps it took nothing for."""
+type CompleteWorkingResult {
+  warnings: [WorkingWarning!]!
+  working: SpellWorking!
+}
+
 """
 A compendium entry made the coven's own: the own entry written, and what it could not carry.
 """
@@ -208,6 +228,11 @@ type CupboardEntry {
 
   """What the coven calls the entry; null is the compendium's name."""
   label: String
+
+  """
+  Raised by one on every save; a save names the revision it was written against.
+  """
+  revision: Int!
   safetyNotes: String
   zodiacSigns: [String!]
 }
@@ -236,6 +261,9 @@ type Deity {
   description: String!
   id: ID!
   name: String!
+
+  """The other names the deity answers to, alphabetically."""
+  otherNames: [String!]!
   slug: String!
   tradition: DeityTradition!
 }
@@ -243,6 +271,7 @@ type Deity {
 input DeityInput {
   description: String!
   name: String!
+  otherNames: [String!]
   traditionId: ID!
 }
 
@@ -252,6 +281,11 @@ type DeitySuggestion {
 
   """The curated row, which a pick sends; null for a value only in use."""
   id: ID
+
+  """
+  The other name the query matched (M14.23), which the deity's own name does not show; null when its name matched, or it was found another way.
+  """
+  matchedName: String
   tradition: String
   value: String!
 }
@@ -326,6 +360,15 @@ type FormSuggestion {
 }
 
 """
+How a grimoire page is ordered: UPDATED_DESC, last edited first (the default); CREATED_DESC, newest first; or TITLE_ASC, by title, untitled spells last.
+"""
+enum GrimoireOrder {
+  CREATED_DESC
+  TITLE_ASC
+  UPDATED_DESC
+}
+
+"""
 A curated deity or category, by id, and how many entries it would list.
 """
 type IdFacetCount {
@@ -372,6 +415,16 @@ type Ingredient {
   A compendium entry the curators have retired, read by a coven whose cupboard still names it (M12.24).
   """
   retired: Boolean!
+
+  """
+  When a curator marked a compendium entry reviewed: null while it needs review, and for a coven's own entry. The date only, shown to anyone; who marked it is never a field.
+  """
+  reviewedAt: DateTime
+
+  """
+  Raised by one on every save; a save names the revision it was written against.
+  """
+  revision: Int!
   safetyNotes: String
   slug: String!
 
@@ -723,7 +776,20 @@ type Mutation {
   """
   Changes the coven's overrides: a field left out keeps its value, null hands it back to the compendium, and a list, even an empty one, is the coven's own.
   """
-  annotateCupboardEntry(ingredientId: ID!, input: CupboardEntryInput!, workspaceId: ID!): CupboardEntry!
+  annotateCupboardEntry(
+    """
+    The revision this save was written against: a newer one refuses it. Left out or null, it writes regardless.
+    """
+    expectedRevision: Int
+    ingredientId: ID!
+    input: CupboardEntryInput!
+    workspaceId: ID!
+  ): CupboardEntry!
+
+  """
+  Completes a draft working, taking what the recipe used from the coven’s jars. Answers the steps it took nothing for.
+  """
+  completeWorking(id: ID!, workspaceId: ID!): CompleteWorkingResult!
 
   """
   Makes a compendium entry the coven holds its own: a new own entry from the coven's reading of it, with copies of its forms, folk names, substitutes, categories, references and deities; its jars and spell layers move to the copy's forms of the same name, and the cupboard entry is removed. Works on an entry the compendium has retired. The compendium entry is not changed.
@@ -756,6 +822,9 @@ type Mutation {
 
   """A null workspaceId writes the compendium's, under the admin proof."""
   createReference(input: ReferenceInput!, workspaceId: ID): Reference!
+
+  """Writes a new spell and its recipe in one save."""
+  createSpell(input: SpellInput!, workspaceId: ID!): Spell!
 
   """
   Creates a coven with the caller as its owner. Refused for a user who may not create one.
@@ -808,8 +877,16 @@ type Mutation {
   """
   deleteIngredientFormValue(id: ID!): ID!
 
+  """
+  Soft-deletes a spell and its steps together; the spell's stock is untouched.
+  """
+  deleteSpell(id: ID!, workspaceId: ID!): ID!
+
   """A soft delete of the jar; the entry stays."""
   deleteStock(id: ID!, workspaceId: ID!): ID!
+
+  """Soft-deletes a working its recorder made."""
+  deleteWorking(id: ID!, workspaceId: ID!): ID!
 
   """
   Deletes a coven, which no member can reach afterwards. Owners only; nothing is destroyed, so it can be restored by hand.
@@ -820,6 +897,11 @@ type Mutation {
   A soft delete, refused while a live compendium entry lists the sign; a coven keeps what it wrote.
   """
   deleteZodiacSign(id: ID!): ID!
+
+  """
+  Copies a spell into a new private draft in the same coven, with its categories and live steps; the original is untouched.
+  """
+  duplicateSpell(id: ID!, workspaceId: ID!): Spell!
 
   """Lets a user with no invitation create a coven. Refused once they may."""
   grantWorkspaceCreation(note: String, userId: ID!): User!
@@ -838,6 +920,9 @@ type Mutation {
   Makes a common name the ingredient's display name, and the old display name a common name. A null workspaceId names a compendium entry, under the admin proof.
   """
   promoteFolkName(folkNameId: ID!, id: ID!, workspaceId: ID): Ingredient!
+
+  """Records a working of a complete spell, as a draft."""
+  recordWorking(input: WorkingInput!, spellId: ID!, workspaceId: ID!): SpellWorking!
 
   """
   Takes the entry out of the coven's cupboard; refused while the coven holds a jar of any of its forms.
@@ -873,6 +958,11 @@ type Mutation {
   Creates, changes and deletes one ingredient's jars in one transaction, and answers the entry's live jars. Every jar and form must be the ingredient's, or the whole save is refused; a bad row's issues are pathed `create.<i>.input.<field>` or `update.<i>.input.<field>`.
   """
   saveStock(ingredientId: ID!, input: SaveStockInput!, workspaceId: ID!): [InventoryItem!]!
+
+  """
+  Marks the entry reviewed by a curator, or clears the mark so it needs review. Curators and admins only.
+  """
+  setCompendiumEntryReviewed(id: ID!, reviewed: Boolean!): Ingredient!
   setEmail(email: String!, next: String): User!
   setName(name: String!): User!
 
@@ -900,6 +990,11 @@ type Mutation {
     Confirms ending another entry's redirect from the address this write takes (MB.82).
     """
     endRedirect: Boolean
+
+    """
+    The revision this save was written against: a newer one refuses it. Left out or null, it writes regardless.
+    """
+    expectedRevision: Int
     id: ID!
     input: CompendiumIngredientUpdateInput!
   ): Ingredient!
@@ -913,7 +1008,15 @@ type Mutation {
   Replaces the tradition; the slug follows the name, and so does the slug of every deity under it.
   """
   updateDeityTradition(id: ID!, input: DeityTraditionInput!): DeityTradition!
-  updateIngredient(id: ID!, input: IngredientUpdateInput!, workspaceId: ID!): Ingredient!
+  updateIngredient(
+    """
+    The revision this save was written against: a newer one refuses it. Left out or null, it writes regardless.
+    """
+    expectedRevision: Int
+    id: ID!
+    input: IngredientUpdateInput!
+    workspaceId: ID!
+  ): Ingredient!
 
   """
   Replaces the group; the slug follows the name, and so does the slug of every form under it.
@@ -933,8 +1036,16 @@ type Mutation {
   """Reaches every row citing it; nothing deletes a reference in v1."""
   updateReference(id: ID!, input: ReferenceInput!, workspaceId: ID): Reference!
 
+  """
+  Saves a spell's fields and, when given, its whole recipe, against the revision it was read at.
+  """
+  updateSpell(id: ID!, input: UpdateSpellInput!, workspaceId: ID!): Spell!
+
   """Changes a jar: a field left out keeps its value, and null clears it."""
   updateStock(id: ID!, input: StockInput!, workspaceId: ID!): InventoryItem!
+
+  """Changes a working its recorder made."""
+  updateWorking(id: ID!, input: WorkingInput!, workspaceId: ID!): SpellWorking!
 
   """
   Replaces the sign; the slug follows the name. A rename is carried onto every live compendium entry listing it.
@@ -965,11 +1076,36 @@ enum Nomenclature {
   zoological
 }
 
+"""
+Why a step takes nothing from the jars: CUSTOM, a typed-name step; UNSTOCKED, a form the coven holds no jar of; NO_QUANTITY, a step with no amount; UNITS_DIFFER, a unit the jar cannot be measured in; JAR_NOT_MEASURED, a jar kept without an amount.
+"""
+enum NotDeductedReason {
+  CUSTOM
+  JAR_NOT_MEASURED
+  NO_QUANTITY
+  UNITS_DIFFER
+  UNSTOCKED
+}
+
 type PageInfo {
   endCursor: String
   hasNextPage: Boolean!
   hasPreviousPage: Boolean!
   startCursor: String
+}
+
+"""What completing a working would take from one jar for one step."""
+type PlannedDeduction {
+  """What the jar held before this take, in the jar unit."""
+  before: Float!
+  inventoryItemId: ID!
+
+  """The jar Low mark, in the jar unit."""
+  lowStockThreshold: Float
+  quantity: Float!
+  shortfall: Float!
+  stepId: ID!
+  unit: InventoryUnit!
 }
 
 type PrivilegeChange {
@@ -1048,6 +1184,11 @@ type Query {
     query: String
 
     """
+    Keeps the entries a curator has marked reviewed, or with false the ones needing review. A curator or admin alone may set it.
+    """
+    reviewed: Boolean
+
+    """
     Keeps toxic entries, or entries that are not toxic; any, or leaving it out, keeps both.
     """
     toxic: ToxicFilter
@@ -1079,6 +1220,16 @@ type Query {
     """
     celestialBodies: [String!]
 
+    """
+    Counts only entries a cupboard of any one of these covens holds, by id. A coven the viewer is not in is ignored.
+    """
+    covenIds: [ID!]
+
+    """
+    Counts only entries none of the covenIds holds instead; with no covenIds, none of the viewer's covens. If every id given is ignored, nothing is filtered.
+    """
+    covensNot: Boolean
+
     """Keeps entries linked to any one of these curated deities, by id."""
     deityIds: [ID!]
 
@@ -1093,6 +1244,11 @@ type Query {
     forms: [String!]
     nomenclature: Nomenclature
     query: String
+
+    """
+    Keeps the entries a curator has marked reviewed, or with false the ones needing review. A curator or admin alone may set it.
+    """
+    reviewed: Boolean
 
     """
     Keeps toxic entries, or entries that are not toxic; any, or leaving it out, keeps both.
@@ -1121,6 +1277,11 @@ type Query {
   """
   deityTraditions(after: String, before: String, first: Int, last: Int): QueryDeityTraditionsConnection!
   formSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryFormSuggestionsConnection!
+
+  """
+  A coven's spells: the shared ones and the caller's own private ones, in `orderBy`, of `status` when given, matching `query` when given and ranked best match first.
+  """
+  grimoire(after: String, before: String, first: Int, last: Int, orderBy: GrimoireOrder! = UPDATED_DESC, query: String, status: SpellStatus, workspaceId: ID!): QueryGrimoireConnection!
   ingredient(id: ID!, workspaceId: ID): Ingredient!
 
   """
@@ -1132,7 +1293,20 @@ type Query {
   The curated forms by name, each under a live group: those whose name holds `query`, case-insensitively, and those filed under `groupId`, when given.
   """
   ingredientFormValues(after: String, before: String, first: Int, groupId: ID, last: Int, query: String): QueryIngredientFormValuesConnection!
-  ingredientSuggestions(after: String, before: String, first: Int, form: String, last: Int, query: String, workspaceId: ID!): QueryIngredientSuggestionsConnection!
+  ingredientSuggestions(
+    after: String
+    before: String
+
+    """
+    Keep only entries carrying any of these categories. Empty or null is no filter.
+    """
+    categoryIds: [ID!]
+    first: Int
+    form: String
+    last: Int
+    query: String
+    workspaceId: ID!
+  ): QueryIngredientSuggestionsConnection!
   me: User!
   ok: Boolean!
   possibleDuplicates(after: String, before: String, first: Int, last: Int, name: String!, workspaceId: ID): QueryPossibleDuplicatesConnection!
@@ -1157,7 +1331,18 @@ type Query {
   """
   reference(id: ID!, workspaceId: ID): Reference!
   referenceSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryReferenceSuggestionsConnection!
+  spell(id: ID!, workspaceId: ID!): Spell!
   users(after: String, awaitingApproval: Boolean, before: String, first: Int, last: Int, query: String, role: UserRole): QueryUsersConnection!
+
+  """
+  What completing a working of this spell would take from the coven’s jars now: the plan completion follows, read and not applied.
+  """
+  workingDeductionPreview(spellId: ID!, workspaceId: ID!): WorkingDeductionPreview!
+
+  """
+  A coven the caller sits in, by id. Refused alike for a stranger and an id no coven holds.
+  """
+  workspace(id: ID!): Workspace!
 
   """
   How many of a coven's ingredients each search filter value would list under the rest of the filter.
@@ -1409,6 +1594,16 @@ type QueryFormSuggestionsConnectionEdge {
   node: FormSuggestion!
 }
 
+type QueryGrimoireConnection {
+  edges: [QueryGrimoireConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryGrimoireConnectionEdge {
+  cursor: String!
+  node: Spell!
+}
+
 type QueryIngredientFormGroupsConnection {
   edges: [QueryIngredientFormGroupsConnectionEdge!]!
   pageInfo: PageInfo!
@@ -1611,6 +1806,19 @@ input ReferenceLinkInput {
   referenceId: ID!
 }
 
+"""A Reviewed setting, and how many entries it would list (M14.8)."""
+type ReviewFacetCount {
+  """
+  How many entries the list would hold with this value as the only one chosen of its kind, the rest of the filter unchanged.
+  """
+  count: Int!
+
+  """
+  true for the reviewed entries, false for the ones needing review, as reviewed takes it.
+  """
+  value: Boolean!
+}
+
 """
 One ingredient's stock edited together: jars to start, change and delete.
 """
@@ -1629,6 +1837,166 @@ type SourceFacetCount {
 
   """local or compendium, as source takes it."""
   value: IngredientSource!
+}
+
+"""A coven's working: what it intends, and the recipe that makes it."""
+type Spell {
+  audit: AuditInfo!
+
+  """What the spell intends: the categories its author assigned."""
+  categories: [Category!]!
+  categoryGaps: CategoryComparison!
+  dayOfWeek: String
+
+  """
+  What the spell is made of: every category its linked ingredients and their forms carry. A one-off row contributes none.
+  """
+  derivedCategories: [Category!]!
+  id: ID!
+  intent: String
+  jarDescription: String
+  moonPhase: String
+  note: String
+
+  """
+  Raised by one on every save; a save names the revision it was written against (M13.15).
+  """
+  revision: Int!
+  sealWaxColor: String
+  status: SpellStatus!
+
+  """The recipe: every step in position order, instructions included."""
+  steps: [SpellStep!]!
+
+  """
+  Null on a draft not yet named: only a complete spell must carry a title (M13.15).
+  """
+  title: String
+  visibility: SpellVisibility!
+
+  """How many complete workings of this spell the caller may read."""
+  workingCount: Int!
+
+  """
+  The workings of this spell the caller may read, newest day first: every shared one and the caller’s own private ones.
+  """
+  workings(after: String, before: String, first: Int, last: Int): SpellWorkingsConnection!
+}
+
+"""A new spell: a draft needs nothing but its status."""
+input SpellInput {
+  """
+  The categories the spell is assigned: what it intends, not what its ingredients bring.
+  """
+  categoryIds: [ID!]
+  dayOfWeek: String
+  intent: String
+  jarDescription: String
+  moonPhase: String
+  note: String
+  sealWaxColor: String
+  status: SpellStatus
+
+  """The recipe, in order."""
+  steps: [SpellStepInput!]
+
+  """Required once the status is complete."""
+  title: String
+  visibility: SpellVisibility
+}
+
+enum SpellStatus {
+  complete
+  draft
+}
+
+"""One step of a recipe: an ingredient laid, an instruction, or both."""
+type SpellStep {
+  audit: AuditInfo!
+
+  """The instruction; null on an ingredient-only step."""
+  body: String
+
+  """The linked form's name; the one-off row's free text otherwise."""
+  form: String
+  id: ID!
+
+  """
+  The ingredient laid, kept once deleted; null on a one-off row and an instruction-only step.
+  """
+  ingredient: Ingredient
+
+  """
+  The linked ingredient's name in this coven; the one-off row's own otherwise; null on an instruction-only step.
+  """
+  name: String
+  position: Int!
+  quantity: Float
+  unit: InventoryUnit
+
+  """The form laid, on a linked step, still shown once deleted since."""
+  variant: IngredientVariant
+}
+
+"""
+One step of a recipe: an instruction, an ingredient, or both. The ingredient is linked (ingredientId with variantId) or written for this jar (name, with form).
+"""
+input SpellStepInput {
+  body: String
+  form: String
+
+  """A saved step this one is; left out, the step is new."""
+  id: ID
+  ingredientId: ID
+  name: String
+  quantity: Float
+  unit: InventoryUnit
+
+  """The form laid; set exactly when ingredientId is."""
+  variantId: ID
+}
+
+"""Who reads a spell: its author alone, or every member of its coven."""
+enum SpellVisibility {
+  private
+  workspace
+}
+
+"""
+One time a spell was made: when, by whom, how it went, and what it took from the jars.
+"""
+type SpellWorking {
+  audit: AuditInfo!
+
+  """Null while a draft."""
+  completedAt: DateTime
+
+  """What completion took from the jars; empty on a draft."""
+  deductions: [WorkingDeduction!]!
+  id: ID!
+  note: String
+  participants: [WorkingParticipant!]!
+  spellId: ID!
+  status: WorkingStatus!
+  visibility: WorkingVisibility!
+
+  """
+  Steps completion took nothing for; empty unless this answers a completion.
+  """
+  warnings: [WorkingWarning!]!
+
+  """The day it was made, which is not the day it was recorded."""
+  workedOn: LocalDate!
+}
+
+type SpellWorkingsConnection {
+  edges: [SpellWorkingsConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type SpellWorkingsConnectionEdge {
+  cursor: String!
+  node: SpellWorking!
 }
 
 input StockInput {
@@ -1720,6 +2088,37 @@ input UpdateJarInput {
   input: StockInput!
 }
 
+"""
+Changes a spell: a field left out keeps its value, and null clears it. Visibility only widens once the spell is complete.
+"""
+input UpdateSpellInput {
+  """
+  The whole set of categories the spell is assigned: one left out is unassigned. Left out, they are unchanged.
+  """
+  categoryIds: [ID!]
+  dayOfWeek: String
+
+  """
+  Required, though it may be null: the revision this save was written against, which a newer one refuses. Null writes regardless.
+  """
+  expectedRevision: Int
+  intent: String
+  jarDescription: String
+  moonPhase: String
+  note: String
+  sealWaxColor: String
+  status: SpellStatus
+
+  """
+  The whole recipe, in order: a saved step left out is removed. Left out, the recipe is unchanged.
+  """
+  steps: [SpellStepInput!]
+
+  """Required once the status is complete."""
+  title: String
+  visibility: SpellVisibility
+}
+
 type User {
   audit: AuditInfo!
   canCreateWorkspace: Boolean!
@@ -1750,14 +2149,98 @@ enum UserRole {
   user
 }
 
+"""
+What a completed working took from one jar for one step, in the jar’s own unit.
+"""
+type WorkingDeduction {
+  id: ID!
+  inventoryItemId: ID!
+  quantity: Float!
+
+  """What the jar could not cover; 0 when fully met."""
+  shortfall: Float!
+  stepId: ID!
+  unit: InventoryUnit!
+}
+
+"""
+What completing a working would do to the jars now, and what it would take nothing for.
+"""
+type WorkingDeductionPreview {
+  deductions: [PlannedDeduction!]!
+  warnings: [WorkingWarning!]!
+}
+
+"""
+A working as recorded or changed. On a change, a field left out keeps its value; `note` null clears it.
+"""
+input WorkingInput {
+  note: String
+
+  """
+  In order. Left out: on record, the recorder alone; on change, unchanged.
+  """
+  participants: [WorkingParticipantInput!]
+
+  """
+  Left out: on record, the coven, capped at the spell’s; on change, unchanged. A complete working only widens.
+  """
+  visibility: WorkingVisibility
+  workedOn: LocalDate!
+}
+
+"""
+Someone who took part in a working: a coven member, or a name typed for anyone else.
+"""
+type WorkingParticipant {
+  id: ID!
+
+  """
+  The typed name as typed; for a member, the name their row last held, or null if none is readable.
+  """
+  name: String
+
+  """Null for a typed name."""
+  userId: ID
+}
+
+"""
+A coven member by `userId`, or a name typed for anyone else: exactly one.
+"""
+input WorkingParticipantInput {
+  name: String
+  userId: ID
+}
+
+enum WorkingStatus {
+  complete
+  draft
+}
+
+"""
+Who reads a working: its recorder alone, or every member of the coven. Never wider than its spell.
+"""
+enum WorkingVisibility {
+  private
+  workspace
+}
+
+"""A step a working took nothing for, and why."""
+type WorkingWarning {
+  position: Int!
+  reason: NotDeductedReason!
+  stepId: ID!
+  stepName: String
+}
+
 type Workspace {
   audit: AuditInfo!
   id: ID!
 
   """
-  The coven's live members, in the order they joined, for the roles that may read them.
+  The coven's live members, in the order they joined, for the roles that may read them: those whose name holds `query`, case-insensitively, when given.
   """
-  members(after: String, before: String, first: Int, last: Int): WorkspaceMembersConnection!
+  members(after: String, before: String, first: Int, last: Int, query: String): WorkspaceMembersConnection!
   name: String!
   slug: String!
 }

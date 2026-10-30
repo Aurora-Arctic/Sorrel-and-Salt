@@ -24,10 +24,14 @@ section's page.
 - **At rest, or while a navigation aimed at another region or at no region
   is on its way, it renders the children as they were.**
 - **While a navigation aimed at its own region is on its way, the page is
-  taken away at once** and `<Skeleton>` of the target's shape, with its `title`, `action` and `filter` parts, stands in its place,
-  with no dimming. Nobody can act on the wrong coven's data in the wait. The
-  shape is the destination's. In the coven it is the section's (`cards` for
-  Ingredients, `table` for the people pages, `page` for the home), worked out
+  hidden and put out of reach at once** (`visibility: hidden`, `inert`,
+  `aria-hidden`) and `<Skeleton>` of the target's shape, with its `title`, `action` and `filter` parts, stands over it,
+  with no dimming. The page stays mounted at its full height inside the
+  section frame, so its flex column and gap are untouched, and the skeleton is
+  laid over it in a copy of that frame, pinned under the bar
+  ([`SkeletonFade`](skeleton-fade.md), "The page is held, not swapped"; MB.271). Nobody can act on the wrong coven's data in the wait. The
+  shape is the destination's. In the coven it is the section's (compact `cards` for
+  Ingredients and the grimoire, `table` for the people pages, `page` for the home), worked out
   by `WorkspaceSwitcher` or `CovenNav` when the navigation starts. In admin it
   is `adminTarget`'s (`AdminNav`).
 - **The context row is not inside it.** A move between admin pages, or
@@ -56,4 +60,10 @@ switcher to mount, which focuses its box. See `workspace-switcher.md`.
 
 ## Stories
 
-`Shell / Section Body`: `AtRest`, `LoadingList`, `LoadingTabs` and `LoadingWithMenu`. The loading stories draw the wait with a title and filter, with the tab row, and with the contents menu.
+`Shell / Section Body`: `States`, with a control that chooses Loading List, Loading List With Action, Loading Tabs, Loading With Menu, Loading Entry and Loading Contents. The states draw the wait with a title and filter, with the tab row, and with the contents menu.
+
+## The frame under a context row
+
+The section body is the frame under a section's context row, the coven's or the admin area's. While a navigation aimed at this section's region is on its way, the old page is hidden and put out of reach at once, so nobody acts on the wrong coven's data, and the destination's skeleton stands over it. The context row above it, with the section's nav, is outside this frame and stays.
+
+It is not a dimmed page and not a `loading.tsx`: a boundary would turn the guards' 404 and 403 into 200s. The pages own their `<main>`, so the skeleton brings one, and a hidden level-one heading, so neither landmark vanishes for the length of the wait.

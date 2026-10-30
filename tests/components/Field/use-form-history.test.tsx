@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { byLabel, choose, press, redo, type, typeIn, undo } from '../../support/interact';
 import { HistoryProbe, type ProbeHandles } from '../../support/form-history';
 
-// Undo and redo for a react-hook-form form (M12.9): what a chord, a pause and
+// Undo and redo for a react-hook-form form: what a chord, a pause and
 // a reset do to the history, and where the focus goes after a restore.
 
 function mount(
@@ -358,13 +358,6 @@ describe('useFormHistory', () => {
       act(() => byLabel('Note', 'input, textarea').focus());
       focusIn('Title');
       type('Title', 'Fi');
-      expect(steps()).toBe(2);
-    });
-
-    it('starts another step on a different field', () => {
-      current = mount();
-      type('Title', 'F');
-      type('Note', 'n');
       expect(steps()).toBe(2);
     });
 

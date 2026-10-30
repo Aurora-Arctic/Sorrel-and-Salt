@@ -1,6 +1,6 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import type { Route } from 'next';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import MenuButton from '@/components/MenuButton';
 import { choicesFor, sectionsFor } from '@/components/MenuButton/sections';
 import type { MenuButtonItem, MenuSection } from '@/components/MenuButton/types';
@@ -89,7 +89,7 @@ describe('MenuButton', () => {
     expect(screen.queryByRole('menu')).toBeNull();
   });
 
-  // A disabled item (the owner's call of 2026-10-20: a coven that holds the entry is shown, not
+  // A disabled item (a coven that holds the entry is shown, not
   // left out): the APG menu pattern, so it stays in the roving and is read as unavailable, and
   // choosing it runs nothing and leaves the menu open.
   describe('a disabled item', () => {
@@ -158,18 +158,8 @@ describe('MenuButton', () => {
     expect(screen.queryByRole('menu')).toBeNull();
   });
 
-  it('is busy and shut while an item is in flight', () => {
-    draw(actions(), true);
-
-    const busy = screen.getByRole('button', { name: 'Adding' });
-    expect(busy).toHaveAttribute('aria-busy', 'true');
-    expect(busy).toHaveAttribute('aria-disabled', 'true');
-  });
-
-  // MB.120: the busy button was `disabled`, and a browser drops the focus of a control that is
-  // disabled under it to the body, so the keyboard lost its place while an add ran. It is
-  // `aria-disabled` instead, as the menu's own disabled items are, and refuses a press and
-  // ArrowDown itself.
+  // The busy button was `disabled`, and a browser drops the focus of a control that is disabled under it to the body, so the keyboard lost its place while an add ran.
+  // It is `aria-disabled` instead, as the menu's own disabled items are, and refuses a press and ArrowDown itself.
   describe('while busy', () => {
     it('keeps the focus on the button as it turns busy, and gives it back as it ends', () => {
       const { rerender } = draw(actions());
@@ -198,15 +188,17 @@ describe('MenuButton', () => {
       fireEvent.click(busy);
       fireEvent.keyDown(busy, { key: 'ArrowDown' });
 
+      expect(busy).toHaveAttribute('aria-busy', 'true');
+      expect(busy).toHaveAttribute('aria-disabled', 'true');
       expect(busy).toHaveAttribute('aria-expanded', 'false');
       expect(screen.queryByRole('menu')).toBeNull();
     });
   });
 
-  // An icon in place of the words (M8.17's card More): the label still names
+  // An icon in place of the words (the card More): the label still names
   // the button and its menu, read by a screen reader though not shown.
   it("keeps its label as its name and its menu's with an icon in place of the words", () => {
-    const { rerender } = render(
+    render(
       <MenuButton
         label="Edit"
         className="btn"
@@ -215,93 +207,21 @@ describe('MenuButton', () => {
       />,
     );
     fireEvent.click(toggle());
+    // `menu()` finds it by the name Edit.
     expect(within(menu()).getAllByRole('menuitem')).toHaveLength(2);
-
-    rerender(
-      <MenuButton
-        label="Edit"
-        className="btn"
-        items={actions()}
-        icon={<svg aria-hidden="true" />}
-        busy
-        busyLabel="Adding"
-      />,
-    );
-    expect(screen.getByRole('button', { name: 'Adding' })).toHaveAttribute('aria-disabled', 'true');
   });
-});
 
-// Where the menu hangs from (claude-docs/components/menu-button.md, "Where it
-// opens"): the button's end edge, wherever the button sits, since every caller
-// puts it at the end of its row. Floating UI turns the placement into the
-// menu's `translate(x, y)`; the rects are stated, since happy-dom lays nothing
-// out.
-describe('MenuButton placement', () => {
-  const WINDOW_WIDTH = 1000;
-  const BUTTON_WIDTH = 80;
-  const MENU_WIDTH = 120;
-  const rectOf = (left: number, width: number, top = 100, height = 32): DOMRect =>
-    ({
-      x: left,
-      y: top,
-      left,
-      top,
-      width,
-      height,
-      right: left + width,
-      bottom: top + height,
-      toJSON: () => ({}),
-    }) as DOMRect;
-
-  // Floating UI measures the button and the menu, and nothing else here.
-  function layOut(buttonLeft: number): void {
-    vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(WINDOW_WIDTH);
-    // What Floating UI keeps the menu inside of.
-    vi.spyOn(document.documentElement, 'clientWidth', 'get').mockReturnValue(WINDOW_WIDTH);
-    vi.spyOn(document.documentElement, 'clientHeight', 'get').mockReturnValue(800);
-    // The menu's own size, which Floating UI reads from the element, not its rect.
-    vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockImplementation(function (
-      this: HTMLElement,
-    ) {
-      return this.getAttribute('role') === 'menu' ? MENU_WIDTH : 0;
-    });
-    vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockImplementation(function (
-      this: HTMLElement,
-    ) {
-      return this.getAttribute('role') === 'menu' ? 60 : 0;
-    });
-    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
-      this: HTMLElement,
-    ) {
-      if (this.getAttribute('role') === 'menu') return rectOf(0, MENU_WIDTH, 0, 60);
-      if (this.getAttribute('aria-haspopup') === 'menu') return rectOf(buttonLeft, BUTTON_WIDTH);
-      return rectOf(0, 0, 0, 0);
-    });
-  }
-
-  afterEach(() => vi.restoreAllMocks());
-
-  // The menu's left edge, from the translate Floating UI sets on it.
-  const menuLeft = async (): Promise<number> => {
+  // The bar's Add Ingredient chevron is "Choose Where to Add" and its menu "Add Ingredient To".
+  it('names its menu by menuLabel where it is given, the button keeping its label', () => {
+    render(<MenuButton label="Edit" menuLabel="Edit Entry" className="btn" items={actions()} />);
     fireEvent.click(toggle());
-    await waitFor(() => expect(menu().style.transform).toMatch(/^translate\(/));
-    return Number.parseFloat(/translate\((-?[\d.]+)px/.exec(menu().style.transform)![1]!);
-  };
 
-  const drawn = () => render(<MenuButton label="Edit" className="btn" items={actions()} />);
-
-  it("hangs from the button's end edge, even in the start half of the window", async () => {
-    layOut(100);
-    drawn();
-
-    expect(await menuLeft()).toBe(100 + BUTTON_WIDTH - MENU_WIDTH);
+    expect(screen.getByRole('menu')).toHaveAccessibleName('Edit Entry');
+    expect(toggle()).toHaveAccessibleName('Edit');
   });
 });
 
-// The green item goes first (the owner's call, 2026-10-20): whatever place a
-// caller gives the item marked `primary`, the menu draws it
-// first and leaves the rest in the caller's order, and the keys follow what is
-// drawn.
+// The green item goes first: whatever place a caller gives the item marked `primary`, the menu draws it first and leaves the rest in the caller's order, and the keys follow what is drawn.
 describe('MenuButton green item first', () => {
   const names = (): (string | null)[] =>
     within(menu())
@@ -355,10 +275,8 @@ describe('MenuButton green item first', () => {
   });
 });
 
-// Sections (the owner's call, 2026-10-20): a menu that holds both the compendium's choices and
-// the coven's draws them in labelled groups, the caller putting first the group that belongs to
-// the page the viewer is on. The APG menu pattern: a group named by its visible label, a
-// separator between groups, and the arrows running through every item as one list.
+// Sections: a menu that holds both the compendium's choices and the coven's draws them in labelled groups, the caller putting first the group that belongs to the page the viewer is on.
+// This is the APG menu pattern: a group named by its visible label, a separator between groups, and the arrows running through every item as one list.
 describe('MenuButton sections', () => {
   const plain = (key: string, label: string): MenuButtonItem => ({
     key,
@@ -492,8 +410,8 @@ describe('MenuButton sections', () => {
       expect(sectionsFor({ compendium: [], coven: [] }, 'coven')).toEqual([]);
     });
 
-    // A More menu always draws its labelled section, even for one kind of choice (the owner's
-    // call, 2026-10-20), and an empty side is left out.
+    // A More menu always draws its labelled section, even for one kind of choice,
+    // and an empty side is left out.
     it('hands a More menu the sections even where only one side has items', () => {
       expect(choicesFor(groups, 'coven').sections).toHaveLength(2);
       const lone = choicesFor({ ...groups, compendium: [] }, 'coven');

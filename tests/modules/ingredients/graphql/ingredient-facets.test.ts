@@ -5,18 +5,15 @@ import type { Session } from '@/lib/session';
 import { A, B, D, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertDeityLink, insertIngredient } from '../../../support/db/insert-ingredient';
-import { insertStock } from '../../../support/db/insert-stock';
+import { insertCupboardEntry } from '../../../support/db/insert-cupboard-entry';
 import { insertReference, insertReferenceLink } from '../../../support/db/insert-reference';
 import { type IngredientFixture, makeIngredient, makeVariant } from '../../../support/fixtures';
 import type { Overrides } from '../../../support/fixtures';
 import { run as runOperation } from '../../../support/graphql/run';
 
-// M12.3's two queries, `compendiumFacets` and `workspaceIngredientFacets`.
-// How each value is counted, and who may read which coven's counts, is
-// services/ingredient-facets.test.ts's and tests/db/repository/ingredient-facets.test.ts's;
-// this file holds the transport's half — the arguments reaching the service,
-// each value typed as its argument, and the one refusal on the wire. The
-// signed-out answers are tests/db/graphql-query-scopes.test.ts's.
+// The two queries, `compendiumFacets` and `workspaceIngredientFacets`.
+// How each value is counted, and who may read which coven's counts, is services/ingredient-facets.test.ts's and tests/db/repository/ingredient-facets.test.ts's.
+// Here: the arguments reaching the service, each value typed as its argument, and the one refusal on the wire. Signed-out answers are tests/db/graphql-query-scopes.test.ts's.
 
 interface FacetCount {
   value: string;
@@ -45,10 +42,7 @@ useTestDatabase((client) => {
 let hecate: string;
 let protection: string;
 
-/**
- * Two compendium entries, one toxic, linked to Hecate, filed in Protection
- * and fire, and both coming as a resin; and W's own entry in a form of its own.
- */
+/** Two compendium entries, one toxic, linked to Hecate, filed in Protection and fire, and both coming as a resin; and W's own entry in a form of its own. */
 beforeEach(async () => {
   await sql`truncate ingredients cascade`;
   [{ id: hecate }] = await sql`select id from deities where name = 'Hecate' and deleted_at is null`;
@@ -225,6 +219,16 @@ describe('workspaceIngredientFacets', () => {
       value: 'not_toxic',
       count: 1,
     });
+    // How Source, In Stock and Low Stock count is services/ingredient-facets.test.ts's.
+    // Covenwort is W's own and has no jar; W holds no compendium entry.
+    expect(result.data?.workspaceIngredientFacets).toMatchObject({
+      source: [
+        { value: 'local', count: 1 },
+        { value: 'compendium', count: 0 },
+      ],
+      inStock: 0,
+      lowStockOnly: 0,
+    });
 
     // W holds no resin, so nothing is left to count by toxicity.
     const narrowed = await workspaceFacets(asUser(B), { forms: ['resin'] });
@@ -252,52 +256,6 @@ describe('workspaceIngredientFacets', () => {
     expect(await forms({ inStock: false })).toEqual(covenform);
   });
 
-  it("answers the coven's Source and In Stock counts, zeros kept", async () => {
-    const result = await workspaceFacets(asUser(B));
-
-    expect(result.errors).toBeUndefined();
-    // Covenwort is W's own and has no jar; W holds no compendium entry.
-    expect(result.data?.workspaceIngredientFacets.source).toEqual([
-      { value: 'local', count: 1 },
-      { value: 'compendium', count: 0 },
-    ]);
-    expect(result.data?.workspaceIngredientFacets.inStock).toBe(0);
-
-    const [{ id: ingredientId }] = await sql`select id from ingredients where name = 'Covenwort'`;
-    const [{ id: variantId }] = await sql`
-      select id from ingredient_variants where ingredient_id = ${ingredientId as string}`;
-    await insertStock(
-      sql,
-      {
-        workspaceId: WORKSPACE_W_ID,
-        ingredientId: ingredientId as string,
-        variantId: variantId as string,
-        quantityOnHand: '3',
-      },
-      A.id,
-    );
-    // The compendium source empties the list, yet the counts leave their own setting out.
-    const chosen = await workspaceFacets(asUser(B), { source: 'compendium' });
-    expect(chosen.errors).toBeUndefined();
-    expect(chosen.data?.workspaceIngredientFacets.source).toEqual([
-      { value: 'local', count: 1 },
-      { value: 'compendium', count: 0 },
-    ]);
-    expect(chosen.data?.workspaceIngredientFacets.inStock).toBe(0);
-    const local = await workspaceFacets(asUser(B), { source: 'local' });
-    expect(local.data?.workspaceIngredientFacets.inStock).toBe(1);
-
-    // A jar of 3 with no threshold is not low; at 0 it is out, and the count follows.
-    expect(chosen.data?.workspaceIngredientFacets.lowStockOnly).toBe(0);
-    await sql`update inventory_items set quantity_on_hand = 0 where ingredient_id = ${ingredientId as string}`;
-    const spent = await workspaceFacets(asUser(B), { source: 'local' });
-    expect(spent.data?.workspaceIngredientFacets.lowStockOnly).toBe(1);
-    const narrowed = await workspaceFacets(asUser(B), { lowStockOnly: true });
-    expect(narrowed.data?.workspaceIngredientFacets.forms).toEqual([
-      { value: 'Covenform', count: 1 },
-    ]);
-  });
-
   it('is FORBIDDEN to a caller naming by id a coven they are not in', async () => {
     // Why D could have read them: W's counts hold a value for its member.
     const own = await workspaceFacets(asUser(B));
@@ -308,5 +266,53 @@ describe('workspaceIngredientFacets', () => {
     expect(result.data).toBeNull();
     expect(result.errors).toHaveLength(1);
     expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+  });
+});
+
+describe('compendiumFacets covenIds', () => {
+  const heldToxic = async (session: Session | null) => {
+    const result = await runOperation<{ compendiumFacets: Facets }>(
+      session,
+      `query ($covenIds: [ID!]) { compendiumFacets(covenIds: $covenIds) { toxic { value count } } }`,
+      { covenIds: [WORKSPACE_W_ID] },
+    );
+    expect(result.errors).toBeUndefined();
+    return result.data?.compendiumFacets.toxic;
+  };
+
+  beforeEach(async () => {
+    const [{ id }] = await sql`select id from ingredients where name = 'Betawort'`;
+    await insertCupboardEntry(
+      sql,
+      { workspaceId: WORKSPACE_W_ID, ingredientId: id as string },
+      A.id,
+    );
+  });
+
+  it("counts only the entries the viewer's picked coven holds", async () => {
+    expect(await heldToxic(asUser(B))).toEqual([
+      { value: 'toxic', count: 0 },
+      { value: 'not_toxic', count: 1 },
+    ]);
+  });
+
+  describe('with covensNot', () => {
+    const notHeldToxic = async (session: Session | null, covenIds?: string[]) => {
+      const result = await runOperation<{ compendiumFacets: Facets }>(
+        session,
+        `query ($covenIds: [ID!]) { compendiumFacets(covenIds: $covenIds, covensNot: true) { toxic { value count } } }`,
+        { covenIds },
+      );
+      expect(result.errors).toBeUndefined();
+      return result.data?.compendiumFacets.toxic;
+    };
+    const rest = [
+      { value: 'toxic', count: 1 },
+      { value: 'not_toxic', count: 0 },
+    ];
+
+    it('counts only the entries the picked coven does not hold', async () => {
+      expect(await notHeldToxic(asUser(B), [WORKSPACE_W_ID])).toEqual(rest);
+    });
   });
 });

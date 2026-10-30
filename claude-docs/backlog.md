@@ -58,6 +58,16 @@
 - [ ] _**Dark Magic**_
 - [ ] In spell steps: allow the user to link to a specific ingredient in the spell in the notes but that drops to plain text if they remove the ingredient and displays a warning to update on the step.
 - [ ] Inline editing on the ingredient entry page: an Edit beside each item opens that item for editing where it sits, rather than the whole form in a modal (M8.19's page).
+- [ ] Reading font (the owner's name for it: Dyslexic mode): a per-user
+      account setting that sets all text in Lexend. Researched 2026-10-23:
+      Lexend's only published evidence is its makers' own unreviewed test of
+      20 children, and fonts made for dyslexia showed no gain once letter
+      spacing was matched (Wery & Diliberto 2017; Marinus et al. 2016), so
+      the research recommends the label "Reading font" and offering wider
+      spacing as a separate setting. Store it on the account with a cookie
+      copy so the server renders the font on first paint, and load Lexend
+      only for those who choose it. No CSS media query exists for this
+      preference.
 
 ### V3
 

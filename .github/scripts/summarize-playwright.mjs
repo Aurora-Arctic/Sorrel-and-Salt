@@ -67,9 +67,5 @@ if (failures.length > 0) {
   details = lines.join('\n');
 }
 
-for (const block of [coverage?.table]) {
-  if (block) details = details ? `${details}\n\n${block}` : block;
-}
-
 setOutput('summary', summary);
 setOutput('details', details);

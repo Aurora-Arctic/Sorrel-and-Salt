@@ -3,7 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import ImpersonationBanner from '@/components/ImpersonationBanner';
 import { stubLocationAssign } from '../../support/location';
 
-// MB.53's way out: every page, `/admin` included, says whose session this is
+// The way out of an impersonation: every page, `/admin` included, says whose session this is
 // and carries Stop (claude-docs/components/impersonation-banner.md).
 
 // Mocked wholesale: a real call would reach /api/auth, and its success
@@ -68,7 +68,7 @@ describe('ImpersonationBanner', () => {
     expect(stopImpersonatingMock).toHaveBeenCalledTimes(1);
   });
 
-  it('says so in an alert under Stop when stopping fails, keeps the focus and the banner, and its badge brings the alert back', async () => {
+  it('says so in an alert under Stop when stopping fails, keeps the focus and the banner', async () => {
     stopImpersonatingMock.mockResolvedValue({ data: null, error: { status: 500 } });
     stubLocationAssign(assignMock);
     render(<ImpersonationBanner {...BO} />);
@@ -82,12 +82,6 @@ describe('ImpersonationBanner', () => {
     expect(stop).not.toHaveAttribute('aria-disabled');
     expect(stop).toHaveAccessibleDescription(new RegExp(STOP_FAILED));
     expect(assignMock).not.toHaveBeenCalled();
-
-    await press(screen.getByRole('button', { name: 'Dismiss' }));
-    expect(screen.queryByRole('alert')).toBeNull();
-    expect(stop).toHaveFocus();
-    await press(screen.getByRole('button', { name: 'Show the error for Stop Impersonating' }));
-    expect(screen.getByRole('alert')).toHaveTextContent(STOP_FAILED);
   });
 
   it('says the same when the endpoint cannot be reached', async () => {

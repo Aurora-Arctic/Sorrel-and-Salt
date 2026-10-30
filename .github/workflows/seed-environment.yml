@@ -1,0 +1,193 @@
+name: Seed an environment
+
+# A site admin seeds staging or production by hand, without a deploy (M14.26):
+# the same seven reference seeds migrate.yml runs after migrating, in the same
+# order, against the environment's own database. Started from the Actions tab
+# only. claude-docs/ci/deploy.md, "Seeding an environment by hand" is the
+# walkthrough.
+#
+# One command, db:seed:reference, runs all seven in a single transaction, dry
+# run or not, so each seed reads what the ones before it wrote and a real run
+# lands whole or not at all. Dry run is on by default: the seven run in full and
+# the transaction is rolled back once, so the summary shows what a real run
+# would do and nothing is written. Force is off by default: it passes `--force` to the compendium seed,
+# which then updates every marked entry that refusals 1 to 4 would refuse, and
+# clears the curator mark on each one it overwrites. It never lifts an
+# identity change or a form a coven holds (claude-docs/db/compendium-seed/README.md,
+# "Refusals").
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Which database to seed. `preview` is staging.
+        required: true
+        type: choice
+        options:
+          - preview
+          - production
+      dry-run:
+        description: Decide and report, then roll back. Nothing is written.
+        required: false
+        default: true
+        type: boolean
+      force:
+        description: >-
+          Pass --force to the compendium seed: overwrite entries a curator
+          reviewed or someone edited on the site, and entries with no baseline.
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+jobs:
+  seed:
+    runs-on: ubuntu-26.04
+    # The same lock migrate.yml's caller takes in deploy.yml: concurrency
+    # groups are repository-wide, so a run started during a migration waits
+    # for it, and a deploy started during this run waits for this. Never
+    # cancelled: a run that has started finishes or rolls back whole.
+    concurrency:
+      group: migrate
+      cancel-in-progress: false
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      # The branch each environment deploys from, so the seed files are the
+      # ones that environment runs, whichever branch the run was started from.
+      GIT_BRANCH: ${{ inputs.environment == 'production' && 'main' || 'staging' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ env.GIT_BRANCH }}
+
+      - name: Check secrets
+        id: guard
+        uses: ./.github/actions/vercel-secrets-guard
+        with:
+          token: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
+          org-id: ${{ secrets.VERCEL_ORG_ID }}
+          project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          skipping: seed
+
+      - name: Set up Node
+        if: steps.guard.outputs.enabled == 'true'
+        uses: actions/setup-node@v7
+        with:
+          # Must match Docker/Dockerfile.node, deploy.yml and migrate.yml.
+          node-version: 26.6.0
+          cache: npm
+
+      - name: Install dependencies
+        if: steps.guard.outputs.enabled == 'true'
+        run: npm ci
+
+      - name: Install Vercel CLI
+        if: steps.guard.outputs.enabled == 'true'
+        run: npm install --global vercel@59
+
+      # As migrate.yml: `--git-branch` on preview only, since production
+      # rejects the flag (MB.45).
+      - name: Pull Vercel environment (preview)
+        if: steps.guard.outputs.enabled == 'true' && inputs.environment == 'preview'
+        run: vercel pull --yes --environment=preview --git-branch="$GIT_BRANCH" --token="$VERCEL_DEPLOY_TOKEN"
+        env:
+          VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
+
+      - name: Pull Vercel environment (production)
+        if: steps.guard.outputs.enabled == 'true' && inputs.environment == 'production'
+        run: vercel pull --yes --environment=production --token="$VERCEL_DEPLOY_TOKEN"
+        env:
+          VERCEL_DEPLOY_TOKEN: ${{ secrets.VERCEL_DEPLOY_TOKEN }}
+
+      - name: Assert the pulled environment
+        if: steps.guard.outputs.enabled == 'true'
+        run: |
+          node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/assert-pulled-env.ts \
+            --file ".vercel/.env.${{ inputs.environment }}.local"
+
+      # The two long-lived targets only, each from its own secret, as
+      # migrate.yml resolves them: the two must agree, or one database is
+      # migrated and another seeded.
+      - name: Resolve DATABASE_URL
+        if: steps.guard.outputs.enabled == 'true'
+        env:
+          DATABASE_URL_PRODUCTION: ${{ secrets.DATABASE_URL_PRODUCTION }}
+          DATABASE_URL_STAGING: ${{ secrets.DATABASE_URL_STAGING }}
+          ENVIRONMENT: ${{ inputs.environment }}
+          RESOLVED_ENV_FILE: ${{ runner.temp }}/resolved.env
+        run: |
+          if [ "$ENVIRONMENT" = "production" ]; then
+            db_url="$DATABASE_URL_PRODUCTION"
+            source="the DATABASE_URL_PRODUCTION secret"
+          else
+            db_url="$DATABASE_URL_STAGING"
+            source="the DATABASE_URL_STAGING secret"
+          fi
+
+          if [ -z "$db_url" ]; then
+            echo "::error::No DATABASE_URL for $ENVIRONMENT: $source is not set."
+            exit 1
+          fi
+
+          echo "::add-mask::$db_url"
+          echo "DATABASE_URL=$db_url" >> "$GITHUB_ENV"
+          (umask 077 && printf 'DATABASE_URL="%s"\n' "$db_url" > "$RESOLVED_ENV_FILE")
+
+          # The source, never the value.
+          echo "Resolved DATABASE_URL from $source"
+
+      - name: Probe the database
+        if: steps.guard.outputs.enabled == 'true'
+        env:
+          RESOLVED_ENV_FILE: ${{ runner.temp }}/resolved.env
+        run: |
+          node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/probe-database.ts \
+            --file "$RESOLVED_ENV_FILE"
+
+      # migrate.yml's order, in one transaction (src/db/seed/reference-data.ts).
+      # `--adopt` only lists the ADOPTED lines; the seed adopts a baseline
+      # either way. A refused compendium entry exits 1.
+      - name: Seed the reference data
+        id: seed
+        if: steps.guard.outputs.enabled == 'true'
+        env:
+          DRY_RUN: ${{ inputs.dry-run && '--dry-run' || '' }}
+          FORCE: ${{ inputs.force && '--force' || '' }}
+        run: |
+          set -o pipefail
+          npm run db:seed:reference -- --adopt $DRY_RUN $FORCE 2>&1 | tee seed.log
+
+      # Every UPDATED, REFUSED, ADOPTED, RETIRED and PENDING line, each
+      # entry's `differs:` line, and the totals, whatever the outcome: the
+      # job-summary action below tails the log only on failure.
+      - name: List what the seed did
+        if: always() && steps.guard.outputs.enabled == 'true'
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
+          DRY_RUN: ${{ inputs.dry-run && 'yes' || 'no' }}
+          FORCE: ${{ inputs.force && 'yes' || 'no' }}
+        run: |
+          {
+            echo "## Seed $ENVIRONMENT"
+            echo
+            echo "- Dry run: **$DRY_RUN**"
+            echo "- Forced: **$FORCE**"
+            echo "- Branch: \`$GIT_BRANCH\`"
+            echo
+            echo '```text'
+            grep -E '^(UPDATED|REFUSED|ADOPTED|RETIRED|PENDING|SKIPPED) |^  differs:|^inserted ' seed.log \
+              || echo 'The compendium seed listed nothing: it failed first, or wrote no line.'
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Write job summary
+        if: always() && steps.guard.outputs.enabled == 'true'
+        uses: ./.github/actions/job-summary
+        with:
+          check-name: Seed ${{ inputs.environment }}${{ inputs.dry-run && ' (dry run)' || '' }}${{ inputs.force && ' (forced)' || '' }}
+          outcome: ${{ steps.seed.outcome }}
+          log-file: seed.log
+          summary: ${{ steps.seed.outcome == 'success' && (inputs.dry-run && 'Decided and rolled back; nothing written' || 'Reference data and the compendium seeded') || 'Seed failed' }}

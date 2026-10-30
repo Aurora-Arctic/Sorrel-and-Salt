@@ -87,13 +87,15 @@ Every gap is a `space()` token. Before and after (px), changed 2026-10-18:
 | Rule to the first jar line              | 8      | 12    |
 | Last jar line to the card's bottom edge | 24     | 32    |
 
-**The whole card is the link.** The name's one `<a>` stretches an empty `::after`
+#### The whole card is the link
+
+The name's one `<a>` stretches an empty `::after`
 over the `article` (`position: relative`), the stretched-link pattern. The card
 is not wrapped in an `<a>`: a screen reader would read the whole card as the
 link's name, and a link cannot hold the Low badge's button. So the accessible name
 stays the ingredient's name and the card has exactly one link. The Low badge's tip
 anchor sits above the overlay (`z-index: 1`) and keeps its own hover, focus and
-click. The category chips pass a click through the same way (the owner, 2026-10-21): the chip row's `list-reset` makes each `li` relative, so it painted above the overlay, and each plain chip's `li` now has `pointer-events: none`. The +N item is left out, so its button keeps its own press, hover and focus and does not open the ingredient. A plain chip is text with no tip, so nothing is lost, and it was never a tab stop. The forms line has `pointer-events: none`, so a click on it reaches the overlay: its `dotted-row` mixin (`clip-path`, relative items) paints above the overlay, and raising the overlay instead would cover the badge, marks and actions. The jar lines need no such rule: nothing in them is positioned above the overlay but the badge. The name is `$text-primary` with no underline, at rest or on hover; the card shows the
+click. The category chips pass a click through the same way (the owner, 2026-10-21): the chip row's `list-reset` makes each `li` relative, so it painted above the overlay, and each plain chip's `li` now has `pointer-events: none`. The +N item is left out, so its button keeps its own press, hover and focus and does not open the ingredient. A plain chip is text with no tip, so nothing is lost, and it was never a tab stop. The forms line has `pointer-events: none`, so a click on it reaches the overlay: its `dotted-row` mixin (`clip-path`, relative items) paints above the overlay, and raising the overlay instead would cover the badge, marks and actions. The jar lines, the New and Updated mark and the foot's actions row pass a click through too (MB.272): the jar list's reset made each line's `li` relative, the mark's words and icon are relative for their optical nudge, and the actions row and its start group are as wide as the card, so each painted above the overlay and a press on a jar's words, the mark or the gap between the foot's buttons went nowhere. `.specimen__stock` and `.recency-mark` now have `pointer-events: none`, and the stock badge's tip anchor takes the pointer back and stays raised. The actions row stays raised (`z-index: 1`) but has `pointer-events: none`, and each of its children, and each child of its start group, takes the pointer back: each child is a control, or the wrapper its tip or menu opens in. What still takes its own press, and never opens the entry: the +N button, the Low and Out of Stock badges, the tipped marks (Retired, Annotated), the last-edit line, and every button and link in the foot (Quick Look, the plus or check, Edit Stock, Edit or Annotate, the dots). The cost of the overlay: text on the card cannot be selected by dragging, since a drag that starts anywhere off a control starts on the link. The name is `$text-primary` with no underline, at rest or on hover; a card whose name links somewhere shows the
 pointer, and the focus ring is drawn on the overlay,
 round the card.
 
@@ -124,7 +126,7 @@ the `(name, id)` keyset the list pages on
 
 Hyphenation is the browser's dictionary alone (owner's ruling, 2026-10-18): `hyphens: auto` with `overflow-wrap: anywhere` as the fallback where the dictionary has no word. No library and no soft hyphens.
 
-Foundations (`.ladle/foundations.tsx`, "An Ingredient Card") renders this component itself, from invented sample data and the shared `Jars` story fixture (which draws [`JarLines`](jar-lines.md)), so its look cannot drift from the card's. The `.specimen*` classes are still the card's styling source, in `_primitives.scss`.
+Foundations (`.storybook/foundations.tsx`, "An Ingredient Card") renders this component itself, from invented sample data and the shared `Jars` story fixture (which draws [`JarLines`](jar-lines.md)), so its look cannot drift from the card's. The `.specimen*` classes are still the card's styling source, in `_primitives.scss`.
 
 ## Styling
 
@@ -132,6 +134,12 @@ Tokens only, as signed off in MB.120 (2026-10-20). `IngredientCard/index.scss` h
 slot it hangs in and the drawer that opens under it; the shared `.specimen*` primitives it builds on
 are in `_primitives.scss`. The compact look is the `[data-density='compact']` block of the same file and `_compact.scss`, keyed off the
 list's `data-density` ([`ingredient-card-list.md`](ingredient-card-list.md)).
+
+What SpellCard shares with this card is written once, in `_specimen-card.scss` beside it: `specimen-card()` (the
+name's link stretched over the card through `card-link()`, the pointer on a card whose name links, the title block,
+the badge row under the name, the medium badge size and the plain chips passing a click through) and
+`specimen-card-compact()` (the compact padding, gap, title step, badges and chips). Each card passes its own class
+names; the corner, formal name, forms line and jar lines stay in this card's own files.
 
 The drawer's measurements are tokens, not pixel literals: its inset from the slot
 (`$drawer-inset`), its side walls (`$drawer-wall`), its travel (`$drawer-travel`) and its slot shadow
@@ -144,19 +152,25 @@ The computed styles were checked identical to the pixel values the tokens replac
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/IngredientCard/index.stories.tsx), under `Surfaces / Ingredient Card`:
-the kinds (`Compendium`, `OwnWithJars`, `InCupboard`, `Retired`), the safety states (`Caution`,
-`RetiredCaution`, `NewWithoutSafety`), the stress cases for the name (`LongName`, `OneLongWord`,
-`MineralName`, `NoFormalName`, `NewLongName`), the other marks and chips (`ManyForms`,
-`ManyCategories`), the actions (`WithActions`, `WithStartActions`), the compact look (`Compact`,
-`CompactLongName`) and the recency marks (`NewEntry`, `UpdatedEntry`).
+[`index.stories.tsx`](../../src/components/IngredientCard/index.stories.tsx), under `Ingredients / Ingredient Card`:
+one story, `States`, a grid of the kinds (Own With Jars, In Cupboard, Retired, Compendium), the safety states (Caution, New Without Safety), the stress cases for the name (Long Name, which is also retired, cautioned and
+Updated; One Long Word, Mineral Name, No Formal Name), the other marks and chips (Many Forms, No Forms Line,
+Many Categories, Last Edited), the actions (With Actions, With Start Actions), the compact look (Compact)
+and the recency marks (New And Updated).
 
 ## Testing
 
 `tests/components/IngredientCard/index.test.tsx`: the card's name and link, the category chips, safety,
 the cupboard marks, the jar-line slot, the actions, the navigation (the whole card is one target for the
-name link) and the recency marks. Layout and the drawer's look are checked in Ladle and in the page
-specs that place the card, not in jsdom, which has no layout.
+name link) and the recency marks. Layout and the drawer's look are checked in Storybook and in the page
+specs that place the card, not in jsdom, which has no layout. For the same reason, whether a press
+reaches the overlay is proved in a browser: `tests/e2e/card-click.spec.ts` (MB.272) presses each
+card on the formal name, its padding, the gap between the foot's controls, the New mark (on
+`/compendium`) and a jar line's words (on a coven's Ingredients page), checking first that the
+point is off every link and button, and expects the entry; it presses the +N, Quick Look, the plus,
+Edit Stock and the Low badge and expects each to keep its own action. It also checks the card has one
+link to the entry, named by the ingredient's name, the tab order, and that every control but the name
+is at least 24 by 24, the last-edit line's button included ([`last-edit.md`](last-edit.md)).
 
 ## Accessibility
 
@@ -167,3 +181,19 @@ keyboard walk in its Playwright spec, since the card has no page of its own.
 ### A long name
 
 The top row (`.specimen__top`) wraps, in the primitive, so it holds wherever the primitive is used. On the card it holds the name block (`.ingredient-card__heading`: the name, the formal name and the row of other marks) and the corner (New or Updated, then the safety badge). **The corner stays beside the name until the name's first word no longer fits beside it, and only then wraps below the block, at the left** (the owner's call, 2026-10-20). A flex row wraps on its items' widths, so the block's is made its first word's: `flex: 1 1 0` from a zero basis, with the default `min-width: auto`, whose content-based minimum is the block's min-content width. The first word is its own span (`.ingredient-card__first`, split from the label in `index.tsx`), with `overflow-wrap: break-word` and `hyphens: manual`, so it counts whole; every other word keeps `overflow-wrap: anywhere`, which counts it as one letter wide; and the row under the formal name has `inline-size: 0; min-inline-size: 100%`, so its badges count as nothing. A plain `flex-wrap` keys on the longest word, and a `flex-basis: auto` on the whole name: before this change the badges dropped below any name that wrapped. `max-width: 100%` lets a first word wider than the card still break rather than spill. Measured in Chromium at 390px: "Testwort Longer Nameicanicusmus" wraps onto two lines with the badge beside the first, and a single 29-letter word drops the badge below the row of other marks. The pending dot (`LinkHint`) hangs into the gap (`margin-inline-end: -0.6em`) so it never wraps onto a blank line of its own under a name that just fits; a no-break space did not stop Chromium breaking before it. The row of other marks and the chips: the forms line sits 16px from the chips and from the jar rule (`$ingredient-card-forms-air`, `space(1)`, plus the 12px gap). A single long word breaks rather than overflows: `overflow-wrap: anywhere` on the block, and `hyphens: auto` on the name heading bar its first word, so a break shows a hyphen where the browser's dictionary can place one (the page's `lang` is `en`). Chromium, with no dictionary hit for an invented word such as "Nameicanicusmus", falls back to a plain break with no hyphen. The italic formal name gets no `hyphens`: binomials are Latin, and English hyphenation would split them oddly. No soft hyphens are ever inserted into the text.
+
+## What the card is for
+
+One ingredient in a list, for the public compendium and the coven's Ingredients page alike. Its name is the card's link, with a Quick Look eye at the foot's left on the coven's list. Beneath the name sit the formal name and the forms, which tell apart two entries that share a label, then the marks, and a slot for jar lines. The card is presentational: it takes props only and works out nothing from the data. The marks and the stock badge are each the project's one presentation, used as they are and never restyled here.
+
+New or Updated sits just left of the safety badge in the card's top-right corner, or in the corner itself when there is no safety badge. `EntryMarks` draws it before the badges.
+
+## The name and safety badge row
+
+The name block and the safety badge share the top row until the name's first word no longer fits beside the badge. Only then does the badge wrap below. A flex row wraps on its items' narrowest widths, so the name block's narrowest width is made its first word's. It starts from a zero basis and grows into the spare room, and its content-based minimum (`min-width: auto`) is its min-content width. Every other word may break anywhere (`overflow-wrap: anywhere`), so it counts as no wider than a letter. The first word breaks only when it overflows (`break-word`) and never by the dictionary (`hyphens: manual`), so it counts whole. The badge row below counts as nothing. This keys the wrap on the first word, not on the longest word (which `flex-wrap` alone keys on) and not on the whole name (which `flex-basis: auto` keys on). `max-width` lets a first word wider than the card still break rather than spill. All of it is Baseline Widely Available.
+
+## Compact density
+
+The compact look is a mixin in `_compact.scss`, so a page can switch to it from its own selector. The card takes no density prop. The look must be switchable before React runs: a pre-paint script sets `data-card-density="regular"` on `<html>` from the stored choice, which the `:not()` on the selectors honours, and a prop would fix the look at render and mismatch on hydration. `index.scss` applies the mixin under `[data-density='compact']`, which `IngredientCardList` sets. Its padding, title, badge and chip rules are `specimen-card-compact()` from `_specimen-card.scss`, shared with SpellCard, and are scoped to `.ingredient-card`, so another specimen inside a compact list (a Quick Look's badges) keeps its own size. Every rule is one class deeper than the one it overrides, so it wins wherever it is included.
+
+What stays in compact: the content, the body order, the hover lift, and every target at 24px or more (the tip badges keep their height and only their sides tighten). Text goes one step down the type scale, to overline at the smallest.

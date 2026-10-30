@@ -1,21 +1,21 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
 import type { CompendiumFacetCounts } from '../CompendiumList/types';
 import FacetPanel, { WIDE } from '.';
 import type { FacetPanelFilter } from './types';
 
-// Render-only; behaviour is asserted in tests/components/FacetPanel. Invented values (M12.4).
-// A change is held, not applied (the list's page holds it until Apply Filters or a close),
-// and marks the chips "loading" for a moment, as the live counts on their way do. The
-// counts themselves do not follow the choices; they are fixed here. A value counting
-// nothing is left out of its list unless chosen. Narrow the preview below the tablet
-// width for the modal sheet.
-export default {
-  title: 'Admin / Facet Panel',
-};
+// Render-only; behaviour is asserted in tests/components/FacetPanel. A change is held
+// until Apply Filters or a close, and marks the chips "loading" briefly. Counts are
+// fixed. Narrow the preview below the tablet width for the modal sheet.
+const meta = {
+  title: 'Forms / Facet Panel',
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<{ state?: ReactNode }>;
 
-const WARDING = { id: 'g1', name: 'Protective', colorDark: '#2f6b4f', colorLight: '#b7dfc9' };
-const MENDING = { id: 'g2', name: 'Restorative', colorDark: '#7a4b8f', colorLight: '#dcc6e8' };
+const WARDING = { id: 'g1', name: 'Protective', colorDark: '#50a58e', colorLight: '#1d755d' };
+const MENDING = { id: 'g2', name: 'Restorative', colorDark: '#b98ac9', colorLight: '#7a4b8f' };
 
 const FACETS: CompendiumFacetCounts = {
   forms: [
@@ -57,7 +57,7 @@ const FACETS: CompendiumFacetCounts = {
   withoutForms: 4,
 };
 
-// The coven's counts: Source's two values, one at zero as Toxic's may be, the In Stock count and the Low Stock Only count.
+// The coven's counts: Source's two values (one at zero), In Stock and Low Stock Only.
 const COVEN_FACETS: CompendiumFacetCounts = {
   ...FACETS,
   source: [
@@ -87,6 +87,7 @@ function Panel({
   facets = FACETS,
   open = true,
   menu,
+  covens,
 }: {
   start?: FacetPanelFilter;
   admin?: boolean;
@@ -95,6 +96,8 @@ function Panel({
   open?: boolean;
   /** The chip whose menu is opened once the panel is, so the menu is seen without a click. */
   menu?: string;
+  /** The viewer's covens, for the In My Covens field. */
+  covens?: readonly { id: string; name: string }[];
 }) {
   const [filter, setFilter] = useState(start);
   const [loading, setLoading] = useState(false);
@@ -124,6 +127,7 @@ function Panel({
           facets={facets}
           filter={filter}
           admin={admin}
+          covens={covens}
           loading={loading}
           clearHref="#clear"
           onClear={() => setFilter(NONE)}
@@ -141,15 +145,15 @@ function Panel({
 }
 
 // Nothing chosen: Filters alone, no Clear All.
-export const Empty: Story = () => <Panel open={false} />;
+const defaultNode = <Panel open={false} />;
 
 // The public compendium's panel: Categories with Match at its right, Forms with Toxic, and no
 // Source, In Stock or No Refs. Open on desktop.
-export const Public: Story = () => <Panel />;
+const publicNode = <Panel />;
 
 // Chosen values: the count on the button (every chosen value, so seven here; Match counts
 // none), Clear All beside it, Match with its hint for two categories.
-export const Chosen: Story = () => (
+const chosenNode = (
   <Panel
     start={{
       ...NONE,
@@ -163,17 +167,17 @@ export const Chosen: Story = () => (
 );
 
 // Two forms and Toxic: the Filters button reads 3, one for each chosen value.
-export const FormsAndToxic: Story = () => (
+const formsAndToxicNode = (
   <Panel start={{ ...NONE, forms: ['test-oil', 'test-resin'], toxic: 'toxic' }} />
 );
 
 // Two categories alone: Match appears, with its hint, and adds nothing to the Filters count.
-export const MatchShown: Story = () => (
+const matchShownNode = (
   <Panel start={{ ...NONE, categories: ['warding', 'mending'], categoryMode: 'any' }} />
 );
 
 // A facet whose every value counts nothing keeps its field, with an empty list.
-export const AllZeroFacet: Story = () => (
+const allZeroFacetNode = (
   <Panel
     facets={{
       ...FACETS,
@@ -184,11 +188,11 @@ export const AllZeroFacet: Story = () => (
 
 // Fewer than two categories: the Match chip stays, on All, disabled and dashed, its hint saying
 // when it applies.
-export const MatchStuck: Story = () => <Panel start={{ ...NONE, categories: ['warding'] }} />;
+const matchStuckNode = <Panel start={{ ...NONE, categories: ['warding'] }} />;
 
 // Either Toxic value counting nothing: every matching entry shares one toxicity, so the
 // chip rests on Any, is disabled, and says why in its hint.
-export const ToxicStuck: Story = () => (
+const toxicStuckNode = (
   <Panel
     start={{ ...NONE, toxic: 'toxic' }}
     facets={{
@@ -203,7 +207,7 @@ export const ToxicStuck: Story = () => (
 
 // Either source counting nothing: every matching entry comes from the other, so the chip rests
 // on All, is disabled, and says why when the pointer or focus is on it.
-export const SourceStuck: Story = () => (
+const sourceStuckNode = (
   <Panel
     facets={{
       ...COVEN_FACETS,
@@ -217,11 +221,11 @@ export const SourceStuck: Story = () => (
 );
 
 // The admin list also has the No Refs switch, after Toxic on the Forms row.
-export const Admin: Story = () => <Panel admin start={{ ...NONE, withoutReferences: true }} />;
+const adminNode = <Panel admin start={{ ...NONE, withoutReferences: true }} />;
 
-// The coven's list also has a Source chip, the In Stock switch and the Low Stock Only switch, on the Forms row beside Toxic.
-// Their values count on the Filters button, so the three chosen here make 3.
-export const Coven: Story = () => (
+// The coven's list adds a Source chip and the In Stock and Low Stock Only
+// switches on the Forms row. Their values count on the Filters button (3 here).
+const covenNode = (
   <Panel
     facets={COVEN_FACETS}
     start={{ ...NONE, source: 'local', inStock: true, lowStockOnly: true }}
@@ -229,12 +233,12 @@ export const Coven: Story = () => (
 );
 
 // The coven's controls with nothing chosen: Source rests on All and the switch is off.
-export const CovenEmpty: Story = () => (
+const covenEmptyNode = (
   <Panel facets={COVEN_FACETS} start={{ ...NONE, source: '', inStock: false }} />
 );
 
 // The Match chip open, two categories chosen: the menu of radios fades in under the chip.
-export const MatchMenu: Story = () => (
+const matchMenuNode = (
   <Panel
     menu="Match"
     start={{ ...NONE, categories: ['warding', 'mending'], categoryMode: 'any' }}
@@ -242,7 +246,7 @@ export const MatchMenu: Story = () => (
 );
 
 // The coven's Source chip open: Local and Compendium with their counts, no brackets.
-export const SourceMenu: Story = () => (
+const sourceMenuNode = (
   <Panel
     menu="Source"
     facets={COVEN_FACETS}
@@ -251,4 +255,57 @@ export const SourceMenu: Story = () => (
 );
 
 // The admin's Toxic chip open, with No Refs on the same row.
-export const ToxicMenu: Story = () => <Panel menu="Toxic" admin start={NONE} />;
+const toxicMenuNode = <Panel menu="Toxic" admin start={NONE} />;
+
+// A signed-in viewer in two covens: In My Covens beside Forms and Toxic, each half the line,
+// one coven picked. The covens carry no counts.
+const inMyCovensNode = (
+  <Panel
+    covens={[
+      { id: 'coven-one', name: 'Test Coven One' },
+      { id: 'coven-two', name: 'Test Coven Two' },
+    ]}
+    start={{ ...NONE, covens: ['coven-one'] }}
+  />
+);
+
+// The admin's Reviewed strip, on Needs Review: Reviewed and Needs Review with their counts.
+const adminReviewedNode = (
+  <Panel
+    admin
+    facets={{
+      ...FACETS,
+      reviewed: [
+        { value: 'reviewed', label: 'Reviewed', count: 15 },
+        { value: 'needs_review', label: 'Needs Review', count: 10 },
+      ],
+    }}
+    start={{ ...NONE, reviewed: 'needs_review' }}
+  />
+);
+
+const STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  Public: publicNode,
+  Chosen: chosenNode,
+  'Forms And Toxic': formsAndToxicNode,
+  'Match Shown': matchShownNode,
+  'All Zero Facet': allZeroFacetNode,
+  'Match Stuck': matchStuckNode,
+  'Toxic Stuck': toxicStuckNode,
+  'Source Stuck': sourceStuckNode,
+  Admin: adminNode,
+  Coven: covenNode,
+  'Coven Empty': covenEmptyNode,
+  'Match Menu': matchMenuNode,
+  'Source Menu': sourceMenuNode,
+  'Toxic Menu': toxicMenuNode,
+  'In My Covens': inMyCovensNode,
+  'Admin Reviewed': adminReviewedNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div>{state}</div>,
+};

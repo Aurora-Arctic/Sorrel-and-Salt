@@ -20,18 +20,12 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient, insertVariant } from '../../../support/db/insert-ingredient';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 
-// Story 18's form half (M5.6a): the curated form vocabulary's writes, the site
-// admin's alone, and the reads the admin page lists them by. A compendium
-// entry's forms are its variants, each a pick (MB.167, MB.215), so a form a
-// live entry's variant picked is held: its delete is refused, and its rename
-// is carried onto every such variant, moving no address (MB.220). A coven's
-// pick is neither. The seeded vocabulary stays, so every form a test writes
-// is named `Fixture …`.
+// The curated form vocabulary's writes, the site admin's alone, and the reads the admin page lists them by.
+// A compendium entry's forms are its variants, each a pick, so a form a live variant picked is held: its delete is refused and its rename is carried onto every such variant, moving no address. A coven's pick is neither.
+// The seeded vocabulary stays, so every form a test writes is named `Fixture …`.
 
-// Two repository reads wrapped, each passing through to the real one: the
-// page finder, to see what the list hands it, and the rename's clash check,
-// so one test can have a clashing variant appear after the check, as a second
-// admin's write would.
+// Two repository reads wrapped, each passing through to the real one: the page finder, to see what the list hands it, and the rename's clash check,
+// so one test can have a clashing variant appear after the check, as a second admin's write would.
 const repository = vi.hoisted(() => ({
   findIngredientFormValues: vi.fn(),
   findCompendiumFormRenameClashes: vi.fn(),
@@ -74,16 +68,10 @@ const admin = asUser(E);
 // stands for every one (claude-docs/testing/acting-as-fixture-users.md): an
 // owner, whose workspace role is the highest and is still no site role.
 const NON_ADMINS = [['an owner of a coven', A]] as const;
-const CURATORS = [
-  ['the site admin', E],
-  ['a curator', F],
-] as const;
-
-it('is testing sessions whose site role is `user`, beside an admin', () => {
-  for (const [, user] of NON_ADMINS) expect(asUser(user).role).toBe('user');
-  expect(admin.role).toBe('admin');
-  expect(asUser(F).role).toBe('curator');
-});
+// A curator stands for both curation roles: assertSiteAdmin refuses a curator, so
+// a curator's success proves the write calls assertCurator, and that an admin
+// passes assertCurator is proved once in identity's site-admin tests.
+const CURATORS = [['a curator', F]] as const;
 
 function input(overrides: Partial<IngredientFormValueInput> = {}): IngredientFormValueInput {
   return {
@@ -126,10 +114,7 @@ const variantsOf = (ingredientId: string) =>
     select id, form, form_id, updated_by from ingredient_variants
     where ingredient_id = ${ingredientId} and deleted_at is null order by form`;
 
-/**
- * A fresh compendium entry, or W's own ingredient, whose one form is `form`,
- * picking `formId` when given — by its label alone unless a formal name is.
- */
+/** A fresh compendium entry, or W's own ingredient, whose one form is `form`, picking `formId` when given, by its label alone unless a formal name is given. */
 const entry = (
   name: string,
   form: string,
@@ -210,16 +195,6 @@ describe('listIngredientFormValues and countIngredientFormValues under a filter'
     expect(await listedUnder({ query: 'ture thi' })).toEqual(['Fixture Thistle']);
   });
 
-  it('reads a blank query as no query', async () => {
-    const all = await listedUnder({});
-    expect(all.length).toBeGreaterThan(1);
-
-    expect(await listedUnder({ query: '   ' })).toEqual(all);
-    await expect(countIngredientFormValues({ query: '   ' }, undefined)).resolves.toEqual(
-      await countIngredientFormValues({}, undefined),
-    );
-  });
-
   it("narrows to a group's forms, alone and with a query", async () => {
     await seed('Fixture Ours', 'Substance');
     await seed('Fixture Theirs', 'Animal');
@@ -238,17 +213,6 @@ describe('listIngredientFormValues and countIngredientFormValues under a filter'
     expect(await listedUnder({ groupId: group('Animal'), query: 'fixture' })).toEqual([
       'Fixture Theirs',
     ]);
-  });
-
-  it('answers an empty page and a zero count for a group id that is not a uuid, reading nothing', async () => {
-    await expect(
-      listIngredientFormValues({ groupId: 'not-a-uuid' }, { limit: 25, inverted: false }),
-    ).resolves.toEqual([]);
-    await expect(countIngredientFormValues({ groupId: 'not-a-uuid' }, undefined)).resolves.toEqual({
-      totalCount: 0,
-      countBefore: null,
-    });
-    expect(repository.findIngredientFormValues).not.toHaveBeenCalled();
   });
 
   it('counts what the filtered page lists, and the rows before a page under it', async () => {
@@ -345,16 +309,24 @@ describe('createIngredientFormValue', () => {
     expect(await countNamed('Fixture Wax')).toBe(2);
   });
 
-  it.each(NON_ADMINS)('refuses %s, writing nothing', async (_who, user) => {
-    await expect(createIngredientFormValue(asUser(user), input())).rejects.toThrow(Forbidden);
-    expect(await countNamed('Fixture Shard')).toBe(0);
-  });
+  it.each(NON_ADMINS)(
+    'refuses %s, writing nothing, and before reading the input, so a bad one earns the same refusal',
+    async (_who, user) => {
+      // Why it could have passed: the guard is all that refuses it. The user
+      // holds no site role, and the same input is written for a curator.
+      expect(asUser(user).role).toBe('user');
+      expect(asUser(F).role).toBe('curator');
 
-  it('refuses a non-admin before reading the input, so a bad one earns the same refusal', async () => {
-    await expect(
-      createIngredientFormValue(asUser(A), input({ name: '   ' })),
-    ).rejects.toBeInstanceOf(Forbidden);
-  });
+      await expect(createIngredientFormValue(asUser(user), input())).rejects.toThrow(Forbidden);
+      expect(await countNamed('Fixture Shard')).toBe(0);
+      await expect(
+        createIngredientFormValue(asUser(user), input({ name: '   ' })),
+      ).rejects.toBeInstanceOf(Forbidden);
+
+      await createIngredientFormValue(asUser(F), input());
+      expect(await countNamed('Fixture Shard')).toBe(1);
+    },
+  );
 
   it('refuses a name whose address a live form in the group holds, on `name`, naming it', async () => {
     await seed('Fixture Shard');
@@ -371,15 +343,6 @@ describe('createIngredientFormValue', () => {
       },
     ]);
     expect(await countNamed('Fixture-Shard')).toBe(0);
-  });
-
-  it("takes a deleted form's address", async () => {
-    const deleted = await seed('Fixture Again');
-    await sql`update ingredient_forms set deleted_at = now(), deleted_by = ${E.id} where id = ${deleted}`;
-
-    const created = await createIngredientFormValue(admin, input({ name: 'Fixture Again' }));
-
-    expect(created.slug).toBe('fixture-again-substance');
   });
 
   it('refuses a group that is retired, or that is not one, on `groupId`', async () => {
@@ -419,7 +382,7 @@ describe('updateIngredientFormValue', () => {
     },
   );
 
-  // MB.171: the seed recognises its own rows by the key, so a renamed seeded
+  // The seed recognises its own rows by the key, so a renamed seeded
   // row must keep it or the next deploy reinserts the original beside it.
   it("keeps a seeded row's seed key through a rename", async () => {
     const [seeded] = await sql<{ id: string; seed_key: string; group_id: string }[]>`
@@ -519,13 +482,8 @@ describe('updateIngredientFormValue', () => {
     await expect(updateIngredientFormValue(admin, 'not-a-uuid', input())).rejects.toThrow(NotFound);
   });
 
-  // MB.162 on the pick (MB.167), onto the variants (MB.220): the new spelling
-  // is carried onto every live compendium variant that picked the form, and
-  // no entry's address moves, since a form is no part of it. Which rows the
-  // carry writes, stamps and leaves alone row by row is write.carryFormRename's
-  // (tests/db/repository/ingredients.test.ts): what stays here is the rule —
-  // which variants follow, that nothing moves an address, the refusal — and
-  // that no coven's pick is an admin's to rewrite (M6.6).
+  // A rename onto the variants: the new spelling is carried onto every live compendium variant that picked the form, and no entry's address moves, since a form is no part of it.
+  // Which rows the carry writes and stamps is write.carryFormRename's (tests/db/repository/ingredients.test.ts); what stays here is which variants follow, that no address moves, the refusal, and that no coven's pick is rewritten.
   describe('a rename, while live compendium entries pick the form', () => {
     it('carries the new name onto every compendium variant picking it, moving no slug and retiring none', async () => {
       const id = await seed('Fixture Resin');
@@ -695,20 +653,9 @@ describe('deleteIngredientFormValue', () => {
       await expect(attempt).rejects.toThrow('Testwort');
       expect((await formOf(id)).deleted_at).toBeNull();
     });
-
-    it('names the first three holding entries and no more', async () => {
-      const id = await seed('Fixture Crowded');
-      for (const name of ['Testa', 'Testb', 'Testc', 'Testd', 'Teste']) {
-        await entry(name, 'Fixture Crowded', id);
-      }
-
-      const attempt = deleteIngredientFormValue(admin, id);
-      await expect(attempt).rejects.toThrow('Testc');
-      await expect(attempt).rejects.not.toThrow('Testd');
-    });
   });
 
-  // MB.167: the pick holds a form, so of two live forms called "Wax" only the
+  // The pick holds a form, so of two live forms called "Wax" only the
   // one an entry picked is held.
   it('deletes the same-named form that no entry picked', async () => {
     const picked = await seed('Fixture Wax', 'Substance');

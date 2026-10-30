@@ -35,6 +35,6 @@ so the root layout strips exactly that one before first paint, in an inline
 script beside the theme one (`src/app/pre-paint-scripts.tsx`); an in-page
 anchor keeps its own.
 
-`/api/auth/ok` (Better Auth's built-in health endpoint, no database access)
-is what `route.test.ts`'s other case uses to confirm the route is mounted
-and responding independent of any provider being configured at all.
+Every e2e run confirms the route is mounted and responding, independent of
+any provider being configured: `tests/e2e/database.ts` reads `/api/auth/get-session` from the worker's server each
+time a spec recreates its database, and throws unless it answers 200.

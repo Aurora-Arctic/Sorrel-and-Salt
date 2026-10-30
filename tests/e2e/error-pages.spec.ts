@@ -3,7 +3,7 @@ import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
-// M11.10 against the built server: the 404 page a signed-in visitor lands on,
+// Against the built server: the 404 page a signed-in visitor lands on,
 // with its way onward. The 500 boundary is covered by tests/app/error.test.tsx;
 // no page throws on demand to walk it here.
 

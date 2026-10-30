@@ -1,20 +1,22 @@
-import type { Story } from '@ladle/react';
-import { GROUP_NAMES, asSlugs } from '../../../.ladle/fixtures';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { GROUP_NAMES, asSlugs } from '../../../.storybook/fixtures';
+import { useState } from 'react';
+import type { ReactNode } from 'react';
+import { SearchField } from '../Field';
+import FilterForm from '.';
 import GroupedValueListFilter from '../GroupedValueList/filter';
 import type { GroupedValueListFilter as Shown } from '../GroupedValueList/types';
 import ListFrame from '../ListFrame';
 
-// Render-only; the lists that use it assert their filters. FilterForm is drawn
-// here as a list draws it: the categories list's own filter
-// (`GroupedValueListFilter`, a Name search and a type-ahead Group select, no
-// switch) inside a ListFrame, which holds the navigation it needs. The
-// workshop's router goes nowhere, so a change shows nothing on its way here
-// (GroupedValueList's `Pending` stories draw that). The search applies from
-// its magnifier or Enter, the group on its pick, and Clear is drawn only
-// while the page shows a filter. The groups are the workshop's invented ones.
-export default {
+// Render-only; the lists that use it assert their filters. Drawn as a list draws
+// it: the categories filter (`GroupedValueListFilter`) in a ListFrame, which holds
+// the navigation it needs. The router goes nowhere, so a change shows nothing on
+// its way. Clear shows only while filtered.
+const meta = {
   title: 'Admin / Filter Form',
-};
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<{ state?: ReactNode }>;
 
 const GROUPS = asSlugs(GROUP_NAMES.category);
 
@@ -26,22 +28,54 @@ const Framed = ({ shown = NO_FILTER }: { shown?: Shown }) => (
   </ListFrame>
 );
 
-// A page showing no filter: nothing to clear, so no Clear.
-export const Default: Story = () => <Framed />;
-
-export const PhoneDark: Story = () => <Framed />;
-PhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const PhoneLight: Story = () => <Framed />;
-PhoneLight.meta = { theme: 'light', width: 375 };
-
 // A page showing a filter: Clear, a link to the page itself, ends the row.
 const FILTER: Shown = { query: 'test', group: GROUPS[0].slug };
 
-export const Filtered: Story = () => <Framed shown={FILTER} />;
+// The form drawn on its own, with a filter shown so Clear would be drawn.
+const Bare = ({ clear, sorrel }: { clear?: boolean; sorrel?: boolean }) => {
+  const [query, setQuery] = useState('test');
+  return (
+    <ListFrame>
+      <FilterForm
+        label="Filter Categories"
+        action="/admin/categories"
+        searchHref={() => '/admin/categories'}
+        shown={['test']}
+        clear={clear}
+        sorrel={sorrel}
+      >
+        <SearchField
+          label="Name"
+          name="query"
+          placeholder="Search names"
+          value={query}
+          onChange={setQuery}
+        />
+      </FilterForm>
+    </ListFrame>
+  );
+};
 
-export const FilteredPhoneDark: Story = () => <Framed shown={FILTER} />;
-FilteredPhoneDark.meta = { theme: 'dark', width: 375 };
+// One control chooses the state (claude-docs/workshop.md, rule 5).
+// - No Filter: no Clear. Filtered: Clear, a link to the page itself, ends the row.
+// - Without Clear: a row with its own Clear All turns Clear off.
+// - With Sorrel: a sticky row's fill layer, so the corner sorrel shows through.
+const STATES: Record<string, ReactNode> = {
+  'No Filter': <Framed />,
+  Filtered: <Framed shown={FILTER} />,
+  'Without Clear': <Bare clear={false} />,
+  'With Sorrel': <Bare sorrel />,
+};
 
-export const FilteredPhoneLight: Story = () => <Framed shown={FILTER} />;
-FilteredPhoneLight.meta = { theme: 'light', width: 375 };
+export const States: Story = {
+  args: { state: 'No Filter' },
+  argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
+  render: ({ state }) => <div>{state}</div>,
+};
+
+// On a phone: the row stacks, the search over Clear. It stays a story of its own because the
+// state is the viewport, which a control on a state cannot set.
+export const Narrow: Story = {
+  globals: { viewport: { value: 'w375', isRotated: false } },
+  render: () => <Framed shown={FILTER} />,
+};

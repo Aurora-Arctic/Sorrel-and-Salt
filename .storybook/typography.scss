@@ -1,0 +1,20 @@
+// typography-base hung off the preview body, as the app hangs it off `body`, so a
+// component's own class beats a rule here as it beats `body p` in the app. The
+// preview iframe holds only the story (preview.tsx adds `workshop-app` to the body).
+
+@use '../src/scss/variables' as *;
+@use '../src/scss/mixins' as *;
+@use '../src/scss/typography' as *;
+
+// next/font defines these on <html>; the workshop has no equivalent, so point
+// them at the families head.html loads. Without this a bare `var(--font-body)`
+// resolving to nothing takes the whole `font-family` declaration down and does
+// NOT fall through to the named families. claude-docs/styling.md, "Known issue".
+:root {
+  --font-body: 'Lexend';
+  --font-display: 'Cormorant Unicase';
+}
+
+body:where(.workshop-app) {
+  @include typography-base;
+}

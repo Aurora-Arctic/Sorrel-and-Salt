@@ -1,0 +1,20 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/eurah-eremophila-bignoniiflora
+status: approved
+listings:
+  - list: state-listing
+    name: Government of Western Australia, Department of Parks and Wildlife
+    value: Not threatened
+    listedAs: Eremophila bignoniiflora
+    scope: Western Australia
+    nameBasis: stated
+    source: wikipedia-eremophila-bignoniiflora
+    locator: section "Conservation status"
+  - list: state-listing
+    name: Victoria, Flora and Fauna Guarantee Act 1988
+    value: Vulnerable
+    listedAs: Eremophila bignoniiflora
+    scope: Victoria
+    nameBasis: stated
+    source: wikipedia-eremophila-bignoniiflora
+    locator: section "Conservation status"

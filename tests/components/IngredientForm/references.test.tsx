@@ -34,20 +34,14 @@ import {
 } from '../../support/msw/ingredient-lookups';
 import type { ReferenceNode } from './types';
 
-// The References field (MB.154) on its own (MB.182): `ReferencesField`, a
-// search over `referenceSuggestions`, each source picked becoming a row
-// beneath the box with its locator, and the new reference panel opened
-// beneath it, in a form of its own on the form's resolver; what the resolver
-// hands the submit is what the form sends. The panel's own behaviours are
-// reference-panel.test.tsx's, and the search's debounce is lookups.test.tsx's
-// and tests/lib/debounce.test.tsx's; what needs the whole form — the payload
-// sent and cleared, and a server's error routed to a row — is at the end
-// (claude-docs/components/ingredient-form.md, "Testing").
+// The References field on its own: `ReferencesField`, a search over `referenceSuggestions`, each source picked becoming a row beneath the box with its locator, and the new reference panel opened beneath it,
+// in a form of its own on the form's resolver; what the resolver hands the submit is what the form sends. The panel's behaviours are reference-panel.test.tsx's, and the search's debounce is lookups.test.tsx's and tests/lib/debounce.test.tsx's.
+// What needs the whole form (the payload sent and cleared, and a server's error routed to a row) is at the end (claude-docs/components/ingredient-form.md, "Testing").
 
 const COMPENDIUM_ID = '1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f';
 const COVEN_ID = '6f5e4d3c-2b1a-4f9e-8d7c-6b5a4f3e2d1c';
 
-// Invented sources (M1.25): a real title is only safe until someone seeds it.
+// Invented sources: a real title is only safe until someone seeds it.
 const HERBAL: ReferenceNode = {
   id: COMPENDIUM_ID,
   citation: 'Fixture, Ada. The Testwort Herbal. Mockford: Fixture Press, 1901.',
@@ -102,7 +96,7 @@ function renderForm() {
 }
 
 // Found by label rather than by role and name, so the whole form's tests
-// below do not name every element of a role in a 25-field form (MB.181).
+// below do not name every element of a role in a 25-field form.
 const box = () => screen.getByLabelText('Reference', { selector: '[role="combobox"]' });
 const references = () => box().closest('fieldset') as HTMLElement;
 const rows = () => within(references()).queryAllByRole('listitem');
@@ -116,11 +110,7 @@ const row = (citation: string) =>
   (() => {
     throw new Error(`No row for ${citation}`);
   })();
-/**
- * What a row's line shows a sighted reader: its text less every hidden
- * element's, and less a pencil's tip, which the press that opens or shuts
- * the row leaves showing over it.
- */
+/** What a row's line shows a sighted reader: its text less every hidden element's, and less a pencil's tip, which the press that opens or shuts the row leaves showing over it. */
 const shownIn = (item: HTMLElement) => {
   const copy = item.cloneNode(true) as HTMLElement;
   copy.querySelectorAll('[hidden], [role="tooltip"]').forEach((node) => node.remove());
@@ -232,7 +222,7 @@ describe('ReferencesField', () => {
       expect(rows()).toHaveLength(1);
       expect(changes()).toHaveTextContent(HERBAL_SHORT);
       expect(box()).toHaveValue('');
-      // The new row opens on its Locator, a page being what it most often needs next (MB.115).
+      // The new row opens on its Locator, a page being what it most often needs next.
       const inRow = within(row(HERBAL_SHORT));
       expect(inRow.getByRole('button', { name: `Edit ${HERBAL_SHORT}` })).toHaveAttribute(
         'aria-expanded',
@@ -241,7 +231,7 @@ describe('ReferencesField', () => {
       expect(inRow.getByRole('textbox', { name: 'Locator' })).toHaveFocus();
     });
 
-    it('shows a row as its short form, its title in real italics, then its locator, described by its whole citation', async () => {
+    it('shows a row as its short form, then its locator, described by its whole citation', async () => {
       renderField();
       const calls = offerReferences([HERBAL]);
 
@@ -259,7 +249,6 @@ describe('ReferencesField', () => {
       expect(shownIn(item)).toContain(HERBAL.citation);
       press(edit);
       expect(shownIn(item)).toBe(`${HERBAL_SHORT}, p. 112`);
-      expect(inRow.getByText('Testwort Herbal').tagName).toBe('I');
     });
 
     it('opens a row as it is added, then keeps it to one line until its edit opens it on its Locator again', async () => {
@@ -292,7 +281,7 @@ describe('ReferencesField', () => {
       expect(inRow.getByRole('button', { name: 'About Locator' })).toBeInTheDocument();
     });
 
-    // Its × asks first, as a variant's does (the owner's call, 2026-10-16).
+    // Its × asks first, as a variant's does.
     it('removes a row by its × once confirmed, keeping the focus in the box, and says so', async () => {
       renderField();
       const calls = offerReferences([HERBAL, NOTES]);
@@ -301,32 +290,32 @@ describe('ReferencesField', () => {
       press(within(references()).getByRole('button', { name: `Remove ${HERBAL_SHORT}` }));
 
       expect(rows()).toHaveLength(2);
-      expect(screen.getByRole('button', { name: 'Keep It' })).toHaveFocus();
+      expect(screen.getByRole('button', { name: 'Cancel' })).toHaveFocus();
       press(screen.getByRole('button', { name: 'Remove' }));
 
       expect(rows()).toHaveLength(1);
       expect(row(NOTES.citation)).toBeInTheDocument();
       expect(changes()).toHaveTextContent(HERBAL_SHORT);
-      expect(screen.queryByRole('button', { name: 'Keep It' })).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Cancel' })).toBeNull();
       expect(box()).toHaveFocus();
     });
 
-    it('keeps a row, and the focus on its ×, when its removal is answered Keep It', async () => {
+    it('keeps a row, and the focus on its ×, when its removal is answered Cancel', async () => {
       renderField();
       const calls = offerReferences([HERBAL, NOTES]);
 
       await pickBoth(calls);
       const remove = within(references()).getByRole('button', { name: `Remove ${HERBAL_SHORT}` });
       press(remove);
-      press(screen.getByRole('button', { name: 'Keep It' }));
+      press(screen.getByRole('button', { name: 'Cancel' }));
 
       expect(rows()).toHaveLength(2);
-      expect(screen.queryByRole('button', { name: 'Keep It' })).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Cancel' })).toBeNull();
       expect(remove).toHaveFocus();
     });
 
     // Unlike the chip lists, the keys never take a row, asked or not: only
-    // its ×, which asks (the owner's call, 2026-10-16).
+    // its ×, which asks.
     it('keeps every row on Backspace or Delete in the empty box, and asks nothing', async () => {
       renderField();
       const calls = offerReferences([HERBAL]);
@@ -338,7 +327,7 @@ describe('ReferencesField', () => {
 
       expect(rows()).toHaveLength(1);
       expect(changes()).toHaveTextContent(said ?? '');
-      expect(screen.queryByRole('button', { name: 'Keep It' })).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Cancel' })).toBeNull();
     });
 
     it('never submits the ingredient on Enter in the box with nothing picked', async () => {
@@ -392,7 +381,7 @@ describe('ReferencesField', () => {
       offerReferences([]);
     });
 
-    // The owner's call: asking again for a panel already open takes you
+    // Asking again for a panel already open takes you
     // back to it, rather than doing nothing; that the panel then focuses
     // Kind and keeps what was typed is reference-panel.test.tsx's.
     it('opens from the list’s last row, "New Reference", taking you to Kind, and again while open', async () => {
@@ -463,7 +452,7 @@ describe('ReferencesField', () => {
     });
   });
 
-  // MB.115: an open row's Edit Source opens the panel on that source whole,
+  // An open row's Edit Source opens the panel on that source whole,
   // and its save rewrites every row citing it. The rows start listed, the
   // ingredient's and a variant's citing the same source, as an edit opens them.
   describe('editing a source', () => {
@@ -614,7 +603,7 @@ describe('ReferencesField', () => {
       expect(editSource(NOTES_SHORT)).toHaveFocus();
     });
 
-    // MB.258: the × at the panel's top closes it as Cancel does.
+    // The × at the panel's top closes it as Cancel does.
     it('closes from its close button, saving nothing, the focus back on the row', async () => {
       offerReference(NOTES_WHOLE);
       const updates = acceptReferenceUpdate(RENAMED_CITATION);

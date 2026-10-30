@@ -1,15 +1,21 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 import Modal from '../Modal';
+import { InModal } from '../../../.storybook/in-modal';
+import '../UserList/index.scss';
 import UserDetail from '.';
 import type { UserCoven, UserDetailUser } from './types';
 
 // Render-only; behaviour is asserted in tests/components/UserDetail.
-// Impersonate reaches Better Auth, which the workshop does not serve: the
-// question can be seen, its answer cannot.
-export default {
+// Impersonate is red, as a high-risk control that destroys nothing; the coven-creation
+// Revoke is plain. Impersonate reaches Better Auth, which the workshop does not serve:
+// the question can be seen, its answer cannot.
+const meta = {
   title: 'Admin / User Detail',
-};
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const FACTS = {
   emailVerified: true,
@@ -34,7 +40,7 @@ const ADA: UserDetailUser = {
   primaryAdmin: true,
   canCreateWorkspace: true,
 };
-// A curator (M11.20): the role in bold, no coven-creation control, and Impersonate.
+// A curator: the role in bold, no coven-creation control, and Impersonate.
 const DEE: UserDetailUser = {
   ...FACTS,
   id: 'u-dee',
@@ -73,36 +79,103 @@ const COVENS: readonly UserCoven[] = [
   },
 ];
 
-export const WithCovens: Story = () => <UserDetail user={BO} memberships={COVENS} canImpersonate />;
+// The dialog the users page opens: User over the name, the address beneath it.
+// The head is the page's user-heading.tsx, written out here as the UserList story does.
+const inDialog = (user: Pick<UserDetailUser, 'name' | 'email'>, body: ReactNode): ReactNode => (
+  <InModal
+    eyebrow="User"
+    title={user.name}
+    qualifier={<span className="user-list__modal-email">{user.email}</span>}
+  >
+    {body}
+  </InModal>
+);
 
-export const NoCovens: Story = () => <UserDetail user={BO} memberships={[]} canImpersonate />;
+const defaultNode = inDialog(BO, <UserDetail user={BO} memberships={COVENS} canImpersonate />);
+
+const noCovensNode = inDialog(BO, <UserDetail user={BO} memberships={[]} canImpersonate />);
 
 // Several providers and an unverified address.
-export const SeveralProviders: Story = () => <UserDetail user={MANY} memberships={COVENS} />;
+const severalProvidersNode = inDialog(MANY, <UserDetail user={MANY} memberships={COVENS} />);
 
-// The primary admin carries the crown. No Impersonate on an admin: the endpoint refuses one (MB.53).
-export const Admin: Story = () => <UserDetail user={ADA} memberships={COVENS} canImpersonate />;
+// The primary admin carries the crown. No Impersonate on an admin: the endpoint refuses one.
+const adminNode = inDialog(ADA, <UserDetail user={ADA} memberships={COVENS} canImpersonate />);
 
-export const Curator: Story = () => <UserDetail user={DEE} memberships={[]} canImpersonate />;
+const curatorNode = inDialog(DEE, <UserDetail user={DEE} memberships={[]} canImpersonate />);
 
-export const WithoutImpersonation: Story = () => <UserDetail user={BO} memberships={COVENS} />;
+const withoutImpersonationNode = inDialog(BO, <UserDetail user={BO} memberships={COVENS} />);
 
-// Press Impersonate to see the question over the modal.
-export const InAModal: Story = () => {
-  const [open, setOpen] = useState(true);
-  return (
-    <>
-      <button type="button" className="btn btn--solid" onClick={() => setOpen(true)}>
-        Open
-      </button>
-      {open && (
-        <Modal title={BO.name} onClose={() => setOpen(false)}>
-          <UserDetail user={BO} memberships={COVENS} canImpersonate />
-        </Modal>
-      )}
-    </>
-  );
+// Admin changes are locked for the viewing admin: the controls say why.
+const changesPausedNode = inDialog(
+  BO,
+  <UserDetail user={BO} memberships={COVENS} canImpersonate changesPaused />,
+);
+
+// A user who may create covens, so the control is a plain Revoke beside the red Impersonate.
+const mayCreateCovensNode = inDialog(
+  BO,
+  <UserDetail user={{ ...BO, canCreateWorkspace: true }} memberships={COVENS} canImpersonate />,
+);
+
+// An admin who is not the primary one: no crown.
+const otherAdminNode = inDialog(
+  { name: 'Eve Fixturewort', email: 'eve@fixture.test' },
+  <UserDetail
+    user={{
+      ...ADA,
+      id: 'u-eve',
+      name: 'Eve Fixturewort',
+      email: 'eve@fixture.test',
+      primaryAdmin: false,
+    }}
+    memberships={[]}
+  />,
+);
+
+// No sign-in method on file.
+const noProvidersNode = inDialog(
+  BO,
+  <UserDetail user={{ ...BO, providers: [] }} memberships={COVENS} />,
+);
+
+// Press the red Impersonate to see its question, with a red confirm, over the modal.
+export const InAModal: Story = {
+  render: () => {
+    const [open, setOpen] = useState(true);
+    return (
+      <>
+        <button type="button" className="btn btn--solid" onClick={() => setOpen(true)}>
+          Open
+        </button>
+        {open && (
+          <Modal title={BO.name} onClose={() => setOpen(false)}>
+            <UserDetail user={BO} memberships={COVENS} canImpersonate />
+          </Modal>
+        )}
+      </>
+    );
+  },
 };
 
 // In its own iframe: `showModal()` puts the dialog in the top layer.
-InAModal.meta = { iframed: true };
+
+const STATES_STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'No Covens': noCovensNode,
+  'Several Providers': severalProvidersNode,
+  Admin: adminNode,
+  Curator: curatorNode,
+  'Without Impersonation': withoutImpersonationNode,
+  'Changes Paused': changesPausedNode,
+  'May Create Covens': mayCreateCovensNode,
+  'Other Admin': otherAdminNode,
+  'No Providers': noProvidersNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
+  },
+  render: ({ state }) => <div>{state}</div>,
+};

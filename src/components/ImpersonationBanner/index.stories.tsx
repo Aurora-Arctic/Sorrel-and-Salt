@@ -1,25 +1,27 @@
-import type { Story } from '@ladle/react';
-import { ShellFrame } from '../../../.ladle/shell-frame';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { hangAuth, refuseAuth, useMockHandlers } from '../../../.storybook/mock-api';
+import { usePressOnMount } from '../../../.storybook/press';
+import { ShellFrame } from '../../../.storybook/shell-frame';
 import ImpersonationBanner from '.';
 
-// Render-only; behaviour is asserted in tests/components/ImpersonationBanner.
-// In the workshop Stop reaches no server, so a click shows the failure. Where
-// the browser can hover, the banner tucks itself above the page until a
-// pointer nears the top; on a touch screen, which the review screenshots
-// emulate, it sits in the page's flow at the top, shown in full.
-export default {
+// Render-only; behaviour is asserted in tests/components/ImpersonationBanner. Stop
+// is answered by the fake sign-in service (.storybook/mock-api.ts): refused in Stop
+// Failed, never answered in Stopping. Where the browser can hover the banner tucks.
+const meta = {
   title: 'Layout / Impersonation Banner',
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+// Stop is never answered here, so a press shows Stopping, not the fake API's 501.
+export const Default: Story = {
+  beforeEach: ({ msw }) => msw.use(hangAuth()),
+  render: () => <ImpersonationBanner name="Bo Fixturewort" email="bo@users.test" />,
 };
-
-export const Default: Story = () => (
-  <ImpersonationBanner name="Bo Fixturewort" email="bo@users.test" />
-);
-
-// At phone width, above the shell, where the app puts it: the first thing in
-// the body, over everything, the shell's bar included (src/app/layout.tsx). On
-// a touch screen (`hover: none`), as the review screenshots emulate, the banner
-// is in the flow and the bar starts below it; a desktop browser shows it tucked.
-const OverTheShell = () => (
+// Above the shell, as src/app/layout.tsx puts it: first in the body, over the
+// shell's bar. On a touch screen (`hover: none`) the banner is in the flow and the
+// bar starts below it; a desktop browser shows it tucked.
+const OverTheShellView = () => (
   <>
     <ImpersonationBanner name="Bo Fixturewort" email="bo-fixturewort@users.test" />
     <ShellFrame area="none">
@@ -31,8 +33,33 @@ const OverTheShell = () => (
   </>
 );
 
-export const PhoneDark: Story = () => <OverTheShell />;
-PhoneDark.meta = { theme: 'dark', width: 375 };
+export const OverTheShell: Story = {
+  beforeEach: ({ msw }) => msw.use(hangAuth()),
+  render: () => <OverTheShellView />,
+};
 
-export const PhoneLight: Story = () => <OverTheShell />;
-PhoneLight.meta = { theme: 'light', width: 375 };
+// Stop pressed and the sign-out refused: the banner stays open with the callout
+// under the button. The refusal is a failed request on purpose.
+const REFUSED = [refuseAuth()];
+const StopFailedView = () => {
+  useMockHandlers(REFUSED);
+  usePressOnMount('Stop Impersonating');
+  return <ImpersonationBanner name="Bo Fixturewort" email="bo@users.test" />;
+};
+
+export const StopFailed: Story = {
+  tags: ['expects-failed-request'],
+  render: () => <StopFailedView />,
+};
+
+// Stop pressed and not yet answered: the button reads Stopping and is busy.
+const UNANSWERED = [hangAuth()];
+const StoppingView = () => {
+  useMockHandlers(UNANSWERED);
+  usePressOnMount('Stop Impersonating');
+  return <ImpersonationBanner name="Bo Fixturewort" email="bo@users.test" />;
+};
+
+export const Stopping: Story = {
+  render: () => <StoppingView />,
+};

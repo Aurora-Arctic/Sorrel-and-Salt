@@ -5,26 +5,22 @@ import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import { graphql } from '../../gql';
 import type { DuplicateQuickLookQuery } from '../../gql/graphql';
-import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlQuery } from '../../lib/graphql-client';
 import { headingOf } from '../IngredientEntry/details-dialog';
 import { detailsHeading, detailsMarks } from '../IngredientEntry/details';
 import IngredientSummary from '../IngredientEntry/summary';
 import type { SummaryJar } from '../IngredientEntry/types';
 import Modal from '../Modal';
+import Skeleton from '../Skeleton';
+import ReadFailure from './read-failure';
 import ModalLoading from '../Modal/loading';
 import type { Duplicate } from './types';
 import { applyCupboardEntry } from '@/modules/ingredients/validation/cupboard-merge';
 import type { IngredientDetail } from '@/modules/ingredients';
 
-// The Quick Look a duplicate row the coven already holds opens (M12.48, the
-// owner's call): the entry's details modal over the Add Ingredient form, read in
-// the page through /api/graphql, so nothing typed into the form is lost to a
-// navigation. One read of the `ingredient` query, which serves an entry by id in a
-// coven's own tier and the compendium's and never another coven's, under the
-// service's own check; nothing new on the server. Not the list's DetailsDialog,
-// which is a route modal its server page fills: this one has no route to change.
-// claude-docs/components/ingredient-form.md, "The duplicate warning".
+// The Quick Look a duplicate row the coven already holds opens: the entry's details modal over the
+// Add Ingredient form, read through /api/graphql so nothing typed is lost to a navigation
+// (claude-docs/components/ingredient-form.md, "The duplicate warning").
 
 const DuplicateQuickLookDocument = graphql(`
   query DuplicateQuickLook($id: ID!, $workspaceId: ID!) {
@@ -38,6 +34,7 @@ const DuplicateQuickLookDocument = graphql(`
       toxic
       isGlobal
       retired
+      reviewedAt
       elements
       celestialBodies
       zodiacSigns
@@ -72,6 +69,7 @@ const DuplicateQuickLookDocument = graphql(`
       deities {
         name
         deity {
+          otherNames
           tradition {
             name
           }
@@ -104,10 +102,8 @@ const DuplicateQuickLookDocument = graphql(`
 type Looked = DuplicateQuickLookQuery['ingredient'];
 
 /**
- * The answer as the entry page's own shape, so the modal's head and body are the
- * details modal's own components. The rows are cast: the summary and its marks read
- * only the fields asked for above, and the rest of each row (its audit ids, its
- * slugs) is nothing they draw. Substitutes and references are the page's alone.
+ * The answer as the entry page's own shape, so the modal's head and body are the details modal's
+ * own components. The rows are cast: the parts drawn read only the fields asked for above.
  */
 export function detailOf(looked: Looked, workspaceId: string): IngredientDetail {
   const tier = looked.isGlobal ? null : workspaceId;
@@ -115,6 +111,7 @@ export function detailOf(looked: Looked, workspaceId: string): IngredientDetail 
     entry: {
       ...looked,
       workspaceId: tier,
+      curatorReviewedAt: looked.reviewedAt,
       createdAt: looked.audit.createdAt,
       updatedAt: looked.audit.updatedAt,
     } as unknown as IngredientDetail['entry'],
@@ -128,6 +125,7 @@ export function detailOf(looked: Looked, workspaceId: string): IngredientDetail 
     deities: looked.deities.map(({ name, deity }) => ({
       name,
       tradition: deity?.tradition?.name ?? null,
+      otherNames: deity?.otherNames ?? [],
     })),
     substitutes: [],
     references: [],
@@ -153,9 +151,32 @@ export const jarsOf = (looked: Looked): SummaryJar[] =>
     threshold: jar.lowStockThreshold === null ? null : Number(jar.lowStockThreshold),
   }));
 
+/** The names a Quick Look's head shows before the entry arrives; the formal name's two fields come together or not at all. */
+type QuickLookNames = Pick<Duplicate, 'name'> &
+  (
+    | Pick<Duplicate, 'canonicalName' | 'nomenclature'>
+    | { canonicalName?: never; nomenclature?: never }
+  );
+
+/**
+ * The head before the entry arrives: the details' own head if the formal name is known; if not, a
+ * line skeleton where it goes while the read is out, and nothing after a failed read, never
+ * "Not yet looked up", which would say the entry has none.
+ */
+function pendingHeading(entry: QuickLookNames, loading = true): ReturnType<typeof detailsHeading> {
+  if (entry.canonicalName !== undefined && entry.nomenclature !== undefined) {
+    return detailsHeading({
+      ...entry,
+      canonicalName: entry.canonicalName,
+      nomenclature: entry.nomenclature,
+    });
+  }
+  return { title: entry.name, formalName: loading ? <Skeleton shape="line" /> : undefined };
+}
+
 /**
  * The modal itself: open at once under the row's name, loading by the standard's
- * skeleton (M12.33), then the entry; a failed read says so, with Try Again.
+ * skeleton, then the entry; a failed read says so, with Try Again.
  */
 export function DuplicateQuickLook({
   id,
@@ -167,10 +188,11 @@ export function DuplicateQuickLook({
 }: {
   id: string;
   /**
-   * The row's names, for the head while the read is out: the details' own head, as
-   * the list's Quick Look opens under, so nothing in it jumps when they arrive.
+   * The row's names, for the head while the read is out, as the list's Quick Look opens under, so
+   * nothing jumps when the entry arrives. A caller that does not know the formal name leaves
+   * `canonicalName` and `nomenclature` out, and the head draws a one-line skeleton in its place.
    */
-  entry: Pick<Duplicate, 'name' | 'canonicalName' | 'nomenclature'>;
+  entry: QuickLookNames;
   workspaceId: string;
   /** The entry's page, opened in a new tab so the form stays as it is. */
   pageHref: string;
@@ -185,20 +207,15 @@ export function DuplicateQuickLook({
 
   if (isPending || (error && isRefetching)) {
     return (
-      <Modal {...detailsHeading(entry)} onClose={onClose} returnTo={returnTo} loading>
+      <Modal {...pendingHeading(entry)} onClose={onClose} returnTo={returnTo} loading>
         <ModalLoading />
       </Modal>
     );
   }
   if (error) {
     return (
-      <Modal {...detailsHeading(entry)} onClose={onClose} returnTo={returnTo}>
-        {/* The server's sentence, "No such ingredient" for one deleted since,
-            or else "That didn't work. Please try again." */}
-        <p role="alert">{readGraphqlFailure(error).alert}</p>
-        <button type="button" className="btn btn--small" onClick={() => void refetch()}>
-          Try Again
-        </button>
+      <Modal {...pendingHeading(entry, false)} onClose={onClose} returnTo={returnTo}>
+        <ReadFailure error={error} onRetry={() => void refetch()} />
       </Modal>
     );
   }

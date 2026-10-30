@@ -6,7 +6,7 @@
 
 `jars`: a list of plain data, `{ id, form, icon, quantity, unit, threshold }` (`types.ts`).
 
-- `form` is the variant's form as stored; the line writes it through `formLabel`, which `tests/guards/form-label.test.ts` holds.
+- `form` is the variant's form as stored; the line writes it through `formLabel`, which the lint rule `sorrel/form-shown-through-form-label` holds.
 - `icon` is the form group's icon or `null`; `FormIcon` draws the generic spoon for `null`.
 - `quantity`: a number is on hand, `0` is out, `null` is held but not measured and reads "Unmeasured".
 - `unit` follows the quantity; `threshold` only feeds the badge.
@@ -22,6 +22,10 @@ The badge is centred on the same vertical line as the icon below it in the card'
 ## One source
 
 The workshop's card stories (`IngredientCard/story-jars.tsx`, `IngredientCardList/story-fixtures.tsx`) draw their jar lines through this component, so no story keeps a copy of the markup.
+
+## Stories
+
+`src/components/JarLines/index.stories.tsx`, titled "Ingredients / Jar Lines": `Default`, the list's markup with no card around it.
 
 ## Tests
 

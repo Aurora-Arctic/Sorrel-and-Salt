@@ -13,7 +13,7 @@ dist
 public/workshop
 
 # Generated reports and builds, all under one directory: Vitest coverage and
-# json, Playwright's report, traces and e2e coverage, the Ladle workshop build.
+# json, Playwright's report, traces and e2e coverage, the Storybook workshop build.
 # `tsc`'s incremental state is under node_modules/.cache (tsconfig.json).
 .reports
 blob-report
@@ -83,3 +83,14 @@ tmp
 
 # Deliberate lint violations written by the tests/guards/lint-*-boundary.test.ts guards
 __lint-probe*__/
+
+# Claude Design sync (M12.53): build artifacts and scratch
+.design-sync/sb-reference/
+.design-sync/learnings/
+.design-sync/.cache/
+.design-sync/node_modules
+.ds-sync/
+ds-bundle/
+
+# Playwright output
+/test-results/

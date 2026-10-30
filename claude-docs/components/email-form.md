@@ -95,8 +95,9 @@ The submit is disabled only while the value, trimmed and lower-cased, equals
 `email` **and** `verified` is true — a verified, unchanged address has nothing
 to send — and while the mutation is pending. An unverified, unchanged address
 stays submittable: the service resends its link. While the send is in
-flight the button is busy, as NameForm's Save is: a `BusyButton`
-([`busy-button.md`](busy-button.md)), it carries `aria-busy` and the
+flight the button is busy, as NameForm's Save is: the row is the shared
+`FormActions` with its `label` and `busyLabel` given, so its button, a `BusyButton`
+([`busy-button.md`](busy-button.md)), carries `aria-busy` and the
 `.spinner` and reads "Sending Confirmation", the owner's rule for every
 form ([`styling.md`](../styling.md), "Buttons"). It is a real `disabled`
 attribute, not `aria-disabled` — unlike SignInPanel's roster, a submit with
@@ -139,8 +140,8 @@ Built on the form primitives in `_primitives.scss` ([`styling.md`](../styling.md
 "Form fields"): `.form` and `.form__actions`, and one field drawn by the
 shared `FieldShell` ([`field.md`](field.md)) around the form's own `.input`, and the `Notice` component
 ([`notice.md`](notice.md)) for the alert and the sent message. On the email
-page the `<h1>` and the status line are a `.header`, the status line its
-`.lede`; embedded, the status line is a `.lede` on its own, under the
+page the `<h1>` and the status line are a `PageHeader` ([`page-header.md`](page-header.md)), the status line its
+`lede`; embedded, the status line is a `.lede` on its own, under the
 section's head. Send Confirmation and Continue are each the view's one primary action,
 so both are `.btn--solid`; Continue is `.btn` on an anchor, which `.btn`
 itself keeps from underlining or taking the visited ink
@@ -155,16 +156,14 @@ column's gap and the address's weight.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/EmailForm/index.stories.tsx),
-titled "Account / Email Form": `Prefilled` (unverified, the sign-up mail just sent, so counting down),
-`ReadyToResend`, `NoEmail`, `Confirmed`, `ChangeLater` (verified, back to
-change it) and `WithError` (reading `verifyErrorMessage` rather than a copied
+titled "Account / Email Form": `States`, drawn in the app shell (the header with the account's initials, and no Add Ingredient while the address is unverified), with a control that chooses Ready To Resend (unverified, the site's resting state, Send Confirmation usable), Countdown (the sign-up mail just sent, so counting down), No Email, Confirmed, Change Later (verified, back to
+change it) and Failed (reading `verifyErrorMessage` rather than a copied
 sentence), and `Embedded`, inside the account page's frame and section.
-`PhoneDark` and `PhoneLight` show the first visit at 375px in each theme.
-Every other story renders inside the page's own `<main className="page-frame page-frame--narrow">`
+Every other state renders inside the page's own `<main className="page-frame page-frame--narrow">`
 and its `.panel`, so the workshop shows what `/account/email` shows and
 nothing is styled for the workshop alone. Render-only, no test ids, no snapshots. The TanStack Query client
 `useMutation` needs comes from the workshop's global provider
-(`.ladle/components.tsx` wraps every story in the app's `Providers`), never
+(`.storybook/components.tsx` wraps every story in the app's `Providers`), never
 from a story's own `QueryClientProvider`: a second would split the cache. Nothing is mocked, since the component reaches
 the network only on submit.
 

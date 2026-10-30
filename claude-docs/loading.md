@@ -53,13 +53,18 @@ arrives at once never flashes them. The wait is a CSS animation delay
 ### Region
 
 The region is the part of the page that is about to change. While it changes,
-the old content is taken away and the [`Skeleton`](components/skeleton.md) of
-the new content stands in its place. The skeleton has five shapes: `table`,
+the old content is hidden and put out of reach (`visibility: hidden`, `inert`,
+`aria-hidden`) and the [`Skeleton`](components/skeleton.md) of the new content
+stands over it. For the shell's two bodies, `MainBody` and `SectionBody`, the
+old page stays mounted at its full height beneath the skeleton rather than
+being swapped out, so the page does not shrink before the browser saves the
+scroll position that Back returns to (MB.271; [`SkeletonFade`](components/skeleton-fade.md),
+"The page is held, not swapped"). The skeleton has five shapes: `table`,
 `cards`, `form` and `page` for a whole page, and `line` for one line of text
 that is still being fetched. A `table` or `cards` skeleton can also draw the page's heading row and filter row, so the wait looks like the page that arrives. When the real content arrives, the skeleton does not vanish: the shell's bodies keep the last one over the arrived page, `aria-hidden` and out of layout, and it fades out over 200ms (`$arrive-duration`) while the page shows through ([`SkeletonFade`](components/skeleton-fade.md)). A navigation that drew no skeleton (a refresh) fades nothing, a new wait mid-fade takes the skeleton back at once, and under reduced motion the page shows at once, as `arrived` does.
 
 A skeleton shows **at once**, with no wait, because the press has already
-removed the old content: holding the skeleton back would leave an empty panel
+hidden the old content: holding the skeleton back would leave an empty panel
 for 100ms, which is the jump the skeleton is there to avoid. The Skeleton
 itself fades in over 150ms.
 
@@ -167,8 +172,9 @@ request failed ([React, `useOptimistic`](#references)). One component,
 router, and every navigation and refresh the site starts is a transition it
 opens. Nothing is ever settled by hand. The first version kept the transition
 in the component that pressed the link and cleared the wait when that component
-unmounted; `MainBody` and `SectionBody` swap their children for a skeleton,
-which unmounts the pressed link, so the wait ended at once and the old page came
+unmounted; `MainBody` and `SectionBody` then swapped their children for a
+skeleton (they now hold the page hidden beneath it, MB.271), which unmounted
+the pressed link, so the wait ended at once and the old page came
 back (the admin navigation, the coven home contents links and Create Coven
 were all hit). Owning the wait above every region removes that whole class of
 bug.
@@ -206,12 +212,17 @@ exported from its `index.ts`.
   reads it from the store. On `PendingLink` the same thing is the prop
   `navigationTarget`, because an anchor's own `target="_blank"` keeps its name.
 
+A navigation waits first on any mounted page form with unsaved changes
+(`useLeaveGuard`, M13.14): that form asks Discard Changes or Keep Editing,
+and the navigation starts only on Discard Changes. A refresh is never held
+([`components/modal.md`](components/modal.md), "Unsaved changes").
+
 Under the hood, `NavigationProvider` holds the site-wide wait (who started it
 and its target) in React context, so the bar and the regions can follow a
 navigation that a button elsewhere in the tree started.
 `useNavigationState()` joins it with the one thing React cannot see, the
 `leaving` flag of a small external store, set by `reportLeaving()` and cleared
-only by a restored page. Outside the provider (a Ladle story, a component test)
+only by a restored page. Outside the provider (a Storybook story, a component test)
 `usePendingNavigation` makes a plain router call in a transition and shows no
 wait.
 
@@ -258,10 +269,12 @@ with the value already put back.
   provider navigate through the hook directly; they keep their own
   skeletons.
 
-**What `MainBody` replaces.** `MainBody` (`src/components/AppShell/main-body.tsx`)
-answers a `main` target by replacing everything inside `.app-shell__main` with one
-`<main>` holding the skeleton, so the page frame is replaced as well as the
-page's content. The `<main>` takes the frame the target names, top-aligned
+**What `MainBody` covers.** `MainBody` (`src/components/AppShell/main-body.tsx`)
+answers a `main` target by hiding everything inside `.app-shell__main` and laying
+one `<main>` holding the skeleton over it, so the page frame is covered as well
+as the page's content. The hidden page stays mounted at its full height, and the
+skeleton is pinned to the top of the window under the bar, wherever the page
+was scrolled to (MB.271). The `<main>` takes the frame the target names, top-aligned
 and never centred in the window: `wide`, `with-nav` and `entry` use `page-column`,
 `narrow` uses `page-frame page-frame--narrow`, and no frame the standard
 `page-frame`. A narrow `form` sits on a `panel`, as the real form does.
@@ -274,11 +287,11 @@ Compendium pages sit in `PublicFrame`, not the shell, and its body is the same
 `MainBody`, so a press of the frame's Compendium link (`siteLinkTarget('/compendium')`),
 a card or an entry's own links draws the destination's skeleton under the
 frame's bar. In both chromes the page sits in a wrapper `div`
-(`.app-shell__main`, `.public-frame__main`), the skip link's target is an
+(`.app-shell__main` in both frames), the skip link's target is an
 empty span just before it, and the `(public)` layout renders the page's own
 `<main>` inside the wrapper:
-during a wait `MainBody` swaps that `main` for the skeleton's, so the page
-still has one `main` and one h1. A `main` on the wrapper would have nested the
+during a wait `MainBody` hides that `main` (`aria-hidden`, `inert`) and lays
+the skeleton's over it, so the page still exposes one `main` and one h1. A `main` on the wrapper would have nested the
 two. There is no `loading.tsx` here either, so a direct request for an unknown
 entry still answers 404 and a moved one 308.
 
@@ -291,17 +304,13 @@ shows its dot when either the hook or the enclosing context says pending.
 
 ### The guard
 
-`tests/guards/navigation.test.ts` fails when a file under `src/` outside
+The lint rule `sorrel/no-bare-router-navigation` (`lint/source-sweeps.js`) fails when a file under `src/` outside
 `src/lib/navigation/` calls `router.push`, `router.replace` or
 `router.refresh`, because a bare call moves the page with no signal. The match
 is by name: a receiver whose name ends in `router` (`router`, `appRouter`),
 so a router held under another name is not seen. Next's `<Link>` is not
-covered. Its baseline is now empty; a file that holds such a call fails in its
-own diff, and the fix is `usePendingNavigation`, not a new baseline entry. Were
-an entry ever added, a count that no longer matches would fail too, so the list
-could only shrink. A second test feeds the pattern a sample string with three
-calls and an `appRouter` call and expects four matches, so a loosened pattern
-fails.
+covered. Nothing is exempt: a file that holds such a call fails in its own diff, and the
+fix is `usePendingNavigation`.
 
 ### Adding a wait: the steps
 
@@ -359,16 +368,16 @@ More examples:
 ## Stories
 
 Search "loading" in the workshop to find every one; they all sit under
-`Feedback / Loading / ...`. The two below are not components of their own,
-so their stories live in `.ladle/`:
+`Feedback`. The two below are not components of their own,
+so their stories live in `.storybook/`:
 
-- `Main Body` (`.ladle/main-body.stories.tsx`): `AtRest` shows a page inside the shell;
-  `LoadingPage` opens with its link already pressed, so the page has gone and the
+- `Main Body` (`.storybook/main-body.stories.tsx`): `States` holds one dropdown of pages inside the shell; the
+  ones that wait open with their link already pressed, so the page has gone and the
   `page` skeleton stands in its `main`, under the page bar.
-- `Pending Link` (`.ladle/pending-link.stories.tsx`): `AtRest` is a link with its
-  hint; `LoadingLink` opens pressed, with the dot showing and `aria-busy` set.
+- `Pending Link` (`.storybook/pending-link.stories.tsx`): `Default` is a link with its
+  hint; `Pending` opens pressed, with the dot showing and `aria-busy` set.
 
-Both run the real `NavigationProvider`. `.ladle/navigating.tsx` keeps the
+Both run the real `NavigationProvider`. `.storybook/navigating.tsx` keeps the
 router call pending for good, as the App Router does until a page renders; its
 "Start Over" button ends the wait.
 

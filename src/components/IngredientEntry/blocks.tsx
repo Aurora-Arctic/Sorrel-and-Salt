@@ -2,13 +2,12 @@ import type { ReactElement, ReactNode } from 'react';
 import { chipColors } from '../../lib/chip-colors';
 import { capitalise } from '../../lib/text';
 import type { CategoryDetail, DeityDetail, IngredientRow } from '@/modules/ingredients';
-// Holds `.ingredient-entry__empty`, which these blocks say "None recorded" in.
+// Holds `.ingredient-entry__empty`, which these blocks say "No elements recorded." in.
 import './index.scss';
 
-// The entry page's blocks, which its Details section, its form sections and
-// the details modal's summary (M12.5) all draw: a headed list, the
-// correspondences, the category chips, and the ids that tie each heading to its
-// content. Server-renderable, with no hook. claude-docs/components/ingredient-entry.md.
+// The entry page's blocks, drawn by its Details, its form sections and the details modal's summary:
+// a headed list, the correspondences, the category chips, and the ids tying each heading to its
+// content. Server-renderable, with no hook.
 
 /** Blank counts as nothing said, as `SafetyNote` counts it. */
 export const said = (text: string | null | undefined): text is string => (text ?? '').trim() !== '';
@@ -37,10 +36,19 @@ export function correspondences(source: Correspondences, deities?: readonly Deit
   if (deities) {
     rows.push({
       label: 'Deities',
-      values: deities.map(({ name, tradition }) => (tradition ? `${name} (${tradition})` : name)),
+      values: deities.map(deityMention),
     });
   }
   return rows;
+}
+
+/** A deity as the Deities row names it: its tradition and other names in brackets, parted by a semicolon because the row joins its values with commas. */
+function deityMention({ name, tradition, otherNames }: DeityDetail): string {
+  const parts = [
+    tradition ?? [],
+    otherNames.length > 0 ? `also called ${otherNames.join(', ')}` : [],
+  ].flat();
+  return parts.length > 0 ? `${name} (${parts.join('; ')})` : name;
 }
 
 /** The ids one block of a section takes: its heading's, and what names its content. */
@@ -113,7 +121,7 @@ export function CorrespondenceBlock({
             {row.values.length > 0 ? (
               <dd>{row.values.join(', ')}</dd>
             ) : (
-              <dd className="ingredient-entry__empty">None recorded</dd>
+              <dd className="ingredient-entry__empty">{`No ${row.label.toLowerCase()} recorded.`}</dd>
             )}
           </div>
         ))}

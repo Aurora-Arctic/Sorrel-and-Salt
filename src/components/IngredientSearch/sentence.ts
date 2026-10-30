@@ -7,13 +7,9 @@ import type {
   SearchSentenceLabelFacet,
 } from './types';
 
-// The sentence above a list that says what it is searching for (M12.4). A pure
-// function, so the component only draws it: it returns typed fragments, and the
-// component turns each `value` into a link to the same filter without that value.
-// Clauses always come in this order, whatever order the address holds them:
-// text query, categories, forms, deities, zodiac, celestial bodies, elements, toxic,
-// then a coven's source, in stock and low stock, then the admin-only nomenclature and No Refs
-// (claude-docs/components/ingredient-search.md, "The search sentence").
+// Builds the sentence above a list that says what it is searching for, as typed fragments the
+// component turns into links. Clauses come in a fixed order, whatever order the address holds
+// them (claude-docs/components/ingredient-search.md, "The search sentence").
 
 // `Intl.ListFormat` is Baseline Widely Available, so no guard line is needed.
 // `en-GB` gives "sage, rue or thyme": no serial comma.
@@ -27,9 +23,8 @@ type Part = SearchSentenceFragment;
 
 const text = (t: string): Part => ({ kind: 'text', text: t });
 
-// Values are shown in lower case, bar the three vocabularies whose entries are proper names
-// (deities, zodiac signs and celestial bodies), which keep their capitals. This is display only: the
-// fragment's `value` is untouched, so it still removes the right filter.
+// Values show in lower case, bar deities, zodiac signs and celestial bodies, which are proper
+// names; display only, as the fragment's `value` keeps its own spelling.
 const lower = (t: string): string => t.toLocaleLowerCase('en-GB');
 
 /** A list format's literal chunk: a bare word ("or") is a join, between its spaces; a comma stays text. */
@@ -103,15 +98,62 @@ export function buildSearchSentence({
     clause(text('matching '), { kind: 'value', text: query, facet: 'query', value: query });
   }
 
+  // A coven is named by label only: the read drops any id that is not a coven the viewer is in. Not In
+  // reads "not held in A or B", or "not held in any of my covens" with none in the address (only for
+  // a viewer with covens to name).
+  const covens = picked(filter.covens).filter((id) => labels.covens?.[id] !== undefined);
+  if (covens.length > 0) {
+    clause(
+      text(filter.covensNot ? 'not held in ' : 'held in '),
+      ...valueList('covens', covens, OR, (v) => label('covens', v)),
+    );
+  } else if (
+    filter.covensNot &&
+    picked(filter.covens).length === 0 &&
+    Object.keys(labels.covens ?? {}).length > 0
+  ) {
+    clause(text('not held in '), {
+      kind: 'value',
+      text: 'any of my covens',
+      facet: 'covensNot',
+      value: 'true',
+    });
+  }
+
   const categories = picked(filter.categories);
   if (categories.length > 0) {
     const any = filter.categoryMode === 'any';
-    // Any-mode reads "in the A or B category" (one of them is enough); all-mode "in the A and B categories".
+    // Any-mode reads "in the A or B category" (one of them is enough); all-mode "in the A and B
+    // categories".
     clause(
       text('in the '),
       ...valueList('categories', categories, any ? OR : AND, (v) => lower(label('categories', v))),
       text(!any && categories.length > 1 ? ' categories' : ' category'),
     );
+  }
+
+  // The grimoire's four facets, after the categories.
+  const moonPhases = picked(filter.moonPhases);
+  if (moonPhases.length > 0) {
+    clause(text('in the moon phase '), ...valueList('moonPhases', moonPhases, OR, (v) => v));
+  }
+
+  const daysOfWeek = picked(filter.daysOfWeek);
+  if (daysOfWeek.length > 0) {
+    clause(text('for the day '), ...valueList('daysOfWeek', daysOfWeek, OR, (v) => v));
+  }
+
+  const visibilities = picked(filter.visibility ? [filter.visibility] : []);
+  if (visibilities.length > 0) {
+    clause(
+      text('that are '),
+      ...valueList('visibilities', visibilities, OR, (v) => lower(label('visibilities', v))),
+    );
+  }
+
+  const makers = picked(filter.makers);
+  if (makers.length > 0) {
+    clause(text('made by '), ...valueList('makers', makers, OR, (v) => label('makers', v)));
   }
 
   const forms = picked(filter.forms);
@@ -210,6 +252,15 @@ export function buildSearchSentence({
       text: 'without forms',
       facet: 'withoutForms',
       value: 'true',
+    });
+  }
+
+  if (admin && (filter.reviewed === 'reviewed' || filter.reviewed === 'needs_review')) {
+    clause({
+      kind: 'value',
+      text: filter.reviewed === 'reviewed' ? 'reviewed by a curator' : 'needing review',
+      facet: 'reviewed',
+      value: filter.reviewed,
     });
   }
 

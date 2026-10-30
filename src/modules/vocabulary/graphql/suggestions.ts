@@ -72,6 +72,11 @@ const DeitySuggestionRef = builder.objectRef<DeitySuggestion>('DeitySuggestion')
     value: t.exposeString('value'),
     description: t.exposeString('description', { nullable: true }),
     tradition: t.exposeString('tradition', { nullable: true }),
+    matchedName: t.exposeString('matchedName', {
+      nullable: true,
+      description:
+        "The other name the query matched (M14.23), which the deity's own name does not show; null when its name matched, or it was found another way.",
+    }),
     curated: t.exposeBoolean('curated'),
   }),
 });

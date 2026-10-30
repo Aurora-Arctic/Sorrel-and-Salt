@@ -92,11 +92,11 @@ column the page frame is, the menu above the sections. The class does not need
 `.page-frame`, so the coven index uses it inside `.coven-layout`. A page has at
 most three sections beside the menu for it to stick against; the account's
 fourth runs on below it. Giving both pages the one class is MB.119's: the two
-cannot drift, and the account page's layout was checked unchanged at four widths.
+cannot drift, and the account page's layout was checked unchanged at four widths. The spell page uses the ingredient layout too (`entry-nav-grid`), and an entry may be `narrowOnly`: hidden from a tablet up, where the section it names stands beside the text. A group whose entries are all `narrowOnly` is hidden whole, its label too.
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/PageNav/index.stories.tsx): `Default`, the column on a wide screen with the bar on the right edge and the text right-aligned; `Grouped` and `GroupedPhone`, a top-level entry and three under a Forms label, wide and at 375px; `Phone`, at 375px, with the bar on the left and the text left-aligned; `PhoneDark` and `PhoneLight`, the same at 375px in each theme.
+[`index.stories.tsx`](../../src/components/PageNav/index.stories.tsx): `States` is a grid: Plain, the column on a wide screen with the bar on the right edge and the text right-aligned; Grouped, a top-level entry and three under a Forms label; Grouped Apart, a group set apart by its first entry, with a break and a short rule before it. The toolbar viewport menu shows any of them at 375px, where the bar is on the left and the text left-aligned.
 
 ## Tests
 
@@ -112,3 +112,9 @@ undrawn with every test of the attribute still green (it was, from MB.7 until
 M10.33). The coven index's entries are asserted in
 `tests/app/(shell)/coven/page.test.tsx`: one per section drawn, each landing on
 a section that exists.
+
+## The break before a set-apart item
+
+An item set apart (an ingredient's Forms, and its References, whether one link or a group of Notes and Bibliography) takes a break one step wider than a group label's, so the line in it has air on both sides. A group's label carries its own break, so here the item takes the gap and the label gives its own up, which keeps the gap from being doubled.
+
+A short hairline sits halfway through that gap. A pseudo-element draws it, so the list gains no element. It starts at the entries' own inset and, where the menu is right-aligned, ends there. The entries above and the item itself both pad their text by `space(1)` top and bottom, so the middle of the margin is the middle between the two texts. The rule is 1px tall and hangs below its offset, so half a pixel is taken off to put its centre on the middle.

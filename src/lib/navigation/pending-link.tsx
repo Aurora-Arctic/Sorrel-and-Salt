@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import type { ComponentProps, MouseEvent, ReactElement } from 'react';
 import type { NavigationTarget } from './types';
+import { opensElsewhere } from '../opens-elsewhere';
 import { LinkPendingContext } from './link-pending';
 import { usePendingNavigation } from './use-navigation';
 
@@ -10,10 +11,8 @@ import { usePendingNavigation } from './use-navigation';
 type PendingLinkProps = ComponentProps<typeof Link> & { navigationTarget?: NavigationTarget };
 
 /**
- * The one link the site draws. A plain press navigates through the shared
- * hook, so the page bar and the destination's skeleton follow. A press the
- * browser means for a new tab or window, or a link that opens elsewhere, is
- * left to the browser untouched.
+ * The one link the site draws. A plain press navigates through the shared hook, so the page bar and the destination's skeleton follow; a press meant for a
+ * new tab or window, or a link that opens elsewhere, is left to the browser.
  */
 export function PendingLink({
   navigationTarget,
@@ -28,9 +27,7 @@ export function PendingLink({
   const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
     onClick?.(event);
     if (event.defaultPrevented || typeof href !== 'string') return;
-    if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
-      return;
-    }
+    if (opensElsewhere(event)) return;
     if ((target && target !== '_self') || rest.download !== undefined) return;
     event.preventDefault();
     navigate(href, {

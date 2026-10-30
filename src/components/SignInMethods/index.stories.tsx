@@ -1,7 +1,8 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
 import { GENERIC_LINK_ERROR, linkErrorMessage } from '../../lib/sign-in';
-import { usePressOnMount } from '../../../.ladle/press';
+import { hangAuth, refuseAuth } from '../../../.storybook/mock-api';
+import { press, pressLast, usePressOnMount, useSteps } from '../../../.storybook/press';
 import EmailForm from '../EmailForm';
 import NameForm from '../NameForm';
 import PageNav from '../PageNav';
@@ -10,13 +11,14 @@ import SignInMethods from '.';
 import type { LinkedAccount, ProviderId } from '../../lib/types';
 import type { SignInMethodsProps } from './types';
 
-// Render-only; behaviour is asserted in tests/components/SignInMethods. Adding
-// or removing here reaches for /api/auth, which the workshop does not serve,
-// so a click fails into a callout under the control pressed — a state worth
-// seeing in itself.
-export default {
-  title: 'Account / Sign-In Methods',
-};
+// Render-only; behaviour is asserted in tests/components/SignInMethods. Adding or
+// removing reaches /api/auth, which the workshop does not serve, so a click fails
+// into a callout under the control pressed.
+const meta = {
+  title: 'Sign In / Sign-In Methods',
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const ALL_PROVIDERS: readonly ProviderId[] = ['discord', 'google', 'facebook', 'microsoft'];
 const DISCORD: LinkedAccount = { id: 'a-discord', providerId: 'discord' };
@@ -49,21 +51,19 @@ const Page = (props: SignInMethodsProps) => (
 
 // The common first visit: the one provider the account was made with, which
 // cannot be removed while it is the only one, and says so.
-export const OneLinked: Story = () => <Page linked={[DISCORD]} configured={ALL_PROVIDERS} />;
+const defaultNode = <Page linked={[DISCORD]} configured={ALL_PROVIDERS} />;
 
-export const TwoLinked: Story = () => (
-  <Page linked={[DISCORD, MICROSOFT]} configured={ALL_PROVIDERS} />
-);
+const twoLinkedNode = <Page linked={[DISCORD, MICROSOFT]} configured={ALL_PROVIDERS} />;
 
 // The same two from a session older than Better Auth's `freshAge`: no row
 // offers Remove, and the list offers a fresh sign-in instead.
-export const StaleSession: Story = () => (
+const staleSessionNode = (
   <Page linked={[DISCORD, MICROSOFT]} configured={ALL_PROVIDERS} fresh={false} />
 );
 
 // A failed link to Microsoft, its sentence in Microsoft's row. `error` reads
 // the real mapping rather than a copied string.
-export const WithError: Story = () => (
+const failedNode = (
   <Page
     linked={[DISCORD]}
     configured={ALL_PROVIDERS}
@@ -75,14 +75,12 @@ export const WithError: Story = () => (
 );
 
 // Local dev with one registered pair: the rest cannot be added.
-export const SomeUnavailable: Story = () => <Page linked={[DISCORD]} configured={['discord']} />;
+const someUnavailableNode = <Page linked={[DISCORD]} configured={['discord']} />;
 
-// The whole /account page, which is a server component and has no story of
-// its own: composed as page.tsx composes it, a bare heading, the jump links
-// (PageNav), then the four sections, each on its own panel, Invitations with
-// none waiting. The `page-with-nav` class on the main is what lays the
-// sections out in two columns on a wide screen. Fixture props stand in for the session and the
-// row. Sign Out is not here: since MB.7 it sits only in the account menu.
+// The whole /account page (a server component with no story of its own), composed
+// as page.tsx composes it: heading, jump links (PageNav), then four panels, with
+// Invitations empty. The `page-with-nav` class lays the sections out in two columns
+// on a wide screen. Sign Out is only in the account menu.
 const WholeAccountPage = ({
   methods = { linked: [DISCORD], configured: ALL_PROVIDERS },
 }: {
@@ -137,11 +135,11 @@ const WholeAccountPage = ({
   </main>
 );
 
-export const WholePage: Story = () => <WholeAccountPage />;
+const wholePageNode = <WholeAccountPage />;
 
-// The whole page at a phone's width, in each theme, with every row state:
+// The whole page with every row state (narrow it with the viewport menu):
 // two linked, one addable, one unavailable, and a failure in a row.
-const AtPhoneWidth = () => (
+const EveryRow = () => (
   <WholeAccountPage
     methods={{
       linked: [DISCORD, MICROSOFT],
@@ -151,24 +149,56 @@ const AtPhoneWidth = () => (
   />
 );
 
-export const PhoneDark: Story = () => <AtPhoneWidth />;
-PhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const PhoneLight: Story = () => <AtPhoneWidth />;
-PhoneLight.meta = { theme: 'light', width: 375 };
-
+const everyRowStateNode = <EveryRow />;
 // Add pressed on Google, as a person would, with the link request left
 // unanswered: the row's button reads "Adding" and waits, as it does while the
-// browser is on its way to the provider (M12.33).
-export const LoadingAdd: Story = () => {
-  usePressOnMount('Add Google');
-  return <Page linked={[DISCORD]} configured={ALL_PROVIDERS} />;
+// browser is on its way to the provider.
+export const PendingAdd: Story = {
+  beforeEach: ({ msw }) => msw.use(hangAuth()),
+  render: () => {
+    usePressOnMount('Add Google');
+    return <Page linked={[DISCORD]} configured={ALL_PROVIDERS} />;
+  },
 };
 
-// Remove pressed on Microsoft, as a person would: the workshop serves no
-// /api/auth, so the removal fails into its callout under Remove Microsoft,
-// with the badge on the button (claude-docs/components/click-feedback.md).
-export const FailedRemove: Story = () => {
-  usePressOnMount('Remove Microsoft');
-  return <Page linked={[DISCORD, MICROSOFT]} configured={ALL_PROVIDERS} />;
+// Remove pressed on Microsoft, then the red Remove in the Remove Sign-In Method
+// question, as a person would: the fake API refuses /api/auth, so the question
+// closes and the removal fails into its callout under Remove Microsoft, with the
+// badge on the button (claude-docs/components/click-feedback.md).
+export const FailedRemove: Story = {
+  tags: ['expects-failed-request'],
+  beforeEach: ({ msw }) => msw.use(refuseAuth()),
+  render: () => {
+    useSteps([() => press('Remove Microsoft'), () => pressLast('Remove')]);
+    return <Page linked={[DISCORD, MICROSOFT]} configured={ALL_PROVIDERS} />;
+  },
+};
+
+const STATES_STATES: Record<string, ReactNode> = {
+  Default: defaultNode,
+  'Two Linked': twoLinkedNode,
+  'Stale Session': staleSessionNode,
+  Failed: failedNode,
+  'Some Unavailable': someUnavailableNode,
+};
+
+export const States: Story = {
+  args: { state: 'Default' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
+  },
+  render: ({ state }) => <div>{state}</div>,
+};
+
+const WHOLEPAGE_STATES: Record<string, ReactNode> = {
+  'Whole Page': wholePageNode,
+  'Every Row State': everyRowStateNode,
+};
+
+export const WholePage: Story = {
+  args: { state: 'Whole Page' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(WHOLEPAGE_STATES), mapping: WHOLEPAGE_STATES },
+  },
+  render: ({ state }) => <div>{state}</div>,
 };

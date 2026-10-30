@@ -1,5 +1,5 @@
 // The shape of a stock amount, written down once: inventory-items.ts builds
-// both numeric columns from it, grimoire's spell-ingredients.ts a layer's
+// both numeric columns from it, grimoire's spell-steps.ts a step's
 // quantity, and ../validation/stock.ts refuses what they cannot hold. Imports
 // nothing, like units.ts, so the form can reach it.
 

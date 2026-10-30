@@ -1,14 +1,16 @@
-import type { Story } from '@ladle/react';
-import { AdminTabbedFrame } from '../../../.ladle/admin-frame';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { ReactNode } from 'react';
 import PrivilegeLedger from '.';
 import { privilegeLedgerHref } from './href';
 import type { PrivilegeLedgerEntry } from './types';
 
 // Render-only; behaviour is asserted in tests/components/PrivilegeLedger.
 // Invented people, on invented dates.
-export default {
+const meta = {
   title: 'Admin / Privilege Ledger',
-};
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const ADA = { name: 'Ada Fixturewort', href: '/admin/users?query=ada%40users.test' };
 const BRAM = { name: 'Bram Testwort', href: '/admin/users?query=bram%40users.test' };
@@ -55,6 +57,36 @@ const CHANGES: PrivilegeLedgerEntry[] = [
     note: null,
   },
   {
+    id: 'c6',
+    at: new Date('2026-01-01T00:00:00Z'),
+    subject: ADA,
+    privilege: 'curator',
+    change: 'grant',
+    via: 'admin',
+    actor: BRAM,
+    note: null,
+  },
+  {
+    id: 'c7',
+    at: new Date('2025-12-20T00:00:00Z'),
+    subject: ADA,
+    privilege: 'admin',
+    change: 'revoke',
+    via: 'admin',
+    actor: BRAM,
+    note: 'Stepped down.',
+  },
+  {
+    id: 'c8',
+    at: new Date('2025-12-19T00:00:00Z'),
+    subject: BRAM,
+    privilege: 'curator',
+    change: 'revoke',
+    via: 'admin',
+    actor: null,
+    note: null,
+  },
+  {
     id: 'c5',
     at: new Date('2026-01-01T00:00:00Z'),
     subject: BRAM,
@@ -66,7 +98,10 @@ const CHANGES: PrivilegeLedgerEntry[] = [
   },
 ];
 
-export const Everything: Story = () => (
+const MIDDLE = { page: 2, pages: 3 };
+const LAST = { page: 3, pages: 3 };
+
+const firstPageNode = (
   <PrivilegeLedger
     changes={CHANGES}
     filter={{}}
@@ -75,57 +110,66 @@ export const Everything: Story = () => (
   />
 );
 
-export const OneUser: Story = () => (
+const middlePageNode = (
+  <PrivilegeLedger
+    changes={CHANGES}
+    filter={{}}
+    previousHref={privilegeLedgerHref({}, { before: 'cursor' })}
+    nextHref={privilegeLedgerHref({}, { after: 'cursor' })}
+    position={MIDDLE}
+  />
+);
+
+const lastPageNode = (
+  <PrivilegeLedger
+    changes={CHANGES.slice(-2)}
+    filter={{}}
+    previousHref={privilegeLedgerHref({}, { before: 'cursor' })}
+    position={LAST}
+  />
+);
+
+const oneUserNode = (
   <PrivilegeLedger
     changes={CHANGES.filter((change) => change.subject === ADA)}
     filter={{ query: 'ada@users.test' }}
   />
 );
 
-export const OneUserAdminOnly: Story = () => (
+const OneUserAdminOnlyView = () => (
   <PrivilegeLedger
     changes={CHANGES.filter((change) => change.subject === ADA && change.privilege === 'admin')}
     filter={{ query: 'ada@users.test', privilege: 'admin' }}
   />
 );
 
-export const Empty: Story = () => <PrivilegeLedger changes={[]} filter={{}} />;
+const oneUserAdminOnlyNode = <OneUserAdminOnlyView />;
+
+const emptyNode = <PrivilegeLedger changes={[]} filter={{}} />;
 
 // A search no row in this file matches, so the empty state is true of the
 // other stories' rows as well.
-export const EmptyForASearch: Story = () => (
+const noMatchesNode = (
   <PrivilegeLedger
     changes={[]}
     filter={{ query: 'cora@users.test', privilege: 'create_workspace' }}
   />
 );
 
-// At phone width, in the admin layout's frame and the People page with its
-// Privilege Changes tab open, as /admin/privilege-changes draws them: each
-// change a card, every fact led by its column's name.
-export const PhoneDark: Story = () => (
-  <AdminTabbedFrame page="people" open="/admin/privilege-changes">
-    <PrivilegeLedger changes={CHANGES} filter={{}} position={{ page: 1, pages: 3 }} />
-  </AdminTabbedFrame>
-);
-PhoneDark.meta = { theme: 'dark', width: 375 };
+const LEDGER_STATES: Record<string, ReactNode> = {
+  'First Page': firstPageNode,
+  'Middle Page': middlePageNode,
+  'Last Page': lastPageNode,
+  'One User': oneUserNode,
+  'One User Admin Only': oneUserAdminOnlyNode,
+  Empty: emptyNode,
+  'No Matches': noMatchesNode,
+};
 
-export const PhoneLight: Story = () => (
-  <AdminTabbedFrame page="people" open="/admin/privilege-changes">
-    <PrivilegeLedger changes={CHANGES} filter={{}} position={{ page: 1, pages: 3 }} />
-  </AdminTabbedFrame>
-);
-PhoneLight.meta = { theme: 'light', width: 375 };
-
-// The filtered ledger at a phone's width, Clear beneath the fields.
-const FilteredPhone = () => (
-  <AdminTabbedFrame page="people" open="/admin/privilege-changes">
-    <OneUserAdminOnly />
-  </AdminTabbedFrame>
-);
-
-export const FilteredPhoneDark: Story = () => <FilteredPhone />;
-FilteredPhoneDark.meta = { theme: 'dark', width: 375 };
-
-export const FilteredPhoneLight: Story = () => <FilteredPhone />;
-FilteredPhoneLight.meta = { theme: 'light', width: 375 };
+export const States: Story = {
+  args: { state: 'First Page' },
+  argTypes: {
+    state: { control: 'select', options: Object.keys(LEDGER_STATES), mapping: LEDGER_STATES },
+  },
+  render: ({ state }) => <div>{state}</div>,
+};

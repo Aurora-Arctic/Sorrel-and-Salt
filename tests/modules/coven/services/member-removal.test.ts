@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { findWorkspaceRole, withAudit } from '@/db/repository';
+import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { Forbidden } from '@/lib/errors';
 import { LastOwner, leaveWorkspace, removeMember, updateMemberRole } from '@/modules/coven';
 import { A, B, C, D, asUser } from '../../../support/as-user';
@@ -8,8 +9,8 @@ import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 
 useRawClient();
 
-// Removing a member and leaving (M6.15): both soft-delete the membership row,
-// stamped from the session, and both run M6.8's last-owner guard. The revive
+// Removing a member and leaving: both soft-delete the membership row,
+// stamped from the session, and both run the last-owner guard. The revive
 // write is the way back for a person invited again.
 
 type Role = 'owner' | 'member' | 'viewer';
@@ -106,6 +107,21 @@ describe('removeMember', () => {
     await expect(removeMember(asUser(D), covenId, B.id)).rejects.toThrow(Forbidden);
 
     expect((await seat(covenId, B.id)).deleted_by).toBe(A.id);
+  });
+  it('refuses to remove the system user, though another owner exists', async () => {
+    const covenId = await insertCoven('Fixture System Seat Coven', [
+      [A.id, 'owner'],
+      [BOOTSTRAP_USER_ID, 'owner'],
+    ]);
+    // Why the refusal is the system-seat rule's: A also owns the coven, so the last-owner guard alone would let this through.
+    await expect(findWorkspaceRole(A.id, covenId)).resolves.toBe('owner');
+    await expect(findWorkspaceRole(BOOTSTRAP_USER_ID, covenId)).resolves.toBe('owner');
+
+    await expect(removeMember(asUser(A), covenId, BOOTSTRAP_USER_ID)).rejects.toThrow(
+      "The system user's seat can't be changed.",
+    );
+
+    await expect(findWorkspaceRole(BOOTSTRAP_USER_ID, covenId)).resolves.toBe('owner');
   });
 });
 
@@ -219,7 +235,7 @@ describe('reviveMembership', () => {
   });
 });
 
-describe('handing a coven over, then leaving (M6.16)', () => {
+describe('handing a coven over, then leaving', () => {
   it('promotes first, so the leave that follows finds a second owner and the coven keeps one', async () => {
     const covenId = await insertCoven('Fixture Handover Coven', [
       [A.id, 'owner'],

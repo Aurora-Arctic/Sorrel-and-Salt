@@ -17,15 +17,15 @@ export const herbs = pgTable('repository_probe_herbs', {
   // inside the inserting transaction — the only way a narrow `AuditWriter`
   // lets a test observe it. `current_setting(.., true)` is missing_ok.
   actingUser: text('acting_user'),
-  // The same for `app.impersonated_by` (MB.53).
+  // The same for `app.impersonated_by`.
   impersonatingAdmin: text('impersonating_admin'),
-  // And for `app.privilege_route` and `app.privilege_note` (MB.195).
+  // And for `app.privilege_route` and `app.privilege_note`.
   privilegeRoute: text('privilege_route'),
   privilegeNote: text('privilege_note'),
   ...auditColumns,
 });
 
-// The join-table shape: four stamps, a composite key, no delete columns (MB.34).
+// The join-table shape: four stamps, a composite key, no delete columns.
 export const pairs = pgTable(
   'repository_probe_pairs',
   {
@@ -55,10 +55,9 @@ export const tinctures = pgTable('repository_probe_tinctures', {
   ...auditColumns,
 });
 
-// The two marked shapes (MB.198): `herbs` and `tinctures` again, each
-// written only through named calls, so every generic writer method refuses
-// it. Declared and never created: what they test is the type, and a refusal
-// they exist to show is a compile error rather than a statement.
+// The two marked shapes: `herbs` and `tinctures` again, each written only through named calls, so
+// every generic writer method refuses it. Declared and never created: what they test is the type, and
+// a refusal they exist to show is a compile error rather than a statement.
 export const switches = namedWrites(
   pgTable('repository_probe_switches', {
     id: uuid('id').defaultRandom().primaryKey(),

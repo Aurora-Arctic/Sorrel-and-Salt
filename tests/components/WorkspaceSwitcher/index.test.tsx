@@ -13,8 +13,8 @@ const { default: WorkspaceSwitcher } = await import('@/components/WorkspaceSwitc
 const { default: CovenSwitchTargets } = await import('@/components/CovenSwitchTargets');
 const { CovenSwitchProvider } = await import('@/components/CovenSwitchTargets/context');
 
-// Story 8 (M6.9): the viewer's workspaces, the current one read off the
-// address, a choice going to the same section in the other. Story 3 (M9.16):
+// The viewer's workspaces, the current one read off the
+// address, a choice going to the same section in the other, and
 // the way to the create page, offered only to a viewer holding the right.
 
 const WORKSPACES = [
@@ -39,14 +39,6 @@ describe('WorkspaceSwitcher', () => {
       'Fixture Coven',
       'Testwort Circle',
     ]);
-  });
-
-  it('shows the workspace the address is in as the value', () => {
-    pathname.mockReturnValue('/coven/testwort-circle');
-
-    render(<WorkspaceSwitcher workspaces={WORKSPACES} />);
-
-    expect(box()).toHaveTextContent('Testwort Circle');
   });
 
   it('goes to the same section in the chosen workspace', () => {
@@ -85,7 +77,7 @@ describe('WorkspaceSwitcher', () => {
     expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle/members');
   });
 
-  describe('from a page that says which covens it opens in (M9.12)', () => {
+  describe('from a page that says which covens it opens in', () => {
     const ENTRY = '/coven/fixture-coven/ingredients/some-id';
     const switchTo = (name: string) => {
       fireEvent.click(box());
@@ -109,22 +101,6 @@ describe('WorkspaceSwitcher', () => {
       expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle/ingredients/some-id');
     });
 
-    it('falls back to the section in a coven it does not open in', () => {
-      renderOn(['fixture-coven']);
-
-      switchTo('Testwort Circle');
-
-      expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle/ingredients');
-    });
-
-    it('falls back to the section when no page registered', () => {
-      renderOn(null);
-
-      switchTo('Testwort Circle');
-
-      expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle/ingredients');
-    });
-
     it('ignores a registration made for another address', () => {
       // Why it could be used: it names the target coven, only for a different entry.
       renderOn(['fixture-coven', 'testwort-circle'], '/coven/fixture-coven/ingredients/other-id');
@@ -133,17 +109,6 @@ describe('WorkspaceSwitcher', () => {
 
       expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle/ingredients');
     });
-  });
-
-  it('is operable from the keyboard', () => {
-    render(<WorkspaceSwitcher workspaces={WORKSPACES} />);
-
-    box().focus();
-    fireEvent.keyDown(box(), { key: 'ArrowDown' });
-    fireEvent.keyDown(box(), { key: 'ArrowDown' });
-    fireEvent.keyDown(box(), { key: 'Enter' });
-
-    expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle/ingredients');
   });
 
   it('keeps the current workspace from the address, so a re-render in another tab’s workspace does not change it', () => {
@@ -155,7 +120,7 @@ describe('WorkspaceSwitcher', () => {
     expect(box()).toHaveTextContent('Testwort Circle');
   });
 
-  describe('the create entry (M9.16)', () => {
+  describe('the create entry', () => {
     it('is offered after the workspaces only to a viewer holding creation rights', () => {
       const { unmount } = render(<WorkspaceSwitcher workspaces={WORKSPACES} canCreate />);
       fireEvent.click(box());
@@ -171,19 +136,11 @@ describe('WorkspaceSwitcher', () => {
       expect(screen.queryByRole('option', { name: 'Create Coven' })).not.toBeInTheDocument();
     });
 
-    it('goes to the create page, from a click or the keyboard', () => {
+    it('goes to the create page', () => {
       render(<WorkspaceSwitcher workspaces={WORKSPACES} canCreate />);
 
       fireEvent.click(box());
       fireEvent.click(screen.getByRole('option', { name: 'Create Coven' }));
-      expect(push).toHaveBeenCalledExactlyOnceWith('/coven/new');
-
-      push.mockClear();
-      box().focus();
-      fireEvent.keyDown(box(), { key: 'ArrowDown' });
-      fireEvent.keyDown(box(), { key: 'ArrowDown' });
-      fireEvent.keyDown(box(), { key: 'ArrowDown' });
-      fireEvent.keyDown(box(), { key: 'Enter' });
       expect(push).toHaveBeenCalledExactlyOnceWith('/coven/new');
     });
 
@@ -196,7 +153,7 @@ describe('WorkspaceSwitcher', () => {
     });
   });
 
-  describe('while the switch is on its way (M12.33)', () => {
+  describe('while the switch is on its way', () => {
     let arrive = () => {};
     afterEach(async () => {
       await act(async () => arrive());

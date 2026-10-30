@@ -54,7 +54,36 @@ client and `drizzle-orm`, `dataloader`, deep module imports, `slugify`,
 `lint/sorrel-lint.js`, an oxlint JS plugin: `no-use-server`,
 `service-server-only`, `route-allowlist`, `pagination-helper` and
 `module-boundaries`. Each was proved once, by a probe file `npm run lint`
-rejected in the PR that added it. What stays in `tests/guards/` reads the
+rejected in the PR that added it.
+
+Seven more were Vitest guards that read the source as text or as a syntax
+tree (M14.27). They are rules in `lint/source-sweeps.js`, spread into the same
+plugin, each proved by one passing and one failing case in
+`tests/lint/source-sweeps.test.ts` (oxlint's `RuleTester`, in the `unit`
+project) and by the whole tree passing `npm run lint`:
+
+- `no-bare-router-navigation` — was `navigation.test.ts`: no `router.push`,
+  `replace` or `refresh` outside `src/lib/navigation/` (M12.33).
+- `form-shown-through-form-label` — was `form-label.test.ts`: a variant's
+  form is shown through `formLabel`.
+- `spell-visibility-read-in-one-place` — was `readable-spells-guard.test.ts`:
+  only `readableSpells` compares a spell's visibility to decide a read (rule 7).
+- `compendium-review-mark-switch-only` — was `compendium-review-mark.test.ts`:
+  only `setCompendiumEntryReviewed` sets the review mark (M14.8).
+- `modal-focus-return-through-modal` — was `focus-return.test.ts`: no
+  hand-built `.focus()` return beside a dialog (M8.17).
+- `long-form-guards-leaving` — was `leave-guard.test.ts`: every form calls
+  `useDiscardGuard` or `useLeaveGuard` (M13.14), or the spell builder's
+  `useSaveOnClose`, which calls `useLeaveGuard` (M10.12).
+- `e2e-chained-tests-serial` — was `e2e-serial-chains.test.ts`: a Playwright
+  spec whose tests chain is serial (M11.18; claude-docs/testing/e2e.md, "E2E").
+  `.oxlintrc.json` turns it on for `tests/e2e/**/*.spec.ts` alone.
+
+The two that keep an allowance list (`modal-focus-return-through-modal` and
+`long-form-guards-leaving`) also report a listed file that no longer needs its
+place, so the list can only shrink.
+
+What stays in `tests/guards/` reads the
 schema, the repository's source, the config or the module graph, which lint
 cannot:
 
@@ -67,14 +96,27 @@ cannot:
   two exemption-count pins, six files and one, plus one probe each that the
   ban still fires.
 - `test-location.test.ts` — above.
-- `e2e-serial-chains.test.ts` — a Playwright spec whose tests chain, one
-  assigning a variable declared outside it for a later test to read, is
-  serial, since a file's tests otherwise spread across workers with their own
-  databases (M11.18; claude-docs/testing/e2e.md, "E2E").
+- `browser-floor.test.ts` — a web API past Baseline Widely Available is used
+  in JavaScript only behind a `typeof` or `in` check; it reads the
+  `web-features` package, which lint cannot (M10.24).
 - `migration-order-check.test.ts` and `destructive-ddl-check.test.ts` — the
   rules of the two CI scripts that guard production's migrations.
 - `pulled-env-assertion.test.ts` — no value of a pulled Vercel environment
   reaches a CI log.
+
+Two guards were deleted in M14.27, under rule 1, because neither proved what
+the app does:
+
+- `story-sections.test.ts` pinned the story reporter's table of site areas
+  (`tests/support/story-sections.ts`) to the list of v1 stories. That list is
+  not written down a second time: `tests/support/stories.ts` parses it out of
+  DESIGN.md §10, so the story count cannot drift from the spec. A story missing
+  from the table is listed under "Other" in the story report, which is where
+  the gap shows.
+- `tasks-md.test.ts` tested `readEntry` in `scripts/tasks-md.mjs`, the
+  parser `task-board.mjs sync` uses. Nothing tests it now, and that is
+  deliberate: task-board tooling is not tested (rule 1), because a fault in it
+  shows at once to whoever runs the command.
 
 **The guards share one scan** (MB.184). `tests/support/unit-global-setup.ts`,
 the `unit` project's `globalSetup`, runs `git ls-files --cached --others
@@ -98,7 +140,7 @@ what it scans — an empty listing satisfies every `toEqual([])`.
   literally named `[...all]` (`tests/app/api/auth/[...all]/route.test.ts`) —
   `[...]` is glob metacharacter syntax, so it was worth confirming rather
   than assuming. Its one setup file is `tests/support/setup-msw.ts`, the MSW
-  lifecycle — `beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))`,
+  lifecycle — `beforeAll(() => server.listen({ onUnhandledFrame: 'error' }))`,
   `afterEach(() => server.resetHandlers())`, `afterAll(() => server.close())`
   — against the `server` exported from `tests/support/msw/server.ts`
   (`setupServer()`, no base handlers — every operation is registered per
@@ -229,7 +271,7 @@ inline; }`, for the HTML rendering section's inline elements.
     rather than the relative `/api/graphql` will not match, since happy-dom's
     default location is `http://localhost:3000`.
     Because no base handler answers an un-overridden operation, it falls
-    through to `onUnhandledRequest: 'error'` and fails loudly instead of
+    through to `onUnhandledFrame: 'error'` and fails loudly instead of
     hitting the network; `afterEach(() => server.resetHandlers())` means an
     override from one test never leaks into the next.
     `tests/support/msw/graphql.test.ts` holds the loud failure, the one harness

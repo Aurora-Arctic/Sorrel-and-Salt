@@ -6,12 +6,9 @@ import { GENERIC_FAILURE } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
 import { useClickFeedback } from '../ClickFeedback';
 
-// Sign Out, the last row of the account menu (MB.63, on the owner's call;
-// MB.7 moved it): Better Auth's own sign-out at `/api/auth/*`, the one path
-// outside GraphQL, which carries the session and no application data
-// (claude-docs/auth/graphql-only-exception.md). A success is a full load of
-// `/`, so nothing the signed-in page held survives it; a failure is said in
-// a callout under the button (claude-docs/components/account-menu.md).
+// Sign Out: Better Auth's own sign-out at `/api/auth/*`, the one path outside GraphQL, carrying the
+// session and no application data (claude-docs/auth/graphql-only-exception.md). A success is a full
+// load of `/`; a failure is a callout under the button (claude-docs/components/account-menu.md).
 
 const LANDING = '/';
 

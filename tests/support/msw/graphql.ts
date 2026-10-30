@@ -1,17 +1,17 @@
 import {
   graphql,
-  HttpResponse,
   type GraphQLQuery,
   type GraphQLResponseBody,
   type GraphQLVariables,
-} from 'msw';
+} from 'msw/graphql';
+import { HttpResponse } from 'msw/http';
 import { maskError } from '@/graphql/errors';
-import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
+import { Forbidden, NotFound, StaleWrite, ValidationError } from '@/lib/errors';
 import { server } from './server';
 import type { MockedError } from './types';
 
 // Scoped to /api/graphql. No base handlers: an operation nothing has mocked
-// falls through to setup-msw.ts's `onUnhandledRequest: 'error'`.
+// falls through to setup-msw.ts's `onUnhandledFrame: 'error'`.
 export const graphqlLink = graphql.link('/api/graphql');
 
 export function mockGraphQLQuery<
@@ -36,7 +36,7 @@ export function mockGraphQLMutation<
   );
 }
 
-function thrownFor({ code, fieldErrors = [], message }: MockedError): Error {
+function thrownFor({ code, fieldErrors = [], currentRevision = 1, message }: MockedError): Error {
   switch (code) {
     case 'VALIDATION':
       return new ValidationError(fieldErrors, message);
@@ -44,14 +44,14 @@ function thrownFor({ code, fieldErrors = [], message }: MockedError): Error {
       return new Forbidden(message);
     case 'NOT_FOUND':
       return new NotFound(message);
+    case 'STALE_WRITE':
+      return new StaleWrite(currentRevision, message);
   }
 }
 
 /**
- * Answers the named query or mutation the way /api/graphql answers a service
- * that threw: the body is built by the route's own mapping, so it cannot drift
- * from it. No `path` or `locations` — the helper answers for the operation,
- * not for one field in it.
+ * Answers the named operation as /api/graphql answers a service that threw, the body built by the route's
+ * own mapping. No `path` or `locations`: it answers for the operation, not one field.
  */
 export function mockGraphQLError(operationName: string, error: MockedError) {
   const body: GraphQLResponseBody<GraphQLQuery> = {

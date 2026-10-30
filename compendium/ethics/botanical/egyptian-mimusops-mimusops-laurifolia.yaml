@@ -1,0 +1,14 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/egyptian-mimusops-mimusops-laurifolia
+status: needs-review
+listings:
+  - list: other
+    name: Wikipedia article text (no assessor named)
+    value: Extremely rare in Southwest Arabia; habitat destruction, overgrazing and desertification
+    listedAs: Mimusops laurifolia
+    scope: Southwest Arabia
+    nameBasis: stated
+    source: wikipedia-mimusops-laurifolia
+    locator: 'section "Conservation status": "M. laurifolia is extremely rare in Southwest Arabia."'
+questions:
+  - 'Wikipedia says ''Conservation status": "M. laurifolia is extremely rare in Southwest Arabia.'' but names no assessor. Find the assessment, or drop the row? I recommend finding the assessment.'

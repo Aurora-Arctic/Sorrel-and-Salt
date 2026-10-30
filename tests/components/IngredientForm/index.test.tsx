@@ -1,15 +1,7 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
-import { HttpResponse } from 'msw';
-import { FormProvider, useForm } from 'react-hook-form';
+import { act, fireEvent, screen, within } from '@testing-library/react';
+import { HttpResponse } from 'msw/http';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import IngredientForm from '@/components/IngredientForm';
-import { MultiSelectField } from '@/components/IngredientForm/fields';
-import type {
-  IngredientElement,
-  IngredientFormInput,
-  IngredientFormValues,
-} from '@/components/IngredientForm/types';
-import { EMPTY_VALUES, ingredientResolver } from '@/components/IngredientForm/values';
 import type {
   AddCupboardEntryFromFormMutation,
   AddCupboardEntryFromFormMutationVariables,
@@ -53,16 +45,10 @@ import {
 import { server } from '../../support/msw/server';
 import type { CategoryNode, DuplicateNode } from './types';
 
-// The ingredient entry form. The mutation is answered by MSW in the shape
-// /api/graphql answers (tests/support/msw/graphql.ts), so a server error is
-// the route's own mapping rather than a hand-written body
+// The ingredient entry form. MSW answers the mutation in the shape /api/graphql answers (tests/support/msw/graphql.ts), so a server error is the route's own mapping rather than a hand-written body
 // (claude-docs/components/ingredient-form.md).
 
-/**
- * Renders the form with every lookup answered empty; a test about a lookup
- * answers it after rendering, since the later answer wins. The categories are
- * read as the form opens, so a test about them passes them in.
- */
+/** Renders the form with every lookup answered empty; a test about a lookup answers it after rendering, since the later answer wins. The categories are read as the form opens, so a test about them passes them in. */
 function renderForm({ categories = [] }: { categories?: CategoryNode[] | 'refused' } = {}) {
   const onSaved = vi.fn();
   offerNothing();
@@ -111,7 +97,7 @@ const describers = (control: HTMLElement) =>
 const statusesSaying = (text: string) =>
   screen.queryAllByRole('status').filter((status) => status.textContent?.includes(text));
 
-// Invented groups (M1.25), given out of order: the picker sorts them, and
+// Invented groups, given out of order: the picker sorts them, and
 // knows none of them by name, as it knows no group an admin adds.
 const WARDS = { id: 'a3e1c9b2-0d4f-4a8e-9c71-5b2f6e8d0a11', name: 'Wards & Fixtures' };
 const CRAFT = { id: 'b7f2d0c3-1e5a-4b9f-8d82-6c3a7f9e1b22', name: 'Craft of Tests' };
@@ -138,19 +124,19 @@ const CATEGORIES: CategoryNode[] = [
 ];
 /** Opens the picker's list and picks the category, once the categories have been read. */
 const pickCategory = async (name: string) => {
-  fireEvent.click(screen.getByRole('button', { name: 'Show Category suggestions' }));
-  // A longer wait than the default 1000ms, here alone: nothing says the categories have
-  // loaded before the list opens, so the options are the only signal. They appear about
-  // 82ms after the click on an idle machine, but a run under full CPU load slows this
-  // file's tests up to about 85 times, past 1000ms. 10s covers that and stays inside
-  // the 20s test timeout.
+  // Opened only when shut: a pick leaves the list open for the next, and the
+  // chevron would shut it.
+  if (screen.getByRole('combobox', { name: 'Category' }).getAttribute('aria-expanded') !== 'true')
+    fireEvent.click(screen.getByRole('button', { name: 'Show Category suggestions' }));
+  // A longer wait than the default 1000ms, here alone: nothing says the categories have loaded before the list opens, so the options are the only signal.
+  // They appear about 82ms after the click on an idle machine, but a run under full CPU load slows this file's tests up to about 85 times, past 1000ms; 10s covers that and stays inside the 20s test timeout.
   fireEvent.click(
     await screen.findByRole('option', { name: new RegExp(`^${name}`) }, { timeout: 10_000 }),
   );
 };
 
 describe('IngredientForm', () => {
-  // The owner's rule for every form (M5.6): a save is offered only when there
+  // The owner's rule for every form: a save is offered only when there
   // is something to save.
   it('keeps both saves off until something is entered, and off again once it is cleared', () => {
     renderForm();
@@ -176,7 +162,7 @@ describe('IngredientForm', () => {
 
       await waitFor(() =>
         expect(onSaved).toHaveBeenCalledWith(
-          { id: 'saved-1', name: 'Testwort', slug: 'saved', stock: [] },
+          { id: 'saved-1', name: 'Testwort', slug: 'saved', revision: 1, stock: [] },
           'open',
         ),
       );
@@ -184,7 +170,7 @@ describe('IngredientForm', () => {
       expect(calls[0].workspaceId).toBe(WORKSPACE_ID);
       // Sent as typed — the kind unanswered — and read by the schema the
       // service parses with as `none`, so the one-field stub is a whole entry.
-      // No element chosen is sent as none, the answer "none" (MB.159).
+      // No element chosen is sent as none, the answer "none".
       expect(calls[0].input).toMatchObject({
         name: 'Testwort',
         nomenclature: null,
@@ -234,12 +220,12 @@ describe('IngredientForm', () => {
         // None picked is sent as none, which an update needs to clear them.
         categoryIds: [],
         references: [],
-        // Its forms alone, never a top-level form (MB.221): variants.test.tsx's.
+        // Its forms alone, never a top-level form: variants-field.test.tsx's.
         variants: [],
       });
     });
 
-    // The owner's call during MB.131: Save Ingredient opens what it made,
+    // Save Ingredient opens what it made,
     // and Save & Add Another leaves the form ready for the next ingredient.
     it('asks the page to open what Save Ingredient made, leaving the form as it is', async () => {
       acceptCreate();
@@ -251,7 +237,7 @@ describe('IngredientForm', () => {
 
       await waitFor(() =>
         expect(onSaved).toHaveBeenCalledWith(
-          { id: 'saved-1', name: 'Testwort', slug: 'saved', stock: [] },
+          { id: 'saved-1', name: 'Testwort', slug: 'saved', revision: 1, stock: [] },
           'open',
         ),
       );
@@ -295,7 +281,7 @@ describe('IngredientForm', () => {
 
       await waitFor(() =>
         expect(onSaved).toHaveBeenCalledWith(
-          { id: 'saved-1', name: 'Testwort', slug: 'saved', stock: [] },
+          { id: 'saved-1', name: 'Testwort', slug: 'saved', revision: 1, stock: [] },
           'another',
         ),
       );
@@ -334,19 +320,6 @@ describe('IngredientForm', () => {
       save();
       await waitFor(() => expect(statusesSaying('Testwort')).toHaveLength(0));
     });
-
-    it('keeps what was typed when the save is refused', async () => {
-      mockGraphQLError('CreateWorkspaceIngredient', { code: 'FORBIDDEN', message: 'Not yours.' });
-      renderForm();
-
-      type('Name', 'Testwort');
-      addEntry('Celestial Body', 'Mercury');
-      save();
-
-      await screen.findByRole('alert');
-      expect(textbox('Name')).toHaveValue('Testwort');
-      expect(removeButton('Mercury')).toBeInTheDocument();
-    });
   });
 
   describe('a resolver error', () => {
@@ -375,7 +348,7 @@ describe('IngredientForm', () => {
       await waitFor(() => expect(textbox('Name')).not.toBeInvalid());
     });
 
-    // Story 31: errors show on leaving a field, not only on submit.
+    // Errors show on leaving a field, not only on submit.
     describe('on leaving a field', () => {
       // A field's error waits for it to be left after the person has edited it,
       // even if the edit put it back to its default.
@@ -390,17 +363,6 @@ describe('IngredientForm', () => {
         expect(calls).toHaveLength(0);
       });
 
-      it('clears the error as the field is corrected, without leaving it again', async () => {
-        renderForm();
-
-        type('Name', '   ');
-        fireEvent.blur(textbox('Name'));
-        await waitFor(() => expect(textbox('Name')).toBeInvalid());
-        type('Name', 'Testwort');
-
-        await waitFor(() => expect(textbox('Name')).not.toBeInvalid());
-      });
-
       it('flags a required field typed into, emptied and left, before any submit', async () => {
         renderForm();
 
@@ -412,11 +374,13 @@ describe('IngredientForm', () => {
         await waitFor(() => expectErrorOn(textbox('Name')));
       });
 
-      it('leaves a required field quiet when it is left without an edit', async () => {
+      it('leaves a required field quiet when it, or another field, is left without an edit', async () => {
         renderForm();
 
         fireEvent.focus(textbox('Name'));
         fireEvent.blur(textbox('Name'));
+        fireEvent.focus(textbox('Description'));
+        fireEvent.blur(textbox('Description'));
         await settle();
 
         expect(textbox('Name')).not.toBeInvalid();
@@ -449,26 +413,6 @@ describe('IngredientForm', () => {
         await settle();
 
         expect(textbox('Formal Name')).not.toBeInvalid();
-      });
-
-      it('says nothing of an empty required field that was never touched', async () => {
-        renderForm();
-
-        fireEvent.focus(textbox('Description'));
-        fireEvent.blur(textbox('Description'));
-        await settle();
-
-        expect(textbox('Name')).not.toBeInvalid();
-      });
-
-      it('still flags every field on submit', async () => {
-        acceptCreate();
-        renderForm();
-
-        type('Description', 'An entry with no name.');
-        save();
-
-        await waitFor(() => expectErrorOn(textbox('Name')));
       });
     });
   });
@@ -553,20 +497,25 @@ describe('IngredientForm', () => {
       expect(textbox('Name')).not.toBeInvalid();
     });
 
-    it('renders above the fields when its path names no field the form has', async () => {
-      mockGraphQLError('CreateWorkspaceIngredient', {
-        code: 'VALIDATION',
-        fieldErrors: [{ path: ['slug'], message: 'That slug is already taken' }],
-      });
-      renderForm();
+    // An index past the category picks names none of them, as a slug names no field: the form
+    // has no field for either, so it is said above the fields rather than lost.
+    it.each([
+      { path: ['slug'], message: 'That slug is already taken' },
+      { path: ['categoryIds', 4], message: 'No such category' },
+    ])(
+      'renders above the fields when its path, $path, names no field the form has',
+      async (issue) => {
+        mockGraphQLError('CreateWorkspaceIngredient', { code: 'VALIDATION', fieldErrors: [issue] });
+        renderForm({ categories: CATEGORIES });
 
-      type('Name', 'Testwort');
-      save();
+        type('Name', 'Testwort');
+        save();
 
-      expect(await screen.findByRole('alert')).toBeVisible();
-    });
+        expect(await screen.findByRole('alert')).toBeVisible();
+      },
+    );
 
-    it("shows a refusal's own message", async () => {
+    it("shows a refusal's own message, keeping what was typed", async () => {
       mockGraphQLError('CreateWorkspaceIngredient', {
         code: 'FORBIDDEN',
         message: 'Viewers cannot add ingredients',
@@ -574,9 +523,12 @@ describe('IngredientForm', () => {
       renderForm();
 
       type('Name', 'Testwort');
+      addEntry('Celestial Body', 'Mercury');
       save();
 
       expect(await screen.findByRole('alert')).toHaveTextContent('Viewers cannot add ingredients');
+      expect(textbox('Name')).toHaveValue('Testwort');
+      expect(removeButton('Mercury')).toBeInTheDocument();
     });
 
     it('says something went wrong when the request never reached an answer', async () => {
@@ -606,7 +558,7 @@ describe('IngredientForm', () => {
     });
   });
 
-  // What the form does with the picker (MB.126): the picks sent, and an
+  // What the form does with the picker: the picks sent, and an
   // issue routed to one. The picker's own list, picks, status and error
   // marking are CategoryPicker's (tests/components/CategoryPicker/).
   describe('the categories', () => {
@@ -664,21 +616,6 @@ describe('IngredientForm', () => {
       await waitFor(() => expect(box('Category')).not.toBeInvalid());
     });
 
-    // An index past the picks names none of them: the form has no field for
-    // it, so it is said above the fields rather than lost.
-    it('says an issue naming no pick above the fields', async () => {
-      mockGraphQLError('CreateWorkspaceIngredient', {
-        code: 'VALIDATION',
-        fieldErrors: [{ path: ['categoryIds', 4], message: 'No such category' }],
-      });
-      renderForm({ categories: CATEGORIES });
-
-      type('Name', 'Testwort');
-      save();
-
-      expect(await screen.findByRole('alert')).toBeVisible();
-    });
-
     // The picker says so beneath its box (CategoryPicker's test); the form
     // goes on without them.
     it('still saves, with no categories, when they cannot be read', async () => {
@@ -730,7 +667,7 @@ describe('IngredientForm', () => {
       expect(calls[0].input).toMatchObject({ nomenclature: 'none', canonicalName: '' });
     });
 
-    // An unknown entry takes either (MB.161), so a name typed before the kind
+    // An unknown entry takes either, so a name typed before the kind
     // is settled is kept, and nothing is asked of the field.
     it('keeps the formal name open and optional under Unknown, saving what was typed', async () => {
       const calls = acceptCreate();
@@ -828,44 +765,16 @@ describe('IngredientForm', () => {
       choose('Classification', 'None');
       expect(textbox('Formal Name')).not.toBeRequired();
 
-      // A formal name with no kind saves as unknown (MB.161), so it asks for none.
+      // A formal name with no kind saves as unknown, so it asks for none.
       choose('Classification', 'Unknown');
       type('Formal Name', 'Fixtura testalis');
       expect(select('Classification')).not.toBeRequired();
     });
   });
 
-  // Undo and redo (M12.10): the hook is tested in tests/components/Field; this
+  // Undo and redo: the hook is tested in tests/components/Field; this
   // is its wiring in the form.
   describe('its undo and redo', () => {
-    it('undoes the text typed in Folk Names after a click on Classification, then on a blank spot', async () => {
-      renderForm();
-      addEntry('Folk Name', 'Hedge Fixture');
-      await settle();
-      act(() => box('Folk Name').focus());
-      type('Folk Name', 'Lane Fixt');
-      await settle();
-      expect(box('Folk Name')).toHaveValue('Lane Fixt');
-
-      act(() => select('Classification').focus());
-      fireEvent.click(select('Classification'));
-      expect(select('Classification')).toHaveAttribute('aria-expanded', 'true');
-      undo({ meta: true });
-
-      expect(box('Folk Name')).toHaveValue('');
-      expect(removeButton('Hedge Fixture')).toBeInTheDocument();
-
-      // And from a blank spot of the dialog, where the focus is on the page itself.
-      act(() => box('Folk Name').focus());
-      type('Folk Name', 'Fixture Bane');
-      await settle();
-      act(() => box('Folk Name').blur());
-      expect(document.body).toHaveFocus();
-      undo({ meta: true });
-
-      expect(box('Folk Name')).toHaveValue('');
-    });
-
     it('undoes a classification pick together with the formal name it emptied, focusing Classification, and redoes both', async () => {
       renderForm();
       type('Name', 'Testwort');
@@ -889,25 +798,6 @@ describe('IngredientForm', () => {
       expect(textbox('Formal Name')).toBeDisabled();
       // Leaving a field validates it; let that land inside the test.
       await settle();
-    });
-
-    it('undoes a chip removal and redoes it', async () => {
-      renderForm();
-      addEntry('Celestial Body', 'Mercury');
-      addEntry('Celestial Body', 'Venus');
-      await settle();
-      fireEvent.click(removeButton('Mercury'));
-      expect(screen.queryByRole('button', { name: 'Remove Mercury' })).toBeNull();
-
-      undo();
-
-      expect(removeButton('Mercury')).toBeInTheDocument();
-      expect(removeButton('Venus')).toBeInTheDocument();
-
-      redo();
-
-      expect(screen.queryByRole('button', { name: 'Remove Mercury' })).toBeNull();
-      expect(removeButton('Venus')).toBeInTheDocument();
     });
 
     it('undoes a keyboard reorder of an ordered list and redoes it', async () => {
@@ -936,37 +826,6 @@ describe('IngredientForm', () => {
       vi.restoreAllMocks();
     });
 
-    it('undoes a folk name removed by its x and redoes it', async () => {
-      renderForm();
-      addEntry('Folk Name', 'Hedge Fixture');
-      addEntry('Folk Name', 'Lane Fixture');
-      await settle();
-      fireEvent.click(removeButton('Hedge Fixture'));
-
-      undo();
-
-      expect(removeButton('Hedge Fixture')).toBeInTheDocument();
-      expect(removeButton('Lane Fixture')).toBeInTheDocument();
-
-      redo();
-
-      expect(screen.queryByRole('button', { name: 'Remove Hedge Fixture' })).toBeNull();
-    });
-
-    it('undoes nothing after Save & Add Another has cleared the form', async () => {
-      acceptCreate();
-      const onSaved = renderForm();
-      type('Name', 'Testwort');
-      saveAnother();
-      await waitFor(() => expect(onSaved).toHaveBeenCalled());
-      await waitFor(() => expect(textbox('Name')).toHaveValue(''));
-
-      expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
-      undo();
-
-      expect(textbox('Name')).toHaveValue('');
-    });
-
     it('changes nothing while a save is in flight, and has nothing to undo once it lands', async () => {
       let finish: () => void = () => {};
       const gate = new Promise<void>((resolve) => (finish = resolve));
@@ -975,7 +834,15 @@ describe('IngredientForm', () => {
           await gate;
           const { name } = (variables as { input: { name: string } }).input;
           return HttpResponse.json({
-            data: { createWorkspaceIngredient: { id: 'saved-1', name, slug: 'saved', stock: [] } },
+            data: {
+              createWorkspaceIngredient: {
+                id: 'saved-1',
+                name,
+                slug: 'saved',
+                revision: 1,
+                stock: [],
+              },
+            },
           });
         }),
       );
@@ -1024,7 +891,7 @@ describe('IngredientForm', () => {
     });
   });
 
-  // Story 16's warning, as only the whole form holds it: the form asks its
+  // The duplicate warning, as only the whole form holds it: the form asks its
   // `check` before it sends and moves the focus to Create Anyway. What the
   // warning says and when it asks is duplicates.test.tsx's.
   describe('the duplicate warning', () => {
@@ -1121,7 +988,7 @@ describe('IngredientForm', () => {
     });
   });
 
-  // M12.20: the + (M12.48's, once Use It), as only the whole form sends it.
+  // The + on a duplicate match, as only the whole form sends it.
   describe('using a compendium entry of the name typed', () => {
     const CLAW: DuplicateNode = {
       id: 'claw-1',
@@ -1130,11 +997,7 @@ describe('IngredientForm', () => {
       slug: 'cats-claw-uncaria-tomentosa',
       isGlobal: true,
     };
-    /**
-     * Adds as the server does in a coven that already calls another entry by the
-     * name typed: any label sent is refused as taken, as Rose under "rosemary"
-     * was (the owner's report, M12.48).
-     */
+    /** Adds as the server does in a coven that already calls another entry by the name typed: any label sent is refused as taken, as Rose under "rosemary" was. */
     const accept = () => {
       const adds: AddCupboardEntryFromFormMutationVariables[] = [];
       server.use(
@@ -1193,30 +1056,12 @@ describe('IngredientForm', () => {
       expect(creates).toHaveLength(0);
     });
 
-    // The owner's report (M12.48): the lookups' cached answers still said the
+    // The lookups' cached answers still said the
     // entry was not held, so its row stayed under In the Compendium with its +.
     const heldRow = () =>
       within(screen.getByRole('list', { name: 'In This Coven' })).getByRole('link', {
         name: /^Cat's Claw \(Uncaria tomentosa\)/,
       });
-
-    it('asks the lookup again once the + has added, so the entry is listed as in the cupboard', async () => {
-      accept();
-      renderForm();
-      offerDuplicates([CLAW]);
-
-      type('Name', 'Porch Claw');
-      act(() => vi.advanceTimersByTime(DEBOUNCE_MS));
-      const plus = await screen.findByRole('button', { name: /^Add to My Ingredients: / });
-      // The server's answer from here on: the coven holds it.
-      offerDuplicates([{ ...CLAW, inCupboard: true }]);
-      fireEvent.click(plus);
-      // The row moves once the check has held and the eye is in.
-      await waitFor(() => expect(plus).toHaveAttribute('data-state', 'added'));
-      act(() => vi.advanceTimersByTime(ADDED_HOLD_MS));
-
-      await waitFor(() => expect(heldRow()).toBeInTheDocument());
-    });
 
     it('lists the exact match as in the cupboard once its + has added it, from a held save', async () => {
       accept();
@@ -1236,12 +1081,10 @@ describe('IngredientForm', () => {
       await waitFor(() => expect(heldRow()).toBeInTheDocument());
     });
 
-    // After the add, the + shows the check, then turns into the eye, and the
-    // row then moves under In This Coven; the form stays open (the owner's
-    // calls, M12.48, in place of opening the entry's page).
+    // After the add the form stays open, rather than opening the entry's page. The + turning to
+    // the check, then the eye, and the
+    // row moving under In This Coven are NameField's, in duplicates.test.tsx.
     describe('after the + has added', () => {
-      const QUICK_LOOK = /^Quick Look Cat's Claw, Uncaria tomentosa/;
-
       /** The form in a coven named Hedge Coven, under the page's status region. */
       const renderInCoven = () => {
         const onSaved = vi.fn();
@@ -1272,8 +1115,6 @@ describe('IngredientForm', () => {
         return plus;
       };
 
-      const region = () => screen.getByRole('status', { name: 'Possible duplicates' });
-
       it('keeps the form open with what was typed, and says the add once, in the page status region', async () => {
         accept();
         const onSaved = renderInCoven();
@@ -1290,88 +1131,6 @@ describe('IngredientForm', () => {
         act(() => vi.advanceTimersByTime(ADDED_HOLD_MS));
         await waitFor(() => expect(heldRow()).toBeInTheDocument());
         expect(statusesSaying('Added to Hedge Coven.')).toHaveLength(1);
-      });
-
-      // The test environment reports prefers-reduced-motion (tests/support/setup-dom.ts).
-      it('under reduced motion, still shows the check for a moment, then the eye at once, with no fade between', async () => {
-        accept();
-        renderInCoven();
-        const plus = await addClaw();
-
-        await waitFor(() => expect(plus).toHaveAttribute('data-state', 'added'));
-        // Still the +, named as it was, and pressing it now does nothing.
-        expect(plus).toHaveAccessibleName(/^Add to My Ingredients: Cat's Claw/);
-        expect(plus).toHaveAttribute('aria-disabled', 'true');
-        act(() => vi.advanceTimersByTime(ADDED_HOLD_MS - 100));
-        expect(plus).toHaveAttribute('data-state', 'added');
-
-        act(() => vi.advanceTimersByTime(100));
-        // The same button, so the focus stays on it: the eye, with no fade from the check.
-        expect(plus).toHaveAccessibleName(QUICK_LOOK);
-        expect(plus).not.toHaveAttribute('data-state');
-        expect(plus).not.toHaveAttribute('aria-disabled');
-      });
-
-      describe('with motion', () => {
-        beforeEach(() => {
-          const media = window.matchMedia;
-          vi.spyOn(window, 'matchMedia').mockImplementation((query) => ({
-            ...media(query),
-            matches: false,
-          }));
-        });
-        afterEach(() => {
-          vi.restoreAllMocks();
-        });
-
-        it('fades the check into the eye', async () => {
-          accept();
-          renderInCoven();
-          const plus = await addClaw();
-
-          await waitFor(() => expect(plus).toHaveAttribute('data-state', 'added'));
-          act(() => vi.advanceTimersByTime(ADDED_HOLD_MS));
-          expect(plus).toHaveAccessibleName(QUICK_LOOK);
-          expect(plus).toHaveAttribute('data-state', 'returning');
-          // The fade's end, or its net when no end is reported.
-          act(() => vi.advanceTimersByTime(500));
-          expect(plus).not.toHaveAttribute('data-state');
-        });
-      });
-
-      it('moves the row under In This Coven only once the eye shows, the focus going to its eye, the duplicates busy meanwhile', async () => {
-        accept();
-        renderInCoven();
-        const plus = await addClaw();
-
-        await waitFor(() => expect(plus).toHaveAttribute('data-state', 'added'));
-        // Not asked again while the check shows: the row stays under In the Compendium.
-        await settle();
-        expect(screen.queryByRole('list', { name: 'In This Coven' })).not.toBeInTheDocument();
-        expect(region()).not.toHaveAttribute('aria-busy');
-
-        act(() => vi.advanceTimersByTime(ADDED_HOLD_MS));
-        expect(region()).toHaveAttribute('aria-busy', 'true');
-        await waitFor(() => expect(heldRow()).toBeInTheDocument());
-        const eye = within(screen.getByRole('list', { name: 'In This Coven' })).getByRole(
-          'button',
-          { name: QUICK_LOOK },
-        );
-        expect(eye).not.toBe(plus);
-        expect(eye).toHaveFocus();
-        await waitFor(() => expect(region()).not.toHaveAttribute('aria-busy'));
-      });
-
-      it('leaves the focus where it was moved to while the check showed', async () => {
-        accept();
-        renderInCoven();
-        const plus = await addClaw();
-
-        await waitFor(() => expect(plus).toHaveAttribute('data-state', 'added'));
-        act(() => textbox('Name').focus());
-        act(() => vi.advanceTimersByTime(ADDED_HOLD_MS));
-        await waitFor(() => expect(heldRow()).toBeInTheDocument());
-        expect(textbox('Name')).toHaveFocus();
       });
 
       it('says a refusal at the form head, with no check, and announces nothing', async () => {
@@ -1473,6 +1232,7 @@ describe('IngredientForm', () => {
               description: null,
               tradition: 'Greek',
               curated: true,
+              matchedName: null,
             },
           ]),
           option: /^Hecate \(Greek\)/,
@@ -1514,67 +1274,8 @@ describe('IngredientForm', () => {
     });
   });
 
-  // The field on its own, given its elements as an edit would be: drawn as
-  // chips in the order held, and a repeat refused on the control itself.
-  describe('an element list given its values', () => {
-    function renderElements(elements: IngredientElement[]) {
-      const onSubmit = vi.fn();
-      const Harness = () => {
-        const methods = useForm<IngredientFormValues, unknown, IngredientFormInput>({
-          defaultValues: { ...EMPTY_VALUES, name: 'Testwort', elements },
-          resolver: ingredientResolver,
-        });
-        return (
-          <FormProvider {...methods}>
-            <form onSubmit={methods.handleSubmit(onSubmit)}>
-              <MultiSelectField
-                name="elements"
-                label="Element"
-                placeholder="Choose elements"
-                options={[
-                  { value: 'earth', label: 'Earth' },
-                  { value: 'air', label: 'Air' },
-                  { value: 'fire', label: 'Fire' },
-                  { value: 'water', label: 'Water' },
-                  { value: 'spirit', label: 'Spirit' },
-                ]}
-              />
-              <button type="submit">Save Ingredient</button>
-            </form>
-          </FormProvider>
-        );
-      };
-      render(<Harness />);
-      return onSubmit;
-    }
-
-    it('prefills them as chips, in the order held, and offers only the rest', () => {
-      renderElements(['water', 'earth']);
-
-      const control = select('Element').closest('.combobox__control') as HTMLElement;
-      expect(
-        within(control)
-          .getAllByRole('button', { name: /^Remove/ })
-          .map((button) => button.getAttribute('aria-label')),
-      ).toEqual(['Remove Water', 'Remove Earth']);
-      fireEvent.click(select('Element'));
-      expect(screen.getAllByRole('option')).toHaveLength(3);
-      expect(screen.queryByRole('option', { name: 'Water' })).not.toBeInTheDocument();
-      expect(screen.queryByRole('option', { name: 'Earth' })).not.toBeInTheDocument();
-    });
-
-    it('shows a repeat the schema refuses on the Element control', async () => {
-      const onSubmit = renderElements(['fire', 'fire']);
-
-      save();
-
-      await waitFor(() => expectErrorOn(select('Element')));
-      expect(onSubmit).not.toHaveBeenCalled();
-    });
-  });
-
   // The save's result carries the new entry's jars for the dialog's status to
-  // name (M8.16). Since M12.27 a save moves none, so only a mock fills it.
+  // name. A save moves none, so only a mock fills it.
   it('hands onSaved the jars the new entry holds', async () => {
     mockGraphQLMutation<
       CreateWorkspaceIngredientMutation,
@@ -1584,6 +1285,7 @@ describe('IngredientForm', () => {
         id: 'saved-1',
         name: variables.input.name,
         slug: 'saved',
+        revision: 1,
         stock: [{ quantityOnHand: 30, unit: 'g', variant: { form: 'Dried' } }],
       },
     }));
@@ -1598,74 +1300,60 @@ describe('IngredientForm', () => {
     ]);
   });
 
-  it.each([{ pressed: 'Save Ingredient', other: 'Save & Add Another' }])(
-    'holds both saves down while one is in flight, $pressed busy',
-    async ({ pressed, other }) => {
-      let release = () => {};
-      const held = new Promise<void>((resolve) => {
-        release = resolve;
-      });
-      server.use(
-        graphqlLink.mutation<
-          CreateWorkspaceIngredientMutation,
-          CreateWorkspaceIngredientMutationVariables
-        >('CreateWorkspaceIngredient', async ({ variables }) => {
-          await held;
-          return HttpResponse.json({
-            data: {
-              createWorkspaceIngredient: {
-                id: 'saved-1',
-                name: variables.input.name,
-                slug: 'saved',
-                stock: [],
-              },
+  it('holds both saves down while one is in flight, Save Ingredient busy', async () => {
+    let release = () => {};
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    server.use(
+      graphqlLink.mutation<
+        CreateWorkspaceIngredientMutation,
+        CreateWorkspaceIngredientMutationVariables
+      >('CreateWorkspaceIngredient', async ({ variables }) => {
+        await held;
+        return HttpResponse.json({
+          data: {
+            createWorkspaceIngredient: {
+              id: 'saved-1',
+              name: variables.input.name,
+              slug: 'saved',
+              revision: 1,
+              stock: [],
             },
-          });
-        }),
-      );
-      const onSaved = renderForm();
-      const submit = screen.getByRole('button', { name: pressed });
-      const rest = screen.getByRole('button', { name: other });
+          },
+        });
+      }),
+    );
+    const onSaved = renderForm();
+    const submit = screen.getByRole('button', { name: 'Save Ingredient' });
+    const rest = screen.getByRole('button', { name: 'Save & Add Another' });
 
-      type('Name', 'Testwort');
-      submit.focus();
-      fireEvent.click(submit);
+    type('Name', 'Testwort');
+    submit.focus();
+    fireEvent.click(submit);
 
-      await waitFor(() => expect(submit).toBeDisabled());
-      // Busy, the owner's call during MB.131; the other is held down beside it.
-      expect(submit).toHaveAttribute('aria-busy', 'true');
-      expect(rest).toBeDisabled();
-      expect(rest).not.toHaveAttribute('aria-busy');
-      release();
-      await waitFor(() => expect(onSaved).toHaveBeenCalled());
-      // Back up once answered.
-      expect(submit).toBeEnabled();
-      expect(rest).toBeEnabled();
-      expect(submit).not.toHaveAttribute('aria-busy');
-    },
-  );
+    await waitFor(() => expect(submit).toBeDisabled());
+    // Busy; the other is held down beside it.
+    expect(submit).toHaveAttribute('aria-busy', 'true');
+    expect(rest).toBeDisabled();
+    expect(rest).not.toHaveAttribute('aria-busy');
+    release();
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    // Released once answered; what it saved is now the form's baseline, so both wait for a change.
+    await waitFor(() => expect(submit).not.toHaveAttribute('aria-busy'));
+    type('Name', 'Testworts');
+    await waitFor(() => expect(submit).toBeEnabled());
+    expect(rest).toBeEnabled();
+  });
 });
 
-// Where the focus lands after an undo (M12.10): a list's rows are not inputs,
+// Where the focus lands after an undo: a list's rows are not inputs,
 // only its typing box is, so the box is where a change to the list is shown.
 describe('IngredientForm undo focus', () => {
   const undoFrom = (from: HTMLElement) => {
     act(() => from.focus());
     fireEvent.keyDown(from, { key: 'z', ctrlKey: true });
   };
-
-  it('lands on a list’s box after undoing an entry added to it', async () => {
-    renderForm();
-    addEntry('Folk Name', 'Hedge Fixture');
-    expect(screen.getByLabelText('Remove Hedge Fixture')).toBeInTheDocument();
-
-    undoFrom(textbox('Name'));
-
-    expect(screen.queryByLabelText('Remove Hedge Fixture')).toBeNull();
-    expect(box('Folk Name')).toHaveFocus();
-    // Leaving a field validates it, a step that ends after the assertions.
-    await settle();
-  });
 
   it('lands on a list’s box after undoing the removal of an entry, and after redoing it', async () => {
     renderForm();

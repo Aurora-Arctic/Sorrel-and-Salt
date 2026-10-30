@@ -4,10 +4,8 @@ import InviteDialog from '@/components/InviteDialog';
 import type { CreateInvitationMutation, CreateInvitationMutationVariables } from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
-// The owner's invite dialog (M7.4): an address, a role of viewer or member,
-// and a confirmation naming where the mail went. Render-and-send only: the
-// service behind the mutation is M7.3's and is tested there
-// (claude-docs/components/invite-dialog.md).
+// The invite dialog: an address, a role of viewer or member, and a confirmation naming where the mail went (claude-docs/components/invite-dialog.md).
+// It is render-and-send only; the service behind the mutation is tested in its own module.
 
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
@@ -28,6 +26,13 @@ function open() {
   fireEvent.click(trigger());
 }
 
+/** A tab close or reload as the browser raises it: true when something cancelled it. */
+function unload(): boolean {
+  const event = new Event('beforeunload', { cancelable: true });
+  window.dispatchEvent(event);
+  return event.defaultPrevented;
+}
+
 function type(address: string) {
   fireEvent.change(emailField(), { target: { value: address } });
 }
@@ -45,10 +50,7 @@ function mockSending() {
   return calls;
 }
 
-/**
- * Nothing in the page to copy or follow: no link, no URL or token in the text
- * or in any field's value. The mail carries the only link there is.
- */
+/** Nothing in the page to copy or follow: no link, no URL or token in the text or in any field's value. The mail carries the only link there is. */
 function expectNothingToCopy() {
   expect(screen.queryAllByRole('link')).toEqual([]);
   expect(document.body.innerHTML).not.toMatch(/https?:|\/invite\/|token/i);
@@ -77,16 +79,14 @@ describe('InviteDialog', () => {
     expect(send()).toBeEnabled();
   });
 
-  it.each([
-    ['no @', 'ada.example.test'],
-    ['no domain dot', 'ada@example'],
-    ['a space in it', 'ada lovelace@example.test'],
-    ['a domain no mailbox can exist under', 'ada@example.invalid'],
-  ])('refuses an address with %s before anything is sent', async (_why, address) => {
+  // The shape of an address is src/lib/email-address.ts's, proved in
+  // tests/lib/email-address.test.ts; this is the form's wiring of it, through
+  // a domain no mailbox can exist under.
+  it('refuses an address the format rule rejects before anything is sent', async () => {
     const calls = mockSending();
     open();
 
-    type(address);
+    type('ada@example.invalid');
     fireEvent.click(send());
 
     await waitFor(() => expect(emailField()).toHaveAttribute('aria-invalid', 'true'));
@@ -118,15 +118,7 @@ describe('InviteDialog', () => {
     expect(within(dialog()).queryByRole('option', { name: /Owner/ })).toBeNull();
   });
 
-  // The line is the group's description, so a screen reader reads it with the
-  // group; its words are the owner's to change.
-  it('explains beside the roles where ownership is granted instead', () => {
-    open();
-
-    expect(within(dialog()).getByRole('group', { name: 'Role' })).toHaveAccessibleDescription(/\S/);
-  });
-
-  it('sends the address, trimmed, with the chosen role for this coven', async () => {
+  it('sends the address, trimmed, with the chosen role for this coven, then says so and refreshes the page behind it', async () => {
     const calls = mockSending();
     open();
 
@@ -134,18 +126,8 @@ describe('InviteDialog', () => {
     fireEvent.click(within(dialog()).getByRole('radio', { name: /Member/ }));
     fireEvent.click(send());
 
-    await screen.findByRole('status');
-    expect(calls).toEqual([{ workspaceId: WORKSPACE, email: 'ada@example.test', role: 'member' }]);
-  });
-
-  it('says the invitation was sent, naming the address, and refreshes the page behind it', async () => {
-    mockSending();
-    open();
-
-    type('ada@example.test');
-    fireEvent.click(send());
-
     const sent = await screen.findByRole('status');
+    expect(calls).toEqual([{ workspaceId: WORKSPACE, email: 'ada@example.test', role: 'member' }]);
     expect(sent).toHaveTextContent('ada@example.test');
     expect(router.refresh).toHaveBeenCalledTimes(1);
     // The form is replaced by the confirmation, so nothing can be sent twice.
@@ -191,29 +173,14 @@ describe('InviteDialog', () => {
     expect(trigger()).toHaveFocus();
   });
 
-  it('closes on Escape with nothing typed, and gives the focus back to Invite', async () => {
-    open();
-
-    fireEvent(dialog(), new Event('cancel', { cancelable: true }));
-
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-    expect(trigger()).toHaveFocus();
-  });
-
-  it('closes from Cancel and from Close with nothing typed', async () => {
-    open();
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Cancel' }));
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-
-    fireEvent.click(trigger());
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Close' }));
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-  });
-
   // The guard's own shape is tests/components/Modal's; this is its wiring here.
-  it('asks before Cancel or Escape discards what was typed, and closes on Discard Changes', async () => {
+  // A navigation from inside a modal goes unheld (tests/components/Modal/discard.test.tsx),
+  // so the leave guard here is the tab close and reload.
+  it('asks before Cancel, Escape or a tab close discards what was typed, and closes on Discard Changes', async () => {
     open();
+    expect(unload()).toBe(false);
     type('ada@example.test');
+    expect(unload()).toBe(true);
     const discard = () => screen.queryByRole('button', { name: 'Discard Changes' });
 
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Cancel' }));
@@ -229,6 +196,7 @@ describe('InviteDialog', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Discard Changes' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(trigger()).toHaveFocus();
+    expect(unload()).toBe(false);
   });
 
   it('opens blank again after an invitation was sent', async () => {

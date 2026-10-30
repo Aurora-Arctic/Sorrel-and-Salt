@@ -1,30 +1,27 @@
 'use client';
 
 import { type ReactElement, useContext, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { useLeaveGuard } from '@/lib/navigation';
 import { CloseGuardContext } from './close-guard';
 import { ConfirmOverlay } from './confirm-overlay';
+import Modal from './modal';
 import type { DiscardGuard, DiscardQuestionProps } from './types';
 import './index.scss';
 
-// A form's unsaved changes, kept from every way out of its modal: Cancel, the
-// Close button, Escape and a click outside each ask "Discard them?" first
-// while the form has changes, the owner's call during MB.115. One guard for
-// every admin form rather than a copy in each; the form says whether it has
-// changes and where Cancel goes, and draws the question over itself, as its
-// Delete question is (claude-docs/components/modal.md, "Unsaved changes").
-// Saving and deleting close through the modal's own close, which nothing
-// guards.
+// A form's unsaved changes, kept from every way out of its modal: Cancel, Close, Escape and a click
+// outside ask "Discard them?" while the form has changes. It also guards leaving the page
+// (claude-docs/components/modal.md, "Unsaved changes").
 
 /**
- * Guards a form's way out while `dirty`, its own `formState.isDirty`, the
- * flag that enables its Save. Inside a `Modal` it also guards the modal's
- * Close button, Escape and backdrop.
+ * Guards a form's way out while `dirty` (its `formState.isDirty`): inside a `Modal` the Close
+ * button, Escape and backdrop, outside one an in-app navigation; a tab close or reload asks the
+ * browser's question either way.
  */
 export function useDiscardGuard(dirty: boolean): DiscardGuard {
   const slot = useContext(CloseGuardContext);
   const [asking, setAsking] = useState(false);
-  // How many times a way out was tried again while asking: each flashes the
-  // question, so the person sees why nothing closed (MB.115, the owner's call).
+  // How many times a way out was tried again while asking; each flashes the question.
   const [flashes, setFlashes] = useState(0);
   // The close the question holds back, made by Discard Changes.
   const held = useRef<(() => void) | null>(null);
@@ -51,11 +48,14 @@ export function useDiscardGuard(dirty: boolean): DiscardGuard {
     return slot.put((close) => latest.current(close));
   }, [slot]);
 
+  const request = (close: () => void) => {
+    if (consult(close)) close();
+  };
+  useLeaveGuard(dirty, request, { holdNavigation: slot === null });
+
   return {
     asking,
-    request: (close) => {
-      if (consult(close)) close();
-    },
+    request,
     discard: () => held.current?.(),
     flashes,
     keepEditing: () => {
@@ -67,11 +67,58 @@ export function useDiscardGuard(dirty: boolean): DiscardGuard {
 }
 
 /**
- * The question, drawn by the form while `guard.asking`, over it in a modal
- * (`ConfirmOverlay`). Its focus is the overlay's: on Keep Editing as it
- * comes and on each flash, and back where it was as it goes.
+ * The question, drawn by the form while `guard.asking`: over it in a modal
+ * (`ConfirmOverlay`), or on a page as a dialog of its own. Its focus is on
+ * Keep Editing as it comes, and back where it was as it goes.
  */
 export function DiscardQuestion({ guard }: DiscardQuestionProps): ReactElement {
+  const inModal = useContext(CloseGuardContext) !== null;
+  return inModal ? <InModal guard={guard} /> : <OnPage guard={guard} />;
+}
+
+/**
+ * The question as a dialog, for a form on a page: Escape, Close and a click outside are Keep
+ * Editing. Nothing flashes, since the page behind is inert while it is open.
+ */
+function OnPage({ guard }: DiscardQuestionProps): ReactElement {
+  const { discard, keepEditing, keepEditingRef } = guard;
+  // On Keep Editing, the safe answer, once the dialog is open: this effect
+  // runs before the modal's own, which opens it and then, in a microtask
+  // queued after this one, leaves a focus already in its body where it is.
+  useEffect(() => {
+    queueMicrotask(() => keepEditingRef.current?.focus());
+  }, [keepEditingRef]);
+  // Into the body, out of the form it would otherwise sit in: the dialog is
+  // not part of the form, and a button in it must not be one of the form's.
+  return createPortal(
+    <Modal title="Discard Changes?" onClose={keepEditing}>
+      {(close) => (
+        <>
+          <p>You have unsaved changes. Discard them?</p>
+          <div className="modal__actions">
+            <button
+              type="button"
+              className="btn btn--destructive"
+              onClick={() => {
+                discard();
+                close();
+              }}
+            >
+              Discard Changes
+            </button>
+            <button ref={keepEditingRef} type="button" className="btn btn--quiet" onClick={close}>
+              Keep Editing
+            </button>
+          </div>
+        </>
+      )}
+    </Modal>,
+    document.body,
+  );
+}
+
+/** The question over the form, in its modal's layer, flashing on each way out tried again. */
+function InModal({ guard }: DiscardQuestionProps): ReactElement {
   const { discard, keepEditing, keepEditingRef, flashes } = guard;
   return (
     <ConfirmOverlay

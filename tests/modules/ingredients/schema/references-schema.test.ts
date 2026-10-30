@@ -6,7 +6,7 @@ import { referenceKind, references } from '@/modules/ingredients/schema/referenc
 import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 import type { ReferenceFields } from './types';
 
-// DESIGN.md §5's `references` (MB.151): one source per row, in Chicago
+// DESIGN.md §5's `references`: one source per row, in Chicago
 // bibliography form, two-tiered as ingredients are.
 const KINDS = ['book', 'chapter', 'article', 'entry', 'web_page'];
 
@@ -28,7 +28,7 @@ const OPTIONAL_TEXT = [
   'note',
 ];
 const DATES = ['modified', 'accessed'];
-// `seed_key` is the reference seed's own (MB.171), outside the blank CHECKs.
+// `seed_key` is the reference seed's own, outside the blank CHECKs.
 const OWN_COLUMNS = ['id', 'workspace_id', 'kind', 'title', ...OPTIONAL_TEXT, ...DATES, 'seed_key'];
 
 // `url` has no blank CHECK of its own: the http(s) CHECK already refuses one.
@@ -88,7 +88,7 @@ beforeEach(async () => {
 
 describe('references table', () => {
   // A closed list is the database's and the code's alike.
-  it('holds the five kinds MB.151 settled, as the code declares them', async () => {
+  it('holds the five kinds, as the code declares them', async () => {
     const [row] = await sql`select enum_range(null::reference_kind)::text[] as kinds`;
 
     expect(row.kinds).toEqual(referenceKind.enumValues);
@@ -145,7 +145,7 @@ describe('references table', () => {
     });
   });
 
-  // 23514 is check_violation, named: each refusal is the CHECK MB.153's field
+  // 23514 is check_violation, named: each refusal is the CHECK the field
   // error is pathed from, where NOT NULL alone would accept ''.
   describe('text is non-blank when set', () => {
     it('refuses a blank title', async () => {
@@ -157,18 +157,13 @@ describe('references table', () => {
 
     // The refusal above, for every other text column: each CHECK reads its
     // own column, so a copied CHECK naming the wrong one fails here.
-    it('carries a blank CHECK on each text column, over that column', async () => {
-      const rows = await sql`
-        select conname, pg_get_constraintdef(oid) as definition from pg_constraint
-        where conrelid = '"references"'::regclass and contype = 'c'
-          and conname like '%_not_blank'
-      `;
-      const definitionOf = Object.fromEntries(rows.map((row) => [row.conname, row.definition]));
-
+    it('refuses a blank value in each text column, by that column’s CHECK', async () => {
       for (const column of NOT_BLANK) {
-        expect(definitionOf[notBlankCheck(column)], column).toContain(`btrim(${column})`);
+        const error = await failureOf(addReference({ ...MINIMAL.chapter, [column]: '   ' }));
+
+        expect(error.code, column).toBe('23514');
+        expect(error.constraint_name, column).toBe(notBlankCheck(column));
       }
-      expect(rows).toHaveLength(NOT_BLANK.length);
     });
 
     it('refuses a blank url as not absolute', async () => {
@@ -179,7 +174,7 @@ describe('references table', () => {
     });
   });
 
-  // The CHECKs that make MB.153's renderer total: every row admitted renders
+  // The CHECKs that make the renderer total: every row admitted renders
   // without a branch for a missing required field.
   describe('the renderer is total over every row', () => {
     // An http(s) url is taken above, by every web page and the filled row.

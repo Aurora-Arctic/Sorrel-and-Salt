@@ -5,11 +5,9 @@ import { useFormContext, useWatch } from 'react-hook-form';
 import { SelectField } from '../Field';
 import type { IngredientFormValues, SubstituteFormsProps, SubstituteListEntry } from './types';
 
-// The ingredient's own substitutes' second pickers (MB.215): a substitute may name one
-// form of the ingredient it links — its oil, not its dried leaf — so each
-// linked ingredient that comes in forms gets a box choosing which, Any Form
-// until one is chosen. Sent as the entry's `substituteVariantId`
-// (claude-docs/components/ingredient-form.md, "The variants").
+// The second pickers of the ingredient's own substitutes: a substitute may name one form of the
+// ingredient it links, so each linked ingredient that comes in forms gets a box choosing which,
+// Any Form until one is chosen (claude-docs/components/ingredient-form.md, "The variants").
 
 /** The choice that names no form: the ingredient, whichever form is to hand. */
 const ANY_FORM = { value: '', label: 'Any Form' };

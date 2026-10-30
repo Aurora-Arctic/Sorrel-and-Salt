@@ -115,10 +115,12 @@ a user sits in the covens they joined, and no more.
 `Workspace.members` is a coven's live members, in the order they joined, and
 is a paged connection rather than a bare list, because a coven's roll grows
 with every invitation and nothing about its parent bounds it (CLAUDE.md rule
-8; M6.11). Its service, `listMembers(session, workspace, page)` in
+8; M6.11). Its service, `listMembers(session, workspace, page, query?)` in
 `src/modules/coven/services/members.ts`, checks `member: read`, which the
 owner holds and, from M6.13, the member too, and reads one page through the
-repository's `findMemberPage`. A coven at a time, not batched across covens by
+repository's `findMemberPage`. The optional `query: String` argument narrows
+the page to the members whose name holds the text, case-insensitively and with
+`%` and `_` read literally, in SQL; blank is no filter. A coven at a time, not batched across covens by
 a loader: no page lists two covens' members at once
 ([`m6.11-members-without-a-loader.md`](../design-decisions/m6.11-members-without-a-loader.md)).
 `WorkspaceMember.user` is a `CoMember`, an `id` and a nullable `name`, and
@@ -126,9 +128,17 @@ never the `User` type, whose email a scope would have to guard. The name
 resolves through `usersById` (MB.10;
 [`auth/display-names.md`](../auth/display-names.md)), so the names on a page
 of members are one read. Through `me`, a member's name sits eight levels
-down, one past the depth limit (["Protections"](protections.md)), and no
-query root reaches a `Workspace` more shallowly yet. The members page does not
-need one: a server component calls `listMembers` directly (M6.13).
+down, one past the depth limit (["Protections"](protections.md)), so
+`workspace(id: ID!): Workspace!` reaches a coven from the query root, where a
+name sits six levels down. Its service, `workspaceById` in
+`src/modules/coven/services/workspace-by-id.ts`, checks `workspace: read` and
+answers the same bare `FORBIDDEN` to a stranger and to an id no coven holds, so
+the answer says nothing of whether the coven exists. The Record a Working dialog's
+participant box searches the members through it as the user types
+([`components/spell-card.md`](../components/spell-card.md), "Record a Working,
+Edit and the More menu"). The members page does not need it: a server component
+calls `listMembers` directly (M6.13). `tests/modules/coven/services/workspace-by-id.test.ts`
+holds the refusals, and `graphql/workspace-members.test.ts` the field.
 
 `users(query: String, awaitingApproval: Boolean, role: UserRole)` is the admin user list
 (MB.52), a paged connection of the ordinary `User`, so `email` resolves through
@@ -322,9 +332,15 @@ type DeitySuggestion {
   description: String # the curated row's; null for a value only in use
   tradition: String # the curated row's tradition; null for a value only in use
   curated: Boolean!
+  matchedName: String # the other name the query matched (M14.23); null when the name matched, or for a value in use
 }
 ```
 
+- **A deity is found by its other names too** (M14.23). A query that matches
+  none of the deity's name but one of its live `deity_other_names` finds it in
+  tier 0, and `matchedName` carries the closest such name, so the picker can
+  say "Also called Woden" on Odin's row. A pick still sends the deity's `id`
+  and its `value`, never the other name.
 - **`tradition` is `formSuggestions`' `group`** under the vocabulary's own
   word. It tells two same-named deities apart, and a client renders
   "Hecate (Greek)". A deity under a soft-deleted tradition comes back as a
@@ -407,7 +423,7 @@ The substitute picker's search (MB.138), registered by `ingredients` over
 `suggestIngredients` and the finder `findIngredientSuggestions`
 ([`db/compendium-read.md`](../db/compendium-read.md), "The ingredient
 picker's search"). MB.131's combobox calls it as a substitute is typed, with
-`workspaceId`, `query`, an optional `form` and the connection arguments, and picking a node
+`workspaceId`, `query`, an optional `form`, an optional `categoryIds` and the connection arguments, and picking a node
 writes a link to it (DESIGN.md §5, `ingredient_substitutes`).
 
 - **A node is an `Ingredient`**, as on `possibleDuplicates`, because a pick
@@ -425,6 +441,7 @@ writes a link to it (DESIGN.md §5, `ingredient_substitutes`).
   first, under the compendium's weights, with no score on the edge, since a picker ranks rather than reports.
   A blank `query` lists both groups by name, so an opened box lists something.
 - **Each edge carries a `group` (M12.19)**, the `SuggestionGroup` enum, `yours` or `compendium`. `yours` is the coven's cupboard, its own entries and the compendium entries it holds, listed first; `compendium` is the rest. Each group is ranked by score within itself and holds up to eight to start. A coven's own entry and a compendium entry sharing its name both appear: a name match hides nothing (M12.28). A held entry's node answers `cupboardEntry(workspaceId)` for the label the coven gave it. `group` is on the edge, not the node, because it depends on the viewing coven, as `score` does on `compendium`. `form` ranks within each group ([`db/compendium-read.md`](../db/compendium-read.md)).
+- **`categoryIds` keeps entries carrying any of the ids**, on the entry or on one of its variants, through the compendium filter's `any` mode. Null or empty is no filter. The spell builder's Add to Jar picker sends the categories pressed above its box; the list is paged, so a filter applied after fetching would miss matches.
 - **The refusals are `possibleDuplicates`'**: `Forbidden` for a signed-out
   caller from the resolver, then `assertMembership` for `ingredient: ['read']`.
   A viewer is answered, a coven the caller is not in is refused, and so is a
@@ -511,7 +528,8 @@ type QueryCompendiumConnectionEdge {
   `variantsByIngredient` (MB.218); `Category.group`,
   `IngredientFormValue.group` and `Deity.tradition` through the three id-keyed
   group loaders, `categoryGroupsById`, `ingredientFormGroupsById` and
-  `deityTraditionsById`; and a variant's `formChoice` through
+  `deityTraditionsById`; `Deity.otherNames` through `otherNamesByDeity`
+  (M14.23); and a variant's `formChoice` through
   `ingredientFormsById` (MB.167; ["Loaders"](loaders.md)).
 - **`FolkName` is an id and a name** (DESIGN.md §7, M12.1). The id is the live
   row's, so a client can name one to `promoteFolkName`; it carries no `audit`.
@@ -778,8 +796,8 @@ The numbers beside each choice in the search's filter panel (M12.3): for
 every value of every filter, how many entries the list would hold with that
 value picked. `compendiumFacets` sits in `graphql/compendium.ts` and takes
 exactly `compendium`'s filter arguments (`query`, `categoryIds`,
-`categoryMode`, the six facet arguments, `withoutReferences`, `withoutForms` and
-`nomenclature`), with no page. `workspaceIngredientFacets` sits in
+`categoryMode`, the six facet arguments, `withoutReferences`, `withoutForms`,
+`reviewed` and `nomenclature`), with no page. `workspaceIngredientFacets` sits in
 `graphql/workspace-ingredient-list.ts` and takes `workspaceIngredients`'
 (`workspaceId`, `query`, the category arguments, the six facet
 arguments, and the coven-only `source`, `inStock` and `lowStockOnly`), so a count agrees with the list under the same filter. Each resolver hands its arguments to its service,
@@ -801,6 +819,16 @@ reference under the rest of the filter, and `withoutForms`, how many have no liv
 off; a coven's list has no such switch. The seven shared fields are written
 once, in `facetFields`, which both types spread.
 
+`CompendiumFacets.reviewed` (M14.8) is a nullable `ReviewFacetCount` list:
+how many entries are reviewed (`value: true`) and how many need review
+(`value: false`), counted under the rest of the filter with `reviewed` left
+out. It is null, with no error, for anyone who neither curates nor
+administers, so the public panel and a signed-out caller can ask for the
+facets and learn nothing of the mark. Both `compendium` and
+`compendiumFacets` take a `reviewed: Boolean` argument; sent by anyone but a
+curator or an admin it is `FORBIDDEN`, refused by `compendiumFilterFor` in the
+service ([`db/compendium-read.md`](../db/compendium-read.md), `reviewed`).
+
 A coven's `IngredientFacets` also carries two counts that a compendium list has no
 switch for (M9.7), so the two answers are two types and the fields are non-null on
 the coven's alone. `source` is a `SourceFacetCount` list (`value` is `local` or
@@ -815,6 +843,12 @@ type CompendiumFacets {
   # the seven fields of IngredientFacets, then:
   withoutReferences: Int!
   withoutForms: Int!
+  reviewed: [ReviewFacetCount!] # null to anyone but a curator or an admin
+}
+
+type ReviewFacetCount {
+  value: Boolean! # true reviewed, false needs review
+  count: Int!
 }
 
 type IngredientFacets {
@@ -852,13 +886,31 @@ type ToxicFacetCount {
 `compendiumFacets` is public like `compendium`: no `signedIn` scope and no
 session, and its service caches the answer under the `compendium` tag
 ([`db/compendium-cache.md`](../db/compendium-cache.md)).
+
+`compendiumFacets` also takes `covenIds: [ID!]` (M12.55, In My Covens on the
+public compendium): count only the entries that a live
+`workspace_compendium_entries` row of any one of these covens holds. The
+resolver hands it to `compendiumFacetsHeldIn` (`services/compendium-held-in.ts`),
+which deduplicates the ids, keeps the first 20, and asks
+`assertMembership` for each against the caller's session with
+`ingredient:read`, which every role holds, viewers included. An id the caller is not a member of, or one that is not a uuid, is
+dropped without an error, so a foreign coven's id narrows nothing and says
+nothing about that coven. With no id left, or none given, or no session, the
+answer is the cached, public one above. With at least one, it is read per
+request and never cached (rule 6). `covensNot: Boolean` turns it to Not In:
+count only the entries none of the proved covens holds, and with no
+`covenIds` given, none of the caller's covens, every membership counted. If
+`covenIds` were given and every one was dropped, it is the cached answer
+under Not In too, so a foreign id never changes it. `compendium` itself takes no `covenIds`: the
+page reads the narrowed list through the service, `listCompendiumHeldIn` and
+`countCompendiumHeldIn`, never through the GraphQL list.
 `workspaceIngredientFacets` refuses as `workspaceIngredients` does: a
 signed-out caller and a coven the caller is not in both answer `FORBIDDEN`,
 and any member, viewers included, may read it. It is never cached.
 
 `tests/modules/ingredients/graphql/ingredient-facets.test.ts` holds the
 transport's half: the arguments reaching each service, each value typed as
-its argument, the No Refs count with the switch on and off, and the refusal of a non-member naming a coven by id. The
+its argument, the No Refs count with the switch on and off, and the refusal of a non-member naming a coven by id; `covenIds` reaching the held-in service is its `compendiumFacets covenIds (M12.55)` block, and the membership proof, the foreign id included, is `tests/modules/ingredients/services/compendium-held-in.test.ts`. The
 signed-out answers are `tests/db/graphql-query-scopes.test.ts`'s, and a
 malformed `workspaceId` is `tests/db/graphql-workspace-ids.test.ts`'s.
 
@@ -979,8 +1031,9 @@ answer is a fresh read:
 
 - **`addCupboardEntry(workspaceId, ingredientId, input)`** answers the new
   `CupboardEntry`. `input` is optional.
-- **`annotateCupboardEntry(workspaceId, ingredientId, input)`** answers the
-  row after the change. A field left out keeps its value, `null` hands it back
+- **`annotateCupboardEntry(workspaceId, ingredientId, input, expectedRevision)`**
+  answers the row after the change, with its `revision`. A stale
+  `expectedRevision` is `STALE_WRITE`; leaving it out writes over a newer one. A field left out keeps its value, `null` hands it back
   to the compendium, and a list, even empty, is the coven's own.
 - **`removeCupboardEntry(workspaceId, ingredientId)`** answers the
   `ingredientId`, as the other deletes answer the id. It is refused with
@@ -1001,6 +1054,153 @@ hold `NOT_FOUND`, and a taken label or an own entry of the same identity
 `VALIDATION` beside `label`, `canonicalName` or `name`
 ([`db/workspace-compendium-entries.md`](../db/workspace-compendium-entries.md),
 "Converting a compendium entry into our own").
+
+### The grimoire: `Spell`, `grimoire`, `spell` and the two saves
+
+The coven's spells as the API reads them (M10.9), registered by `grimoire` in
+`graphql/spell.ts` over `services/spell-reads.ts`. Every read asks the proof
+for `spell: read`, which every role in the coven holds, and every row comes
+through the finders that keep a private spell its author's
+([`db/spell-visibility.md`](../db/spell-visibility.md)). So a private spell
+never reaches a resolver: it is left out of a list in SQL, and by id it is
+`NOT_FOUND`, the same answer as a spell that does not exist.
+
+- **`grimoire(workspaceId, orderBy, status, query, first, after)`** is a cursor page
+  (a page that resumes from the last row it gave, rather than counting rows to
+  skip) of the coven's shared spells and the caller's own private ones. It is
+  declared with `t.pagedConnection` and reads through `findGrimoirePage`.
+  - `orderBy` is the `GrimoireOrder` enum, and each order's cursor key ends
+    in the spell's id, so spells that tie on the rest still page once each:
+
+    | Value                    | Order                                  |
+    | ------------------------ | -------------------------------------- |
+    | `UPDATED_DESC` (default) | last edited first, by `updatedAt`      |
+    | `CREATED_DESC`           | newest first, by `createdAt`           |
+    | `TITLE_ASC`              | by title, A to Z, untitled spells last |
+
+    A draft may go untitled (M13.15), so `TITLE_ASC` sorts on whether the
+    title is missing first, then on the title read as empty when missing. A
+    cursor compares its key as one row value, which a null part would break.
+
+  - `status` is the `SpellStatus` enum, `draft` or `complete`. Given, it
+    keeps only the spells of that status, filtered in SQL; left out, the page
+    holds both. The grimoire page (M10.11) reads its Drafts tab through it.
+  - `query` searches the title and the intent (M10.11), through the
+    weighted search the ingredient lists use
+    ([`db/compendium-read.md`](../db/compendium-read.md)): a title match
+    counts for twice an intent match, and the best match comes first, with
+    `orderBy` breaking a tie. A search under two characters
+    (`MIN_QUERY_LENGTH`, counted in composed code points) is no search, the
+    same floor the compendium keeps; `listGrimoire` and `countGrimoire` drop
+    it, so the page and its count agree. The grimoire page's type-ahead reads
+    through it.
+- **`spell(id, workspaceId): Spell!`** is one spell. It takes the coven as
+  `ingredient(id, workspaceId)` does, so the membership check runs before any
+  read. A spell in another coven, or another author's private spell, is
+  `NOT_FOUND`.
+- **`Spell`** carries its own columns, `status` and `visibility` as the
+  `SpellStatus` and `SpellVisibility` enums built from the columns, and three
+  lists that each load through a loader ([`loaders.md`](loaders.md)). Its
+  `title` is nullable, because a draft may go untitled until it is complete
+  (M13.15), and `revision` is the count a save names (M10.10, below). The
+  lists:
+  - `steps` (`stepsBySpell`): every live step in recipe order, instructions
+    and one-off rows included.
+  - `categories` (`assignedCategoriesBySpell`): the categories the author
+    assigned, what the spell intends.
+  - `derivedCategories` (`derivedCategoriesBySpell`): what the spell is made
+    of. Each linked step contributes its ingredient's own categories and those
+    of the form it lays, never another form's. A one-off row and an
+    instruction contribute none. An ingredient deleted since still
+    contributes (M5.3).
+
+  `categoryGaps` is a `CategoryComparison`: `intendedNotPresent`, assigned but
+  carried by no ingredient, and `presentNotIntended`, carried but not
+  assigned. It is worked out by `compareSpellCategories` from the two category
+  loaders' cached answers, so it costs no read of its own.
+
+- **`SpellStep`** is one step. `ingredient` is the linked ingredient, kept and
+  answered even once it has been deleted, and `variant` the form it lays,
+  answered too once that form alone has been deleted, through
+  `findFormsInSpellsIncludingSoftDeleted` (M10.9). `name` and `form` read the
+  linked row's when there is one and the step's own text otherwise.
+  `quantity` is a `Float`, turned from Postgres's `numeric` text, and `unit`
+  the stock's `InventoryUnit` enum.
+
+- **`createSpell(workspaceId, input: SpellInput)`** and
+  **`updateSpell(workspaceId, id, input: UpdateSpellInput)`** (M10.10) save a
+  spell's fields and its recipe, over `services/spells.ts`. Both answer the
+  `Spell`, and both clear that spell's three loaders first, so the answer's
+  steps and categories are the ones just written, even in a request that read
+  them before the save.
+  - `steps` is a list of `SpellStepInput`, the whole recipe in order. A step
+    with an `id` is a saved step, kept; one without is new; a saved step left
+    out is removed. On `updateSpell`, leaving `steps` out leaves the recipe
+    as it is. [`db/grimoire.md`](../db/grimoire.md), "Saving a recipe", has
+    the rules and the checks.
+  - `categoryIds` (M10.14) is the whole set of categories the spell is
+    assigned: one left out is unassigned, and `[]` empties the set. On
+    `updateSpell`, leaving it out leaves the set as it is. An id that names
+    no live category is `VALIDATION` at `['categoryIds', index]`.
+    [`db/grimoire.md`](../db/grimoire.md), "Saving its categories", has the rules.
+  - Every other field is nullable. On `updateSpell`, a field left out keeps
+    its value, and null clears it. A `status`, `visibility`, `steps` or
+    `categoryIds` sent as null is read as left out, since none of the four
+    can be cleared that way.
+  - `expectedRevision` is the revision the save was written against. GraphQL
+    cannot require a field that may be null, so the schema has it as a
+    nullable `Int`, and the service refuses a save that leaves it out as
+    `VALIDATION`. Null writes whatever the revision is. A revision no longer
+    current is `STALE_WRITE`, with `extensions.currentRevision`.
+  - A viewer is `FORBIDDEN`; a spell the caller cannot read is `NOT_FOUND`.
+
+A page of spells with all three lists costs the same reads as one spell: the
+page, then eight batched reads (three for the steps, two for the assigned
+categories, three for the derived ones), plus one membership check per coven
+named. A coven the caller is not in refuses at the field, `FORBIDDEN` with the
+field's path.
+
+`tests/modules/grimoire/graphql/spell.test.ts` holds the transport's half: the
+fields, the gaps both ways, the refusal codes by direct id, the paging, the
+`orderBy`, `status` and `query` arguments, and the read count for a page of one and
+of four, which is also where the loaders' batching is proved. Which reader
+sees which spell is `services/spell-reads.test.ts`'s. The saves' transport half is
+`tests/modules/grimoire/graphql/spell-saves.test.ts`: the answer and its
+revision, the loaders cleared, the nulls, and one refusal per code.
+
+### Workings: `Spell.workings`, `workingCount`, the four writes and the preview
+
+A working is one time a spell was made (M13.4, M13.5), registered by
+`graphql/working.ts` over `services/workings.ts`. No resolver authorizes or
+queries: every service asks for `working: read | create | update | delete`, and
+a private working is its recorder's in SQL, so by id it is `NOT_FOUND`.
+
+- **`Spell.workings(first, after)`** is a cursor page of the workings of the
+  spell the caller may read, newest `workedOn` first. It is declared with
+  `t.pagedConnection` and reads through `findWorkingsPage`. The service reads
+  the participants and the deductions of the whole page in one query each,
+  so a page costs the same reads however many workings it holds.
+- **`Spell.workingCount: Int!`** counts the complete workings the caller may
+  read, through the `workingCountBySpell` loader: one query per coven for a
+  whole page of spells, and `0` for a spell with none. A completion clears it.
+- **`SpellWorking`** has `status`, `workedOn` (a `LocalDate`), `completedAt`,
+  `note`, `visibility`, `participants`, `deductions`, `warnings` and `audit`.
+  A participant is a `userId` or a typed `name`; a member's name is the one
+  their row last held. A deduction is in the jar's own unit.
+  `warnings` is filled only on the answer to a completion.
+- **`recordWorking(workspaceId, spellId, input)`**, **`updateWorking(workspaceId, id, input)`**,
+  **`completeWorking(workspaceId, id)`** and **`deleteWorking(workspaceId, id)`**.
+  `WorkingInput` mirrors `validation/working.ts`; a bad participant lands on
+  `participants.<index>` as `VALIDATION`. `completeWorking` answers
+  `CompleteWorkingResult { working, warnings }`, one warning per step it took
+  nothing for, with a `NotDeductedReason`. `deleteWorking` answers the id.
+  Making a complete working private again is `FORBIDDEN` with its explaining
+  message.
+- **`workingDeductionPreview(workspaceId, spellId)`** answers what completing
+  a working would take from each jar and what it would take nothing for, using
+  the same `planDeductions` as completion and writing nothing.
+
+`tests/modules/grimoire/graphql/working.test.ts` holds the transport's half.
 
 ### The compendium mutations
 
@@ -1037,6 +1237,18 @@ curated values.
   deleted entry and an id that names nothing are `NOT_FOUND`, so the admin
   reaches no coven's row by id.
 
+**`setCompendiumEntryReviewed(id: ID!, reviewed: Boolean!): Ingredient!`**
+(M14.8) sets a curator's review mark on a compendium entry, or clears it so
+the entry needs review. It carries `authScopes: { curator: true }` and the
+service's `assertCurator` refuses again; a coven's ingredient, a deleted
+entry and an unknown id are `NOT_FOUND`. It answers the entry, but no field
+of `Ingredient` carries the mark or the reviewer: the compendium's reads are
+cached and shared by every viewer (CLAUDE.md, rule 6), so the admin's
+details read the mark on the server through `readCompendiumReview`
+([`db/compendium-read.md`](../db/compendium-read.md)), never through the
+type. Create, update and promote set the mark in their services
+([`db/compendium-writes.md`](../db/compendium-writes.md)).
+
 **`compendiumEntryUsers(id: ID!): Int!`** (M12.25) answers how many covens
 hold a compendium entry in their cupboard, for the delete confirm. It carries
 `authScopes: { curator: true }` and the service's `assertCurator` refuses
@@ -1050,7 +1262,8 @@ writes' half: the input left short refused before any resolver runs, the
 loaders cleared between two updates, `endRedirect` reaching the update's
 service, one `NOT_FOUND` for the update and the delete, and one `VALIDATION`
 for the create. A non-admin at the `admin` scope is the sweep's; who the
-service refuses, and every collision, are `services/compendium-entries.test.ts`'s.
+service refuses is `services/compendium-entries.test.ts`'s, and every collision
+is `services/compendium-entry-slugs.test.ts`'s.
 
 ### Promoting a common name: `promoteFolkName`
 
@@ -1270,7 +1483,7 @@ services on navigation (rule 1), and `ingredientFormGroups` already answers
 the browser.
 
 - **Two inputs, each for both of its writes.** `CategoryGroupInput` is
-  `name`, `description`, `colorDark` and `colorLight`, all required;
+  `name`, `description`, `color`, all required;
   `IngredientFormGroupInput` is `name` and `description`. No slug, which
   follows the name.
 - **`createCategoryGroup`, `updateCategoryGroup` and `deleteCategoryGroup`;
@@ -1319,8 +1532,13 @@ the pick's `IngredientDeityInput`.
   `traditionId` narrow it as `categories`' two arguments do, a
   `traditionId` that is not a uuid an empty page. `deityTraditions` is the
   live traditions by name and carries no count.
-- **`DeityInput`** is `name`, `description` and `traditionId`, required;
-  **`DeityTraditionInput`** is `name` and `description`. No slug, which
+- **`DeityInput`** is `name`, `description` and `traditionId`, required,
+  and `otherNames`, optional (M14.23): the whole list, so a save brings the
+  stored names to the list sent and an absent list clears them. A name the
+  list repeats in any case, or another live deity of the tradition holds, is
+  `VALIDATION` on `['otherNames', index]`, naming the deity that holds it.
+  `Deity.otherNames` is non-null, `[]` with none, and alphabetical, read
+  through `otherNamesByDeity`. **`DeityTraditionInput`** is `name` and `description`. No slug, which
   follows the name, and a deity's its tradition too; no `endRedirect`, since a
   deity moves no entry's address.
 - **The writes carry `admin`**, and `assertSiteAdmin` refuses again in the
@@ -1338,7 +1556,8 @@ the pick's `IngredientDeityInput`.
   collide is `VALIDATION` on `name`. It is never `FORBIDDEN` for a
   compendium entry's pick.
 - **The writes clear the loaders an earlier root field may have filled**:
-  `deitiesByIngredient` on every deity and tradition write but a create, and
+  `deitiesByIngredient` on every deity and tradition write but a create,
+  `otherNamesByDeity` on a deity's update and delete, and
   `deityTraditionsById` on a tradition's update and delete.
   Each write expires the `compendium` tag (M8.7).
 

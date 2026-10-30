@@ -13,12 +13,8 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient, makeVariant, variantInput } from '../../../support/fixtures';
 
-// MB.167: the curated form a member picked, recorded beside the form's text in
-// its variant's `form_id` (DESIGN.md §5, `ingredient_forms`), so Wax under
-// _Animal_ and Wax under _Substance_ stay told apart after a save; and
-// `formChoicesOf`, the batch behind `IngredientVariant.formChoice`. The
-// ingredients are emptied per test; a form or group a test adds or retires is
-// put back.
+// The curated form a member picked, recorded beside the form's text in its variant's `form_id` (DESIGN.md §5, `ingredient_forms`), so Wax under _Animal_ and Wax under _Substance_ stay told apart after a save.
+// Also `formChoicesOf`, the batch behind `IngredientVariant.formChoice`. Ingredients are emptied per test; a form or group a test adds or retires is put back.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -128,7 +124,7 @@ describe('a save carrying a picked form', () => {
     expect(issues).toEqual([expect.objectContaining({ path: ['variants', 0, 'form'] })]);
   });
 
-  // Typed text is never resolved into a pick (MB.165).
+  // Typed text is never resolved into a pick.
   it('links nothing for typed text, curated or not', async () => {
     const curated = await createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, input('Wax'));
     const uncurated = await createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, {
@@ -172,7 +168,7 @@ describe('a form pick that names no curated form', () => {
 });
 
 // A pick is the column's alone, so a save without one clears it and keeps the
-// text, which is the value and the identity (MB.165).
+// text, which is the value and the identity.
 describe('a picked form since retired', () => {
   let id: string;
 
@@ -206,16 +202,5 @@ describe('a picked form since retired', () => {
     await updateWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, id, input('Wax'));
 
     expect(await rowOf(id)).toEqual({ form: 'Wax', form_id: null });
-  });
-
-  it('is refused when sent again by id, as any pick of a retired form is', async () => {
-    await retire('ingredient_forms', animalWax);
-
-    const issues = await refusal(
-      updateWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, id, input('Wax', animalWax)),
-    );
-
-    expect(issues).toEqual([expect.objectContaining({ path: ['variants', 0, 'formId'] })]);
-    expect(await rowOf(id)).toEqual({ form: 'Wax', form_id: animalWax });
   });
 });

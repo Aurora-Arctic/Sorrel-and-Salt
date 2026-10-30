@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/yarrow-achillea-millefolium
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species, as printed in Wikipedia's taxobox
+    value: LC
+    listedAs: Achillea millefolium
+    scope: global
+    nameBasis: stated
+    source: wikipedia-iucn-achillea-millefolium
+    locator: 'Taxobox: status = LC, status_system = IUCN3.1; its status_ref reads: "Achillea millefolium", Maiz-Tome, L., 2016, 10.2305/IUCN.UK.2016-1.RLTS.T202909A78457012.en'

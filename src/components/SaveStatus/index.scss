@@ -1,0 +1,56 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// Inline beside the form's primary action: one line of small muted text, or
+// the alert or notice that replaces it.
+.save-status {
+  display: inline-flex;
+  align-items: center;
+  gap: space(2);
+  min-inline-size: 0;
+  font-size: type-size('caption');
+}
+
+.save-status__text {
+  display: inline-flex;
+  align-items: center;
+  gap: space(1);
+  color: $text-muted;
+}
+
+// The failure and the conflict are both the site's warning notice (ochre bar, tint and
+// triangle), and Retry sits in the notice's button ink. Doubled class to outrank the notice's
+// own bottom margin, which would lift it off the Save button's line.
+.save-status .save-status__failed {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(2);
+  margin: 0;
+
+  // The notice puts its triangle level with the first line of text. Here the row is the height
+  // of the Retry button, which is taller than the text, so the triangle is centred on the row,
+  // level with the text, which the row centres too. Notice itself is right for text alone.
+  &::before {
+    inset-block-start: 50%;
+    translate: 0 -50%;
+  }
+}
+
+// The conflict notice and the recovery notice, as rows of sentence and buttons; classes of their own
+// rather than the parent's, since in a dialog they are portalled under the title (`conflictInto`).
+.save-status__conflict.save-status__conflict,
+.save-status__recovery.save-status__recovery {
+  @include notice-row;
+}
+
+.save-status__actions {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: space(2);
+}
+
+// The live region is for screen readers alone: the line above is what shows.
+.save-status__announced {
+  @include visually-hidden;
+}

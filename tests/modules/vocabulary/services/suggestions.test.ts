@@ -1,5 +1,6 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import postgres from 'postgres';
+import { beforeEach, describe, expect, it } from 'vitest';
+import type postgres from 'postgres';
+import { useTestDatabase } from '../../../support/db/database';
 import { CELESTIAL_BODIES } from '@/db/seed/astrology';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden, InvalidCursor } from '@/lib/errors';
@@ -16,18 +17,12 @@ import { type IngredientFixture, type Overrides, makeIngredient } from '../../..
 import type { ConnectionArgs, Page } from '@/lib/types';
 import type { Suggest } from './types';
 
-// DESIGN.md §5, "The two readers are scoped differently": a member's autofill
-// for a `celestialBodies` or `zodiacSigns` entry offers the curated vocabulary first, then the
-// uncurated values in use in the compendium and the caller's own workspace.
-// The vocabularies are the seed's, revived per test since some tests retire a
-// row; `ingredients` is emptied per test, so every in-use value a result
-// could carry is one this file wrote.
+// DESIGN.md §5, "The two readers are scoped differently": a member's autofill for a `celestialBodies` or `zodiacSigns` entry offers the curated vocabulary first, then uncurated values in use in the compendium and the caller's own workspace.
+// The vocabularies are the seed's, revived per test since some tests retire a row; `ingredients` is emptied per test, so every in-use value a result could carry is one this file wrote.
 
 let sql: ReturnType<typeof postgres>;
 
-beforeAll(() => {
-  sql = postgres(process.env.DATABASE_URL as string);
-});
+useTestDatabase((client) => (sql = client));
 
 beforeEach(async () => {
   await sql`truncate ingredients cascade`;
@@ -166,7 +161,7 @@ describe('suggestCelestialBodies', () => {
       ]);
     });
 
-    // MB.136: the scan reads entries, not lists, so a list's second entry is
+    // The scan reads entries, not lists, so a list's second entry is
     // as much in use as its first.
     it('reads every entry of a list, not only its first', async () => {
       await addIngredient({

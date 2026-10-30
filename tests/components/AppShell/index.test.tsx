@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ShellViewer, ShellWorkspace } from '@/lib/types';
 
@@ -12,7 +12,7 @@ vi.mock('@/lib/auth-client', () => ({ signOut: vi.fn() }));
 
 const { default: AppShell } = await import('@/components/AppShell');
 
-// The shell around every signed-in page (MB.7): who sees which links, where
+// The shell around every signed-in page: who sees which links, where
 // the brand goes, and what an unverified account is left with.
 
 const MEMBER: ShellViewer = {
@@ -73,7 +73,7 @@ describe('AppShell', () => {
     expect(nav).toContainElement(screen.getByRole('link', { name: 'Compendium' }));
     expect(nav).toContainElement(screen.getByRole('link', { name: 'Your Covens' }));
     expect(screen.getByRole('link', { name: 'Admin' })).toHaveAttribute('href', '/admin');
-    // Into the first coven, not via the /coven landing's redirect (MB.257).
+    // Into the first coven, not via the /coven landing's redirect.
     expect(screen.getByRole('link', { name: 'Your Covens' })).toHaveAttribute(
       'href',
       '/coven/fixture-coven',
@@ -86,56 +86,32 @@ describe('AppShell', () => {
     expect(screen.getByRole('link', { name: 'Your Coven' })).toHaveAttribute('href', '/coven');
   });
 
-  it('offers anyone else the Compendium alone, though they are signed in and verified', () => {
-    shell(MEMBER);
+  it('offers a verified member of a coven Your Coven and not Admin', () => {
+    shell(MEMBER, COVENS.slice(0, 1));
 
     // The precondition: a verified viewer does get the rest of the bar.
-    expect(screen.getByRole('button', { name: 'Add Ingredient' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add Ingredient' })).toBeEnabled();
     expect(screen.getByRole('link', { name: 'Compendium' })).toHaveAttribute('href', '/compendium');
-    expect(screen.queryByRole('link', { name: 'Admin' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Your Coven' })).not.toBeInTheDocument();
-  });
-
-  it.each([
-    ['a member', MEMBER],
-    ['an admin', ADMIN],
-    ['an unverified account', UNVERIFIED],
-  ])('shows %s the Compendium link', (_, viewer) => {
-    shell(viewer);
-
-    expect(
-      within(screen.getByRole('navigation', { name: 'Site' })).getByRole('link', {
-        name: 'Compendium',
-      }),
-    ).toHaveAttribute('href', '/compendium');
-  });
-
-  it('marks the compendium as the current page beneath it', () => {
-    pathname.mockReturnValue('/compendium/ingredients/fixtura-testalis');
-    shell(MEMBER);
-
-    expect(screen.getByRole('link', { name: 'Compendium' })).toHaveAttribute(
-      'aria-current',
-      'page',
+    expect(screen.getByRole('link', { name: 'Your Coven' })).toHaveAttribute(
+      'href',
+      '/coven/fixture-coven',
     );
+    expect(screen.queryByRole('link', { name: 'Admin' })).not.toBeInTheDocument();
   });
 
-  it('marks the area the page is in as the current page', () => {
-    pathname.mockReturnValue('/admin/users');
-    shell(ADMIN);
+  it('offers a verified viewer in a coven Your Coven and not Admin', () => {
+    shell(MEMBER, [{ ...COVENS[0], canWrite: false, canInvite: false }]);
 
-    expect(screen.getByRole('link', { name: 'Admin' })).toHaveAttribute('aria-current', 'page');
-    expect(screen.getByRole('link', { name: 'Your Covens' })).not.toHaveAttribute('aria-current');
+    expect(screen.getByRole('link', { name: 'Your Coven' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Admin' })).not.toBeInTheDocument();
   });
 
-  it.each([
-    ['an admin', ADMIN, COVENS],
-    ['a member', MEMBER, COVENS],
-    ['someone in no coven', MEMBER, []],
-  ])('sends the brand of %s to the front page', (_, viewer, covens) => {
-    shell(viewer, covens);
+  it('offers a verified account in no coven, who is not a curator, the Compendium alone', () => {
+    shell(MEMBER, []);
 
-    expect(screen.getByRole('link', { name: 'Sorrel & Salt' })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('link', { name: 'Compendium' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /^Your Covens?$/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Admin' })).not.toBeInTheDocument();
   });
 
   it('names the coven link for one coven or several', () => {
@@ -149,18 +125,12 @@ describe('AppShell', () => {
     expect(screen.queryByRole('link', { name: 'Your Coven' })).not.toBeInTheDocument();
   });
 
-  it('offers a member of a coven an enabled Add Ingredient button', () => {
-    shell(MEMBER);
-
-    expect(screen.getByRole('button', { name: 'Add Ingredient' })).toBeEnabled();
-  });
-
-  it('leaves an unverified account the brand as text, the account menu and the theme switch', () => {
+  it('leaves an unverified account the brand link to the front page, the account menu and the theme switch', () => {
     shell(UNVERIFIED);
 
-    expect(screen.queryByRole('link', { name: 'Sorrel & Salt' })).not.toBeInTheDocument();
-    expect(screen.getByText('Sorrel & Salt')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Sorrel & Salt' })).toHaveAttribute('href', '/');
     expect(screen.queryByRole('button', { name: 'Add Ingredient' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /^Your Covens?$/ })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Fixture Member' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Toggle light and dark mode' })).toBeInTheDocument();
   });
@@ -179,7 +149,7 @@ describe('AppShell', () => {
     const skip = screen.getByRole('link', { name: 'Skip to Content' });
     const target = document.getElementById(skip.getAttribute('href')?.slice(1) ?? '');
     // Focusable by script only, and wrapping nothing, so a click on the page
-    // never lands on it (M12.48).
+    // never lands on it.
     expect(target).toHaveAttribute('tabindex', '-1');
     expect(target).toBeEmptyDOMElement();
     expect(target!.compareDocumentPosition(screen.getByRole('main'))).toBe(

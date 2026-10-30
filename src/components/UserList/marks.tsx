@@ -2,11 +2,11 @@ import type { ReactElement } from 'react';
 import { isRosterProvider, SOCIAL_PROVIDERS } from '../../lib/social-providers';
 import ProviderMark from '../ProviderMark';
 import Hint from './hint';
-import { CheckIcon, CrossIcon } from './icons';
+import { CheckIcon, CrossIcon } from '../IconTip/icons';
 import type { MarkProps, ProviderLogoProps } from './types';
 import './index.scss';
 
-// The table's two drawn facts, shared with the user's modal (M9.19) so the
+// The table's two drawn facts, shared with the user's modal so the
 // two cannot drift. Their styles are the list's own, imported here so a
 // caller outside the list draws them styled; Sass bundles the file once.
 
@@ -16,14 +16,14 @@ function providerLabel(id: string): string {
 }
 
 /**
- * A linked provider as its logo on its brand's ground, on the owner's call,
+ * A linked provider as its logo on its brand's ground,
  * named in a tip bubble on hover and in hidden text for a screen reader. A
  * provider with no logo, one since dropped from the roster, keeps its id as
  * text, so the account still says it is linked.
  */
 export const ProviderLogo = ({ id }: ProviderLogoProps): ReactElement => {
   const label = providerLabel(id);
-  if (!isRosterProvider(id)) return <span className="user-list__provider-text">{label}</span>;
+  if (!isRosterProvider(id)) return <span>{label}</span>;
   return (
     <Hint className="user-list__hint" label={label}>
       <ProviderMark id={id} />
@@ -33,7 +33,7 @@ export const ProviderLogo = ({ id }: ProviderLogoProps): ReactElement => {
 };
 
 /**
- * A yes-or-no as a mark, on the owner's call: a green check or a red cross,
+ * A yes-or-no as a mark: a green check or a red cross,
  * its word in the page for a screen reader since the mark is drawn alone, and
  * where `hint` asks, in a tip bubble on hover too, since the column's heading
  * does not say it. The bubble is the eye's copy, hidden from the reader.

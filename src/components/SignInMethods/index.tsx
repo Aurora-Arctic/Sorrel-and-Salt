@@ -20,14 +20,10 @@ import { ProviderRow } from './provider-row';
 import type { ProviderRemoval, SignInMethodError, SignInMethodsProps } from './types';
 import './index.scss';
 
-// The account page's list of the ways into this account: each roster
-// provider, linked or addable, removable while another is left. Adding one is
-// Better Auth's /link-social, which leaves for the provider and lands back on
-// the account page; removing one is /unlink-account, answered in place. A
-// session too old for Better Auth to remove one is offered a fresh sign-in
-// in place of every Remove, rather than a press it would refuse. The
-// section's heading and intro are the page's, so the section is a named
-// region like the other two. See claude-docs/components/sign-in-methods.md.
+// The account page's list of the ways into this account: each roster provider, linked or addable,
+// removable while another is left. Adding is Better Auth's /link-social, removing /unlink-account.
+// A session too old to remove one is offered a fresh sign-in in place of every Remove. The heading
+// and intro are the page's (claude-docs/components/sign-in-methods.md).
 
 const SignInMethods = ({
   linked,
@@ -154,6 +150,7 @@ const SignInMethods = ({
           >
             Sign In Again
           </BusyButton>
+          {/* oxlint-disable-next-line react/refs -- the callback ref and handlers come from a hook and are only handed to the DOM, never read while rendering */}
           {signInAgain.feedback}
         </div>
       )}

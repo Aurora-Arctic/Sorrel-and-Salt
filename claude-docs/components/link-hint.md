@@ -90,10 +90,10 @@ announced when the new page arrives.
 
 ## Stories
 
-`Idle` and `Pending` draw the markup for each state directly; `IconIdle` and
-`IconPending` do the same for a link with the chain icon. The workshop has
+`States` is a grid: Idle and Pending draw the markup for each state directly; Icon Idle and
+Icon Pending do the same for a link with the chain icon. The workshop has
 no Next router, so `useLinkStatus` there (the stub in
-`.ladle/UnoptimizedLink.tsx`, next to the `next/link` alias) always answers
+`.storybook/UnoptimizedLink.tsx`, next to the `next/link` alias) always answers
 `false`.
 
 ## Testing

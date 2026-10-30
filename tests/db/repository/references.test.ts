@@ -5,11 +5,8 @@ import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { A, E } from '../../support/as-user';
 import { insertReference } from '../../support/db/insert-reference';
 
-// `findReferencesOf` over a sourced table other than the ingredients (MB.208):
-// a deity is global reference data, so its links read while it is live, and
-// only to a compendium reference. The ingredient's arm, two-tier, is the
-// ingredient services' and loaders' to prove. The sources seed links the
-// deities, so the seeded template holds the links read here.
+// `findReferencesOf` over a sourced table other than the ingredients: a deity is global reference data, so its links read while it is live, and only to a compendium reference.
+// The ingredient's two-tier arm is the services' and loaders' to prove. The sources seed links the deities, so the seeded template holds the links read here.
 
 let sql: ReturnType<typeof postgres>;
 let deityId: string;

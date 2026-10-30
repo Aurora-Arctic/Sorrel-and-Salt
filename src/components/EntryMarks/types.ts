@@ -1,12 +1,11 @@
 /**
- * Whose entry it is, from the cupboard's three kinds (M12.13): the coven's
- * own (`own`), a compendium entry this coven's cupboard names (`cupboard`),
- * and a compendium entry it does not (`compendium`, which is every entry on
- * the public compendium).
+ * Whose entry it is: the coven's own (`own`), a compendium entry this coven's cupboard
+ * names (`cupboard`), or a compendium entry it does not (`compendium`, which is every
+ * entry on the public compendium).
  */
 export type EntryKind = 'own' | 'cupboard' | 'compendium';
 
-/** How recently a compendium entry was added or changed (MB.106); see `entryRecency`. */
+/** How recently a compendium entry was added or changed; see `entryRecency`. */
 import type { EntryRecency } from '@/lib/entry-recency';
 import type { SafetyVariant } from '../SafetyNote/types';
 
@@ -17,7 +16,7 @@ export interface EntryMarksProps {
   kind: EntryKind;
   /** The cupboard row overrides a field of the compendium's; only a `cupboard` entry shows it. */
   annotated?: boolean;
-  /** The curators retired the entry (M12.24); it shows in place of Compendium. */
+  /** The curators retired the entry; it shows in place of Compendium. */
   retired?: boolean;
   /**
    * Read inside a coven, where Compendium tells a compendium entry from the
@@ -26,21 +25,25 @@ export interface EntryMarksProps {
    */
   inCoven?: boolean;
   /**
-   * Compendium and Annotated, which say where a held entry came from. On by
-   * default; the ingredient card turns it off, as a coven's card leaves the
-   * question to the entry page (the owner's call, 2026-10-20).
+   * Compendium and Annotated, which say where a held entry came from. On by default;
+   * the ingredient card turns it off, leaving the question to the entry page.
    */
   provenance?: boolean;
   /**
    * False leaves the safety badge out, for a caller that draws its own SafetyMark
-   * elsewhere: the card, beside the name (the owner's call, 2026-10-20).
+   * elsewhere: the card, beside the name.
    */
   safety?: boolean;
   /**
-   * New or Updated (MB.106), drawn before every badge (the owner's call, 2026-10-20).
-   * Not a badge: `RecencyMark`, which a caller with no badge row beside it draws alone.
+   * New or Updated, drawn before every badge. Not a badge: `RecencyMark`, which a
+   * caller with no badge row beside it draws alone.
    */
   recency?: EntryRecency | null;
+  /**
+   * The curators' review mark, shown to everyone: an ISO date for a Reviewed By Curator badge, `null` for
+   * Needs Review, left out for no badge. Never drawn on a coven's own entry; only the date shows.
+   */
+  reviewedAt?: string | null;
   /** The ingredient's own Toxic flag; it or any form's shows Toxic, last in the row. */
   toxic?: boolean | null;
   /** The ingredient's own safety notes; these or any form's show Caution, unless Toxic shows. */

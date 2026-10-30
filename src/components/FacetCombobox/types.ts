@@ -17,10 +17,8 @@ export interface FacetComboboxProps {
   /** Every change, as the whole list. Called once hydrated; before, the form submits the native select. */
   onChange: (values: string[]) => void;
   /**
-   * Type to narrow the list, as the Forms and Deities filters do: the typed
-   * box in place of the select-style one. A choice with a `group` is listed
-   * under that heading, and the typing form is used whenever any choice has
-   * one, since only it draws headings. Off unless set.
+   * Type to narrow the list: the typed box in place of the select-style one. A choice with a `group` is
+   * listed under that heading, and any such choice forces the typing form, the only one that draws headings.
    */
   typeahead?: boolean;
   /** A short action shown, muted, while nothing is chosen and after the chips: "Add an element". */
@@ -34,6 +32,11 @@ export interface FacetComboboxProps {
   removeNoun?: string;
   /** A search is running: every chip holds a placeholder where its count will be. */
   loading?: boolean;
+  /**
+   * Whether the values carry counts. On unless set to `false`: a field without counts
+   * (In My Covens) never draws a count or its placeholder.
+   */
+  counts?: boolean;
   /** Leave out a value whose count is 0. On unless set to `false`; a value already chosen keeps its chip. */
   hideZeros?: boolean;
   /** What the label's tip says, if anything. */

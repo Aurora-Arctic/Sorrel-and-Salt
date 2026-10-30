@@ -2,14 +2,11 @@ import type { SeedCategoryGroup } from './types';
 
 // §6's eight groups and their colour pairs, apart from the seed that writes
 // them so the workshop can render them: this file imports nothing at runtime,
-// where categories.ts reaches the database (claude-docs/workshop.md, ".ladle/").
+// where categories.ts reaches the database (claude-docs/workshop.md, ".storybook/").
 
 /**
- * The eight groups in §6's order, each with its hex pair. These are the owner's
- * hand-tuned pairs, and this file is their only source. M0.7's Sass formula,
- * which gave every group one saturation per theme, could not hold them
- * (claude-docs/styling.md, "Category-group colours"). categories.test.ts holds
- * each pair to the contrast floor, to one hue, and to its step of the rotation.
+ * The eight groups in order, each with its hex pair: hand-tuned, and this file is their only source, as a Sass formula giving a group one
+ * saturation per theme could not hold them (claude-docs/styling.md, "Category-group colours"). categories.test.ts holds each pair to the contrast floor.
  */
 export const CATEGORY_GROUPS: SeedCategoryGroup[] = [
   {

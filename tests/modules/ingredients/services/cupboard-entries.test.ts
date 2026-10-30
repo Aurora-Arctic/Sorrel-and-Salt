@@ -3,10 +3,8 @@ import { applyCupboardEntry } from '@/modules/ingredients';
 import type { CupboardEntryRow, IngredientRow } from '@/modules/ingredients';
 import { entryDetail } from '../../../support/entry-detail';
 
-// `applyCupboardEntry` (M12.14): a coven's cupboard entry laid over the
-// compendium entry it names. Per column, a null override is the compendium's
-// value, a set one the coven's, and an empty list a list cleared on purpose;
-// everything else is the compendium's, whatever the row says.
+// `applyCupboardEntry`: a coven's cupboard entry laid over the compendium entry it names. Per column, a null override is the compendium's value, a set one the coven's, and an empty list a list cleared on purpose.
+// Everything else is the compendium's, whatever the row says.
 
 const STAMPS = {
   createdAt: new Date('2026-02-01T00:00:00Z'),
@@ -35,6 +33,7 @@ function cupboardEntry(overrides: Partial<CupboardEntryRow> = {}): CupboardEntry
     workspaceId: '00000000-0000-4000-8000-000000000201',
     ingredientId: COMPENDIUM.id,
     label: null,
+    revision: 1,
     description: null,
     safetyNotes: null,
     elements: null,
@@ -65,30 +64,32 @@ describe('applyCupboardEntry', () => {
     expect(applyCupboardEntry(COMPENDIUM, undefined)).toEqual(COMPENDIUM);
   });
 
-  it.each(COLUMNS)("reads the compendium's $column while $override is null", ({ column }) => {
-    expect(applyCupboardEntry(COMPENDIUM, cupboardEntry())[column]).toEqual(COMPENDIUM[column]);
+  // One case per rule, each over every column at once: the merge is one line
+  // per column, so a single row of each would leave the other lines unread.
+  it("reads the compendium's columns while every override is null", () => {
+    expect(applyCupboardEntry(COMPENDIUM, cupboardEntry())).toEqual(COMPENDIUM);
   });
 
-  it.each(COLUMNS)(
-    "reads the coven's $override over $column once set",
-    ({ override, column, set }) => {
-      const merged = applyCupboardEntry(COMPENDIUM, cupboardEntry({ [override]: set }));
+  it("reads the coven's overrides over the compendium's columns once set", () => {
+    const overrides = Object.fromEntries(COLUMNS.map(({ override, set }) => [override, set]));
+    const merged = applyCupboardEntry(COMPENDIUM, cupboardEntry(overrides));
 
+    for (const { column, set } of COLUMNS) {
       expect(merged[column]).toEqual(set);
       // Precondition: the compendium said something else.
       expect(COMPENDIUM[column]).not.toEqual(set);
-    },
-  );
+    }
+  });
 
-  it.each(LISTS)(
-    'reads an empty $override as cleared, not as the compendium’s',
-    ({ override, column }) => {
-      const merged = applyCupboardEntry(COMPENDIUM, cupboardEntry({ [override]: [] }));
+  it('reads an empty list override as cleared, not as the compendium’s', () => {
+    const overrides = Object.fromEntries(LISTS.map(({ override }) => [override, []]));
+    const merged = applyCupboardEntry(COMPENDIUM, cupboardEntry(overrides));
 
+    for (const { column } of LISTS) {
       expect(merged[column]).toEqual([]);
       expect(COMPENDIUM[column]).not.toEqual([]);
-    },
-  );
+    }
+  });
 
   it('leaves the inherited fields, the tier and the id as the compendium has them', () => {
     const merged = applyCupboardEntry(

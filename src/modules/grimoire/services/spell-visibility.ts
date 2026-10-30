@@ -1,16 +1,18 @@
 import 'server-only';
 import { findOneSpell, withAudit } from '../../../db/repository';
 import { spells } from '../schema/spells';
-import { Forbidden, NotFound } from '../../../lib/errors';
+import { NotFound } from '../../../lib/errors';
+import { assertWidens } from './visibility-rule';
 import type { Session } from '../../../lib/session';
 import { assertMembership } from '@/modules/coven';
 import type { SpellVisibility } from '../types';
 
 /**
  * DESIGN.md §5's one-way rule, as the caller meets it. Widening is a gift and
- * narrowing is a retraction: once the coven has read a spell and built on it,
- * hiding it takes back something they were relying on, so `private` may be
- * widened to `workspace` and `workspace` may never go back.
+ * narrowing is a retraction: once the coven has read a finished spell and built
+ * on it, hiding it takes back something they were relying on, so `private` may
+ * be widened to `workspace` and a complete spell may never go back. A draft is
+ * not yet relied on, and moves either way.
  *
  * **There is no author clause here, and none is missing.** A private spell is
  * readable by its author alone, so `findOneSpell` has already answered
@@ -33,12 +35,7 @@ export async function setSpellVisibility(
   const spell = await findOneSpell(membership, spellId);
   if (!spell) throw new NotFound('No such spell in this coven');
 
-  if (spell.visibility === 'workspace' && visibility === 'private') {
-    throw new Forbidden(
-      'This spell has been shared with the coven and cannot be made private again. ' +
-        'Delete it instead if it should not be there.',
-    );
-  }
+  assertWidens(spell, visibility);
 
   const [updated] = await withAudit(session, (write) =>
     write.updateByIdInWorkspace(membership, spells, spellId, { visibility }),

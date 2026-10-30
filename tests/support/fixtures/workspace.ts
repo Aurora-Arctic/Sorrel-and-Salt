@@ -20,17 +20,9 @@ const DEFAULTS: WorkspaceFixture = {
 };
 
 /**
- * One workspace.
- *
- * ```ts
- * makeWorkspace()                                // Fixture Coven, A owning it
- * makeWorkspace({ name: 'Fixture Coven Two' })   // slug follows the name
- * ```
- *
- * The slug is re-derived through `src/lib/slugify` whenever the name is
- * stated — a fixture is exactly where a second spelling would get written
- * down. A stated slug is left alone, which is how a test writes the collision
- * `workspaces_slug_unique` rejects.
+ * One workspace, `makeWorkspace({ name: 'Fixture Coven Two' })`: A owns it and the slug follows the name,
+ * re-derived through `src/lib/slugify` whenever the name is stated. A stated slug is left alone, so a test
+ * can write the collision `workspaces_slug_unique` rejects.
  */
 export function makeWorkspace(overrides: Overrides<WorkspaceFixture> = {}): WorkspaceFixture {
   const workspace = mergeFixture(DEFAULTS, overrides);

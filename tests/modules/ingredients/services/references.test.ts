@@ -16,11 +16,8 @@ import { A, B, C, D, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertReference } from '../../../support/db/insert-reference';
 
-// MB.153: a reference written in its tier — the compendium's under the
-// SiteAdmin proof alone, a coven's under its Membership, whoever cites it —
-// and the picker's search, scoped to the compendium and the current coven
-// (DESIGN.md §5, "References"). Both tables are emptied per test, so every
-// row a result could come from is one this file wrote.
+// A reference written in its tier (the compendium's under the SiteAdmin proof alone, a coven's under its Membership, whoever cites it), and the picker's search, scoped to the compendium and the current coven (DESIGN.md §5, "References").
+// Both tables are emptied per test, so every row a result could come from is one this file wrote.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -77,7 +74,7 @@ describe('createReference', () => {
     });
   });
 
-  // MB.154: the server stores what the form shows once a field is left,
+  // The server stores what the form shows once a field is left,
   // whoever sent the input.
   it('stores the fields tidied and formatted, not as sent', async () => {
     const created = await createReference(asUser(B), WORKSPACE_W_ID, {
@@ -114,10 +111,8 @@ describe('createReference', () => {
     await expect(createReference(asUser(user), WORKSPACE_W_ID, BOOK)).rejects.toThrow(Forbidden);
   });
 
-  // DESIGN.md §5's CHECKs, refused by the shared schema before the table sees
-  // them: each issue on the field that failed, never a constraint's name. One
-  // case proves the service parses its input; every rule the schema holds is
-  // tests/modules/ingredients/validation/reference.test.ts's.
+  // DESIGN.md §5's CHECKs, refused by the shared schema before the table sees them: each issue on the field that failed, never a constraint's name.
+  // One case proves the service parses its input; every rule the schema holds is tests/modules/ingredients/validation/reference.test.ts's.
   it('refuses a web page with no address or day, pathed to each field', async () => {
     const issues = await refusal(
       createReference(asUser(B), WORKSPACE_W_ID, { kind: 'web_page', title: 'Testwort' } as never),
@@ -162,7 +157,8 @@ describe('updateReference', () => {
   });
 
   // The precondition: B's ingredient cites it, and B reads it there. Citing a
-  // reference is not owning it, under either argument a member could send.
+  // reference is not owning it, under either argument a member could send. The
+  // null arm reads the site role alone, so B stands for every non-admin.
   it('refuses a member the compendium reference their ingredient cites, by direct id', async () => {
     const id = await insertReference(sql, { title: 'Compendium Herbal' }, E.id);
     const ingredient = await createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, {
@@ -179,18 +175,6 @@ describe('updateReference', () => {
     ).rejects.toThrow(NotFound);
     await expect(
       updateReference(asUser(B), null, id, { ...BOOK, title: 'Hijacked' }),
-    ).rejects.toThrow(Forbidden);
-    expect(await rowOf(id)).toMatchObject({ title: 'Compendium Herbal', updated_by: E.id });
-  });
-
-  // The precondition is the admin's own replace, above, of the same row shape;
-  // the site role alone is read, so the coven's owner stands for every non-admin.
-  it('refuses the coven’s owner a compendium reference by direct id, leaving it as it was', async () => {
-    const id = await insertReference(sql, { title: 'Compendium Herbal' }, E.id);
-    expect(await rowOf(id)).toMatchObject({ workspace_id: null });
-
-    await expect(
-      updateReference(asUser(A), null, id, { ...BOOK, title: 'Hijacked' }),
     ).rejects.toThrow(Forbidden);
     expect(await rowOf(id)).toMatchObject({ title: 'Compendium Herbal', updated_by: E.id });
   });
@@ -244,7 +228,7 @@ describe('updateReference', () => {
   });
 });
 
-// MB.115: the edit panel opens on the source whole, read in the tiers the
+// The edit panel opens on the source whole, read in the tiers the
 // picker offers.
 describe('getReference', () => {
   it('reads a compendium reference whole without a coven, and under one', async () => {

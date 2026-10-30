@@ -1,35 +1,55 @@
-import type { Story } from '@ladle/react';
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactElement } from 'react';
 import StackTable from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
 import ListFrame, { ListBody } from '../ListFrame';
+import { StatesGrid } from '../../../.storybook/states-grid';
 import {
+  AnnotateButton,
+  AnnotateIcon,
+  AnnotateLink,
+  BinButton,
+  BinIcon,
+  CauldronIcon,
+  CheckIcon,
+  ChevronIcon,
+  CloseIcon,
+  CompleteIcon,
+  CompendiumEditLink,
   CopyIcon,
+  CrossIcon,
+  DotsIcon,
   EditLink,
   LinkIcon,
+  MoreMenu,
   MysticEyeIcon,
   PencilIcon,
   PlusIcon,
+  PreviewIcon,
+  PrintIcon,
+  QuickLookButton,
   QuickLookLink,
   RedoIcon,
+  StockIcon,
   UndoIcon,
 } from '.';
 
-// Render-only; behaviour is asserted in tests/components/IconTip. Hover or
-// focus a pencil to open its tip; Escape closes it. The rows are a list's
-// banded table, so the pencil shows on both of its grounds, the page and the
-// card. The ingredient form's smaller pencils are drawn in its own stories.
-export default {
-  title: 'Layout / Icon Tip',
-};
+// Render-only; behaviour is asserted in tests/components/IconTip. Hover or focus
+// a pencil to open its tip; Escape closes it. The rows are a list's banded table,
+// so the pencil shows on both grounds, the page and the card.
+const meta = {
+  title: 'Forms / Icon Tip',
+} satisfies Meta;
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 const ROWS = ['Fixture Salt', 'Testwort', 'Fixture Ash'].map((name) => ({
   name,
   description: 'An invented entry, for the workshop.',
 }));
 
-// The columns an admin list has: the name with its Quick Look eye (M12.5), the labels, then the pencil in its own,
-// unlabelled, at the row's end (a card's top right at a phone's width).
+// An admin list's columns: the name with its Quick Look eye, the labels, then an
+// unlabelled pencil at the row's end (a card's top right at phone width).
 const COLUMNS: StackColumn<(typeof ROWS)[number]>[] = [
   {
     heading: 'Name',
@@ -65,24 +85,81 @@ const Rows = (): ReactElement => (
   </ListFrame>
 );
 
-// Every glyph the wrapper's icons file draws, at the icon button's glyph size:
-// the history pair, Restore Original and Copy From Ingredient use undo, redo
-// and copy, and Quick Look the eye.
-export const Glyphs: Story = () => (
-  <p style={{ display: 'flex', gap: '1rem', fontSize: '1rem' }}>
-    {[CopyIcon, LinkIcon, MysticEyeIcon, PencilIcon, PlusIcon, RedoIcon, UndoIcon].map(
-      (Glyph, at) => (
-        <Glyph key={at} />
-      ),
-    )}
-  </p>
-);
+const GLYPHS = {
+  Annotate: AnnotateIcon,
+  Bin: BinIcon,
+  Cauldron: CauldronIcon,
+  Check: CheckIcon,
+  Chevron: ChevronIcon,
+  Close: CloseIcon,
+  Complete: CompleteIcon,
+  Copy: CopyIcon,
+  Cross: CrossIcon,
+  Dots: DotsIcon,
+  Link: LinkIcon,
+  'Mystic Eye': MysticEyeIcon,
+  Pencil: PencilIcon,
+  Plus: PlusIcon,
+  Preview: PreviewIcon,
+  Print: PrintIcon,
+  Redo: RedoIcon,
+  Stock: StockIcon,
+  Undo: UndoIcon,
+};
 
-export const InAListRow: Story = () => <Rows />;
+const NOOP = (): void => undefined;
+const HEADING = { title: 'Testwort' };
 
-// A phone's width, in each theme: each row a card, the pencil at its top right.
-export const PhoneDark: Story = () => <Rows />;
-PhoneDark.meta = { theme: 'dark', width: 375 };
+// Every glyph the wrapper's icons file draws at the icon button's glyph size,
+// then every control that wears one with its tip: the links, the buttons, and
+// the three dots' menu in its Compendium and Coven sections.
+export const States: Story = {
+  render: () => (
+    <StatesGrid
+      cell="12rem"
+      states={{
+        ...Object.fromEntries(
+          Object.entries(GLYPHS).map(([name, Glyph]) => [
+            `${name} Icon`,
+            <p key={name} style={{ fontSize: '1rem' }}>
+              <Glyph />
+            </p>,
+          ]),
+        ),
+        'Edit Link': <EditLink href="#edit" name="Testwort" heading={HEADING} />,
+        'Compendium Edit Link': (
+          <CompendiumEditLink href="#edit" name="Testwort" heading={HEADING} />
+        ),
+        'Annotate Link': <AnnotateLink href="#annotate" name="Testwort" heading={HEADING} />,
+        'Quick Look Link': <QuickLookLink href="#look" name="Testwort" heading={HEADING} />,
+        'Bin Button': <BinButton verb="Delete Ingredient" name="Testwort" onClick={NOOP} />,
+        'Annotate Button': <AnnotateButton name="Testwort" onClick={NOOP} />,
+        'Quick Look Button': <QuickLookButton name="Testwort" onClick={NOOP} />,
+        'More Menu': (
+          <MoreMenu
+            name="Testwort"
+            sections={[
+              {
+                key: 'compendium',
+                label: 'Compendium',
+                items: [
+                  { key: 'edit', label: 'Edit in Compendium', onSelect: NOOP, primary: true },
+                ],
+              },
+              {
+                key: 'coven',
+                label: 'Coven',
+                items: [
+                  { key: 'annotate', label: 'Annotate', onSelect: NOOP },
+                  { key: 'remove', label: 'Remove', onSelect: NOOP, destructive: true },
+                ],
+              },
+            ]}
+          />
+        ),
+      }}
+    />
+  ),
+};
 
-export const PhoneLight: Story = () => <Rows />;
-PhoneLight.meta = { theme: 'light', width: 375 };
+export const InAListRow: Story = { render: () => <Rows /> };

@@ -15,6 +15,7 @@ const SafetyNote = ({
   variants = [],
   level = 3,
   footnote,
+  compact = false,
 }: SafetyNoteProps): ReactElement | null => {
   const headingId = useId();
   const forms = variants.filter((variant) => said(variant.safetyNotes));
@@ -26,7 +27,10 @@ const SafetyNote = ({
   const Heading = `h${level}` as const;
 
   return (
-    <section className="safety-note" aria-labelledby={headingId}>
+    <section
+      className={compact ? 'safety-note safety-note--compact' : 'safety-note'}
+      aria-labelledby={headingId}
+    >
       <Heading id={headingId} className="safety-note__heading">
         Caution
       </Heading>

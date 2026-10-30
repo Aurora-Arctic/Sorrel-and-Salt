@@ -11,9 +11,7 @@
 }
 
 .user-detail .user-detail__section {
-  display: flex;
-  flex-direction: column;
-  gap: space(2);
+  @include stack(2);
   margin: 0;
   padding-block: space(4);
   border-top: 1px solid $hairline;
@@ -27,7 +25,7 @@
 // draws, since the dialog's own title is the heading here.
 .user-detail .user-detail__title {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: type-size('title');
   line-height: 1.2;
 }
 
@@ -53,9 +51,8 @@
   }
 }
 
-// A value, and the control that changes it at the right edge (the owner's
-// call). A refusal of that control is its callout, which floats over the rows
-// rather than taking room in one (M12.31).
+// A value, and the control that changes it at the right edge. A refusal of that control is
+// its callout, which floats over the rows rather than taking room in one.
 .user-detail__value {
   display: flex;
   flex-wrap: wrap;
@@ -77,15 +74,11 @@
 // One coven to an item: its name, then its role and the day they joined in
 // the muted ink at the caption size, as a folded section's summary reads.
 .user-detail .user-detail__covens {
-  display: flex;
-  flex-direction: column;
-  gap: space(3);
+  @include stack(3);
   @include list-reset;
 
   > li {
-    display: flex;
-    flex-direction: column;
-    gap: space(1);
+    @include stack(1);
   }
 }
 

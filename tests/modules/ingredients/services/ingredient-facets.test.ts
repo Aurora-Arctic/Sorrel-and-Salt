@@ -2,12 +2,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden, ValidationError } from '@/lib/errors';
-import { resolvePage } from '@/lib/pagination';
 import type { Session } from '@/lib/session';
 import {
   type IngredientFacets,
   compendiumFacets,
-  listWorkspaceIngredients,
+  countWorkspaceIngredients,
   workspaceIngredientFacets,
 } from '@/modules/ingredients';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
@@ -21,11 +20,8 @@ import { type IngredientFixture, makeIngredient, makeVariant } from '../../../su
 import type { Overrides } from '../../../support/fixtures';
 import { clearDataCache } from '../../../support/next-data-cache';
 
-// M12.3's two services: the compendium's facets, public and cached as the
-// list is, and a coven's, under the coven's proof and never cached. A data
-// cache that holds, as Next's does, so a row written underneath a read shows
-// whether the repeat read reached Postgres. The counting itself is
-// tests/db/repository/ingredient-facets.test.ts's.
+// The two services: the compendium's facets, public and cached as the list is, and a coven's, under the coven's proof and never cached.
+// The data cache holds as Next's does, so a row written underneath a read shows whether the repeat read reached Postgres. The counting itself is tests/db/repository/ingredient-facets.test.ts's.
 vi.mock('next/cache', () => import('../../../support/next-data-cache'));
 
 let sql: postgres.Sql;
@@ -105,10 +101,7 @@ describe('workspaceIngredientFacets', () => {
   let hecate: string;
   let protection: string;
 
-  /**
-   * W's own entry and a compendium entry W's cupboard holds, each with values no other
-   * row carries; X's own entry; and a compendium entry no coven holds.
-   */
+  /** W's own entry and a compendium entry W's cupboard holds, each with values no other row carries; X's own entry; and a compendium entry no coven holds. */
   async function seedCovens(): Promise<void> {
     hecate = await idOf('deities', 'Hecate');
     protection = await idOf('categories', 'Protection');
@@ -291,11 +284,7 @@ describe('workspaceIngredientFacets', () => {
   });
 
   describe('the Source and In Stock counts', () => {
-    /**
-     * W's local entries (one jarred at 4, one with a jar at 0, one with a jar
-     * of no quantity, one with no jar), a compendium entry W holds in stock, one
-     * it holds at 0, one it does not hold, and X's local entry with a jar in X.
-     */
+    /** W's local entries (one jarred at 4, one with a jar at 0, one with a jar of no quantity, one with no jar), a compendium entry W holds in stock, one at 0, one it does not hold, and X's local entry with a jar in X. */
     async function seedSources(): Promise<void> {
       const form = (name: string, workspaceId?: string) =>
         add(name, { workspaceId, variants: [makeVariant({ form: `${name}form` })] });
@@ -433,7 +422,7 @@ describe('workspaceIngredientFacets', () => {
     });
   });
 
-  describe('the Low Stock Only count (M9.8)', () => {
+  describe('the Low Stock Only count', () => {
     /** W: a low jar, an out jar, a healthy jar, an unweighed one, a held compendium entry low; X: its own out jar. */
     async function seedLow(): Promise<void> {
       const form = (name: string, workspaceId?: string) =>
@@ -498,14 +487,12 @@ describe('workspaceIngredientFacets', () => {
     });
   });
 
-  it.each([
-    ['A, the owner', A],
-    ['B, a member', B],
-    ['C, a viewer', C],
-  ])('counts W for %s', async (_label, user) => {
+  // The viewer stands for every role: reading is one permission owner, member
+  // and viewer all hold (tests/modules/coven/services/access-control.test.ts).
+  it('counts W for C, a viewer', async () => {
     await seedCovens();
 
-    const facets = await workspaceIngredientFacets(asUser(user), WORKSPACE_W_ID, {});
+    const facets = await workspaceIngredientFacets(asUser(C), WORKSPACE_W_ID, {});
 
     expect(countedOf(facets, 'forms')).toContain('Covenform');
   });
@@ -563,10 +550,13 @@ describe('workspaceIngredientFacets', () => {
 /** How many entries the coven list shows `session` in W under `filter`. */
 async function listedCount(
   session: Session,
-  filter: Parameters<typeof listWorkspaceIngredients>[2],
+  filter: Parameters<typeof countWorkspaceIngredients>[2],
 ): Promise<number> {
-  const page = await resolvePage({ first: 100 }, (request) =>
-    listWorkspaceIngredients(session, WORKSPACE_W_ID, filter, request),
+  const { totalCount } = await countWorkspaceIngredients(
+    session,
+    WORKSPACE_W_ID,
+    filter,
+    undefined,
   );
-  return page.edges.length;
+  return totalCount;
 }

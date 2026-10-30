@@ -83,7 +83,7 @@ In [`db/invitations.md`](db/invitations.md#policy-in-two-services).
 
 ## The deity vocabulary (MB.127; tables MB.128)
 
-`deities`, the admin-curated vocabulary behind an ingredient's deities, the rows of `ingredient_deities` since MB.167, whose names stay free text with the curated row picked beside them as `form` does, grouped by `deity_traditions` as the forms are by their groups, with a required description that carries each deity's other spellings. [`db/deity-vocabulary.md`](db/deity-vocabulary.md)
+`deities`, the admin-curated vocabulary behind an ingredient's deities, the rows of `ingredient_deities` since MB.167, whose names stay free text with the curated row picked beside them as `form` does, grouped by `deity_traditions` as the forms are by their groups, with a required description, and its other spellings as `deity_other_names` rows (M14.22, M14.23). [`db/deity-vocabulary.md`](db/deity-vocabulary.md)
 
 ### The member's autofill (MB.94)
 
@@ -111,15 +111,15 @@ In [`db/stock.md`](db/stock.md#nullability-and-why-zero-is-not-the-same-as-nothi
 
 ## The grimoire (M10.2)
 
-`spells` and `spell_ingredients`: a layer names an ingredient rather than a stock row or may name a custom one instead (MB.40), is soft-deleted, and its order is unique among the spell's live layers. [`db/grimoire.md`](db/grimoire.md)
+`spells` and `spell_steps` (`spell_ingredients` until M13.1): a step is an instruction, an ingredient, or both; its ingredient is one the workspace knows rather than a stock row, or a custom name (MB.40); it is soft-deleted, and its position is unique among the spell's live steps. [`db/grimoire.md`](db/grimoire.md)
 
 ### The join names the ingredient, never the stock row
 
 In [`db/grimoire.md`](db/grimoire.md#the-join-names-the-ingredient-never-the-stock-row).
 
-### Layer order is the identity, and what that costs the reorder
+### Position is the identity, and what that costs the reorder
 
-In [`db/grimoire.md`](db/grimoire.md#layer-order-is-the-identity-and-what-that-costs-the-reorder).
+In [`db/grimoire.md`](db/grimoire.md#position-is-the-identity-and-what-that-costs-the-reorder).
 
 ### Custom ingredients (MB.40)
 
@@ -271,7 +271,7 @@ Thirty-five traditions and 216 deities, the owner's starting list, with their de
 
 ## The compendium seed (MB.240 to MB.249)
 
-The compendium's 614 starting entries, seeded on staging and production as reference data by `db:seed:compendium`: the entry template, the closed lists an entry may name, the formal-name and sourcing rules, write-once, the owner's book library and the candidate list. [`db/compendium-seed/README.md`](db/compendium-seed/README.md)
+The compendium's 1,111 starting entries, seeded on staging and production as reference data by `db:seed:compendium`: the entry template, the closed lists an entry may name, the formal-name and sourcing rules, write-once, the owner's book library and the candidate list. [`db/compendium-seed/README.md`](db/compendium-seed/README.md)
 
 ## The standard scenario (M1.22)
 

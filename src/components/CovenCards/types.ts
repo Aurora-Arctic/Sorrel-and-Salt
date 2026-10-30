@@ -28,33 +28,30 @@ export interface CovenCardEntry {
   retired: boolean;
   /** The coven's jars of it, one per form held. */
   jars: readonly JarLine[];
-  /** Who last edited it and when (M6.18): the newest of its jars and, for a coven's own entry, its row. */
+  /** Who last edited it and when: the newest of its jars and, for a coven's own entry, its row. */
   lastEdit?: LastEditProps | null;
-  /** Its details modal over the list, `?entry=<id>`, which the Quick Look eye at the card's bottom left opens (M12.5). */
+  /** Its details modal over the list, `?entry=<id>`, which the Quick Look eye opens. */
   details: RouteModalLink;
   /**
-   * The list's own address with `?edit=<id>`, where the card's Edit opens the
-   * coven's edit dialog over the list (M8.17). Left out, no Edit shows: a
-   * compendium entry, or a role that may not update.
+   * The list's own address with `?edit=<id>`, where the card's Edit opens the coven's
+   * edit dialog. Left out, no Edit shows: a compendium entry, or a role that may not update.
    */
   editHref?: Route;
-  /** The head of the dialog Edit opens, shown at once over a skeleton while the form loads (M9.18). */
+  /** The head of the dialog Edit opens, shown at once over a skeleton while the form loads. */
   editHeading?: ModalHeading;
   /**
-   * The list's own address with `?annotate=<id>`, where the card's Annotate
-   * opens the coven's Annotate dialog over the list (M8.17). Left out, no
-   * Annotate shows: the coven's own entry, or a role that may not update.
+   * The list's own address with `?annotate=<id>`, where the card's Annotate opens the
+   * coven's Annotate dialog. Left out, no Annotate shows: the coven's own entry, or a
+   * role that may not update.
    */
   annotateHref?: Route;
-  /** The coven's own entry, for a role that may delete it: More offers Delete Ingredient. */
-  mayDelete?: boolean;
   /** A compendium entry the cupboard holds, for a role that may make it the coven's own. */
   mayMakeOurs?: boolean;
   /** A compendium entry the cupboard holds, for a role that may remove it. */
   mayRemove?: boolean;
   /**
-   * Every form the entry comes in and the coven's jars of them, for a role that may update the
-   * stock: the foot then draws the Edit Stock pencil (M9.9). Left out, no pencil.
+   * Every form the entry comes in and the coven's jars of them, for a role that may
+   * update the stock: the foot then draws the Edit Stock pencil. Left out, no pencil.
    */
   stock?: Pick<StockDialogProps, 'forms' | 'jars'>;
 }
@@ -62,7 +59,7 @@ export interface CovenCardEntry {
 /** A card's More (`card-more.tsx`): the entry, its coven, and what the role may do to it. */
 export interface CardMoreProps extends Pick<
   CovenCardEntry,
-  'id' | 'label' | 'mayDelete' | 'mayMakeOurs' | 'mayRemove'
+  'id' | 'label' | 'mayMakeOurs' | 'mayRemove'
 > {
   /** The card's name with its formal name, read after each control's verb. */
   name: string;
@@ -77,7 +74,14 @@ export interface CardMoreProps extends Pick<
 
 export interface CovenCardsProps extends Pick<
   CompendiumListProps,
-  'facets' | 'categories' | 'vocabulary' | 'previousHref' | 'nextHref' | 'position' | 'total'
+  | 'facets'
+  | 'categories'
+  | 'vocabulary'
+  | 'previousHref'
+  | 'nextHref'
+  | 'position'
+  | 'total'
+  | 'cursor'
 > {
   /** The coven's address segment, which every link and the filter's submit are built under. */
   covenSlug: string;
@@ -86,11 +90,11 @@ export interface CovenCardsProps extends Pick<
   entries: readonly CovenCardEntry[];
   /** The filter the page shows, with the coven's Source, In Stock and Low Stock Only choices. */
   filter: CompendiumListFilterProps['filter'];
-  /** The viewer may add to this coven: an empty cupboard then offers the first add (M9.11). */
+  /** The viewer may add to this coven: an empty cupboard then offers the first add. */
   canAdd: boolean;
 }
 
-/** What the list draws with no card to show (M9.11): the filter decides which of its two states. */
+/** What the list draws with no card to show: the filter decides which of its two states. */
 export interface EmptyCupboardProps extends Pick<
   CovenCardsProps,
   'covenSlug' | 'filter' | 'canAdd'

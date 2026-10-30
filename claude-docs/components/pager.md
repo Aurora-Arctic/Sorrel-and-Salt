@@ -75,8 +75,8 @@ button the same size. `index.scss` holds nothing of its own.
 
 [`index.stories.tsx`](../../src/components/Pager/index.stories.tsx), `Layout /
 Pager`, each in a `ListFrame`, which holds the navigation a pager reads:
-`FirstPage`, with Next only; `MiddlePage`, with both and the position
-`2 of 3`; and `LastPage`, with Prev only.
+`States`, a grid of First Page, with Next only; Middle Page, with both and the position
+`2 of 3`; and Last Page, with Prev only.
 
 ## Testing
 

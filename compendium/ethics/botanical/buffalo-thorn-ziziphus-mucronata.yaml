@@ -1,0 +1,12 @@
+# Gathered for M14.29; the seed never reads this folder.
+entry: botanical/buffalo-thorn-ziziphus-mucronata
+status: approved
+listings:
+  - list: iucn
+    name: IUCN Red List of Threatened Species
+    value: Least Concern (IUCN 3.1)
+    listedAs: Ziziphus mucronata
+    scope: global
+    nameBasis: stated
+    source: wikipedia-ziziphus-mucronata
+    locator: 'taxobox, "Conservation status": "Least Concern (IUCN 3.1)"'

@@ -106,6 +106,11 @@ writer method ([`write-path.md`](write-path.md#table-marks-mb198), "Table
 marks"; MB.198). In their place, in the repository's `invitations.ts`, which
 `writerFor` spreads into the writer:
 
+- **`revokePendingInvitationsTo(proof, email)`** stamps revoked every pending
+  invitation to the address in the proof's tier: its coven for a `Membership`,
+  the site tier for a `SiteAdmin`, so the two tiers never replace each other.
+  Both create services call it before `insertInvitation`, in the same write
+  (MB.269).
 - **`insertInvitation(membership, values)`** writes a workspace invitation
   into the proof's workspace with the role `values` names, which the type
   requires and confines to `viewer` or `member`.
@@ -280,9 +285,15 @@ runs in this order, and the order is the point:
    inviting owner's name, read from their `users` row, since the session holds
    the id alone.
 
-**A second pending invitation to an address already invited is accepted**, as
-the admin tier's is: each mail carries its own token and any one accepts. What
-the first leaves pending, the owner revokes (M7.6). **A failed send leaves the
+**A repeat invitation replaces the pending one** (MB.269). Inviting an address
+that already has a pending invitation to the same coven first stamps that one
+revoked, as the inviter, in the same `withAudit` write that inserts the new one,
+through the repository's `revokePendingInvitationsTo(membership, email)`. So one
+invitation per address and coven is pending, its link is the newest and its role
+the one that applies, and the old link is refused as revoked. The address is
+matched in any case. Only a pending row in this coven is touched: another
+coven's, the site tier's, and an accepted, declined or lapsed one stay as they
+are. A new invitation that fails its checks revokes nothing. **A failed send leaves the
 invitation pending**: `send` in `src/lib/mail.ts` never throws and logs with
 `console.error`, so the mutation succeeds and the owner can revoke and
 re-invite. The test for it runs the real `send` over a `fetch` that answers
@@ -440,3 +451,25 @@ column is nullable and nothing would read it until the behaviour landed with it.
 - **Asked for again.** A declined invitation is final: to join, the person asks
   the owner to invite them again, which writes a new row with its own token.
   Nothing un-declines one.
+
+## Invitation acceptance details
+
+`src/modules/identity/services/invitation-acceptance.ts` is the one accept service for both tiers of `invitations`. Holding the token names the invitation, and the session's verified address is what admits. No message names a workspace, since the reader is not yet a member of it (claude-docs/auth/admin-users.md, "Inviting an admin").
+
+- **Dead-link order.** A link reports one reason: accepted before declined before revoked before expired, so a link in two states always reports the same one. An act beats the clock, and the invitee's answer beats the owner's Remove that may follow a decline. Accepted and declined cannot coexist: the writers match a pending row only and a CHECK holds it. The database's CHECK ties a role to a workspace, so a row with one has both.
+- **Deleted coven.** A link into a deleted coven is refused as `closed`, after the dead-link and address checks, so an accepted invitation into a since-deleted coven still says accepted and a stranger learns nothing of the coven. The person never sees an Accept that fails on click; the repository write's own live-workspace check is the backstop. Workspaces are only soft-deleted, so no live coven means a deleted one and no finder of deleted rows is needed. The account page lists live covens only, so an id into a deleted one reads as none; only the link names the reason.
+- **Pause.** While admin changes are paused, an invitation is accepted only if the primary admin sent it. Another admin's waits for the resume, so one a rogue admin sent cannot be redeemed meanwhile.
+- **Two ways in.** The link's token and the account page's id share one check body so they cannot drift. The id read is the session's own (a coven invitation to its verified address, in SQL), so another address's id, a site-tier id, a deleted row and a malformed id all read as none. An id is not a link, so no message says "open the whole link". The writer's own match is the last word: an accept, a revoke or a second decline that committed since the checks leaves nothing to stamp.
+- **Site tier.** Accepting grants the named site role (curator or admin) with the creation flag the users CHECK holds both to, declared `via: 'invitation'` with the invitation's note so the trigger on `users` records it as the accepting user's act; the invitation is stamped `acceptedAt` and `acceptedBy` in the same transaction. An account already holding that role or a higher one has the invitation stamped and nothing granted, so nothing is recorded: an invitation never lowers a role.
+- **Workspace tier.** It seats the person at the invited role. A removed member's row is revived, since `(workspace_id, user_id)` is the key and a second insert would collide; a live member is seated nowhere and the invitation only stamped. It also sets `canCreateWorkspace`, declared the same way, which re-grants it to a person an admin revoked; one who holds it gets no ledger row. The live seat is read before the transaction. If the row is soft-deleted since the read, the stamp rolls back with it.
+- **Decline.** `declineInvitationById` kills the invitation from now on: its link reports declined, the coven's owner sees it marked declined until they remove it, and nothing is granted or seated.
+
+## Coven invitation service details
+
+`src/modules/coven/services/invitations.ts` is the workspace tier of `invitations`: who may invite is this service's; the token's hash, the expiry and the workspace the row names are the repository's named write's.
+
+- Inviting stamps the session's user, mails the token to the address through `sender` after the commit (so a mailed link always names a row) and stores its hash alone. The row it answers carries no token. A failed send is the transport's to log: the invitation stays pending and can be revoked and sent again. The mail names who sent it; the session holds the id alone, so the name is read when sending.
+- A second invitation to an address already invited replaces the pending one: that one is stamped revoked by the session's user in the same write as the new one, so a failed insert leaves it pending, only the newest link works and its role is the one that applies. Another coven's invitation, an accepted or lapsed one, and the site tier's are left alone.
+- `role` may not be `owner`, which is granted afterwards on the members page. The email is refused when malformed, unmailable, or a live member's already.
+- Listing pending invitations is for owners only: the rows carry the addresses of people who have not joined, and members read the roll, so the check is `member: invite`, never `member: read`. A pending invitation outlives its inviter's demotion or removal, as the admin tier's does.
+- Revoking kills the link from now on and keeps the row for the audit. An invitation already revoked or lapsed is no longer pending, so it is answered as not found, as the admin tier's is. An accepted one is refused on `id`: the person is a member and is removed on the members page instead. Two tabs revoking at once, or the link lapsing in between, leave nothing pending to stamp.

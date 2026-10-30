@@ -29,26 +29,20 @@ import {
 import { makeIngredient, makeVariant } from '../../support/fixtures/ingredient';
 import { slugify } from '@/lib/slugify';
 
-// Stories 14, 15 and 16: the compendium as anyone browses it, an entry added
-// from it to a coven, a coven's own ingredient, and the warning that a new
-// name resembles one already there. /compendium (M8.18), the add modal (M8.16)
-// and the entry pages (M8.19) are built, so 15 and 16 run; the scaffold still
-// marked `fixme` waits on the task its annotation names.
+// The compendium as anyone browses it, an entry added from it to a coven, a coven's own ingredient, and the
+// warning that a new name resembles one already there. The flow still marked `fixme` waits on the task its
+// annotation names.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-/** The compendium's search box, a typeahead labelled "Name" as the admin's is (M8.10). */
+/** The compendium's search box, a typeahead labelled "Name" as the admin's is. */
 function compendiumSearch(page: Page) {
   return filterOf(page).getByRole('combobox', { name: 'Name' });
 }
 
-/**
- * M8.18's action slot on a card. Matched without regard to case because the
- * entry spells it "Add to my ingredients" and every label is title case,
- * "Add to My Ingredients".
- */
+/** The action slot on a card, matched without regard to case: the entry spells it "Add to my ingredients", the label is title case. */
 const ADD_TO_MY_INGREDIENTS = /^add to my ingredients/i;
 
 /** The cards page by `CARD_PAGE_SIZE`, 24, so the grid ends on a full row. */
@@ -78,7 +72,7 @@ test(
       for (const [index, entry] of firstPage.entries()) {
         await expect(cards.nth(index)).toContainText(entry.name);
       }
-      // Signed out the cards carry no action; signing in is the header's (M8.18).
+      // Signed out the cards carry no action; signing in is the header's.
       await expect(compendiumList(page).getByRole('link', { name: 'Sign In' })).toHaveCount(0);
       await expect(page.getByRole('button', { name: ADD_TO_MY_INGREDIENTS })).toHaveCount(0);
       await expect(cards.first()).toBeVisible();
@@ -87,7 +81,7 @@ test(
 
     await test.step('a folk name, its accent left off, finds the two Uncaria', async () => {
       await compendiumSearch(page).fill('una de gato');
-      // Enter applies the text to the paged list rather than picking a row (M8.10).
+      // Enter applies the text to the paged list rather than picking a row.
       await compendiumSearch(page).press('Enter');
       const cards = compendiumList(page).locator(':scope > li');
       await expect(cards).toHaveCount(2);
@@ -127,7 +121,7 @@ test(
 
     await test.step('a form keeps only the entries holding it: bark is the two Uncaria', async () => {
       await page.goto('/compendium');
-      // M8.13's form filter, a type-ahead labelled "Form" as the admin's is
+      // The form filter, a type-ahead labelled "Form" as the admin's is
       // (claude-docs/components/compendium-list.md).
       const panel = await openFilters(page);
       await panel.getByRole('combobox', { name: 'Form' }).fill('bark');
@@ -139,7 +133,7 @@ test(
       await expect(rowOf(compendiumList(page), "Cat's Claw", 'Uncaria guianensis')).toBeVisible();
     });
 
-    await test.step("picking Devil's Shoestring opens its entry, with its folk name and categories", async () => {
+    await test.step("picking Devil's Shoestring opens its Quick Look, and through it its entry, with its folk name and categories", async () => {
       const [entry] = await withSql(
         (sql) => sql<{ slug: string }[]>`
           select slug from ingredients
@@ -147,8 +141,13 @@ test(
       );
       await page.goto('/compendium');
       await compendiumSearch(page).fill("Devil's Shoestring");
-      // Picking a row in the dropdown opens its entry (M8.10).
+      // Picking a row in the dropdown opens its Quick Look over the list,
+      // and the Quick Look's link goes on to the entry's page.
       await page.getByRole('option', { name: /^Devil's Shoestring/ }).click();
+      const details = page.getByRole('dialog', { name: "Devil's Shoestring", exact: true });
+      await expect(details).toBeVisible();
+      await expect(page).toHaveURL(/\/compendium\?(.*&)?entry=/);
+      await details.getByRole('link', { name: 'See in Compendium' }).click();
 
       await expect(page).toHaveURL(new RegExp(`/compendium/ingredients/${entry.slug}$`));
       await expect(
@@ -281,14 +280,14 @@ test(
       await card.getByRole('button', { name: /^More for Comfrey/ }).click();
       await page.getByRole('menuitem', { name: 'Edit Stock', exact: true }).click();
       const editor = stockEditor(card, 'Comfrey', 'Fixture Coven Fourteen Stock');
-      await expect(editor.dialog).toContainText('No stock yet');
+      await expect(editor.dialog).toContainText('There is no stock yet');
       await editor.add('Leaf');
       const leaf = editor.jar('Leaf');
       await leaf.quantity.fill('50');
       await leaf.pickUnit('g');
       await editor.save.click();
       await expect(editor.dialog).toHaveCount(0);
-      // The default threshold is the weight one, 10 g, written on the row (M9.3, M9.8).
+      // The default threshold is the weight one, 10 g, written on the row.
       expect(await heldRows()).toEqual([{ quantity: 50, unit: 'g', threshold: 10 }]);
       expect(await cupboardRows()).toHaveLength(1);
     });
@@ -346,7 +345,7 @@ test(
           select id, workspace_id from ingredients
           where lower(name) = lower(${NAME}) and deleted_at is null`,
       );
-    // Why this is story 15's case: nothing by this name exists in any tier.
+    // Nothing by this name exists in any tier.
     expect(await tiersHolding()).toEqual([]);
 
     let createdId = '';
@@ -359,7 +358,7 @@ test(
       await dialog.getByRole('button', { name: 'Save Ingredient' }).click();
 
       // Save Ingredient opens what it saved, at the coven's entry page,
-      // /coven/[slug]/ingredients/[id] (M8.19; the Wave 12 review).
+      // /coven/[slug]/ingredients/[id].
       await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}/ingredients/[0-9a-f-]{36}$`));
       const tiers = await tiersHolding();
       // Local, and only local: the compendium still lacks it.
@@ -407,7 +406,7 @@ test(
       await expect(rowOf(ingredientList(page), NAME)).toHaveCount(0);
 
       expect((await page.goto(`/coven/${coven.slug}/ingredients`))?.status()).toBe(404);
-      // The entry's page is the coven's too, so a non-member meets the same 404 (M8.19).
+      // The entry's page is the coven's too, so a non-member meets the same 404.
       expect((await page.goto(`/coven/${coven.slug}/ingredients/${createdId}`))?.status()).toBe(
         404,
       );
@@ -478,7 +477,7 @@ test(
       }
       await assertNoAccessibilityViolations(page);
 
-      // Each opens in a new tab, so the form keeps its place (MB.115).
+      // Each opens in a new tab, so the form keeps its place.
       const [opened] = await Promise.all([context.waitForEvent('page'), matches.first().click()]);
       await opened.waitForLoadState();
       expect(new URL(opened.url()).pathname).toBe(await matches.first().getAttribute('href'));

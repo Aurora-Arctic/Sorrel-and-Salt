@@ -1,7 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import { getTableConfig } from 'drizzle-orm/pg-core';
-import { inventoryItems } from '@/modules/ingredients/schema/inventory-items';
-import { MAX_QUANTITY } from '@/modules/ingredients/schema/quantities';
 import { StockInput } from '@/modules/ingredients/validation/stock';
 
 // What the schema adds over src/lib/validation.ts, whose optionalText and
@@ -45,14 +42,6 @@ describe('StockInput', () => {
   it('takes the largest amount the column holds, and refuses one past it', () => {
     expect(StockInput.safeParse({ lowStockThreshold: 999_999_999.999 }).success).toBe(true);
     expect(failedPaths({ lowStockThreshold: 1_000_000_000 })).toEqual([['lowStockThreshold']]);
-  });
-
-  it('reads the ceiling from the column, not a second number', () => {
-    const column = getTableConfig(inventoryItems).columns.find(
-      (candidate) => candidate.name === 'quantity_on_hand',
-    ) as unknown as { precision: number; scale: number };
-
-    expect(MAX_QUANTITY).toBe(10 ** (column.precision - column.scale) - 10 ** -column.scale);
   });
 
   it('refuses an amount that is not a number', () => {

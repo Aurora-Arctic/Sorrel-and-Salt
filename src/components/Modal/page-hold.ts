@@ -1,14 +1,6 @@
-// While a modal is open the page behind it holds still: CSS hides the root's
-// scroll (`:root:has(.modal-dialog:modal)`, index.scss), and this takes the
-// scrollbar's place, so nothing behind it moves sideways as the scrollbar
-// goes (the owner's call, 2026-10-20). It measures the scrollbar as the first
-// modal opens and, only when there is one, publishes its width on the root
-// as `--scrollbar-width`, which the root's padding and every right-anchored
-// fixed element read. It replaces the CSS-only `scrollbar-gutter: stable`,
-// which reserves the room on every page, scrolling or not: kept always, it
-// left a blank strip beside the header on a page that fits the window; kept
-// only while a modal was open, a page with no scrollbar gained the room as one
-// opened and moved by half of it (claude-docs/components/modal.md).
+// While a modal is open the page behind it holds still: CSS hides the root's scroll (index.scss) and
+// this publishes the scrollbar's width as `--scrollbar-width`, measured only where there is one
+// (claude-docs/components/modal.md, "Styling").
 
 export const SCROLLBAR_WIDTH = '--scrollbar-width';
 

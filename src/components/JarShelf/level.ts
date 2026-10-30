@@ -12,16 +12,8 @@ export interface Fill {
 const STEADY = 0.7;
 
 /**
- * The fill of a held jar.
- *
- * TODO(owner): the rule is mine, the mock gave only example fractions. With a
- * threshold, "full" is twice the threshold or the quantity, whichever is more:
- * a jar at its threshold stands half full, the mark half way, and a jar above
- * twice the threshold stands full. With no threshold there is nothing to scale
- * by, so a measured jar stands at 70% with no mark, and an unmeasured one
- * (`null`) the same, because "held but not measured" must not look empty. A
- * quantity of 0 is empty whatever the threshold. Written up in
- * claude-docs/components/jar-shelf.md, "The level".
+ * The fill of a held jar: with a threshold, full is twice the threshold or the quantity, whichever
+ * is more (claude-docs/components/jar-shelf.md, "The level").
  */
 export function fillOf({ quantity, threshold }: Pick<HeldJar, 'quantity' | 'threshold'>): Fill {
   const marked = threshold !== null && threshold > 0;

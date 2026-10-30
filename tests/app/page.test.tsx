@@ -2,14 +2,12 @@ import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Session } from '@/lib/session';
 
-// `/` offers a signed-in visitor the landing for their role and a signed-out
-// one the sign-in page (claude-docs/components/welcome.md). What the session
-// is, is tests/lib/request-session.test.ts's, and which landing a role gets
-// tests/lib/sign-in.test.ts's; here the session and the viewer's first coven
-// are mocked.
+// `/` offers a signed-in visitor the landing for their role and a signed-out one the sign-in page (claude-docs/components/welcome.md).
+// The session is tests/lib/request-session.test.ts's and the landing per role tests/lib/sign-in.test.ts's; here both and the viewer's first coven are mocked.
 
 const getSession = vi.fn<() => Promise<Session | null>>();
-vi.mock('@/lib/request-session', () => ({ getSession }));
+const sessionIsVerified = vi.fn<() => Promise<boolean>>();
+vi.mock('@/lib/request-session', () => ({ getSession, sessionIsVerified }));
 
 const firstCovenSlugOf = vi.fn<() => Promise<string | undefined>>();
 vi.mock('@/modules/coven', () => ({ firstCovenSlugOf }));
@@ -20,6 +18,8 @@ const USER_ID = '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f';
 
 beforeEach(() => {
   getSession.mockReset();
+  sessionIsVerified.mockReset();
+  sessionIsVerified.mockResolvedValue(true);
   firstCovenSlugOf.mockReset();
   firstCovenSlugOf.mockResolvedValue(undefined);
 });
@@ -67,7 +67,7 @@ describe('the / page', () => {
     expect(screen.getByRole('link', { name: 'Continue' })).toHaveAttribute('href', '/admin');
   });
 
-  // Into the coven itself, never via the /coven landing's redirect (MB.257).
+  // Into the coven itself, never via the /coven landing's redirect.
   it('continues a signed-in member straight into their first coven', async () => {
     getSession.mockResolvedValue({ userId: USER_ID, role: 'user' });
     firstCovenSlugOf.mockResolvedValue('fixture-coven');
@@ -86,5 +86,19 @@ describe('the / page', () => {
     render(await HomePage());
 
     expect(screen.getByRole('link', { name: 'Continue' })).toHaveAttribute('href', '/coven');
+  });
+
+  // An unverified account is sent to the email page by every protected page, so
+  // Continue goes there directly, carrying the landing to go on to once verified.
+  it('continues an unverified account to the email page, carrying its landing', async () => {
+    getSession.mockResolvedValue({ userId: USER_ID, role: 'user' });
+    sessionIsVerified.mockResolvedValue(false);
+
+    render(await HomePage());
+
+    expect(screen.getByRole('link', { name: 'Continue' })).toHaveAttribute(
+      'href',
+      '/account/email?next=%2Fcoven',
+    );
   });
 });
