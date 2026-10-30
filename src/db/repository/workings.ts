@@ -35,6 +35,25 @@ export async function findOneWorking(
   return row;
 }
 
+/** Whether the member is named on this working as an account, in this coven. A typed name carries no account, so it never counts. */
+export async function isParticipantOfWorking(
+  membership: Membership,
+  workingId: string,
+): Promise<boolean> {
+  const rows = await selectFrom(
+    spellWorkingParticipants,
+    and(
+      eq(spellWorkingParticipants.workingId, workingId),
+      eq(spellWorkingParticipants.userId, membership.userId),
+      existsIn(
+        spellWorkings,
+        and(eq(spellWorkings.id, spellWorkingParticipants.workingId), readableWorkings(membership)),
+      ),
+    ),
+  );
+  return rows.length > 0;
+}
+
 /** A spell's workings the reader may read, newest day first (then newest recorded). */
 export async function findWorkingsInSpell(
   membership: Membership,

@@ -9,6 +9,7 @@ import {
   findCompleteWorkingCounts,
   findWorkingsInSpell,
   findWorkingsPage,
+  isParticipantOfWorking,
   withAudit,
 } from '../../../db/repository';
 import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
@@ -38,7 +39,7 @@ import type {
 
 // A working is one making of a complete spell: when, by whom, how it went. Recording writes it as a draft; completing it takes what it
 // used from the coven's jars (claude-docs/db/spell-workings.md). A working is read under its own visibility, capped at its spell's, and
-// changed by the person who recorded it alone. A hidden working is `NotFound`, never confirmed to exist.
+// changed by its recorder or a member named on it, and deleted by its recorder alone. A hidden working is `NotFound`, never confirmed to exist.
 
 const NO_SUCH_WORKING = 'No such working in this coven';
 
@@ -56,11 +57,20 @@ async function spellOf(membership: Membership, working: WorkingRow): Promise<Spe
   return spell;
 }
 
-/** A working is its recorder's to change: a member who can read it, as a participant or in the coven, still cannot. */
+/** A working is deleted by its recorder alone: a member who can read it, as a participant or in the coven, still cannot. */
 function assertRecorder(membership: Membership, working: WorkingRow): void {
   if (working.createdBy !== membership.userId) {
-    throw new Forbidden('Only the person who recorded a working can change it');
+    throw new Forbidden('Only the person who recorded a working can delete it');
   }
+}
+
+/** A working is changed by its recorder or by a coven member named on it; the role check has already refused a viewer. */
+async function assertMayChange(membership: Membership, working: WorkingRow): Promise<void> {
+  if (working.createdBy === membership.userId) return;
+  if (await isParticipantOfWorking(membership, working.id)) return;
+  throw new Forbidden(
+    'Only the person who recorded a working, or someone named on it, can change it',
+  );
 }
 
 function assertSpellComplete(spell: SpellRow, doing: string): void {
@@ -355,7 +365,7 @@ export async function previewWorkingDeductions(
  * with nothing taken. What a jar lacks is taken to zero and the shortfall recorded. A step with nothing to take comes back as a
  * warning.
  *
- * @throws {Forbidden} the caller may not change this working, did not record it, it is already complete, or its spell is a draft.
+ * @throws {Forbidden} the caller may not change this working, is neither its recorder nor named on it, it is already complete, or its spell is a draft.
  * @throws {NotFound} no such working here, or none this caller may read.
  */
 export async function completeWorking(
@@ -365,7 +375,7 @@ export async function completeWorking(
 ): Promise<WorkingReport> {
   const membership = await assertMembership(session, workspaceId, { working: ['update'] });
   const working = await readableWorking(membership, workingId);
-  assertRecorder(membership, working);
+  await assertMayChange(membership, working);
   const { status } = working;
   if (status === 'complete') throw new Forbidden('This working is already complete');
   assertSpellComplete(await spellOf(membership, working), 'its workings cannot be completed');
@@ -398,7 +408,7 @@ export async function completeWorking(
 /**
  * Changes a working's day, note, participants (when named) and visibility, which only widens once it is complete.
  *
- * @throws {Forbidden} the caller may not change this working, did not record it, or asked to narrow a complete one.
+ * @throws {Forbidden} the caller may not change this working, is neither its recorder nor named on it, or asked to narrow a complete one.
  * @throws {NotFound} no such working here, or none this caller may read.
  * @throws {ValidationError} the input is invalid, or a participant is not a member of this coven.
  */
@@ -411,7 +421,7 @@ export async function updateWorking(
   const membership = await assertMembership(session, workspaceId, { working: ['update'] });
   const values = parseInput(WorkingInput, input);
   const working = await readableWorking(membership, workingId);
-  assertRecorder(membership, working);
+  await assertMayChange(membership, working);
 
   const { visibility: next } = values;
   if (next !== undefined) {

@@ -31,7 +31,7 @@ is empty outside a completion; `skipSummary` words the draft row's count.
 
 `RecordWorkingDialog` takes the same props plus `onClose`, `returnTo` and an optional `working`
 (`{ id, workedOn, note, visibility, status, participants }`). With `working` it is titled "Edit
-Working", calls `updateWorking` and closes on Save. Only the recorder may edit (the service
+Working", calls `updateWorking` and closes on Save. Only the recorder or a member named on the working may edit (the service
 refuses anyone else), and a complete working that is shared holds the switch on and shut, since a
 complete working's visibility only widens.
 
