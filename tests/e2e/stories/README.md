@@ -51,22 +51,24 @@ Going green is `test.fixme` → `test` and deleting the annotation.
 
 ## Files
 
-| File                         | Stories      | Built or unskipped by                     |
-| ---------------------------- | ------------ | ----------------------------------------- |
-| `01-accounts.spec.ts`        | 1, 2, 3, 8   | M9.1                                      |
-| `01-members.spec.ts`         | 9, 10, 11    | M9.1                                      |
-| `01-invitations.spec.ts`     | 4–7          | M9.1                                      |
-| `01-viewer.spec.ts`          | 12, 13       | fixme: M9.6, M10.11, M9.9, M6.18          |
-| `02-compendium.spec.ts`      | 14–16, 64    | 14 M9.12, 15, 16 M8.16                    |
-| `03-ingredients.spec.ts`     | 20–27        | M9.1 (scaffold); 25 M9.10                 |
-| `04-modals.spec.ts`          | 28–34        | M8.9 (scaffold); 28–32 M8.16, 33–34 M8.17 |
-| `06-grimoire.spec.ts`        | 47–57, 76–80 | fixme: M10.11–M10.20, M13.3, M13.8        |
-| `07-admin.spec.ts`           | 17–19        | M9.1                                      |
-| `08-email-and-admin.spec.ts` | 58–62        | M9.1                                      |
-| `09-public.spec.ts`          | 63           | MB.83, MB.85                              |
-| `16-password.spec.ts`        | 70           | M16.2                                     |
-| `73-passkeys.spec.ts`        | 73           | M16.7                                     |
-| `87-demo-coven.spec.ts`      | 87           | M15.16                                    |
+| File                                      | Stories      | Built or unskipped by                     |
+| ----------------------------------------- | ------------ | ----------------------------------------- |
+| `01-accounts.spec.ts`                     | 1, 2, 3, 8   | M9.1                                      |
+| `01-members.spec.ts`                      | 9, 10, 11    | M9.1                                      |
+| `01-invitations.spec.ts`                  | 4–7          | M9.1                                      |
+| `01-viewer.spec.ts`                       | 12, 13       | fixme: M9.6, M10.11, M9.9, M6.18          |
+| `02-compendium.spec.ts`                   | 14–16, 64    | 14 M9.12, 15, 16 M8.16                    |
+| `03-ingredients.spec.ts`                  | 20–27        | M9.1 (scaffold); 25 M9.10                 |
+| `04-modals.spec.ts`                       | 28–34        | M8.9 (scaffold); 28–32 M8.16, 33–34 M8.17 |
+| `06-grimoire.spec.ts`                     | 47–57, 76–80 | fixme: M10.11–M10.20, M13.3, M13.8        |
+| `07-admin.spec.ts`                        | 17–19        | M9.1                                      |
+| `08-email-and-admin.spec.ts`              | 58–62        | M9.1                                      |
+| `09-public.spec.ts`                       | 63           | MB.83, MB.85                              |
+| `16-password.spec.ts`                     | 70           | M16.2                                     |
+| `73-passkeys.spec.ts`                     | 73           | M16.7                                     |
+| `74-passkeys-on-the-account-page.spec.ts` | 74           | M16.8                                     |
+| `75-two-factor.spec.ts`                   | 75           | M16.10                                    |
+| `87-demo-coven.spec.ts`                   | 87           | M15.16                                    |
 
 In `06-grimoire.spec.ts`, each story waits on: 47 M10.12, 48 M10.14, 49 M10.15, 50 M10.15, 51 M10.16, 52 M10.17, 53 M10.18, 54 M10.19, 55 M10.20, 56 M10.11, 57 M10.15, 77 M10.15, 79 M13.8, 80 M13.3, 83 M13.21, 84 M13.22.
 

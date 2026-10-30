@@ -25,7 +25,7 @@ import { appendQueryParams } from '@better-auth/core/utils/url';
 import { db } from '../db/connection';
 import { workspaceMembers } from '../modules/coven/schema/workspaces';
 import { users } from '../modules/identity/schema/users';
-import { findDemoWorkspace } from '../db/repository';
+import { findDemoWorkspace, removePasskeyKeepingAWayIn } from '../db/repository';
 import {
   sessions,
   accounts,
@@ -297,6 +297,32 @@ function pinPasskeyOrigin(ctx: HookContext): void {
       message: 'Use a passkey from a page on this site.',
     });
   }
+}
+
+/**
+ * Removes the account's own passkey here rather than in the plugin, refusing the last one when the account has no other
+ * way to sign in: no other passkey, no account for a roster provider and no password. The repository checks and deletes
+ * under one lock, so two removals at once cannot each see the other passkey and leave none; the plugin's own delete
+ * would run apart from the check.
+ */
+async function keepAWayIn(ctx: HookContext) {
+  const session = await sessionOf(ctx);
+  const id = ctx.body?.id;
+  if (!session || typeof id !== 'string') return;
+  const outcome = await removePasskeyKeepingAWayIn(
+    session.user.id,
+    id,
+    SOCIAL_PROVIDERS.map((provider) => provider.id),
+  );
+  // Another account's id falls through to the plugin, which refuses it as not this account's.
+  if (outcome === 'not-held') return;
+  if (outcome === 'last-way-in') {
+    throw new APIError('BAD_REQUEST', {
+      code: 'LAST_SIGN_IN_METHOD',
+      message: 'This passkey is the only way to sign in to this account, so it cannot be removed.',
+    });
+  }
+  return ctx.json({ status: true });
 }
 
 /** The verification token's claims, decoded and not verified: a caller may only refuse on them. */
@@ -721,6 +747,7 @@ export const auth = betterAuth({
         return holdHeldPassword(ctx, HELD_PASSWORD_FIELDS[ctx.path]);
       if (ctx.path === '/sign-in/email') return holdLockedSignIn(ctx);
       if (PASSKEY_VERIFY_PATHS.has(ctx.path)) return pinPasskeyOrigin(ctx);
+      if (ctx.path === '/passkey/delete-passkey') return keepAWayIn(ctx);
       if (ctx.path !== '/callback/:id' && ctx.path !== '/sign-up/email') return;
       await sweepQuietly(ctx);
     }),

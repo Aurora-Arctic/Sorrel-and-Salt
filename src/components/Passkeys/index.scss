@@ -1,0 +1,52 @@
+@use '../../scss/variables' as *;
+
+// The list inside the account page's Passkeys section, laid out as the Sign-In Methods rows are: the rows, then Add a
+// Passkey at its own width beneath.
+.passkeys {
+  display: flex;
+  flex-direction: column;
+  gap: space(3);
+}
+
+.passkeys__list {
+  display: flex;
+  flex-direction: column;
+  gap: space(3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// Name and day added, then the two actions at the end; a failure wraps onto a line of its own beneath.
+.passkeys__item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(2) space(3);
+  margin: 0;
+}
+
+// No `_typography.scss` ◆ marker: a column of rows, not a bulleted list.
+.passkeys__item::before {
+  content: none;
+}
+
+.passkeys__label {
+  font-weight: 500;
+}
+
+.passkeys__added {
+  flex: 1;
+}
+
+.passkeys__item > .btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.passkeys__add {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: space(2);
+}

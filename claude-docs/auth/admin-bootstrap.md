@@ -541,6 +541,14 @@ component docs are [`components/name-form.md`](../components/name-form.md),
   (`SignOutButton`,
   [`components/account-menu.md`](../components/account-menu.md)):
   Better Auth's own sign-out, then a full load of `/` (MB.63, moved by MB.7).
+- **Passkeys (M16.8, Story 74).** A Passkeys section follows Sign-In Methods,
+  linked from the nav as `#account-passkeys`. Its intro says a passkey works
+  only on the site where it was added, because a passkey is bound to the host
+  that made it ([`plugins.md`](plugins.md), "Passkeys"). The page reads the
+  list with `accountPasskeys()` in `src/lib/request-session.ts`, the plugin's
+  `listPasskeys` cut to id, name and day added, and hands it to `Passkeys`
+  ([`components/passkeys.md`](../components/passkeys.md)), whose Add a
+  Passkey, Rename and Remove call the plugin's own routes.
 - **The email page stays, for the flows that are not a visit to the
   account.** Every unverified sign-in lands there, it is the only protected page a
   provisional account can reach, a mailed link lands on its confirmed view,

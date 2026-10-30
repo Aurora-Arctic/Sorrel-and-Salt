@@ -137,6 +137,8 @@ export {
 } from './invitations';
 export { findOpenAdminRoleChangePause } from './admin-roles';
 export { deleteProvisionalUsers } from './provisional-users';
+export { removePasskeyKeepingAWayIn } from './passkeys';
+export type { PasskeyRemoval } from './passkeys';
 export {
   clearSignInFailures,
   lockPasswordSignIn,

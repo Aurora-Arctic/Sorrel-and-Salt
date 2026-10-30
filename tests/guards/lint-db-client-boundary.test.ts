@@ -33,9 +33,9 @@ describe('CLAUDE.md rules 2 and 4 — the database import boundaries', () => {
 
   // The exemptions are disable comments rather than config (oxlint ignores "off" inside `overrides`), which makes a new one cheap to add by hand, so the set is pinned and a new one is argued for in the diff.
   // A directive counts only when the line after it imports the client: a file may carry one for another `no-restricted-imports` pattern. Untracked files count, so one is caught in the diff that adds it.
-  it('has exactly seven files carrying the client exemption, and no others', () => {
+  it('has exactly eight files carrying the client exemption, and no others', () => {
     const files = inject('repoFiles').filter((file) => /\.tsx?$/.test(file));
-    // Precondition: an empty listing has no seventh in it either.
+    // Precondition: an empty listing has no eighth in it either.
     expect(files).toEqual(expect.arrayContaining(CLIENT_EXEMPT));
 
     const directive = /^[ \t]*\/\/[ \t]*oxlint-disable(-next-line)? no-restricted-imports\b/;

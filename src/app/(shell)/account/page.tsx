@@ -10,10 +10,12 @@ import {
 import EmailForm from '../../../components/EmailForm';
 import NameForm from '../../../components/NameForm';
 import PageNav from '../../../components/PageNav';
+import Passkeys from '../../../components/Passkeys';
 import PasswordSection from '../../../components/PasswordSection';
 import ReceivedInvitations from '../../../components/ReceivedInvitations';
 import SignInMethods from '../../../components/SignInMethods';
 import {
+  accountPasskeys,
   hasPassword,
   linkedAccounts,
   requireSession,
@@ -50,6 +52,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
       (start) => countReceivedInvitations(session, start),
     ),
   ]);
+  const passkeys = await accountPasskeys();
   // The pager stays at the section: a page of invitations is what was asked for.
   const invitationsHref = (cursor: Record<string, string>) =>
     `${ACCOUNT_PATH}?${new URLSearchParams(cursor).toString()}#${ACCOUNT_INVITATIONS_ID}` as Route;
@@ -72,6 +75,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           { href: '#account-email', label: 'Email' },
           { href: '#account-sign-in-methods', label: 'Sign-In Methods' },
           { href: '#account-password', label: 'Password' },
+          { href: '#account-passkeys', label: 'Passkeys' },
           { href: `#${ACCOUNT_INVITATIONS_ID}`, label: 'Invitations' },
         ]}
       />
@@ -138,6 +142,20 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           </p>
         </div>
         <PasswordSection hasPassword={passwordHeld} twoFactorEnabled={me.twoFactorEnabled} />
+      </section>
+      <section
+        id="account-passkeys"
+        className="page-frame__section panel"
+        aria-labelledby="account-passkeys-heading"
+      >
+        <div className="header">
+          <h2 id="account-passkeys-heading">Passkeys</h2>
+          <p className="lede">
+            A passkey works only on the site where it was added: one added here will not sign you in
+            on another Sorrel &amp; Salt site, such as staging.
+          </p>
+        </div>
+        <Passkeys passkeys={passkeys} />
       </section>
       <section
         id={ACCOUNT_INVITATIONS_ID}
