@@ -17,16 +17,17 @@ const rolePermits = vi.fn((role: string, statement?: { member?: string[] }) =>
 vi.mock('@/lib/request-session', () => ({ requireSignedIn, getSession }));
 vi.mock('@/modules/identity', () => ({ getMe, countReceivedInvitations }));
 // The switcher's order is the coven module's too; stood in for by the rule it states.
-const byCovenName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name);
+const byCovenName = (a: { name: string; demo?: boolean }, b: { name: string; demo?: boolean }) =>
+  Number(a.demo ?? false) - Number(b.demo ?? false) || a.name.localeCompare(b.name);
 vi.mock('@/modules/coven', () => ({ membershipsOf, rolePermits, byCovenName }));
 
 const { covenRolesIfSignedIn, viewerIfSignedIn, viewerOf } = await import('@/lib/viewer');
 
 const SESSION = { userId: 'u1', role: 'user' } as const;
 const ME = { name: 'Fixture Member', canCreateWorkspace: true, emailVerified: true };
-const membership = (slug: string, name: string, role = 'member') => ({
+const membership = (slug: string, name: string, role = 'member', demo = false) => ({
   role,
-  workspace: { id: `id-${slug}`, slug, name },
+  workspace: { id: `id-${slug}`, slug, name, demo },
 });
 
 beforeEach(() => {
@@ -70,6 +71,19 @@ describe('viewerOf', () => {
 
     expect(viewer.pendingInvitations).toBe(0);
     expect(countReceivedInvitations).not.toHaveBeenCalled();
+  });
+
+  it("lists the demo coven last, though its name sorts ahead of the viewer's own", async () => {
+    membershipsOf.mockResolvedValue([
+      [
+        membership('sorrel-salt-demo', 'Sorrel & Salt Demo', 'viewer', true),
+        membership('testwort-circle', 'Testwort Circle', 'owner'),
+      ],
+    ]);
+
+    const { workspaces } = await viewerOf();
+
+    expect(workspaces.map(({ slug }) => slug)).toEqual(['testwort-circle', 'sorrel-salt-demo']);
   });
 
   it('lists the covens by name, alphabetically', async () => {
