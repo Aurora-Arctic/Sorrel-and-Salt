@@ -57,9 +57,12 @@ for (const [name, size] of [
     // Under the body, in the body's column.
     expect(workings.top).toBeGreaterThan(note.bottom);
     expect(workings.left).toBeLessThan(steps.left + 4);
-    // Not in the side column: on a desktop it is beside it, on a phone above it.
+    // Not in the side column: on a desktop it is beside it, on a phone it stands below it, the jar between the body and Workings.
     if (name === 'desktop') expect(workings.right).toBeLessThanOrEqual(aside.left);
-    else expect(workings.bottom).toBeLessThan(aside.top);
+    else {
+      expect(aside.top).toBeGreaterThan(note.bottom);
+      expect(aside.bottom).toBeLessThanOrEqual(workings.top);
+    }
   });
 }
 
@@ -177,12 +180,18 @@ for (const [name, size] of [
     await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
 
     const nav = page.getByRole('navigation', { name: 'On This Page' });
-    await expect(nav.getByRole('link')).toHaveText([
-      'Steps',
-      'Workings',
-      'Category Match',
-      'In Coven Inventory',
-    ]);
+    // The jar stands beside the recipe on a desktop, so the menu does not name it; on a phone it is
+    // one entry, above Workings, and the jar section stands above Workings on the page too.
+    await expect(nav.getByRole('link')).toHaveText(
+      name === 'desktop' ? ['Steps', 'Workings'] : ['Steps', 'The Jar', 'Workings'],
+    );
+    if (name === 'phone') {
+      const top = (label: string) =>
+        page
+          .getByRole(label === 'The Jar' ? 'complementary' : 'region', { name: label })
+          .evaluate((el) => el.getBoundingClientRect().top);
+      expect(await top('The Jar')).toBeLessThan(await top('Workings'));
+    }
     if (name === 'desktop') {
       // Left of the body, not above it.
       const navBox = await nav.evaluate((el) => el.getBoundingClientRect().toJSON());

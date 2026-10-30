@@ -66,17 +66,12 @@ with no steps says so.
   Notice ([grimoire-list.md](grimoire-list.md)); the Modal, gone with the page, gives the focus to
   the list's heading. A refusal is the callout under the bin (M12.31). A viewer gets neither
   icon, and the service refuses them by id.
-- No `PageNav`: the sections fit one screen. The Print menu item and the print layout are M10.22's ("Print" below).
+- The Print menu item and the print layout are M10.22's ("Print" below).
 - Steps are drawn by `StepRow` (M13.3) with no editing controls, so the page and the Quick Look modal read them the same way as the builder draws them. The body keeps no step renderer of its own. The ingredient's name is passed to `StepRow` as markup (the name, the formal name, the Deleted mark and the Quick Look eye), and its marks as `marks`.
 
 ## The jump menu
 
-The page carries the shared `PageNav` ("On This Page", claude-docs/components/page-nav.md), placed and
-sized as the ingredient entry page places it: after the head, a sticky column left of the page from a
-phone’s width up, stacked above the sections below it, with the page-nav styles unchanged. Its entries are
-Steps, Workings, Category Match and In Coven Inventory, each present only where its section is drawn: Steps
-with at least one step, Workings with the `workings` slot, the other two with the `aside` slot, and the menu
-is left out when none is. The ids are `sections.ts`’s constants, which the steps list, `SpellWorkings` and the
+The page carries the shared `PageNav` ("On This Page", claude-docs/components/page-nav.md) in the ingredient entry page's grid: the article's children are the head (which holds the back link and the Edited line), the summary, the menu, then the columns, and `.spell-recipe--with-nav` takes the `entry-nav-grid` mixin on screen, so the menu is a sticky column left of the page from a phone's width up and stacked above the sections below it. It spans the summary and the columns (`grid-row: 2 / span 2`) so it has room to stick. The article fills the coven column and starts at its left edge; the text is capped at `$recipe-column` (`$measure`, the gutter and the side column with the jar). Its entries are Steps, The Jar and Workings, each present only where its section is drawn: Steps with at least one step, Workings with the `workings` slot, The Jar with the `aside` slot (it links the aside, id `spell-jar`), and the menu is left out when none is. The Jar entry is `narrowOnly`: from a tablet up the jar stands beside the recipe, so the entry is hidden there (and Category Match and In Coven Inventory are never entries); below a tablet the jar stacks, and it is placed above Workings (`order`) so the page matches the menu. The ids are `sections.ts`’s constants, which the steps list, `SpellWorkings`, the aside and the
 two panels (their optional `id` prop) carry, each with a scroll margin under the shell’s bar. The Quick Look
 modal has no menu. Print hides it (`.page-nav` in `_print.scss`) and the nav column is a screen-only rule, so the
 printed sheet is unchanged. `tests/components/SpellRecipe/index.test.tsx` checks that each link has a target;

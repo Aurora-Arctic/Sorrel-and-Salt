@@ -52,6 +52,10 @@
       gap: space(2);
     }
 
+    .spell-recipe > * {
+      max-width: none !important;
+    }
+
     // The coven's name stands as plain text with nothing under it: no box, no chevron, no ground,
     // no rule. The section nav beside it is gone, so the divider that told them apart goes too.
     .context-row {

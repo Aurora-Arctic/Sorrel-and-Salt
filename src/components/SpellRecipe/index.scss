@@ -9,9 +9,12 @@
   // The Edited line close over the title, and the title close over the body: the title's line
   // box carries its own air, so a wider gap read as a gulf.
   gap: space(2);
-  max-width: $recipe-column;
-  margin-inline: auto;
-  padding: space(4);
+
+  // The article fills the coven column and starts at its left edge, as the ingredient page does;
+  // the text is capped instead, and the jump menu is not.
+  > :where(:not(.page-nav)) {
+    max-width: $recipe-column;
+  }
 }
 
 // The way back stands a clear step off the Edited line and the title. Its look is the back
@@ -48,11 +51,29 @@
 // empty before the gutter. The head stays over the body, so the Edit
 // pencil ends where the text does, as the entry page's does.
 .spell-recipe--with-aside {
-  max-width: calc(#{$measure} + #{space(8)} + #{$side-column});
+  > :where(:not(.page-nav)) {
+    max-width: calc(#{$measure} + #{space(8)} + #{$side-column});
+  }
+
+  // Under a tablet's width the jar stands over Workings, as the menu lists it: the body's boxes
+  // and Workings become the stack's items, and Workings goes last.
+  @media (max-width: $shell-tablet-width) {
+    .spell-recipe__main {
+      display: contents;
+    }
+
+    .spell-recipe__aside {
+      order: 1;
+    }
+
+    .spell-workings {
+      order: 2;
+    }
+  }
 
   @media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
     > .spell-recipe__head {
-      max-width: calc(100% - #{space(8)} - #{$side-column});
+      max-width: $measure;
     }
 
     // The side column starts level with the facts strip: the body's two boxes become grid items in
@@ -126,6 +147,12 @@
   gap: space(3);
   // The title can wrap, so the icon row hangs from its first line rather than its middle.
   align-items: flex-start;
+
+  // The way back and the Edited line each take a row above the title.
+  > .spell-recipe__back,
+  > .last-edit {
+    flex-basis: 100%;
+  }
 
   h1 {
     flex: 1 1 0;
@@ -373,32 +400,16 @@
   padding-block-start: space(3);
 }
 
-// The jump menu (PageNav) stands in a sticky column left of the page from a phone's width up, on the
-// ingredient entry page's breakpoint, offset and column width, and stacks above the sections below
-// it. Screen only: print hides the menu and keeps its single column.
-$-nav-column: calc(#{space(8)} * 3);
-
-@media screen and (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
-  .spell-recipe.spell-recipe--with-nav {
-    display: grid;
-    grid-template-columns: $-nav-column minmax(0, 1fr);
-    align-content: start;
-    column-gap: 0;
-    max-width: calc(#{$recipe-column} + #{$-nav-column});
-
-    > :not(.page-nav) {
-      grid-column: 2;
-    }
+// The jump menu (PageNav) is the ingredient entry page's grid (`entry-nav-grid`): a sticky column left of
+// the page from a phone's width up, stacked above the sections below it. The menu spans the summary and
+// the columns, so it keeps its place as they scroll. Screen only: print hides the menu and keeps its
+// single column.
+@media screen {
+  .spell-recipe--with-nav {
+    @include entry-nav-grid;
 
     > .page-nav {
-      position: sticky;
-      top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
-      grid-column: 1;
-      align-self: start;
-    }
-
-    &.spell-recipe--with-aside {
-      max-width: calc(#{$measure} + #{space(8)} + #{$side-column} + #{$-nav-column});
+      grid-row: 2 / span 2;
     }
   }
 }

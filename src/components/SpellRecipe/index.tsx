@@ -7,7 +7,7 @@ import PageNav from '../PageNav';
 import type { PageNavEntry } from '../PageNav/types';
 import SpellRecipeBody from './body';
 import SpellRecipeSummary from './summary';
-import { CATEGORY_MATCH_ID, INVENTORY_ID, STEPS_ID, WORKINGS_ID } from './sections';
+import { JAR_ID, STEPS_ID, WORKINGS_ID } from './sections';
 import type { SpellRecipeProps } from './types';
 
 // A saved spell as a page: purpose, four facts, steps, note (`SpellRecipeBody`, which Quick Look
@@ -36,27 +36,23 @@ const SpellRecipe = ({
   // One entry per section drawn, so none links to nothing.
   const entries: PageNavEntry[] = [
     ...(steps.length > 0 ? [{ href: `#${STEPS_ID}` as const, label: 'Steps' }] : []),
+    // The jar stands beside the recipe from a tablet up, so the menu names it only where it is stacked.
+    ...(aside ? [{ href: `#${JAR_ID}` as const, label: 'The Jar', narrowOnly: true }] : []),
     ...(workings ? [{ href: `#${WORKINGS_ID}` as const, label: 'Workings' }] : []),
-    ...(aside
-      ? [
-          { href: `#${CATEGORY_MATCH_ID}` as const, label: 'Category Match' },
-          { href: `#${INVENTORY_ID}` as const, label: 'In Coven Inventory' },
-        ]
-      : []),
   ];
   return (
     <article
       className={`spell-recipe${aside ? ' spell-recipe--with-aside' : ''}${entries.length > 0 ? ' spell-recipe--with-nav' : ''}`}
       aria-labelledby="spell-recipe-title"
     >
-      {/* The ingredient entry's own back link: the chevron, and the
-          way back through history to the list as it was, the Drafts tab counted as the list. */}
-      <BackLink className="spell-recipe__back" href={back.href} also={[`${back.href}/drafts`]}>
-        Back to {back.label} <LinkHint />
-      </BackLink>
-      {/* Above the title, as the ingredient entry page places it. */}
-      {lastEdit && <LastEdit by={lastEdit.by} at={lastEdit.at} />}
       <header className="spell-recipe__head">
+        {/* The ingredient entry's own back link: the chevron, and the
+            way back through history to the list as it was, the Drafts tab counted as the list. */}
+        <BackLink className="spell-recipe__back" href={back.href} also={[`${back.href}/drafts`]}>
+          Back to {back.label} <LinkHint />
+        </BackLink>
+        {/* Above the title, as the ingredient entry page places it. */}
+        {lastEdit && <LastEdit by={lastEdit.by} at={lastEdit.at} />}
         <h1 id="spell-recipe-title">{name}</h1>
         {(status === 'draft' || visibility === 'private') && (
           <div className="specimen__badges">
@@ -85,7 +81,7 @@ const SpellRecipe = ({
         </div>
         {/* Named: an aside inside an article is a landmark only with a name. */}
         {aside && (
-          <aside className="spell-recipe__aside" aria-label="The Jar">
+          <aside id={JAR_ID} className="spell-recipe__aside" aria-label="The Jar">
             {aside}
           </aside>
         )}
