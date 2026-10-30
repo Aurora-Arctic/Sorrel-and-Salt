@@ -49,7 +49,7 @@ function stepList(page: Page): Locator {
 
 /** The grimoire's list of spells, named after its page. */
 function grimoireList(page: Page): Locator {
-  return page.getByRole('list', { name: 'Grimoire' });
+  return page.getByRole('list', { name: /^(Spells|Drafts)$/ });
 }
 
 /**
@@ -319,7 +319,7 @@ test(
     await expect(row('Extra')).toBeVisible();
     // Prosperity is still intended and nothing carries it: its chip says so in its tip.
     await expect(panel.getByRole('button', { name: 'Prosperity' })).toHaveAccessibleDescription(
-      'Assigned to this spell, and nothing in the jar carries it',
+      'Assigned to this spell, and nothing in the jar carries it.',
     );
     // The step just added is open: its pencil reads Close, and Remove is hidden until it is shut.
     await page.getByRole('button', { name: /Close Mugwort/ }).click();
@@ -413,7 +413,7 @@ test('a member saves a spell as a draft', { tag: '@story-55' }, async ({ page })
   const draft = page.url();
   // It lists as a draft.
   await page.goto(`/coven/${coven.slug}/grimoire/drafts`);
-  const card = grimoireList(page).getByRole('listitem', { name: /Fixture Working/ });
+  const card = grimoireList(page).getByRole('article', { name: /Fixture Working/ });
   await expect(card.getByText('Draft')).toBeVisible();
   // Marking it complete is explicit, and final: the button goes and nothing replaces it.
   await page.goto(draft);
@@ -454,7 +454,7 @@ test(
     await page.goto(path);
     await expect(grimoireList(page).getByRole('listitem')).toHaveCount(2);
     // Its author is told it is theirs alone, in a word, not a colour.
-    const item = (name: string) => grimoireList(page).getByRole('listitem', { name });
+    const item = (name: string) => grimoireList(page).getByRole('article', { name });
     await expect(item('Private Working').getByText('Private', { exact: true })).toBeVisible();
     await expect(item('Shared Working').getByText('Private', { exact: true })).toHaveCount(0);
     for (const reader of [B, C]) {
@@ -880,7 +880,7 @@ test(
     ).toContainText('Rosemary');
     await assertNoAccessibilityViolations(page);
     await page.goto(`/coven/${coven.slug}/grimoire`);
-    const card = grimoireList(page).getByRole('listitem', { name: /Fixture Working/ });
+    const card = grimoireList(page).getByRole('article', { name: /Fixture Working/ });
     await expect(card.getByText('Made 2 Times')).toBeVisible();
     // The pencil is on the workings B may change, their own two and the draft that names them, and not on A's others; it saves a changed note in place.
     await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
@@ -1154,7 +1154,7 @@ test(
     await signInAgainAs(page, coven.users.B);
     await page.goto(`/coven/${coven.slug}/grimoire`);
     const items = grimoireList(page).getByRole('listitem');
-    const item = (name: string) => grimoireList(page).getByRole('listitem', { name });
+    const item = (name: string) => grimoireList(page).getByRole('article', { name });
     await expect(items).toHaveCount(3);
 
     // The moon phase it is worked under.

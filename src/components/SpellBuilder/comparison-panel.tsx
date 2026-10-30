@@ -106,7 +106,7 @@ export function ComparisonPanel({
       .filter((step) => step.categories.some((c) => c.id === id))
       .map(stepNameOf)
       .join(', ')}`;
-  const missingTip = (): string => 'Assigned to this spell, and nothing in the jar carries it';
+  const missingTip = (): string => 'Assigned to this spell, and nothing in the jar carries it.';
   // Each extra category, once, named by the first ingredient that carries it.
   const extras = gaps.presentNotIntended.flatMap((id) => {
     const name = ingredientSteps.flatMap((step) => step.categories).find((c) => c.id === id)?.name;

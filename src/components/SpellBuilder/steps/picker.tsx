@@ -12,9 +12,8 @@ import type { SpellBuilderValues } from '../types';
 import type { SpellIngredientSuggestionsQuery } from '../../../gql/graphql';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 import Combobox from '../../Combobox';
-import InfoTip from '../../InfoTip';
 import CategoryChips from '../../CategoryChips';
-import { FieldError } from '../../Field';
+import { FieldShell, fieldDescription } from '../../Field';
 import FormIcon from '../../FormIcon';
 import { useLookup } from '../../IngredientForm/suggestions';
 import { COMPENDIUM_HEADING, YOUR_INGREDIENTS } from '../../IngredientForm/values';
@@ -33,7 +32,8 @@ export interface StepPickerProps {
   onAdd: (step: SpellStepValue) => void;
 }
 
-const ONE_OFF_TAKEN = 'This ingredient is already in the jar';
+const PICKER_HINT = 'Type to search your ingredients and the compendium.';
+const ONE_OFF_TAKEN = 'This ingredient is already in the jar.';
 
 /** A one-off's name as the jar compares it: case and outer spaces aside. */
 export const oneOffKey = (name: string): string => name.trim().toLocaleLowerCase();
@@ -262,18 +262,19 @@ export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): Re
     setText('');
   };
 
-  const labelId = `${id}-label`;
+  const { aria, ...shell } = fieldDescription({
+    id,
+    hint: PICKER_HINT,
+    error: refused ? ONE_OFF_TAKEN : undefined,
+  });
   return (
-    <div className="field">
-      <label className="field__label" id={labelId} htmlFor={`${id}-search`}>
-        Add to Jar
-      </label>
+    <FieldShell label="Add to Jar" hint={PICKER_HINT} {...shell}>
       {/* One frame round the box and the filter tray: the filter reads as part of the search. */}
       <div className="spell-steps__frame">
         <Combobox<IngredientPickOption>
-          id={`${id}-search`}
+          id={shell.controlId}
           label="Add to Jar"
-          labelId={labelId}
+          labelId={shell.labelId}
           value={text}
           onChange={(value) => {
             setText(value);
@@ -295,9 +296,8 @@ export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): Re
           offerTyped={false}
           actionFirst
           noun="ingredient"
-          placeholder="Add an ingredient or search"
-          aria-invalid={refused || undefined}
-          aria-describedby={refused ? `${id}-error` : undefined}
+          placeholder="Add an ingredient"
+          {...aria}
         />
         {/* The tray inside the frame; the open list is layered over it (z-index, Combobox). Each chip
           is a toggle: none pressed is no filter, one or more keeps ingredients carrying any. */}
@@ -307,9 +307,6 @@ export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): Re
               <span id={`${id}-filter-label`} className="spell-steps__filter-label">
                 Filter By Category
               </span>
-              <InfoTip id={`${id}-filter-tip`} label="Filter By Category">
-                Show only ingredients in any of the pressed categories.
-              </InfoTip>
               {narrowedBy.length > 0 && (
                 <button
                   type="button"
@@ -320,11 +317,15 @@ export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): Re
                 </button>
               )}
             </div>
+            <p id={`${id}-filter-note`} className="field__hint">
+              Show only ingredients in any of the pressed categories.
+            </p>
             <div className="spell-steps__filter-row">
               <div
                 // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- a fieldset or details would add a legend or a disclosure; this is a plain labelled group
                 role="group"
                 aria-labelledby={`${id}-filter-label`}
+                aria-describedby={`${id}-filter-note`}
                 className="spell-steps__filter-chips"
               >
                 {[...assigned].flatMap((categoryId) => {
@@ -361,7 +362,6 @@ export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): Re
           </div>
         )}
       </div>
-      <FieldError id={`${id}-error`} message={refused ? ONE_OFF_TAKEN : undefined} />
-    </div>
+    </FieldShell>
   );
 }

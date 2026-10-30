@@ -119,3 +119,4 @@ const SaveStatus = ({
 };
 
 export default SaveStatus;
+export { default as RecoveryNotice } from './recovery-notice';

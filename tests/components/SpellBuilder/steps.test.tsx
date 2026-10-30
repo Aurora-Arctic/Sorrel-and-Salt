@@ -331,7 +331,7 @@ describe('the spell builder’s Add to Jar', () => {
     await addOneOff('testwort');
 
     expect(stepRows()).toHaveLength(1);
-    expect(search()).toHaveAccessibleDescription('This ingredient is already in the jar');
+    expect(search()).toHaveAccessibleDescription(/This ingredient is already in the jar\.$/);
   });
 
   it('saves each step as its ingredient and form, or its one-off name and form, with its amount', async () => {

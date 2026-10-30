@@ -24,14 +24,14 @@ import {
   TextField,
   useFormHistory,
 } from '../Field';
-import { clockTime } from '../LastEdit/relative';
 import { moonPhaseIcon } from './moon-phase-icon';
 import { BinButton } from '../IconTip';
 import { ConfirmQuestion, useModalHeaderNote } from '../Modal';
 import { useDeleteSpell } from '../SpellRecipe/delete-spell';
 import { UNTITLED_SPELL } from '../SpellCard';
+import { VISIBILITY_LABELS } from '../GrimoireList/params';
 import Notice from '../Notice';
-import SaveStatus from '../SaveStatus';
+import SaveStatus, { RecoveryNotice } from '../SaveStatus';
 import Skeleton from '../Skeleton';
 import { SpellCategoriesField, sameCategories, useCategoryName } from './categories-field';
 import { SpellComparison } from './comparison-panel';
@@ -118,7 +118,7 @@ function lineOfField(
     case 'categoryIds':
       return (values.categoryIds ?? []).flatMap((id) => named(id) ?? []).join(', ');
     case 'visibility':
-      return values.visibility === 'workspace' ? 'Shared' : 'Private';
+      return VISIBILITY_LABELS[values.visibility ?? 'private'];
     case 'steps': {
       // The steps that lay something: an instruction step has no name.
       const laid = (values.steps ?? []).filter((step) => step.name !== null).length;
@@ -631,18 +631,7 @@ const SpellBuilder = ({
   // modal they stay in the form's flow.
   const headerNote = useModalHeaderNote();
   const recovery = recovered && jarReady && (
-    <Notice kind="warn" block className="spell-builder__restored">
-      <span>Restored unsaved changes from {clockTime(recovered.at)}</span>
-      <span className="spell-builder__recovered">
-        {/* One primary: Keep, the choice that loses no typing; Discard sits back, quiet. */}
-        <button type="button" className="btn btn--small btn--solid" onClick={keepRecovered}>
-          Keep
-        </button>
-        <button type="button" className="btn btn--small btn--quiet" onClick={discardRecovered}>
-          Discard
-        </button>
-      </span>
-    </Notice>
+    <RecoveryNotice at={recovered.at} onKeep={keepRecovered} onDiscard={discardRecovered} />
   );
 
   /**

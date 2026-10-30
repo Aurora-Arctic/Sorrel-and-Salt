@@ -106,10 +106,11 @@
   grid-column: 2;
   grid-row: 2;
   // Its top edge is level with the top of the box's frame, not the label above it, and it stays
-  // there as the filter tray grows the frame downward. The label's line is pinned (below) so the
-  // offset is a known height. Flat: the box beside it has no shadow.
+  // there as the filter tray grows the frame downward. The label row is the taller of the label's
+  // pinned line (above) and the hint's ⓘ, so the offset is a known height. Flat: the box beside it
+  // has no shadow.
   align-self: start;
-  margin-block-start: calc(#{type-size('small')} * 1.5 + #{space(2)});
+  margin-block-start: calc(max(#{type-size('small')} * 1.5, #{$icon-size}) + #{space(2)});
   box-shadow: none;
   white-space: nowrap;
 }
@@ -173,7 +174,7 @@
 }
 
 // The picker's category filter, the tray under the box inside the frame, separated by a hairline:
-// the caption and its InfoTip on one line, the chips (and Clear) on the next. Each chip is a
+// the caption (and Clear) on one line, its sentence beneath, the chips on the next. Each chip is a
 // toggle.
 .spell-steps__filter {
   display: flex;
@@ -503,29 +504,4 @@
     flex: 1 1 8rem;
     margin: 0;
   }
-}
-
-// The recovery banner: a warning in a flex row like the save status's notices, doubled to outrank
-// the notice's margin. Its own class, since in a dialog it is portalled under the title; its room
-// is the conflict notice's, so the two line up (SaveStatus's index.scss).
-.spell-builder__restored.spell-builder__restored {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: space(3);
-  margin: 0;
-  padding-block: space(3);
-  padding-inline: calc(#{space(4)} + 1.0125rem + #{space(2)}) space(4);
-
-  &::before {
-    inset-block-start: calc(#{space(3)} + 0.05rem);
-    inset-inline-start: space(4);
-  }
-}
-
-// The recovery banner's two choices, side by side after the sentence.
-.spell-builder__recovered {
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: space(2);
 }

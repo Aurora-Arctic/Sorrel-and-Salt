@@ -12,7 +12,7 @@ test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-const grimoireList = (page: Page): Locator => page.getByRole('list', { name: 'Grimoire' });
+const grimoireList = (page: Page): Locator => page.getByRole('list', { name: 'Spells' });
 
 test('a member edits a saved spell from its card and its recipe page, and a viewer cannot', async ({
   page,

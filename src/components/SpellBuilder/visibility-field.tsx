@@ -59,7 +59,7 @@ export function SpellVisibilityField({ created, flush }: SpellVisibilityFieldPro
           question="Share With the Coven?"
           details={
             <p>
-              Every member of the coven will be able to see this spell. Once it is marked complete,
+              Every member of the coven will be able to see this spell. This spell is complete, so
               it cannot be made private again. Any other changes are saved with it.
             </p>
           }
