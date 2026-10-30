@@ -143,6 +143,11 @@ describe('the brand and text colours clear their floors on the page and the card
     // The banner's heavy foot rule, a line rather than text, against the page
     // beneath it.
     row('the banner rule on the page', tokens['--secondary'], page, 3);
+    // The user list's Impersonate column: wax text on a wax tint, 6% over the
+    // page and 5% over a banded row's card (UserList/index.scss).
+    const wax = toHex(tokens['--secondary'], theme);
+    row('--secondary on the Impersonate tint on the page', wax, mixed(wax, page, 0.06), 4.5);
+    row('--secondary on the Impersonate tint on the card', wax, mixed(wax, card, 0.05), 4.5);
     // The tab row's pills (TabbedPage/index.scss): the open tab's label on its pill and the pill's accent edge against the track, over the page or a card; the other labels are the muted ink on the track.
     // The edge marks the open tab because the fill alone sits under 3:1 against the track. The track's mix is the stylesheet's own `$segment-track`, read from it.
     const accent = toHex(tokens['--accent'], theme);
@@ -231,7 +236,6 @@ describe('the brand and text colours clear their floors on the page and the card
     // A notice (`.notice`, _primitives.scss): a bar down its start edge and a tint of the bar's colour over the page or a card. The bar and the warning's triangle are marks (3:1 against the ground and the tint); the text is 4.5:1 on the tint.
     // Text is the hover shade of the error's and success's own colour, and the body ink in the plain notice, the warning and the caution. The error's triangle is drawn in its text colour, so its text row covers it.
     const tint = parseFloat(tokens['--notice-tint']) / 100;
-    const wax = toHex(tokens['--secondary'], theme);
     const warning = toHex(tokens['--warning'], theme);
     const ink = toHex(tokens['--text-primary'], theme);
     const muted = toHex(tokens['--text-muted'], theme);

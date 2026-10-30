@@ -10,7 +10,7 @@ import {
 } from './impersonation';
 import type { ImpersonateButtonProps } from './types';
 
-// The row's Impersonate, asking first, since acting as someone else is the table's weightiest act.
+// The row's Impersonate, asking first: acting as someone else is the table's one dangerous control.
 // Better Auth's endpoint is the guard, refusing a non-admin and an admin target. A success swaps
 // the session cookie, so the next page is a full load as the user.
 
@@ -18,7 +18,7 @@ const ImpersonateButton = ({ userId, name }: ImpersonateButtonProps): ReactEleme
   <ConfirmedAction
     label="Impersonate"
     accessibleName={`Impersonate ${name}`}
-    openClass="btn btn--quiet btn--small"
+    openClass="btn btn--destructive btn--small"
     title="Impersonate User"
     question={impersonationQuestion(name)}
     busy="Impersonating"

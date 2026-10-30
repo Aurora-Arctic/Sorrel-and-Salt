@@ -739,7 +739,7 @@ Four variants:
   the edge `$edge-highlight`, in place of filling with ink (M8.17, the owner's
   call of 2026-10-20). The label on the lit ground holds 4.5:1 in both themes
   (`tests/scss/tokens.test.ts`).
-- **`.btn--destructive`**, what destroys something: Delete, Remove, Discard Changes. The wax,
+- **`.btn--destructive`**, what destroys something: Delete, Remove, Discard Changes. It also marks a high-risk control that destroys nothing, and only two exist: Impersonate (on the row, in the user modal and on its confirm) and Pause Admin Changes (Pause, Resume and its confirm). The wax,
   `$secondary`, which every error wears too. It was `.btn--secondary`, named
   for the token rather than the job, until M5.6, the owner's call.
 
@@ -1337,7 +1337,8 @@ heavier than the reverse; light reverts to the browser default.
   modifiers a table takes by class; `value-and-control` (a cell's value on
   the left and the control that changes it on the right); and
   `sticky-action-column($layer)` (a stacking table's pinned row-action
-  column on a neutral `$hairline` rule: the Compendium's Edit, the members' Remove and the users' Impersonate, and its card placement).
+  column on a neutral `$hairline` rule: the Compendium's Edit and the members' Remove, and its card placement) and
+  `row-action-column($layer)` (the same column in red, over a `@content` block: Impersonate).
 - **Three `*-base` mixins**, each emitting nothing on its own `@use` and
   `@include`d at exactly one site, `globals.scss`'s `body`:
   - `_typography.scss` → `typography-base` — headings, body copy capped at

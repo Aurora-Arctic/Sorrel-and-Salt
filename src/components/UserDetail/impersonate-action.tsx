@@ -26,7 +26,7 @@ const ImpersonateAction = ({ user }: { user: UserDetailUser }): ReactElement => 
       <div className="user-detail__actions">
         <button
           type="button"
-          className="btn btn--quiet"
+          className="btn btn--destructive"
           aria-label={`Impersonate ${user.name}`}
           onClick={() => {
             setFailure(undefined);
