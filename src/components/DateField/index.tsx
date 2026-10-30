@@ -195,6 +195,7 @@ export default function DateField({
         type="button"
         className="input date-field__button"
         aria-labelledby={`${labelledBy} ${id}`}
+        aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
         disabled={disabled}
@@ -210,6 +211,8 @@ export default function DateField({
         <div
           ref={panel}
           id={panelId}
+          role="dialog"
+          aria-label="Choose a Day"
           className={
             floating ? 'date-field__panel date-field__panel--floating' : 'date-field__panel'
           }

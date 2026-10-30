@@ -13,6 +13,7 @@ It replaces the browser's `<input type="date">`, whose look and highlight differ
   there is more room above, kept inside the window's width, and follows it on scroll and resize.
   Escape or a press outside closes it and returns focus to the button. Where the browser has no
   `showPopover` the panel opens in flow beneath the button instead.
+- The button says it opens a dialog (`aria-haspopup="dialog"`, with `aria-expanded` and `aria-controls`), and the panel is `role="dialog"` named "Choose a Day", as the APG date-picker dialog pattern has it. It is not `aria-modal`: a press outside closes it rather than being shut out.
 - The caption has a month box and a year box (`captionLayout="dropdown"`), each a `ComboboxSelect` in its compact form (`.field--compact`, 2rem high, caption-size text) and as wide as its longest option (a hidden stack of every option sizes it)
   passed to day-picker as its `Dropdown` component, so the open list is the app's own and not the
   operating system's. The list sits inside the panel's DOM, so it draws in the popover's top layer and a
