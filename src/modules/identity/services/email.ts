@@ -77,7 +77,7 @@ export async function isEmailHeldByAnother(email: string, userId: string): Promi
  * followed from this account's session. The row is stamped as mailed, which
  * also restarts a provisional caller's window so the link cannot outlive the
  * row. An address a live verified account holds is answered the same and
- * mailed nothing. The row's own address, still unverified, is mailed again
+ * mailed nothing. Both mails are sent after the answer. The row's own address, still unverified, is mailed again
  * instead; verified, there is nothing to do. Either link lands on the way to `next`,
  * which the sender guards where it builds the link.
  *
@@ -122,11 +122,11 @@ export async function setEmail(
   }
 
   await recordVerificationSent(session);
-  await sender.notifyChangeRequested(me.email, email);
   // Answered alike whether or not a verified account holds the address, so the form cannot be used to find out: the holder is mailed nothing, as a
-  // notice to it would be a mail anyone signed in could send to any account.
-  if (!(await isEmailHeldByVerifiedAccount(email))) {
-    await sender.requestChange(me.email, email, next);
-  }
+  // notice to it would be a mail anyone signed in could send to any account. Both mails go out after the answer, since waiting for one on only the
+  // free path would show in how long the answer takes.
+  const held = await isEmailHeldByVerifiedAccount(email);
+  sender.defer(() => sender.notifyChangeRequested(me.email, email));
+  if (!held) sender.defer(() => sender.requestChange(me.email, email, next));
   return me;
 }

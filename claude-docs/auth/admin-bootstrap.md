@@ -360,7 +360,9 @@ the tests [`tests.md`](tests.md).
   link asks no such thing. A taken address is not refused: held (by a live _verified_ account;
   a provisional holder lapses first) or free, the call stamps, notifies and
   answers alike, and only a free address is mailed a link, so the response
-  does not say which it was. It tells the address being left that a
+  does not say which it was. Both mails are handed to `sender.defer` (Next's
+  `after`), so the call does not wait for either and a free address does not
+  take longer to answer than a taken one. It tells the address being left that a
   change was asked for (`sender.notifyChangeRequested`: when, and the new
   address's domain only, with no link in it), stamps the row as mailed (`recordVerificationSent`, which is also
   what restarts a provisional caller's window), and asks the sender to mail

@@ -33,6 +33,10 @@ const sender: EmailVerificationSender = {
   requestChange: vi.fn(async () => {}),
   sessionIsFresh: vi.fn(async () => true),
   notifyChangeRequested: vi.fn(async () => {}),
+  // Starts the task at once and leaves it running, as `after` does once the response is out.
+  defer: vi.fn((task: () => Promise<void>) => {
+    void task();
+  }),
 };
 
 async function userRow(id: string): Promise<EmailUserRow> {
@@ -126,6 +130,27 @@ describe('setEmail', () => {
     expect(sender.requestChange).toHaveBeenCalledTimes(1);
     expect(sender.notifyChangeRequested).toHaveBeenCalledTimes(1);
     expect(sender.notifyChangeRequested).toHaveBeenCalledWith(B.email, NEW);
+  });
+
+  it.each([
+    ['a free address', NEW],
+    ['an address a verified account holds', A.email],
+  ])('answers %s without waiting for any mail to go out', async (_name, address) => {
+    await setVerified(A.id, true);
+    const stuck = new Promise<void>(() => {});
+    const slow: EmailVerificationSender = {
+      ...sender,
+      requestChange: vi.fn(() => stuck),
+      notifyChangeRequested: vi.fn(() => stuck),
+    };
+    const timedOut = Symbol('timed out');
+    const timeout = new Promise<symbol>((resolve) => setTimeout(() => resolve(timedOut), 1000));
+
+    const outcome = await Promise.race([setEmail(asUser(B), address, slow), timeout]);
+
+    expect(outcome).not.toBe(timedOut);
+    // The send was handed over to run after the answer, not dropped.
+    expect(slow.notifyChangeRequested).toHaveBeenCalledWith(B.email, address);
   });
 
   it("does not ask a stale session for freshness when it only asks for the row's own link again", async () => {
