@@ -81,7 +81,7 @@ const AccountMenu = ({
         <span className="account-menu__name" aria-hidden={pending || undefined}>
           {name}
         </span>
-        {fullName && <span className="account-menu__count">{fullName}</span>}
+        {fullName && <span className="account-menu__full-name">{fullName}</span>}
         <ChevronIcon className="account-menu__chevron" />
       </button>
       {/* Always mounted and hidden when shut, so it can fade (the stylesheet). */}
