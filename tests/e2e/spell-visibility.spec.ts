@@ -43,7 +43,7 @@ test('a new spell starts private, a draft moves between private and shared freel
   await expect(visibility).toBeEnabled();
 
   await visibility.check();
-  await expect(page.getByRole('group', { name: /Share With the Coven/ })).toBeHidden();
+  await expect(page.getByRole('group', { name: /^Share Fixture Hidden Working\?/ })).toBeHidden();
   await save.click();
   await expect(save).toBeDisabled();
   expect(await stored()).toEqual([{ visibility: 'workspace' }]);

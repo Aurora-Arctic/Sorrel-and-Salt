@@ -156,6 +156,8 @@ export interface SpellStatusFieldProps {
 }
 
 export interface SpellVisibilityFieldProps {
+  /** The spell's title as the form holds it, or the untitled name, for the question Share asks. */
+  name: string;
   /** The spell is saved, so its visibility is the saved one's: a draft's moves either way, a complete one's only widens. */
   created: boolean;
   /** Saves everything the form holds now (the autosave's flush); rejects when the save is refused. */

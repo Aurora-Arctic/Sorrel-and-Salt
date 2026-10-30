@@ -12,7 +12,11 @@ import type { SpellVisibility } from '@/modules/grimoire';
 // switch. A new spell starts private. A complete spell's visibility only widens, held by the
 // service. claude-docs/components/spell-builder.md, "Visibility".
 
-export function SpellVisibilityField({ created, flush }: SpellVisibilityFieldProps): ReactElement {
+export function SpellVisibilityField({
+  name,
+  created,
+  flush,
+}: SpellVisibilityFieldProps): ReactElement {
   const { control, setValue } = useFormContext<SpellBuilderValues, unknown, SpellBuilderInput>();
   const { defaultValues } = useFormState({ control });
   const { field } = useController({ control, name: 'visibility' });
@@ -56,12 +60,11 @@ export function SpellVisibilityField({ created, flush }: SpellVisibilityFieldPro
       />
       {asking && (
         <ConfirmQuestion
-          question="Share With the Coven?"
-          details={
-            <p>
-              Every member of the coven will be able to see this spell. This spell is complete, so
-              it cannot be made private again. Any other changes are saved with it.
-            </p>
+          question={
+            <>
+              Share <strong>{name}</strong>? Every member of the coven will see it, it cannot be
+              made private again, and your other changes are saved with it.
+            </>
           }
           confirmLabel="Share"
           busyLabel="Sharing"

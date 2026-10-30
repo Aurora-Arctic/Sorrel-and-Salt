@@ -27,7 +27,7 @@ import {
 import { moonPhaseIcon } from '../MoonPhaseIcon/for-phase';
 import { BinButton } from '../IconTip';
 import { ConfirmQuestion, useModalHeaderNote } from '../Modal';
-import { useDeleteSpell } from '../SpellRecipe/delete-spell';
+import { DeleteSpellWords, useDeleteSpell } from '../SpellRecipe/delete-spell';
 import { UNTITLED_SPELL } from '../SpellCard';
 import { VISIBILITY_LABELS } from '../GrimoireList/params';
 import Notice from '../Notice';
@@ -758,6 +758,7 @@ const SpellBuilder = ({
                   multiline
                 />
                 <SpellVisibilityField
+                  name={name}
                   created={opened !== undefined || createdId !== null}
                   flush={flush}
                 />
@@ -802,15 +803,7 @@ const SpellBuilder = ({
           </FormActions>
           <ConfirmQuestion
             asked={deleting}
-            question={
-              <>
-                Delete {name}?
-                {/* A private spell was only ever its author's, so only a shared one leaves the coven. */}
-                {defaultValues?.visibility === 'workspace' &&
-                  ' It leaves the grimoire for every member of the coven.'}{' '}
-                Nothing in stock changes.
-              </>
-            }
+            question={<DeleteSpellWords name={name} visibility={defaultValues?.visibility} />}
             busy={removed}
             onConfirm={async () => remove()}
             onKeep={() => setDeleting(false)}

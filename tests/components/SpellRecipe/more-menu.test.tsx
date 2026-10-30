@@ -197,14 +197,16 @@ describe('SpellMoreMenu', () => {
     choose('Delete Spell');
     const ask = screen.getByRole('dialog', { name: 'Delete Spell' });
     expect(ask).not.toHaveTextContent(/member/);
-    expect(ask).toHaveTextContent(/gone for good/);
+    expect(ask).toHaveTextContent(
+      'Delete Fixture Working? It is gone for good, and nothing in stock changes.',
+    );
   });
 
   it('tells the deleter of a shared spell that the coven loses it', () => {
     renderMenu({ visibility: 'workspace' });
     choose('Delete Spell');
     expect(screen.getByRole('dialog', { name: 'Delete Spell' })).toHaveTextContent(
-      /every member of the coven/,
+      'Delete Fixture Working? It leaves the grimoire for every member of the coven, and nothing in stock changes.',
     );
   });
 

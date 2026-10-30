@@ -237,8 +237,10 @@ describe('SpellWorkings', () => {
     expect(screen.getAllByRole('button', { name: /^Delete Working/ })).toHaveLength(1);
     press(screen.getByRole('button', { name: /^Delete Working/ }));
     const dialog = await screen.findByRole('dialog', { name: 'Delete Working' });
-    // The dialog says the stock the working took is not given back.
-    expect(dialog).toHaveTextContent(/stays taken/);
+    // The dialog names the working, then says in one sentence that the stock it took is not given back.
+    expect(dialog).toHaveTextContent(
+      /Delete the working of .+\? It leaves the spell’s history and count, and what it took from the jars stays taken\./,
+    );
     expect(calls).toHaveLength(0);
     press(within(dialog).getByRole('button', { name: 'Delete' }));
     await waitFor(() => expect(calls).toEqual([{ id: 'w1', workspaceId: WORKSPACE_ID }]));

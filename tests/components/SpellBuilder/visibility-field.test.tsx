@@ -40,7 +40,7 @@ const save = () => screen.getByRole('button', { name: /^Sav/ });
 const title = () => screen.getByRole('textbox', { name: 'Title' });
 const submit = () => fireEvent.submit(save().closest('form') as HTMLFormElement);
 // The question over the form: a group named by it (ConfirmOverlay).
-const sharing = () => screen.queryByRole('group', { name: /Share With the Coven/ });
+const sharing = () => screen.queryByRole('group', { name: /^Share Fixture Working\?/ });
 
 const SPELL: SpellBuilderSpell = {
   id: 's3',
@@ -184,7 +184,10 @@ describe('SpellBuilder visibility', () => {
       fireEvent.click(toggle());
 
       const question = sharing();
-      expect(question).toBeInTheDocument();
+      // The question names the spell, then says in one sentence what sharing does.
+      expect(question).toHaveTextContent(
+        'Share Fixture Working? Every member of the coven will see it, it cannot be made private again, and your other changes are saved with it.',
+      );
       fireEvent.click(
         within(question as HTMLElement).getByRole('button', { name: 'Keep It Private' }),
       );
