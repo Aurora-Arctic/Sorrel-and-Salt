@@ -1,9 +1,9 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import type { Route } from 'next';
 import { type ReactElement, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { useMutation } from '@tanstack/react-query';
 import { FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
 import { CollapsibleSection, FoldAll } from '../CollapsibleSection';
 import {
@@ -26,12 +26,10 @@ import {
 } from '../Field';
 import { clockTime } from '../LastEdit/relative';
 import { moonPhaseIcon } from './moon-phase-icon';
+import { BinButton } from '../IconTip';
 import { ConfirmQuestion, useModalHeaderNote } from '../Modal';
-import { DeleteSpellDocument } from '../SpellRecipe/delete-spell';
+import { useDeleteSpell } from '../SpellRecipe/delete-spell';
 import { UNTITLED_SPELL } from '../SpellCard';
-import { graphqlRequest } from '../../lib/graphql-client';
-import { usePendingNavigation } from '../../lib/navigation';
-import { covenTarget } from '../../lib/coven-path';
 import Notice from '../Notice';
 import SaveStatus from '../SaveStatus';
 import Skeleton from '../Skeleton';
@@ -473,27 +471,17 @@ const SpellBuilder = ({
     return { revision: answer.revision, savedAt: new Date(), id: answer.id };
   };
 
-  // Delete is asked over the form; once confirmed the spell is going, so `removed` holds the autosave
-  // and the save on close down (a save after the delete would answer not found). A refusal lifts it.
   const [deleting, setDeleting] = useState(false);
-  const [removed, setRemoved] = useState(false);
-  const { navigate } = usePendingNavigation();
   const spellId = createdId ?? opened?.id ?? null;
   const name = useWatch({ control, name: 'title' })?.trim() || UNTITLED_SPELL;
-  const remove = useMutation({
-    mutationFn: () => graphqlRequest(DeleteSpellDocument, { id: spellId!, workspaceId }),
+  // The shared Delete Spell write; `removed` holds the autosave and the save on close once it is sent.
+  const { remove, pending: removed } = useDeleteSpell({
+    workspaceId,
+    spellId: spellId ?? '',
+    deletedHref: deletedHrefOf?.(name) ?? ('/' as Route),
+    onRefused: (message) => setError('root', { message }),
+    onClosed: () => setDeleting(false),
   });
-  const confirmDelete = async () => {
-    setRemoved(true);
-    try {
-      await remove.mutateAsync();
-    } catch (error) {
-      setRemoved(false);
-      throw error;
-    }
-    const href = deletedHrefOf!(getValues('title') ?? null);
-    navigate(href, { replace: true, target: covenTarget(href.split('?')[0]!) });
-  };
 
   const mirror = userId
     ? mirrorKey({ entity: 'spell', id: createdId ?? opened?.id ?? null, userId })
@@ -791,13 +779,17 @@ const SpellBuilder = ({
             submitting={autosave.status === 'saving'}
             onSave={() => void saveNow()}
             saveReason={saveReason ?? undefined}
-            onDelete={
-              deletedHrefOf && spellId
-                ? () => {
+            aside={
+              deletedHrefOf && spellId ? (
+                <BinButton
+                  verb="Delete Spell"
+                  name={name}
+                  onClick={() => {
                     clearErrors('root');
                     setDeleting(true);
-                  }
-                : undefined
+                  }}
+                />
+              ) : undefined
             }
           >
             <SpellStatusField
@@ -825,13 +817,9 @@ const SpellBuilder = ({
                 stock changes.
               </>
             }
-            busy={remove.isPending || remove.isSuccess}
-            onConfirm={confirmDelete}
+            busy={removed}
+            onConfirm={async () => remove()}
             onKeep={() => setDeleting(false)}
-            onRefused={(message) => {
-              setDeleting(false);
-              setError('root', { message });
-            }}
           />
         </form>
       </FormHistoryContext.Provider>

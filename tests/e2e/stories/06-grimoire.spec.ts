@@ -591,7 +591,9 @@ test(
     await signInAgainAs(page, B);
     await page.goto(`${listPath}?edit=${gone}`);
     const edit = page.getByRole('dialog', { name: 'Edit Spell, Builder Doomed Working' });
-    await edit.getByRole('button', { name: 'Delete Spell', exact: true }).click();
+    await edit
+      .getByRole('button', { name: 'Delete Spell Builder Doomed Working', exact: true })
+      .click();
     await expect(page.getByText('Delete Builder Doomed Working?')).toBeVisible();
     await assertNoAccessibilityViolations(page);
     await page.getByRole('button', { name: 'Delete', exact: true }).click();
