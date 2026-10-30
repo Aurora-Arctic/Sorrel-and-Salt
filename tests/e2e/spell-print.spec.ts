@@ -281,3 +281,42 @@ test('the printed recipe is an A4 sheet on white with no drawings, its note rule
   expect(Math.abs(sheet.width - 595.28)).toBeLessThanOrEqual(2);
   expect(Math.abs(sheet.height - 841.89)).toBeLessThanOrEqual(2);
 });
+
+test('a printed draft private spell carries its Draft and Private badges in the head, with no Edited line', async ({
+  page,
+}) => {
+  const coven = await seedCoven(page, 'Fixture Coven Marks', 'spell-print-marks.test', {
+    A: 'owner',
+  });
+  const { A } = coven.users;
+  const spellId = await withSql(async (sql) => {
+    const held = await compendiumVariant(sql, 'Rosemary', 'Herb');
+    const id = await insertSpell(sql, coven.id, 'Fixture Marked', 'private', A, 'draft');
+    await sql`update spells set intent = 'To mark a draft' where id = ${id}`;
+    await insertStep(sql, id, held, { quantity: 2, unit: 'g', position: 0 }, A);
+    return id;
+  });
+  await signInAgainAs(page, A);
+  await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+  const head = page.locator('header.spell-recipe__head');
+  const draft = head.getByText('Draft', { exact: true });
+  const shared = head.getByText('Private', { exact: true });
+  const edited = page.locator('.last-edit');
+  // On screen both badges and the Edited line show, so what print does is the print rules' doing.
+  await expect(draft).toBeVisible();
+  await expect(shared).toBeVisible();
+  await expect(edited).toBeVisible();
+
+  await page.emulateMedia({ media: 'print' });
+  await expect(edited).toBeHidden();
+  await expect(draft).toBeVisible();
+  await expect(shared).toBeVisible();
+  // The badges stand in the head, between the title's top and the intent under it.
+  const box = (locator: Locator) => locator.evaluate((el) => el.getBoundingClientRect().toJSON());
+  const title = await box(page.getByRole('heading', { level: 1, name: 'Fixture Marked' }));
+  const intent = await box(page.getByText('To mark a draft'));
+  for (const badge of [await box(draft), await box(shared)]) {
+    expect(badge.top).toBeGreaterThanOrEqual(title.top - 1);
+    expect(badge.bottom).toBeLessThanOrEqual(intent.top);
+  }
+});

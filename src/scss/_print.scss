@@ -35,7 +35,8 @@
     background: none;
     color: $text-primary;
 
-    // Chrome that does nothing on paper.
+    // Chrome that does nothing on paper. The Draft and Private badges stay in the head, so a printed
+    // draft is not taken for a finished spell; the Edited line goes.
     .backdrop,
     .skip-link,
     .skip-target,
@@ -48,7 +49,6 @@
     .spell-workings,
     .last-edit,
     .icon-tip__look,
-    .specimen__badges,
     [role='dialog'],
     [role='tooltip'] {
       display: none !important;
