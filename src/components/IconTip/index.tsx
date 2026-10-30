@@ -14,6 +14,7 @@ export {
   BinIcon,
   CauldronIcon,
   CheckIcon,
+  CloseIcon,
   CopyIcon,
   DotsIcon,
   LinkIcon,

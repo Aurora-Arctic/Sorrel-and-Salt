@@ -1,10 +1,9 @@
 'use client';
 
 import { type ReactElement, useEffect, useRef, useState } from 'react';
-import { PreviewButton } from '../IconTip';
+import IconTip, { CloseIcon, MysticEyeIcon, PreviewButton } from '../IconTip';
 import SpellRecipeBody from '../SpellRecipe/body';
 import SpellRecipeSummary from '../SpellRecipe/summary';
-import '../Modal/index.scss';
 import type { SpellPreviewProps } from './types';
 import { useWakeLock } from './use-wake-lock';
 import './index.scss';
@@ -74,23 +73,21 @@ export default function SpellPreview(props: SpellPreviewProps): ReactElement {
       >
         <div className="spell-preview__bar">
           {wake.shown && (
-            <button
-              type="button"
-              className="btn btn--quiet spell-preview__awake"
-              aria-pressed={wake.held}
-              onClick={wake.toggle}
-            >
-              Screen Awake
-            </button>
+            <IconTip tip="Screen Awake">
+              <button
+                type="button"
+                className="icon-tip__edit icon-tip__edit--plain spell-preview__awake"
+                aria-pressed={wake.held}
+                onClick={wake.toggle}
+              >
+                <MysticEyeIcon />
+                <span className="visually-hidden">Screen Awake</span>
+              </button>
+            </IconTip>
           )}
-          {/* The dialogs' own ×, so the two close alike. */}
-          <button
-            type="button"
-            className="modal-dialog__close spell-preview__close"
-            aria-label="Close"
-            onClick={close}
-          >
-            <span aria-hidden="true">×</span>
+          <button type="button" className="icon-tip__edit icon-tip__edit--plain" onClick={close}>
+            <CloseIcon />
+            <span className="visually-hidden">Close</span>
           </button>
         </div>
         {/* Drawn only while open, so the page holds no second copy of the spell. */}

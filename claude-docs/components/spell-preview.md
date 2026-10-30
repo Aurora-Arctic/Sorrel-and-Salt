@@ -18,8 +18,7 @@ full screen, with nothing else on screen. `src/components/SpellPreview/`.
   or stock verdicts.
 - The content is one column centred in the pane, at most `$recipe-column` (48rem) wide: the width of
   the recipe page's own reading column, so a wide window leaves margins and lines stay readable.
-- One control: Close, the dialogs' own × (`modal-dialog__close`, named "Close"), at the end of the
-  bar. There is no site header, navigation, link or editing control.
+- Two controls at the end of the bar, both plain icon buttons (`icon-tip__edit icon-tip__edit--plain`, a visually hidden name, no border, background or visible label): Screen Awake and Close (`CloseIcon`, an X, named "Close"). There is no site header, navigation, link or editing control.
 
 ## How it opens and closes
 
@@ -44,6 +43,6 @@ full screen, with nothing else on screen. `src/components/SpellPreview/`.
   the browser lacks it, or refuses the request, the pane works and no sign shows.
 - The browser drops the lock when the tab is hidden, so it is asked for again when the tab is visible,
   unless the person turned it off.
-- The Screen Awake button beside Close is the sign. It is pressed while the lock is held, and pressing it
-  releases the lock or asks again. A pane that is closed and opened again asks afresh.
+- The Screen Awake icon button beside Close (`MysticEyeIcon`, tipped "Screen Awake") is the sign. It is pressed while the lock is held, and pressing it
+  releases the lock or asks again. While pressed the eye is in the accent colour and blinks now and then (an 8s cycle, the lid closing once); it stays still under reduced motion. A pane that is closed and opened again asks afresh.
 - A slow glow drifts behind the content. It stands still under reduced motion (the `reduced-motion` mixin).
