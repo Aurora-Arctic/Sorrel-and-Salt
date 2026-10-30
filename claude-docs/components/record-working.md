@@ -2,15 +2,15 @@
 
 `src/components/RecordWorking/` — recording a working of a complete spell from its recipe page, changing one, and completing one (M13.7).
 
-| File                  | What it holds                                                                                                                                    |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `index.tsx`           | `RecordWorkingButton` (default; the icon-only cauldron, `RecordButton` of IconTip), and re-exports of the dialog, `CompleteWorkingAction`, types |
-| `dialog.tsx`          | `RecordWorkingDialog`: the `Modal`, apart from its button                                                                                        |
-| `form.tsx`            | The form inside it                                                                                                                               |
-| `completion.tsx`      | `WorkingCompletion`: the deduction preview and its Confirm                                                                                       |
-| `complete-action.tsx` | `CompleteWorkingAction`: a Complete button opening `WorkingCompletion` in a dialog                                                               |
-| `warnings.ts`         | `NOT_DEDUCTED` and `skipSummary`: why a step takes nothing, and the one-line skip count, in words (no `'use client'`)                            |
-| `types.ts`            | The props                                                                                                                                        |
+| File                  | What it holds                                                                                                                                                |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `index.tsx`           | `RecordWorkingButton` (default; the icon-only cauldron, `RecordButton` of IconTip), and re-exports of the dialog, `CompleteWorkingAction`, types             |
+| `dialog.tsx`          | `RecordWorkingDialog`: the `Modal`, apart from its button                                                                                                    |
+| `form.tsx`            | The form inside it                                                                                                                                           |
+| `completion.tsx`      | `WorkingCompletion`: the deduction preview and its Confirm                                                                                                   |
+| `complete-action.tsx` | `CompleteWorkingAction`: a Complete button opening `WorkingCompletion` in a dialog                                                                           |
+| `warnings.ts`         | `NOT_DEDUCTED` and `skipSummary`: why a step takes nothing, and the one-line count of items completing leaves out of inventory, in words (no `'use client'`) |
+| `types.ts`            | The props                                                                                                                                                    |
 
 ## Recording and editing
 
