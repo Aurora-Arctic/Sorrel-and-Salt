@@ -1,10 +1,35 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The day button is a `.input` box; the calendar opens beneath it in flow, so nothing is positioned.
-.date-field__button {
+// The day button is a `.input` box. The calendar is a popover in the top layer, placed from the button's position, so the dialog's scrolling body
+// cannot clip it; a browser with no popover leaves it in flow beneath the button.
+// As wide as the widest date it can show: the sizer and the text share one grid cell, and the sizer is
+// invisible, so the box never changes width with the day.
+.input.date-field__button {
+  display: inline-grid;
+  inline-size: auto;
+  max-inline-size: 100%;
   text-align: start;
   cursor: pointer;
+}
+
+.date-field__sizer,
+.date-field__text {
+  grid-area: 1 / 1;
+}
+
+.date-field__sizer {
+  visibility: hidden;
+  white-space: pre;
+}
+
+// Each stack lays its candidates in one cell, so it is as wide as the widest.
+.date-field__stack {
+  display: inline-grid;
+
+  > span {
+    grid-area: 1 / 1;
+  }
 }
 
 .date-field__panel {
@@ -15,6 +40,19 @@
   background-color: $surface-card;
   inline-size: fit-content;
   max-inline-size: 100%;
+}
+
+// A popover is in the top layer and fixed to the window; the component sets its place as two custom
+// properties. Only a popover gets this class, so the in-flow fallback keeps its margin.
+.date-field__panel--floating {
+  position: fixed;
+  inset: auto;
+  inset-block-start: var(--date-field-top, 0);
+  inset-inline-start: var(--date-field-left, 0);
+  margin: 0;
+  max-inline-size: calc(100vw - #{space(4)});
+  overflow: visible;
+  color: inherit;
 }
 
 .day-picker {
@@ -31,6 +69,27 @@
   align-items: center;
   block-size: 2rem;
   padding-inline-end: 4.5rem;
+}
+
+// The two selects are the month and year pickers; the library's own text label for them is spoken twice, so it stays hidden.
+.day-picker__dropdowns {
+  display: flex;
+  gap: space(2);
+}
+
+.day-picker__dropdown-root .day-picker__label {
+  display: none;
+}
+
+.day-picker__dropdown {
+  padding: space(1);
+  border: 1px solid $text-muted;
+  border-radius: radius('surface');
+  background-color: $surface-card;
+  color: $text-primary;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .day-picker__label {
