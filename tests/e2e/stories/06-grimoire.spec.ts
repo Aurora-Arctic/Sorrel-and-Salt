@@ -656,13 +656,19 @@ test(
     await dialog.getByRole('combobox', { name: 'Participants' }).fill('Fixture A');
     await page.getByRole('option', { name: 'Fixture A' }).click();
     await dialog.getByRole('button', { name: 'Save Working' }).click();
-    // The draft is kept and the dialog shows who took part. The Workings list is M13.8's.
-    await expect(dialog.getByText('Working saved as a draft')).toBeVisible();
-    await expect(dialog).toContainText('Fixture A');
-    await assertNoAccessibilityViolations(page);
-    await dialog.getByRole('button', { name: 'Done' }).click();
+    // Save keeps the draft and closes the dialog. The Workings list is M13.8's, so the row is read from the database.
     await expect(dialog).toBeHidden();
     await expect(page.getByRole('button', { name: 'Record a Working' })).toBeFocused();
+    await assertNoAccessibilityViolations(page);
+    const kept = await withSql(
+      (sql) => sql`
+        select w.status, count(p.id)::int as people
+        from spell_workings w
+        left join spell_working_participants p on p.working_id = w.id
+        where w.spell_id = ${spellId}
+        group by w.status`,
+    );
+    expect(kept).toEqual([{ status: 'draft', people: 1 }]);
   },
 );
 
@@ -735,7 +741,7 @@ test(
     await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
     await page.getByRole('button', { name: 'Record a Working' }).click();
     const dialog = page.getByRole('dialog', { name: 'Record a Working' });
-    await dialog.getByRole('button', { name: 'Complete' }).click();
+    await dialog.getByRole('button', { name: 'Save & Complete' }).click();
     // The preview says what will be taken before anything is.
     await expect(dialog.getByRole('list', { name: 'Deductions' })).toContainText('2 g');
     await assertNoAccessibilityViolations(page);

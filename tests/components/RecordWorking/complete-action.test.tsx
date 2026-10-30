@@ -60,7 +60,7 @@ describe('Complete on a working', () => {
     expect(rows[0]).toHaveTextContent('Testwort 2 g');
     expect(rows[1]).toHaveTextContent('Mockroot Not deducted: units differ');
     expect(rows[2]).toHaveTextContent('Fixtureleaf 5 ml');
-    expect(rows[2]).toHaveTextContent('short by 1.5 ml');
+    expect(rows[2]).toHaveTextContent('jar short by 1.5 ml');
   });
 
   it('takes nothing until Confirm, then completes the working and reads the page again', async () => {
@@ -84,5 +84,9 @@ describe('Complete on a working', () => {
     await waitFor(() => expect(calls).toEqual([{ workspaceId: WORKSPACE, id: WORKING }]));
     expect(await screen.findByRole('button', { name: 'Done' })).toBeVisible();
     expect(router.refresh).toHaveBeenCalled();
+    // The list reads the same after as before, a step that took nothing included.
+    const rows = within(screen.getByRole('list', { name: 'Deductions' })).getAllByRole('listitem');
+    expect(rows).toHaveLength(3);
+    expect(rows[1]).toHaveTextContent('Mockroot Not deducted: units differ');
   });
 });

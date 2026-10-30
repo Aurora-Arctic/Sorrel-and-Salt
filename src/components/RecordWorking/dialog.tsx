@@ -14,7 +14,7 @@ export default function RecordWorkingDialog({
 }: RecordWorkingDialogProps): ReactElement {
   return (
     <Modal
-      title={rest.working ? 'Edit a Working' : 'Record a Working'}
+      title={rest.working ? 'Edit Working' : 'Record a Working'}
       onClose={onClose}
       returnTo={returnTo}
     >

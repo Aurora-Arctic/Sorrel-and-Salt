@@ -72,8 +72,7 @@ const STATES: Record<string, ReactNode> = {
   ),
   Open: <Driven />,
   'Private Spell': <Driven visibility="private" />,
-  'Draft Saved': <Driven steps={[() => press('Save Working')]} />,
-  'Deduction Preview': <Driven steps={[() => press('Complete')]} />,
+  'Deduction Preview': <Driven steps={[() => press('Save & Complete')]} />,
 };
 
 // One story with a control to choose the state: the open ones are dialogs, too big to sit beside

@@ -6,9 +6,10 @@
 | --------------------- | --------------------------------------------------------------------------------------------- |
 | `index.tsx`           | `RecordWorkingButton` (default), and re-exports of the dialog, `CompleteWorkingAction`, types |
 | `dialog.tsx`          | `RecordWorkingDialog`: the `Modal`, apart from its button                                     |
-| `form.tsx`            | The form inside it, and the saved-draft view                                                  |
+| `form.tsx`            | The form inside it                                                                            |
 | `completion.tsx`      | `WorkingCompletion`: the deduction preview and its Confirm                                    |
 | `complete-action.tsx` | `CompleteWorkingAction`: a Complete button opening `WorkingCompletion` in a dialog            |
+| `warnings.ts`         | `NOT_DEDUCTED` and `skipLine`: why a step takes nothing, in words (no `'use client'`)         |
 | `types.ts`            | The props                                                                                     |
 
 ## Recording and editing
@@ -23,13 +24,14 @@ a typed name is added as a name chip), a note, and visibility. Visibility never 
 spell's: a private spell offers Private only. `participants` is left out of a new working's input
 when no chip is set, so the service names the recorder alone; an edit always sends them.
 
-Save keeps a draft and the dialog stays open on a saved-draft view: who took part, what completing
-would skip (read from the preview query, since `SpellWorking.warnings` is empty outside a
-completion), and Complete or Done. Complete in the form saves first, then shows the preview.
-Closing with unsaved changes asks first.
+Save keeps a draft, closes the dialog and refreshes the page, where the draft is a row of the
+Workings list. Save & Complete in the form saves first, then shows the preview. The date input's
+`max` is today, and a later date leaves Save disabled. Closing with unsaved changes asks first.
+What completing a draft would skip is read from the preview query, since `SpellWorking.warnings`
+is empty outside a completion; `skipLine` words each line.
 
 `RecordWorkingDialog` takes the same props plus `onClose`, `returnTo` and an optional `working`
-(`{ id, workedOn, note, visibility, status, participants }`). With `working` it is titled "Edit a
+(`{ id, workedOn, note, visibility, status, participants }`). With `working` it is titled "Edit
 Working", calls `updateWorking` and closes on Save. Only the recorder may edit (the service
 refuses anyone else), and a complete working that is shared hides the Private option, since a
 complete working's visibility only widens.
@@ -37,9 +39,11 @@ complete working's visibility only widens.
 ## Completing a working
 
 `WorkingCompletion` reads `workingDeductionPreview` afresh each time it opens and lists the spell's
-ingredient steps in order: the amount to be taken in the jar's unit, the shortfall if the jar is
-short, or why nothing is taken ("Not deducted: units differ"). Confirm runs `completeWorking`, reads
-the page again and says what was taken. The preview and the completion share one plan on the
+ingredient steps in order, as a list laid out in two columns: the step's name, then its amount to be
+taken in the jar's unit against the right edge in tabular figures, with "jar short by" beneath it in
+the warning colour if the jar is short, or why nothing is taken ("Not deducted: units differ", muted).
+Confirm runs `completeWorking`, reads the page again and shows the same list, so it reads the same
+before and after. The preview and the completion share one plan on the
 server (`plan-deductions.ts`), so the two agree.
 
 `CompleteWorkingAction` takes `{ workspaceId, spellId, workingId, steps, label? }` and is what a
