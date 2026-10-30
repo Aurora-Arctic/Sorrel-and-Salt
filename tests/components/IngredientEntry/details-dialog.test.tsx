@@ -373,7 +373,7 @@ describe('DetailsDialog from a compendium card', () => {
 });
 
 // The window's icons are the coven card's, drawn by the same `covenCardActions` the list's cards use, so the window shows what the card shows for this entry and role:
-// Edit and the bin on the coven's own entry, Annotate and More on a compendium entry the cupboard holds.
+// Edit on the coven's own entry, Annotate and More on a compendium entry the cupboard holds.
 describe('DetailsDialog coven card controls', () => {
   const WORKSPACE_ID = '00000000-0000-4000-8000-000000000001';
   const ID = '00000000-0000-4000-8000-0000000000bb';
