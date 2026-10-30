@@ -415,6 +415,8 @@ window.__dsDecorate = !ds.length ? null : function(el){
         path: a.path.startsWith('react-dom') ? 'rd' : 'r',
         namespace: 'rg',
       }));
+      // No own Fragment key: the proxy then answers it from window.React, so a decorator's
+      // <Fragment> is the page's. An own undefined key answered undefined (an invalid element type).
       // ownKeys + getOwnPropertyDescriptor so esbuild's __toESM/__copyProps
       // (which enumerate via getOwnPropertyNames) see every React export -
       // otherwise `import {useState} from 'react'` is undefined.
@@ -426,7 +428,7 @@ window.__dsDecorate = !ds.length ? null : function(el){
       b.onLoad({ filter: /^r$/, namespace: 'rg' }, () => ({
         loader: 'js',
         contents: `function jsx(t,p,k){return window.React.createElement(t,k===void 0?p:Object.assign({key:k},p))}
-module.exports=${proxy('window.React', '{jsx:jsx,jsxs:jsx,jsxDEV:jsx,Fragment:undefined}')};`,
+module.exports=${proxy('window.React', '{jsx:jsx,jsxs:jsx,jsxDEV:jsx}')};`,
       }));
       b.onLoad({ filter: /^rd$/, namespace: 'rg' }, () => ({
         loader: 'js',
