@@ -488,6 +488,8 @@ $notice-button-ink: var(--notice-button-ink);
 // "$ornament-screen").
 $ornament-screen: var(--ornament-screen);
 $ornament-multiply: var(--ornament-multiply);
+// The salt ornament's width before a page's `--backdrop-width`; the sorrel draws three quarters of it.
+$ornament-width: clamp(8.75rem, 17.5vw, 13.75rem);
 
 // The label on a solid fill — the selected chip, the safety badge. An alias for
 // the page surface: on dark the fill is the light thing and the label goes
