@@ -1,4 +1,5 @@
-import type { ReactElement } from 'react';
+import { createElement, type ReactElement } from 'react';
+import { SHAPES } from '../JarShelf/shapes';
 
 // The pencil every Edit control shows, in the control's own ink and hidden from assistive technology, as the control around it names it.
 
@@ -268,6 +269,30 @@ export function CauldronIcon(): ReactElement {
         transform="translate(10.4 3.05) rotate(35) scale(.88)"
         d="M0 -2c1.7 1 1.9 2.5 0 4-1.9-1.5-1.7-3 0-4z"
       />
+    </svg>
+  );
+}
+
+/** The jar shelf's round flask with a tick on its bulb: Complete a Working. The flask is the shelf's own drawing, read from `SHAPES.flask` (its lid parts, and its body left open at the rim, as the shelf draws it); the tick is the icon's. */
+export function CompleteIcon(): ReactElement {
+  const { lid, body } = SHAPES.flask;
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      aria-hidden="true"
+      focusable="false"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.25"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {/* The shelf's 48-unit box scaled to fit the 16, its stroke widened to come out at 1.25. */}
+      <g transform="translate(-1 0) scale(.375)" strokeWidth="3.33">
+        {lid.map((part, i) => createElement(part.el, { key: i, ...part.attrs }))}
+        <path d={body.replace(/z$/, '')} />
+        <path d="M16.8 28.5l5 5 9.6-10.5" strokeWidth="4" />
+      </g>
     </svg>
   );
 }
