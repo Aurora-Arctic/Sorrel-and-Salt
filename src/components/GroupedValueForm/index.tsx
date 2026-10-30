@@ -235,7 +235,6 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
     group: {
       label: 'Group',
       placeholder: 'Choose a group',
-      hint: "The family it is filed under. Its chip wears the group's colours.",
     },
     // Deleting a category removes nothing of a coven's: an entry filed under it keeps its
     // link and stops reading the category, so the entry stays in its list and only the
@@ -256,7 +255,6 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
     group: {
       label: 'Group',
       placeholder: 'Choose a group',
-      hint: "What kind of thing it is. The ingredient form's suggestions list the forms under their groups.",
     },
     deleteNote: USED_DELETE_NOTE,
     // A rename carries onto every compendium entry that picked the form, though no

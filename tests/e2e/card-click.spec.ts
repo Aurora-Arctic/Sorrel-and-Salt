@@ -5,6 +5,8 @@ import { signInAgainAs, signInAs } from './session';
 import {
   compendiumList,
   ingredientList,
+  insertSpell,
+  insertWorking,
   insertStock,
   localIngredient,
   lowBadge,
@@ -17,9 +19,9 @@ import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
 import { ingredientSlug } from '@/lib/slugify';
 
-// A click anywhere on an ingredient card opens its entry while each control keeps its own action. The card is
-// one stretched link (claude-docs/components/ingredient-card.md, "The whole card is the link"); jsdom does no
-// hit-testing, so only a browser shows whether a click on empty space reaches it.
+// A click anywhere on an ingredient card opens its entry, and anywhere on a spell card its recipe page, while
+// each control keeps its own action. Each card is one stretched link (ingredient-card.md, "The whole card is the
+// link"; spell-card.md, "The link"); jsdom does no hit-testing, so only a browser shows where a press lands.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -334,5 +336,117 @@ test('on a coven’s Ingredients page, a press on a card outside its name opens 
     await quickLook().click();
     await expect(page.getByRole('dialog', { name: NAME, exact: true })).toBeVisible();
     await expect(page).toHaveURL(new RegExp(`${listPath}\\?`));
+  });
+});
+
+test('in the grimoire, a press on a spell card outside its title opens its recipe page, and Quick Look, Record a Working, Edit and More keep their own actions', async ({
+  page,
+}) => {
+  const TITLE = 'Fixture Pressing Working';
+  const INTENT = 'To keep the testwort fresh';
+  const coven = await seedCoven(page, 'Fixture Coven Spell Press', 'card-click-spell.test', {
+    A: 'owner',
+  });
+  const spellId = await withSql(async (sql) => {
+    const id = await insertSpell(sql, coven.id, TITLE, 'workspace', coven.users.A, 'complete');
+    await sql`update spells set intent = ${INTENT} where id = ${id}`;
+    await insertWorking(sql, id, coven.users.A, { workedOn: '2026-10-01' });
+    return id;
+  });
+  const listPath = `/coven/${coven.slug}/grimoire`;
+  const recipePath = new RegExp(`/coven/${coven.slug}/grimoire/${spellId}$`);
+  const listUrl = new RegExp(`/coven/${coven.slug}/grimoire(\\?|$)`);
+  const card = () => rowOf(page.getByRole('list', { name: 'Spells' }), TITLE);
+  const quickLook = () => card().getByRole('link', { name: `Quick Look ${TITLE}`, exact: true });
+  const record = () => card().getByRole('button', { name: 'Record a Working' });
+  const edit = () => card().getByRole('link', { name: `Edit ${TITLE}`, exact: true });
+  const more = () => card().getByRole('button', { name: `More for ${TITLE}` });
+  const open = async () => {
+    await page.goto(listPath);
+    await expect(card()).toBeVisible();
+  };
+
+  await signInAgainAs(page, coven.users.A);
+  await open();
+
+  await test.step('the title is the card’s one link to its recipe page, named by the title alone', async () => {
+    const href = `/coven/${coven.slug}/grimoire/${spellId}`;
+    await expect(nameLink(card(), TITLE)).toHaveAttribute('href', href);
+    await expect(card().locator(`a[href="${href}"]`)).toHaveCount(1);
+    await expect(nameLink(card(), TITLE)).toHaveAccessibleName(TITLE);
+  });
+
+  await test.step('every control but the title is at least 24 by 24', async () => {
+    await expectTargets(card(), TITLE, [quickLook(), record(), edit(), more()]);
+  });
+
+  await test.step('a press on the intent opens the recipe page', async () => {
+    await pressCardAt(card(), await middleOf(card(), card().getByText(INTENT, { exact: true })));
+    await expect(page).toHaveURL(recipePath);
+  });
+
+  await test.step('a press on the card’s empty space opens the recipe page', async () => {
+    await open();
+    await pressCardAt(card(), await blankPoint(card()));
+    await expect(page).toHaveURL(recipePath);
+  });
+
+  await test.step('a press between the foot’s controls opens the recipe page', async () => {
+    await open();
+    await pressCardAt(card(), await gapAfter(card(), quickLook()));
+    await expect(page).toHaveURL(recipePath);
+  });
+
+  await test.step('a press on the made count opens the recipe page', async () => {
+    await open();
+    await pressCardAt(card(), await middleOf(card(), card().getByText(/^made once$/i)));
+    await expect(page).toHaveURL(recipePath);
+  });
+
+  await test.step('the last-edit line shows its tip on hover and on focus, and a press on it stays on the list', async () => {
+    await open();
+    const line = card().getByRole('button', { name: /^Edited / });
+    const tip = card().getByRole('tooltip');
+    await expect(tip).toBeHidden();
+    // A hover lands only on the element on top at that point, so the title's overlay would take it.
+    await line.hover();
+    await expect(tip).toBeVisible();
+    await page.mouse.move(0, 0);
+    await expect(tip).toBeHidden();
+    await line.focus();
+    await expect(tip).toBeVisible();
+    await line.click();
+    await expect(page).toHaveURL(listUrl);
+  });
+
+  await test.step('Quick Look opens the spell over the list, not the recipe page', async () => {
+    await open();
+    await quickLook().click();
+    await expect(page.getByRole('dialog', { name: TITLE, exact: true })).toBeVisible();
+    await expect(page).toHaveURL(listUrl);
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+  });
+
+  await test.step('Record a Working opens its dialog over the list', async () => {
+    await record().click();
+    await expect(page.getByRole('dialog', { name: 'Record a Working' })).toBeVisible();
+    await expect(page).toHaveURL(listUrl);
+  });
+
+  await test.step('Edit opens the builder over the list', async () => {
+    await open();
+    await edit().click();
+    await expect(page.getByRole('dialog', { name: `Edit Spell, ${TITLE}` })).toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`[?&]edit=${spellId}`));
+  });
+
+  await test.step('More opens its menu and stays on the list', async () => {
+    await open();
+    await more().click();
+    await expect(page.getByRole('menuitem', { name: 'Duplicate' })).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: 'Delete', exact: true })).toBeVisible();
+    await expect(page).toHaveURL(listUrl);
+    await page.keyboard.press('Escape');
   });
 });

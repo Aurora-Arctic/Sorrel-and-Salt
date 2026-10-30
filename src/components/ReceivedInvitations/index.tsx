@@ -3,6 +3,7 @@ import StackTable from '../DataTable';
 import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
 import { workspaceRoleLabel } from '../UserDetail/roles';
+import { emptyList } from '../../lib/text';
 import { inUtc } from '../../lib/utc';
 import AcceptControl from './accept-control';
 import DeclineControl from './decline-control';
@@ -66,7 +67,7 @@ const ReceivedInvitations = ({
           ]}
           rows={invitations}
           rowKey={(invitation) => invitation.id}
-          empty="No invitations are waiting."
+          empty={emptyList('invitations')}
           className="data-table--nowrap"
         />
         <Pager previousHref={previousHref} nextHref={nextHref} position={position} soft />

@@ -67,5 +67,5 @@ export const States: Story = {
   argTypes: {
     state: { control: 'select', options: Object.keys(CREATE_STATES), mapping: CREATE_STATES },
   },
-  render: ({ state }) => <div key={String(state)}>{state}</div>,
+  render: ({ state }) => <div>{state}</div>,
 };

@@ -10,7 +10,7 @@ import CategoryChips from '../CategoryChips';
 import FormIcon from '../FormIcon';
 import StackTable, { updatedColumn } from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
-import { NO_MATCH_ADVICE, noMatchLead } from '../../lib/text';
+import { NO_MATCH_ADVICE, emptyList, noMatchLead } from '../../lib/text';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS, labelOf } from '../IngredientForm/options';
 import IngredientSearch from '../IngredientSearch';
@@ -166,7 +166,7 @@ export function emptyText(
   known: readonly CompendiumCategoryChoice[],
   facets: CompendiumFacetCounts,
   /** What an unfiltered empty list says: the admin's tells how to begin it. */
-  whenEmpty = 'The compendium is empty. Add the first entry with Add Ingredient.',
+  whenEmpty = `${emptyList('ingredients')} Add the first with Add Ingredient.`,
 ): ReactElement {
   // A deity by its name and tradition, the pair that tells two of one name apart.
   const deityNames = deities.flatMap((slug) => {

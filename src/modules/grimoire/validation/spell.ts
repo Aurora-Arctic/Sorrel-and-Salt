@@ -26,7 +26,7 @@ const SpellFields = z.object({
   moonPhase: optionalText(),
   dayOfWeek: optionalText(),
   // `public` is deferred with the notes subsystem (§13).
-  visibility: z.enum(VISIBILITIES, { error: 'Choose private or workspace' }).optional(),
+  visibility: z.enum(VISIBILITIES, { error: 'Choose private or coven' }).optional(),
   // Left out means the column's default (a draft) on create, and unchanged on
   // update.
   status: z.enum(STATUSES, { error: 'Choose draft or complete' }).optional(),
@@ -73,12 +73,12 @@ function distinctSteps(spell: { steps?: StepIdentity[] }, context: z.RefinementC
     context.addIssue({ code: 'custom', path: ['steps', index, field], message });
   spell.steps?.forEach((step, index) => {
     if (step.id != null) {
-      if (seen.id.has(step.id)) flag(index, 'id', 'This step is already in the recipe');
+      if (seen.id.has(step.id)) flag(index, 'id', 'This step is already in the spell.');
       seen.id.add(step.id);
     }
     if (step.ingredientId == null && step.name != null) {
       const name = step.name.toLowerCase();
-      if (seen.name.has(name)) flag(index, 'name', 'This ingredient is already in the jar');
+      if (seen.name.has(name)) flag(index, 'name', 'This ingredient is already in the jar.');
       seen.name.add(name);
     }
   });

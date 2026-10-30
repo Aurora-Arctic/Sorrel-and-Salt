@@ -142,7 +142,7 @@ const CategoryPicker = ({
     // Named by the legend's text alone: the tip's button inside the legend
     // would otherwise join the group's name.
     <fieldset className="fieldset category-picker" aria-labelledby={legendId}>
-      <legend className="fieldset__legend category-picker__legend">
+      <legend className="fieldset__legend">
         <span id={legendId}>{legend}</span>
         {hint && (
           <InfoTip id={hintId} label={legend}>

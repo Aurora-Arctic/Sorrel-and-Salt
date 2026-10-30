@@ -1,7 +1,7 @@
 'use client';
 
 import type { Route } from 'next';
-import { moonPhaseIcon } from '../SpellBuilder/moon-phase-icon';
+import { moonPhaseIcon } from '../MoonPhaseIcon/for-phase';
 import FacetCombobox from '../FacetCombobox';
 import CardDensitySwitch from '../CardDensitySwitch';
 import { type ReactElement, useMemo, useState } from 'react';
@@ -112,7 +112,6 @@ const PanelCategories = ({
         held.makers.length
       }
       clearHref={path}
-      className="compendium-list__panel"
       // Shut any other way than Apply Filters, whose submit applies the text as well: the
       // categories held, under the text the page shows, and nothing at all when none changed.
       onApply={() => {
@@ -134,10 +133,10 @@ const PanelCategories = ({
       <div className="facet-panel__line">
         <div className="facet-panel__grow">
           <FacetCombobox
-            label="Moon Phase"
+            label="Moon Phases"
             name="moonPhase"
             typeahead
-            placeholder="Add Moon Phase"
+            placeholder="Add a moon phase"
             removeNoun="Moon Phase"
             loading={pending}
             choices={facets.moonPhases.map((choice) => ({
@@ -150,10 +149,10 @@ const PanelCategories = ({
         </div>
         <div className="facet-panel__grow">
           <FacetCombobox
-            label="Day of Week"
+            label="Days of the Week"
             name="dayOfWeek"
             typeahead
-            placeholder="Add Day"
+            placeholder="Add a day"
             removeNoun="Day"
             loading={pending}
             choices={facets.daysOfWeek}
@@ -165,10 +164,10 @@ const PanelCategories = ({
       <div className="facet-panel__line">
         <div className="facet-panel__grow">
           <FacetCombobox
-            label="Coven Member"
+            label="Coven Members"
             name="maker"
             typeahead
-            placeholder="Add Member"
+            placeholder="Add a member"
             removeNoun="Member"
             loading={pending}
             choices={facets.makers}
@@ -230,7 +229,7 @@ const GrimoireFilterRow = ({
       query={filter.query}
       shown={[]}
       clear={false}
-      className="compendium-list__row"
+      className="grimoire-list__row"
       searchHref={(query) => hrefFor(path, filter, held, query)}
       // A picked title opens the spell's Quick Look over the list as shown, as the card's eye
       // does: the page and the filter kept, the text typed and not searched not applied.

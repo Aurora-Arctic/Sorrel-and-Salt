@@ -5,8 +5,8 @@ import type { StepRowProps } from './types';
 
 // One step of a spell: its position, its ingredient with the quantity
 // and unit if it has them, and its text. Presentational: the spell builder
-// hands it editing controls, the recipe page none, and a working's
-// deduction lines draw theirs with it. See claude-docs/components/step-row.md.
+// hands it editing controls and the recipe page none.
+// See claude-docs/components/step-row.md.
 
 /**
  * The quantity as the person typed it rather than as the column stores it: "1.000" is "1" and
@@ -69,7 +69,6 @@ export default function StepRow({
   edit,
   look,
   onToggle,
-  aside,
   handle,
   nameField,
   formField,
@@ -165,7 +164,6 @@ export default function StepRow({
             </div>
             <div className="step-row__inputs-error" ref={errorRef} />
             {note && <div className="step-row__note">{note}</div>}
-            {aside && <p className="step-row__aside">{aside}</p>}
           </div>
         )}
       </li>
@@ -175,20 +173,8 @@ export default function StepRow({
     <li ref={rowRef} className={className_} style={style}>
       {identity}
       {name !== null && <div className="step-row__marks">{marks}</div>}
-      {name !== null && (quantityField || unitField) ? (
-        <div className="step-row__fields">
-          {quantityField}
-          {unitField}
-        </div>
-      ) : (
-        name !== null && amount && <p className="step-row__amount">{amount}</p>
-      )}
-      {bodyField ? (
-        <div className="step-row__field">{bodyField}</div>
-      ) : body ? (
-        <p className="step-row__body">{body}</p>
-      ) : null}
-      {actions}
+      {name !== null && amount && <p className="step-row__amount">{amount}</p>}
+      {body && <p className="step-row__body">{body}</p>}
       {name !== null && note && <div className="step-row__note">{note}</div>}
     </li>
   );

@@ -11,15 +11,15 @@ export interface StepRowProps {
   name: ReactNode;
   /** The form's group icon; null draws the generic spoon. Only drawn beside a name. */
   icon?: FormGroupIcon | null;
-  /** The amount, as text. Read-only; `quantityField` replaces it. */
+  /** The amount, as text. On a card, `quantityField` replaces it. */
   quantity?: string | null;
-  /** The unit, as text. Read-only; `unitField` replaces it. */
+  /** The unit, as text. On a card, `unitField` replaces it. */
   unit?: string | null;
   /** A badge beside the name, such as the safety mark. Only drawn beside a name. */
   marks?: ReactNode;
   /** A block beneath the row's controls, the width of the row, such as the safety note. */
   note?: ReactNode;
-  /** The step's instruction. Read-only; `bodyField` replaces it. */
+  /** The step's instruction. On a card, `bodyField` replaces it. */
   body?: string | null;
   /**
    * Makes the card open or closed (the ingredient form's variant card). Closed it is one line:
@@ -42,18 +42,21 @@ export interface StepRowProps {
   edit?: ReactNode;
   /** The Quick Look eye: after the badges, before `edit`, in the same tight group of buttons. */
   look?: ReactNode;
-  /** A line in the open fields beneath the note, such as what a one-off means. */
-  aside?: ReactNode;
   /** The node the fields' errors are drawn in, the full width beneath the inputs. */
   errorRef?: Ref<HTMLDivElement>;
-  /** The editing controls around the step, each drawn in place of the plain text it stands for. */
+  /** The move handle, before the position. */
   handle?: ReactNode;
   /** A one-off's name, first of the open fields and the full width of them. */
   nameField?: ReactNode;
+  /**
+   * The card's open fields, each in place of the plain text it stands for; a row without `open`
+   * draws none of them.
+   */
   formField?: ReactNode;
   quantityField?: ReactNode;
   unitField?: ReactNode;
   bodyField?: ReactNode;
+  /** The card's buttons after `edit`, such as Remove. */
   actions?: ReactNode;
   /** For a caller that makes the row sortable: the row's ref, class and style. */
   rowRef?: Ref<HTMLLIElement>;

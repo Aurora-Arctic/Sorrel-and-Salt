@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { type ReactElement, useState } from 'react';
 import { NEW, opensNewSpell } from '../AppShell/add-href';
 import { graphqlQuery } from '../../lib/graphql-client';
+import { withParam } from '../../lib/list-href';
 import { usePendingNavigation } from '../../lib/navigation';
 import { RouteModal } from '../Modal';
 import type { ModalHeading } from '../Modal/types';
@@ -25,8 +26,7 @@ import type { SpellDialogProps } from './types';
  * `closeHref` with a saved spell's dialog open over it, `?edit=<id>`. Built here rather than
  * handed down, since a server page cannot hand a client part a function.
  */
-const withEdit = (closeHref: Route, id: string) =>
-  `${closeHref}${closeHref.includes('?') ? '&' : '?'}${new URLSearchParams({ edit: id })}` as Route;
+const withEdit = (closeHref: Route, id: string) => withParam(closeHref, 'edit', id);
 
 /**
  * The dialog's head for a new spell, headed as Add Ingredient's is: the coven it

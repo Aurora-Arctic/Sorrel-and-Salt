@@ -18,7 +18,7 @@ const ImpersonateButton = ({ userId, name }: ImpersonateButtonProps): ReactEleme
   <ConfirmedAction
     label="Impersonate"
     accessibleName={`Impersonate ${name}`}
-    openClass="btn btn--small btn--destructive"
+    openClass="btn btn--destructive btn--small"
     title="Impersonate User"
     question={impersonationQuestion(name)}
     busy="Impersonating"

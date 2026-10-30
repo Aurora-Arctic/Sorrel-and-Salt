@@ -16,9 +16,7 @@
 }
 
 .chip-color-field__picker {
-  display: flex;
-  flex-direction: column;
-  gap: space(2);
+  @include stack(2);
 }
 
 // The picker sizes nothing itself: the area takes the field's width and a
@@ -187,9 +185,7 @@
 }
 
 .chip-color-field__channel {
-  display: flex;
-  flex-direction: column;
-  gap: space(1);
+  @include stack(1);
   min-inline-size: 0;
 }
 
@@ -197,7 +193,7 @@
 // the site reads alike. Ark marks an open tooltip `data-state="open"` where
 // InfoTip sets `is-open`; this is that state, with its fade both ways.
 .chip-color-field__tooltip-positioner {
-  z-index: 10;
+  z-index: layer('floating');
 }
 
 .chip-color-field__tooltip {

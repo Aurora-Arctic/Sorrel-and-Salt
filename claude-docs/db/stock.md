@@ -210,9 +210,10 @@ stock.
 
 - **A jar is read through a live form of a live ingredient.** M5.3's ingredient
   delete leaves the jar in place, so the repository's stock finders
-  (`src/db/repository/stock.ts`) add `readableVariantParent` to the proof's
+  (`src/db/repository/stock.ts`) add `inUseVariantParent` to the proof's
   own scope: the form must be live, and its ingredient live and in the
-  compendium or this coven. A deleted ingredient's jar is then in no read, and
+  compendium or this coven, or a retired compendium entry this coven's
+  cupboard still names. A deleted ingredient's jar is then in no read, and
   an update or delete of it answers `NotFound`. The writes read the jar first
   for this reason: the writer's by-id methods see the jar's own tombstone, not
   its ingredient's. `findStockOfIngredients` is the batch read behind

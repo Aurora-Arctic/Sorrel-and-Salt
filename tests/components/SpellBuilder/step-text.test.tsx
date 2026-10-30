@@ -106,9 +106,9 @@ const steps = () => screen.getByRole('list', { name: 'Steps' });
 const rows = () => within(steps()).queryAllByRole('listitem');
 const instructions = () =>
   within(steps()).queryAllByRole('textbox', { name: /^Instruction/ }) as HTMLTextAreaElement[];
-/** Opens a step row by its pencil, unless it is open already. */
-const openStep = (n: number) => {
-  const pencil = screen.getByRole('button', { name: `Edit step ${n}` });
+/** Opens a step row, by the name its pencil carries, unless it is open already. */
+const openStep = (name: string) => {
+  const pencil = screen.getByRole('button', { name: `Edit ${name}` });
   if (pencil.getAttribute('aria-expanded') !== 'true') fireEvent.click(pencil);
 };
 const save = () => screen.getByRole('button', { name: /^Sav/ });
@@ -190,7 +190,7 @@ describe('the spell builder’s step text', () => {
     expect(within(rows()[0] as HTMLElement).getByText('Light the candle')).toBeInTheDocument();
     expect(instructions().map((field) => field.value)).toEqual(['Crush it first']);
     expect(within(rows()[1] as HTMLElement).getByRole('spinbutton')).toBeInTheDocument();
-    openStep(1);
+    openStep('Light the candle');
     expect(instructions().map((field) => field.value)).toEqual(['Light the candle']);
     expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(true);
   });
@@ -199,7 +199,7 @@ describe('the spell builder’s step text', () => {
     const calls = acceptUpdate();
     renderSaved();
 
-    openStep(1);
+    openStep('Light the candle');
     fireEvent.change(instructions()[0] as HTMLElement, { target: { value: 'Snuff the candle' } });
     expect(save().matches(':disabled, [aria-disabled="true"]')).toBe(false);
     submit();
@@ -225,7 +225,7 @@ describe('the spell builder’s step text', () => {
 
   it('shows a closed instruction step as its text, opens one row at a time, and opens a blank one on its error', async () => {
     renderSaved();
-    const first = screen.getByRole('button', { name: 'Edit step 1' });
+    const first = screen.getByRole('button', { name: 'Edit Light the candle' });
     expect(first).toHaveAttribute('aria-expanded', 'false');
     expect(instructions()).toHaveLength(0);
 
@@ -240,30 +240,30 @@ describe('the spell builder’s step text', () => {
 
   it('opens a closed instruction from a click on its text, as an ingredient row opens, and shows Close, not Remove, while open', () => {
     renderSaved();
-    expect(screen.getByRole('button', { name: 'Remove step 1' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Remove Light the candle' })).toBeInTheDocument();
 
     fireEvent.click(screen.getByText('Light the candle', { selector: 'p' }));
 
-    expect(screen.getByRole('button', { name: 'Close step 1' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: 'Close Light the candle' })).toHaveAttribute(
       'aria-expanded',
       'true',
     );
     expect(instructions().map((field) => field.value)).toEqual(['Light the candle']);
-    expect(screen.queryByRole('button', { name: 'Remove step 1' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Remove Light the candle' })).toBeNull();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Close step 1' }));
-    expect(screen.getByRole('button', { name: 'Edit step 1' })).toHaveAttribute(
+    fireEvent.click(screen.getByRole('button', { name: 'Close Light the candle' }));
+    expect(screen.getByRole('button', { name: 'Edit Light the candle' })).toHaveAttribute(
       'aria-expanded',
       'false',
     );
-    expect(screen.getByRole('button', { name: 'Remove step 1' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Remove Light the candle' })).toBeInTheDocument();
   });
 
   it('removes an instruction-only step, says so, and leaves it out of what is sent', async () => {
     const calls = acceptUpdate();
     renderSaved();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Remove step 1' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Light the candle' }));
 
     expect(announced()).toContain('Removed Light the candle, from position 1 of 2.');
     expect(rows()).toHaveLength(1);
@@ -274,11 +274,14 @@ describe('the spell builder’s step text', () => {
     ]);
   });
 
-  it('keeps the focus in the list after a removal', () => {
+  it('puts the focus on the handle of the step now in the removed one’s place, and on Add Instruction once none is left', () => {
     renderSaved();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Remove step 1' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Light the candle' }));
+    expect(screen.getByRole('button', { name: 'Move Testwort' })).toHaveFocus();
 
-    expect(steps().contains(document.activeElement)).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Testwort' }));
+    expect(rows()).toHaveLength(0);
+    expect(screen.getByRole('button', { name: 'Add Instruction' })).toHaveFocus();
   });
 });

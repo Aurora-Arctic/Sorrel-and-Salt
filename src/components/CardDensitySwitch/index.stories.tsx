@@ -12,7 +12,7 @@ import { WorkshopPathname } from '../../../.storybook/navigation';
 
 // Render-only; the attribute and the stored choice are asserted in tests/components/CardDensitySwitch.
 const meta = {
-  title: 'Ingredients / Card Density Switch',
+  title: 'Forms / Card Density Switch',
 } satisfies Meta;
 export default meta;
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
@@ -81,5 +81,5 @@ const STATES: Record<string, ReactNode> = {
 export const States: Story = {
   args: { state: 'Switch' },
   argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
-  render: ({ state }) => <div key={String(state)}>{state}</div>,
+  render: ({ state }) => <div>{state}</div>,
 };

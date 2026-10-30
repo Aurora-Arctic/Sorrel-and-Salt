@@ -8,13 +8,14 @@ import SectionBody from '../../../components/SectionBody';
 // component cannot import.
 import { RouteModalProvider } from '../../../components/Modal/route-modal-provider';
 import { requireCuratorSession } from '../../../lib/request-session';
+import { titleTemplate } from '../../../lib/site';
 import type { AdminLayoutProps } from './types';
 
 // Each page under `/admin` gives its own name ('Celestial Bodies') and this template
 // finishes it. Next does not apply a layout's template to a page in the same
-// segment, so `/admin` itself takes the `default` as its title.
+// segment, so `/admin` itself takes the `default`, which the root template finishes.
 export const metadata: Metadata = {
-  title: { template: '%s — Admin — Sorrel & Salt', default: 'Admin — Sorrel & Salt' },
+  title: { template: titleTemplate('Admin'), default: 'Admin' },
 };
 
 // The curation guard, passed by a curator or an admin; each people page calls the admin guard. Every

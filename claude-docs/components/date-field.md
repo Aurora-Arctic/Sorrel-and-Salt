@@ -5,6 +5,9 @@ It replaces the browser's `<input type="date">`, whose look and highlight differ
 
 - Props: `id`, `labelledBy` (the id of the label, so the button reads "Date, 12 March 2026"), `value`
   and `onChange` (a `YYYY-MM-DD` string), `max` (last pickable day), `disabled`.
+- `day.ts` holds the day helpers the grimoire shares: `isoDay(date)` (a local date as `YYYY-MM-DD`), `today()`
+  and `dayWords(day)` ("12 March 2026", read at UTC midnight so no zone shifts it). The button, the
+  Workings rows and the reason Complete is off all write a day through `dayWords`.
 - Built on `react-day-picker`. Its own stylesheet is not imported: `index.scss` styles it with the
   tokens, inside the browser floor. Only classes are given, no `style`.
 - The calendar is a manual popover in the top layer, so it floats over the fields below and the
@@ -13,6 +16,7 @@ It replaces the browser's `<input type="date">`, whose look and highlight differ
   there is more room above, kept inside the window's width, and follows it on scroll and resize.
   Escape or a press outside closes it and returns focus to the button. Where the browser has no
   `showPopover` the panel opens in flow beneath the button instead.
+- The button says it opens a dialog (`aria-haspopup="dialog"`, with `aria-expanded` and `aria-controls`), and the panel is `role="dialog"` named "Choose a Day", as the APG date-picker dialog pattern has it. It is not `aria-modal`: a press outside closes it rather than being shut out.
 - The caption has a month box and a year box (`captionLayout="dropdown"`), each a `ComboboxSelect` in its compact form (`.field--compact`, 2rem high, caption-size text) and as wide as its longest option (a hidden stack of every option sizes it)
   passed to day-picker as its `Dropdown` component, so the open list is the app's own and not the
   operating system's. The list sits inside the panel's DOM, so it draws in the popover's top layer and a
@@ -28,3 +32,20 @@ It replaces the browser's `<input type="date">`, whose look and highlight differ
 - Days are parsed and written in the browser's local calendar, never through `Date.parse`, so no
   timezone shifts the day.
 - Used by the Record a Working form only. The form's Save stays disabled for a date after today.
+
+## Styling
+
+`index.scss`, on the `date-field` block and the `day-picker` classes it hands the library:
+
+- **The button** is a `.input` box (`.input.date-field__button`), as wide as its hidden sizer.
+- **The panel** (`.date-field__panel`) is a card: `$surface-card`, a 1px `$text-muted` border, `radius('surface')` and `space(3)` of padding. `--floating` places it from the two custom properties.
+- **The caption** holds the two month and year boxes (`.day-picker__dropdowns`), with the previous and next steps placed over its end (`.day-picker__nav`).
+- **A step and a day** take `$surface-card-hover` on hover and the `focus-ring` on keyboard focus. Today is told by a `$text-primary` rule, the chosen day by its `$accent` fill, `$text-on-color` ink and weight, so neither rests on colour alone; outside and disabled days are muted.
+
+The calendar's sizes and fades are the `$day-picker-*` tokens in `_variables.scss`: the caption's 2.5rem, the steps' 2rem (`$control-height-compact`, as high as the month and year boxes), the room the caption keeps for them (4.5rem), the pickers' chevron box (1.25rem) and their sizer's end room (1.75rem), the days' 2.25rem, and the fade of a step past the allowed months and of a day that cannot be chosen, which is `$opacity-disabled` (0.55), as for any control that cannot be used. The chevrons are `$glyph-size`.
+
+## Stories
+
+`src/components/DateField/index.stories.tsx`, titled "Forms / Date Field": `States`, a grid of
+Default, Disabled, Invalid, Open (the calendar shown) and With Max (open, the days after the 24th
+faded and refused, and the next-month step faded at October). The workshop's Grimoire / Record Working story draws the field inside its dialog.

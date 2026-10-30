@@ -4335,7 +4335,7 @@ _Acceptance criteria:_
 
 See **MB.7**.
 
-**MB.123 — Design review: the grimoire** · 7h
+**MB.123 — Design review: the grimoire** · 11h
 
 _Story:_ As a coven member, I want building and reading a spell to feel crafted, so that the grimoire is a pleasure to use.
 
@@ -4351,18 +4351,20 @@ _Left by MB.115:_ The grimoire list builds on the admin section's pieces rather 
 
 _Acceptance criteria:_
 
-- The owner signs off the section's design, in both themes and at phone width, recorded as a comment on this issue
+- The owner signs off the section's design, in both themes and at phone width, recorded as a comment on this issue. The owner signs off per decision on a private sign-off page, and the decisions are recorded in [`design-decisions/mb.123-design-review-the-grimoire.md`](../design-decisions/mb.123-design-review-the-grimoire.md)
 - No page in the section scrolls sideways at 375px, and its body copy keeps to the reading measure
 - Contrast holds at 4.5:1 in both themes, and no raw hue or size is added outside `_variables.scss`
 - Every page in the section is axe clean with visible keyboard focus, and its e2e specs and stories pass
 - Accessibility: the grimoire list, `SpellCard`, `SpellBuilder` with its step editor, the Record a Working dialog and the recipe page pass an axe check in Playwright (`@axe-core/playwright`) in both themes. Each page also gets a keyboard-only and a screen-reader pass against WCAG 2.2 AA, and every failure found is fixed or filed as a task
 - UX, with research: the review is backed by published UX guidance for step reordering, the comparison panel, the warnings and the deduction preview (for example Nielsen Norman Group, the GOV.UK Design System, the WAI-ARIA Authoring Practices and Baymard). Each change it makes or rejects names its source, in Chicago form. Wikipedia is acceptable; academic or practitioner sources are preferred
-- Storybook and /design-sync: a separate agent, not the one doing the design review, updates every Storybook story that the review's changes affect, covering new states, changed props and removed variants (the stories follow the `States`-first convention). That same separate agent then runs `/design-sync`, so the Claude Design project matches, and every changed story grades `match` or `close`
+- Storybook and /design-sync: a separate agent, not the one doing the design review, updated every Storybook story that the review's changes affect, covering new states, changed props and removed variants (the stories follow the `States`-first convention), and the workshop build and check pass (`workshop:build`, `workshop:check`, 390 of 390 story loads clean). The owner runs `/design-sync` at the end, so the Claude Design project matches, and every changed story grades `match` or `close`
 - Each component's doc updates its Styling section, and its stories show the reviewed design
 - The recipe view's print layout is reviewed on paper or as a PDF as well as on screen
 - Reordering steps reads clearly by keyboard as well as by pointer
 - The deduction preview reads plainly, and a shortfall or a step not deducted is told apart without colour alone
 - The comparison panel reads without relying on colour alone
+
+**Amended 2026-10-30 by the review itself** ([`design-decisions/mb.123-design-review-the-grimoire.md`](../design-decisions/mb.123-design-review-the-grimoire.md), plan in [`design-decisions/mb.123-plan.md`](../design-decisions/mb.123-plan.md)): the review changed three rules. The destructive-controls rule in `.claude/rules/components.md` (Delete and Remove live in the edit dialog; a row's Remove or Revoke is drawn plain; red also marks the two high-risk controls, Impersonate and Pause Admin Changes). The page-head rule in `claude-docs/styling.md`, guarded by `tests/guards/page-heads.test.ts`. The stylelint token rules in `.stylelintrc.json`. It also added a non-blocking knip leg to CI. The estimate is now 11h. That figure is the wall-clock time of the agent run (a floor), not an estimate of human hours.
 
 **MB.124 — Design review: error, loading and empty states, and the whole site** · 7h
 
@@ -4376,7 +4378,7 @@ _Left by MB.116:_ `Notice` is the one way to show an error, a warning or a succe
 
 _Left by MB.115:_ `BusyButton` is the one busy state for a button. The `.data-table`, `.pager` and `.filter-row` primitives are on the Foundations story. Stacking order is still written as raw `z-index` values, one per component; a `$layers` map of them is this review's to make. Each admin table's first cell is still a `td`: making it a row header, `th scope="row"`, was held back from MB.115 because it changes what the tables' tests count as cells.
 
-_Left by MB.119:_ Floating panels open at three widths: the coven switcher at 12rem with its list at 15rem (`$switcher-min-width` and `$switcher-list-min-width` in `WorkspaceSwitcher/index.scss`), and the account menu at 13rem. Settling on one width for a floating panel is this review’s to decide. `ConfirmedAction` still lives inside `UserList/`. Moving it into its own directory, with its CSS split out and its own story and doc, is this review’s too. So is one shared row of confirm and safe buttons for `ConfirmedAction`'s inner `Answers`, the modal's `ConfirmQuestion` and its `DiscardQuestion`, which each draw their own today.
+_Left by MB.119:_ Floating panels open at three widths: the coven switcher at 12rem with its list at 15rem (`$switcher-min-width` and `$switcher-list-min-width` in `WorkspaceSwitcher/index.scss`), and the account menu at 13rem. Settling on one width for a floating panel is this review’s to decide. `ConfirmedAction` still lives inside `UserList/`. Moving it into its own directory, with its CSS split out and its own story and doc, is this review’s too. So is one shared row of confirm and safe buttons for `ConfirmedAction`'s inner `Answers`, the modal's `ConfirmQuestion` and its `DiscardQuestion`, which each draw their own today. That row also replaces the five hand-written confirms the grimoire review found, each a `Modal` with a bold-name question, a `BusyButton` and a quiet Cancel: `SpellRecipe/delete-spell.tsx`, `SpellWorkings/delete-working.tsx`, `IngredientEntry/delete-entry.tsx`, and Make It Ours and Remove from Cupboard in `IngredientEntry/cupboard-writes.tsx`; they become one `ConfirmDialog` beside `ConfirmQuestion` ([`design-decisions/mb.123-design-review-the-grimoire.md`](../design-decisions/mb.123-design-review-the-grimoire.md)).
 
 _Acceptance criteria:_
 

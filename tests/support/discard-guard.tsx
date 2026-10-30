@@ -78,8 +78,20 @@ export function expectAskingOver(field: HTMLElement, safe: HTMLElement): HTMLEle
   return question as HTMLElement;
 }
 
-/** The question answered: its safe answer gone, and the form live again. */
-export function expectAnswered(field: HTMLElement, safe: string): void {
-  expect(screen.queryByRole('button', { name: safe })).not.toBeInTheDocument();
+/**
+ * The live button named `name`: the question's own answer, where the inert form behind it has a button
+ * of the same name (a confirm's Cancel over the form's Cancel).
+ */
+export function answer(name: string): HTMLElement {
+  const live = screen
+    .getAllByRole('button', { name })
+    .filter((button) => button.closest('[inert]') === null);
+  expect(live).toHaveLength(1);
+  return live[0] as HTMLElement;
+}
+
+/** The question answered: the question `expectAskingOver` returned gone, and the form live again. */
+export function expectAnswered(field: HTMLElement, question: HTMLElement): void {
+  expect(question).not.toBeInTheDocument();
   expect(field.closest('[inert]')).toBeNull();
 }

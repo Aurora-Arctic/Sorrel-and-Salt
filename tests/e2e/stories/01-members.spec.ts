@@ -330,7 +330,7 @@ test.describe('the last owner', () => {
       // There is no confirm that would leave the coven ownerless.
       await expect(dialog.getByRole('button', { name: 'Leave Coven', exact: true })).toHaveCount(0);
       // The deletion is the other way out, its confirm taking the place once chosen.
-      await dialog.getByRole('radio', { name: /^Delete It/ }).check();
+      await dialog.getByRole('radio', { name: /^Delete Coven/ }).check();
       await expect(dialog.getByRole('button', { name: 'Delete Coven' })).toBeEnabled();
       await dialog.getByRole('radio', { name: /^Hand It/ }).check();
 

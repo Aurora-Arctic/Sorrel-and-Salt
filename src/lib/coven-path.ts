@@ -103,8 +103,8 @@ export function pathInCoven(
  * as it is an owner's alone and the address does not say who is asking.
  */
 const PARTS_OF_SECTION: Record<string, Omit<NavigationTarget, 'region'>> = {
-  ingredients: { shape: 'cards', title: true, filter: true },
-  grimoire: { shape: 'cards', title: true, filter: true, tabs: true },
+  ingredients: { shape: 'cards', title: true, filter: true, density: 'compact' },
+  grimoire: { shape: 'cards', title: true, filter: true, tabs: true, density: 'compact' },
   members: { shape: 'table', title: true, tabs: true },
   invitations: { shape: 'table', title: true, tabs: true },
 };
@@ -122,9 +122,6 @@ export function covenTarget(pathname: string): NavigationTarget {
     return { region: 'coven', shape: 'page', frame: 'with-nav', head: 'eyebrow' };
   if (slug && section === 'ingredients' && beneath)
     return { region: 'coven', shape: 'page', frame: 'entry', head: 'eyebrow' };
-  // The new-spell page is the spell builder, a form.
-  if (slug && section === 'grimoire' && beneath === 'new')
-    return { region: 'coven', shape: 'form' };
   // Drafts is the grimoire's second tab, its list too; anything else beneath it is a spell's own page.
   if (slug && section === 'grimoire' && beneath && beneath !== 'drafts')
     return { region: 'coven', shape: 'page' };

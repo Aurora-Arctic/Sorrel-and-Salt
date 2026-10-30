@@ -280,7 +280,7 @@ test(
       await card.getByRole('button', { name: /^More for Comfrey/ }).click();
       await page.getByRole('menuitem', { name: 'Edit Stock', exact: true }).click();
       const editor = stockEditor(card, 'Comfrey', 'Fixture Coven Fourteen Stock');
-      await expect(editor.dialog).toContainText('No stock yet');
+      await expect(editor.dialog).toContainText('There is no stock yet');
       await editor.add('Leaf');
       const leaf = editor.jar('Leaf');
       await leaf.quantity.fill('50');

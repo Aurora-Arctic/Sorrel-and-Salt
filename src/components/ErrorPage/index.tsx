@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import PageHeader from '../PageHeader';
 import type { ErrorPageProps } from './types';
 import './index.scss';
 
@@ -9,10 +10,7 @@ const ErrorPage = ({ title, reason, reference, children }: ErrorPageProps): Reac
   <main className="page-frame">
     <title>{title}</title>
     <div className="error-page">
-      <div className="header">
-        <h1 className="error-page__title">{title}</h1>
-        <p className="error-page__reason lede">{reason}</p>
-      </div>
+      <PageHeader title={title} lede={reason} />
       {reference && <p className="error-page__reference">Reference: {reference}</p>}
       <p className="error-page__way-on">{children}</p>
     </div>

@@ -13,6 +13,10 @@ without a page routed to it.
   beside `index.tsx`, and mail stories at `src/emails/<name>.stories.tsx`. The
   `stories` globs in `.storybook/main.ts` also pick up `.storybook/*.stories.tsx`,
   for workshop-only pages the app never imports.
+- **A component that renders nothing has no story.** `CovenSwitchTargets` is the
+  one: it only tells the coven switcher which covens a page also opens in, so a
+  story of it would be an empty frame, and the switcher's own story shows the
+  effect. Every other component under `src/components/` needs one.
 - Stories are CSF3 (Storybook's story file format): a default-exported `meta`
   with the title, and one named export per story. They carry no test ids, no
   snapshots and no assertions — behaviour is the test's job, and since MB.41 the
@@ -54,13 +58,15 @@ without a page routed to it.
      piece is drawn from.
   2. **A piece the app draws in one area goes under that area's group**, in the
      order a person meets them: **Pages** (a whole page with no area of its own:
-     Welcome, the invitation page; Not Authorized is a state of Error Page), **Sign In** (the panel, the
+     Welcome, the invitation page, Error Page, Not Authorized), **Sign In** (the panel, the
      sign-in methods and the provider mark), **Shell** (the bar and what sits
      in it: the account menu, the context row), **Account** (including
      `Account / Invitations Received`), **Coven** (including
      `Coven / Invitations Sent`), **Ingredients** (everything about the
      compendium and a coven's ingredients, in one flat group: cards, the list,
-     the form, the entry, the facets, the search) and **Admin**
+     the form, the entry, the facets, the search), **Grimoire** (everything
+     about a coven's spells: the card, the list, the builder, the preview and
+     the recipe, the workings) and **Admin**
      (`Admin / Invitations`, `Admin / Nav`, `Admin / User List`) and
      **Emails**. `Coven / Member List`, `Admin / Group List`,
      `Account / Name Form`.
@@ -215,7 +221,7 @@ The viewport is a Storybook global, like the theme, so a link can set both:
   (0,1,0), so the workshop drew `EmailForm`'s notice at body size with the
   paragraph margin, and `AdminNav`'s rows with the ◆ bullet the page never
   shows (MB.114).
-- **`navigation.tsx`** — two wrappers for the two stories that need more than the
+- **`navigation.tsx`** — three wrappers for the stories that need more than the
   framework's fixed answer, which put a different value in the same contexts
   Next's real hooks read. `WorkshopPathname` sets another address for
   `usePathname`, so AdminNav's stories show the current-page marker on People, and
@@ -225,6 +231,11 @@ The viewport is a Storybook global, like the theme, so a link can set both:
   once faded and holding the whole page inert (M10.33). The framework's
   `useSearchParams` answers an empty query, so the shell's Add Ingredient button,
   which opens its dialog on `?new` (M8.16), draws closed in a story.
+  `WorkshopSearch` is that query for a component whose open state is a search
+  parameter, such as Spell Preview's `?preview`: it follows the story's own
+  `history.pushState`, `replaceState` and Back as the router does, adds its
+  `initial` parameters to the frame's address, and puts the address back when it
+  unmounts. The Spell Preview and Spell Recipe stories draw inside it.
 - **`reopenable.tsx`** — `Reopenable`, what stands in for a modal's owner in a
   story. The app's owners close a modal by unmounting it, and a story has no
   owner. It renders its children while open, hands them a `close`, answers a
@@ -259,9 +270,34 @@ The viewport is a Storybook global, like the theme, so a link can set both:
   and its list's story offer the same data: `GROUP_NAMES` (four names per kind
   of group), fixed ids with `asOptions()` and `asSlugs()` to shape them for a
   picker or a filter, and two pending `INVITATIONS`.
+- **`grimoire-fixtures.ts`** — invented rows the grimoire's stories share, so the builder's
+  Category Match, the recipe and the cards draw the same categories in the same colours:
+  `GRIMOIRE_CATEGORIES` (fourteen categories in two invented groups), `CATEGORIES_ANSWER` (the
+  categories query's answer), `namedCategories()` and `cardCategories()` (named categories shaped
+  for a step or a card), `GROUP_COLORS` (each category's group colours by id), `BUILDER_STEPS`
+  (one spell's steps as the builder reads them: ingredient forms with a toxic one, an instruction
+  and a one-off), `RECIPE_STEPS` (the same spell as the recipe draws it), `WORKINGS` (a draft, a
+  private and a complete working), `RECORDER` (the member recording a working; these stories answer no member search) and `WORKING_STEPS` (the
+  ingredient steps a working's preview names).
+- **`grimoire-workings.tsx`** — the Workings section with the recipe page's own controls, as
+  the page passes them: `WorkingsSection` (Spell Workings with Record a Working, Complete Working
+  and Edit Working), `RecordButton`, and the fixture coven and spell ids. The Spell Workings and
+  Spell Recipe stories share it.
+- **`compendium-fixtures.ts`** — `NO_FILTER` and `NO_FACETS`: a compendium filter with
+  nothing chosen and facet counts with nothing in them, which the list and card stories start
+  from.
+- **`states-grid.tsx`** — `StatesGrid`, every data state of one small component side by side,
+  each under its name (rule 5). A state that needs a canvas of its own (a click, an open dialog, a
+  hanging request, a viewport) stays a story.
+- **`in-modal.tsx`** — `InModal`, a form drawn in the modal the admin pages open it in, with
+  Open Again once it is closed (`reopenable.tsx`).
 - **`press.ts`** — `press(name)` and `usePressOnMount(name)`, for a story that
   opens on a state a button press reaches, such as a Delete question over its
-  form.
+  form. `pressLast(name)` presses the last button of that name (a dialog's
+  confirm over a same-named button), `setInputValue(input, value)` types into a
+  field so React hears it, `submitForm(selector)` submits a form as Enter does,
+  and `useSteps(steps, gap)` runs a list of these once the story has mounted, a
+  short wait between each.
 - **`types.ts`** — the types the workshop's helpers share, kept apart from
   their components as the repo keeps types: `AdminTabbedFrameProps` and
   `ShellFrameProps`.
@@ -353,7 +389,7 @@ node scripts/review-screenshots.mjs --out .reports/mb.116-screenshots \
 
 A story whose component asks the server gets an answer from Mock Service Worker (MSW), a library that answers a request in the browser. `.storybook/mock-api.ts` holds the helpers; `preview.tsx` starts the worker with `mswLoader(startMockWorker)`, which also resets the handlers before each story.
 
-- **A story states its answers in `beforeEach: ({ msw }) => msw.use(...)`.** The helpers are `answerQuery` and `answerMutation` (typed by the generated document, matched by operation name), `answerOperations` (one function for a story with many lookups), `hangOperation` and `hangAllOperations` (a request that never answers, for a loading state), `hangAuth` and `refuseAuth` (the same for `/api/auth`), and `refusal({ message, code, fieldErrors })` (a refusal as the server sends it: HTTP 200, no data, one error with its code). Anything unanswered gets a 501.
+- **A story states its answers in `beforeEach: ({ msw }) => msw.use(...)`.** The helpers are `answerQuery` and `answerMutation` (typed by the generated document, matched by operation name), `answerOperations` (one function for a story with many lookups), `hangOperation` and `hangAllOperations` (a request that never answers, for a loading state), `hangAuth` and `refuseAuth` (the same for `/api/auth`), and `refusal({ message, code, fieldErrors, currentRevision })` (a refusal as the server sends it: HTTP 200, no data, one error with its code; `currentRevision` goes with `STALE_WRITE`, for a story that shows a conflict). Anything unanswered gets a 501.
 - **`beforeEach` runs once per load.** A story that picks its answer from an arg or a `state` control calls `useMockHandlers(handlers)` in its render instead; it swaps the handlers whenever they change.
 - **The prefix.** Staging serves the workshop under `/workshop/` with a CSP of `connect-src <host>/workshop/`, so a request to `/api/graphql` would be refused. `apiPath()` in `src/lib/graphql-client.ts` and `src/lib/auth-client.ts` puts `WORKSHOP_API_PREFIX` in front of the path; it is empty in the app and `/workshop` in the workshop. The worker file is served at `/workshop/mockServiceWorker.js`.
 - **A refused auth request is a failed request.** A GraphQL refusal logs nothing in the browser; an `/api/auth` refusal is a non-OK response and logs "Failed to load resource". A story that does this carries the tag `expects-failed-request`, which the every-story check reads from `index.json`.
@@ -554,7 +590,7 @@ The workshop's font plumbing substitutes, Vite-side, for what `next/font` +
 
 ## The `state` dropdown story
 
-A story with a `state` control (rule 5 above) draws a whole page or list, too big to sit beside the others. Its `state` arg is the node it draws: the `argTypes` mapping turns the chosen name into that node, so the story's type is `StoryObj<{ state?: ReactNode }>`. Story files do not repeat either fact.
+A story with a `state` control (rule 5 above) draws a whole page or list, too big to sit beside the others. Its `state` arg is the node it draws: the `argTypes` mapping turns the chosen name into that node, so the story's type is `StoryObj<{ state?: ReactNode }>`. Story files do not repeat either fact. A node keys nothing, so the frame's decorator keys the story by the chosen name (`context.unmappedArgs.state`): a new choice remounts it, and its state, its fake API handlers and its scripted presses start afresh, as they do when the state is opened by its address.
 
 ## Notes the `.storybook/` files cite
 

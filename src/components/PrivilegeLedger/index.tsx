@@ -3,7 +3,7 @@ import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
 import StackTable from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
-import { noMatchText } from '../../lib/text';
+import { emptyList, noMatchText } from '../../lib/text';
 import LedgerFilterForm from './filter';
 import { privilegeLabel } from './privileges';
 import type {
@@ -38,7 +38,7 @@ function nothingToShow({ privilege, query }: PrivilegeLedgerFilter): string {
     query && `“${query}”`,
     privilege && `the privilege ${privilegeLabel(privilege)}`,
   ].filter((filter): filter is string => Boolean(filter));
-  return noMatchText('privilege changes', filters, 'No privilege changes yet.');
+  return noMatchText('privilege changes', filters, emptyList('privilege changes'));
 }
 
 /** A time to the minute, in UTC and saying so, since the server renders it. */

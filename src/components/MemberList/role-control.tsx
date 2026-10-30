@@ -48,7 +48,7 @@ const RoleControl = ({
     <ConfirmedAction
       label={label}
       accessibleName={`${label} for ${name}`}
-      openClass="btn btn--small btn--quiet"
+      openClass="btn btn--quiet btn--small"
       confirmLabel={promoting ? 'Promote' : 'Demote'}
       title="Change Role"
       question={

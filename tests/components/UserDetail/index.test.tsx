@@ -188,6 +188,36 @@ describe('UserDetail', () => {
     expect(calls).toEqual([{ userId: BO.id }]);
   });
 
+  // The row offers no Revoke, so the modal is its one place (claude-docs/components/user-list.md).
+  it('revokes coven creation from the modal with a trimmed reason, warning of nothing even when unverified', async () => {
+    const calls: unknown[] = [];
+    mockGraphQLMutation('RevokeWorkspaceCreation', (variables) => {
+      calls.push(variables);
+      return { revokeWorkspaceCreation: { id: BO.id, canCreateWorkspace: false } };
+    });
+    renderDetail({ user: { ...BO, canCreateWorkspace: true, emailVerified: false } });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Revoke approval for Bo Fixturewort' }));
+    expect(screen.getAllByRole('dialog')).toHaveLength(1);
+    const revoke = screen.getByRole('button', { name: 'Revoke' });
+    expect(revoke).not.toHaveAccessibleDescription();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Reason' }), {
+      target: { value: '  Left the circle ' },
+    });
+    fireEvent.click(revoke);
+
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
+    expect(calls).toEqual([{ userId: BO.id, note: 'Left the circle' }]);
+  });
+
+  it('locks Revoke while admin changes are paused for this admin, saying why', () => {
+    renderDetail({ user: { ...BO, canCreateWorkspace: true }, changesPaused: true });
+
+    const revoke = screen.getByRole('button', { name: 'Revoke approval for Bo Fixturewort' });
+    expect(revoke).toHaveAttribute('aria-disabled', 'true');
+    expect(revoke).toHaveAccessibleDescription(/\S/);
+  });
+
   it('locks both controls while admin changes are paused for this admin', () => {
     renderDetail({ changesPaused: true });
 

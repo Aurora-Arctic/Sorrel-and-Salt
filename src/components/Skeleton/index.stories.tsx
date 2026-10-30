@@ -4,12 +4,12 @@ import Skeleton from '.';
 import SwapPanel from './swap-panel';
 
 // Render-only; the skeleton announces itself once, as a status, and the shapes
-// are hidden from assistive technology. Each story is one shape.
+// are hidden from assistive technology. Each state is one shape.
 const meta = {
   title: 'Feedback / Skeleton',
 } satisfies Meta;
 export default meta;
-type Story = StoryObj<{ state?: import('react').ReactNode }>;
+type Story = StoryObj<{ state?: ReactNode }>;
 
 const defaultNode = <Skeleton shape="table" />;
 
@@ -24,6 +24,9 @@ const formNode = <Skeleton shape="form" />;
 const pageNode = <Skeleton shape="page" />;
 
 const lineNode = <Skeleton shape="line" />;
+
+// Three bars, as Record a Working's completion draws one per ingredient step while it loads.
+const linesWithCountNode = <Skeleton shape="line" count={3} />;
 
 const tableWithTitleAndFilterNode = <Skeleton shape="table" title action filter />;
 
@@ -45,6 +48,13 @@ const fewRowsNode = <Skeleton shape="table" count={3} />;
 
 const manyCardsNode = <Skeleton shape="cards" count={8} />;
 
+// Compact cards, as the coven lists open at: an ancestor says `data-density="compact"`.
+const compactCardsNode = (
+  <div data-density="compact">
+    <Skeleton shape="cards" />
+  </div>
+);
+
 // What a panel shows while the next one loads: the skeleton in the panel's own place.
 const swapPendingNode = (
   <SwapPanel pending className="tabbed-page__panel" shape="table" filter>
@@ -62,6 +72,7 @@ const SKELETON_STATES: Record<string, ReactNode> = {
   Form: formNode,
   Page: pageNode,
   Line: lineNode,
+  'Lines With Count': linesWithCountNode,
   'Table With Title And Filter': tableWithTitleAndFilterNode,
   'Cards With Title And Filter': cardsWithTitleAndFilterNode,
   Contents: contentsNode,
@@ -73,6 +84,7 @@ const SKELETON_STATES: Record<string, ReactNode> = {
   'Contents With Eyebrow Head': contentsEyebrowNode,
   'Table With Three Rows': fewRowsNode,
   'Cards With Eight': manyCardsNode,
+  'Compact Cards': compactCardsNode,
   'Swap Panel Pending': swapPendingNode,
 };
 
@@ -81,5 +93,5 @@ export const States: Story = {
   argTypes: {
     state: { control: 'select', options: Object.keys(SKELETON_STATES), mapping: SKELETON_STATES },
   },
-  render: ({ state }) => <div key={String(state)}>{state}</div>,
+  render: ({ state }) => <div>{state}</div>,
 };

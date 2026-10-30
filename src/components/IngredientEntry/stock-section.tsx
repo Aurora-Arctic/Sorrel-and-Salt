@@ -63,7 +63,7 @@ export default function StockSection({
           )}
         </div>
         {/* The wrapper always renders, so the empty line sits in the text column too. */}
-        <div className="ingredient-entry__stock">
+        <div>
           {forms.length > 0 ? (
             <JarShelf
               forms={forms}

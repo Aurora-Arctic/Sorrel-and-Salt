@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import { isRosterProvider, SOCIAL_PROVIDERS } from '../../lib/social-providers';
 import ProviderMark from '../ProviderMark';
 import Hint from './hint';
-import { CheckIcon, CrossIcon } from './icons';
+import { CheckIcon, CrossIcon } from '../IconTip/icons';
 import type { MarkProps, ProviderLogoProps } from './types';
 import './index.scss';
 
@@ -23,7 +23,7 @@ function providerLabel(id: string): string {
  */
 export const ProviderLogo = ({ id }: ProviderLogoProps): ReactElement => {
   const label = providerLabel(id);
-  if (!isRosterProvider(id)) return <span className="user-list__provider-text">{label}</span>;
+  if (!isRosterProvider(id)) return <span>{label}</span>;
   return (
     <Hint className="user-list__hint" label={label}>
       <ProviderMark id={id} />
