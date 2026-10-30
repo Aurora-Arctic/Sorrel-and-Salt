@@ -103,8 +103,8 @@ export const signInFailures = pgTable('sign_in_failures', {
   passwordDisabled: boolean('password_disabled').default(false).notNull(),
 });
 
-// The `passkey` plugin's model, named `passkeys` by `usePlural`; the plugin is not registered yet. Its field `credentialID` is `credentialId`
-// here, and its `schema` option maps one to the other when the plugin is registered.
+// The `passkey` plugin's model, named `passkeys` by `usePlural`. Its field `credentialID` is `credentialId` here, and the
+// plugin's `schema` option in src/lib/auth.ts maps one to the other.
 export const passkeys = pgTable(
   'passkeys',
   {

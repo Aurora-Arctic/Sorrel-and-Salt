@@ -36,6 +36,15 @@ convention) and split across two schema files:
   `rateLimits` in `drizzleAdapter`'s `schema`, the key `usePlural` looks it
   up by. Better Auth asks for the model only because the storage is
   `'database'` (MB.76; ["Rate limiting"](rate-limiting.md)).
+- **`passkeys`**, in the same file (M16.6) — the `passkey` plugin's model:
+  `id`, `name`, `public_key` (the COSE public key, base64), `user_id`
+  referencing `users.id` with `onDelete: 'cascade'`, `credential_id`,
+  `counter`, `device_type`, `backed_up`, `transports`, `created_at` and
+  `aaguid`, indexed on `user_id` and on `credential_id`. The plugin names the
+  credential field `credentialID`; the column is `credentialId` and the
+  plugin's `schema` option in `src/lib/auth.ts` maps one to the other
+  (["Passkeys"](plugins.md)). The plugin alone writes it, through the
+  adapter, outside `withAudit`, so it carries no audit columns.
 - **`generateId: 'uuid'`** (`src/lib/auth.ts`'s `advanced.database` option)
   makes every primary key a Postgres `uuid` via `gen_random_uuid()`, not
   Better Auth's own default text id — matching `auditColumns`' `uuid`

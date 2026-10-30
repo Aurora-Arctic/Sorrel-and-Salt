@@ -375,6 +375,38 @@ cost of every e2e job. The browsers sit in `/ms-playwright`
 (`PLAYWRIGHT_BROWSERS_PATH`) rather than under `$HOME`, because a GitHub
 container job sets `HOME` to a directory the image never saw.
 
+#### Passkeys
+
+A browser offers WebAuthn only in a secure context, and the one plain-http
+host that counts as one is `localhost`. Every other spec reaches its slot
+server at `devcontainer:<port>` when the browser is remote, where
+`PublicKeyCredential` is undefined. So `tests/e2e/stories/73-passkeys.spec.ts`
+reaches its slot server at `localhost` in two ways:
+
+- **The browser.** The spec connects to the browser server with
+  `exposeNetwork: '<loopback>'`, which routes the remote browser's
+  `localhost` back to the runner, and overrides the `baseURL` fixture with
+  `serverUrl(slotPort(slot))`.
+- **The server.** The passkey plugin takes its relying party (rpID) and its
+  expected origin from the base URL, and a production build resolves its base
+  URL across the deployed hosts, falling back to `https://sorrelandsalt.com`.
+  So `baseURL()` in `src/lib/auth.ts` gives an e2e server the fixed
+  `http://localhost:<PORT>` that `next dev` uses, under
+  `plainSessionCookie()`: the same `E2E_PLAIN_SESSION_COOKIE` switch, which
+  does nothing wherever `VERCEL_ENV` is set, so no deploy takes it. A
+  `next start` left running from before this change keeps the old base URL;
+  stop it first.
+
+The passkey itself is held by Chromium's virtual authenticator, added
+through a CDP session (`WebAuthn.enable`, then
+`WebAuthn.addVirtualAuthenticator` with a resident-key, user-verifying
+internal authenticator that answers every prompt). The spec writes a
+`passkeys` row by SQL and gives the authenticator the matching private key
+with `WebAuthn.addCredential`, rpID `localhost`, so the sign-in is the
+browser's own ceremony against the server's own verification. CDP is
+Chromium's alone, so these stories do not run in the audit's WebKit and
+Firefox projects.
+
 #### The audit runs the suite in WebKit, Firefox and as a phone, on demand
 
 (M10.25). CI and `npm run e2e` stay Chromium alone, and the "phone" checks

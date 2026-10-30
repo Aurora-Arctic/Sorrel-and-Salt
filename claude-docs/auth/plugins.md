@@ -9,7 +9,8 @@ place. MB.74 weighed the whole roster against an OAuth-only, invite-gated site
 ([`design-decisions/mb.74-better-auth-plugins.md`](../design-decisions/mb.74-better-auth-plugins.md)).
 The owner then brought email and password, passkeys and two-factor into v1
 (Wave 16; [`design-decisions/m16.1-first-party-sign-in.md`](../design-decisions/m16.1-first-party-sign-in.md)),
-so the four rows marked Wave 16 are planned and not yet registered.
+so the rows still marked Wave 16 are planned and not yet registered. `passkey`
+is registered ("Passkeys", below).
 
 | Plugin or option                                                                                                                                                                    | Status                  | Why                                                                                                                                                                                |
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -21,7 +22,7 @@ so the four rows marked Wave 16 are planned and not yet registered.
 | `createAccessControl`                                                                                                                                                               | In use (M6.3)           | A helper, not a plugin: workspace permission statements                                                                                                                            |
 | `emailAndPassword`                                                                                                                                                                  | Wave 16 (M16.2, M16.3)  | Sign-in and sign-up by address and password, reset and change; `minPasswordLength` 15, `maxPasswordLength` 128, `requireEmailVerification` true. Policy: DESIGN.md §8, "Passwords" |
 | `haveIBeenPwned()`                                                                                                                                                                  | Wave 16 (M16.2)         | Refuses a breached password at sign-up, reset and change by sending only a five-character hash prefix to Have I Been Pwned; refuses while that service is unreachable              |
-| `passkey`, from `@better-auth/passkey`                                                                                                                                              | Wave 16 (M16.6, M16.7)  | The first-party credential with no password. Needs `better-auth` and `@better-auth/core` at ^1.7.10, met by 1.7.12; a `passkey` table; ships no rate rule                          |
+| `passkey`, from `@better-auth/passkey`                                                                                                                                              | In use (M16.6, M16.7)   | The first-party credential with no password. Needs `better-auth` and `@better-auth/core` at ^1.7.10, met by 1.7.12; a `passkey` table; ships no rate rule                          |
 | `twoFactor`                                                                                                                                                                         | Wave 16 (M16.9, M16.10) | An authenticator-app step for password sign-ins, offered not required; never challenges a provider or passkey sign-in. A `two_factors` table and `users.two_factor_enabled`        |
 | Magic link, email OTP                                                                                                                                                               | v2                      | Sign-in for someone with none of the four providers                                                                                                                                |
 | `@better-auth/stripe`                                                                                                                                                               | v2 (MB.79)              | Subscription billing; DESIGN.md §13 sets it against what the owner wants to charge, and a test-mode spike decides                                                                  |
@@ -52,3 +53,43 @@ because the two must agree. `SignInPanel` reads it through the client plugin
 (`components/sign-in-panel.md`, "Last used"). The server never reads it, and
 never names a provider for an address: that would tell a visitor the address
 has an account. The page can name one because the browser already knows it.
+
+### Passkeys (M16.7)
+
+`passkey` from `@better-auth/passkey` is registered in `src/lib/auth.ts` with
+`rpName: 'Sorrel & Salt'` and a `schema` option that maps its `credentialID`
+field to the `passkeys` table's `credentialId` column (["Tables"](tables.md)).
+The client half is `passkeyClient()` in `src/lib/auth-client.ts`, which adds
+`signIn.passkey` and the `passkey` actions.
+
+- **The relying party is the host.** No `rpID` is set, so the plugin takes
+  the hostname of the request's base URL. In production the base URL is
+  resolved per request across `sorrelandsalt.com`, `staging.sorrelandsalt.com`
+  and `hotfix-*.sorrelandsalt.com`, so a passkey made on one is bound to that
+  host: production's rpID is `sorrelandsalt.com`, staging's is
+  `staging.sorrelandsalt.com`. A passkey made on production is refused on
+  staging, because the authenticator signs over production's rpID and staging
+  expects its own (`tests/db/passkey-hosts.test.ts`).
+- **A ceremony is verified only from a page on the host it is posted to.**
+  WebAuthn lets a page on a subdomain ask for its parent domain's passkey, and
+  the plugin accepts any trusted origin, which includes every hotfix host.
+  A `hooks.before` check in `src/lib/auth.ts` (`pinPasskeyOrigin`) refuses
+  `/passkey/verify-authentication` and `/passkey/verify-registration` with
+  `PASSKEY_ORIGIN_MISMATCH` unless the request's `Origin` header is the base
+  URL's own origin. Without it, a page on a hotfix host could post a
+  production passkey's assertion to production and sign in there.
+- **A passkey finds its own account.** The plugin looks the stored row up by
+  the credential id the browser sends and verifies the signature with that
+  row's public key, so one account's passkey cannot sign in another, and a
+  removed passkey has no row and is refused with 401
+  (`tests/db/passkey-sign-in.test.ts`).
+- **It signs in and earns nothing else.** A passkey sign-in makes a session
+  like any other, and `lastLoginMethod` marks it `passkey`. It does not set
+  `canCreateWorkspace`, change the role or add a seat, and it cannot create
+  an account: a passkey is added only by an account that is already signed
+  in.
+- **Rate limit.** The plugin ships no rate rule, so `rateLimit.customRules`
+  sets `/passkey/*` to three per ten seconds (["Rate limiting"](rate-limiting.md)).
+
+The sign-in page's button and autofill are described in
+[`components/sign-in-panel.md`](../components/sign-in-panel.md), "Passkey".

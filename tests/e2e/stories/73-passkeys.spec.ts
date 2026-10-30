@@ -23,6 +23,9 @@ test.use({
   connectOptions: wsEndpoint ? { wsEndpoint, exposeNetwork: '<loopback>' } : undefined,
 });
 
+// The virtual authenticator is a CDP domain, which Chromium alone speaks.
+test.skip(({ browserName }) => browserName !== 'chromium', 'needs CDP');
+
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });

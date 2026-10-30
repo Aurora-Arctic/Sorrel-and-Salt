@@ -203,6 +203,35 @@ A failure before the redirect always says `GENERIC_SIGN_IN_ERROR`
 provider- or Better-Auth-internal and unreviewed, the same reasoning
 `signInErrorMessage()` applies to `error_description`.
 
+## Passkey
+
+Below the provider buttons, "Sign In with a Passkey" (`passkey-button.tsx`)
+asks the browser for a passkey saved for this site and signs in with the one
+chosen (`signIn.passkey()`, from the passkey client plugin;
+[`auth/plugins.md`](../auth/plugins.md), "Passkeys"). It is a `BusyButton`
+like the provider buttons, with the same busy state and its own click
+feedback. A cancelled prompt, a refused passkey or a dropped connection says
+`PASSKEY_SIGN_IN_ERROR` in a callout under the button and leaves the page
+where it was. A sign-in that succeeds leaves for `/sign-in` carrying `next`
+with a full navigation, so the server reads the new session cookie and sends
+it where any sign-in goes. It carries the "Last Used" badge when the
+`lastLoginMethod` cookie says `passkey`. It is always offered, configured
+providers or not, because a passkey needs no provider.
+
+**Autofill.** Where the browser can offer saved passkeys among a field's
+suggestions (WebAuthn conditional mediation), `usePasskeyAutofill`
+(`passkey-autofill.ts`) starts that ceremony as the page loads, and the
+passkey picked from the suggestions signs in. Conditional mediation is past
+the browser floor, so it is an enhancement behind
+`PublicKeyCredential.isConditionalMediationAvailable`, and the button is the
+fallback where that answers false or does not exist. The browser shows the
+suggestions only in an input whose `autocomplete` ends in `webauthn`, so
+the hook starts only when the page has a field marked
+`PASSKEY_AUTOCOMPLETE` (`username webauthn`). The panel has no such field of
+its own: the email field of the email-and-password sign-in carries it, and
+until that field is on the page the autofill does not start. An autofill that
+ends unpicked says nothing, since the visitor did not ask for it.
+
 ## Styling
 
 The page's `main` is the page frame, `.page-frame.page-frame--narrow`
