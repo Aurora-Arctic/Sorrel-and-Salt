@@ -62,4 +62,16 @@ test('an admin revokes a whole batch and its links are refused as withdrawn', as
   await signInAs(page, 'latecomer@admin-cards.test');
   await page.goto(link as string);
   await expect(page.getByText(/This invitation was withdrawn/)).toBeVisible();
+
+  // The refused open was recorded, so the Cards tab counts it and lists who tried and why.
+  await signInAs(page, 'cards-admin@admin-cards.test', ['discord'], 'admin');
+  await page.goto('/admin/cards');
+  const attempted = page
+    .getByRole('row')
+    .filter({ has: page.getByRole('button', { name: /^View Attempts/ }) });
+  await expect(attempted).toHaveCount(1);
+  await attempted.getByRole('button', { name: /^View Attempts/ }).click();
+  const attempts = page.getByRole('dialog', { name: 'Refused Opens' });
+  await expect(attempts.getByRole('row').filter({ hasText: 'Revoked' })).toHaveCount(1);
+  await assertNoAccessibilityViolations(page);
 });

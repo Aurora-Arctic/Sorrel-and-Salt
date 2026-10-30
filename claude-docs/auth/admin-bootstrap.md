@@ -689,5 +689,13 @@ only the token's hash. Accepting a card follows the invitation-token rules in CL
   account owns (read as an admin may read anyone's memberships). `cardArrivalsCsv` returns the same as
   CSV text (Account Name, Email, Accepted, Batch), with a leading apostrophe on any cell a spreadsheet
   would read as a formula. The Arrivals tab at `/admin/arrivals` offers it as a download.
+- **Refused opens.** When a signed-in, verified account opens a card link that is refused as revoked,
+  expired or already accepted by another account, the refused panel sends `recordCardAttempt(token)`
+  and the service writes one row per card, account and reason, counting repeats
+  ([`db/invitations.md`](../db/invitations.md), "Card attempts"). The mutation takes the token alone;
+  the account comes from the session. A signed-out visitor, an unverified account, an unknown token,
+  a pending card and the account that accepted the card record nothing, and the signed-out page reads
+  nothing of the link. `invitationCardAttempts(invitationId)` and `InvitationCard.attemptCount` are
+  admin only, like every card field.
 
 The component is described in [`components/admin-cards.md`](../components/admin-cards.md).

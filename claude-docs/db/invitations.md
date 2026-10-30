@@ -470,7 +470,10 @@ column is nullable and nothing would read it until the behaviour landed with it.
 - **Columns.** `invitation_id` and `user_id` are foreign keys, `reason` is `revoked`, `expired` or `accepted`, `attempts` is at least 1, and the table carries the full audit spread and the `updated_at` trigger.
 - **Why the reason is a CHECK.** A CHECK, like `invitations.kind`, rather than a Postgres enum: adding a reason is a one-line constraint change in an ordinary migration and needs no enum migration.
 - **Indexes.** Both are partial on `deleted_at IS NULL`: the unique index on `(invitation_id, user_id, reason)` is what makes a repeat one row, and the index on `invitation_id` serves the per-card count and list.
-- **Writes.** The table is marked `namedWrites`, so only a named repository writer may write it. The refused-open service that does so is a later task.
+- **Writes.** The table is marked `namedWrites`, so only a named repository writer may write it. `recordCardAttempt` (identity service `invitation-acceptance.ts`) is its one writer: an upsert on `(invitation_id, user_id, reason)` that adds 1 to `attempts` and sets `last_attempted_at` to now.
+- **What is recorded.** A signed-in account with a verified address opening a card link that is refused as `revoked`, `expired` or `accepted` by another account. The dead-link order of the acceptance service picks the one reason.
+- **What is not.** Nothing is written for no session, an unverified account, an unknown token, a token that is not a card, a card still pending, or the account that accepted the card itself. The service returns quietly for each, so a probe learns nothing.
+- **Reading.** `findCardAttemptPage` and `findCardAttemptCount` (site admin only) list one card's rows, most recent first; `findCardAttemptTotals` sums `attempts` per card for the Cards tab's count.
 
 ## Invitation acceptance details
 
