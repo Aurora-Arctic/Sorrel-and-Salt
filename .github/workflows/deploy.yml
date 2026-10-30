@@ -122,6 +122,8 @@ jobs:
             src/db/seed/sources.ts \
             src/db/seed/reference-rows.ts \
             src/db/seed/compendium.ts \
+            src/db/seed/demo-coven.ts \
+            src/db/bootstrap.ts \
             src/db/seed/compendium/ \
             compendium/ \
             src/db/seed/idempotent.ts \

@@ -9,6 +9,7 @@ import { categoryIdByName } from './categories';
 import { assertCompendiumValid, seedCompendiumContent } from './compendium';
 import { loadCompendium } from './compendium/load';
 import { ingredientSlug } from '../../lib/slugify';
+import { seedDemoCovenSeats } from './demo-coven';
 import { insertMissingWorkings } from './demo-workings';
 import {
   COMPENDIUM_INGREDIENTS,
@@ -1156,6 +1157,8 @@ export async function seedDemo(db: SeedDatabase): Promise<void> {
     // person exploring the app; standard stays the test fixture cast
     // (claude-docs/db/demo-scenario.md).
     await seedCompendiumContent(tx, CURATED_FILES);
+    // Reference data on every environment, so the scenario shows it too; `standard` leaves it out.
+    await seedDemoCovenSeats(tx);
 
     await insertMissingWorkspaceIngredients(tx);
     const own = await workspaceIngredientIds(tx);

@@ -2,19 +2,20 @@
 // The repo's one database CLI: reaching the database means importing the
 // client, and that exemption set is six files pinned by test (claude-docs/db/client-imports.md,
 // "Who may import the client"). `categories`, `forms`, `astrology`, `deities`,
-// `sources` and `compendium` are reference data, not scenarios — what migrate.yml seeds after migrating. Runs through `tsx`:
+// `sources`, `compendium` and `demo-coven` are reference data, not scenarios — what migrate.yml seeds after migrating. Runs through `tsx`:
 // Node's own type stripping resolves no extensionless relative import.
 //
 // Usage: npm run db:seed              # SEED_SCENARIO, default minimal
 //        npm run db:seed:categories | db:seed:forms | db:seed:astrology | db:seed:deities
 //        npm run db:seed:sources      # after the vocabularies it links
 //        npm run db:seed:compendium   # after the vocabularies and sources
+//        npm run db:seed:demo-coven   # after the compendium; seats every account
 //        npm run db:seed:<reference target> -- --dry-run    # run, then roll back: write nothing
 //        npm run db:seed:compendium -- [--dry-run] [--adopt] [--force]
 //          --adopt also lists the ADOPTED lines, as migrate.yml does
 //          --force lifts refusals 1 to 4
 //        npm run db:seed:reference -- [--dry-run] [--adopt] [--force]
-//          all six above in one transaction, which a dry run rolls back once
+//          all seven above in one transaction, which a dry run rolls back once
 //        npm run db:drop              # drop the schema, nothing else
 //        npm run db:reset             # drop, migrate, seed
 
@@ -28,6 +29,7 @@ import { seedAstrology } from '../src/db/seed/astrology.ts';
 import { seedForms } from '../src/db/seed/forms.ts';
 import { seedDeities } from '../src/db/seed/deities.ts';
 import { seedSources } from '../src/db/seed/sources.ts';
+import { seedDemoCoven } from '../src/db/seed/demo-coven.ts';
 import { seedCompendium } from '../src/db/seed/compendium.ts';
 import { seedReferenceData } from '../src/db/seed/reference-data.ts';
 import { formatReport, hasRefusals } from '../src/db/seed/compendium/report.ts';
@@ -44,6 +46,7 @@ const FLAGS: Record<string, readonly string[]> = {
   astrology: ['--dry-run'],
   deities: ['--dry-run'],
   sources: ['--dry-run'],
+  'demo-coven': ['--dry-run'],
   compendium: ['--dry-run', '--adopt', '--force'],
   reference: ['--dry-run', '--adopt', '--force'],
 };
@@ -80,6 +83,9 @@ try {
   } else if (target === 'sources') {
     await seedSources(db, { dryRun });
     done("the vocabularies' sources and their links");
+  } else if (target === 'demo-coven') {
+    await seedDemoCoven(db, { dryRun });
+    done('the demo coven and its seats');
   } else if (target === 'compendium' || target === 'reference') {
     // One line per entry the run updated, refused, left pending or
     // found retired, then the totals; a refused entry exits 1, which fails
@@ -95,7 +101,7 @@ try {
     if (force) console.log('Forced: refusals 1 to 4 were lifted for every marked entry.');
     const what =
       target === 'reference'
-        ? 'the five vocabularies, their sources and the compendium'
+        ? 'the five vocabularies, their sources, the compendium and the demo coven'
         : 'the compendium: its entries, their forms and their sources';
     console.log(
       dryRun ? `Dry run: decided ${what}, then rolled back; nothing written.` : `Seeded ${what}.`,
@@ -114,7 +120,7 @@ try {
     console.log(`Seeded the ${scenario} scenario.`);
   } else {
     throw new Error(
-      `Unknown seed target "${target}". Pass "categories", "forms", "astrology", "deities", "sources", "compendium", "reference" or "drop", or nothing to seed a scenario.`,
+      `Unknown seed target "${target}". Pass "categories", "forms", "astrology", "deities", "sources", "compendium", "demo-coven", "reference" or "drop", or nothing to seed a scenario.`,
     );
   }
 } finally {
