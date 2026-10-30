@@ -19,3 +19,13 @@
     opacity: 0.7;
   }
 }
+
+.admin-cards__minted {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
+  gap: 1rem;
+  padding: 0;
+  list-style: none;
+  max-height: 20rem;
+  overflow-y: auto;
+}

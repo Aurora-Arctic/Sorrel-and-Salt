@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { buildCardSheetsPdf } from '@/lib/invitation-cards';
 import AdminCards, { MintCards } from '@/components/AdminCards';
 import AdminArrivals from '@/components/AdminCards/arrivals';
 import type {
@@ -13,6 +14,12 @@ import { mockGraphQLMutation } from '../../support/msw/graphql';
 
 // The Cards and Arrivals tabs: render-only, so the page owns the read and this owns what an admin sees of it
 // and sends (claude-docs/components/admin-cards.md).
+
+vi.mock('@/lib/invitation-cards', () => ({
+  cardQrSvg: (link: string) =>
+    `<svg xmlns="http://www.w3.org/2000/svg"><title>${link}</title></svg>`,
+  buildCardSheetsPdf: vi.fn(async () => new Uint8Array([37, 80, 68, 70])),
+}));
 
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
@@ -115,6 +122,13 @@ describe('AdminCards', () => {
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]).toEqual({ count: 3, expiresAt: '2026-12-01T00:00:00.000Z' });
     expect(await within(dialog()).findByText(/cannot be shown again/)).toBeInTheDocument();
+    for (const n of [1, 2, 3]) {
+      expect(within(dialog()).getByRole('img', { name: `Code for Card ${n}` })).toBeInTheDocument();
+      expect(
+        within(dialog()).getByRole('button', { name: `Download Card ${n}` }),
+      ).toBeInTheDocument();
+    }
+    expect(within(dialog()).getByRole('button', { name: 'Download PDF' })).toBeEnabled();
   });
 
   it('revokes a batch after asking, naming the batch', async () => {
@@ -138,6 +152,38 @@ describe('AdminCards', () => {
     );
 
     await waitFor(() => expect(calls).toEqual([{ batchId: CARDS[0].batchId }]));
+  });
+
+  it('builds the batch PDF from one link per code when Download PDF is pressed', async () => {
+    mockGraphQLMutation<CreateInvitationCardsMutation, CreateInvitationCardsMutationVariables>(
+      'CreateInvitationCards',
+      (variables) => ({
+        createInvitationCards: {
+          batchId: 'b4444444-0000-4000-8000-000000000004',
+          expiresAt: variables.expiresAt,
+          tokens: ['ta', 'tb'],
+        },
+      }),
+    );
+    URL.createObjectURL = vi.fn(() => 'blob:x');
+    URL.revokeObjectURL = vi.fn();
+    render(<AdminCards cards={[]} minting />);
+    fireEvent.change(within(dialog()).getByLabelText(/Number of Cards/), {
+      target: { value: '2' },
+    });
+    fireEvent.change(within(dialog()).getByLabelText(/Expires On/), {
+      target: { value: '2026-12-01' },
+    });
+    fireEvent.click(mint());
+    fireEvent.click(await within(dialog()).findByRole('button', { name: 'Download PDF' }));
+
+    await waitFor(() => expect(buildCardSheetsPdf).toHaveBeenCalled());
+    const input = vi.mocked(buildCardSheetsPdf).mock.calls[0][0];
+    expect(input.links).toEqual(['http://localhost:3000/i/ta', 'http://localhost:3000/i/tb']);
+    expect(input.expiresAt).toEqual(new Date('2026-12-01T00:00:00.000Z'));
+    await waitFor(() =>
+      expect(within(dialog()).getByRole('button', { name: 'Download PDF' })).toBeEnabled(),
+    );
   });
 });
 
