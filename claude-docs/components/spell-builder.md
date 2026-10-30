@@ -568,6 +568,8 @@ visibility switch's place in the footer row and the Jar section (the owner's des
 - the Jar's detail fields (`.jar-details`) and every other layout rule are plain: the sections are single columns spaced by `CollapsibleSection`'s own gap, with a bare `section`'s margin zeroed under `.spell-builder` so the gap is not doubled; the Category Match chips are `CategoryChips`, unstyled here; every colour is a token,
   so both themes follow.
 
+Category Match's and In the Cupboard's rules are `panels.scss`, which `index.scss` takes with `@use` and the recipe page's side column imports on its own.
+
 The row's own look, the card, is in [`step-row.md`](step-row.md), "The card".
 
 ## Stories

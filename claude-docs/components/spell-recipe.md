@@ -101,8 +101,8 @@ body in the ingredient entry page's columns (`entry-section` and `entry-side`: t
 width and gutter, the column beneath the body on a phone), the article sized to the paragraphs'
 `$measure`, the gutter and the column, so the column starts one gutter after the text ends (the
 owner, 2026-10-29), and the head capped to the body's width, so the Edit pencil ends where the
-text does. `aside.tsx` (`SpellRecipeAside`, client) hands the panels their props and loads the
-builder's styles itself. The page reads them with `readRecipeAsideOf` (`[id]/recipe-aside.ts`):
+text does. `aside.tsx` (`SpellRecipeAside`, client) hands the panels their props and loads their
+stylesheet, `SpellBuilder/panels.scss`, itself. The page reads them with `readRecipeAsideOf` (`[id]/recipe-aside.ts`):
 each linked step's categories (`categoriesOf`, then `categoriesOfVariants`, the union rule) and
 the coven's jars (`stockOf`), one batch each, made into the builder's `SpellStepValue` through
 `jarRowsOf` (`[id]/recipe-supply.ts`, shared with the Quick Look's marks) and the builder's `jarOf`, with the assigned categories as the intended set and the group colours from
@@ -175,10 +175,11 @@ The Delete item in the three-dots menu (`more-menu.tsx`), with its dialog in `de
 
 ## Styling
 
-Tokens only, in three stylesheets:
+Tokens only, in four stylesheets:
 
 - **`SpellRecipe/index.scss`** lays the page out: the head (its back link in the shared `.back-bar` row, as the ingredient entry page's is), the body's boxes, the side column beside the text past a tablet's width and under it on a phone, Workings pinned to the text column's last row, and the Recipe Card look of each `StepRow` (a `$step-position-width` number column, right-aligned). It hides the Ingredients summary on screen and keeps each jump target clear of the shell's sticky bar.
 - **`src/scss/_recipe-columns.scss`** is the printed layout, shared with the Spell Preview pane: the Ingredients summary in a `$recipe-summary-width` column beside the steps, its heading and the Steps heading at `$recipe-heading-size`.
+- **`SpellBuilder/panels.scss`** styles the side column's two panels, Category Match and In the Cupboard, which the builder's `index.scss` also takes, so the page loads none of the builder's other rules.
 - **`src/scss/_print.scss`** is the paper: what print hides ("Print", above) and the white ground.
 
 ## Stories

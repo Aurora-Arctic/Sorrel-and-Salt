@@ -1,5 +1,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
+@use './panels';
 
 // The Shared switch in the footer's row, beside Mark Complete: the toggle first, its label to the
 // right and the short note under the label, a control's height in all so it stands level with the
@@ -357,11 +358,6 @@
   }
 }
 
-.spell-aside__empty {
-  margin: 0;
-  color: $text-muted;
-}
-
 // The builder's sections: space(6) under the fields of an open one, so the gap between
 // sections is plainly bigger than the space(5) between fields.
 // Here and not in the shared component, which IngredientForm also uses.
@@ -418,105 +414,5 @@
   .jar-shelf__lid,
   .jar-shelf__facet {
     stroke: $text-muted;
-  }
-}
-
-// In the Cupboard: the panel and its list of `JarLine`s.
-.spell-inventory {
-  @include stack(2);
-}
-
-.spell-inventory__list {
-  @include stack(2);
-  // Not a bulleted list: no ◆ marker from typography-base's `ul li::before`.
-  @include list-reset;
-}
-
-// The eye at seven eighths of its size, as the recipe's steps draw it, and the verdict raised above
-// the press's stretch, so each keeps its own press.
-.spell-inventory .jar-line__look .icon-tip__look {
-  @include icon-button($icon-size * 0.875, $glyph-size * 0.875);
-}
-
-.spell-inventory__verdict {
-  position: relative;
-  z-index: 1;
-  display: inline-flex;
-  flex: none;
-  align-items: center;
-  gap: space(1);
-  color: $text-muted;
-
-  &.is-low {
-    color: $stock-low-ink;
-  }
-
-  &.is-out {
-    color: $stock-out-ink;
-  }
-}
-
-// Units Differ's mark: a button only so the tip can be reached by focus; it does nothing.
-.spell-inventory__mark {
-  display: inline-flex;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: inherit;
-  // A button does not inherit the font; its own size (13.33px) would shrink the 1em icon inside.
-  font: inherit;
-  cursor: default;
-
-  // A bare mark, not a `.btn`, so it takes the shared ring here rather than the browser's own.
-  &:focus-visible {
-    @include focus-ring;
-  }
-}
-
-.spell-inventory__icon {
-  inline-size: 1em;
-  block-size: 1em;
-  flex: none;
-}
-
-@container spell-column (max-width: #{$narrow-column}) {
-  .spell-inventory .jar-line__name {
-    overflow: visible;
-    white-space: normal;
-  }
-}
-
-// Category Match: Carried, Missing and Extra, each a row of chips.
-.comparison-panel {
-  @include stack(2);
-
-  h4 {
-    margin: 0;
-  }
-}
-
-.comparison-panel__rows {
-  @include stack(2);
-  margin: 0;
-}
-
-.comparison-panel__row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: space(1) space(2);
-
-  // One quiet label: caption size, normal case, left-aligned, so the chips start on one edge.
-  dt {
-    flex: none;
-    inline-size: 5.5rem;
-    color: $text-muted;
-    font-size: type-size('caption');
-    font-weight: 500;
-  }
-
-  dd {
-    flex: 1 1 8rem;
-    margin: 0;
   }
 }
