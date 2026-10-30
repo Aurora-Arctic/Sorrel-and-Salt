@@ -112,7 +112,6 @@ const PanelCategories = ({
         held.makers.length
       }
       clearHref={path}
-      className="compendium-list__panel"
       // Shut any other way than Apply Filters, whose submit applies the text as well: the
       // categories held, under the text the page shows, and nothing at all when none changed.
       onApply={() => {
@@ -230,7 +229,7 @@ const GrimoireFilterRow = ({
       query={filter.query}
       shown={[]}
       clear={false}
-      className="compendium-list__row"
+      className="grimoire-list__row"
       searchHref={(query) => hrefFor(path, filter, held, query)}
       // A picked title opens the spell's Quick Look over the list as shown, as the card's eye
       // does: the page and the filter kept, the text typed and not searched not applied.

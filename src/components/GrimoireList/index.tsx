@@ -6,7 +6,6 @@ import { recipeHref } from './recipe-href';
 import EmptyGrimoire from './empty';
 import GrimoireFilter from './filter';
 import type { GrimoireListProps } from './types';
-import '../CompendiumList/index.scss';
 import './index.scss';
 
 // One tab (Spells or Drafts) of a coven's Grimoire list: the filter row, a card per spell and the pager,
