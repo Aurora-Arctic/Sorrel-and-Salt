@@ -92,3 +92,27 @@ for (const [name, size] of [
     expect(Math.abs(editBox.top - titleBox.top)).toBeLessThanOrEqual(1);
   });
 }
+
+// The facts strip gives the moon phase's cell the room its name and drawing need, so the phase never
+// wraps at desktop width.
+test('the moon phase sits on one line in the facts strip on a desktop', async ({ page }) => {
+  const coven = await seedCoven(page, 'Fixture Coven Moon', 'spell-moon.test', { A: 'owner' });
+  const { A } = coven.users;
+  const spellId = await withSql(async (sql) => {
+    const id = await insertSpell(sql, coven.id, 'Fixture Moon', 'workspace', A, 'complete');
+    await sql`update spells set jar_description = '4 oz jar', seal_wax_color = 'Black', moon_phase = 'Waxing Gibbous', day_of_week = 'Wednesday' where id = ${id}`;
+    return id;
+  });
+  await signInAgainAs(page, A);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+  // The text alone, not the drawing beside it: one rect top per line it sets.
+  const lines = await page.locator('.spell-recipe__facts dd').evaluateAll((cells) =>
+    cells.map((cell) => {
+      const range = document.createRange();
+      range.selectNodeContents(cell.lastChild!);
+      return new Set([...range.getClientRects()].map((rect) => Math.round(rect.top))).size;
+    }),
+  );
+  expect(lines).toEqual([1, 1, 1, 1]);
+});

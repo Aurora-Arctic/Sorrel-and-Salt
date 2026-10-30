@@ -297,7 +297,8 @@ $recipe-column: 48rem;
 
 .spell-recipe__facts {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  // Equal tracks, except that a track never shrinks below its widest unbreakable cell (the moon phase).
+  grid-template-columns: repeat(4, minmax(min-content, 1fr));
   gap: space(3);
   margin: 0;
 
@@ -320,6 +321,11 @@ $recipe-column: 48rem;
     align-items: center;
     margin: 0;
     overflow-wrap: anywhere;
+  }
+
+  // The phase name and its drawing stay on one line, and the track grows to hold them.
+  .spell-recipe__moon {
+    white-space: nowrap;
   }
 
   // The moon a third larger than its 1.25em line size, so the phase reads

@@ -102,7 +102,7 @@ const SpellRecipeBody = ({
               {facts.map(({ label, text }) => (
                 <div key={label}>
                   <dt>{label}</dt>
-                  <dd>
+                  <dd className={label === 'Moon Phase' ? 'spell-recipe__moon' : undefined}>
                     {/* The builder's drawing beside the phase; a phase outside its list draws nothing. */}
                     {label === 'Moon Phase' && <MoonPhaseIcon phase={text} />}
                     {text}
