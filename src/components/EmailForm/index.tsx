@@ -7,8 +7,7 @@ import { type FormEvent, type ReactElement, useEffect, useId, useState } from 'r
 import { graphql } from '../../gql';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
-import BusyButton from '../BusyButton';
-import { FieldShell, fieldDescription } from '../Field';
+import { FieldShell, FormActions, fieldDescription } from '../Field';
 import Notice from '../Notice';
 import type { EmailFormProps } from './types';
 import './index.scss';
@@ -178,18 +177,13 @@ const EmailForm = ({
             {...aria}
           />
         </FieldShell>
-        <div className="form__actions">
-          {/* Busy, saying so, from the press to the answer, as NameForm's save is. */}
-          <BusyButton
-            type="submit"
-            className="btn btn--solid"
-            disabled={nothingToDo || mutation.isPending || coolingDown}
-            busy={mutation.isPending}
-            busyLabel="Sending Confirmation"
-          >
-            {coolingDown ? `Send Again in ${secondsLeft}s` : 'Send Confirmation'}
-          </BusyButton>
-        </div>
+        <FormActions
+          noun="Confirmation"
+          label={coolingDown ? `Send Again in ${secondsLeft}s` : 'Send Confirmation'}
+          busyLabel="Sending Confirmation"
+          dirty={!nothingToDo && !coolingDown}
+          submitting={mutation.isPending}
+        />
       </form>
       {/* The way on for an account that can leave: an unverified one reaches
           no other page, so it is offered none. */}

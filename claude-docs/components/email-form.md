@@ -95,8 +95,9 @@ The submit is disabled only while the value, trimmed and lower-cased, equals
 `email` **and** `verified` is true — a verified, unchanged address has nothing
 to send — and while the mutation is pending. An unverified, unchanged address
 stays submittable: the service resends its link. While the send is in
-flight the button is busy, as NameForm's Save is: a `BusyButton`
-([`busy-button.md`](busy-button.md)), it carries `aria-busy` and the
+flight the button is busy, as NameForm's Save is: the row is the shared
+`FormActions` with its `label` and `busyLabel` given, so its button, a `BusyButton`
+([`busy-button.md`](busy-button.md)), carries `aria-busy` and the
 `.spinner` and reads "Sending Confirmation", the owner's rule for every
 form ([`styling.md`](../styling.md), "Buttons"). It is a real `disabled`
 attribute, not `aria-disabled` — unlike SignInPanel's roster, a submit with
