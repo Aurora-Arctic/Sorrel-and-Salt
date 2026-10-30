@@ -30,7 +30,7 @@ The slots a row takes from the page:
 - Delete Working, a bin opening a confirmation dialog through `ModalButton` (`delete-working.tsx`), drawn when the working's
   `canChange` is true: the viewer's role may delete and the viewer is the recorder. The same mutation and question (`useDeleteWorking`, `DeleteWorkingQuestion`) serve the bin in the Edit Working dialog; `editAction` receives `canChange` as its fourth argument for it.
 
-A draft row also lists what completing it would skip (`warnings`), as one line giving the count, such as "Completing does not affect inventory for 4 items", beside its Complete; the reasons stay in the Complete dialog's confirm step. The wording is `skipSummary` in `@/components/RecordWorking/warnings`. It carries no shortfalls. `readWorkingsOf` reads the preview once per page, only when a draft of the viewer's own is there, and gives the lines to the viewer's own drafts; they are the spell's stock as it stands now.
+A draft row also lists what completing it would skip (`warnings`), as one line giving the count, such as "Completing takes nothing from the jars for 4 ingredients.", beside its Complete; the reasons stay in the Complete dialog's confirm step. The wording is `skipSummary` in `@/components/RecordWorking/warnings`. It carries no shortfalls. `readWorkingsOf` reads the preview once per page, only when a draft of the viewer's own is there, and gives the lines to the viewer's own drafts; they are the spell's stock as it stands now.
 
 An empty list reads "This spell has not been worked yet."
 

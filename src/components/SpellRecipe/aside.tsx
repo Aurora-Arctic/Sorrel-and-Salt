@@ -12,7 +12,7 @@ import type { SpellRecipeAsideProps } from './types';
 // mounts the builder's dialog too, but the column loads them itself rather than by that chance.
 import '../SpellBuilder/index.scss';
 
-// The recipe page's side column of Category Match and In Coven Inventory, read-only here, beside the text past tablet width and beneath it on a phone; a client part
+// The recipe page's side column of Category Match and In the Cupboard, read-only here, beside the text past tablet width and beneath it on a phone; a client part
 // (claude-docs/components/spell-recipe.md, "The aside component").
 
 export default function SpellRecipeAside({

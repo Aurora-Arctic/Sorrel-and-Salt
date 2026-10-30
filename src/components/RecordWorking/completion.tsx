@@ -70,7 +70,7 @@ type PreviewRow = { step: WorkingStep; taken: Taken } | { step: WorkingStep; ski
 
 const amount = (quantity: number, unit: string) => withUnit(Number(quantity.toFixed(3)), unit);
 
-/** One line of the preview: the step's jar as the recipe page's In Coven Inventory draws it, then what the step takes from it. */
+/** One line of the preview: the step's jar as the recipe page's In the Cupboard panel draws it, then what the step takes from it. */
 function DeductionLine({ row, onSaved }: { row: PreviewRow; onSaved: () => void }): ReactElement {
   const { step } = row;
   const taken = 'taken' in row ? row.taken : null;
@@ -95,7 +95,7 @@ function DeductionLine({ row, onSaved }: { row: PreviewRow; onSaved: () => void 
         step.stock
           ? {
               ...step.stock,
-              // The same dialog and handler as a jar on the recipe page's In Coven Inventory.
+              // The same dialog and handler as a jar on the recipe page's In the Cupboard panel.
               ariaLabel: ['Edit Stock', step.stock.ingredientName, form && formLabel(form)]
                 .filter(Boolean)
                 .join(', '),

@@ -390,10 +390,10 @@ test(
     await expect(look.getByRole('button', { name: 'Out' })).toHaveCount(1);
     const emptyStep = look.getByRole('listitem').filter({ hasText: 'Fixture Emptywort' });
     await expect(emptyStep.getByRole('button', { name: 'Out' })).toBeVisible();
-    // The recipe page says the same in its In Coven Inventory.
+    // The recipe page says the same in its In the Cupboard panel.
     await look.getByRole('link', { name: 'See Full Recipe' }).click();
     await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}/grimoire/${spellId}$`));
-    const inventory = page.getByRole('region', { name: 'In Coven Inventory' });
+    const inventory = page.getByRole('region', { name: 'In the Cupboard' });
     await expect(inventory.getByRole('button', { name: 'Out' })).toHaveCount(1);
     const emptyLine = inventory.getByRole('listitem').filter({ hasText: 'Fixture Emptywort' });
     await expect(emptyLine.getByRole('button', { name: 'Out' })).toBeVisible();
@@ -872,7 +872,7 @@ test(
     }
     await expect(workings.getByRole('button', { name: 'Complete' })).toHaveCount(2);
     await expect(workings.getByRole('listitem').filter({ hasText: 'Waiting rite' })).toContainText(
-      /Completing does not affect inventory for \d+ items?/,
+      /Completing takes nothing from the jars for \d+ ingredients?\./,
     );
     const first = workings.getByRole('listitem').filter({ hasText: 'First brewing' });
     // The recorder is not listed again among the people who took part.

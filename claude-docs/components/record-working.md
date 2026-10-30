@@ -2,16 +2,16 @@
 
 `src/components/RecordWorking/` — recording a working of a complete spell from its recipe page, changing one, and completing one (M13.7).
 
-| File                  | What it holds                                                                                                                                               |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `index.tsx`           | `RecordWorkingButton` (default; the icon-only cauldron, `RecordButton` of IconTip), and re-exports of the dialog, `CompleteWorkingAction`, types            |
-| `dialog.tsx`          | `RecordWorkingDialog`: the `Modal`, apart from its button                                                                                                   |
-| `form.tsx`            | The form inside it                                                                                                                                          |
-| `completion.tsx`      | `WorkingCompletion`: the deduction preview and its Confirm                                                                                                  |
-| `complete-action.tsx` | `CompleteWorkingAction`: a Complete button opening `WorkingCompletion` in a dialog                                                                          |
-| `warnings.ts`         | `SKIP_REASON` and `skipSummary`: why a step takes nothing, and the one-line count of items completing leaves out of inventory, in words (no `'use client'`) |
-| `day.ts`              | `completeReason`: why Complete is off for a working dated after today, in words                                                                             |
-| `types.ts`            | The props                                                                                                                                                   |
+| File                  | What it holds                                                                                                                                                   |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `index.tsx`           | `RecordWorkingButton` (default; the icon-only cauldron, `RecordButton` of IconTip), and re-exports of the dialog, `CompleteWorkingAction`, types                |
+| `dialog.tsx`          | `RecordWorkingDialog`: the `Modal`, apart from its button                                                                                                       |
+| `form.tsx`            | The form inside it                                                                                                                                              |
+| `completion.tsx`      | `WorkingCompletion`: the deduction preview and its Confirm                                                                                                      |
+| `complete-action.tsx` | `CompleteWorkingAction`: a Complete button opening `WorkingCompletion` in a dialog                                                                              |
+| `warnings.ts`         | `SKIP_REASON` and `skipSummary`: why a step takes nothing, and the one-sentence count of ingredients completing takes nothing for, in words (no `'use client'`) |
+| `day.ts`              | `completeReason`: why Complete is off for a working dated after today, in words                                                                                 |
+| `types.ts`            | The props                                                                                                                                                       |
 
 ## Recording and editing
 
@@ -44,7 +44,7 @@ With `working` and a `deleteWorking` prop (`{ name, remove }`), the form also dr
 ## Completing a working
 
 `WorkingCompletion` reads `workingDeductionPreview` afresh each time it opens, drawing a `Skeleton shape="line"`, a line for each ingredient step, until it arrives, and lists the spell's
-ingredient steps in order, one line each, as the jar the recipe page's In Coven Inventory draws, both through `JarLine`
+ingredient steps in order, one line each, as the jar the recipe page's In the Cupboard panel draws, both through `JarLine`
 ([`jar-line.md`](jar-line.md): the drawing, the `jar-shelf__jar--low|out|empty` paint, the press, the shake and the growing name) beside the step's name (no step number), and these words:
 
 - A take: "takes X · have Y · left Z", all in the jar's unit, with "short by N" in the warning colour
@@ -58,7 +58,7 @@ ingredient steps in order, one line each, as the jar the recipe page's In Coven 
 - Any other skip (units differ, no amount, jar not measured): the reason and "takes nothing", over a
   steady jar with no level, since the preview carries no jar quantity for a line that takes nothing.
 
-A step that carries `stock` (the same `StockDialogProps` the In Coven Inventory line gets, so only
+A step that carries `stock` (the same `StockDialogProps` the In the Cupboard panel's line gets, so only
 for a role that may edit stock, and never for a deleted ingredient or form) wraps its name and jar in a
 `StockJarButton`, which opens Edit Stock as it does on the recipe page. Its `onSaved` then reads the
 preview again, so have, left and short by are redrawn before Confirm. The stock dialog is a second

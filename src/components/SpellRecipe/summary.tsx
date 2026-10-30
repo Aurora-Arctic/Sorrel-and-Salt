@@ -6,7 +6,7 @@ import { SUMMARY_TITLE_ID } from './sections';
 import type { IngredientRecipeStep, SpellRecipeSummaryProps } from './types';
 
 // The Ingredients summary: one line per form, at its first step's place, with the total the steps
-// need (`needOf`, as In Coven Inventory adds them), to gather from before starting. Drawn for
+// need (`needOf`, as the In the Cupboard panel adds them), to gather from before starting. Drawn for
 // print and the Preview pane (`index.scss` hides it on screen, where the side column holds the same): stock marks
 // and buttons are left out. A formal name shows where two ingredients share a label, as in the steps.
 

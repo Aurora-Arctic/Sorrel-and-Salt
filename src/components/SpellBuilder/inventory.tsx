@@ -11,7 +11,7 @@ import type { SpellStepValue } from './steps/types';
 import { verdictOf, type VerdictKind, VerdictMark } from './verdict-mark';
 import { isInstruction, stepNameOf } from './steps/values';
 
-// In Coven Inventory: one line per form, at its first step's place, setting `needOf` against the jar's `supplyOf`, with a `VerdictMark` and `doorsOf` doors; used by the recipe page alone
+// In the Cupboard: one line per form, at its first step's place, setting `needOf` against the jar's `supplyOf`, with a `VerdictMark` and `doorsOf` doors; used by the recipe page alone
 // (claude-docs/components/spell-recipe.md, "The side column" and "The inventory panel").
 
 /** What a line opens, where the page offers it: the Quick Look eye, and the Edit Stock dialog. */
@@ -112,7 +112,7 @@ export function InCovenInventory({
   );
   return (
     <section id={id} className="spell-inventory" aria-labelledby="spell-inventory-heading">
-      <h2 id="spell-inventory-heading">In Coven Inventory</h2>
+      <h2 id="spell-inventory-heading">In the Cupboard</h2>
       {lines.length === 0 ? (
         <p className="spell-aside__empty">Nothing in the jar yet.</p>
       ) : (

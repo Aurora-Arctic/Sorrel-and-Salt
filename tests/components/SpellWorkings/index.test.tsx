@@ -121,15 +121,15 @@ describe('SpellWorkings', () => {
       working({
         id: 'w1',
         status: 'draft',
-        warnings: ['Completing does not affect inventory for 2 items'],
+        warnings: ['Completing takes nothing from the jars for 2 ingredients.'],
       }),
-      working({ id: 'w2', warnings: ['Completing does not affect inventory for 1 item'] }),
+      working({ id: 'w2', warnings: ['Completing takes nothing from the jars for 1 ingredient.'] }),
     ]);
     expect(
-      within(rows()[0]!).getByText('Completing does not affect inventory for 2 items'),
+      within(rows()[0]!).getByText('Completing takes nothing from the jars for 2 ingredients.'),
     ).toBeVisible();
     expect(
-      screen.queryByText(/Completing does not affect inventory for 1 item/),
+      screen.queryByText(/Completing takes nothing from the jars for 1 ingredient\./),
     ).not.toBeInTheDocument();
   });
 

@@ -210,7 +210,7 @@ for (const [name, size] of [
     await expect(nav.getByRole('link')).toHaveText(
       name === 'desktop'
         ? ['Steps', 'Workings']
-        : ['Steps', 'Category Match', 'In Coven Inventory', 'Workings'],
+        : ['Steps', 'Category Match', 'In the Cupboard', 'Workings'],
     );
     // The group label and its list go with the links on a desktop, and stand over them below it.
     await expect(nav.getByText('The Jar', { exact: true })).toBeVisible({

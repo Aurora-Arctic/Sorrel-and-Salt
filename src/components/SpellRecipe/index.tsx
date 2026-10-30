@@ -50,7 +50,7 @@ const SpellRecipe = ({
           },
           {
             href: `#${INVENTORY_ID}` as const,
-            label: 'In Coven Inventory',
+            label: 'In the Cupboard',
             group: 'The Jar',
             narrowOnly: true,
           },

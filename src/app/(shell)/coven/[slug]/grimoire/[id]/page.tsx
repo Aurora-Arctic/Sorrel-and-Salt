@@ -60,7 +60,7 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
   const { workspace, membership, session, spell } = await spellOf(slug, id);
   const recipePath = `/coven/${workspace.slug}/grimoire/${spell.id}` as Route;
   const recipe = await readRecipeOf(session, spell, recipePath);
-  // The side column: the builder's In Coven Inventory and Category Match on the saved spell, for
+  // The side column: the builder's In the Cupboard panel and Category Match on the saved spell, for
   // the page and not the Quick Look modal.
   const aside = await readRecipeAsideOf(
     session,

@@ -181,14 +181,14 @@ describe('the spell recipe page', () => {
     );
   });
 
-  it('draws In Coven Inventory and Category Match beside the recipe, read for this coven (the owner, 2026-10-29)', async () => {
+  it('draws In the Cupboard and Category Match beside the recipe, read for this coven (the owner, 2026-10-29)', async () => {
     categoriesOf.mockResolvedValueOnce([[{ id: 'cat-1', name: 'Testwarding' }]]);
     stockOf.mockResolvedValueOnce([
       [{ variantId: 'v-1', unit: 'tsp', quantityOnHand: '1', lowStockThreshold: null }],
     ]);
     await draw();
     const aside = screen.getByRole('complementary');
-    const inventory = within(aside).getByRole('region', { name: 'In Coven Inventory' });
+    const inventory = within(aside).getByRole('region', { name: 'In the Cupboard' });
     expect(within(inventory).getByText('Testwort (Dried Leaf)')).toBeInTheDocument();
     expect(within(inventory).getByText('need 2 tsp · have 1 tsp')).toBeInTheDocument();
     expect(within(inventory).getByRole('button', { name: 'Not Enough' })).toBeInTheDocument();

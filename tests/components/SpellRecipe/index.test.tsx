@@ -338,7 +338,7 @@ describe('SpellRecipe', () => {
       expect(linksOf().map((link) => link.textContent)).toEqual([
         'Steps',
         'Category Match',
-        'In Coven Inventory',
+        'In the Cupboard',
         'Workings',
       ]);
       // The two jar links are nested under one group label, and the group is narrow-only whole.

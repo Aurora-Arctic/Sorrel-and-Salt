@@ -47,7 +47,7 @@ export interface IngredientRecipeStep {
   /** The ingredient's and the laid form's safety, for the Toxic and Caution marks; null for a one-off. */
   safety: Pick<SafetyMarkProps, 'toxic' | 'safetyNotes' | 'variants'> | null;
   /**
-   * The coven’s stock verdict on the step, as In Coven Inventory gives it: drawn in the row only
+   * The coven’s stock verdict on the step, as the In the Cupboard panel gives it: drawn in the row only
    * where the recipe has no side column (the Quick Look modal). Left out on the page.
    */
   supply?: VerdictKind | null;
@@ -94,7 +94,7 @@ export interface SpellRecipeProps {
 }
 
 /**
- * An In Coven Inventory line's doors on the recipe page: the
+ * A line's doors on the recipe page: the
  * Quick Look eye beside the name, and Edit Stock behind the jar and the name, each null where
  * there is nothing to open (the ingredient deleted since; a role that may not update stock).
  */
