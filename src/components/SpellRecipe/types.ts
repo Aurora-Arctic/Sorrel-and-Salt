@@ -131,6 +131,15 @@ export type SpellRecipeBodyProps = Pick<
   | 'dayOfWeek'
 >;
 
+/** The level of the recipe's Steps and Ingredients headings: 2 under the page's h1, 3 under a dialog's or pane's h2. */
+export type RecipeHeadingLevel = 2 | 3;
+
+export interface SpellRecipeSummaryProps {
+  steps: readonly RecipeStep[];
+  /** The Ingredients heading's level, one below the heading it sits under. Defaults to 2. */
+  level?: RecipeHeadingLevel;
+}
+
 /** The spell a Quick Look modal is open on; the body arrives as the page's rendered children. */
 export interface SpellLookOpened {
   /** The spell's title; a draft may have none. */

@@ -184,7 +184,8 @@
 .spell-recipe__instructions {
   display: contents;
 
-  > h2 {
+  // An h3 where the body sits under a dialog's or pane's h2.
+  > :is(h2, h3) {
     @include visually-hidden;
   }
 }

@@ -96,7 +96,7 @@
 
   // The two headings alike and level, each a step over its list. The Steps heading is drawn here,
   // taking back the screen's visually hidden box.
-  .spell-recipe__instructions > h2 {
+  .spell-recipe__instructions > :is(h2, h3) {
     position: static;
     width: auto;
     height: auto;
@@ -117,7 +117,7 @@
     // The global section margin would drop the heading below the first step.
     margin: 0;
 
-    h2 {
+    :is(h2, h3) {
       margin: 0;
       font-size: 1.1em;
     }

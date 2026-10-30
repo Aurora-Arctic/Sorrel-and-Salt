@@ -3,7 +3,7 @@ import type { Unit } from '@/modules/ingredients/schema/units';
 import { needOf } from '../SpellBuilder/steps/supply';
 import { labelOf } from './body';
 import { SUMMARY_TITLE_ID } from './sections';
-import type { IngredientRecipeStep, RecipeStep } from './types';
+import type { IngredientRecipeStep, SpellRecipeSummaryProps } from './types';
 
 // The Ingredients summary: one line per form, at its first step's place, with the total the steps
 // need (`needOf`, as In Coven Inventory adds them), to gather from before starting. Drawn for
@@ -16,7 +16,8 @@ const plain = (quantity: string | null): string =>
     ? (quantity ?? '')
     : String(Number(quantity));
 
-const SpellRecipeSummary = ({ steps }: { steps: readonly RecipeStep[] }): ReactElement | null => {
+const SpellRecipeSummary = ({ steps, level = 2 }: SpellRecipeSummaryProps): ReactElement | null => {
+  const Heading = level === 3 ? 'h3' : 'h2';
   const laid = steps.filter((step): step is IngredientRecipeStep => step.kind === 'ingredient');
   const lines = laid.filter(
     (step, index) =>
@@ -25,7 +26,7 @@ const SpellRecipeSummary = ({ steps }: { steps: readonly RecipeStep[] }): ReactE
   if (lines.length === 0) return null;
   return (
     <section className="spell-recipe__summary">
-      <h2 id={SUMMARY_TITLE_ID}>Ingredients</h2>
+      <Heading id={SUMMARY_TITLE_ID}>Ingredients</Heading>
       <ul aria-labelledby={SUMMARY_TITLE_ID}>
         {lines.map((step) => {
           const same =
