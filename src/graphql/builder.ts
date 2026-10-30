@@ -48,8 +48,9 @@ export function createBuilder() {
     scopeAuth: {
       authScopes: ({ session }) => ({
         signedIn: session !== null,
-        admin: session?.role === 'admin',
-        curator: session !== null && curates(session.role),
+        // An unverified account holds neither site role here, as `assertSiteAdmin` and `assertCurator` refuse it too.
+        admin: session?.role === 'admin' && !session.emailUnverified,
+        curator: session !== null && !session.emailUnverified && curates(session.role),
         self: (userId) => session?.userId === userId,
       }),
       // A service's own refusal type, so the transport maps one shape
