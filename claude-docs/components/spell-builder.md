@@ -464,7 +464,7 @@ once each and sorted by name.
 - **Carried** is each intended category the jar carries; **Missing** each assigned category nothing
   in the jar carries; **Extra** each category the jar carries that was not assigned. The row is its chips and nothing
   else: no line, tip or other place names the ingredients that bring an extra category (the owner's
-  call, 2026-10-28).
+  call, 2026-10-28). The Extra row has no bound, so it draws its first eight chips and folds the rest into one +N chip, `CategoryChips`' own (`limit={EXTRA_CHIP_LIMIT}`, 8; the owner, 2026-10-30): the +N opens the panel of the remaining chips on hover, focus or tap, as it does on the ingredient card. Carried and Missing keep every chip, since each is bounded by the spell's assigned categories. The panel is one component, so the builder, the spell page's side column and the Quick Look all fold alike. `tests/components/SpellBuilder/comparison-panel.test.tsx` proves eight chips and a +N at nine, and no +N at eight.
   The words carry the difference; the chips are coloured by group, as they are everywhere. On 2026-10-29 the owner chose the group colours over the second design review's finding 6a (neutral chips), so the review is not current on this point. The review's spacing stays: the chips are the compact size (`CategoryChips` with `compact`, which applies `chip($size: compact)`: overline text, 0.4375rem side padding), the row labels are the 5.5rem caption column, and rows are `space(2)` apart.
 - With none of the three, it reads "Intent and ingredients match." With no category assigned the
   panel does not list every ingredient as an extra: it asks for categories first. With nothing
