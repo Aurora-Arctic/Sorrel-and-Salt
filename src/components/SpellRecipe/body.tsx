@@ -9,6 +9,7 @@ import { SafetyMark } from '../SafetyNote';
 import { formLabel } from '../../modules/ingredients/validation/form-label';
 import { UNTITLED_SPELL } from '../SpellCard';
 import { VerdictMark } from '../SpellBuilder/verdict-mark';
+import { STEPS_ID } from './sections';
 import type { IngredientRecipeStep, RecipeStep, SpellRecipeBodyProps } from './types';
 import './index.scss';
 
@@ -116,7 +117,7 @@ const SpellRecipeBody = ({
         {steps.length === 0 ? (
           <p className="meta">This spell has no steps yet.</p>
         ) : (
-          <ol className="spell-recipe__steps" aria-label="Steps">
+          <ol id={STEPS_ID} className="spell-recipe__steps" aria-label="Steps">
             {steps.map((step: RecipeStep, i) =>
               step.kind === 'instruction' ? (
                 <StepRow

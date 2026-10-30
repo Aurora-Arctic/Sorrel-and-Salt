@@ -375,3 +375,41 @@ $recipe-column: 48rem;
 .modal-dialog__heading:has(.spell-look-actions) {
   padding-block-start: space(3);
 }
+
+// The jump menu (PageNav) stands in a sticky column left of the page from a phone's width up, on the
+// ingredient entry page's breakpoint, offset and column width, and stacks above the sections below
+// it. Screen only: print hides the menu and keeps its single column.
+$-nav-column: calc(#{space(8)} * 3);
+
+@media screen and (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+  .spell-recipe.spell-recipe--with-nav {
+    display: grid;
+    grid-template-columns: $-nav-column minmax(0, 1fr);
+    align-content: start;
+    column-gap: 0;
+    max-width: calc(#{$recipe-column} + #{$-nav-column});
+
+    > :not(.page-nav) {
+      grid-column: 2;
+    }
+
+    > .page-nav {
+      position: sticky;
+      top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
+      grid-column: 1;
+      align-self: start;
+    }
+
+    &.spell-recipe--with-aside {
+      max-width: calc(#{$measure} + #{space(8)} + #{$side-column} + #{$-nav-column});
+    }
+  }
+}
+
+// A jump from the menu lands clear of the shell's sticky bar, as the entry page's sections do.
+.spell-recipe .spell-recipe__steps,
+.spell-recipe .spell-workings,
+.spell-recipe .comparison-panel,
+.spell-recipe .spell-inventory {
+  scroll-margin-top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
+}

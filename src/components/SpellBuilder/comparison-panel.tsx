@@ -25,6 +25,8 @@ export interface ComparisonPanelProps {
   groups: ReadonlyMap<string, GroupColors>;
   /** The heading's level: h5 under the builder's Jar heading, h2 on the recipe page. */
   heading?: 'h2' | 'h5';
+  /** The section's id, for a jump link; the recipe page gives one. */
+  id?: string;
 }
 
 // The chips are the compact size, the one the admin Compendium table's Categories column uses.
@@ -84,6 +86,7 @@ export function ComparisonPanel({
   steps,
   groups,
   heading: Heading = 'h5',
+  id,
 }: ComparisonPanelProps): ReactElement {
   const headingId = useId();
   const intendedIds = intended.map(({ id }) => id);
@@ -126,7 +129,7 @@ export function ComparisonPanel({
   }
 
   return (
-    <section className="comparison-panel" aria-labelledby={headingId}>
+    <section id={id} className="comparison-panel" aria-labelledby={headingId}>
       <Heading id={headingId}>Category Match</Heading>
       {body}
     </section>

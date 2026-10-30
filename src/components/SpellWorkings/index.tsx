@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { WORKINGS_ID } from '../SpellRecipe/sections';
 import DeleteWorkingAction from './delete-working';
 import type { SpellWorkingsProps, WorkingView } from './types';
 import './index.scss';
@@ -81,7 +82,7 @@ const SpellWorkings = ({
   completeAction,
   editAction,
 }: SpellWorkingsProps): ReactElement => (
-  <section className="spell-workings" aria-labelledby="spell-workings-title">
+  <section id={WORKINGS_ID} className="spell-workings" aria-labelledby="spell-workings-title">
     <h2 id="spell-workings-title">Workings</h2>
     {workings.length === 0 ? (
       <p className="meta">This spell has not been worked yet.</p>

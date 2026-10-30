@@ -153,3 +153,49 @@ test('the badges of a draft and a complete working start at the same place on a 
   await expect(rows.nth(1).locator('.badge')).toHaveCount(1);
   expect(Math.abs(draft! - complete!)).toBeLessThanOrEqual(1);
 });
+
+for (const [name, size] of [
+  ['desktop', { width: 1280, height: 900 }],
+  ['phone', { width: 390, height: 844 }],
+] as const) {
+  test(`the jump menu stands beside the page and jumps to a section on a ${name}`, async ({
+    page,
+  }) => {
+    const coven = await seedCoven(page, `Fixture Nav ${name}`, `spell-nav-${name}.test`, {
+      A: 'owner',
+    });
+    const { A } = coven.users;
+    const spellId = await withSql(async (sql) => {
+      const held = await compendiumVariant(sql, "Cat's Claw", 'Bark', 'Uncaria tomentosa');
+      const id = await insertSpell(sql, coven.id, 'Fixture Nav', 'workspace', A, 'complete');
+      await insertStep(sql, id, held, { quantity: 2, unit: 'g', position: 0 }, A);
+      await insertWorking(sql, id, A, { workedOn: '2026-03-04' });
+      return id;
+    });
+    await signInAgainAs(page, A);
+    await page.setViewportSize(size);
+    await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+
+    const nav = page.getByRole('navigation', { name: 'On This Page' });
+    await expect(nav.getByRole('link')).toHaveText([
+      'Steps',
+      'Workings',
+      'Category Match',
+      'In Coven Inventory',
+    ]);
+    if (name === 'desktop') {
+      // Left of the body, not above it.
+      const navBox = await nav.evaluate((el) => el.getBoundingClientRect().toJSON());
+      const stepsBox = await page
+        .getByRole('list', { name: 'Steps' })
+        .evaluate((el) => el.getBoundingClientRect().toJSON());
+      expect(navBox.right).toBeLessThanOrEqual(stepsBox.left + 1);
+    }
+    await nav.getByRole('link', { name: 'Workings' }).click();
+    await expect(page).toHaveURL(/#spell-workings$/);
+    await expect(page.getByRole('heading', { name: 'Workings' })).toBeInViewport();
+
+    await page.emulateMedia({ media: 'print' });
+    await expect(nav).toBeHidden();
+  });
+}
