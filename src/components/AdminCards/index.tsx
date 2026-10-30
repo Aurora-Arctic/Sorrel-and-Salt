@@ -74,7 +74,7 @@ const AdminCards = ({
               </span>
               <ConfirmedAction
                 label="Revoke Batch"
-                accessibleName={`Revoke every pending card in batch ${batchName(batch.batchId)}`}
+                accessibleName={`Revoke Batch ${batchName(batch.batchId)}`}
                 openClass="btn btn--small btn--destructive"
                 title="Revoke Batch"
                 question={

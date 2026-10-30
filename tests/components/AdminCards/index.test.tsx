@@ -132,9 +132,7 @@ describe('AdminCards', () => {
       </StatusRegionProvider>,
     );
 
-    fireEvent.click(
-      screen.getByRole('button', { name: /^Revoke every pending card in batch b1111111/ }),
-    );
+    fireEvent.click(screen.getByRole('button', { name: /^Revoke Batch b1111111/ }));
     fireEvent.click(
       within(screen.getByRole('dialog')).getByRole('button', { name: 'Revoke Batch' }),
     );

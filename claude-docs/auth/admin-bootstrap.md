@@ -665,3 +665,29 @@ tasks that build the rest:
   registered: nothing soft-deletes a user through Better Auth.
 - **No `user.fields` mapping.** `name`/`image` keep Better Auth's own
   column names ([`tables.md`](tables.md) has the reverted rename).
+
+## Invitation cards (M15.17–M15.19)
+
+An invitation card is a printed QR code that admits one signed-in account. It is a row in `invitations`
+with `kind = 'card'`: no email, workspace or role, a `batch_id` shared by the batch it was minted in, and
+only the token's hash. Accepting a card follows the invitation-token rules in CLAUDE.md: the link is
+`/i/<token>`, and nothing but the mint ever holds the token.
+
+- **Who may.** Only a site admin. Every service in `src/modules/identity/services/invitation-cards.ts`
+  opens with `assertSiteAdmin`, so a curator, a member and an owner are refused by direct call, and the
+  GraphQL fields add `authScopes: { admin: true }` over that. The admin page calls
+  `requireAdminSession()`, which answers a curator with the styled not-authorized page.
+- **Minting.** `createInvitationCards(count, expiresAt)` makes `count` cards in one transaction under one
+  `batch_id`, at most `MAX_CARDS_PER_BATCH` (500), with an expiry in the future. The mutation returns
+  each token once, in that response; no query or type but `MintedInvitationCards.tokens` has a token,
+  hash or link field, and a test fails if one appears.
+- **Revoking.** `revokeInvitationCard(id)` and `revokeInvitationCardBatch(batchId)` set `revoked_at` on
+  pending cards only; a card already accepted stays accepted.
+- **Listing.** `invitationCards` pages every card with its state (pending, accepted, expired, revoked).
+  The Cards tab at `/admin/cards` shows it; the QR codes cannot be redrawn from it.
+- **Arrivals.** `cardArrivals` pages every accepted card with the account, the date and the covens that
+  account owns (read as an admin may read anyone's memberships). `cardArrivalsCsv` returns the same as
+  CSV text (Account Name, Email, Accepted, Batch), with a leading apostrophe on any cell a spreadsheet
+  would read as a formula. The Arrivals tab at `/admin/arrivals` offers it as a download.
+
+The component is described in [`components/admin-cards.md`](../components/admin-cards.md).
