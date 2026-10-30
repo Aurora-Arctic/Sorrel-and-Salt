@@ -186,10 +186,10 @@ jobs:
           pr-number: ${{ inputs.pr-number }}
           merge-queue: ${{ inputs.merge-queue }}
 
-    # Blocking and unfiltered. src/gql/ is committed generated output
-    # (claude-docs/graphql/client-types.md): a document added, changed or
-    # removed without `npm run codegen` leaves it stale, and `status`
-    # sees an added file as well as a changed or deleted one.
+  # Blocking and unfiltered. src/gql/ is committed generated output
+  # (claude-docs/graphql/client-types.md): a document added, changed or
+  # removed without `npm run codegen` leaves it stale, and `status`
+  # sees an added file as well as a changed or deleted one.
   codegen:
     name: codegen
     runs-on: ubuntu-26.04
@@ -222,8 +222,8 @@ jobs:
           pr-number: ${{ inputs.pr-number }}
           merge-queue: ${{ inputs.merge-queue }}
 
-    # The workshop build is chained so a failed app build stops first.
-    # No PR comment: the check itself is the report.
+  # The workshop build is chained so a failed app build stops first.
+  # No PR comment: the check itself is the report.
   build:
     name: build
     if: ${{ format('{0}', inputs.run-build) != 'false' }}
@@ -260,7 +260,7 @@ jobs:
           slug: build
           command: npm run build && npm run workshop:build
 
-    # Blocking. The script's own output is the report, so no summariser.
+  # Blocking. The script's own output is the report, so no summariser.
   destructive-ddl:
     name: destructive-ddl
     if: ${{ format('{0}', inputs.run-destructive-ddl) != 'false' }}
@@ -295,8 +295,8 @@ jobs:
           pr-number: ${{ inputs.pr-number }}
           merge-queue: ${{ inputs.merge-queue }}
 
-    # Blocking. The checkout is the PR's merge commit, shallow, so the
-    # base is fetched for its journal; the script's output is the report.
+  # Blocking. The checkout is the PR's merge commit, shallow, so the
+  # base is fetched for its journal; the script's output is the report.
   migration-order:
     name: migration-order
     if: ${{ format('{0}', inputs.run-migration-order) != 'false' }}
@@ -333,8 +333,8 @@ jobs:
           pr-number: ${{ inputs.pr-number }}
           merge-queue: ${{ inputs.merge-queue }}
 
-    # Non-blocking and never a required check, hence `|| true`. Reports
-    # through its own step below.
+  # Non-blocking and never a required check, hence `|| true`. Reports
+  # through its own step below.
   audit:
     name: audit
     runs-on: ubuntu-26.04
