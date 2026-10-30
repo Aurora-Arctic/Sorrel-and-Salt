@@ -1,4 +1,4 @@
-import type { Locator } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '../fixtures';
 import { assertNoAccessibilityViolations } from '../axe';
 import { recreateE2eDatabase } from '../database';
@@ -120,6 +120,88 @@ test(
     await page.goForward();
     await expect(pane).toBeVisible();
     expect(errors).toEqual([]);
+  },
+);
+
+// A spell long enough to scroll in the pane at a phone's height.
+async function longSpell(page: Page, slug: string) {
+  const coven = await seedCoven(page, `Fixture Coven ${slug}`, `${slug}.test`, { A: 'owner' });
+  const spellId = await withSql(async (sql) => {
+    const held = await localIngredient(sql, coven.id, coven.users.A, {
+      name: 'Fixture Longwort',
+      nomenclature: 'none',
+      variants: [makeVariant({ form: 'Root' })],
+    });
+    const id = await insertSpell(
+      sql,
+      coven.id,
+      'Fixture Long Working',
+      'workspace',
+      coven.users.A,
+      'complete',
+    );
+    for (let position = 0; position < 24; position++) {
+      await insertStep(sql, id, held, { quantity: 1, unit: 'g', position }, coven.users.A);
+    }
+    return id;
+  });
+  await page.addInitScript(() => Reflect.deleteProperty(Navigator.prototype, 'wakeLock'));
+  await signInAgainAs(page, coven.users.A);
+  await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+  await page.getByRole('button', { name: /^Preview Spell/ }).click();
+  const pane = page.getByRole('dialog', { name: 'Fixture Long Working' });
+  await expect(pane).toBeVisible();
+  return pane;
+}
+
+const rect = (locator: Locator) =>
+  locator.evaluate((el) => el.getBoundingClientRect().toJSON() as DOMRect);
+
+test(
+  'the pane ends as far above its bottom as its title starts below its top',
+  { tag: '@story-85' },
+  async ({ page }) => {
+    const pane = await longSpell(page, 'story-85-foot');
+    for (const [width, height] of [
+      [1440, 900],
+      [390, 844],
+    ] as const) {
+      await page.setViewportSize({ width, height });
+      await pane.evaluate((el) => el.scrollTo(0, 0));
+      const top = (await rect(pane.getByRole('heading', { name: 'Fixture Long Working' }))).top;
+      const paneTop = (await rect(pane)).top;
+      await pane.evaluate((el) => el.scrollTo(0, el.scrollHeight));
+      const foot =
+        (await rect(pane)).bottom - (await rect(pane.locator('.spell-preview__content'))).bottom;
+      expect(Math.abs(foot - (top - paneTop)), `${width}px`).toBeLessThanOrEqual(1);
+      await pane.screenshot({
+        path: `${process.env.SHOTS ?? 'test-results'}/preview-scroll-foot-${width}.png`,
+      });
+    }
+  },
+);
+
+test(
+  'only the pane scrolls while it is open, and its Close scrolls away with the content',
+  { tag: '@story-85' },
+  async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    const pane = await longSpell(page, 'story-85-lock');
+    const close = pane.getByRole('button', { name: 'Close' });
+    // The page behind is long enough to scroll, which is what the pane must not let happen.
+    expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeGreaterThan(900);
+    const scrolled = await page.evaluate(() => window.scrollY);
+    const paneTop = (await rect(pane)).top;
+    await pane.hover();
+    await page.mouse.wheel(0, 400);
+    await expect.poll(() => pane.evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
+    expect(await page.evaluate(() => window.scrollY)).toBe(scrolled);
+    expect((await rect(close)).bottom).toBeLessThan(paneTop);
+    await pane.screenshot({
+      path: `${process.env.SHOTS ?? 'test-results'}/preview-scroll-lock-390.png`,
+    });
+    await page.keyboard.press('Escape');
+    await expect(pane).toHaveCount(0);
   },
 );
 

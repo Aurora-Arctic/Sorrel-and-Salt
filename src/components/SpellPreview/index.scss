@@ -6,6 +6,13 @@
 
 // The pane covers the window: the native dialog's top layer, sized to the viewport and no longer a
 // box in the middle. Tokens only; the look is the grimoire's design review's (MB.123).
+// The pane's edge space, and the space above the title: the edge, the bar's row and the grid's gap above the title. The foot takes
+// the same expression, so the content ends as far from the bottom as the title starts from the top.
+$preview-edge: space(5);
+$preview-edge-phone: space(4);
+$preview-head: calc(#{$preview-edge} + #{$icon-size-large} + #{space(2)});
+$preview-head-phone: calc(#{$preview-edge-phone} + #{$icon-size-large} + #{space(2)});
+
 .spell-preview {
   box-sizing: border-box;
   width: 100%;
@@ -13,9 +20,12 @@
   max-width: none;
   max-height: none;
   margin: 0;
-  padding: space(5);
+  padding: $preview-edge;
+  padding-bottom: $preview-head;
   border: 0;
   overflow-y: auto;
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: a browser without it lets a scroll past the pane's end reach the page behind, which is held still anyway, not yet Baseline
+  overscroll-behavior: contain;
 
   &:focus {
     outline: none;
@@ -23,19 +33,27 @@
 
   // The page's side gutter on a phone.
   @media (max-width: $shell-phone-width) {
-    padding: space(4);
+    padding: $preview-edge-phone;
+    padding-bottom: $preview-head-phone;
   }
 }
 
-// The controls sit in a row above the title, at the end, and stay in view as the steps scroll. A row and
+// While the pane is open only it scrolls: the page behind holds still, as it does under a modal, and the
+// room the page's scrollbar took is given back as padding, `--scrollbar-width`, which `holdPage` sets
+// (claude-docs/components/modal.md, "Styling").
+:root:has(.spell-preview:modal) {
+  overflow: hidden;
+  padding-inline-end: var(--scrollbar-width, 0);
+}
+
+// The controls sit in a row above the title, at the end, and scroll away with the content. A row and
 // not a float, so a long title never wraps around them.
 .spell-preview__bar {
-  position: sticky;
-  top: 0;
-  z-index: 1;
   display: flex;
   justify-content: flex-end;
   gap: space(2);
+  // The row is the button's height even when it holds nothing, so the title's place above is fixed.
+  min-height: $icon-size-large;
   // No wider than the content, so the close X ends where the text does.
   max-width: $recipe-sheet-width;
   margin-inline: auto;
