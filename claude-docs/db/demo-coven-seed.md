@@ -24,6 +24,10 @@ never-re-add rule: someone who used Leave stays out, and so does an ex-admin
 whose seat was removed, until another owner invites and promotes them. The seed
 never updates a row, so a second run inserts nothing.
 
+A new account is seated as a viewer at sign-up by
+`databaseHooks.user.create.after`; the seed's step 3 backfills any account that
+hook missed.
+
 Contents (cupboard, spells, stock, workings) are not written here.
 
 ## The slug refusal

@@ -111,6 +111,7 @@ export {
   findMembershipsOfUsers,
   findWorkspaceRole,
 } from './memberships';
+export { findDemoWorkspace } from './workspaces';
 export {
   findCoMemberNamesIncludingSoftDeleted,
   findPrivilegeChangeCount,
