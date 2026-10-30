@@ -166,13 +166,14 @@ test('the printed recipe names the coven with no line under it, leads with the i
   );
   expect(instructions.bottom).toBeLessThanOrEqual(firstStep.top);
 
-  // Amounts share one right-aligned column and names one left-aligned column beside it, so the numbers
-  // line up, and a line with no amount keeps its name in that column.
+  // Amounts share one column and names another beside it, each set to the left, so the amounts start
+  // on one line and the names on another, and a line with no amount keeps its name in its column.
   const columns = await page.evaluate(() => {
     const lines = [...document.querySelectorAll('ul[aria-label="Ingredients"] > li')];
     return lines.map((li) => {
       const [need, name] = [li.children[0]!, li.children[1]!];
       return {
+        needLeft: need.getBoundingClientRect().left,
         needRight: need.getBoundingClientRect().right,
         needText: need.textContent,
         nameLeft: name.getBoundingClientRect().left,
@@ -181,8 +182,9 @@ test('the printed recipe names the coven with no line under it, leads with the i
   });
   expect(columns).toHaveLength(3);
   expect(columns.filter((c) => c.needText).length).toBe(2);
+  const starts = columns.filter((c) => c.needText).map((c) => c.needLeft);
+  expect(Math.abs(starts[0]! - starts[1]!)).toBeLessThanOrEqual(1);
   const amounts = columns.filter((c) => c.needText).map((c) => c.needRight);
-  expect(Math.abs(amounts[0]! - amounts[1]!)).toBeLessThanOrEqual(1);
   const lefts = columns.map((c) => c.nameLeft);
   expect(Math.max(...lefts) - Math.min(...lefts)).toBeLessThanOrEqual(1);
   expect(Math.min(...lefts)).toBeGreaterThan(Math.max(...amounts));
