@@ -63,3 +63,11 @@ body {
     transition: none;
   }
 }
+
+// Highlighted text takes the accent with the page colour on it (as a solid button does), so it reads
+// the same on every browser in both themes.
+// stylelint-disable-next-line plugin/use-baseline -- enhancement: a browser without it keeps its own highlight, not yet Baseline
+::selection {
+  background-color: $accent;
+  color: $text-on-color;
+}

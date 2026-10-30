@@ -8,15 +8,17 @@ import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
 import type { Failure } from '../../lib/types';
 import Combobox, { ComboboxEntry } from '../Combobox';
+import DateField from '../DateField';
 import { FieldShell, FormActions, VisibilitySwitch, fieldDescription } from '../Field';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import WorkingCompletion from './completion';
+import './index.scss';
 import type { RecordWorkingDialogProps, WorkingParticipantValue } from './types';
 
 // The form inside the Record a Working dialog, which records a draft working of a complete spell or
 // changes one the caller recorded. Inside the modal so its discard guard reaches the modal's Close,
-// Escape and backdrop. Save closes it and the page behind shows the draft; Save & Complete goes on to the
+// Escape and backdrop. Save closes it and the page behind shows the draft; Complete goes on to the
 // deduction preview (claude-docs/components/record-working.md).
 
 const RecordWorkingDocument = graphql(`
@@ -71,6 +73,7 @@ export default function RecordWorkingForm({
   spellId,
   spellVisibility,
   members,
+  recorderId,
   steps,
   working,
   close,
@@ -81,7 +84,9 @@ export default function RecordWorkingForm({
     workedOn: working?.workedOn ?? today(),
     note: working?.note ?? '',
     visibility: working?.visibility ?? spellVisibility,
-    participants: working?.participants ?? [],
+    participants:
+      working?.participants ??
+      members.filter((m) => m.userId === recorderId).map(({ userId, name }) => ({ userId, name })),
   }));
   const [workedOn, setWorkedOn] = useState(initial.workedOn);
   const [note, setNote] = useState(initial.note);
@@ -148,8 +153,7 @@ export default function RecordWorkingForm({
       workedOn,
       note: note.trim() === '' ? null : note.trim(),
       visibility,
-      // Left out on a new working with nobody named: the service puts the recorder in.
-      ...(working || people.length > 0 ? { participants: people } : {}),
+      participants: people,
     };
     try {
       const result = working
@@ -180,7 +184,7 @@ export default function RecordWorkingForm({
   }
   return (
     <form
-      className="form"
+      className="form working-form"
       noValidate
       onSubmit={(event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -189,16 +193,14 @@ export default function RecordWorkingForm({
     >
       {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
       <FieldShell label="Date" required {...dateField}>
-        <input
+        <DateField
           id={dateField.controlId}
-          className="input"
-          type="date"
-          max={today()}
-          aria-required
-          {...dateField.aria}
+          labelledBy={dateField.labelId}
           value={workedOn}
+          max={today()}
           disabled={submitting}
-          onChange={(event) => setWorkedOn(event.target.value)}
+          onChange={setWorkedOn}
+          {...dateField.aria}
         />
       </FieldShell>
       <div className="fieldset">
@@ -269,6 +271,7 @@ export default function RecordWorkingForm({
       />
       <FormActions
         noun="Working"
+        label={complete ? 'Save Working' : 'Save as Draft'}
         dirty={valid && (working ? changed : true)}
         submitting={submitting}
         holdCancel
@@ -281,7 +284,7 @@ export default function RecordWorkingForm({
             disabled={!valid || submitting}
             onClick={() => void submit(true)}
           >
-            Save & Complete
+            Complete
           </button>
         )}
       </FormActions>

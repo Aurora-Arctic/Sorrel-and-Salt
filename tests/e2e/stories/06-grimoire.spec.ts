@@ -655,7 +655,7 @@ test(
     const dialog = page.getByRole('dialog', { name: 'Record a Working' });
     await dialog.getByRole('combobox', { name: 'Participants' }).fill('Fixture A');
     await page.getByRole('option', { name: 'Fixture A' }).click();
-    await dialog.getByRole('button', { name: 'Save Working' }).click();
+    await dialog.getByRole('button', { name: 'Save as Draft' }).click();
     // Save keeps the draft and closes the dialog. The Workings list is M13.8's, so the row is read from the database.
     await expect(dialog).toBeHidden();
     await expect(page.getByRole('button', { name: 'Record a Working' })).toBeFocused();
@@ -668,7 +668,7 @@ test(
         where w.spell_id = ${spellId}
         group by w.status`,
     );
-    expect(kept).toEqual([{ status: 'draft', people: 1 }]);
+    expect(kept).toEqual([{ status: 'draft', people: 2 }]);
   },
 );
 
@@ -838,7 +838,7 @@ test(
     await first.getByRole('button', { name: /^Edit Working / }).click();
     const edit = page.getByRole('dialog', { name: /^Edit (a )?Working$/ });
     await edit.getByRole('textbox', { name: 'Note' }).fill('First brewing, revised');
-    await edit.getByRole('button', { name: 'Save Working' }).click();
+    await edit.getByRole('button', { name: 'Save as Draft' }).click();
     await expect(workings.getByText('First brewing, revised')).toBeVisible();
     // Deleting B's own working takes it out of the list and the count.
     await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);

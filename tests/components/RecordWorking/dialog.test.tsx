@@ -69,6 +69,7 @@ function openButton(visibility: 'private' | 'workspace' = 'workspace') {
         spellId={SPELL}
         spellVisibility={visibility}
         members={MEMBERS}
+        recorderId="u1"
         steps={STEPS}
       />,
     ),
@@ -86,7 +87,7 @@ describe('Record a Working', () => {
     fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Note' }), {
       target: { value: 'Under the new moon' },
     });
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save as Draft' }));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]).toMatchObject({
       workspaceId: WORKSPACE,
@@ -94,7 +95,7 @@ describe('Record a Working', () => {
       input: {
         note: 'Under the new moon',
         visibility: 'workspace',
-        participants: [{ userId: 'u2' }],
+        participants: [{ userId: 'u1' }, { userId: 'u2' }],
       },
     });
     expect(calls[0]?.input.workedOn).toMatch(/^\d{4}-\d{2}-\d{2}$/);
@@ -102,10 +103,10 @@ describe('Record a Working', () => {
     expect(router.refresh).toHaveBeenCalled();
   });
 
-  it('saves, then shows the deduction preview, from Save & Complete', async () => {
+  it('saves, then shows the deduction preview, from Complete', async () => {
     const calls = mockRecording();
     openButton();
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save & Complete' }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Complete' }));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(await screen.findByRole('list', { name: 'Deductions' })).toHaveTextContent('Testwort');
     expect(screen.getByRole('button', { name: 'Confirm' })).toBeEnabled();
@@ -113,9 +114,16 @@ describe('Record a Working', () => {
 
   it('cannot date a working in the future', () => {
     openButton();
-    const max = within(dialog()).getByLabelText(/Date/).getAttribute('max');
-    expect(max).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    expect(max).toBe(new Date().toLocaleDateString('en-CA'));
+    fireEvent.click(within(dialog()).getByRole('button', { name: /Date/ }));
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const day = within(screen.getByRole('grid')).queryByRole('button', {
+      name: new RegExp(
+        tomorrow.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
+      ),
+    });
+    // Tomorrow is either not drawn (a later month, which cannot be reached) or drawn and disabled.
+    if (day) expect(day).toBeDisabled();
   });
 
   it('adds a typed name as a chip and sends it as a name', async () => {
@@ -127,17 +135,29 @@ describe('Record a Working', () => {
     expect(
       await within(dialog()).findByRole('button', { name: /Remove.*Guest Witness/ }),
     ).toBeInTheDocument();
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save as Draft' }));
     await waitFor(() => expect(calls).toHaveLength(1));
-    expect(calls[0]?.input.participants).toEqual([{ name: 'Guest Witness' }]);
+    expect(calls[0]?.input.participants).toEqual([{ userId: 'u1' }, { name: 'Guest Witness' }]);
   });
 
-  it('leaves the participants out when none are named, so the recorder is the one taking part', async () => {
+  it('starts with the recorder as a participant, and sends them', async () => {
     const calls = mockRecording();
     openButton();
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
+    expect(
+      within(dialog()).getByRole('button', { name: /Remove.*Testa Owner/ }),
+    ).toBeInTheDocument();
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save as Draft' }));
     await waitFor(() => expect(calls).toHaveLength(1));
-    expect(calls[0]?.input).not.toHaveProperty('participants');
+    expect(calls[0]?.input.participants).toEqual([{ userId: 'u1' }]);
+  });
+
+  it('keeps the recorder out when they are removed, rather than putting them back', async () => {
+    const calls = mockRecording();
+    openButton();
+    fireEvent.click(within(dialog()).getByRole('button', { name: /Remove.*Testa Owner/ }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save as Draft' }));
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]?.input.participants).toEqual([]);
   });
 
   it('holds the share switch off and shut on a private spell', () => {
@@ -154,7 +174,7 @@ describe('Record a Working', () => {
     expect(share).toBeChecked();
     expect(share).toBeEnabled();
     fireEvent.click(share);
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save as Draft' }));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]?.input.visibility).toBe('private');
   });
@@ -222,7 +242,7 @@ describe('Edit Working', () => {
       within(dialog()).getByRole('button', { name: /Remove.*Testa Owner/ }),
     ).toBeInTheDocument();
     fireEvent.change(note, { target: { value: 'Second try' } });
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save as Draft' }));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]).toMatchObject({
       workspaceId: WORKSPACE,
@@ -249,6 +269,6 @@ describe('Edit Working', () => {
     const share = within(dialog()).getByRole('switch', { name: 'Share With the Coven' });
     expect(share).toBeChecked();
     expect(share).toBeDisabled();
-    expect(within(dialog()).queryByRole('button', { name: 'Save & Complete' })).toBeNull();
+    expect(within(dialog()).queryByRole('button', { name: 'Complete' })).toBeNull();
   });
 });

@@ -168,6 +168,7 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
                   spellId={spell.id}
                   spellVisibility={spell.visibility}
                   members={members}
+                  recorderId={membership.userId}
                   steps={ingredientSteps}
                 />
               )}
