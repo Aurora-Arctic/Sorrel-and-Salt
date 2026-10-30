@@ -646,6 +646,11 @@ export interface AuditWriter {
   /** Revoke every pending card of the batch. An accepted card is the record of an arrival and is left untouched. */
   revokeInvitationCardBatch(admin: SiteAdmin, batchId: string): Promise<InvitationRow[]>;
   /**
+   * Record one refused open of the card `invitationId` by the session's user for `reason`: a new row, or the live row's `attempts` plus one and a later `last_attempted_at`.
+   * Under no proof, since the account is signed in and nothing here reads the card; the service has decided it is a recordable refusal.
+   */
+  recordCardAttempt(invitationId: string, reason: CardAttemptReason): Promise<CardAttemptRow[]>;
+  /**
    * Accept the pending invitation a link's token names, on either tier, as the session's user: stamps `accepted_at` and `accepted_by`.
    * Under no proof, since the invitee holds neither membership nor site role yet; the token admits, and the user must hold the invited address, verified.
    * No row comes back for a token naming no pending invitation, or a user whose live row holds another address or holds it unverified.
@@ -1083,6 +1088,23 @@ export interface CardInvitationValues {
 
 /** A card in any state: always in a batch. */
 export type CardRow = InvitationRow & { kind: 'card'; batchId: string };
+
+/** Why a card's link was refused to a signed-in account: the reasons a refused open is recorded under. */
+export type CardAttemptReason = 'revoked' | 'expired' | 'accepted';
+
+/** One account's refused opens of one card for one reason. */
+export type CardAttemptRow = {
+  id: string;
+  invitationId: string;
+  userId: string;
+  reason: CardAttemptReason;
+  attempts: number;
+  lastAttemptedAt: Date;
+  createdAt: Date;
+};
+
+/** A card's refused opens, all accounts and reasons added. */
+export type CardAttemptTotal = { invitationId: string; total: number };
 
 /** A card some account accepted: who, when, and the batch it came from. */
 export type CardArrivalRow = InvitationRow & {

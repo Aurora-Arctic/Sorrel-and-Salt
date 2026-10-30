@@ -3,12 +3,15 @@ import { randomUUID } from 'node:crypto';
 import {
   findCardArrivalCount,
   findCardArrivalPage,
+  findCardAttemptCount,
+  findCardAttemptPage,
+  findCardAttemptTotals,
   findCardCount,
   findCardPage,
   findManyByIds,
   withAudit,
 } from '../../../db/repository';
-import type { CardRow } from '../../../db/repository';
+import type { CardAttemptRow, CardAttemptTotal, CardRow } from '../../../db/repository';
 import { NotFound, ValidationError } from '../../../lib/errors';
 import { newCardToken } from '../../../lib/invitation-token';
 import type { Session } from '../../../lib/session';
@@ -209,4 +212,45 @@ export async function cardArrivalsCsv(session: Session): Promise<string> {
 function csvCell(value: string): string {
   const safe = /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
   return /[",\r\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
+}
+
+/**
+ * One page of the refused opens of one card, latest first: a row per account and reason.
+ *
+ * @throws {Forbidden} the session's role is not `admin`.
+ */
+export async function listCardAttempts(
+  session: Session,
+  invitationId: string,
+  page: PageRequest,
+): Promise<PageEntry<CardAttemptRow>[]> {
+  const admin = assertSiteAdmin(session, REFUSAL);
+  return findCardAttemptPage(admin, invitationId, page);
+}
+
+/**
+ * How many rows `listCardAttempts` pages for the card, and how many come before `start`.
+ *
+ * @throws {Forbidden} the session's role is not `admin`.
+ */
+export async function countCardAttempts(
+  session: Session,
+  invitationId: string,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  const admin = assertSiteAdmin(session, REFUSAL);
+  return findCardAttemptCount(admin, invitationId, start);
+}
+
+/**
+ * The refused opens of each of these cards, all accounts and reasons added; a card never refused has no entry.
+ *
+ * @throws {Forbidden} the session's role is not `admin`.
+ */
+export async function totalCardAttempts(
+  session: Session,
+  invitationIds: readonly string[],
+): Promise<CardAttemptTotal[]> {
+  const admin = assertSiteAdmin(session, REFUSAL);
+  return findCardAttemptTotals(admin, invitationIds);
 }
