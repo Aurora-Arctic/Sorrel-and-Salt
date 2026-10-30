@@ -130,7 +130,9 @@ smouldering from its bottom-right corner (found in the owner's review of M10.11,
 from a set of hover options). The card's face also takes IngredientCard's hover tint and
 lifted shadow, and nothing else: nothing moves the card.
 
-What the effect is, in `_smoulder.scss`:
+What the effect is, in `_smoulder.scss`. Its colours, lengths, durations and the rim's flicker frames are `$burn-*` tokens at the end of
+`src/scss/_variables.scss`; the partial forwards the ones SpellPreview reads, and keeps `$candle` and `$ember` as its names for
+`$burn-candle` and `$burn-ember`.
 
 - **A true hole.** The burnt part is gone, through the card's face and its shadow both, so
   the page itself shows through it. The card's face and shadow are not on the `article` but
@@ -141,8 +143,8 @@ What the effect is, in `_smoulder.scss`:
   1rem deep in all, so along the bottom it stays inside the card's padding. At the corner it
   bites deeper and curves about 1.25rem up the right edge (an elliptical corner radius,
   `$burn-corner-radius`), where no text runs.
-- **An ember line, a char rim and a char line.** A thin bright line (`$ochre-bright`,
-  `$wax-warm`) runs round the burn front, with a dark char rim (`--burn-char`) outside it,
+- **An ember line, a char rim and a char line.** A thin bright line (`$burn-candle`, the dark theme's warning ochre,
+  and `$burn-ember`, its secondary red) runs round the burn front, with a dark char rim (`--burn-char`) outside it,
   and outside that a thin soft near-black line (`--burn-char-line`) where the paper is
   charred but not yet alight. Both char colours are tokens per theme, taken from the
   theme's darkest ink, never pure black. One SVG filter, `#spell-card-burn` from
@@ -157,7 +159,9 @@ What the effect is, in `_smoulder.scss`:
 - **Nothing warm sits under text.** With its rim and the tearing, the hole stays inside the
   card's padding along the bottom, and climbs higher only at the corner, where no text runs.
 - **Timing.** The burn creeps along the edge for 1.3s, and the glow grows with it, then holds
-  while the ember glows unevenly. On
+  while the ember glows unevenly for three rounds (`$burn-flickers`), the glow and the embers breathing at their own
+  paces for three rounds too, and each then holds its last frame, so a card left under the pointer or holding the focus
+  settles rather than flickering for as long as it is hovered. On
   leaving, the burn fades while the hole, the face's shadow and the glow shrink back to the
   corner, so a quick return burns on from where they had shrunk to.
 - **Reduced motion** shows the finished burn at once, still. **Touch** gets no hover at all:
