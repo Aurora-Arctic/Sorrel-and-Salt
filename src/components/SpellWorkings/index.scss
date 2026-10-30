@@ -20,6 +20,7 @@
 
   &__list {
     display: grid;
+    margin-top: space(4);
     gap: space(4);
 
     // No margin, indent or typography-base's ◆ marker: each row is headed by its date.
@@ -34,6 +35,7 @@
 
     h3 {
       margin: 0;
+      font-size: type-size('caption');
     }
 
     // Past a phone the head is three columns: the date, the badges in a column of their own, and a
