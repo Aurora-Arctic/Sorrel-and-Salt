@@ -34,7 +34,7 @@ import { send } from './mail';
 import { emailPagePath, returnPathOf, verifiedLanding } from './account-email';
 import { LAST_USED_PROVIDER_COOKIE, SIGN_IN_TO_VERIFY_PATH } from './sign-in';
 import { signedInLanding } from './landing';
-import { plainSessionCookie } from './e2e-session-cookie';
+import { e2eTrustedOrigins, plainSessionCookie } from './e2e-session-cookie';
 import { impersonation, impersonationEnabled } from './impersonation';
 import { primaryAdminEmail } from './primary-admin';
 import { verifyEmailMessage } from '../emails/verify-email';
@@ -339,6 +339,8 @@ export const auth = betterAuth({
   // logs and still answers 200 on the well-known default (claude-docs/auth/config.md, "Config").
   secret: requiredInProduction('BETTER_AUTH_SECRET'),
   baseURL: baseURL(),
+  // Empty but on the e2e servers, whose browsers post from localhost or devcontainer (claude-docs/testing/e2e.md).
+  trustedOrigins: e2eTrustedOrigins(),
   socialProviders: socialProviders(),
   database: drizzleAdapter(db, {
     provider: 'pg',
