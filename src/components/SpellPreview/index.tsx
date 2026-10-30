@@ -1,6 +1,7 @@
 'use client';
 
-import { type CSSProperties, type ReactElement, useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { type CSSProperties, type ReactElement, useCallback, useEffect, useRef } from 'react';
 import IconTip, { CloseIcon, MysticEyeIcon, PreviewButton } from '../IconTip';
 import { SpellCardFilters } from '../SpellCard';
 import SpellRecipeBody from '../SpellRecipe/body';
@@ -14,7 +15,20 @@ import './index.scss';
 // everything the printed spell shows, and no links or controls, so it can be followed without
 // distraction. A native modal `<dialog>` in the top layer, which already covers the
 // window, holds the page inert and gives Escape; true full screen is added on top where the browser
-// has it (claude-docs/components/spell-preview.md).
+// has it (claude-docs/components/spell-preview.md). The pane is open while the address carries
+// `?preview`, which is its one source of truth: a direct link or a refresh opens it, and Back closes it.
+
+const PREVIEW = 'preview';
+
+// The address with `?preview` added or dropped, keeping the other parameters and the fragment.
+function addressWith(preview: boolean): string {
+  const { pathname, search, hash } = window.location;
+  const rest = new URLSearchParams(search);
+  rest.delete(PREVIEW);
+  const query = rest.toString();
+  const next = preview ? (query ? `${query}&${PREVIEW}` : PREVIEW) : query;
+  return `${pathname}${next ? `?${next}` : ''}${hash}`;
+}
 
 // An ember's place, size and timing, as custom properties its stylesheet reads.
 const emberStyle = (ember: Ember): CSSProperties =>
@@ -78,11 +92,25 @@ const Scene = (): ReactElement => (
 
 export default function SpellPreview(props: SpellPreviewProps): ReactElement {
   const { title, steps } = props;
-  const [open, setOpen] = useState(false);
+  const open = useSearchParams().has(PREVIEW);
   const pane = useRef<HTMLDialogElement>(null);
   // Set once the pane is in full screen, so leaving it (which is Escape's first press there) closes
   // the pane, and a pane that never got full screen is not closed by an unrelated change.
   const inFullscreen = useRef(false);
+  // Set when this page visit pushed the `?preview` entry, so Close can step back over it; a page that
+  // loaded with `?preview` has no earlier entry of ours, and Close replaces the address instead.
+  const pushed = useRef(false);
+
+  const show = (): void => {
+    pushed.current = true;
+    window.history.pushState(null, '', addressWith(true));
+  };
+  const close = useCallback((): void => {
+    if (pushed.current) {
+      pushed.current = false;
+      window.history.back();
+    } else window.history.replaceState(null, '', addressWith(false));
+  }, []);
 
   useEffect(() => {
     const dialog = pane.current;
@@ -105,7 +133,7 @@ export default function SpellPreview(props: SpellPreviewProps): ReactElement {
     }
     const onChange = (): void => {
       if (document.fullscreenElement) inFullscreen.current = true;
-      else if (inFullscreen.current) setOpen(false);
+      else if (inFullscreen.current) close();
     };
     document.addEventListener('fullscreenchange', onChange);
     return () => {
@@ -116,14 +144,13 @@ export default function SpellPreview(props: SpellPreviewProps): ReactElement {
         document.exitFullscreen().catch(() => undefined);
       }
     };
-  }, [open]);
+  }, [open, close]);
 
   const wake = useWakeLock(open);
-  const close = (): void => setOpen(false);
 
   return (
     <>
-      <PreviewButton name={title} onClick={() => setOpen(true)} />
+      <PreviewButton name={title} onClick={show} />
       <dialog
         ref={pane}
         className="spell-preview"

@@ -1,8 +1,52 @@
 import { act, render, screen, within, fireEvent } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import SpellPreview from '@/components/SpellPreview';
+import { useSyncExternalStore } from 'react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { RecipeStep } from '@/components/SpellRecipe/types';
 import { press } from '../../support/interact';
+
+// The address as the browser keeps it, with a history stack: the pane's open state is read from it,
+// as Next's `useSearchParams` does for a `pushState` write.
+const browser = vi.hoisted(() => {
+  const listeners = new Set<() => void>();
+  const state = { stack: ['/page'], at: 0 };
+  const go = (to: number): void => {
+    state.at = to;
+    listeners.forEach((listen) => listen());
+  };
+  return {
+    state,
+    listeners,
+    reset: (url: string): void => {
+      state.stack = [url];
+      state.at = 0;
+    },
+    push: (url: string): void => {
+      state.stack = [...state.stack.slice(0, state.at + 1), url];
+      go(state.stack.length - 1);
+    },
+    replace: (url: string): void => {
+      state.stack[state.at] = url;
+      go(state.at);
+    },
+    back: (): void => go(Math.max(0, state.at - 1)),
+    forward: (): void => go(Math.min(state.stack.length - 1, state.at + 1)),
+  };
+});
+vi.mock('next/navigation', () => ({
+  useSearchParams: () =>
+    new URLSearchParams(
+      useSyncExternalStore(
+        (listen) => {
+          browser.listeners.add(listen);
+          return () => browser.listeners.delete(listen);
+        },
+        () => browser.state.stack[browser.state.at]!.split('?')[1] ?? '',
+        () => '',
+      ),
+    ),
+}));
+
+const { default: SpellPreview } = await import('@/components/SpellPreview');
 
 // The Preview pane: a button on the recipe page opens the spell full screen, with only the title,
 // the ingredients with their amounts and the steps (claude-docs/components/spell-preview.md).
@@ -47,7 +91,25 @@ const onPage = () => (
 const opener = () => screen.getByRole('button', { name: 'Preview Spell Fixture Working' });
 const pane = () => screen.getByRole('dialog', { name: 'Fixture Working' });
 
+const here = () => browser.state.stack[browser.state.at]!;
+
+beforeEach(() => {
+  browser.reset('/page?tab=a');
+  vi.spyOn(window.history, 'pushState').mockImplementation((_s, _t, url) =>
+    browser.push(String(url)),
+  );
+  vi.spyOn(window.history, 'replaceState').mockImplementation((_s, _t, url) =>
+    browser.replace(String(url)),
+  );
+  vi.spyOn(window.history, 'back').mockImplementation(browser.back);
+  // The component reads the pathname and query from the window when it writes the address.
+  vi.spyOn(window, 'location', 'get').mockImplementation(
+    () => new URL(here(), 'http://localhost') as unknown as Location,
+  );
+});
+
 afterEach(() => {
+  vi.restoreAllMocks();
   Reflect.deleteProperty(HTMLElement.prototype, 'requestFullscreen');
   Reflect.deleteProperty(document, 'exitFullscreen');
   Reflect.deleteProperty(document, 'fullscreenElement');
@@ -132,6 +194,37 @@ describe('SpellPreview', () => {
     expect(close.querySelector('svg')).not.toBeNull();
     expect(close.textContent).toBe('Close');
     expect(close.querySelector('.visually-hidden')?.textContent).toBe('Close');
+  });
+
+  it('adds ?preview to the address on opening, keeping the other parameters', () => {
+    render(onPage());
+    expect(here()).toBe('/page?tab=a');
+    press(opener());
+    expect(here()).toBe('/page?tab=a&preview');
+    expect(pane()).toBeInTheDocument();
+  });
+
+  it('goes back over the entry it pushed on Close, and Back and Forward close and reopen it', () => {
+    render(onPage());
+    press(opener());
+    act(() => browser.back());
+    expect(screen.queryByRole('dialog')).toBeNull();
+    act(() => browser.forward());
+    expect(pane()).toBeInTheDocument();
+    press(within(pane()).getByRole('button', { name: 'Close' }));
+    expect(here()).toBe('/page?tab=a');
+    expect(browser.state.at).toBe(0);
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('opens from a direct link, and Close replaces the address rather than leaving the page', () => {
+    browser.reset('/page?preview&tab=a');
+    render(onPage());
+    expect(pane()).toBeInTheDocument();
+    press(within(pane()).getByRole('button', { name: 'Close' }));
+    expect(here()).toBe('/page?tab=a');
+    expect(browser.state.stack).toHaveLength(1);
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 
   it('closes on Close (the browser then gives the focus back to Preview, which the story proves)', () => {
