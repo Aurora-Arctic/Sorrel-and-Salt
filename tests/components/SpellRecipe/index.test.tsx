@@ -333,7 +333,19 @@ describe('SpellRecipe', () => {
 
     it('lists the sections the page draws, each link pointing at one that exists', () => {
       render(<SpellRecipe {...props({ steps: [instruction('s1', 'Stir.')], aside, workings })} />);
-      expect(linksOf().map((link) => link.textContent)).toEqual(['Steps', 'The Jar', 'Workings']);
+      expect(linksOf().map((link) => link.textContent)).toEqual([
+        'Steps',
+        'Category Match',
+        'In Coven Inventory',
+        'Workings',
+      ]);
+      // The two jar links are nested under one group label, and the group is narrow-only whole.
+      const group = within(screen.getByRole('navigation', { name: 'On This Page' })).getByRole(
+        'list',
+        { name: 'The Jar' },
+      );
+      expect(within(group).getAllByRole('link')).toHaveLength(2);
+      expect(group.parentElement).toHaveClass('page-nav__narrow');
       for (const link of linksOf()) {
         const target = document.getElementById(link.getAttribute('href')!.slice(1));
         expect(target, link.textContent ?? '').not.toBeNull();

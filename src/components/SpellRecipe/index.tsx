@@ -7,7 +7,7 @@ import PageNav from '../PageNav';
 import type { PageNavEntry } from '../PageNav/types';
 import SpellRecipeBody from './body';
 import SpellRecipeSummary from './summary';
-import { JAR_ID, STEPS_ID, WORKINGS_ID } from './sections';
+import { CATEGORY_MATCH_ID, INVENTORY_ID, JAR_ID, STEPS_ID, WORKINGS_ID } from './sections';
 import type { SpellRecipeProps } from './types';
 
 // A saved spell as a page: purpose, four facts, steps, note (`SpellRecipeBody`, which Quick Look
@@ -36,8 +36,24 @@ const SpellRecipe = ({
   // One entry per section drawn, so none links to nothing.
   const entries: PageNavEntry[] = [
     ...(steps.length > 0 ? [{ href: `#${STEPS_ID}` as const, label: 'Steps' }] : []),
-    // The jar stands beside the recipe from a tablet up, so the menu names it only where it is stacked.
-    ...(aside ? [{ href: `#${JAR_ID}` as const, label: 'The Jar', narrowOnly: true }] : []),
+    // The jar stands beside the recipe from a tablet up, so the menu names its two sections only
+    // where it is stacked.
+    ...(aside
+      ? [
+          {
+            href: `#${CATEGORY_MATCH_ID}` as const,
+            label: 'Category Match',
+            group: 'The Jar',
+            narrowOnly: true,
+          },
+          {
+            href: `#${INVENTORY_ID}` as const,
+            label: 'In Coven Inventory',
+            group: 'The Jar',
+            narrowOnly: true,
+          },
+        ]
+      : []),
     ...(workings ? [{ href: `#${WORKINGS_ID}` as const, label: 'Workings' }] : []),
   ];
   return (
