@@ -468,7 +468,12 @@ test(
     };
     const listPath = `/coven/${coven.slug}/grimoire`;
     const recipePath = `${listPath}/${gone}`;
-    const bin = page.getByRole('button', { name: 'Delete Spell Doomed Working', exact: true });
+    // The three dots in the page's header hold Delete Spell (claude-docs/components/spell-recipe.md).
+    const more = page.getByRole('button', { name: 'More for Doomed Working', exact: true });
+    const openDelete = async () => {
+      await more.click();
+      await page.getByRole('menuitem', { name: /^Delete Spell/ }).click();
+    };
     const question = page.getByRole('dialog', { name: 'Delete Spell', exact: true });
 
     // Why the delete could be refused: B is not the author, and the spell is complete and
@@ -478,18 +483,18 @@ test(
     await expect(page.getByRole('heading', { level: 1, name: 'Doomed Working' })).toBeVisible();
 
     await test.step('the Delete asks first, naming the spell, and Cancel changes nothing', async () => {
-      await bin.click();
+      await openDelete();
       await expect(question).toContainText('Doomed Working');
       await assertNoAccessibilityViolations(page);
       await question.getByRole('button', { name: 'Cancel', exact: true }).click();
 
       await expect(question).toHaveCount(0);
-      await expect(bin).toBeFocused();
+      await expect(more).toBeFocused();
       expect(await deletedAt('spells', gone)).toBeNull();
     });
 
     await test.step('confirmed, the page leaves for the grimoire, which says so, with the focus on its heading', async () => {
-      await bin.click();
+      await openDelete();
       await question.getByRole('button', { name: 'Delete', exact: true }).click();
 
       await expect(page).toHaveURL(/\/grimoire\?deleted=/);
@@ -1171,12 +1176,15 @@ test(
     // A viewer may not create a spell, so the recipe page offers no Duplicate.
     await signInAgainAs(page, coven.users.C);
     await page.goto(recipe);
-    await expect(page.getByRole('button', { name: 'Duplicate' })).toHaveCount(0);
+    await page.getByRole('button', { name: 'More for Fixture Working', exact: true }).click();
+    await expect(page.getByRole('menuitem', { name: 'Duplicate', exact: true })).toHaveCount(0);
+    await page.keyboard.press('Escape');
 
     // A member duplicates it and lands in the copy's builder.
     await signInAgainAs(page, coven.users.B);
     await page.goto(recipe);
-    await page.getByRole('button', { name: 'Duplicate' }).click();
+    await page.getByRole('button', { name: 'More for Fixture Working', exact: true }).click();
+    await page.getByRole('menuitem', { name: 'Duplicate', exact: true }).click();
     const builder = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working (Copy)' });
     await expect(builder).toBeVisible();
     await expect(page).toHaveURL(/\/grimoire\/drafts\?edit=[0-9a-f-]{36}$/);
