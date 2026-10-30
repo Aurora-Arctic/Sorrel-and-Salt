@@ -117,8 +117,10 @@ const withWorkshopFrame: Decorator = (Story, context) => (
     reducedMotion={context.parameters.reducedMotion === true}
   >
     {/* A States story's choice by its name, since the mapped node it renders keys nothing:
-        a new choice remounts the story, so its state and its scripted steps start afresh. */}
-    <Fragment key={String(context.unmappedArgs.state ?? '')}>
+        a new choice remounts the story, so its state and its scripted steps start afresh.
+        Optional, since a story context outside Storybook (the design-sync previews) has no
+        unmappedArgs. */}
+    <Fragment key={String(context.unmappedArgs?.state ?? '')}>
       <Story />
     </Fragment>
   </Frame>
