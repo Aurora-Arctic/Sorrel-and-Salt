@@ -11,6 +11,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn(), refres
 const listInvitationCards = vi.fn();
 const countInvitationCards = vi.fn();
 const usersForAdmin = vi.fn();
+const totalCardAttempts = vi.fn();
 vi.mock('@/modules/identity', async () => ({
   cardState: (
     await vi.importActual<typeof import('@/modules/identity/services/invitation-cards')>(
@@ -19,6 +20,7 @@ vi.mock('@/modules/identity', async () => ({
   ).cardState,
   countInvitationCards,
   listInvitationCards,
+  totalCardAttempts,
   usersForAdmin,
 }));
 
@@ -33,6 +35,8 @@ beforeEach(() => {
   countInvitationCards.mockReset();
   usersForAdmin.mockReset();
   usersForAdmin.mockResolvedValue([]);
+  totalCardAttempts.mockReset();
+  totalCardAttempts.mockResolvedValue([]);
 });
 
 describe('/admin/cards', () => {
