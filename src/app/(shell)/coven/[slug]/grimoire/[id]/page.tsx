@@ -74,11 +74,18 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
     rolePermits(membership.role, { working: ['delete'] }),
     rolePermits(membership.role, { working: ['update'] }),
   );
-  const roster = await memberRoster(session, workspace);
-  const memberNames = await displayNamesOf(
-    session,
-    roster.map(({ userId }) => userId),
-  );
+  // The members are read only for a role that records or edits a working, and only on the
+  // permission `memberRoster` asserts (`member: read`), which a viewer lacks.
+  const listsMembers =
+    rolePermits(membership.role, { member: ['read'] }) &&
+    rolePermits(membership.role, { working: ['create'] });
+  const roster = listsMembers ? await memberRoster(session, workspace) : [];
+  const memberNames = listsMembers
+    ? await displayNamesOf(
+        session,
+        roster.map(({ userId }) => userId),
+      )
+    : [];
   const members = roster.map(({ userId }, i) => ({
     userId,
     name: memberNames[i] ?? 'A former member',
