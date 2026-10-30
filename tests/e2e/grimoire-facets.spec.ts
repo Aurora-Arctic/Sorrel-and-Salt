@@ -1,6 +1,6 @@
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
-import { assertNoAccessibilityViolations } from './axe';
+import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { signInAgainAs } from './session';
 import { insertSpell, openFilters, seedCoven, withSql } from './stories/coven-ingredients';
 
@@ -134,8 +134,5 @@ test('at 375px the grimoire filter panel opens, a facet can be picked, and the p
   await panel.getByRole('combobox', { name: 'Moon Phase' }).fill('full');
   await page.getByRole('option', { name: /Full Moon/ }).click();
   await expect(panel.getByRole('button', { name: 'Remove Moon Phase: Full Moon' })).toBeVisible();
-  const overflow = await page.evaluate(
-    () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
-  );
-  expect(overflow).toBe(false);
+  await assertNoSidewaysScroll(page);
 });
