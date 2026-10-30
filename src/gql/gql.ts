@@ -14,6 +14,10 @@ import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 type Documents = {
+    "\n  query CardArrivalsCsv {\n    cardArrivalsCsv\n  }\n": typeof types.CardArrivalsCsvDocument,
+    "\n  mutation RevokeInvitationCard($id: ID!) {\n    revokeInvitationCard(id: $id) {\n      id\n    }\n  }\n": typeof types.RevokeInvitationCardDocument,
+    "\n  mutation RevokeInvitationCardBatch($batchId: ID!) {\n    revokeInvitationCardBatch(batchId: $batchId) {\n      id\n    }\n  }\n": typeof types.RevokeInvitationCardBatchDocument,
+    "\n  mutation CreateInvitationCards($count: Int!, $expiresAt: DateTime!) {\n    createInvitationCards(count: $count, expiresAt: $expiresAt) {\n      batchId\n      expiresAt\n      tokens\n    }\n  }\n": typeof types.CreateInvitationCardsDocument,
     "\n  mutation RevokeAdminInvitation($id: ID!) {\n    revokeAdminInvitation(id: $id) {\n      id\n    }\n  }\n": typeof types.RevokeAdminInvitationDocument,
     "\n  mutation CreateAdminInvitation($email: String!, $siteRole: InvitableSiteRole!, $note: String) {\n    createAdminInvitation(email: $email, siteRole: $siteRole, note: $note) {\n      id\n    }\n  }\n": typeof types.CreateAdminInvitationDocument,
     "\n  query CompendiumFacetCounts(\n    $query: String\n    $forms: [String!]\n    $withoutReferences: Boolean\n    $withoutForms: Boolean\n    $elements: [IngredientElement!]\n    $categoryIds: [ID!]\n    $categoryMode: CategoryMode\n    $deityIds: [ID!]\n    $zodiacSigns: [String!]\n    $celestialBodies: [String!]\n    $toxic: ToxicFilter\n    $reviewed: Boolean\n    $covenIds: [ID!]\n    $covensNot: Boolean\n  ) {\n    compendiumFacets(\n      query: $query\n      forms: $forms\n      withoutReferences: $withoutReferences\n      withoutForms: $withoutForms\n      elements: $elements\n      categoryIds: $categoryIds\n      categoryMode: $categoryMode\n      deityIds: $deityIds\n      zodiacSigns: $zodiacSigns\n      celestialBodies: $celestialBodies\n      toxic: $toxic\n      reviewed: $reviewed\n      covenIds: $covenIds\n      covensNot: $covensNot\n    ) {\n      forms {\n        value\n        count\n      }\n      deities {\n        value\n        count\n      }\n      categories {\n        value\n        count\n      }\n      zodiacSigns {\n        value\n        count\n      }\n      celestialBodies {\n        value\n        count\n      }\n      elements {\n        value\n        count\n      }\n      toxic {\n        value\n        count\n      }\n      withoutReferences\n      withoutForms\n      reviewed {\n        value\n        count\n      }\n    }\n  }\n": typeof types.CompendiumFacetCountsDocument,
@@ -111,6 +115,10 @@ type Documents = {
     "\n  mutation SetUserRole($userId: ID!, $role: UserRole!, $note: String) {\n    setUserRole(userId: $userId, role: $role, note: $note) {\n      id\n      role\n      canCreateWorkspace\n    }\n  }\n": typeof types.SetUserRoleDocument,
 };
 const documents: Documents = {
+    "\n  query CardArrivalsCsv {\n    cardArrivalsCsv\n  }\n": types.CardArrivalsCsvDocument,
+    "\n  mutation RevokeInvitationCard($id: ID!) {\n    revokeInvitationCard(id: $id) {\n      id\n    }\n  }\n": types.RevokeInvitationCardDocument,
+    "\n  mutation RevokeInvitationCardBatch($batchId: ID!) {\n    revokeInvitationCardBatch(batchId: $batchId) {\n      id\n    }\n  }\n": types.RevokeInvitationCardBatchDocument,
+    "\n  mutation CreateInvitationCards($count: Int!, $expiresAt: DateTime!) {\n    createInvitationCards(count: $count, expiresAt: $expiresAt) {\n      batchId\n      expiresAt\n      tokens\n    }\n  }\n": types.CreateInvitationCardsDocument,
     "\n  mutation RevokeAdminInvitation($id: ID!) {\n    revokeAdminInvitation(id: $id) {\n      id\n    }\n  }\n": types.RevokeAdminInvitationDocument,
     "\n  mutation CreateAdminInvitation($email: String!, $siteRole: InvitableSiteRole!, $note: String) {\n    createAdminInvitation(email: $email, siteRole: $siteRole, note: $note) {\n      id\n    }\n  }\n": types.CreateAdminInvitationDocument,
     "\n  query CompendiumFacetCounts(\n    $query: String\n    $forms: [String!]\n    $withoutReferences: Boolean\n    $withoutForms: Boolean\n    $elements: [IngredientElement!]\n    $categoryIds: [ID!]\n    $categoryMode: CategoryMode\n    $deityIds: [ID!]\n    $zodiacSigns: [String!]\n    $celestialBodies: [String!]\n    $toxic: ToxicFilter\n    $reviewed: Boolean\n    $covenIds: [ID!]\n    $covensNot: Boolean\n  ) {\n    compendiumFacets(\n      query: $query\n      forms: $forms\n      withoutReferences: $withoutReferences\n      withoutForms: $withoutForms\n      elements: $elements\n      categoryIds: $categoryIds\n      categoryMode: $categoryMode\n      deityIds: $deityIds\n      zodiacSigns: $zodiacSigns\n      celestialBodies: $celestialBodies\n      toxic: $toxic\n      reviewed: $reviewed\n      covenIds: $covenIds\n      covensNot: $covensNot\n    ) {\n      forms {\n        value\n        count\n      }\n      deities {\n        value\n        count\n      }\n      categories {\n        value\n        count\n      }\n      zodiacSigns {\n        value\n        count\n      }\n      celestialBodies {\n        value\n        count\n      }\n      elements {\n        value\n        count\n      }\n      toxic {\n        value\n        count\n      }\n      withoutReferences\n      withoutForms\n      reviewed {\n        value\n        count\n      }\n    }\n  }\n": types.CompendiumFacetCountsDocument,
@@ -222,6 +230,22 @@ const documents: Documents = {
  */
 export function graphql(source: string): unknown;
 
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query CardArrivalsCsv {\n    cardArrivalsCsv\n  }\n"): (typeof documents)["\n  query CardArrivalsCsv {\n    cardArrivalsCsv\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RevokeInvitationCard($id: ID!) {\n    revokeInvitationCard(id: $id) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation RevokeInvitationCard($id: ID!) {\n    revokeInvitationCard(id: $id) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RevokeInvitationCardBatch($batchId: ID!) {\n    revokeInvitationCardBatch(batchId: $batchId) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation RevokeInvitationCardBatch($batchId: ID!) {\n    revokeInvitationCardBatch(batchId: $batchId) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreateInvitationCards($count: Int!, $expiresAt: DateTime!) {\n    createInvitationCards(count: $count, expiresAt: $expiresAt) {\n      batchId\n      expiresAt\n      tokens\n    }\n  }\n"): (typeof documents)["\n  mutation CreateInvitationCards($count: Int!, $expiresAt: DateTime!) {\n    createInvitationCards(count: $count, expiresAt: $expiresAt) {\n      batchId\n      expiresAt\n      tokens\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
