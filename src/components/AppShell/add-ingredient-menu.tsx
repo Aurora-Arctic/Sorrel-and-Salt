@@ -1,7 +1,8 @@
 'use client';
 
 import type { ReactElement } from 'react';
-import MenuButton, { Chevron } from '../MenuButton';
+import { ChevronIcon } from '../IconTip/icons';
+import MenuButton from '../MenuButton';
 import type { MenuButtonItem, MenuSection } from '../MenuButton/types';
 import type { AddDestination } from './types';
 
@@ -28,7 +29,7 @@ export default function AddIngredientMenu({
   const shared = {
     label: 'Choose Where to Add',
     menuLabel: 'Add Ingredient To',
-    icon: <Chevron />,
+    icon: <ChevronIcon className="menu-button__chevron" textSized />,
     className,
   };
   return sections.length < 2 ? (

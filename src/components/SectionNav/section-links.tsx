@@ -13,7 +13,7 @@ import {
   useSyncExternalStore,
 } from 'react';
 import { isAtPath } from '../../lib/at-path';
-import { ChevronIcon } from '../Combobox/icons';
+import { ChevronIcon } from '../IconTip/icons';
 import SectionIcon from './icons';
 import type { SectionNavItem, SectionNavProps } from './types';
 

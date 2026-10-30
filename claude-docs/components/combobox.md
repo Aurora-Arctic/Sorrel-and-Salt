@@ -8,18 +8,18 @@ list field's box; MB.131 gave celestial bodies, signs, deities and substitutes t
 sources, and M5.10 and M8.10 adopt its debounce. MB.170 made a list's chips
 movable, on dnd-kit.
 
-| File               | What it holds                                                                     |
-| ------------------ | --------------------------------------------------------------------------------- |
-| `index.tsx`        | The control, the list in its buckets, the typed row, the status, the indicators   |
-| `entry.tsx`        | `ComboboxEntry`, the chip a list draws inside the control, with its × and tooltip |
-| `sortable.tsx`     | `ComboboxSortableEntries`, a list's chips moved by a handle each, on dnd-kit      |
-| `flow.ts`          | Where a sortable list's chips sit in a given order, and where a key moves one     |
-| `select.tsx`       | `ComboboxSelect`, the select-only box for a closed set                            |
-| `typeahead.tsx`    | `ComboboxTypeahead`, a closed set typed into, its list narrowing as it is         |
-| `multi-select.tsx` | `ComboboxMultiSelect`, the select-only box holding several, its choices as chips  |
-| `icons.tsx`        | The chevron and the clear's ×, which every box draws, and a sortable chip's grip  |
-| `index.scss`       | The control, the list, a row, and the entry chip                                  |
-| `types.ts`         | `ComboboxOption`, `Suggestions`, the props, and the row types                     |
+| File               | What it holds                                                                                                                                                                                                 |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `index.tsx`        | The control, the list in its buckets, the typed row, the status, the indicators                                                                                                                               |
+| `entry.tsx`        | `ComboboxEntry`, the chip a list draws inside the control, with its × and tooltip                                                                                                                             |
+| `sortable.tsx`     | `ComboboxSortableEntries`, a list's chips moved by a handle each, on dnd-kit                                                                                                                                  |
+| `flow.ts`          | Where a sortable list's chips sit in a given order, and where a key moves one                                                                                                                                 |
+| `select.tsx`       | `ComboboxSelect`, the select-only box for a closed set                                                                                                                                                        |
+| `typeahead.tsx`    | `ComboboxTypeahead`, a closed set typed into, its list narrowing as it is                                                                                                                                     |
+| `multi-select.tsx` | `ComboboxMultiSelect`, the select-only box holding several, its choices as chips                                                                                                                              |
+| `icons.tsx`        | A sortable chip's grip and a linked entry's chain. The chevron, the plus and the clear's × that every box draws are the shared set's `ChevronIcon`, `PlusIcon` and `CrossIcon` ([`icon-tip.md`](icon-tip.md)) |
+| `index.scss`       | The control, the list, a row, and the entry chip                                                                                                                                                              |
+| `types.ts`         | `ComboboxOption`, `Suggestions`, the props, and the row types                                                                                                                                                 |
 
 ## The props contract
 

@@ -1,5 +1,6 @@
 import { createElement, type ReactElement } from 'react';
 import { SHAPES } from '../JarShelf/shapes';
+import type { ChevronIconProps } from './types';
 
 // The pencil every Edit control shows, in the control's own ink and hidden from assistive technology, as the control around it names it.
 
@@ -40,6 +41,41 @@ export function PlusIcon(): ReactElement {
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
       <path
         d="M8 3v10M3 8h10"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** A cross: clear this, or no. Smaller than `CloseIcon`'s, to sit inside a field or a table cell. */
+export function CrossIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** A chevron pointing down: this opens a list or a panel below it. */
+export function ChevronIcon({
+  className = 'chevron-icon',
+  textSized = false,
+}: ChevronIconProps): ReactElement {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 16 16"
+      width={textSized ? '1em' : undefined}
+      height={textSized ? '1em' : undefined}
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path
+        d="M3.5 6l4.5 4.5L12.5 6"
         fill="none"
         stroke="currentColor"
         strokeWidth="1.5"

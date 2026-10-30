@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import type { ReactElement } from 'react';
-import { ClearIcon } from '../Combobox/icons';
+import { CrossIcon } from '../IconTip/icons';
 import { useFade } from './fade';
 import { useBadgePlace, useCalloutPlace } from './position';
 import { useAnnounce } from './status-region';
@@ -238,7 +238,7 @@ export function useClickFeedback({ name }: ClickFeedbackOptions): ClickFeedback 
             aria-label="Dismiss"
             onClick={() => close(true)}
           >
-            <ClearIcon />
+            <CrossIcon />
           </button>
         </div>
       )}
