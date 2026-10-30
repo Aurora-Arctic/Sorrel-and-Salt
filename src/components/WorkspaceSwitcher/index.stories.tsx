@@ -34,6 +34,16 @@ export const States: Story = {
             <WorkspaceSwitcher workspaces={WORKSPACES} />
           </WorkshopPathname.Provider>
         ),
+        'Demo Coven': (
+          <WorkshopPathname.Provider value="/coven/testwort-circle">
+            <WorkspaceSwitcher
+              workspaces={WORKSPACES.map((workspace) => ({
+                ...workspace,
+                demo: workspace.slug === 'testwort-circle',
+              }))}
+            />
+          </WorkshopPathname.Provider>
+        ),
         'Can Create': (
           <WorkshopPathname.Provider value="/coven/testwort-circle">
             <WorkspaceSwitcher workspaces={WORKSPACES} canCreate />

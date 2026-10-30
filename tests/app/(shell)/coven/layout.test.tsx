@@ -81,6 +81,41 @@ describe('the /coven/[slug] layout', () => {
     expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle/ingredients/some-id');
   });
 
+  describe('the demo notice', () => {
+    const admit = (role: string, demo: boolean) =>
+      requireCovenMembership.mockResolvedValue({
+        workspace: { ...ADMITTED.workspace, demo },
+        membership: { ...ADMITTED.membership, role },
+      });
+    const demoNotice = () => screen.queryByText(/This is a demo coven/);
+    const ownerNotice = () => screen.queryByText(/You own this coven as a site admin/);
+    const renderLayout = async () =>
+      render(
+        await CovenLayout({ children: <p>The page itself</p>, params: params('fixture-coven') }),
+      );
+
+    it('tells a viewer of the demo coven it is a demo, and not the owner sentence', async () => {
+      admit('viewer', true);
+      await renderLayout();
+      expect(demoNotice()).toBeInTheDocument();
+      expect(ownerNotice()).not.toBeInTheDocument();
+    });
+
+    it('tells an owner of the demo coven what their changes do, and not the viewer sentence', async () => {
+      admit('owner', true);
+      await renderLayout();
+      expect(ownerNotice()).toBeInTheDocument();
+      expect(demoNotice()).not.toBeInTheDocument();
+    });
+
+    it.each(['viewer', 'owner'])('says nothing in an ordinary coven to a %s', async (role) => {
+      admit(role, false);
+      await renderLayout();
+      expect(demoNotice()).not.toBeInTheDocument();
+      expect(ownerNotice()).not.toBeInTheDocument();
+    });
+  });
+
   it('renders nothing when the guard refuses', async () => {
     requireCovenMembership.mockRejectedValue(new Error('not-found'));
 

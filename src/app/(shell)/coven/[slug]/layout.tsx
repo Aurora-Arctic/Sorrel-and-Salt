@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { rolePermits } from '@/modules/coven';
+import Notice from '../../../../components/Notice';
 import SectionBody from '../../../../components/SectionBody';
 import ContextRow from '../../../../components/ContextRow';
 import CovenNav from '../../../../components/CovenNav';
@@ -8,6 +9,11 @@ import WorkspaceSwitcher from '../../../../components/WorkspaceSwitcher';
 import { requireCovenMembership } from '../../../../lib/request-session';
 import { viewerOf } from '../../../../lib/viewer';
 import type { CovenLayoutParams, CovenLayoutProps } from './types';
+
+const DEMO_NOTICE =
+  'This is a demo coven, so you can see how Sorrel & Salt works. You can look at everything and change nothing. A coven of your own starts with an invitation from someone who has one.';
+const DEMO_OWNER_NOTICE =
+  'You own this coven as a site admin: what you change here is what every new account sees.';
 
 // Each page under the coven gives its own name ('Grimoire') and this template
 // finishes it with the coven's. The guard is the same cached call the layout
@@ -28,7 +34,7 @@ export async function generateMetadata({ params }: CovenLayoutParams): Promise<M
 // Every page calls the guard too. The provider carries a page's covens up to the switcher.
 export default async function CovenLayout({ children, params }: CovenLayoutProps) {
   const { slug } = await params;
-  const { membership } = await requireCovenMembership(slug);
+  const { workspace, membership } = await requireCovenMembership(slug);
   const { viewer, workspaces } = await viewerOf();
 
   return (
@@ -36,6 +42,11 @@ export default async function CovenLayout({ children, params }: CovenLayoutProps
       <ContextRow lead={<WorkspaceSwitcher workspaces={workspaces} canCreate={viewer.canCreate} />}>
         <CovenNav slug={slug} canReadMembers={rolePermits(membership.role, { member: ['read'] })} />
       </ContextRow>
+      {workspace.demo && (
+        <Notice kind="plain">
+          {membership.role === 'owner' ? DEMO_OWNER_NOTICE : DEMO_NOTICE}
+        </Notice>
+      )}
       <SectionBody region="coven" className="coven-layout">
         {children}
       </SectionBody>

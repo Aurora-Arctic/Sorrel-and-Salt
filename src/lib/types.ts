@@ -253,6 +253,8 @@ export interface ShellWorkspace {
   canInvite: boolean;
   /** The viewer’s role there may create ingredients: false lists the coven in Add Ingredient, disabled. */
   canWrite: boolean;
+  /** The one demo coven, which every screen of it says it is. */
+  demo: boolean;
 }
 
 /** The viewer and their covens together: what the shell is drawn from (`src/lib/viewer.ts`). */

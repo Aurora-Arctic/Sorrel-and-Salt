@@ -36,7 +36,11 @@ export default function WorkspaceSwitcher({
   const registration = useCovenSwitchRegistration();
   const [picked, setPicked] = useState<string>();
   const box = useRef<HTMLDivElement>(null);
-  const choices = workspaces.map(({ slug, name }) => ({ value: slug, label: name }));
+  const choices = workspaces.map(({ slug, name, demo }) => ({
+    value: slug,
+    // The select-only box draws no qualifier, so the demo coven says so in its label.
+    label: demo ? `${name} (Demo)` : name,
+  }));
 
   useEffect(() => {
     if (focusAfterSwitch === undefined) return;

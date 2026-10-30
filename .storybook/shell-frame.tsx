@@ -38,6 +38,7 @@ export const FIXTURE_WORKSPACES: readonly ShellWorkspace[] = [
     canReadMembers: true,
     canInvite: true,
     canWrite: true,
+    demo: false,
   },
   {
     id: 'w2',
@@ -46,6 +47,7 @@ export const FIXTURE_WORKSPACES: readonly ShellWorkspace[] = [
     canReadMembers: true,
     canInvite: true,
     canWrite: true,
+    demo: false,
   },
   {
     id: 'w3',
@@ -54,6 +56,7 @@ export const FIXTURE_WORKSPACES: readonly ShellWorkspace[] = [
     canReadMembers: false,
     canInvite: false,
     canWrite: false,
+    demo: false,
   },
 ];
 
