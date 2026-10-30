@@ -742,7 +742,7 @@ test(
     await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
     await page.getByRole('button', { name: 'Record a Working' }).click();
     const dialog = page.getByRole('dialog', { name: 'Record a Working' });
-    await dialog.getByRole('button', { name: 'Save & Complete' }).click();
+    await dialog.getByRole('button', { name: 'Complete' }).click();
     // The preview says what will be taken before anything is.
     await expect(dialog.getByRole('list', { name: 'Deductions' })).toContainText('2 g');
     await assertNoAccessibilityViolations(page);
