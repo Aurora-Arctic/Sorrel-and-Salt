@@ -27,7 +27,7 @@ const onPage = () => (
   </main>
 );
 
-const opener = () => screen.getByRole('button', { name: 'Preview' });
+const opener = () => screen.getByRole('button', { name: 'Preview Spell Fixture Working' });
 const pane = () => screen.getByRole('dialog', { name: 'Fixture Working' });
 
 afterEach(() => {

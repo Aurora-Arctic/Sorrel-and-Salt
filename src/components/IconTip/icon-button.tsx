@@ -4,7 +4,15 @@ import type { ReactElement, Ref } from 'react';
 import MenuButton from '../MenuButton';
 import type { MenuButtonChoices } from '../MenuButton/types';
 import IconTip from './icon-tip';
-import { AnnotateIcon, BinIcon, DotsIcon, MysticEyeIcon, PencilIcon } from './icons';
+import {
+  AnnotateIcon,
+  BinIcon,
+  DotsIcon,
+  MysticEyeIcon,
+  PencilIcon,
+  PreviewIcon,
+  PrintIcon,
+} from './icons';
 
 // The icon controls that are a button rather than a link, shared by the coven cards' foot, the entry page and the Quick Look window so the places cannot differ
 // (claude-docs/components/icon-tip.md).
@@ -91,6 +99,40 @@ export const QuickLookButton = ({
     >
       <MysticEyeIcon />
       <span className="visually-hidden">Quick Look {name}</span>
+    </button>
+  </IconTip>
+);
+
+/** Preview as a button: a spell's pane for following it as it is worked, named "Preview Spell" and the spell. */
+export const PreviewButton = ({
+  name,
+  onClick,
+  ref,
+}: {
+  name: string;
+  onClick: () => void;
+  ref?: Ref<HTMLButtonElement>;
+}): ReactElement => (
+  <IconTip tip="Preview">
+    <button ref={ref} type="button" className="icon-tip__edit" onClick={onClick}>
+      <PreviewIcon />
+      <span className="visually-hidden">Preview Spell {name}</span>
+    </button>
+  </IconTip>
+);
+
+/** Print as a button: opens the browser's print dialog, named "Print Spell" and the spell. */
+export const PrintButton = ({
+  name,
+  onClick,
+}: {
+  name: string;
+  onClick: () => void;
+}): ReactElement => (
+  <IconTip tip="Print">
+    <button type="button" className="icon-tip__edit" onClick={onClick}>
+      <PrintIcon />
+      <span className="visually-hidden">Print Spell {name}</span>
     </button>
   </IconTip>
 );

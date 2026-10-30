@@ -44,7 +44,7 @@ test(
     for (const user of [coven.users.B, coven.users.C]) {
       await signInAgainAs(page, user);
       await page.goto(recipePath);
-      const preview = page.getByRole('button', { name: 'Preview', exact: true });
+      const preview = page.getByRole('button', { name: /^Preview Spell/ });
       // Scrolled a little first, so the return to the same place is a fact and not the top.
       await page.evaluate(() => {
         document.body.style.minHeight = '3000px';
@@ -90,10 +90,10 @@ test('a non-member gets a 404 for the spell', { tag: '@story-85' }, async ({ pag
   // The precondition: the same address opens for a member, so the 404 below is the guard's.
   await signInAgainAs(page, coven.users.B);
   expect((await page.goto(recipePath))?.status()).toBe(200);
-  await expect(page.getByRole('button', { name: 'Preview', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Preview Spell/ })).toBeVisible();
   await signInAs(page, 'd@story-85b.test');
   expect((await page.goto(recipePath))?.status()).toBe(404);
-  await expect(page.getByRole('button', { name: 'Preview', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /^Preview Spell/ })).toHaveCount(0);
 });
 
 // Keeping the screen awake in the pane (story 86). The browser's lock is stood in for by one that counts, since a
@@ -136,7 +136,7 @@ test(
       );
     await signInAgainAs(page, coven.users.B);
     await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
-    await page.getByRole('button', { name: 'Preview', exact: true }).click();
+    await page.getByRole('button', { name: /^Preview Spell/ }).click();
     const pane = page.getByRole('dialog', { name: 'Fixture Working' });
     const awake = pane.getByRole('button', { name: 'Screen Awake' });
     await expect(awake).toHaveAttribute('aria-pressed', 'true');

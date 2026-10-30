@@ -5,7 +5,7 @@ full screen, with nothing else on screen. `src/components/SpellPreview/`.
 
 ## What it draws
 
-- A Preview button in the recipe page's actions, beside Edit and Delete Spell. Every role that can
+- A Preview icon button (`PreviewButton`, named "Preview Spell <title>") in the recipe page's actions, before Print and Edit. Every role that can
   read the spell sees it, a viewer included: it changes nothing. A non-member never reaches it,
   because the page answers them with a 404 first.
 - The pane, opened by the button: the spell's title, then its steps. Each ingredient step shows its

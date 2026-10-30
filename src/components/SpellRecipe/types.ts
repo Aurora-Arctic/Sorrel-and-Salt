@@ -164,12 +164,10 @@ export interface DeleteSpellActionProps {
   deletedHref: Route;
 }
 
-/** Duplicate's button on the recipe page, for a role that may create a spell. */
-export interface DuplicateSpellActionProps {
-  workspaceId: string;
+/** The recipe page's three dots: Duplicate for a role that may create a spell, Delete Spell for one that may delete. */
+export interface SpellMoreMenuProps extends DeleteSpellActionProps {
   /** The coven's slug, which the copy's address needs. */
   covenSlug: string;
-  spellId: string;
-  /** The spell's name as the page shows it, Untitled Spell for a draft with none. */
-  name: string;
+  canDuplicate: boolean;
+  canDelete: boolean;
 }

@@ -4,7 +4,6 @@ import LastEdit from '../LastEdit';
 import LinkHint from '../LinkHint';
 import { UNTITLED_SPELL } from '../SpellCard';
 import SpellRecipeBody from './body';
-import PrintButton from './print-button';
 import SpellRecipeSummary from './summary';
 import type { SpellRecipeProps } from './types';
 
@@ -51,8 +50,6 @@ const SpellRecipe = ({
             {visibility === 'private' && <span className="badge badge--private">Private</span>}
           </div>
         )}
-        {/* Every role may print, so the button is the component's own, not the action slot's. */}
-        <PrintButton />
         {action}
       </header>
       <SpellRecipeSummary steps={steps} />

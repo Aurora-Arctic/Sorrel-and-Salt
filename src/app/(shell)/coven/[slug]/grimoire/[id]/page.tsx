@@ -5,10 +5,10 @@ import { RouteModalProvider } from '@/components/Modal/route-modal-provider';
 import { EditLink } from '@/components/IconTip';
 import DetailsDialog from '@/components/IngredientEntry/details-dialog';
 import SpellDialog from '@/components/SpellBuilder/spell-dialog';
-import DeleteSpellAction from '@/components/SpellRecipe/delete-spell';
 import SpellPreview from '@/components/SpellPreview';
 import { previewStepsOf } from '@/components/SpellPreview/preview-steps';
-import DuplicateSpellAction from '@/components/SpellRecipe/duplicate-spell';
+import PrintButton from '@/components/SpellRecipe/print-button';
+import SpellMoreMenu from '@/components/SpellRecipe/more-menu';
 import SpellRecipe from '@/components/SpellRecipe';
 import CompleteWorkingAction from '@/components/RecordWorking/complete-action';
 import EditWorkingAction from '@/components/SpellWorkings/edit-working';
@@ -162,7 +162,6 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
           aside={<SpellRecipeAside {...aside} />}
           action={
             <div className="spell-recipe__actions">
-              <SpellPreview title={name} steps={previewStepsOf(recipe.steps)} />
               {canRecord && (
                 <RecordWorkingButton
                   workspaceId={workspace.id}
@@ -172,6 +171,8 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
                   steps={ingredientSteps}
                 />
               )}
+              <SpellPreview title={name} steps={previewStepsOf(recipe.steps)} />
+              <PrintButton name={name} />
               {canUpdate && (
                 <EditLink
                   href={`${recipePath}?edit=${spell.id}` as Route}
@@ -179,22 +180,15 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
                   heading={{ eyebrow: 'Edit Spell', title: name }}
                 />
               )}
-              {canDuplicate && (
-                <DuplicateSpellAction
-                  workspaceId={workspace.id}
-                  covenSlug={workspace.slug}
-                  spellId={spell.id}
-                  name={name}
-                />
-              )}
-              {canDelete && (
-                <DeleteSpellAction
-                  workspaceId={workspace.id}
-                  spellId={spell.id}
-                  name={name}
-                  deletedHref={deletedHref}
-                />
-              )}
+              <SpellMoreMenu
+                workspaceId={workspace.id}
+                covenSlug={workspace.slug}
+                spellId={spell.id}
+                name={name}
+                deletedHref={deletedHref}
+                canDuplicate={canDuplicate}
+                canDelete={canDelete}
+              />
             </div>
           }
           back={{ href: `/coven/${workspace.slug}/grimoire` as Route, label: 'Grimoire' }}
