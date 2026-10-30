@@ -16,6 +16,12 @@ const { query, categories, categoryMode } = COMPENDIUM_PARAMS.entries;
 /** The two visibilities a spell has, as the address spells them. */
 export const VISIBILITIES = ['private', 'workspace'] as const;
 
+/** What each visibility is called on screen: a spell shared with the coven reads "Shared". */
+export const VISIBILITY_LABELS: Record<(typeof VISIBILITIES)[number], string> = {
+  private: 'Private',
+  workspace: 'Shared',
+};
+
 export const GRIMOIRE_PARAMS = defineSearchParams({
   query,
   categories,

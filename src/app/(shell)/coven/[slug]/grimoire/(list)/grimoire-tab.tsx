@@ -9,7 +9,7 @@ import { deletedHrefOf as deletedHrefFor } from '@/components/SpellRecipe/delete
 import SpellRecipeBody from '@/components/SpellRecipe/body';
 import SpellLookDialog from '@/components/SpellRecipe/look-dialog';
 import SpellDialog from '@/components/SpellBuilder/spell-dialog';
-import { GRIMOIRE_PARAMS, VISIBILITIES } from '@/components/GrimoireList/params';
+import { GRIMOIRE_PARAMS, VISIBILITIES, VISIBILITY_LABELS } from '@/components/GrimoireList/params';
 import type { GrimoireFacets, GrimoireListFilter } from '@/components/GrimoireList/types';
 import { NEW, opensNewSpell } from '@/components/AppShell/add-href';
 import { single } from '@/lib/search-params';
@@ -40,11 +40,6 @@ import { viewedDetailsOf } from '../../ingredients/viewed-details';
 /** `closeHref` with a saved spell's dialog open over it. */
 const editHrefOf = (closeHref: Route, id: string): Route =>
   `${closeHref}${closeHref.includes('?') ? '&' : '?'}${new URLSearchParams({ edit: id })}` as Route;
-
-const VISIBILITY_LABELS: Record<(typeof VISIBILITIES)[number], string> = {
-  private: 'Private',
-  workspace: 'Shared',
-};
 
 /**
  * The four facets' choices from their counts. A picked moon phase or day no spell holds is still
