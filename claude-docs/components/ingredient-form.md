@@ -1159,7 +1159,7 @@ compendium page opens the match's own modal, `?edit=<slug>` — and the shell's 
 reaches compendium and coven entries alike. It opens in a new tab, so the
 form and what is typed in it stay where they are (the owner's call at
 MB.115's review), and its name ends "(opens in a new tab)" for a screen
-reader, as the substitute summary's Open Entry does. It is a plain anchor,
+reader, as the substitute summary's See Entry does. It is a plain anchor,
 since the caller hands back a plain string, where a typed `<Link>` wants a route
 the build contains. Nothing refuses the create on the server: the warning is the
 form's alone.

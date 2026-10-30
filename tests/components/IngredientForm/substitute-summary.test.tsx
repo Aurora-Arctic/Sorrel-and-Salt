@@ -146,7 +146,7 @@ describe('a substitute list’s chips', () => {
 
     fireEvent.click(opener());
 
-    const link = await within(summary()).findByRole('link');
+    const link = await within(summary()).findByRole('link', { name: /^See Entry/ });
     expect(link).toHaveAttribute('href', '/admin/compendium?edit=mockwort-fixtura-vulgaris');
     expect(link).toHaveAttribute('target', '_blank');
   });
