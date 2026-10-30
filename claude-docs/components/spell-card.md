@@ -146,7 +146,7 @@ What the effect is, in `_smoulder.scss`:
   meet exactly.
 - **One glow.** A single soft warm glow sits behind the face: it shows through the hole and
   spills onto the table below the card as one continuous layer, so there is no dark row
-  between the glow inside the hole and the glow off the card. It runs 1.5rem past the ember
+  between the glow inside the hole and the glow off the card. It runs `$burn-glow-lead` (1.5rem) past the ember
   front, at opacity 0.4 under a 1.25rem blur, kept below the ember line's brightness (the
   owner, 2026-10-28). Faint embers glow in the burnt part, brightest along the ember line and
   fading towards the corner.

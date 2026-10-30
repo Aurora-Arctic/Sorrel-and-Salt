@@ -32,6 +32,34 @@ $burn-ember-duration: $pulse-duration * 2.65;
 // The spill on the table: soft and wide, but under the ember line's brightness.
 $burn-glow-opacity: 0.4;
 $burn-glow-blur: 1.25rem;
+// The glow's box: it hangs this far past the card's right edge and below its bottom edge, is this
+// tall, and runs this far past the ember front.
+$burn-glow-overhang: 0.5rem;
+$burn-glow-drop: 1.75rem;
+$burn-glow-height: 3.5rem;
+$burn-glow-lead: 1.5rem;
+
+// The glow's light, from the corner (burnt out first) to the front, strongest just behind it.
+@function burn-glow-gradient() {
+  @return linear-gradient(
+    to right,
+    transparent,
+    rgba($candle, 0.75) 0.75rem,
+    rgba($ember, 0.4) 4.5rem,
+    rgba($ember, 0.16)
+  );
+}
+
+// The embers in the burnt part, brightest at the advancing front, fading towards the corner.
+@function burn-embers-gradient() {
+  @return linear-gradient(
+    to right,
+    rgba($candle, 0.4),
+    rgba($ember, 0.25) 1.5rem,
+    rgba($ember, 0.1) 55%,
+    transparent 85%
+  );
+}
 
 // The rim round the burn: from the burnt edge onto the paper, a candle-bright line, the ember
 // red behind it, a soft char rim and a thin black line where the paper is charred but not yet
@@ -122,21 +150,15 @@ $burn-glow-blur: 1.25rem;
 @mixin smoulder-base {
   // The glow on the table: anchored at the corner, behind the face (first in the markup,
   // so the face, and a later neighbour's face, paints over it). It grows with the
-  // hole at the same pace and runs 1.5rem past the ember front, strongest just behind
+  // hole at the same pace and runs `$burn-glow-lead` past the ember front, strongest just behind
   // the front, fading back towards the corner, which burnt out first.
   .spell-card__glow {
     position: absolute;
-    inset: auto -0.5rem -1.75rem auto;
+    inset: auto (-$burn-glow-overhang) (-$burn-glow-drop) auto;
     width: 0;
-    height: 3.5rem;
+    height: $burn-glow-height;
     border-radius: 50%;
-    background: linear-gradient(
-      to right,
-      transparent,
-      rgba($candle, 0.75) 0.75rem,
-      rgba($ember, 0.4) 4.5rem,
-      rgba($ember, 0.16)
-    );
+    background: burn-glow-gradient();
     filter: blur($burn-glow-blur);
     opacity: 0;
     pointer-events: none;
@@ -249,13 +271,7 @@ $burn-glow-blur: 1.25rem;
     position: absolute;
     inset: 0;
     border-radius: inherit;
-    background: linear-gradient(
-      to right,
-      rgba($candle, 0.4),
-      rgba($ember, 0.25) 1.5rem,
-      rgba($ember, 0.1) 55%,
-      transparent 85%
-    );
+    background: burn-embers-gradient();
     // Only the mask's alpha counts, so any opaque token does.
     mask-image: linear-gradient(to bottom, $text-primary, transparent 0.25rem);
   }
@@ -278,7 +294,7 @@ $burn-glow-blur: 1.25rem;
 // Reduced motion shows the finished burn at once, still.
 @mixin smoulder-lit {
   .spell-card__glow {
-    width: calc(#{$burn-length} + 1.5rem);
+    width: calc(#{$burn-length} + #{$burn-glow-lead});
     opacity: $burn-glow-opacity;
     transition:
       opacity $pulse-duration * 0.6 ease,
