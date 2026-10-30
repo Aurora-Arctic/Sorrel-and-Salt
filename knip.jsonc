@@ -1,0 +1,32 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema-jsonc.json",
+  "entry": [
+    "scripts/**/*.{mjs,ts}",
+    // .cjs too: audit-fix.cjs is where `semver` is used.
+    ".github/scripts/**/*.{mjs,cjs,js,ts}",
+    ".design-sync/**/*.{ts,mjs}",
+    "src/db/seed/index.ts",
+    "tests/**/*.type-check.ts",
+    "tests/support/*-reporter.ts",
+    "playwright.*.config.ts",
+    // Run by playwright.workshop-check.config.ts; `.check.ts` matches no default Playwright test pattern.
+    "tests/e2e/workshop/every-story.check.ts",
+    // Swapped in for `postgres` by a Vitest plugin that names it through `new URL(...)`, not an import.
+    "tests/support/db/bounded-postgres.ts"
+  ],
+  "project": ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}", "scripts/**/*.{mjs,ts}"],
+  "ignore": [".storybook/public/mockServiceWorker.js", ".design-sync/dist-index.mjs"],
+  "ignoreDependencies": ["server-only"],
+  "ignoreBinaries": ["flock"],
+  // knip reads the `--require` list in deploy.yml's assert-pulled-env step as a file path.
+  "ignoreUnresolved": ["DATABASE_URL,BETTER_AUTH_SECRET,ADMIN_BOOTSTRAP_EMAIL"],
+  "ignoreIssues": {
+    // Resolved from .design-sync/.ds-sync/package.json on purpose, not from this package.json.
+    ".design-sync/remote-chromium.mjs": ["unlisted"]
+  },
+  "ignoreExportsUsedInFile": true,
+  "next": true,
+  "vitest": true,
+  "playwright": true,
+  "storybook": true
+}
