@@ -6,7 +6,7 @@ import type { SpellMoreMenuProps } from '../SpellRecipe/types';
 import type { SpellStatus, SpellVisibility } from '@/modules/grimoire';
 
 export interface SpellCardProps {
-  /** The spell's id, which names its title heading for the list item (`spellTitleId`). */
+  /** The spell's id, which gives its title heading the id the card is named by. */
   id: string;
   /** The spell's recipe page, which the title links to; none leaves the title plain text. */
   href?: Route;

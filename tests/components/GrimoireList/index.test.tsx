@@ -95,12 +95,24 @@ describe('GrimoireList', () => {
     }));
   });
 
-  it('lists each spell as an item of the Grimoire list, named by its title', () => {
+  it('lists each spell as an item of the Spells list, its card named by its title', () => {
     render(<List {...props()} />);
-    const list = screen.getByRole('list', { name: 'Grimoire' });
+    const list = screen.getByRole('list', { name: 'Spells' });
     expect(within(list).getAllByRole('listitem')).toHaveLength(2);
-    expect(within(list).getByRole('listitem', { name: 'Fixture Working' })).toBeInTheDocument();
-    expect(within(list).getByRole('listitem', { name: 'Testwort Charm' })).toBeInTheDocument();
+    expect(within(list).getByRole('article', { name: 'Fixture Working' })).toBeInTheDocument();
+    expect(within(list).getByRole('article', { name: 'Testwort Charm' })).toBeInTheDocument();
+  });
+
+  it('names the list Drafts on the Drafts tab', () => {
+    render(<List {...props({ status: 'draft' })} />);
+    expect(screen.getByRole('list', { name: 'Drafts' })).toBeInTheDocument();
+    expect(screen.queryByRole('list', { name: 'Spells' })).not.toBeInTheDocument();
+  });
+
+  it('leaves each item unnamed, so the title is heard once, on its card', () => {
+    render(<List {...props()} />);
+    const items = within(screen.getByRole('list', { name: 'Spells' })).getAllByRole('listitem');
+    for (const item of items) expect(item).not.toHaveAccessibleName();
   });
 
   it("links each card's title to the spell's recipe page", () => {
@@ -127,7 +139,7 @@ describe('GrimoireList', () => {
       render(<List {...props()} />);
       const control = screen.getByRole('switch', { name: 'Compact' });
       expect(control).toBeChecked();
-      expect(screen.getByRole('list', { name: 'Grimoire' })).toHaveAttribute(
+      expect(screen.getByRole('list', { name: 'Spells' })).toHaveAttribute(
         'data-density',
         'compact',
       );
@@ -151,7 +163,7 @@ describe('GrimoireList', () => {
     render(<List {...props({ spells: [], total: 0, position: undefined })} />);
     expect(screen.getByRole('status', { name: 'No Spells' })).toBeInTheDocument();
     expect(screen.queryByRole('status', { name: 'No Matches' })).toBeNull();
-    expect(screen.queryByRole('list', { name: 'Grimoire' })).toBeNull();
+    expect(screen.queryByRole('list', { name: 'Spells' })).toBeNull();
   });
 
   it('names the drafts tab in its empty region', () => {

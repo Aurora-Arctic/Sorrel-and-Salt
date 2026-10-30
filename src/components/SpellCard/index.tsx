@@ -20,8 +20,8 @@ export const UNTITLED_SPELL = 'Untitled Spell';
 /** The modal place the Quick Look shows in, apart from the spell builder's. */
 export const SPELL_LOOK_PLACE = 'look';
 
-/** The id of a spell's title heading, which the list item names itself by. */
-export const spellTitleId = (id: string): string => `spell-${id}-title`;
+/** The id of a spell's title heading, which the card names itself by. */
+const spellTitleId = (id: string): string => `spell-${id}-title`;
 
 const SpellCard = ({
   id,

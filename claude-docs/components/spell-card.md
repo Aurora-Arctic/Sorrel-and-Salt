@@ -20,7 +20,7 @@ The card is presentational: it takes props and works nothing out from the data, 
 
 | Prop            | What it is                                                                                                                            |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`            | The spell's id. It names the title heading, `spellTitleId(id)`                                                                        |
+| `id`            | The spell's id. It gives the title heading the id the card is named by                                                                |
 | `title`         | The title, or null. Null or blank lists as "Untitled Spell"                                                                           |
 | `intent`        | The intent, or null. Without one the card draws no paragraph                                                                          |
 | `status`        | `draft` or `complete`                                                                                                                 |
@@ -36,9 +36,9 @@ The card is presentational: it takes props and works nothing out from the data, 
 
 ## Its name
 
-The `article` is named by its title heading through `aria-labelledby`. The grimoire list
-names each list item the same way, pointing at the same id (`spellTitleId`), so a test or a
-screen reader finds a spell by `getByRole('listitem', { name: 'Hearth Warding Jar' })`.
+The `article` is named by its title heading through `aria-labelledby`, so a test or a screen
+reader finds a spell by `getByRole('article', { name: 'Hearth Warding Jar' })`. The grimoire
+list leaves its items unnamed, so the title is heard once.
 
 ## Only a draft is marked
 

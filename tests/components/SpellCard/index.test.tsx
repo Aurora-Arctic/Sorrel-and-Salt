@@ -4,7 +4,7 @@ import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { press } from '../../support/interact';
-import SpellCard, { SpellCardFilters, spellTitleId } from '@/components/SpellCard';
+import SpellCard, { SpellCardFilters } from '@/components/SpellCard';
 
 // The title link navigates through the shared hook, so the App Router is mocked.
 vi.mock('next/navigation', () => ({
@@ -182,11 +182,10 @@ describe('SpellCard', () => {
     expect(edit.contains(title)).toBe(false);
   });
 
-  it('names the card by its title, under the id a list item points at', () => {
+  it('names the card by its title heading', () => {
     render(<SpellCard {...BASE} />);
     const card = screen.getByRole('article', { name: 'Fixture Working' });
-    const heading = within(card).getByRole('heading', { name: 'Fixture Working' });
-    expect(heading.id).toBe(spellTitleId('spell-1'));
+    expect(within(card).getByRole('heading', { name: 'Fixture Working' })).toBeInTheDocument();
   });
 
   it('calls a spell with no title Untitled Spell', () => {

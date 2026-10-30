@@ -1,18 +1,18 @@
 import type { ReactElement } from 'react';
 import IngredientSearch from '../IngredientSearch';
-import SpellCard, { SpellCardFilters, spellTitleId } from '../SpellCard';
+import IngredientCardList from '../IngredientCardList';
+import SpellCard, { SpellCardFilters } from '../SpellCard';
 import { recipeHref } from './recipe-href';
 import EmptyGrimoire from './empty';
 import GrimoireFilter from './filter';
 import type { GrimoireListProps } from './types';
 import '../CompendiumList/index.scss';
-import '../IngredientCardList/index.scss';
 import './index.scss';
 
 // One tab (Spells or Drafts) of a coven's Grimoire list: the filter row, a card per spell and the pager,
-// on the coven Ingredients' list shell (CovenCards). Render-only; drawn here so each item takes its
-// spell's title as its name (claude-docs/components/grimoire-list.md). The wrapper's `data-density`
-// draws the cards and the loading skeleton that stands in for them compact alike.
+// on the coven Ingredients' list shell (CovenCards), the list named after its tab. Render-only
+// (claude-docs/components/grimoire-list.md). The wrapper's `data-density` draws the loading skeleton
+// compact, as the cards are.
 
 const GrimoireList = ({
   path,
@@ -53,17 +53,11 @@ const GrimoireList = ({
       ) : (
         <>
           <SpellCardFilters />
-          <ul
-            className="ingredient-card-list grimoire-list__cards"
-            aria-label="Grimoire"
-            data-density="compact"
-          >
+          <IngredientCardList label={status === 'draft' ? 'Drafts' : 'Spells'} density="compact">
             {spells.map((spell) => (
-              <li key={spell.id} aria-labelledby={spellTitleId(spell.id)}>
-                <SpellCard {...spell} href={recipeHref(covenSlug, spell.id)} />
-              </li>
+              <SpellCard key={spell.id} {...spell} href={recipeHref(covenSlug, spell.id)} />
             ))}
-          </ul>
+          </IngredientCardList>
         </>
       )}
     </IngredientSearch>

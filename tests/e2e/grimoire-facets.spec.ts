@@ -59,7 +59,7 @@ test('the grimoire address filters by moon phase, visibility and maker, and a hi
   });
   await signInAgainAs(page, coven.users.B);
   const path = `/coven/${coven.slug}/grimoire`;
-  const items = () => page.getByRole('list', { name: 'Grimoire' }).getByRole('listitem');
+  const items = () => page.getByRole('list', { name: 'Spells' }).getByRole('listitem');
 
   await page.goto(path);
   await expect(items()).toHaveCount(3);
@@ -101,7 +101,7 @@ test('the Compact switch sets the grimoire list density and the filter is access
     insertSpell(sql, coven.id, 'Fixture Density Working', 'workspace', coven.users.A, 'complete'),
   );
   await page.goto(`/coven/${coven.slug}/grimoire`);
-  const list = page.getByRole('list', { name: 'Grimoire' });
+  const list = page.getByRole('list', { name: 'Spells' });
   const compact = page.getByRole('search').getByRole('switch', { name: 'Compact' });
   await expect(compact).toBeChecked();
   await expect(list).toHaveAttribute('data-density', 'compact');

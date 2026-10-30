@@ -107,9 +107,10 @@ variables, so a search and its categories live in the address and combine.
     value with no count is shown at 0.
   - The search sentence names each pick: "in the moon phase X or Y", "for the day X",
     "that are private" (one pick), "made by X".
-- **The list** is named Grimoire, and each item is named by its spell's title, through the
-  card's title id, so a test or a screen reader finds a spell by
-  `getByRole('listitem', { name: 'Hearth Warding Jar' })`.
+- **The list** is the shared `IngredientCardList` at compact density, named after its tab: Spells or
+  Drafts. Its items are unnamed and each card (`article`) is named by its spell's title, so a screen
+  reader hears the title once and a test finds a spell by
+  `getByRole('article', { name: 'Hearth Warding Jar' })`.
 - **Two empty states**, each a named status region, as the coven cards' are
   ([`coven-cards.md`](coven-cards.md)):
   - **No Spells**, "There are no complete spells here yet.", or **No Drafts**, "There are
@@ -163,7 +164,7 @@ One thing in the list exists for the cards' smouldering edge ([spell-card.md](sp
 
 ## Testing
 
-- `tests/components/GrimoireList/index.test.tsx`: the named list and items, the three empty
+- `tests/components/GrimoireList/index.test.tsx`: the list named after its tab, its unnamed items and named cards, the three empty
   regions, the title search's address, the category pick applied as a slug, and each category
   offered with its count, a category at zero not offered.
   The Compact switch: on by default, the list's `data-density`, and the stored choice it writes.
