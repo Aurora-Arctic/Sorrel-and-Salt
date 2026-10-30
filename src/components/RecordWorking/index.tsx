@@ -1,6 +1,7 @@
 'use client';
 
 import { type ReactElement, useRef, useState } from 'react';
+import { CauldronIcon } from '../IconTip/icons';
 import RecordWorkingDialog from './dialog';
 import type { RecordWorkingButtonProps } from './types';
 
@@ -11,7 +12,13 @@ export default function RecordWorkingButton(props: RecordWorkingButtonProps): Re
   const trigger = useRef<HTMLButtonElement>(null);
   return (
     <>
-      <button ref={trigger} type="button" className="btn btn--solid" onClick={() => setOpen(true)}>
+      <button
+        ref={trigger}
+        type="button"
+        className="btn btn--solid record-working__button"
+        onClick={() => setOpen(true)}
+      >
+        <CauldronIcon />
         Record a Working
       </button>
       {open && (
