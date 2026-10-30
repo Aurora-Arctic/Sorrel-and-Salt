@@ -126,7 +126,7 @@ export const PreviewButton = ({
   </IconTip>
 );
 
-/** Record a Working as a button: a spell's cauldron, named and tipped "Record a Working", opening the dialog that records one, in the text colour. */
+/** Record a Working as a button: a spell's cauldron, named and tipped "Record a Working", opening the dialog that records one, in the accent green. */
 export const RecordButton = ({
   onClick,
   ref,
@@ -135,12 +135,7 @@ export const RecordButton = ({
   ref?: Ref<HTMLButtonElement>;
 }): ReactElement => (
   <IconTip tip="Record a Working">
-    <button
-      ref={ref}
-      type="button"
-      className="icon-tip__edit icon-tip__edit--plain"
-      onClick={onClick}
-    >
+    <button ref={ref} type="button" className="icon-tip__edit" onClick={onClick}>
       <CauldronIcon />
       <span className="visually-hidden">Record a Working</span>
     </button>
