@@ -9,10 +9,10 @@ import type { FacetPanelFilter } from './types';
 // until Apply Filters or a close, and marks the chips "loading" briefly. Counts are
 // fixed. Narrow the preview below the tablet width for the modal sheet.
 const meta = {
-  title: 'Ingredients / Facet Panel',
+  title: 'Forms / Facet Panel',
 } satisfies Meta;
 export default meta;
-type Story = StoryObj<{ state?: import('react').ReactNode }>;
+type Story = StoryObj<{ state?: ReactNode }>;
 
 const WARDING = { id: 'g1', name: 'Protective', colorDark: '#50a58e', colorLight: '#1d755d' };
 const MENDING = { id: 'g2', name: 'Restorative', colorDark: '#b98ac9', colorLight: '#7a4b8f' };
@@ -87,6 +87,7 @@ function Panel({
   facets = FACETS,
   open = true,
   menu,
+  covens,
 }: {
   start?: FacetPanelFilter;
   admin?: boolean;
@@ -95,6 +96,8 @@ function Panel({
   open?: boolean;
   /** The chip whose menu is opened once the panel is, so the menu is seen without a click. */
   menu?: string;
+  /** The viewer's covens, for the In My Covens field. */
+  covens?: readonly { id: string; name: string }[];
 }) {
   const [filter, setFilter] = useState(start);
   const [loading, setLoading] = useState(false);
@@ -124,6 +127,7 @@ function Panel({
           facets={facets}
           filter={filter}
           admin={admin}
+          covens={covens}
           loading={loading}
           clearHref="#clear"
           onClear={() => setFilter(NONE)}
@@ -234,28 +238,51 @@ const covenEmptyNode = (
 );
 
 // The Match chip open, two categories chosen: the menu of radios fades in under the chip.
-export const MatchMenu: Story = {
-  render: () => (
-    <Panel
-      menu="Match"
-      start={{ ...NONE, categories: ['warding', 'mending'], categoryMode: 'any' }}
-    />
-  ),
-};
+const matchMenuNode = (
+  <Panel
+    menu="Match"
+    start={{ ...NONE, categories: ['warding', 'mending'], categoryMode: 'any' }}
+  />
+);
 
 // The coven's Source chip open: Local and Compendium with their counts, no brackets.
-export const SourceMenu: Story = {
-  render: () => (
-    <Panel
-      menu="Source"
-      facets={COVEN_FACETS}
-      start={{ ...NONE, source: 'local', inStock: true, lowStockOnly: true }}
-    />
-  ),
-};
+const sourceMenuNode = (
+  <Panel
+    menu="Source"
+    facets={COVEN_FACETS}
+    start={{ ...NONE, source: 'local', inStock: true, lowStockOnly: true }}
+  />
+);
 
 // The admin's Toxic chip open, with No Refs on the same row.
-export const ToxicMenu: Story = { render: () => <Panel menu="Toxic" admin start={NONE} /> };
+const toxicMenuNode = <Panel menu="Toxic" admin start={NONE} />;
+
+// A signed-in viewer in two covens: In My Covens beside Forms and Toxic, each half the line,
+// one coven picked. The covens carry no counts.
+const inMyCovensNode = (
+  <Panel
+    covens={[
+      { id: 'coven-one', name: 'Test Coven One' },
+      { id: 'coven-two', name: 'Test Coven Two' },
+    ]}
+    start={{ ...NONE, covens: ['coven-one'] }}
+  />
+);
+
+// The admin's Reviewed strip, on Needs Review: Reviewed and Needs Review with their counts.
+const adminReviewedNode = (
+  <Panel
+    admin
+    facets={{
+      ...FACETS,
+      reviewed: [
+        { value: 'reviewed', label: 'Reviewed', count: 15 },
+        { value: 'needs_review', label: 'Needs Review', count: 10 },
+      ],
+    }}
+    start={{ ...NONE, reviewed: 'needs_review' }}
+  />
+);
 
 const STATES: Record<string, ReactNode> = {
   Default: defaultNode,
@@ -270,6 +297,11 @@ const STATES: Record<string, ReactNode> = {
   Admin: adminNode,
   Coven: covenNode,
   'Coven Empty': covenEmptyNode,
+  'Match Menu': matchMenuNode,
+  'Source Menu': sourceMenuNode,
+  'Toxic Menu': toxicMenuNode,
+  'In My Covens': inMyCovensNode,
+  'Admin Reviewed': adminReviewedNode,
 };
 
 export const States: Story = {

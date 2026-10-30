@@ -31,7 +31,7 @@ cards. The compact selectors, with the `:not(:root[data-card-density='regular'] 
 
 ## Stories
 
-`Ingredients / Card Density Switch` has one story, `States`, with a control that chooses Switch (the switch alone; toggling it sets `data-card-density` on the story frame's `<html>` and writes storage, so the choice carries to other stories until cleared), Coven Row (the Ingredients filter row with no filter, the switch on the Filters line) and Coven Row Filtered (a form chosen, so Clear All shows and the switch wraps beneath).
+`Forms / Card Density Switch` has one story, `States`, with a control that chooses Switch (the switch alone; toggling it sets `data-card-density` on the story frame's `<html>` and writes storage, so the choice carries to other stories until cleared), Coven Row (the Ingredients filter row with no filter, the switch on the Filters line) and Coven Row Filtered (a form chosen, so Clear All shows and the switch wraps beneath).
 
 ## Tests
 

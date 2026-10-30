@@ -181,10 +181,13 @@ and 7.99:1 (dark), the title 15.56:1 and 12.20:1.
 
 ## Stories
 
-`Grimoire / Spell Card` (`index.stories.tsx`), each a set of states drawn side by side:
+`Grimoire / Spell Card` (`index.stories.tsx`): `States`, a grid of Complete, As Listed (the
+title link, the made count, the last edit and the foot's Quick Look eye, Record a Working, Edit
+pencil and More menu, as the grimoire lists a card to a member who may use them), Viewer, As
+Listed (the link, the eye and the lines, with no Record, Edit or More), Draft, Private, Private
+Draft, Untitled, No Intent, No Categories, Made Once, Made Several Times, Edited, Heading Level 3,
+Long Title, Held (the finished hovered look, drawn with no pointer), Hover It (a card at rest to
+hover), Compact and Compact Private Draft (each under `data-density="compact"`).
 
-- `States`: Complete, Draft, Private, Private Draft, Untitled, No Intent, No Categories and Long Title.
-- `Hover`: Held, a card in its finished hovered state, and Hover It, a card at rest to hover with the pointer.
-- `Compact`: Complete and Private Draft under `data-density="compact"`.
-
-None draws the foot's actions: each needs a query client, which the workshop does not provide.
+The foot's buttons open their dialogs, but nothing they write is answered in this story; Record
+a Working's own story answers its writes.

@@ -8,10 +8,10 @@ import FacetCombobox from '.';
 // Render-only; behaviour is asserted in tests/components/FacetCombobox. Invented
 // values and counts, as a filter reads them from a search.
 const meta = {
-  title: 'Ingredients / Facet Combobox',
+  title: 'Forms / Facet Combobox',
 } satisfies Meta;
 export default meta;
-type Story = StoryObj<{ state?: import('react').ReactNode }>;
+type Story = StoryObj<{ state?: ReactNode }>;
 
 const ELEMENTS: ComboboxChoice[] = [
   { value: 'air', label: 'Testair', count: 3 },
@@ -34,16 +34,20 @@ function Stateful({
   initial = [],
   choices = ELEMENTS,
   label = 'Elements',
+  noun = label.replace(/s$/, ''),
   ...props
 }: {
   initial?: string[];
   choices?: ComboboxChoice[];
   label?: string;
+  /** One value of the label, in title case, for the placeholder and the cross's name. */
+  noun?: string;
   loading?: boolean;
   typeahead?: boolean;
   hideZeros?: boolean;
   hint?: string;
   emptyPlaceholder?: string;
+  counts?: boolean;
 }) {
   const [values, setValues] = useState(initial);
   return (
@@ -54,8 +58,8 @@ function Stateful({
         choices={choices}
         values={values}
         onChange={setValues}
-        placeholder={`Add ${label.toLowerCase().replace(/s$/, '')}`}
-        removeNoun={label.replace(/s$/, '')}
+        placeholder={`Add ${noun}`}
+        removeNoun={noun}
         {...props}
       />
     </div>
@@ -79,6 +83,7 @@ const chosenWithNothingBehindItNode = <Stateful initial={['earth']} />;
 const allZeroNode = (
   <Stateful
     label="Celestial Bodies"
+    noun="Celestial Body"
     choices={[
       { value: 'sun', label: 'Test Sun', count: 0 },
       { value: 'moon', label: 'Test Moon', count: 0 },
@@ -98,25 +103,36 @@ const withHintNode = <Stateful hint="Counts follow the other filters." initial={
 const customEmptyNode = (
   <Stateful
     label="Celestial Bodies"
+    noun="Celestial Body"
     choices={[{ value: 'sun', label: 'Test Sun', count: 0 }]}
     emptyPlaceholder="None In These Results"
   />
 );
 
 // Narrow, as on a phone: the chips wrap inside the control.
-export const Narrow: Story = {
-  render: () => (
-    <div style={{ maxWidth: '16rem' }}>
-      <Stateful initial={['air', 'fire', 'spirit', 'water']} />
-    </div>
-  ),
-};
+const narrowNode = (
+  <div style={{ maxWidth: '16rem' }}>
+    <Stateful initial={['air', 'fire', 'spirit', 'water']} />
+  </div>
+);
 
 // Typing narrows the list, as the Forms filter does: the typed box, the chosen
 // values still outlined chips with their counts and icons.
-export const Typeahead: Story = {
-  render: () => <Stateful label="Forms" choices={FORMS} initial={['leaf']} typeahead />,
-};
+const typeaheadNode = <Stateful label="Forms" choices={FORMS} initial={['leaf']} typeahead />;
+
+// A field whose values carry no counts, as In My Covens: no count and no placeholder for one.
+const withoutCountsNode = (
+  <Stateful
+    label="Covens"
+    choices={[
+      { value: 'first', label: 'Test Coven One' },
+      { value: 'second', label: 'Test Coven Two' },
+      { value: 'third', label: 'Test Coven Three' },
+    ]}
+    initial={['first']}
+    counts={false}
+  />
+);
 
 const DEITIES: ComboboxChoice[] = [
   { value: 'a', label: 'Test Aletheia', count: 4, group: 'Test Tradition One' },
@@ -127,7 +143,9 @@ const DEITIES: ComboboxChoice[] = [
 ];
 
 // Each choice under its group's heading, as the Deities filter groups by tradition.
-const groupedNode = <Stateful label="Deities" choices={DEITIES} initial={['c']} typeahead />;
+const groupedNode = (
+  <Stateful label="Deities" noun="Deity" choices={DEITIES} initial={['c']} typeahead />
+);
 
 const STATES: Record<string, ReactNode> = {
   Default: defaultNode,
@@ -140,6 +158,9 @@ const STATES: Record<string, ReactNode> = {
   Grouped: groupedNode,
   'With Hint': withHintNode,
   'Custom Empty Text': customEmptyNode,
+  Narrow: narrowNode,
+  Typeahead: typeaheadNode,
+  'Without Counts': withoutCountsNode,
 };
 
 export const States: Story = {

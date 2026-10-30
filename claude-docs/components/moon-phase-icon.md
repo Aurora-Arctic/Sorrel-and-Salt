@@ -38,4 +38,5 @@ A Gazetteer diameter is a feature's greatest extent, so the ellipse is generous 
 
 ## Stories
 
-Surfaces / Moon Phase Icon: All Phases, every phase in a row.
+[`index.stories.tsx`](../../src/components/MoonPhaseIcon/index.stories.tsx), under
+`Grimoire / Moon Phase Icon`: `Default`, every phase in a row with its name beneath.

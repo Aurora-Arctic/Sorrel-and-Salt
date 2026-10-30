@@ -188,6 +188,7 @@ const preview: Preview = {
           'account',
           'coven',
           'ingredients',
+          'grimoire',
           'admin',
           'emails',
           'forms',

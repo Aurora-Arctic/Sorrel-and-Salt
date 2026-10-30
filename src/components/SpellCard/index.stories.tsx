@@ -1,9 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { StatesGrid } from '../../../.storybook/states-grid';
+import { route } from '../../../.storybook/route';
 import SpellCard, { SpellCardFilters } from '.';
+import type { SpellCardProps } from './types';
 import './index.stories.scss';
 
-// Render-only; what shows and when is asserted in tests/components/SpellCard.
+// Render-only; what shows and when is asserted in tests/components/SpellCard. Recording a
+// working and the More menu's writes are not answered here: their own stories answer them.
 const meta = {
   title: 'Grimoire / Spell Card',
 } satisfies Meta;
@@ -32,8 +35,38 @@ const BASE = {
   categories: CATEGORIES,
 };
 
+// Everything the grimoire's list gives a member who may record, edit and delete: the title
+// link, the made count, the last edit, and the foot's Quick Look eye, Record a Working, the
+// Edit pencil and the More menu.
+const LISTED = {
+  href: route('/coven/fixture-coven/grimoire/story'),
+  lookHref: route('/coven/fixture-coven/grimoire?spell=story'),
+  editHref: route('/coven/fixture-coven/grimoire?edit=story'),
+  recordWorking: {
+    workspaceId: 'fixture-coven',
+    members: [
+      { userId: 'u1', name: 'Testa Owner' },
+      { userId: 'u2', name: 'Mocka Member' },
+    ],
+    recorderId: 'u1',
+    steps: [{ id: 's1', name: 'Testwort' }],
+  },
+  more: {
+    workspaceId: 'fixture-coven',
+    covenSlug: 'fixture-coven',
+    deletedHref: route('/coven/fixture-coven/grimoire'),
+    canDuplicate: true,
+    canDelete: true,
+  },
+  lastEdit: LAST_EDIT,
+  workingCount: 3,
+} satisfies Partial<SpellCardProps>;
+
 // Every state of the card in one grid. The cell is the grimoire's narrowest column.
 // The burn filter of the smouldering edge rides along, so hovering any card shows it.
+// Held is the hovered look drawn with no pointer, for a touch screen and a still screenshot.
+// The two Compact cells are the look the grimoire's Compact switch turns on: the list's
+// `data-density` attribute is all it takes.
 export const States: Story = {
   render: () => (
     <>
@@ -42,6 +75,17 @@ export const States: Story = {
         cell="22rem"
         states={{
           Complete: <SpellCard {...BASE} id="complete" />,
+          'As Listed': <SpellCard {...BASE} {...LISTED} id="listed" />,
+          'Viewer, As Listed': (
+            <SpellCard
+              {...BASE}
+              id="viewer"
+              href={LISTED.href}
+              lookHref={LISTED.lookHref}
+              lastEdit={LAST_EDIT}
+              workingCount={1}
+            />
+          ),
           Draft: <SpellCard {...BASE} id="draft" status="draft" title="Dreaming Sachet" />,
           Private: <SpellCard {...BASE} id="private" visibility="private" />,
           'Private Draft': (
@@ -56,6 +100,10 @@ export const States: Story = {
           Untitled: <SpellCard {...BASE} id="untitled" status="draft" title={null} />,
           'No Intent': <SpellCard {...BASE} id="no-intent" intent={null} />,
           'No Categories': <SpellCard {...BASE} id="no-categories" categories={[]} />,
+          'Made Once': <SpellCard {...BASE} id="made-once" workingCount={1} />,
+          'Made Several Times': <SpellCard {...BASE} id="made-several" workingCount={3} />,
+          Edited: <SpellCard {...BASE} id="edited" lastEdit={LAST_EDIT} />,
+          'Heading Level 3': <SpellCard {...BASE} id="level-3" level={3} />,
           'Long Title': (
             <SpellCard
               {...BASE}
@@ -63,55 +111,31 @@ export const States: Story = {
               title="A Very Long Spell Title for Banishing the Damp from Grandmother's Cellar"
             />
           ),
-        }}
-      />
-    </>
-  ),
-};
-
-// The hover, the parchment smouldering from the foot corner: one card held in its
-// finished hovered state, and one at rest to hover with the pointer.
-export const Hover: Story = {
-  render: () => (
-    <>
-      <SpellCardFilters />
-      <StatesGrid
-        cell="22rem"
-        states={{
           Held: (
             <div className="spell-card-story-held">
               <SpellCard {...BASE} id="held" lastEdit={LAST_EDIT} />
             </div>
           ),
           'Hover It': <SpellCard {...BASE} id="hover" lastEdit={LAST_EDIT} />,
-        }}
-      />
-    </>
-  ),
-};
-
-// The compact look, which the grimoire's Compact switch turns on (as an ingredient card's):
-// the list's `data-density` attribute is all it takes.
-export const Compact: Story = {
-  render: () => (
-    <div data-density="compact">
-      <SpellCardFilters />
-      <StatesGrid
-        cell="18rem"
-        states={{
-          Complete: <SpellCard {...BASE} id="compact-complete" lastEdit={LAST_EDIT} />,
-          'Private Draft': (
-            <SpellCard
-              {...BASE}
-              id="compact-private-draft"
-              status="draft"
-              visibility="private"
-              title="Dreaming Sachet"
-              lastEdit={LAST_EDIT}
-            />
+          Compact: (
+            <div data-density="compact">
+              <SpellCard {...BASE} {...LISTED} id="compact-listed" />
+            </div>
+          ),
+          'Compact Private Draft': (
+            <div data-density="compact">
+              <SpellCard
+                {...BASE}
+                id="compact-private-draft"
+                status="draft"
+                visibility="private"
+                title="Dreaming Sachet"
+                lastEdit={LAST_EDIT}
+              />
+            </div>
           ),
         }}
       />
-    </div>
+    </>
   ),
 };

@@ -60,7 +60,9 @@ without a page routed to it.
      `Account / Invitations Received`), **Coven** (including
      `Coven / Invitations Sent`), **Ingredients** (everything about the
      compendium and a coven's ingredients, in one flat group: cards, the list,
-     the form, the entry, the facets, the search) and **Admin**
+     the form, the entry, the facets, the search), **Grimoire** (everything
+     about a coven's spells: the card, the list, the builder, the preview and
+     the recipe, the workings) and **Admin**
      (`Admin / Invitations`, `Admin / Nav`, `Admin / User List`) and
      **Emails**. `Coven / Member List`, `Admin / Group List`,
      `Account / Name Form`.
