@@ -18,8 +18,9 @@ import { UNTITLED_SPELL } from '@/components/SpellCard';
 import { Forbidden, NotFound } from '@/lib/errors';
 import { RowId } from '@/lib/validation';
 import { memberRoster, rolePermits } from '@/modules/coven';
-import { displayNamesOf } from '@/modules/identity';
 import { requireCovenMembership, requireSession } from '@/lib/request-session';
+import RecordWorkingButton from '@/components/RecordWorking';
+import { displayNamesOf } from '@/modules/identity';
 import { readSpell } from '@/modules/grimoire';
 import { readEditedSpell } from '../(list)/reads';
 import { readViewedEntry } from '../../ingredients/reads';
@@ -92,6 +93,9 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
   const canUpdate = rolePermits(membership.role, { spell: ['update'] });
   const canDelete = rolePermits(membership.role, { spell: ['delete'] });
   const canDuplicate = rolePermits(membership.role, { spell: ['create'] });
+  // Only a complete spell is worked, and on the permission `recordWorking` asserts.
+  const canRecord =
+    spell.status === 'complete' && rolePermits(membership.role, { working: ['create'] });
   const name = spell.title?.trim() || UNTITLED_SPELL;
   const listPath = `/coven/${workspace.slug}/grimoire${spell.status === 'draft' ? '/drafts' : ''}`;
   const deletedHref = `${listPath}?${new URLSearchParams({ deleted: name })}` as Route;
@@ -152,6 +156,15 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
           action={
             <div className="spell-recipe__actions">
               <SpellPreview title={name} steps={previewStepsOf(recipe.steps)} />
+              {canRecord && (
+                <RecordWorkingButton
+                  workspaceId={workspace.id}
+                  spellId={spell.id}
+                  spellVisibility={spell.visibility}
+                  members={members}
+                  steps={ingredientSteps}
+                />
+              )}
               {canUpdate && (
                 <EditLink
                   href={`${recipePath}?edit=${spell.id}` as Route}
