@@ -5,7 +5,9 @@ import type { DBAdapter } from '@better-auth/core/db/adapter';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { tableFacts } from '../../../support/db/table-metadata';
 import { passkey } from '@better-auth/passkey';
-import { passkeys, rateLimits, signInFailures } from '@/modules/identity/schema/auth';
+import { twoFactor } from 'better-auth/plugins';
+import { passkeys, rateLimits, signInFailures, twoFactors } from '@/modules/identity/schema/auth';
+import { users } from '@/modules/identity/schema/users';
 import { warmImport } from '../../../support/warm-import';
 
 warmImport(() => import('@/lib/auth'));
@@ -187,6 +189,64 @@ describe('passkeys in the migrated database', () => {
     const [{ delete_rule: rule }] = await sql<{ delete_rule: string }[]>`
       select delete_rule from information_schema.referential_constraints
       where constraint_name = 'passkeys_user_id_users_id_fk'
+    `;
+    expect(rule).toBe('CASCADE');
+  });
+});
+
+// Better Auth's `twoFactor` model, `two_factors` under `usePlural`; the plugin is not registered, so only its declared fields bind the table.
+describe('two_factors schema', () => {
+  const { columns, indexes, byName, foreignKeyByColumn } = tableFacts(twoFactors);
+  const { schema } = twoFactor();
+
+  it('has a column for every field the plugin declares, and the user flag', () => {
+    const fields = Object.keys(schema.twoFactor.fields);
+
+    // Precondition: the plugin declared its fields.
+    expect(fields).toEqual([
+      'secret',
+      'backupCodes',
+      'userId',
+      'verified',
+      'failedVerificationCount',
+      'lockedUntil',
+    ]);
+    expect(fields.every((field) => field in twoFactors)).toBe(true);
+    expect(columns.map((column) => column.name).sort()).toEqual([
+      'backup_codes',
+      'failed_verification_count',
+      'id',
+      'locked_until',
+      'secret',
+      'user_id',
+      'verified',
+    ]);
+    expect(Object.keys(schema.user.fields)).toEqual(['twoFactorEnabled']);
+    expect(tableFacts(users).byName.two_factor_enabled).toBeDefined();
+  });
+
+  it('indexes the account and starts a row verified, with no failures', () => {
+    expect(indexes.map((index) => index.config.name)).toEqual(['two_factors_userId_idx']);
+    expect(byName.verified.default).toBe(true);
+    expect(byName.failed_verification_count.default).toBe(0);
+  });
+
+  it('belongs to an account and goes with it', () => {
+    expect(byName.user_id.notNull).toBe(true);
+    expect(foreignKeyByColumn.user_id.foreignColumnNames).toEqual(['id']);
+  });
+});
+
+describe('two_factors in the migrated database', () => {
+  let sql: postgres.Sql;
+  useTestDatabase((client) => {
+    sql = client;
+  });
+
+  it('cascades from users on delete', async () => {
+    const [{ delete_rule: rule }] = await sql<{ delete_rule: string }[]>`
+      select delete_rule from information_schema.referential_constraints
+      where constraint_name = 'two_factors_user_id_users_id_fk'
     `;
     expect(rule).toBe('CASCADE');
   });
