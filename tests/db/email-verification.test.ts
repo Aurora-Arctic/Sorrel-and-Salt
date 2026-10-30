@@ -411,11 +411,20 @@ describe('a new account is seated in the demo coven', () => {
     return row;
   }
 
+  // Every case starts from no demo coven, whether or not the template holds one.
+  async function removeDemoCoven() {
+    // The coven's contents reference its row, so they go first; the cascade also empties the tables that hang off them.
+    await sql`truncate spell_workings, spells, inventory_items, workspace_compendium_entries, ingredients cascade`;
+    await sql`delete from workspace_members where workspace_id = ${DEMO_WORKSPACE_ID}`;
+    await sql`delete from workspaces where id = ${DEMO_WORKSPACE_ID}`;
+  }
+
+  beforeEach(removeDemoCoven);
+
   afterEach(async () => {
     await sql`drop trigger if exists refuse_demo_seat on workspace_members`;
     await sql`drop function if exists refuse_demo_seat()`;
-    await sql`delete from workspace_members where workspace_id = ${DEMO_WORKSPACE_ID}`;
-    await sql`delete from workspaces where id = ${DEMO_WORKSPACE_ID}`;
+    await removeDemoCoven();
   });
 
   it('gives a sign-up a viewer seat and leaves canCreateWorkspace false', async () => {
