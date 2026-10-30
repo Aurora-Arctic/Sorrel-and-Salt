@@ -17,16 +17,28 @@
   &:focus {
     outline: none;
   }
+
+  // The page's side gutter on a phone.
+  @media (max-width: $shell-phone-width) {
+    padding: space(4);
+  }
 }
 
-// Close and the wake-lock sign sit together at the top right, kept in view as the steps scroll.
+// The controls sit in a row above the title, at the end, and stay in view as the steps scroll. A row and
+// not a float, so a long title never wraps around them.
 .spell-preview__bar {
   position: sticky;
   top: 0;
   z-index: 1;
   display: flex;
-  float: right;
+  justify-content: flex-end;
   gap: space(2);
+}
+
+// Screen Awake held on: the quiet button's highlighted look stays, so pressed differs from unpressed.
+.spell-preview__awake[aria-pressed='true'] {
+  border-color: $edge-highlight;
+  background-color: $fill-highlight-field;
 }
 
 // A slow decorative glow behind the content: it drifts, and stands still under reduced motion.
