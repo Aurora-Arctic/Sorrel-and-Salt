@@ -813,8 +813,11 @@ const SpellBuilder = ({
             asked={deleting}
             question={
               <>
-                Delete {name}? It leaves the grimoire for every member of the coven. Nothing in
-                stock changes.
+                Delete {name}?
+                {/* A private spell was only ever its author's, so only a shared one leaves the coven. */}
+                {defaultValues?.visibility === 'workspace' &&
+                  ' It leaves the grimoire for every member of the coven.'}{' '}
+                Nothing in stock changes.
               </>
             }
             busy={removed}

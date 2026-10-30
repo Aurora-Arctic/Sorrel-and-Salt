@@ -98,13 +98,19 @@ describe('Delete in the spell builder', () => {
     renderBuilder({ spell: SPELL, deletedHrefOf });
     fireEvent.click(del()!);
     const question = await asked();
-    expect(question).toHaveTextContent(
-      'Delete Fixture Working? It leaves the grimoire for every member of the coven. Nothing in stock changes.',
-    );
+    expect(question).toHaveTextContent('Delete Fixture Working? Nothing in stock changes.');
     fireEvent.click(within(question).getByRole('button', { name: 'Keep It' }));
     await waitFor(() => expect(screen.queryByRole('button', { name: 'Keep It' })).toBeNull());
     expect(deleted).toHaveLength(0);
     expect(router.replace).not.toHaveBeenCalled();
+  });
+
+  it("tells a shared spell's author that it leaves the grimoire for the whole coven", async () => {
+    renderBuilder({ spell: { ...SPELL, visibility: 'workspace' }, deletedHrefOf });
+    fireEvent.click(del()!);
+    expect(await asked()).toHaveTextContent(
+      'Delete Fixture Working? It leaves the grimoire for every member of the coven. Nothing in stock changes.',
+    );
   });
 
   it('deletes on confirm, sends no save, and leaves for the list', async () => {
