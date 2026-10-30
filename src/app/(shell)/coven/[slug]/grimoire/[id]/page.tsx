@@ -7,7 +7,6 @@ import DetailsDialog from '@/components/IngredientEntry/details-dialog';
 import SpellDialog from '@/components/SpellBuilder/spell-dialog';
 import SpellPreview from '@/components/SpellPreview';
 import { previewStepsOf } from '@/components/SpellPreview/preview-steps';
-import PrintButton from '@/components/SpellRecipe/print-button';
 import SpellMoreMenu from '@/components/SpellRecipe/more-menu';
 import SpellRecipe from '@/components/SpellRecipe';
 import CompleteWorkingAction from '@/components/RecordWorking/complete-action';
@@ -172,15 +171,15 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
                   steps={ingredientSteps}
                 />
               )}
-              <SpellPreview title={name} steps={previewStepsOf(recipe.steps)} />
-              <PrintButton name={name} />
               {canUpdate && (
                 <EditLink
                   href={`${recipePath}?edit=${spell.id}` as Route}
                   name={name}
                   heading={{ eyebrow: 'Edit Spell', title: name }}
+                  className="icon-tip__edit icon-tip__edit--plain"
                 />
               )}
+              <SpellPreview title={name} steps={previewStepsOf(recipe.steps)} />
               <SpellMoreMenu
                 workspaceId={workspace.id}
                 covenSlug={workspace.slug}

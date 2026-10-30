@@ -12,7 +12,6 @@ import {
   MysticEyeIcon,
   PencilIcon,
   PreviewIcon,
-  PrintIcon,
 } from './icons';
 
 // The icon controls that are a button rather than a link, shared by the coven cards' foot, the entry page and the Quick Look window so the places cannot differ
@@ -104,7 +103,7 @@ export const QuickLookButton = ({
   </IconTip>
 );
 
-/** Preview as a button: a spell's pane for following it as it is worked, named "Preview Spell" and the spell. */
+/** Preview as a button: a spell's pane for following it as it is worked, in the text colour, named "Preview Spell" and the spell. */
 export const PreviewButton = ({
   name,
   onClick,
@@ -115,30 +114,19 @@ export const PreviewButton = ({
   ref?: Ref<HTMLButtonElement>;
 }): ReactElement => (
   <IconTip tip="Preview">
-    <button ref={ref} type="button" className="icon-tip__edit" onClick={onClick}>
+    <button
+      ref={ref}
+      type="button"
+      className="icon-tip__edit icon-tip__edit--plain"
+      onClick={onClick}
+    >
       <PreviewIcon />
       <span className="visually-hidden">Preview Spell {name}</span>
     </button>
   </IconTip>
 );
 
-/** Print as a button: opens the browser's print dialog, named "Print Spell" and the spell. */
-export const PrintButton = ({
-  name,
-  onClick,
-}: {
-  name: string;
-  onClick: () => void;
-}): ReactElement => (
-  <IconTip tip="Print">
-    <button type="button" className="icon-tip__edit" onClick={onClick}>
-      <PrintIcon />
-      <span className="visually-hidden">Print Spell {name}</span>
-    </button>
-  </IconTip>
-);
-
-/** Record a Working as a button: a spell's cauldron, named and tipped "Record a Working", opening the dialog that records one. */
+/** Record a Working as a button: a spell's cauldron, named and tipped "Record a Working", opening the dialog that records one, in the text colour. */
 export const RecordButton = ({
   onClick,
   ref,
@@ -147,7 +135,12 @@ export const RecordButton = ({
   ref?: Ref<HTMLButtonElement>;
 }): ReactElement => (
   <IconTip tip="Record a Working">
-    <button ref={ref} type="button" className="icon-tip__edit" onClick={onClick}>
+    <button
+      ref={ref}
+      type="button"
+      className="icon-tip__edit icon-tip__edit--plain"
+      onClick={onClick}
+    >
       <CauldronIcon />
       <span className="visually-hidden">Record a Working</span>
     </button>
