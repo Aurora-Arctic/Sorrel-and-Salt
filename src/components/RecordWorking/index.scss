@@ -1,5 +1,15 @@
 @use '../../scss/variables' as *;
 
+// The Share With the Coven switch, start-aligned as the spell builder's is rather than centred as the
+// primitive's filter-bar switch is.
+.working-form .switch {
+  align-items: flex-start;
+
+  .field__label {
+    text-align: start;
+  }
+}
+
 // The deduction preview: each step's name, then its amount against the right edge in figures of one
 // width so the amounts line up. The list stays a list for assistive technology.
 .working-deductions {

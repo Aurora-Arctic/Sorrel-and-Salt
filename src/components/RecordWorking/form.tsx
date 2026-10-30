@@ -13,6 +13,7 @@ import { FieldShell, FormActions, VisibilitySwitch, fieldDescription } from '../
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import WorkingCompletion from './completion';
+import './index.scss';
 import type { RecordWorkingDialogProps, WorkingParticipantValue } from './types';
 
 // The form inside the Record a Working dialog, which records a draft working of a complete spell or
@@ -183,7 +184,7 @@ export default function RecordWorkingForm({
   }
   return (
     <form
-      className="form"
+      className="form working-form"
       noValidate
       onSubmit={(event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
