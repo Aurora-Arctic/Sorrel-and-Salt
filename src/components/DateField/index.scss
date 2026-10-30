@@ -79,35 +79,15 @@
   gap: space(2);
 }
 
-// The select's chevron is the library's label span, kept as a layer over the select's right edge: its text is
-// hidden (the select shows its own) and it ignores presses, so the select takes them.
+// The month and year pickers are the app's select-only boxes, shorter than a field to sit in the caption; the library's own text label for them is not drawn.
 .day-picker__dropdown-root {
   position: relative;
   display: inline-grid;
-}
 
-.day-picker__dropdown-root .day-picker__label {
-  position: absolute;
-  inset-block: 0;
-  inset-inline-end: space(2);
-  display: flex;
-  align-items: center;
-  color: $text-muted;
-  font-size: 0;
-  pointer-events: none;
-}
-
-// The shared `.select` box (_primitives.scss) without its gradient arrow, shorter than a field to sit in the caption.
-.select.day-picker__dropdown {
-  inline-size: auto;
-  min-block-size: 0;
-  padding-block: space(1);
-  padding-inline-end: space(6);
-  background-image: none;
-}
-
-.day-picker__label {
-  font-weight: 600;
+  .combobox__control {
+    min-block-size: 0;
+    padding-block: space(1);
+  }
 }
 
 // Previous and next sit at the caption's end, over the space its padding keeps clear (the nav is a sibling of the caption, so it is placed, not flowed).

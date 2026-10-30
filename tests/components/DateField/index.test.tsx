@@ -55,8 +55,10 @@ describe('DateField', () => {
   it('moves the calendar to a month and a year chosen from its caption, then picks a day there', () => {
     render(<Harness initial="2026-03-10" max="2026-06-15" />);
     fireEvent.click(screen.getByRole('button', { name: /Date/ }));
-    fireEvent.change(screen.getByRole('combobox', { name: /Year/ }), { target: { value: '2024' } });
-    fireEvent.change(screen.getByRole('combobox', { name: /Month/ }), { target: { value: '1' } });
+    fireEvent.click(screen.getByRole('combobox', { name: /Year/ }));
+    fireEvent.click(screen.getByRole('option', { name: '2024' }));
+    fireEvent.click(screen.getByRole('combobox', { name: /Month/ }));
+    fireEvent.click(screen.getByRole('option', { name: 'February' }));
     const grid = screen.getByRole('grid');
     expect(grid).toHaveAccessibleName(/February 2024/);
     fireEvent.click(within(grid).getByRole('button', { name: /, 9 February 2024/ }));
@@ -66,8 +68,27 @@ describe('DateField', () => {
   it('offers no year after max', () => {
     render(<Harness max="2026-06-15" />);
     fireEvent.click(screen.getByRole('button', { name: /Date/ }));
-    const years = within(screen.getByRole('combobox', { name: /Year/ })).getAllByRole('option');
+    fireEvent.click(screen.getByRole('combobox', { name: /Year/ }));
+    const years = screen.getAllByRole('option');
     expect(years[years.length - 1]).toHaveTextContent('2026');
+  });
+
+  it('keeps the calendar open when a press lands on a year in the open list', () => {
+    render(<Harness max="2026-06-15" />);
+    fireEvent.click(screen.getByRole('button', { name: /Date/ }));
+    fireEvent.click(screen.getByRole('combobox', { name: /Year/ }));
+    fireEvent.pointerDown(screen.getByRole('option', { name: '2020' }));
+    expect(screen.getByRole('grid')).toBeInTheDocument();
+  });
+
+  it('closes an open year list on Escape and leaves the calendar open', () => {
+    render(<Harness max="2026-06-15" />);
+    fireEvent.click(screen.getByRole('button', { name: /Date/ }));
+    const year = screen.getByRole('combobox', { name: /Year/ });
+    fireEvent.click(year);
+    fireEvent.keyDown(year, { key: 'Escape' });
+    expect(screen.queryByRole('option', { name: '2020' })).toBeNull();
+    expect(screen.getByRole('grid')).toBeInTheDocument();
   });
 
   it('closes on Escape without changing the day', () => {

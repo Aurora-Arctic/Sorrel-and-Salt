@@ -385,8 +385,18 @@ for (const [name, size] of [
     expect(corner).toBe(true);
 
     // A short date, 1 May 1900, takes no less room than today's.
-    await page.getByRole('combobox', { name: /Year/ }).selectOption('1900');
-    await page.getByRole('combobox', { name: /Month/ }).selectOption('4');
+    await page.getByRole('combobox', { name: /Year/ }).click();
+    // The open list draws above the calendar's own layer and a press on it leaves the calendar open.
+    const listed = await page.getByRole('option', { name: '2020' }).boundingBox();
+    expect(listed).not.toBeNull();
+    const onTop = await page.evaluate(
+      ([x, y]) => document.elementFromPoint(x, y)?.closest('[role="option"]') !== null,
+      [listed!.x + listed!.width / 2, listed!.y + listed!.height / 2],
+    );
+    expect(onTop).toBe(true);
+    await page.getByRole('option', { name: '1900' }).click();
+    await page.getByRole('combobox', { name: /Month/ }).click();
+    await page.getByRole('option', { name: 'May' }).click();
     await calendar.getByRole('button', { name: /, 1 May 1900/ }).click();
     await expect(dateButton).toContainText('1 May 1900');
     expect(await widthOf()).toBe(todayWidth);
