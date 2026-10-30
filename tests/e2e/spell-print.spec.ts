@@ -103,9 +103,12 @@ test('the printed recipe names the coven with no line under it, leads with the i
 
   // On screen the section is there, so its absence in print is the print rules' doing.
   const workings = page.getByRole('heading', { name: 'Workings' });
+  const edited = page.locator('.last-edit');
   await expect(workings).toBeVisible();
+  await expect(edited).toBeVisible();
   await page.emulateMedia({ media: 'print' });
   await expect(workings).toBeHidden();
+  await expect(edited).toBeHidden();
   await expect(page.getByText('Worked under a waxing moon')).toBeHidden();
 
   // The coven's name stands as plain text (no box) and nothing draws a line under it.
