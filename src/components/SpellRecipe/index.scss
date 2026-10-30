@@ -322,9 +322,11 @@
 
 .spell-recipe__facts {
   display: grid;
-  // Equal tracks, except that a track never shrinks below its widest unbreakable cell (the moon phase).
-  grid-template-columns: repeat(4, minmax(min-content, 1fr));
-  gap: space(3);
+  // Tracks size from their cells, not equally: each is as wide as its content, shrinking no further than its
+  // widest unbreakable cell (the moon phase), and the wide column gap leaves the moon phase room on its right.
+  grid-template-columns: repeat(4, minmax(min-content, max-content));
+  justify-content: start;
+  gap: space(3) space(6);
   margin: 0;
 
   @container (max-width: #{$narrow-column}) {
