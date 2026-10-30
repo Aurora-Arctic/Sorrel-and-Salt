@@ -180,7 +180,7 @@ describe('Complete on a working', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Edit Stock, Testwort, Leaf' }));
     const stock = await screen.findByRole('dialog', { name: 'Edit Stock, Testwort' });
     typeIn(within(stock).getByRole('spinbutton', { name: 'Quantity, Leaf' }), '12');
-    press(within(stock).getByRole('button', { name: 'Save' }));
+    press(within(stock).getByRole('button', { name: 'Save Stock' }));
     await waitFor(() =>
       expect(screen.getByRole('list', { name: 'Deductions' })).toHaveTextContent(
         'have 10 g · left 8 g',

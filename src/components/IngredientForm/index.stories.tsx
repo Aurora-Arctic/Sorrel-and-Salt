@@ -678,14 +678,7 @@ type CompendiumFormProps =
 
 /** The form as the admin draws it over a compendium entry: lookups ask the compendium alone. */
 function CompendiumForm(props: CompendiumFormProps) {
-  return (
-    <IngredientForm
-      workspaceId={null}
-      duplicateHref={compendiumDuplicateHref}
-      onCancel={() => undefined}
-      {...props}
-    />
-  );
+  return <IngredientForm workspaceId={null} duplicateHref={compendiumDuplicateHref} {...props} />;
 }
 
 /** What to type for each state the form can be in, beside it in the workshop. */

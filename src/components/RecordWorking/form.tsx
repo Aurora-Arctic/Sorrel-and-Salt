@@ -286,7 +286,6 @@ export default function RecordWorkingForm({
       />
       <FormActions
         noun="Working"
-        label={complete ? 'Save Working' : 'Save as Draft'}
         dirty={valid && (working ? changed : true)}
         submitting={submitting}
         holdCancel

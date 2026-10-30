@@ -39,7 +39,7 @@ interface IngredientFormCallbacks {
   onSaved?: (ingredient: SavedIngredient, next: AfterSave) => void;
   /**
    * Called once, when an autosave has created a new ingredient, with the saved row: the page moves
-   * its address from the add to the edit. Not called by Save, Close or Cancel, whose callbacks say
+   * its address from the add to the edit. Not called by Save or Close, whose callbacks say
    * what the page does next.
    */
   onCreated?: (ingredient: SavedIngredient) => void;
@@ -50,8 +50,6 @@ interface IngredientFormCallbacks {
   onReload?: () => void;
   /** Called once the entry given has been deleted. */
   onDeleted?: () => void;
-  /** Cancel, offered beside the saves when given: the page the form sits in closes it. */
-  onCancel?: () => void;
   /** Where a near match the duplicate warning names links: a coven's ingredient page, or the admin's compendium modal. */
   duplicateHref: (match: Duplicate) => string;
   /**

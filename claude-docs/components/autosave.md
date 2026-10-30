@@ -132,16 +132,16 @@ Save (the spell builder passes the modal's header note; the owner's call,
 2026-10-29). The failure and its Retry stay beside Save, since they are about
 that button.
 
-| Status     | Shows                                                                                                  |
-| ---------- | ------------------------------------------------------------------------------------------------------ |
-| `idle`     | Nothing                                                                                                |
-| `pending`  | The last "Saved" line, if any                                                                          |
-| `saving`   | A spinner and "Saving…"                                                                                |
-| `saved`    | "Saved 2:02 pm", or "Draft saved 2:02 pm"                                                              |
-| `failed`   | A `warn` `Notice` (`role="alert"`) with "Could not save." and a Retry button, until a save succeeds    |
-| `conflict` | A `warn` `Notice` with the message, Reload Latest (solid, the one primary) and Keep My Version (quiet) |
+| Status     | Shows                                                                                               |
+| ---------- | --------------------------------------------------------------------------------------------------- |
+| `idle`     | Nothing                                                                                             |
+| `pending`  | The last "Saved" line, if any                                                                       |
+| `saving`   | A spinner and "Saving…"                                                                             |
+| `saved`    | "Saved 2:02 pm", or "Draft saved 2:02 pm"                                                           |
+| `failed`   | A `warn` `Notice` (`role="alert"`) with "Could not save." and a Retry button, until a save succeeds |
+| `conflict` | A `warn` `Notice` with the message, Reload Latest (small outline) and Keep My Version (small quiet) |
 
-The conflict notice has one primary, Reload Latest, the choice that loses nothing of anyone else's, and Keep My Version sits back as a quiet button; it is roomier than a notice of text alone, with a step more padding and a step more between the sentence and the buttons, since the buttons need air inside the bar, and the triangle moves with that padding (the owner's call, 2026-10-29). The failure and the conflict are both warnings, not errors and not the quieter caution (the owner's calls, 2026-10-29). The notice draws its triangle level with the first line of text; beside the Retry button that line is taller than the text, so `.save-status__failed` centres the triangle on the row instead (Notice itself is right for text alone and is unchanged). Both notices (failed, conflict) drop the notice's bottom margin so they stand level with Save in the footer; the failure was a bare `<p>` of default-ink text before 2026-10-29, with nothing to say it was an error.
+The conflict notice leads with Reload Latest, the choice that loses nothing of anyone else's, as a small outline button, so the view keeps its one solid button, Save, and Keep My Version sits back as a quiet button; it is roomier than a notice of text alone, with a step more padding and a step more between the sentence and the buttons, since the buttons need air inside the bar, and the triangle moves with that padding (the owner's call, 2026-10-29). The failure and the conflict are both warnings, not errors and not the quieter caution (the owner's calls, 2026-10-29). The notice draws its triangle level with the first line of text; beside the Retry button that line is taller than the text, so `.save-status__failed` centres the triangle on the row instead (Notice itself is right for text alone and is unchanged). Both notices (failed, conflict) drop the notice's bottom margin so they stand level with Save in the footer; the failure was a bare `<p>` of default-ink text before 2026-10-29, with nothing to say it was an error.
 
 The time is `clockTime` from `src/components/LastEdit/relative.ts`: hours and
 minutes on a 12-hour clock with am or pm ("2:02 pm"), in the viewer's time zone.

@@ -70,22 +70,11 @@ vi.mock('@/modules/ingredients', async (importActual) => ({
 
 // The form is its own tests'; here only which ways out of it lead where.
 vi.mock('@/components/IngredientForm', () => ({
-  default: ({
-    onSaved,
-    onCancel,
-  }: {
-    onSaved: (saved: unknown) => void;
-    onCancel?: () => void;
-  }) => (
+  default: ({ onSaved }: { onSaved: (saved: unknown) => void }) => (
     <form aria-label="Fixture Form">
       <button type="button" onClick={() => onSaved({ slug: 'testwort' })}>
         Save
       </button>
-      {onCancel && (
-        <button type="button" onClick={onCancel}>
-          Cancel
-        </button>
-      )}
     </form>
   ),
 }));
@@ -343,13 +332,12 @@ describe("the coven Ingredients page's edit dialog", () => {
     await expect(renderPage({ edit: 'a1' })).rejects.toThrow('connection lost');
   });
 
-  it('goes back to the filtered list on a save, fetched again, and on Close, with no Cancel button', async () => {
+  it('goes back to the filtered list on a save, fetched again, and on Close', async () => {
     await renderPage({ source: 'local', edit: 'a1' });
     fireEvent.click(within(editDialog()!).getByRole('button', { name: 'Save' }));
     expect(router.replace.mock.lastCall?.[0]).toBe(FILTERED_HREF);
     expect(router.refresh).toHaveBeenCalled();
 
-    expect(within(editDialog()!).queryByRole('button', { name: 'Cancel' })).toBeNull();
     router.replace.mockClear();
     fireEvent.click(within(editDialog()!).getByRole('button', { name: 'Close' }));
     await waitFor(() => expect(router.replace.mock.lastCall?.[0]).toBe(FILTERED_HREF));
@@ -579,7 +567,6 @@ describe("the coven Ingredients page's details modal", () => {
     // Fetched again, so the list and the details beneath both show the save.
     expect(router.refresh).toHaveBeenCalled();
 
-    expect(within(editDialog()!).queryByRole('button', { name: 'Cancel' })).toBeNull();
     router.replace.mockClear();
     fireEvent.click(within(editDialog()!).getByRole('button', { name: 'Close' }));
     await waitFor(() =>

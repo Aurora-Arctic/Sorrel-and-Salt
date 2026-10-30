@@ -1403,7 +1403,7 @@ describe('IngredientEntry stock', () => {
     );
     expect(open.getByRole('spinbutton', { name: 'Quantity, Testoil' })).toHaveValue(null);
     // The new row is a place to fill, not a change, so Save is off.
-    expect(open.getByRole('button', { name: 'Save' })).toBeDisabled();
+    expect(open.getByRole('button', { name: 'Save Stock' })).toBeDisabled();
   });
 
   it('gives a role that may not edit plain jars with no button', () => {

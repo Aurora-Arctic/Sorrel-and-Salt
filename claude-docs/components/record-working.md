@@ -26,7 +26,7 @@ The dialog holds a date (today by default), participants (a `Combobox` of the me
 a typed name is added as a name chip), a note, and visibility. Participants is a `<fieldset>`, so while a save runs it shuts with the other fields, chips and all, and a refused name describes the box through `FieldError`. Visibility never exceeds the
 spell's, and is the same Share With the Coven switch the spell builder uses (`VisibilitySwitch`, in `Field`), start-aligned by `.working-form .switch` as `.spell-builder .switch` does: on a private spell it is off and shut, with a line saying why. A new working opens with the recorder (`recorderId`) as a chip, who may remove themselves; the dialog always sends `participants`. A Workings row says "Recorded by" the recorder and lists only the others after "With", so a stored recorder is never named twice (`workings-read.ts` filters them out).
 
-Save as Draft keeps a draft, closes the dialog and refreshes the page, where the draft is a row of the
+Save Working keeps a draft, closes the dialog and refreshes the page, where the draft is a row of the
 Workings list. Complete in the form saves first, then shows the preview. The date is a `DateField` day picker. A working may be dated ahead and saved as a draft, but Complete
 is off while the date is after the browser's today, with "Complete on or after <day>" written under the buttons and describing it, since a disabled button takes no focus to show a tip. The Complete beside a
 draft's Edit pencil on the recipe page (`CompleteWorkingAction`, given `workedOn`) is `aria-disabled` instead: it keeps the focus, a press does nothing, and the same words are its tip (shown on focus, hover or press) and its description. The service refuses it too. Closing with unsaved changes asks first.

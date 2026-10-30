@@ -78,7 +78,7 @@ several saves passes `busy` for the one pressed, its `saveValue`, and the
 others as children, between Save and Cancel, as the ingredient form's Save &
 Add Another is. Save is the form's submit, or with `onSave` a plain button,
 for the reference panel, which sits inside the ingredient form's own `<form>`.
-Cancel, quiet, is drawn only when `onCancel` is given and calls it; a form that closes through its modal's Close alone, such as the Annotate and Add Ingredient dialogs, leaves it out: each form
+Save names its thing (`Save ${noun}`: Save Spell, Save Working, Save Stock, Save Ingredient). Cancel, quiet, is drawn only when `onCancel` is given and calls it, and only a dialog that does not save on close passes it: a form that saves on close (the ingredient form, the Annotate dialog, the spell builder) leaves it out, since Cancel would only close as Close does, while Record a Working and Edit Stock, which throw changes away on close, keep it: each such form
 passes its discard guard's `request` (claude-docs/components/modal.md,
 "Unsaved changes"), and `holdCancel` makes it wait while a save is in flight,
 as the panel's does. Delete, `.btn--destructive` and `.form__aside` at the far
