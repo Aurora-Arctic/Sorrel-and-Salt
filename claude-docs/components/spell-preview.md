@@ -72,7 +72,7 @@ and embers rising from the glow and from the charred edge. The owner chose it fr
 C6 for the light theme and C6b for the dark.
 
 - The burn is the card's, layer for layer: `index.scss` uses the card's smoulder partial for its
-  timings and `ember-rim`, and sizes it from the card's lengths: half as deep again (`$burn-depth * 1.5`, 1.5rem)
+  timings, `ember-rim`, the glow's and the embers' gradients and the glow's box tokens, and sizes it from the card's lengths: half as deep again (`$burn-depth * 1.5`, 1.5rem)
   and twice as long along the bottom (`$burn-length * 2`, 21.8rem), with the corner's curve, the
   spill and the edge embers' places scaled by the same two factors, and `SpellCardFilters` is drawn inside the pane while it is open,
   since the spell page has no other copy of the burn filter. The scene is mounted with the content, so

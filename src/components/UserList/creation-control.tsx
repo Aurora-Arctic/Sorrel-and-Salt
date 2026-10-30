@@ -45,7 +45,7 @@ const CreationControl = ({
       label={action === 'approve' ? 'Approve' : 'Revoke'}
       accessibleName={action === 'approve' ? `Approve ${name}` : `Revoke approval for ${name}`}
       className={
-        action === 'approve' ? 'btn btn--small btn--quiet' : 'btn btn--small btn--destructive'
+        action === 'approve' ? 'btn btn--quiet btn--small' : 'btn btn--destructive btn--small'
       }
       reason={ADMIN_CHANGES_PAUSED_REFUSAL}
     />
@@ -54,7 +54,7 @@ const CreationControl = ({
       label="Approve"
       accessibleName={`Approve ${name}`}
       // Quiet, the body ink.
-      openClass="btn btn--small btn--quiet"
+      openClass="btn btn--quiet btn--small"
       title="Approve Coven Creation"
       // The user's name in bold.
       question={
@@ -79,7 +79,7 @@ const CreationControl = ({
       label="Revoke"
       accessibleName={`Revoke approval for ${name}`}
       // Red: it takes something away.
-      openClass="btn btn--small btn--destructive"
+      openClass="btn btn--destructive btn--small"
       title="Revoke Coven Creation"
       question={
         <>

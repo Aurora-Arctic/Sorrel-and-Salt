@@ -7,6 +7,7 @@ import { PendingLink } from '../../lib/navigation';
 import { siteLinkTarget } from '../AppShell/site-target';
 import { ACCOUNT_INVITATIONS_PATH, ACCOUNT_PATH } from '../../lib/sign-in';
 import IconTip from '../IconTip';
+import { ChevronIcon } from '../IconTip/icons';
 import SignOutButton from './sign-out-button';
 import { initialsOf } from './initials';
 import type { AccountMenuProps } from './types';
@@ -15,19 +16,6 @@ import './index.scss';
 // The account button in the shell's bar and its panel: Your Account, a link to pending invitations
 // when there are any, and Sign Out. A disclosure, not an ARIA menu: `role="menu"` promises arrow-key
 // roving and a typeahead this lacks (claude-docs/components/account-menu.md).
-
-const Chevron = (): ReactElement => (
-  <svg className="account-menu__chevron" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-    <path
-      d="M3.5 6l4.5 4.5L12.5 6"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
 
 // The account page: its sections beside the jump menu.
 const ACCOUNT_TARGET = { region: 'main', shape: 'page', frame: 'with-nav', head: 'title' } as const;
@@ -92,7 +80,7 @@ const AccountMenu = ({
         </span>
         {/* Hidden by size on a phone, not removed: the button keeps its name. */}
         <span className="account-menu__name">{name}</span>
-        <Chevron />
+        <ChevronIcon className="account-menu__chevron" />
       </button>
       {/* Always mounted and hidden when shut, so it can fade (the stylesheet). */}
       <ul id={panelId} className="account-menu__panel" hidden={!open}>

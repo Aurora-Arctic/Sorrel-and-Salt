@@ -2,7 +2,7 @@ import type { ReactElement } from 'react';
 import { isRosterProvider, SOCIAL_PROVIDERS } from '../../lib/social-providers';
 import ProviderMark from '../ProviderMark';
 import Hint from './hint';
-import { CheckIcon, CrossIcon } from './icons';
+import { CheckIcon, CrossIcon } from '../IconTip/icons';
 import type { MarkProps, ProviderLogoProps } from './types';
 import './index.scss';
 

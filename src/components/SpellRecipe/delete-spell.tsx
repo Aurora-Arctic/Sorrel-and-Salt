@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import { type ReactElement, useCallback, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { graphql } from '../../gql';
 import { covenTarget } from '../../lib/coven-path';
 import { graphqlRequest } from '../../lib/graphql-client';
@@ -9,8 +9,8 @@ import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
 import BusyButton from '../BusyButton';
 import { useClickFeedback } from '../ClickFeedback';
-import { BinButton } from '../IconTip';
-import Modal from '../Modal';
+import { BinIcon } from '../IconTip';
+import Modal, { ModalButton } from '../Modal';
 import type { DeleteSpellActionProps } from './types';
 import type { SpellVisibility } from '@/modules/grimoire';
 
@@ -54,7 +54,48 @@ export function useDeleteSpell({
   return { remove: remove.mutate, pending: remove.isPending || remove.isSuccess };
 }
 
-/** The question naming the spell, which gives the focus to `returnTo()` once it closes. */
+/** The question naming the spell and its two answers, in the bin's dialog and the menu's. */
+function DeleteSpellQuestion({
+  name,
+  visibility,
+  pending,
+  onConfirm,
+  close,
+}: {
+  name: string;
+  visibility?: SpellVisibility;
+  pending: boolean;
+  onConfirm: () => void;
+  close: () => void;
+}): ReactElement {
+  return (
+    <>
+      <p>
+        Delete <strong>{name}</strong>?{' '}
+        {visibility === 'workspace'
+          ? 'It leaves the grimoire for every member of the coven.'
+          : 'It is gone for good.'}{' '}
+        Nothing in stock changes.
+      </p>
+      <div className="modal__actions">
+        <BusyButton
+          className="btn btn--destructive"
+          busy={pending}
+          busyLabel="Deleting"
+          disabled={pending}
+          onClick={onConfirm}
+        >
+          Delete
+        </BusyButton>
+        <button type="button" className="btn btn--quiet" disabled={pending} onClick={close}>
+          Cancel
+        </button>
+      </div>
+    </>
+  );
+}
+
+/** The question in a dialog opened by state, as the More menu's item opens it; it gives the focus to `returnTo()` once it closes. */
 export function DeleteSpellDialog({
   name,
   visibility,
@@ -73,84 +114,58 @@ export function DeleteSpellDialog({
   return (
     <Modal title="Delete Spell" onClose={onClose} returnTo={returnTo}>
       {(close) => (
-        <>
-          <p>
-            Delete <strong>{name}</strong>?{' '}
-            {visibility === 'workspace'
-              ? 'It leaves the grimoire for every member of the coven.'
-              : 'It is gone for good.'}{' '}
-            Nothing in stock changes.
-          </p>
-          <div className="modal__actions">
-            <BusyButton
-              className="btn btn--destructive"
-              busy={pending}
-              busyLabel="Deleting"
-              disabled={pending}
-              onClick={onConfirm}
-            >
-              Delete
-            </BusyButton>
-            <button type="button" className="btn btn--quiet" disabled={pending} onClick={close}>
-              Cancel
-            </button>
-          </div>
-        </>
+        <DeleteSpellQuestion
+          name={name}
+          visibility={visibility}
+          pending={pending}
+          onConfirm={onConfirm}
+          close={close}
+        />
       )}
     </Modal>
   );
 }
 
-export default function DeleteSpellAction({
-  workspaceId,
-  spellId,
-  name,
-  deletedHref,
-  visibility,
-}: DeleteSpellActionProps): ReactElement {
-  const [asking, setAsking] = useState(false);
-  // The bin, where the focus goes back to once the dialog closes; once the delete has led
-  // away it is gone, and Modal gives the focus to the heading.
-  const trigger = useRef<HTMLButtonElement | null>(null);
-  const feedback = useClickFeedback({ name: `Delete Spell ${name}` });
-  const { anchorRef } = feedback;
-  const triggerRef = useCallback(
-    (node: HTMLButtonElement | null) => {
-      trigger.current = node;
-      anchorRef(node);
-    },
-    [anchorRef],
+/** The bin's dialog body, which holds the write so a refusal can close the dialog it is in. */
+function BinQuestion({
+  close,
+  onRefused,
+  ...props
+}: DeleteSpellActionProps & { close: () => void; onRefused: (message: string) => void }) {
+  const { remove, pending } = useDeleteSpell({ ...props, onRefused, onClosed: close });
+  return (
+    <DeleteSpellQuestion
+      name={props.name}
+      visibility={props.visibility}
+      pending={pending}
+      onConfirm={() => remove()}
+      close={close}
+    />
   );
-  const { remove, pending } = useDeleteSpell({
-    workspaceId,
-    spellId,
-    deletedHref,
-    onRefused: feedback.report,
-    onClosed: () => setAsking(false),
-  });
+}
+
+export default function DeleteSpellAction(props: DeleteSpellActionProps): ReactElement {
+  const { name } = props;
+  const feedback = useClickFeedback({ name: `Delete Spell ${name}` });
 
   return (
     <>
-      <BinButton
-        ref={triggerRef}
-        verb="Delete Spell"
-        name={name}
-        onClick={() => {
-          feedback.report(undefined);
-          setAsking(true);
-        }}
-      />
+      <ModalButton
+        ref={feedback.anchorRef}
+        className="icon-tip__remove"
+        tip="Delete Spell"
+        title="Delete Spell"
+        label={
+          <>
+            <BinIcon />
+            <span className="visually-hidden">Delete Spell {name}</span>
+          </>
+        }
+        onOpen={() => feedback.report(undefined)}
+      >
+        {(close) => <BinQuestion {...props} close={close} onRefused={feedback.report} />}
+      </ModalButton>
       {feedback.feedback}
-      {asking && (
-        <DeleteSpellDialog
-          name={name}
-          visibility={visibility}
-          pending={pending}
-          onConfirm={() => remove()}
-          onClose={() => setAsking(false)}
-          returnTo={() => (trigger.current?.isConnected ? trigger.current : null)}
-        />
-      )}
     </>
   );
 }

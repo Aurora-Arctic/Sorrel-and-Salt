@@ -431,7 +431,7 @@ export function FormField({ workspaceId, at, pickOnly }: FormFieldProps): ReactE
             </button>
             <button
               type="button"
-              className="btn btn--small btn--quiet"
+              className="btn btn--quiet btn--small"
               onClick={() => settle(false)}
             >
               Keep &quot;{text.trim()}&quot;

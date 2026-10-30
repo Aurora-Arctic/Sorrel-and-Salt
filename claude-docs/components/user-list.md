@@ -76,8 +76,8 @@ head, both built by the page per row, as the other admin lists carry
   on the owner's call). The Email
   cell leads with whether the address is verified, then the address, so the
   two are one column. Sign-in methods and the verified mark are what an admin changing a role judges a person by (MB.59, M11.20). A yes-or-no is a mark, on the
-  owner's call: a green check (`$accent`) or a red cross (`$secondary`), from
-  `icons.tsx`, its word beside it in `.visually-hidden` since the mark is
+  owner's call: a green check (`$accent`) or a red cross (`$secondary`), the
+  shared set's `CheckIcon` and `CrossIcon` (`IconTip/icons.tsx`, stroke 1.5), its word beside it in `.visually-hidden` since the mark is
   drawn alone, and the icon `aria-hidden`. The email's says Verified or
   Unverified, and on hover in a tip bubble too (`tip-bubble`, the form tips'
   look, opened by `tip-bubble-open`), so the eye learns what it marks: a

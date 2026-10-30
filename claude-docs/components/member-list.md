@@ -24,12 +24,12 @@ through `Workspace.members`.
   passes them in (CLAUDE.md rule 1). With no `removeAction` the table has no
   Remove column, not an empty one.
 - **Change Role sits in the Role column**, the role on the left and the
-  control on the right. It is `btn btn--small btn--quiet`.
+  control on the right. It is `btn btn--quiet btn--small`.
 - **Remove is `RemoveControl`** (M6.15): a `ConfirmedAction` naming the member, sending `removeMember`, and reading the page again. The page passes it to owners only, on every row but their own (leaving is the coven page's), and a refusal such as the last owner is said under the Remove pressed, as Change Role's is (below).
 - **Remove has a column of its own**, as Impersonate has, from the same
   `row-action-column` mixin: last, ruled in red,
   sticky at the right edge while the table scrolls, and at the card's top
-  right at phone width. Its button is `btn btn--small btn--destructive`.
+  right at phone width. Its button is `btn btn--destructive btn--small`.
 - **Roles are told apart by their word**, from `workspaceRoleLabel`
   (`UserDetail/roles.ts`). An owner is
   also bold, as the user list sets an admin, but weight is never the only cue.

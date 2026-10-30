@@ -150,12 +150,6 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   padding-inline-end: var(--scrollbar-width, 0);
 }
 
-// A long form's width, the compendium entry's first: its list fields and nested References panel
-// are cramped in the default `$dialog-column`.
-.modal-dialog--wide {
-  width: min(calc($dialog-column-wide + #{$modal-padding}), calc(100vw - #{$modal-gap} * 2));
-}
-
 // The default column with a list down its side: a third of the body to the list and two to the
 // column, half a column more and a step of gap, so the column keeps the width it has alone.
 .modal-dialog--listed {

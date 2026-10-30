@@ -4,7 +4,8 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { ChevronIcon, ClearIcon, GripIcon } from '../../Combobox/icons';
+import { GripIcon } from '../../Combobox/icons';
+import { ChevronIcon, CrossIcon } from '../../IconTip/icons';
 import { EditIcon } from '../../IngredientForm/icons';
 import { SelectField, TextField } from '../../Field';
 import SafetyNote, { SafetyMark, ToxicMark } from '../../SafetyNote';
@@ -260,7 +261,7 @@ export function BuilderStepRow({
             onClick={onRemove}
           >
             {/* The × a variant card's Remove is, so the row keeps its width for the name. */}
-            <ClearIcon />
+            <CrossIcon />
           </button>
         )
       }

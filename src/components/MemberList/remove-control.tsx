@@ -20,7 +20,7 @@ const RemoveControl = ({ workspaceId, userId, name }: RemoveControlProps): React
   <ConfirmedAction
     label="Remove"
     accessibleName={`Remove ${name}`}
-    openClass="btn btn--small btn--destructive"
+    openClass="btn btn--destructive btn--small"
     title="Remove Member"
     question={
       <>

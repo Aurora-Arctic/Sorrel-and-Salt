@@ -723,11 +723,8 @@ $control-height-compact: 2rem;
 // scrolling in their frame, and the privilege ledger has seven too.
 $wide-column: 80rem;
 
-// A dialog's content column, and the wide one for a form with nested panels or two columns side by
-// side, such as the ingredient form or the spell builder's jar (55rem: its step list at 30rem or
-// more beside an 18rem aside). The modal adds its padding and caps both at the window.
+// A dialog's content column. The modal adds its padding and caps it at the window.
 $dialog-column: 32rem;
-$dialog-column-wide: 55rem;
 
 // The page's ground at three quarters over what lies behind: a dialog's backdrop over the page, and
 // a question's scrim over the form it asks about. The Filters sheet shares it.
@@ -740,6 +737,10 @@ $modal-fade: 150ms ease-out;
 // `$glyph-size` mark. InfoTip's ⓘ, Combobox's clear and chip-remove buttons
 // and the user list's icon boxes each wrote 1.5rem.
 $icon-size: 1.5rem;
+
+// The line size that brings a form icon, drawn at 1.25em of its line, to `$icon-size`: a segmented
+// radio's icon.
+$form-icon-line: math.div($icon-size, 1.25);
 
 // The mark inside a `$icon-size` box: InfoTip's ⓘ, Combobox's icons, the
 // user list's marks. Each wrote 1rem.
@@ -790,6 +791,22 @@ $filter-search-basis: 16rem;
 // The dialog's close button: a 2rem × in a 2rem square, set in from the dialog's corner
 // (`Modal/index.scss`), well past WCAG 2.2's 24px minimum.
 $close-target: 2rem;
+
+// The day picker's calendar (`DateField`). The previous and next steps are as high as the compact
+// month and year pickers beside them, and the caption is a little taller than both. The caption keeps
+// room at its end for the two steps, the 0.25rem gap between them and as much again before its text.
+$day-picker-step: $control-height-compact;
+$day-picker-caption-height: 2.5rem;
+$day-picker-nav-room: $day-picker-step * 2 + 0.5rem;
+// The pickers' chevron box, and the room their hidden sizer leaves at its end for it and the
+// select's end padding, rounded up.
+$day-picker-indicator: 1.25rem;
+$day-picker-sizer-end: 1.75rem;
+// A day's square button: 36px, over WCAG 2.2's 24px target.
+$day-picker-day: 2.25rem;
+// A step past the allowed months, and a day that cannot be chosen, fade this far.
+$day-picker-step-disabled-opacity: 0.4;
+$day-picker-day-disabled-opacity: 0.5;
 
 // The width of its own frame under which a `.data-table--stack` table turns each row into a card: a
 // container width, not the screen's, so a table in a narrow column stacks too
@@ -1016,6 +1033,11 @@ $radii: (
 // of text. Off the spacing scale: the triangle is sized to the body type's cap height.
 $notice-mark-size: 1.0125rem;
 $notice-mark-drop: 0.05rem;
+
+// A spell step's name in lettering that is mostly lowercase sits a little below the middle of its
+// line, measured at 0.8px under 16px type, so an icon centred on the line looks high beside it. Each
+// icon on the step's first line drops this far.
+$step-ink-drop: 0.05rem;
 
 // The recipe's step-number column: room for a two-digit number. The page's steps and the Preview pane share it.
 $step-position-width: 1.5rem;

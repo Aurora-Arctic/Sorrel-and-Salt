@@ -72,10 +72,10 @@ const SaveStatus = ({
       <span>{conflictMessage}</span>
       <span className="save-status__actions">
         {/* One primary: Reload Latest, the safe choice; Keep My Version sits back, quiet. */}
-        <button type="button" className="btn btn--small btn--solid" onClick={onReload}>
+        <button type="button" className="btn btn--solid btn--small" onClick={onReload}>
           Reload Latest
         </button>
-        <button type="button" className="btn btn--small btn--quiet" onClick={onKeepMine}>
+        <button type="button" className="btn btn--quiet btn--small" onClick={onKeepMine}>
           Keep My Version
         </button>
       </span>

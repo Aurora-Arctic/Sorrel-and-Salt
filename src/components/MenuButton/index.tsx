@@ -11,7 +11,7 @@ import {
   useState,
 } from 'react';
 import { useListPosition } from '../Combobox/position';
-import { CheckIcon } from '../IconTip/icons';
+import { CheckIcon, ChevronIcon } from '../IconTip/icons';
 import Spinner from '../Spinner';
 import type { MenuButtonItem, MenuButtonProps, MenuSection } from './types';
 import './index.scss';
@@ -19,28 +19,6 @@ import './index.scss';
 // A labelled button with a chevron opening a menu, the APG menu-button pattern
 // (claude-docs/components/menu-button.md). Placed on Floating UI, fixed so a scrolling dialog
 // cannot clip it; a closing menu stays drawn, inert, until its fade ends.
-
-// Exported for a caller that draws the chevron alone as its `icon`: the bar's Add Ingredient split
-// button.
-export const Chevron = (): ReactElement => (
-  <svg
-    className="menu-button__chevron"
-    viewBox="0 0 16 16"
-    width="1em"
-    height="1em"
-    aria-hidden="true"
-    focusable="false"
-  >
-    <path
-      d="M3.5 6l4.5 4.5L12.5 6"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    />
-  </svg>
-);
 
 /** The gap between button and menu, space(2), as the stylesheet kept it before Floating UI. */
 const MENU_GAP_PX = 8;
@@ -268,7 +246,7 @@ export default function MenuButton({
         ) : (
           <>
             {busy ? (busyLabel ?? label) : label}
-            {!busy && <Chevron />}
+            {!busy && <ChevronIcon className="menu-button__chevron" textSized />}
           </>
         )}
       </button>

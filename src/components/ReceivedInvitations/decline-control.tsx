@@ -23,7 +23,7 @@ const DeclineControl = ({ invitation: { id, covenName } }: AcceptControlProps): 
   <ConfirmedAction
     label="Decline"
     accessibleName={`Decline the invitation to ${covenName}`}
-    openClass="btn btn--small btn--destructive"
+    openClass="btn btn--destructive btn--small"
     title="Decline Invitation"
     question={
       <>

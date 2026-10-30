@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactElement, useRef, useState } from 'react';
+import { type ReactElement, useCallback, useRef, useState } from 'react';
 import IconTip from '../IconTip/icon-tip';
 import Modal from './modal';
 import type { ModalButtonProps } from './types';
@@ -19,18 +19,32 @@ export default function ModalButton({
   ariaLabel,
   tip,
   size,
+  ref,
+  onOpen,
   children,
 }: ModalButtonProps): ReactElement {
   const [open, setOpen] = useState(false);
-  const button = useRef<HTMLButtonElement>(null);
+  const button = useRef<HTMLButtonElement | null>(null);
+  // The button in both refs: this one for the focus's return, the owner's for its own use (a ClickFeedback anchor).
+  const buttonRef = useCallback(
+    (node: HTMLButtonElement | null) => {
+      button.current = node;
+      if (typeof ref === 'function') ref(node);
+      else if (ref) ref.current = node;
+    },
+    [ref],
+  );
 
   const trigger = (
     <button
-      ref={button}
+      ref={buttonRef}
       className={className}
       type="button"
       aria-label={ariaLabel}
-      onClick={() => setOpen(true)}
+      onClick={() => {
+        onOpen?.();
+        setOpen(true);
+      }}
     >
       {label}
     </button>

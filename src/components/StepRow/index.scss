@@ -64,10 +64,8 @@
 
 // A step's name takes a paragraph's line height (1.65).
 $step-line: type-size('body') * 1.65;
-// A name's lettering (mostly lowercase) sits a little below the middle of its line, measured
-// at 0.8px under 16px type, so an icon centred on the line looks high beside it. Each icon
-// on the first line (the handle, the marks, the pencil and Remove) takes this one drop.
-$step-ink-drop: 0.05rem;
+// Each icon on a step's first line (the handle, the marks, the pencil and Remove) takes the one
+// drop `$step-ink-drop`, so it sits level with the name's lettering.
 
 // A closed ingredient row opens on a click anywhere on its face (the pencil still does too).
 .step-row.step-row--card.step-row--closed:not(.step-row--instruction),

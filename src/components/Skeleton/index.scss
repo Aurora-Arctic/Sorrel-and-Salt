@@ -533,9 +533,9 @@
   }
 }
 
-// The line shape: one bar the height of a line of text, for a sentence that
-// loads in place (the substitute summary's), so it does not jump when the
-// text arrives.
+// The line shape: a bar the height of a line of text for each line, for a
+// sentence or a short list that loads in place (the substitute summary's, the
+// deduction preview's), so it does not jump when the text arrives.
 .skeleton__shapes .skeleton__line {
   width: 70%;
 }

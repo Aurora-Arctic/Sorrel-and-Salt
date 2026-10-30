@@ -41,7 +41,7 @@ of invitations keeps the reader at the section rather than the top of the accoun
   calls `router.refresh()`: a navigation keeps the shell's layout, so without the refresh the
   account menu's count would stay at its old figure.
 - **Decline** (`decline-control.tsx`, M10.34) is the second client island, a `ConfirmedAction` as the
-  owner's Revoke is. The button is "Decline", `btn btn--small btn--destructive`, named "Decline the
+  owner's Revoke is. The button is "Decline", `btn btn--destructive btn--small`, named "Decline the
   invitation to <coven>". It opens a "Decline Invitation" dialog that names the coven and says the
   owner will see that the invitation was declined and its link will stop working; confirming sends
   `declineInvitationById` with the row's id. On success the page and the shell are read again

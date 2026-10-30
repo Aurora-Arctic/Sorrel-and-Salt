@@ -245,7 +245,8 @@ const Skeleton = ({
             </div>
           </>
         )}
-        {shape === 'line' && <span className="skeleton__line" />}
+        {shape === 'line' &&
+          Array.from({ length: many }, (_, line) => <span key={line} className="skeleton__line" />)}
         {shape === 'page' && (
           // The page's own grid when it has a menu (`.page-with-nav`), its
           // children in the page's order: head, menu, then the sections, so

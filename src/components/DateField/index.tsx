@@ -12,7 +12,7 @@ import {
 import { DayPicker, type DropdownProps } from 'react-day-picker';
 import { enGB } from 'react-day-picker/locale';
 import { ComboboxSelect } from '../Combobox/select';
-import { ChevronIcon } from '../Combobox/icons';
+import { ChevronIcon } from '../IconTip/icons';
 import { dayWords, isoDay, today } from './day';
 import type { DateFieldProps } from './types';
 import './index.scss';

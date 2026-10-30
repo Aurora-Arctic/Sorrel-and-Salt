@@ -1,5 +1,5 @@
 import type { Route } from 'next';
-import type { ReactNode, RefObject } from 'react';
+import type { ReactNode, Ref, RefObject } from 'react';
 
 /** What a modal's head says: a title alone for an add dialog, an eyebrow over the entry's saved name for an edit dialog (claude-docs/components/modal.md, "An edit dialog's head"). */
 export interface ModalHeading {
@@ -30,8 +30,8 @@ export interface ModalProps extends ModalHeading {
   onClose: () => void;
   /** Where the focus goes as the modal closes when its opener is gone or held none (a click in WebKit focuses no button), given the opener already out of the page, or null (claude-docs/components/modal.md, "Giving the focus back"). */
   returnTo?: (gone: Element | null) => HTMLElement | null | undefined;
-  /** The width: 32rem by default; `wide`, 48rem, for a long form; `listed`, the default column with an 11rem list beside it. */
-  size?: 'wide' | 'listed';
+  /** The width: 32rem by default; `listed`, the default column with an 11rem list beside it. */
+  size?: 'listed';
   /** A body with nothing to fill in, only to read: Tab stops on the body itself so a keyboard can scroll it. Off by default, as a form's fields already reach every part. */
   readingBody?: boolean;
   /** Its contents are on their way: the body is marked busy, and the focus moves to their first field on arrival. */
@@ -59,6 +59,10 @@ export interface ModalButtonProps {
   /** A tip over an icon button, "Edit Stock" over the pencil. Wraps the button alone, never the dialog, which would open the tip on its focus. */
   tip?: string;
   size?: ModalProps['size'];
+  /** The button, for an owner that anchors something to it, as ClickFeedback's callout is. */
+  ref?: Ref<HTMLButtonElement>;
+  /** Runs on the press, before the modal opens: an owner clears an earlier refusal here. */
+  onOpen?: () => void;
   /** What the modal holds, given the modal's close, so a form can close it after its send. */
   children: (close: () => void) => ReactNode;
 }
