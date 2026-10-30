@@ -339,6 +339,10 @@ the fill's ratio against the page surface is exactly the `vs page` figure alread
 measured for every group and every ink — the two questions have the same
 arithmetic. **Worst pairing in the set is 4.68:1**, the light accent.
 
+### Selected text
+
+`::selection` in `globals.scss` swaps the page's two colours: the background is `$text-primary` and the text is `$text-on-color` (the page surface). The highlight is nearly black in the light theme and nearly white in the dark one, never the accent green. The pair is 14.77:1 in dark (chalk on soot) and 13.41:1 in light (iron gall on parchment), both past AA's 4.5:1. `tests/e2e/smoke.spec.ts` asserts the swap in both themes.
+
 ### `$ornament-screen` and `$ornament-multiply`
 
 How `Backdrop`'s grey corner ornaments meet the page: the opacity of its
