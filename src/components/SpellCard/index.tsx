@@ -5,9 +5,9 @@ import CategoryChips from '../CategoryChips';
 import LastEdit from '../LastEdit';
 import { EditLink, QuickLookLink } from '../IconTip';
 import LinkHint from '../LinkHint';
-import RecordWorkingButton from '../RecordWorking';
 import SpellMarks from '../SpellMarks';
 import SpellMoreMenu from '../SpellRecipe/more-menu';
+import CardRecordWorking from './record-working';
 import type { SpellCardProps } from './types';
 import './index.scss';
 
@@ -118,7 +118,7 @@ const SpellCard = ({
                 </span>
               )}
               {recordWorking && (
-                <RecordWorkingButton
+                <CardRecordWorking
                   {...recordWorking}
                   spellId={id}
                   spellName={name}

@@ -69,7 +69,7 @@ vi.mock('@/modules/grimoire', () => ({
   readSpell,
 }));
 
-// The coven roster a Record a Working button lists: nobody, by default.
+// The coven roster, which the list leaves to the Record a Working dialog to read.
 const memberRoster = vi.fn(async () => []);
 vi.mock('@/modules/coven', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/modules/coven')>()),
@@ -454,6 +454,27 @@ describe('the spell builder over a Grimoire tab', () => {
     await renderTab(DraftsPage);
     expect(screen.getAllByRole('heading', { name: 'Fixture Working' }).length).toBeGreaterThan(0);
     expect(screen.queryByRole('link', { name: /^Edit / })).not.toBeInTheDocument();
+  });
+
+  it('draws Record a Working on a member’s complete spells yet reads no roster or steps for it, which the dialog reads once opened', async () => {
+    as('member');
+    await renderTab(SpellsPage);
+    // A member may record a working, and both spells are complete: the reads were owed if the list made them.
+    expect(
+      screen.getByRole('button', { name: 'Record a Working of Fixture Working' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Record a Working of Testwort Charm' }),
+    ).toBeInTheDocument();
+    expect(memberRoster).not.toHaveBeenCalled();
+    expect(stepsOfSpells).not.toHaveBeenCalled();
+  });
+
+  it('draws no Record a Working for a viewer, who may not record one', async () => {
+    as('viewer');
+    await renderTab(SpellsPage);
+    expect(screen.getAllByRole('heading', { name: 'Fixture Working' }).length).toBeGreaterThan(0);
+    expect(screen.queryByRole('button', { name: /^Record a Working/ })).not.toBeInTheDocument();
   });
 
   it('opens a saved draft under ?edit=<id> with its values, read for the signed-in member', async () => {

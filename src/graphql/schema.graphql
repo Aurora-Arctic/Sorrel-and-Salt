@@ -1340,6 +1340,11 @@ type Query {
   workingDeductionPreview(spellId: ID!, workspaceId: ID!): WorkingDeductionPreview!
 
   """
+  A coven the caller sits in, by id. Refused alike for a stranger and an id no coven holds.
+  """
+  workspace(id: ID!): Workspace!
+
+  """
   How many of a coven's ingredients each search filter value would list under the rest of the filter.
   """
   workspaceIngredientFacets(
