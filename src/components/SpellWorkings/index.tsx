@@ -40,11 +40,13 @@ const Working = ({
             <span className="badge badge--private">Private</span>
           )}
         </div>
-        {working.status === 'draft' && working.editable && completeAction?.(working.id)}
-        {working.editable && editAction?.(working.editable, day)}
-        {working.canChange && (
-          <DeleteWorkingAction workspaceId={workspaceId} workingId={working.id} name={day} />
-        )}
+        <div className="spell-workings__actions">
+          {working.status === 'draft' && working.editable && completeAction?.(working.id)}
+          {working.editable && editAction?.(working.editable, day)}
+          {working.canChange && (
+            <DeleteWorkingAction workspaceId={workspaceId} workingId={working.id} name={day} />
+          )}
+        </div>
       </div>
       {working.status === 'draft' &&
         working.warnings?.map((line) => (

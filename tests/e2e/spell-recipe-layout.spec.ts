@@ -116,3 +116,40 @@ test('the moon phase sits on one line in the facts strip on a desktop', async ({
   );
   expect(lines).toEqual([1, 1, 1, 1]);
 });
+
+// Each working row's badges sit in their own column and its buttons in a slot at the far right, so
+// the badges start the same distance from the row's right edge whatever the row holds.
+test('the badges of a draft and a complete working start at the same place on a desktop', async ({
+  page,
+}) => {
+  const coven = await seedCoven(page, 'Fixture Coven Badges', 'spell-badges.test', { A: 'owner' });
+  const { A } = coven.users;
+  const spellId = await withSql(async (sql) => {
+    const id = await insertSpell(sql, coven.id, 'Fixture Badges', 'workspace', A, 'complete');
+    await insertWorking(sql, id, A, {
+      workedOn: '2026-03-04',
+      status: 'draft',
+      visibility: 'private',
+    });
+    await insertWorking(sql, id, A, { workedOn: '2026-03-01', visibility: 'private' });
+    return id;
+  });
+  await signInAgainAs(page, A);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+  const rows = page.getByRole('list', { name: 'Workings' }).getByRole('listitem');
+  await expect(rows).toHaveCount(2);
+  const [draft, complete] = await Promise.all(
+    [0, 1].map((i) =>
+      rows
+        .nth(i)
+        .locator('.specimen__badges .badge')
+        .first()
+        .evaluate((el) => el.getBoundingClientRect().left),
+    ),
+  );
+  // The draft row has the extra Draft badge and the extra Complete button, the complete row neither.
+  await expect(rows.nth(0).locator('.badge')).toHaveCount(2);
+  await expect(rows.nth(1).locator('.badge')).toHaveCount(1);
+  expect(Math.abs(draft! - complete!)).toBeLessThanOrEqual(1);
+});

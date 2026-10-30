@@ -23,6 +23,36 @@
     h3 {
       margin: 0;
     }
+
+    // Past a phone the head is three columns: the date, the badges in a column of their own, and a
+    // slot at the far right for the buttons, so the badges start at the same place on every row. The
+    // slot holds the most a row can have (Complete, Edit, Delete) with room for Complete's icon.
+    @media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 10rem 14rem;
+
+      // Placed by column, since a heading rule elsewhere would otherwise span the whole row.
+      h3 {
+        grid-area: 1 / 1;
+      }
+
+      .specimen__badges {
+        grid-area: 1 / 2;
+        margin: 0;
+      }
+
+      .spell-workings__actions {
+        grid-area: 1 / 3;
+      }
+    }
+  }
+
+  // Below that width the badges and buttons wrap under the date, as the head's flex row lays them.
+  &__actions {
+    display: flex;
+    gap: space(2);
+    align-items: center;
+    justify-content: flex-end;
   }
 
   &__note {

@@ -16,6 +16,8 @@ recorded it and who took part, its note, and, on a complete working, its deducti
 and each participant are names the page resolved with `displayNamesOf`, so a removed member reads
 under the name they last held; a participant with no readable name reads "A former member".
 
+At a tablet width and up the head is three columns: the date, the badges in a column of their own (so they start at the same place on every row, whatever the row holds), and a slot at the far right for the buttons (`spell-workings__actions`, sized for Complete, Edit and Delete). Below that the badges and buttons wrap under the date.
+
 The row does not use `LastEdit`: a working is recorded once, and `LastEdit` says who edited a row last.
 Its deduction lines are plain items (name, then amount and unit) inside an `ol` named Deductions,
 in the spell's step order. They carry no step number: the recipe above says where a step stands.
