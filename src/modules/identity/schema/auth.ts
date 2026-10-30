@@ -102,3 +102,28 @@ export const signInFailures = pgTable('sign_in_failures', {
   lockedUntil: timestamp('locked_until'),
   passwordDisabled: boolean('password_disabled').default(false).notNull(),
 });
+
+// The `passkey` plugin's model, named `passkeys` by `usePlural`; the plugin is not registered yet. Its field `credentialID` is `credentialId`
+// here, and its `schema` option maps one to the other when the plugin is registered.
+export const passkeys = pgTable(
+  'passkeys',
+  {
+    id: idColumn(),
+    name: text('name'),
+    publicKey: text('public_key').notNull(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    credentialId: text('credential_id').notNull(),
+    counter: integer('counter').notNull(),
+    deviceType: text('device_type').notNull(),
+    backedUp: boolean('backed_up').notNull(),
+    transports: text('transports'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    aaguid: text('aaguid'),
+  },
+  (table) => [
+    index('passkeys_userId_idx').on(table.userId),
+    index('passkeys_credentialId_idx').on(table.credentialId),
+  ],
+);
