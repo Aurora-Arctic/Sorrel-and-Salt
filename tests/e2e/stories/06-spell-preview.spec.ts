@@ -147,12 +147,18 @@ test(
     await expect(awake).toHaveAttribute('aria-pressed', 'true');
     expect(await counts()).toEqual({ requests: 1, releases: 0 });
     await assertNoAccessibilityViolations(page);
-    // The background animation stands still under reduced motion.
-    const animation = () => pane.evaluate((el) => getComputedStyle(el, '::before').animationName);
+    // The background is there and hidden from assistive technology, and under reduced motion nothing
+    // in it moves.
+    const scene = pane.locator('.spell-preview__scene');
+    await expect(scene).toHaveAttribute('aria-hidden', 'true');
+    const running = () =>
+      scene.evaluate(
+        (el) => el.getAnimations({ subtree: true }).filter((a) => a.playState === 'running').length,
+      );
     await page.emulateMedia({ reducedMotion: 'no-preference' });
-    expect(await animation()).not.toBe('none');
+    expect(await running()).toBeGreaterThan(0);
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    expect(await animation()).toBe('none');
+    expect(await running()).toBe(0);
     // Off releases the lock; on asks again.
     await awake.click();
     await expect(awake).toHaveAttribute('aria-pressed', 'false');

@@ -45,4 +45,30 @@ full screen, with nothing else on screen. `src/components/SpellPreview/`.
   unless the person turned it off.
 - The Screen Awake icon button beside Close (`MysticEyeIcon`, tipped "Screen Awake") is the sign. It is pressed while the lock is held, and pressing it
   releases the lock or asks again. While pressed the eye is in the accent colour and blinks now and then (an 8s cycle, the lid closing once); it stays still under reduced motion. A pane that is closed and opened again asks afresh.
-- A slow glow drifts behind the content. It stands still under reduced motion (the `reduced-motion` mixin).
+
+## The background
+
+The pane is a page smouldering from its bottom-right corner, as a spell card does under the pointer
+(claude-docs/components/spell-card.md, "How the burn is built"), with a hearth glow under the burn
+and embers rising from the glow and from the charred edge. The owner chose it from the mock-ups as
+C6 for the light theme and C6b for the dark.
+
+- The burn is the card's, layer for layer: `index.scss` uses the card's smoulder partial for its
+  lengths, timings and `ember-rim`, and `SpellCardFilters` is drawn inside the pane while it is open,
+  since the spell page has no other copy of the burn filter. The scene is mounted with the content, so
+  the burn comes in afresh on every open (the card's burn-in, as keyframes that start from the card's
+  resting state) with no class flip.
+- The rim, the embers in the burnt part and the spill on the table breathe by `opacity`, not the
+  card's `box-shadow` and `filter` frames: a pane kept awake runs for minutes, and opacity frames do not
+  repaint.
+- Each ember is an `<i>` placed and timed by custom properties from `embers.ts`: ten from the hearth
+  glow, ten from the charred edge (measured in from the corner), a quarter of them ash.
+- The glow's strength and the ember colours are theme custom properties (`--preview-glow`,
+  `--preview-ember`, `--preview-ember-core`, `--preview-ember-char`, `--preview-ash`), set in the
+  two theme blocks of `_mixins.scss` and aliased in `_variables.scss`: light is the wax red at 0.12,
+  dark the ember red at 0.08. The text keeps at least 4.5:1 over the glow's brightest point.
+- The dialog paints nothing itself: the face layer is `$surface-page` everywhere but the burn, where
+  the `::backdrop`, the table (`$drawer-slot`), shows through. The scene is `aria-hidden`, takes no
+  pointer, and sits behind the content.
+- Under reduced motion every animation is off: the burn is shown finished, the glow steady, and the
+  embers, which are invisible until they rise, do not appear.
