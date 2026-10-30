@@ -11,13 +11,19 @@ function Harness({
   max = '2026-03-15',
 }: {
   initial?: string;
-  max?: string;
+  max?: string | null;
 }) {
   const [value, setValue] = useState(initial);
   return (
     <>
       <span id="label">Date</span>
-      <DateField id="d" labelledBy="label" value={value} max={max} onChange={setValue} />
+      <DateField
+        id="d"
+        labelledBy="label"
+        value={value}
+        max={max ?? undefined}
+        onChange={setValue}
+      />
     </>
   );
 }
@@ -110,6 +116,22 @@ describe('DateField', () => {
     render(<Harness initial="2026-01-05" max="2026-03-01" />);
     fireEvent.click(screen.getByRole('button', { name: /Date/ }));
     expect(screen.queryByRole('button', { name: 'Today' })).toBeNull();
+  });
+
+  it('runs the years to the end of next year with no max, and picks a day next month', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(2026, 2, 12, 9));
+    render(<Harness initial="2026-03-10" max={null} />);
+    fireEvent.click(screen.getByRole('button', { name: /Date/ }));
+    fireEvent.click(screen.getByRole('combobox', { name: /Year/ }));
+    const years = screen.getAllByRole('option');
+    expect(years[years.length - 1]).toHaveTextContent('2027');
+    fireEvent.click(screen.getByRole('combobox', { name: /Year/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Next Month/ }));
+    fireEvent.click(screen.getByRole('button', { name: /, 20 April 2026/ }));
+    expect(screen.getByRole('button', { name: /Date.*20 April 2026/ })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /Date/ }));
+    expect(screen.getByRole('button', { name: 'Today' })).toBeInTheDocument();
   });
 
   it('closes on Escape without changing the day', () => {

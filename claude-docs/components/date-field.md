@@ -18,8 +18,9 @@ It replaces the browser's `<input type="date">`, whose look and highlight differ
   operating system's. The list sits inside the panel's DOM, so it draws in the popover's top layer and a
   press on it is not an outside press; Escape on an open list closes the list alone. Years run from 1900
   (or the selected year, if earlier) to `max`'s year. The form allows no later day, and no lower bound.
+- With no `max`, no day is disabled and the years and months run to the end of next year (`YEARS_AHEAD`).
 - A Today button sits in a footer row under the grid, at its end (the caption row has no room for it at
-  390 px). It picks today, closes the calendar and returns focus as a day does, and is left out when `max`
+  390 px). It picks today, closes the calendar and returns focus as a day does, and is left out only when `max`
   is before today.
 - The button is as wide as the widest date it can show: a hidden sizer in the same grid cell holds every
   month name, every day number and every year from 1900 to 2999, each part stacked so it takes the widest
