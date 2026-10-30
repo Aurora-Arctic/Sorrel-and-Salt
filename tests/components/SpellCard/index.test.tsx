@@ -4,7 +4,7 @@ import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { press } from '../../support/interact';
-import SpellCard, { SpellCardFilters } from '@/components/SpellCard';
+import SpellCard from '@/components/SpellCard';
 
 // The title link navigates through the shared hook, so the App Router is mocked.
 vi.mock('next/navigation', () => ({
@@ -36,13 +36,13 @@ const MORE = {
 describe('SpellCard', () => {
   it('says how many times a spell has been made, in the singular for one and nothing for none', () => {
     const { rerender } = render(<SpellCard {...BASE} workingCount={2} />);
-    expect(screen.getByText('Made 2 Times')).toBeInTheDocument();
+    expect(screen.getByText(/^made 2 times$/i)).toBeInTheDocument();
     rerender(<SpellCard {...BASE} workingCount={1} />);
-    expect(screen.getByText('Made 1 Time')).toBeInTheDocument();
+    expect(screen.getByText(/^made 1 time$/i)).toBeInTheDocument();
     rerender(<SpellCard {...BASE} workingCount={0} />);
-    expect(screen.queryByText(/^Made /)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^made /i)).not.toBeInTheDocument();
     rerender(<SpellCard {...BASE} />);
-    expect(screen.queryByText(/^Made /)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^made /i)).not.toBeInTheDocument();
   });
 
   it('draws a Record a Working button only when given what recording needs, and it opens the dialog that records one', async () => {
@@ -260,21 +260,14 @@ describe('SpellCard', () => {
     render(<SpellCard {...BASE} />);
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
-  // The smouldering edge (spell-card.md): layers drawn on hover, which a screen reader must
-  // not meet. Hidden layers have no role, so they are found by the attribute that hides them.
-  it('draws the smoulder as hidden decoration, leaving the card named by its title alone', () => {
+  // The smouldering edge (spell-card.md) is decoration: a screen reader meets the card's title
+  // and nothing the hover draws.
+  it('exposes the card as its title alone, with no description and no image from the smoulder', () => {
     render(<SpellCard {...BASE} />);
     const card = screen.getByRole('article', { name: 'Fixture Working' });
-    const layers = card.querySelectorAll(':scope > [aria-hidden="true"]');
-    expect(layers).toHaveLength(3);
-    layers.forEach((layer) => expect(layer).toHaveTextContent(/^$/));
-  });
-
-  it('renders the burn filter the stylesheet names, hidden from assistive technology', () => {
-    const { container } = render(<SpellCardFilters />);
-    const svg = container.querySelector('svg');
-    expect(svg).toHaveAttribute('aria-hidden', 'true');
-    expect(svg?.querySelector('filter#spell-card-burn')).not.toBeNull();
+    expect(card).toHaveAccessibleName('Fixture Working');
+    expect(card).toHaveAccessibleDescription('');
+    expect(within(card).queryAllByRole('img')).toHaveLength(0);
   });
 });
 
