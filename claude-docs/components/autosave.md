@@ -88,6 +88,10 @@ not the state of the render that set them.
 `useDebouncedValue` (300 ms) is not used: it is for type-ahead, and has no
 maximum wait and no flush.
 
+### Who flushes, and when
+
+The engine flushes when focus leaves the form for something outside it. A form with its own Save button must hold that flush while Save is submitting: disabling the button blurs it with no related target, and the flush would start a second write. `IngredientForm` does this, and also serialises its writes ([`ingredient-form.md`](ingredient-form.md#autosave)).
+
 ## The mirror
 
 `src/lib/autosave/mirror.ts`: a copy of the form's value in localStorage, so
