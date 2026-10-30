@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import { securityHeaders } from './src/lib/security-headers';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -22,6 +23,7 @@ const nextConfig: NextConfig = {
   // the last spec wrote. The compendium-cache server keeps it
   // (claude-docs/db/compendium-cache.md, "In tests").
   ...(process.env.NEXT_DATA_CACHE === 'off' && { cacheMaxMemorySize: 0 }),
+  headers: async () => securityHeaders(process.env.NODE_ENV === 'development'),
   experimental: {
     // Off, as Server Fast Refresh would re-run an edited GraphQL module and add its fields to the builder twice, failing every request until a restart
     // (claude-docs/debugging.md).
