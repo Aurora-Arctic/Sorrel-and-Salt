@@ -69,7 +69,11 @@ vi.mock('@/modules/grimoire', () => ({
   readSpell,
 }));
 
-// The coven roster, which the list leaves to the Record a Working dialog to read.
+// The signed-in viewer, whom Record a Working names as its recorder.
+vi.mock('@/lib/viewer', () => ({
+  viewerOf: async () => ({ viewer: { id: 'fixture-user', name: 'Fixture Name' }, workspaces: [] }),
+}));
+// The coven roster, which the list leaves to the Record a Working dialog to search.
 const memberRoster = vi.fn(async () => []);
 vi.mock('@/modules/coven', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/modules/coven')>()),

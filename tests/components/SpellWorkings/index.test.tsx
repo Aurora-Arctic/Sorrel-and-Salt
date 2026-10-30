@@ -211,7 +211,6 @@ describe('SpellWorkings', () => {
           workspaceId={WORKSPACE_ID}
           spellId="s1"
           spellVisibility="workspace"
-          members={[]}
           steps={[]}
           working={working}
         />
@@ -256,7 +255,6 @@ describe('Delete Working in the Edit dialog', () => {
           workspaceId={WORKSPACE_ID}
           spellId="s1"
           spellVisibility="workspace"
-          members={[]}
           steps={[]}
           working={working}
         />

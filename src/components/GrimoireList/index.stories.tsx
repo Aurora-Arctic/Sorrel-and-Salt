@@ -76,7 +76,10 @@ const spell = (
     lastEdit: { by: 'Testa Owner', at: '2026-10-20T10:00:00Z' },
     ...(status === 'complete' && {
       workingCount: 2,
-      recordWorking: { workspaceId: 'fixture-coven', recorderId: 'user-a' },
+      recordWorking: {
+        workspaceId: 'fixture-coven',
+        recorder: { userId: 'user-a', name: 'Testa Owner' },
+      },
     }),
     more: {
       workspaceId: 'fixture-coven',

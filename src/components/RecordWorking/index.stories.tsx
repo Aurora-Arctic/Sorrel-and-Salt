@@ -1,7 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { RequestHandler } from 'msw';
 import type { ReactElement, ReactNode } from 'react';
-import { RecordWorkingDocument, WorkingDeductionPreviewDocument } from '@/gql/graphql';
+import {
+  RecordWorkingDocument,
+  RecordWorkingMembersDocument,
+  WorkingDeductionPreviewDocument,
+} from '@/gql/graphql';
 import {
   answerMutation,
   answerOperations,
@@ -14,8 +18,8 @@ import EditWorkingAction from '../SpellWorkings/edit-working';
 import RecordWorkingButton, { CompleteWorkingAction } from '.';
 import type { EditableWorking, WorkingStep } from './types';
 
-// Render-only; behaviour is asserted in tests/components/RecordWorking. Saving, deleting and the
-// preview are answered by the workshop's fake API (.storybook/mock-api.ts).
+// Render-only; behaviour is asserted in tests/components/RecordWorking. Saving, deleting, the
+// participant search and the preview are answered by the workshop's fake API (.storybook/mock-api.ts).
 const meta = { title: 'Grimoire / Record Working' } satisfies Meta;
 export default meta;
 type Story = StoryObj<{ state?: ReactNode }>;
@@ -26,6 +30,7 @@ const MEMBERS = [
   { userId: 'u1', name: 'Testa Owner' },
   { userId: 'u2', name: 'Mocka Member' },
 ];
+const [RECORDER] = MEMBERS;
 const STEPS: readonly WorkingStep[] = [
   { id: 's1', name: 'Testwort (Dried Leaf)', form: 'Dried Leaf', seed: 'ingredient-s1' },
 ];
@@ -46,6 +51,18 @@ const recorded = answerMutation(RecordWorkingDocument, ({ variables: { input } }
     workedOn: input.workedOn,
     visibility: input.visibility ?? ('private' as const),
     participants: [{ id: 'p1', name: 'Testa Owner', userId: 'u1' }],
+  },
+}));
+
+// The participant box's search: the members whose name holds the typed text, as the server narrows them.
+const searched = answerQuery(RecordWorkingMembersDocument, ({ variables: { query } }) => ({
+  workspace: {
+    id: WORKSPACE,
+    members: {
+      edges: MEMBERS.filter(({ name }) =>
+        name.toLowerCase().includes((query ?? '').toLowerCase()),
+      ).map(({ userId, name }) => ({ node: { user: { id: userId, name } } })),
+    },
   },
 }));
 
@@ -78,6 +95,7 @@ const HANDLERS = {
   // Ten grams in the jar, two taken, against a Low mark of three: nothing short or low.
   plain: [
     recorded,
+    searched,
     answerQuery(WorkingDeductionPreviewDocument, () => ({
       workingDeductionPreview: { deductions: [jar('s1', 10, 2, 3)], warnings: [] },
     })),
@@ -86,6 +104,7 @@ const HANDLERS = {
   // and its jar measure in different units; the candle a one-off.
   shortfall: [
     recorded,
+    searched,
     answerQuery(WorkingDeductionPreviewDocument, () => ({
       workingDeductionPreview: {
         deductions: [jar('s1', 3, 8, 5), { ...jar('s2', 20, 15, 10), unit: 'ml' as const }],
@@ -98,6 +117,7 @@ const HANDLERS = {
   ],
   // An edit's save and Delete Working's write, should either be pressed.
   edit: [
+    searched,
     answerOperations(({ operationName, variables }) => {
       if (operationName === 'UpdateWorking') {
         const { input } = variables as { input: Record<string, unknown> };
@@ -128,8 +148,7 @@ const Driven = ({
       spellId={SPELL}
       spellName="Testwort Tonic"
       spellVisibility={visibility}
-      members={MEMBERS}
-      recorderId="u1"
+      recorder={RECORDER}
       steps={spellSteps}
     />
   );
@@ -155,7 +174,6 @@ const Edit = ({
       workspaceId={WORKSPACE}
       spellId={SPELL}
       spellVisibility="workspace"
-      members={MEMBERS}
       steps={STEPS}
       working={working}
     />
@@ -207,7 +225,6 @@ const STATES: Record<string, ReactNode> = {
       spellId={SPELL}
       spellName="Testwort Tonic"
       spellVisibility="workspace"
-      members={MEMBERS}
       steps={STEPS}
     />
   ),

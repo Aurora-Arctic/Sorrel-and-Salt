@@ -10,12 +10,12 @@ import { RecordButton } from '../IconTip';
 import Modal from '../Modal';
 import Notice from '../Notice';
 import RecordWorkingForm from '../RecordWorking/form';
-import type { WorkingMember, WorkingStep } from '../RecordWorking';
+import type { WorkingStep } from '../RecordWorking';
 import Skeleton from '../Skeleton';
 import type { SpellCardRecordWorkingProps } from './types';
 
-// Record a Working on a card: the dialog reads the coven's members and the spell's steps when it
-// opens, as a list draws many cards and most are never recorded from
+// Record a Working on a card: the dialog reads the spell's steps when it opens, as a list draws
+// many cards and most are never recorded from
 // (claude-docs/components/spell-card.md, "Record a Working, Edit and the More menu").
 
 const RecordWorkingSetupDocument = graphql(`
@@ -34,24 +34,10 @@ const RecordWorkingSetupDocument = graphql(`
         }
       }
     }
-    workspace(id: $workspaceId) {
-      id
-      members(first: 100) {
-        edges {
-          node {
-            user {
-              id
-              name
-            }
-          }
-        }
-      }
-    }
   }
 `);
 
-/** What the recipe page calls a member it cannot name, and a linked ingredient it cannot read. */
-const FORMER_MEMBER = 'A former member';
+/** What the recipe page calls a linked ingredient it cannot read. */
 const UNAVAILABLE_INGREDIENT = 'Unavailable Ingredient';
 
 /** The spell's ingredient steps as the completion preview reads them; an instruction-only step has none. */
@@ -66,18 +52,11 @@ function workingStepsOf(steps: RecordWorkingSetupQuery['spell']['steps']): Worki
   });
 }
 
-function membersOf(workspace: RecordWorkingSetupQuery['workspace']): WorkingMember[] {
-  return workspace.members.edges.map(({ node }) => ({
-    userId: node.user.id,
-    name: node.user.name ?? FORMER_MEMBER,
-  }));
-}
-
 function CardRecordWorkingDialog({
   workspaceId,
   spellId,
   spellVisibility,
-  recorderId,
+  recorder,
   onClose,
   returnTo,
 }: Omit<SpellCardRecordWorkingProps, 'spellName'> & {
@@ -96,8 +75,7 @@ function CardRecordWorkingDialog({
             workspaceId={workspaceId}
             spellId={spellId}
             spellVisibility={spellVisibility}
-            recorderId={recorderId}
-            members={membersOf(setup.data.workspace)}
+            recorder={recorder}
             steps={workingStepsOf(setup.data.spell.steps)}
             close={close}
           />

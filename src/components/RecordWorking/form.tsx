@@ -2,15 +2,17 @@
 
 import { type FormEvent, type ReactElement, useId, useState } from 'react';
 import { graphql } from '../../gql';
-import type { WorkingParticipantInput } from '../../gql/graphql';
+import type { RecordWorkingMembersQuery, WorkingParticipantInput } from '../../gql/graphql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
+import { useDebouncedValue } from '../../lib/debounce';
 import { usePendingNavigation } from '../../lib/navigation';
 import type { Failure } from '../../lib/types';
 import Combobox, { ComboboxEntry } from '../Combobox';
 import DateField from '../DateField';
 import { FieldError, FieldShell, FormActions, VisibilitySwitch, fieldDescription } from '../Field';
 import { BinButton } from '../IconTip';
+import { useLookup } from '../IngredientForm/suggestions';
 import { ConfirmQuestion, DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import WorkingCompletion from './completion';
@@ -59,6 +61,34 @@ const UpdateWorkingDocument = graphql(`
   }
 `);
 
+// The participant box's search: the coven's members whose name holds the typed text.
+const RecordWorkingMembersDocument = graphql(`
+  query RecordWorkingMembers($workspaceId: ID!, $query: String, $first: Int) {
+    workspace(id: $workspaceId) {
+      id
+      members(first: $first, search: $query) {
+        edges {
+          node {
+            user {
+              id
+              name
+            }
+          }
+        }
+      }
+    }
+  }
+`);
+
+/** What the recipe page calls a member it cannot name. */
+const FORMER_MEMBER = 'A former member';
+
+const memberOptions = (data: RecordWorkingMembersQuery) =>
+  data.workspace.members.edges.map(({ node }) => ({
+    value: node.user.name ?? FORMER_MEMBER,
+    key: node.user.id,
+  }));
+
 const FIELDS = ['workedOn', 'note', 'participants', 'visibility'];
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/;
@@ -69,8 +99,7 @@ export default function RecordWorkingForm({
   workspaceId,
   spellId,
   spellVisibility,
-  members,
-  recorderId,
+  recorder,
   steps,
   working,
   deleteWorking,
@@ -82,9 +111,7 @@ export default function RecordWorkingForm({
     workedOn: working?.workedOn ?? today(),
     note: working?.note ?? '',
     visibility: working?.visibility ?? spellVisibility,
-    participants:
-      working?.participants ??
-      members.filter((m) => m.userId === recorderId).map(({ userId, name }) => ({ userId, name })),
+    participants: working?.participants ?? (recorder ? [recorder] : []),
   }));
   const [workedOn, setWorkedOn] = useState(initial.workedOn);
   const [note, setNote] = useState(initial.note);
@@ -142,13 +169,23 @@ export default function RecordWorkingForm({
   const peopleError = failure.field?.name === 'participants' ? failure.field.message : undefined;
 
   const typed = text.trim();
-  const suggested = members
-    .filter(
-      (m) =>
-        !participants.some((p) => p.userId === m.userId) &&
-        m.name.toLowerCase().includes(typed.toLowerCase()),
-    )
-    .map((m) => ({ value: m.name, key: m.userId }));
+  // The search waits for typed text, as the box takes the focus when the dialog opens and opening asks nothing.
+  const active = useDebouncedValue(typed) !== '';
+  const found = useLookup(
+    RecordWorkingMembersDocument,
+    { workspaceId },
+    text,
+    active,
+    memberOptions,
+  );
+  // The members already taking part are left out of the page the server answered.
+  const suggested = {
+    ...found,
+    options:
+      typed === ''
+        ? []
+        : found.options.filter((m) => !participants.some((p) => p.userId === m.key)),
+  };
   const addTyped = () => {
     if (typed === '' || participants.some((p) => p.userId === null && sameText(p.name, typed))) {
       return;
@@ -237,7 +274,7 @@ export default function RecordWorkingForm({
           keepOpen
           onCommit={addTyped}
           onRemoveLast={() => setParticipants(participants.slice(0, -1))}
-          suggestions={{ options: suggested, pending: false }}
+          suggestions={suggested}
           offerTyped={
             typed !== '' && !participants.some((p) => p.userId === null && sameText(p.name, typed))
           }

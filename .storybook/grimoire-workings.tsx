@@ -4,7 +4,7 @@ import EditWorkingAction from '../src/components/SpellWorkings/edit-working';
 import SpellWorkings from '../src/components/SpellWorkings';
 import type { WorkingView } from '../src/components/SpellWorkings/types';
 import type { SpellVisibility } from '../src/modules/grimoire/types';
-import { MEMBERS, WORKING_STEPS } from './grimoire-fixtures';
+import { RECORDER, WORKING_STEPS } from './grimoire-fixtures';
 
 // The Workings section with the recipe page's own controls, as the page passes them
 // (src/app/(shell)/coven/[slug]/grimoire/[id]/page.tsx), shared by the Spell Workings and
@@ -24,8 +24,7 @@ export const RecordButton = ({
     spellId={FIXTURE_SPELL}
     spellName="Fixture Working"
     spellVisibility={visibility}
-    members={MEMBERS}
-    recorderId="user-a"
+    recorder={RECORDER}
     steps={WORKING_STEPS}
   />
 );
@@ -60,7 +59,6 @@ export const WorkingsSection = ({
         workspaceId={FIXTURE_WORKSPACE}
         spellId={FIXTURE_SPELL}
         spellVisibility={visibility}
-        members={MEMBERS}
         steps={WORKING_STEPS}
         working={editable}
       />
