@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import { dayWords } from '../DateField/day';
+import SpellMarks from '../SpellMarks';
 import { WORKINGS_ID } from '../SpellRecipe/sections';
 import DeleteWorkingAction from './delete-working';
 import type { SpellWorkingsProps, WorkingView } from './types';
@@ -28,12 +29,7 @@ const Working = ({
         <h3>
           <time dateTime={working.workedOn}>{day}</time>
         </h3>
-        <div className="specimen__badges">
-          {working.status === 'draft' && <span className="badge badge--draft">Draft</span>}
-          {working.visibility === 'private' && (
-            <span className="badge badge--private">Private</span>
-          )}
-        </div>
+        <SpellMarks status={working.status} visibility={working.visibility} />
         <div className="spell-workings__actions">
           {showsComplete && completeAction?.(working.id, working.workedOn, day)}
           {working.editable &&

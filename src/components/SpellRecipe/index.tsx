@@ -3,6 +3,7 @@ import BackLink from '../IngredientEntry/back-link';
 import LastEdit from '../LastEdit';
 import LinkHint from '../LinkHint';
 import { UNTITLED_SPELL } from '../SpellCard';
+import SpellMarks from '../SpellMarks';
 import PageNav from '../PageNav';
 import type { PageNavEntry } from '../PageNav/types';
 import SpellRecipeBody from './body';
@@ -71,12 +72,7 @@ const SpellRecipe = ({
         {/* Above the title, as the ingredient entry page places it. */}
         {lastEdit && <LastEdit by={lastEdit.by} at={lastEdit.at} />}
         <h1 id="spell-recipe-title">{name}</h1>
-        {(status === 'draft' || visibility === 'private') && (
-          <div className="specimen__badges">
-            {status === 'draft' && <span className="badge badge--draft">Draft</span>}
-            {visibility === 'private' && <span className="badge badge--private">Private</span>}
-          </div>
-        )}
+        <SpellMarks status={status} visibility={visibility} />
         {action}
       </header>
       <SpellRecipeSummary steps={steps} />
