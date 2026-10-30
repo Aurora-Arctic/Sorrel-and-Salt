@@ -136,7 +136,7 @@ const PanelCategories = ({
             label="Moon Phase"
             name="moonPhase"
             typeahead
-            placeholder="Add Moon Phase"
+            placeholder="Add a moon phase"
             removeNoun="Moon Phase"
             loading={pending}
             choices={facets.moonPhases.map((choice) => ({
@@ -152,7 +152,7 @@ const PanelCategories = ({
             label="Day of Week"
             name="dayOfWeek"
             typeahead
-            placeholder="Add Day"
+            placeholder="Add a day"
             removeNoun="Day"
             loading={pending}
             choices={facets.daysOfWeek}
@@ -167,7 +167,7 @@ const PanelCategories = ({
             label="Coven Member"
             name="maker"
             typeahead
-            placeholder="Add Member"
+            placeholder="Add a member"
             removeNoun="Member"
             loading={pending}
             choices={facets.makers}
