@@ -95,8 +95,8 @@ follows the mailed link from that browser.
 Better Auth's rate limiter counts per client address, so guesses spread over
 many addresses pass it. Failed password sign-ins are also counted per account,
 in `sign_in_failures` (DESIGN.md §8, "Passwords"), by
-`src/modules/identity/services/sign-in-lockout.ts` and two hooks on
-`/sign-in/email` in `src/lib/auth.ts`:
+`src/modules/identity/services/sign-in-lockout.ts` and hooks on
+`/sign-in/email` and `/change-password` in `src/lib/auth.ts`:
 
 - **The schedule.** The 5th failure locks the password for 1 minute, the 10th
   for 5 minutes, the 20th for 1 hour, and the 100th disables it until a reset.
@@ -115,6 +115,13 @@ in `sign_in_failures` (DESIGN.md §8, "Passwords"), by
   returned that error for an account that was not locked, and deletes the row
   on a successful sign-in. Attempts made during a lock are not counted, so a
   lock ends when its time does.
+- **A change counts too.** A wrong current password at `/change-password`
+  is a guess at the same password, so it counts the same way: the before hook
+  (`holdChange`) swaps the current password for random bytes while the
+  account is locked, so the change is refused as Better Auth's own
+  `INVALID_PASSWORD`, and the after hook (`countChange`) adds one for a wrong
+  current password on an unlocked account and deletes the row on a completed
+  change.
 - **What it leaves open.** A provider sign-in never reads the row. A completed
   reset deletes it, in `onPasswordReset`.
 - **Outside `withAudit`.** A failed sign-in has no session to audit; the
@@ -207,7 +214,9 @@ following the mailed link gives it its first password the same way.
   `/sign-in/email`: each step of the schedule, the right password refused in
   a lock and accepted after, the reset that lifts a disabled password, a lock
   that leaves another account and the same account's provider sign-in open,
-  the count cleared by a sign-in, and a locked attempt's response compared
+  the count cleared by a sign-in, by a completed change and by a completed
+  reset, a wrong current password at a change counted and a change refused
+  during a lock, and a locked attempt's response compared
   whole (status, headers but `date`, body) with a wrong password's and an
   unknown address's. Each shows the guard refuses by deleting the row.
 - `tests/modules/identity/graphql/set-password.test.ts`: the mutation's

@@ -233,3 +233,65 @@ describe('Story 72: a lock looks like a wrong password', () => {
     expect((await signIn(RIGHT)).status).toBe(200);
   });
 });
+
+describe('Story 72: a wrong current password at a change counts', () => {
+  async function signedInCookie(): Promise<string> {
+    const response = await signIn(RIGHT);
+    expect(response.status, await response.clone().text()).toBe(200);
+    return cookieHeader(response);
+  }
+
+  const change = (cookie: string, currentPassword: string) =>
+    post(auth, '/change-password', { currentPassword, newPassword: NEW }, cookie);
+
+  it('counts a wrong current password as a failure, and locks at the fifth', async () => {
+    await verifiedAccount();
+    const cookie = await signedInCookie();
+    // The precondition: the sign-in that made the session left no count behind.
+    expect(await failureRow()).toBeUndefined();
+    await seedFailures(4);
+
+    expect((await change(cookie, WRONG)).status).toBe(400);
+    const row = await failureRow();
+    expect(row?.count).toBe(5);
+    expect(row?.locked_until?.getTime()).toBeGreaterThan(Date.now());
+    expect((await signIn(RIGHT)).status).toBe(401);
+  });
+
+  it('refuses the right current password during a lock as a wrong one, without counting it', async () => {
+    await verifiedAccount();
+    const cookie = await signedInCookie();
+    await seedFailures(4);
+    await signIn(WRONG);
+
+    const locked = await change(cookie, RIGHT);
+    expect(locked.status).toBe(400);
+    expect(((await locked.json()) as { code: string }).code).toBe('INVALID_PASSWORD');
+    expect((await failureRow())?.count).toBe(5);
+
+    await removeRow();
+    expect((await change(cookie, RIGHT)).status).toBe(200);
+  });
+
+  it('clears the count on a change made with the right current password', async () => {
+    await verifiedAccount();
+    const cookie = await signedInCookie();
+    await seedFailures(3);
+    expect((await change(cookie, RIGHT)).status).toBe(200);
+    expect(await failureRow()).toBeUndefined();
+  });
+});
+
+describe('Story 72: a reset clears the count', () => {
+  it('clears a count below any lock once a reset completes', async () => {
+    await verifiedAccount();
+    await seedFailures(3);
+    expect((await post(auth, '/request-password-reset', { email: OWNER })).status).toBe(200);
+    const text = send.mock.calls[send.mock.calls.length - 1][0].text;
+    const token = text.match(/\/reset-password\/([^\s\]?]+)/)![1];
+    expect((await failureRow())?.count).toBe(3);
+
+    expect((await post(auth, '/reset-password', { token, newPassword: NEW })).status).toBe(200);
+    expect(await failureRow()).toBeUndefined();
+  });
+});

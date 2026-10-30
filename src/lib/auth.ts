@@ -343,12 +343,37 @@ async function mailResetLink({
   await send(await resetPasswordMessage({ to: user.email, url: link.toString() }));
 }
 
+// The account a password sign-in or change names, and whether its lock was on when the attempt arrived, carried from the
+// before hook to the after hook so the after hook does no second lookup.
+const passwordAttempt = defineRequestState<{ userId?: string; locked: boolean }>(() => ({
+  locked: false,
+}));
+
 /**
  * Changes `/change-password` to sign out every other session whatever the request asks, so a change always
- * shuts out whoever else held the old password.
+ * shuts out whoever else held the old password. While the account's password lock is on, it also swaps the
+ * current password for one no hash can match, so the change is refused as a wrong current password.
  */
-function revokeOtherSessions(ctx: HookContext) {
-  return { context: { body: { ...ctx.body, revokeOtherSessions: true } } };
+async function holdChange(ctx: HookContext) {
+  const userId = (await sessionOf(ctx))?.user.id;
+  const locked = userId !== undefined && (await isPasswordSignInLocked(userId));
+  await passwordAttempt.set({ userId, locked });
+  const body = { ...ctx.body, revokeOtherSessions: true };
+  if (locked) body.currentPassword = randomBytes(32).toString('hex');
+  return { context: { body } };
+}
+
+/**
+ * Counts a wrong current password against an unlocked account as a failed sign-in, since it is a guess at the
+ * same password, and clears the count once a change proves the password.
+ */
+async function countChange(ctx: HookContext) {
+  const { userId, locked } = await passwordAttempt.get();
+  if (!userId) return;
+  const returned = ctx.context.returned;
+  if (!isAPIError(returned)) return clearFailedPasswordSignIns(userId);
+  if (returned.body?.code !== BASE_ERROR_CODES.INVALID_PASSWORD.code) return;
+  if (!locked) await recordFailedPasswordSignIn(userId);
 }
 
 /** Tells the account a change on its account page replaced its password. */
@@ -390,12 +415,6 @@ function sameSignUpAnswer(ctx: HookContext) {
   if (isAPIError(returned) || returned instanceof Response) return;
   return ctx.json({ status: true });
 }
-
-// The account a password sign-in names, and whether its lock was on when the attempt arrived, carried from the
-// before hook to the after hook so the after hook does no second lookup.
-const passwordAttempt = defineRequestState<{ userId?: string; locked: boolean }>(() => ({
-  locked: false,
-}));
 
 /**
  * While the account is locked, swaps the submitted password for a random one no hash can match. Better Auth then
@@ -579,14 +598,17 @@ export const auth = betterAuth({
     before: createAuthMiddleware(async (ctx) => {
       if (ctx.path === '/verify-email') return gateEmailChange(ctx);
       if (ctx.path === '/send-verification-email') return requireOwnResend(ctx);
-      if (ctx.path === '/change-password') return revokeOtherSessions(ctx);
+      if (ctx.path === '/change-password') return holdChange(ctx);
       if (ctx.path === '/sign-in/email') return holdLockedSignIn(ctx);
       if (ctx.path !== '/callback/:id' && ctx.path !== '/sign-up/email') return;
       await sweepQuietly(ctx);
     }),
     after: createAuthMiddleware(async (ctx) => {
       if (ctx.path === '/sign-up/email') return sameSignUpAnswer(ctx);
-      if (ctx.path === '/change-password') return mailChangeNotice(ctx);
+      if (ctx.path === '/change-password') {
+        await countChange(ctx);
+        return mailChangeNotice(ctx);
+      }
       if (ctx.path === '/sign-in/email') return countPasswordSignIn(ctx);
       const newSession = ctx.context.newSession;
       if (ctx.path !== '/callback/:id' || !newSession) return;
