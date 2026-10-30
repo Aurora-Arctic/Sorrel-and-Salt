@@ -455,9 +455,9 @@ test("a short jar's deduction line keeps each part whole at 375px", async ({ pag
   const dialog = page.getByRole('dialog', { name: 'Record a Working' });
   await dialog.getByRole('button', { name: 'Complete' }).click();
   const words = dialog.getByRole('list', { name: 'Deductions' }).locator('.jar-line__words');
-  await expect(words).toContainText('short by');
+  await expect(words).toContainText('needs 3 g · have 1 g · short by 2 g');
 
-  // Every part (takes, have, left, short by) stands on one line, so no unit sits alone under its number.
+  // Every part (needs, have, short by) stands on one line, so no unit sits alone under its number.
   const parts = await words.locator('> span').evaluateAll((spans) =>
     spans.map((span) => {
       const range = document.createRange();
@@ -466,6 +466,6 @@ test("a short jar's deduction line keeps each part whole at 375px", async ({ pag
       return { text: span.textContent, lines: tops.size };
     }),
   );
-  expect(parts).toHaveLength(4);
+  expect(parts).toHaveLength(3);
   for (const part of parts) expect(part, part.text ?? '').toMatchObject({ lines: 1 });
 });

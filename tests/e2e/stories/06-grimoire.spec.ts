@@ -793,7 +793,7 @@ test(
     // The preview says what will be taken before anything is.
     await expect(dialog.getByRole('list', { name: 'Deductions' })).toContainText('2 g');
     await assertNoAccessibilityViolations(page);
-    await dialog.getByRole('button', { name: 'Confirm' }).click();
+    await dialog.getByRole('button', { name: 'Mark Complete' }).click();
     await expect(dialog.getByText('Done')).toBeVisible();
     await page.goto(`/coven/${coven.slug}/ingredients`);
     await expect(page.getByRole('listitem').filter({ hasText: 'Herb' }).first()).toContainText(
