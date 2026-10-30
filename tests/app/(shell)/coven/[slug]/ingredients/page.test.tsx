@@ -121,6 +121,8 @@ const row = (id: string, name: string, workspaceId: string | null) => ({
   toxic: false,
   safetyNotes: null,
   deletedAt: null,
+  revision: 1,
+  updatedAt: new Date('2026-03-04T05:06:07.000Z'),
 });
 
 const NO_FACETS = {
