@@ -36,10 +36,9 @@ export default function WorkspaceSwitcher({
   const registration = useCovenSwitchRegistration();
   const [picked, setPicked] = useState<string>();
   const box = useRef<HTMLDivElement>(null);
-  const choices = workspaces.map(({ slug, name, demo }) => ({
+  const choices = workspaces.map(({ slug, name }) => ({
     value: slug,
-    // The select-only box draws no qualifier, so the demo coven says so in its label.
-    label: demo ? `${name} (Demo)` : name,
+    label: name,
   }));
 
   useEffect(() => {
