@@ -26,24 +26,16 @@ import type {
 } from '@/gql/graphql';
 import { DEBOUNCE_MS } from '@/lib/debounce';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
-import {
-  expectAnswered,
-  expectAskingOver,
-  expectGuardedWaysOut,
-  renderInModal,
-} from '../../support/discard-guard';
+import { expectAnswered, expectAskingOver, renderInModal } from '../../support/discard-guard';
 import {
   box,
-  chooseKind,
-  inPanel,
-  referencePanel,
   renderWithClient,
   textbox,
   waitFor,
   duplicateHref,
 } from '../../support/ingredient-form';
 import { openSections } from '../../support/ingredient-sections';
-import { choose, press, type, typeIn } from '../../support/interact';
+import { choose, press, type } from '../../support/interact';
 import {
   ENTRY_ID,
   acceptCompendiumCreate,
@@ -184,7 +176,7 @@ describe('IngredientForm on the compendium', () => {
       });
       expect(calls[0]).not.toHaveProperty('workspaceId');
       expect(onSaved).toHaveBeenCalledWith(
-        { id: ENTRY_ID, name: 'Testwort', slug: 'testwort-fixtura-testalis' },
+        { id: ENTRY_ID, name: 'Testwort', slug: 'testwort-fixtura-testalis', revision: 1 },
         'open',
       );
     });
@@ -246,61 +238,6 @@ describe('IngredientForm on the compendium', () => {
 
       expect(screen.queryByRole('button', { name: 'Discard Changes' })).not.toBeInTheDocument();
       expect(onClose).toHaveBeenCalledOnce();
-    });
-
-    // Every way out asks first while the form has changes: the
-    // guard's shape is tests/components/Modal's, and this its wiring.
-    it('asks before Cancel or Escape discards a change, and closes on Discard Changes', async () => {
-      offerNothing();
-      const onClose = renderInModal((done) => (
-        <IngredientForm
-          duplicateHref={duplicateHref}
-          workspaceId={null}
-          onSaved={vi.fn()}
-          onDeleted={done}
-          onCancel={done}
-        />
-      ));
-
-      expectGuardedWaysOut(onClose, () => type('Name', 'Testwort'));
-      // Each way out leaves Name, which validates it after the press.
-      await act(async () => {});
-    });
-
-    // A reference panel's edits are in a form of their own, which the
-    // ingredient form's isDirty never sees; they count all the same.
-    it('asks before Escape or Cancel discards what is typed in a reference panel, keeping it on Keep Editing', async () => {
-      offerNothing();
-      const onClose = renderInModal((done) => (
-        <IngredientForm
-          duplicateHref={duplicateHref}
-          workspaceId={null}
-          onSaved={vi.fn()}
-          onDeleted={done}
-          onCancel={done}
-        />
-      ));
-      const title = () => inPanel('Title');
-
-      expectGuardedWaysOut(
-        onClose,
-        () => {
-          fireEvent.keyDown(box('Reference'), { key: 'ArrowDown' });
-          fireEvent.click(screen.getByRole('option', { name: 'New Reference' }));
-          chooseKind('Book');
-          typeIn(title(), 'A Fixture Grimoire');
-        },
-        {
-          // The form's own Cancel, not the panel's.
-          cancel: () =>
-            screen
-              .getAllByRole('button', { name: 'Cancel' })
-              .find((cancel) => !referencePanel().contains(cancel)) as HTMLElement,
-          kept: () => expect(title()).toHaveValue('A Fixture Grimoire'),
-        },
-      );
-      // Leaving a field validates it, a step that ends after the assertions.
-      await act(async () => {});
     });
   });
 
@@ -545,8 +482,9 @@ describe('IngredientForm on the compendium', () => {
         expect(review).toHaveLength(0);
       });
 
-      it('is dropped by Cancel, which asks first because the switch changed the form', async () => {
+      it('is saved by Cancel, which closes without asking', async () => {
         const review = acceptReview();
+        acceptUpdate();
         offerNothing();
         const onClose = renderInModal((done) => (
           <IngredientForm
@@ -562,13 +500,10 @@ describe('IngredientForm on the compendium', () => {
 
         fireEvent.click(reviewSwitch());
         fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
-        expect(screen.getByRole('button', { name: 'Discard Changes' })).toBeInTheDocument();
-        expect(onClose).not.toHaveBeenCalled();
 
-        fireEvent.click(screen.getByRole('button', { name: 'Discard Changes' }));
-        expect(onClose).toHaveBeenCalledOnce();
-        await act(async () => {});
-        expect(review).toHaveLength(0);
+        await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+        expect(screen.queryByRole('button', { name: 'Discard Changes' })).not.toBeInTheDocument();
+        expect(review).toHaveLength(1);
       });
     });
 
@@ -599,7 +534,7 @@ describe('IngredientForm on the compendium', () => {
       });
       expect(calls[0]?.endRedirect).toBeFalsy();
       expect(onSaved).toHaveBeenCalledWith(
-        { id: ENTRY_ID, name: 'Mockwort', slug: 'mockwort-fixtura-testalis' },
+        { id: ENTRY_ID, name: 'Mockwort', slug: 'mockwort-fixtura-testalis', revision: 1 },
         'open',
       );
     });

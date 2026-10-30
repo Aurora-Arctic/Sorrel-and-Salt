@@ -101,7 +101,7 @@ describe("IngredientForm editing a coven's own entry", () => {
       },
     });
     expect(onSaved).toHaveBeenCalledWith(
-      { id: ENTRY_ID, name: 'Mockwort', slug: 'mockwort-fixtura-testalis' },
+      { id: ENTRY_ID, name: 'Mockwort', slug: 'mockwort-fixtura-testalis', revision: 1 },
       'open',
     );
   });

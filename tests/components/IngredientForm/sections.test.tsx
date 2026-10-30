@@ -1,4 +1,4 @@
-import { act, fireEvent, screen } from '@testing-library/react';
+import { fireEvent, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import IngredientForm from '@/components/IngredientForm';
 import type { IngredientFormValues } from '@/components/IngredientForm/types';
@@ -114,29 +114,6 @@ describe('IngredientForm’s sections', () => {
     fireEvent.click(openAll);
 
     expect(openSections()).toEqual(SECTIONS);
-  });
-
-  // A control the question holds is off, not merely faded.
-  it('turns Close All off while the unsaved changes are asked about, and on again on Keep Editing', async () => {
-    offerNothing();
-    renderInModal((done) => (
-      <IngredientForm duplicateHref={duplicateHref} workspaceId={null} onCancel={done} />
-    ));
-    const closeAll = screen.getByRole('button', { name: 'Close All' });
-    type('Name', 'Testwort');
-    expect(closeAll).toBeEnabled();
-
-    press('Cancel');
-    // Leaving Name validates it, which lands after the press.
-    await act(async () => {});
-
-    expect(screen.getByRole('button', { name: 'Keep Editing' })).toBeInTheDocument();
-    expect(closeAll).toBeDisabled();
-
-    press('Keep Editing');
-
-    expect(screen.queryByRole('button', { name: 'Keep Editing' })).not.toBeInTheDocument();
-    expect(closeAll).toBeEnabled();
   });
 
   it('opens every section with Open All, and closes every one with Close All while any is open', () => {

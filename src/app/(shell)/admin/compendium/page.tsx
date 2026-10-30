@@ -212,7 +212,12 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
           editing
             ? {
                 heading: editHeading(editing.values),
-                entry: { id: editing.id, values: editing.values },
+                entry: {
+                  id: editing.id,
+                  values: editing.values,
+                  revision: editing.revision,
+                  updatedAt: editing.updatedAt,
+                },
                 ...(editReview !== undefined && {
                   review: {
                     reviewed: editReview !== null,

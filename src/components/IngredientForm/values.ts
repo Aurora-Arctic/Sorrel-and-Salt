@@ -1,3 +1,4 @@
+import { NAMELESS_KIND, UNSETTLED_KIND } from '@/modules/ingredients/schema/ingredient-enums';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { zodResolver } from '@hookform/resolvers/zod';
 import type {
@@ -447,6 +448,34 @@ export const fold = (text: string): string => text.trim().toLowerCase();
  */
 export const renamedTo = ({ form, formLink }: RenamedFormHolder): string | undefined =>
   formLink && fold(formLink.name) !== fold(form) ? formLink.name : undefined;
+
+/**
+ * Whether the form holds something a save would refuse and that is only unfinished: no name yet,
+ * text in a list's box or an open reference panel, a form with no name, a named classification with no formal
+ * name, and on the compendium no classification or a typed form not picked. The autosave waits
+ * on these quietly, where Save says what is wrong.
+ */
+export function heldBack(values: IngredientFormValues, compendium: boolean): boolean {
+  const boxed = (drafts: Partial<Record<string, string>>, panelOpen: boolean): boolean =>
+    panelOpen || Object.values(drafts).some((text) => (text ?? '').trim() !== '');
+  if (values.name.trim() === '' || boxed(values.drafts, values.referencePanelOpen)) return true;
+  if (
+    values.variants.some(
+      (variant) =>
+        variant.form.trim() === '' ||
+        boxed(variant.drafts, variant.referencePanelOpen) ||
+        renamedTo(variant) !== undefined ||
+        (compendium && variant.formLink === null),
+    )
+  ) {
+    return true;
+  }
+  const { nomenclature, canonicalName } = values;
+  if (compendium && nomenclature === '') return true;
+  const named =
+    nomenclature !== '' && nomenclature !== NAMELESS_KIND && nomenclature !== UNSETTLED_KIND;
+  return named && canonicalName.trim() === '';
+}
 
 /**
  * Why `text` cannot be a list's next entry, or undefined when it can. It reads the schema's keys,

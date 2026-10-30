@@ -37,6 +37,17 @@ interface IngredientFormCallbacks {
    * ingredient; 'another', Save & Add Another, after which the form clears.
    */
   onSaved?: (ingredient: SavedIngredient, next: AfterSave) => void;
+  /**
+   * Called once, when an autosave has created a new ingredient, with the saved row: the page moves
+   * its address from the add to the edit. Not called by Save, Close or Cancel, whose callbacks say
+   * what the page does next.
+   */
+  onCreated?: (ingredient: SavedIngredient) => void;
+  /**
+   * Reload, after another save changed the ingredient: the form is replaced with what the server
+   * holds. Left out, the page reloads.
+   */
+  onReload?: () => void;
   /** Called once the entry given has been deleted. */
   onDeleted?: () => void;
   /** Cancel, offered beside the saves when given: the page the form sits in closes it. */
@@ -95,6 +106,10 @@ export type IngredientFormProps = IngredientFormCallbacks &
 export interface EditedIngredient {
   id: string;
   values: IngredientFormValues;
+  /** The revision the page read, which the first save names so a change made since is not written over. */
+  revision?: number | null;
+  /** When the page read it saved, as an ISO moment: a copy kept in the browser is offered back only if newer. */
+  updatedAt?: string | null;
 }
 
 /** What follows a save: the new ingredient opened, or the form cleared for another. */
@@ -323,6 +338,7 @@ export type VariantPath = `variants.${number}`;
 export interface IngredientSend {
   input: IngredientFormInput;
   endRedirect: boolean;
+  revision?: number;
 }
 
 /** A save the server asked to confirm: what it said, and the input to send again. */

@@ -1,7 +1,7 @@
 'use client';
 
 import { usePendingNavigation } from '@/lib/navigation';
-import type { ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 import { compendiumHref } from '../../../../components/CompendiumList/href';
 import { detailsHeading } from '../../../../components/IngredientEntry/details';
 import IngredientForm from '../../../../components/IngredientForm';
@@ -19,6 +19,9 @@ export default function CompendiumDialog({
 }: CompendiumDialogProps): ReactElement {
   const { navigate, refresh } = usePendingNavigation();
   const entry = opened?.entry;
+  // The entry an autosave created: the address moves to its `?edit=`, and the form stays the one
+  // the person is typing in.
+  const [created, setCreated] = useState<string | null>(null);
   // The list it opened over: the admin's, or the public search's.
   const href = (dialog?: { edit: string }) => compendiumHref(place, dialog, path);
   return (
@@ -32,11 +35,15 @@ export default function CompendiumDialog({
               // A fresh form per entry, inside the one modal: Save Ingredient's move
               // from ?new to ?edit= swaps the form without the modal fading away
               // and back.
-              key={entry?.id ?? 'new'}
+              key={entry && entry.id !== created ? entry.id : 'new'}
+              onCreated={(saved) => {
+                setCreated(saved.id);
+                navigate(href({ edit: saved.slug }), { replace: true, scroll: false });
+              }}
               workspaceId={null}
               mayPromote
               review={opened.review}
-              entry={entry}
+              entry={entry && entry.id !== created ? entry : undefined}
               // Save Ingredient opens the entry it saved, at the address its name
               // now spells; Save & Add Another stays on the new form, which clears
               // itself, and the list beneath gains the entry.

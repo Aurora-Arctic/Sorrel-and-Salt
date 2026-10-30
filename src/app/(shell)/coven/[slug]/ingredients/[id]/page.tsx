@@ -150,7 +150,12 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
     : inCompendium && viewer.canCurate;
   const opened =
     canEdit && 'edit' in (await searchParams)
-      ? { id: entry.id, values: await entryValues(entry, isOwn ? session : null) }
+      ? {
+          id: entry.id,
+          values: await entryValues(entry, isOwn ? session : null),
+          revision: entry.revision,
+          updatedAt: entry.updatedAt.toISOString(),
+        }
       : undefined;
 
   // Annotate opens its dialog from the address the same way, but only for a
