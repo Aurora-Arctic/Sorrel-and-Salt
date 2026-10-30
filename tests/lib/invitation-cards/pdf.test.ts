@@ -296,6 +296,23 @@ describe('the card sheets PDF', () => {
     }
   });
 
+  it("runs each front's salt 1/8 in past its card's trim at the bottom right, at 460 × 307 artboard px", () => {
+    const fronts = pictures(nine, 0, 'salt');
+    expect(fronts).toHaveLength(9);
+    for (const box of fronts) {
+      const [cx, cy] = cell(box).split(',').map(Number);
+      const trim = {
+        left: BLOCK.left + 9 + 189 * cx,
+        bottom: BLOCK.bottom + 9 + 252 * cy,
+      };
+      // The frame turns a quarter clockwise, so a card's right edge lies at the page's bottom and its bottom at the left.
+      expect(trim.bottom - box.bottom).toBeCloseTo(9);
+      expect(trim.left - box.left).toBeCloseTo(9);
+      expect(box.top - box.bottom).toBeCloseTo((460 * 72) / 192);
+      expect(box.right - box.left).toBeCloseTo((307 * 72) / 192);
+    }
+  });
+
   it('prints card i with front text i, and the expiry date on every front', async () => {
     const pdfjs = await import('pdfjs-dist/legacy/build/pdf.mjs');
     const pdf = await pdfjs.getDocument({ data: nineBytes.slice() }).promise;

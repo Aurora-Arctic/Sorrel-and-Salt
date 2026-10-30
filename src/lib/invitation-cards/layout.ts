@@ -50,18 +50,14 @@ const FOOT_GAP = 6;
 export const HEADLINE_SIZE = 52;
 export const HEADLINE_MAX_LINES = 2;
 
-// The salt's right and bottom edges sit on the trim, so a neighbouring card shows it only on a miscut.
-const SALT = {
-  width: 460,
-  height: 307,
-  rightInset: ARTBOARD.trimInset,
-  bottomInset: ARTBOARD.trimInset,
-};
+// The salt fills the artboard's bottom-right corner, bleed included, as the canvas draws it,
+// so it runs under the words of the cards beside and below and is clipped only at the block's edge.
+const SALT = { width: 460, height: 307 };
 
 export const FRONT_PICTURE: PictureItem = {
   picture: 'salt',
-  x: ARTBOARD.width - SALT.rightInset - SALT.width,
-  y: ARTBOARD.height - SALT.bottomInset - SALT.height,
+  x: ARTBOARD.width - SALT.width,
+  y: ARTBOARD.height - SALT.height,
   width: SALT.width,
   height: SALT.height,
 };
