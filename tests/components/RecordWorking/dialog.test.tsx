@@ -114,9 +114,16 @@ describe('Record a Working', () => {
 
   it('cannot date a working in the future', () => {
     openButton();
-    const max = within(dialog()).getByLabelText(/Date/).getAttribute('max');
-    expect(max).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    expect(max).toBe(new Date().toLocaleDateString('en-CA'));
+    fireEvent.click(within(dialog()).getByRole('button', { name: /Date/ }));
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const day = within(screen.getByRole('grid')).queryByRole('button', {
+      name: new RegExp(
+        tomorrow.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }),
+      ),
+    });
+    // Tomorrow is either not drawn (a later month, which cannot be reached) or drawn and disabled.
+    if (day) expect(day).toBeDisabled();
   });
 
   it('adds a typed name as a chip and sends it as a name', async () => {

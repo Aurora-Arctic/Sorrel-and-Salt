@@ -1,0 +1,140 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The day button is a `.input` box; the calendar opens beneath it in flow, so nothing is positioned.
+.date-field__button {
+  text-align: start;
+  cursor: pointer;
+}
+
+.date-field__panel {
+  margin-block-start: space(2);
+  padding: space(3);
+  border: 1px solid $text-muted;
+  border-radius: radius('surface');
+  background-color: $surface-card;
+  inline-size: fit-content;
+  max-inline-size: 100%;
+}
+
+.day-picker {
+  color: $text-primary;
+  font-family: $font-body;
+}
+
+.day-picker__months {
+  position: relative;
+}
+
+.day-picker__caption {
+  display: flex;
+  align-items: center;
+  block-size: 2rem;
+  padding-inline-end: 4.5rem;
+}
+
+.day-picker__label {
+  font-weight: 600;
+}
+
+// Previous and next sit at the caption's end, over the space its padding keeps clear.
+.day-picker__nav {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  display: flex;
+  gap: space(1);
+}
+
+.day-picker__step {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 2rem;
+  block-size: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: radius('control');
+  background: transparent;
+  color: $text-primary;
+  cursor: pointer;
+
+  &:hover {
+    background-color: $surface-card-hover;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  &[aria-disabled='true'] {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+.day-picker__chevron {
+  inline-size: 1rem;
+  block-size: 1rem;
+  fill: currentcolor;
+}
+
+.day-picker__grid {
+  border-collapse: collapse;
+}
+
+.day-picker__weekday {
+  padding-block: space(1);
+  color: $text-muted;
+  font-size: type-size('small');
+  font-weight: 400;
+  text-align: center;
+}
+
+.day-picker__day {
+  padding: 0;
+  text-align: center;
+}
+
+.day-picker__button {
+  inline-size: 2.25rem;
+  block-size: 2.25rem;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: radius('control');
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background-color: $surface-card-hover;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+}
+
+// Today is told by its rule and the chosen day by its fill and weight, not colour alone.
+.day-picker__day--today .day-picker__button {
+  border-color: $text-primary;
+}
+
+.day-picker__day--selected .day-picker__button {
+  background-color: $accent;
+  color: $text-on-color;
+  font-weight: 600;
+}
+
+.day-picker__day--outside {
+  color: $text-muted;
+}
+
+.day-picker__day--disabled {
+  color: $text-muted;
+  opacity: 0.5;
+}

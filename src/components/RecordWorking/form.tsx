@@ -8,6 +8,7 @@ import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
 import type { Failure } from '../../lib/types';
 import Combobox, { ComboboxEntry } from '../Combobox';
+import DateField from '../DateField';
 import { FieldShell, FormActions, VisibilitySwitch, fieldDescription } from '../Field';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
@@ -191,16 +192,14 @@ export default function RecordWorkingForm({
     >
       {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
       <FieldShell label="Date" required {...dateField}>
-        <input
+        <DateField
           id={dateField.controlId}
-          className="input"
-          type="date"
-          max={today()}
-          aria-required
-          {...dateField.aria}
+          labelledBy={dateField.labelId}
           value={workedOn}
+          max={today()}
           disabled={submitting}
-          onChange={(event) => setWorkedOn(event.target.value)}
+          onChange={setWorkedOn}
+          {...dateField.aria}
         />
       </FieldShell>
       <div className="fieldset">
