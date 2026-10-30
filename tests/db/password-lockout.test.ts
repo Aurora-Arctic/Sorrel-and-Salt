@@ -210,6 +210,25 @@ describe('Story 72: a lock is the account’s alone', () => {
       OWNER,
     );
   });
+
+  it('counts nothing against an account that holds no password', async () => {
+    await oauthSignIn(auth, server, 'google', {
+      sub: 'g-password-lockout-only',
+      email: OWNER,
+      verified: true,
+    });
+    // Precondition: the address has an account, with a provider row and no password row.
+    const accounts = await sql`
+      select provider_id from accounts where user_id = (select id from users where email = ${OWNER})
+    `;
+    expect(accounts.map((row) => row.provider_id)).toEqual(['google']);
+    send.mockReset();
+
+    for (let attempt = 0; attempt < 5; attempt++) {
+      expect((await signIn(WRONG)).status).toBe(401);
+    }
+    expect(await failureRow()).toBeUndefined();
+  });
 });
 
 describe('Story 72: a lock looks like a wrong password', () => {

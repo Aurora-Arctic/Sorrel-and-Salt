@@ -112,6 +112,11 @@ in `sign_in_failures` (DESIGN.md §8, "Passwords"), by
 - **The schedule.** The 5th failure locks the password for 1 minute, the 10th
   for 5 minutes, the 20th for 1 hour, and the 100th disables it until a reset.
   A count between two of these adds no lock of its own.
+- **Only an account with a password is counted.** The before hook looks the
+  address up the way Better Auth's sign-in does, with its accounts, and goes
+  no further when it has no `credential` row holding a password. Guesses at a
+  provider-only account are refused by Better Auth as wrong and count nothing,
+  so they cannot lock it.
 - **The before hook** (`holdLockedSignIn`) looks the address up and, while its
   account is locked, replaces the submitted password with 32 random bytes in
   hex, which no stored hash matches. Better Auth then runs its own lookup and
