@@ -916,7 +916,7 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   }
 }
 
-// A stacking table's dangerous row action as a column of its own (Impersonate, Remove): the pinned
+// A stacking table's dangerous row action as a column of its own (Impersonate): the pinned
 // column of `sticky-action-column` in red, with a red hairline, faded red tint and red text. The
 // tint is mixed into the band it sits on, so it stays opaque.
 @mixin row-action-column($layer: 1) {

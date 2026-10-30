@@ -26,8 +26,8 @@ through `Workspace.members`.
 - **Change Role sits in the Role column**, the role on the left and the
   control on the right. It is `btn btn--quiet btn--small`.
 - **Remove is `RemoveControl`** (M6.15): a `ConfirmedAction` naming the member, sending `removeMember`, and reading the page again. The page passes it to owners only, on every row but their own (leaving is the coven page's), and a refusal such as the last owner is said under the Remove pressed, as Change Role's is (below).
-- **Remove has a column of its own**, as Impersonate has, from the same
-  `row-action-column` mixin: last, ruled in red,
+- **Remove has a column of its own**, as the Compendium's Edit has, from the same
+  `sticky-action-column` mixin: last, on the neutral rule,
   sticky at the right edge while the table scrolls, and at the card's top
   right at phone width. Its button is `btn btn--quiet btn--small`, plain as
   Change Role is: the red is the confirm's own, on the Remove that removes.
@@ -84,7 +84,7 @@ success is said in the page's status region: "<name> is now <role>." or
 `index.scss` holds the list's own rules only: the name with its "You" mark, the
 Joined, Invited By and Updated facts muted at the caption size above the
 stacking width, the Role column shrunk to its content, the role beside its
-button, and the Remove column from `row-action-column`. The table, its frame
+button, and the Remove column from `sticky-action-column`. The table, its frame
 and its card layout are the `.data-table` primitives
 ([`../styling.md`](../styling.md)). The Change Role button has no minimum
 width: every row holds the same one button, so they line up without it. Tokens
@@ -111,4 +111,4 @@ and its success said in the status region.
 
 ## Columns
 
-The roll reads left to right as who, what they may do, and what has happened to the membership. The name comes first and the address only where the page asks for it. Next is the role with its change control beside it. Then come the facts no control changes: when the person joined, who invited them, and who last changed the membership and when, folded into one Updated column. Remove is last, and only when the page passes it. It is the table's one destructive row action, so its column is ruled in red, as the Impersonate column is.
+The roll reads left to right as who, what they may do, and what has happened to the membership. The name comes first and the address only where the page asks for it. Next is the role with its change control beside it. Then come the facts no control changes: when the person joined, who invited them, and who last changed the membership and when, folded into one Updated column. Remove is last, and only when the page passes it. It is the table's one destructive row action, yet its column is drawn plain, on the neutral rule: the red is kept for the Remove in its question, the one that removes.
