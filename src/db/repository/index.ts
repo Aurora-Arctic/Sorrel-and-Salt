@@ -124,6 +124,8 @@ export {
 export {
   findCardArrivalCount,
   findCardArrivalPage,
+  findCardCount,
+  findCardPage,
   findInvitationByToken,
   findInvitationInWorkspace,
   findInvitedCoven,
@@ -191,6 +193,7 @@ export type {
   AddressInvitationRow,
   CardArrivalRow,
   CardInvitationValues,
+  CardRow,
   SiteInvitationRow,
   SiteInvitationValues,
   SlugRedirect,

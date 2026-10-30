@@ -13,6 +13,8 @@ import {
   findPendingSiteInvitationPage,
   findCardArrivalPage,
   findCardArrivalCount,
+  findCardCount,
+  findCardPage,
   withAudit,
   type AuditWriter,
   type InvitationRow,
@@ -1090,5 +1092,23 @@ describe('invitation cards', () => {
     );
     for (const { node } of page) expect(node.acceptedAt).toBeInstanceOf(Date);
     expect((await findCardArrivalCount(admin, undefined)).totalCount).toBe(2);
+  });
+
+  it('pages every card in any state, narrowed to one batch where named, and no address invitation', async () => {
+    const OTHER_BATCH = '22222222-2222-4222-8222-222222222222';
+    await mint([CARD, OTHER_CARD]);
+    await mint(['cardtokenCCCCCCC'], LATER(), OTHER_BATCH);
+    await cardAccept(B);
+    await inviteIntoW({ token: 'fixture-token-w-listed' });
+    const all = { limit: 101, inverted: false };
+
+    const everything = await findCardPage(admin, undefined, all);
+    const one = await findCardPage(admin, OTHER_BATCH, all);
+
+    expect(everything).toHaveLength(3);
+    expect(everything.every(({ node }) => node.kind === 'card')).toBe(true);
+    expect(one.map(({ node }) => node.batchId)).toEqual([OTHER_BATCH]);
+    expect((await findCardCount(admin, undefined, undefined)).totalCount).toBe(3);
+    expect((await findCardCount(admin, OTHER_BATCH, undefined)).totalCount).toBe(1);
   });
 });

@@ -1081,6 +1081,9 @@ export interface CardInvitationValues {
   expiresAt: Date;
 }
 
+/** A card in any state: always in a batch. */
+export type CardRow = InvitationRow & { kind: 'card'; batchId: string };
+
 /** A card some account accepted: who, when, and the batch it came from. */
 export type CardArrivalRow = InvitationRow & {
   kind: 'card';

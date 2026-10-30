@@ -137,3 +137,13 @@ export type InvitationCheck =
       /** The live coven, as the invited account may be told it. */
       coven: InvitedCoven;
     };
+
+/** Where a card stands: pending until accepted, revoked or past its date. */
+export type CardState = 'pending' | 'accepted' | 'expired' | 'revoked';
+
+/** A mint's answer: the batch, its expiry, and each card's token, which no later read returns. */
+export interface MintedCards {
+  batchId: string;
+  expiresAt: Date;
+  tokens: string[];
+}

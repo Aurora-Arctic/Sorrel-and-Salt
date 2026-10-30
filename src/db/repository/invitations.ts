@@ -16,6 +16,7 @@ import type {
   AddressInvitationRow,
   CardArrivalRow,
   CardInvitationValues,
+  CardRow,
   InvitationRow,
   InvitedCoven,
   ReceivedInvitationCoven,
@@ -385,6 +386,39 @@ export function findCardArrivalCount(
   start: Cursor | undefined,
 ): Promise<PageCount> {
   return findPageCountInScope(invitations, arrivedByCard(), CARD_ARRIVAL_ORDER, start);
+}
+
+/** Every card, newest first, the key negated as the other lists' are. */
+const CARD_ORDER: readonly SortPart[] = [
+  { expression: sql`-extract(epoch from ${invitations.createdAt})`, type: 'numeric' },
+];
+
+// Every card, in any state; narrowed to one batch where a batch is named.
+function cardsOf(batchId: string | undefined): SQL {
+  return and(cardKind(), batchId ? eq(invitations.batchId, batchId) : undefined) as SQL;
+}
+
+/**
+ * One page of the cards in any state (pending, accepted, expired or revoked), newest first, narrowed to one batch
+ * where `batchId` names it. A site admin's read; the rows hold only a hash, never a token.
+ */
+export function findCardPage(
+  _admin: SiteAdmin,
+  batchId: string | undefined,
+  page: PageRequest,
+): Promise<PageEntry<CardRow>[]> {
+  return findPageInScope(invitations, cardsOf(batchId), CARD_ORDER, page) as Promise<
+    PageEntry<CardRow>[]
+  >;
+}
+
+/** How many cards `findCardPage` pages under `batchId`, and how many come before `start`, a page's first row. */
+export function findCardCount(
+  _admin: SiteAdmin,
+  batchId: string | undefined,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  return findPageCountInScope(invitations, cardsOf(batchId), CARD_ORDER, start);
 }
 
 /**

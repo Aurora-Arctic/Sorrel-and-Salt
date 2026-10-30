@@ -8,6 +8,7 @@ export * from './services/display-names';
 export * from './services/editor-names';
 export * from './services/email';
 export * from './services/invitation-acceptance';
+export * from './services/invitation-cards';
 export * from './services/name';
 export * from './services/privilege-changes';
 export * from './services/primary-admin';
@@ -28,6 +29,8 @@ export * from './loaders/users-by-id';
 export * from './loaders/users-by-id-for-admin';
 export type {
   AdminInvitationFilter,
+  CardState,
+  MintedCards,
   AdminRoleChangePauseState,
   EmailVerificationSender,
   InvitationRefusal,
