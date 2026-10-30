@@ -2367,7 +2367,7 @@ A deleted coven entry is deleted from this coven alone, and a spell holding it s
 
 This extends "The duplicate warning".
 
-**Asking.** The "did you mean" list asks on the debounce the other lookups wait on. `opened` is the name the form opened with. Until the name has been typed in, nothing is asked or held, so an edit that leaves the name alone never warns. Once typed in, it asks as any name does, back at the opened name too. A near match not yet dismissed holds a save, which asks about the name being sent rather than waiting out the debounce. An edit's warning only names matches: renaming makes nothing new, so its save is never held and it offers no Create Anyway.
+**Asking.** The "did you mean" list asks on the debounce the other lookups wait on. `opened` is the name the form opened with. Until the name has been typed in, nothing is asked or held, so an edit that leaves the name alone never warns. Once typed in, it asks as any name does, back at the opened name too. A near match not yet dismissed holds a save, which asks about the name being sent rather than waiting out the debounce. An autosave never holds on the list and never closes it: a save that moves `opened` on to the name typed leaves the list showing, until it is dismissed or the name changes. An edit's warning only names matches: renaming makes nothing new, so its save is never held and it offers no Create Anyway.
 
 **What a match offers.** Each match is listed by its label and formal name, linked to its entry in a new tab (plain anchors, not `<Link>`, since the caller hands back a plain string), so unsaved changes stay. At the right:
 

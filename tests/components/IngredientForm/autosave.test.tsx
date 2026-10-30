@@ -16,6 +16,7 @@ import {
   acceptCovenUpdate,
   acceptCreate,
   offerNothing,
+  offerDuplicates,
 } from '../../support/msw/ingredient-lookups';
 
 // The ingredient form's autosave: what it sends, to whom, and what it keeps in the browser. The save
@@ -109,6 +110,21 @@ describe('an ingredient opened for editing', () => {
     await wait(3100);
     await waitFor(() => expect(updated).toHaveLength(2));
     expect(updated[1]).toMatchObject({ expectedRevision: 4 });
+  });
+
+  it('saves a renamed entry while Did You Mean shows, and leaves the list showing', async () => {
+    const updated = acceptCovenUpdate();
+    renderForm({ entry: OPENED });
+    offerDuplicates([{ id: 'claw-1', name: 'Mockleaf', canonicalName: null, slug: 'mockleaf' }]);
+
+    type('Name', 'Mockleaf');
+    await wait(600);
+    await screen.findByText('Did you mean one of these?');
+    await wait(3100);
+
+    await waitFor(() => expect(updated).toHaveLength(1));
+    expect(updated[0].input.name).toBe('Mockleaf');
+    expect(screen.getByText('Did you mean one of these?')).toBeInTheDocument();
   });
 
   it('saves an unsaved change when Cancel is pressed, and closes with no question', async () => {
