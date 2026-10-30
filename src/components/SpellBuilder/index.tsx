@@ -29,7 +29,6 @@ import { BinButton } from '../IconTip';
 import { ConfirmQuestion, useModalHeaderNote } from '../Modal';
 import { DeleteSpellWords, useDeleteSpell } from '../SpellRecipe/delete-spell';
 import { UNTITLED_SPELL } from '../SpellCard';
-import { VISIBILITY_LABELS } from '../GrimoireList/params';
 import Notice from '../Notice';
 import SaveStatus, { RecoveryNotice } from '../SaveStatus';
 import Skeleton from '../Skeleton';
@@ -94,7 +93,7 @@ const SECTIONS = {
   Purpose: ['title', 'intent', 'categoryIds'],
   Jar: ['jarDescription', 'sealWaxColor', 'steps'],
   'When to Work It': ['moonPhase', 'dayOfWeek'],
-  Notes: ['note', 'visibility'],
+  Notes: ['note'],
 } as const satisfies Record<string, readonly SectionField[]>;
 
 type SectionName = keyof typeof SECTIONS;
@@ -118,8 +117,6 @@ function lineOfField(
   switch (field) {
     case 'categoryIds':
       return (values.categoryIds ?? []).flatMap((id) => named(id) ?? []).join(', ');
-    case 'visibility':
-      return VISIBILITY_LABELS[values.visibility ?? 'private'];
     case 'steps': {
       // The steps that lay something: an instruction step has no name.
       const laid = (values.steps ?? []).filter((step) => step.name !== null).length;
@@ -757,11 +754,6 @@ const SpellBuilder = ({
                   placeholder="Add a note"
                   multiline
                 />
-                <SpellVisibilityField
-                  name={name}
-                  created={opened !== undefined || createdId !== null}
-                  flush={flush}
-                />
               </>,
             )}
           </div>
@@ -789,6 +781,11 @@ const SpellBuilder = ({
               workspaceId={workspaceId}
               spellId={spellId}
               copiedHrefOf={copiedHrefOf}
+            />
+            <SpellVisibilityField
+              name={name}
+              created={opened !== undefined || createdId !== null}
+              flush={flush}
             />
             <SaveStatus
               status={autosave.status}

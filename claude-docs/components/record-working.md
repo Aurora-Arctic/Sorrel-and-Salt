@@ -24,7 +24,7 @@ not list members themselves) and `steps` (`{ id, name }` for each ingredient ste
 
 The dialog holds a date (today by default), participants (a `Combobox` of the members with chips;
 a typed name is added as a name chip), a note, and visibility. Participants is a `<fieldset>`, so while a save runs it shuts with the other fields, chips and all, and a refused name describes the box through `FieldError`. Visibility never exceeds the
-spell's, and is the same Share With the Coven switch the spell builder uses (`VisibilitySwitch`, in `Field`), start-aligned by `.working-form .switch` as `.spell-builder .switch` does: on a private spell it is off and shut, with a line saying why. A new working opens with the recorder (`recorderId`) as a chip, who may remove themselves; the dialog always sends `participants`. A Workings row says "Recorded by" the recorder and lists only the others after "With", so a stored recorder is never named twice (`workings-read.ts` filters them out).
+spell's, and is the same `VisibilitySwitch` (in `Field`) the spell builder uses, here in its long form labelled Share With the Coven and start-aligned by `.working-form .switch` as the ingredient form's Toxic switch is: on a private spell it is off and shut, with a line saying why. A new working opens with the recorder (`recorderId`) as a chip, who may remove themselves; the dialog always sends `participants`. A Workings row says "Recorded by" the recorder and lists only the others after "With", so a stored recorder is never named twice (`workings-read.ts` filters them out).
 
 Save Working keeps a draft, closes the dialog and refreshes the page, where the draft is a row of the
 Workings list. Complete in the form saves first, then shows the preview. The date is a `DateField` day picker. A working may be dated ahead and saved as a draft, but Complete
@@ -79,7 +79,7 @@ Browser flows: stories 76 and 78 in `tests/e2e/stories/06-grimoire.spec.ts`.
 
 `index.scss`, tokens only:
 
-- **The form** (`.working-form`) starts Share With the Coven's switch at the line's start, as the spell builder's is, rather than centred as the filter bar's.
+- **The form** (`.working-form`) starts Share With the Coven's switch at the line's start, as the ingredient form's Toxic switch is, rather than centred as the filter bar's.
 - **The deduction preview** (`.working-deductions`) is a column of `JarLine`s `space(3)` apart with no marker. A long name wraps rather than being cut, and each line's parts wrap whole at `type-size('small')` with tabular figures. A short line (`.working-deductions__short`) is in `$warning`.
 
 ## Stories

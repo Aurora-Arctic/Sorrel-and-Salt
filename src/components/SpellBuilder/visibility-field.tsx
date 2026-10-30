@@ -4,12 +4,13 @@ import { type ReactElement, useState } from 'react';
 import { flushSync } from 'react-dom';
 import { useController, useFormContext, useFormState } from 'react-hook-form';
 import { VisibilitySwitch } from '../Field';
+import { VISIBILITY_LABELS } from '../GrimoireList/params';
 import { ConfirmQuestion } from '../Modal';
 import type { SpellBuilderInput, SpellBuilderValues, SpellVisibilityFieldProps } from './types';
 import type { SpellVisibility } from '@/modules/grimoire';
 
-// Who can see a spell: its author alone, or every member of the coven, by the Share With the Coven
-// switch. A new spell starts private. A complete spell's visibility only widens, held by the
+// Who can see a spell: its author alone, or every member of the coven, by the Shared switch in the
+// builder's footer, named as the grimoire list names a shared spell. A new spell starts private. A complete spell's visibility only widens, held by the
 // service. claude-docs/components/spell-builder.md, "Visibility".
 
 export function SpellVisibilityField({
@@ -54,6 +55,8 @@ export function SpellVisibilityField({
     <>
       <VisibilitySwitch
         noun="spell"
+        label={VISIBILITY_LABELS.workspace}
+        brief
         checked={field.value === 'workspace'}
         onChange={choose}
         sharedForGood={shared}

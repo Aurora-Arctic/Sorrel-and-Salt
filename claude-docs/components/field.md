@@ -62,6 +62,7 @@ owner, 2026-10-20).
 | `SelectField`       | A closed set on Combobox's select-only box, or its type-ahead box, in a react-hook-form form                  |
 | `RadioGroupField`   | One choice from a few, each radio with a line saying what it means, in a `.fieldset`                          |
 | `SwitchField`       | An on-or-off choice as a slide toggle, its label above, in a plain-state form                                 |
+| `VisibilitySwitch`  | Who can see a spell or a working, on `SwitchField`; `brief` gives a short line and a tip, for a footer row    |
 | `FormActions`       | A form's row of actions: Save, any further saves, Cancel and Delete                                           |
 | `ReasonField`       | An admin change's optional Reason, in a plain-state form                                                      |
 | `SearchField`       | A list filter's search box, its submit a magnifier at the box's end                                           |
@@ -234,11 +235,11 @@ block of its own rather than `FieldShell`, since it has no error and its
 label takes the press feedback. A `note` (M10.13) is a line under the
 toggle saying what its state means, in `.field__hint` and named in the
 toggle's `aria-describedby`, as `RadioGroupField`'s note is: the spell
-builder's Share With the Coven switch says by it who can see the spell. A `hint` puts the label in a
+builder's Shared switch says by it who can see the spell. A `hint` puts the label in a
 `.field__label-row` beside an InfoTip, as `FieldShell` does, and names the
 tip in the toggle's `aria-describedby`; a filter switch takes none. The rest: the label above, tied to the
 toggle by `htmlFor`, and the toggle, a native checkbox with
-`role="switch"`, beneath it in `.switch__control`, centred under the label, which lines a filter bar's switch up among its boxes; the ingredient form sets its Toxic switches and their labels at the start of the column instead ([`ingredient-form.md`](ingredient-form.md), "Styling"), and the spell builder its Share With the Coven switch ([`spell-builder.md`](spell-builder.md), "Visibility"). The label is its
+`role="switch"`, beneath it in `.switch__control`, centred under the label, which lines a filter bar's switch up among its boxes; the ingredient form sets its Toxic switches and their labels at the start of the column instead ([`ingredient-form.md`](ingredient-form.md), "Styling"), and the spell builder sets its Shared switch in the footer's row, the toggle before its label ([`spell-builder.md`](spell-builder.md), "Visibility"). The label is its
 accessible name and a click on it turns it; the label and the toggle are
 each marked `data-pressed` while a pointer holds them
 (`src/lib/press-feedback.ts`). It writes no `aria-checked`: the native

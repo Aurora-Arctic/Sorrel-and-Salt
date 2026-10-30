@@ -1,8 +1,8 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The Share With the Coven switch, start-aligned as the spell builder's is rather than centred as the
-// primitive's filter-bar switch is.
+// The Share With the Coven switch, label and note start-aligned as the ingredient form's Toxic switch
+// is, rather than centred as the primitive's filter-bar switch is.
 .working-form .switch {
   align-items: flex-start;
 

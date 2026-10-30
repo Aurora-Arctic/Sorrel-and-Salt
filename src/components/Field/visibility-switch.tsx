@@ -3,12 +3,16 @@
 import type { ReactElement } from 'react';
 import { SwitchField } from './switch-field';
 
-// The Share With the Coven switch a spell and a working both use: on is the coven, off is the author
-// alone. It holds no rule of its own; the caller says when it is shut and why.
+// The visibility switch a spell and a working both use: on is the coven, off is the author alone.
+// It holds no rule of its own; the caller says when it is shut and why.
 
 export interface VisibilitySwitchProps {
   /** What is being shared, for the line under the switch. */
   noun: 'spell' | 'working';
+  /** The switch's name; a working's form reads "Share With the Coven". */
+  label?: string;
+  /** One short line under the switch, the rest in its tip, to fit a form's footer row. */
+  brief?: boolean;
   checked: boolean;
   onChange: (checked: boolean) => void;
   /** Shut on: already shared and complete, so it cannot be made private again. */
@@ -25,8 +29,16 @@ const MEANS = {
 
 const SHARED_FOR_GOOD = 'Shared with the coven';
 
+const BRIEF = {
+  workspace: 'The coven can see it.',
+  private: 'Only you can see it.',
+  stays: (noun: string) => `Once the ${noun} is complete, it stays shared.`,
+};
+
 export function VisibilitySwitch({
   noun,
+  label = 'Share With the Coven',
+  brief,
   checked,
   onChange,
   sharedForGood,
@@ -36,20 +48,27 @@ export function VisibilitySwitch({
     noun === 'spell'
       ? 'It cannot be made private again. Duplicate makes a private copy.'
       : 'It cannot be made private again.';
+  const on = sharedForGood || checked;
+  const note = brief
+    ? (heldPrivate ?? (on ? BRIEF.workspace : BRIEF.private))
+    : sharedForGood
+      ? SHARED_FOR_GOOD
+      : (heldPrivate ?? (checked ? MEANS.workspace(noun) : MEANS.private()));
+  const noteTip = sharedForGood
+    ? tip
+    : brief && checked && heldPrivate === undefined
+      ? BRIEF.stays(noun)
+      : undefined;
   return (
     <SwitchField
-      label="Share With the Coven"
+      label={label}
       name="visibility"
       value="workspace"
-      checked={sharedForGood || checked}
+      checked={on}
       onChange={onChange}
       disabled={sharedForGood || heldPrivate !== undefined}
-      note={
-        sharedForGood
-          ? SHARED_FOR_GOOD
-          : (heldPrivate ?? (checked ? MEANS.workspace(noun) : MEANS.private()))
-      }
-      noteTip={sharedForGood ? tip : undefined}
+      note={note}
+      noteTip={noteTip}
     />
   );
 }

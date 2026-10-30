@@ -179,14 +179,20 @@ A draft and a complete spell meet it alike, since both save to the one row.
 ## Visibility
 
 Who can see the spell (M10.13): `SpellVisibilityField`, in
-`visibility-field.tsx`, drawn after Note in the Notes section, whose shut line
-reads Shared or Private for it. It wraps `VisibilitySwitch`
-(`Field`, shared with the Record a Working dialog, [`field.md`](field.md)) labelled Share With the Coven (the owner's call,
-2026-10-27): on is the coven (`workspace`), which every member can see, and
-off is private (`private`), which only its author can. A line under the
-switch, its `note`, says what the state it is in means. The switch stands at the start of its column, its label and note too, as the
-ingredient form's Toxic switch does, rather than centred as in a filter bar
-(`index.scss`, on the form's `spell-builder` class).
+`visibility-field.tsx`, drawn in the footer's row (`FormActions`' children) after
+Mark Complete and before the save status, so it is in reach with every section
+shut (the owner's call in the MB.123 review, D11). It wraps `VisibilitySwitch`
+(`Field`, shared with the Record a Working dialog, [`field.md`](field.md)) in its
+`brief` form, labelled **Shared**: `VISIBILITY_LABELS.workspace` in
+`GrimoireList/params.ts`, the word the grimoire list uses for a shared spell, and
+the one constant the tests read. On is the coven (`workspace`), which every member
+can see, and off is private (`private`), which only its author can. A short line
+under the label, its `note`, says what the state means: "Only you can see it." off,
+"The coven can see it." on. The rest is in an InfoTip beside the line, which is in
+the switch's accessible description. The toggle comes first, its label to its right
+and the line under the label, a control's height in all, so it stands level with
+the buttons (`index.scss`, `.spell-builder .form__actions > .switch`). Below 28rem
+the footer stacks and the switch takes its own line, at the start.
 The rule it follows is DESIGN.md §5's: a complete spell's visibility only widens, and a draft's moves either way (M10.20, [`m10.20-draft-visibility.md`](../design-decisions/m10.20-draft-visibility.md)).
 
 - **A new spell** opens with the switch off, private (the owner's call, 2026-10-28: the
@@ -196,8 +202,8 @@ The rule it follows is DESIGN.md §5's: a complete spell's visibility only widen
   the last save's makes the form dirty, so Save Spell enables, Close saves
   it, and the browser asks before the tab closes.
 - **A saved draft** keeps the switch open both ways, with no question: sharing
-  it is reversible. Shared, its note says "Every member of the coven can see it.
-  Once the spell is complete, it stays shared." The change is saved with the rest.
+  it is reversible. Shared, its note says "The coven can see it.", with "Once the
+  spell is complete, it stays shared." in its tip. The change is saved with the rest.
 - **A saved complete private spell** keeps the switch open. Turning it on asks
   "Share **<name>**? Every member of the coven will see it, it cannot be made
   private again, and your other changes are saved with it." (`ConfirmQuestion`,
@@ -210,7 +216,7 @@ The rule it follows is DESIGN.md §5's: a complete spell's visibility only widen
   change like a new spell's, saved with the rest of the form. The lock binds only
   once the stored status is complete (M10.20).
 - **A complete spell shared with the coven** shows the switch on and disabled, with
-  the note "Shared with the coven" and, in an InfoTip beside it, "It cannot be
+  the note "The coven can see it." and, in an InfoTip beside it, "It cannot be
   made private again. Duplicate makes a private copy." The tip's text is in
   the switch's accessible description. Duplicate is M13.20. A new spell saved for
   the coven stays open while it is a draft, and shuts once it is complete.
@@ -286,13 +292,13 @@ The fields sit in four `CollapsibleSection`s at `h3`
 | Purpose         | Title, Intent, Categories (M10.14)                                                                 |
 | Jar             | The jar details (Seal Wax, Jar Description), What Goes In (the steps, M10.15), then the comparison |
 | When to Work It | Moon Phase, Day                                                                                    |
-| Notes           | Note, Share With the Coven (M10.13)                                                                |
+| Notes           | Note                                                                                               |
 
 A new spell opens with every section open, to be filled in order; a saved
 spell opens with every section shut. Shut, a section's line names the values
 it holds, each on one line and joined by a middle dot ("Waxing Moon ·
-Monday"), or reads "Nothing yet". The visibility switch reads as Shared or
-Private, so Notes always has a line, and the categories by name, joined by
+Monday"), or reads "Nothing yet". The visibility switch is the footer's, not a
+section's, so Notes reads its note alone. The categories read by name, joined by
 commas, once the categories are read (`useCategoryIndex`), so the line never
 shows an id, and the steps as a count of the ingredients laid ("3 ingredients",
 an instruction step not counted). Each section's values are its entry in
@@ -536,9 +542,9 @@ Spacing, set by the second design review (2026-10-28, finding 3), which reverses
 
 No wrapper: the `<form className="form">` sits straight in the body of a `RouteModal` of
 `size` unset: the default `$dialog-column` (32rem of content), since the owner's call, 2026-10-29: with In Coven Inventory gone, one column in the default-width dialog; it was `size="wide"` from 2026-10-28 until then; [`modal.md`](modal.md)), its sections styled by `CollapsibleSection`. `index.scss` holds the
-visibility switch's alignment (M10.13) and the Jar section (the owner's design pass, 2026-10-28):
+visibility switch's place in the footer row and the Jar section (the owner's design pass, 2026-10-28):
 
-- a single text field (Title, Intent, Moon Phase, Day, Note) fills the dialog's column, with no cap; When to Work It and Notes (with Status and the visibility switch) are plain full-width fields;
+- a single text field (Title, Intent, Moon Phase, Day, Note) fills the dialog's column, with no cap; When to Work It and Notes are plain full-width fields;
 - the Purpose section is one column (the owner's call, 2026-10-29: with In Coven Inventory gone, one column in the default-width dialog): Title, Intent, then the Categories picker under Intent. The two-column rhythm (`$spell-main-min`, `$spell-side`, `$spell-columns-switch`, `spell-side-stacked`, `spell-side-beside`, `.spell-purpose*`, `.spell-main-column*`) is gone;
 - the handle unboxed in `$text-muted`, with the shared focus ring;
 - the lifted step (`.step-row.spell-step.is-dragging`) in `$shadow-lifted` with an `$accent`
@@ -666,11 +672,11 @@ The builder autosaves (`./autosave.ts`): a change saves 3 s after the last, Save
 
 ## Status and visibility controls
 
-**Status.** A spell is a draft until it is marked complete. A draft shows one button, Mark Complete. A click saves everything the form holds as complete, as Share With the Coven does, so the status is never a pick left pending. A complete spell needs a title (a database CHECK), so its absence is said on the title field before anything is sent. Marking complete flushes the autosave with the other status, which carries every unsaved change in the same save.
+**Status.** A spell is a draft until it is marked complete. A draft shows one button, Mark Complete. A click saves everything the form holds as complete, as sharing a complete spell does, so the status is never a pick left pending. A complete spell needs a title (a database CHECK), so its absence is said on the title field before anything is sent. Marking complete flushes the autosave with the other status, which carries every unsaved change in the same save.
 
 A complete spell shows no statement and no Mark Complete, and there is no Reopen as Draft. Once complete, a spell's workings are recorded against it and its visibility lock has started, so reopening would undo both. To vary a complete spell, the copy (Duplicate a Spell) is the way: a complete spell has a **Duplicate** button here, for a member who may create a spell. It flushes the autosave, calls `duplicateSpell` and opens the copy in the Drafts tab's builder (`?edit=<id>`). The service refuses complete to draft as well (M13.20, amended 2026-10-29 by the owner).
 
-**Visibility.** A spell is seen by its author alone, or by every member of the coven. The control is a switch, Share With the Coven, on for the coven and off for private, with a line under it saying what its state means. A new spell starts private, because the autosave would otherwise share it 3 s after the first keystroke. It takes either, and the choice goes out with its first save.
+**Visibility.** A spell is seen by its author alone, or by every member of the coven. The control is a switch, Shared, in the footer beside Mark Complete, on for the coven and off for private, with a short line under it saying what its state means. A new spell starts private, because the autosave would otherwise share it 3 s after the first keystroke. It takes either, and the choice goes out with its first save.
 
 A draft moves either way, as often as wanted, with no question, since sharing it is reversible. A complete spell obeys DESIGN.md §5's one-way rule, held by the service. A private one is shared by switching it on, which asks first and then saves at once, so that one action with its confirmation shares it. A shared one never goes back, so the control then reads only and says so, rather than leave a person to find out from a refusal.
 
