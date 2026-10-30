@@ -1,9 +1,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The reading column: the body's width on its own, on the page and in the Quick Look modal.
-$recipe-column: 48rem;
-
 // A saved spell's page. Tokens only; the layout is a single readable column. Print
 // styles are not set here.
 .spell-recipe {

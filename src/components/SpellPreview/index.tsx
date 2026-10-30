@@ -2,18 +2,21 @@
 
 import { type ReactElement, useEffect, useRef, useState } from 'react';
 import { PreviewButton } from '../IconTip';
-import StepRow from '../StepRow';
+import SpellRecipeBody from '../SpellRecipe/body';
+import SpellRecipeSummary from '../SpellRecipe/summary';
+import '../Modal/index.scss';
 import type { SpellPreviewProps } from './types';
 import { useWakeLock } from './use-wake-lock';
 import './index.scss';
 
 // Spell Preview (M13.12): a Preview button that opens the spell in a pane of its own, with
-// the title, the ingredients with their amounts and the steps, and nothing else, so it can be
-// followed without distraction. A native modal `<dialog>` in the top layer, which already covers the
+// everything the printed spell shows, and no links or controls, so it can be followed without
+// distraction. A native modal `<dialog>` in the top layer, which already covers the
 // window, holds the page inert and gives Escape; true full screen is added on top where the browser
 // has it (claude-docs/components/spell-preview.md).
 
-export default function SpellPreview({ title, steps }: SpellPreviewProps): ReactElement {
+export default function SpellPreview(props: SpellPreviewProps): ReactElement {
+  const { title, steps } = props;
   const [open, setOpen] = useState(false);
   const pane = useRef<HTMLDialogElement>(null);
   // Set once the pane is in full screen, so leaving it (which is Escape's first press there) closes
@@ -80,33 +83,22 @@ export default function SpellPreview({ title, steps }: SpellPreviewProps): React
               Screen Awake
             </button>
           )}
-          <button type="button" className="btn btn--quiet spell-preview__close" onClick={close}>
-            Close
+          {/* The dialogs' own ×, so the two close alike. */}
+          <button
+            type="button"
+            className="modal-dialog__close spell-preview__close"
+            aria-label="Close"
+            onClick={close}
+          >
+            <span aria-hidden="true">×</span>
           </button>
         </div>
-        <h2 id="spell-preview-title" className="spell-preview__title">
-          {title}
-        </h2>
-        {steps.length === 0 ? (
-          <p className="meta">This spell has no steps yet.</p>
-        ) : (
-          <ol className="spell-preview__steps" aria-label="Steps">
-            {steps.map((step, i) =>
-              step.kind === 'instruction' ? (
-                <StepRow key={step.id} position={i + 1} name={null} body={step.body} />
-              ) : (
-                <StepRow
-                  key={step.id}
-                  position={i + 1}
-                  name={step.name}
-                  quantity={step.quantity}
-                  unit={step.unit}
-                  body={step.body}
-                />
-              ),
-            )}
-          </ol>
-        )}
+        <div className="spell-preview__content">
+          <h2 id="spell-preview-title" className="spell-preview__title">
+            {title}
+          </h2>
+          <SpellRecipeBody {...props} beforeSteps={<SpellRecipeSummary steps={steps} />} />
+        </div>
       </dialog>
     </>
   );

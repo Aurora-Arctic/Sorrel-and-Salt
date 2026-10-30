@@ -8,11 +8,18 @@ full screen, with nothing else on screen. `src/components/SpellPreview/`.
 - A Preview icon button (`PreviewButton`, named "Preview Spell <title>") in the recipe page's actions, before Print and Edit. Every role that can
   read the spell sees it, a viewer included: it changes nothing. A non-member never reaches it,
   because the page answers them with a 404 first.
-- The pane, opened by the button: the spell's title, then its steps. Each ingredient step shows its
-  label ("Testwort (Dried Leaf)") and amount, and an instruction step shows its text. The page
-  cuts the recipe's steps down with `previewStepsOf` (`preview-steps.ts`, on the server), so the
-  pane's props carry no Quick Look links, safety marks or stock verdicts.
-- One control: Close. There is no site header, navigation, link or editing control.
+- The pane, opened by the button: everything the printed spell shows, in print order, by drawing
+  the recipe's own body (`SpellRecipeBody`) and Ingredients summary (`SpellRecipeSummary`), so the
+  two cannot drift. That is the title, the intent and categories, the facts (Jar, Seal Wax, Moon
+  Phase, Day), the Ingredients section (each amount right-aligned in a column beside its name, in
+  bold), the Steps and the note. What print leaves out stays out: the Edited line, the back link and
+  the page's actions. The page cuts the recipe's steps down with `previewStepsOf`
+  (`preview-steps.ts`, on the server), so the pane's props carry no Quick Look links, safety marks
+  or stock verdicts.
+- The content is one column centred in the pane, at most `$recipe-column` (48rem) wide: the width of
+  the recipe page's own reading column, so a wide window leaves margins and lines stay readable.
+- One control: Close, the dialogs' own × (`modal-dialog__close`, named "Close"), at the end of the
+  bar. There is no site header, navigation, link or editing control.
 
 ## How it opens and closes
 

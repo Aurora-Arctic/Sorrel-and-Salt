@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import CategoryChips from '../CategoryChips';
 import { QuickLookLink } from '../IconTip';
 import { DETAILS_PLACE, detailsHeading } from '../IngredientEntry/details';
@@ -69,7 +69,11 @@ const SpellRecipeBody = ({
   sealWaxColor,
   moonPhase,
   dayOfWeek,
-}: SpellRecipeBodyProps): ReactElement => {
+  beforeSteps,
+}: SpellRecipeBodyProps & {
+  /** A section between the facts and the steps; the Preview pane puts the Ingredients summary here. */
+  beforeSteps?: ReactNode;
+}): ReactElement => {
   const name = (title ?? '').trim() || UNTITLED_SPELL;
   const purpose = (intent ?? '').trim();
   const facts = (
@@ -113,6 +117,8 @@ const SpellRecipeBody = ({
             </dl>
           </div>
         )}
+
+        {beforeSteps}
 
         {steps.length === 0 ? (
           <p className="meta">This spell has no steps yet.</p>

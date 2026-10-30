@@ -179,7 +179,17 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
                   className="icon-tip__edit icon-tip__edit--plain"
                 />
               )}
-              <SpellPreview title={name} steps={previewStepsOf(recipe.steps)} />
+              <SpellPreview
+                title={name}
+                intent={spell.intent}
+                categories={recipe.categories}
+                note={spell.note}
+                jarDescription={spell.jarDescription}
+                sealWaxColor={spell.sealWaxColor}
+                moonPhase={spell.moonPhase}
+                dayOfWeek={spell.dayOfWeek}
+                steps={previewStepsOf(recipe.steps)}
+              />
               <SpellMoreMenu
                 workspaceId={workspace.id}
                 covenSlug={workspace.slug}
