@@ -150,6 +150,12 @@ test('the printed recipe names the coven with no line under it, leads with the i
     Math.max(heading.top, steps.top),
   );
 
+  // The Ingredients heading starts level with the first step.
+  const firstStep = await box(
+    page.getByRole('list', { name: 'Steps' }).getByRole('listitem').first(),
+  );
+  expect(Math.abs(heading.top - firstStep.top)).toBeLessThanOrEqual(1);
+
   // The summary's lines start flush with the heading.
   const indent = await page.evaluate(() => {
     const heading = [...document.querySelectorAll('h2')].find(

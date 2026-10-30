@@ -142,6 +142,8 @@
 
     .spell-recipe__summary {
       display: block;
+      // The global section margin would drop the heading below the first step.
+      margin: 0;
 
       h2 {
         margin: 0;
