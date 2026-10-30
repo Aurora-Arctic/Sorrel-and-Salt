@@ -11,7 +11,7 @@ import {
   CUPBOARD_MENU_LABEL,
   MAKE_IT_OURS_DETAILS,
   MakeItOursQuestion,
-  RemoveQuestion,
+  RemoveFromCupboardQuestion,
   useCupboardWrites,
 } from './cupboard-writes';
 import type { AnnotateMoreProps } from './types';
@@ -122,7 +122,7 @@ export default function AnnotateMore({
       <ConfirmQuestion
         key="remove"
         asked={asking === 'remove' && !discardAsking}
-        question={<RemoveQuestion name={name} />}
+        question={<RemoveFromCupboardQuestion name={name} />}
         confirmLabel="Remove"
         busyLabel="Removing"
         busy={writes.remove.pending}
