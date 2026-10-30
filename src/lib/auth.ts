@@ -16,7 +16,7 @@ import { appendQueryParams } from '@better-auth/core/utils/url';
 import { db } from '../db/connection';
 import { workspaceMembers } from '../modules/coven/schema/workspaces';
 import { users } from '../modules/identity/schema/users';
-import { findDemoWorkspace } from '../db/repository';
+import { findDemoWorkspace, removePasskeyKeepingAWayIn } from '../db/repository';
 import {
   sessions,
   accounts,
@@ -277,26 +277,29 @@ function pinPasskeyOrigin(ctx: HookContext): void {
 }
 
 /**
- * Refuses to remove an account's last passkey when it has no other way to sign in: no provider account and no
- * password. The plugin deletes any passkey its owner names, which could otherwise lock the account out for good.
+ * Removes the account's own passkey here rather than in the plugin, refusing the last one when the account has no other
+ * way to sign in: no other passkey, no account for a roster provider and no password. The repository checks and deletes
+ * under one lock, so two removals at once cannot each see the other passkey and leave none; the plugin's own delete
+ * would run apart from the check.
  */
-async function keepAWayIn(ctx: HookContext): Promise<void> {
+async function keepAWayIn(ctx: HookContext) {
   const session = await sessionOf(ctx);
   const id = ctx.body?.id;
   if (!session || typeof id !== 'string') return;
-  const userId = session.user.id;
-  const passkeys = await ctx.context.adapter.findMany<{ id: string }>({
-    model: 'passkey',
-    where: [{ field: 'userId', value: userId }],
-  });
+  const outcome = await removePasskeyKeepingAWayIn(
+    session.user.id,
+    id,
+    SOCIAL_PROVIDERS.map((provider) => provider.id),
+  );
   // Another account's id falls through to the plugin, which refuses it as not this account's.
-  if (!passkeys.some((row) => row.id === id) || passkeys.length > 1) return;
-  const accounts = await ctx.context.internalAdapter.findAccounts(userId);
-  if (accounts.some((row) => row.providerId !== 'credential' || row.password)) return;
-  throw new APIError('BAD_REQUEST', {
-    code: 'LAST_SIGN_IN_METHOD',
-    message: 'This passkey is the only way to sign in to this account, so it cannot be removed.',
-  });
+  if (outcome === 'not-held') return;
+  if (outcome === 'last-way-in') {
+    throw new APIError('BAD_REQUEST', {
+      code: 'LAST_SIGN_IN_METHOD',
+      message: 'This passkey is the only way to sign in to this account, so it cannot be removed.',
+    });
+  }
+  return ctx.json({ status: true });
 }
 
 /** The verification token's claims, decoded and not verified: a caller may only refuse on them. */

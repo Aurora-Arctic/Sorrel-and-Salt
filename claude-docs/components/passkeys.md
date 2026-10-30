@@ -50,7 +50,7 @@ under the button.
 ## The last way in
 
 The server refuses to remove an account's only passkey when the account has
-no provider and no password, with the code `LAST_SIGN_IN_METHOD`
+no account for a roster provider and no password, with the code `LAST_SIGN_IN_METHOD`
 ([`auth/plugins.md`](../auth/plugins.md), "Passkeys"). The component shows
 that refusal as "This passkey is your only way to sign in, so it cannot be
 removed. Add another way first." under Remove, and keeps the row. It does not
