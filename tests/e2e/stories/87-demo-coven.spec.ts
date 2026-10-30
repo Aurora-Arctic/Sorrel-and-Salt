@@ -6,7 +6,10 @@ import { withSql } from './accounts-setup';
 
 // Story 87: a new account lands in the demo coven as a viewer and can leave it, and a site admin owns it. `signInAs`
 // writes the account's rows by SQL and so skips the sign-up hook; the viewer seat the hook writes is written here
-// by SQL as well (tests/db covers the hook itself).
+// by SQL as well. Two steps are not walked here: the sign-up hook, because the suite runs no OAuth provider (the
+// end-to-end sign-up in tests/db/email-verification.test.ts proves it), and the redirect from `/coven` to the first
+// coven, because the test browser carries its session in a request header that a redirect drops (the real-cookie
+// 01-invitations.spec.ts reads that redirect without following it).
 
 const DEMO_SLUG = 'sorrel-and-salt-demo';
 const DEMO_PATH = `/coven/${DEMO_SLUG}`;

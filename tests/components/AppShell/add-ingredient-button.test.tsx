@@ -102,7 +102,6 @@ const coven = (slug: string, canWrite = true): ShellWorkspace => ({
   canReadMembers: true,
   canInvite: false,
   canWrite,
-  demo: false,
 });
 const FIXTURE = coven('fixture-coven');
 const TESTWORT = coven('testwort-circle');
