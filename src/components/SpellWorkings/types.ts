@@ -5,8 +5,6 @@ import type { SpellStatus, SpellVisibility } from '@/modules/grimoire';
 /** What a complete working took for one ingredient step, in the jar's own unit. */
 export interface WorkingDeductionView {
   id: string;
-  /** The step's place in the spell, counting from 1. */
-  position: number;
   /** The ingredient and form as the step names them. */
   name: string;
   quantity: string;

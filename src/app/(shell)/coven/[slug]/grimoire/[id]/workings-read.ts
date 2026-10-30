@@ -43,20 +43,25 @@ export async function readWorkingsOf(
     participants: participants
       .filter((person) => person.userId !== working.createdBy)
       .map((person) => person.displayName ?? person.name ?? FORMER_MEMBER),
-    deductions: deductions.flatMap((line) => {
-      const at = stepAt.get(line.spellStepId);
-      if (!at || at.step.kind !== 'ingredient') return [];
-      const { name, form } = at.step;
-      return [
-        {
-          id: line.id,
-          position: at.position,
-          name: form ? `${name} (${formLabel(form)})` : name,
-          quantity: String(Number(line.quantity)),
-          unit: line.unit,
-        },
-      ];
-    }),
+    // The spell's order, so the lines read the way the recipe does without carrying its numbers.
+    deductions: [...deductions]
+      .sort(
+        (a, b) =>
+          (stepAt.get(a.spellStepId)?.position ?? 0) - (stepAt.get(b.spellStepId)?.position ?? 0),
+      )
+      .flatMap((line) => {
+        const at = stepAt.get(line.spellStepId);
+        if (!at || at.step.kind !== 'ingredient') return [];
+        const { name, form } = at.step;
+        return [
+          {
+            id: line.id,
+            name: form ? `${name} (${formLabel(form)})` : name,
+            quantity: String(Number(line.quantity)),
+            unit: line.unit,
+          },
+        ];
+      }),
     canChange: mayDelete && working.createdBy === session.userId,
     editable:
       mayEdit && working.createdBy === session.userId

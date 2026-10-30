@@ -11,8 +11,8 @@ and each participant are names the page resolved with `displayNamesOf`, so a rem
 under the name they last held; a participant with no readable name reads "A former member".
 
 The row does not use `LastEdit`: a working is recorded once, and `LastEdit` says who edited a row last.
-Its deduction lines are `StepRow`s inside an `ol` named Deductions; the row and the list are the
-section's own.
+Its deduction lines are plain items (name, then amount and unit) inside an `ol` named Deductions,
+in the spell's step order. They carry no step number: the recipe above says where a step stands.
 
 The slots a row takes from the page:
 

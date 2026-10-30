@@ -72,9 +72,7 @@ describe('SpellWorkings', () => {
     renderSection([
       working({
         id: 'w1',
-        deductions: [
-          { id: 'd1', position: 2, name: 'Testwort (Dried Leaf)', quantity: '2', unit: 'g' },
-        ],
+        deductions: [{ id: 'd1', name: 'Testwort (Dried Leaf)', quantity: '2', unit: 'g' }],
       }),
     ]);
     const lines = within(within(rows()[0]!).getByRole('list', { name: 'Deductions' })).getAllByRole(
@@ -84,6 +82,8 @@ describe('SpellWorkings', () => {
     expect(lines[0]).toHaveTextContent('Testwort (Dried Leaf)');
     expect(lines[0]).toHaveTextContent('2');
     expect(lines[0]).toHaveTextContent('g');
+    // The lines carry no step number: the spell, not the working, says where a step stands.
+    expect(lines[0]).toHaveTextContent(/^Testwort/);
   });
 
   it('offers Complete on a draft row only, in the slot the page fills', () => {
