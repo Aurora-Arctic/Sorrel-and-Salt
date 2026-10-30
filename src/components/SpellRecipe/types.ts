@@ -85,7 +85,7 @@ export interface SpellRecipeProps {
   dayOfWeek?: string | null;
   /** The way back to the grimoire. */
   back: { href: Route; label: string };
-  /** The Edit control, for a role that may update the spell. */
+  /** The head's row of controls, each drawn only for a role that may use it. */
   action?: ReactNode;
   /** The Workings section (`SpellWorkings`), beneath the body; the Quick Look modal gives none. */
   workings?: ReactNode;
@@ -175,12 +175,12 @@ export interface DeleteSpellActionProps {
   visibility?: SpellVisibility;
 }
 
-/** The recipe page's three dots: Duplicate for a role that may create a spell, Delete Spell for one that may delete. */
+/** The three dots: Duplicate for a role that may create a spell, Print on the recipe page, Delete Spell for one that may delete. */
 export interface SpellMoreMenuProps extends DeleteSpellActionProps {
   /** The coven's slug, which the copy's address needs. */
   covenSlug: string;
   canDuplicate: boolean;
   canDelete: boolean;
-  /** Print is the recipe page's alone: a card's menu leaves it out, and with nothing else draws no menu. */
+  /** Print is the recipe page's alone: a card's menu leaves it out, and alone it is a Print button, not a menu. */
   canPrint: boolean;
 }

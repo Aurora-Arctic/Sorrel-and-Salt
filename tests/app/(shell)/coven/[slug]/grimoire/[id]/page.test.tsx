@@ -302,9 +302,12 @@ describe('the spell recipe page', () => {
       expect(
         screen.getByRole('heading', { level: 1, name: 'Fixture Working' }),
       ).toBeInTheDocument();
-      fireEvent.click(screen.getByRole('button', { name: 'More for Fixture Working' }));
-      expect(await screen.findByRole('menuitem', { name: 'Print' })).toBeInTheDocument();
-      expect(screen.queryByRole('menuitem', { name: 'Delete Spell' })).not.toBeInTheDocument();
+      // Print is the viewer's one choice, so it is a button and there is no menu to hold a Delete.
+      expect(screen.getByRole('button', { name: 'Print Fixture Working' })).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'More for Fixture Working' }),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
     });
   });
 

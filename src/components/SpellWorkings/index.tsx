@@ -5,8 +5,8 @@ import type { SpellWorkingsProps, WorkingView } from './types';
 import './index.scss';
 
 // A spell's history on its recipe page: one row per working, newest day first. A working is not a
-// step, so the row is its own; only a complete working's deduction lines are `StepRow`s. Complete
-// on a draft row is the page's to give (`completeAction`).
+// step, so the row is its own, and a complete working's deduction lines are plain lines beneath it.
+// Complete on a draft row is the page's to give (`completeAction`).
 
 /** The day as people say it: "4 March 2026". The date is a calendar day, so no zone shifts it. */
 const dayOf = (workedOn: string): string =>

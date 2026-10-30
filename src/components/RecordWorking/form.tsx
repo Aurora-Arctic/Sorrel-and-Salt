@@ -227,12 +227,11 @@ export default function RecordWorkingForm({
           labelId={`${ids}-people-label`}
           value={text}
           onChange={setText}
-          onPick={(value, option) => {
+          onPick={(_value, option) => {
             if (option?.key) {
               setParticipants([...participants, { userId: option.key, name: option.value }]);
               setText('');
             } else addTyped();
-            void value;
           }}
           keepOpen
           onCommit={addTyped}

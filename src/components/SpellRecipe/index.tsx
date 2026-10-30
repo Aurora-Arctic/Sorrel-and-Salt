@@ -11,7 +11,8 @@ import { CATEGORY_MATCH_ID, INVENTORY_ID, JAR_ID, STEPS_ID, WORKINGS_ID } from '
 import type { SpellRecipeProps } from './types';
 
 // A saved spell as a page: purpose, four facts, steps, note (`SpellRecipeBody`, which Quick Look
-// also draws). Read-only; Edit and Delete Spell are the `action` slot's, for roles that may. Its print
+// also draws). Read-only; the page's controls (Record, Edit, Preview, the three dots) are the
+// `action` slot's, for the roles that may. Its print
 // layout is `src/scss/_print.scss` (claude-docs/components/spell-recipe.md).
 
 const SpellRecipe = ({
