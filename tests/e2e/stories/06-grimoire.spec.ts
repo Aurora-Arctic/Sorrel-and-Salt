@@ -225,8 +225,15 @@ test(
     await signInAgainAs(page, coven.users.B);
     await openBuilder(page, coven.slug);
     await page.getByRole('textbox', { name: 'Title' }).fill('Fixture Working');
+    const said = (text: string) => page.getByRole('status').filter({ hasText: text });
+    const addToJar = page.getByRole('combobox', { name: 'Add to Jar' });
+    // An added ingredient is said with its place, and the focus stays in the box for the next one.
     await addIngredientStep(page, 'Rosemary (Herb)');
+    await expect(said('Added Rosemary (Herb), at position 1 of 1.')).toBeAttached();
+    await expect(addToJar).toBeFocused();
     await addIngredientStep(page, 'Mugwort (Herb)');
+    await expect(said('Added Mugwort (Herb), at position 2 of 2.')).toBeAttached();
+    await expect(addToJar).toBeFocused();
     const steps = stepList(page).getByRole('listitem');
     await expect(steps.first()).toContainText('Rosemary');
     // Keyboard alone: pick the handle up, move it one place, put it down.
@@ -234,7 +241,6 @@ test(
     // Each key waits for what the last one said, as a person hears it. dnd-kit
     // starts listening for the moving keys in a timer it sets at the lift, which
     // can run after the lift is said, so the Up also waits one timer behind it.
-    const said = (text: string) => page.getByRole('status').filter({ hasText: text });
     await handle.focus();
     await page.keyboard.press('Space');
     await expect(said('Picked up Mugwort (Herb), at position 2 of 2.')).toBeAttached();
@@ -265,6 +271,23 @@ test(
       { name: 'Mugwort', position: 1 },
       { name: 'Rosemary', position: 2 },
     ]);
+
+    // A new instruction is said with its place, and the focus goes into its field.
+    await page.getByRole('button', { name: 'Add Instruction' }).click();
+    await expect(said('Added New Instruction, at position 3 of 3.')).toBeAttached();
+    await expect(steps.nth(2).getByRole('textbox', { name: 'Instruction' })).toBeFocused();
+    // A removal is said with the place it left, and the focus goes to the handle now in that
+    // place; with the last step gone, to Add Instruction.
+    await steps.nth(2).getByRole('button', { name: 'Close New Instruction' }).click();
+    await page.getByRole('button', { name: 'Remove New Instruction' }).click();
+    await expect(said('Removed New Instruction, from position 3 of 3.')).toBeAttached();
+    await expect(page.getByRole('button', { name: 'Move Rosemary (Herb)' })).toBeFocused();
+    await page.getByRole('button', { name: 'Remove Mugwort (Herb)' }).click();
+    await expect(said('Removed Mugwort (Herb), from position 1 of 2.')).toBeAttached();
+    await expect(page.getByRole('button', { name: 'Move Rosemary (Herb)' })).toBeFocused();
+    await page.getByRole('button', { name: 'Remove Rosemary (Herb)' }).click();
+    await expect(said('Removed Rosemary (Herb), from position 1 of 1.')).toBeAttached();
+    await expect(page.getByRole('button', { name: 'Add Instruction' })).toBeFocused();
   },
 );
 
