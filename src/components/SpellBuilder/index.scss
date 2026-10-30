@@ -54,11 +54,10 @@
   box-shadow: $shadow-lifted;
 }
 
-// The jar's list and what surrounds it: one
-// column, spaced by its gap alone, so a row carries no margin of its own. The
-// list is the size container the row stacks by, declared in StepRow's
-// stylesheet beside its only query.
+// The jar's list and what surrounds it: one column, spaced by its gap alone, so a row carries no
+// margin of its own. It is the size container for the add row's query (`spell-column`, below).
 .spell-steps {
+  container: spell-column / inline-size;
   display: flex;
   flex-direction: column;
   align-items: stretch;
@@ -74,22 +73,17 @@
   gap: space(1) space(3);
 }
 
-.spell-steps__heading,
-.spell-steps__summary {
+.spell-steps__heading {
   margin: 0;
 }
 
 .spell-steps__summary {
+  margin: 0;
   color: $text-muted;
 }
 
 // The box, Add Instruction and the list in one grid, so that one button can sit after the box
-// on a wide column and be the list's last line on a narrow one, by `order` alone. The
-// column is its own container for the query, named for it.
-.spell-steps {
-  container: spell-column / inline-size;
-}
-
+// on a wide column and be the list's last line on a narrow one, by `order` alone.
 .spell-steps__body {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -293,23 +287,13 @@
   font-style: italic;
 }
 
-.spell-steps__body > .spell-steps__list {
-  grid-column: 1 / -1;
-  grid-row: 1;
-}
-
-// No steps: no row, so no gap above the add row.
-.spell-steps__body > .spell-steps__list:empty {
-  display: none;
-}
-
 @container spell-column (max-width: #{$narrow-column}) {
   .spell-steps__body {
     grid-template-columns: minmax(0, 1fr);
   }
 
   .spell-steps__box,
-  .spell-steps__body > .spell-steps__list {
+  .spell-steps__list {
     grid-column: 1;
   }
 
@@ -327,21 +311,24 @@
   }
 }
 
-// The steps themselves: unnumbered, unindented, a gap between them: space(4),
-// where it was space(3), so the cards do not blur into one column.
+// The steps themselves: unnumbered, unindented, space(4) apart so the cards do not blur into one
+// column, across the top of the body's grid. The list is the size container StepRow's narrow
+// query names (`spell-steps`), since the builder is a dialog narrower than the window.
 .spell-steps__list {
+  container: spell-steps / inline-size;
   display: flex;
   flex-direction: column;
+  grid-column: 1 / -1;
+  grid-row: 1;
   gap: space(4);
   margin: 0;
   padding: 0;
   list-style: none;
-}
 
-// An empty list takes no room, so the controls above are not left with a gap
-// above a blank.
-.spell-steps__list:empty {
-  display: none;
+  // No steps: no row, so no gap above the add row.
+  &:empty {
+    display: none;
+  }
 }
 
 .spell-aside__empty {
@@ -352,13 +339,13 @@
 // The builder's sections: space(6) under the fields of an open one, so the gap between
 // sections is plainly bigger than the space(5) between fields.
 // Here and not in the shared component, which IngredientForm also uses.
-body .spell-builder .collapsible-section__fields {
+.spell-builder .collapsible-section__fields {
   padding-block-end: space(6);
 }
 
 // The fields' own gap spaces the steps and the category match; a bare `section` carries
 // space(4) of margin (_layout.scss) that would sit on top of it.
-body .spell-builder .collapsible-section__fields > section {
+.spell-builder .collapsible-section__fields > section {
   margin-block: 0;
 }
 
@@ -434,9 +421,6 @@ body .spell-builder .collapsible-section__fields > section {
 .spell-inventory__verdict {
   position: relative;
   z-index: 1;
-}
-
-.spell-inventory__verdict {
   display: inline-flex;
   flex: none;
   align-items: center;

@@ -42,8 +42,6 @@ export interface StepRowProps {
   edit?: ReactNode;
   /** The Quick Look eye: after the badges, before `edit`, in the same tight group of buttons. */
   look?: ReactNode;
-  /** A line in the open fields beneath the note, such as what a one-off means. */
-  aside?: ReactNode;
   /** The node the fields' errors are drawn in, the full width beneath the inputs. */
   errorRef?: Ref<HTMLDivElement>;
   /** The editing controls around the step, each drawn in place of the plain text it stands for. */
