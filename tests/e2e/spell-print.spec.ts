@@ -1,3 +1,4 @@
+import type { Locator } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
@@ -18,7 +19,7 @@ test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-test('a viewer prints a one-page recipe with the summary first and no controls', async ({
+test('a viewer prints a one-page recipe with the summary beside the steps and no controls', async ({
   page,
 }) => {
   const coven = await seedCoven(page, 'Fixture Coven Print', 'spell-print.test', {
@@ -64,17 +65,17 @@ test('a viewer prints a one-page recipe with the summary first and no controls',
     /2 g\s+Cat's Claw \(Bark\)\s+\(Uncaria tomentosa\)/,
     /3 ml\s+Cat's Claw \(Leaf\)\s+\(Dolichandra unguis-cati\)/,
   ]);
-  const above = await Promise.all([
-    summary.evaluate((el) => el.getBoundingClientRect().top),
-    page.getByRole('list', { name: 'Steps' }).evaluate((el) => el.getBoundingClientRect().top),
+  const left = await Promise.all([
+    summary.evaluate((el) => el.getBoundingClientRect().right),
+    page.getByRole('list', { name: 'Steps' }).evaluate((el) => el.getBoundingClientRect().left),
   ]);
-  expect(above[0]).toBeLessThan(above[1]);
+  expect(left[0]).toBeLessThanOrEqual(left[1]);
 
   const pdf = (await page.pdf()).toString('latin1');
   expect(pdf.match(/\/Type\s*\/Page[^s]/g)).toHaveLength(1);
 });
 
-test('the printed recipe names the coven with no line under it, leads with the intent and categories, sets the summary flush and leaves out Workings', async ({
+test('the printed recipe names the coven with no line under it, leads with the intent and categories, sets the facts across the top over the Ingredients beside the steps and leaves out Workings', async ({
   page,
 }) => {
   const coven = await seedCoven(page, 'Fixture Coven Layout', 'spell-print-layout.test', {
@@ -84,7 +85,7 @@ test('the printed recipe names the coven with no line under it, leads with the i
   const spellId = await withSql(async (sql) => {
     const held = await compendiumVariant(sql, "Cat's Claw", 'Bark', 'Uncaria tomentosa');
     const id = await insertSpell(sql, coven.id, 'Fixture Layout', 'workspace', A, 'complete');
-    await sql`update spells set intent = 'To draw a steady hand' where id = ${id}`;
+    await sql`update spells set intent = 'To draw a steady hand', jar_description = '4 oz jar', seal_wax_color = 'Black' where id = ${id}`;
     await sql`
       insert into spell_categories (spell_id, category_id, created_by, updated_by)
       select ${id}, id, ${A}, ${A} from categories where deleted_at is null limit 1`;
@@ -129,17 +130,25 @@ test('the printed recipe names the coven with no line under it, leads with the i
   expect(lineUnder.image).toBe('none');
   expect(['none', 'normal']).toContain(lineUnder.after);
 
-  // The intent and the categories come first, then the summary, then the steps.
-  const tops = await Promise.all(
-    [
-      page.getByText('To draw a steady hand'),
-      page.getByRole('list', { name: 'Categories' }),
-      page.getByRole('heading', { name: 'Ingredients' }),
-      page.getByRole('list', { name: 'Steps' }),
-    ].map((locator) => locator.evaluate((el) => el.getBoundingClientRect().top)),
+  // The intent and the categories lead, then the facts run across the top, over the Ingredients
+  // column and the steps.
+  const box = (locator: Locator) => locator.evaluate((el) => el.getBoundingClientRect().toJSON());
+  const intent = await box(page.getByText('To draw a steady hand'));
+  const categories = await box(page.getByRole('list', { name: 'Categories' }));
+  const facts = await box(page.getByText('Seal Wax'));
+  const heading = await box(page.getByRole('heading', { name: 'Ingredients' }));
+  const ingredients = await box(page.getByRole('list', { name: 'Ingredients' }));
+  const steps = await box(page.getByRole('list', { name: 'Steps' }));
+  expect(intent.top).toBeLessThan(categories.top);
+  expect(categories.bottom).toBeLessThanOrEqual(facts.top);
+  expect(facts.bottom).toBeLessThanOrEqual(heading.top);
+  expect(facts.bottom).toBeLessThanOrEqual(steps.top);
+
+  // The Ingredients column stands to the left of the steps, the two side by side.
+  expect(ingredients.right).toBeLessThanOrEqual(steps.left);
+  expect(Math.min(ingredients.bottom, steps.bottom)).toBeGreaterThan(
+    Math.max(heading.top, steps.top),
   );
-  expect(tops).toEqual([...tops].sort((a, b) => a - b));
-  expect(new Set(tops).size).toBe(4);
 
   // The summary's lines start flush with the heading.
   const indent = await page.evaluate(() => {

@@ -75,6 +75,45 @@ describe('ComparisonPanel', () => {
     expect(within(row('Extra') as HTMLElement).getAllByRole('button')).toHaveLength(1);
   });
 
+  describe('the Extra row past eight chips', () => {
+    const many = (count: number) => {
+      const names = Array.from({ length: count }, (_, i) => `Fixture Extra ${i + 1}`);
+      const wide = new Map(
+        names.map((name) => [`c-${name}`, { colorDark: '#8fb8de', colorLight: '#2f5d86' }]),
+      );
+      render(
+        <ComparisonPanel
+          groups={wide}
+          intended={[cat('Prosperity')]}
+          steps={[step('Fixture Mugwort', names)]}
+        />,
+      );
+      return within(row('Extra') as HTMLElement);
+    };
+
+    it('draws eight chips and a +N for the rest at nine', () => {
+      const extra = many(9);
+      expect(
+        extra.getAllByRole('button').filter((b) => b.textContent?.startsWith('Fixture Extra')),
+      ).toHaveLength(8);
+      expect(extra.getByRole('button', { name: /1 more category for Extra/ })).toHaveTextContent(
+        '+1',
+      );
+    });
+
+    it('counts every chip past eight in the +N', () => {
+      expect(
+        many(12).getByRole('button', { name: /4 more categories for Extra/ }),
+      ).toHaveTextContent('+4');
+    });
+
+    it('draws no +N at eight', () => {
+      const extra = many(8);
+      expect(extra.getAllByRole('button')).toHaveLength(8);
+      expect(extra.queryByRole('button', { name: /more categor/ })).toBeNull();
+    });
+  });
+
   it('shows an extra category once, however many ingredients carry it', () => {
     render(
       <ComparisonPanel
