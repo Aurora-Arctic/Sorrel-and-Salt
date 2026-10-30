@@ -3,7 +3,7 @@ import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { Forbidden, NotFound } from '@/lib/errors';
 import { PRIMARY_ADMIN_REFUSAL } from '@/lib/primary-admin';
-import { DEMO_WORKSPACE_ID } from '@/db/bootstrap';
+import { BOOTSTRAP_USER_ID, DEMO_WORKSPACE_ID } from '@/db/bootstrap';
 import { seedDemoCoven } from '@/db/seed/demo-coven';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { setUserRole } from '@/modules/identity';
@@ -67,8 +67,15 @@ beforeEach(async () => {
   // The ledger first, since its rows name the users deleted below; then E,
   // F, A and B back as the seed made them, as a `psql` fix would put them.
   await sql`truncate user_privilege_changes`;
-  await sql`delete from users where email like ${`%${DOMAIN}`}`;
   await asManualFix(sql, async (tx) => {
+    // A case that acted as one of this file's users stamped the rows it changed with that user; the stamp would refuse the delete.
+    await tx`
+      update users set updated_by = ${BOOTSTRAP_USER_ID}
+      where updated_by in (select id from users where email like ${`%${DOMAIN}`}) and email not like ${`%${DOMAIN}`}`;
+    await tx`
+      update users set created_by = ${BOOTSTRAP_USER_ID}
+      where created_by in (select id from users where email like ${`%${DOMAIN}`}) and email not like ${`%${DOMAIN}`}`;
+    await tx`delete from users where email like ${`%${DOMAIN}`}`;
     await tx`update users set role = 'admin', can_create_workspace = true where id = ${E.id}`;
     await tx`update users set role = 'curator', can_create_workspace = true where id = ${F.id}`;
     await tx`update users set role = 'user', can_create_workspace = true where id in (${A.id}, ${B.id})`;
