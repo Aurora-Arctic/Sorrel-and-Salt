@@ -21,6 +21,37 @@ const accept = () => screen.getByRole('button', { name: 'Accept Invitation' });
 // A cast: the built routes know `/coven/[slug]`, not this literal.
 const COVEN_LANDING = '/coven/fixture-coven' as Route;
 
+describe('InvitationAcceptance, for a card', () => {
+  it('tells a signed-out visitor any account will do, with no address to match', () => {
+    render(<InvitationAcceptance status="signed-out" card signInHref="/sign-in?next=%2Fi%2Fabc" />);
+
+    expect(screen.getByText(/any account/i)).toBeVisible();
+    expect(screen.queryByText(/email address is the one/i)).toBeNull();
+  });
+
+  it('accepts, and lands where the account starts a coven', async () => {
+    mockGraphQLMutation<AcceptInvitationMutation, AcceptInvitationMutationVariables>(
+      'AcceptInvitation',
+      ({ token }) => {
+        expect(token).toBe('abc');
+        return { acceptInvitation: { id: 'x' } };
+      },
+    );
+    render(
+      <InvitationAcceptance
+        status="acceptable"
+        token="abc"
+        tier="card"
+        landing={'/coven/new' as Route}
+      />,
+    );
+
+    fireEvent.click(accept());
+
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/coven/new'));
+  });
+});
+
 describe('InvitationAcceptance', () => {
   it('asks a signed-out visitor to sign in, and back to the link', () => {
     render(<InvitationAcceptance status="signed-out" signInHref="/sign-in?next=%2Finvite%2Fabc" />);

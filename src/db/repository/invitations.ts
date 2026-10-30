@@ -1,4 +1,5 @@
 import { and, eq, gt, inArray, isNotNull, isNull, lte, or, sql, type SQL } from 'drizzle-orm';
+import { applyAudit } from '../audit';
 import { workspaces } from '../../modules/coven/schema/workspaces';
 import { invitations } from '../../modules/coven/schema/invitations';
 import { users } from '../../modules/identity/schema/users';
@@ -13,6 +14,8 @@ import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types'
 import type {
   AuditWriter,
   AddressInvitationRow,
+  CardArrivalRow,
+  CardInvitationValues,
   InvitationRow,
   InvitedCoven,
   ReceivedInvitationCoven,
@@ -29,13 +32,23 @@ import type {
 // site-tier one under `SiteAdmin`, and the accept and token read under no proof
 // (claude-docs/db/invitations.md, "Invitations").
 
+/** An address invitation: the kind the lists, the received reads and the address match belong to. A card is the other kind. */
+function addressKind(): SQL {
+  return eq(invitations.kind, 'address');
+}
+
+/** A card: bound to no address, coven or site role. */
+function cardKind(): SQL {
+  return eq(invitations.kind, 'card');
+}
+
 /**
- * The site tier, `workspace_id IS NULL`, spelled for this table alone. Not
- * `inCompendium`: a site-tier invitation is no compendium row, and the tier
+ * The site tier, an address invitation with `workspace_id IS NULL`, spelled for this table alone: a card has no workspace
+ * either, and is not this tier's. Not `inCompendium`: a site-tier invitation is no compendium row, and the tier
  * seam counts the compendium's reads (claude-docs/modules.md, "The tier seam").
  */
 function onSiteTier(): SQL {
-  return isNull(invitations.workspaceId);
+  return and(addressKind(), isNull(invitations.workspaceId)) as SQL;
 }
 
 /** The workspace tier, `workspace_id IS NOT NULL`: a coven invitation, which the site tier's admin grant is not. */
@@ -96,6 +109,11 @@ function heldVerifiedBySession(session: AuditSession) {
       eq(sql`lower(${users.email})`, sql`lower(${invitations.email})`),
     ),
   );
+}
+
+// The session's user is verified. A card asks nothing more of the account: no address is matched.
+function verifiedBySession(session: AuditSession) {
+  return existsIn(users, and(eq(users.id, session.userId), eq(users.emailVerified, true)));
 }
 
 // What the finders by id and the accept by id share: a coven invitation, never
@@ -333,16 +351,57 @@ export async function findReceivedInvitationInviters(
 }
 
 /**
+ * The card arrivals' order, newest first: the key is ascending, so the instant is negated, as the pending lists' is.
+ */
+const CARD_ARRIVAL_ORDER: readonly SortPart[] = [
+  { expression: sql`-extract(epoch from ${invitations.acceptedAt})`, type: 'numeric' },
+];
+
+// A card some account accepted: the record of an arrival, kept for good.
+function arrivedByCard(): SQL {
+  return and(
+    cardKind(),
+    isNotNull(invitations.acceptedAt),
+    isNotNull(invitations.acceptedBy),
+  ) as SQL;
+}
+
+/**
+ * One page of the accounts that arrived by card, newest first: the card rows alone, each with the account that
+ * accepted it, when, and its batch. A site admin's read, as the admin Arrivals view is.
+ */
+export function findCardArrivalPage(
+  _admin: SiteAdmin,
+  page: PageRequest,
+): Promise<PageEntry<CardArrivalRow>[]> {
+  return findPageInScope(invitations, arrivedByCard(), CARD_ARRIVAL_ORDER, page) as Promise<
+    PageEntry<CardArrivalRow>[]
+  >;
+}
+
+/** How many arrivals `findCardArrivalPage` pages, and how many come before `start`, a page's first row. */
+export function findCardArrivalCount(
+  _admin: SiteAdmin,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  return findPageCountInScope(invitations, arrivedByCard(), CARD_ARRIVAL_ORDER, start);
+}
+
+/**
  * The invitation's named writes, beside its finders: the table is marked `namedWrites`, so these are its only
  * writes. Each decides the tier from the proof it is handed, never from `values`.
  */
 export function invitationWrites({
+  tx,
   session,
   insert,
   update,
 }: WriterContext): Pick<
   AuditWriter,
   | 'insertInvitation'
+  | 'insertInvitationCards'
+  | 'revokeInvitationCard'
+  | 'revokeInvitationCardBatch'
   | 'acceptInvitation'
   | 'acceptReceivedInvitation'
   | 'declineReceivedInvitation'
@@ -375,16 +434,53 @@ export function invitationWrites({
         ...tier,
       });
     },
-    // The address match in the statement, not only in the accept service:
-    // the service checks first to say why, and this is what holds if it forgot.
+    // A batch of cards in one statement: the tokens are hashed here, one row each, sharing the batch and the expiry,
+    // and bound to nothing. Not `insert`, which stamps one row.
+    insertInvitationCards: (
+      _admin: SiteAdmin,
+      { tokens, batchId, expiresAt }: CardInvitationValues,
+    ) =>
+      tokens.length === 0
+        ? Promise.resolve([])
+        : (tx
+            .insert(invitations)
+            .values(
+              tokens.map(
+                (token) =>
+                  applyAudit(
+                    'insert',
+                    { kind: 'card', batchId, expiresAt, tokenHash: hashToken(token) },
+                    session,
+                  ) as never,
+              ),
+            )
+            .returning() as never),
+    // Only pending cards: an accepted one is the record of an arrival and is never touched.
+    revokeInvitationCard: (_admin: SiteAdmin, id: string) =>
+      update(
+        invitations,
+        { revokedAt: sql`now()` },
+        pendingInvitation(cardKind(), eq(invitations.id, id)),
+      ),
+    revokeInvitationCardBatch: (_admin: SiteAdmin, batchId: string) =>
+      update(
+        invitations,
+        { revokedAt: sql`now()` },
+        pendingInvitation(cardKind(), eq(invitations.batchId, batchId)),
+      ),
+    // The match in the statement, not only in the accept service: the service checks first to say why, and this is
+    // what holds if it forgot. An address invitation needs the invited address, verified; a card needs a verified
+    // account and no address.
     acceptInvitation: (token: string) =>
       update(
         invitations,
         { acceptedAt: sql`now()`, acceptedBy: session.userId },
         pendingInvitation(
           eq(invitations.tokenHash, hashToken(token)),
-          heldVerifiedBySession(session),
-          inLiveWorkspaceOrSite(),
+          or(
+            and(addressKind(), heldVerifiedBySession(session), inLiveWorkspaceOrSite()),
+            and(cardKind(), verifiedBySession(session)),
+          ),
         ),
       ),
     // The same stamp, found by id, for a coven invitation only: the site tier's

@@ -23,6 +23,7 @@ export const INVITED = `grantee${DOMAIN}`;
 export const AS_PRIMARY = { id: PRIMARY, role: 'admin' as const };
 export const AS_GRANTEE = { id: GRANTEE, role: 'user' as const };
 export const AS_STRANGER = { id: STRANGER, role: 'user' as const };
+export const CARD_BATCH = '00000000-0000-0000-0000-0000000000b1';
 export const TOKEN = 'fixture-token-cccccccccccccccccccccccccccccccc';
 
 export const sha256 = (value: string) => createHash('sha256').update(value).digest('hex');
@@ -61,8 +62,17 @@ export function setUpInvitationAcceptance(onClient: (client: postgres.Sql) => vo
       expired = false,
       revoked = false,
       accepted = false,
+      card = false,
     } = fixture;
-    const [row] = await sql`
+    const [row] = card
+      ? await sql`
+    insert into invitations (kind, batch_id, token_hash, created_by, updated_by, expires_at, revoked_at, accepted_at, accepted_by)
+    values ('card', ${CARD_BATCH}, ${sha256(token)}, ${createdBy}, ${createdBy},
+      ${expired ? sql`now() - interval '1 second'` : sql`now() + interval '7 days'`},
+      ${revoked ? sql`now()` : null}, ${accepted ? sql`now()` : null}, ${accepted ? STRANGER : null})
+    returning id
+  `
+      : await sql`
     insert into invitations (email, token_hash, note, workspace_id, role, site_role, created_by,
       updated_by, expires_at, revoked_at, accepted_at, accepted_by)
     values (${email}, ${sha256(token)}, ${note}, ${workspaceId}, ${role}, ${siteRole}, ${createdBy}, ${createdBy},

@@ -11,7 +11,7 @@ import Notice from '../Notice';
 import type { InvitationAcceptanceProps } from './types';
 import './index.scss';
 
-// `/invite/[token]`'s one panel: the page reads where the visitor stands and this shows it. Accept
+// `/invite/[token]` and `/i/[token]` share this one panel: the page reads where the visitor stands and this shows it. Accept
 // sends the mutation, which decides, and a refusal is shown in the service's words
 // (claude-docs/components/invitation-acceptance.md).
 
@@ -35,10 +35,17 @@ const WORKSPACE_GRANT = "You've been invited to join a coven on Sorrel & Salt.";
 const SIGNED_OUT_GRANT =
   "You've been invited to Sorrel & Salt. Sign in with an account whose email address is the one this invitation was sent to.";
 
+/** What a card grants, and what a signed-out visitor holding one is told: no address, no batch. */
+const CARD_GRANT = "You've been given a card to join Sorrel & Salt.";
+
+const CARD_SIGNED_OUT_GRANT =
+  "You've been given a card to join Sorrel & Salt. Sign in with any account, once its email address is verified.";
+
 /** The sentence under the heading, or none for a refusal: its alert says all there is to say. */
 function grantOf(props: InvitationAcceptanceProps): string | undefined {
-  if (props.status === 'signed-out') return SIGNED_OUT_GRANT;
+  if (props.status === 'signed-out') return props.card ? CARD_SIGNED_OUT_GRANT : SIGNED_OUT_GRANT;
   if (props.status !== 'acceptable') return undefined;
+  if (props.tier === 'card') return CARD_GRANT;
   if (props.tier === 'site') return SITE_GRANTS[props.siteRole];
   return props.covenName
     ? `You've been invited to join ${props.covenName} on Sorrel & Salt.`

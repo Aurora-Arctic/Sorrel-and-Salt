@@ -637,9 +637,19 @@ export interface AuditWriter {
    */
   insertInvitation(admin: SiteAdmin, values: SiteInvitationValues): Promise<InvitationRow[]>;
   /**
+   * Insert a batch of cards (up to 500) in one statement, on the site tier's proof: one row per token, hashed here, sharing the batch id and the
+   * expiry, with no address, coven or role.
+   */
+  insertInvitationCards(admin: SiteAdmin, values: CardInvitationValues): Promise<InvitationRow[]>;
+  /** Revoke the pending card `id` names. No row comes back for an accepted, revoked or expired card, or an address invitation. */
+  revokeInvitationCard(admin: SiteAdmin, id: string): Promise<InvitationRow[]>;
+  /** Revoke every pending card of the batch. An accepted card is the record of an arrival and is left untouched. */
+  revokeInvitationCardBatch(admin: SiteAdmin, batchId: string): Promise<InvitationRow[]>;
+  /**
    * Accept the pending invitation a link's token names, on either tier, as the session's user: stamps `accepted_at` and `accepted_by`.
    * Under no proof, since the invitee holds neither membership nor site role yet; the token admits, and the user must hold the invited address, verified.
    * No row comes back for a token naming no pending invitation, or a user whose live row holds another address or holds it unverified.
+   * A card names no address: any verified account is admitted, once.
    */
   acceptInvitation(token: string): Promise<InvitationRow[]>;
   /**
@@ -1063,6 +1073,21 @@ type InvitationValues = Pick<typeof invitations.$inferInsert, 'email' | 'expires
 
 /** What a site-tier invitation starts with: the same, and the site role it grants. */
 export type SiteInvitationValues = InvitationValues & { siteRole: InvitableSiteRole };
+
+/** What a batch of cards starts with: a token each, never stored, and the batch and expiry they share. */
+export interface CardInvitationValues {
+  tokens: string[];
+  batchId: string;
+  expiresAt: Date;
+}
+
+/** A card some account accepted: who, when, and the batch it came from. */
+export type CardArrivalRow = InvitationRow & {
+  kind: 'card';
+  acceptedAt: Date;
+  acceptedBy: string;
+  batchId: string;
+};
 
 /** What a workspace invitation starts with: the same, and the coven role it grants. */
 export type WorkspaceInvitationValues = InvitationValues & { role: InvitableRole };

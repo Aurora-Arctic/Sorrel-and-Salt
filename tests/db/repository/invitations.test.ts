@@ -11,6 +11,8 @@ import {
   findPendingWorkspaceInvitationCount,
   findPendingWorkspaceInvitationPage,
   findPendingSiteInvitationPage,
+  findCardArrivalPage,
+  findCardArrivalCount,
   withAudit,
   type AuditWriter,
   type InvitationRow,
@@ -945,5 +947,148 @@ describe('the named writes’ signatures', () => {
     ];
 
     expect(writes).toHaveLength(12);
+  });
+});
+
+describe('invitation cards', () => {
+  const BATCH = '11111111-1111-4111-8111-111111111111';
+  const CARD = 'cardtokenAAAAAAA';
+  const OTHER_CARD = 'cardtokenBBBBBBB';
+  const LATER = () => new Date(Date.now() + 7 * 24 * 3600 * 1000);
+
+  const mint = (tokens: string[], expiresAt = LATER(), batchId = BATCH) =>
+    withAudit(asUser(E), (write) =>
+      write.insertInvitationCards(admin, { tokens, batchId, expiresAt }),
+    );
+  const cardAccept = (user: SessionUser, token = CARD) =>
+    withAudit(asUser(user), (write) => write.acceptInvitation(token));
+
+  it('stores only the hash, with no address, coven or role, one batch and one expiry', async () => {
+    const expiresAt = LATER();
+    const inserted = await mint([CARD, OTHER_CARD], expiresAt);
+
+    expect(inserted).toHaveLength(2);
+    expect(inserted[0]).toMatchObject({
+      kind: 'card',
+      email: null,
+      workspaceId: null,
+      role: null,
+      siteRole: null,
+      batchId: BATCH,
+      tokenHash: sha256(CARD),
+      createdBy: E.id,
+      acceptedAt: null,
+    });
+    expect(inserted[0]!.expiresAt).toEqual(expiresAt);
+    for (const row of inserted) {
+      expect(Object.values(await rowOf(row.id))).not.toContain(CARD);
+      expect(Object.values(await rowOf(row.id))).not.toContain(OTHER_CARD);
+    }
+  });
+
+  it('inserts five hundred cards in one statement', async () => {
+    const tokens = Array.from({ length: 500 }, (_, i) => `card-${String(i).padStart(11, '0')}`);
+    expect(await mint(tokens)).toHaveLength(500);
+  });
+
+  it('is accepted by any verified account, whatever its address', async () => {
+    await mint([CARD]);
+    const [accepted] = await cardAccept(B);
+
+    expect(accepted).toMatchObject({ acceptedBy: B.id, batchId: BATCH });
+    expect((await findInvitationByToken(CARD))?.acceptedBy).toBe(B.id);
+  });
+
+  it('is accepted by no unverified account, though the card is pending', async () => {
+    await mint([CARD]);
+    await sql`update users set email_verified = false where id = ${B.id}`;
+
+    expect(await cardAccept(B)).toHaveLength(0);
+
+    await sql`update users set email_verified = true where id = ${B.id}`;
+    expect(await cardAccept(B)).toHaveLength(1);
+  });
+
+  // The second account is verified and the card was pending until the first stamp, so the single-use predicate alone refuses.
+  it('affects no row on a second accept', async () => {
+    await mint([CARD]);
+    expect(await cardAccept(B)).toHaveLength(1);
+
+    expect(await cardAccept(A)).toHaveLength(0);
+    expect(await cardAccept(B)).toHaveLength(0);
+    expect((await findInvitationByToken(CARD))?.acceptedBy).toBe(B.id);
+  });
+
+  it('is not accepted once expired or revoked', async () => {
+    await mint([CARD]);
+    await mint([OTHER_CARD], LATER());
+    await sql`update invitations set expires_at = now() - interval '1 second' where token_hash = ${sha256(CARD)}`;
+    await sql`update invitations set revoked_at = now() where token_hash = ${sha256(OTHER_CARD)}`;
+
+    expect(await cardAccept(B)).toHaveLength(0);
+    expect(await cardAccept(B, OTHER_CARD)).toHaveLength(0);
+  });
+
+  it('never reaches the received list, the accept by id, the decline or the site tier’s lists', async () => {
+    const [card] = await mint([CARD]);
+
+    const received = await findReceivedInvitationPage(asUser(B), { limit: 101, inverted: false });
+    expect(received).toHaveLength(0);
+    expect(await findReceivedInvitation(asUser(B), card!.id)).toBeUndefined();
+    expect(await withAudit(asUser(B), (w) => w.acceptReceivedInvitation(card!.id))).toHaveLength(0);
+    expect(await withAudit(asUser(B), (w) => w.declineReceivedInvitation(card!.id))).toHaveLength(
+      0,
+    );
+    expect(
+      await findPendingSiteInvitationPage(admin, {}, { limit: 101, inverted: false }),
+    ).toHaveLength(0);
+    expect(await withAudit(asUser(E), (w) => w.revokeInvitation(admin, card!.id))).toHaveLength(0);
+  });
+
+  it('revokes a batch’s pending cards and leaves an accepted one untouched', async () => {
+    await mint([CARD, OTHER_CARD]);
+    await cardAccept(B);
+    const before = await rowOf((await findInvitationByToken(CARD))!.id);
+
+    const revoked = await withAudit(asUser(E), (write) =>
+      write.revokeInvitationCardBatch(admin, BATCH),
+    );
+
+    expect(revoked).toHaveLength(1);
+    expect(revoked[0]!.tokenHash).toBe(sha256(OTHER_CARD));
+    expect(await rowOf((await findInvitationByToken(CARD))!.id)).toEqual(before);
+  });
+
+  it('revokes one pending card by id, and not an accepted one', async () => {
+    const [pending, taken] = await mint([OTHER_CARD, CARD]);
+    await cardAccept(B);
+
+    const one = await withAudit(asUser(E), (w) => w.revokeInvitationCard(admin, pending!.id));
+    const none = await withAudit(asUser(E), (w) => w.revokeInvitationCard(admin, taken!.id));
+
+    expect(one).toHaveLength(1);
+    expect(none).toHaveLength(0);
+  });
+
+  it('answers who arrived by card, when and from which batch, from the rows alone', async () => {
+    const OTHER_BATCH = '22222222-2222-4222-8222-222222222222';
+    await mint([CARD, OTHER_CARD]);
+    await mint(['cardtokenCCCCCCC'], LATER(), OTHER_BATCH);
+    await cardAccept(B);
+    await cardAccept(A, 'cardtokenCCCCCCC');
+    // An address invitation accepted is no card arrival.
+    await inviteIntoW({ token: 'fixture-token-w-accepted' });
+    await acceptAs(A, 'fixture-token-w-accepted');
+
+    const page = await findCardArrivalPage(admin, { limit: 101, inverted: false });
+
+    expect(page.map(({ node }) => [node.acceptedBy, node.batchId]).sort()).toEqual(
+      [
+        [A.id, OTHER_BATCH],
+        [B.id, BATCH],
+      ].sort(),
+    );
+    for (const { node } of page) expect(node.acceptedAt).toBeInstanceOf(Date);
+    expect((await findCardArrivalCount(admin, undefined)).totalCount).toBe(2);
   });
 });

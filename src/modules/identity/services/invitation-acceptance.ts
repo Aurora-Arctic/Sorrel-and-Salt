@@ -82,6 +82,12 @@ async function checkInvitation(
   if (dead) return { refusal: dead };
 
   const user = await findOneById(users, session.userId);
+  // A card is bound to no address, so any verified account admits; every other kind is held by its address.
+  if (invitation.kind === 'card') {
+    if (!user) return { refusal: 'invalid' };
+    if (!user.emailVerified) return { refusal: 'unverified' };
+    return { tier: 'card', invitation, user };
+  }
   if (!user || invitation.email === null || !sameAddress(user.email, invitation.email))
     return { refusal: 'different-address' };
   if (!user.emailVerified) return { refusal: 'unverified' };
@@ -117,6 +123,7 @@ export async function invitationStanding(
 ): Promise<InvitationStanding> {
   const standing = await standingOf(session, token);
   if (standing.refusal) return refused(standing.refusal);
+  if (standing.tier === 'card') return { acceptable: true, tier: 'card' };
   return standing.tier === 'site'
     ? { acceptable: true, tier: 'site', siteRole: standing.invitation.siteRole }
     : { acceptable: true, tier: 'workspace', slug: standing.coven.slug, name: standing.coven.name };
@@ -215,6 +222,14 @@ async function acceptChecked(
         }
         return stamped;
       }
+      if (standing.tier === 'card') {
+        // A card seats nobody and grants no role: the right to create a coven is all it gives.
+        if (!user.canCreateWorkspace) {
+          const [granted] = await write.updateById(users, user.id, { canCreateWorkspace: true });
+          if (!granted) throw new NotFound('No such user');
+        }
+        return stamped;
+      }
       const { workspaceId, role } = standing.invitation;
       if (!seated) {
         const [revived] = await write.reviveMembership(
@@ -231,7 +246,7 @@ async function acceptChecked(
       }
       return stamped;
     },
-    { via: 'invitation', note: invitation.note ?? undefined },
+    { via: standing.tier === 'card' ? 'card' : 'invitation', note: invitation.note ?? undefined },
   );
   if (!accepted) {
     const again = await recheck();

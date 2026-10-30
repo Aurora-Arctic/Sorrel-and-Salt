@@ -26,6 +26,7 @@ const ROUTE_LABELS: Record<LedgerRoute, string> = {
   bootstrap: 'Seeded',
   admin: 'By an admin',
   invitation: 'Invitation accepted',
+  card: 'Card accepted',
   manual: 'Manual fix',
 };
 
