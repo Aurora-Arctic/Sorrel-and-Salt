@@ -10,7 +10,7 @@ import { BuilderStepRow } from './step-row';
 import type { SpellStepValue, SpellStepsValues } from './types';
 import { isInstruction, newInstruction, stepNameOf, warningOf } from './values';
 
-// The jar's steps under What Goes In: the add box, Add Instruction and the list, one step open at a time, each moved by a handle
+// The jar's steps in the Jar section: the add box, Add Instruction and the list, one step open at a time, each moved by a handle
 // (claude-docs/components/spell-builder.md, "Steps").
 
 export function SpellSteps({

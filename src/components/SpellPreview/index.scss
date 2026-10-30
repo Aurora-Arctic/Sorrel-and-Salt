@@ -4,9 +4,10 @@
 @use 'sass:list';
 @use '../SpellCard/smoulder' as card;
 
-// The pane covers the window: the native dialog's top layer, sized to the viewport and no longer a
-// box in the middle. Tokens only; the look is the grimoire's design review's (MB.123).
-// The pane's edge space, and the foot's: 2.5rem at every width, which no `space()` step equals.
+// The pane covers the window: the native dialog's top layer, sized to the viewport rather than a box
+// in the middle.
+// The pane's edge space, narrower on a phone, and its foot space: 2.5rem at every width, which no
+// `space()` step equals.
 $preview-edge: space(5);
 $preview-edge-phone: space(4);
 $preview-foot: 2.5rem;
