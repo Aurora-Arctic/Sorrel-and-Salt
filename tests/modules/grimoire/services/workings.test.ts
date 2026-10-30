@@ -606,3 +606,44 @@ describe('deleteSpell', () => {
     expect(await quantityOf(salt.jarId)).toBe(9);
   });
 });
+
+describe('a working dated in the future', () => {
+  const FUTURE = '2999-01-01';
+  const today = () => new Date().toISOString().slice(0, 10);
+
+  it('saves as a draft, and its day may move to another future day', async () => {
+    const spell = await spellBy(A);
+    const { working } = await record(A, spell, { workedOn: FUTURE });
+    expect((await workingRow(working.id)).worked_on).toBe(FUTURE);
+
+    await updateWorking(asUser(A), WORKSPACE_W_ID, working.id, { workedOn: '2999-02-02' });
+    expect((await workingRow(working.id)).worked_on).toBe('2999-02-02');
+  });
+
+  it('is refused completion by direct id, with an explaining error, and stays a draft', async () => {
+    const spell = await spellBy(A);
+    const { working } = await record(A, spell, { workedOn: FUTURE });
+    // The preconditions: the caller may complete it, and the spell is complete.
+    expect((await workingRow(working.id)).status).toBe('draft');
+
+    const error = await refusal(completeWorking(asUser(A), WORKSPACE_W_ID, working.id));
+    expect(error).toBeInstanceOf(Forbidden);
+    expect((error as Error).message).toContain('before its day');
+    expect((await workingRow(working.id)).status).toBe('draft');
+  });
+
+  it('completes once its day is today, and a complete working cannot be moved past today', async () => {
+    const spell = await spellBy(A);
+    const { working } = await record(A, spell, { workedOn: FUTURE });
+    await updateWorking(asUser(A), WORKSPACE_W_ID, working.id, { workedOn: today() });
+
+    const report = await completeWorking(asUser(A), WORKSPACE_W_ID, working.id);
+    expect(report.working.status).toBe('complete');
+
+    const error = await refusal(
+      updateWorking(asUser(A), WORKSPACE_W_ID, working.id, { workedOn: FUTURE }),
+    );
+    expect(error).toBeInstanceOf(Forbidden);
+    expect((await workingRow(working.id)).worked_on).toBe(today());
+  });
+});

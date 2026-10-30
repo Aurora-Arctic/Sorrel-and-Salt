@@ -73,6 +73,16 @@ async function assertMayChange(membership: Membership, working: WorkingRow): Pro
   );
 }
 
+// The latest calendar day anywhere is today at UTC+14, so a browser's own today is never refused.
+function latestToday(): string {
+  return new Date(Date.now() + 14 * 3_600_000).toISOString().slice(0, 10);
+}
+
+/** A working may be dated ahead as a draft, but it is complete only once its day has come. */
+function assertDayHasCome(workedOn: string): void {
+  if (workedOn > latestToday()) throw new Forbidden("A working can't be completed before its day.");
+}
+
 function assertSpellComplete(spell: SpellRow, doing: string): void {
   const { status } = spell;
   if (status !== 'complete') {
@@ -365,7 +375,7 @@ export async function previewWorkingDeductions(
  * with nothing taken. What a jar lacks is taken to zero and the shortfall recorded. A step with nothing to take comes back as a
  * warning.
  *
- * @throws {Forbidden} the caller may not change this working, is neither its recorder nor named on it, it is already complete, or its spell is a draft.
+ * @throws {Forbidden} the caller may not change this working, is neither its recorder nor named on it, it is already complete, its spell is a draft, or its day is yet to come.
  * @throws {NotFound} no such working here, or none this caller may read.
  */
 export async function completeWorking(
@@ -379,6 +389,7 @@ export async function completeWorking(
   const { status } = working;
   if (status === 'complete') throw new Forbidden('This working is already complete');
   assertSpellComplete(await spellOf(membership, working), 'its workings cannot be completed');
+  assertDayHasCome(working.workedOn);
 
   const warnings = await withAudit(session, async (write) => {
     // The coven's stock lock first, so the jars read below are the ones the decrements meet.
@@ -408,7 +419,7 @@ export async function completeWorking(
 /**
  * Changes a working's day, note, participants (when named) and visibility, which only widens once it is complete.
  *
- * @throws {Forbidden} the caller may not change this working, is neither its recorder nor named on it, or asked to narrow a complete one.
+ * @throws {Forbidden} the caller may not change this working, is neither its recorder nor named on it, asked to narrow a complete one, or moved a complete one past its day.
  * @throws {NotFound} no such working here, or none this caller may read.
  * @throws {ValidationError} the input is invalid, or a participant is not a member of this coven.
  */
@@ -423,6 +434,8 @@ export async function updateWorking(
   const working = await readableWorking(membership, workingId);
   await assertMayChange(membership, working);
 
+  // A complete working is judged on the day it will hold after this write.
+  if (working.status === 'complete') assertDayHasCome(values.workedOn);
   const { visibility: next } = values;
   if (next !== undefined) {
     assertWidens(working, next, 'working');
