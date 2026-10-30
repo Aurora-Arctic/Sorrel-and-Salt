@@ -158,7 +158,7 @@ const rect = (locator: Locator) =>
   locator.evaluate((el) => el.getBoundingClientRect().toJSON() as DOMRect);
 
 test(
-  'the pane ends as far above its bottom as its title starts below its top',
+  'the pane ends 2.5rem (40px) above its bottom, at any width',
   { tag: '@story-85' },
   async ({ page }) => {
     const pane = await longSpell(page, 'story-85-foot');
@@ -167,13 +167,10 @@ test(
       [390, 844],
     ] as const) {
       await page.setViewportSize({ width, height });
-      await pane.evaluate((el) => el.scrollTo(0, 0));
-      const top = (await rect(pane.getByRole('heading', { name: 'Fixture Long Working' }))).top;
-      const paneTop = (await rect(pane)).top;
       await pane.evaluate((el) => el.scrollTo(0, el.scrollHeight));
       const foot =
         (await rect(pane)).bottom - (await rect(pane.locator('.spell-preview__content'))).bottom;
-      expect(Math.abs(foot - (top - paneTop)), `${width}px`).toBeLessThanOrEqual(1);
+      expect(Math.abs(foot - 40), `${width}px`).toBeLessThanOrEqual(1);
       await pane.screenshot({
         path: `${process.env.SHOTS ?? 'test-results'}/preview-scroll-foot-${width}.png`,
       });
