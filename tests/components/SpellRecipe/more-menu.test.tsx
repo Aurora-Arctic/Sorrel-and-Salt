@@ -17,7 +17,7 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The recipe page's three dots: Duplicate for a role that may create a spell, Delete Spell for one
+// The recipe page's three dots: Duplicate for a role that may create a spell, Delete for one
 // that may delete, and Print for every role (claude-docs/components/spell-recipe.md).
 
 const WORKSPACE_ID = '00000000-0000-4000-8000-000000000001';
@@ -68,13 +68,13 @@ describe('SpellMoreMenu', () => {
     router.replace.mockClear();
   });
 
-  it('offers Duplicate and Delete Spell to a role that may do both', async () => {
+  it('offers Duplicate, Print and Delete to a role that may do both', async () => {
     renderMenu();
     press(dots());
     expect((await screen.findAllByRole('menuitem')).map((item) => item.textContent)).toEqual([
       'Duplicate',
       'Print',
-      'Delete Spell',
+      'Delete',
     ]);
   });
 
@@ -87,12 +87,12 @@ describe('SpellMoreMenu', () => {
     ]);
   });
 
-  it('offers only Delete Spell to a role that may not duplicate', async () => {
+  it('offers only Print and Delete to a role that may not duplicate', async () => {
     renderMenu({ canDuplicate: false });
     press(dots());
     expect((await screen.findAllByRole('menuitem')).map((item) => item.textContent)).toEqual([
       'Print',
-      'Delete Spell',
+      'Delete',
     ]);
   });
 
@@ -182,7 +182,7 @@ describe('SpellMoreMenu', () => {
     );
     renderMenu();
 
-    choose('Delete Spell');
+    choose('Delete');
     const ask = screen.getByRole('dialog', { name: 'Delete Spell' });
     expect(within(ask).getByText('Fixture Working')).toBeInTheDocument();
     press(within(ask).getByRole('button', { name: 'Cancel' }));
@@ -194,7 +194,7 @@ describe('SpellMoreMenu', () => {
 
   it('tells the author of a private spell only what is true of it: no one else loses it', () => {
     renderMenu({ visibility: 'private' });
-    choose('Delete Spell');
+    choose('Delete');
     const ask = screen.getByRole('dialog', { name: 'Delete Spell' });
     expect(ask).not.toHaveTextContent(/member/);
     expect(ask).toHaveTextContent(/gone for good/);
@@ -202,7 +202,7 @@ describe('SpellMoreMenu', () => {
 
   it('tells the deleter of a shared spell that the coven loses it', () => {
     renderMenu({ visibility: 'workspace' });
-    choose('Delete Spell');
+    choose('Delete');
     expect(screen.getByRole('dialog', { name: 'Delete Spell' })).toHaveTextContent(
       /every member of the coven/,
     );
@@ -219,7 +219,7 @@ describe('SpellMoreMenu', () => {
     );
     renderMenu();
 
-    choose('Delete Spell');
+    choose('Delete');
     press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }));
 
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith(DELETED_HREF));
@@ -230,7 +230,7 @@ describe('SpellMoreMenu', () => {
     mockGraphQLError('DeleteSpell', { code: 'NOT_FOUND', message: 'No such spell in this coven' });
     renderMenu();
 
-    choose('Delete Spell');
+    choose('Delete');
     press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }));
 
     expect(await screen.findByRole('alert')).toBeInTheDocument();

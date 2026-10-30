@@ -42,7 +42,7 @@ export default function CompleteWorkingAction({
       ariaLabel={label}
       tip="Complete"
       className="icon-tip__edit"
-      title="Complete a Working"
+      title="Complete Working"
     >
       {(close) => <WorkingCompletion {...completion} onBack={close} />}
     </ModalButton>

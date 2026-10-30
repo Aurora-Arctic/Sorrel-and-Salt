@@ -429,7 +429,7 @@ test('in the grimoire, a press on a spell card outside its title opens its recip
     await open();
     await more().click();
     await expect(page.getByRole('menuitem', { name: 'Duplicate' })).toBeVisible();
-    await expect(page.getByRole('menuitem', { name: 'Delete Spell' })).toBeVisible();
+    await expect(page.getByRole('menuitem', { name: 'Delete', exact: true })).toBeVisible();
     await expect(page).toHaveURL(listUrl);
     await page.keyboard.press('Escape');
   });

@@ -73,9 +73,8 @@ function DeleteSpellQuestion({
       <p>
         Delete <strong>{name}</strong>?{' '}
         {visibility === 'workspace'
-          ? 'It leaves the grimoire for every member of the coven.'
-          : 'It is gone for good.'}{' '}
-        Nothing in stock changes.
+          ? 'It leaves the grimoire for every member of the coven, and nothing in stock changes.'
+          : 'It is gone for good, and nothing in stock changes.'}
       </p>
       <div className="modal__actions">
         <BusyButton

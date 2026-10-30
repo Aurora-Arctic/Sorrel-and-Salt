@@ -445,7 +445,7 @@ describe('the spell builder over a Grimoire tab', () => {
     expect(more).toHaveLength(count);
     if (count > 0) {
       press(more[0]!);
-      expect(await screen.findByRole('menuitem', { name: 'Delete Spell' })).toBeInTheDocument();
+      expect(await screen.findByRole('menuitem', { name: 'Delete' })).toBeInTheDocument();
     }
   });
 
@@ -779,7 +779,7 @@ describe('Quick Look over a Grimoire tab', () => {
       if (count > 0) {
         press(more[0]!);
         expect(
-          (await screen.findAllByRole('menuitem', { name: 'Delete Spell', hidden: true })).length,
+          (await screen.findAllByRole('menuitem', { name: 'Delete', hidden: true })).length,
         ).toBeGreaterThan(0);
       }
     },

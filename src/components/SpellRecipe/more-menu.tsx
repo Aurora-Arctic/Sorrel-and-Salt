@@ -10,10 +10,9 @@ import { useDuplicateSpell } from './duplicate-spell';
 import PrintButton from './print-button';
 import type { SpellMoreMenuProps } from './types';
 
-// The three dots on the recipe page and on a spell's card: Duplicate, which makes a private draft copy and
-// leaves for it, Print (the page's alone), which opens the browser's print dialog, and Delete Spell,
-// which asks in a dialog first. Print alone is its own button rather than a menu of one, and a
-// menu with nothing in it is not drawn (claude-docs/components/spell-recipe.md, "Duplicate", "Print" and "Delete Spell").
+// The three dots on the recipe page and a spell's card: Duplicate, Print (the page's alone) and Delete, bare
+// verbs whose dialog names the noun. Print alone is its own button, not a menu of one, and an empty menu is not
+// drawn (claude-docs/components/spell-recipe.md, "Duplicate", "Print" and "Delete Spell").
 
 export default function SpellMoreMenu({
   workspaceId,
@@ -70,7 +69,7 @@ export default function SpellMoreMenu({
       ? [
           {
             key: 'delete',
-            label: 'Delete Spell',
+            label: 'Delete',
             destructive: true,
             onSelect: () => {
               feedback.report(undefined);

@@ -95,9 +95,9 @@ describe('SpellCard', () => {
     press(screen.getByRole('button', { name: 'More for Fixture Working' }));
     expect((await screen.findAllByRole('menuitem')).map((item) => item.textContent)).toEqual([
       'Duplicate',
-      'Delete Spell',
+      'Delete',
     ]);
-    press(screen.getByRole('menuitem', { name: 'Delete Spell' }));
+    press(screen.getByRole('menuitem', { name: 'Delete' }));
     expect(
       within(await screen.findByRole('dialog', { name: 'Delete Spell' })).getByText(
         'Fixture Working',

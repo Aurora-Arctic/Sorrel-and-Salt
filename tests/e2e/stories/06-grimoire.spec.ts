@@ -495,11 +495,11 @@ test(
     };
     const listPath = `/coven/${coven.slug}/grimoire`;
     const recipePath = `${listPath}/${gone}`;
-    // Delete Spell is in the page's More menu.
+    // Delete is in the page's More menu, and its dialog is titled Delete Spell.
     const dots = page.getByRole('button', { name: 'More for Doomed Working', exact: true });
     const askToDelete = async () => {
       await dots.click();
-      await page.getByRole('menuitem', { name: /^Delete Spell/ }).click();
+      await page.getByRole('menuitem', { name: 'Delete', exact: true }).click();
     };
     const question = page.getByRole('dialog', { name: 'Delete Spell', exact: true });
 
@@ -549,7 +549,7 @@ test(
       await page.goto(`${listPath}/${kept}`);
       // Why it could be offered: the viewer reads the page the member could delete from.
       await expect(page.getByRole('heading', { level: 1, name: 'Kept Working' })).toBeVisible();
-      // Print stands alone because nothing else is offered: a Delete Spell would put both in the dots' menu.
+      // Print stands alone because nothing else is offered: a Delete would put both in the dots' menu.
       await expect(
         page.getByRole('button', { name: 'Print Kept Working', exact: true }),
       ).toBeVisible();
@@ -591,7 +591,7 @@ test(
     await grimoireList(page)
       .getByRole('button', { name: 'More for Card Doomed Working', exact: true })
       .click();
-    await page.getByRole('menuitem', { name: /^Delete Spell/ }).click();
+    await page.getByRole('menuitem', { name: 'Delete', exact: true }).click();
     const question = page.getByRole('dialog', { name: 'Delete Spell', exact: true });
     await expect(question).toContainText('Card Doomed Working');
     await assertNoAccessibilityViolations(page);
