@@ -80,13 +80,37 @@
 }
 
 // The month and year pickers are the app's select-only boxes, shorter than a field to sit in the caption; the library's own text label for them is not drawn.
+// The month and year pickers are the app's select-only boxes in their compact form (`.field--compact`, as high as a step), as wide as their longest option and no wider.
 .day-picker__dropdown-root {
-  position: relative;
   display: inline-grid;
 
+  > * {
+    grid-area: 1 / 1;
+  }
+
   .combobox__control {
-    min-block-size: 0;
-    padding-block: space(1);
+    padding-inline: space(2) space(1);
+    gap: 0;
+  }
+
+  .combobox__indicator {
+    inline-size: 1.25rem;
+  }
+
+  .combobox__option {
+    padding: space(1) space(2);
+  }
+}
+
+.day-picker__dropdown-sizer {
+  display: inline-grid;
+  padding-inline: space(2) 1.75rem;
+  font-size: type-size('caption');
+  visibility: hidden;
+  pointer-events: none;
+
+  > * {
+    grid-area: 1 / 1;
   }
 }
 
