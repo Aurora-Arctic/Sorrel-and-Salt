@@ -92,4 +92,5 @@ Browser flows: stories 76 and 78 in `tests/e2e/stories/06-grimoire.spec.ts`.
 
 `src/components/RecordWorking/index.stories.tsx`, titled "Grimoire / Record Working": `States`,
 with a control that chooses one of Closed, Open, Private Spell, Deduction Preview, Shortfall, Edit
-Working, Edit Complete Working, Delete Working or Dated Ahead.
+Working, Edit Complete Working, Delete Working, Complete Working (a draft row's flask pressed, opening
+the dialog titled Complete Working over the deduction preview) or Dated Ahead.

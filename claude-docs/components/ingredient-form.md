@@ -1914,9 +1914,9 @@ answers `Reference` from each source's whole fields and keeps what
 once drawn: Correspondences opens on the error, flagged, the box focused
 (MB.115). `CompendiumEntryInModal` is the edit in its modal.
 `AskingToDeleteInModal` opens every section, scrolls to the foot and presses
-Delete Ingredient, and `AskingToDiscardInModal` types a change, opens every
-section, scrolls half way and presses Close: each question over the long
-form, centred where it was scrolled to (MB.115). The stories that open
+Delete Ingredient: the question over the long form, the name in bold,
+centred where it was scrolled to (MB.115). Close asks nothing, since it saves
+a change before closing, so there is no discard story. The stories that open
 something inside an edit open its section first, as a person would. The toolbar viewport menu shows any of them at 375px. On a phone the
 compendium's modal stays inset, the page in view on every side, rather than
 a full-height sheet: the owner's call in M5.5, kept at MB.115's design

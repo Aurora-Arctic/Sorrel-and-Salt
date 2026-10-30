@@ -139,7 +139,7 @@
     },
     "IngredientForm": {
       "cardMode": "single",
-      "primaryStory": "AskingToDiscardInModal",
+      "primaryStory": "AskingToDeleteInModal",
       "viewport": "900x2000"
     },
     "LastEdit": {

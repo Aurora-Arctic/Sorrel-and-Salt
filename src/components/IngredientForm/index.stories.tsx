@@ -1229,29 +1229,6 @@ export const AskingToDeleteInModal: Story = {
   },
 };
 
-/**
- * The edit in its modal with a change typed, every section open and scrolled half
- * way, then Close pressed: the unsaved-changes question appears over the form,
- * centred where the person had scrolled. Close again flashes it.
- */
-export const AskingToDiscardInModal: Story = {
-  render: () => {
-    useEffect(() => {
-      const name = document.querySelector<HTMLInputElement>('input[name="name"]');
-      if (name) {
-        setInputValue(name, `${name.value} Renamed`);
-      }
-      press('Open All');
-      const later = requestAnimationFrame(() => {
-        scrollBody(0.5);
-        press('Close');
-      });
-      return () => cancelAnimationFrame(later);
-    }, []);
-    return <CompendiumEntryInModalForm />;
-  },
-};
-
 // Promoting a folk name: the arrow on a saved folk name's chip, and the
 // question it always asks.
 

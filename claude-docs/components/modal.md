@@ -965,8 +965,8 @@ short form; pressing Escape or Close there flashes it. `AskingToConfirm`
 shows `ConfirmQuestion`'s Delete and Cancel, Delete busy once pressed. The
 forms' own tests cover `ConfirmQuestion` through their Delete questions.
 IngredientForm's
-`AskingToDeleteInModal` and `AskingToDiscardInModal` show it over the long
-form scrolled down, each with a phone pair.
+`AskingToDeleteInModal` shows it over the long form scrolled down, with a
+phone pair.
 
 `tests/components/Modal/route-modal.test.tsx` (M9.18) covers the opening at
 once: a plain press opens the modal with the pressed head and a status, a

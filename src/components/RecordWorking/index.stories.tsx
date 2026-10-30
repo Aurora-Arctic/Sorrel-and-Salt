@@ -184,6 +184,22 @@ const DatedAhead = (): ReactElement => {
   );
 };
 
+/** A draft dated today, its row's flask pressed: the dialog titled Complete Working, over the preview. */
+const CompleteFromRow = (): ReactElement => {
+  useMockHandlers(HANDLERS.plain);
+  useSteps([() => press('Complete Working')], 120);
+  return (
+    <CompleteWorkingAction
+      label="Complete Working"
+      workspaceId={WORKSPACE}
+      spellId={SPELL}
+      workingId="w1"
+      workedOn={today()}
+      steps={STEPS}
+    />
+  );
+};
+
 const STATES: Record<string, ReactNode> = {
   Closed: (
     <RecordWorkingButton
@@ -198,7 +214,10 @@ const STATES: Record<string, ReactNode> = {
   // The recorder already named as the first participant.
   Open: <Driven />,
   'Private Spell': <Driven visibility="private" />,
+  // Complete pressed: the draft saved, then what it takes from the jars, with Mark Complete and
+  // Keep as Draft.
   'Deduction Preview': <Driven steps={[() => press('Complete')]} />,
+  // A short jar reads "needs · have · short by"; the skipped step and the one-off take nothing.
   Shortfall: (
     <Driven
       spellSteps={SHORT_STEPS}
@@ -217,6 +236,7 @@ const STATES: Record<string, ReactNode> = {
       steps={[() => press(`Delete Working ${dayWords(DRAFT.workedOn)}`)]}
     />
   ),
+  'Complete Working': <CompleteFromRow />,
   'Dated Ahead': <DatedAhead />,
 };
 
