@@ -54,6 +54,8 @@ export interface RecordWorkingDialogProps {
   /** A working is never visible to more people than its spell. */
   spellVisibility: 'private' | 'workspace';
   members: readonly WorkingMember[];
+  /** The signed-in member recording: a new working starts with them as a participant, who may remove themselves. */
+  recorderId?: string;
   steps: readonly WorkingStep[];
   /** Present: the dialog changes this working (`updateWorking`) rather than recording a new one. Only its recorder may. */
   working?: EditableWorking;

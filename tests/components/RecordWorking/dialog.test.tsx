@@ -69,6 +69,7 @@ function openButton(visibility: 'private' | 'workspace' = 'workspace') {
         spellId={SPELL}
         spellVisibility={visibility}
         members={MEMBERS}
+        recorderId="u1"
         steps={STEPS}
       />,
     ),
@@ -94,7 +95,7 @@ describe('Record a Working', () => {
       input: {
         note: 'Under the new moon',
         visibility: 'workspace',
-        participants: [{ userId: 'u2' }],
+        participants: [{ userId: 'u1' }, { userId: 'u2' }],
       },
     });
     expect(calls[0]?.input.workedOn).toMatch(/^\d{4}-\d{2}-\d{2}$/);
@@ -129,15 +130,27 @@ describe('Record a Working', () => {
     ).toBeInTheDocument();
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
     await waitFor(() => expect(calls).toHaveLength(1));
-    expect(calls[0]?.input.participants).toEqual([{ name: 'Guest Witness' }]);
+    expect(calls[0]?.input.participants).toEqual([{ userId: 'u1' }, { name: 'Guest Witness' }]);
   });
 
-  it('leaves the participants out when none are named, so the recorder is the one taking part', async () => {
+  it('starts with the recorder as a participant, and sends them', async () => {
     const calls = mockRecording();
     openButton();
+    expect(
+      within(dialog()).getByRole('button', { name: /Remove.*Testa Owner/ }),
+    ).toBeInTheDocument();
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
     await waitFor(() => expect(calls).toHaveLength(1));
-    expect(calls[0]?.input).not.toHaveProperty('participants');
+    expect(calls[0]?.input.participants).toEqual([{ userId: 'u1' }]);
+  });
+
+  it('keeps the recorder out when they are removed, rather than putting them back', async () => {
+    const calls = mockRecording();
+    openButton();
+    fireEvent.click(within(dialog()).getByRole('button', { name: /Remove.*Testa Owner/ }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]?.input.participants).toEqual([]);
   });
 
   it('holds the share switch off and shut on a private spell', () => {

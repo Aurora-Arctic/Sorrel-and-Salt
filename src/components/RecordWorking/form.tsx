@@ -71,6 +71,7 @@ export default function RecordWorkingForm({
   spellId,
   spellVisibility,
   members,
+  recorderId,
   steps,
   working,
   close,
@@ -81,7 +82,9 @@ export default function RecordWorkingForm({
     workedOn: working?.workedOn ?? today(),
     note: working?.note ?? '',
     visibility: working?.visibility ?? spellVisibility,
-    participants: working?.participants ?? [],
+    participants:
+      working?.participants ??
+      members.filter((m) => m.userId === recorderId).map(({ userId, name }) => ({ userId, name })),
   }));
   const [workedOn, setWorkedOn] = useState(initial.workedOn);
   const [note, setNote] = useState(initial.note);
@@ -148,8 +151,7 @@ export default function RecordWorkingForm({
       workedOn,
       note: note.trim() === '' ? null : note.trim(),
       visibility,
-      // Left out on a new working with nobody named: the service puts the recorder in.
-      ...(working || people.length > 0 ? { participants: people } : {}),
+      participants: people,
     };
     try {
       const result = working
