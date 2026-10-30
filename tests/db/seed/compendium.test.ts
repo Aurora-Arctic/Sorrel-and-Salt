@@ -27,7 +27,8 @@ import { beginSeedTransaction } from '@/db/seed/idempotent';
 import { seedDeities } from '@/db/seed/deities';
 import { seedForms } from '@/db/seed/forms';
 import { SOURCES, seedSources } from '@/db/seed/sources';
-import { FIXTURE_USERS, identityOf } from '@/db/seed/standard';
+import { identityOf } from '@/db/seed/coven-content';
+import { FIXTURE_USERS } from '@/db/seed/standard';
 import { citationText } from '@/lib/citation';
 import { wordsOf } from './compendium-fixture';
 import {
