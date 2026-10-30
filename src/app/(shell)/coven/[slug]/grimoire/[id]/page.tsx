@@ -11,8 +11,10 @@ import SpellRecipeAside from '@/components/SpellRecipe/aside';
 import { UNTITLED_SPELL } from '@/components/SpellCard';
 import { Forbidden, NotFound } from '@/lib/errors';
 import { RowId } from '@/lib/validation';
-import { rolePermits } from '@/modules/coven';
+import { memberRoster, rolePermits } from '@/modules/coven';
 import { requireCovenMembership, requireSession } from '@/lib/request-session';
+import RecordWorkingButton from '@/components/RecordWorking';
+import { displayNamesOf } from '@/modules/identity';
 import { readSpell } from '@/modules/grimoire';
 import { readEditedSpell } from '../(list)/reads';
 import { readViewedEntry } from '../../ingredients/reads';
@@ -63,6 +65,22 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
   );
   const canUpdate = rolePermits(membership.role, { spell: ['update'] });
   const canDelete = rolePermits(membership.role, { spell: ['delete'] });
+  // Only a complete spell is worked, and on the permission `recordWorking` asserts.
+  const canRecord =
+    spell.status === 'complete' && rolePermits(membership.role, { working: ['create'] });
+  const roster = canRecord ? await memberRoster(session, workspace) : [];
+  const rosterNames = canRecord
+    ? await displayNamesOf(
+        session,
+        roster.map(({ userId }) => userId),
+      )
+    : [];
+  const members = roster.flatMap(({ userId }, i) =>
+    rosterNames[i] ? [{ userId, name: rosterNames[i] }] : [],
+  );
+  const steps = recipe.steps.flatMap((step) =>
+    step.kind === 'ingredient' ? [{ id: step.id, name: step.name }] : [],
+  );
   const name = spell.title?.trim() || UNTITLED_SPELL;
   const listPath = `/coven/${workspace.slug}/grimoire${spell.status === 'draft' ? '/drafts' : ''}`;
   const deletedHref = `${listPath}?${new URLSearchParams({ deleted: name })}` as Route;
@@ -96,8 +114,17 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
           steps={recipe.steps}
           aside={<SpellRecipeAside {...aside} />}
           action={
-            (canUpdate || canDelete) && (
+            (canUpdate || canDelete || canRecord) && (
               <div className="spell-recipe__actions">
+                {canRecord && (
+                  <RecordWorkingButton
+                    workspaceId={workspace.id}
+                    spellId={spell.id}
+                    spellVisibility={spell.visibility}
+                    members={members}
+                    steps={steps}
+                  />
+                )}
                 {canUpdate && (
                   <EditLink
                     href={`${recipePath}?edit=${spell.id}` as Route}

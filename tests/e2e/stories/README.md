@@ -25,7 +25,7 @@ test('…', { tag: ['@story-4', '@story-5'] }, async ({ page }) => {});
 The checklist reads the tag. A test in this directory with no `@story-N` tag
 fails the run. A tag naming a number DESIGN.md §10 does not list is reported as
 "Not a v1 story" and does not fail it (35–46 belong to v2 and are not reused;
-76, 78 and 79 wait for M13.4 to add them; 81 has no scaffold until M13.17 adds its flows). A story passes when every test tagged
+79 waits for M13.8 to add it; 81 has no scaffold until M13.17 adds its flows). A story passes when every test tagged
 with it passes. A test that passes only on its retry counts as failing: CI
 retries once so the run finishes, and the checklist lists the story as flaky,
 its box unticked: `FLAKY (failed, then passed on retry)`.
@@ -60,12 +60,12 @@ Going green is `test.fixme` → `test` and deleting the annotation.
 | `02-compendium.spec.ts`      | 14–16, 64    | 14 M9.12, 15, 16 M8.16                    |
 | `03-ingredients.spec.ts`     | 20–27        | M9.1 (scaffold); 25 M9.10                 |
 | `04-modals.spec.ts`          | 28–34        | M8.9 (scaffold); 28–32 M8.16, 33–34 M8.17 |
-| `06-grimoire.spec.ts`        | 47–57, 76–80 | fixme: M10.11–M10.20, M13.3, M13.7, M13.8 |
+| `06-grimoire.spec.ts`        | 47–57, 76–80 | fixme: M10.11–M10.20, M13.3, M13.8        |
 | `07-admin.spec.ts`           | 17–19        | M9.1                                      |
 | `08-email-and-admin.spec.ts` | 58–62        | M9.1                                      |
 | `09-public.spec.ts`          | 63           | MB.83, MB.85                              |
 
-In `06-grimoire.spec.ts`, each story waits on: 47 M10.12, 48 M10.14, 49 M10.15, 50 M10.15, 51 M10.16, 52 M10.17, 53 M10.18, 54 M10.19, 55 M10.20, 56 M10.11, 57 M10.15, 76 M13.7, 77 M10.15, 78 M13.7, 79 M13.8, 80 M13.3, 83 M13.21, 84 M13.22.
+In `06-grimoire.spec.ts`, each story waits on: 47 M10.12, 48 M10.14, 49 M10.15, 50 M10.15, 51 M10.16, 52 M10.17, 53 M10.18, 54 M10.19, 55 M10.20, 56 M10.11, 57 M10.15, 77 M10.15, 79 M13.8, 80 M13.3, 83 M13.21, 84 M13.22.
 
 Which old acceptance test each file replaces, and which gate e2e tests it made
 obsolete, is tabled in the decision record's "Mapping" section

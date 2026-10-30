@@ -636,34 +636,31 @@ test(
   },
 );
 
-test.fixme(
+test(
   'a member records that the coven made a spell, when and with whom',
-  {
-    tag: '@story-76',
-    annotation: {
-      type: 'fixme',
-      description: 'M13.7 builds Record a Working on /coven/[slug]/grimoire/[id]',
-    },
-  },
+  { tag: '@story-76' },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Seventy-Six', 'story-76.test', {
       A: 'owner',
       B: 'member',
     });
     const spellId = await withSql((sql) =>
-      insertSpell(sql, coven.id, 'Fixture Working', 'workspace', coven.users.B),
+      insertSpell(sql, coven.id, 'Fixture Working', 'workspace', coven.users.B, 'complete'),
     );
     await signInAgainAs(page, coven.users.B);
     await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
-    const record = page.getByRole('button', { name: 'Record a Working' });
-    await record.click();
+    await page.getByRole('button', { name: 'Record a Working' }).click();
     const dialog = page.getByRole('dialog', { name: 'Record a Working' });
     await dialog.getByRole('combobox', { name: 'Participants' }).fill('Fixture A');
     await page.getByRole('option', { name: 'Fixture A' }).click();
-    await dialog.getByRole('button', { name: 'Save' }).click();
-    const workings = page.getByRole('list', { name: 'Workings' });
-    await expect(workings.getByRole('listitem')).toHaveCount(1);
-    await expect(workings.getByRole('listitem').first()).toContainText('Fixture A');
+    await dialog.getByRole('button', { name: 'Save Working' }).click();
+    // The draft is kept and the dialog shows who took part. The Workings list is M13.8's.
+    await expect(dialog.getByText('Working saved as a draft')).toBeVisible();
+    await expect(dialog).toContainText('Fixture A');
+    await assertNoAccessibilityViolations(page);
+    await dialog.getByRole('button', { name: 'Done' }).click();
+    await expect(dialog).toBeHidden();
+    await expect(page.getByRole('button', { name: 'Record a Working' })).toBeFocused();
   },
 );
 
@@ -704,33 +701,48 @@ test(
   },
 );
 
-test.fixme(
+test(
   'completing a working takes what it used out of the coven stock',
-  {
-    tag: '@story-78',
-    annotation: {
-      type: 'fixme',
-      description: 'M13.7 builds the completion preview and Complete on the recipe page',
-    },
-  },
+  { tag: '@story-78' },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Seventy-Eight', 'story-78.test', {
       A: 'owner',
       B: 'member',
     });
-    const spellId = await withSql((sql) =>
-      insertSpell(sql, coven.id, 'Fixture Working', 'workspace', coven.users.B),
-    );
+    const spellId = await withSql(async (sql) => {
+      const held = await compendiumVariant(sql, 'Rosemary', 'Herb');
+      await insertStock(
+        sql,
+        coven.id,
+        held,
+        { quantity: 20, unit: 'g', threshold: 0 },
+        coven.users.A,
+      );
+      const id = await insertSpell(
+        sql,
+        coven.id,
+        'Fixture Working',
+        'workspace',
+        coven.users.B,
+        'complete',
+      );
+      await insertStep(sql, id, held, { quantity: 2, unit: 'g', position: 0 }, coven.users.B);
+      return id;
+    });
     await signInAgainAs(page, coven.users.B);
     await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
     await page.getByRole('button', { name: 'Record a Working' }).click();
     const dialog = page.getByRole('dialog', { name: 'Record a Working' });
     await dialog.getByRole('button', { name: 'Complete' }).click();
     // The preview says what will be taken before anything is.
-    await expect(dialog.getByRole('list', { name: 'Deductions' })).toBeVisible();
+    await expect(dialog.getByRole('list', { name: 'Deductions' })).toContainText('2 g');
+    await assertNoAccessibilityViolations(page);
     await dialog.getByRole('button', { name: 'Confirm' }).click();
+    await expect(dialog.getByText('Done')).toBeVisible();
     await page.goto(`/coven/${coven.slug}/ingredients`);
-    await expect(page.getByRole('spinbutton', { name: 'Quantity' }).first()).toHaveValue('18');
+    await expect(page.getByRole('listitem').filter({ hasText: 'Herb' }).first()).toContainText(
+      '18 g',
+    );
   },
 );
 
