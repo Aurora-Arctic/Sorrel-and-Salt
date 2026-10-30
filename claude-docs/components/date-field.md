@@ -42,7 +42,7 @@ It replaces the browser's `<input type="date">`, whose look and highlight differ
 - **The caption** holds the two month and year boxes (`.day-picker__dropdowns`), with the previous and next steps placed over its end (`.day-picker__nav`).
 - **A step and a day** take `$surface-card-hover` on hover and the `focus-ring` on keyboard focus. Today is told by a `$text-primary` rule, the chosen day by its `$accent` fill, `$text-on-color` ink and weight, so neither rests on colour alone; outside and disabled days are muted.
 
-The calendar's sizes and fades are the `$day-picker-*` tokens in `_variables.scss`: the caption's 2.5rem, the steps' 2rem (`$control-height-compact`, as high as the month and year boxes), the room the caption keeps for them (4.5rem), the pickers' chevron box (1.25rem) and their sizer's end room (1.75rem), the days' 2.25rem, and the 0.4 and 0.5 opacities of a step past the allowed months and a day that cannot be chosen. The chevrons are `$glyph-size`.
+The calendar's sizes and fades are the `$day-picker-*` tokens in `_variables.scss`: the caption's 2.5rem, the steps' 2rem (`$control-height-compact`, as high as the month and year boxes), the room the caption keeps for them (4.5rem), the pickers' chevron box (1.25rem) and their sizer's end room (1.75rem), the days' 2.25rem, and the fade of a step past the allowed months and of a day that cannot be chosen, which is `$opacity-disabled` (0.55), as for any control that cannot be used. The chevrons are `$glyph-size`.
 
 ## Stories
 

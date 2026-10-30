@@ -804,9 +804,10 @@ $day-picker-indicator: 1.25rem;
 $day-picker-sizer-end: 1.75rem;
 // A day's square button: 36px, over WCAG 2.2's 24px target.
 $day-picker-day: 2.25rem;
-// A step past the allowed months, and a day that cannot be chosen, fade this far.
-$day-picker-step-disabled-opacity: 0.4;
-$day-picker-day-disabled-opacity: 0.5;
+// A step past the allowed months, and a day that cannot be chosen, fade as any control that
+// cannot be used does.
+$day-picker-step-disabled-opacity: $opacity-disabled;
+$day-picker-day-disabled-opacity: $opacity-disabled;
 
 // The width of its own frame under which a `.data-table--stack` table turns each row into a card: a
 // container width, not the screen's, so a table in a narrow column stacks too
