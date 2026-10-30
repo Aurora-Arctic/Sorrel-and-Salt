@@ -60,6 +60,9 @@ export async function createWorkspaceIngredient(
  *
  * @throws {Forbidden} the caller may not write this coven's ingredients or its stock.
  * @throws {ValidationError} the input breaks `LocalIngredientInput`, or collides, or links outside the compendium and this coven.
+ * A save names the revision it read in `expectedRevision`: a newer one refuses it, and null writes whatever the row holds.
+ *
+ * @throws {StaleWrite} `expectedRevision` is not the ingredient's revision.
  * @throws {NotFound} no such ingredient in this coven, the compendium's and other covens' included.
  */
 export async function updateWorkspaceIngredient(
@@ -67,6 +70,7 @@ export async function updateWorkspaceIngredient(
   workspaceId: string,
   id: string,
   input: IngredientValues,
+  expectedRevision: number | null = null,
 ): Promise<IngredientRow> {
   const membership = await assertMembership(session, workspaceId, {
     ingredient: ['update'],
@@ -83,9 +87,15 @@ export async function updateWorkspaceIngredient(
   await refuseCupboardLabelAsName(membership, fields.name);
 
   return withAudit(session, async (write) => {
-    const [row] = await write.updateByIdInWorkspace(membership, ingredients, id, columns);
+    const [row] = await write.updateRevisioned(
+      membership,
+      ingredients,
+      id,
+      expectedRevision,
+      columns,
+    );
     if (!row) throw new NotFound('No such ingredient in this coven');
-    await writeChildren(
+    const touched = await writeChildren(
       write,
       [membership],
       id,
@@ -93,7 +103,7 @@ export async function updateWorkspaceIngredient(
       'replace',
       membership,
     );
-    return row;
+    return touched ?? row;
   }).catch((error: unknown) => refuseCollision(error, membership, fields, columns.slug, id));
 }
 /**

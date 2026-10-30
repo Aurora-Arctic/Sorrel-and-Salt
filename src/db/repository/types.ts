@@ -398,6 +398,19 @@ export interface AuditWriter {
     values: Partial<WritableInWorkspace<TTable>>,
   ): Promise<TTable['$inferSelect'][]>;
   /**
+   * `updateByIdInCompendium` for a table carrying `revision`, with `updateRevisioned`'s contract: a live compendium row that has moved
+   * past `expectedRevision` throws `StaleWrite`, `null` writes whatever the row holds, and no live compendium row answers `[]`.
+   */
+  updateRevisionedInCompendium<
+    TTable extends PgTable & TwoTier & Generic & Identified & Revisioned,
+  >(
+    curator: Curator,
+    table: TTable,
+    id: string,
+    expectedRevision: number | null,
+    values: Partial<WritableInWorkspace<TTable>>,
+  ): Promise<TTable['$inferSelect'][]>;
+  /**
    * Sets the review mark of the one live compendium entry: with `reviewed`, by `curator`, now, in one statement that keeps a mark the entry
    * already has (the original date and reviewer stand); without it, clears the mark. The only writer of those two columns.
    */
