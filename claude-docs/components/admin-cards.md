@@ -12,6 +12,9 @@ yields one. The rules are [`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md
   Accepted, Expired, Revoked), its batch (the first block of the batch id), its expiry and the account
   that accepted it. **Revoke** shows on a pending card only. Above the table, each batch with a pending
   card on the page has **Revoke Batch**. Both ask first (`ConfirmedAction`).
+- **Attempts** (`attempts.tsx`): each card shows its count of refused opens; where the count is above
+  zero a **View** button opens a "Refused Opens" dialog that reads `invitationCardAttempts` for that card
+  and lists the account, the reason, how many times and the latest time, twenty at a time with **Show More**.
 - **Mint Cards** (`mint-form.tsx`) is a link to `?mint`, which opens a modal: **Number of Cards**
   (1 to 500, `MAX_CARDS_PER_BATCH`) and **Expires On** (a `DateField` whose earliest day is tomorrow in UTC, sent as midnight UTC; with no `max` it ends at the end of next year). The submit stays
   disabled until both are given. The answer carries each token once; the dialog says the codes cannot
