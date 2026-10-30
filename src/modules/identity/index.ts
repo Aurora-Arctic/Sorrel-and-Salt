@@ -45,3 +45,4 @@ export type {
   UserFilter,
   UserRow,
 } from './types';
+export * from './loaders/card-attempt-totals';

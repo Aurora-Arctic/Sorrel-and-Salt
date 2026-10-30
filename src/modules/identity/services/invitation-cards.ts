@@ -218,6 +218,7 @@ function csvCell(value: string): string {
  * One page of the refused opens of one card, latest first: a row per account and reason.
  *
  * @throws {Forbidden} the session's role is not `admin`.
+ * @throws {ValidationError} on `invitationId`: not a row id.
  */
 export async function listCardAttempts(
   session: Session,
@@ -225,7 +226,7 @@ export async function listCardAttempts(
   page: PageRequest,
 ): Promise<PageEntry<CardAttemptRow>[]> {
   const admin = assertSiteAdmin(session, REFUSAL);
-  return findCardAttemptPage(admin, invitationId, page);
+  return findCardAttemptPage(admin, parseInput(RowId, invitationId), page);
 }
 
 /**
@@ -239,7 +240,7 @@ export async function countCardAttempts(
   start: Cursor | undefined,
 ): Promise<PageCount> {
   const admin = assertSiteAdmin(session, REFUSAL);
-  return findCardAttemptCount(admin, invitationId, start);
+  return findCardAttemptCount(admin, parseInput(RowId, invitationId), start);
 }
 
 /**
