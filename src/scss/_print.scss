@@ -32,6 +32,7 @@
     .spell-recipe__actions,
     .spell-recipe__aside,
     .spell-workings,
+    .last-edit,
     .icon-tip__look,
     .specimen__badges,
     [role='dialog'],
@@ -142,15 +143,34 @@
 
     .spell-recipe__summary {
       display: block;
+      // The global section margin would drop the heading below the first step.
+      margin: 0;
 
       h2 {
         margin: 0;
         font-size: 1.1em;
       }
 
+      // Amounts in one right-aligned column, names in a left-aligned one beside it, so the numbers
+      // line up; each line shares the list's two columns (subgrid), and a line with no amount leaves
+      // its first cell empty.
       ul {
+        display: grid;
+        grid-template-columns: max-content minmax(0, 1fr);
+        column-gap: space(2);
         margin: space(1) 0 0;
         padding-inline-start: 0;
+      }
+
+      li {
+        display: grid;
+        grid-column: 1 / -1;
+        grid-template-columns: subgrid;
+      }
+
+      .spell-recipe__need {
+        text-align: end;
+        font-variant-numeric: tabular-nums;
       }
 
       // The ◆ hangs in the gutter the padding gave up, so with no gutter it goes too.

@@ -90,6 +90,11 @@ test('the printed recipe names the coven with no line under it, leads with the i
       insert into spell_categories (spell_id, category_id, created_by, updated_by)
       select ${id}, id, ${A}, ${A} from categories where deleted_at is null limit 1`;
     await insertStep(sql, id, held, { quantity: 2, unit: 'g', position: 0 }, A);
+    const second = await compendiumVariant(sql, 'Rosemary', 'Herb');
+    await insertStep(sql, id, second, { quantity: 125, unit: 'ml', position: 1 }, A);
+    const third = await compendiumVariant(sql, 'Selenite', 'Crystal');
+    const bare = await insertStep(sql, id, third, { quantity: 1, unit: 'g', position: 2 }, A);
+    await sql`update spell_steps set quantity = null, unit = null where id = ${bare}`;
     await insertWorking(sql, id, A, { workedOn: '2026-03-04', note: 'Worked under a waxing moon' });
     return id;
   });
@@ -98,9 +103,12 @@ test('the printed recipe names the coven with no line under it, leads with the i
 
   // On screen the section is there, so its absence in print is the print rules' doing.
   const workings = page.getByRole('heading', { name: 'Workings' });
+  const edited = page.locator('.last-edit');
   await expect(workings).toBeVisible();
+  await expect(edited).toBeVisible();
   await page.emulateMedia({ media: 'print' });
   await expect(workings).toBeHidden();
+  await expect(edited).toBeHidden();
   await expect(page.getByText('Worked under a waxing moon')).toBeHidden();
 
   // The coven's name stands as plain text (no box) and nothing draws a line under it.
@@ -149,6 +157,33 @@ test('the printed recipe names the coven with no line under it, leads with the i
   expect(Math.min(ingredients.bottom, steps.bottom)).toBeGreaterThan(
     Math.max(heading.top, steps.top),
   );
+
+  // The Ingredients heading starts level with the first step.
+  const firstStep = await box(
+    page.getByRole('list', { name: 'Steps' }).getByRole('listitem').first(),
+  );
+  expect(Math.abs(heading.top - firstStep.top)).toBeLessThanOrEqual(1);
+
+  // Amounts share one right-aligned column and names one left-aligned column beside it, so the numbers
+  // line up, and a line with no amount keeps its name in that column.
+  const columns = await page.evaluate(() => {
+    const lines = [...document.querySelectorAll('ul[aria-label="Ingredients"] > li')];
+    return lines.map((li) => {
+      const [need, name] = [li.children[0]!, li.children[1]!];
+      return {
+        needRight: need.getBoundingClientRect().right,
+        needText: need.textContent,
+        nameLeft: name.getBoundingClientRect().left,
+      };
+    });
+  });
+  expect(columns).toHaveLength(3);
+  expect(columns.filter((c) => c.needText).length).toBe(2);
+  const amounts = columns.filter((c) => c.needText).map((c) => c.needRight);
+  expect(Math.abs(amounts[0]! - amounts[1]!)).toBeLessThanOrEqual(1);
+  const lefts = columns.map((c) => c.nameLeft);
+  expect(Math.max(...lefts) - Math.min(...lefts)).toBeLessThanOrEqual(1);
+  expect(Math.min(...lefts)).toBeGreaterThan(Math.max(...amounts));
 
   // The summary's lines start flush with the heading.
   const indent = await page.evaluate(() => {

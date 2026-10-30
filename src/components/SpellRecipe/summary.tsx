@@ -36,9 +36,12 @@ const SpellRecipeSummary = ({ steps }: { steps: readonly RecipeStep[] }): ReactE
           );
           return (
             <li key={step.id}>
-              {need !== null && `${need} `}
-              {labelOf(step)}
-              {step.formal !== null && <span> ({step.formal})</span>}
+              {/* Two cells, so print sets the amounts in one column and the names in another; a line with no amount keeps an empty first cell. */}
+              <span className="spell-recipe__need">{need}</span>{' '}
+              <span className="spell-recipe__item">
+                {labelOf(step)}
+                {step.formal !== null && <span> ({step.formal})</span>}
+              </span>
             </li>
           );
         })}
