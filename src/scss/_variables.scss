@@ -993,3 +993,11 @@ $radii: (
 
   @return map.get($radii, $role);
 }
+
+// The recipe's step-number column: room for a two-digit number. The page's steps and the Preview pane share it.
+$step-position-width: 1.5rem;
+// The recipe sheet's Ingredients column beside the steps, in the sheet's own em, so it scales with the print root.
+$recipe-summary-width: 17em;
+// The recipe sheet's Steps and Ingredients headings, in the sheet's em: a little above the lines they head,
+// which none of the heading scale's fixed rem sizes is.
+$recipe-heading-size: 1.1em;

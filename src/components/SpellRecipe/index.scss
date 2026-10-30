@@ -213,7 +213,7 @@
   margin: 0;
 }
 
-// The steps as the Recipe Card mock-up draws them: a 1.5rem position column, the amount leading the
+// The steps as the Recipe Card mock-up draws them: a `$step-position-width` position column, the amount leading the
 // name on the first line, the text and note on lines of their own indented to the name. The
 // position stays a flex item (an absolute one would not share the baseline).
 .spell-recipe__steps .step-row {
@@ -224,7 +224,7 @@
 .spell-recipe__steps .step-row__position {
   order: -2;
   // Room for a two-digit number and its stop, and no more: wider read as an indent.
-  flex: 0 0 1.5rem;
+  flex: 0 0 $step-position-width;
   text-align: end;
   color: $text-muted;
   font-variant-numeric: tabular-nums;
@@ -259,7 +259,7 @@
 
 .spell-recipe__steps .step-row__body,
 .spell-recipe__steps .step-row__note {
-  margin-inline-start: calc(1.5rem + #{space(2)});
+  margin-inline-start: calc(#{$step-position-width} + #{space(2)});
 }
 
 // A step's text reads as its note does, `.meta`: caption size, muted,
@@ -286,7 +286,7 @@
 // marks' column left empty. With no amount the name takes the amount's column too.
 .spell-recipe__steps .step-row:not(.spell-recipe__instruction) {
   display: grid;
-  grid-template-columns: 1.5rem auto minmax(0, 1fr) auto;
+  grid-template-columns: $step-position-width auto minmax(0, 1fr) auto;
 
   .step-row__position {
     grid-area: 1 / 1;

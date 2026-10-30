@@ -15,7 +15,7 @@
 .working-deductions {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: space(3);
 
   // No ◆ beside the jars: the jar is each line's mark.
   @include list-reset;

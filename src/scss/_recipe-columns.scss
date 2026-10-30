@@ -16,7 +16,7 @@
   align-items: start;
 
   @if $columns {
-    grid-template-columns: 17em minmax(0, 1fr);
+    grid-template-columns: $recipe-summary-width minmax(0, 1fr);
     column-gap: space(6);
   } @else {
     grid-template-columns: minmax(0, 1fr);
@@ -104,7 +104,7 @@
     overflow: visible;
     clip-path: none;
     white-space: normal;
-    font-size: 1.1em;
+    font-size: $recipe-heading-size;
   }
 
   .spell-recipe__steps {
@@ -119,7 +119,7 @@
 
     :is(h2, h3) {
       margin: 0;
-      font-size: 1.1em;
+      font-size: $recipe-heading-size;
     }
 
     // Amounts in one column, names in another beside it, both set to the left so the amounts and
