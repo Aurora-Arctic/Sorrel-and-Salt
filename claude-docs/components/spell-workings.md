@@ -3,7 +3,13 @@
 `src/components/SpellWorkings/` is the Workings section of the recipe page (M13.8, story 79). It
 lists a spell's workings, newest `workedOn` first, in the order the connection returns them.
 
+## Where it sits
+
+The page passes the section to `SpellRecipe` as `workings`, and the recipe draws it last in the main column, under the note. On a tablet or wider, with the side column present, the recipe's grid pins it to the text column's last row; the side column spans the facts' row and Workings' row, so Workings never stands in the side column (`.spell-recipe--with-aside` in `SpellRecipe/index.scss`). On a phone the columns stack and it sits at the foot of the main column, above the side column. The recipe does not print it: `_print.scss` hides `.spell-workings` (claude-docs/components/spell-recipe.md, "Print"). `tests/e2e/spell-recipe-layout.spec.ts` holds the screen placement and `tests/e2e/spell-print.spec.ts` the print omission.
+
 ## A row
+
+The list is a `ul` named Workings with no marker (`list-reset`, which turns off typography-base's ◆), each row headed by its date.
 
 Each working draws its date, a Draft badge on a draft, a Private badge on a private working, who
 recorded it and who took part, its note, and, on a complete working, its deductions. The recorder
