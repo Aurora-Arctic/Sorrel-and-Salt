@@ -35,10 +35,38 @@
   gap: space(2);
 }
 
-// Screen Awake held on: the quiet button's highlighted look stays, so pressed differs from unpressed.
-.spell-preview__awake[aria-pressed='true'] {
-  border-color: $edge-highlight;
-  background-color: $fill-highlight-field;
+// The eye, held on, wears the accent and blinks now and then: still for most of the cycle, the lid
+// closing and opening once; still under reduced motion.
+.spell-preview__awake {
+  svg {
+    transform-origin: center;
+  }
+
+  &[aria-pressed='true'],
+  &[aria-pressed='true']:hover,
+  &[aria-pressed='true']:focus-visible {
+    color: $accent;
+  }
+
+  &[aria-pressed='true'] svg {
+    animation: spell-preview-blink 8s ease-in-out infinite;
+
+    @include reduced-motion {
+      animation: none;
+    }
+  }
+}
+
+@keyframes spell-preview-blink {
+  0%,
+  94%,
+  100% {
+    transform: scaleY(1);
+  }
+
+  97% {
+    transform: scaleY(0.1);
+  }
 }
 
 // A slow decorative glow behind the content: it drifts, and stands still under reduced motion.
@@ -79,12 +107,6 @@
   gap: space(4);
   max-width: $recipe-column;
   margin-inline: auto;
-}
-
-// The × is the dialogs' own (Modal/index.scss), which is placed out of the flow in a dialog's
-// corner; in the bar it is a plain item at the row's end.
-.spell-preview__bar .spell-preview__close {
-  position: static;
 }
 
 // The Ingredients section the page keeps for print: the amounts in one right-aligned column beside

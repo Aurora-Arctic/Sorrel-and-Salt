@@ -127,8 +127,11 @@ describe('SpellPreview', () => {
         .getAllByRole('button')
         .map((b) => b.getAttribute('aria-label') ?? b.textContent),
     ).toEqual(['Close']);
-    // An X, not the word.
-    expect(within(dialog).getByRole('button', { name: 'Close' }).textContent).toBe('×');
+    // An icon button: the name is for assistive technology only, and the mark is a drawn icon.
+    const close = within(dialog).getByRole('button', { name: 'Close' });
+    expect(close.querySelector('svg')).not.toBeNull();
+    expect(close.textContent).toBe('Close');
+    expect(close.querySelector('.visually-hidden')?.textContent).toBe('Close');
   });
 
   it('closes on Close (the browser then gives the focus back to Preview, which the story proves)', () => {
