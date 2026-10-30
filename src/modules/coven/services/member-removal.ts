@@ -5,6 +5,7 @@ import type { Session } from '../../../lib/session';
 import { RowId } from '../../../lib/validation';
 import { assertNotLastOwner } from './last-owner';
 import { assertMembership } from './membership';
+import { assertNotSystemSeat } from './system-seat';
 
 // A member goes, removed by an owner or leaving. Both soft-delete the row and run the last-owner guard in the writing transaction.
 // A removed member invited back is not inserted again: the row still holds the pair, so accepting revives it.
@@ -16,7 +17,7 @@ import { assertMembership } from './membership';
  * are the last.
  *
  * @throws {Forbidden} the caller is not an owner of the workspace, or `userId`
- * is not a live member of it.
+ * is not a live member of it or is the system user.
  * @throws {LastOwner} the removal would leave the workspace without an owner.
  */
 export async function removeMember(
@@ -27,6 +28,7 @@ export async function removeMember(
   const membership = await assertMembership(session, workspaceId, { member: ['remove'] });
   // An id that cannot name a user is a stranger, as a wrong one is.
   if (!RowId.safeParse(userId).success) throw new Forbidden();
+  assertNotSystemSeat(userId);
 
   await withAudit(session, async (write) => {
     await assertNotLastOwner(write, membership, userId, null);
