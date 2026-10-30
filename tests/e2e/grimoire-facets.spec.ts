@@ -4,7 +4,7 @@ import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { signInAgainAs } from './session';
 import { insertSpell, openFilters, seedCoven, withSql } from './stories/coven-ingredients';
 
-// The grimoire's Moon Phase, Day of Week, Visibility and Coven Member facets and its Compact switch: the GET
+// The grimoire's Moon Phases, Days of the Week, Visibility and Coven Members facets and its Compact switch: the GET
 // form filters by address before hydration, the maker is read as created_by, and a hidden spell's phase is
 // never suggested. Spells are raw SQL, since the builder is not under test.
 
@@ -84,9 +84,9 @@ test('the grimoire address filters by moon phase, visibility and maker, and a hi
   // Another member's private spell's phase is not a suggestion, though a phase B can see is.
   await page.goto(path);
   const panel = await openFilters(page);
-  await panel.getByRole('combobox', { name: 'Moon Phase' }).fill('waning');
+  await panel.getByRole('combobox', { name: 'Moon Phases' }).fill('waning');
   await expect(page.getByRole('option', { name: /Waning Crescent/ })).toBeVisible();
-  await panel.getByRole('combobox', { name: 'Moon Phase' }).fill('new');
+  await panel.getByRole('combobox', { name: 'Moon Phases' }).fill('new');
   await expect(page.getByRole('option', { name: /New Moon/ })).toHaveCount(0);
   await page.keyboard.press('Escape');
 });
@@ -131,7 +131,7 @@ test('at 375px the grimoire filter panel opens, a facet can be picked, and the p
   });
   await page.goto(`/coven/${coven.slug}/grimoire`);
   const panel = await openFilters(page);
-  await panel.getByRole('combobox', { name: 'Moon Phase' }).fill('full');
+  await panel.getByRole('combobox', { name: 'Moon Phases' }).fill('full');
   await page.getByRole('option', { name: /Full Moon/ }).click();
   await expect(panel.getByRole('button', { name: 'Remove Moon Phase: Full Moon' })).toBeVisible();
   await assertNoSidewaysScroll(page);

@@ -46,8 +46,8 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
   }
 
   // Only the pages the caller can open are listed, so none is a link to a 404. Every role can open
-  // Ingredients; Members is listed only for a role that may read it. The section and its menu entry
-  // are built together, so they agree.
+  // Ingredients and the Grimoire; Members is listed only for a role that may read it. The section and
+  // its menu entry are built together, so they agree.
   const entries: PageNavEntry[] = [
     { href: '#coven-contents' as const, label: 'Contents' },
     { href: '#coven-membership', label: 'Your Membership' },
@@ -82,6 +82,18 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
             </PendingLink>
             <span id="coven-contents-ingredients" className="admin-contents__description">
               What the coven has in its cupboard, and what it can add from the compendium.
+            </span>
+          </li>
+          <li>
+            <PendingLink
+              href={`/coven/${slug}/grimoire` as Route}
+              navigationTarget={covenTarget(`/coven/${slug}/grimoire`)}
+              aria-describedby="coven-contents-grimoire"
+            >
+              Grimoire
+            </PendingLink>
+            <span id="coven-contents-grimoire" className="admin-contents__description">
+              What the coven makes: its spells, and the workings it has recorded.
             </span>
           </li>
           {canReadMembers && (

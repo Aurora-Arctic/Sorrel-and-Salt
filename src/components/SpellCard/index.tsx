@@ -5,14 +5,14 @@ import CategoryChips from '../CategoryChips';
 import LastEdit from '../LastEdit';
 import { EditLink, QuickLookLink } from '../IconTip';
 import LinkHint from '../LinkHint';
-import RecordWorkingButton from '../RecordWorking';
 import SpellMarks from '../SpellMarks';
 import SpellMoreMenu from '../SpellRecipe/more-menu';
+import CardRecordWorking from './record-working';
 import type { SpellCardProps } from './types';
 import './index.scss';
 
 // One spell in the grimoire's list: title, intent, Draft and Private badges, assigned categories,
-// the made count, last editor and the actions. Presentational, in IngredientCard's pattern, with no drawer; the title links where
+// last editor and made count, and the actions. Presentational, in IngredientCard's pattern, with no drawer; the title links where
 // `href` is given (claude-docs/components/spell-card.md).
 
 /** What a spell with no title is called, here and wherever it is listed. */
@@ -43,6 +43,13 @@ const SpellCard = ({
   const Heading = `h${level}` as const;
   const name = (title ?? '').trim() || UNTITLED_SPELL;
   const purpose = (intent ?? '').trim();
+  // How often it has been made: none says nothing, as a spell never worked has nothing to say.
+  const made =
+    workingCount == null || workingCount < 1
+      ? null
+      : workingCount === 1
+        ? 'Made once'
+        : `Made ${workingCount} times`;
   return (
     <article className="spell-card specimen" aria-labelledby={spellTitleId(id)}>
       {/* The card's face and shadow, and the warm glow behind them, as layers, so the
@@ -82,18 +89,22 @@ const SpellCard = ({
       </div>
       {purpose !== '' && <p className="spell-card__intent">{purpose}</p>}
       <CategoryChips categories={categories} label={name} />
-      {/* How often it has been made: none draws nothing, as a spell never worked has nothing to say. */}
-      {workingCount != null && workingCount > 0 && (
-        <p className="meta">
-          Made {workingCount} {workingCount === 1 ? 'Time' : 'Times'}
-        </p>
-      )}
-      {(lastEdit != null || lookHref || editHref || recordWorking || more) && (
-        // The foot, as IngredientCard's, so cards in one grid row end on the same line: who last edited,
-        // then the actions on one row, the Quick Look eye at the left (the start group) and Record a
-        // Working, the Edit pencil and the More menu at the right.
+      {(lastEdit != null || made != null || lookHref || editHref || recordWorking || more) && (
+        // The foot, as IngredientCard's, so cards in one grid row end on the same line: who last edited
+        // and how often it has been made on one line, then the actions on one row, the Quick Look eye at
+        // the left (the start group) and Record a Working, the Edit pencil and the More menu at the right.
         <div className="specimen__foot">
-          {lastEdit != null && <LastEdit by={lastEdit.by} at={lastEdit.at} />}
+          {(lastEdit != null || made != null) && (
+            <div className="spell-card__foot-line">
+              {lastEdit != null && <LastEdit by={lastEdit.by} at={lastEdit.at} />}
+              {lastEdit != null && made != null && (
+                <span className="spell-card__foot-dot" aria-hidden="true">
+                  ·
+                </span>
+              )}
+              {made != null && <p className="meta spell-card__made">{made}</p>}
+            </div>
+          )}
           {(lookHref || editHref || recordWorking || more) && (
             <div className="specimen__actions">
               {lookHref && (
@@ -107,7 +118,7 @@ const SpellCard = ({
                 </span>
               )}
               {recordWorking && (
-                <RecordWorkingButton
+                <CardRecordWorking
                   {...recordWorking}
                   spellId={id}
                   spellName={name}

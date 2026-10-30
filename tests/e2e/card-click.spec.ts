@@ -399,7 +399,7 @@ test('in the grimoire, a press on a spell card outside its title opens its recip
 
   await test.step('a press on the made count opens the recipe page', async () => {
     await open();
-    await pressCardAt(card(), await middleOf(card(), card().getByText(/^made 1 time$/i)));
+    await pressCardAt(card(), await middleOf(card(), card().getByText(/^made once$/i)));
     await expect(page).toHaveURL(recipePath);
   });
 
