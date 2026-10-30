@@ -17,6 +17,7 @@ import {
   useFormContext,
   useFormState,
   useWatch,
+  type FieldError as FormFieldError,
 } from 'react-hook-form';
 import { renderShortCitation, shortCitationText } from '@/lib/short-citation';
 import { formatLocator } from '@/modules/ingredients/validation/reference-format';
@@ -171,13 +172,16 @@ export function ReferencesField({
   const rowErrors = fields.map(
     (_, index): string | undefined =>
       [
-        get(errors, `${list}.${index}.value`)?.message,
-        get(errors, `${list}.${index}.locator`)?.message,
+        get<unknown, FormFieldError | undefined>(errors, `${list}.${index}.value`)?.message,
+        get<unknown, FormFieldError | undefined>(errors, `${list}.${index}.locator`)?.message,
       ]
         .filter(Boolean)
         .join(' ') || undefined,
   );
-  const boxError: string | undefined = get(errors, box)?.message;
+  const boxError: string | undefined = get<unknown, FormFieldError | undefined>(
+    errors,
+    box,
+  )?.message;
   const message = [
     ...fields.flatMap((row, index) =>
       rowErrors[index]

@@ -1,17 +1,17 @@
 import {
   graphql,
-  HttpResponse,
   type GraphQLQuery,
   type GraphQLResponseBody,
   type GraphQLVariables,
-} from 'msw';
+} from 'msw/graphql';
+import { HttpResponse } from 'msw/http';
 import { maskError } from '@/graphql/errors';
 import { Forbidden, NotFound, StaleWrite, ValidationError } from '@/lib/errors';
 import { server } from './server';
 import type { MockedError } from './types';
 
 // Scoped to /api/graphql. No base handlers: an operation nothing has mocked
-// falls through to setup-msw.ts's `onUnhandledRequest: 'error'`.
+// falls through to setup-msw.ts's `onUnhandledFrame: 'error'`.
 export const graphqlLink = graphql.link('/api/graphql');
 
 export function mockGraphQLQuery<

@@ -10,6 +10,7 @@ import {
   useFormContext,
   useFormState,
   useWatch,
+  type FieldError as FormFieldError,
 } from 'react-hook-form';
 import Combobox from '../Combobox';
 import IconTip from '../IconTip';
@@ -185,7 +186,7 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
 
   // The one variant open, by its place in the list; the rest are a line each.
   const { card: open, setCard: setOpen } = folds;
-  const error: string | undefined = get(errors, BOX)?.message;
+  const error: string | undefined = get<unknown, FormFieldError | undefined>(errors, BOX)?.message;
   // Shown while a compendium entry has no form: it saves, but as information
   // only, which nothing can stock or lay in a spell.
   const prompting = compendium && fields.length === 0;

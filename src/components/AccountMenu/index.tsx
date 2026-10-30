@@ -42,10 +42,10 @@ const AccountMenu = ({
   // An unverified account cannot reach the account page the count leads to.
   const pending = verified && pendingInvitations > 0;
   const invitations = `${pendingInvitations} Coven ${pendingInvitations === 1 ? 'Invitation' : 'Invitations'}`;
-  // The dot is drawn only; the button's name says the count instead, set whole as
-  // a label (a flex button's children are blocks, which a browser joins with a
-  // space). It starts with the visible name, as WCAG 2.5.3 asks.
-  const buttonLabel = pending ? `${name}, ${invitations.toLowerCase()}` : undefined;
+  // The dot is drawn only; the button's name carries the count as hidden text that repeats the visible
+  // name, whole, so a browser joins it with no stray space. Not an `aria-label`, which must repeat every
+  // visible word, the avatar's initials among them (axe's label-content-name-mismatch).
+  const fullName = pending ? `${name}, ${invitations.toLowerCase()}` : undefined;
   const pathname = usePathname();
   const panelId = useId();
   const root = useRef<HTMLDivElement>(null);
@@ -83,7 +83,6 @@ const AccountMenu = ({
         className="account-menu__button"
         aria-expanded={open}
         aria-controls={panelId}
-        aria-label={buttonLabel}
         onClick={() => setOpen((was) => !was)}
       >
         <span className="account-menu__avatar" aria-hidden="true">
@@ -91,7 +90,10 @@ const AccountMenu = ({
           {pending && <span className="account-menu__dot" />}
         </span>
         {/* Hidden by size on a phone, not removed: the button keeps its name. */}
-        <span className="account-menu__name">{name}</span>
+        <span className="account-menu__name" aria-hidden={pending || undefined}>
+          {name}
+        </span>
+        {fullName && <span className="account-menu__count">{fullName}</span>}
         <Chevron />
       </button>
       {/* Always mounted and hidden when shut, so it can fade (the stylesheet). */}

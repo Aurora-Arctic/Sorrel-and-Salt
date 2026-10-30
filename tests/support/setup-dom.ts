@@ -1,5 +1,6 @@
+import type { Window } from 'happy-dom';
 import { afterEach } from 'vitest';
-import { cleanup } from '@testing-library/react';
+import { act, cleanup } from '@testing-library/react';
 import { installConsoleGuard } from './console-guard';
 import HTMLElementConfig from 'happy-dom/lib/config/HTMLElementConfig.js';
 import HTMLElementConfigContentModelEnum from 'happy-dom/lib/config/HTMLElementConfigContentModelEnum.js';
@@ -16,6 +17,13 @@ installConsoleGuard();
 // global `afterEach`); the explicit call is a harmless duplicate from the port.
 afterEach(() => {
   cleanup();
+});
+
+// A request still waiting for its answer when a test ends is aborted by the unmount, and happy-dom's fetch
+// logs the abort as a "socket hang up" error. Registered after the cleanup above, so it runs before it: the
+// render stays while happy-dom finishes what it has started.
+afterEach(async () => {
+  await act(() => (window as unknown as Window).happyDOM.waitUntilComplete());
 });
 
 // Emptied after every test, as the render is: what one test stores — a theme,

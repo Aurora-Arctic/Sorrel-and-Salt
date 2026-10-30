@@ -1,6 +1,6 @@
 # Dependencies
 
-What is behind, what is blocked and what has no fix, as of the audit of 2026-10-12 (M10.30). It covers all 69 direct dependencies, 34 runtime and 35 dev. Each open item below ends with when to look at it again.
+What is behind, what is blocked and what has no fix, as of the audit of 2026-10-12 (M10.30), with the items below rechecked on 2026-10-30. It covers all 69 direct dependencies, 34 runtime and 35 dev. Each open item below ends with when to look at it again.
 
 ## How the audit is run
 
@@ -20,13 +20,13 @@ From a clean checkout, in this order:
 `graphql` 17.0.2 is out. Yoga, Pothos, graphql-scalars, codegen and the typed-document-node core accept it. Two packages do not:
 
 - `graphql-request@7.4.0` (peer `14 - 16`) is the old name of Graffle, kept on a branch with occasional releases, so a 17 range is unlikely. This repo uses only its `request()` and `ClientError`, so M10.31 replaced it with a small `fetch` wrapper (`src/lib/graphql-client.ts`).
-- `@escape.tech/graphql-armor@3.2.0` (peer `^16.10.0`) has an open request for 17, issue #885 (September 2026).
+- `@escape.tech/graphql-armor@3.2.0` depends on `graphql@^16.10.0` as a hard `dependencies` entry in each sub-package (checked on `graphql-armor` and `graphql-armor-max-depth`), not a peer range, so installing `graphql` 17 would put a second copy of 16 under armor, the "another module or realm" failure. It has an open request for 17, issue #885 (September 2026), and its `latest` is still 3.2.0, published 2025-12-29 (checked 2026-10-30).
 
-**Revisit when** `graphql-armor` accepts `graphql` 17; it is the only blocker left. The pin's reasoning is [`graphql/graphql-pin.md`](graphql/graphql-pin.md).
+**Revisit when** an armor release accepts `graphql` 17, or #885 closes; armor is the only blocker left. The pin's reasoning is [`graphql/graphql-pin.md`](graphql/graphql-pin.md).
 
-## `msw` 3 is on hold
+## `postgres` 4 is held
 
-msw 3.0.3 is out and the move is small: subpath imports and one renamed option (M10.29). It is on hold since 2026-10-12 because its `@mswjs/interceptors` 0.45 intercepts raw TCP sockets and writes a passed-through socket's first chunk twice, which breaks postgres.js's handshake in every test that mocks HTTP while talking to Postgres (mswjs/interceptors issue #860, open). The tests stay on msw 2.15. **Revisit when** interceptors ships the fix; the finished move waits on the `feature/m10.29-msw-3` branch.
+`postgres` 4.0.0 was released on 2026-10-29. It rewrites the pool, connection, protocol and socket layer, and changes behaviour the repo could rely on: `infer: false` is now the default, a `Date` written to a `timestamp` column outside UTC is taken as UTC, `sql.array()` is removed, a transaction the server rolled back now rejects, and the package is ES-module only. `drizzle-orm` 0.45's peer range is `>=3`, so the range allows it, but drizzle has said nothing about postgres 4. The repo stays on 3. **Revisit when** 4.0.1 or later ships, or `drizzle-orm` says postgres 4 works.
 
 ## Only prereleases ahead
 
@@ -39,4 +39,5 @@ msw 3.0.3 is out and the move is small: subpath imports and one renamed option (
 
 - **braces up to 3.0.3, GHSA-vfj7-8cjw-p6xm** (CVSS 8.7, September 2026): a deeply nested brace pattern from an attacker exhausts the stack. No patched version exists. It is reached through `micromatch`, `fast-glob` and `globby` under `stylelint` and `@graphql-codegen/cli`, each at its latest release, and none takes glob patterns from users. **Revisit when** a patched `braces` is published.
 - **esbuild up to 0.24.2, GHSA-67mh-4wv8-2f99**, under `drizzle-kit` and its deprecated `@esbuild-kit/esm-loader`. Accepted in [`db/orm-version.md`](db/orm-version.md); `drizzle-kit@1.0.0-rc` drops `@esbuild-kit`, so it clears with the ORM move above.
+- `tsconfck`, under `vite-tsconfig-paths`, is deprecated as "unmaintained" (seen 2026-10-30). It is upstream's to fix; **revisit when** `vite-tsconfig-paths` moves to another resolver.
 - `node-domexception` is deprecated and reached through `@graphql-codegen/cli` and `sync-fetch` to `node-fetch@3`. It is upstream's to fix.

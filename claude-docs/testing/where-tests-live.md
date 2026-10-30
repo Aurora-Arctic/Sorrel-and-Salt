@@ -140,7 +140,7 @@ what it scans — an empty listing satisfies every `toEqual([])`.
   literally named `[...all]` (`tests/app/api/auth/[...all]/route.test.ts`) —
   `[...]` is glob metacharacter syntax, so it was worth confirming rather
   than assuming. Its one setup file is `tests/support/setup-msw.ts`, the MSW
-  lifecycle — `beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))`,
+  lifecycle — `beforeAll(() => server.listen({ onUnhandledFrame: 'error' }))`,
   `afterEach(() => server.resetHandlers())`, `afterAll(() => server.close())`
   — against the `server` exported from `tests/support/msw/server.ts`
   (`setupServer()`, no base handlers — every operation is registered per
@@ -271,7 +271,7 @@ inline; }`, for the HTML rendering section's inline elements.
     rather than the relative `/api/graphql` will not match, since happy-dom's
     default location is `http://localhost:3000`.
     Because no base handler answers an un-overridden operation, it falls
-    through to `onUnhandledRequest: 'error'` and fails loudly instead of
+    through to `onUnhandledFrame: 'error'` and fails loudly instead of
     hitting the network; `afterEach(() => server.resetHandlers())` means an
     override from one test never leaks into the next.
     `tests/support/msw/graphql.test.ts` holds the loud failure, the one harness

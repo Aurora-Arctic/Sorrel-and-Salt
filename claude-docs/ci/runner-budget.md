@@ -86,8 +86,11 @@ job's 64 s, each on one worker while the other three wait — M11.18's plan,
 is what shortens them. Neither job saves a cache since MB.235: Playwright's
 save ran after the tests, on that path, and the build leg's never restored.
 
-`vitest.config.mts` runs every project in worker threads (`pool: 'threads'`)
-rather than Vitest's default forked processes. M11.24 measured it at three
+`vitest.config.mts` runs every project but `dom` in worker threads
+(`pool: 'threads'`) rather than Vitest's default forked processes, and `dom` in forked
+processes (`pool: 'forks'`): at twelve workers a full `dom` run took about 150 s on
+threads, against about 30 s on forks, each `dom` test running 10 to 50 times slower
+than alone. The threads figures below were measured before that and hold for the other projects. M11.24 measured it at three
 workers with coverage, on the 12-core arm64 devcontainer with the core count
 patched to four: about 94s wall and 284 CPU-seconds on forks over three runs,
 and about 85s and 247 over six on threads. A file's fresh worker started in

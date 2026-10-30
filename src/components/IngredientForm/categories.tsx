@@ -2,7 +2,13 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { type ReactElement, useId, useMemo } from 'react';
-import { get, useController, useFormContext, useFormState } from 'react-hook-form';
+import {
+  type FieldError as FormFieldError,
+  get,
+  useController,
+  useFormContext,
+  useFormState,
+} from 'react-hook-form';
 import { graphql } from '../../gql';
 import { graphqlQuery } from '../../lib/graphql-client';
 import CategoryPicker from '../CategoryPicker';
@@ -60,7 +66,7 @@ export function CategoryField({ at, action }: SharedFieldProps): ReactElement {
   // An issue on one pick is pathed to its index, as the ids were sent; one on
   // the field is the field's.
   const named = (id: string) => categories.find((category) => category.id === id)?.name ?? id;
-  const issue = get(errors, FIELD);
+  const issue = get<unknown, FormFieldError | undefined>(errors, FIELD);
   const entryIssues: { id: string; message: string }[] = Array.isArray(issue)
     ? issue.flatMap((entry, index) =>
         entry?.message && picked[index] !== undefined

@@ -2,7 +2,13 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { type ReactElement, useId, useMemo } from 'react';
-import { get, useController, useFormContext, useFormState } from 'react-hook-form';
+import {
+  type FieldError as FormFieldError,
+  get,
+  useController,
+  useFormContext,
+  useFormState,
+} from 'react-hook-form';
 import { graphqlQuery } from '../../lib/graphql-client';
 import CategoryPicker from '../CategoryPicker';
 import type { PickerCategory } from '../CategoryPicker/types';
@@ -56,7 +62,7 @@ export function SpellCategoriesField(): ReactElement {
 
   // An issue on one pick is pathed to its index, as the ids were sent, and
   // names the pick; one on the field is the field's.
-  const issue = get(errors, 'categoryIds');
+  const issue = get<unknown, FormFieldError | undefined>(errors, 'categoryIds');
   const entryIssues: { id: string; message: string }[] = Array.isArray(issue)
     ? issue.flatMap((entry, index) =>
         entry?.message && picked[index] !== undefined

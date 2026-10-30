@@ -218,10 +218,12 @@ describe('AnnotateDialog: Make It Ours and Remove', () => {
 
   // Make It Ours copies the saved annotations, so the form's unsaved ones are
   // lost with the dialog: the question says so.
-  it('warns that unsaved changes are lost only while the form holds some', () => {
-    mockGraphQLMutation<AnnotateCupboardEntryMutation>('AnnotateCupboardEntry', () => ({
-      annotateCupboardEntry: { id: 'fixture', revision: 4 },
-    }));
+  it('warns that unsaved changes are lost only while the form holds some', async () => {
+    let saved = false;
+    mockGraphQLMutation<AnnotateCupboardEntryMutation>('AnnotateCupboardEntry', () => {
+      saved = true;
+      return { annotateCupboardEntry: { id: 'fixture', revision: 4 } };
+    });
     renderDialog();
 
     choose('Make It Ours');
@@ -233,6 +235,9 @@ describe('AnnotateDialog: Make It Ours and Remove', () => {
     });
     choose('Make It Ours');
     expect(within(asked(OURS)).getByRole('alert')).toHaveTextContent(UNSAVED_CHANGES_LOST);
+    // Opening the question moved focus out of the form, which sent a save; let it land here, so it
+    // cannot reach the next test's handler.
+    await waitFor(() => expect(saved).toBe(true));
   });
 
   it("has no Cancel button of its own, only the dialog's Close", () => {

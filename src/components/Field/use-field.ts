@@ -1,7 +1,13 @@
 'use client';
 
 import { useId } from 'react';
-import { type FieldPath, type FieldValues, get, useFormState } from 'react-hook-form';
+import {
+  type FieldError as FormFieldError,
+  type FieldPath,
+  type FieldValues,
+  get,
+  useFormState,
+} from 'react-hook-form';
 import { fieldDescription } from './description';
 import { useEditedFieldsContext } from './edited-fields';
 import { useSettledWhilePressed } from './pointer-held';
@@ -44,7 +50,10 @@ export function useField<V extends FieldValues>(
   const id = useId();
   const state = useFormState<V>({ name });
   const edited = useEditedFieldsContext();
-  const raw: string | undefined = get(state.errors, name)?.message;
+  const raw: string | undefined = get<unknown, FormFieldError | undefined>(
+    state.errors,
+    name,
+  )?.message;
   // The rest of the state is read only for a field in error, so a field with
   // none re-renders for nothing but its error.
   const error = useSettledWhilePressed(
