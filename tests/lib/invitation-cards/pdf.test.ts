@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import * as fontkit from '@pdf-lib/fontkit';
 import {
   decodePDFRawStream,
   PDFArray,
@@ -326,4 +327,38 @@ describe('the card sheets PDF', () => {
     const saltPage = pictures(doc, 110, 'salt');
     expect(saltPage).toHaveLength(500 - 55 * 9);
   }, 60_000);
+
+  it('embeds every glyph it draws with the outline the shipped font gives it', () => {
+    // A subset whose glyph data lands at the wrong offsets draws nothing, or the wrong shape, for those letters.
+    const sources: Record<string, Uint8Array> = {
+      'CormorantUnicase-SemiBold': assets.cormorant600,
+      'Lexend-Light': assets.lexend300,
+      'Lexend-Regular': assets.lexend400,
+      'Lexend-Medium': assets.lexend500,
+    };
+    const descriptors = nine.context
+      .enumerateIndirectObjects()
+      .map(([, object]) => object)
+      .filter(
+        (object): object is PDFDict =>
+          object instanceof PDFDict &&
+          object.get(PDFName.of('Type')) === PDFName.of('FontDescriptor'),
+      );
+    expect(descriptors).toHaveLength(4);
+    for (const descriptor of descriptors) {
+      const name = String(descriptor.get(PDFName.of('FontName'))).replace(/^\/|-\d+$/g, '');
+      const source = fontkit.create(sources[name]);
+      const outlines = new Set(
+        Array.from({ length: source.numGlyphs }, (_, id) => source.getGlyph(id).path.toSVG()),
+      );
+      const file = nine.context.lookup(descriptor.get(PDFName.of('FontFile2'))) as PDFRawStream;
+      const font = fontkit.create(decodePDFRawStream(file).decode());
+      expect(font.numGlyphs).toBeGreaterThan(20);
+      for (let id = 1; id < font.numGlyphs; id += 1) {
+        const outline = () => font.getGlyph(id).path.toSVG();
+        expect(outline, `${name} glyph ${id}`).not.toThrow();
+        expect(outlines.has(outline()), `${name} glyph ${id}`).toBe(true);
+      }
+    }
+  });
 });

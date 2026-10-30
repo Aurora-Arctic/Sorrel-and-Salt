@@ -31,6 +31,7 @@ import {
   stroke,
 } from 'pdf-lib';
 import { FRONT_COPY, validUntil } from './copy';
+import { padGlyphs } from './font-padding';
 import {
   ARTBOARD,
   BACK_PICTURE,
@@ -267,8 +268,9 @@ async function embedAssets(doc: PDFDocument, assets: CardAssets): Promise<Embedd
   const fonts = {} as Record<FontKey, PDFFont>;
   const measure = {} as CardFonts;
   for (const key of keys) {
-    fonts[key] = await doc.embedFont(assets[key], { subset: true });
-    measure[key] = fontkit.create(assets[key]);
+    const bytes = padGlyphs(assets[key]);
+    fonts[key] = await doc.embedFont(bytes, { subset: true });
+    measure[key] = fontkit.create(bytes);
   }
   const [salt, sorrel] = await Promise.all([
     doc.embedPng(assets.salt),
