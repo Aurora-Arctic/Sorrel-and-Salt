@@ -169,16 +169,22 @@ describe('GrimoireList', () => {
 
   // A viewer, who cannot write a spell, is told which roles can, as an empty cupboard tells them. The
   // roles named are the state's data: nothing else tells a viewer who to ask, and a member is not told.
-  it('names, to a viewer only, the roles that can write a spell on an empty Spells tab', () => {
-    const empty = { spells: [], total: 0, position: undefined };
-    const { unmount } = render(<List {...props({ ...empty, canCreate: false })} />);
-    const state = () => screen.getByRole('status', { name: 'No Spells' });
-    expect(state()).toHaveTextContent(/\bmember\b/i);
-    expect(state()).toHaveTextContent(/\bowner\b/i);
-    unmount();
-    render(<List {...props(empty)} />);
-    expect(state()).not.toHaveTextContent(/\bmember\b|\bowner\b/i);
-  });
+  it.each([
+    ['complete', 'No Spells'],
+    ['draft', 'No Drafts'],
+  ] as const)(
+    'names, to a viewer only, the roles that can write a spell on an empty %s tab',
+    (status, name) => {
+      const empty = { status, spells: [], total: 0, position: undefined };
+      const { unmount } = render(<List {...props({ ...empty, canCreate: false })} />);
+      const state = () => screen.getByRole('status', { name });
+      expect(state()).toHaveTextContent(/\bmember\b/i);
+      expect(state()).toHaveTextContent(/\bowner\b/i);
+      unmount();
+      render(<List {...props(empty)} />);
+      expect(state()).not.toHaveTextContent(/\bmember\b|\bowner\b/i);
+    },
+  );
 
   it('names the drafts tab in its empty region', () => {
     render(
