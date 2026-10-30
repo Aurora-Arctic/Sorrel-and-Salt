@@ -47,6 +47,17 @@ differs in three things:
   also names the `email-otp`, `phone-number` and `admin` plugins'
   endpoints, none of which is registered here, and leaves out setting a
   first password.
+- **The guard.** The list names the routes it checks, so an endpoint a
+  Better Auth upgrade or a new plugin adds would take a password unchecked.
+  `tests/guards/breached-password-paths.test.ts` reads every endpoint the
+  configured instance registers and fails on one whose body takes a
+  `password` or `newPassword` and that is on none of: `BREACHED_CHECK_PATHS`;
+  its list of endpoints that check a password the account already holds
+  (`/sign-in/email`, `/verify-password`, `/delete-user`); or its list of
+  server-only endpoints, each of which it checks is called inside
+  `withBreachedCheck`. An endpoint whose body has no schema to read must be
+  named with the reason it takes no password. A new endpoint goes on one of
+  those lists in the PR that registers it.
 
 Only the first five characters of the password's upper-case SHA-1 hash leave
 the server, with `Add-Padding: true` so the answer's size says nothing about
