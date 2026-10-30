@@ -1529,9 +1529,10 @@ Stories 35–46 covered the three-tier experience-notes system. They move to v2 
 
 ### Workings (M13.4)
 
+<!-- prettier-ignore -->
 76. Record a working of a spell: the day I made it, who took part (coven members or names I type) and a note on how it went, so the grimoire keeps what was made as well as the recipe.
-77. Complete a working and have the stock it used taken out of my coven's jars, warned where a jar cannot cover it, so the stock I see matches what is on the shelf.
-78. See a spell's workings on its recipe page, and how many there are on its card in the grimoire list, so I can tell what I have made and how often.
+78. Complete a working and have the stock it used taken out of my coven's jars, warned where a jar cannot cover it, so the stock I see matches what is on the shelf.
+79. See a spell's workings on its recipe page, and how many there are on its card in the grimoire list, so I can tell what I have made and how often.
 
 ### Spell steps (M13.1)
 
