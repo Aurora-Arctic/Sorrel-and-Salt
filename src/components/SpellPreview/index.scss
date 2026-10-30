@@ -550,7 +550,8 @@ $preview-hearth-duration: 11s;
   grid-row: 1;
   grid-column: 1 / -1;
   max-width: none;
-  margin-block-end: space(2);
+  // Clear of the eye and the close X above it, whose boxes end where the content begins.
+  margin-block: space(2);
 }
 
 .spell-preview__notice-text {
