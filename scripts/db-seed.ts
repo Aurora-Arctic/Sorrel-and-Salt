@@ -30,6 +30,7 @@ import { seedForms } from '../src/db/seed/forms.ts';
 import { seedDeities } from '../src/db/seed/deities.ts';
 import { seedSources } from '../src/db/seed/sources.ts';
 import { seedDemoCoven } from '../src/db/seed/demo-coven.ts';
+import { formatContentReport } from '../src/db/seed/demo-coven-content.ts';
 import { seedCompendium } from '../src/db/seed/compendium.ts';
 import { seedReferenceData } from '../src/db/seed/reference-data.ts';
 import { formatReport, hasRefusals } from '../src/db/seed/compendium/report.ts';
@@ -84,8 +85,10 @@ try {
     await seedSources(db, { dryRun });
     done("the vocabularies' sources and their links");
   } else if (target === 'demo-coven') {
-    await seedDemoCoven(db, { dryRun });
-    done('the demo coven and its seats');
+    const contents = await seedDemoCoven(db, { dryRun });
+    const skipped = formatContentReport(contents);
+    if (skipped) console.log(skipped);
+    done('the demo coven, its seats and its contents');
   } else if (target === 'compendium' || target === 'reference') {
     // One line per entry the run updated, refused, left pending or
     // found retired, then the totals; a refused entry exits 1, which fails
@@ -97,6 +100,10 @@ try {
         ? await seedReferenceData(db, { dryRun, force })
         : await seedCompendium(db, undefined, { dryRun, force });
     console.log(formatReport(report, { adopt: flags.has('--adopt') }));
+    if ('demoCovenContent' in report) {
+      const skipped = formatContentReport(report.demoCovenContent);
+      if (skipped) console.log(skipped);
+    }
     if (hasRefusals(report)) process.exitCode = 1;
     if (force) console.log('Forced: refusals 1 to 4 were lifted for every marked entry.');
     const what =

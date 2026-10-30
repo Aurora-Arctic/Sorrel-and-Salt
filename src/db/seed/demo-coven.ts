@@ -1,3 +1,4 @@
+import { seedDemoCovenContent, type DemoCovenContentReport } from './demo-coven-content';
 import { eq, isNull, or } from 'drizzle-orm';
 import { beginSeedTransaction, insertMissingBy, insertStamped } from './idempotent';
 import { DEMO_WORKSPACE_ID, BOOTSTRAP_USER_ID } from '../bootstrap';
@@ -12,9 +13,22 @@ import type { SeedDatabase, SeedRunOptions, SeedTransaction } from './types';
 
 export const DEMO_COVEN_NAME = 'Sorrel & Salt Demo';
 
-/** The coven and its seats in a transaction of its own. Writes go through the handle the caller gives, not `withAudit`. */
-export async function seedDemoCoven(db: SeedDatabase, options: SeedRunOptions = {}): Promise<void> {
-  await beginSeedTransaction(db, seedDemoCovenSeats, options);
+/**
+ * The coven, its seats and its contents in a transaction of its own, with the report of what the contents left out. Writes go
+ * through the handle the caller gives, not `withAudit`.
+ */
+export async function seedDemoCoven(
+  db: SeedDatabase,
+  options: SeedRunOptions = {},
+): Promise<DemoCovenContentReport> {
+  return beginSeedTransaction(
+    db,
+    async (tx) => {
+      await seedDemoCovenSeats(tx);
+      return seedDemoCovenContent(tx);
+    },
+    options,
+  );
 }
 
 /**

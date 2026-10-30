@@ -8,6 +8,7 @@ import {
 import { loadCompendium, readConversionManifest, type LoadedCompendium } from './compendium/load';
 import type { SeedCompendiumReport } from './compendium/report';
 import { seedDemoCovenSeats } from './demo-coven';
+import { seedDemoCovenContent, type DemoCovenContentReport } from './demo-coven-content';
 import { seedDeityVocabulary } from './deities';
 import { seedFormVocabulary } from './forms';
 import { beginSeedTransaction } from './idempotent';
@@ -38,7 +39,7 @@ export async function seedReferenceData(
     dryRun = false,
     force = false,
   }: SeedReferenceDataOptions = {},
-): Promise<SeedCompendiumReport> {
+): Promise<SeedCompendiumReport & { demoCovenContent: DemoCovenContentReport }> {
   assertCompendiumValid(compendium);
   return beginSeedTransaction(
     db,
@@ -50,7 +51,8 @@ export async function seedReferenceData(
       await seedVocabularySources(tx);
       const report = await seedCompendiumContent(tx, compendium, { manifest, force });
       await seedDemoCovenSeats(tx);
-      return report;
+      const demoCovenContent = await seedDemoCovenContent(tx);
+      return { ...report, demoCovenContent };
     },
     { dryRun },
   );
