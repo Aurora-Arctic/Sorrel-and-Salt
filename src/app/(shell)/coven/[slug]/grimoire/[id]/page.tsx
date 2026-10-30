@@ -105,6 +105,16 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
   // Only a complete spell is worked, and on the permission `recordWorking` asserts.
   const canRecord =
     spell.status === 'complete' && rolePermits(membership.role, { working: ['create'] });
+  const recordButton = (
+    <RecordWorkingButton
+      workspaceId={workspace.id}
+      spellId={spell.id}
+      spellVisibility={spell.visibility}
+      members={members}
+      recorderId={membership.userId}
+      steps={ingredientSteps}
+    />
+  );
   const name = spell.title?.trim() || UNTITLED_SPELL;
   const listPath = `/coven/${workspace.slug}/grimoire${spell.status === 'draft' ? '/drafts' : ''}`;
   const deletedHref = `${listPath}?${new URLSearchParams({ deleted: name })}` as Route;
@@ -140,6 +150,7 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
             <SpellWorkings
               workspaceId={workspace.id}
               workings={workings}
+              headingAction={canRecord ? recordButton : undefined}
               completeAction={(workingId) => (
                 <CompleteWorkingAction
                   workspaceId={workspace.id}
@@ -165,16 +176,7 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
           aside={<SpellRecipeAside {...aside} />}
           action={
             <div className="spell-recipe__actions">
-              {canRecord && (
-                <RecordWorkingButton
-                  workspaceId={workspace.id}
-                  spellId={spell.id}
-                  spellVisibility={spell.visibility}
-                  members={members}
-                  recorderId={membership.userId}
-                  steps={ingredientSteps}
-                />
-              )}
+              {canRecord && recordButton}
               {canUpdate && (
                 <EditLink
                   href={`${recipePath}?edit=${spell.id}` as Route}

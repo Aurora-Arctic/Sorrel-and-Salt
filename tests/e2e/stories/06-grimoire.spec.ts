@@ -652,14 +652,17 @@ test(
     );
     await signInAgainAs(page, coven.users.B);
     await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
-    await page.getByRole('button', { name: 'Record a Working' }).click();
+    const recordButton = page
+      .locator('.spell-recipe__actions')
+      .getByRole('button', { name: 'Record a Working' });
+    await recordButton.click();
     const dialog = page.getByRole('dialog', { name: 'Record a Working' });
     await dialog.getByRole('combobox', { name: 'Participants' }).fill('Fixture A');
     await page.getByRole('option', { name: 'Fixture A' }).click();
     await dialog.getByRole('button', { name: 'Save as Draft' }).click();
     // Save keeps the draft and closes the dialog. The Workings list is M13.8's, so the row is read from the database.
     await expect(dialog).toBeHidden();
-    await expect(page.getByRole('button', { name: 'Record a Working' })).toBeFocused();
+    await expect(recordButton).toBeFocused();
     await assertNoAccessibilityViolations(page);
     const kept = await withSql(
       (sql) => sql`
@@ -740,7 +743,10 @@ test(
     });
     await signInAgainAs(page, coven.users.B);
     await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
-    await page.getByRole('button', { name: 'Record a Working' }).click();
+    await page
+      .locator('.spell-recipe__actions')
+      .getByRole('button', { name: 'Record a Working' })
+      .click();
     const dialog = page.getByRole('dialog', { name: 'Record a Working' });
     await dialog.getByRole('button', { name: 'Complete' }).click();
     // The preview says what will be taken before anything is.

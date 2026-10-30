@@ -33,6 +33,7 @@ function renderSection(
   workings: WorkingView[],
   complete?: (id: string) => React.ReactNode,
   edit?: SpellWorkingsProps['editAction'],
+  headingAction?: React.ReactNode,
 ) {
   return render(
     <QueryClientProvider client={makeQueryClient()}>
@@ -41,6 +42,7 @@ function renderSection(
         workings={workings}
         completeAction={complete}
         editAction={edit}
+        headingAction={headingAction}
       />
     </QueryClientProvider>,
   );
@@ -55,6 +57,23 @@ describe('SpellWorkings', () => {
     renderSection([]);
     expect(screen.getByRole('heading', { name: 'Workings' })).toBeInTheDocument();
     expect(screen.queryByRole('list', { name: 'Workings' })).not.toBeInTheDocument();
+  });
+
+  it('draws the heading action in the Workings section, whether or not it has rows, and nothing without one', () => {
+    const action = <button type="button">Record a Working</button>;
+    const { unmount } = renderSection([], undefined, undefined, action);
+    const section = screen.getByRole('region', { name: 'Workings' });
+    expect(within(section).getByRole('button', { name: 'Record a Working' })).toBeInTheDocument();
+    unmount();
+    const second = renderSection([working({ id: 'w1' })], undefined, undefined, action);
+    expect(
+      within(screen.getByRole('region', { name: 'Workings' })).getByRole('button', {
+        name: 'Record a Working',
+      }),
+    ).toBeInTheDocument();
+    second.unmount();
+    renderSection([working({ id: 'w1' })]);
+    expect(screen.queryByRole('button', { name: 'Record a Working' })).not.toBeInTheDocument();
   });
 
   it('draws a row per working with its date, participants, note, status and visibility, in order', () => {
