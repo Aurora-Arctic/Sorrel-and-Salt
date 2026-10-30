@@ -396,31 +396,6 @@
   gap: space(4);
 }
 
-// The Quick Look's Edit and Delete icons (`formalActions`, wrapped in `.spell-look-actions`, so
-// the ingredient's Quick Look, which shares the Modal's slot, is left as it is). A spell has no
-// formal name to ride on, so they stand on the middle of the title's first line and run to the
-// dialog's right edge, beneath the ×; the naming grid takes back the head's reserve for the ×.
-.modal-dialog__naming:has(.spell-look-actions) {
-  margin-inline-end: calc(-1 * (#{$close-target} + #{space(3)}));
-
-  > .modal-dialog__formal-actions {
-    align-self: start;
-    margin-block: calc((#{heading-size(2)} * 1.15 - #{$action-icon-size}) / 2);
-  }
-}
-
-.spell-look-actions {
-  display: contents;
-}
-
-// The Quick Look's head content (the Edited line, the title, the icons) stands lower than the
-// Modal's default, for room between the × and the bin beneath it.
-// The × is the header's own child and does not move. Scoped by the same hook, so the ingredient's
-// Quick Look is as it was.
-.modal-dialog__heading:has(.spell-look-actions) {
-  padding-block-start: space(3);
-}
-
 // The jump menu (PageNav) is the ingredient entry page's grid (`entry-nav-grid`): a sticky column left of
 // the page from a phone's width up, stacked above the sections below it. The menu spans the summary and
 // the columns, so it keeps its place as they scroll. Screen only: print hides the menu and keeps its

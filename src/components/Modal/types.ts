@@ -17,6 +17,8 @@ export interface ModalHeading {
   topEnd?: ReactNode;
   /** The title's controls, at the end of the formal name's line and after the title in the markup. Not in the dialog's name (claude-docs/components/modal.md, "A title with its own end"). */
   formalActions?: ReactNode;
+  /** With `formalActions` and no formal name: the controls stand level with the title's first line and run to the dialog's edge beneath the ×, the head a step lower to make room (claude-docs/components/modal.md, "Controls beneath the ×"). */
+  actionsUnderClose?: boolean;
   /** A line above the formal name and the title, under any top line (the details window's last edit). Not in the dialog's name. */
   aboveName?: ReactNode;
   /** A row under the heading's last line, for the badges that are not beside the title. Not in the dialog's name. */

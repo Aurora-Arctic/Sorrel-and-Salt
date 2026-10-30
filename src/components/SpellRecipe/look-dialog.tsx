@@ -42,7 +42,7 @@ export default function SpellLookDialog({
     // Edit and Delete as icons at the end of the title's line, as the ingredient's Quick Look has them.
     ...((opened.editHref || opened.deleteSpell) && {
       formalActions: (
-        <span className="spell-look-actions">
+        <>
           {opened.editHref && (
             <EditLink
               href={opened.editHref}
@@ -51,8 +51,9 @@ export default function SpellLookDialog({
             />
           )}
           {opened.deleteSpell && <DeleteSpellAction {...opened.deleteSpell} name={name} />}
-        </span>
+        </>
       ),
+      actionsUnderClose: true,
     }),
     ...(opened.lastEdit && {
       aboveName: <LastEdit by={opened.lastEdit.by} at={opened.lastEdit.at} />,
