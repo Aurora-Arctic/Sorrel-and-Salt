@@ -111,6 +111,8 @@ and the embers.
   so a long title never wraps around them.
 - The eye (`.spell-preview__awake`), while held on, wears the accent colour and blinks once in a
   long cycle; under reduced motion it stays still.
+- The steps take their Recipe Card look from `SpellRecipe/index.scss`, which `SpellRecipeBody`
+  imports, so the pane and the recipe page share one set of step rules.
 
 ## Stories
 
