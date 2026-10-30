@@ -14,7 +14,7 @@ import { copiedHrefOf } from './copied-href';
 import type { DuplicateSpellActionProps } from './types';
 
 // Duplicate: `duplicateSpell` makes a private draft copy, and the page leaves for the Drafts tab
-// with the copy open in the builder. The recipe page's button and the builder's Copy as Draft both
+// with the copy open in the builder. The recipe page's button and the builder's Duplicate both
 // use it (claude-docs/components/spell-recipe.md, "Duplicate").
 
 export const DuplicateSpellDocument = graphql(`

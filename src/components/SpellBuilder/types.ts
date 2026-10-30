@@ -86,8 +86,8 @@ export interface SpellBuilderProps {
    */
   deletedHrefOf?: (title: string | null) => Route;
   /**
-   * Where Copy as Draft leaves for, given the copy's id; left out when this member may not create a
-   * spell and a complete spell's form has no Copy as Draft. Shown only once the spell exists.
+   * Where Duplicate leaves for, given the copy's id; left out when this member may not create a
+   * spell and a complete spell's form has no Duplicate. Shown only once the spell exists.
    */
   copiedHrefOf?: (id: string) => Route;
 }
@@ -122,7 +122,7 @@ export interface SpellDialogProps {
   canCreate: boolean;
   /** Whether this member may delete a spell (`spell: delete`); the builder then has a Delete. */
   canDelete?: boolean;
-  /** Whether this member may create a spell (`spell: create`); the builder of a complete spell then has a Copy as Draft. */
+  /** Whether this member may create a spell (`spell: create`); the builder of a complete spell then has a Duplicate. */
   canDuplicate?: boolean;
   /** The signed-in member; the builder keeps its browser copy of a draft under this id. */
   userId?: string;
@@ -145,7 +145,7 @@ export interface SpellStatusFieldProps {
   workspaceId: string;
   /** The saved spell's id; none until the first save. */
   spellId: string | null;
-  /** Copy as Draft's destination (see `SpellBuilderProps`); none draws no button. */
+  /** Duplicate's destination (see `SpellBuilderProps`); none draws no button. */
   copiedHrefOf?: (id: string) => Route;
   /** Saves everything the form holds now (the autosave's flush); rejects when the save is refused. */
   flush: () => Promise<void>;
