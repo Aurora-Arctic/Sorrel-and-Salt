@@ -1396,7 +1396,7 @@ Sources, cited in the table by the short name in bold:
 - OWASP Foundation. "Authentication Cheat Sheet." OWASP Cheat Sheet Series. https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html. **OWASP Auth**.
 - OWASP Foundation. "Password Storage Cheat Sheet." OWASP Cheat Sheet Series. https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html. **OWASP Storage**.
 - Hunt, Troy. "API v3: Pwned Passwords." Have I Been Pwned. https://haveibeenpwned.com/API/v3#PwnedPasswords. **HIBP**.
-- Better Auth. "Email & Password," "Passkey," "Two-Factor Authentication" and "Hooks." Better Auth documentation. https://www.better-auth.com/docs; and the installed `better-auth` 1.7.12, read in `node_modules`. **Better Auth**.
+- Better Auth. "Email & Password," "Passkey," "Two-Factor Authentication" and "Hooks." Better Auth documentation. https://www.better-auth.com/docs; and the installed `better-auth`, read in `node_modules`. **Better Auth**.
 
 **Hashing, as Better Auth ships it.** Passwords are hashed with scrypt (a deliberately slow, memory-hungry hash) at N=2^14, r=16, p=1, using about 32 MiB of memory and a 16-byte random salt, and stored as `salt:key` with no tag naming the scheme. That is below OWASP Storage's floor for scrypt of N=2^17, r=8. **The owner accepted it as good enough (2026-10-16), and nothing in Wave 16 changes it.** The way out, for a later task: a custom `password.hash` and `password.verify` pair using Node's built-in Argon2id (Node 24.7 and later) that tells old hashes by their shape ([`m16.1-first-party-sign-in.md`](design-decisions/m16.1-first-party-sign-in.md)).
 
@@ -1489,7 +1489,7 @@ Modern module system throughout — `@use '../../scss/variables' as *;`, never t
 
 ### Accounts and workspaces
 
-1. Sign in with an account I already have, so I don't manage another password.
+1. Sign in with an account I already have, so I can start without setting up a new way to sign in.
 2. As a newly signed-in user, be told plainly what I can do next, so an empty account doesn't look broken.
 3. Create a workspace once I hold creation rights, for my coven or household.
 4. Invite someone to my workspace by email with a chosen role (viewer or member), so that only the verified holder of that address can accept.
