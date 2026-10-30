@@ -46,6 +46,19 @@ const ME = /* GraphQL */ `
   }
 `;
 
+const COVENS = /* GraphQL */ `
+  query {
+    me {
+      memberships {
+        role
+        workspace {
+          name
+        }
+      }
+    }
+  }
+`;
+
 beforeEach(async () => {
   await sql`truncate invitations`;
 });
@@ -77,5 +90,16 @@ describe('an unverified session on the API', () => {
     const answer = await run(unverified(), ME);
     expect(answer.errors).toBeUndefined();
     expect(answer.data).toMatchObject({ me: { id: A.id } });
+  });
+
+  it('is told of no covens by its own account, while the same account verified is told them', async () => {
+    const verified = await run(asUser(A), COVENS);
+    expect(verified.errors).toBeUndefined();
+    const seats = (verified.data as { me: { memberships: unknown[] } }).me.memberships;
+    expect(seats.length).toBeGreaterThan(0);
+
+    const unverifiedAnswer = await run(unverified(), COVENS);
+    expect(unverifiedAnswer.errors).toBeUndefined();
+    expect(unverifiedAnswer.data).toEqual({ me: { memberships: [] } });
   });
 });

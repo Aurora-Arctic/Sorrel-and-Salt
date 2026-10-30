@@ -352,9 +352,9 @@ the tests [`tests.md`](tests.md).
 - **The API refuses an unverified account too.** The session built from the
   request headers carries `emailUnverified` while the address is unverified,
   and `assertMembership` refuses such a session with an explaining
-  `Forbidden`, so no coven data is reachable through `/api/graphql` by
+  `Forbidden`, and `membershipsOf` answers an empty list, so no coven data or name is reachable through `/api/graphql` by
   skipping the page redirect. `me`, `setEmail` and sign-out take no
-  membership and still work.
+  membership and still work. The list is empty rather than refused because the shell draws the email page and public pages from it.
 - **One rule: an address becomes the account's at verification, never
   before.** `setEmail(session, email, sender, next?)` in
   `src/modules/identity/services/email.ts` writes nothing to `users.email`.
