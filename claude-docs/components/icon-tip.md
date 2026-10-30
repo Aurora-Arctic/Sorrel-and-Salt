@@ -261,7 +261,7 @@ The tip is `fixed`, so a table frame's sideways scroll clips nothing. It fades i
 - Edit in Compendium, on a compendium entry for an admin or a curator, is named and tipped "Edit in Compendium" so it cannot be taken for a coven's own choice.
 - Annotate in a coven's list wears `AnnotateIcon`, an open book with a pencil, not Edit's pencil, since it writes the coven's notes over a compendium entry. Its stroke is 1.25 rather than the set's 1.5 so the lines sit apart at 16px, and the pencil is filled.
 - `QuickLookLink` is the eye beside an entry's name, in its own class as it sits in the name's line. `QuickLookButton` serves where the details open in the page rather than at an address, such as over the Add Ingredient form's held duplicates.
-- `MoreButton` is the three dots: a menu of further choices, always in labelled Compendium and Coven sections. A lone Delete or Remove is the bin instead. A More drawn with words keeps its chevron.
+- `MoreButton` is the three dots: a menu of further choices, as flat items (a spell's) or in labelled sections (an entry's Compendium and Coven). A lone Delete or Remove is the bin instead. A More drawn with words keeps its chevron.
 - The icon controls that are buttons rather than links are shared by the coven cards' foot, the entry page and the Quick Look window so the places cannot differ.
 
 ## The icons

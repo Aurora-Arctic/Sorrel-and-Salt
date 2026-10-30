@@ -191,10 +191,12 @@ Three variants exist for one use each:
 2026-10-19 for a warning that should not read as an error: `$ochre-deep`
 (`#8a5a00`) on light and `$ochre-bright` (`#d9a441`) on dark, the
 `--warning` token and its `$warning` alias. It draws a warning notice's bar,
-tint and triangle, never text, so it needs 3:1 as a graphic (WCAG 1.4.11),
-and clears more: 4.89 on the light page, 5.44 on the light card, 8.32 and 7.55
-on the dark ones, and over its own tint 4.47 and 4.95 light, 7.35 and 6.57
-dark. `tests/scss/tokens.test.ts` holds those floors.
+tint and triangle, which need 3:1 as a graphic (WCAG 1.4.11), and one line of
+text, a shortfall in Record a Working's preview, which needs 4.5:1. It clears
+both: 4.89 on the light page, 5.44 on the light card, 8.32 and 7.55 on the dark
+ones, and over its own tint 4.47 and 4.95 light, 7.35 and 6.57 dark.
+`tests/scss/tokens.test.ts` holds those floors: 4.5:1 as text on the page and
+the card, 3:1 as a mark on its tint.
 
 Shadow inks are per-theme: a 0.8-alpha near-black under a card reads as a hole
 punched in parchment, so light mode gets a much softer one.

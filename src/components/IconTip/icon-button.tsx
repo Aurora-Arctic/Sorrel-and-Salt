@@ -152,7 +152,7 @@ export const RecordButton = ({
   </IconTip>
 );
 
-/** The three dots: a menu of further choices, in the page's ink, always in labelled Compendium and Coven sections; a lone Delete or Remove is the bin instead. */
+/** The three dots: a menu of further choices, in the page's ink, as flat items or in labelled sections (an entry's Compendium and Coven); a lone Delete or Remove is the bin instead. */
 export const MoreMenu = ({
   name,
   ref,
