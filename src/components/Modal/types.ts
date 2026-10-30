@@ -152,7 +152,7 @@ export interface ConfirmOverlayProps {
   question?: ReactNode;
   /** The id of what names the card when there is no `question`. */
   labelledBy?: string;
-  /** The safe answer, Keep It or Keep Editing: it takes the focus when the question comes and on each flash. Never the destructive one. */
+  /** The safe answer, Cancel or Keep Editing: it takes the focus when the question comes and on each flash. Never the destructive one. */
   safe: RefObject<HTMLElement | null>;
   /** Ways out tried again while asking, each a flash of the card; absent for none. */
   flashes?: number;
@@ -160,7 +160,7 @@ export interface ConfirmOverlayProps {
   children: ReactNode;
 }
 
-/** A form's yes-or-no question over itself: Delete and Keep It, by default. */
+/** A form's yes-or-no question over itself: Delete and Cancel, by default. */
 export interface ConfirmQuestionProps {
   /** The question, "Delete "Fixture Healing"? …", which names the card. */
   question: ReactNode;
@@ -176,7 +176,7 @@ export interface ConfirmQuestionProps {
   busyLabel?: string;
   /** The acting answer's weight: destructive for a delete, solid for a save. */
   tone?: 'destructive' | 'solid';
-  /** The safe answer, which the focus lands on: "Keep It" by default, "Back" for a step back. */
+  /** The safe answer, which the focus lands on: "Cancel" by default, "Back" for a step back. */
   keepLabel?: string;
   /** The action is in flight: the acting answer is busy and shut. */
   busy: boolean;

@@ -147,7 +147,6 @@ export function PromoteFolkNameQuestion({
         </>
       }
       tone="solid"
-      keepLabel="Cancel"
       confirmLabel={dirty ? 'Save & Promote' : 'Promote'}
       busyLabel="Promoting"
       busy={step === 'confirm'}

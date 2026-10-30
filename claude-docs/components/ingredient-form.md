@@ -780,7 +780,7 @@ as the ingredient's page shows its forms after it (MB.221).
   named for the form, "Edit Oil" and "Remove Oil". The card is
   a fieldset named by the form alone, through `aria-labelledby`.
 - **Remove asks first, and only removes.** It never opens or closes the
-  card: Keep It leaves the variant as it was, open or closed, and Remove
+  card: Cancel leaves the variant as it was, open or closed, and Remove
   takes it, the focus going to the New Form box
   ([Removing a variant or a reference](#removing-a-variant-or-a-reference)).
 - **Edit opens it in place, one at a time.** Edit carries `aria-expanded`
@@ -885,12 +885,12 @@ owner's call (2026-10-16). Both rows take more typing to put back than a
 chip does, and a variant's × had read as closing its card. The question is
 the form's usual card ([`ConfirmQuestion`](modal.md)), drawn by
 `RemoveQuestion` in `remove-question.tsx`: "Remove "Oil"? …" with
-**Remove** and **Keep It**, the focus on Keep It.
+**Remove** and **Cancel**, the focus on Cancel.
 
 - **Nothing is lost until the save.** Remove takes the row from the form,
   as the × did before; the entry changes only when it is saved, and Cancel
   still discards the removal with the rest.
-- **The focus.** Keep It hands it back to the ×. Remove hands it to the
+- **The focus.** Cancel hands it back to the ×. Remove hands it to the
   list's box, New Form or Reference, since the × went with its row. The
   removal is committed at once (`flushSync`) so the card's own hand-back,
   to the first field when the × is gone, comes first and the box's second.
@@ -1608,11 +1608,11 @@ site admin's, through the compendium mutations
 "Testwort"? It leaves the compendium, but any spell that uses it keeps it.`, or
   on a coven's own entry `Delete "Testwort"? It leaves the coven, but any spell
 that uses it keeps it.`, with
-  Delete, destructive, and Keep It, quiet, as
+  Delete, destructive, and Cancel, quiet, as
   [`GroupedValueForm`](grouped-value-form.md) asks: on a card over the form,
   centred in the part in view however far the long form is scrolled, the
-  form dimmed and held until it is answered, the focus on Keep It, its safe
-  answer, and back on Delete Ingredient once Keep It puts it away (MB.115,
+  form dimmed and held until it is answered, the focus on Cancel, its safe
+  answer, and back on Delete Ingredient once Cancel puts it away (MB.115,
   the owner's call; [`modal.md`](modal.md), "Asking over the form"). Delete sends
   `deleteCompendiumIngredient`, or for a coven `deleteIngredient(id,
 workspaceId)`, busy until the answer, and calls
@@ -1628,7 +1628,7 @@ workspaceId)`, busy until the answer, and calls
   ([`db/ingredient-slugs.md`](../db/ingredient-slugs.md), "Ingredient
   slugs"). That issue is no field's, so the form asks over itself, as the
   delete does: the server's message, then **End Redirect & Save**, which sends
-  the same input again with `endRedirect: true`, and **Keep It**, which
+  the same input again with `endRedirect: true`, and **Cancel**, which
   drops the question and sends nothing, the entry left as typed.
 - **Unsaved changes** (MB.115, the owner's call). The form hands
   `formState.isDirty`, the flag that turns the saves on, to the shared guard
@@ -1984,7 +1984,7 @@ a time; a variant added from the New Form box opened, the other closed,
 listed first after the New Form box (MB.115), and sent in `variants` with no
 top-level `form`; Add refusing a form not picked, and a repeat form, with no
 second fieldset added; a variant removed by its own button once confirmed,
-and kept open as it was on Keep It; an open variant's `h4` section headings
+and kept open as it was on Cancel; an open variant's `h4` section headings
 in the ingredient's order (MB.115); those sections folding (MB.115): an
 edit's variant opened with every one closed, each heading described by its
 line, the variant's own data in it; a variant added here with every one
@@ -2195,7 +2195,7 @@ short form, open, the citation whole; a row kept to one
 line until its edit opens it (`aria-expanded`, the Locator focused) and
 closes it again (MB.115); each row's locator
 labelled and read with its citation and its tip, and tidied as it is left; the
-× removing a row once confirmed and keeping it on Keep It; Backspace and
+× removing a row once confirmed and keeping it on Cancel; Backspace and
 Delete in the empty box taking none; Enter with nothing picked submitting nothing;
 a search left in the box, and an open panel, each stopping the save. The panel
 from the field: opened by the create row, "New Reference", taking you to
@@ -2243,10 +2243,10 @@ and flat, Enter on text not picked refused — is `list-field.test.tsx`'s. An
 entry given: its values shown, one save, off until something changes, and the
 update sent whole, its categories carried through; the duplicate warning
 leaving the entry out, and a rename near another entry naming it but saving
-at once, with no Create Anyway; MB.82's question, Keep It sending nothing and End
+at once, with no Create Anyway; MB.82's question, Cancel sending nothing and End
 Redirect & Save sending again with `endRedirect: true`; and a refused delete's alert, and a confirmed delete calling `onDeleted`.
 In a modal, the delete's and MB.82's questions are asked over the form: the
-form inert while each asks, the focus on Keep It, both given back on Keep It,
+form inert while each asks, the focus on Cancel, both given back on Cancel,
 and Delete deleting from over the form.
 An entry's categories shown picked, and a pick beside them sent, are
 CategoryPicker's and `index.test.tsx`'s.
@@ -2285,7 +2285,7 @@ An issue naming a picked category lands on the picker's one error element, named
 
 ## Questions the form asks over itself
 
-**Remove.** A variant's × had read as closing its card, and a reference row takes more typing than a chip to put back, so both ask before removing. The form's own question card (Remove and Keep It) is the one way of asking. `RemoveQuestion` runs `onRemove`, which removes the row and stops asking, then `afterRemove` once the card has gone and handed the focus back. The pressed × went with its row, so the focus goes where the list says, not to the form's first field. `flushSync(onRemove)` commits at once, the card's cleanup with it, so the focus that cleanup gives back is moved on after it, not before.
+**Remove.** A variant's × had read as closing its card, and a reference row takes more typing than a chip to put back, so both ask before removing. The form's own question card (Remove and Cancel) is the one way of asking. `RemoveQuestion` runs `onRemove`, which removes the row and stops asking, then `afterRemove` once the card has gone and handed the focus back. The pressed × went with its row, so the focus goes where the list says, not to the form's first field. `flushSync(onRemove)` commits at once, the card's cleanup with it, so the focus that cleanup gives back is moved on after it, not before.
 
 **Promote.** `promote.tsx` is written for either tier, a compendium entry (a null `workspaceId`) or a coven's ingredient. The question always comes first. With unsaved changes it offers Save & Promote, which runs the form's own save first and promotes only if that landed, and Discard & Promote, which puts the form back to its saved values. Cancel sends nothing. The question steps aside while the unsaved-changes question asks, as a removal's does. Its four tiers are told apart by type as well as by space: the question as the card's heading, naming no name because the panel beneath names both; the swap on a tinted panel; the compendium's reach as a muted aside; and, ruled off above the buttons, the question they answer. The promote question's term overline takes the `.eyebrow` look, so the names carry the weight.
 

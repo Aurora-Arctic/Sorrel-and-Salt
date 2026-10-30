@@ -84,7 +84,7 @@ describe('VariantsField', () => {
   });
 
   // Its × asks first, and only removes: an open card stays open until the
-  // answer, and Keep It leaves it so.
+  // answer, and Cancel leaves it so.
   it('removes a variant by its own button once confirmed, and sends the rest', async () => {
     const onSubmit = renderVariants({ workspaceId: WORKSPACE_ID });
 
@@ -93,30 +93,30 @@ describe('VariantsField', () => {
     fireEvent.click(within(variant('Oil')).getByRole('button', { name: 'Remove Oil' }));
 
     expect(variant('Oil')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Keep It' })).toHaveFocus();
+    expect(screen.getByRole('button', { name: 'Cancel' })).toHaveFocus();
     fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
 
     noVariant('Oil');
     expect(variant('Herb')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Keep It' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Cancel' })).toBeNull();
     expect(newForm()).toHaveFocus();
     save();
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(sent(onSubmit)?.variants?.map(({ form }) => form)).toEqual(['Herb']);
   });
 
-  it('keeps a variant, open as it was, when its removal is answered Keep It', async () => {
+  it('keeps a variant, open as it was, when its removal is answered Cancel', async () => {
     renderVariants({ workspaceId: WORKSPACE_ID });
 
     addVariant('Oil');
     const remove = within(variant('Oil')).getByRole('button', { name: 'Remove Oil' });
     expect(editOf('Oil')).toHaveAttribute('aria-expanded', 'true');
     press(remove);
-    press('Keep It');
+    press('Cancel');
 
     expect(variant('Oil')).toBeInTheDocument();
     expect(editOf('Oil')).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.queryByRole('button', { name: 'Keep It' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Cancel' })).toBeNull();
     expect(remove).toHaveFocus();
     // Leaving a field validates it; let that land inside the test.
     await act(async () => {});

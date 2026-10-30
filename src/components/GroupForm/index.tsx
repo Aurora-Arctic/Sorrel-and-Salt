@@ -348,14 +348,14 @@ const GroupForm = ({
 
   // The choosing step's safe answer, which takes the focus as it is asked;
   // the confirming step's are ConfirmQuestion's own.
-  const keepItRef = useRef<HTMLButtonElement>(null);
+  const cancelRef = useRef<HTMLButtonElement>(null);
   const keepGoing = () => {
     setMoveError(undefined);
     setStep({ at: 'idle' });
   };
-  const keepIt = (
-    <button ref={keepItRef} type="button" className="btn btn--quiet" onClick={keepGoing}>
-      Keep It
+  const cancelButton = (
+    <button ref={cancelRef} type="button" className="btn btn--quiet" onClick={keepGoing}>
+      Cancel
     </button>
   );
 
@@ -372,9 +372,9 @@ const GroupForm = ({
               to. Add another {noun} first, then delete this one.
             </>
           }
-          safe={keepItRef}
+          safe={cancelRef}
         >
-          <div className="modal__actions">{keepIt}</div>
+          <div className="modal__actions">{cancelButton}</div>
         </ConfirmOverlay>
       );
     }
@@ -383,7 +383,7 @@ const GroupForm = ({
     const { aria, ...move } = fieldDescription({ id: `${id}-move`, error: moveError });
     // Named by the picker's label, the question this step asks.
     return (
-      <ConfirmOverlay key="choosing" labelledBy={move.labelId} safe={keepItRef}>
+      <ConfirmOverlay key="choosing" labelledBy={move.labelId} safe={cancelRef}>
         <FieldShell label={label} {...move}>
           <ComboboxSelect
             id={move.controlId}
@@ -414,7 +414,7 @@ const GroupForm = ({
           >
             Continue
           </button>
-          {keepIt}
+          {cancelButton}
         </div>
       </ConfirmOverlay>
     );

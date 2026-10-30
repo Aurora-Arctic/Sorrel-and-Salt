@@ -355,7 +355,7 @@ owner's call of 2026-10-20) are drawn through it, never a second dialog.
 | ------------ | ---------------------------------------------------------------------------- |
 | `question`   | The question, drawn as the card's first paragraph; it names the card         |
 | `labelledBy` | The id that names the card instead, when a field's label asks the question   |
-| `safe`       | A ref to the safe answer, Keep It or Keep Editing; never the destructive one |
+| `safe`       | A ref to the safe answer, Cancel or Keep Editing; never the destructive one  |
 | `flashes`    | The discard guard's count of ways out tried again, each a flash of the card  |
 | `children`   | What follows the question: a field, a live region, the `.modal__actions` row |
 
@@ -426,7 +426,7 @@ Redirect & Save. A `ConfirmOverlay` holding the acting answer, a
 | `confirmLabel` | The acting answer: "Delete" by default                                                                                                                    |
 | `busyLabel`    | What it says while busy: "Deleting" by default                                                                                                            |
 | `tone`         | `'destructive'` by default, `'solid'` for a save                                                                                                          |
-| `keepLabel`    | The safe answer: "Keep It" by default, "Back" for a step back                                                                                             |
+| `keepLabel`    | The safe answer: "Cancel" by default, "Back" for a step back                                                                                              |
 | `busy`         | The action is in flight: the acting answer busy and shut                                                                                                  |
 | `onConfirm`    | The action, a promise                                                                                                                                     |
 | `also`         | A second acting answer between the two, as Discard & Promote (M12.1): its label, busy label, busy state and action                                        |
@@ -912,7 +912,7 @@ Open button to bring it back after Close or Escape.
   is the same, pressed open as it mounts, so the dialog itself can be looked at.
 - Asking To Discard Changes, the discard
   question over a form with a change; Escape or Close there flashes it.
-  Asking To Confirm shows `ConfirmQuestion`'s Delete and Keep It, Delete busy
+  Asking To Confirm shows `ConfirmQuestion`'s Delete and Cancel, Delete busy
   once pressed.
 - Listed With A Foot, a list in the body with a foot.
 - With Pickers, a picker and a multi-picker, where Escape closes an open list
@@ -954,7 +954,7 @@ question in a modal (the form inert, the question a named group, the focus
 on the safe answer; then gone, the form live). The `AskingToDiscardChanges`
 story shows the question over a
 short form; pressing Escape or Close there flashes it. `AskingToConfirm`
-shows `ConfirmQuestion`'s Delete and Keep It, Delete busy once pressed. The
+shows `ConfirmQuestion`'s Delete and Cancel, Delete busy once pressed. The
 forms' own tests cover `ConfirmQuestion` through their Delete questions.
 IngredientForm's
 `AskingToDeleteInModal` and `AskingToDiscardInModal` show it over the long
@@ -998,7 +998,7 @@ The modal draws its layer before its contents can ask, but not before their firs
 
 ### `ConfirmQuestion`
 
-`ConfirmQuestion` is the one written-once form of the yes-or-no question, for example "Delete "Fixture Healing"? …": Delete is destructive and busy ("Deleting") until answered, Keep It is the safe answer. With a discard guard it shows the unsaved changes' question while that one asks, and its own only while `asked`. On a rejection it reads the server's first sentence and hands it to `onRefused` for the form's alert: a refusal naming its remedy, not a bad value in a box (DESIGN.md §7). Its second answer's action cannot be taken back, so Delete is shut while it runs.
+`ConfirmQuestion` is the one written-once form of the yes-or-no question, for example "Delete "Fixture Healing"? …": Delete is destructive and busy ("Deleting") until answered, Cancel is the safe answer. With a discard guard it shows the unsaved changes' question while that one asks, and its own only while `asked`. On a rejection it reads the server's first sentence and hands it to `onRefused` for the form's alert: a refusal naming its remedy, not a bad value in a box (DESIGN.md §7). Its second answer's action cannot be taken back, so Delete is shut while it runs.
 
 ## Naming, cancelling and closing
 

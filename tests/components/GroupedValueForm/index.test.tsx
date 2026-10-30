@@ -24,6 +24,7 @@ import { ADDING, DELETING, EDITING } from '../../support/grouped-value-form';
 import { choose, press, typeIn, undo } from '../../support/interact';
 import type { GroupedValueFormSubject } from '../../support/types';
 import {
+  answer,
   expectAnswered,
   expectAskingOver,
   expectGuardedWaysOut,
@@ -161,17 +162,16 @@ describe('GroupedValueForm, its delete question in a modal', () => {
       <GroupedValueForm kind="category" value={CATEGORY} groups={CATEGORY_GROUPS} onDone={done} />
     ));
 
-  it('holds the form while asking, the focus on Keep It, and gives both back on Keep It', () => {
+  it('holds the form while asking, the focus on Cancel, and gives both back on Cancel', () => {
     const onClose = renderEdit();
     expect(name().closest('[inert]')).toBeNull();
 
     press('Delete Category');
 
-    expect(
-      expectAskingOver(name(), screen.getByRole('button', { name: 'Keep It' })),
-    ).toContainElement(screen.getByRole('button', { name: 'Delete' }));
-    press('Keep It');
-    expectAnswered(name(), 'Keep It');
+    const question = expectAskingOver(name(), answer('Cancel'));
+    expect(question).toContainElement(screen.getByRole('button', { name: 'Delete' }));
+    press(answer('Cancel'));
+    expectAnswered(name(), question);
     expect(screen.getByRole('button', { name: 'Delete Category' })).toHaveFocus();
     expect(onClose).not.toHaveBeenCalled();
   });
@@ -187,9 +187,9 @@ describe('GroupedValueForm, its delete question in a modal', () => {
     press('Delete Category');
     escape();
     expect(screen.getByRole('button', { name: 'Keep Editing' })).toHaveFocus();
-    expect(screen.queryByRole('button', { name: 'Keep It' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
     press('Keep Editing');
-    expectAskingOver(name(), screen.getByRole('button', { name: 'Keep It' }));
+    expectAskingOver(name(), answer('Cancel'));
     expect(onClose).not.toHaveBeenCalled();
 
     typeIn(description(), CATEGORY.description);
@@ -273,7 +273,7 @@ describe('GroupedValueForm, a category', () => {
       press('Delete');
 
       expect(await screen.findByRole('alert')).toBeVisible();
-      expect(screen.queryByRole('button', { name: 'Keep It' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Delete Category' })).toBeInTheDocument();
       expect(onDone).not.toHaveBeenCalled();
     });
@@ -396,7 +396,7 @@ describe('GroupedValueForm, a form', () => {
       press('Delete');
 
       expect(await screen.findByRole('alert')).toBeVisible();
-      expect(screen.queryByRole('button', { name: 'Keep It' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Delete' })).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Delete Form' })).toBeInTheDocument();
       expect(onDone).not.toHaveBeenCalled();
     });
@@ -714,7 +714,7 @@ describe('GroupedValueForm, its undo and redo', () => {
     ));
     typeIn(name(), 'Testcraft Two');
     press('Delete Category');
-    expectAskingOver(name(), screen.getByRole('button', { name: 'Keep It' }));
+    expectAskingOver(name(), answer('Cancel'));
 
     undo();
 

@@ -1177,7 +1177,7 @@ const IngredientForm = ({
                   />
                 </FormActions>
                 {/* A question is asked over the form, centred in view however far it is scrolled,
-              the focus on Keep It: the unsaved changes' first, then the end-redirect's, then
+              the focus on Cancel: the unsaved changes' first, then the end-redirect's, then
               Delete's. */}
                 {promoteOffered && (
                   <PromoteFolkNameQuestion
@@ -1201,7 +1201,7 @@ const IngredientForm = ({
                 )}
                 {question ? (
                   // The address this save takes is another entry's redirect. Asked before anything
-                  // else is pressed; Keep It leaves the entry as typed, unsaved.
+                  // else is pressed; Cancel leaves the entry as typed, unsaved.
                   <ConfirmQuestion
                     key="redirect"
                     question={question.message}

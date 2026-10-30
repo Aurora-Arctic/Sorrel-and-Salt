@@ -26,7 +26,12 @@ import type {
 } from '@/gql/graphql';
 import { DEBOUNCE_MS } from '@/lib/debounce';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
-import { expectAnswered, expectAskingOver, renderInModal } from '../../support/discard-guard';
+import {
+  answer,
+  expectAnswered,
+  expectAskingOver,
+  renderInModal,
+} from '../../support/discard-guard';
 import {
   box,
   renderWithClient,
@@ -569,7 +574,7 @@ describe('IngredientForm on the compendium', () => {
       expect(textbox('Name')).toBeValid();
     });
 
-    it('asks before ending another entry’s redirect, sending nothing on Keep It, and again once confirmed', async () => {
+    it('asks before ending another entry’s redirect, sending nothing on Cancel, and again once confirmed', async () => {
       const message =
         '"mockwort-fixtura-testalis" redirects to "Mockwort" (Fixtura vulgaris, root) until 4 April 2027, 00:00 UTC — confirm to end that redirect';
       mockGraphQLError('UpdateCompendiumIngredient', {
@@ -580,8 +585,8 @@ describe('IngredientForm on the compendium', () => {
 
       type('Name', 'Mockwort');
       press('Save Ingredient');
-      await waitFor(() => button('Keep It'));
-      fireEvent.click(button('Keep It'));
+      await waitFor(() => button('Cancel'));
+      fireEvent.click(button('Cancel'));
 
       noButton('End Redirect & Save');
       expect(button('Save Ingredient')).toBeEnabled();
@@ -609,7 +614,7 @@ describe('IngredientForm on the compendium', () => {
       expect(asked).toEqual([{ id: ENTRY_ID }]);
     });
 
-    // Keep It, and the focus on it, are the modal's case below.
+    // Cancel, and the focus on it, are the modal's case below.
     it('deletes it once confirmed, and says why when the delete is refused', async () => {
       const { onDeleted } = renderEntry();
       mockGraphQLError('DeleteCompendiumIngredient', {
@@ -638,7 +643,7 @@ describe('IngredientForm on the compendium', () => {
 
   // Its questions are asked over the form, as the unsaved changes' is
   // : the long form inert behind each, and the
-  // focus on its safe answer, Keep It.
+  // focus on its safe answer, Cancel.
   describe('an entry given to it, in a modal', () => {
     const renderInDialog = () =>
       renderInModal((done) => (
@@ -652,17 +657,16 @@ describe('IngredientForm on the compendium', () => {
         />
       ));
 
-    it('holds the form while Delete asks, gives it back on Keep It, and deletes on Delete', async () => {
+    it('holds the form while Delete asks, gives it back on Cancel, and deletes on Delete', async () => {
       offerNothing();
       const onClose = renderInDialog();
       expect(textbox('Name').closest('[inert]')).toBeNull();
 
       press('Delete Ingredient');
-      expect(expectAskingOver(textbox('Name'), button('Keep It'))).toContainElement(
-        button('Delete'),
-      );
-      press('Keep It');
-      expectAnswered(textbox('Name'), 'Keep It');
+      const question = expectAskingOver(textbox('Name'), answer('Cancel'));
+      expect(question).toContainElement(button('Delete'));
+      press(answer('Cancel'));
+      expectAnswered(textbox('Name'), question);
       expect(button('Delete Ingredient')).toHaveFocus();
 
       const calls = acceptDelete();
@@ -673,7 +677,7 @@ describe('IngredientForm on the compendium', () => {
       expect(calls).toEqual([{ id: ENTRY_ID }]);
     });
 
-    it('holds the form while a redirect asks, and gives it back on Keep It', async () => {
+    it('holds the form while a redirect asks, and gives it back on Cancel', async () => {
       offerNothing();
       mockGraphQLError('UpdateCompendiumIngredient', {
         code: 'VALIDATION',
@@ -685,9 +689,9 @@ describe('IngredientForm on the compendium', () => {
       press('Save Ingredient');
       await waitFor(() => button('End Redirect & Save'));
 
-      expectAskingOver(textbox('Name'), button('Keep It'));
-      press('Keep It');
-      expectAnswered(textbox('Name'), 'Keep It');
+      const question = expectAskingOver(textbox('Name'), answer('Cancel'));
+      press(answer('Cancel'));
+      expectAnswered(textbox('Name'), question);
       expect(textbox('Name')).toHaveValue('Mockwort');
     });
   });

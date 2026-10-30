@@ -712,7 +712,7 @@ Four variants:
 - **`.btn--solid`**, a view's one primary action — Save, Send, Continue.
   Filled in the accent, with the label on `$text-on-color`, and its own hover
   step (`--accent-solid-hover`, above).
-- **`.btn--quiet`**, an action that changes nothing: Cancel, Keep It, Keep Editing, Back.
+- **`.btn--quiet`**, an action that changes nothing: Cancel, Keep Editing, Back.
   The label in the body ink, so it neither competes with the primary nor reads as
   destructive — and, unlike the muted ink, not as disabled either. It sits in a
   field's ground (`$surface-card`, what an input fills with) inside a

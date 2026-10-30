@@ -118,7 +118,7 @@ describe("IngredientForm editing a coven's own entry", () => {
     // Its words are for assistive technology alone.
     expect(bin.querySelector('.visually-hidden')).not.toBeNull();
     press('Delete Ingredient');
-    expect(button('Keep It')).toBeInTheDocument();
+    expect(button('Cancel')).toBeInTheDocument();
   });
 
   it('deletes the entry from the coven once confirmed, naming it, and says why when refused', async () => {
@@ -127,8 +127,8 @@ describe("IngredientForm editing a coven's own entry", () => {
 
     press('Delete Ingredient');
     expect(screen.getByText(/Testwort/, { selector: 'p' })).toBeInTheDocument();
-    expect(button('Keep It')).toHaveFocus();
-    press('Keep It');
+    expect(button('Cancel')).toHaveFocus();
+    press('Cancel');
     noButton('Delete');
 
     mockGraphQLError('DeleteWorkspaceIngredient', {

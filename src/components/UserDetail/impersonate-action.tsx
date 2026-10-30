@@ -42,7 +42,6 @@ const ImpersonateAction = ({ user }: { user: UserDetailUser }): ReactElement => 
         confirmLabel="Impersonate"
         busyLabel="Impersonating"
         tone="destructive"
-        keepLabel="Cancel"
         busy={busy}
         onConfirm={async () => {
           setBusy(true);

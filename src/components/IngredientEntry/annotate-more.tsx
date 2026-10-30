@@ -115,7 +115,6 @@ export default function AnnotateMore({
         tone="solid"
         confirmLabel="Make It Ours"
         busyLabel="Making It Ours"
-        keepLabel="Cancel"
         busy={writes.makeOurs.pending}
         onConfirm={async () => writes.makeOurs.run()}
         onKeep={settle}
@@ -126,7 +125,6 @@ export default function AnnotateMore({
         question={<RemoveQuestion name={name} />}
         confirmLabel="Remove"
         busyLabel="Removing"
-        keepLabel="Cancel"
         busy={writes.remove.pending}
         onConfirm={async () => writes.remove.run()}
         onKeep={settle}
