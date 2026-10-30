@@ -262,12 +262,14 @@ export async function addCupboardEntry(
  * @throws {Forbidden} the caller may not update this coven's ingredients.
  * @throws {NotFound} this coven holds no live cupboard entry for this id.
  * @throws {ValidationError} the patch breaks `CupboardEntryInput`, or the label is used.
+ * @throws {StaleWrite} `expectedRevision` is not the entry's revision.
  */
 export async function annotateCupboardEntry(
   session: Session,
   workspaceId: string,
   ingredientId: string,
   patch: CupboardEntryValues,
+  expectedRevision: number | null = null,
 ): Promise<CupboardEntryRow> {
   const membership = await assertMembership(session, workspaceId, { ingredient: ['update'] });
   const parsed = parseInput(CupboardEntryInput, patch);
@@ -281,7 +283,13 @@ export async function annotateCupboardEntry(
   if (Object.keys(values).length === 0) return row;
   try {
     const [updated] = await withAudit(session, (write) =>
-      write.updateByIdInWorkspace(membership, workspaceCompendiumEntries, row.id, values),
+      write.updateRevisioned(
+        membership,
+        workspaceCompendiumEntries,
+        row.id,
+        expectedRevision,
+        values,
+      ),
     );
     if (!updated) throw new NotFound(NO_ROW);
     return updated;

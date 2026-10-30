@@ -53,6 +53,8 @@ export interface CupboardEntryFormProps {
   compendium: CompendiumValues;
   /** The coven's overrides now. */
   overrides: CupboardOverrides;
+  /** The cupboard row's revision the page read, which the first save names so a change made since is not written over. */
+  revision?: number | null;
   /** Closes the modal the form is in. */
   onDone: () => void;
   /**

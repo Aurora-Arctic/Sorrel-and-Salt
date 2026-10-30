@@ -3,6 +3,7 @@ import type postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { A, B } from '../support/as-user';
 import { useTestDatabase } from '../support/db/database';
+import { insertCupboardEntry } from '../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { insertSpell } from '../support/db/insert-spell';
 import { makeSpell } from '../support/fixtures';
@@ -33,7 +34,7 @@ async function revisionOf(id: string): Promise<number> {
 describe('the catalogue', () => {
   // Read from the catalogue on both sides, so a later table that takes the
   // column and forgets its trigger line reddens without this file being edited.
-  it('attaches bump_revision to every table carrying a revision, and spells and ingredients carry one', async () => {
+  it('attaches bump_revision to every table carrying a revision, and spells, ingredients and cupboard entries carry one', async () => {
     // Tables alone: a view has no trigger of its own to carry.
     const carrying = await sql<{ table_name: string }[]>`
       select c.table_name from information_schema.columns c
@@ -51,7 +52,7 @@ describe('the catalogue', () => {
 
     // Why the comparison is not two empty lists agreeing: spells is in it.
     expect(carrying.map((row) => row.table_name)).toEqual(
-      expect.arrayContaining(['spells', 'ingredients']),
+      expect.arrayContaining(['spells', 'ingredients', 'workspace_compendium_entries']),
     );
     expect(triggered.map((row) => row.relname)).toEqual(carrying.map((row) => row.table_name));
   });
@@ -159,5 +160,33 @@ describe('an ingredient’s revision', () => {
     const [after] =
       await sql`select updated_at, updated_by, revision from ingredients where id = ${id}`;
     expect(after).toEqual({ ...before, revision: 3 });
+  });
+});
+
+// A coven's annotation of a compendium entry autosaves, so it counts saves as an ingredient does (M13.24).
+describe('a cupboard entry’s revision', () => {
+  beforeEach(async () => {
+    await sql`truncate ingredients cascade`;
+  });
+
+  it('starts at 1 and rises by one on each update', async () => {
+    const ingredientId = await insertIngredient(
+      sql,
+      makeIngredient({ workspaceId: null, nomenclature: 'none' }),
+      A.id,
+    );
+    const id = await insertCupboardEntry(sql, { workspaceId: WORKSPACE_W_ID, ingredientId }, A.id);
+    const read = async () => {
+      const [row] = await sql<
+        { revision: number }[]
+      >`select revision from workspace_compendium_entries where id = ${id}`;
+      return row.revision;
+    };
+    expect(await read()).toBe(1);
+
+    await sql`update workspace_compendium_entries set description = 'One' where id = ${id}`;
+    await sql`update workspace_compendium_entries set revision = 100, description = 'Two' where id = ${id}`;
+
+    expect(await read()).toBe(3);
   });
 });

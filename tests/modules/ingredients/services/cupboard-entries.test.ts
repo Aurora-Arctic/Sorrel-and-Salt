@@ -33,6 +33,7 @@ function cupboardEntry(overrides: Partial<CupboardEntryRow> = {}): CupboardEntry
     workspaceId: '00000000-0000-4000-8000-000000000201',
     ingredientId: COMPENDIUM.id,
     label: null,
+    revision: 1,
     description: null,
     safetyNotes: null,
     elements: null,

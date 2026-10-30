@@ -171,6 +171,7 @@ const cupboardEntry = (
   workspaceId: FIXTURE_WORKSPACE_ID,
   ingredientId: '00000000-0000-4000-8000-000000000001',
   label: null,
+  revision: 1,
   description: null,
   safetyNotes: null,
   elements: null,

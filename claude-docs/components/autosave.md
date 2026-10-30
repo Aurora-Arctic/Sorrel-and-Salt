@@ -218,3 +218,5 @@ axe.
 An autosaving form reports how its saves are going inline beside its primary action, never as a toast, because the status describes this form and stays until the next save. The conflict notice alone may go elsewhere (`conflictInto`): under a dialog's title, where a long form's footer is out of view, since it asks for a decision rather than reporting.
 
 The visible line updates on every change. Screen readers hear only the first save of a burst, from a live region of its own, because a save every few seconds read out each time would drown what the person is typing.
+
+The forms that use it: the spell builder, `IngredientForm` and `CupboardEntryForm` (the Annotate dialog; M13.24), each writing against its row's `revision`.

@@ -14,6 +14,7 @@ import type {
 import { graphqlRequest } from '../../lib/graphql-client';
 import { placeServerIssues, readGraphqlFailure } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
+import { BinButton } from '../IconTip';
 import { ConfirmQuestion, useModalHeaderNote } from '../Modal';
 import {
   type MirrorEntry,
@@ -1096,13 +1097,17 @@ const IngredientForm = ({
                       });
                     })
                   }
-                  onDelete={
-                    editing
-                      ? () => {
+                  aside={
+                    editing ? (
+                      <BinButton
+                        verb="Delete Ingredient"
+                        name=""
+                        onClick={() => {
                           setRefusal(undefined);
                           setDeleting(true);
-                        }
-                      : undefined
+                        }}
+                      />
+                    ) : undefined
                   }
                 >
                   {!editing && (

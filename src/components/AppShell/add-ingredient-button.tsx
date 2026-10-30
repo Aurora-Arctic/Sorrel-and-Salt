@@ -66,7 +66,6 @@ function AddIngredientBody({
         onSaved(saved);
         close();
       }}
-      onCancel={close}
       duplicateHref={(match) => `/coven/${workspace.slug}/ingredients/${match.id}`}
       // A linked substitute that is a compendium entry opens its public page; a
       // coven's own has none to open from here.
