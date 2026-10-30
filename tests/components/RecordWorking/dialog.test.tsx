@@ -87,7 +87,7 @@ describe('Record a Working', () => {
     fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Note' }), {
       target: { value: 'Under the new moon' },
     });
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save as Draft' }));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]).toMatchObject({
       workspaceId: WORKSPACE,
@@ -103,10 +103,10 @@ describe('Record a Working', () => {
     expect(router.refresh).toHaveBeenCalled();
   });
 
-  it('saves, then shows the deduction preview, from Save & Complete', async () => {
+  it('saves, then shows the deduction preview, from Complete', async () => {
     const calls = mockRecording();
     openButton();
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save & Complete' }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Complete' }));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(await screen.findByRole('list', { name: 'Deductions' })).toHaveTextContent('Testwort');
     expect(screen.getByRole('button', { name: 'Confirm' })).toBeEnabled();
@@ -135,7 +135,7 @@ describe('Record a Working', () => {
     expect(
       await within(dialog()).findByRole('button', { name: /Remove.*Guest Witness/ }),
     ).toBeInTheDocument();
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save as Draft' }));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]?.input.participants).toEqual([{ userId: 'u1' }, { name: 'Guest Witness' }]);
   });
@@ -146,7 +146,7 @@ describe('Record a Working', () => {
     expect(
       within(dialog()).getByRole('button', { name: /Remove.*Testa Owner/ }),
     ).toBeInTheDocument();
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save as Draft' }));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]?.input.participants).toEqual([{ userId: 'u1' }]);
   });
@@ -155,7 +155,7 @@ describe('Record a Working', () => {
     const calls = mockRecording();
     openButton();
     fireEvent.click(within(dialog()).getByRole('button', { name: /Remove.*Testa Owner/ }));
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save as Draft' }));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]?.input.participants).toEqual([]);
   });
@@ -174,7 +174,7 @@ describe('Record a Working', () => {
     expect(share).toBeChecked();
     expect(share).toBeEnabled();
     fireEvent.click(share);
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save as Draft' }));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]?.input.visibility).toBe('private');
   });
@@ -242,7 +242,7 @@ describe('Edit Working', () => {
       within(dialog()).getByRole('button', { name: /Remove.*Testa Owner/ }),
     ).toBeInTheDocument();
     fireEvent.change(note, { target: { value: 'Second try' } });
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save as Draft' }));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]).toMatchObject({
       workspaceId: WORKSPACE,
@@ -269,6 +269,6 @@ describe('Edit Working', () => {
     const share = within(dialog()).getByRole('switch', { name: 'Share With the Coven' });
     expect(share).toBeChecked();
     expect(share).toBeDisabled();
-    expect(within(dialog()).queryByRole('button', { name: 'Save & Complete' })).toBeNull();
+    expect(within(dialog()).queryByRole('button', { name: 'Complete' })).toBeNull();
   });
 });

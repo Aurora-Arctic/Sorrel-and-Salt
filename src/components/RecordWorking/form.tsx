@@ -17,7 +17,7 @@ import type { RecordWorkingDialogProps, WorkingParticipantValue } from './types'
 
 // The form inside the Record a Working dialog, which records a draft working of a complete spell or
 // changes one the caller recorded. Inside the modal so its discard guard reaches the modal's Close,
-// Escape and backdrop. Save closes it and the page behind shows the draft; Save & Complete goes on to the
+// Escape and backdrop. Save closes it and the page behind shows the draft; Complete goes on to the
 // deduction preview (claude-docs/components/record-working.md).
 
 const RecordWorkingDocument = graphql(`
@@ -270,6 +270,7 @@ export default function RecordWorkingForm({
       />
       <FormActions
         noun="Working"
+        label={complete ? 'Save Working' : 'Save as Draft'}
         dirty={valid && (working ? changed : true)}
         submitting={submitting}
         holdCancel
@@ -282,7 +283,7 @@ export default function RecordWorkingForm({
             disabled={!valid || submitting}
             onClick={() => void submit(true)}
           >
-            Save & Complete
+            Complete
           </button>
         )}
       </FormActions>

@@ -23,9 +23,9 @@ The dialog holds a date (today by default), participants (a `Combobox` of the me
 a typed name is added as a name chip), a note, and visibility. Visibility never exceeds the
 spell's, and is the same Share With the Coven switch the spell builder uses (`VisibilitySwitch`, in `Field`): on a private spell it is off and shut, with a line saying why. A new working opens with the recorder (`recorderId`) as a chip, who may remove themselves; the dialog always sends `participants`. A Workings row says "Recorded by" the recorder and lists only the others after "With", so a stored recorder is never named twice (`workings-read.ts` filters them out).
 
-Save keeps a draft, closes the dialog and refreshes the page, where the draft is a row of the
-Workings list. Save & Complete in the form saves first, then shows the preview. The date is a `DateField` day picker; its
-last pickable day is today, and a later date leaves Save disabled. Closing with unsaved changes asks first.
+Save as Draft keeps a draft, closes the dialog and refreshes the page, where the draft is a row of the
+Workings list. Complete in the form saves first, then shows the preview. The date is a `DateField` day picker; its
+last pickable day is today, and a later date leaves both saves disabled. Closing with unsaved changes asks first.
 What completing a draft would skip is read from the preview query, since `SpellWorking.warnings`
 is empty outside a completion; `skipLine` words each line.
 
