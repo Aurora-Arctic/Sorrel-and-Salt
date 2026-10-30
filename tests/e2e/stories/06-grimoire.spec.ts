@@ -1166,7 +1166,7 @@ test(
 
     // The moon phase it is worked under.
     let panel = await openFilters(page);
-    await panel.getByRole('combobox', { name: 'Moon Phase' }).fill('full');
+    await panel.getByRole('combobox', { name: 'Moon Phases' }).fill('full');
     await page.getByRole('option', { name: /Full Moon/ }).click();
     await applyFilters(page, panel);
     await expect(items).toHaveCount(2);
@@ -1182,10 +1182,10 @@ test(
     // Who made it: a member's own, whatever its phase.
     await page.goto(`/coven/${coven.slug}/grimoire`);
     panel = await openFilters(page);
-    await panel.getByRole('combobox', { name: 'Coven Member' }).fill('Fixture B');
+    await panel.getByRole('combobox', { name: 'Coven Members' }).fill('Fixture B');
     await page.getByRole('option', { name: /^Fixture B/ }).click();
     // The box takes several members, so its menu stays open on the rest until it is shut.
-    await panel.getByRole('button', { name: 'Show Coven Member coven members' }).click();
+    await panel.getByRole('button', { name: 'Show Coven Members suggestions' }).click();
     await applyFilters(page, panel);
     await expect(items).toHaveCount(2);
     await expect(item('Private Full Moon Working')).toBeVisible();

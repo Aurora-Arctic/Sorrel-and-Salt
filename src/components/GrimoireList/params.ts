@@ -9,8 +9,8 @@ import {
 } from '../../lib/search-param-table';
 
 // The grimoire's search parameters: the compendium's text and category filter with the match mode (claude-docs/components/ingredient-search.md,
-// "The parameter table"), no status, plus Moon Phase and Day of Week (free text), Visibility (a fixed
-// pair) and Coven Member (makers' ids, each checked, repeats dropped).
+// "The parameter table"), no status, plus Moon Phases and Days of the Week (free text), Visibility (a fixed
+// pair) and Coven Members (makers' ids, each checked, repeats dropped).
 const { query, categories, categoryMode } = COMPENDIUM_PARAMS.entries;
 
 /** The two visibilities a spell has, as the address spells them. */

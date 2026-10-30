@@ -70,6 +70,8 @@ box's state.
   (`matchesLabelOrGroup`, `Combobox/match.ts`, shared with the category picker), so
   "irish" lists every Irish deity. Before
   hydration the native select makes each group an `optgroup`.
+  The list toggle and the count it announces say "suggestions" ("Show Forms suggestions"),
+  as every `Combobox` does by default, since a plural label read twice would say "Forms formss".
 - **`count`, `disabled` and `note` on a choice** are drawn by both forms; the
   plain `Combobox` ignores them.
 

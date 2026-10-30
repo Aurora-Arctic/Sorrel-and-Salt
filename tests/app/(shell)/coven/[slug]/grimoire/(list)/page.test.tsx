@@ -291,7 +291,7 @@ describe('the Grimoire tabs', () => {
 
   it('says on each card who last edited it and when, the editors named in one batch', async () => {
     await renderTab(SpellsPage);
-    // One batch for the page's editors, one for the members the Coven Member facet offers.
+    // One batch for the page's editors, one for the members the Coven Members facet offers.
     expect(displayNamesOf).toHaveBeenCalledTimes(2);
     expect(displayNamesOf).toHaveBeenCalledWith(session, ['editor-s1', 'editor-s2']);
     expect(displayNamesOf).toHaveBeenCalledWith(session, [MAKER]);

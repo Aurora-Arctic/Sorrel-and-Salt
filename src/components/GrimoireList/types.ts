@@ -40,7 +40,7 @@ export interface GrimoireListProps {
   filter: GrimoireListFilter;
   /** Every category the filter offers, by slug. */
   categories: readonly CompendiumCategoryChoice[];
-  /** Moon Phase, Day of Week, Visibility and Coven Member, each with its counts. */
+  /** Moon Phases, Days of the Week, Visibility and Coven Members, each with its counts. */
   facets: GrimoireFacets;
   position?: PagePosition;
   /** The cursor of the page shown, which a picked title's Quick Look opens over and closes back to. */

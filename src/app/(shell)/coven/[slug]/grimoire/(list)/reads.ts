@@ -151,8 +151,8 @@ export const readGrimoireCategoryCounts = cache(
 );
 
 /**
- * How many spells each Moon Phase, Day of Week, Visibility and Coven Member holds under the
- * filter: one grouped read each, dropping its own picks so another can be added. Makers are named
+ * How many spells each value of the Moon Phases, Days of the Week, Visibility and Coven Members
+ * facets holds under the filter: one grouped read each, dropping its own picks so another can be added. Makers are named
  * in one `displayNamesOf` batch; one the viewer cannot name reads A former member.
  */
 export const readGrimoireFacetCounts = cache(
