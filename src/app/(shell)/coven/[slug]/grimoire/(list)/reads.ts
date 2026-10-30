@@ -152,7 +152,7 @@ export const readGrimoireCategoryCounts = cache(
 /**
  * How many spells each Moon Phase, Day of Week, Visibility and Coven Member holds under the
  * filter: one grouped read each, dropping its own picks so another can be added. Makers are named
- * in one `displayNamesOf` batch; one the viewer cannot name is left out.
+ * in one `displayNamesOf` batch; one the viewer cannot name reads Unknown Member.
  */
 export const readGrimoireFacetCounts = cache(
   async (workspaceId: string, variables: string, status: SpellStatus) => {
@@ -172,11 +172,12 @@ export const readGrimoireFacetCounts = cache(
       moonPhases: counts.moonPhases,
       daysOfWeek: counts.daysOfWeek,
       visibilities: counts.visibilities,
-      makers: makers.flatMap((value, i) => {
-        // One the viewer cannot name is offered only when picked, so its chip can be removed.
-        const label = names[i] ?? (picked.includes(value) ? 'Unknown Member' : undefined);
-        return label ? [{ value, label, count: counted.get(value) ?? 0 }] : [];
-      }),
+      makers: makers.map((value, i) => ({
+        // One the viewer cannot name is still offered, unnamed, so its spells can be filtered.
+        value,
+        label: names[i] ?? 'Unknown Member',
+        count: counted.get(value) ?? 0,
+      })),
     };
   },
 );
