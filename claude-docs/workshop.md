@@ -277,7 +277,7 @@ The viewport is a Storybook global, like the theme, so a link can set both:
   for a step or a card), `GROUP_COLORS` (each category's group colours by id), `BUILDER_STEPS`
   (one spell's steps as the builder reads them: ingredient forms with a toxic one, an instruction
   and a one-off), `RECIPE_STEPS` (the same spell as the recipe draws it), `WORKINGS` (a draft, a
-  private and a complete working), `MEMBERS` (the coven's members) and `WORKING_STEPS` (the
+  private and a complete working), `RECORDER` (the member recording a working; these stories answer no member search) and `WORKING_STEPS` (the
   ingredient steps a working's preview names).
 - **`grimoire-workings.tsx`** — the Workings section with the recipe page's own controls, as
   the page passes them: `WorkingsSection` (Spell Workings with Record a Working, Complete Working
