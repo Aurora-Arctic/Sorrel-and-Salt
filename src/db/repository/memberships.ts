@@ -7,7 +7,7 @@ import { users } from '../../modules/identity/schema/users';
 import type { Membership, WorkspaceRole } from '@/modules/coven';
 import type { PageEntry, PageRequest } from '../../lib/types';
 import { applyAudit } from '../audit';
-import { notSoftDeleted, scopedTo } from './predicates';
+import { containsText, notSoftDeleted, scopedTo } from './predicates';
 import { existsIn, pageBounds, selectFrom, selectOne } from './select';
 import type { AuditWriter, Keyset, WriterContext } from './types';
 
@@ -54,12 +54,14 @@ export async function findMembershipsOfUsers(
 }
 
 /**
- * One page of the live members of the proof's coven, in the order they joined. Its own finder, as a membership is
- * keyed on the pair, so the user id breaks ties instead of `id`.
+ * One page of the live members of the proof's coven, in the order they joined, narrowed by `search` to those whose live
+ * user row's name holds it, case-insensitively. Its own finder, as a membership is keyed on the pair, so the user id
+ * breaks ties instead of `id`.
  */
 export function findMemberPage(
   membership: Membership,
   page: PageRequest,
+  search?: string,
 ): Promise<PageEntry<typeof workspaceMembers.$inferSelect>[]> {
   const keyset: Keyset = {
     sort: [workspaceMembers.joinedAt],
@@ -71,6 +73,12 @@ export function findMemberPage(
     and(
       notSoftDeleted(workspaceMembers),
       scopedTo(membership, workspaceMembers),
+      search
+        ? existsIn(
+            users,
+            and(eq(users.id, workspaceMembers.userId), containsText(users.name, search)),
+          )
+        : undefined,
       pageBounds(keyset),
     ),
     keyset,

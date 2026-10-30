@@ -17,10 +17,10 @@ import { deletedHrefOf } from '@/components/SpellRecipe/deleted-href';
 import { UNTITLED_SPELL } from '@/components/SpellCard';
 import { Forbidden, NotFound } from '@/lib/errors';
 import { RowId } from '@/lib/validation';
-import { memberRoster, rolePermits } from '@/modules/coven';
+import { viewerOf } from '@/lib/viewer';
+import { rolePermits } from '@/modules/coven';
 import { requireCovenMembership, requireSession } from '@/lib/request-session';
 import RecordWorkingButton from '@/components/RecordWorking';
-import { displayNamesOf } from '@/modules/identity';
 import { readSpell } from '@/modules/grimoire';
 import { readEditedSpell } from '../(list)/reads';
 import { readViewedEntry } from '../../ingredients/reads';
@@ -79,22 +79,6 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
     rolePermits(membership.role, { working: ['delete'] }),
     rolePermits(membership.role, { working: ['update'] }),
   );
-  // The members are read only for a role that records or edits a working, and only on the
-  // permission `memberRoster` asserts (`member: read`), which a viewer lacks.
-  const listsMembers =
-    rolePermits(membership.role, { member: ['read'] }) &&
-    rolePermits(membership.role, { working: ['create'] });
-  const roster = listsMembers ? await memberRoster(session, workspace) : [];
-  const memberNames = listsMembers
-    ? await displayNamesOf(
-        session,
-        roster.map(({ userId }) => userId),
-      )
-    : [];
-  const members = roster.map(({ userId }, i) => ({
-    userId,
-    name: memberNames[i] ?? 'A former member',
-  }));
   const ingredientSteps = workingStepsOf(
     recipe.views,
     recipePath,
@@ -107,14 +91,15 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
   const canRecord =
     spell.status === 'complete' && rolePermits(membership.role, { working: ['create'] });
   const name = spell.title?.trim() || UNTITLED_SPELL;
+  // The recorder by name, from the viewer the shell layout already read this request.
+  const { viewer } = await viewerOf();
   const recordButton = (
     <RecordWorkingButton
       workspaceId={workspace.id}
       spellId={spell.id}
       spellName={name}
       spellVisibility={spell.visibility}
-      members={members}
-      recorderId={membership.userId}
+      recorder={{ userId: membership.userId, name: viewer.name }}
       steps={ingredientSteps}
     />
   );
@@ -170,7 +155,6 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
                   workspaceId={workspace.id}
                   spellId={spell.id}
                   spellVisibility={spell.visibility}
-                  members={members}
                   steps={ingredientSteps}
                   working={editable}
                 />

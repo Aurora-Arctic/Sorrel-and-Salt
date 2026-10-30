@@ -15,18 +15,18 @@
 
 ## Recording and editing
 
-`RecordWorkingButton` takes `{ workspaceId, spellId, spellName, spellVisibility, members, recorderId, steps }`;
+`RecordWorkingButton` takes `{ workspaceId, spellId, spellName, spellVisibility, recorder, steps }`;
 `spellName` ends the button's name, "Record a Working of <spell>", as the Preview and More buttons beside it end with
 the spell's name. The recipe
 page shows it to a role that may create a working (owner and member) on a complete spell, and
-passes `members` (`{ userId, name }`, from `memberRoster` and `displayNamesOf`, since a member may
-not list members themselves) and `steps` (`{ id, name }` for each ingredient step). A spell card's
-Record a Working holds the same form but reads `members` and `steps` itself once its dialog opens
+passes `recorder` (`{ userId, name }`, the signed-in member, named from `viewerOf()`, which the shell
+layout already read that request) and `steps` (`{ id, name }` for each ingredient step). A spell card's
+Record a Working holds the same form but reads `steps` itself once its dialog opens
 ([`spell-card.md`](spell-card.md), "Record a Working, Edit and the More menu").
 
-The dialog holds a date (today by default), participants (a `Combobox` of the members with chips;
-a typed name is added as a name chip), a note, and visibility. Participants is a `<fieldset>`, so while a save runs it shuts with the other fields, chips and all, and a refused name describes the box through `FieldError`. Visibility never exceeds the
-spell's, and is the same `VisibilitySwitch` (in `Field`) the spell builder uses, here in its long form labelled Share With the Coven and start-aligned by `.working-form .switch` as the ingredient form's Toxic switch is: on a private spell it is off and shut, with a line saying why. A new working opens with the recorder (`recorderId`) as a chip, who may remove themselves; the dialog always sends `participants`. A Workings row says "Recorded by" the recorder and lists only the others after "With", so a stored recorder is never named twice (`workings-read.ts` filters them out).
+The dialog holds a date (today by default), participants (a `Combobox` with chips that searches the coven's members as the user types;
+a typed name is added as a name chip), a note, and visibility. Participants is a `<fieldset>`, so while a save runs it shuts with the other fields, chips and all, and a refused name describes the box through `FieldError`. The participant box asks `workspace(id).members(search:)` through `/api/graphql` (`RecordWorkingMembers`, on the shared `useLookup` hook: 300ms debounce, ten rows), only once text is typed, since the box takes the focus when the dialog opens; an empty box suggests nobody. The members already taking part are left out of the answer, and a member the server cannot name is "A former member". Visibility never exceeds the
+spell's, and is the same `VisibilitySwitch` (in `Field`) the spell builder uses, here in its long form labelled Share With the Coven and start-aligned by `.working-form .switch` as the ingredient form's Toxic switch is: on a private spell it is off and shut, with a line saying why. A new working opens with the recorder (`recorder`) as a chip, who may remove themselves; the dialog always sends `participants`. A Workings row says "Recorded by" the recorder and lists only the others after "With", so a stored recorder is never named twice (`workings-read.ts` filters them out).
 
 Save Working keeps a draft, closes the dialog and refreshes the page, where the draft is a row of the
 Workings list. Complete in the form saves first, then shows the preview. The date is a `DateField` day picker. A working may be dated ahead and saved as a draft, but Complete

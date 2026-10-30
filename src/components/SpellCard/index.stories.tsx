@@ -42,7 +42,7 @@ const LISTED = {
   href: route('/coven/fixture-coven/grimoire/story'),
   lookHref: route('/coven/fixture-coven/grimoire?spell=story'),
   editHref: route('/coven/fixture-coven/grimoire?edit=story'),
-  recordWorking: { workspaceId: 'fixture-coven', recorderId: 'u1' },
+  recordWorking: { workspaceId: 'fixture-coven', recorder: { userId: 'u1', name: 'Testa Owner' } },
   more: {
     workspaceId: 'fixture-coven',
     covenSlug: 'fixture-coven',

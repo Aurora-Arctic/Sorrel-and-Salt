@@ -17,6 +17,7 @@ import { pagerHrefs, withParam } from '@/lib/list-href';
 import { readPageCursors } from '@/lib/numbered-page';
 import { requireCovenMembership } from '@/lib/request-session';
 import { RowId } from '@/lib/validation';
+import { viewerOf } from '@/lib/viewer';
 import { rolePermits } from '@/modules/coven';
 import {
   readEditedSpell,
@@ -110,10 +111,14 @@ export async function grimoireTab({
   const canUpdate = rolePermits(role, { spell: ['update'] });
   const canDelete = rolePermits(role, { spell: ['delete'] });
   const closeHref = GRIMOIRE_PARAMS.href(path, filter, { after, before });
-  // The members box needs the roster (`member: read`) as well as the right to record, as the spell page's.
-  // The dialog reads the roster and the steps itself once opened, so the list reads neither.
+  // The members box searches the members (`member: read`), so it needs that as well as the right to
+  // record, as the spell page's. The dialog reads the steps once opened, so the list reads none.
   const canRecord =
     rolePermits(role, { working: ['create'] }) && rolePermits(role, { member: ['read'] });
+  // The recorder by name, from the viewer the shell layout already read this request.
+  const recorder = canRecord
+    ? { userId: membership.userId, name: (await viewerOf()).viewer.name }
+    : undefined;
   // Where a delete from the card or the Quick Look lands: this tab as it was, filter and page
   // kept, `?spell` dropped, with the name for the Notice.
   const deletedHrefOf = (title: string | null): Route => deletedHrefFor(closeHref, title);
@@ -166,9 +171,9 @@ export async function grimoireTab({
           ...spell,
           lookHref: lookHrefOf(closeHref, spell.id),
           ...(canUpdate && { editHref: editHrefOf(closeHref, spell.id) }),
-          ...(canRecord &&
+          ...(recorder &&
             spell.status === 'complete' && {
-              recordWorking: { workspaceId: workspace.id, recorderId: membership.userId },
+              recordWorking: { workspaceId: workspace.id, recorder },
             }),
           ...((canCreate || canDelete) && {
             more: {

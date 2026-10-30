@@ -2238,9 +2238,9 @@ type Workspace {
   id: ID!
 
   """
-  The coven's live members, in the order they joined, for the roles that may read them.
+  The coven's live members, in the order they joined, for the roles that may read them: those whose name holds `search`, case-insensitively, when given.
   """
-  members(after: String, before: String, first: Int, last: Int): WorkspaceMembersConnection!
+  members(after: String, before: String, first: Int, last: Int, search: String): WorkspaceMembersConnection!
   name: String!
   slug: String!
 }

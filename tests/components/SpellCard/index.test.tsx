@@ -12,7 +12,9 @@ import type {
   RecordWorkingSetupQueryVariables,
   WorkingDeductionPreviewQuery,
 } from '@/gql/graphql';
-import { mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
+import { HttpResponse } from 'msw';
+import { graphqlLink, mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
+import { server } from '../../support/msw/server';
 
 // The title link navigates through the shared hook, so the App Router is mocked.
 vi.mock('next/navigation', () => ({
@@ -70,37 +72,34 @@ describe('SpellCard', () => {
     expect(made.compareDocumentPosition(edit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it('draws a Record a Working button only when given what recording needs, and reads the dialog’s members and steps only once it opens', async () => {
+  it('draws a Record a Working button only when given what recording needs, and reads the spell’s steps, and no members, only once its dialog opens', async () => {
     const asked: RecordWorkingSetupQueryVariables[] = [];
-    mockGraphQLQuery<RecordWorkingSetupQuery, RecordWorkingSetupQueryVariables>(
-      'RecordWorkingSetup',
-      (variables) => {
-        asked.push(variables);
-        return {
-          spell: {
-            id: 'spell-1',
-            steps: [
-              { id: 's0', name: null, form: null, ingredient: null, variant: null },
-              {
-                id: 's1',
-                name: 'Testwort',
-                form: 'Dried Leaf',
-                ingredient: { id: 'i1' },
-                variant: { id: 'v1' },
+    const sent: string[] = [];
+    server.use(
+      graphqlLink.query<RecordWorkingSetupQuery, RecordWorkingSetupQueryVariables>(
+        'RecordWorkingSetup',
+        ({ query, variables }) => {
+          asked.push(variables);
+          sent.push(query);
+          return HttpResponse.json({
+            data: {
+              spell: {
+                id: 'spell-1',
+                steps: [
+                  { id: 's0', name: null, form: null, ingredient: null, variant: null },
+                  {
+                    id: 's1',
+                    name: 'Testwort',
+                    form: 'Dried Leaf',
+                    ingredient: { id: 'i1' },
+                    variant: { id: 'v1' },
+                  },
+                ],
               },
-            ],
-          },
-          workspace: {
-            id: 'workspace-1',
-            members: {
-              edges: [
-                { node: { user: { id: 'u1', name: 'Testa Owner' } } },
-                { node: { user: { id: 'u2', name: 'Mocka Member' } } },
-              ],
-            },
-          },
-        } as RecordWorkingSetupQuery;
-      },
+            } as RecordWorkingSetupQuery,
+          });
+        },
+      ),
     );
     mockGraphQLMutation<RecordWorkingMutation, RecordWorkingMutationVariables>(
       'RecordWorking',
@@ -122,7 +121,10 @@ describe('SpellCard', () => {
         warnings: [{ position: 2, reason: 'UNSTOCKED', stepId: 's1', stepName: 'Testwort' }],
       },
     }));
-    const recordWorking = { workspaceId: 'workspace-1', recorderId: 'u1' };
+    const recordWorking = {
+      workspaceId: 'workspace-1',
+      recorder: { userId: 'u1', name: 'Testa Owner' },
+    };
     const { rerender } = render(<SpellCard {...BASE} />);
     expect(screen.queryByRole('button', { name: /^Record a Working/ })).not.toBeInTheDocument();
     rerender(
@@ -137,11 +139,13 @@ describe('SpellCard', () => {
     press(screen.getByRole('button', { name: 'Record a Working of Fixture Working' }));
     const dialog = await screen.findByRole('dialog', { name: 'Record a Working' });
     expect(within(dialog).getByRole('status')).toHaveTextContent('Loading');
-    // The recorder starts as a participant, picked from the members read on opening.
+    // The recorder starts as a participant, named by the page rather than a roster read on opening.
     expect(
       await within(dialog).findByRole('button', { name: /Remove.*Testa Owner/ }),
     ).toBeInTheDocument();
     expect(asked).toEqual([{ workspaceId: 'workspace-1', spellId: 'spell-1' }]);
+    // The participant box searches the members as the user types, so the setup reads none.
+    expect(sent[0]).not.toMatch(/\bmembers\b/);
     // The ingredient step read on opening is the one the completion preview names.
     press(within(dialog).getByRole('button', { name: 'Complete' }));
     expect(await screen.findByRole('list', { name: 'Deductions' })).toHaveTextContent('Testwort');
@@ -153,7 +157,10 @@ describe('SpellCard', () => {
         <SpellCard
           {...BASE}
           editHref={'/here?edit=spell-1' as Route}
-          recordWorking={{ workspaceId: 'workspace-1', recorderId: 'u1' }}
+          recordWorking={{
+            workspaceId: 'workspace-1',
+            recorder: { userId: 'u1', name: 'Testa Owner' },
+          }}
           more={MORE}
         />
       </QueryClientProvider>,
@@ -213,7 +220,10 @@ describe('SpellCard', () => {
         <SpellCard
           {...BASE}
           href={'/coven/x/grimoire/spell-1' as Route}
-          recordWorking={{ workspaceId: 'workspace-1', recorderId: 'u1' }}
+          recordWorking={{
+            workspaceId: 'workspace-1',
+            recorder: { userId: 'u1', name: 'Testa Owner' },
+          }}
           more={MORE}
         />
       </QueryClientProvider>,

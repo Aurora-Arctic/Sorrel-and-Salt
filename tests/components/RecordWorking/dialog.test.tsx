@@ -3,6 +3,8 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import RecordWorkingButton, { RecordWorkingDialog } from '@/components/RecordWorking';
 import type {
+  RecordWorkingMembersQuery,
+  RecordWorkingMembersQueryVariables,
   RecordWorkingMutation,
   RecordWorkingMutationVariables,
   UpdateWorkingMutation,
@@ -27,13 +29,35 @@ vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 const WORKSPACE = '00000000-0000-4000-8000-000000000001';
 const SPELL = '00000000-0000-4000-8000-000000000002';
+// The coven's members as the server holds them: the box searches them as the user types.
 const MEMBERS = [
-  { userId: 'u1', name: 'Testa Owner' },
-  { userId: 'u2', name: 'Mocka Member' },
+  { id: 'u1', name: 'Testa Owner' },
+  { id: 'u2', name: 'Mocka Member' },
 ];
+const RECORDER = { userId: 'u1', name: 'Testa Owner' };
 const STEPS = [{ id: 's1', name: 'Testwort' }];
 
-beforeEach(() => router.refresh.mockClear());
+/** Answers the participant box's search as the server does, with the members whose name holds the text. */
+function mockMembers(users: readonly { id: string; name: string | null }[] = MEMBERS) {
+  const asked: RecordWorkingMembersQueryVariables[] = [];
+  mockGraphQLQuery<RecordWorkingMembersQuery, RecordWorkingMembersQueryVariables>(
+    'RecordWorkingMembers',
+    (variables) => {
+      asked.push(variables);
+      const text = (variables.query ?? '').toLowerCase();
+      const edges = users
+        .filter(({ name }) => name === null || name.toLowerCase().includes(text))
+        .map((user) => ({ node: { user } }));
+      return { workspace: { id: WORKSPACE, members: { edges } } } as RecordWorkingMembersQuery;
+    },
+  );
+  return asked;
+}
+
+beforeEach(() => {
+  router.refresh.mockClear();
+  mockMembers();
+});
 
 const dialog = () => screen.getByRole('dialog');
 
@@ -76,8 +100,7 @@ function openButton(visibility: 'private' | 'workspace' = 'workspace') {
         spellId={SPELL}
         spellName="Testwort Tonic"
         spellVisibility={visibility}
-        members={MEMBERS}
-        recorderId="u1"
+        recorder={RECORDER}
         steps={STEPS}
       />,
     ),
@@ -109,6 +132,43 @@ describe('Record a Working', () => {
     expect(calls[0]?.input.workedOn).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(router.refresh).toHaveBeenCalled();
+  });
+
+  it('asks nothing of the server on opening, though the participant box takes the focus', async () => {
+    const asked = mockMembers();
+    openButton();
+    const people = within(dialog()).getByRole('combobox', { name: 'Participants' });
+    await waitFor(() => expect(people).toHaveFocus());
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    expect(asked).toEqual([]);
+  });
+
+  it('searches the coven’s members once the typing settles, not on every key', async () => {
+    const asked = mockMembers();
+    openButton();
+    const people = within(dialog()).getByRole('combobox', { name: 'Participants' });
+    for (const value of ['M', 'Mo', 'Moc']) fireEvent.change(people, { target: { value } });
+    expect(await screen.findByRole('option', { name: 'Mocka Member' })).toBeInTheDocument();
+    expect(asked).toEqual([{ workspaceId: WORKSPACE, query: 'Moc', first: 10 }]);
+  });
+
+  it('leaves the members already taking part out of the matches', async () => {
+    openButton();
+    // Both names hold the letter, and the recorder already takes part.
+    fireEvent.change(within(dialog()).getByRole('combobox', { name: 'Participants' }), {
+      target: { value: 'a' },
+    });
+    expect(await screen.findByRole('option', { name: 'Mocka Member' })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: 'Testa Owner' })).toBeNull();
+  });
+
+  it('calls a member the server cannot name a former member', async () => {
+    mockMembers([{ id: 'u3', name: null }]);
+    openButton();
+    fireEvent.change(within(dialog()).getByRole('combobox', { name: 'Participants' }), {
+      target: { value: 'x' },
+    });
+    expect(await screen.findByRole('option', { name: 'A former member' })).toBeInTheDocument();
   });
 
   it('saves, then shows the deduction preview, from Complete', async () => {
@@ -304,7 +364,6 @@ describe('Edit Working', () => {
           workspaceId={WORKSPACE}
           spellId={SPELL}
           spellVisibility="workspace"
-          members={MEMBERS}
           steps={STEPS}
           working={working}
           onClose={onClose}
@@ -335,7 +394,6 @@ describe('Edit Working', () => {
           workspaceId={WORKSPACE}
           spellId={SPELL}
           spellVisibility="workspace"
-          members={MEMBERS}
           steps={STEPS}
           deleteWorking={{ name: '1 October 2026', remove: () => Promise.resolve() }}
           onClose={() => {}}
@@ -356,7 +414,6 @@ describe('Edit Working', () => {
           workspaceId={WORKSPACE}
           spellId={SPELL}
           spellVisibility="workspace"
-          members={MEMBERS}
           steps={STEPS}
           working={{ ...working, workedOn }}
           onClose={() => {}}
@@ -384,7 +441,6 @@ describe('Edit Working', () => {
           workspaceId={WORKSPACE}
           spellId={SPELL}
           spellVisibility="workspace"
-          members={MEMBERS}
           steps={STEPS}
           working={{ ...working, status: 'complete', visibility: 'workspace' }}
           onClose={() => {}}

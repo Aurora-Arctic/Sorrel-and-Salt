@@ -340,11 +340,11 @@ export const WORKINGS: WorkingView[] = [
   },
 ];
 
-/** The coven's members, as Record a Working's participants box suggests them. */
-export const MEMBERS = [
-  { userId: 'user-a', name: 'Testa Owner' },
-  { userId: 'user-b', name: 'Mocka Member' },
-];
+/**
+ * The member recording, whom Record a Working starts with as a participant. These stories answer
+ * no member search, so the participants box suggests nobody as the user types.
+ */
+export const RECORDER = { userId: 'user-a', name: 'Testa Owner' };
 
 /** The spell's ingredient steps as a working's preview names them. */
 export const WORKING_STEPS = [

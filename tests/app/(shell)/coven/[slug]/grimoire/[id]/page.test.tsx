@@ -60,11 +60,9 @@ vi.mock('@/modules/ingredients', async (importOriginal) => ({
   stockOf,
   variantsOf,
 }));
-// The coven roster Record a Working lists: nobody, by default.
-const memberRoster = vi.fn(async () => []);
-vi.mock('@/modules/coven', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/modules/coven')>()),
-  memberRoster,
+// The signed-in viewer, whom Record a Working names as its recorder.
+vi.mock('@/lib/viewer', () => ({
+  viewerOf: async () => ({ viewer: { id: 'fixture-user', name: 'Fixture Name' }, workspaces: [] }),
 }));
 const displayNamesOf = vi.fn();
 vi.mock('@/modules/identity', async (importOriginal) => ({
