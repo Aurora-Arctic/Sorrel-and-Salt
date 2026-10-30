@@ -125,7 +125,8 @@ const everything = (): CompendiumWrite => ({
 async function rowOf(id: string) {
   // `updated_at` is the trigger's and moves on any write, a no-op included.
   // `curator_reviewed_at` moves on a curator's save, untouched or not (tests/modules/ingredients/services/compendium-review.test.ts).
-  const [{ updated_at: _updated, curator_reviewed_at: _reviewed, ...row }] =
+  // `revision` is the trigger's counter and rises on every update, a no-op included.
+  const [{ updated_at: _updated, curator_reviewed_at: _reviewed, revision: _revision, ...row }] =
     await sql`select * from ingredients where id = ${id}`;
   return row;
 }

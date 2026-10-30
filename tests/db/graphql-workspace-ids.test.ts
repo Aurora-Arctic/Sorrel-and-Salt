@@ -63,11 +63,9 @@ let ownableEntryId: string;
 let spellId: string;
 // A spell of W of its own, which the update probe saves.
 let updatableSpellId: string;
-// A complete spell of W, which the working probes record against and preview.
+// A complete shared spell of W, which the record and preview probes name, and three draft workings of it recorded by B: the
+// update, complete and delete probes each take their own, so no admitted call depends on another having run.
 let completeSpellId: string;
-// Three of B's draft workings of it: the update probe changes the first, the
-// complete probe completes the second and the delete probe deletes the third,
-// so no admitted call depends on another having run.
 let updatableWorkingId: string;
 let completableWorkingId: string;
 let deletableWorkingId: string;
@@ -176,18 +174,16 @@ beforeAll(async () => {
     }),
     A.id,
   );
-  const draftWorking = async () =>
-    sql.begin(async (tx) => {
-      await tx`select set_config('app.current_user_id', ${B.id}, true)`;
-      const [working] = await tx`
-        insert into spell_workings (spell_id, worked_on, created_by, updated_by)
-        values (${completeSpellId}, ${DAY}, ${B.id}, ${B.id})
-        returning id`;
-      return working.id as string;
-    });
-  updatableWorkingId = await draftWorking();
-  completableWorkingId = await draftWorking();
-  deletableWorkingId = await draftWorking();
+  const insertWorking = async (): Promise<string> => {
+    const [working] = await sql`
+      insert into spell_workings (spell_id, worked_on, created_by, updated_by)
+      values (${completeSpellId}, '2026-10-01', ${B.id}, ${B.id})
+      returning id`;
+    return working.id as string;
+  };
+  updatableWorkingId = await insertWorking();
+  completableWorkingId = await insertWorking();
+  deletableWorkingId = await insertWorking();
   await sql.end();
 });
 
@@ -215,9 +211,6 @@ const WHOLE_INGREDIENT = {
   references: [],
   categoryIds: [],
 };
-
-/** A day already past, so a working on it can be completed. */
-const DAY = '2026-10-01';
 
 const REFERENCE = { kind: 'book', title: 'A Herbal of Fixture Covens', published: '1988' };
 
@@ -282,21 +275,21 @@ const PROBES: Record<string, WorkspaceIdProbe> = {
   },
   workingDeductionPreview: {
     source: `query ($workspaceId: ID!, $spellId: ID!) {
-      workingDeductionPreview(workspaceId: $workspaceId, spellId: $spellId) { warnings { stepId } }
+      workingDeductionPreview(workspaceId: $workspaceId, spellId: $spellId) { deductions { stepId } }
     }`,
     variables: () => ({ spellId: completeSpellId }),
   },
   recordWorking: {
-    source: `mutation ($workspaceId: ID!, $spellId: ID!, $input: WorkingInput!) {
-      recordWorking(workspaceId: $workspaceId, spellId: $spellId, input: $input) { id }
+    source: `mutation ($workspaceId: ID!, $spellId: ID!) {
+      recordWorking(workspaceId: $workspaceId, spellId: $spellId, input: { workedOn: "2026-10-01" }) { id }
     }`,
-    variables: () => ({ spellId: completeSpellId, input: { workedOn: DAY } }),
+    variables: () => ({ spellId: completeSpellId }),
   },
   updateWorking: {
-    source: `mutation ($workspaceId: ID!, $id: ID!, $input: WorkingInput!) {
-      updateWorking(workspaceId: $workspaceId, id: $id, input: $input) { id }
+    source: `mutation ($workspaceId: ID!, $id: ID!) {
+      updateWorking(workspaceId: $workspaceId, id: $id, input: { workedOn: "2026-10-02" }) { id }
     }`,
-    variables: () => ({ id: updatableWorkingId, input: { workedOn: DAY, note: 'Saved' } }),
+    variables: () => ({ id: updatableWorkingId }),
   },
   completeWorking: {
     source: `mutation ($workspaceId: ID!, $id: ID!) {

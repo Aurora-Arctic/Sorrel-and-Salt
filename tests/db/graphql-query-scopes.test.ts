@@ -190,10 +190,10 @@ const PROBES: Record<string, ScopeProbe> = {
     outcome: 'refuses',
   },
   workingDeductionPreview: {
-    source: `query ($spellId: ID!, $workspaceId: ID!) {
-      workingDeductionPreview(spellId: $spellId, workspaceId: $workspaceId) { warnings { stepId } }
+    source: `query ($workspaceId: ID!, $spellId: ID!) {
+      workingDeductionPreview(workspaceId: $workspaceId, spellId: $spellId) { deductions { stepId } }
     }`,
-    variables: { spellId: NOWHERE, workspaceId: WORKSPACE_W_ID },
+    variables: { workspaceId: WORKSPACE_W_ID, spellId: NOWHERE },
     outcome: 'refuses',
   },
   workspace: {
@@ -308,10 +308,10 @@ const NULL_WORKSPACE_PROBES: Record<string, ScopeProbe> = {
   },
   // A working is always some coven's spell's.
   workingDeductionPreview: {
-    source: `query ($spellId: ID!, $workspaceId: ID!) {
-      workingDeductionPreview(spellId: $spellId, workspaceId: $workspaceId) { warnings { stepId } }
+    source: `query ($workspaceId: ID!, $spellId: ID!) {
+      workingDeductionPreview(workspaceId: $workspaceId, spellId: $spellId) { deductions { stepId } }
     }`,
-    variables: { spellId: NOWHERE, workspaceId: null },
+    variables: { workspaceId: null, spellId: NOWHERE },
     outcome: 'invalid',
   },
 };
@@ -653,14 +653,13 @@ const OPEN_WRITES = [
   'updateSpell',
   // The coven's `spell: delete` decides, which the spell service checks.
   'deleteSpell',
-  // The coven's `spell: create` decides, and the copy's source is a spell the caller may read.
+  // The coven's `spell: create` decides, which the spell service checks.
   'duplicateSpell',
-  // The coven's `working: create` decides, which the working service checks.
+  // The coven's `working: create`, `update` and `delete` decide, which the working service checks; a change or a delete
+  // also needs the recorder, or for a change someone named on the working.
   'recordWorking',
-  // The coven's `working: update` decides, and the caller must be the working's recorder or named on it.
   'updateWorking',
   'completeWorking',
-  // The coven's `working: delete` decides, and the caller must be the working's recorder.
   'deleteWorking',
 ];
 
