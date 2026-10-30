@@ -246,8 +246,8 @@ const Page = ({ children }: { children: ReactNode }) => (
 );
 
 // The cupboard choices beside the title. With no API, a press answers with the
-// generic error in the failure callout. A member sees Annotate, More and the Remove
-// bin once the coven holds the entry; a viewer sees none.
+// generic error in the failure callout. A member sees Annotate and More, holding Make It
+// Ours and Remove, once the coven holds the entry; a viewer sees none.
 const CUPBOARD = {
   workspaceId: nextId(),
   covenSlug: FIXTURE_COVEN.slug,
@@ -315,7 +315,7 @@ const noFormalNameNode = (
 );
 
 // A coven's own entry, badged Local, with its latest editor right-aligned above
-// the icon row. It has no Edit.
+// the icon row, as a viewer sees it: no Edit and no More.
 const covenEntryNode = (
   <Entry
     detail={{
@@ -323,6 +323,34 @@ const covenEntryNode = (
       entry: entryRow({ workspaceId: FIXTURE_WORKSPACE_ID }),
     }}
     lastEdit={{ by: 'Fixture A', at: new Date(Date.now() - 3_600_000).toISOString() }}
+  />
+);
+
+// The same to a member: the Edit pencil, then More, holding Edit Stock and Delete Ingredient.
+// With no API, Delete Ingredient's question answers with the generic error in the callout.
+const covenEntryForMemberNode = (
+  <Entry
+    detail={{
+      ...FULL,
+      entry: entryRow({ workspaceId: FIXTURE_WORKSPACE_ID }),
+    }}
+    edit={{
+      href: '/coven/fixture-coven/ingredients/fixture?edit' as Route,
+      closeHref: '/coven/fixture-coven/ingredients/fixture' as Route,
+      deletedHref: BACK.href,
+      coven: {
+        workspaceId: FIXTURE_WORKSPACE_ID,
+        ingredientsHref: BACK.href,
+        mayPromote: true,
+        stock: {
+          forms: FULL.variants.map(({ variant }) => ({
+            variantId: variant.id,
+            label: variant.form.replace(/\b\w/g, (c) => c.toUpperCase()),
+          })),
+          jars: [],
+        },
+      },
+    }}
   />
 );
 
@@ -400,8 +428,8 @@ const annotateOrRemoveNode = (
   />
 );
 
-// Remove the one choice left: no Make It Ours, no Annotate, so it is the bin and there are no dots.
-const removeIsTheBinNode = (
+// Remove the one choice left: no Make It Ours, no Annotate. It is still an item of More, never a bin.
+const removeAloneInMoreNode = (
   <Entry
     detail={{ ...FULL, cupboardEntry: cupboardEntry() }}
     cupboard={{ ...CUPBOARD, canAnnotate: false, canMakeOurs: false }}
@@ -1024,6 +1052,7 @@ const STATES_STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   'No Formal Name': noFormalNameNode,
   'Coven Entry': covenEntryNode,
+  'Coven Entry For Member': covenEntryForMemberNode,
   'Unknown With Name': unknownWithNameNode,
   'Unknown Without Name': unknownWithoutNameNode,
   'From The Compendium': fromTheCompendiumNode,
@@ -1032,7 +1061,7 @@ const STATES_STATES: Record<string, ReactNode> = {
   'Annotated With Stock And Compendium Panel': annotatedWithStockAndPanelNode,
   Toxic: toxicNode,
   'Annotate Or Remove': annotateOrRemoveNode,
-  'Remove Is The Bin': removeIsTheBinNode,
+  'Remove Alone In More': removeAloneInMoreNode,
   'New With Back': newWithBackNode,
   'Long Names': longNamesNode,
   'Long Names Public': longNamesPublicNode,
