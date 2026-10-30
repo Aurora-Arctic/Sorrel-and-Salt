@@ -88,11 +88,11 @@ describe('SpellWorkings', () => {
 
   it('says on a draft row what completing it would skip, and on no complete row', () => {
     renderSection([
-      working({ id: 'w1', status: 'draft', warnings: ['Completing skips Salt: units differ'] }),
-      working({ id: 'w2', warnings: ['Completing skips Pepper: not in stock'] }),
+      working({ id: 'w1', status: 'draft', warnings: ['Completing skips 2 steps'] }),
+      working({ id: 'w2', warnings: ['Completing skips 1 step'] }),
     ]);
-    expect(within(rows()[0]!).getByText('Completing skips Salt: units differ')).toBeVisible();
-    expect(screen.queryByText(/Pepper/)).not.toBeInTheDocument();
+    expect(within(rows()[0]!).getByText('Completing skips 2 steps')).toBeVisible();
+    expect(screen.queryByText(/Completing skips 1 step/)).not.toBeInTheDocument();
   });
 
   it("offers Complete on the recorder's own draft row only, in the slot the page fills", () => {

@@ -20,7 +20,8 @@ export const NOT_DEDUCTED: Record<NotDeductedReason, string> = {
   CUSTOM: `Not deducted: ${REASON.CUSTOM}`,
 };
 
-/** What a draft working says beside Complete about one step it would skip. */
-export function skipLine(stepName: string | null | undefined, reason: NotDeductedReason): string {
-  return `Completing skips ${stepName ?? 'a removed step'}: ${REASON[reason]}`;
+/** What a draft working says beside Complete: how many steps it would skip, the reasons staying in the Complete dialog. */
+export function skipSummary(count: number): string | null {
+  if (count === 0) return null;
+  return `Completing skips ${count} ${count === 1 ? 'step' : 'steps'}`;
 }

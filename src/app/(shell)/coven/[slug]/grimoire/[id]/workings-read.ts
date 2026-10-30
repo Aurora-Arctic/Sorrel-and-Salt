@@ -3,8 +3,7 @@ import type { RecipeStep } from '@/components/SpellRecipe/types';
 import type { WorkingView } from '@/components/SpellWorkings/types';
 import { allPages } from '@/lib/pagination';
 import type { Session } from '@/lib/session';
-import type { NotDeductedReason } from '@/gql/graphql';
-import { skipLine } from '@/components/RecordWorking/warnings';
+import { skipSummary } from '@/components/RecordWorking/warnings';
 import { listWorkingsPage, previewWorkingDeductions } from '@/modules/grimoire';
 import { displayNamesOf } from '@/modules/identity';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
@@ -12,19 +11,6 @@ import { formLabel } from '@/modules/ingredients/validation/form-label';
 // A spell's workings as the recipe page's Workings section draws them. Read through the
 // connection finder as the signed-in session, which keeps a private working to its recorder and the
 // people named on it in SQL; per request, never cached (rule 6).
-
-type ServiceReason = Awaited<
-  ReturnType<typeof previewWorkingDeductions>
->['warnings'][number]['reason'];
-
-/** The service's reasons under the names the dialog's wording is keyed by. */
-const REASON: Record<ServiceReason, NotDeductedReason> = {
-  custom: 'CUSTOM',
-  unstocked: 'UNSTOCKED',
-  'no-quantity': 'NO_QUANTITY',
-  'units-differ': 'UNITS_DIFFER',
-  'jar-not-measured': 'JAR_NOT_MEASURED',
-};
 
 /** What a participant reads when no name is readable for them. */
 export const FORMER_MEMBER = 'A former member';
@@ -50,11 +36,10 @@ export async function readWorkingsOf(
   const completable = reports.some(
     ({ working }) => working.status === 'draft' && working.createdBy === session.userId,
   );
-  const skips = completable
-    ? (await previewWorkingDeductions(session, workspaceId, spellId)).warnings.map((warning) =>
-        skipLine(warning.stepName, REASON[warning.reason]),
-      )
-    : [];
+  const summary = completable
+    ? skipSummary((await previewWorkingDeductions(session, workspaceId, spellId)).warnings.length)
+    : null;
+  const skips = summary ? [summary] : [];
   const stepAt = new Map(steps.map((step, i) => [step.id, { step, position: i + 1 }]));
   return reports.map(({ working, participants, deductions }, i) => ({
     id: working.id,

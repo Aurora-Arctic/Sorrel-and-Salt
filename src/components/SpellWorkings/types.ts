@@ -24,7 +24,7 @@ export interface WorkingView {
   /** Each participant, a member under the name they last held or a typed name. */
   participants: readonly string[];
   deductions: readonly WorkingDeductionView[];
-  /** What completing a draft would skip, one line each, as the Complete dialog words it; none on a complete working. */
+  /** One line saying how many steps completing a draft would skip (the Complete dialog gives the reasons); none on a complete working. */
   warnings?: readonly string[];
   /** The viewer recorded it and may delete it. */
   canChange: boolean;

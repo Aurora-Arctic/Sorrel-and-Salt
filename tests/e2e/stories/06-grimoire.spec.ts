@@ -816,7 +816,7 @@ test(
     await expect(workings.getByText('Secret rite')).toHaveCount(0);
     await expect(workings.getByRole('button', { name: 'Complete' })).toHaveCount(1);
     await expect(workings.getByRole('listitem').filter({ hasText: 'Waiting rite' })).toContainText(
-      /Completing skips Rosemary.*not in stock/,
+      /Completing skips \d+ steps?/,
     );
     const first = workings.getByRole('listitem').filter({ hasText: 'First brewing' });
     // The recorder is not listed again among the people who took part.

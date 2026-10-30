@@ -9,7 +9,7 @@
 | `form.tsx`            | The form inside it                                                                                                                               |
 | `completion.tsx`      | `WorkingCompletion`: the deduction preview and its Confirm                                                                                       |
 | `complete-action.tsx` | `CompleteWorkingAction`: a Complete button opening `WorkingCompletion` in a dialog                                                               |
-| `warnings.ts`         | `NOT_DEDUCTED` and `skipLine`: why a step takes nothing, in words (no `'use client'`)                                                            |
+| `warnings.ts`         | `NOT_DEDUCTED` and `skipSummary`: why a step takes nothing, and the one-line skip count, in words (no `'use client'`)                            |
 | `types.ts`            | The props                                                                                                                                        |
 
 ## Recording and editing
@@ -27,7 +27,7 @@ Save as Draft keeps a draft, closes the dialog and refreshes the page, where the
 Workings list. Complete in the form saves first, then shows the preview. The date is a `DateField` day picker; its
 last pickable day is today, and a later date leaves both saves disabled. Closing with unsaved changes asks first.
 What completing a draft would skip is read from the preview query, since `SpellWorking.warnings`
-is empty outside a completion; `skipLine` words each line.
+is empty outside a completion; `skipSummary` words the draft row's count.
 
 `RecordWorkingDialog` takes the same props plus `onClose`, `returnTo` and an optional `working`
 (`{ id, workedOn, note, visibility, status, participants }`). With `working` it is titled "Edit
