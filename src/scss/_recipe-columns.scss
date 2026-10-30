@@ -55,10 +55,11 @@
     margin: 0;
   }
 
+  // Clear of the categories above, and of the Ingredients and steps below.
   .spell-recipe__facts-box {
     grid-row: 4;
     max-width: none;
-    margin-block: space(2) space(3);
+    margin-block: space(3) space(4);
   }
 
   .spell-recipe__summary {
@@ -66,11 +67,11 @@
     grid-column: 1;
   }
 
-  // The steps, or the line that stands in for them when there are none.
-  .spell-recipe__steps,
-  .spell-recipe__empty {
-    max-width: none;
-
+  // The steps under their Instructions heading, or the line that stands in for them: a plain box
+  // with no margin, not the page's spaced `section`, so its heading sits level with Ingredients.
+  .spell-recipe__instructions {
+    display: block;
+    margin: 0;
     @if $columns {
       grid-row: 5;
       grid-column: 2;
@@ -81,11 +82,26 @@
   }
 
   .spell-recipe__note {
+    // Clear of the steps, over the grid's gap.
+    margin-block-start: space(3);
+
     @if $columns {
       grid-row: 6;
     } @else {
       grid-row: 7;
     }
+  }
+
+  // The two headings alike and level, each a step over its list.
+  .spell-recipe__instructions > h2 {
+    display: block;
+    margin: 0;
+    font-size: 1.1em;
+  }
+
+  .spell-recipe__steps {
+    max-width: none;
+    margin-block-start: space(1);
   }
 
   .spell-recipe__summary {

@@ -214,35 +214,50 @@ test(
         variants: [makeVariant({ form: 'Leaf' })],
       });
       const id = await insertSpell(sql, coven.id, 'Fixture Columns', 'workspace', A, 'complete');
-      await sql`update spells set intent = 'To set things side by side', jar_description = '4 oz jar', note = 'Seal it well.' where id = ${id}`;
+      await sql`update spells set intent = 'To set things side by side through a long night of careful work, when the lamp is low and the pen must not shake, and the page must be finished before the household wakes', jar_description = '4 oz jar', note = 'Seal it well, and keep the jar sealed until the moon turns, then open it only in daylight and never where a draught can reach the wax.' where id = ${id}`;
       await insertStep(sql, id, first, { quantity: 2, unit: 'g', position: 0 }, A);
       await insertStep(sql, id, second, { quantity: 3, unit: 'g', position: 1 }, A);
       return id;
     });
     await signInAgainAs(page, A);
-    await page.setViewportSize({ width: 1280, height: 900 });
+    await page.setViewportSize({ width: 1440, height: 1000 });
     await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
 
-    // The gaps the two layouts share, in rem so paper's smaller type does not count: from the
-    // title to the lead, and from one step to the next.
-    const gaps = () =>
+    // What the two layouts share, in rem so paper's smaller type does not count: the gaps from the
+    // title to the lead, the categories to the facts strip, the strip to the Ingredients row, that row
+    // to the note, and one step to the next; and the lines the intent and the note break into, which
+    // match only when the two columns hold the same characters.
+    const layout = () =>
       page.evaluate(() => {
         const pane = document.querySelector('.spell-preview[open]');
         const root = pane ?? document;
         const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
         const box = (sel: string) => root.querySelector(sel)!.getBoundingClientRect();
+        const lines = (sel: string) => {
+          const range = document.createRange();
+          range.selectNodeContents(root.querySelector(sel)!);
+          return new Set([...range.getClientRects()].map((r) => Math.round(r.top))).size;
+        };
         const title = box(pane ? '.spell-preview__title' : '.spell-recipe__head h1');
         const lead = box('.spell-recipe__lead');
+        const facts = box('.spell-recipe__facts-box');
+        const summary = box('.spell-recipe__summary');
+        const note = box('.spell-recipe__note');
         const [one, two] = [...root.querySelector('ol[aria-label="Steps"]')!.children].map((el) =>
           el.getBoundingClientRect(),
         );
         return {
           headToLead: (lead.top - title.bottom) / rem,
+          leadToFacts: (facts.top - lead.bottom) / rem,
+          factsToRow: (summary.top - facts.bottom) / rem,
+          rowToNote: (note.top - Math.max(summary.bottom, two!.bottom)) / rem,
           stepToStep: (two!.top - one!.bottom) / rem,
+          intentLines: lines('.spell-recipe__intent'),
+          noteLines: lines('.spell-recipe__note'),
         };
       });
     await page.emulateMedia({ media: 'print' });
-    const printed = await gaps();
+    const printed = await layout();
     await page.emulateMedia({ media: 'screen' });
 
     const box = (locator: Locator) =>
@@ -251,21 +266,37 @@ test(
     const pane = page.getByRole('dialog', { name: 'Fixture Columns' });
     await expect(pane).toBeVisible();
     const heading = pane.getByRole('heading', { name: 'Ingredients' });
+    const instructions = pane.getByRole('heading', { name: 'Instructions' });
     const ingredients = pane.getByRole('list', { name: 'Ingredients' });
     const steps = pane.getByRole('list', { name: 'Steps' });
-    const firstStep = steps.getByRole('listitem').first();
 
-    // Wide: Ingredients to the left of the steps, its heading level with the first step.
+    // Wide: Ingredients to the left of the steps, its heading level with the Instructions heading
+    // over them, and the column the printed sheet's width in the pane's rem.
     expect((await box(ingredients)).right).toBeLessThanOrEqual((await box(steps)).left);
-    expect(Math.abs((await box(heading)).top - (await box(firstStep)).top)).toBeLessThanOrEqual(1);
+    expect(Math.abs((await box(heading)).top - (await box(instructions)).top)).toBeLessThanOrEqual(
+      1,
+    );
+    expect((await box(instructions)).bottom).toBeLessThanOrEqual((await box(steps)).top);
     // The close X ends where the content does.
     const close = await box(pane.getByRole('button', { name: 'Close' }));
     const content = await box(pane.locator('.spell-preview__content'));
     expect(Math.abs(close.right - content.right)).toBeLessThanOrEqual(1);
-    // The pane's gaps are the printed page's.
-    const shown = await gaps();
-    expect(Math.abs(shown.headToLead - printed.headToLead)).toBeLessThan(0.05);
-    expect(Math.abs(shown.stepToStep - printed.stepToStep)).toBeLessThan(0.05);
+    // The pane's gaps are the printed page's, and its lines break where the printed ones do. Why
+    // they could differ: the paper is 180mm wide at an 11pt root and the pane 742px at 16px.
+    const shown = await layout();
+    expect(printed.intentLines).toBeGreaterThan(1);
+    expect(shown.intentLines).toBe(printed.intentLines);
+    expect(shown.noteLines).toBe(printed.noteLines);
+    for (const gap of [
+      'headToLead',
+      'leadToFacts',
+      'factsToRow',
+      'rowToNote',
+      'stepToStep',
+    ] as const) {
+      // Within a tenth of a rem: paper's 11pt lines round to whole pixels differently.
+      expect(Math.abs(shown[gap] - printed[gap]), gap).toBeLessThan(0.1);
+    }
 
     // A phone: Ingredients above the steps.
     await page.setViewportSize({ width: 390, height: 844 });
