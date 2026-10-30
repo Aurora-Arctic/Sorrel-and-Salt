@@ -56,7 +56,7 @@ with no steps says so.
 - The `action` slot takes the page's controls, in a `.spell-recipe__actions` row at the heading's
   end: the Edit pencil for a role that may update the spell (M13.10), an `EditLink` to
   `?edit=<id>`, over which the page renders the spell builder's dialog, closing back to this
-  page; the Preview button ([`spell-preview.md`](spell-preview.md), M13.12) for every role; and, last, a three-dots `SpellMoreMenu` (`more-menu.tsx`) holding Duplicate and Delete Spell (destructive), each only for a role that may do it; a role that may do neither gets no menu. The header ends with icon buttons in the order Preview, Print, the pencil, the menu; Record a Working is the one text button, first (owner's call, 2026-10-30). Delete Spell's dialog is `delete-spell.tsx`.
+  page; the Preview button ([`spell-preview.md`](spell-preview.md), M13.12) for every role; and, last, a three-dots `SpellMoreMenu` (`more-menu.tsx`) holding Duplicate and Delete Spell (destructive), each only for a role that may do it; a role that may do neither gets no menu. The header is icon buttons only, in the order Record a Working (the cauldron), Preview, Print, the pencil, the menu. Delete Spell's dialog is `delete-spell.tsx`.
   The menu item is named for the spell ("Delete Spell Hearth Warding") and asks in a `Modal` titled
   Delete Spell, as a coven's own ingredient's page asks (M8.17, M9.10): the question names the
   spell and says the coven loses it, Delete is `.btn--destructive` and busy "Deleting", Cancel

@@ -9,9 +9,11 @@ export {
   PreviewButton,
   PrintButton,
   QuickLookButton,
+  RecordButton,
 } from './icon-button';
 export {
   BinIcon,
+  CauldronIcon,
   CheckIcon,
   CopyIcon,
   DotsIcon,
