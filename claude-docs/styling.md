@@ -739,7 +739,7 @@ Four variants:
   the edge `$edge-highlight`, in place of filling with ink (M8.17, the owner's
   call of 2026-10-20). The label on the lit ground holds 4.5:1 in both themes
   (`tests/scss/tokens.test.ts`).
-- **`.btn--destructive`**, what destroys something: Delete, Remove, Discard Changes. The wax,
+- **`.btn--destructive`**, what destroys something: Delete, Remove, Discard Changes. It also marks a high-risk control that destroys nothing, and only two exist: Impersonate (on the row, in the user modal and on its confirm) and Pause Admin Changes (Pause, Resume and its confirm). The wax,
   `$secondary`, which every error wears too. It was `.btn--secondary`, named
   for the token rather than the job, until M5.6, the owner's call.
 
