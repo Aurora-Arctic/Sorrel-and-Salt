@@ -78,7 +78,12 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
   const search = await searchParams;
   const opened =
     canEdit && 'edit' in search
-      ? { id: entry.id, values: await entryValues(entry, null) }
+      ? {
+          id: entry.id,
+          values: await entryValues(entry, null),
+          revision: entry.revision,
+          updatedAt: entry.updatedAt.toISOString(),
+        }
       : undefined;
   // The covens of the viewer's that hold the entry, read once: the shelf mark before the
   // name says any does, and the cupboard choices say which. Someone in no coven has none to ask.

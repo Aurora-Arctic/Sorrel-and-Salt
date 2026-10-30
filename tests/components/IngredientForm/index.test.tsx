@@ -162,7 +162,7 @@ describe('IngredientForm', () => {
 
       await waitFor(() =>
         expect(onSaved).toHaveBeenCalledWith(
-          { id: 'saved-1', name: 'Testwort', slug: 'saved', stock: [] },
+          { id: 'saved-1', name: 'Testwort', slug: 'saved', revision: 1, stock: [] },
           'open',
         ),
       );
@@ -237,7 +237,7 @@ describe('IngredientForm', () => {
 
       await waitFor(() =>
         expect(onSaved).toHaveBeenCalledWith(
-          { id: 'saved-1', name: 'Testwort', slug: 'saved', stock: [] },
+          { id: 'saved-1', name: 'Testwort', slug: 'saved', revision: 1, stock: [] },
           'open',
         ),
       );
@@ -281,7 +281,7 @@ describe('IngredientForm', () => {
 
       await waitFor(() =>
         expect(onSaved).toHaveBeenCalledWith(
-          { id: 'saved-1', name: 'Testwort', slug: 'saved', stock: [] },
+          { id: 'saved-1', name: 'Testwort', slug: 'saved', revision: 1, stock: [] },
           'another',
         ),
       );
@@ -834,7 +834,15 @@ describe('IngredientForm', () => {
           await gate;
           const { name } = (variables as { input: { name: string } }).input;
           return HttpResponse.json({
-            data: { createWorkspaceIngredient: { id: 'saved-1', name, slug: 'saved', stock: [] } },
+            data: {
+              createWorkspaceIngredient: {
+                id: 'saved-1',
+                name,
+                slug: 'saved',
+                revision: 1,
+                stock: [],
+              },
+            },
           });
         }),
       );
@@ -1277,6 +1285,7 @@ describe('IngredientForm', () => {
         id: 'saved-1',
         name: variables.input.name,
         slug: 'saved',
+        revision: 1,
         stock: [{ quantityOnHand: 30, unit: 'g', variant: { form: 'Dried' } }],
       },
     }));
@@ -1308,6 +1317,7 @@ describe('IngredientForm', () => {
               id: 'saved-1',
               name: variables.input.name,
               slug: 'saved',
+              revision: 1,
               stock: [],
             },
           },
@@ -1329,10 +1339,11 @@ describe('IngredientForm', () => {
     expect(rest).not.toHaveAttribute('aria-busy');
     release();
     await waitFor(() => expect(onSaved).toHaveBeenCalled());
-    // Back up once answered.
-    expect(submit).toBeEnabled();
+    // Released once answered; what it saved is now the form's baseline, so both wait for a change.
+    await waitFor(() => expect(submit).not.toHaveAttribute('aria-busy'));
+    type('Name', 'Testworts');
+    await waitFor(() => expect(submit).toBeEnabled());
     expect(rest).toBeEnabled();
-    expect(submit).not.toHaveAttribute('aria-busy');
   });
 });
 

@@ -54,6 +54,7 @@ function acceptPromote(oldName = 'Testwort'): Sent {
       updateCompendiumIngredient: {
         id: String(variables.id),
         name: variables.input.name,
+        revision: 1,
         slug: 'testwort',
       },
     };

@@ -35,6 +35,8 @@ export interface CompendiumSearchParams extends ListSearchParams {
 /** The entry an edit opens: its id, which the writes name, and its values as the form shows them. */
 export interface EditedEntry {
   id: string;
+  revision?: number | null;
+  updatedAt?: string | null;
   values: IngredientFormValues;
 }
 

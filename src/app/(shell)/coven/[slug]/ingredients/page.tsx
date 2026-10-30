@@ -221,7 +221,12 @@ export default async function CovenIngredientsPage({
               // again; a delete goes back to the list, the details' entry gone.
               deletedHref: listHref,
               savedHref: hereHref,
-              opened: edited && { id: edited.entry.id, values: edited.values },
+              opened: edited && {
+                id: edited.entry.id,
+                values: edited.values,
+                revision: edited.entry.revision,
+                updatedAt: edited.entry.updatedAt.toISOString(),
+              },
               coven: {
                 workspaceId: workspace.id,
                 ingredientsHref: covenIngredientsPath(workspace.slug),

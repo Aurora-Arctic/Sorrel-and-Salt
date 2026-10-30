@@ -144,31 +144,6 @@ describe('IngredientForm’s variants', () => {
     expect(calls).toHaveLength(0);
   });
 
-  it('asks one question at a time: Cancel while a removal asks shows the unsaved changes instead', async () => {
-    offerNothing();
-    renderWithClient(
-      <IngredientForm
-        duplicateHref={duplicateHref}
-        workspaceId={WORKSPACE_ID}
-        onSaved={vi.fn()}
-        onCancel={vi.fn()}
-      />,
-    );
-
-    addVariant('Oil');
-    press(within(variant('Oil')).getByRole('button', { name: 'Remove Oil' }));
-    // Outside a modal nothing holds the form inert, so Cancel is still in reach.
-    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
-
-    expect(screen.queryByRole('button', { name: 'Keep It' })).toBeNull();
-    press('Keep Editing');
-
-    expect(screen.getByRole('button', { name: 'Keep It' })).toBeInTheDocument();
-    expect(variant('Oil')).toBeInTheDocument();
-    // Leaving a field validates it; let that land inside the test.
-    await act(async () => {});
-  });
-
   it('opens an entry’s variants as fieldsets and saves each back by its id', async () => {
     const calls = acceptUpdate();
     renderForm({

@@ -537,6 +537,7 @@ function answer(operation: string, variables: Record<string, unknown>): object |
           id: crypto.randomUUID(),
           name: input?.name ?? '',
           slug: 'new',
+          revision: 1,
           stock: [],
         },
       } satisfies CreateWorkspaceIngredientMutation;
@@ -548,13 +549,19 @@ function answer(operation: string, variables: Record<string, unknown>): object |
           id: crypto.randomUUID(),
           name: input?.name ?? '',
           slug: 'new',
+          revision: 1,
         },
       } satisfies CreateCompendiumIngredientMutation;
     }
     case 'UpdateCompendiumIngredient': {
       const input = variables.input as { name?: string } | undefined;
       return {
-        updateCompendiumIngredient: { id: ENTRY.id, name: input?.name ?? '', slug: 'saved' },
+        updateCompendiumIngredient: {
+          id: ENTRY.id,
+          name: input?.name ?? '',
+          slug: 'saved',
+          revision: 1,
+        },
       } satisfies UpdateCompendiumIngredientMutation;
     }
     case 'PromoteFolkName':
