@@ -23,7 +23,7 @@ const Working = ({
   const day = dayWords(working.workedOn);
   const showsComplete = working.status === 'draft' && Boolean(working.editable);
   return (
-    <li className="spell-workings__row">
+    <li>
       <div className="spell-workings__head">
         <h3>
           <time dateTime={working.workedOn}>{day}</time>
@@ -45,7 +45,7 @@ const Working = ({
       </div>
       {working.status === 'draft' &&
         working.warnings?.map((line) => (
-          <p key={line} className="meta spell-workings__warning">
+          <p key={line} className="meta">
             {line}
           </p>
         ))}

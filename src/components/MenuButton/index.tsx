@@ -93,7 +93,7 @@ function MenuGroup({
       {/* oxlint-disable-next-line jsx-a11y/control-has-associated-label, jsx-a11y/prefer-tag-over-role -- menu items need role=menuitem siblings, so the rule and group stay plain elements with their roles */}
       {!first && <div role="separator" className="menu-button__rule" />}
       {/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- menu items need role=menuitem siblings, so the rule and group stay plain elements with their roles */}
-      <div role="group" aria-labelledby={labelId} className="menu-button__group">
+      <div role="group" aria-labelledby={labelId}>
         <div id={labelId} className="menu-button__heading">
           {section.label}
         </div>

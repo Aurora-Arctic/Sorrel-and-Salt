@@ -34,7 +34,7 @@ export const labelOf = ({ name, form }: IngredientRecipeStep): string =>
 const Name = ({ step }: { step: IngredientRecipeStep }): ReactElement => (
   <>
     <span>{labelOf(step)}</span>
-    {step.formal !== null && <span className="meta spell-recipe__formal"> ({step.formal})</span>}
+    {step.formal !== null && <span className="meta"> ({step.formal})</span>}
     {step.deleted && <span className="meta"> (Deleted)</span>}
     {step.look && (
       <>

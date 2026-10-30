@@ -14,26 +14,13 @@ import { enGB } from 'react-day-picker/locale';
 import { ComboboxSelect } from '../Combobox/select';
 import { ChevronIcon } from '../Combobox/icons';
 import { dayWords, isoDay, today } from './day';
+import type { DateFieldProps } from './types';
 import './index.scss';
 
 // A day field: a button showing the day in words, opening a calendar. It replaces the browser's date
 // input, whose look and highlight differ by browser. The calendar is a popover in the top layer, so it
 // floats over the fields below and no scrolling ancestor clips it; where the browser has no popover
 // (an older one) it opens in flow beneath the button instead (claude-docs/components/date-field.md).
-
-export interface DateFieldProps {
-  id: string;
-  /** The day, `YYYY-MM-DD`. */
-  value: string;
-  onChange: (value: string) => void;
-  /** The last day that may be picked, `YYYY-MM-DD`. */
-  max?: string;
-  disabled?: boolean;
-  /** The id of the label element, so the button reads "Date, 4 March 2026". */
-  labelledBy: string;
-  'aria-invalid'?: boolean;
-  'aria-describedby'?: string;
-}
 
 const DAY = /^(\d{4})-(\d{2})-(\d{2})$/;
 

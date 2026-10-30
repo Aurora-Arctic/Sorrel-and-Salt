@@ -85,7 +85,6 @@ function DeductionLine({ row, onSaved }: { row: PreviewRow; onSaved: () => void 
   const form = step.form ?? '';
   return (
     <JarLine
-      className="working-deductions__line"
       seed={step.seed ?? step.name}
       kind={form}
       held={held}
@@ -204,7 +203,6 @@ export default function WorkingCompletion({
             {orphans.map((warning) => (
               <JarLine
                 key={warning.stepId}
-                className="working-deductions__line"
                 seed=""
                 kind=""
                 held={null}
