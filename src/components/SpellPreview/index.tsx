@@ -93,12 +93,15 @@ export default function SpellPreview(props: SpellPreviewProps): ReactElement {
             <span aria-hidden="true">×</span>
           </button>
         </div>
-        <div className="spell-preview__content">
-          <h2 id="spell-preview-title" className="spell-preview__title">
-            {title}
-          </h2>
-          <SpellRecipeBody {...props} beforeSteps={<SpellRecipeSummary steps={steps} />} />
-        </div>
+        {/* Drawn only while open, so the page holds no second copy of the spell. */}
+        {open && (
+          <div className="spell-preview__content">
+            <h2 id="spell-preview-title" className="spell-preview__title">
+              {title}
+            </h2>
+            <SpellRecipeBody {...props} beforeSteps={<SpellRecipeSummary steps={steps} />} />
+          </div>
+        )}
       </dialog>
     </>
   );

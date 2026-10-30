@@ -89,6 +89,15 @@ describe('SpellPreview', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
+  it('holds no copy of the spell in the page while closed', () => {
+    render(onPage());
+    expect(screen.queryByText('Keeps the hearth warm.')).toBeNull();
+    press(opener());
+    expect(screen.getByText('Keeps the hearth warm.')).toBeTruthy();
+    press(within(pane()).getByRole('button', { name: 'Close' }));
+    expect(screen.queryByText('Keeps the hearth warm.')).toBeNull();
+  });
+
   it('opens a pane of everything the printed spell shows, and no controls but Close', () => {
     render(onPage());
     press(opener());
