@@ -1,0 +1,47 @@
+name: probe-inner
+on:
+  workflow_call:
+    inputs:
+      run-yes:
+        type: boolean
+        default: true
+      run-no:
+        type: boolean
+        default: false
+jobs:
+  # (a) matrix job, job-level if on matrix.should-run
+  matrix-if:
+    if: matrix.should-run
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: m-on
+            should-run: true
+          - name: m-off
+            should-run: false
+    name: matrix-if (${{ matrix.name }})
+    steps:
+      - run: echo ${{ matrix.name }}
+  # (b) plain jobs, job-level if on inputs
+  plain-yes:
+    if: inputs.run-yes
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo yes
+  plain-no:
+    if: inputs.run-no
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo no
+  # control: flag resolved in a step
+  control-yes:
+    runs-on: ubuntu-latest
+    steps:
+      - if: inputs.run-yes
+        run: echo yes
+  control-no:
+    runs-on: ubuntu-latest
+    steps:
+      - if: inputs.run-no
+        run: echo no
