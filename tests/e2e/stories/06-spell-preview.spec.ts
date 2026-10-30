@@ -181,6 +181,30 @@ test(
   },
 );
 
+test(
+  'only the pane scrolls while it is open, and its Close scrolls away with the content',
+  { tag: '@story-85' },
+  async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    const pane = await longSpell(page, 'story-85-lock');
+    const close = pane.getByRole('button', { name: 'Close' });
+    // The page behind is long enough to scroll, which is what the pane must not let happen.
+    expect(await page.evaluate(() => document.documentElement.scrollHeight)).toBeGreaterThan(900);
+    const scrolled = await page.evaluate(() => window.scrollY);
+    const paneTop = (await rect(pane)).top;
+    await pane.hover();
+    await page.mouse.wheel(0, 400);
+    await expect.poll(() => pane.evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
+    expect(await page.evaluate(() => window.scrollY)).toBe(scrolled);
+    expect((await rect(close)).bottom).toBeLessThan(paneTop);
+    await pane.screenshot({
+      path: `${process.env.SHOTS ?? 'test-results'}/preview-scroll-lock-390.png`,
+    });
+    await page.keyboard.press('Escape');
+    await expect(pane).toHaveCount(0);
+  },
+);
+
 test('a non-member gets a 404 for the spell', { tag: '@story-85' }, async ({ page }) => {
   const coven = await seedCoven(page, 'Fixture Coven Eighty-Five B', 'story-85b.test', {
     A: 'owner',

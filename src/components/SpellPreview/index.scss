@@ -24,6 +24,8 @@ $preview-head-phone: calc(#{$preview-edge-phone} + #{$icon-size-large} + #{space
   padding-bottom: $preview-head;
   border: 0;
   overflow-y: auto;
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: a browser without it lets a scroll past the pane's end reach the page behind, which is held still anyway, not yet Baseline
+  overscroll-behavior: contain;
 
   &:focus {
     outline: none;
@@ -36,12 +38,17 @@ $preview-head-phone: calc(#{$preview-edge-phone} + #{$icon-size-large} + #{space
   }
 }
 
-// The controls sit in a row above the title, at the end, and stay in view as the steps scroll. A row and
+// While the pane is open only it scrolls: the page behind holds still, as it does under a modal, and the
+// room the page's scrollbar took is given back as padding, `--scrollbar-width`, which `holdPage` sets
+// (claude-docs/components/modal.md, "Styling").
+:root:has(.spell-preview:modal) {
+  overflow: hidden;
+  padding-inline-end: var(--scrollbar-width, 0);
+}
+
+// The controls sit in a row above the title, at the end, and scroll away with the content. A row and
 // not a float, so a long title never wraps around them.
 .spell-preview__bar {
-  position: sticky;
-  top: 0;
-  z-index: 1;
   display: flex;
   justify-content: flex-end;
   gap: space(2);

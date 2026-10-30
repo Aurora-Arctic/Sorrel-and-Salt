@@ -6,6 +6,7 @@ import IconTip, { CloseIcon, MysticEyeIcon, PreviewButton } from '../IconTip';
 import { SpellCardFilters } from '../SpellCard';
 import SpellRecipeBody from '../SpellRecipe/body';
 import SpellRecipeSummary from '../SpellRecipe/summary';
+import { holdPage } from '../Modal/page-hold';
 import { EDGE_EMBERS, HEARTH_EMBERS } from './embers';
 import type { Ember, SpellPreviewProps } from './types';
 import { useWakeLock } from './use-wake-lock';
@@ -120,6 +121,8 @@ export default function SpellPreview(props: SpellPreviewProps): ReactElement {
       if (dialog.open) dialog.close();
       return;
     }
+    // Measured before showModal(), while the page's scrollbar is still there to be replaced.
+    const release = holdPage();
     if (!dialog.open) dialog.showModal();
     // Past the browser floor on some engines (iPhone Safari has no element full screen): a pure
     // enhancement behind a `typeof` check, with the dialog covering the window as the fallback.
@@ -138,6 +141,7 @@ export default function SpellPreview(props: SpellPreviewProps): ReactElement {
     document.addEventListener('fullscreenchange', onChange);
     return () => {
       document.removeEventListener('fullscreenchange', onChange);
+      release();
       inFullscreen.current = false;
       // The pane is gone, which ends full screen on its own; asking too keeps the browser's state tidy.
       if (typeof document.exitFullscreen === 'function' && document.fullscreenElement) {
