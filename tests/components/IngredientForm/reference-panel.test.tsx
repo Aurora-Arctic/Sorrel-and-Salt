@@ -1,6 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { HttpResponse } from 'msw';
+import { HttpResponse } from 'msw/http';
 import { describe, expect, it, vi } from 'vitest';
 import ReferencePanel from '@/components/IngredientForm/reference-panel';
 import type { CreateReferenceMutation, CreateReferenceMutationVariables } from '@/gql/graphql';

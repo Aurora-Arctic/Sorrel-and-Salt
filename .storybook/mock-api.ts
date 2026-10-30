@@ -5,7 +5,9 @@
 import { type TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { type DocumentNode, getOperationAST } from 'graphql';
 import { useLayoutEffect } from 'react';
-import { delay, graphql, http, HttpResponse, type RequestHandler } from 'msw';
+import { graphql } from 'msw/graphql';
+import { http, HttpResponse } from 'msw/http';
+import { delay, type RequestHandler } from 'msw';
 import type { SetupWorker } from 'msw/browser';
 import { apiPath } from '@/lib/api-path';
 
@@ -190,7 +192,7 @@ export async function startMockWorker(): Promise<SetupWorker> {
   await worker.start({
     quiet: true,
     serviceWorker: { url: './mockServiceWorker.js' },
-    onUnhandledRequest: 'bypass',
+    onUnhandledFrame: 'bypass',
   });
   return worker;
 }

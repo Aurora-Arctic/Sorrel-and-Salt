@@ -24,10 +24,6 @@ From a clean checkout, in this order:
 
 **Revisit when** `graphql-armor` accepts `graphql` 17; it is the only blocker left. The pin's reasoning is [`graphql/graphql-pin.md`](graphql/graphql-pin.md).
 
-## `msw` 3 is on hold
-
-msw 3.0.3 is out and the move is small: subpath imports and one renamed option (M10.29). It is on hold since 2026-10-12 because its `@mswjs/interceptors` 0.45 intercepts raw TCP sockets and writes a passed-through socket's first chunk twice, which breaks postgres.js's handshake in every test that mocks HTTP while talking to Postgres (mswjs/interceptors issue #860, open). The tests stay on msw 2.15. **Revisit when** interceptors ships the fix; the finished move waits on the `feature/m10.29-msw-3` branch.
-
 ## Only prereleases ahead
 
 - `drizzle-orm` and `drizzle-kit` `1.0.0-rc.4` (June 2026); `latest` is still 0.45 and 0.31. [`db/orm-version.md`](db/orm-version.md) holds the decision and its three triggers; none has fired. **Revisit when** `1.0` reaches the `latest` dist-tag.
