@@ -138,3 +138,7 @@ form holds a sentence, a list and a button in every kind, with the same roles
 and no list or button inside a paragraph or an `<output>`; and that a notice
 `inRegion` takes no role, so the region round it is the one thing announced. The look is the story's (`Feedback / Notice`, both themes at
 375px) and axe's on every page that shows one.
+
+## The demo coven's notice
+
+The `/coven/[slug]` layout draws a plain `Notice` under the `ContextRow` on every page of the demo coven (`workspace.demo`) and of no other. A viewer or member reads that it is a demo, that they may look at everything and change nothing, and that a coven of their own starts with an invitation; an owner (a site admin, seated by the system) reads that what they change is what every new account sees. The coven page's `<h1>` also carries a `badge badge--demo` reading "Demo" (tinted, in Local's inks). Tests: `tests/app/(shell)/coven/layout.test.tsx` and `page.test.tsx`.

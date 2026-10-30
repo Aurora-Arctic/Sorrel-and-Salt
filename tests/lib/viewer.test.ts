@@ -24,9 +24,9 @@ const { covenRolesIfSignedIn, viewerIfSignedIn, viewerOf } = await import('@/lib
 
 const SESSION = { userId: 'u1', role: 'user' } as const;
 const ME = { name: 'Fixture Member', canCreateWorkspace: true, emailVerified: true };
-const membership = (slug: string, name: string, role = 'member') => ({
+const membership = (slug: string, name: string, role = 'member', demo = false) => ({
   role,
-  workspace: { id: `id-${slug}`, slug, name },
+  workspace: { id: `id-${slug}`, slug, name, demo },
 });
 
 beforeEach(() => {
@@ -90,6 +90,7 @@ describe('viewerOf', () => {
         canReadMembers: true,
         canInvite: false,
         canWrite: true,
+        demo: false,
       },
       {
         id: 'id-testwort-circle',
@@ -98,7 +99,24 @@ describe('viewerOf', () => {
         canReadMembers: false,
         canInvite: false,
         canWrite: false,
+        demo: false,
       },
+    ]);
+  });
+
+  it("carries the workspace row's demo flag, true for the demo coven alone", async () => {
+    membershipsOf.mockResolvedValue([
+      [
+        membership('sorrel-salt-demo', 'Sorrel & Salt Demo', 'viewer', true),
+        membership('fixture-coven', 'Fixture Coven'),
+      ],
+    ]);
+
+    const { workspaces } = await viewerOf();
+
+    expect(workspaces.map(({ slug, demo }) => [slug, demo])).toEqual([
+      ['fixture-coven', false],
+      ['sorrel-salt-demo', true],
     ]);
   });
 

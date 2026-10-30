@@ -281,6 +281,8 @@ because `$sorrel-vivid` on its own tint measured 4.42:1, under 4.5. As drawn,
 its label on its tint is 5.60:1 dark and 6.98:1 light, and its edge 4.23:1 and
 4.66:1 on the dark card and page, 4.46:1 and 4.01:1 on the light ones.
 
+**Demo** marks the one demo coven in the heading of its page (`badge--demo`). It wears Local's inks through the same two tokens, tinted, as its own palette.
+
 **Annotated** (M8.14) marks a compendium entry with the coven's own changes. It wears Local's inks exactly, through the shared `$local-badge-dark` and `$local-badge-light` tokens (the same idea as an entry of its own), tinted, with Local's contrast. It is its own palette, never `badge--local`.
 
 **Retired** (M12.24) marks a compendium entry the curators have retired, on

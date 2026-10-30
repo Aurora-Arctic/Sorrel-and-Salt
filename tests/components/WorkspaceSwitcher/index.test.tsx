@@ -30,6 +30,16 @@ beforeEach(() => {
 });
 
 describe('WorkspaceSwitcher', () => {
+  it('marks the demo coven as a demo in its option and no other', () => {
+    const workspaces = [WORKSPACES[0]!, { ...WORKSPACES[1]!, demo: true }];
+
+    render(<WorkspaceSwitcher workspaces={workspaces} />);
+    fireEvent.click(box());
+
+    expect(screen.getByRole('option', { name: /Testwort Circle.*Demo/ })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Fixture Coven' })).toBeInTheDocument();
+  });
+
   it('lists every workspace the viewer belongs to', () => {
     render(<WorkspaceSwitcher workspaces={WORKSPACES} />);
 

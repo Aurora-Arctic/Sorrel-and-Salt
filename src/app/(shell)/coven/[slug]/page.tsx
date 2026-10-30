@@ -58,7 +58,15 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
     <main className="page-with-nav">
       <div className="header">
         <p className="eyebrow">Coven</p>
-        <h1>{workspace.name}</h1>
+        <h1>
+          {workspace.name}
+          {workspace.demo && (
+            <>
+              {' '}
+              <span className="badge badge--demo">Demo</span>
+            </>
+          )}
+        </h1>
         <p className="lede">
           You are {ROLE_NAME[membership.role]} of this coven.{' '}
           {WORKSPACE_ROLE_ACCESS[membership.role]}

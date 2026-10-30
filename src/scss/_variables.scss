@@ -253,6 +253,12 @@ $badge-palettes: (
       dark: $local-badge-dark,
       light: $local-badge-light,
     ),
+  // The demo coven: Local's contrast-checked inks, as it is a place and not a warning.
+  'demo': (
+      treatment: tinted,
+      dark: $local-badge-dark,
+      light: $local-badge-light,
+    ),
   // A compendium entry with this coven's own changes: Local's contrast-checked inks.
   'annotated': (
       treatment: tinted,
