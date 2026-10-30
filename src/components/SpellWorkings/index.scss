@@ -9,9 +9,9 @@
   &__list {
     display: grid;
     gap: space(4);
-    margin: 0;
-    padding: 0;
-    list-style: none;
+
+    // No margin, indent or typography-base's ◆ marker: each row is headed by its date.
+    @include list-reset;
   }
 
   &__head {

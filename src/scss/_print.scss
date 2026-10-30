@@ -50,12 +50,56 @@
       gap: space(2);
     }
 
-    // One column: the side column is hidden, and the body takes the page.
-    .spell-recipe__columns {
-      display: block;
+    // The coven's name stands as plain text with nothing under it: no box, no chevron, no ground,
+    // no rule. The section nav beside it is gone, so the divider that told them apart goes too.
+    .context-row {
+      border-bottom: 0;
+      background: none;
     }
 
-    .spell-recipe__main,
+    .context-row__lead {
+      padding-right: 0;
+      margin-right: 0;
+
+      &::after {
+        content: none;
+      }
+    }
+
+    .workspace-switcher {
+      .input.combobox__control {
+        padding-inline: 0;
+        border-color: transparent;
+        border-width: 0;
+        background: none;
+      }
+
+      .combobox__indicators {
+        display: none;
+      }
+    }
+
+    // One column: the side column is hidden, and the body takes the page. The wrappers around the
+    // body's two boxes dissolve, so the summary can stand between them: intent and categories
+    // first, then the summary, then the facts, steps and note.
+    .spell-recipe__columns,
+    .spell-recipe__main {
+      display: contents;
+    }
+
+    .spell-recipe__lead {
+      order: 1;
+      margin: 0;
+    }
+
+    .spell-recipe__summary {
+      order: 2;
+    }
+
+    .spell-recipe__rest {
+      order: 3;
+    }
+
     .spell-recipe__lead,
     .spell-recipe__rest {
       display: flex;
@@ -73,7 +117,12 @@
 
       ul {
         margin: space(1) 0 0;
-        padding-inline-start: 1.25em;
+        padding-inline-start: 0;
+      }
+
+      // The ◆ hangs in the gutter the padding gave up, so with no gutter it goes too.
+      li::before {
+        content: none;
       }
     }
 

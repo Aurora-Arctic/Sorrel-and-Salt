@@ -4,6 +4,7 @@ import { signInAgainAs } from './session';
 import {
   insertSpell,
   insertStep,
+  insertWorking,
   compendiumVariant,
   seedCoven,
   withSql,
@@ -71,4 +72,82 @@ test('a viewer prints a one-page recipe with the summary first and no controls',
 
   const pdf = (await page.pdf()).toString('latin1');
   expect(pdf.match(/\/Type\s*\/Page[^s]/g)).toHaveLength(1);
+});
+
+test('the printed recipe names the coven with no line under it, leads with the intent and categories, sets the summary flush and leaves out Workings', async ({
+  page,
+}) => {
+  const coven = await seedCoven(page, 'Fixture Coven Layout', 'spell-print-layout.test', {
+    A: 'owner',
+  });
+  const { A } = coven.users;
+  const spellId = await withSql(async (sql) => {
+    const held = await compendiumVariant(sql, "Cat's Claw", 'Bark', 'Uncaria tomentosa');
+    const id = await insertSpell(sql, coven.id, 'Fixture Layout', 'workspace', A, 'complete');
+    await sql`update spells set intent = 'To draw a steady hand' where id = ${id}`;
+    await sql`
+      insert into spell_categories (spell_id, category_id, created_by, updated_by)
+      select ${id}, id, ${A}, ${A} from categories where deleted_at is null limit 1`;
+    await insertStep(sql, id, held, { quantity: 2, unit: 'g', position: 0 }, A);
+    await insertWorking(sql, id, A, { workedOn: '2026-03-04', note: 'Worked under a waxing moon' });
+    return id;
+  });
+  await signInAgainAs(page, A);
+  await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+
+  // On screen the section is there, so its absence in print is the print rules' doing.
+  const workings = page.getByRole('heading', { name: 'Workings' });
+  await expect(workings).toBeVisible();
+  await page.emulateMedia({ media: 'print' });
+  await expect(workings).toBeHidden();
+  await expect(page.getByText('Worked under a waxing moon')).toBeHidden();
+
+  // The coven's name stands as plain text (no box) and nothing draws a line under it.
+  const row = page.getByRole('region', { name: 'Context' });
+  const selector = row.getByRole('combobox', { name: 'Coven' });
+  await expect(selector).toBeVisible();
+  await expect(selector).toContainText('Fixture Coven Layout');
+  const edges = await selector.evaluate((el) => {
+    const style = getComputedStyle(el);
+    const rowStyle = getComputedStyle(el.closest('section')!);
+    return {
+      box: parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth),
+      rule: parseFloat(rowStyle.borderBottomWidth),
+    };
+  });
+  expect(edges.box).toBe(0);
+  expect(edges.rule).toBe(0);
+  const lineUnder = await row.evaluate((el) => {
+    const style = getComputedStyle(el);
+    return {
+      shadow: style.boxShadow,
+      image: style.backgroundImage,
+      after: getComputedStyle(el, '::after').content,
+    };
+  });
+  expect(lineUnder.shadow).toBe('none');
+  expect(lineUnder.image).toBe('none');
+  expect(['none', 'normal']).toContain(lineUnder.after);
+
+  // The intent and the categories come first, then the summary, then the steps.
+  const tops = await Promise.all(
+    [
+      page.getByText('To draw a steady hand'),
+      page.getByRole('list', { name: 'Categories' }),
+      page.getByRole('heading', { name: 'Ingredients' }),
+      page.getByRole('list', { name: 'Steps' }),
+    ].map((locator) => locator.evaluate((el) => el.getBoundingClientRect().top)),
+  );
+  expect(tops).toEqual([...tops].sort((a, b) => a - b));
+  expect(new Set(tops).size).toBe(4);
+
+  // The summary's lines start flush with the heading.
+  const indent = await page.evaluate(() => {
+    const heading = [...document.querySelectorAll('h2')].find(
+      (h) => h.textContent === 'Ingredients',
+    )!;
+    const line = heading.parentElement!.querySelector('li')!;
+    return line.getBoundingClientRect().left - heading.getBoundingClientRect().left;
+  });
+  expect(Math.abs(indent)).toBeLessThanOrEqual(1);
 });

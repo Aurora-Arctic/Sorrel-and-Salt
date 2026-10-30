@@ -69,6 +69,33 @@ $recipe-column: 48rem;
     .spell-recipe__rest {
       grid-column: 1;
     }
+
+    // Rows are pinned so Workings closes the text column under the body and the side column
+    // spans the facts' row and Workings' (the last row takes the slack, so a tall column never
+    // pushes Workings down). The rows carry no gap: the lead's own margin stands in, so a missing
+    // lead leaves an empty row that takes no room.
+    .spell-recipe__columns {
+      grid-template-rows: auto auto 1fr;
+      row-gap: 0;
+    }
+
+    .spell-recipe__lead {
+      grid-row: 1;
+      margin-block-end: space(4);
+    }
+
+    .spell-recipe__rest {
+      grid-row: 2;
+    }
+
+    .spell-workings {
+      grid-column: 1;
+      grid-row: 3;
+    }
+
+    .spell-recipe__aside {
+      grid-row: 2 / span 2;
+    }
   }
 }
 
