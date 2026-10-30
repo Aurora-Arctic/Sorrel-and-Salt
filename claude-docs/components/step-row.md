@@ -122,7 +122,7 @@ area to 24 by 44 px) is in SpellBuilder's stylesheet, which owns the handle.
 
 `src/components/StepRow/index.stories.tsx`, titled "Grimoire / Step Row": `States`, a grid of the
 plain row (Instruction Only, Ingredient Only, Ingredient With Instruction, One-Off Without Amount,
-Toxic, and Toxic, Open with its safety note) and the card (Folded, Unfolded and Editing). The
+Toxic, Toxic, Open with its safety note, and Caution, Open, whose notes draw the Caution badge) and the card (Folded, Unfolded and Editing). The
 spell builder's stories draw the rows in their list ([`spell-builder.md`](spell-builder.md)).
 
 ## Testing

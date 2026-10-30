@@ -578,14 +578,16 @@ more after Close:
 
 - Empty, Title Typed, and Refused After Saving: a new spell's first save refused, so the status
   reads "Could not save." with Retry.
-- Saved Spell (shared with the coven, its visibility shut), Private Spell, Share Question and Phase
-  Outside the List.
+- Saved Spell (a shared draft, its Shared switch on and still open), Private Spell (a private
+  draft, the switch off), Share Question (a complete private spell switched on, asking before it
+  shares) and Phase Outside the List.
 - With Steps (each kind of step: ingredient forms, a toxic one, an instruction and a one-off) and
   Comparison (the same steps against three assigned categories: two carried, one missing, and
   extras past the fold).
 - Steps Loading and Steps Failed: a saved spell's steps still on their way, and refused.
-- Complete Spell (Duplicate in place of Mark Complete), Restored Draft (the recovery notice),
-  Delete Question, Saved, and Conflict (Reload Latest and Keep My Version).
+- Complete Spell (Duplicate in place of Mark Complete, and the Shared switch shut), Restored Draft
+  (the recovery notice), Delete Question, Complete Question (Mark Complete on a shared draft,
+  asking with the spell named in bold), Saved, and Conflict (Reload Latest and Keep My Version).
 
 Each state answers its own requests through the workshop's fake API (`useMockHandlers`): the
 categories from `.storybook/grimoire-fixtures.ts`, the saved spell's steps, and the save or

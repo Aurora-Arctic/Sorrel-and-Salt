@@ -220,24 +220,26 @@ const typeTitle = () => {
 const save = () => submitForm('form.form');
 const openAll = () => press('Open All');
 
-// Turning Share With the Coven on for a private spell, which asks before it shares.
+// Turning the footer's Shared switch on. On a complete private spell it asks before it shares.
 const pickCoven = () =>
   document.querySelector<HTMLInputElement>('input[name="visibility"][value="workspace"]')?.click();
 
 const PRIVATE: SpellDialogSpell = { ...SAVED, visibility: 'private' };
+const COMPLETE_PRIVATE: SpellDialogSpell = { ...PRIVATE, status: 'complete' };
 
 const BUILDER_STATES: Record<string, ReactNode> = {
   // The usual visit: every field empty, nothing to save until one holds something.
   Empty: <Page />,
   'Title Typed': <Page steps={[typeTitle]} />,
-  // A saved spell, as its Edit opens it: its values, its sections shut, nothing to save yet. Its
-  // moon phase is one of the eight, so the box draws its icon.
+  // A saved spell, as its Edit opens it: its values, its sections shut, nothing to save yet. A
+  // shared draft, so the footer's Shared switch is on and still open. Its moon phase is one of
+  // the eight, so the box draws its icon.
   'Saved Spell': <Page spell={SAVED} handlers={HANDLERS.noSteps} />,
-  // Its author alone sees it, so the visibility control is still open;
-  // the saved spell above is the coven's, its control shut with the reason.
-  'Private Spell': <Page spell={PRIVATE} handlers={HANDLERS.noSteps} steps={[openAll]} />,
+  // A private draft: its author alone sees it, so the Shared switch is off.
+  'Private Spell': <Page spell={PRIVATE} handlers={HANDLERS.noSteps} />,
+  // A complete private spell, its Shared switch turned on: the question before it shares for good.
   'Share Question': (
-    <Page spell={PRIVATE} handlers={HANDLERS.noSteps} steps={[openAll, pickCoven]} />
+    <Page spell={COMPLETE_PRIVATE} handlers={HANDLERS.noSteps} steps={[pickCoven]} />
   ),
   // A moon phase saved before the list existed: its words, with no icon.
   'Phase Outside the List': (
@@ -255,7 +257,8 @@ const BUILDER_STATES: Record<string, ReactNode> = {
   'Steps Loading': <Page spell={SAVED} handlers={HANDLERS.stepsLoading} steps={[openAll]} />,
   // The steps could not be read: the Jar section opens by itself to say so.
   'Steps Failed': <Page spell={SAVED} handlers={HANDLERS.stepsFailed} />,
-  // A complete spell: Duplicate where a draft has Mark Complete.
+  // A complete shared spell: Duplicate where a draft has Mark Complete, and the Shared switch shut
+  // with the reason, since it cannot be made private again.
   'Complete Spell': (
     <Page spell={{ ...SAVED, status: 'complete' }} handlers={HANDLERS.noSteps} steps={[openAll]} />
   ),
@@ -268,6 +271,10 @@ const BUILDER_STATES: Record<string, ReactNode> = {
       handlers={HANDLERS.noSteps}
       steps={[() => press('Delete Spell Fixture Working')]}
     />
+  ),
+  // Mark Complete on a shared draft: the question naming the spell, before it stays shared for good.
+  'Complete Question': (
+    <Page spell={SAVED} handlers={HANDLERS.noSteps} steps={[() => press('Mark Complete')]} />
   ),
   // A save that landed: the status reads Saved.
   Saved: <Page spell={SAVED} handlers={HANDLERS.saved} steps={[openAll, typeTitle, save]} />,

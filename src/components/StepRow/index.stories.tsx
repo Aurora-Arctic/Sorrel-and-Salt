@@ -7,7 +7,7 @@ import { GripIcon } from '../Combobox/icons';
 import { ChevronIcon, CrossIcon } from '../IconTip/icons';
 import { SelectField, TextField } from '../Field';
 import { EditIcon } from '../IngredientForm/icons';
-import SafetyNote, { SafetyMark, ToxicMark } from '../SafetyNote';
+import SafetyNote, { SafetyMark } from '../SafetyNote';
 import { UNIT_OPTIONS } from '../StockFields';
 import StepRow from '.';
 import OneOffBadge from './one-off-badge';
@@ -27,6 +27,8 @@ const List = ({ children }: { children: ReactNode }) => (
 
 const NAME = 'Testwort (Dried Leaf)';
 const SAFETY = { toxic: true, safetyNotes: 'Keep away from the skin; wash hands after use.' };
+// Notes without toxicity: SafetyMark draws Caution rather than Toxic.
+const CAUTION = { toxic: false, safetyNotes: 'Strong scent; air the room while working.' };
 
 interface Values {
   quantity: string;
@@ -171,9 +173,22 @@ export const States: Story = {
               position={5}
               name="Mockleaf (Oil)"
               icon="fluid"
-              marks={<ToxicMark {...SAFETY} />}
+              marks={<SafetyMark {...SAFETY} />}
               // Level 4 under the grid's level-3 names; the builder's step list puts it at 5.
               note={<SafetyNote level={4} compact {...SAFETY} />}
+            />
+          </List>
+        ),
+        'Caution, Open': (
+          <List>
+            <StepRow
+              open
+              fieldsId="story-caution-fields"
+              position={6}
+              name="Testmoss (Dried)"
+              icon="botanical"
+              marks={<SafetyMark {...CAUTION} />}
+              note={<SafetyNote level={4} compact {...CAUTION} />}
             />
           </List>
         ),
