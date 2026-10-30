@@ -11,10 +11,10 @@ const RecoveryNotice = ({ at, onKeep, onDiscard }: RecoveryNoticeProps): ReactEl
     <span>Restored unsaved changes from {clockTime(at)}.</span>
     <span className="save-status__actions">
       {/* One primary: Keep, the choice that loses no typing; Discard sits back, quiet. */}
-      <button type="button" className="btn btn--small btn--solid" onClick={onKeep}>
+      <button type="button" className="btn btn--solid btn--small" onClick={onKeep}>
         Keep
       </button>
-      <button type="button" className="btn btn--small btn--quiet" onClick={onDiscard}>
+      <button type="button" className="btn btn--quiet btn--small" onClick={onDiscard}>
         Discard
       </button>
     </span>

@@ -42,7 +42,7 @@ const RoleControl = ({
   const [chosen, setChosen] = useState<UserRole>(options[0]!);
   const label = 'Change Role';
   const accessibleName = `${label} for ${name}`;
-  const openClass = 'btn btn--small btn--quiet';
+  const openClass = 'btn btn--quiet btn--small';
   // The primary admin's own reason first: it holds whether or not changes are paused.
   const reason = primaryAdmin
     ? PRIMARY_ADMIN_REFUSAL
