@@ -48,4 +48,4 @@ The calendar's sizes and fades are the `$day-picker-*` tokens in `_variables.scs
 
 `src/components/DateField/index.stories.tsx`, titled "Forms / Date Field": `States`, a grid of
 Default, Disabled, Invalid, Open (the calendar shown) and With Max (open, the days after the 24th
-refused). The workshop's Grimoire / Record Working story draws the field inside its dialog.
+faded and refused, and the next-month step faded at October). The workshop's Grimoire / Record Working story draws the field inside its dialog.

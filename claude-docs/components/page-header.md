@@ -66,8 +66,8 @@ the admin area's actions spanned the line ([`styling.md`](../styling.md),
 
 [`index.stories.tsx`](../../src/components/PageHeader/index.stories.tsx),
 `Layout / Page Header`: `States`, with a control that chooses Default and Heading Alone (the compendium's
-heading), Long Heading With Action (a longer heading, Deity Traditions) and With Lead; `Narrow` shows the header at 375px, where the Add is a plus beside the heading. Each
-sits in the admin layout as it is, through the workshop's `AdminFrame`: the
+heading), Long Heading With Action (a longer heading, Deity Traditions), With Lead, and Eyebrow And Lede (the public Compendium's head: the eyebrow Reference above the heading and the lede beneath it, under the signed-out public header); `Narrow` shows the header at 375px, where the Add is a plus beside the heading. Each
+bar Eyebrow And Lede sits in the admin layout as it is, through the workshop's `AdminFrame`: the
 context row and nav above the `.page-column` column, the header in a `main`
 as the compendium page draws it, with its own Add Ingredient.
 

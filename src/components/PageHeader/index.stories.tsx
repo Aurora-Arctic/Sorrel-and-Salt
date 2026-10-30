@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
 import type { Route } from 'next';
 import { AdminFrame as InAdminLayout } from '../../../.storybook/admin-frame';
+import { ShellFrame } from '../../../.storybook/shell-frame';
 import AddAction from '../../app/(shell)/admin/add-action';
 import PageHeader from '.';
 
@@ -74,6 +75,20 @@ const withLeadNode = (
   </InAdminLayout>
 );
 
+// The public Compendium's head: the eyebrow naming the part of the site above the heading, and
+// the lede saying what the page is for beneath it, drawn as one column.
+const eyebrowAndLedeNode = (
+  <ShellFrame area="none" open="/compendium" signedOut>
+    <main className="page-column">
+      <PageHeader
+        eyebrow="Reference"
+        title="Compendium"
+        lede="Ingredients for spellwork: their formal and folk names, categories, deities and forms, with the sources behind them."
+      />
+    </main>
+  </ShellFrame>
+);
+
 // The long heading again at a phone's width, where it wraps beside the action.
 const AtPhoneWidth = () => <Long />;
 
@@ -82,6 +97,7 @@ const STATES_STATES: Record<string, ReactNode> = {
   'Heading Alone': headingAloneNode,
   'Long Heading With Action': longHeadingWithActionNode,
   'With Lead': withLeadNode,
+  'Eyebrow And Lede': eyebrowAndLedeNode,
 };
 
 export const States: Story = {

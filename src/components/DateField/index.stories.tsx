@@ -57,7 +57,8 @@ const Field = ({
 };
 
 // The two open calendars come last, so each floats below its own cell with nothing beneath it.
-// With Max refuses the days after the 24th and stops the next-month step at October.
+// With Max is open on the days that cannot be chosen: those after the 24th are faded and refused,
+// and the next-month step is faded too, stopped at October.
 export const States: Story = {
   render: () => (
     <StatesGrid
