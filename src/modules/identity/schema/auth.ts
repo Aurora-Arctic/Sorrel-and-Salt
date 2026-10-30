@@ -6,6 +6,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
 import { users } from './users';
@@ -124,6 +125,6 @@ export const passkeys = pgTable(
   },
   (table) => [
     index('passkeys_userId_idx').on(table.userId),
-    index('passkeys_credentialId_idx').on(table.credentialId),
+    uniqueIndex('passkeys_credentialId_idx').on(table.credentialId),
   ],
 );
