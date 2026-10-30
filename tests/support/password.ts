@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto';
-import { http, HttpResponse } from 'msw';
+import { delay, http, HttpResponse } from 'msw';
 import { ORIGIN } from './oauth';
 import type { AuthInstance } from './types';
 
@@ -30,6 +30,13 @@ export function pwnedRange(breached: readonly string[], requests: Request[]) {
 
 /** The range API unreachable: the connection fails before any answer. */
 export const pwnedUnreachable = () => http.get(PWNED_RANGE, () => HttpResponse.error());
+
+/** The range API accepting the connection and never answering. */
+export const pwnedHanging = () =>
+  http.get(PWNED_RANGE, async () => {
+    await delay('infinite');
+    return HttpResponse.text('');
+  });
 
 /** A JSON POST to one of Better Auth's endpoints, from this origin, carrying `cookie` when given. */
 export function post(

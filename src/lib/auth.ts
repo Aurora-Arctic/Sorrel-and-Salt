@@ -8,7 +8,7 @@ import {
   isAPIError,
 } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { haveIBeenPwned, lastLoginMethod } from 'better-auth/plugins';
+import { lastLoginMethod } from 'better-auth/plugins';
 import {
   defineRequestState,
   getCurrentAuthEndpointContext,
@@ -36,6 +36,7 @@ import { LAST_USED_PROVIDER_COOKIE, SIGN_IN_TO_VERIFY_PATH } from './sign-in';
 import { signedInLanding } from './landing';
 import { e2eTrustedOrigins, plainSessionCookie } from './e2e-session-cookie';
 import { impersonation, impersonationEnabled } from './impersonation';
+import { breachedPasswordCheck } from './breached-password';
 import { primaryAdminEmail } from './primary-admin';
 import { verifyEmailMessage } from '../emails/verify-email';
 import { accountExistsMessage } from '../emails/account-exists';
@@ -359,8 +360,8 @@ export const auth = betterAuth({
   // Impersonation is never constructed at production, nor where the flag is unset, so its endpoints are absent.
   plugins: [
     lastLoginMethod({ cookieName: LAST_USED_PROVIDER_COOKIE }),
-    // Fails closed: an unreachable service refuses the password, never waves it through.
-    haveIBeenPwned({ customPasswordCompromisedMessage: PASSWORD_BREACHED_MESSAGE }),
+    // Fails closed: an unreachable or silent service refuses the password, never waves it through.
+    breachedPasswordCheck({ message: PASSWORD_BREACHED_MESSAGE }),
     ...(impersonationEnabled() ? [impersonation()] : []),
   ],
   advanced: {

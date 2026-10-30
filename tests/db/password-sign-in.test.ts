@@ -5,7 +5,15 @@ import { ORIGIN, PROVIDER_CREDENTIALS, cookieHeader } from '../support/oauth';
 import { asTouch } from '../support/db/touch-row';
 import { asManualFix } from '../support/db/privileges';
 import { importAuth } from '../support/auth-module';
-import { get, post, pwnedRange, pwnedUnreachable, sha1Hex } from '../support/password';
+import {
+  get,
+  post,
+  pwnedHanging,
+  pwnedRange,
+  pwnedUnreachable,
+  sha1Hex,
+} from '../support/password';
+import { BREACHED_CHECK_TIMEOUT_MS } from '@/lib/breached-password';
 import type { Message } from '@/lib/types';
 import type { AuthInstance } from '../support/types';
 
@@ -166,6 +174,20 @@ describe('Story 70: the password a sign-up may choose', () => {
     expect(await userRow(OWNER)).toBeUndefined();
     expect(send).not.toHaveBeenCalled();
   });
+
+  it('refuses the sign-up when the service never answers, within the time bound, and creates nothing', async () => {
+    server.use(pwnedHanging());
+
+    const started = performance.now();
+    const response = await signUp(STRONG);
+    const waited = performance.now() - started;
+
+    expect(response.status).toBe(500);
+    expect(((await response.json()) as { message: string }).message).toMatch(/try again later/i);
+    expect(waited).toBeGreaterThanOrEqual(BREACHED_CHECK_TIMEOUT_MS - 50);
+    expect(waited).toBeLessThan(BREACHED_CHECK_TIMEOUT_MS + 2_000);
+    expect(await userRow(OWNER)).toBeUndefined();
+  }, 15_000);
 
   it('accepts the same password once the service answers again', async () => {
     // The precondition for the test above: the refusal was the outage, not the password.
