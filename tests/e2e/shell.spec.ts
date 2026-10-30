@@ -98,12 +98,12 @@ test('a member on the coven page sees the bar, the coven nav and the account pan
   await expect(banner).toBeVisible();
   // The brand leads to the front page, which redirects no one.
   await expect(banner.getByRole('link', { name: 'Sorrel & Salt' })).toHaveAttribute('href', '/');
-  // A non-admin's Site nav holds the Compendium alone.
+  // A non-admin's Site nav holds the Compendium and, as a member, Your Coven; never Admin.
   await expect(
     page.getByRole('navigation', { name: 'Site' }).getByRole('link', { name: 'Compendium' }),
   ).toBeVisible();
   await expect(banner.getByRole('link', { name: 'Admin', exact: true })).toHaveCount(0);
-  await expect(banner.getByRole('link', { name: 'Your Coven', exact: true })).toHaveCount(0);
+  await expect(banner.getByRole('link', { name: /^Your Covens?$/ }).first()).toBeVisible();
 
   const coven = page.getByRole('navigation', { name: 'Coven' });
   await expect(coven.getByRole('link', { name: 'Overview', exact: true })).toHaveAttribute(
