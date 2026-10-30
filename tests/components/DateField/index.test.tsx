@@ -52,6 +52,24 @@ describe('DateField', () => {
     );
   });
 
+  it('moves the calendar to a month and a year chosen from its caption, then picks a day there', () => {
+    render(<Harness initial="2026-03-10" max="2026-06-15" />);
+    fireEvent.click(screen.getByRole('button', { name: /Date/ }));
+    fireEvent.change(screen.getByRole('combobox', { name: /Year/ }), { target: { value: '2024' } });
+    fireEvent.change(screen.getByRole('combobox', { name: /Month/ }), { target: { value: '1' } });
+    const grid = screen.getByRole('grid');
+    expect(grid).toHaveAccessibleName(/February 2024/);
+    fireEvent.click(within(grid).getByRole('button', { name: /, 9 February 2024/ }));
+    expect(screen.getByRole('button', { name: /Date.*9 February 2024/ })).toBeInTheDocument();
+  });
+
+  it('offers no year after max', () => {
+    render(<Harness max="2026-06-15" />);
+    fireEvent.click(screen.getByRole('button', { name: /Date/ }));
+    const years = within(screen.getByRole('combobox', { name: /Year/ })).getAllByRole('option');
+    expect(years[years.length - 1]).toHaveTextContent('2026');
+  });
+
   it('closes on Escape without changing the day', () => {
     render(<Harness />);
     fireEvent.click(screen.getByRole('button', { name: /Date/ }));

@@ -335,3 +335,60 @@ for (const width of [1280, 800]) {
     expect(headLeft - navRight).toBeGreaterThanOrEqual(32);
   });
 }
+
+for (const [name, size] of [
+  ['desktop', { width: 1280, height: 900 }],
+  ['phone', { width: 390, height: 844 }],
+] as const) {
+  test(`the date calendar floats over the Record a Working dialog's fields and the date box keeps its width on a ${name}`, async ({
+    page,
+  }) => {
+    const coven = await seedCoven(page, `Fixture Coven Date ${name}`, `spell-date-${name}.test`, {
+      A: 'owner',
+    });
+    const { A } = coven.users;
+    const spellId = await withSql((sql) =>
+      insertSpell(sql, coven.id, 'Fixture Date', 'workspace', A, 'complete'),
+    );
+    await signInAgainAs(page, A);
+    await page.setViewportSize(size);
+    await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+    await page
+      .getByRole('region', { name: 'Workings' })
+      .getByRole('button', { name: 'Record a Working' })
+      .click();
+    const dialog = page.getByRole('dialog', { name: 'Record a Working' });
+    const dateButton = dialog.getByRole('button', { name: /^Date/ });
+    const note = dialog.getByRole('textbox', { name: 'Note' });
+    const noteTop = async () => (await note.boundingBox())!.y;
+    const widthOf = async () => (await dateButton.boundingBox())!.width;
+
+    const before = await noteTop();
+    const todayWidth = await widthOf();
+    await dateButton.click();
+    const calendar = page.getByRole('grid');
+    await expect(calendar).toBeVisible();
+
+    // The field after the date has not moved down.
+    expect(await noteTop()).toBe(before);
+
+    // The calendar's box is whole: inside the window, and its far corner is the calendar, not the dialog's edge.
+    const box = (await page.locator('.date-field__panel').boundingBox())!;
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.y).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(size.width);
+    expect(box.y + box.height).toBeLessThanOrEqual(size.height);
+    const corner = await page.evaluate(
+      ([x, y]) => document.elementFromPoint(x, y)?.closest('.date-field__panel') !== null,
+      [box.x + box.width - 3, box.y + box.height - 3],
+    );
+    expect(corner).toBe(true);
+
+    // A short date, 1 May 1900, takes no less room than today's.
+    await page.getByRole('combobox', { name: /Year/ }).selectOption('1900');
+    await page.getByRole('combobox', { name: /Month/ }).selectOption('4');
+    await calendar.getByRole('button', { name: /, 1 May 1900/ }).click();
+    await expect(dateButton).toContainText('1 May 1900');
+    expect(await widthOf()).toBe(todayWidth);
+  });
+}
