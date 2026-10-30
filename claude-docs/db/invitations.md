@@ -20,8 +20,19 @@ undeclared the two and MB.203 dropped them (`0059`). Why one table, why it is
   being invited, optional as a privilege change's `note` is in
   `user_privilege_changes`; either tier may carry one, and the workspace tier's UI need
   not offer it.
-- **`invitations_tier`**, `(workspace_id is null) = (role is null)`: a row is
-  in one tier, a workspace and the role it is invited to, or neither.
+- **Cards (M15.17).** A third shape of the same table: `kind` is `address` (the
+  default) or `card`, and `batch_id` (nullable uuid, no table) groups the cards
+  of one mint. `email` is nullable. A card is a printed code bound to no address,
+  coven or site role. `invitations_kind_known` admits the two kinds;
+  `invitations_kind_shape` requires an `address` row's `email` and a `card`'s
+  `email`, `workspace_id`, `role` and `site_role` to be null. A card's token is
+  returned once, at minting, to the admin who mints it; only its hash is stored.
+  Migration `0095_invitation-cards.sql`. Why a shape of this table rather than a
+  new one:
+  [`m15.17-invitation-cards.md`](../design-decisions/m15.17-invitation-cards.md).
+- **`invitations_tier`**, `kind = 'card' or (workspace_id is null) = (role is null)`:
+  an address row is in one tier, a workspace and the role it is invited to, or
+  neither; a card is in neither.
 - **`invitations_declined_coven`** (M10.34),
   `declined_at is null or workspace_id is not null`: only a coven invitation is
   declined. An admin invitation is never listed to its invitee, so it is

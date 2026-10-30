@@ -82,7 +82,8 @@ async function checkInvitation(
   if (dead) return { refusal: dead };
 
   const user = await findOneById(users, session.userId);
-  if (!user || !sameAddress(user.email, invitation.email)) return { refusal: 'different-address' };
+  if (!user || invitation.email === null || !sameAddress(user.email, invitation.email))
+    return { refusal: 'different-address' };
   if (!user.emailVerified) return { refusal: 'unverified' };
 
   if (isSiteTier(invitation)) {

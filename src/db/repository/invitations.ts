@@ -12,6 +12,7 @@ import type { SiteAdmin } from '@/modules/identity';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import type {
   AuditWriter,
+  AddressInvitationRow,
   InvitationRow,
   InvitedCoven,
   ReceivedInvitationCoven,
@@ -207,14 +208,15 @@ export function findPendingSiteInvitationCount(
 export function findPendingWorkspaceInvitationPage(
   membership: Membership,
   page: PageRequest,
-): Promise<PageEntry<InvitationRow>[]> {
+): Promise<PageEntry<AddressInvitationRow>[]> {
+  // A coven's row names a workspace, which a card never does, so every row has an address.
   return findPageInScope(
     invitations,
     scopedTo(membership, invitations),
     PENDING_INVITATION_ORDER,
     page,
     openInvitation(),
-  );
+  ) as Promise<PageEntry<AddressInvitationRow>[]>;
 }
 
 /**

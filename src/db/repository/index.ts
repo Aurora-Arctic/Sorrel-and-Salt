@@ -186,6 +186,7 @@ export type {
   ReferenceRow,
   SimilarityScore,
   SiteInvitationFilter,
+  AddressInvitationRow,
   SiteInvitationRow,
   SiteInvitationValues,
   SlugRedirect,

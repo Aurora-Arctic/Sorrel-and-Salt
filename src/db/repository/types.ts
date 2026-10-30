@@ -1017,6 +1017,9 @@ export interface SlugRedirect {
 /** An `invitations` row, either tier, as a finder or a write returns it. */
 export type InvitationRow = typeof invitations.$inferSelect;
 
+/** An `address` invitation, either tier: `invitations_kind_shape` gives it the address a card lacks. */
+export type AddressInvitationRow = InvitationRow & { email: string };
+
 /** The live coven a workspace invitation names, as the invited account may be told it: two fields, never the row. */
 export interface InvitedCoven {
   name: string;
@@ -1043,7 +1046,7 @@ export type InvitableSiteRole = Exclude<NonNullable<InvitationRow['siteRole']>, 
  * A site-tier invitation, which grants the site role it names: the workspace and the coven role both null, as the `invitations_tier` CHECK makes them
  * together, and the site role set, as `invitations_site_role_tier` makes it.
  */
-export type SiteInvitationRow = InvitationRow & {
+export type SiteInvitationRow = AddressInvitationRow & {
   workspaceId: null;
   role: null;
   siteRole: InvitableSiteRole;

@@ -10,8 +10,8 @@ import { idColumn, liveUnique } from '../../../db/schema-parts';
 // (claude-docs/db/invitations.md, "Invitations").
 const DEFAULT_LIFETIME = sql`now() + interval '7 days'`;
 
-// Every invitation, in two tiers as `ingredients` is: a row naming a workspace and a role invites into that coven, and a row with
-// neither is a site-tier invitation granting the site role it names. Only the token's hash is stored, never plaintext, and the row is
+// Every invitation, in three shapes. An `address` row is in two tiers as `ingredients` is: a row naming a workspace and a role invites into that coven, and a row with
+// neither is a site-tier invitation granting the site role it names. A `card` row is bound to no address, coven or site role. Only the token's hash is stored, never plaintext, and the row is
 // written only through its named insert, accept, decline and revoke (claude-docs/design-decisions/mb.201-two-tier-invitations.md).
 export const invitations = namedWrites(
   pgTable(
@@ -21,7 +21,8 @@ export const invitations = namedWrites(
       // Null on the site tier, with `role`: the tier check pairs them.
       workspaceId: uuid('workspace_id').references(() => workspaces.id),
       // Not a foreign key: an invitee may have no account yet.
-      email: text('email').notNull(),
+      // Null on a card, which is bound to no address; the shape check requires one on an address row.
+      email: text('email'),
       // The enum `workspace_members.role` stores; the role check narrows it.
       role: workspaceRole('role'),
       tokenHash: text('token_hash').notNull(),
@@ -39,11 +40,26 @@ export const invitations = namedWrites(
       // The site role a site-tier invitation grants, `curator` or `admin`;
       // null on a coven invitation, which grants `role` instead.
       siteRole: userRole('site_role'),
+      // `address` is invited by mail; `card` is a printed code any verified account may redeem once. Text with a check, not an enum, so
+      // adding a kind needs no enum migration.
+      kind: text('kind').notNull().default('address'),
+      // The mint a card came from; null on an address row. Not a foreign key: a batch has no table, only its cards.
+      batchId: uuid('batch_id'),
       ...auditColumns,
     },
     (table) => [
       // A workspace and a role together, or neither: a row is in one tier.
-      check('invitations_tier', sql`(${table.workspaceId} is null) = (${table.role} is null)`),
+      // A card is outside it: it names neither.
+      check(
+        'invitations_tier',
+        sql`${table.kind} = 'card' or (${table.workspaceId} is null) = (${table.role} is null)`,
+      ),
+      check('invitations_kind_known', sql`${table.kind} in ('address', 'card')`),
+      // An address row names its address; a card names none of address, coven, role or site role.
+      check(
+        'invitations_kind_shape',
+        sql`(${table.kind} = 'address' and ${table.email} is not null) or (${table.kind} = 'card' and num_nonnulls(${table.email}, ${table.workspaceId}, ${table.role}, ${table.siteRole}) = 0)`,
+      ),
       // `viewer` or `member` only, in the database so no write path can forget
       // it. The allowed set rather than `<> 'owner'`: a fourth value would be
       // silently invitable under the negative form.
@@ -51,10 +67,10 @@ export const invitations = namedWrites(
         'invitations_role_invitable',
         sql`${table.role} is null or ${table.role} in ('viewer', 'member')`,
       ),
-      // A site role on the site tier and only there.
+      // A site role on the site tier and only there; a card has none.
       check(
         'invitations_site_role_tier',
-        sql`(${table.workspaceId} is null) = (${table.siteRole} is not null)`,
+        sql`${table.kind} = 'card' or (${table.workspaceId} is null) = (${table.siteRole} is not null)`,
       ),
       // The allowed set, as for `role`, so `user` grants nothing. Compared as
       // text: as the enum, each literal is cast to `user_role`, and Postgres
