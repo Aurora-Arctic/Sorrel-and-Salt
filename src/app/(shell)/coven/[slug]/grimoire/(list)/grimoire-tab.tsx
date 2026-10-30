@@ -24,6 +24,7 @@ import {
   readGrimoireCategoryCounts,
   readGrimoireFacetCounts,
   readLookedSpell,
+  readRecordingOf,
 } from './reads';
 import type { GrimoireTabProps } from './types';
 import { readViewedEntry } from '../../ingredients/reads';
@@ -33,8 +34,9 @@ import { viewedDetailsOf } from '../../ingredients/viewed-details';
 // cards. Per request, never cached (rule 6). A function, not a component, so a test awaits each
 // page whole. Dialogs: claude-docs/design-decisions/m10.12-spell-builder-modal.md.
 // A delete on a spell's page leaves for this tab with `?deleted=<name>`, which a success Notice
-// above the list says once. A role that may delete or update a spell gets each card's bin and Edit
-// pencil, links back to this address with `deleted` or `?edit=<id>` added.
+// above the list says once. A role that may record, update, duplicate or delete a spell gets each
+// card's Record a Working button, Edit pencil and More menu, links back to this address with
+// `deleted` or `?edit=<id>` added.
 /** `closeHref` with a saved spell's dialog open over it. */
 const editHrefOf = (closeHref: Route, id: string): Route =>
   `${closeHref}${closeHref.includes('?') ? '&' : '?'}${new URLSearchParams({ edit: id })}` as Route;
@@ -115,6 +117,10 @@ export async function grimoireTab({
   const canUpdate = rolePermits(role, { spell: ['update'] });
   const canDelete = rolePermits(role, { spell: ['delete'] });
   const closeHref = GRIMOIRE_PARAMS.href(path, filter, { after, before });
+  // The members box needs the roster (`member: read`) as well as the right to record, as the spell page's.
+  const canRecord =
+    rolePermits(role, { working: ['create'] }) && rolePermits(role, { member: ['read'] });
+  const recording = await readRecordingOf(workspace, page.spells, canRecord);
   // Where a delete from the card or the Quick Look lands: this tab as it was, filter and page
   // kept, `?spell` dropped, with the name for the Notice.
   const deletedHrefOf = (title: string | null): Route => deletedHrefFor(closeHref, title);
@@ -167,8 +173,22 @@ export async function grimoireTab({
           ...spell,
           lookHref: lookHrefOf(closeHref, spell.id),
           ...(canUpdate && { editHref: editHrefOf(closeHref, spell.id) }),
-          ...(canDelete && {
-            deleteSpell: { workspaceId: workspace.id, deletedHref: deletedHrefOf(spell.title) },
+          ...(recording.stepsById.has(spell.id) && {
+            recordWorking: {
+              workspaceId: workspace.id,
+              members: recording.members,
+              recorderId: membership.userId,
+              steps: recording.stepsById.get(spell.id) ?? [],
+            },
+          }),
+          ...((canCreate || canDelete) && {
+            more: {
+              workspaceId: workspace.id,
+              covenSlug: workspace.slug,
+              deletedHref: deletedHrefOf(spell.title),
+              canDuplicate: canCreate,
+              canDelete,
+            },
           }),
         }))}
         filter={filter}

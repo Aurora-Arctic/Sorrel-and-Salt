@@ -15,11 +15,14 @@ import {
   countGrimoireFacets,
   listGrimoire,
   readSpell,
+  stepsOfSpells,
   workingCountsOf,
 } from '@/modules/grimoire';
 import type { SpellStatus } from '@/modules/grimoire';
+import { memberRoster } from '@/modules/coven';
 import { displayNamesOf } from '@/modules/identity';
 import { readRecipeOf } from '../recipe-read';
+import { recipeStepsOf } from '../[id]/recipe-steps';
 import { readStepSuppliesOf } from '../[id]/recipe-supply';
 import type { SpellDialogSpell } from '@/components/SpellBuilder/types';
 
@@ -197,4 +200,50 @@ export async function readLookedSpell(workspaceId: string, lookHref: Route, id: 
     if (error instanceof NotFound || error instanceof Forbidden) return undefined;
     return { failed: true as const };
   }
+}
+
+/**
+ * What each complete spell's Record a Working button needs beyond the card: the coven's members
+ * (read once, and only on the permission `memberRoster` asserts, which a viewer lacks) and each
+ * spell's ingredient steps, one batch for the page. Keyed by spell id; empty for a role that may
+ * not record a working. Per request, never cached (rule 6).
+ */
+export async function readRecordingOf(
+  workspace: Parameters<typeof memberRoster>[1],
+  spells: readonly { id: string; status: SpellStatus }[],
+  canRecord: boolean,
+): Promise<{
+  members: { userId: string; name: string }[];
+  stepsById: Map<string, { id: string; name: string }[]>;
+}> {
+  const complete = spells.filter(({ status }) => status === 'complete');
+  if (!canRecord || complete.length === 0) return { members: [], stepsById: new Map() };
+  const session = await requireSession();
+  const [roster, views] = await Promise.all([
+    memberRoster(session, workspace),
+    stepsOfSpells(
+      session,
+      complete.map(({ id }) => ({ id, workspaceId: workspace.id })),
+    ),
+  ]);
+  const names = await displayNamesOf(
+    session,
+    roster.map(({ userId }) => userId),
+  );
+  const stepsById = new Map(
+    complete.map(({ id }, i) => {
+      const view = views[i];
+      const steps = view instanceof Error || !view ? [] : recipeStepsOf(view, '/' as Route);
+      return [
+        id,
+        steps.flatMap((step) =>
+          step.kind === 'ingredient' ? [{ id: step.id, name: step.name }] : [],
+        ),
+      ] as const;
+    }),
+  );
+  return {
+    members: roster.map(({ userId }, i) => ({ userId, name: names[i] ?? 'A former member' })),
+    stepsById,
+  };
 }
