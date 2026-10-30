@@ -9,6 +9,7 @@ import { graphql } from '../../gql';
 import { useDebouncedValue } from '../../lib/debounce';
 import { graphqlQuery } from '../../lib/graphql-client';
 import Combobox from '../Combobox';
+import { UNTITLED_SPELL } from '../SpellCard';
 import { MagnifierIcon } from '../Field/icons';
 import { useApplyFilter } from '../FilterForm';
 import { useRouteModalOpener } from '../Modal/route-modal-provider';
@@ -184,12 +185,12 @@ const IngredientSearchBox = ({
             hasNextPage: page.pageInfo.hasNextPage,
             rows: page.edges.map(({ node }) => ({
               key: node.id,
-              value: node.title ?? query,
-              label: node.title ?? 'Untitled Spell',
+              value: node.title?.trim() || query,
+              label: node.title?.trim() || UNTITLED_SPELL,
               match: {
                 id: node.id,
                 slug: node.id,
-                name: node.title ?? 'Untitled Spell',
+                name: node.title?.trim() || UNTITLED_SPELL,
                 canonicalName: null,
                 nomenclature: 'none',
               },
