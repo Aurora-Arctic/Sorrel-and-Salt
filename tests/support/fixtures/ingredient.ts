@@ -16,7 +16,7 @@ import type {
  * §5's seven values, in its order, written out because `nomenclatureKind.enumValues` is a runtime drizzle-orm
  * import; `Nomenclature` is the table's, so a value missing here is a type error.
  */
-export const NOMENCLATURE_KINDS = [
+const NOMENCLATURE_KINDS = [
   'botanical',
   'fungal',
   'zoological',

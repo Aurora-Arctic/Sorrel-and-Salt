@@ -50,7 +50,7 @@ import { draftOf, sourceTierOf } from './values';
  * form is made from. One fragment for the search and the panel's two saves. Defined before its
  * first use, as codegen reads the documents in order.
  */
-export const ReferenceRowFragment = graphql(`
+const ReferenceRowFragment = graphql(`
   fragment ReferenceRow on Reference {
     id
     citation

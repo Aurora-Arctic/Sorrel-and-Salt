@@ -15,7 +15,6 @@ export {
   findOneInWorkspace,
   findPage,
   findPageCount,
-  findPageCountInReadableSpells,
   findPageInReadableSpells,
   findPageInWorkspace,
 } from './finders';

@@ -231,15 +231,6 @@ export const stepsChanged = (
   saved: readonly SpellStepValue[],
 ): boolean => JSON.stringify(steps.map(stepInputOf)) !== JSON.stringify(saved.map(stepInputOf));
 
-/**
- * The spell's derived categories: the union of its steps', once each, sorted
- * by name, as the service derives them. A one-off or instruction brings none.
- */
-export function derivedCategories(steps: readonly SpellStepValue[]): StepCategory[] {
-  const byId = new Map(steps.flatMap((step) => step.categories).map((c) => [c.id, c]));
-  return [...byId.values()].sort((a, b) => a.name.localeCompare(b.name));
-}
-
 // An instruction is named by its text, cut short where it runs on, since its
 // name is read before every move of it and every Add and Remove.
 const INSTRUCTION_NAME_LENGTH = 40;
