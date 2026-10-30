@@ -185,6 +185,17 @@ test('the printed recipe names the coven with no line under it, leads with the i
   expect(Math.max(...lefts) - Math.min(...lefts)).toBeLessThanOrEqual(1);
   expect(Math.min(...lefts)).toBeGreaterThan(Math.max(...amounts));
 
+  // The amounts are as heavy as the steps' own amounts.
+  const weights = await page.evaluate(() => ({
+    summary: getComputedStyle(
+      document.querySelector('ul[aria-label="Ingredients"] .spell-recipe__need')!,
+    ).fontWeight,
+    step: getComputedStyle(document.querySelector('.spell-recipe__steps .step-row__amount')!)
+      .fontWeight,
+  }));
+  expect(weights.step).toBe('500');
+  expect(weights.summary).toBe(weights.step);
+
   // The summary's lines start flush with the heading.
   const indent = await page.evaluate(() => {
     const heading = [...document.querySelectorAll('h2')].find(
