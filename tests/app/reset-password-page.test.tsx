@@ -13,7 +13,7 @@ vi.mock('@/components/ResetPasswordForm', () => ({
   },
 }));
 
-const { default: ResetPasswordPage } = await import('@/app/reset-password/page');
+const { default: ResetPasswordPage, metadata } = await import('@/app/reset-password/page');
 
 const visit = async (params: { token?: string | string[]; error?: string }) =>
   render(await ResetPasswordPage({ searchParams: Promise.resolve(params) }));
@@ -39,5 +39,11 @@ describe('/reset-password', () => {
     await visit(params);
 
     expect(handed).toHaveBeenCalledWith({ token: undefined });
+  });
+});
+
+describe('/reset-password metadata', () => {
+  it('asks search engines not to index it', () => {
+    expect(metadata.robots).toMatchObject({ index: false });
   });
 });
