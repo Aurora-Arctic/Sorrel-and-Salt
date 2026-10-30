@@ -47,6 +47,17 @@ differs in three things:
   also names the `email-otp`, `phone-number` and `admin` plugins'
   endpoints, none of which is registered here, and leaves out setting a
   first password.
+- **The guard.** The list names the routes it checks, so an endpoint a
+  Better Auth upgrade or a new plugin adds would take a password unchecked.
+  `tests/guards/breached-password-paths.test.ts` reads every endpoint the
+  configured instance registers and fails on one whose body takes a
+  `password` or `newPassword` and that is on none of: `BREACHED_CHECK_PATHS`;
+  its list of endpoints that check a password the account already holds
+  (`/sign-in/email`, `/verify-password`, `/delete-user`); or its list of
+  server-only endpoints, each of which it checks is called inside
+  `withBreachedCheck`. An endpoint whose body has no schema to read must be
+  named with the reason it takes no password. A new endpoint goes on one of
+  those lists in the PR that registers it.
 
 Only the first five characters of the password's upper-case SHA-1 hash leave
 the server, with `Add-Padding: true` so the answer's size says nothing about
@@ -144,6 +155,20 @@ endpoints, configured in `emailAndPassword` and the hooks in
   placeholder address. It sets the link's `callbackURL` to `/reset-password`
   whatever the request asked, so a request cannot point the link anywhere
   else.
+- **The mail runs after the answer.** Better Auth hands the send to
+  `advanced.backgroundTasks.handler`, which is `runInBackground` in
+  `src/lib/background-tasks.ts`: Next's `after()` runs it once the response
+  is sent. Without it the request waited for the mail transport for a
+  verified address and not for any other, so the time an answer took showed
+  whether the address has an account. Every mail Better Auth sends goes the
+  same way: the verification mail at sign-up, at sign-in and on a resend,
+  the mail to an address that signs up again, the change-email mails, and the
+  link-account verification. So does the rate limiter's sweep of expired
+  rows. Outside a request, where `after()` throws, a task is held until
+  `settleHeldTasks()` is awaited; `importAuth` in
+  `tests/support/auth-module.ts` does that after every call, so a test sees
+  the mail its call sent. `tests/db/password-reset-background.test.ts` holds
+  the send open and proves the answer arrives first.
 - **The link.** It is Better Auth's `/reset-password/:token`, which
   redirects to `/reset-password?token=…`, or to
   `/reset-password?error=INVALID_TOKEN` for a token spent or past its life.
@@ -181,10 +206,15 @@ through the GraphQL mutation `setPassword(newPassword: String!)`:
 
 - The service `setPassword` (`src/modules/identity/services/password.ts`)
   refuses an account whose address is unverified, as every service but `me`
-  and `setEmail` does, then calls the setter it is handed.
+  and `setEmail` does. It then refuses a session older than Better Auth's
+  `freshAge` (one day), with a `Forbidden` that says to sign out and sign in
+  again, the check Better Auth makes before adding a passkey: whoever holds a
+  stolen or forgotten session cannot give the account a password that outlives
+  it. Only then does it call the setter it is handed.
 - The setter is `passwordSetter(request)` (`src/lib/password-setter.ts`),
   put on the GraphQL context as `context.passwords`, because a service may
-  not import `auth`. It calls `auth.api.setPassword` with the request's own
+  not import `auth`. Its `sessionIsFresh` reads the request's session from
+  Better Auth for the service's freshness check. It calls `auth.api.setPassword` with the request's own
   headers, so the only account it can name is the caller's. It runs the call
   inside `withBreachedCheck`, so the breached-password check holds here too
   ("The breached-password check" above), and words every refusal of the
@@ -209,7 +239,8 @@ following the mailed link gives it its first password the same way.
   endpoints: the same answer for every address, the link working once and not
   after 15 minutes, every session signed out by a reset, every other one by a
   change, the rules for a new password, each notice, the current password a
-  change needs, a first password set without one, and no periodic change.
+  change needs, a first password set without one and refused from a session
+  older than a day, and no periodic change.
 - `tests/db/password-lockout.test.ts`, story 72 through the real
   `/sign-in/email`: each step of the schedule, the right password refused in
   a lock and accepted after, the reset that lifts a disabled password, a lock
@@ -220,7 +251,8 @@ following the mailed link gives it its first password the same way.
   whole (status, headers but `date`, body) with a wrong password's and an
   unknown address's. Each shows the guard refuses by deleting the row.
 - `tests/modules/identity/graphql/set-password.test.ts`: the mutation's
-  refusals and that it sets the caller's own password.
+  refusals, a stale session among them, and that it sets the caller's own
+  password.
 - `tests/e2e/stories/16-password.spec.ts`, story 70: the browser flow, with
   the e2e servers' stand-in for the range API
   ([`testing/e2e.md`](../testing/e2e.md), "A password sign-in in the browser"),

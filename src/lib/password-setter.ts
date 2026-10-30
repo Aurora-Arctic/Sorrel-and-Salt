@@ -4,6 +4,7 @@ import { ValidationError } from './errors';
 import { mailPasswordChanged } from './password-notice';
 import { PASSWORD_CHECK_UNAVAILABLE, newPasswordRefusal } from './password-refusals';
 import { requestOrigin } from './request-origin';
+import { isFreshSession } from './session-fresh';
 
 // Where the account page's Set Password meets Better Auth, whose set-password endpoint answers only on the
 // server. Handed to the service by the GraphQL context, as a service may not import `auth`
@@ -14,6 +15,15 @@ const ALREADY_SET = 'This account already has a password. Change it instead.';
 
 export function passwordSetter(request: Request): PasswordSetter {
   return {
+    async sessionIsFresh() {
+      const { auth } = await import('./auth');
+      const session = await auth.api.getSession({ headers: request.headers });
+      if (!session) return false;
+      return isFreshSession(
+        session.session.createdAt,
+        (await auth.$context).sessionConfig.freshAge,
+      );
+    },
     async set(newPassword) {
       const [{ auth }, { isAPIError }] = await Promise.all([
         import('./auth'),

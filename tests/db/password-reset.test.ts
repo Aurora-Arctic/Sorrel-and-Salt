@@ -11,7 +11,11 @@ import { asTouch } from '../support/db/touch-row';
 import { importAuth } from '../support/auth-module';
 import { get, post, pwnedRange, pwnedUnreachable } from '../support/password';
 import type { passwordSetter as PasswordSetterFactory } from '@/lib/password-setter';
-import type { ValidationError as ValidationErrorClass } from '@/lib/errors';
+import type {
+  Forbidden as ForbiddenClass,
+  ValidationError as ValidationErrorClass,
+} from '@/lib/errors';
+import type { setPassword as SetPasswordService } from '@/modules/identity';
 import type { Message } from '@/lib/types';
 import type { AuthInstance } from '../support/types';
 
@@ -45,10 +49,13 @@ let auth: AuthInstance;
 // Imported after `importAuth` resets the module registry, so the setter and its errors share this `auth`'s modules.
 let passwordSetter: typeof PasswordSetterFactory;
 let ValidationError: typeof ValidationErrorClass;
+let Forbidden: typeof ForbiddenClass;
+let setPassword: typeof SetPasswordService;
 beforeAll(async () => {
   auth = await importAuth(PROVIDER_CREDENTIALS);
   ({ passwordSetter } = await import('@/lib/password-setter'));
-  ({ ValidationError } = await import('@/lib/errors'));
+  ({ ValidationError, Forbidden } = await import('@/lib/errors'));
+  ({ setPassword } = await import('@/modules/identity'));
 });
 
 beforeEach(async () => {
@@ -424,6 +431,38 @@ describe('Story 71: a provider-only account sets a password', () => {
 
   it('refuses without a session', async () => {
     await expect(passwordSetter(new Request(`${ORIGIN}/api/graphql`)).set(NEW)).rejects.toThrow();
+  });
+
+  /** The service's view of the provider account's session. */
+  async function serviceSession() {
+    const [{ id }] = await sql`select id from users where email = ${PROVIDER_OWNER}`;
+    return { userId: id as string, role: 'user' as const };
+  }
+
+  it('sets one through the service from a session signed in within the last day', async () => {
+    const cookie = await providerSession();
+
+    expect(await setPassword(await serviceSession(), NEW, setterFor(cookie))).toBe(true);
+
+    expect(await hasPassword(PROVIDER_OWNER)).toBe(true);
+  });
+
+  it('refuses a session signed in more than a day ago, explaining why, and sets nothing', async () => {
+    const cookie = await providerSession();
+    // The precondition: the same session is fresh, and a fresh one sets (the test above).
+    expect(await setterFor(cookie).sessionIsFresh()).toBe(true);
+    await sql`
+      update sessions set created_at = now() - interval '25 hours'
+      where user_id = (select id from users where email = ${PROVIDER_OWNER})
+    `;
+    expect(await isSignedIn(cookie)).toBe(true);
+
+    const refusal = setPassword(await serviceSession(), NEW, setterFor(cookie));
+    await expect(refusal).rejects.toBeInstanceOf(Forbidden);
+    await expect(refusal).rejects.toThrow(/sign in again/i);
+
+    expect(await hasPassword(PROVIDER_OWNER)).toBe(false);
+    expect(noticesTo(PROVIDER_OWNER)).toHaveLength(0);
   });
 });
 
