@@ -2,16 +2,16 @@
 
 `src/components/RecordWorking/` — recording a working of a complete spell from its recipe page, changing one, and completing one (M13.7).
 
-| File                  | What it holds                                                                                                                                               |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `index.tsx`           | `RecordWorkingButton` (default; the icon-only cauldron, `RecordButton` of IconTip), and re-exports of the dialog, `CompleteWorkingAction`, types            |
-| `dialog.tsx`          | `RecordWorkingDialog`: the `Modal`, apart from its button                                                                                                   |
-| `form.tsx`            | The form inside it                                                                                                                                          |
-| `completion.tsx`      | `WorkingCompletion`: the deduction preview and its Confirm                                                                                                  |
-| `complete-action.tsx` | `CompleteWorkingAction`: a Complete button opening `WorkingCompletion` in a dialog                                                                          |
-| `warnings.ts`         | `SKIP_REASON` and `skipSummary`: why a step takes nothing, and the one-line count of items completing leaves out of inventory, in words (no `'use client'`) |
-| `day.ts`              | `completeReason`: why Complete is off for a working dated after today, in words                                                                             |
-| `types.ts`            | The props                                                                                                                                                   |
+| File                  | What it holds                                                                                                                                                   |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `index.tsx`           | `RecordWorkingButton` (default; the icon-only cauldron, `RecordButton` of IconTip), and re-exports of the dialog, `CompleteWorkingAction`, types                |
+| `dialog.tsx`          | `RecordWorkingDialog`: the `Modal`, apart from its button                                                                                                       |
+| `form.tsx`            | The form inside it                                                                                                                                              |
+| `completion.tsx`      | `WorkingCompletion`: the deduction preview and its Mark Complete                                                                                                |
+| `complete-action.tsx` | `CompleteWorkingAction`: a Complete button opening `WorkingCompletion` in a dialog                                                                              |
+| `warnings.ts`         | `SKIP_REASON` and `skipSummary`: why a step takes nothing, and the one-sentence count of ingredients completing takes nothing for, in words (no `'use client'`) |
+| `day.ts`              | `completeReason`: why Complete is off for a working dated after today, in words                                                                                 |
+| `types.ts`            | The props                                                                                                                                                       |
 
 ## Recording and editing
 
@@ -41,16 +41,18 @@ Working", calls `updateWorking` and closes on Save. Only the recorder or a membe
 refuses anyone else), and a complete working that is shared holds the switch on and shut, since a
 complete working's visibility only widens.
 
-With `working` and a `deleteWorking` prop (`{ name, remove }`), the form also draws a bin named "Delete Working <date>" beside the Save buttons. It asks the same question as the row bin (`DeleteWorkingQuestion`, in `SpellWorkings/delete-working.tsx`) through `ConfirmQuestion`, runs `remove` (the shared `useDeleteWorking` mutation), then closes. The form no longer counts as changed once it is removed, so closing does not ask to discard it. `EditWorkingAction` passes `deleteWorking` only when the row's `canChange` is true, and a new working never has one.
+With `working` and a `deleteWorking` prop (`{ name, remove }`), the form also draws a bin named "Delete Working <date>" beside the Save buttons, the one place a working is deleted, since a row carries no bin. It asks `DeleteWorkingQuestion` (in `SpellWorkings/delete-working.tsx`) through `ConfirmQuestion`, runs `remove` (the shared `useDeleteWorking` mutation), then closes. The form no longer counts as changed once it is removed, so closing does not ask to discard it. `EditWorkingAction` passes `deleteWorking` only when the row's `canChange` is true, and a new working never has one.
 
 ## Completing a working
 
 `WorkingCompletion` reads `workingDeductionPreview` afresh each time it opens, drawing a `Skeleton shape="line"`, a line for each ingredient step, until it arrives, and lists the spell's
-ingredient steps in order, one line each, as the jar the recipe page's In Coven Inventory draws, both through `JarLine`
+ingredient steps in order, one line each, as the jar the recipe page's In the Cupboard panel draws, both through `JarLine`
 ([`jar-line.md`](jar-line.md): the drawing, the `jar-shelf__jar--low|out|empty` paint, the press, the shake and the growing name) beside the step's name (no step number), and these words:
 
-- A take: "takes X · have Y · left Z", all in the jar's unit, with "short by N" in the warning colour
-  when the jar cannot cover it. `have` is what the jar held before this line's take, so two lines on
+- A take: "takes X · have Y · left Z", all in the jar's unit. A jar that cannot cover the step reads
+  "needs X · have Y · short by N" instead, with "short by N" in the warning colour: it is emptied, so
+  the need leads and no "left" is said. An empty jar says "have none", as the In the Cupboard panel does.
+  `have` is what the jar held before this line's take, so two lines on
   one jar show it running down. The preview returns it as `before`, with the jar's Low mark as
   `lowStockThreshold`, from the plan that already read the jars, so it costs no extra read.
   A short line draws its jar Low, whatever the Low mark says.
@@ -60,16 +62,18 @@ ingredient steps in order, one line each, as the jar the recipe page's In Coven 
 - Any other skip (units differ, no amount, jar not measured): the reason and "takes nothing", over a
   steady jar with no level, since the preview carries no jar quantity for a line that takes nothing.
 
-A step that carries `stock` (the same `StockDialogProps` the In Coven Inventory line gets, so only
+A step that carries `stock` (the same `StockDialogProps` the In the Cupboard panel's line gets, so only
 for a role that may edit stock, and never for a deleted ingredient or form) wraps its name and jar in a
 `StockJarButton`, which opens Edit Stock as it does on the recipe page. Its `onSaved` then reads the
-preview again, so have, left and short by are redrawn before Confirm. The stock dialog is a second
+preview again, so have, left and short by are redrawn before Mark Complete. The stock dialog is a second
 modal opened over the Record a Working one. A step without `stock` keeps a plain drawing: the
 recipe page builds `stock` from the aside's doors, and the spell cards' Record a Working carries none,
 so a card's jars are not clickable.
 
-Confirm runs `completeWorking`, reads the page again and shows the same list, so it reads the same
-before and after. The preview and the completion share one plan on the
+The sentence above the list says "Completing this working takes the following from the coven’s jars.",
+or "Completing this working takes nothing from the coven’s jars." when no line takes anything. Mark Complete
+(busy "Marking Complete") runs `completeWorking`, reads the page again and shows the same list, so it reads the same
+before and after. Beside it, Keep as Draft goes back without completing: the working is already saved as a draft. The preview and the completion share one plan on the
 server (`plan-deductions.ts`), so the two agree.
 
 `CompleteWorkingAction` takes `{ workspaceId, spellId, workingId, steps, label?, workedOn? }` and is what a

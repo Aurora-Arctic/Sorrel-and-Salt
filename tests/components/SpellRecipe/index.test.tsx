@@ -219,7 +219,7 @@ describe('SpellRecipe', () => {
     ).toBeInTheDocument();
   });
 
-  it('gives an ingredient a Quick Look eye, not a link on its name, and a one-off neither, marking it One-Off', () => {
+  it('names an ingredient plainly in its step, with no Quick Look eye, which the side column carries, and marks a one-off One-Off', () => {
     render(
       <SpellRecipe
         {...props({
@@ -238,12 +238,8 @@ describe('SpellRecipe', () => {
       />,
     );
     const steps = screen.getByRole('list', { name: 'Steps' });
-    expect(within(steps).getAllByRole('link')).toHaveLength(1);
-    expect(within(steps).getByRole('link', { name: /Quick Look Testwort/ })).toHaveAttribute(
-      'href',
-      '/coven/fixture-coven/ingredients?entry=i1',
-    );
-    expect(within(steps).getByText('Testwort').closest('a')).toBeNull();
+    expect(within(steps).queryAllByRole('link')).toHaveLength(0);
+    expect(within(steps).getByText('Testwort')).toBeInTheDocument();
     expect(within(steps).getByText(/Fixture Moss \(Fresh\)/)).toBeInTheDocument();
     const oneOff = within(steps).getByRole('button', { name: 'One-Off' });
     expect(oneOff).toHaveAccessibleDescription(
@@ -314,7 +310,7 @@ describe('SpellRecipe', () => {
         })}
       />,
     );
-    const aside = screen.getByRole('complementary');
+    const aside = screen.getByRole('complementary', { name: 'The Cupboard' });
     expect(within(aside).getByRole('region', { name: 'Fixture Aside' })).toBeInTheDocument();
     const note = screen.getByText('Best at dusk.');
     expect(note.compareDocumentPosition(aside) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -325,12 +321,7 @@ describe('SpellRecipe', () => {
       within(screen.getByRole('navigation', { name: 'On This Page' })).getAllByRole('link');
     const aside = <SpellRecipeAside steps={[]} doors={[]} intended={[]} groups={[]} />;
     const workings = (
-      <SpellWorkings
-        workspaceId="w"
-        workings={[]}
-        completeAction={() => null}
-        editAction={() => null}
-      />
+      <SpellWorkings workings={[]} completeAction={() => null} editAction={() => null} />
     );
 
     it('lists the sections the page draws, each link pointing at one that exists', () => {
@@ -338,13 +329,13 @@ describe('SpellRecipe', () => {
       expect(linksOf().map((link) => link.textContent)).toEqual([
         'Steps',
         'Category Match',
-        'In Coven Inventory',
+        'In the Cupboard',
         'Workings',
       ]);
       // The two jar links are nested under one group label, and the group is narrow-only whole.
       const group = within(screen.getByRole('navigation', { name: 'On This Page' })).getByRole(
         'list',
-        { name: 'The Jar' },
+        { name: 'The Cupboard' },
       );
       expect(within(group).getAllByRole('link')).toHaveLength(2);
       expect(group.parentElement).toHaveClass('page-nav__narrow');

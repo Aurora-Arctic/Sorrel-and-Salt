@@ -209,16 +209,11 @@ export async function grimoireTab({
           looked && !('failed' in looked)
             ? {
                 title: looked.spell.title,
+                status: looked.spell.status,
+                visibility: looked.spell.visibility,
                 lastEdit: looked.recipe.lastEdit,
                 recipeHref: `/coven/${workspace.slug}/grimoire/${looked.spell.id}` as Route,
                 ...(canUpdate && { editHref: editHrefOf(closeHref, looked.spell.id) }),
-                ...(canDelete && {
-                  deleteSpell: {
-                    workspaceId: workspace.id,
-                    spellId: looked.spell.id,
-                    deletedHref: deletedHrefOf(looked.spell.title),
-                  },
-                }),
                 children: (
                   <SpellRecipeBody
                     title={looked.spell.title}

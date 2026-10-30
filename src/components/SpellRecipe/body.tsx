@@ -131,7 +131,7 @@ const SpellRecipeBody = ({
 
         {/* The steps under their heading, the Ingredients summary's twin: shown where the summary is,
             on paper and in the Preview pane, and on screen read only by a screen reader. */}
-        <section className="spell-recipe__instructions">
+        <section className="spell-recipe__steps-section">
           <Heading id={STEPS_TITLE_ID}>Steps</Heading>
           {steps.length === 0 ? (
             <p className="meta">This spell has no steps yet.</p>

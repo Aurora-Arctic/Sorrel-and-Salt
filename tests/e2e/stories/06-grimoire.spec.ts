@@ -390,10 +390,10 @@ test(
     await expect(look.getByRole('button', { name: 'Out' })).toHaveCount(1);
     const emptyStep = look.getByRole('listitem').filter({ hasText: 'Fixture Emptywort' });
     await expect(emptyStep.getByRole('button', { name: 'Out' })).toBeVisible();
-    // The recipe page says the same in its In Coven Inventory.
+    // The recipe page says the same in its In the Cupboard panel.
     await look.getByRole('link', { name: 'See Full Recipe' }).click();
     await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}/grimoire/${spellId}$`));
-    const inventory = page.getByRole('region', { name: 'In Coven Inventory' });
+    const inventory = page.getByRole('region', { name: 'In the Cupboard' });
     await expect(inventory.getByRole('button', { name: 'Out' })).toHaveCount(1);
     const emptyLine = inventory.getByRole('listitem').filter({ hasText: 'Fixture Emptywort' });
     await expect(emptyLine.getByRole('button', { name: 'Out' })).toBeVisible();
@@ -495,11 +495,11 @@ test(
     };
     const listPath = `/coven/${coven.slug}/grimoire`;
     const recipePath = `${listPath}/${gone}`;
-    // Delete Spell is in the page's More menu.
+    // Delete is in the page's More menu, and its dialog is titled Delete Spell.
     const dots = page.getByRole('button', { name: 'More for Doomed Working', exact: true });
     const askToDelete = async () => {
       await dots.click();
-      await page.getByRole('menuitem', { name: /^Delete Spell/ }).click();
+      await page.getByRole('menuitem', { name: 'Delete', exact: true }).click();
     };
     const question = page.getByRole('dialog', { name: 'Delete Spell', exact: true });
 
@@ -549,7 +549,7 @@ test(
       await page.goto(`${listPath}/${kept}`);
       // Why it could be offered: the viewer reads the page the member could delete from.
       await expect(page.getByRole('heading', { level: 1, name: 'Kept Working' })).toBeVisible();
-      // Print stands alone because nothing else is offered: a Delete Spell would put both in the dots' menu.
+      // Print stands alone because nothing else is offered: a Delete would put both in the dots' menu.
       await expect(
         page.getByRole('button', { name: 'Print Kept Working', exact: true }),
       ).toBeVisible();
@@ -591,7 +591,7 @@ test(
     await grimoireList(page)
       .getByRole('button', { name: 'More for Card Doomed Working', exact: true })
       .click();
-    await page.getByRole('menuitem', { name: /^Delete Spell/ }).click();
+    await page.getByRole('menuitem', { name: 'Delete', exact: true }).click();
     const question = page.getByRole('dialog', { name: 'Delete Spell', exact: true });
     await expect(question).toContainText('Card Doomed Working');
     await assertNoAccessibilityViolations(page);
@@ -793,7 +793,7 @@ test(
     // The preview says what will be taken before anything is.
     await expect(dialog.getByRole('list', { name: 'Deductions' })).toContainText('2 g');
     await assertNoAccessibilityViolations(page);
-    await dialog.getByRole('button', { name: 'Confirm' }).click();
+    await dialog.getByRole('button', { name: 'Mark Complete' }).click();
     await expect(dialog.getByText('Done')).toBeVisible();
     await page.goto(`/coven/${coven.slug}/ingredients`);
     await expect(page.getByRole('listitem').filter({ hasText: 'Herb' }).first()).toContainText(
@@ -872,7 +872,7 @@ test(
     }
     await expect(workings.getByRole('button', { name: 'Complete' })).toHaveCount(2);
     await expect(workings.getByRole('listitem').filter({ hasText: 'Waiting rite' })).toContainText(
-      /Completing does not affect inventory for \d+ items?/,
+      /Completing takes nothing from the jars for \d+ ingredients?\./,
     );
     const first = workings.getByRole('listitem').filter({ hasText: 'First brewing' });
     // The recorder is not listed again among the people who took part.
@@ -883,7 +883,7 @@ test(
     await expect(alone).toContainText('Recorded by Fixture A');
     await expect(alone).not.toContainText('With');
     await expect(
-      first.getByRole('list', { name: 'Deductions' }).getByRole('listitem'),
+      first.getByRole('list', { name: 'Taken From the Jars' }).getByRole('listitem'),
     ).toContainText('Rosemary');
     await assertNoAccessibilityViolations(page);
     await page.goto(`/coven/${coven.slug}/grimoire`);
@@ -906,13 +906,15 @@ test(
     await waitingEdit.getByRole('button', { name: 'Delete', exact: true }).click();
     await expect(waitingEdit).toHaveCount(0);
     await expect(workings.getByText('Waiting rite')).toHaveCount(0);
-    // Deleting B's own working takes it out of the list and the count.
+    // A row carries no bin: deleting B's own working goes through its Edit dialog, and takes it out
+    // of the list and the count.
     await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
-    await first.getByRole('button', { name: /^Delete Working/ }).click();
-    await page
-      .getByRole('dialog', { name: 'Delete Working' })
-      .getByRole('button', { name: 'Delete' })
-      .click();
+    await expect(workings.getByRole('button', { name: /^Delete Working/ })).toHaveCount(0);
+    await first.getByRole('button', { name: /^Edit Working / }).click();
+    const firstEdit = page.getByRole('dialog', { name: /^Edit (a )?Working$/ });
+    await firstEdit.getByRole('button', { name: /^Delete Working/ }).click();
+    await firstEdit.getByRole('button', { name: 'Delete', exact: true }).click();
+    await expect(firstEdit).toHaveCount(0);
     await expect(workings.getByText('First brewing')).toHaveCount(0);
     await expect(workings.getByRole('listitem')).toHaveCount(2);
     await page.goto(`/coven/${coven.slug}/grimoire`);

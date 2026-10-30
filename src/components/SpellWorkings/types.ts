@@ -26,14 +26,13 @@ export interface WorkingView {
   deductions: readonly WorkingDeductionView[];
   /** One line saying how many steps completing a draft would skip (the Complete dialog gives the reasons); none on a complete working. */
   warnings?: readonly string[];
-  /** The viewer recorded it and may delete it. */
+  /** The viewer recorded it and may delete it, which the Edit dialog's Delete Working follows. */
   canChange: boolean;
   /** What the Edit dialog opens on: given to the recorder and to a member named on the working. */
   editable?: EditableWorking;
 }
 
 export interface SpellWorkingsProps {
-  workspaceId: string;
   /** Newest day first, as read. */
   workings: readonly WorkingView[];
   /** The control drawn beside the section heading (Record a Working), given only to a viewer who may record. */
@@ -49,9 +48,8 @@ export interface SpellWorkingsProps {
   ) => ReactNode;
 }
 
-export interface DeleteWorkingActionProps {
+/** The working Delete Working removes, in the coven it belongs to. */
+export interface DeleteWorkingProps {
   workspaceId: string;
   workingId: string;
-  /** What the row is called to a reader: the day it was worked, such as "4 March 2026". */
-  name: string;
 }

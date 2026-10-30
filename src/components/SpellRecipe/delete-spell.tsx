@@ -8,16 +8,13 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
 import BusyButton from '../BusyButton';
-import { useClickFeedback } from '../ClickFeedback';
-import { BinIcon } from '../IconTip';
-import Modal, { ModalButton } from '../Modal';
+import Modal from '../Modal';
 import type { DeleteSpellActionProps } from './types';
 import type { SpellVisibility } from '@/modules/grimoire';
 
-// Delete Spell: the bin beside the Edit pencil, which asks in a dialog naming the spell before
-// `deleteSpell` runs. Confirmed, the page leaves for the grimoire list, replacing the history
-// entry so Back does not return to a 404. Not a `ConfirmQuestion`, which asks over a form and this
-// page has none (claude-docs/components/spell-recipe.md, "Delete Spell").
+// Delete Spell: the question naming the spell, asked in a dialog before `deleteSpell` runs. Confirmed,
+// the page leaves for the grimoire list, replacing the history entry so Back does not return to a 404.
+// Not a `ConfirmQuestion`, which asks over a form and the More menu has none (claude-docs/components/spell-recipe.md, "Delete Spell").
 
 export const DeleteSpellDocument = graphql(`
   mutation DeleteSpell($workspaceId: ID!, $id: ID!) {
@@ -57,7 +54,7 @@ export function useDeleteSpell({
 /**
  * The question naming the spell in bold, then one sentence on what deleting it does: a shared
  * spell leaves the whole coven's grimoire, a private one only its author's. Asked by the recipe
- * page's dialogs and the builder's bin.
+ * page's More menu and the builder's bin.
  */
 export function DeleteSpellWords({
   name,
@@ -76,7 +73,7 @@ export function DeleteSpellWords({
   );
 }
 
-/** The question naming the spell and its two answers, in the bin's dialog and the menu's. */
+/** The question naming the spell and its two answers. */
 function DeleteSpellQuestion({
   name,
   visibility,
@@ -141,49 +138,5 @@ export function DeleteSpellDialog({
         />
       )}
     </Modal>
-  );
-}
-
-/** The bin's dialog body, which holds the write so a refusal can close the dialog it is in. */
-function BinQuestion({
-  close,
-  onRefused,
-  ...props
-}: DeleteSpellActionProps & { close: () => void; onRefused: (message: string) => void }) {
-  const { remove, pending } = useDeleteSpell({ ...props, onRefused, onClosed: close });
-  return (
-    <DeleteSpellQuestion
-      name={props.name}
-      visibility={props.visibility}
-      pending={pending}
-      onConfirm={() => remove()}
-      close={close}
-    />
-  );
-}
-
-export default function DeleteSpellAction(props: DeleteSpellActionProps): ReactElement {
-  const { name } = props;
-  const feedback = useClickFeedback({ name: `Delete Spell ${name}` });
-
-  return (
-    <>
-      <ModalButton
-        ref={feedback.anchorRef}
-        className="icon-tip__remove"
-        tip="Delete Spell"
-        title="Delete Spell"
-        label={
-          <>
-            <BinIcon />
-            <span className="visually-hidden">Delete Spell {name}</span>
-          </>
-        }
-        onOpen={() => feedback.report(undefined)}
-      >
-        {(close) => <BinQuestion {...props} close={close} onRefused={feedback.report} />}
-      </ModalButton>
-      {feedback.feedback}
-    </>
   );
 }

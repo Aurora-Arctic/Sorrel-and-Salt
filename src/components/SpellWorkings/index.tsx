@@ -1,27 +1,27 @@
 import type { ReactElement } from 'react';
 import { dayWords } from '../DateField/day';
+import Notice from '../Notice';
 import SpellMarks from '../SpellMarks';
 import { WORKINGS_ID, WORKINGS_TITLE_ID } from '../SpellRecipe/sections';
-import DeleteWorkingAction from './delete-working';
 import type { SpellWorkingsProps, WorkingView } from './types';
 import './index.scss';
 
 // A spell's history on its recipe page: one row per working, newest day first. A working is not a
 // step, so the row is its own, and a complete working's deduction lines are plain lines beneath it.
-// Complete on a draft row is the page's to give (`completeAction`).
+// Complete on a draft row is the page's to give (`completeAction`); a row carries no bin, since the
+// Edit dialog holds Delete Working beside the working it shows.
 
 const Working = ({
   working,
-  workspaceId,
   completeAction,
   editAction,
 }: {
   working: WorkingView;
-  workspaceId: string;
   completeAction: SpellWorkingsProps['completeAction'];
   editAction: SpellWorkingsProps['editAction'];
 }): ReactElement => {
   const day = dayWords(working.workedOn);
+  const takenId = `working-${working.id}-taken`;
   const showsComplete = working.status === 'draft' && Boolean(working.editable);
   return (
     <li>
@@ -34,16 +34,13 @@ const Working = ({
           {showsComplete && completeAction?.(working.id, working.workedOn, day)}
           {working.editable &&
             editAction?.(working.editable, day, showsComplete, working.canChange)}
-          {working.canChange && (
-            <DeleteWorkingAction workspaceId={workspaceId} workingId={working.id} name={day} />
-          )}
         </div>
       </div>
       {working.status === 'draft' &&
         working.warnings?.map((line) => (
-          <p key={line} className="meta">
+          <Notice key={line} kind="warn" quiet className="spell-workings__warning">
             {line}
-          </p>
+          </Notice>
         ))}
       <p className="meta">
         {working.recordedBy ? `Recorded by ${working.recordedBy}` : 'Recorded'}
@@ -51,23 +48,27 @@ const Working = ({
       </p>
       {working.note && <p className="spell-workings__note">{working.note}</p>}
       {working.deductions.length > 0 && (
-        <ol className="spell-workings__deductions" aria-label="Deductions">
-          {working.deductions.map((line) => (
-            <li key={line.id} className="spell-workings__deduction">
-              <span>{line.name}</span>
-              <span>
-                {line.quantity} {line.unit}
-              </span>
-            </li>
-          ))}
-        </ol>
+        <>
+          <p id={takenId} className="spell-workings__taken">
+            Taken From the Jars
+          </p>
+          <ol className="spell-workings__deductions" aria-labelledby={takenId}>
+            {working.deductions.map((line) => (
+              <li key={line.id} className="spell-workings__deduction">
+                <span>{line.name}</span>
+                <span>
+                  {line.quantity} {line.unit}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </>
       )}
     </li>
   );
 };
 
 const SpellWorkings = ({
-  workspaceId,
   workings,
   completeAction,
   editAction,
@@ -90,7 +91,6 @@ const SpellWorkings = ({
           <Working
             key={working.id}
             working={working}
-            workspaceId={workspaceId}
             completeAction={completeAction}
             editAction={editAction}
           />

@@ -45,7 +45,7 @@ for (const [name, size] of [
     const workings = await box(page.getByRole('heading', { name: 'Workings' }));
     const steps = await box(page.getByRole('list', { name: 'Steps' }));
     const note = await box(page.getByText('A closing note'));
-    const aside = await box(page.getByRole('complementary', { name: 'The Jar' }));
+    const aside = await box(page.getByRole('complementary', { name: 'The Cupboard' }));
 
     // The rows carry no list marker.
     const marker = await page
@@ -121,7 +121,9 @@ test('the moon phase sits on one line in the facts strip on a desktop', async ({
   expect(lines).toEqual([1, 1, 1, 1]);
 });
 
-test("a step's Quick Look eye is a 24px target with a smaller glyph", async ({ page }) => {
+test("the side column's Quick Look eye is a 24px target with a smaller glyph, and the step carries none", async ({
+  page,
+}) => {
   const coven = await seedCoven(page, 'Fixture Coven Eye', 'spell-eye.test', { A: 'owner' });
   const { A } = coven.users;
   const spellId = await withSql(async (sql) => {
@@ -132,8 +134,11 @@ test("a step's Quick Look eye is a 24px target with a smaller glyph", async ({ p
   });
   await signInAgainAs(page, A);
   await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+  await expect(
+    page.getByRole('list', { name: 'Steps' }).getByRole('link', { name: "Quick Look Cat's Claw" }),
+  ).toHaveCount(0);
   const eye = page
-    .getByRole('list', { name: 'Steps' })
+    .getByRole('region', { name: 'In the Cupboard' })
     .getByRole('link', { name: "Quick Look Cat's Claw" });
   const target = await eye.evaluate((el) => el.getBoundingClientRect().toJSON());
   const glyph = await eye.locator('svg').evaluate((el) => el.getBoundingClientRect().toJSON());
@@ -210,18 +215,18 @@ for (const [name, size] of [
     await expect(nav.getByRole('link')).toHaveText(
       name === 'desktop'
         ? ['Steps', 'Workings']
-        : ['Steps', 'Category Match', 'In Coven Inventory', 'Workings'],
+        : ['Steps', 'Category Match', 'In the Cupboard', 'Workings'],
     );
     // The group label and its list go with the links on a desktop, and stand over them below it.
-    await expect(nav.getByText('The Jar', { exact: true })).toBeVisible({
+    await expect(nav.getByText('The Cupboard', { exact: true })).toBeVisible({
       visible: name !== 'desktop',
     });
     if (name === 'phone') {
       const top = (label: string) =>
         page
-          .getByRole(label === 'The Jar' ? 'complementary' : 'region', { name: label })
+          .getByRole(label === 'The Cupboard' ? 'complementary' : 'region', { name: label })
           .evaluate((el) => el.getBoundingClientRect().top);
-      expect(await top('The Jar')).toBeLessThan(await top('Workings'));
+      expect(await top('The Cupboard')).toBeLessThan(await top('Workings'));
     }
     if (name === 'desktop') {
       // Left of the body, not above it.
@@ -450,9 +455,9 @@ test("a short jar's deduction line keeps each part whole at 375px", async ({ pag
   const dialog = page.getByRole('dialog', { name: 'Record a Working' });
   await dialog.getByRole('button', { name: 'Complete' }).click();
   const words = dialog.getByRole('list', { name: 'Deductions' }).locator('.jar-line__words');
-  await expect(words).toContainText('short by');
+  await expect(words).toContainText('needs 3 g · have 1 g · short by 2 g');
 
-  // Every part (takes, have, left, short by) stands on one line, so no unit sits alone under its number.
+  // Every part (needs, have, short by) stands on one line, so no unit sits alone under its number.
   const parts = await words.locator('> span').evaluateAll((spans) =>
     spans.map((span) => {
       const range = document.createRange();
@@ -461,6 +466,31 @@ test("a short jar's deduction line keeps each part whole at 375px", async ({ pag
       return { text: span.textContent, lines: tops.size };
     }),
   );
-  expect(parts).toHaveLength(4);
+  expect(parts).toHaveLength(3);
   for (const part of parts) expect(part, part.text ?? '').toMatchObject({ lines: 1 });
+});
+
+test('on a phone the jump menu stands under the intent and over the facts', async ({ page }) => {
+  const coven = await seedCoven(page, 'Fixture Coven Nav Order', 'spell-nav-order.test', {
+    A: 'owner',
+  });
+  const { A } = coven.users;
+  const spellId = await withSql(async (sql) => {
+    const held = await compendiumVariant(sql, 'Rosemary', 'Herb');
+    const id = await insertSpell(sql, coven.id, 'Fixture Nav Order', 'workspace', A, 'complete');
+    await sql`update spells set intent = 'To draw a steady hand', jar_description = '4 oz jar' where id = ${id}`;
+    await insertStep(sql, id, held, { quantity: 2, unit: 'g', position: 0 }, A);
+    return id;
+  });
+  await signInAgainAs(page, A);
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+
+  const box = (locator: Locator) => locator.evaluate((el) => el.getBoundingClientRect().toJSON());
+  const intent = await box(page.getByText('To draw a steady hand'));
+  const nav = await box(page.getByRole('navigation', { name: 'On This Page' }));
+  const facts = await box(page.getByText('4 oz jar'));
+  // The reader learns what the spell is for before the five links that jump past it.
+  expect(nav.top).toBeGreaterThanOrEqual(intent.bottom);
+  expect(nav.bottom).toBeLessThanOrEqual(facts.top);
 });

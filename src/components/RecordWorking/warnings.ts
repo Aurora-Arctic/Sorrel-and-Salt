@@ -11,8 +11,8 @@ export const SKIP_REASON: Record<NotDeductedReason, string> = {
   CUSTOM: 'a one-off ingredient',
 };
 
-/** What a draft working says beside Complete: how many items it would leave out of inventory, the reasons staying in the Complete dialog. */
+/** What a draft working says beside Complete: how many ingredients completing would take nothing for, the reasons staying in the Complete dialog. */
 export function skipSummary(count: number): string | null {
   if (count === 0) return null;
-  return `Completing does not affect inventory for ${count} ${count === 1 ? 'item' : 'items'}`;
+  return `Completing takes nothing from the jars for ${count} ${count === 1 ? 'ingredient' : 'ingredients'}.`;
 }

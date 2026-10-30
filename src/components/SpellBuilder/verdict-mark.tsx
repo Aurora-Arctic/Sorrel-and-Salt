@@ -5,7 +5,7 @@ import { UnitsDifferIcon, NotEnoughIcon } from './supply-icon';
 import type { StepSupply } from './steps/supply';
 
 // The cupboard's verdict as a symbol alone in a button named by its words, whose IconTip says why;
-// it only carries the tip to focus. Used in In Coven Inventory and the Quick Look
+// it only carries the tip to focus. Used in the In the Cupboard panel and the Quick Look
 // (claude-docs/components/spell-recipe.md, "The side column").
 
 /** The kinds that draw a mark: One-Off and No Jar are told in words, and nothing has none. */

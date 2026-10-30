@@ -17,7 +17,7 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The recipe page's three dots: Duplicate for a role that may create a spell, Delete Spell for one
+// The recipe page's three dots: Duplicate for a role that may create a spell, Delete for one
 // that may delete, and Print for every role (claude-docs/components/spell-recipe.md).
 
 const WORKSPACE_ID = '00000000-0000-4000-8000-000000000001';
@@ -30,14 +30,16 @@ function renderMenu({
   canDelete = true,
   canPrint = true,
   visibility,
+  queryClient = makeQueryClient(),
 }: {
   canDuplicate?: boolean;
   canDelete?: boolean;
   canPrint?: boolean;
   visibility?: SpellVisibility;
+  queryClient?: ReturnType<typeof makeQueryClient>;
 } = {}) {
   return render(
-    <QueryClientProvider client={makeQueryClient()}>
+    <QueryClientProvider client={queryClient}>
       <main>
         <h1>Fixture Working</h1>
         <SpellMoreMenu
@@ -68,13 +70,13 @@ describe('SpellMoreMenu', () => {
     router.replace.mockClear();
   });
 
-  it('offers Duplicate and Delete Spell to a role that may do both', async () => {
+  it('offers Duplicate, Print and Delete to a role that may do both', async () => {
     renderMenu();
     press(dots());
     expect((await screen.findAllByRole('menuitem')).map((item) => item.textContent)).toEqual([
       'Duplicate',
       'Print',
-      'Delete Spell',
+      'Delete',
     ]);
   });
 
@@ -87,12 +89,12 @@ describe('SpellMoreMenu', () => {
     ]);
   });
 
-  it('offers only Delete Spell to a role that may not duplicate', async () => {
+  it('offers only Print and Delete to a role that may not duplicate', async () => {
     renderMenu({ canDuplicate: false });
     press(dots());
     expect((await screen.findAllByRole('menuitem')).map((item) => item.textContent)).toEqual([
       'Print',
-      'Delete Spell',
+      'Delete',
     ]);
   });
 
@@ -182,7 +184,7 @@ describe('SpellMoreMenu', () => {
     );
     renderMenu();
 
-    choose('Delete Spell');
+    choose('Delete');
     const ask = screen.getByRole('dialog', { name: 'Delete Spell' });
     expect(within(ask).getByText('Fixture Working')).toBeInTheDocument();
     press(within(ask).getByRole('button', { name: 'Cancel' }));
@@ -194,7 +196,7 @@ describe('SpellMoreMenu', () => {
 
   it('tells the author of a private spell only what is true of it: no one else loses it', () => {
     renderMenu({ visibility: 'private' });
-    choose('Delete Spell');
+    choose('Delete');
     const ask = screen.getByRole('dialog', { name: 'Delete Spell' });
     expect(ask).not.toHaveTextContent(/member/);
     expect(ask).toHaveTextContent(
@@ -204,13 +206,13 @@ describe('SpellMoreMenu', () => {
 
   it('tells the deleter of a shared spell that the coven loses it', () => {
     renderMenu({ visibility: 'workspace' });
-    choose('Delete Spell');
+    choose('Delete');
     expect(screen.getByRole('dialog', { name: 'Delete Spell' })).toHaveTextContent(
       'Delete Fixture Working? It leaves the grimoire for every member of the coven, and nothing in stock changes.',
     );
   });
 
-  it('deletes the spell and replaces the address with the list’s', async () => {
+  it("deletes the spell, replaces the address with the list's, and gives the list's heading the focus", async () => {
     const calls: DeleteSpellMutationVariables[] = [];
     mockGraphQLMutation<DeleteSpellMutation, DeleteSpellMutationVariables>(
       'DeleteSpell',
@@ -219,20 +221,37 @@ describe('SpellMoreMenu', () => {
         return { deleteSpell: String(variables.id) };
       },
     );
-    renderMenu();
+    const queryClient = makeQueryClient();
+    const view = renderMenu({ queryClient });
 
-    choose('Delete Spell');
+    choose('Delete');
     press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }));
 
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith(DELETED_HREF));
     expect(calls).toEqual([{ id: ID, workspaceId: WORKSPACE_ID }]);
+    expect(router.push).not.toHaveBeenCalled();
+    // Busy until the list arrives, so the focus is not handed back to the page first.
+    expect(
+      within(screen.getByRole('dialog')).getByRole('button', { name: /Delet/ }),
+    ).toBeDisabled();
+
+    view.rerender(
+      <QueryClientProvider client={queryClient}>
+        <main>
+          <h1>Grimoire</h1>
+        </main>
+      </QueryClientProvider>,
+    );
+    await waitFor(() =>
+      expect(screen.getByRole('heading', { level: 1, name: 'Grimoire' })).toHaveFocus(),
+    );
   });
 
   it('shows the service’s refusal of a delete and gives the dots the focus back', async () => {
     mockGraphQLError('DeleteSpell', { code: 'NOT_FOUND', message: 'No such spell in this coven' });
     renderMenu();
 
-    choose('Delete Spell');
+    choose('Delete');
     press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }));
 
     expect(await screen.findByRole('alert')).toBeInTheDocument();

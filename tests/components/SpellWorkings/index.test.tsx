@@ -39,7 +39,6 @@ function renderSection(
   return render(
     <QueryClientProvider client={makeQueryClient()}>
       <SpellWorkings
-        workspaceId={WORKSPACE_ID}
         workings={workings}
         completeAction={complete}
         editAction={edit}
@@ -105,9 +104,10 @@ describe('SpellWorkings', () => {
         deductions: [{ id: 'd1', name: 'Testwort (Dried Leaf)', quantity: '2', unit: 'g' }],
       }),
     ]);
-    const lines = within(within(rows()[0]!).getByRole('list', { name: 'Deductions' })).getAllByRole(
-      'listitem',
-    );
+    // A visible label over the lines names the list, so the screen and a screen reader say the same.
+    const list = within(rows()[0]!).getByRole('list', { name: 'Taken From the Jars' });
+    expect(within(rows()[0]!).getByText('Taken From the Jars')).toBeVisible();
+    const lines = within(list).getAllByRole('listitem');
     expect(lines).toHaveLength(1);
     expect(lines[0]).toHaveTextContent('Testwort (Dried Leaf)');
     expect(lines[0]).toHaveTextContent('2');
@@ -116,20 +116,20 @@ describe('SpellWorkings', () => {
     expect(lines[0]).toHaveTextContent(/^Testwort/);
   });
 
-  it('says on a draft row what completing it would skip, and on no complete row', () => {
+  it('warns on a draft row, in a warning notice, what completing it would skip, and on no complete row', () => {
     renderSection([
       working({
         id: 'w1',
         status: 'draft',
-        warnings: ['Completing does not affect inventory for 2 items'],
+        warnings: ['Completing takes nothing from the jars for 2 ingredients.'],
       }),
-      working({ id: 'w2', warnings: ['Completing does not affect inventory for 1 item'] }),
+      working({ id: 'w2', warnings: ['Completing takes nothing from the jars for 1 ingredient.'] }),
     ]);
+    expect(within(rows()[0]!).getByRole('status')).toHaveTextContent(
+      'Completing takes nothing from the jars for 2 ingredients.',
+    );
     expect(
-      within(rows()[0]!).getByText('Completing does not affect inventory for 2 items'),
-    ).toBeVisible();
-    expect(
-      screen.queryByText(/Completing does not affect inventory for 1 item/),
+      screen.queryByText(/Completing takes nothing from the jars for 1 ingredient\./),
     ).not.toBeInTheDocument();
   });
 
@@ -224,27 +224,10 @@ describe('SpellWorkings', () => {
     expect(edit(rows()[1]!)).not.toHaveClass('icon-tip__edit--plain');
   });
 
-  it('draws Delete Working only for a working its viewer may change, and deletes it after a confirmation', async () => {
-    const calls: DeleteWorkingMutationVariables[] = [];
-    mockGraphQLMutation<DeleteWorkingMutation, DeleteWorkingMutationVariables>(
-      'DeleteWorking',
-      (variables) => {
-        calls.push(variables);
-        return { deleteWorking: String(variables.id) };
-      },
-    );
+  it('draws no Delete Working bin on a row, even for a working its viewer may delete, which the Edit dialog deletes', () => {
     renderSection([working({ id: 'w1', canChange: true }), working({ id: 'w2' })]);
-    expect(screen.getAllByRole('button', { name: /^Delete Working/ })).toHaveLength(1);
-    press(screen.getByRole('button', { name: /^Delete Working/ }));
-    const dialog = await screen.findByRole('dialog', { name: 'Delete Working' });
-    // The dialog names the working, then says in one sentence that the stock it took is not given back.
-    expect(dialog).toHaveTextContent(
-      /Delete the working of .+\? It leaves the spell’s history and count, and what it took from the jars stays taken\./,
-    );
-    expect(calls).toHaveLength(0);
-    press(within(dialog).getByRole('button', { name: 'Delete' }));
-    await waitFor(() => expect(calls).toEqual([{ id: 'w1', workspaceId: WORKSPACE_ID }]));
-    await waitFor(() => expect(router.refresh).toHaveBeenCalled());
+    expect(rows()).toHaveLength(2);
+    expect(screen.queryByRole('button', { name: /^Delete Working/ })).toBeNull();
   });
 });
 

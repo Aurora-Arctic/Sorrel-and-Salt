@@ -115,7 +115,7 @@
   }
 }
 
-// The column's two panels, Category Match then In Coven Inventory (the builder's order
+// The column's two panels, Category Match then In the Cupboard (the builder's order
 // reversed), headed as the entry page's side blocks are: at the h3 size, with no rule under
 // them.
 .spell-recipe__aside {
@@ -185,14 +185,22 @@
 .spell-recipe__intent,
 .spell-recipe__note {
   margin: 0;
-  color: $text-muted;
   white-space: pre-line;
+}
+
+// The intent is a muted lead under the title; the note is read as the recipe is, in the body ink.
+.spell-recipe__intent {
+  color: $text-muted;
+}
+
+.spell-recipe__note {
+  color: $text-primary;
 }
 
 // The Steps heading shows on paper and in the Preview pane (recipe-columns); on the screen's page
 // and Quick Look the jump menu heads the steps, so the heading is there for a screen reader alone.
 // The section around them is no box at all, so the steps stay the stack's own item.
-.spell-recipe__instructions {
+.spell-recipe__steps-section {
   display: contents;
 
   // An h3 where the body sits under a dialog's or pane's h2.
@@ -262,9 +270,11 @@
   display: none;
 }
 
-// The step's Quick Look eye: its glyph at seven eighths of the form icon's, so it sits in the name's
-// line without weight, inside the full `$icon-size` box, WCAG 2.2's 24px target.
-.spell-recipe__steps .icon-tip__look {
+// The Quick Look eye, on a step in the Quick Look modal and on a side column line on the page: its
+// glyph at seven eighths of the form icon's, so it sits in the line without weight, inside the full
+// `$icon-size` box, WCAG 2.2's 24px target, where the builder's column draws the whole eye smaller.
+.spell-recipe__steps .icon-tip__look,
+.spell-recipe__aside .spell-inventory .jar-line__look .icon-tip__look {
   @include icon-button($icon-size, $glyph-size * 0.875);
 }
 
@@ -418,6 +428,39 @@
 
     > .page-nav {
       grid-row: 2 / span 2;
+    }
+  }
+
+  // On a phone the menu follows the intent and categories, so the spell's purpose comes first: the
+  // wrappers dissolve and `order` moves the menu, kept first in the source for the wider grid (a chip's
+  // tip button focuses after it). Each moved box adds `space(2)` to the gap, for the body's `space(4)`.
+  @media (max-width: $shell-phone-width) {
+    .spell-recipe--with-nav {
+      .spell-recipe__columns,
+      .spell-recipe__main {
+        display: contents;
+      }
+
+      .spell-recipe__lead,
+      > .page-nav,
+      .spell-recipe__rest,
+      .spell-recipe__aside,
+      .spell-workings {
+        margin-block-start: space(2);
+      }
+
+      > .page-nav,
+      .spell-recipe__rest {
+        order: 1;
+      }
+
+      .spell-recipe__aside {
+        order: 2;
+      }
+
+      .spell-workings {
+        order: 3;
+      }
     }
   }
 }

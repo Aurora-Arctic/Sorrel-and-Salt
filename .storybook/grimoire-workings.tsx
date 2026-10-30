@@ -40,7 +40,6 @@ export const WorkingsSection = ({
   visibility?: SpellVisibility;
 }): ReactElement => (
   <SpellWorkings
-    workspaceId={FIXTURE_WORKSPACE}
     workings={workings}
     headingAction={canRecord ? <RecordButton visibility={visibility} /> : undefined}
     completeAction={(workingId, workedOn, name) => (

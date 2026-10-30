@@ -1,6 +1,6 @@
 # JarLine
 
-`src/components/JarLine/`: one line of a list that shows a jar beside a name and some words. The recipe page's In Coven Inventory (`SpellBuilder/inventory.tsx`) and the Complete Working preview (`RecordWorking/completion.tsx`) both draw their lines through it, so the two behave the same.
+`src/components/JarLine/`: one line of a list that shows a jar beside a name and some words. The recipe page's In the Cupboard panel (`SpellBuilder/inventory.tsx`) and the Complete Working preview (`RecordWorking/completion.tsx`) both draw their lines through it, so the two behave the same.
 
 ## Props
 

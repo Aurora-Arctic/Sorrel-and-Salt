@@ -7,6 +7,7 @@ import type { GroupColors } from '../../lib/types';
 import type { StockDialogProps } from '../StockDialog/types';
 import type { SafetyMarkProps } from '../SafetyNote/types';
 import type { SpellStatus, SpellVisibility } from '@/modules/grimoire';
+import type { SpellMarksProps } from '../SpellMarks/types';
 import type { VerdictKind } from '../SpellBuilder/verdict-mark';
 import type { IngredientRow } from '@/modules/ingredients';
 
@@ -47,7 +48,7 @@ export interface IngredientRecipeStep {
   /** The ingredient's and the laid form's safety, for the Toxic and Caution marks; null for a one-off. */
   safety: Pick<SafetyMarkProps, 'toxic' | 'safetyNotes' | 'variants'> | null;
   /**
-   * The coven’s stock verdict on the step, as In Coven Inventory gives it: drawn in the row only
+   * The coven’s stock verdict on the step, as the In the Cupboard panel gives it: drawn in the row only
    * where the recipe has no side column (the Quick Look modal). Left out on the page.
    */
   supply?: VerdictKind | null;
@@ -94,7 +95,7 @@ export interface SpellRecipeProps {
 }
 
 /**
- * An In Coven Inventory line's doors on the recipe page: the
+ * A line's doors on the recipe page: the
  * Quick Look eye beside the name, and Edit Stock behind the jar and the name, each null where
  * there is nothing to open (the ingredient deleted since; a role that may not update stock).
  */
@@ -141,7 +142,7 @@ export interface SpellRecipeSummaryProps {
 }
 
 /** The spell a Quick Look modal is open on; the body arrives as the page's rendered children. */
-export interface SpellLookOpened {
+export interface SpellLookOpened extends SpellMarksProps {
   /** The spell's title; a draft may have none. */
   title: string | null;
   lastEdit: LastEditProps | null;
@@ -149,8 +150,6 @@ export interface SpellLookOpened {
   recipeHref: Route;
   /** Where Edit Spell opens the spell in the builder, for a role that may update it; none draws no Edit Spell. */
   editHref?: Route;
-  /** What Delete Spell needs, for a role that may delete the spell; none draws no bin. */
-  deleteSpell?: Omit<DeleteSpellActionProps, 'name'>;
   children: ReactNode;
 }
 
@@ -163,7 +162,7 @@ export interface SpellLookDialogProps {
   failed?: boolean;
 }
 
-/** Delete Spell's bin and dialog on the recipe page. */
+/** What deleting a spell needs, from the More menu or the Edit Spell dialog. */
 export interface DeleteSpellActionProps {
   workspaceId: string;
   spellId: string;
