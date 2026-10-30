@@ -1,7 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type postgres from 'postgres';
+import postgres from 'postgres';
+import { drizzle } from 'drizzle-orm/postgres-js';
 import { Forbidden, NotFound } from '@/lib/errors';
 import { PRIMARY_ADMIN_REFUSAL } from '@/lib/primary-admin';
+import { DEMO_WORKSPACE_ID } from '@/db/bootstrap';
+import { seedDemoCoven } from '@/db/seed/demo-coven';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { setUserRole } from '@/modules/identity';
 import type { UserRole } from '@/lib/session';
@@ -60,6 +63,7 @@ async function insertUser(
 }
 
 beforeEach(async () => {
+  await removeDemoCoven();
   // The ledger first, since its rows name the users deleted below; then E,
   // F, A and B back as the seed made them, as a `psql` fix would put them.
   await sql`truncate user_privilege_changes`;
@@ -77,9 +81,26 @@ beforeEach(async () => {
   await sql`truncate user_privilege_changes`;
 });
 
-afterEach(() => {
+afterEach(async () => {
   vi.unstubAllEnvs();
+  await sql`drop trigger if exists refuse_demo_seat on workspace_members`;
+  await sql`drop function if exists refuse_demo_seat()`;
 });
+
+/** The standard scenario has no demo coven, so a case that needs one removes it afterwards and starts from none. */
+async function removeDemoCoven(): Promise<void> {
+  await sql`delete from workspace_members where workspace_id = ${DEMO_WORKSPACE_ID}`;
+  await sql`delete from workspaces where id = ${DEMO_WORKSPACE_ID}`;
+}
+
+/** The user's seat in the demo coven, live or not; `undefined` where there is no row. */
+async function demoSeat(userId: string) {
+  const [row] = await sql<{ role: string; deleted: boolean }[]>`
+    select role::text, deleted_at is not null as deleted from workspace_members
+    where workspace_id = ${DEMO_WORKSPACE_ID} and user_id = ${userId}
+  `;
+  return row;
+}
 
 /** The ledger, oldest first, the enums cast to text. */
 async function changes(): Promise<PrivilegeChangeRow[]> {
@@ -424,5 +445,92 @@ describe('setUserRole and the last admin', () => {
     expect(refused?.reason).toBeInstanceOf(Forbidden);
     expect(await liveAdmins()).toHaveLength(1);
     expect(await changes()).toHaveLength(1);
+  });
+});
+
+// A site admin owns the demo coven, so they can keep its contents in order; the seat moves in the transaction that moves the role.
+describe('setUserRole and the demo coven seat', () => {
+  beforeEach(async () => {
+    // Drizzle rewires the client it wraps, so the seed gets one of its own.
+    const seedClient = postgres(process.env.DATABASE_URL as string, { onnotice: () => {} });
+    try {
+      await seedDemoCoven(drizzle(seedClient));
+    } finally {
+      await seedClient.end();
+    }
+  });
+
+  afterEach(removeDemoCoven);
+
+  it('seats a new admin as owner, promoting the viewer seat they held', async () => {
+    expect(await demoSeat(B.id)).toEqual({ role: 'viewer', deleted: false });
+
+    await setUserRole(asUser(E), B.id, 'admin');
+
+    expect(await demoSeat(B.id)).toEqual({ role: 'owner', deleted: false });
+  });
+
+  it('inserts the seat for an admin who has none', async () => {
+    await sql`delete from workspace_members where workspace_id = ${DEMO_WORKSPACE_ID} and user_id = ${B.id}`;
+    expect(await demoSeat(B.id)).toBeUndefined();
+
+    await setUserRole(asUser(E), B.id, 'admin');
+
+    expect(await demoSeat(B.id)).toEqual({ role: 'owner', deleted: false });
+  });
+
+  it('revives the seat of an admin who had left', async () => {
+    await sql`
+      update workspace_members set deleted_at = now(), deleted_by = ${B.id}
+      where workspace_id = ${DEMO_WORKSPACE_ID} and user_id = ${B.id}
+    `;
+    expect(await demoSeat(B.id)).toEqual({ role: 'viewer', deleted: true });
+
+    await setUserRole(asUser(E), B.id, 'admin');
+
+    expect(await demoSeat(B.id)).toEqual({ role: 'owner', deleted: false });
+  });
+
+  it('returns the seat to a viewer when the admin is demoted', async () => {
+    await setUserRole(asUser(E), B.id, 'admin');
+    expect(await demoSeat(B.id)).toEqual({ role: 'owner', deleted: false });
+
+    await setUserRole(asUser(E), B.id, 'user');
+
+    expect(await demoSeat(B.id)).toEqual({ role: 'viewer', deleted: false });
+  });
+
+  it('seats no one when a user becomes a curator', async () => {
+    await sql`delete from workspace_members where workspace_id = ${DEMO_WORKSPACE_ID} and user_id = ${PLAIN}`;
+
+    await setUserRole(asUser(E), PLAIN, 'curator');
+
+    expect(await roleOf(PLAIN)).toMatchObject({ role: 'curator' });
+    expect(await demoSeat(PLAIN)).toBeUndefined();
+  });
+
+  it('writes the seat in the transaction that writes the role', async () => {
+    await sql`delete from workspace_members where workspace_id = ${DEMO_WORKSPACE_ID} and user_id = ${PLAIN}`;
+    // The role write would succeed on its own, so only a seat that cannot be written explains a role left unchanged.
+    await sql.unsafe(`
+      create function refuse_demo_seat() returns trigger language plpgsql as \$\$
+      begin raise exception 'seat refused'; end \$\$;
+      create trigger refuse_demo_seat before insert on workspace_members
+        for each row execute function refuse_demo_seat();
+    `);
+
+    await expect(setUserRole(asUser(E), PLAIN, 'admin')).rejects.toThrow();
+
+    expect(await roleOf(PLAIN)).toMatchObject({ role: 'user' });
+    expect(await changes()).toEqual([]);
+  });
+
+  it('grants the role and seats no one where there is no demo coven', async () => {
+    await removeDemoCoven();
+
+    await setUserRole(asUser(E), B.id, 'admin');
+
+    expect(await roleOf(B.id)).toMatchObject({ role: 'admin' });
+    expect(await demoSeat(B.id)).toBeUndefined();
   });
 });

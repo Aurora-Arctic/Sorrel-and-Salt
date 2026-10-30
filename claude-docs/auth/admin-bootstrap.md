@@ -64,6 +64,11 @@ created, and only when that sign-in's provider vouches for the address
   route and stamped as the user; the promotion writes no ledger row itself
   (MB.195; [`db/write-path.md`](../db/write-path.md)). MB.59's grant and
   revoke make the same kind of write, declared `admin`.
+- **Every admin grant also seats the owner of the demo coven**, in the same
+  `withAudit` as the role write (`writeSiteRoleGrant`): the promotion here, the
+  MB.59 grant and an accepted admin invitation. See
+  [`db/demo-coven-seed.md`](../db/demo-coven-seed.md), "How an admin gains and
+  loses the seat".
 - **Changing the variable** and redeploying promotes the new address at
   its next qualifying sign-in or verification, even if that account
   already exists. The previous primary admin keeps `role: 'admin'` and

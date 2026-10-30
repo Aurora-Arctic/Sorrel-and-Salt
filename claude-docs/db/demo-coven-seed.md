@@ -30,6 +30,36 @@ hook missed.
 
 Contents (cupboard, spells, stock, workings) are not written here.
 
+## How an admin gains and loses the seat
+
+Making someone an admin seats them as `owner` of the demo coven, in the same
+`withAudit` transaction as the role change. If the role write fails, no seat is
+written. This covers every admin grant: `setUserRole`, the primary admin's
+promotion, and an accepted admin invitation.
+
+- No seat row: it is inserted as `owner`.
+- A soft-deleted seat: it is revived as `owner`. Unlike the seed, the grant
+  does re-seat a pair that left.
+- A `viewer` or `member` seat: it is promoted to `owner`.
+- No demo coven: nothing is written.
+
+Demoting an admin sets their live seat back to `viewer`. Making or unmaking a
+curator changes no seat. The writer for the role change is `setSeatRole`, a
+write that takes no `Membership` proof, because a site-tier action has none.
+
+## Three refusals
+
+Each throws `Forbidden` with a message that explains it.
+
+- `deleteWorkspace` refuses a workspace with `demo = true`: "The demo coven
+  can't be deleted."
+- `removeMember` refuses `BOOTSTRAP_USER_ID`: "The system user's seat can't be
+  changed."
+- `updateMemberRole` refuses `BOOTSTRAP_USER_ID` with the same message.
+
+These hold even when another owner exists, so the last-owner guard is not what
+stops them.
+
 ## The slug refusal
 
 If a coven that is not the demo coven already holds the slug, the seed throws an
