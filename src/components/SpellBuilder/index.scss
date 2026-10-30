@@ -1,14 +1,34 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The Share With the Coven switch, label and note start-aligned as the ingredient form's Toxic
-// switch is. Not the primitive's centring, which suits a filter bar; here it sits alone beneath
-// full-width fields.
-.spell-builder .switch {
-  align-items: flex-start;
+// The Shared switch in the footer's row, beside Mark Complete: the toggle first, its label to the
+// right and the short note under the label, a control's height in all so it stands level with the
+// buttons. A grid rather than the primitive's column, which centres the toggle under its label.
+.spell-builder .form__actions > .switch {
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-areas:
+    'control label'
+    'control note';
+  place-content: center start;
+  align-items: center;
+  gap: 0 space(2);
+  min-block-size: $control-height;
+
+  .switch__control {
+    grid-area: control;
+    min-block-size: 0;
+  }
 
   .field__label {
+    grid-area: label;
     text-align: start;
+    white-space: nowrap;
+  }
+
+  .field__hint {
+    grid-area: note;
+    margin: 0;
   }
 }
 

@@ -3,6 +3,7 @@ import { getMe } from '@/modules/identity';
 import CreateWorkspaceForm from '../../../../components/CreateWorkspaceForm';
 import ContextRow from '../../../../components/ContextRow';
 import Notice from '../../../../components/Notice';
+import PageHeader from '../../../../components/PageHeader';
 import WorkspaceSwitcher from '../../../../components/WorkspaceSwitcher';
 import { requireSession } from '../../../../lib/request-session';
 import { viewerOf } from '../../../../lib/viewer';
@@ -30,10 +31,10 @@ export default async function NewCovenPage() {
           is. */}
       <main className="page-frame page-frame--narrow">
         <div className="page-frame__section panel">
-          <div className="header">
-            <h1>Create Coven</h1>
-            <p className="lede">Start a coven of your own. You will be its owner.</p>
-          </div>
+          <PageHeader
+            title="Create Coven"
+            lede="Start a coven of your own. You will be its owner."
+          />
           {me.canCreateWorkspace ? (
             <CreateWorkspaceForm />
           ) : (

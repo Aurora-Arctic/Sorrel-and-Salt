@@ -1,7 +1,7 @@
 name: Checks
 
-# One matrix job for lint, format, typecheck, codegen, build, destructive-ddl,
-# migration-order and audit, each reporting as `checks / <name>`. workflow_call only, from
+# One matrix job for lint, unused, format, typecheck, codegen, build,
+# destructive-ddl, migration-order and audit, each reporting as `checks / <name>`. workflow_call only, from
 # pr-gate.yml. claude-docs/ci/reusable-checks.md, "Reusable checks" is the walkthrough.
 #
 # vitest.yml and playwright.yml are not legs: a `services: postgres:` block
@@ -104,6 +104,13 @@ jobs:
             command: npm run lint
             summarize: .github/scripts/summarize-lint.sh
             comment: minimize
+          # Non-blocking and never a required check: its Run step continues on
+          # error, so knip's findings reach the PR comment without failing the leg.
+          - name: unused
+            label: Unused Code (Non-Blocking)
+            command: npm run lint:unused
+            summarize: ''
+            comment: minimize
           - name: format
             label: Format Check
             command: npm run format:check
@@ -198,7 +205,7 @@ jobs:
           RUN_MIGRATION_ORDER: ${{ inputs.run-migration-order }}
         run: |
           case "$CHECK" in
-            lint) flag="$RUN_LINT" ;;
+            lint | unused) flag="$RUN_LINT" ;;
             typecheck) flag="$RUN_TYPECHECK" ;;
             build) flag="$RUN_BUILD" ;;
             destructive-ddl) flag="$RUN_DESTRUCTIVE_DDL" ;;
@@ -216,6 +223,7 @@ jobs:
       - name: Run ${{ matrix.name }}
         id: run
         if: steps.flags.outputs.should-run == 'true'
+        continue-on-error: ${{ matrix.name == 'unused' }}
         run: |
           set -o pipefail
           {

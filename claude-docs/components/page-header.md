@@ -1,7 +1,10 @@
 # PageHeader
 
-`src/components/PageHeader/` — a page's heading with its one primary action
-on the same line, the action at the end: `/admin/compendium`'s Add Ingredient
+`src/components/PageHeader/` — every page's head: its heading with its one primary action
+on the same line, the action at the end, and, on the pages that carry them, an eyebrow above
+and a lede beneath. No page writes its own `h1`; `tests/guards/page-heads.test.ts` fails one
+that does, bar the loading covers' visually hidden heading
+([`styling.md`](../styling.md), "Designing a section"). The action example is `/admin/compendium`'s Add Ingredient
 beside its `h1` (the owner's call, M5.6). Nine admin pages wrote the
 `.page-header` row and its heading by hand until MB.115. Since MB.115's
 tabbed pages, `TabbedPage` renders it too, with its row of tab pills beside the
@@ -14,15 +17,21 @@ it directly.
 
 `PageHeaderProps` (`types.ts`):
 
-| Prop     | What it is                                                                                                      |
-| -------- | --------------------------------------------------------------------------------------------------------------- |
-| `title`  | The `h1`, title case                                                                                            |
-| `lead`   | Optional: a mark before the heading, on its line and outside the `h1` (the entry page’s In Your Cupboard shelf) |
-| `action` | Optional: the one primary action, an Add link as `<Link className="btn btn--solid">`, or a control of its own   |
+| Prop        | What it is                                                                                                                |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `title`     | The `h1`, title case                                                                                                      |
+| `id`        | Optional: the `h1`'s id, for a section or an article named by the heading (the coven landing's, the spell page's)         |
+| `eyebrow`   | Optional: the small capitals above the heading, naming the part of the site. A list page in the app leaves it out         |
+| `lede`      | Optional: the muted sentence or two under the heading, in a `p.lede`. A list page in the app leaves it out                |
+| `lead`      | Optional: a mark before the heading, on its line and outside the `h1` (the entry page’s In Your Cupboard shelf)           |
+| `action`    | Optional: the one primary action, an Add link as `<Link className="btn btn--solid">`, or a control of its own             |
+| `className` | Optional: a class on the head's outer element, for the one caller that lays it out further (the sign-in panel centres it) |
 
 ## Contracts
 
-- **One `h1` per page, and this is it** on every page that renders it.
+- **One `h1` per page, and this is it.** Every page head is drawn here; a page or component that writes an `h1` of its own fails `tests/guards/page-heads.test.ts`.
+- **Two shapes.** With no eyebrow and no lede, the head is the `.page-header` row. With either, it is a `.header` column (_layout.scss): the eyebrow, the heading, or the `.page-header` row when there is a lead or an action, then the lede, spaced by the column's gap alone.
+- **Who carries an eyebrow and a lede.** The public pages: the public Compendium has both, and the entry page's formal name is its eyebrow, drawn by `FormalName` above the `PageHeader`. The app's list pages (a coven's Ingredients and Grimoire, its Members, the admin Compendium and the other admin lists) have the heading alone. The screens outside the lists keep what they say their purpose with: the coven home's and the coven landing's eyebrow and lede, and the lede of Create Coven, Admin, the sign-in, email and invitation panels, Welcome, Not Authorized and the error pages.
 - **A `lead` stays out of the heading.** With one, the `h1` and the lead share a `.page-header__title` row, so the heading reads as the title alone and the lead keeps its own name; the row takes the place the bare `h1` takes in the header’s layout.
 - **The action is the caller's element**: an Add link to the page's `?new`
   address (the admin lists' `AddAction`, which opens its modal at once, and
@@ -34,7 +43,7 @@ it directly.
 
 ## Styling
 
-None of its own: `.page-header` is the primitive ([`styling.md`](../styling.md),
+None of its own. In the column shape `.header` spaces the parts and `.header > .page-header` drops the row's margin, so the gap alone spaces the heading's line from the eyebrow and the lede. The spell page lays the row out further in `.spell-recipe__head`: its marks and actions hang from the title's first line at every width ([`spell-recipe.md`](spell-recipe.md)). `.page-header` is the primitive ([`styling.md`](../styling.md),
 "Buttons"), the row centred and the action brought down to sit level with the
 heading's letters (`position: relative; top`, not a `translate`, which would hold the Add's tip under the bar; it holds while the item shares the heading's line, and is cancelled where the action goes beneath). Under 28rem of its own width the action goes beneath the
 heading, at its natural width and the line's start, as every action is. The

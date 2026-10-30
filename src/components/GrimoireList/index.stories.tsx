@@ -56,11 +56,6 @@ const FACETS: GrimoireFacets = {
   ],
 };
 
-const MEMBERS = [
-  { userId: 'user-a', name: 'Testa Owner' },
-  { userId: 'user-b', name: 'Mocka Member' },
-];
-
 /** One spell as the tab hands it to its card, with every control an owner's role gets. */
 const spell = (
   id: string,
@@ -81,12 +76,7 @@ const spell = (
     lastEdit: { by: 'Testa Owner', at: '2026-10-20T10:00:00Z' },
     ...(status === 'complete' && {
       workingCount: 2,
-      recordWorking: {
-        workspaceId: 'fixture-coven',
-        members: MEMBERS,
-        recorderId: 'user-a',
-        steps: [{ id: `${id}-s1`, name: 'Testwort' }],
-      },
+      recordWorking: { workspaceId: 'fixture-coven', recorderId: 'user-a' },
     }),
     more: {
       workspaceId: 'fixture-coven',
@@ -155,6 +145,7 @@ const Tab = ({
         workspaceId="fixture-coven"
         covenSlug="fixture-coven"
         status={drafts ? 'draft' : 'complete'}
+        canCreate
         spells={spells}
         filter={filter}
         categories={CATEGORIES}

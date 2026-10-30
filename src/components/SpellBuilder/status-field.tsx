@@ -2,19 +2,22 @@
 
 import { type ReactElement, useId, useState } from 'react';
 import { flushSync } from 'react-dom';
-import { useFormContext, useFormState } from 'react-hook-form';
+import { useFormContext, useFormState, useWatch } from 'react-hook-form';
 import BusyButton from '../BusyButton';
+import { ConfirmQuestion } from '../Modal';
 import { useDuplicateSpell } from '../SpellRecipe/duplicate-spell';
 import type { SpellBuilderInput, SpellBuilderValues, SpellStatusFieldProps } from './types';
 
 // A spell is a draft until Mark Complete saves it as complete; a complete spell has Duplicate
 // where a draft has Mark Complete, which makes a private draft copy and opens it. A complete spell
-// is not reopened here, and the service refuses complete -> draft too.
+// is not reopened here, and the service refuses complete -> draft too. A shared draft asks first,
+// since completing it keeps it shared for good, as sharing a complete spell asks.
 // claude-docs/components/spell-builder.md, "Draft and complete".
 
 const DRAFT_SAYS = 'A draft: not yet finished.';
 
 export function SpellStatusField({
+  name,
   flush,
   workspaceId,
   spellId,
@@ -27,6 +30,9 @@ export function SpellStatusField({
   const saysId = useId();
   // The saved spell's status is the last save's, which the form starts from.
   const complete = defaultValues?.status === 'complete';
+  // The visibility the form holds, saved or not, is the one completing would lock.
+  const shared = useWatch({ control, name: 'visibility' }) === 'workspace';
+  const [asking, setAsking] = useState(false);
 
   const { duplicate, duplicating } = useDuplicateSpell(
     workspaceId,
@@ -60,6 +66,8 @@ export function SpellStatusField({
         () => flush(),
         () => {
           setValue('status', before);
+          // The question goes first, so the form is no longer inert when the title takes the focus.
+          flushSync(() => setAsking(false));
           setFocus('title');
         },
       )();
@@ -68,6 +76,7 @@ export function SpellStatusField({
       setValue('status', before);
     } finally {
       setBusy(false);
+      setAsking(false);
     }
   };
 
@@ -101,10 +110,27 @@ export function SpellStatusField({
         busy={busy}
         busyLabel="Marking Complete"
         aria-describedby={saysId}
-        onClick={change}
+        onClick={shared ? () => setAsking(true) : change}
       >
         Mark Complete
       </BusyButton>
+      {asking && (
+        <ConfirmQuestion
+          question={
+            <>
+              Mark <strong>{name}</strong> Complete? It stays shared with every member of the coven
+              for good, and your other changes are saved with it.
+            </>
+          }
+          confirmLabel="Mark Complete"
+          busyLabel="Marking Complete"
+          tone="solid"
+          keepLabel="Keep It a Draft"
+          busy={busy}
+          onConfirm={change}
+          onKeep={() => setAsking(false)}
+        />
+      )}
     </>
   );
 }

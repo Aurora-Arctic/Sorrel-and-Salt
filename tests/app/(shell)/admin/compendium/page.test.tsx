@@ -98,14 +98,10 @@ const entryValues = vi.fn();
 vi.mock('@/app/entry-values', () => ({ entryValues }));
 
 // The form is its own tests' (tests/components/IngredientForm/); here only what the dialog
-// hands it, and that its Cancel and its delete close the dialog where the page says.
+// hands it, and that its delete and the modal's Close close the dialog where the page says.
 const formProps = vi.fn();
 vi.mock('@/components/IngredientForm', () => ({
-  default: (props: {
-    onCancel: () => void;
-    onDeleted: () => void;
-    review?: { reviewed: boolean };
-  }) => {
+  default: (props: { onDeleted: () => void; review?: { reviewed: boolean } }) => {
     formProps(props);
     return (
       <form aria-label="Fixture Form">
@@ -117,9 +113,6 @@ vi.mock('@/components/IngredientForm', () => ({
             defaultChecked={props.review.reviewed}
           />
         )}
-        <button type="button" onClick={props.onCancel}>
-          Cancel
-        </button>
         <button type="button" onClick={props.onDeleted}>
           Fixture Delete
         </button>
@@ -530,7 +523,7 @@ describe('the /admin/compendium modal', () => {
   it('closes the modal back to the filtered page it opened over', async () => {
     await renderPage({ ...FILTERED, edit: TESTWORT.slug });
 
-    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Close' }));
 
     expect(router.replace).toHaveBeenCalledWith(FILTERED_HREF);
   });
@@ -654,14 +647,14 @@ describe('the /admin/compendium details modal', () => {
     expect(router.replace).toHaveBeenCalledWith(FILTERED_HREF);
   });
 
-  it('opens the edit modal over the details on ?entry= with ?edit=, and its Cancel goes back to them', async () => {
+  it('opens the edit modal over the details on ?entry= with ?edit=, and its Close goes back to them', async () => {
     await renderPage({ ...FILTERED, entry: TESTWORT.slug, edit: TESTWORT.slug });
 
     expect(screen.getAllByRole('dialog')).toHaveLength(2);
     expect(details()).toBeInTheDocument();
     const editing = screen.getByRole('dialog', { name: EDITING_TESTWORT });
 
-    fireEvent.click(within(editing).getByRole('button', { name: 'Cancel' }));
+    fireEvent.click(within(editing).getByRole('button', { name: 'Close' }));
 
     expect(router.replace).toHaveBeenCalledWith(ON_DETAILS);
   });

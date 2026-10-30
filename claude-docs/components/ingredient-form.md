@@ -45,7 +45,6 @@ foot, as the compendium's does, as the bin icon (`BinButton`, named and tipped "
 | `entry`         | The entry to edit, `{ id, values }`, its values in the form's own shape, `IngredientFormValues`: a compendium entry with a null `workspaceId`, or the coven's own with a coven's id (M8.17). Left out, the form creates.                                                                                                                                                                                                                                                                   |
 | `onSaved`       | Called with the saved row (`id`, `name`, `slug`, and for a coven’s new ingredient `stock`, the jars it holds, each with its form, quantity and unit, which is always empty since M12.27 stopped a save moving jars; a compendium save carries none) once the server has accepted it, and which save was pressed: `'open'`, Save Ingredient, for the page to open the ingredient, or `'another'`, Save & Add Another, after which the form clears (MB.131). An edit's one save is `'open'`. |
 | `onDeleted`     | Called once the `entry` given has been deleted, from the compendium or, with a coven's id, from that coven.                                                                                                                                                                                                                                                                                                                                                                                |
-| `onCancel`      | Given, a quiet Cancel follows the saves (the coven's Add and Edit Ingredient dialogs and the public route's edit leave it out, so their only ways out are Close, Escape and a click outside), and calls it: the page holding the form closes it. With unsaved changes Cancel asks first, and calls it on Discard Changes (["On the compendium"](#on-the-compendium), "Unsaved changes").                                                                                                   |
 | `duplicateHref` | Required. Where the duplicate warning links a near match: the admin's compendium page opens its modal, the shell's add button goes to the coven's ingredient page, `/coven/[slug]/ingredients/[id]` (["The duplicate warning"](#the-duplicate-warning)).                                                                                                                                                                                                                                   |
 | `quickLookOf`   | Given, each near match in the duplicate warning offers its Quick Look, opening the details `{ href, heading }` it names over the form ("Quick Look in the warning", under ["The duplicate warning"](#the-duplicate-warning)). The admin compendium's form passes it; the public search's and the coven's leave it out.                                                                                                                                                                     |
 | `entryHref`     | Where a linked substitute's summary links its ingredient, given `{ slug, isGlobal }`, opened in a new tab; `undefined` for one with no page. Left out, a summary links nothing (MB.115; ["A linked substitute's summary"](#a-linked-substitutes-summary)).                                                                                                                                                                                                                                 |
@@ -748,7 +747,7 @@ the source, not the row's link to it, so it reaches every entry citing it.
   new or editing (MB.115, the owner's call that every way out of an admin
   form asks while it has changes). Each panel reports its own `isDirty`
   through `PanelChangesContext` (`panel-changes.ts`), and the form's guard
-  reads its `isDirty` or any panel holding edits, so the form's Cancel, the
+  reads its `isDirty` or any panel holding edits, so the
   modal's ×, Escape and the backdrop all ask first. Keep Editing returns to
   the panel with its text as typed; Discard Changes closes everything. A
   closed panel reports nothing.
@@ -1159,7 +1158,7 @@ compendium page opens the match's own modal, `?edit=<slug>` — and the shell's 
 reaches compendium and coven entries alike. It opens in a new tab, so the
 form and what is typed in it stay where they are (the owner's call at
 MB.115's review), and its name ends "(opens in a new tab)" for a screen
-reader, as the substitute summary's Open Entry does. It is a plain anchor,
+reader, as the substitute summary's See Entry does. It is a plain anchor,
 since the caller hands back a plain string, where a typed `<Link>` wants a route
 the build contains. Nothing refuses the create on the server: the warning is the
 form's alone.
@@ -1435,7 +1434,7 @@ The form saves itself (M13.24), through `useAutosave` ([`autosave.md`](autosave.
 - **`persist` reads whether the write created the row.** The write itself records that it created the row, so the id is handed to `onCreated` only by the write that made it, even when a queued write ran first.
 - **Conflict.** Another tab's save makes this one's refused with "This ingredient was changed elsewhere." **Reload Latest** reloads the page (or calls `onReload`); **Keep My Version** sends the form over the newer revision.
 - **Offline.** A failed save retries after 2, 5 and 15 s, then shows "Could not save." with Retry. The form stays in the local mirror, which Retry clears when the save lands. A reopened form with a mirror newer than the row shows the recovery banner, `RecoveryNotice` ([`save-status.md`](save-status.md)), with Keep and Discard.
-- **No Discard question.** The form no longer uses the unsaved-changes guard: Close saves first ([`modal.md`](modal.md#unsaved-changes)). Older passages here that describe Discard Changes for this form are out of date. A viewer's form has no autosave and writes nothing.
+- **No Discard question, and no Cancel.** The form no longer uses the unsaved-changes guard: Close saves first, so a Cancel beside the saves would only be a second Close, and the form draws none in any dialog ([`modal.md`](modal.md#unsaved-changes)). Older passages here that describe Discard Changes for this form are out of date. A viewer's form has no autosave and writes nothing.
 
 ## After a save
 
@@ -1604,10 +1603,9 @@ site admin's, through the compendium mutations
   whole entry, sends them all, so categories left alone stay
   ([`design-decisions/m5.5-admin-compendium.md`](../design-decisions/m5.5-admin-compendium.md)).
 - **Delete Ingredient** stands apart at the far end of an edit's actions,
-  `.btn--destructive`. Pressed, it asks `Delete
-"Testwort"? It leaves the compendium, but any spell that uses it keeps it.`, or
-  on a coven's own entry `Delete "Testwort"? It leaves the coven, but any spell
-that uses it keeps it.`, with
+  `.btn--destructive`. Pressed, it asks "Delete **Testwort**? It leaves the compendium, but any spell that
+  uses it keeps it.", or on a coven's own entry "Delete **Testwort**? It leaves
+  the coven, but any spell that uses it keeps it.", the name in bold, with
   Delete, destructive, and Cancel, quiet, as
   [`GroupedValueForm`](grouped-value-form.md) asks: on a card over the form,
   centred in the part in view however far the long form is scrolled, the
@@ -1633,8 +1631,8 @@ workspaceId)`, busy until the answer, and calls
 - **Unsaved changes** (MB.115, the owner's call). The form hands
   `formState.isDirty`, the flag that turns the saves on, to the shared guard
   ([`modal.md`](modal.md#unsaved-changes)). Its question comes before any
-  other and takes its place until answered; Discard Changes closes as Cancel
-  did. Every question's buttons stand on the card's `.modal__actions`
+  other and takes its place until answered; Discard Changes closes the
+  dialog. Every question's buttons stand on the card's `.modal__actions`
   row, the form's own `.form__actions` staying beneath the card. The form's
   row is the shared [`FormActions`](field.md), its two saves passed to it,
   and its Delete and End Redirect & Save questions the shared
@@ -1656,8 +1654,8 @@ picker offers — so opening the modal sends no browser read
 `RouteModal` ([`modal.md`](modal.md), "RouteModal"), in the default width, that closes back to the
 list, with a router of its own for what RouteModal does not do: Save
 Ingredient replaces the address with the saved entry's `?edit=`, at the
-slug its name now spells; Save & Add Another stays on `?new`; a delete,
-Cancel and the modal's close replace it with the list's, filter and cursor
+slug its name now spells; Save & Add Another stays on `?new`; a delete
+and the modal's close replace it with the list's, filter and cursor
 kept; and each refreshes, so the list re-reads. A near match opens its own
 modal over the same list, in a new tab. Why a modal, and `?edit=` after a save:
 [`design-decisions/m5.5-admin-compendium.md`](../design-decisions/m5.5-admin-compendium.md).

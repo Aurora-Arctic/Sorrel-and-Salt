@@ -751,7 +751,7 @@ describe('the spell builder’s safety warning', () => {
     ).toContain('Warning: Toxic.');
   });
 
-  it('warns of a form’s notes once: the notes while open, the Caution badge while closed, and says so', async () => {
+  it('marks a form with notes Caution, open or closed, shows the notes while open, and says so', async () => {
     suggest(CAREWORT);
     renderBuilder();
 
@@ -762,7 +762,7 @@ describe('the spell builder’s safety warning', () => {
     expect(within(row).getByRole('region', { name: 'Caution' })).toHaveTextContent(
       'Wash your hands after.',
     );
-    expect(badge()).toBeNull();
+    expect(badge()).toBeInTheDocument();
 
     fireEvent.click(within(row).getByRole('button', { name: 'Close Fixture Carewort (Leaf)' }));
 

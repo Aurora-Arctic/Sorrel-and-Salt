@@ -21,7 +21,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // Which cupboard choices a compendium entry offers (claude-docs/components/ingredient-entry.md): the page decides from the member's permissions and the choices follow whether the coven holds the entry.
 // They are drawn as the list cards draw them: a main icon (Annotate on a coven's page, Edit in Compendium on the compendium's) and the three dots for the rest,
-// with Remove beside Make It Ours, and the bin only where Remove is the one choice left.
+// with Remove beside Make It Ours, and no bin even where Remove is the one choice left.
 
 const ANNOTATE = {
   href: '/coven/fixture-coven/ingredients/fixture?annotate' as Route,
@@ -97,12 +97,8 @@ function choices(): string[] {
   return shownChoices();
 }
 
-/** The bin where Remove is the one choice left, else an item of the three dots' menu. */
+/** An item of the three dots' menu. */
 function choose(name: string): void {
-  if (name === 'Remove' && button('Remove Testwort')) {
-    fireEvent.click(screen.getByRole('button', { name: 'Remove Testwort' }));
-    return;
-  }
   fireEvent.click(screen.getByRole('button', { name: 'More for Testwort' }));
   fireEvent.click(within(screen.getByRole('menu')).getByRole('menuitem', { name }));
 }
@@ -154,15 +150,13 @@ describe('CupboardActions', () => {
     expect(button('Remove Testwort')).not.toBeInTheDocument();
   });
 
-  // A lone choice is its own icon, so a member who may remove but
-  // not make it ours has the bin, and no menu of one.
-  it('draws Remove as the bin, with no three dots, where it is the one choice left', () => {
-    // Why the dots could have shown: with Make It Ours permitted too they do (the test above).
-    expect(BASE.canMakeOurs).toBe(true);
+  // The page always draws the three dots, so a member who may remove but
+  // not make it ours finds Remove in a menu of one, never a bin beside it.
+  it('draws Remove in the three dots, with no bin, where it is the one choice left', () => {
     renderActions({ held: true, canMakeOurs: false });
 
-    expect(button('Remove Testwort')).toBeInTheDocument();
-    expect(button('More for Testwort')).not.toBeInTheDocument();
+    expect(button('Remove Testwort')).not.toBeInTheDocument();
+    expect(choices()).toEqual(['Remove']);
   });
 
   describe("a curator's Edit in Compendium", () => {
@@ -210,12 +204,11 @@ describe('CupboardActions', () => {
     expect(button('Remove Testwort')).not.toBeInTheDocument();
   });
 
-  it('draws no Make It Ours without its permission, and so no three dots', () => {
+  it('draws no Make It Ours without its permission', () => {
     renderActions({ held: true, canMakeOurs: false });
 
     expect(screen.getByRole('link', { name: 'Annotate Testwort' })).toBeInTheDocument();
-    expect(button('Remove Testwort')).toBeInTheDocument();
-    expect(button('More for Testwort')).not.toBeInTheDocument();
+    expect(choices()).not.toContain('Make It Ours');
   });
 
   it('draws nothing for a viewer', () => {
@@ -420,7 +413,7 @@ describe('CupboardActions', () => {
     expect(button('Show the error for More for Testwort')).toBeInTheDocument();
   });
 
-  it('anchors a Remove refusal on the bin where Remove is the one choice, so the callout follows it', async () => {
+  it('anchors a Remove refusal on the three dots where Remove is the one choice, so the callout follows it', async () => {
     mockGraphQLError('RemoveCupboardEntry', {
       code: 'VALIDATION',
       fieldErrors: [{ path: ['ingredientId'], message: 'Fixture refusal: a jar is held' }],
@@ -432,8 +425,8 @@ describe('CupboardActions', () => {
 
     expect(await screen.findByRole('alert')).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    expect(button('Remove Testwort')).toHaveFocus();
-    expect(button('Show the error for Remove Testwort')).toBeInTheDocument();
+    expect(button('More for Testwort')).toHaveFocus();
+    expect(button('Show the error for More for Testwort')).toBeInTheDocument();
   });
 
   it('asks before making it ours, in a dialog, and changes nothing on the way out', async () => {

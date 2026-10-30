@@ -399,8 +399,24 @@ test('in the grimoire, a press on a spell card outside its title opens its recip
 
   await test.step('a press on the made count opens the recipe page', async () => {
     await open();
-    await pressCardAt(card(), await middleOf(card(), card().getByText(/^made 1 time$/i)));
+    await pressCardAt(card(), await middleOf(card(), card().getByText(/^made once$/i)));
     await expect(page).toHaveURL(recipePath);
+  });
+
+  await test.step('the last-edit line shows its tip on hover and on focus, and a press on it stays on the list', async () => {
+    await open();
+    const line = card().getByRole('button', { name: /^Edited / });
+    const tip = card().getByRole('tooltip');
+    await expect(tip).toBeHidden();
+    // A hover lands only on the element on top at that point, so the title's overlay would take it.
+    await line.hover();
+    await expect(tip).toBeVisible();
+    await page.mouse.move(0, 0);
+    await expect(tip).toBeHidden();
+    await line.focus();
+    await expect(tip).toBeVisible();
+    await line.click();
+    await expect(page).toHaveURL(listUrl);
   });
 
   await test.step('Quick Look opens the spell over the list, not the recipe page', async () => {

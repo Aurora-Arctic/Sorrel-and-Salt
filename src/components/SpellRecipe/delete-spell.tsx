@@ -51,6 +51,28 @@ export function useDeleteSpell({
   return { remove: remove.mutate, pending: remove.isPending || remove.isSuccess };
 }
 
+/**
+ * The question naming the spell in bold, then one sentence on what deleting it does: a shared
+ * spell leaves the whole coven's grimoire, a private one only its author's. Asked by the recipe
+ * page's More menu and the builder's bin.
+ */
+export function DeleteSpellWords({
+  name,
+  visibility,
+}: {
+  name: string;
+  visibility?: SpellVisibility;
+}): ReactElement {
+  return (
+    <>
+      Delete <strong>{name}</strong>?{' '}
+      {visibility === 'workspace'
+        ? 'It leaves the grimoire for every member of the coven, and nothing in stock changes.'
+        : 'It is gone for good, and nothing in stock changes.'}
+    </>
+  );
+}
+
 /** The question naming the spell and its two answers. */
 function DeleteSpellQuestion({
   name,
@@ -68,10 +90,7 @@ function DeleteSpellQuestion({
   return (
     <>
       <p>
-        Delete <strong>{name}</strong>?{' '}
-        {visibility === 'workspace'
-          ? 'It leaves the grimoire for every member of the coven, and nothing in stock changes.'
-          : 'It is gone for good, and nothing in stock changes.'}
+        <DeleteSpellWords name={name} visibility={visibility} />
       </p>
       <div className="modal__actions">
         <BusyButton

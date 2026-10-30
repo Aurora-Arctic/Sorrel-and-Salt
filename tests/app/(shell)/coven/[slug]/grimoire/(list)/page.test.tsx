@@ -69,7 +69,7 @@ vi.mock('@/modules/grimoire', () => ({
   readSpell,
 }));
 
-// The coven roster a Record a Working button lists: nobody, by default.
+// The coven roster, which the list leaves to the Record a Working dialog to read.
 const memberRoster = vi.fn(async () => []);
 vi.mock('@/modules/coven', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/modules/coven')>()),
@@ -291,7 +291,7 @@ describe('the Grimoire tabs', () => {
 
   it('says on each card who last edited it and when, the editors named in one batch', async () => {
     await renderTab(SpellsPage);
-    // One batch for the page's editors, one for the members the Coven Member facet offers.
+    // One batch for the page's editors, one for the members the Coven Members facet offers.
     expect(displayNamesOf).toHaveBeenCalledTimes(2);
     expect(displayNamesOf).toHaveBeenCalledWith(session, ['editor-s1', 'editor-s2']);
     expect(displayNamesOf).toHaveBeenCalledWith(session, [MAKER]);
@@ -455,6 +455,45 @@ describe('the spell builder over a Grimoire tab', () => {
     expect(screen.getAllByRole('heading', { name: 'Fixture Working' }).length).toBeGreaterThan(0);
     expect(screen.queryByRole('link', { name: /^Edit / })).not.toBeInTheDocument();
   });
+
+  it('draws Record a Working on a member’s complete spells yet reads no roster or steps for it, which the dialog reads once opened', async () => {
+    as('member');
+    await renderTab(SpellsPage);
+    // A member may record a working, and both spells are complete: the reads were owed if the list made them.
+    expect(
+      screen.getByRole('button', { name: 'Record a Working of Fixture Working' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Record a Working of Testwort Charm' }),
+    ).toBeInTheDocument();
+    expect(memberRoster).not.toHaveBeenCalled();
+    expect(stepsOfSpells).not.toHaveBeenCalled();
+  });
+
+  it('draws no Record a Working for a viewer, who may not record one', async () => {
+    as('viewer');
+    await renderTab(SpellsPage);
+    expect(screen.getAllByRole('heading', { name: 'Fixture Working' }).length).toBeGreaterThan(0);
+    expect(screen.queryByRole('button', { name: /^Record a Working/ })).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ['viewer', true],
+    ['member', false],
+  ] as const)(
+    'tells a coven %s on an empty Spells tab which roles can write a spell: %s',
+    async (role, named) => {
+      as(role);
+      listGrimoire.mockResolvedValue([]);
+      countGrimoire.mockResolvedValue({ totalCount: 0, countBefore: null });
+      assignedCategoriesOf.mockResolvedValue([]);
+      await renderTab(SpellsPage);
+      // The roles named are the state's data: a viewer has no New Spell and nothing else says who to ask.
+      const state = screen.getByRole('status', { name: 'No Spells' });
+      if (named) expect(state).toHaveTextContent(/\bmember\b.*\bowner\b|\bowner\b.*\bmember\b/i);
+      else expect(state).not.toHaveTextContent(/\bmember\b|\bowner\b/i);
+    },
+  );
 
   it('opens a saved draft under ?edit=<id> with its values, read for the signed-in member', async () => {
     as('member');

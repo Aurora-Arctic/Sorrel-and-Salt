@@ -344,3 +344,39 @@ describe('WorkspaceMember.email', () => {
     expect(repository.findMemberEmails).not.toHaveBeenCalled();
   });
 });
+
+describe('Query.workspace', () => {
+  const BY_ID = /* GraphQL */ `
+    query ($id: ID!) {
+      workspace(id: $id) {
+        id
+        members(first: 10) {
+          edges {
+            node {
+              user {
+                id
+                name
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+  type ById = {
+    workspace: { id: string; members: { edges: { node: { user: { id: string } } }[] } };
+  };
+
+  it('lists a coven named by id to a member, and answers FORBIDDEN to a stranger', async () => {
+    const own = await run<ById>(asUser(A), BY_ID, { id: covenY });
+    expect(own.errors).toBeUndefined();
+    expect(own.data!.workspace.members.edges.map(({ node }) => node.user.id)).toEqual(
+      expect.arrayContaining([A.id, D.id]),
+    );
+
+    // B sits in W beside A but not in Y, which A's own call just read.
+    const stranger = await run(asUser(B), BY_ID, { id: covenY });
+
+    expect(stranger.errors?.map((error) => error.extensions?.code)).toEqual(['FORBIDDEN']);
+  });
+});

@@ -98,7 +98,9 @@ describe('Delete in the spell builder', () => {
     renderBuilder({ spell: SPELL, deletedHrefOf });
     fireEvent.click(del()!);
     const question = await asked();
-    expect(question).toHaveTextContent('Delete Fixture Working? Nothing in stock changes.');
+    expect(question).toHaveTextContent(
+      'Delete Fixture Working? It is gone for good, and nothing in stock changes.',
+    );
     fireEvent.click(within(question).getByRole('button', { name: 'Cancel' }));
     await waitFor(() => expect(screen.queryByRole('button', { name: 'Cancel' })).toBeNull());
     expect(deleted).toHaveLength(0);
@@ -109,7 +111,7 @@ describe('Delete in the spell builder', () => {
     renderBuilder({ spell: { ...SPELL, visibility: 'workspace' }, deletedHrefOf });
     fireEvent.click(del()!);
     expect(await asked()).toHaveTextContent(
-      'Delete Fixture Working? It leaves the grimoire for every member of the coven. Nothing in stock changes.',
+      'Delete Fixture Working? It leaves the grimoire for every member of the coven, and nothing in stock changes.',
     );
   });
 

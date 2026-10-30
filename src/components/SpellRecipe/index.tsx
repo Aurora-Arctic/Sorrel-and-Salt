@@ -4,6 +4,7 @@ import LastEdit from '../LastEdit';
 import LinkHint from '../LinkHint';
 import { UNTITLED_SPELL } from '../SpellCard';
 import SpellMarks from '../SpellMarks';
+import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';
 import type { PageNavEntry } from '../PageNav/types';
 import SpellRecipeBody from './body';
@@ -76,9 +77,16 @@ const SpellRecipe = ({
         </div>
         {/* Above the title, as the ingredient entry page places it. */}
         {lastEdit && <LastEdit by={lastEdit.by} at={lastEdit.at} />}
-        <h1 id="spell-recipe-title">{name}</h1>
-        <SpellMarks status={status} visibility={visibility} />
-        {action}
+        <PageHeader
+          id="spell-recipe-title"
+          title={name}
+          action={
+            <>
+              <SpellMarks status={status} visibility={visibility} />
+              {action}
+            </>
+          }
+        />
       </header>
       <SpellRecipeSummary steps={steps} />
       {entries.length > 0 && <PageNav label="On This Page" entries={entries} />}

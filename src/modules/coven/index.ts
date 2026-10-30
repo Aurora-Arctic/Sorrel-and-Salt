@@ -11,6 +11,7 @@ export * from './services/members';
 export * from './services/memberships';
 export * from './services/workspace-creation';
 export * from './services/workspace-deletion';
+export * from './services/workspace-by-id';
 export * from './services/workspace-by-slug';
 export * from './loaders/member-emails';
 export * from './loaders/memberships-by-user';

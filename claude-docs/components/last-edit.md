@@ -23,7 +23,9 @@ full date), which is the M12.43 test for a real tip.
 
 On the coven card the card's stretched name link covers the card, so the line sits above it
 (`position: relative; z-index: 1`); without that, hover never reached the line and only
-focus worked.
+focus worked. On a spell card the foot also passes the pointer through to the title's link
+(`pointer-events: none`, inherited), so the card gives the line `pointer-events: auto` back
+for the same reason (spell-card.md, "The link").
 
 The button is at least 24px tall to press (WCAG 2.5.8, Target Size (Minimum); MB.272, the
 owner's call). One line of the card's small text is 21.4px, and WCAG's spacing exception for a

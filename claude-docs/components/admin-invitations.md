@@ -73,7 +73,7 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   "Revoke Invitation": "Revoke the invitation to <address>? Its link will say
   it was withdrawn." Once revoked, the page's status region says "The
   invitation to <address> is revoked."; a refusal is said in a callout under
-  Revoke, which keeps the focus ([`click-feedback.md`](click-feedback.md)). A locked control is `UserList/locked-control.tsx`'s `LockedControl`:
+  Revoke, which keeps the focus ([`click-feedback.md`](click-feedback.md)). The row's Revoke, live or locked, is `btn btn--quiet btn--small`; the red is the confirm's own. A locked control is `UserList/locked-control.tsx`'s `LockedControl`:
   `aria-disabled` with the reason in a tip and said again as an alert on a
   click. Each brings its own rules (`UserList/controls.scss`), so the section
   stands on its own in the workshop without the list's stylesheet (MB.115).

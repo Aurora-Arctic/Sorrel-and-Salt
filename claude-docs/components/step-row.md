@@ -87,8 +87,8 @@ only while the row is closed.
 (`field-sizing: content` inside `@supports`; without it the box stays two lines and scrolls).
 
 **The safety note** in an open ingredient row is the compact `SafetyNote`
-([`safety-note.md`](safety-note.md)). While a row is open the Caution badge is not drawn, since
-the note says the same; the Toxic badge stays, because the note never says Toxic.
+([`safety-note.md`](safety-note.md)). The row's safety badge, Toxic or Caution, is drawn open or
+closed; an open row adds the note beneath it.
 
 **The One-Off badge** (`OneOffBadge`, `one-off-badge.tsx`) is a button named One-Off in an
 `IconTip` whose description is "Used in this spell only; not kept in your cupboard.", reached by

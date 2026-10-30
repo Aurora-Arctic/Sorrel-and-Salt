@@ -29,8 +29,8 @@ export function useDeleteWorking({ workspaceId, workingId }: DeleteWorkingProps)
 export function DeleteWorkingQuestion({ name }: { name: string }): ReactElement {
   return (
     <>
-      Delete the working of <strong>{name}</strong>? It leaves the spell&rsquo;s history and its
-      count, and what it took from the jars stays taken.
+      Delete the working of <strong>{name}</strong>? It leaves the spell&rsquo;s history and count,
+      and what it took from the jars stays taken.
     </>
   );
 }

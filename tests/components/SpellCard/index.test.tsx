@@ -5,6 +5,14 @@ import { describe, expect, it, vi } from 'vitest';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { press } from '../../support/interact';
 import SpellCard from '@/components/SpellCard';
+import type {
+  RecordWorkingMutation,
+  RecordWorkingMutationVariables,
+  RecordWorkingSetupQuery,
+  RecordWorkingSetupQueryVariables,
+  WorkingDeductionPreviewQuery,
+} from '@/gql/graphql';
+import { mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
 
 // The title link navigates through the shared hook, so the App Router is mocked.
 vi.mock('next/navigation', () => ({
@@ -34,33 +42,109 @@ const MORE = {
 };
 
 describe('SpellCard', () => {
-  it('says how many times a spell has been made, in the singular for one and nothing for none', () => {
-    const { rerender } = render(<SpellCard {...BASE} workingCount={2} />);
-    expect(screen.getByText(/^made 2 times$/i)).toBeInTheDocument();
+  it('says how many times a spell has been made, once for one and nothing for none', () => {
+    const { rerender } = render(<SpellCard {...BASE} workingCount={3} />);
+    expect(screen.getByText('Made 3 times')).toBeInTheDocument();
     rerender(<SpellCard {...BASE} workingCount={1} />);
-    expect(screen.getByText(/^made 1 time$/i)).toBeInTheDocument();
+    expect(screen.getByText('Made once')).toBeInTheDocument();
     rerender(<SpellCard {...BASE} workingCount={0} />);
     expect(screen.queryByText(/^made /i)).not.toBeInTheDocument();
     rerender(<SpellCard {...BASE} />);
     expect(screen.queryByText(/^made /i)).not.toBeInTheDocument();
   });
 
-  it('draws a Record a Working button only when given what recording needs, and it opens the dialog that records one', async () => {
-    const recordWorking = {
-      workspaceId: 'workspace-1',
-      members: [{ userId: 'u1', name: 'Testa Owner' }],
-      recorderId: 'u1',
-      steps: [{ id: 's1', name: 'Testwort' }],
-    };
+  // The count is read with the edit line, after it and before the actions, as one line of the foot.
+  it('reads the made count after the edit line and before the actions', () => {
+    render(
+      <SpellCard
+        {...BASE}
+        workingCount={3}
+        lastEdit={{ by: 'Fixture A', at: '2026-09-01T12:00:00.000Z' }}
+        editHref={'/edit' as Route}
+      />,
+    );
+    const made = screen.getByText('Made 3 times');
+    const edited = screen.getByRole('button', { name: /^Edited/ });
+    const edit = screen.getByRole('link', { name: /^Edit Fixture Working/ });
+    expect(edited.compareDocumentPosition(made) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(made.compareDocumentPosition(edit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('draws a Record a Working button only when given what recording needs, and reads the dialog’s members and steps only once it opens', async () => {
+    const asked: RecordWorkingSetupQueryVariables[] = [];
+    mockGraphQLQuery<RecordWorkingSetupQuery, RecordWorkingSetupQueryVariables>(
+      'RecordWorkingSetup',
+      (variables) => {
+        asked.push(variables);
+        return {
+          spell: {
+            id: 'spell-1',
+            steps: [
+              { id: 's0', name: null, form: null, ingredient: null, variant: null },
+              {
+                id: 's1',
+                name: 'Testwort',
+                form: 'Dried Leaf',
+                ingredient: { id: 'i1' },
+                variant: { id: 'v1' },
+              },
+            ],
+          },
+          workspace: {
+            id: 'workspace-1',
+            members: {
+              edges: [
+                { node: { user: { id: 'u1', name: 'Testa Owner' } } },
+                { node: { user: { id: 'u2', name: 'Mocka Member' } } },
+              ],
+            },
+          },
+        } as RecordWorkingSetupQuery;
+      },
+    );
+    mockGraphQLMutation<RecordWorkingMutation, RecordWorkingMutationVariables>(
+      'RecordWorking',
+      (variables) =>
+        ({
+          recordWorking: {
+            id: 'w1',
+            status: 'draft',
+            note: null,
+            workedOn: variables.input.workedOn,
+            visibility: 'workspace',
+            participants: [{ id: 'p1', name: 'Testa Owner', userId: 'u1' }],
+          },
+        }) as RecordWorkingMutation,
+    );
+    mockGraphQLQuery<WorkingDeductionPreviewQuery>('WorkingDeductionPreview', () => ({
+      workingDeductionPreview: {
+        deductions: [],
+        warnings: [{ position: 2, reason: 'UNSTOCKED', stepId: 's1', stepName: 'Testwort' }],
+      },
+    }));
+    const recordWorking = { workspaceId: 'workspace-1', recorderId: 'u1' };
     const { rerender } = render(<SpellCard {...BASE} />);
-    expect(screen.queryByRole('button', { name: 'Record a Working' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Record a Working/ })).not.toBeInTheDocument();
     rerender(
       <QueryClientProvider client={makeQueryClient()}>
         <SpellCard {...BASE} recordWorking={recordWorking} />
       </QueryClientProvider>,
     );
+    // A list draws many cards, so nothing is read for a card until its dialog opens.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(asked).toEqual([]);
+
     press(screen.getByRole('button', { name: 'Record a Working of Fixture Working' }));
-    expect(await screen.findByRole('dialog', { name: 'Record a Working' })).toBeInTheDocument();
+    const dialog = await screen.findByRole('dialog', { name: 'Record a Working' });
+    expect(within(dialog).getByRole('status')).toHaveTextContent('Loading');
+    // The recorder starts as a participant, picked from the members read on opening.
+    expect(
+      await within(dialog).findByRole('button', { name: /Remove.*Testa Owner/ }),
+    ).toBeInTheDocument();
+    expect(asked).toEqual([{ workspaceId: 'workspace-1', spellId: 'spell-1' }]);
+    // The ingredient step read on opening is the one the completion preview names.
+    press(within(dialog).getByRole('button', { name: 'Complete' }));
+    expect(await screen.findByRole('list', { name: 'Deductions' })).toHaveTextContent('Testwort');
   });
 
   it('draws the foot in the order Record a Working, Edit, then the More menu', () => {
@@ -69,7 +153,7 @@ describe('SpellCard', () => {
         <SpellCard
           {...BASE}
           editHref={'/here?edit=spell-1' as Route}
-          recordWorking={{ workspaceId: 'workspace-1', members: [], recorderId: 'u1', steps: [] }}
+          recordWorking={{ workspaceId: 'workspace-1', recorderId: 'u1' }}
           more={MORE}
         />
       </QueryClientProvider>,
@@ -129,7 +213,7 @@ describe('SpellCard', () => {
         <SpellCard
           {...BASE}
           href={'/coven/x/grimoire/spell-1' as Route}
-          recordWorking={{ workspaceId: 'workspace-1', members: [], recorderId: 'u1', steps: [] }}
+          recordWorking={{ workspaceId: 'workspace-1', recorderId: 'u1' }}
           more={MORE}
         />
       </QueryClientProvider>,

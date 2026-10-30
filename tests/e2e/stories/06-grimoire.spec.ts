@@ -700,7 +700,7 @@ test(
     const dialog = page.getByRole('dialog', { name: 'Record a Working' });
     await dialog.getByRole('combobox', { name: 'Participants' }).fill('Fixture A');
     await page.getByRole('option', { name: 'Fixture A' }).click();
-    await dialog.getByRole('button', { name: 'Save as Draft' }).click();
+    await dialog.getByRole('button', { name: 'Save Working' }).click();
     // Save keeps the draft and closes the dialog. The Workings list is M13.8's, so the row is read from the database.
     await expect(dialog).toBeHidden();
     await expect(recordButton).toBeFocused();
@@ -888,7 +888,7 @@ test(
     await assertNoAccessibilityViolations(page);
     await page.goto(`/coven/${coven.slug}/grimoire`);
     const card = grimoireList(page).getByRole('article', { name: /Fixture Working/ });
-    await expect(card.getByText('Made 2 Times')).toBeVisible();
+    await expect(card.getByText('Made 2 times')).toBeVisible();
     // The pencil is on the workings B may change, their own two and the draft that names them, and not on A's others; it saves a changed note in place.
     await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
     await expect(workings.getByRole('button', { name: /^Edit Working / })).toHaveCount(3);
@@ -918,7 +918,7 @@ test(
     await expect(workings.getByText('First brewing')).toHaveCount(0);
     await expect(workings.getByRole('listitem')).toHaveCount(2);
     await page.goto(`/coven/${coven.slug}/grimoire`);
-    await expect(card.getByText('Made 1 Time')).toBeVisible();
+    await expect(card.getByText('Made once')).toBeVisible();
   },
 );
 
@@ -1168,7 +1168,7 @@ test(
 
     // The moon phase it is worked under.
     let panel = await openFilters(page);
-    await panel.getByRole('combobox', { name: 'Moon Phase' }).fill('full');
+    await panel.getByRole('combobox', { name: 'Moon Phases' }).fill('full');
     await page.getByRole('option', { name: /Full Moon/ }).click();
     await applyFilters(page, panel);
     await expect(items).toHaveCount(2);
@@ -1184,10 +1184,10 @@ test(
     // Who made it: a member's own, whatever its phase.
     await page.goto(`/coven/${coven.slug}/grimoire`);
     panel = await openFilters(page);
-    await panel.getByRole('combobox', { name: 'Coven Member' }).fill('Fixture B');
+    await panel.getByRole('combobox', { name: 'Coven Members' }).fill('Fixture B');
     await page.getByRole('option', { name: /^Fixture B/ }).click();
     // The box takes several members, so its menu stays open on the rest until it is shut.
-    await panel.getByRole('button', { name: 'Show Coven Member coven members' }).click();
+    await panel.getByRole('button', { name: 'Show Coven Members suggestions' }).click();
     await applyFilters(page, panel);
     await expect(items).toHaveCount(2);
     await expect(item('Private Full Moon Working')).toBeVisible();

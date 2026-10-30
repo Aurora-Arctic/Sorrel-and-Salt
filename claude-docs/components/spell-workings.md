@@ -28,7 +28,7 @@ The slots a row takes from the page:
 - `completeAction(workingId, workedOn, name)`: Complete on a draft row that carries `editable`, so on a draft the viewer recorded or is named on. `name` is the row's day in words, as the pencil has it. The page passes
   `CompleteWorkingAction` (`@/components/RecordWorking/complete-action`), named "Complete Working <date>" so two drafts' buttons are told apart.
 - `editAction(editable, name)`: the pencil (`edit-working.tsx`, `EditWorkingAction`), drawn on rows that carry `editable`, which `readWorkingsOf` gives to the recorder, or a member named on the working, whose role may update workings. It opens Record a Working on that working ("Edit Working"), and the pencil is named "Edit Working <date>"; and the focus returns to the pencil on close. On a row that also shows Complete the pencil takes the text ink (`icon-tip__edit--plain`, through `editAction`'s `plain`); Complete stays green.
-  A row carries no bin. Delete Working lives in the Edit Working dialog, drawn when the working's `canChange` is true: the viewer's role may delete and the viewer is the recorder. `editAction` receives `canChange` as its fourth argument for it, and `delete-working.tsx` holds the mutation and the question (`useDeleteWorking`, `DeleteWorkingQuestion`) the dialog uses.
+  A row carries no bin. Delete Working lives in the Edit Working dialog, drawn when the working's `canChange` is true: the viewer's role may delete and the viewer is the recorder. `editAction` receives `canChange` as its fourth argument for it, and `delete-working.tsx` holds the mutation and the question (`useDeleteWorking`, `DeleteWorkingQuestion`: "Delete the working of **<date>**? It leaves the spell's history and count, and what it took from the jars stays taken.") the dialog uses, in a `Modal` titled Delete Working.
 
 A draft row also lists what completing it would skip (`warnings`), as one line giving the count, such as "Completing takes nothing from the jars for 4 ingredients.", in a quiet warning `Notice` (`kind="warn"`, a status present from the start, `spell-workings__warning` for its top margin) under the date; the reasons stay in the Complete dialog's confirm step. The wording is `skipSummary` in `@/components/RecordWorking/warnings`. It carries no shortfalls. `readWorkingsOf` reads the preview once per page, only when a draft of the viewer's own is there, and gives the lines to the viewer's own drafts; they are the spell's stock as it stands now.
 
@@ -49,7 +49,7 @@ An empty list reads "This spell has not been worked yet."
 
 `src/components/SpellWorkings/index.stories.tsx`, titled "Grimoire / Spell Workings": `States`,
 with a control that chooses one state, each with the recipe page's own controls (Record a Working,
-Complete, the Edit pencil and the bin), drawn by `.storybook/grimoire-workings.tsx`:
+Complete and the Edit pencil), drawn by `.storybook/grimoire-workings.tsx`:
 
 - Every Kind of Row: a draft, a private working the viewer recorded, and one another member
   recorded.

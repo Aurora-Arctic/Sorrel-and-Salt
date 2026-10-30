@@ -1,22 +1,48 @@
 import type { ReactElement } from 'react';
 import type { PageHeaderProps } from './types';
 
-// A page's heading with its one primary action on the same line, the action at the end
-// (claude-docs/styling.md, "Buttons"). No client directive and no hook, so a server page
-// renders it directly; an action that needs the browser is a client component of its own.
-const PageHeader = ({ title, lead, action }: PageHeaderProps): ReactElement => (
-  <div className="page-header">
-    {lead ? (
-      // Beside the heading, not in it, so the heading reads as the title alone.
-      <div className="page-header__title">
-        {lead}
-        <h1>{title}</h1>
-      </div>
+const classes = (...names: (string | false | undefined)[]): string =>
+  names.filter(Boolean).join(' ');
+
+// Every page's head: the heading with its one primary action on the same line, the action at the end
+// (claude-docs/styling.md, "Buttons"), and, where the page carries them, an eyebrow above and a lede
+// beneath in a `.header` column. No client directive and no hook, so a server page renders it
+// directly; an action that needs the browser is a client component of its own.
+const PageHeader = ({
+  title,
+  id,
+  eyebrow,
+  lede,
+  lead,
+  action,
+  className,
+}: PageHeaderProps): ReactElement => {
+  const heading = <h1 id={id}>{title}</h1>;
+  const column = Boolean(eyebrow) || Boolean(lede);
+  const line =
+    column && !lead && !action ? (
+      heading
     ) : (
-      <h1>{title}</h1>
-    )}
-    {action}
-  </div>
-);
+      <div className={classes('page-header', !column && className)}>
+        {lead ? (
+          <div className="page-header__title">
+            {lead}
+            {heading}
+          </div>
+        ) : (
+          heading
+        )}
+        {action}
+      </div>
+    );
+  if (!column) return line;
+  return (
+    <div className={classes('header', className)}>
+      {eyebrow && <p className="eyebrow">{eyebrow}</p>}
+      {line}
+      {lede && <p className="lede">{lede}</p>}
+    </div>
+  );
+};
 
 export default PageHeader;

@@ -51,7 +51,7 @@ const noQuantity = (form: string) =>
 const threshold = (form: string) =>
   inDialog().getByRole('spinbutton', { name: `Low Stock At, ${form}` });
 const unit = (form: string) => inDialog().getByRole('combobox', { name: `Unit, ${form}` });
-const save = () => inDialog().getByRole('button', { name: /^Sav(e|ing)$/ });
+const save = () => inDialog().getByRole('button', { name: /^Sav(e|ing) Stock$/ });
 const removeButton = (form: string) => inDialog().getByRole('button', { name: `Remove ${form}` });
 const undo = (form: string) => inDialog().getByRole('button', { name: `Undo Remove ${form}` });
 const addForm = () => inDialog().queryByRole('combobox', { name: 'Add Form' });

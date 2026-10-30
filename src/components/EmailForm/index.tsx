@@ -9,6 +9,7 @@ import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { FieldShell, FormActions, fieldDescription } from '../Field';
 import Notice from '../Notice';
+import PageHeader from '../PageHeader';
 import type { EmailFormProps } from './types';
 import './index.scss';
 
@@ -121,10 +122,7 @@ const EmailForm = ({
     embedded ? (
       <p className="lede email-form__status">{status}</p>
     ) : (
-      <div className="header">
-        <h1>Your Email</h1>
-        <p className="lede email-form__status">{status}</p>
-      </div>
+      <PageHeader title="Your Email" lede={status} />
     );
 
   if (confirmed && !embedded) {

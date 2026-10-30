@@ -95,7 +95,7 @@ describe('Record a Working', () => {
     fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Note' }), {
       target: { value: 'Under the new moon' },
     });
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save as Draft' }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]).toMatchObject({
       workspaceId: WORKSPACE,
@@ -176,7 +176,7 @@ describe('Record a Working', () => {
     expect(people).toBeEnabled();
     expect(removeRecorder).toBeEnabled();
 
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save as Draft' }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
 
     await waitFor(() =>
       expect(within(dialog()).getByRole('textbox', { name: 'Note' })).toBeDisabled(),
@@ -196,7 +196,7 @@ describe('Record a Working', () => {
     const people = within(dialog()).getByRole('combobox', { name: 'Participants' });
     expect(people).not.toHaveAccessibleDescription();
 
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save as Draft' }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
 
     await waitFor(() => expect(people).toHaveAttribute('aria-invalid', 'true'));
     expect(people).toHaveAccessibleDescription('Choose a member of this coven');
@@ -211,7 +211,7 @@ describe('Record a Working', () => {
     expect(
       await within(dialog()).findByRole('button', { name: /Remove.*Guest Witness/ }),
     ).toBeInTheDocument();
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save as Draft' }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]?.input.participants).toEqual([{ userId: 'u1' }, { name: 'Guest Witness' }]);
   });
@@ -222,7 +222,7 @@ describe('Record a Working', () => {
     expect(
       within(dialog()).getByRole('button', { name: /Remove.*Testa Owner/ }),
     ).toBeInTheDocument();
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save as Draft' }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]?.input.participants).toEqual([{ userId: 'u1' }]);
   });
@@ -231,7 +231,7 @@ describe('Record a Working', () => {
     const calls = mockRecording();
     openButton();
     fireEvent.click(within(dialog()).getByRole('button', { name: /Remove.*Testa Owner/ }));
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save as Draft' }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]?.input.participants).toEqual([]);
   });
@@ -250,7 +250,7 @@ describe('Record a Working', () => {
     expect(share).toBeChecked();
     expect(share).toBeEnabled();
     fireEvent.click(share);
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save as Draft' }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]?.input.visibility).toBe('private');
   });
@@ -318,7 +318,7 @@ describe('Edit Working', () => {
       within(dialog()).getByRole('button', { name: /Remove.*Testa Owner/ }),
     ).toBeInTheDocument();
     fireEvent.change(note, { target: { value: 'Second try' } });
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save as Draft' }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]).toMatchObject({
       workspaceId: WORKSPACE,
@@ -374,7 +374,7 @@ describe('Edit Working', () => {
       expect(complete).toHaveAccessibleDescription('Complete on or after 1 January 2999');
     }
     // A draft dated ahead still saves.
-    expect(within(dialog()).getByRole('button', { name: 'Save as Draft' })).toBeInTheDocument();
+    expect(within(dialog()).getByRole('button', { name: 'Save Working' })).toBeInTheDocument();
   });
 
   it('keeps a shared complete working shared', () => {

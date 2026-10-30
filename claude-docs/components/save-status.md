@@ -9,8 +9,8 @@ exports:
   saves, is in [`autosave.md`](autosave.md), "`SaveStatus`".
 - **`RecoveryNotice`** (`recovery-notice.tsx`) is the banner a form opens with when this browser
   kept typing that never reached the server: "Restored unsaved changes from 2:02 pm." with Keep
-  (load the kept typing into the form) and Discard (drop it). Keep is the one solid button, since it
-  loses no typing; Discard is quiet.
+  (load the kept typing into the form) and Discard (drop it). Keep is a small outline button, ahead of
+  a quiet Discard, so the view keeps its one solid button, Save.
 
 The spell builder and IngredientForm use both ([`spell-builder.md`](spell-builder.md), "Saving"). CupboardEntryForm uses `SaveStatus` alone.
 

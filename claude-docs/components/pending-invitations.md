@@ -26,7 +26,7 @@ for the pager's "Page X of Y".
   roll's Remove are: it names the address, sends `revokeInvitation` with the coven and the id, and
   refreshes the page, and the status region says "The invitation to <address> is revoked.". A
   refusal is said in a callout under the control, which keeps the focus
-  ([`click-feedback.md`](click-feedback.md)). It is `btn btn--destructive btn--small`.
+  ([`click-feedback.md`](click-feedback.md)). It is `btn btn--quiet btn--small`, plain as a row's control is; the red is the confirm's own.
 - **Remove** (`remove-control.tsx`, M10.34) is a `ConfirmedAction` too, titled "Remove Invitation":
   it asks to remove the declined invitation to the address from the list, then sends the same
   `revokeInvitation` mutation with the coven and the id, and refreshes the page, so the row leaves

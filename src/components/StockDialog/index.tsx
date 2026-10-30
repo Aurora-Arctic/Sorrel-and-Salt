@@ -369,8 +369,6 @@ const StockDialogForm = ({
         </div>
         <FormActions
           noun="Stock"
-          label="Save"
-          busyLabel="Saving"
           dirty={isDirty}
           submitting={isSubmitting}
           onCancel={() => discard.request(close)}

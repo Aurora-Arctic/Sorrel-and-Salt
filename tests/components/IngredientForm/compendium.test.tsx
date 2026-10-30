@@ -205,7 +205,7 @@ describe('IngredientForm on the compendium', () => {
     });
 
     // Regression: an entry whose substitute links an ingredient in forms, with none chosen, opened as the readback gives it, its Form of X box registering a key the values lacked.
-    // React's development double mount then counted the untouched entry changed, and Cancel asked.
+    // React's development double mount then counted the untouched entry changed, and closing asked.
     it('closes an untouched entry at once whose substitute links an ingredient with no form chosen', () => {
       offerNothing();
       const values: IngredientFormValues = {
@@ -232,14 +232,13 @@ describe('IngredientForm on the compendium', () => {
             entry={{ id: ENTRY_ID, values }}
             onSaved={vi.fn()}
             onDeleted={done}
-            onCancel={done}
           />
         ),
         { strict: true },
       );
 
       expect(screen.getByRole('button', { name: 'Save Ingredient' })).toBeDisabled();
-      fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }));
 
       expect(screen.queryByRole('button', { name: 'Discard Changes' })).not.toBeInTheDocument();
       expect(onClose).toHaveBeenCalledOnce();
@@ -487,7 +486,7 @@ describe('IngredientForm on the compendium', () => {
         expect(review).toHaveLength(0);
       });
 
-      it('is saved by Cancel, which closes without asking', async () => {
+      it('is saved by Close, which closes without asking', async () => {
         const review = acceptReview();
         acceptUpdate();
         offerNothing();
@@ -499,12 +498,11 @@ describe('IngredientForm on the compendium', () => {
             review={{ reviewed: false }}
             onSaved={vi.fn()}
             onDeleted={done}
-            onCancel={done}
           />
         ));
 
         fireEvent.click(reviewSwitch());
-        fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Close' }));
 
         await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
         expect(screen.queryByRole('button', { name: 'Discard Changes' })).not.toBeInTheDocument();
@@ -623,8 +621,8 @@ describe('IngredientForm on the compendium', () => {
       });
 
       fireEvent.click(button('Delete Ingredient'));
-      // The question names it: a paragraph, the closed Identity's summary line naming it too.
-      expect(screen.getByText(/Testwort/, { selector: 'p' })).toBeInTheDocument();
+      // The question names it, as the group it draws is named by the question.
+      expect(screen.getByRole('group', { name: /Testwort/ })).toBeInTheDocument();
       await act(async () => {
         fireEvent.click(button('Delete'));
       });
@@ -653,7 +651,6 @@ describe('IngredientForm on the compendium', () => {
           entry={{ id: ENTRY_ID, values: TESTWORT }}
           onSaved={vi.fn()}
           onDeleted={done}
-          onCancel={done}
         />
       ));
 
