@@ -417,6 +417,39 @@
       grid-row: 2 / span 2;
     }
   }
+
+  // On a phone the menu follows the intent and categories, so the spell's purpose comes first: the
+  // wrappers dissolve and `order` moves the menu, kept first in the source for the wider grid (a chip's
+  // tip button focuses after it). Each moved box adds `space(2)` to the gap, for the body's `space(4)`.
+  @media (max-width: $shell-phone-width) {
+    .spell-recipe--with-nav {
+      .spell-recipe__columns,
+      .spell-recipe__main {
+        display: contents;
+      }
+
+      .spell-recipe__lead,
+      > .page-nav,
+      .spell-recipe__rest,
+      .spell-recipe__aside,
+      .spell-workings {
+        margin-block-start: space(2);
+      }
+
+      > .page-nav,
+      .spell-recipe__rest {
+        order: 1;
+      }
+
+      .spell-recipe__aside {
+        order: 2;
+      }
+
+      .spell-workings {
+        order: 3;
+      }
+    }
+  }
 }
 
 // A jump from the menu lands clear of the shell's sticky bar, as the entry page's sections do;

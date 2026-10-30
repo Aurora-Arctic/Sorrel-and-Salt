@@ -469,3 +469,28 @@ test("a short jar's deduction line keeps each part whole at 375px", async ({ pag
   expect(parts).toHaveLength(3);
   for (const part of parts) expect(part, part.text ?? '').toMatchObject({ lines: 1 });
 });
+
+test('on a phone the jump menu stands under the intent and over the facts', async ({ page }) => {
+  const coven = await seedCoven(page, 'Fixture Coven Nav Order', 'spell-nav-order.test', {
+    A: 'owner',
+  });
+  const { A } = coven.users;
+  const spellId = await withSql(async (sql) => {
+    const held = await compendiumVariant(sql, 'Rosemary', 'Herb');
+    const id = await insertSpell(sql, coven.id, 'Fixture Nav Order', 'workspace', A, 'complete');
+    await sql`update spells set intent = 'To draw a steady hand', jar_description = '4 oz jar' where id = ${id}`;
+    await insertStep(sql, id, held, { quantity: 2, unit: 'g', position: 0 }, A);
+    return id;
+  });
+  await signInAgainAs(page, A);
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+
+  const box = (locator: Locator) => locator.evaluate((el) => el.getBoundingClientRect().toJSON());
+  const intent = await box(page.getByText('To draw a steady hand'));
+  const nav = await box(page.getByRole('navigation', { name: 'On This Page' }));
+  const facts = await box(page.getByText('4 oz jar'));
+  // The reader learns what the spell is for before the five links that jump past it.
+  expect(nav.top).toBeGreaterThanOrEqual(intent.bottom);
+  expect(nav.bottom).toBeLessThanOrEqual(facts.top);
+});
