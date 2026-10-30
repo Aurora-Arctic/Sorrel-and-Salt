@@ -5,6 +5,8 @@ error state and unavailable-provider treatment, on a card ground. Server compone
 reads `?next=`/`?error=` and the environment, and hands the results down as
 props; this component does the rendering and the click.
 
+A visitor who is already signed in never sees the panel. The page reads the session with `getSession()` and redirects on the server: to `?next=` when it passes `safeReturnPath()`, otherwise to `signedInLanding(session)` (the landing a sign-in uses). An account whose address is unverified goes to `emailPagePath(target)` instead, as `requireSession()` sends it. Tested in `tests/app/sign-in-page.test.tsx`.
+
 ## The `?next=` contract
 
 `safeReturnPath()` and `signInErrorMessage()` (`src/lib/sign-in.ts`) turn the
