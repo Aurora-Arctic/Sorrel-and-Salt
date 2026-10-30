@@ -61,15 +61,15 @@ export const WorkspaceMemberRef = builder
 
 // Here rather than in `WorkspaceRef`'s own fields, which are built before
 // `WorkspaceMemberRef` exists. A coven at a time: the service checks
-// `member: read` and reads one page, narrowed by `search` when given.
+// `member: read` and reads one page, narrowed by `query` when given.
 builder.objectField(WorkspaceRef, 'members', (t) =>
   t.pagedConnection({
     type: WorkspaceMemberRef,
     description:
-      "The coven's live members, in the order they joined, for the roles that may read them: those whose name holds `search`, case-insensitively, when given.",
-    args: { search: t.arg.string({ required: false }) },
-    resolve: (workspace, { search }, page, context) =>
-      listMembers(sessionOf(context), workspace, page, search ?? undefined),
+      "The coven's live members, in the order they joined, for the roles that may read them: those whose name holds `query`, case-insensitively, when given.",
+    args: { query: t.arg.string({ required: false }) },
+    resolve: (workspace, { query }, page, context) =>
+      listMembers(sessionOf(context), workspace, page, query ?? undefined),
   }),
 );
 

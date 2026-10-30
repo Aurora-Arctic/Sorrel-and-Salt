@@ -54,14 +54,14 @@ export async function findMembershipsOfUsers(
 }
 
 /**
- * One page of the live members of the proof's coven, in the order they joined, narrowed by `search` to those whose live
+ * One page of the live members of the proof's coven, in the order they joined, narrowed by `query` to those whose live
  * user row's name holds it, case-insensitively. Its own finder, as a membership is keyed on the pair, so the user id
  * breaks ties instead of `id`.
  */
 export function findMemberPage(
   membership: Membership,
   page: PageRequest,
-  search?: string,
+  query?: string,
 ): Promise<PageEntry<typeof workspaceMembers.$inferSelect>[]> {
   const keyset: Keyset = {
     sort: [workspaceMembers.joinedAt],
@@ -73,10 +73,10 @@ export function findMemberPage(
     and(
       notSoftDeleted(workspaceMembers),
       scopedTo(membership, workspaceMembers),
-      search
+      query
         ? existsIn(
             users,
-            and(eq(users.id, workspaceMembers.userId), containsText(users.name, search)),
+            and(eq(users.id, workspaceMembers.userId), containsText(users.name, query)),
           )
         : undefined,
       pageBounds(keyset),
