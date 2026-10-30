@@ -1,10 +1,12 @@
 'use client';
 
-import { type ReactElement, useEffect, useRef, useState } from 'react';
+import { type CSSProperties, type ReactElement, useEffect, useRef, useState } from 'react';
 import IconTip, { CloseIcon, MysticEyeIcon, PreviewButton } from '../IconTip';
+import { SpellCardFilters } from '../SpellCard';
 import SpellRecipeBody from '../SpellRecipe/body';
 import SpellRecipeSummary from '../SpellRecipe/summary';
-import type { SpellPreviewProps } from './types';
+import { EDGE_EMBERS, HEARTH_EMBERS } from './embers';
+import type { Ember, SpellPreviewProps } from './types';
 import { useWakeLock } from './use-wake-lock';
 import './index.scss';
 
@@ -13,6 +15,66 @@ import './index.scss';
 // distraction. A native modal `<dialog>` in the top layer, which already covers the
 // window, holds the page inert and gives Escape; true full screen is added on top where the browser
 // has it (claude-docs/components/spell-preview.md).
+
+// An ember's place, size and timing, as custom properties its stylesheet reads.
+const emberStyle = (ember: Ember): CSSProperties =>
+  ({
+    '--x': ember.x === undefined ? undefined : `${ember.x}%`,
+    '--r': ember.right === undefined ? undefined : `${ember.right}rem`,
+    '--b': ember.bottom === undefined ? undefined : `${ember.bottom}rem`,
+    '--w': `${ember.w}px`,
+    '--h': `${ember.h}px`,
+    '--br': ember.br,
+    '--d': `${ember.d}s`,
+    '--delay': `-${ember.delay}s`,
+    '--sway': `${ember.sway}px`,
+  }) as CSSProperties;
+
+const embers = (list: readonly Ember[], edge: boolean): ReactElement[] =>
+  list.map((ember, i) => (
+    <i
+      key={i}
+      className={[
+        'spell-preview__ember',
+        `spell-preview__ember--${ember.kind}`,
+        edge && 'spell-preview__ember--edge',
+      ]
+        .filter(Boolean)
+        .join(' ')}
+      style={emberStyle(ember)}
+    />
+  ));
+
+// The background: the page smouldering from its foot corner as a spell card does under the pointer,
+// a hearth glow under the burn, and embers rising from the glow and from the charred edge. Decoration
+// only: hidden from assistive technology, behind the content, taking no pointer. The spell page has
+// no other copy of the card's burn filter, so the pane carries one while open.
+const Scene = (): ReactElement => (
+  <>
+    <SpellCardFilters />
+    <div className="spell-preview__scene" aria-hidden="true">
+      <span className="spell-preview__glow" />
+      <span className="spell-preview__face">
+        <span className="spell-preview__face-paper">
+          <span className="spell-preview__face-corner">
+            <span className="spell-preview__face-hole" />
+          </span>
+        </span>
+      </span>
+      <span className="spell-preview__hearth" />
+      <span className="spell-preview__embers">{embers(HEARTH_EMBERS, false)}</span>
+      <span className="spell-preview__burn">
+        <span className="spell-preview__burn-paper">
+          <span className="spell-preview__burn-corner">
+            <span className="spell-preview__burn-hole" />
+          </span>
+          <span className="spell-preview__burn-curve" />
+        </span>
+      </span>
+      <span className="spell-preview__embers">{embers(EDGE_EMBERS, true)}</span>
+    </div>
+  </>
+);
 
 export default function SpellPreview(props: SpellPreviewProps): ReactElement {
   const { title, steps } = props;
@@ -71,6 +133,8 @@ export default function SpellPreview(props: SpellPreviewProps): ReactElement {
           close();
         }}
       >
+        {/* Mounted with the content, so the burn comes in afresh on every open. */}
+        {open && <Scene />}
         <div className="spell-preview__bar">
           {wake.shown && (
             <IconTip tip="Screen Awake">
