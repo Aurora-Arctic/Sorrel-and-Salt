@@ -678,3 +678,68 @@ describe('deleteWorkspaceIngredient', () => {
     ).rejects.toThrow(NotFound);
   });
 });
+
+// Folk names and categories are written inside the ingredient's own save, so a
+// viewer's save is refused by the ingredient's gate before either is reached.
+describe('a viewer’s save of folk names and categories', () => {
+  const categoryNamed = async (name: string) => {
+    const [row] = await sql`select id from categories where name = ${name} and deleted_at is null`;
+    return row.id as string;
+  };
+
+  const categoryRows = (ingredientId: string) =>
+    sql`select category_id from ingredient_categories where ingredient_id = ${ingredientId}
+        order by category_id`;
+
+  it('refuses C’s update, leaving the folk names, categories and updated_at as they were', async () => {
+    // Why it could have succeeded: C reads the ingredient, and B makes the same save below.
+    const id = await seed(
+      local({ name: 'Rootwort', folkNames: ['Old Root'], categories: ['Love'] }),
+    );
+    await expect(getWorkspaceIngredient(asUser(C), WORKSPACE_W_ID, id)).resolves.toMatchObject({
+      name: 'Rootwort',
+    });
+    const before = await rowOf(id);
+    const folkBefore = await folkNameRows(id);
+    const categoriesBefore = await categoryRows(id);
+    const edit = {
+      ...inputOf(local({ name: 'Rootwort' })),
+      folkNames: ['New Root'],
+      categoryIds: [await categoryNamed('Protection')],
+    };
+
+    await expect(updateWorkspaceIngredient(asUser(C), WORKSPACE_W_ID, id, edit)).rejects.toThrow(
+      Forbidden,
+    );
+
+    expect((await rowOf(id)).updated_at).toEqual(before.updated_at);
+    expect(await folkNameRows(id)).toEqual(folkBefore);
+    expect(await categoryRows(id)).toEqual(categoriesBefore);
+
+    await updateWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, id, edit);
+    expect(await liveNames(id)).toEqual(['New Root']);
+    expect((await categoryRows(id)).map((row) => row.category_id)).toEqual([
+      await categoryNamed('Protection'),
+    ]);
+  });
+
+  it('refuses C’s create with folk names and categories, writing no rows', async () => {
+    const input = {
+      ...inputOf(local({ name: 'Rootwort' })),
+      folkNames: ['New Root'],
+      categoryIds: [await categoryNamed('Protection')],
+    };
+
+    await expect(createWorkspaceIngredient(asUser(C), WORKSPACE_W_ID, input)).rejects.toThrow(
+      Forbidden,
+    );
+    expect(await countIngredients()).toBe(0);
+    const [{ n: folk }] = await sql`select count(*)::int as n from ingredient_folk_names`;
+    const [{ n: cats }] = await sql`select count(*)::int as n from ingredient_categories`;
+    expect([folk, cats]).toEqual([0, 0]);
+
+    const created = await createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, input);
+    expect(await liveNames(created.id)).toEqual(['New Root']);
+    expect(await categoryRows(created.id)).toHaveLength(1);
+  });
+});

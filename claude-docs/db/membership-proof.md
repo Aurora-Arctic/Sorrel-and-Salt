@@ -45,6 +45,14 @@ without a guard of its own. `tests/db/graphql-workspace-ids.test.ts` sends a
 malformed id to every GraphQL field that takes a `workspaceId`, and fails on a
 field it does not name.
 
+**Where the viewer census lives.** `tests/db/graphql-viewer-writes.test.ts`
+sends every mutation that takes a `workspaceId` as a viewer, expects `FORBIDDEN`
+with every table unchanged, then sends it again as a member (an owner, where the
+probe says so) and expects it to be admitted. A mutation with no probe in
+`tests/support/graphql-workspace-probes.ts` fails the test, and so does one that
+is not on its short exceptions list (`leaveWorkspace`, which every role may call).
+A folk name or a category is written inside its ingredient's own save, so it takes
+the ingredient's permission; `workspace-ingredients.test.ts` proves it.
 **A role that lacks the permission is told so.** A stranger and an unknown id get the bare `Forbidden`, since whether a coven exists is private; a member who is really there and lacks the permission is told, in the one sentence every such refusal carries: "Your role in this coven doesn't allow that. Ask an owner if you need it." (the owner's call at MB.119's review). It names neither the role nor the permission, and it is the alert a button on a stale page shows. Only a workspace-scoped call reaches it, so "coven" is always right. A test asserts the `Forbidden` kind, never the sentence.
 
 ### One lookup per render
