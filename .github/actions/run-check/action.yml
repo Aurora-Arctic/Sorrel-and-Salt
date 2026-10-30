@@ -1,0 +1,80 @@
+name: Run Check
+description: >-
+  Runs one checks.yml command with its output captured to /app/output.log,
+  then summarises it, writes the job summary and comments on the PR. Runs after
+  checkout-to-app, in the job's /app container.
+
+inputs:
+  command:
+    description: Shell command to run in /app
+    required: true
+  label:
+    description: Human-readable check name for the summary and the PR comment, e.g. "Lint"
+    required: true
+  slug:
+    description: Marker slug for the PR comment, e.g. "lint"
+    required: true
+  summarize:
+    description: Path of a script under .github/scripts/ that turns the log into a summary; empty for none
+    required: false
+    default: ''
+  comment:
+    description: pr-comment success-mode ("minimize" or "comment"); empty to post no comment
+    required: false
+    default: ''
+  pr-number:
+    description: Pull request number to comment on (omit to skip PR commenting)
+    required: false
+    default: ''
+  merge-queue:
+    description: Passed to pr-comment as its merge-queue input
+    required: false
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    # The brace group keeps `2>&1 | tee` on the whole command, not on `|| true`.
+    - name: Run ${{ inputs.slug }}
+      id: run
+      shell: bash
+      working-directory: /app
+      run: |
+        set -o pipefail
+        {
+          ${{ inputs.command }}
+        } 2>&1 | tee /app/output.log
+
+    # Regardless of outcome: a passing lint can still carry warnings.
+    - name: Summarize output
+      id: summarize
+      if: always() && inputs.summarize != ''
+      shell: bash
+      working-directory: /app
+      run: bash ${{ inputs.summarize }}
+
+    - name: Write job summary
+      if: always()
+      uses: ./.github/actions/job-summary
+      with:
+        check-name: ${{ inputs.label }}
+        outcome: ${{ steps.run.outcome }}
+        log-file: /app/output.log
+        summary: ${{ steps.summarize.outputs.summary }}
+        details: ${{ steps.summarize.outputs.details }}
+
+    # `!cancelled()`, not `always()`: pr-comment reads a cancelled run as a
+    # failure, and a newer push cancels this one (claude-docs/ci/composite-actions.md).
+    - name: Comment on PR
+      if: ${{ !cancelled() && inputs.pr-number != '' && inputs.comment != '' }}
+      uses: ./.github/actions/pr-comment
+      with:
+        check-name: ${{ inputs.label }}
+        marker-slug: ${{ inputs.slug }}
+        pr-number: ${{ inputs.pr-number }}
+        merge-queue: ${{ inputs.merge-queue }}
+        outcome: ${{ steps.run.outcome }}
+        log-file: /app/output.log
+        success-mode: ${{ inputs.comment }}
+        summary: ${{ steps.summarize.outputs.summary }}
+        details: ${{ steps.summarize.outputs.details }}
