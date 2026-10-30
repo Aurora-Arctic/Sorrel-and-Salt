@@ -70,7 +70,7 @@ export function ProviderRow({
           // second press itself; the others are disabled until it answers.
           <BusyButton
             ref={controlRef}
-            className="btn btn--destructive btn--small"
+            className="btn btn--quiet btn--small"
             aria-label={`Remove ${provider.label}`}
             busy={busy}
             busyLabel="Removing"
@@ -93,7 +93,7 @@ export function ProviderRow({
           // button's description.
           <button
             type="button"
-            className="btn btn--destructive btn--small"
+            className="btn btn--quiet btn--small"
             aria-label={`Remove ${provider.label}`}
             aria-disabled="true"
             aria-describedby={reasonId}
@@ -104,8 +104,7 @@ export function ProviderRow({
       ) : (
         <BusyButton
           ref={controlRef}
-          // Small and quiet, as Remove is small and in the wax: a row's action, not a
-          // page's.
+          // Small and quiet, as Remove is: a row's action, not a page's.
           className="btn btn--quiet btn--small"
           aria-label={`Add ${provider.label}`}
           // Not `disabled`, as on /sign-in: it stays in the tab order.
