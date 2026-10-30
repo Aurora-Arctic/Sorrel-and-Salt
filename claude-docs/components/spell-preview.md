@@ -5,6 +5,7 @@ full screen, with nothing else on screen. `src/components/SpellPreview/`.
 
 ## What it draws
 
+- In the demo coven, the demo coven's notice at the top of the open pane (`demoNotice`, a quiet `Notice` warning, its text at the reading measure), because the pane covers the layout's own. The recipe page passes the viewer or the owner sentence from `src/lib/demo-notice.ts`; any other coven passes nothing, and the pane draws none.
 - A Preview icon button (`PreviewButton`, named "Preview Spell <title>") in the recipe page's actions, before Print and Edit. Every role that can
   read the spell sees it, a viewer included: it changes nothing. A non-member never reaches it,
   because the page answers them with a 404 first.

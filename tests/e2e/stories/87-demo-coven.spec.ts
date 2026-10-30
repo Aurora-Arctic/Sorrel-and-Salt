@@ -3,6 +3,7 @@ import { assertNoAccessibilityViolations } from '../axe';
 import { recreateE2eDatabase } from '../database';
 import { signInAgainAs, signInAs } from '../session';
 import { withSql } from './accounts-setup';
+import { insertSpell } from './coven-ingredients';
 
 // Story 87: a new account lands in the demo coven as a viewer and can leave it, and a site admin owns it. `signInAs`
 // writes the account's rows by SQL and so skips the sign-up hook; the viewer seat the hook writes is written here
@@ -57,6 +58,21 @@ test.describe('Story 87: A New Account Lands in the Demo Coven', { tag: '@story-
       // The add dialog's address opens nothing for a viewer.
       await page.goto(`${DEMO_PATH}/grimoire?new=spell`);
       await expect(page.getByRole('dialog')).toHaveCount(0);
+    });
+
+    await test.step('a seeded spell’s preview carries the demo notice', async () => {
+      // The suite's template holds no demo spells, so one is written for the viewer to open.
+      const spellId = await withSql(async (sql) => {
+        const [demo] = await sql`select id from workspaces where demo and deleted_at is null`;
+        return insertSpell(sql, demo.id, 'Testwort Working', 'workspace', userId, 'complete');
+      });
+      await page.goto(`${DEMO_PATH}/grimoire/${spellId}`);
+      await page.getByRole('button', { name: /^Preview Spell/ }).click();
+      const pane = page.getByRole('dialog');
+      await expect(pane).toBeVisible();
+      await expect(pane.getByRole('status')).toHaveText(VIEWER_NOTICE);
+      await pane.getByRole('button', { name: 'Close' }).click();
+      await expect(pane).toBeHidden();
     });
 
     await test.step('the account leaves, and is not seated again on its next sign-in', async () => {

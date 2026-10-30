@@ -542,3 +542,17 @@ $preview-hearth-duration: 11s;
     @include recipe-columns('.spell-preview__title', $columns: false);
   }
 }
+
+// The demo coven's notice over the title: in the row the page gives its Edited line, which the pane
+// leaves out, across both columns. The box spans the sheet and the sentence stops at the reading measure.
+.spell-preview__notice {
+  grid-row: 1;
+  grid-column: 1 / -1;
+  max-width: none;
+  margin-block-end: space(2);
+}
+
+.spell-preview__notice-text {
+  display: block;
+  max-width: $measure;
+}

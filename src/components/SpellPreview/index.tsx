@@ -2,6 +2,7 @@
 
 import { useSearchParams } from 'next/navigation';
 import { type CSSProperties, type ReactElement, useCallback, useEffect, useRef } from 'react';
+import Notice from '../Notice';
 import IconTip, { CloseIcon, MysticEyeIcon, PreviewButton } from '../IconTip';
 import { SpellCardFilters } from '../SpellCard';
 import SpellRecipeBody from '../SpellRecipe/body';
@@ -92,7 +93,7 @@ const Scene = (): ReactElement => (
 );
 
 export default function SpellPreview(props: SpellPreviewProps): ReactElement {
-  const { title, steps } = props;
+  const { title, steps, demoNotice, ...recipe } = props;
   const open = useSearchParams().has(PREVIEW);
   const pane = useRef<HTMLDialogElement>(null);
   // Set once the pane is in full screen, so leaving it (which is Escape's first press there) closes
@@ -189,10 +190,20 @@ export default function SpellPreview(props: SpellPreviewProps): ReactElement {
         {/* Drawn only while open, so the page holds no second copy of the spell. */}
         {open && (
           <div className="spell-preview__content">
+            {demoNotice && (
+              <Notice kind="warn" quiet className="spell-preview__notice">
+                <span className="spell-preview__notice-text">{demoNotice}</span>
+              </Notice>
+            )}
             <h2 id="spell-preview-title" className="spell-preview__title">
               {title}
             </h2>
-            <SpellRecipeBody {...props} beforeSteps={<SpellRecipeSummary steps={steps} />} />
+            <SpellRecipeBody
+              {...recipe}
+              title={title}
+              steps={steps}
+              beforeSteps={<SpellRecipeSummary steps={steps} />}
+            />
           </div>
         )}
       </dialog>

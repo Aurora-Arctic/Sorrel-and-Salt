@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { DEMO_NOTICE, DEMO_OWNER_NOTICE } from '@/lib/demo-notice';
 import { rolePermits } from '@/modules/coven';
 import Notice from '../../../../components/Notice';
 import SectionBody from '../../../../components/SectionBody';
@@ -9,11 +10,6 @@ import WorkspaceSwitcher from '../../../../components/WorkspaceSwitcher';
 import { requireCovenMembership } from '../../../../lib/request-session';
 import { viewerOf } from '../../../../lib/viewer';
 import type { CovenLayoutParams, CovenLayoutProps } from './types';
-
-const DEMO_NOTICE =
-  'This is a demo coven, so you can see how Sorrel & Salt works. You can look at everything and change nothing. A coven of your own starts with an invitation from someone who has one.';
-const DEMO_OWNER_NOTICE =
-  'You own this coven as a site admin: what you change here is what every new account sees.';
 
 // Each page under the coven gives its own name ('Grimoire') and this template
 // finishes it with the coven's. The guard is the same cached call the layout

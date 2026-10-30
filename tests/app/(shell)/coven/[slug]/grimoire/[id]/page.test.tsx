@@ -23,6 +23,11 @@ vi.mock('next/navigation', () => ({
   usePathname: () => `/coven/fixture-coven/grimoire/${SPELL_ID}`,
   useSearchParams: () => new URLSearchParams(),
 }));
+// The pane itself is proved by its own tests; here only what the page hands it.
+vi.mock('@/components/SpellPreview', () => ({
+  default: ({ demoNotice }: { demoNotice?: string }) =>
+    demoNotice ? <output>{demoNotice}</output> : null,
+}));
 vi.mock('@/app/compendium-reads', () => ({
   readCategories: async () => [
     {
@@ -202,6 +207,32 @@ describe('the spell recipe page', () => {
     expect(stockOf).toHaveBeenCalledWith(session, [
       { ingredientId: 'ing-1', workspaceId: COVEN.id },
     ]);
+  });
+
+  describe('the demo notice in the preview', () => {
+    const as = (role: 'owner' | 'viewer', demo: boolean) =>
+      requireCovenMembership.mockResolvedValue({
+        workspace: { ...COVEN, demo },
+        membership: { role },
+      });
+
+    it('hands a viewer of the demo coven the viewer sentence', async () => {
+      as('viewer', true);
+      await draw();
+      expect(screen.getByRole('status')).toHaveTextContent(/^This is a demo coven/);
+    });
+
+    it('hands an owner of the demo coven the owner sentence', async () => {
+      as('owner', true);
+      await draw();
+      expect(screen.getByRole('status')).toHaveTextContent(/^You own this coven as a site admin/);
+    });
+
+    it('hands an ordinary coven nothing', async () => {
+      as('viewer', false);
+      await draw();
+      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    });
   });
 
   describe('editing', () => {
