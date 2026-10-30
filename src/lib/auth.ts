@@ -31,6 +31,7 @@ import type { HookContext } from './session';
 import { toUserRole } from './session-role';
 import { requiredInProduction } from './env';
 import { send } from './mail';
+import { runInBackground } from './background-tasks';
 import { emailPagePath, returnPathOf, verifiedLanding } from './account-email';
 import { LAST_USED_PROVIDER_COOKIE, SIGN_IN_TO_VERIFY_PATH } from './sign-in';
 import { signedInLanding } from './landing';
@@ -428,6 +429,8 @@ export const auth = betterAuth({
     ipAddress: {
       ipAddressHeaders: ['x-vercel-forwarded-for'],
     },
+    // Mails, and the rate limiter's sweep, run after the response, so no answer waits on them.
+    backgroundTasks: { handler: runInBackground },
   },
   // Offered at sign-up, never required for a session: what needs a verified
   // address checks the column. claude-docs/auth/admin-bootstrap.md, "First-party verification".

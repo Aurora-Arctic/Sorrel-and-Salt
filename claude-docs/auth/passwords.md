@@ -110,6 +110,20 @@ endpoints, configured in `emailAndPassword` and the hooks in
   placeholder address. It sets the link's `callbackURL` to `/reset-password`
   whatever the request asked, so a request cannot point the link anywhere
   else.
+- **The mail runs after the answer.** Better Auth hands the send to
+  `advanced.backgroundTasks.handler`, which is `runInBackground` in
+  `src/lib/background-tasks.ts`: Next's `after()` runs it once the response
+  is sent. Without it the request waited for the mail transport for a
+  verified address and not for any other, so the time an answer took showed
+  whether the address has an account. Every mail Better Auth sends goes the
+  same way: the verification mail at sign-up, at sign-in and on a resend,
+  the mail to an address that signs up again, the change-email mails, and the
+  link-account verification. So does the rate limiter's sweep of expired
+  rows. Outside a request, where `after()` throws, a task is held until
+  `settleHeldTasks()` is awaited; `importAuth` in
+  `tests/support/auth-module.ts` does that after every call, so a test sees
+  the mail its call sent. `tests/db/password-reset-background.test.ts` holds
+  the send open and proves the answer arrives first.
 - **The link.** It is Better Auth's `/reset-password/:token`, which
   redirects to `/reset-password?token=…`, or to
   `/reset-password?error=INVALID_TOKEN` for a token spent or past its life.
