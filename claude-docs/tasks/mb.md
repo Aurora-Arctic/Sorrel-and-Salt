@@ -277,6 +277,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.273 | Claude Design Previews Render in a Narrower, Shorter Frame Than Storybook                                                | Bugfixes | —                      |
 | MB.274 | Seeded Compendium Content Stays Stale After a Deploy                                                                     | Bugfixes | —                      |
 | MB.275 | Lint Warnings Pile Up Because Nothing Fails on Them                                                                      | Bugfixes | —                      |
+| MB.276 | An Admin's Compendium Edit Saves Whatever the Autosave Timing                                                            | Bugfixes | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -5590,3 +5591,26 @@ _Acceptance criteria:_
 - The warning is read with the confirmation by assistive technology, asserted by role and label queries, and the component's story shows the unverified case
 - The Playwright admin spec covers approving an unverified user through the warning, with `@axe-core/playwright` clean, run against the e2e container
 - `components/user-list.md` describes the warning
+
+**MB.276 — An Admin's Compendium Edit Saves Whatever the Autosave Timing** · 3h
+
+_Story:_ As a site admin editing a compendium entry, I want the Save Ingredient button to reflect what is unsaved whatever the autosave timing, so that the edit flow behaves the same on a slow machine as on a fast one and story 18 passes first time.
+
+The ingredient form saves on a pause (`src/components/IngredientForm`, the autosave that creates at the first named save and updates on a pause). In `tests/e2e/stories/07-admin.spec.ts` (around line 398) story 18 fills Name, Description, adds the Oil form and its Safety Notes, then waits for Save Ingredient to be enabled. On a slow runner the pause-save lands first, so nothing is left to save, Save stays disabled, and the story times out at 60 s. Either the form must keep Save meaningful after an autosave, if the design says so, or the story must prove the flow in a way the autosave timing cannot break; the task decides which and states why.
+
+Found on 2026-10-30 on the PR gate's stories job: flaky (failed, then passed on retry) on PR #1344; failed both attempts on PR #1358's run; passes locally on the same branch. A wrong result, seen sometimes, as a site admin, under Admin & Compendium. Steps to reproduce:
+
+1. Run the story suite on CI's runner (the PR gate's stories job)
+2. Story 18 signs in as a site admin and opens `/admin/compendium`
+3. It adds the entry "Aaa Testwort", then opens its Edit Ingredient dialog and presses Open All
+4. It fills Name, Description, adds the Oil form and fills its Safety Notes, taking longer than the autosave pause on a slow runner (assumed)
+5. It waits for Save Ingredient to be enabled
+
+Actual: Save Ingredient stays disabled for 60 s and the story times out; on a fast run it passes, so the story is flaky. Expected: Save Ingredient is enabled while the form holds unsaved changes, and the story passes first time on every runner.
+
+_Acceptance criteria:_
+
+- A regression test that fails before the fix: a test under `tests/components/IngredientForm/` (or the story itself under a forced autosave pause) that shows Save Ingredient disabled with the user's edits already autosaved, and the chosen behaviour afterwards
+- Story 18 passes first time on CI's runner in two consecutive PR-gate runs, with no retry
+- The chosen behaviour is stated in `claude-docs/components/ingredient-form.md` ("Autosave") and, if the form changes, in that doc's form save rules
+- No other story's timing is changed to make it pass
