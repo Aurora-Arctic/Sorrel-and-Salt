@@ -883,7 +883,7 @@ test(
     await expect(alone).toContainText('Recorded by Fixture A');
     await expect(alone).not.toContainText('With');
     await expect(
-      first.getByRole('list', { name: 'Deductions' }).getByRole('listitem'),
+      first.getByRole('list', { name: 'Taken From the Jars' }).getByRole('listitem'),
     ).toContainText('Rosemary');
     await assertNoAccessibilityViolations(page);
     await page.goto(`/coven/${coven.slug}/grimoire`);

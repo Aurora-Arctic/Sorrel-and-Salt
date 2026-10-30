@@ -19,8 +19,9 @@ under the name they last held; a participant with no readable name reads "A form
 The head is one wrapping row: the date, its badges right after it, and the buttons pushed to the far right (`spell-workings__actions`). When the row is full, as on a phone, the buttons wrap under the date.
 
 The row does not use `LastEdit`: a working is recorded once, and `LastEdit` says who edited a row last.
-Its deduction lines are plain items (name, then amount and unit) inside an `ol` named Deductions,
-in the spell's step order. They carry no step number: the recipe above says where a step stands.
+Its deduction lines are plain items (name, then amount and unit) inside an `ol`, in the spell's step order,
+under a small "Taken From the Jars" label that names the list (`aria-labelledby`), so the screen and a screen
+reader say the same thing. They carry no step number: the recipe above says where a step stands.
 
 The slots a row takes from the page:
 
@@ -42,7 +43,7 @@ An empty list reads "This spell has not been worked yet."
 - **The list** (`__list`) is a grid with `space(5)` between rows and no marker (`list-reset`).
 - **A row's date** is an `h3` at `heading-size(4)`.
 - **A draft's warning** (`__warning`) is a quiet warning `Notice`, `space(2)` under the date line.
-- **The deductions** (`__deductions`) sit `space(3)` under the note, each line its name at the start and its amount at the end.
+- **The deductions**: their label (`__taken`, muted at the caption size, as `.meta` is) sits `space(3)` under the note, and the lines (`__deductions`) `space(1)` under it, each line its name at the start and its amount at the end.
 
 ## Stories
 

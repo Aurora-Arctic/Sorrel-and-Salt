@@ -104,9 +104,10 @@ describe('SpellWorkings', () => {
         deductions: [{ id: 'd1', name: 'Testwort (Dried Leaf)', quantity: '2', unit: 'g' }],
       }),
     ]);
-    const lines = within(within(rows()[0]!).getByRole('list', { name: 'Deductions' })).getAllByRole(
-      'listitem',
-    );
+    // A visible label over the lines names the list, so the screen and a screen reader say the same.
+    const list = within(rows()[0]!).getByRole('list', { name: 'Taken From the Jars' });
+    expect(within(rows()[0]!).getByText('Taken From the Jars')).toBeVisible();
+    const lines = within(list).getAllByRole('listitem');
     expect(lines).toHaveLength(1);
     expect(lines[0]).toHaveTextContent('Testwort (Dried Leaf)');
     expect(lines[0]).toHaveTextContent('2');

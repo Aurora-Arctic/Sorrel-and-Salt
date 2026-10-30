@@ -21,6 +21,7 @@ const Working = ({
   editAction: SpellWorkingsProps['editAction'];
 }): ReactElement => {
   const day = dayWords(working.workedOn);
+  const takenId = `working-${working.id}-taken`;
   const showsComplete = working.status === 'draft' && Boolean(working.editable);
   return (
     <li>
@@ -47,16 +48,21 @@ const Working = ({
       </p>
       {working.note && <p className="spell-workings__note">{working.note}</p>}
       {working.deductions.length > 0 && (
-        <ol className="spell-workings__deductions" aria-label="Deductions">
-          {working.deductions.map((line) => (
-            <li key={line.id} className="spell-workings__deduction">
-              <span>{line.name}</span>
-              <span>
-                {line.quantity} {line.unit}
-              </span>
-            </li>
-          ))}
-        </ol>
+        <>
+          <p id={takenId} className="spell-workings__taken">
+            Taken From the Jars
+          </p>
+          <ol className="spell-workings__deductions" aria-labelledby={takenId}>
+            {working.deductions.map((line) => (
+              <li key={line.id} className="spell-workings__deduction">
+                <span>{line.name}</span>
+                <span>
+                  {line.quantity} {line.unit}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </>
       )}
     </li>
   );
