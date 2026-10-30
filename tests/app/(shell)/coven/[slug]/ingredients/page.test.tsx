@@ -409,19 +409,17 @@ describe("the coven Ingredients page's details modal", () => {
     expect(covensHoldingEntry).not.toHaveBeenCalled();
   });
 
-  it("gives a member Edit and the bin on the coven's own entry, Edit opening the edit modal over the details", async () => {
-    // The window carries its card's controls: the pencil, a link,
-    // and the bin, a lone Delete, with no menu between them.
+  it("gives a member Edit over the details of the coven's own entry, and no Delete or More beside it", async () => {
+    // The window carries its card's controls, and a Quick Look holds no Delete: the own entry's
+    // Delete Ingredient is its Edit dialog's, which the pencil opens over the details.
     await renderPage({ source: 'local', entry: 'a1' });
     const dialog = details('Testwort')!;
     expect(within(dialog).getByRole('link', { name: 'Edit Testwort' })).toHaveAttribute(
       'href',
       `${FILTERED_HREF}&entry=a1&edit=a1`,
     );
-    expect(
-      within(dialog).getByRole('button', { name: 'Delete Ingredient Testwort' }),
-    ).toBeInTheDocument();
-    expect(within(dialog).queryByRole('button', { name: /^More for\b/ })).not.toBeInTheDocument();
+    expect(within(dialog).queryByRole('button', { name: /^(Delete|Remove)\b/ })).toBeNull();
+    expect(within(dialog).queryByRole('button', { name: /^More for\b/ })).toBeNull();
   });
 
   it('gives a viewer the details, and no Edit in them', async () => {
@@ -678,10 +676,15 @@ describe("the coven Ingredients page's card More", () => {
       membership: { workspaceId: COVEN.id, userId: 'fixture-user', role },
     });
 
-  it("draws a member's lone Delete on the coven's own entry as its bin, with no More", async () => {
+  it("draws no bin and no More on a member's own-entry card, while the held compendium entry's card has More", async () => {
     await renderPage({ source: 'local' });
-    expect(screen.getByRole('button', { name: 'Delete Ingredient Testwort' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'More for Testwort' })).not.toBeInTheDocument();
+    const list = screen.getByRole('list', { name: 'Ingredients' });
+    // The member may write here: the own entry has its Edit, and the held entry its More, so the
+    // own card's missing bin and More are the rule, not a role that may do nothing.
+    expect(within(list).getByRole('link', { name: 'Edit Testwort' })).toBeInTheDocument();
+    expect(within(list).getByRole('button', { name: 'More for House Salt' })).toBeInTheDocument();
+    expect(within(list).queryByRole('button', { name: 'More for Testwort' })).toBeNull();
+    expect(within(list).queryByRole('button', { name: /^(Delete|Remove)\b/ })).toBeNull();
   });
 
   it('gives a viewer no More, and no bin', async () => {
