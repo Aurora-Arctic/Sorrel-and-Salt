@@ -10,6 +10,7 @@ import {
   signIn as signInThrough,
 } from '../support/oauth';
 import { importAuth } from '../support/auth-module';
+import { asTouch } from '../support/db/touch-row';
 import { softKey } from '../support/passkey-authenticator';
 import { enrol, signInWithPasskey } from '../support/passkey';
 import type { AuthInstance } from '../support/types';
@@ -188,5 +189,30 @@ describe('a passkey sign-in and the password failure count', () => {
 
     expect(refused.status).toBe(401);
     expect(await failures(owner.id)).toBe(3);
+  });
+});
+
+describe('two-factor and a sign-in made without a password', () => {
+  it('asks neither a provider nor a passkey sign-in for a code', async () => {
+    // Precondition: two-factor is registered and on for the account, so a password sign-in would be asked.
+    expect(auth.api.enableTwoFactor).toBeTypeOf('function');
+    const owner = await account(OWNER);
+    const key = softKey();
+    await enrol(auth, owner.session, key);
+    await asTouch(
+      sql,
+      (tx) => tx`update users set two_factor_enabled = true where id = ${owner.id}`,
+    );
+
+    const throughGoogle = await signInThrough(auth, server, 'google', {
+      sub: `g-${OWNER}`,
+      email: OWNER,
+      verified: true,
+    });
+    expect(await signedInAs(throughGoogle)).toBe(owner.id);
+
+    const withPasskey = await signInWithPasskey(auth, key);
+    expect(withPasskey.status).toBe(200);
+    expect(await signedInAs(withPasskey)).toBe(owner.id);
   });
 });

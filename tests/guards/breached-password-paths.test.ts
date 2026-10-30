@@ -11,7 +11,15 @@ import { BREACHED_CHECK_PATHS } from '@/lib/breached-password';
 const PASSWORD_FIELDS = ['password', 'newPassword'];
 
 /** Endpoints that check a password the account already holds, which the breached check has no reason to see. */
-const CHECKS_A_HELD_PASSWORD = ['/sign-in/email', '/verify-password', '/delete-user'];
+const CHECKS_A_HELD_PASSWORD = [
+  '/sign-in/email',
+  '/verify-password',
+  '/delete-user',
+  '/two-factor/enable',
+  '/two-factor/disable',
+  '/two-factor/get-totp-uri',
+  '/two-factor/generate-backup-codes',
+];
 
 /** Endpoints with no route, so no path to match: each is called only inside `withBreachedCheck`, from the file named. */
 const SERVER_ONLY_WRAPPED: Record<string, string> = { setPassword: 'src/lib/password-setter.ts' };
@@ -25,6 +33,7 @@ const NO_BODY_SCHEMA: Record<string, string> = {
   '/update-user': 'Better Auth refuses a password here',
   '/refresh-token': 'a provider token',
   '/get-access-token': 'a provider token',
+  '/two-factor/send-otp': 'whether to trust the device; a mailed code, which is not configured',
 };
 
 interface Endpoint {

@@ -10,6 +10,7 @@ import {
 } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { lastLoginMethod } from 'better-auth/plugins';
+import { twoFactor } from 'better-auth/plugins/two-factor';
 import { passkey } from '@better-auth/passkey';
 import {
   defineRequestState,
@@ -31,6 +32,7 @@ import {
   verifications,
   rateLimits,
   passkeys,
+  twoFactors,
 } from '../modules/identity/schema/auth';
 import { SOCIAL_PROVIDERS, isRosterProvider } from './social-providers';
 // Server-only — see social-providers-config.ts's own header.
@@ -39,6 +41,8 @@ import { PROFILE, clientCredentials } from './social-providers-config';
 import type { HookContext } from './session';
 import { toUserRole } from './session-role';
 import { requiredInProduction } from './env';
+import { authSecrets } from './auth-secrets';
+import { SITE_NAME } from './site';
 import { send } from './mail';
 import { runInBackground } from './background-tasks';
 import { emailPagePath, returnPathOf, verifiedLanding } from './account-email';
@@ -508,6 +512,9 @@ export const auth = betterAuth({
   // Better Auth's own `validateSecret` is swallowed — with the secret unset it
   // logs and still answers 200 on the well-known default (claude-docs/auth/config.md, "Config").
   secret: requiredInProduction('BETTER_AUTH_SECRET'),
+  // Versioned, so a new key leaves what the old one encrypted readable; `secret` above is read only for values written
+  // before versions existed (claude-docs/auth/config.md, "Rotating the secret").
+  secrets: authSecrets(),
   baseURL: baseURL(),
   // Empty but on the e2e servers, whose browsers post from localhost or devcontainer (claude-docs/testing/e2e.md).
   trustedOrigins: e2eTrustedOrigins(),
@@ -515,7 +522,7 @@ export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: 'pg',
     usePlural: true,
-    schema: { users, sessions, accounts, verifications, rateLimits, passkeys },
+    schema: { users, sessions, accounts, verifications, rateLimits, passkeys, twoFactors },
   }),
   // Better Auth's own default, stated so a bump cannot move it: on in every
   // deploy, off under `next dev` and the test suites. In the database because
@@ -543,6 +550,9 @@ export const auth = betterAuth({
       rpName: 'Sorrel & Salt',
       schema: { passkey: { fields: { credentialID: 'credentialId' } } },
     }),
+    // An authenticator-app step after a right password, offered, never required. It answers only the password sign-in,
+    // so a provider or passkey sign-in is never asked (claude-docs/auth/two-factor.md).
+    twoFactor({ issuer: SITE_NAME }),
   ],
   advanced: {
     // Absent leaves Better Auth's own rule: `__Secure-` names wherever the base

@@ -131,7 +131,7 @@ export const passkeys = pgTable(
   ],
 );
 
-// The `twoFactor` plugin's model, named `two_factors` by `usePlural`; the plugin is not registered yet. `secret` and `backup_codes` hold the
+// The `twoFactor` plugin's model, named `two_factors` by `usePlural`. `secret` and `backup_codes` hold the
 // plugin's encrypted text. The last three columns are its lockout after repeated wrong codes: the count, and until when the account is refused.
 export const twoFactors = pgTable(
   'two_factors',
