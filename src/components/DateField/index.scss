@@ -69,7 +69,7 @@
   display: flex;
   align-items: center;
   // Clear of the previous and next steps, which sit over the caption's end: the panel grows to hold both.
-  min-block-size: 2rem;
+  block-size: 2.5rem;
   padding-inline-end: 4.5rem;
 }
 
@@ -79,16 +79,31 @@
   gap: space(2);
 }
 
-.day-picker__dropdown-root .day-picker__label {
-  display: none;
+// The select's chevron is the library's label span, kept as a layer over the select's right edge: its text is
+// hidden (the select shows its own) and it ignores presses, so the select takes them.
+.day-picker__dropdown-root {
+  position: relative;
+  display: inline-grid;
 }
 
-// The shared `.select` box and chevron (_primitives.scss), compacted to sit in the caption.
+.day-picker__dropdown-root .day-picker__label {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: space(2);
+  display: flex;
+  align-items: center;
+  color: $text-muted;
+  font-size: 0;
+  pointer-events: none;
+}
+
+// The shared `.select` box (_primitives.scss) without its gradient arrow, shorter than a field to sit in the caption.
 .select.day-picker__dropdown {
   inline-size: auto;
   min-block-size: 0;
   padding-block: space(1);
-  font-size: type-size('small');
+  padding-inline-end: space(6);
+  background-image: none;
 }
 
 .day-picker__label {
@@ -101,7 +116,9 @@
   inset-block-start: 0;
   inset-inline-end: 0;
   display: flex;
+  align-items: center;
   gap: space(1);
+  block-size: 2.5rem;
 }
 
 .day-picker__step {
@@ -130,13 +147,32 @@
   }
 }
 
+// The Combobox's stroked chevron, turned to point where the step or select does.
 .day-picker__chevron {
+  display: inline-grid;
   inline-size: 1rem;
   block-size: 1rem;
-  fill: currentcolor;
+
+  svg {
+    inline-size: 100%;
+    block-size: 100%;
+  }
+}
+
+.day-picker__chevron--left {
+  transform: rotate(90deg);
+}
+
+.day-picker__chevron--right {
+  transform: rotate(-90deg);
+}
+
+.day-picker__chevron--up {
+  transform: rotate(180deg);
 }
 
 .day-picker__grid {
+  inline-size: 100%;
   border-collapse: collapse;
 }
 

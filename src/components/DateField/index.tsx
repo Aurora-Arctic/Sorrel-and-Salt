@@ -3,6 +3,7 @@
 import { type ReactElement, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { DayPicker } from 'react-day-picker';
 import { enGB } from 'react-day-picker/locale';
+import { ChevronIcon } from '../Combobox/icons';
 import './index.scss';
 
 // A day field: a button showing the day in words, opening a calendar. It replaces the browser's date
@@ -183,6 +184,13 @@ export default function DateField({
             selected={selected}
             defaultMonth={selected ?? last}
             captionLayout="dropdown"
+            components={{
+              Chevron: ({ orientation = 'down', className }) => (
+                <span className={`${className ?? ''} day-picker__chevron--${orientation}`}>
+                  <ChevronIcon />
+                </span>
+              ),
+            }}
             startMonth={
               new Date(Math.min(FIRST_YEAR, (selected ?? last ?? new Date()).getFullYear()), 0)
             }
