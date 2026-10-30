@@ -217,7 +217,15 @@
   a called workflow, not a job with its own runner, so a run that stands down
   leaves it skipped, as for the other called workflows. Its steps run only when `changes` says a suite ran
   (`should-run`), and post nothing otherwise. It downloads each coverage artifact
-  by name into a folder of its own, `merge-playwright-coverage.mjs` merges the
+  by name into a folder of its own. A download that fails is either an artifact
+  that was never uploaded (a suite that did not run), which the merge leaves out
+  quietly, or one that exists in the run and could not be fetched.
+  `check-coverage-downloads.mjs` tells them apart by asking the run's artifact
+  list (the called workflow and its caller grant `actions: read` for this). For the
+  second kind the job posts the "Playwright Coverage" comment as a failure saying
+  coverage is missing for this commit, with the run link, merges nothing, and fails,
+  so the job shows red and "Re-run failed jobs" runs it again.
+  Otherwise `merge-playwright-coverage.mjs` merges the
   `raw/` data that is there, and the job uploads `playwright-coverage-merged`, writes the job
   summary and comments as "Playwright Coverage" (`marker-slug: playwright-coverage`).
   The summary line names the suites included. Only this comment carries the
