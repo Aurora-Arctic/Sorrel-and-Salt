@@ -51,7 +51,7 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
   const entries: PageNavEntry[] = [
     { href: '#coven-contents' as const, label: 'Contents' },
     { href: '#coven-membership', label: 'Your Membership' },
-    ...(canDelete ? [{ href: '#coven-delete' as const, label: 'Delete This Coven' }] : []),
+    ...(canDelete ? [{ href: '#coven-delete' as const, label: 'Delete Coven' }] : []),
   ];
 
   return (
@@ -127,7 +127,7 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
           className="page-frame__section"
           aria-labelledby="coven-delete-heading"
         >
-          <h2 id="coven-delete-heading">Delete This Coven</h2>
+          <h2 id="coven-delete-heading">Delete Coven</h2>
           <p>Closes its ingredients and its grimoire to every member, other owners included.</p>
           <div className="form__actions">
             <DeleteWorkspaceButton workspaceId={workspace.id} name={workspace.name} />

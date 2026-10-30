@@ -161,7 +161,7 @@ const Options = ({
           },
           {
             value: 'delete',
-            label: 'Delete It',
+            label: 'Delete Coven',
             description:
               'Closes it for every other member as well. Only an administrator with database access can restore it.',
           },

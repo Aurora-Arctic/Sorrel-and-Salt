@@ -87,7 +87,7 @@ describe('the /coven/[slug] page', () => {
       const dialog = await screen.findByRole('dialog');
 
       expect(within(dialog).getByRole('radio', { name: /^Hand It/ })).toBeChecked();
-      expect(within(dialog).getByRole('radio', { name: /^Delete It/ })).toBeInTheDocument();
+      expect(within(dialog).getByRole('radio', { name: /^Delete Coven/ })).toBeInTheDocument();
       const box = await within(dialog).findByRole('combobox', { name: 'New Owner' });
       fireEvent.focus(box);
       fireEvent.change(box, { target: { value: 'Name of' } });
@@ -153,14 +153,14 @@ describe('the /coven/[slug] page', () => {
       const membership = screen.getByRole('region', { name: 'Your Membership' });
       expect(within(membership).getByRole('button', { name: 'Leave Coven' })).toBeEnabled();
       expect(within(membership).queryByRole('button', { name: 'Delete Coven' })).toBeNull();
-      const owners = screen.getByRole('region', { name: 'Delete This Coven' });
+      const owners = screen.getByRole('region', { name: 'Delete Coven' });
       expect(within(owners).getByRole('button', { name: 'Delete Coven' })).toBeEnabled();
     });
 
     it('shows a viewer no Delete section', async () => {
       await renderAs('viewer');
 
-      expect(screen.queryByRole('region', { name: 'Delete This Coven' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('region', { name: 'Delete Coven' })).not.toBeInTheDocument();
     });
   });
 
