@@ -128,6 +128,11 @@ in `sign_in_failures` (DESIGN.md §8, "Passwords"), by
   failure that starts a lock answers like any other.
 - **`password_disabled`** is left from the first schedule and read by
   nothing; a later task drops it.
+- **Only an account with a password is counted.** The before hook looks the
+  address up the way Better Auth's sign-in does, with its accounts, and goes
+  no further when it has no `credential` row holding a password. Guesses at a
+  provider-only account are refused by Better Auth as wrong and count nothing,
+  so they cannot lock it.
 - **The before hook** (`holdLockedSignIn`) looks the address up and, while its
   account is locked, replaces the submitted password with 32 random bytes in
   hex, which no stored hash matches. Better Auth then runs its own lookup and
