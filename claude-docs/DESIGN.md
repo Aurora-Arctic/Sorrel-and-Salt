@@ -1491,7 +1491,7 @@ Modern module system throughout — `@use '../../scss/variables' as *;`, never t
 
 ### Notes — deferred to v2
 
-Stories 35–46 covered the three-tier experience-notes system. They move to v2 with the rest of the notes subsystem (§13). Story numbers are **not** reused: the grimoire stories keep their original 47–56, story 57 (MB.40) took the next free number rather than one of the twelve, and 58–62 (M2.9: email verification, changing an email, granting admin, the ledger, inviting an admin) followed the same way, as their own list because Prettier renumbers a list from its first item, and 63 (MB.80: the public compendium) the same way after them, and 64 (MB.151: references) after it, and 76 (recording a working), 77 (step units), 78 (completing a working), 79 (workings on the recipe page), 80 (a spell's steps) and 81 (autosave) after them, and 82 (duplicate a spell), 83 (a spell's Quick Look) and 84 (the grimoire's filters) after those, and 85 (Spell Preview) and 86 (keeping the screen awake) after them, so a v1 count is 63 stories (1–34, 47–64, 76–86).
+Stories 35–46 covered the three-tier experience-notes system. They move to v2 with the rest of the notes subsystem (§13). Story numbers are **not** reused: the grimoire stories keep their original 47–56, story 57 (MB.40) took the next free number rather than one of the twelve, and 58–62 (M2.9: email verification, changing an email, granting admin, the ledger, inviting an admin) followed the same way, as their own list because Prettier renumbers a list from its first item, and 63 (MB.80: the public compendium) the same way after them, and 64 (MB.151: references) after it, and 76 (recording a working), 77 (step units), 78 (completing a working), 79 (workings on the recipe page), 80 (a spell's steps) and 81 (autosave) after them, and 82 (duplicate a spell), 83 (a spell's Quick Look) and 84 (the grimoire's filters) after those, and 85 (Spell Preview) and 86 (keeping the screen awake) after them, and 87 (the demo coven) after those, so a v1 count is 64 stories (1–34, 47–64, 76–87).
 
 ### Grimoire
 
@@ -1558,6 +1558,10 @@ Stories 35–46 covered the three-tier experience-notes system. They move to v2 
 
 85. Open a spell in a full-screen pane with nothing else on screen, so that I can follow it without distraction.
 86. Keep the screen awake while I work a spell from the preview pane, with a sign that it will, so that it does not lock mid-spell.
+
+### The Demo Coven (M15.16)
+
+87. Land in the demo coven when I first sign in, see that it is a demo, look round it, be refused when I try to add to it, and be able to leave it, so that the whole first visit works as the site promises.
 
 Keeping a spell `private` while building it, and the one-way widen of a complete spell to `workspace`, are governed by §5's visibility rule rather than a numbered story.
 

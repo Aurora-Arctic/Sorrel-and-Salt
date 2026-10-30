@@ -43,9 +43,12 @@ export default async function CovenLayout({ children, params }: CovenLayoutProps
         <CovenNav slug={slug} canReadMembers={rolePermits(membership.role, { member: ['read'] })} />
       </ContextRow>
       {workspace.demo && (
-        <Notice kind="plain">
-          {membership.role === 'owner' ? DEMO_OWNER_NOTICE : DEMO_NOTICE}
-        </Notice>
+        // A region of its own: axe asks all page content to sit in a landmark, and the pages own the main one.
+        <section aria-label="Demo Coven">
+          <Notice kind="plain">
+            {membership.role === 'owner' ? DEMO_OWNER_NOTICE : DEMO_NOTICE}
+          </Notice>
+        </section>
       )}
       <SectionBody region="coven" className="coven-layout">
         {children}
