@@ -788,8 +788,13 @@ test(
     await expect(workings.getByText('Secret rite')).toHaveCount(0);
     await expect(workings.getByRole('button', { name: 'Complete' })).toHaveCount(1);
     const first = workings.getByRole('listitem').filter({ hasText: 'First brewing' });
-    await expect(first).toContainText('Fixture B');
-    await expect(first).toContainText('Fixture A');
+    // The recorder is not listed again among the people who took part.
+    await expect(first).toContainText('Recorded by Fixture B');
+    await expect(first).toContainText('With Fixture A');
+    await expect(first).not.toContainText('With Fixture B');
+    const alone = workings.getByRole('listitem').filter({ hasText: '1 February 2026' });
+    await expect(alone).toContainText('Recorded by Fixture A');
+    await expect(alone).not.toContainText('With');
     await expect(
       first.getByRole('list', { name: 'Deductions' }).getByRole('listitem'),
     ).toContainText('Rosemary');

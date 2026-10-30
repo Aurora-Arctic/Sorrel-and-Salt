@@ -39,7 +39,10 @@ export async function readWorkingsOf(
     workedOn: working.workedOn,
     note: working.note,
     recordedBy: recorders[i] ?? null,
-    participants: participants.map((person) => person.displayName ?? FORMER_MEMBER),
+    // The recorder is named once, in "Recorded by", so the people who took part leave them out.
+    participants: participants
+      .filter((person) => person.userId !== working.createdBy)
+      .map((person) => person.displayName ?? person.name ?? FORMER_MEMBER),
     deductions: deductions.flatMap((line) => {
       const at = stepAt.get(line.spellStepId);
       if (!at || at.step.kind !== 'ingredient') return [];
