@@ -7,7 +7,7 @@ export type SkeletonShape = 'table' | 'cards' | 'form' | 'page' | 'contents' | '
 export type SkeletonHead = 'eyebrow' | 'title' | undefined;
 
 export interface SkeletonProps {
-  /** `table` (a tabbed list), `cards` (the Ingredients cards), `form` (a form's fields and buttons) `page` (a heading and blocks), `contents` (a heading and titled lists of links, the admin index) or `line` (one line of text, for a sentence that loads in place). */
+  /** `table` (a tabbed list), `cards` (the Ingredients cards), `form` (a form's fields and buttons) `page` (a heading and blocks), `contents` (a heading and titled lists of links, the admin index) or `line` (a line of text each, for a sentence or a short list that loads in place). */
   shape: SkeletonShape;
   /** Whether a `table` or `cards` skeleton draws a filter row above the list. */
   filter?: boolean;
@@ -25,7 +25,7 @@ export interface SkeletonProps {
   head?: 'eyebrow' | 'title';
   /** A `cards` skeleton draws compact cards, as the coven lists open at, unless a stored Regular choice sits on `<html>`. */
   density?: 'compact';
-  /** How many rows, cards, fields or blocks it draws; each shape has its own default. */
+  /** How many rows, cards, fields, blocks or lines it draws; each shape has its own default. */
   count?: number;
 }
 

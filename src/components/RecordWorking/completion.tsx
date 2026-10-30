@@ -188,7 +188,7 @@ export default function WorkingCompletion({
     <div className="form">
       {failure && <Notice kind="error">{failure}</Notice>}
       {!plan ? (
-        <Skeleton shape="line" />
+        <Skeleton shape="line" count={steps.length || 1} />
       ) : (
         <>
           <p>
