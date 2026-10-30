@@ -9,7 +9,7 @@ import { SafetyMark } from '../SafetyNote';
 import { formLabel } from '../../modules/ingredients/validation/form-label';
 import { UNTITLED_SPELL } from '../SpellCard';
 import { VerdictMark } from '../SpellBuilder/verdict-mark';
-import { STEPS_ID } from './sections';
+import { STEPS_ID, STEPS_TITLE_ID } from './sections';
 import type { IngredientRecipeStep, RecipeStep, SpellRecipeBodyProps } from './types';
 import './index.scss';
 
@@ -120,14 +120,14 @@ const SpellRecipeBody = ({
 
         {beforeSteps}
 
-        {/* The steps under an Instructions heading, the Ingredients summary's twin: shown where the
-            summary is, on paper and in the Preview pane, and hidden on screen as the summary is. */}
+        {/* The steps under their heading, the Ingredients summary's twin: shown where the summary is,
+            on paper and in the Preview pane, and on screen read only by a screen reader. */}
         <section className="spell-recipe__instructions">
-          <h2>Instructions</h2>
+          <h2 id={STEPS_TITLE_ID}>Steps</h2>
           {steps.length === 0 ? (
             <p className="meta">This spell has no steps yet.</p>
           ) : (
-            <ol id={STEPS_ID} className="spell-recipe__steps" aria-label="Steps">
+            <ol id={STEPS_ID} className="spell-recipe__steps" aria-labelledby={STEPS_TITLE_ID}>
               {steps.map((step: RecipeStep, i) =>
                 step.kind === 'instruction' ? (
                   <StepRow

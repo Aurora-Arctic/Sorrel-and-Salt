@@ -1,8 +1,8 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// A saved spell's page. Tokens only; the layout is a single readable column. Print
-// styles are not set here.
+// A saved spell's page: the body's column, with the side column beside it past a tablet's width.
+// Tokens only. The print layout is `_print.scss`'s.
 .spell-recipe {
   display: flex;
   flex-direction: column;
@@ -162,7 +162,7 @@
   }
 }
 
-// The pencil and the bin on one line at the heading's end, as the
+// The head's icons on one line at the heading's end, as the
 // ingredient entry's icons stand (`.ingredient-entry__cupboard--icons`).
 .spell-recipe__actions {
   display: flex;
@@ -178,15 +178,21 @@
   white-space: pre-line;
 }
 
-// The Instructions heading is for paper and the Preview pane (recipe-columns); the screen's
-// page and Quick Look head the steps with the jump menu and the list's own name, and the section
-// around them is no box at all, so the steps stay the stack's own item.
+// The Steps heading shows on paper and in the Preview pane (recipe-columns); on the screen's page
+// and Quick Look the jump menu heads the steps, so the heading is there for a screen reader alone.
+// The section around them is no box at all, so the steps stay the stack's own item.
 .spell-recipe__instructions {
   display: contents;
 
   > h2 {
-    display: none;
+    @include visually-hidden;
   }
+}
+
+// The Ingredients summary is for paper and the Preview pane (recipe-columns): on screen the steps
+// carry the amounts and the side column the stock.
+.spell-recipe__summary {
+  display: none;
 }
 
 .spell-recipe__steps {

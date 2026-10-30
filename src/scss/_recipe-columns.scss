@@ -67,7 +67,7 @@
     grid-column: 1;
   }
 
-  // The steps under their Instructions heading, or the line that stands in for them: a plain box
+  // The steps under their Steps heading, or the line that stands in for them: a plain box
   // with no margin, not the page's spaced `section`, so its heading sits level with Ingredients.
   .spell-recipe__instructions {
     display: block;
@@ -81,7 +81,9 @@
     }
   }
 
+  // Uncapped, as the facts box is, so the note's hairline runs the width the facts' does.
   .spell-recipe__note {
+    max-width: none;
     // Clear of the steps, over the grid's gap.
     margin-block-start: space(3);
 
@@ -92,10 +94,16 @@
     }
   }
 
-  // The two headings alike and level, each a step over its list.
+  // The two headings alike and level, each a step over its list. The Steps heading is drawn here,
+  // taking back the screen's visually hidden box.
   .spell-recipe__instructions > h2 {
-    display: block;
+    position: static;
+    width: auto;
+    height: auto;
     margin: 0;
+    overflow: visible;
+    clip-path: none;
+    white-space: normal;
     font-size: 1.1em;
   }
 

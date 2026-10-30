@@ -93,7 +93,7 @@ const SpellWorkings = ({
     {workings.length === 0 ? (
       <p className="meta">This spell has not been worked yet.</p>
     ) : (
-      <ul className="spell-workings__list" aria-label="Workings">
+      <ul className="spell-workings__list" aria-labelledby="spell-workings-title">
         {workings.map((working) => (
           <Working
             key={working.id}

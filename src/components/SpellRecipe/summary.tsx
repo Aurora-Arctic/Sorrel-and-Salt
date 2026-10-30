@@ -2,11 +2,12 @@ import type { ReactElement } from 'react';
 import type { Unit } from '@/modules/ingredients/schema/units';
 import { needOf } from '../SpellBuilder/steps/supply';
 import { labelOf } from './body';
+import { SUMMARY_TITLE_ID } from './sections';
 import type { IngredientRecipeStep, RecipeStep } from './types';
 
 // The Ingredients summary: one line per form, at its first step's place, with the total the steps
 // need (`needOf`, as In Coven Inventory adds them), to gather from before starting. Drawn for
-// print alone (`_print.scss` hides it on screen, where the side column holds the same): stock marks
+// print and the Preview pane (`index.scss` hides it on screen, where the side column holds the same): stock marks
 // and buttons are left out. A formal name shows where two ingredients share a label, as in the steps.
 
 // A stored amount reads "2.000"; the summary writes "2", as the steps do.
@@ -24,8 +25,8 @@ const SpellRecipeSummary = ({ steps }: { steps: readonly RecipeStep[] }): ReactE
   if (lines.length === 0) return null;
   return (
     <section className="spell-recipe__summary">
-      <h2>Ingredients</h2>
-      <ul aria-label="Ingredients">
+      <h2 id={SUMMARY_TITLE_ID}>Ingredients</h2>
+      <ul aria-labelledby={SUMMARY_TITLE_ID}>
         {lines.map((step) => {
           const same =
             step.variantId === null ? [step] : laid.filter((o) => o.variantId === step.variantId);
