@@ -1,7 +1,7 @@
 # SpellCard
 
 `src/components/SpellCard/` draws one spell in the grimoire's list (M10.11, story 56). It
-shows seven things:
+shows:
 
 - the spell's title, or "Untitled Spell" when it has none (`UNTITLED_SPELL`), since a draft
   may have no title;
@@ -11,7 +11,10 @@ shows seven things:
 - the categories its author assigned it, as `CategoryChips`;
 - how many times it has been made, "Made 2 Times", when `workingCount` is above zero (M13.8);
 - who last edited it and when, as `LastEdit` ([last-edit.md](last-edit.md)), in the card's
-  foot as an ingredient card's is, when the caller hands in an edit (the owner, 2026-10-27).
+  foot as an ingredient card's is, when the caller hands in an edit (the owner, 2026-10-27);
+- its actions, in the foot: the Quick Look eye at the left, and Record a Working, the Edit
+  pencil and the More menu at the right, each drawn only when the caller hands in what it
+  needs (below).
 
 The card is presentational: it takes props and works nothing out from the data, as
 [ingredient-card.md](ingredient-card.md) is.
@@ -21,6 +24,7 @@ The card is presentational: it takes props and works nothing out from the data, 
 | Prop            | What it is                                                                                                                            |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `id`            | The spell's id. It gives the title heading the id the card is named by                                                                |
+| `href`          | The spell's recipe page, which the title links to. None leaves the title plain text                                                   |
 | `title`         | The title, or null. Null or blank lists as "Untitled Spell"                                                                           |
 | `intent`        | The intent, or null. Without one the card draws no paragraph                                                                          |
 | `status`        | `draft` or `complete`                                                                                                                 |
@@ -68,8 +72,8 @@ The link covers the whole card, as IngredientCard's does: the title's `<a>` stre
 empty `::after` over the article, so a press anywhere opens the recipe. While the link holds
 focus, the focus ring is drawn round the card on the article's own `::after`, which comes after
 the burn layers and so is not covered by the burnt corner. The intent, the chips' plain items and the last-edit
-line pass the pointer through to it; the Edit pencil and the +N button sit above it and keep
-their own press, hover and focus.
+line pass the pointer through to it; the foot's four actions and the category chips' +N button
+sit above it and keep their own press, hover and focus.
 
 ## The Edit pencil
 
@@ -140,8 +144,12 @@ What the effect is, in `_smoulder.scss`:
   spills onto the table below the card as one continuous layer, so there is no dark row
   between the glow inside the hole and the glow off the card. It runs 1.5rem past the ember
   front, at opacity 0.4 under a 1.25rem blur, kept below the ember line's brightness (the
-  owner, 2026-10-28).
-- **Timing.** The burn creeps along the edge for 1.3s, and the glow grows with it. On
+  owner, 2026-10-28). Faint embers glow in the burnt part, brightest along the ember line and
+  fading towards the corner.
+- **Nothing warm sits under text.** With its rim and the tearing, the hole stays inside the
+  card's padding along the bottom, and climbs higher only at the corner, where no text runs.
+- **Timing.** The burn creeps along the edge for 1.3s, and the glow grows with it, then holds
+  while the ember glows unevenly. On
   leaving, the burn fades while the hole, the face's shadow and the glow shrink back to the
   corner, so a quick return burns on from where they had shrunk to.
 - **Reduced motion** shows the finished burn at once, still. **Touch** gets no hover at all:
@@ -163,22 +171,16 @@ warm glow on parchment, together with the card's shadow, is slightly darker than
 as any warm tint on parchment is. On the hovered card the intent measures 6.95:1 (light)
 and 7.99:1 (dark), the title 15.56:1 and 12.20:1.
 
-The Workshop's `Hover` story holds the effect lit on one card and leaves a second to hover.
-
-## How the burn is built
-
-What burns is gone. The hole in the card's foot corner goes through the card's face and its shadow, so the page shows through and no edge of the whole card is left. The face and its shadow are one layer (`.spell-card__face`). The face is the spread shadow of a hole-shaped box, so it covers everything but the hole. The shadow is a `drop-shadow()` of that, so it follows the burnt edge, not the rectangle.
-
-Over the content, a thin bright ember line and a thin dark char rim run round the burn front. One SVG filter, `#spell-card-burn` from `SpellCardFilters`, tears the hole and the rim alike so their edges meet. Faint embers glow in the burnt part, brightest along the ember line and fading towards the corner. A little warmth spills onto the table below the card, behind it, and shows through the hole.
-
-The layers stack by markup order with no `z-index`. Nothing transforms the card or any ancestor of it, because a transformed ancestor becomes the containing block of the category chips' `position: fixed` tip bubbles.
-
-## Timing and the text clearance
-
-The burn creeps along the bottom edge for 1.3s, then holds while the ember glows unevenly. On leaving, the burn fades while the hole and the spill shrink back to the corner, so a quick return burns on from where they have shrunk to.
-
-Nothing warm sits under text. The hole is under 1rem deep, half of it past the card's edge, so with its rim and the tearing it stays inside the card's padding. Only at the corner does it climb higher, about 1.25rem up the right edge, where no text runs. The card's face takes `IngredientCard`'s hover tint and lifted shadow and nothing else.
-
-## The burn filter
+### The burn filter
 
 `SpellCardFilters` renders the filter once per page beside the list of cards (`GrimoireList`), not once per card: an id must be unique and one filter serves every card. Without it the burn front is a smooth curve. The filter uses coarse noise to displace the hole and its ember and char bands. The noise is still, since a burn line does not wriggle.
+
+## Stories
+
+`Grimoire / Spell Card` (`index.stories.tsx`), each a set of states drawn side by side:
+
+- `States`: Complete, Draft, Private, Private Draft, Untitled, No Intent, No Categories and Long Title.
+- `Hover`: Held, a card in its finished hovered state, and Hover It, a card at rest to hover with the pointer.
+- `Compact`: Complete and Private Draft under `data-density="compact"`.
+
+None draws the foot's actions: each needs a query client, which the workshop does not provide.
