@@ -243,3 +243,32 @@ export function PrintIcon(): ReactElement {
     </svg>
   );
 }
+
+/** A cauldron with two leaves tumbling in: Record a Working. */
+export function CauldronIcon(): ReactElement {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      aria-hidden="true"
+      focusable="false"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.25"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {/* Stroke 1.25, not the set's 1.5: the rim and leaves stay open at button size. */}
+      <rect x="3.8" y="5.9" width="8.4" height="1.5" rx=".75" />
+      <path d="M4.5 7.4C2.2 8.4 1.6 10.6 3 12.3 4.1 13.6 6 14 8 14s3.9-.4 5-1.7c1.4-1.7.8-3.9-1.5-4.9" />
+      <path d="M5.4 14l-.8 1.2M10.6 14l.8 1.2" />
+      <path
+        transform="translate(5.9 3.05) rotate(-35) scale(.95)"
+        d="M0 -2c1.7 1 1.9 2.5 0 4-1.9-1.5-1.7-3 0-4z"
+      />
+      <path
+        transform="translate(10.4 3.05) rotate(35) scale(.88)"
+        d="M0 -2c1.7 1 1.9 2.5 0 4-1.9-1.5-1.7-3 0-4z"
+      />
+    </svg>
+  );
+}
