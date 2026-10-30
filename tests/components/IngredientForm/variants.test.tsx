@@ -77,7 +77,9 @@ function renderForm(props: { workspaceId: string | null; values?: IngredientForm
 
 const save = () => press('Save Ingredient');
 
-describe('IngredientForm’s variants', () => {
+// The heaviest renders in the dom project: a full run times each test of this file at 10 to 50 times its time alone, so
+// the default 20 s guard is lifted here.
+describe('IngredientForm’s variants', { timeout: 60_000 }, () => {
   beforeEach(() => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
   });
