@@ -35,6 +35,9 @@ full screen, with nothing else on screen. `src/components/SpellPreview/`.
 
 ## How it opens and closes
 
+- The pane is open while the address carries `?preview`, with no value, and that is its only state: there is no `useState` beside it. Preview pushes the address with `?preview` added by `window.history.pushState`, keeping the other parameters, which Next's `useSearchParams` follows without a server read (as `?new=spell` does). Browser Back closes the pane and Forward reopens it.
+- Close, Escape and leaving full screen all go through one `close`. If this page visit pushed the entry, it goes back in history; if the page loaded with `?preview` (a direct link or a refresh), it replaces the address with one that drops `?preview`, so closing never leaves the site.
+- A page that loads with `?preview` opens the pane at once. Full screen needs a user gesture, so there the browser refuses it, the refusal is ignored, and the pane is the window-covering dialog. Escape, Close and Screen Awake work as usual.
 - The pane is a native modal `<dialog>` (`showModal()`): the browser puts it in the top layer,
   holds the page behind it inert and answers Escape with a `cancel` event. On its own it covers
   the window, which is the fallback where full screen is missing.
@@ -46,7 +49,7 @@ full screen, with nothing else on screen. `src/components/SpellPreview/`.
   `fullscreenchange` once it has been in full screen and is no longer. Close leaves full screen
   and closes.
 - The `<dialog>` stays in the page and is closed with `close()`, so the browser gives the focus back to
-  Preview itself, without scrolling. The page never navigates, so it keeps its scroll position.
+  Preview itself, without scrolling. The page keeps its scroll position, as only the query changes.
 
 ## Keeping the screen awake (M13.13)
 

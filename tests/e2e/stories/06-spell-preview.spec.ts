@@ -84,6 +84,45 @@ test(
   },
 );
 
+test(
+  'the pane is open while the address carries ?preview, so a link or a refresh opens it',
+  { tag: '@story-85' },
+  async ({ page }) => {
+    const coven = await seedCoven(page, 'Fixture Coven Eighty-Five C', 'story-85c.test', {
+      A: 'owner',
+    });
+    const spellId = await withSql((sql) =>
+      insertSpell(sql, coven.id, 'Fixture Working', 'workspace', coven.users.A, 'complete'),
+    );
+    await page.addInitScript(() => Reflect.deleteProperty(Navigator.prototype, 'wakeLock'));
+    await signInAgainAs(page, coven.users.A);
+    const recipePath = `/coven/${coven.slug}/grimoire/${spellId}`;
+    const pane = page.getByRole('dialog', { name: 'Fixture Working' });
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+
+    // A direct link opens the pane, a refresh keeps it, and Close drops the parameter.
+    await page.goto(`${recipePath}?preview`);
+    await expect(pane).toBeVisible();
+    await page.reload();
+    await expect(pane).toBeVisible();
+    await pane.getByRole('button', { name: 'Close' }).click();
+    await expect(pane).toHaveCount(0);
+    expect(new URL(page.url()).searchParams.has('preview')).toBe(false);
+    expect(new URL(page.url()).pathname).toBe(recipePath);
+
+    // Opened from the button, Back closes it and Forward opens it again.
+    await page.getByRole('button', { name: /^Preview Spell/ }).click();
+    await expect(pane).toBeVisible();
+    expect(new URL(page.url()).searchParams.has('preview')).toBe(true);
+    await page.goBack();
+    await expect(pane).toHaveCount(0);
+    await page.goForward();
+    await expect(pane).toBeVisible();
+    expect(errors).toEqual([]);
+  },
+);
+
 test('a non-member gets a 404 for the spell', { tag: '@story-85' }, async ({ page }) => {
   const coven = await seedCoven(page, 'Fixture Coven Eighty-Five B', 'story-85b.test', {
     A: 'owner',
