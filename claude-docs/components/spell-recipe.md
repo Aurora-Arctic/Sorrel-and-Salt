@@ -164,7 +164,7 @@ The aside is the recipe page's side column: Category Match and In Coven Inventor
 
 In Coven Inventory shows one line for each form, at its first step's place. The line says what all the form's steps need together (`needOf`) against what the coven's jar holds, as `supplyOf` judges it. A one-off keeps a line for each step, and a step with an instruction only has none. The verdict's mark (`VerdictMark`) stands at the right end of the name's line, so the name is cut short before it is.
 
-A line may carry doors (`doorsOf`): a Quick Look eye in a column of its own at the line's right, and Edit Stock behind the jar and the name, as a `StockJarButton` stretched over both, the way the entry page's shelf stretches it over a jar. The builder draws no stock, so doors serve the page alone.
+A line may carry doors (`doorsOf`): a Quick Look eye in a column of its own at the line's right, and Edit Stock behind the jar and the name, as a `StockJarButton` stretched over both, the way the entry page's shelf stretches it over a jar. Each line is a `JarLine` ([`jar-line.md`](jar-line.md)), which the Complete Working preview uses too. The builder draws no stock, so doors serve the page alone.
 
 ## Duplicate
 

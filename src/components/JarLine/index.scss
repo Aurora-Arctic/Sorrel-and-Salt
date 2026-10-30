@@ -1,0 +1,114 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+@use '../../scss/jar-motion' as *;
+
+// A jar line: a small jar, the name, and the words under it. The paint is JarShelf's, picked by the
+// `jar-shelf__jar--low|out|empty` modifier on `__jar`.
+.jar-line {
+  // The Edit Stock press's stretch (`__press::after`) is placed against the line.
+  position: relative;
+  display: grid;
+  // The control has the right-hand column, level with the name.
+  grid-template-areas:
+    'jar name look'
+    'jar words .';
+  grid-template-columns: 2rem minmax(0, 1fr) auto;
+  column-gap: space(2);
+
+  // A one-off holds no stock, but its jar looks as if it holds something: the glass, the level
+  // and the wave are all muted ink in place of the stock green, at the middling level.
+  &.is-one-off .jar-line__jar {
+    .jar-shelf__glass,
+    .jar-shelf__lid,
+    .jar-shelf__facet,
+    .jar-shelf__wave {
+      stroke: $text-muted;
+    }
+
+    .jar-shelf__level {
+      fill: $text-muted;
+    }
+  }
+}
+
+.jar-line__jar {
+  grid-area: jar;
+  align-self: center;
+
+  svg {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+    // As `.spell-jar svg`: the stroke on the bottom edge is not clipped.
+    overflow: visible;
+  }
+}
+
+// The name line: the name alone, cut short with an ellipsis.
+.jar-line__title {
+  display: flex;
+  grid-area: name;
+  gap: space(2);
+  align-items: baseline;
+  min-width: 0;
+}
+
+.jar-line__name {
+  min-width: 0;
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.jar-line__words {
+  display: flex;
+  grid-area: words;
+  gap: space(1);
+  align-items: center;
+  color: $text-muted;
+}
+
+// Edit Stock behind the jar and name: the button holds the name, stretched by its `::after` as
+// `.jar-shelf__press` is. The ellipsis and growth are on the inner span, since `overflow: hidden`
+// or a transform on the button would clip or contain the stretch.
+.jar-line__press {
+  @include button-reset;
+
+  display: inline-flex;
+  min-width: 0;
+  text-align: start;
+  color: inherit;
+  font: inherit;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+  }
+
+  &:focus-visible {
+    outline: 0;
+
+    &::after {
+      @include focus-ring($text-primary, $focus-ring-strength, inset);
+    }
+  }
+}
+
+@include jar-press-motion(
+  '.jar-line',
+  '.jar-line__press',
+  '.jar-line__jar > svg',
+  '.jar-line__name',
+  left center
+);
+
+// The control raised above the press's stretch, so it keeps its own press.
+.jar-line__look {
+  display: inline-flex;
+  grid-area: look;
+  align-self: center;
+  position: relative;
+  z-index: 1;
+}

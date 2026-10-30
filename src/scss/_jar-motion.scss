@@ -1,0 +1,84 @@
+@use 'variables' as *;
+@use 'mixins' as *;
+
+// The motion of a jar you can press: the drawing shakes once and the name grows, on hover where a
+// device really hovers and on keyboard focus (claude-docs/components/jar-line.md, "Hover, focus and motion").
+// `$scope` holds both the press and the drawing, `$svg` and `$name` are found beneath it, and
+// `$press` is the button, which may hold the name.
+@mixin jar-press-motion($scope, $press, $svg, $name, $origin: center) {
+  // A transform has no effect on an inline box, hence the inline-block.
+  #{$press} #{$name} {
+    display: inline-block;
+    transition: transform $motion-short ease-out;
+    transform-origin: $origin;
+  }
+
+  @media (hover: hover) {
+    #{$press}:hover #{$name} {
+      transform: scale($jar-name-grow);
+    }
+
+    #{$scope}:has(#{$press}:hover) #{$svg} {
+      animation: jar-shelf-shake $jar-shake-duration ease-out;
+    }
+
+    @include reduced-motion {
+      #{$scope}:has(#{$press}:hover) #{$svg} {
+        animation: none;
+      }
+    }
+  }
+
+  // On `:focus-visible`, so a click does not repeat it, and outside the hover query, since a
+  // keyboard on a touch device has no hover.
+  #{$scope}:has(#{$press}:focus-visible) {
+    #{$svg} {
+      animation: jar-shelf-shake $jar-shake-duration ease-out;
+    }
+
+    #{$name} {
+      transform: scale($jar-name-grow);
+    }
+  }
+
+  // Reduced motion: no shake and no transition, and the name still changes size.
+  @include reduced-motion {
+    #{$press} #{$name} {
+      transition: none;
+    }
+
+    #{$scope}:has(#{$press}:focus-visible) #{$svg} {
+      animation: none;
+    }
+  }
+}
+
+// A wobble that dies away: each swing smaller than the last, in degrees because no token holds an
+// angle. Included once, by the sheet that draws the jars.
+@mixin jar-shake-keyframes {
+  @keyframes jar-shelf-shake {
+    0% {
+      transform: rotate(0);
+    }
+
+    20% {
+      transform: rotate(-6deg);
+    }
+
+    40% {
+      transform: rotate(4.5deg);
+    }
+
+    60% {
+      transform: rotate(-3deg);
+    }
+
+    80% {
+      transform: rotate(1.5deg);
+    }
+
+    100% {
+      transform: rotate(0);
+    }
+  }
+}

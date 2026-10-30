@@ -38,8 +38,8 @@ complete working's visibility only widens.
 ## Completing a working
 
 `WorkingCompletion` reads `workingDeductionPreview` afresh each time it opens and lists the spell's
-ingredient steps in order, one line each, as the jar the recipe page's In Coven Inventory draws
-(`JarDrawing`, `pickJarShape`, the `jar-shelf__jar--low|out|empty` paint) beside "n. Name", n being
+ingredient steps in order, one line each, as the jar the recipe page's In Coven Inventory draws, both through `JarLine`
+([`jar-line.md`](jar-line.md): the drawing, the `jar-shelf__jar--low|out|empty` paint, the press, the shake and the growing name) beside "n. Name", n being
 the step's place among all the recipe's steps, and these words:
 
 - A take: "takes X · have Y · left Z", all in the jar's unit, with "short by N" in the warning colour
@@ -53,7 +53,7 @@ the step's place among all the recipe's steps, and these words:
   steady jar with no level, since the preview carries no jar quantity for a line that takes nothing.
 
 A step that carries `stock` (the same `StockDialogProps` the In Coven Inventory line gets, so only
-for a role that may edit stock, and never for a deleted ingredient or form) draws its jar inside a
+for a role that may edit stock, and never for a deleted ingredient or form) wraps its name and jar in a
 `StockJarButton`, which opens Edit Stock as it does on the recipe page. Its `onSaved` then reads the
 preview again, so have, left and short by are redrawn before Confirm. The stock dialog is a second
 modal opened over the Record a Working one. A step without `stock` keeps a plain drawing: the
