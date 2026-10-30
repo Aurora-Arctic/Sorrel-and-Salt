@@ -415,14 +415,15 @@ async function countChange(ctx: HookContext) {
 }
 
 /**
- * Counts one failure and, when it starts a lock, mails the account's owner. The mail carries a reset link made the way
+ * Counts one failure and, when it starts the first lock of a series, mails the account's owner; a later lock in the same
+ * series sends nothing, so guessing on cannot mail the owner every hour. The mail carries a reset link made the way
  * Better Auth makes its own, so the owner can choose a new password at once rather than wait out the lock. Like the
  * reset mail, it goes only to a verified address, and runs after the answer, so the answer shows nothing.
  */
 async function countFailure(ctx: HookContext, userId: string) {
-  const length = await recordFailedPasswordSignIn(userId);
-  if (length === null) return;
-  await ctx.context.runInBackgroundOrAwait(mailLockNotice(ctx, userId, length));
+  const lock = await recordFailedPasswordSignIn(userId);
+  if (!lock?.firstOfSeries) return;
+  await ctx.context.runInBackgroundOrAwait(mailLockNotice(ctx, userId, lock.length));
 }
 
 async function mailLockNotice(ctx: HookContext, userId: string, length: number) {
@@ -481,6 +482,20 @@ function sameSignUpAnswer(ctx: HookContext) {
 }
 
 /**
+ * The id of the account at this address when it holds a password, found as Better Auth's own sign-in finds it. An
+ * account with none has nothing to guess, so its wrong passwords are not counted.
+ */
+async function passwordHolderId(ctx: HookContext, email: string): Promise<string | undefined> {
+  const found = await ctx.context.internalAdapter.findUserByEmail(email.toLowerCase(), {
+    includeAccounts: true,
+  });
+  const credential = found?.accounts.find(
+    (account) => account.providerId === 'credential' && account.accountId === found.user.id,
+  );
+  return credential?.password ? found?.user.id : undefined;
+}
+
+/**
  * While the account is locked, swaps the submitted password for a random one no hash can match. Better Auth then
  * runs its own lookup and verify and refuses with its own wrong-password error, so a locked attempt answers and
  * takes as long as a wrong password, where a refusal here would skip the verify and show the lock.
@@ -488,7 +503,7 @@ function sameSignUpAnswer(ctx: HookContext) {
 async function holdLockedSignIn(ctx: HookContext) {
   const email = (ctx.body as { email?: unknown } | undefined)?.email;
   if (typeof email !== 'string') return;
-  const userId = (await ctx.context.internalAdapter.findUserByEmail(email.toLowerCase()))?.user.id;
+  const userId = await passwordHolderId(ctx, email);
   const locked = userId !== undefined && (await isPasswordSignInLocked(userId));
   await passwordAttempt.set({ userId, locked });
   if (locked) {

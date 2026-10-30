@@ -209,6 +209,26 @@ describe('Story 72: a lock is the account’s alone', () => {
       OWNER,
     );
   });
+
+  it('counts nothing against an account that holds no password', async () => {
+    await oauthSignIn(auth, server, 'google', {
+      sub: 'g-password-lockout-only',
+      email: OWNER,
+      verified: true,
+    });
+    // Precondition: the address has an account, with a provider row and no password row.
+    const accounts = await sql`
+      select provider_id from accounts where user_id = (select id from users where email = ${OWNER})
+    `;
+    expect(accounts.map((row) => row.provider_id)).toEqual(['google']);
+    send.mockReset();
+
+    for (let attempt = 0; attempt < 5; attempt++) {
+      expect((await signIn(WRONG)).status).toBe(401);
+    }
+    expect(await failureRow()).toBeUndefined();
+    expect(send).not.toHaveBeenCalled();
+  });
 });
 
 describe('Story 72: a lock looks like a wrong password', () => {
@@ -360,6 +380,36 @@ describe('Story 72: a lock is mailed to the account', () => {
 
     expect(await failureRow()).toBeUndefined();
     expect((await signIn(NEW)).status).toBe(200);
+  });
+
+  it('mails the first lock of a series only: a second lock within the day sends nothing', async () => {
+    await verifiedAccount();
+    await seedFailures(4);
+    await signIn(WRONG);
+    expect(lockMails()).toHaveLength(1);
+
+    await expireLock();
+    for (let attempt = 0; attempt < 5; attempt += 1) await signIn(WRONG);
+
+    // Precondition: the five guesses started a second lock, which would have been mailed.
+    const row = await failureRow();
+    expect(row?.count).toBe(10);
+    expect(row!.locked_until!.getTime()).toBeGreaterThan(Date.now());
+    expect(lockMails()).toHaveLength(1);
+  });
+
+  it('mails a lock again once the previous lock is more than a day old', async () => {
+    await verifiedAccount();
+    await seedFailures(9);
+    await sql`
+      update sign_in_failures set locked_until = now() - interval '25 hours'
+      where user_id = (select id from users where email = ${OWNER})
+    `;
+
+    await signIn(WRONG);
+
+    expect((await failureRow())?.count).toBe(10);
+    expect(lockMails()).toHaveLength(1);
   });
 
   it('sends nothing for a wrong password below a lock', async () => {

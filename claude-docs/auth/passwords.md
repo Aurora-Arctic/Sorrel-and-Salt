@@ -126,8 +126,20 @@ in `sign_in_failures` (DESIGN.md §8, "Passwords"), by
   `/reset-password`), and goes, like the reset mail, only to a verified, real
   address. The whole mail runs in the background, after the answer, so a
   failure that starts a lock answers like any other.
+- **Only the first lock of a series is mailed.** A lock whose previous lock
+  ended within the 24-hour quiet period sends nothing, so someone guessing on
+  through every lock cannot mail the owner a live reset link each hour. The
+  failure upsert leaves `locked_until` alone, so the row it returns still
+  holds the previous lock, and `recordFailedPasswordSignIn` reports whether
+  the new one opens a series. A completed reset or a successful sign-in
+  deletes the row, so the next lock after either is mailed again.
 - **`password_disabled`** is left from the first schedule and read by
   nothing; a later task drops it.
+- **Only an account with a password is counted.** The before hook looks the
+  address up the way Better Auth's sign-in does, with its accounts, and goes
+  no further when it has no `credential` row holding a password. Guesses at a
+  provider-only account are refused by Better Auth as wrong and count nothing,
+  so they cannot lock it.
 - **The before hook** (`holdLockedSignIn`) looks the address up and, while its
   account is locked, replaces the submitted password with 32 random bytes in
   hex, which no stored hash matches. Better Auth then runs its own lookup and
