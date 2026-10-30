@@ -364,6 +364,12 @@ jobs:
     concurrency:
       group: pr-gate-playwright-coverage-${{ github.event.pull_request.number }}
       cancel-in-progress: true
+    # `actions: read` lets the called workflow ask the run which artifacts it holds.
+    permissions:
+      actions: read
+      contents: read
+      packages: read
+      pull-requests: write
     uses: ./.github/workflows/playwright-coverage.yml
     with:
       image: ${{ needs.build-image.outputs.image }}

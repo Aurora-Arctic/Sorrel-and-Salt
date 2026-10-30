@@ -91,7 +91,8 @@ two suites be merged without running either again.
 
 **The merged report (M14.28).** `pr-gate.yml`'s `playwright-coverage` job runs
 after both suites, pass or fail. It downloads whichever of the two coverage
-artifacts exist, runs `.github/scripts/merge-playwright-coverage.mjs` (monocart's
+artifacts exist (an artifact that exists but cannot be downloaded fails the job and
+replaces the comment with a coverage-missing notice, so no earlier commit's figure stays), runs `.github/scripts/merge-playwright-coverage.mjs` (monocart's
 `generate()` with `inputDir` set to each `raw/` folder, under the same `src/`
 filter as `coverage.config.ts`), uploads the result as `playwright-coverage-merged`
 and posts it as a "Playwright Coverage" comment. The summary line names the suites
