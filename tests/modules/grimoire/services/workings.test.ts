@@ -324,6 +324,9 @@ describe('completeWorking', () => {
 
     const error = await refusal(completeWorking(asUser(A), WORKSPACE_W_ID, working.id));
     expect(error).toBeInstanceOf(Forbidden);
+    // A complete spell never returns to a draft, so the message must not promise it will.
+    expect((error as Error).message).toContain('once the spell is complete');
+    expect((error as Error).message).not.toContain('complete again');
 
     await sql`update spells set status = 'complete' where id = ${spell}`;
     const report = await completeWorking(asUser(A), WORKSPACE_W_ID, working.id);

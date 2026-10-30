@@ -176,8 +176,8 @@ A draft and a complete spell meet it alike, since both save to the one row.
 
 Who can see the spell (M10.13): `SpellVisibilityField`, in
 `visibility-field.tsx`, drawn after Note in the Notes section, whose shut line
-reads Shared or Private for it. It is a `SwitchField`
-([`field.md`](field.md)) labelled Share With the Coven (the owner's call,
+reads Shared or Private for it. It wraps `VisibilitySwitch`
+(`Field`, shared with the Record a Working dialog, [`field.md`](field.md)) labelled Share With the Coven (the owner's call,
 2026-10-27): on is the coven (`workspace`), which every member can see, and
 off is private (`private`), which only its author can. A line under the
 switch, its `note`, says what the state it is in means. The switch stands at the start of its column, its label and note too, as the

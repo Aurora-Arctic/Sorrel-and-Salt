@@ -67,7 +67,7 @@ function assertSpellComplete(spell: SpellRow, doing: string): void {
   const { status } = spell;
   if (status !== 'complete') {
     throw new Forbidden(
-      `This spell is a draft, so ${doing}. Complete the spell first: its workings are kept and come back when it is complete again.`,
+      `This spell is a draft, so ${doing}. A spell takes workings once the spell is complete.`,
     );
   }
 }

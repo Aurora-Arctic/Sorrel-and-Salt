@@ -140,10 +140,23 @@ describe('Record a Working', () => {
     expect(calls[0]?.input).not.toHaveProperty('participants');
   });
 
-  it('offers only private on a private spell', () => {
+  it('holds the share switch off and shut on a private spell', () => {
     openButton('private');
-    expect(within(dialog()).getByRole('radio', { name: /Private/ })).toBeChecked();
-    expect(within(dialog()).queryByRole('radio', { name: /Coven/ })).toBeNull();
+    const share = within(dialog()).getByRole('switch', { name: 'Share With the Coven' });
+    expect(share).not.toBeChecked();
+    expect(share).toBeDisabled();
+  });
+
+  it('shares with the coven by default on a shared spell, and goes private when switched off', async () => {
+    const calls = mockRecording();
+    openButton();
+    const share = within(dialog()).getByRole('switch', { name: 'Share With the Coven' });
+    expect(share).toBeChecked();
+    expect(share).toBeEnabled();
+    fireEvent.click(share);
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]?.input.visibility).toBe('private');
   });
 
   it('asks before closing with changes, and closes quietly without any', () => {
@@ -233,7 +246,9 @@ describe('Edit Working', () => {
         />,
       ),
     );
-    expect(within(dialog()).queryByRole('radio', { name: /Private/ })).toBeNull();
+    const share = within(dialog()).getByRole('switch', { name: 'Share With the Coven' });
+    expect(share).toBeChecked();
+    expect(share).toBeDisabled();
     expect(within(dialog()).queryByRole('button', { name: 'Save & Complete' })).toBeNull();
   });
 });
