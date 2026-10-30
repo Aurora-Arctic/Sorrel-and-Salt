@@ -14,7 +14,6 @@ export default function CompleteWorkingAction({
   ...completion
 }: CompleteWorkingActionProps): ReactElement {
   return (
-    // `icon-tip__edit` is the accent green; add `icon-tip__edit--plain` for the text ink.
     <ModalButton
       label={<CompleteIcon />}
       ariaLabel={label}

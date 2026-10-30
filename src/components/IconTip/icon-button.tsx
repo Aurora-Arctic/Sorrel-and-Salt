@@ -45,14 +45,22 @@ export const BinButton = ({
 export const EditButton = ({
   name,
   onClick,
+  plain = false,
   ref,
 }: {
   name: string;
+  /** The text ink in place of the accent green. */
+  plain?: boolean;
   onClick: () => void;
   ref?: Ref<HTMLButtonElement>;
 }): ReactElement => (
   <IconTip tip="Edit">
-    <button ref={ref} type="button" className="icon-tip__edit" onClick={onClick}>
+    <button
+      ref={ref}
+      type="button"
+      className={plain ? 'icon-tip__edit icon-tip__edit--plain' : 'icon-tip__edit'}
+      onClick={onClick}
+    >
       <PencilIcon />
       <span className="visually-hidden">Edit {name}</span>
     </button>
