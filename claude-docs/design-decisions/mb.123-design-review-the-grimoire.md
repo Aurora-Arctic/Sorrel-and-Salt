@@ -127,8 +127,6 @@ These followed from rules already in force.
 
 - D1, D3, D4, D10, D13, D31, D34, D42: the owner chose to keep what exists.
 - D25: the owner will look later.
-- D24: the focus order still differs from the visual order on a phone.
-- The Record a Working dialog reads only the first 100 members.
 - `SpellPreview` animations still run `infinite`, and it passes raw rim values to `card.ember-rim()`.
 - The builder's discard question names no thing.
 - The admin group forms still quote names (D9).
@@ -137,6 +135,14 @@ These followed from rules already in force.
 - The builder's inventory eye is 21px.
 - Raw `1.5rem` in the `SpellPreview` glow and `DateField`.
 - knip's 78 findings.
+
+### Built after the review proper, on 2026-10-30
+
+The owner asked for three findings to be fixed in the review rather than filed.
+
+- **The recipe page's reading order matches its phone layout.** The On This Page menu is rendered after the intent and category chips, and The Cupboard side column before Workings, so a keyboard and a screen reader meet them in the order a sighted reader sees them (WCAG 2.2 SC 2.4.3). From a tablet up the grid places them by explicit row instead of the `order` rules that used to move them. Two Playwright tests at 375px prove the Tab order, in `tests/e2e/spell-recipe-layout.spec.ts`.
+- **The Record a Working participant box searches the server.** `Workspace.members` takes an optional `query`, narrowed by name in SQL under the membership check, and the box asks `/api/graphql` as the user types from the card and from the recipe page alike, so no roster is fetched up front and no cap exists. An empty box suggests nobody until text is typed.
+- **Contents-list links are drawn in body ink** on the admin and coven overviews whether or not visited, so the two pages read the same regardless of browser history.
 
 ## 5. Follow-ups
 
