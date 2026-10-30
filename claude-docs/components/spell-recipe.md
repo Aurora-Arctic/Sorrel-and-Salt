@@ -43,10 +43,12 @@ muted paragraph under its own hairline, drawn only when there is one; the strip 
 capped at the paragraphs' `$measure`, so the two hairlines end together on the page. A spell
 with no steps says so.
 
-- An ingredient's name is plain text; a Quick Look eye beside it, its glyph at seven eighths of the form's icon size in a full 24px box (the WCAG 2.2 target), opens
+- An ingredient's name is plain text. On the recipe page a step carries no Quick Look eye: the side
+  column's In the Cupboard line carries it (MB.123 D17). `SpellRecipe` hands the body its steps with
+  `look` cleared, so the body itself is unchanged. In the grimoire's Quick Look modal, which has no side
+  column, a Quick Look eye sits beside the name, its glyph at seven eighths of the form's icon size in a full 24px box (the WCAG 2.2 target), and opens
   the ingredient's details (`DetailsDialog`, M12.5) over the spell, never leaving it (the owner,
-  2026-10-28): the recipe page's own address plus `?entry=<id>`, or in the grimoire's Quick Look
-  the tab's address with `?spell=<id>` kept and `&entry=<id>` added. The page and the tab read it
+  2026-10-28): the tab's address with `?spell=<id>` kept and `&entry=<id>` added. The page and the tab read it
   with the Ingredients page's `readViewedEntry` and draw it with `viewedDetailsOf`, without the
   card's actions. No eye for an ingredient deleted since or one the service withheld
   ("Unavailable Ingredient").
@@ -110,7 +112,7 @@ neither.
 
 Each inventory line of a linked step carries two doors (the owner, 2026-10-29), read in the same
 pass as `doors` and drawn by `InCovenInventory`'s `doorsOf`: a Quick Look eye in a column of its own at the line's right,
-the same `QuickLookLink` the steps carry, to this page's `?entry=<id>`; and, for a role that
+the same `QuickLookLink` the Quick Look modal's steps carry, to this page's `?entry=<id>`, in the full 24px box (`index.scss`; the builder's own column draws it at seven eighths); and, for a role that
 may update stock (`rolePermits(role, { inventory: ['update'] })`, the permission `saveStock`
 asserts), Edit Stock behind the jar and the name, a `StockJarButton` ([`stock-dialog.md`](stock-dialog.md))
 named "Edit Stock, <name>" and opening on the step's form, with the ingredient's forms

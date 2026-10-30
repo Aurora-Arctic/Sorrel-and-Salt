@@ -219,7 +219,7 @@ describe('SpellRecipe', () => {
     ).toBeInTheDocument();
   });
 
-  it('gives an ingredient a Quick Look eye, not a link on its name, and a one-off neither, marking it One-Off', () => {
+  it('names an ingredient plainly in its step, with no Quick Look eye, which the side column carries, and marks a one-off One-Off', () => {
     render(
       <SpellRecipe
         {...props({
@@ -238,12 +238,8 @@ describe('SpellRecipe', () => {
       />,
     );
     const steps = screen.getByRole('list', { name: 'Steps' });
-    expect(within(steps).getAllByRole('link')).toHaveLength(1);
-    expect(within(steps).getByRole('link', { name: /Quick Look Testwort/ })).toHaveAttribute(
-      'href',
-      '/coven/fixture-coven/ingredients?entry=i1',
-    );
-    expect(within(steps).getByText('Testwort').closest('a')).toBeNull();
+    expect(within(steps).queryAllByRole('link')).toHaveLength(0);
+    expect(within(steps).getByText('Testwort')).toBeInTheDocument();
     expect(within(steps).getByText(/Fixture Moss \(Fresh\)/)).toBeInTheDocument();
     const oneOff = within(steps).getByRole('button', { name: 'One-Off' });
     expect(oneOff).toHaveAccessibleDescription(

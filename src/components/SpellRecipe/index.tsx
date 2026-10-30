@@ -35,6 +35,9 @@ const SpellRecipe = ({
   workings,
 }: SpellRecipeProps): ReactElement => {
   const name = (title ?? '').trim() || UNTITLED_SPELL;
+  // The side column's lines carry the Quick Look eyes, so a step names its ingredient plainly; the
+  // Quick Look modal, which has no side column, keeps the eye on its steps.
+  const plain = steps.map((step) => (step.kind === 'ingredient' ? { ...step, look: null } : step));
   // One entry per section drawn, so none links to nothing.
   const entries: PageNavEntry[] = [
     ...(steps.length > 0 ? [{ href: `#${STEPS_ID}` as const, label: 'Steps' }] : []),
@@ -86,7 +89,7 @@ const SpellRecipe = ({
             intent={intent}
             categories={categories}
             note={note}
-            steps={steps}
+            steps={plain}
             jarDescription={jarDescription}
             sealWaxColor={sealWaxColor}
             moonPhase={moonPhase}

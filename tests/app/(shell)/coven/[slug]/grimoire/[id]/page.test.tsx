@@ -171,11 +171,12 @@ describe('the spell recipe page', () => {
     expect(screen.getAllByText(/Fixture Author/).length).toBeGreaterThan(0);
   });
 
-  it("gives an ingredient step a Quick Look eye to this page's own address with ?entry=<id>, so the details open over the recipe", async () => {
+  it("gives the side column's ingredient line the Quick Look eye, to this page's own address with ?entry=<id>, and the step none", async () => {
     await draw();
-    // The step's own eye, in the recipe's list: the inventory line carries another.
     const steps = within(screen.getByRole('list', { name: 'Steps' }));
-    expect(steps.getByRole('link', { name: 'Quick Look Testwort' })).toHaveAttribute(
+    expect(steps.queryByRole('link', { name: 'Quick Look Testwort' })).toBeNull();
+    const inventory = within(screen.getByRole('region', { name: 'In the Cupboard' }));
+    expect(inventory.getByRole('link', { name: 'Quick Look Testwort' })).toHaveAttribute(
       'href',
       `/coven/fixture-coven/grimoire/${SPELL_ID}?entry=ing-1`,
     );

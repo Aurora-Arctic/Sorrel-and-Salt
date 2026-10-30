@@ -121,7 +121,9 @@ test('the moon phase sits on one line in the facts strip on a desktop', async ({
   expect(lines).toEqual([1, 1, 1, 1]);
 });
 
-test("a step's Quick Look eye is a 24px target with a smaller glyph", async ({ page }) => {
+test("the side column's Quick Look eye is a 24px target with a smaller glyph, and the step carries none", async ({
+  page,
+}) => {
   const coven = await seedCoven(page, 'Fixture Coven Eye', 'spell-eye.test', { A: 'owner' });
   const { A } = coven.users;
   const spellId = await withSql(async (sql) => {
@@ -132,8 +134,11 @@ test("a step's Quick Look eye is a 24px target with a smaller glyph", async ({ p
   });
   await signInAgainAs(page, A);
   await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+  await expect(
+    page.getByRole('list', { name: 'Steps' }).getByRole('link', { name: "Quick Look Cat's Claw" }),
+  ).toHaveCount(0);
   const eye = page
-    .getByRole('list', { name: 'Steps' })
+    .getByRole('region', { name: 'In the Cupboard' })
     .getByRole('link', { name: "Quick Look Cat's Claw" });
   const target = await eye.evaluate((el) => el.getBoundingClientRect().toJSON());
   const glyph = await eye.locator('svg').evaluate((el) => el.getBoundingClientRect().toJSON());

@@ -249,9 +249,11 @@
   display: none;
 }
 
-// The step's Quick Look eye: its glyph at seven eighths of the form icon's, so it sits in the name's
-// line without weight, inside the full `$icon-size` box, WCAG 2.2's 24px target.
-.spell-recipe__steps .icon-tip__look {
+// The Quick Look eye, on a step in the Quick Look modal and on a side column line on the page: its
+// glyph at seven eighths of the form icon's, so it sits in the line without weight, inside the full
+// `$icon-size` box, WCAG 2.2's 24px target, where the builder's column draws the whole eye smaller.
+.spell-recipe__steps .icon-tip__look,
+.spell-recipe__aside .spell-inventory .jar-line__look .icon-tip__look {
   @include icon-button($icon-size, $glyph-size * 0.875);
 }
 
