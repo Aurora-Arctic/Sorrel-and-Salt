@@ -484,12 +484,51 @@ const IngredientForm = ({
     return answer.createCompendiumIngredient;
   };
 
+  // Writes go one at a time, each reading the id and revision the one before answered: Save's press
+  // and the autosave's flush as the button goes busy would otherwise both create the entry.
+  const writes = useRef<Promise<unknown>>(Promise.resolve());
+  // True from Save's press to its answer. The press disables Save, which blurs it with nothing
+  // focused next, and the autosave's flush on leaving the form would write before Save has asked
+  // its questions (a name the compendium bears) and so could create the entry unasked.
+  const submitting = useRef(false);
+  useEffect(() => {
+    const node = form.current;
+    if (!node) return;
+    const hold = (event: FocusEvent) => {
+      if (submitting.current) event.stopPropagation();
+    };
+    // Capture, so it runs before the autosave's own listener on this element.
+    node.addEventListener('focusout', hold, true);
+    return () => node.removeEventListener('focusout', hold, true);
+  }, []);
+  const createdByWrite = useRef(false);
+  // What the last write sent, so a write queued behind it with the same input has nothing to add.
+  const lastSent = useRef<{
+    input: string;
+    answer: SavedIngredient & { revision?: number | null };
+  } | null>(null);
   const mutation = useMutation({
-    mutationFn: async (sending: IngredientSend): Promise<SavedIngredient> => {
-      const answer = await send(sending);
-      savedIdRef.current = answer.id;
-      revisionRef.current = answer.revision ?? null;
-      return answer;
+    mutationFn: (sending: IngredientSend): Promise<SavedIngredient> => {
+      const turn = writes.current.then(async () => {
+        const input = JSON.stringify(sending.input);
+        if (
+          savedIdRef.current !== null &&
+          sending.revision === undefined &&
+          !sending.endRedirect &&
+          lastSent.current?.input === input
+        ) {
+          createdByWrite.current = false;
+          return lastSent.current.answer;
+        }
+        createdByWrite.current = savedIdRef.current === null;
+        const answer = await send(sending);
+        lastSent.current = { input, answer };
+        savedIdRef.current = answer.id;
+        revisionRef.current = answer.revision ?? null;
+        return answer;
+      });
+      writes.current = turn.catch(() => undefined);
+      return turn;
     },
   });
 
@@ -672,7 +711,6 @@ const IngredientForm = ({
       void methods.trigger();
       throw fieldsRefused();
     }
-    const creating = savedIdRef.current === null;
     let row: SavedIngredient;
     try {
       // Only Keep Mine names a revision; every other save writes against the last answer.
@@ -705,6 +743,8 @@ const IngredientForm = ({
     // The form now holds what was sent as saved; anything typed meanwhile stays a change.
     reset(sent.fields, { keepValues: true, keepErrors: true });
     methods.clearErrors('root');
+    // Read as the write ran: a flush that queued behind Save's create updates what it made.
+    const creating = createdByWrite.current;
     if (creating) {
       setCreatedId(row.id);
       if (!closing.current) onCreated?.(row);
@@ -857,7 +897,10 @@ const IngredientForm = ({
                   setPressed(next.current);
                   setSaved(null);
                   setRefusal(undefined);
-                  return handleSubmit(save)(event);
+                  submitting.current = true;
+                  return handleSubmit(save)(event).finally(() => {
+                    submitting.current = false;
+                  });
                 }}
                 noValidate
               >
