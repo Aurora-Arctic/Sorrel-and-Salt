@@ -106,7 +106,7 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  await sql`truncate inventory_items`;
+  await sql`truncate inventory_items cascade`;
 });
 
 describe('inventory_items table', () => {

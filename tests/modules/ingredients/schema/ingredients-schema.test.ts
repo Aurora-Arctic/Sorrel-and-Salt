@@ -35,6 +35,7 @@ const COLUMNS = [
   'curator_reviewed_by',
   'slug',
   'seed_key',
+  'revision',
   ...AUDIT_COLUMNS,
 ].sort();
 
