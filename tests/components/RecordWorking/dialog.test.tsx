@@ -77,7 +77,7 @@ function openButton(visibility: 'private' | 'workspace' = 'workspace') {
 }
 
 describe('Record a Working', () => {
-  it('saves a draft naming a picked member, then shows what completing it would skip', async () => {
+  it('saves a draft naming a picked member, then closes and refreshes the page', async () => {
     const calls = mockRecording();
     openButton();
     const people = within(dialog()).getByRole('combobox', { name: 'Participants' });
@@ -98,10 +98,24 @@ describe('Record a Working', () => {
       },
     });
     expect(calls[0]?.input.workedOn).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-    const warnings = await screen.findByRole('list', { name: 'Warnings' });
-    expect(warnings).toHaveTextContent('Testwort');
-    expect(screen.getByRole('button', { name: 'Complete' })).toBeEnabled();
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(router.refresh).toHaveBeenCalled();
+  });
+
+  it('saves, then shows the deduction preview, from Save & Complete', async () => {
+    const calls = mockRecording();
+    openButton();
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save & Complete' }));
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(await screen.findByRole('list', { name: 'Deductions' })).toHaveTextContent('Testwort');
+    expect(screen.getByRole('button', { name: 'Confirm' })).toBeEnabled();
+  });
+
+  it('cannot date a working in the future', () => {
+    openButton();
+    const max = within(dialog()).getByLabelText(/Date/).getAttribute('max');
+    expect(max).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(max).toBe(new Date().toLocaleDateString('en-CA'));
   });
 
   it('adds a typed name as a chip and sends it as a name', async () => {
@@ -146,7 +160,7 @@ describe('Record a Working', () => {
   });
 });
 
-describe('Edit a Working', () => {
+describe('Edit Working', () => {
   const working = {
     id: 'w9',
     workedOn: '2026-10-01',
@@ -188,7 +202,7 @@ describe('Edit a Working', () => {
         />,
       ),
     );
-    expect(screen.getByRole('dialog', { name: 'Edit a Working' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Edit Working' })).toBeInTheDocument();
     const note = within(dialog()).getByRole('textbox', { name: 'Note' });
     expect(note).toHaveValue('First try');
     expect(
@@ -220,6 +234,6 @@ describe('Edit a Working', () => {
       ),
     );
     expect(within(dialog()).queryByRole('radio', { name: /Private/ })).toBeNull();
-    expect(within(dialog()).queryByRole('button', { name: 'Complete' })).toBeNull();
+    expect(within(dialog()).queryByRole('button', { name: 'Save & Complete' })).toBeNull();
   });
 });

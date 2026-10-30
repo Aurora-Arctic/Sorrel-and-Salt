@@ -11,15 +11,13 @@ import Combobox, { ComboboxEntry } from '../Combobox';
 import { FieldShell, FormActions, RadioGroupField, fieldDescription } from '../Field';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
-import WorkingCompletion, { NOT_DEDUCTED, WorkingDeductionPreviewDocument } from './completion';
-import { useQuery } from '@tanstack/react-query';
-import { graphqlQuery } from '../../lib/graphql-client';
+import WorkingCompletion from './completion';
 import type { RecordWorkingDialogProps, WorkingParticipantValue } from './types';
 
 // The form inside the Record a Working dialog, which records a draft working of a complete spell or
 // changes one the caller recorded. Inside the modal so its discard guard reaches the modal's Close,
-// Escape and backdrop. A saved draft shows what was kept and what completing it would skip, and
-// Complete goes on to the deduction preview (claude-docs/components/record-working.md).
+// Escape and backdrop. Save closes it and the page behind shows the draft; Save & Complete goes on to the
+// deduction preview (claude-docs/components/record-working.md).
 
 const RecordWorkingDocument = graphql(`
   mutation RecordWorking($workspaceId: ID!, $spellId: ID!, $input: WorkingInput!) {
@@ -68,8 +66,6 @@ const DAY = /^\d{4}-\d{2}-\d{2}$/;
 
 const sameText = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
 
-type Saved = { id: string; participants: readonly WorkingParticipantValue[]; note: string | null };
-
 export default function RecordWorkingForm({
   workspaceId,
   spellId,
@@ -96,7 +92,6 @@ export default function RecordWorkingForm({
   const [text, setText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [failure, setFailure] = useState<Failure>({});
-  const [saved, setSaved] = useState<Saved>();
   const [completing, setCompleting] = useState<string>();
 
   const complete = working?.status === 'complete';
@@ -109,8 +104,8 @@ export default function RecordWorkingForm({
       (p, i) =>
         p.userId !== initial.participants[i]?.userId || p.name !== initial.participants[i]?.name,
     );
-  const valid = DAY.test(workedOn);
-  const dirty = saved === undefined && completing === undefined && changed;
+  const valid = DAY.test(workedOn) && workedOn <= today();
+  const dirty = completing === undefined && changed;
   const discard = useDiscardGuard(dirty);
 
   // Only what the spell allows: never wider than it, and a complete working that is shared stays so.
@@ -170,16 +165,7 @@ export default function RecordWorkingForm({
       setSubmitting(false);
       refresh();
       if (thenComplete) setCompleting(result.id);
-      else if (working) close();
-      else
-        setSaved({
-          id: result.id,
-          note: result.note ?? null,
-          participants: result.participants.map((p) => ({
-            userId: p.userId ?? null,
-            name: p.name ?? 'Unknown',
-          })),
-        });
+      else close();
     } catch (error) {
       setSubmitting(false);
       setFailure(readGraphqlFailure(error, FIELDS));
@@ -197,18 +183,6 @@ export default function RecordWorkingForm({
       />
     );
   }
-  if (saved) {
-    return (
-      <SavedDraft
-        saved={saved}
-        workspaceId={workspaceId}
-        spellId={spellId}
-        onComplete={() => setCompleting(saved.id)}
-        close={close}
-      />
-    );
-  }
-
   return (
     <form
       className="form"
@@ -224,6 +198,7 @@ export default function RecordWorkingForm({
           id={dateField.controlId}
           className="input"
           type="date"
+          max={today()}
           aria-required
           {...dateField.aria}
           value={workedOn}
@@ -320,64 +295,11 @@ export default function RecordWorkingForm({
             disabled={!valid || submitting}
             onClick={() => void submit(true)}
           >
-            Complete
+            Save & Complete
           </button>
         )}
       </FormActions>
       {discard.asking && <DiscardQuestion guard={discard} />}
     </form>
-  );
-}
-
-function SavedDraft({
-  saved,
-  workspaceId,
-  spellId,
-  onComplete,
-  close,
-}: {
-  saved: Saved;
-  workspaceId: string;
-  spellId: string;
-  onComplete: () => void;
-  close: () => void;
-}): ReactElement {
-  const preview = useQuery({
-    ...graphqlQuery(WorkingDeductionPreviewDocument, { workspaceId, spellId }),
-    staleTime: 0,
-    gcTime: 0,
-    throwOnError: false,
-  });
-  const warnings = preview.data?.workingDeductionPreview.warnings ?? [];
-  return (
-    <div className="form">
-      <Notice kind="success">
-        Working saved as a draft. Nothing has been taken from the jars.
-      </Notice>
-      <p>
-        {saved.participants.length > 0 ? 'With ' : 'With no one named.'}
-        {saved.participants.map((p) => p.name).join(', ')}
-      </p>
-      {warnings.length > 0 && (
-        <>
-          <p>Completing it would skip these steps.</p>
-          <ul aria-label="Warnings">
-            {warnings.map((w) => (
-              <li key={w.stepId}>
-                <strong>{w.stepName ?? 'A removed step'}</strong> {NOT_DEDUCTED[w.reason]}
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-      <div className="modal__actions">
-        <button type="button" className="btn btn--solid" onClick={onComplete}>
-          Complete
-        </button>
-        <button type="button" className="btn btn--quiet" onClick={close}>
-          Done
-        </button>
-      </div>
-    </div>
   );
 }

@@ -3,13 +3,14 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { type ReactElement, useState } from 'react';
 import { graphql } from '../../gql';
-import type { NotDeductedReason, WorkingDeductionPreviewQuery } from '../../gql/graphql';
+import type { WorkingDeductionPreviewQuery } from '../../gql/graphql';
 import { graphqlQuery, graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
 import BusyButton from '../BusyButton';
 import Notice from '../Notice';
 import type { WorkingCompletionProps } from './types';
+import { NOT_DEDUCTED } from './warnings';
 
 // The step before a working is completed: what completing it would take from each jar, read from
 // `workingDeductionPreview`, and a Confirm that runs `completeWorking`. The preview and the
@@ -53,15 +54,6 @@ export const CompleteWorkingDocument = graphql(`
     }
   }
 `);
-
-/** Why a step took nothing, said where the step is listed. */
-export const NOT_DEDUCTED: Record<NotDeductedReason, string> = {
-  UNITS_DIFFER: 'Not deducted: units differ',
-  JAR_NOT_MEASURED: 'Not deducted: the jar has no amount',
-  NO_QUANTITY: 'Not deducted: the step has no amount',
-  UNSTOCKED: 'Not deducted: not in stock',
-  CUSTOM: 'Not deducted: a one-off ingredient',
-};
 
 type Plan = WorkingDeductionPreviewQuery['workingDeductionPreview'];
 type PreviewRow =
