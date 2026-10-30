@@ -37,7 +37,7 @@
   justify-content: flex-end;
   gap: space(2);
   // No wider than the content, so the close X ends where the text does.
-  max-width: $shell-tablet-width;
+  max-width: $recipe-sheet-width;
   margin-inline: auto;
 }
 
@@ -513,12 +513,12 @@ $preview-hearth-duration: 11s;
 
 // The content is one centred column, laid out as the printed page is (_recipe-columns.scss): the
 // title and lead across the top, then Ingredients in a narrow column beside the steps. Its width is
-// the tablet breakpoint's, the width past which the app sets things side by side, so a wide window
-// leaves margins; under that width the pane stacks, Ingredients above the steps.
+// the printed sheet's (`$recipe-sheet-width`), so on a wide window its lines break where the paper's
+// do; under the tablet width the pane stacks, Ingredients above the steps.
 .spell-preview__content {
   @include recipe-columns('.spell-preview__title');
 
-  max-width: $shell-tablet-width;
+  max-width: $recipe-sheet-width;
   margin-inline: auto;
 
   @media (max-width: $shell-tablet-width) {

@@ -178,6 +178,17 @@
   white-space: pre-line;
 }
 
+// The Instructions heading is for paper and the Preview pane (recipe-columns); the screen's
+// page and Quick Look head the steps with the jump menu and the list's own name, and the section
+// around them is no box at all, so the steps stay the stack's own item.
+.spell-recipe__instructions {
+  display: contents;
+
+  > h2 {
+    display: none;
+  }
+}
+
 .spell-recipe__steps {
   display: flex;
   // The paragraphs' measure (_typography.scss), so the page's column reads as one width and

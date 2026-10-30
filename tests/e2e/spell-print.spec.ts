@@ -158,11 +158,13 @@ test('the printed recipe names the coven with no line under it, leads with the i
     Math.max(heading.top, steps.top),
   );
 
-  // The Ingredients heading starts level with the first step.
+  // The Ingredients heading starts level with the Instructions heading, which stands over the steps.
+  const instructions = await box(page.getByRole('heading', { name: 'Instructions' }));
+  expect(Math.abs(heading.top - instructions.top)).toBeLessThanOrEqual(1);
   const firstStep = await box(
     page.getByRole('list', { name: 'Steps' }).getByRole('listitem').first(),
   );
-  expect(Math.abs(heading.top - firstStep.top)).toBeLessThanOrEqual(1);
+  expect(instructions.bottom).toBeLessThanOrEqual(firstStep.top);
 
   // Amounts share one right-aligned column and names one left-aligned column beside it, so the numbers
   // line up, and a line with no amount keeps its name in that column.

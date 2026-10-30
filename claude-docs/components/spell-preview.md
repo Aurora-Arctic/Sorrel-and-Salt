@@ -20,11 +20,17 @@ full screen, with nothing else on screen. `src/components/SpellPreview/`.
   (`src/scss/_recipe-columns.scss`) that `_print.scss` and the pane both use, so the two cannot drift:
   the title and the lead across the top, the facts strip over both columns, Ingredients in a 17em
   column beside the steps, the note under them, and print's spacing throughout (the grid's
-  `space(2)` gap, the head's `space(4)` under it, the facts strip's `space(2) space(3)` margins).
-  The column is centred and at most `$shell-tablet-width` (56rem) wide, the width past which the
-  app sets things side by side; under that width the pane stacks, Ingredients above the steps, with
-  the same rows and spacing (`$columns: false`). The bar holding the controls is the same width and
-  centred the same way, so the close X ends where the content does.
+  `space(2)` gap, the head's `space(4)` under it, the facts strip's `space(3) space(4)` margins, the
+  note's `space(3)` over its rule).
+  The column is centred and at most `$recipe-sheet-width` wide: the printed sheet's content width
+  (A4 210mm less two 15mm margins, 180mm) in the sheet's own 11pt rem, 180mm ÷ 11pt = 46.39rem,
+  which at the pane's 16px root is 742px, so the pane's lines hold the same characters as the
+  paper's and break where they do (story 85 counts the intent's and the note's lines in both).
+  Under `$shell-tablet-width` (56rem) the pane stacks, Ingredients above the steps, with the same
+  rows and spacing (`$columns: false`); the columns fit well above that width, so the breakpoint
+  stays the one the recipe page stacks its own side column at. The bar holding the controls is the
+  same width and centred the same way, so the close X ends where the content does. The steps carry
+  an "Instructions" heading, the Ingredients heading's twin and level with it, from `body.tsx`.
 - Two controls at the end of the bar (sticky at the top, no wider than the content), both plain icon buttons (`icon-tip__edit icon-tip__edit--plain`, a visually hidden name, no border, background or visible label): Screen Awake and Close (`CloseIcon`, an X, named "Close"). There is no site header, navigation, link or editing control.
 
 ## How it opens and closes
