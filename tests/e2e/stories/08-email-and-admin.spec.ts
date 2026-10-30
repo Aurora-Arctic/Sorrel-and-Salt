@@ -32,8 +32,7 @@ async function rename(userId: string, name: string): Promise<void> {
 }
 
 /**
- * Opens `path` in this page, following each redirect itself. The session rides as an extra request header
- * (tests/e2e/session.ts), which the browser drops on a followed redirect, so each hop is read and opened afresh.
+ * Opens `path` in this page, opening each redirect target afresh from the first response's `location`.
  */
 async function visit(page: Page, path: string): Promise<Response> {
   let target = path;

@@ -90,13 +90,6 @@ export const wsEndpoint = process.env.PLAYWRIGHT_WS_ENDPOINT;
 export const auditWsEndpoint =
   process.env.E2E_AUDIT === '1' ? process.env.PLAYWRIGHT_AUDIT_WS_ENDPOINT : undefined;
 
-/**
- * Whether the servers drop `__Secure-` from Better Auth's cookie names and `signInAs` puts the cookie in the
- * jar: on under the audit alone, since WebKit sends neither to a plain-http origin
- * (claude-docs/testing/e2e.md, "A signed-in browser without a provider").
- */
-export const plainSessionCookie = process.env.E2E_AUDIT === '1';
-
 export const serverUrl = (port: number) => `http://localhost:${port}`;
 
 /**

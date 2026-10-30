@@ -437,9 +437,8 @@ test(
       rollRow(page, invited.name).getByRole('cell', { name: 'Member', exact: true }),
     ).toBeVisible();
 
-    // The landing now goes straight into the coven. The redirect is read rather than followed: the session
-    // rides as an extra request header (tests/e2e/session.ts), which the browser drops from a followed
-    // redirect.
+    // The landing now goes straight into the coven. The redirect is read rather than followed, so the
+    // assertion is on where the landing sends the browser.
     expect(await landingRedirect(page)).toBe(`/coven/${COVEN_SLUG}`);
 
     // The creation right came with it: the switcher offers Create Coven, and

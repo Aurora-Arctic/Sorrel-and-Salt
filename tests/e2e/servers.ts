@@ -9,7 +9,6 @@ import {
   COMPENDIUM_CACHE_PORT,
   CONFIGURED_PROVIDERS_PORT,
   E2E_SLOTS,
-  plainSessionCookie,
   serverUrl,
   slotPort,
 } from './slots';
@@ -53,9 +52,9 @@ const serverEnv = (
   // Every server serves that one build directory, so a data cache flushed to
   // it would hand one slot's cached reads to another slot's server.
   NEXT_ISR_FLUSH_TO_DISK: 'false',
-  // Under the audit alone, plain cookie names, so WebKit sends the session cookie `signInAs` puts in
-  // its jar over the plain-http origin a remote browser uses (src/lib/e2e-session-cookie.ts).
-  ...(plainSessionCookie && { E2E_PLAIN_SESSION_COOKIE: 'true' }),
+  // Plain cookie names on every e2e server, so a browser on a plain-http origin sends the session cookie `signInAs`
+  // puts in its jar, and keeps it through a redirect (src/lib/e2e-session-cookie.ts). A test-environment switch only.
+  E2E_PLAIN_SESSION_COOKIE: 'true',
   // Off, set rather than left absent: Next never lets `.env.local` override a set variable, and a developer's
   // `ENABLE_IMPERSONATION=true` would add an Impersonate button the specs do not expect (claude-docs/auth/impersonation.md).
   ENABLE_IMPERSONATION: 'false',

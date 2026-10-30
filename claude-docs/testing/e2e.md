@@ -265,24 +265,7 @@ HMAC-SHA256 under `BETTER_AUTH_SECRET`, percent-encoded as better-call's
 `signCookieValue` does it. The runner and the served build share that
 secret: `playwright.yml` and compose set it at job level, and a local run
 sets it on the command line, or the helper throws. The name is
-`__Secure-better-auth.session_token` because a production build's base URL
-forces https. It rides as an extra request header, not in the cookie jar,
-since a browser never sends a `Secure` cookie to the plain-http
-`devcontainer:<port>` a remote browser uses. WebKit sends that header
-no better (MB.255, found by the first audit; Chromium and Firefox send it),
-nor a `__Secure-` cookie from the jar, so under the audit
-(`E2E_AUDIT=1`) the servers are started with
-`E2E_PLAIN_SESSION_COOKIE=true` (`playwright.config.ts`'s `serverEnv`),
-which `src/lib/auth.ts` reads through `plainSessionCookie()`
-(`src/lib/e2e-session-cookie.ts`) as `advanced.useSecureCookies: false`,
-and the helper puts a plain-named, non-`Secure` cookie in the context's jar
-with the host alone (a cookie ignores the port, so any slot's server gets
-it). The flag is off for `npm run e2e` and CI, which keep the production
-names, and does nothing wherever `VERCEL_ENV` is set, so no deploy can lose
-the prefix. A `next start` left running from an ordinary run keeps its
-names, so stop it before an audit. The other shape, https in front of each
-slot server, was left: a certificate and a proxy per
-port, to test one cookie name. Give each call a fresh address:
+`better-auth.session_token`, not the `__Secure-` name a production build's https base URL would give it, because no browser sends a `Secure` cookie to a plain-http origin such as `devcontainer:<port>`. Every e2e server is started with `E2E_PLAIN_SESSION_COOKIE=true` (`tests/e2e/servers.ts`), which `src/lib/auth.ts` reads through `plainSessionCookie()` (`src/lib/e2e-session-cookie.ts`) as `advanced.useSecureCookies: false`. The helper puts the cookie in the context's jar with the host alone (a cookie ignores the port, so any slot's server gets it), so every engine sends it and a followed redirect keeps it. The flag does nothing wherever `VERCEL_ENV` is set, so no deploy can lose the prefix. A `next start` left running from an earlier run may keep its names, so stop it first. The other shape, https in front of each slot server, was left: a certificate and a proxy per port, to test one cookie name. Give each call a fresh address:
 the email index is unique. To switch back to a user already made,
 `signInAgainAs(page, userId)` gives the browser a new session for it
 (MB.63).

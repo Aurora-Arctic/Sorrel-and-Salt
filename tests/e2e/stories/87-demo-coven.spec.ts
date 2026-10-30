@@ -6,10 +6,8 @@ import { withSql } from './accounts-setup';
 
 // Story 87: a new account lands in the demo coven as a viewer and can leave it, and a site admin owns it. `signInAs`
 // writes the account's rows by SQL and so skips the sign-up hook; the viewer seat the hook writes is written here
-// by SQL as well. Two steps are not walked here: the sign-up hook, because the suite runs no OAuth provider (the
-// end-to-end sign-up in tests/db/email-verification.test.ts proves it), and the redirect from `/coven` to the first
-// coven, because the test browser carries its session in a request header that a redirect drops (the real-cookie
-// 01-invitations.spec.ts reads that redirect without following it).
+// by SQL as well. The sign-up hook is not walked here, because the suite runs no OAuth provider; the
+// end-to-end sign-up in tests/db/email-verification.test.ts proves it.
 
 const DEMO_SLUG = 'sorrel-and-salt-demo';
 const DEMO_PATH = `/coven/${DEMO_SLUG}`;
@@ -36,9 +34,7 @@ test.describe('Story 87: A New Account Lands in the Demo Coven', { tag: '@story-
     });
 
     await test.step('the demo coven is the account’s coven, badged and with the viewer notice', async () => {
-      // Entered by its address: the test browser carries its session in a request header, which a redirect from `/coven`
-      // does not keep, so the redirect is left to a real cookie.
-      await page.goto(DEMO_PATH);
+      await page.goto('/coven');
       await expect(page).toHaveURL(new RegExp(`${DEMO_PATH}$`));
       await expect(page.getByRole('combobox', { name: 'Coven' })).toHaveText(/Sorrel & Salt Demo/);
       const heading = page.getByRole('heading', { level: 1 });

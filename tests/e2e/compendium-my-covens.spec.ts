@@ -150,8 +150,6 @@ test('In My Covens narrows the compendium to the entries the viewer’s covens h
   });
 
   await test.step('a visitor signed out is offered no In My Covens, and the address filters nothing', async () => {
-    // The session rides in a header as well as a cookie (session.ts, holdSession); both go.
-    await page.context().setExtraHTTPHeaders({});
     await page.context().clearCookies();
     await open(page, [mine.id]);
     await expect(page.getByRole('banner').getByRole('link', { name: 'Sign In' })).toBeVisible();

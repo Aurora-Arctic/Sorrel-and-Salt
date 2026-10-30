@@ -344,7 +344,6 @@ test('the Quick Look window has the plus, then the check, on a compendium list f
     };
 
     await test.step('a visitor gets neither', async () => {
-      await page.context().setExtraHTTPHeaders({});
       await page.context().clearCookies();
       await opened(publicList);
       await expect(page.getByRole('banner').getByRole('link', { name: 'Sign In' })).toBeVisible();
