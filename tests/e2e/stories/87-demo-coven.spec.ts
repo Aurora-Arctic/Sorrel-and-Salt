@@ -81,6 +81,33 @@ test.describe('Story 87: A New Account Lands in the Demo Coven', { tag: '@story-
     });
   });
 
+  test('an account with a coven of its own lands there, not in the demo coven', async ({
+    page,
+  }) => {
+    const { userId } = await signInAs(page, 'keeper@example.test');
+    const own = { name: 'Testwort Coven', slug: 'testwort-coven' };
+    // Why the demo coven could have won: its name sorts ahead of this one, so a plain alphabetical order lands the account in it.
+    expect('Sorrel & Salt Demo'.localeCompare(own.name)).toBeLessThan(0);
+    await withSql(async (sql) => {
+      const [demo] = await sql`select id from workspaces where demo and deleted_at is null`;
+      expect(demo, 'the template holds the demo coven').toBeDefined();
+      const [coven] = await sql`
+        insert into workspaces (name, slug, created_by, updated_by)
+        values (${own.name}, ${own.slug}, ${userId}, ${userId}) returning id`;
+      await sql`
+        insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
+        values (${coven.id}, ${userId}, 'owner', ${userId}, ${userId}),
+               (${demo.id}, ${userId}, 'viewer', ${userId}, ${userId})`;
+    });
+
+    await page.goto('/sign-in');
+    await expect(page).toHaveURL(new RegExp(`/coven/${own.slug}$`));
+    await page.goto('/coven');
+    await expect(page).toHaveURL(new RegExp(`/coven/${own.slug}$`));
+    await expect(page.getByRole('combobox', { name: 'Coven' })).toHaveText(/Testwort Coven/);
+    await assertNoAccessibilityViolations(page);
+  });
+
   test('a site admin owns the demo coven', async ({ page }) => {
     await signInAs(page, 'owner@example.test', ['discord'], 'admin');
     await withSql(async (sql) => {

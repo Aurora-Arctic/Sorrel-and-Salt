@@ -39,8 +39,9 @@ async function viewerFor(session: Session): Promise<ShellContext> {
       verified: me.emailVerified,
       pendingInvitations,
     },
-    // Alphabetical: the service's order is the database's, which looks random.
-    workspaces: memberships
+    // Alphabetical with the demo coven last: the service's order is the database's, which looks random.
+    workspaces: [...memberships]
+      .sort((a, b) => byCovenName(a.workspace, b.workspace))
       .map(({ role, workspace: { id, slug, name } }) => ({
         id,
         slug,
@@ -50,8 +51,7 @@ async function viewerFor(session: Session): Promise<ShellContext> {
         canInvite: rolePermits(role, { member: ['invite'] }),
         // The statement createWorkspaceIngredient asserts, so the button never offers a coven the save would refuse.
         canWrite: rolePermits(role, { ingredient: ['create'], inventory: ['update'] }),
-      }))
-      .sort(byCovenName),
+      })),
   };
 }
 
