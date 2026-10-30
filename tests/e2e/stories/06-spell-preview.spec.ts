@@ -361,7 +361,7 @@ test(
         const facts = box('.spell-recipe__facts-box');
         const summary = box('.spell-recipe__summary');
         const note = box('.spell-recipe__note');
-        const [one, two] = [...root.querySelector('ol[aria-label="Steps"]')!.children].map((el) =>
+        const [one, two] = [...root.querySelector('.spell-recipe__steps')!.children].map((el) =>
           el.getBoundingClientRect(),
         );
         return {
@@ -384,11 +384,11 @@ test(
     const pane = page.getByRole('dialog', { name: 'Fixture Columns' });
     await expect(pane).toBeVisible();
     const heading = pane.getByRole('heading', { name: 'Ingredients' });
-    const instructions = pane.getByRole('heading', { name: 'Instructions' });
+    const instructions = pane.getByRole('heading', { name: 'Steps', exact: true });
     const ingredients = pane.getByRole('list', { name: 'Ingredients' });
     const steps = pane.getByRole('list', { name: 'Steps' });
 
-    // Wide: Ingredients to the left of the steps, its heading level with the Instructions heading
+    // Wide: Ingredients to the left of the steps, its heading level with the Steps heading
     // over them, and the column the printed sheet's width in the pane's rem.
     expect((await box(ingredients)).right).toBeLessThanOrEqual((await box(steps)).left);
     expect(Math.abs((await box(heading)).top - (await box(instructions)).top)).toBeLessThanOrEqual(
