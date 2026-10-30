@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactElement, ReactNode } from 'react';
-import { JarDrawing, pickJarShape } from '../JarShelf';
+import { JarDrawing, ONE_OFF_HELD, pickJarShape } from '../JarShelf';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { StockJarButton } from '../StockDialog';
 import type { StockDialogProps } from '../StockDialog/types';
@@ -14,11 +14,6 @@ import { isInstruction, stepNameOf } from './steps/values';
 
 // In Coven Inventory: one line per form, at its first step's place, setting `needOf` against the jar's `supplyOf`, with a `VerdictMark` and `doorsOf` doors; used by the recipe page alone
 // (claude-docs/components/spell-recipe.md, "The side column" and "The inventory panel").
-
-// A one-off holds no stock, but its jar is drawn with something in it, as a stocked jar is: an
-// unmeasured jar stands at the middling level, in muted ink (index.scss). The One-Off badge says
-// why.
-const ONE_OFF_HELD = { quantity: null, threshold: null };
 
 /** What a line opens, where the page offers it: the Quick Look eye, and the Edit Stock dialog. */
 export interface LineDoors {

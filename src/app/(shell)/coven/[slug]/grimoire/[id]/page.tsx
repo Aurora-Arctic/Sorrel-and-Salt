@@ -27,6 +27,7 @@ import { viewedDetailsOf } from '../../ingredients/viewed-details';
 import { readRecipeOf } from '../recipe-read';
 import { readWorkingsOf } from './workings-read';
 import { readRecipeAsideOf } from './recipe-aside';
+import { workingStepsOf } from './recipe-steps';
 import type { SpellRecipeParams } from './types';
 
 // One saved spell as a page. `readSpell` keeps a private spell its author's in SQL, so a stranger,
@@ -93,8 +94,10 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
     userId,
     name: memberNames[i] ?? 'A former member',
   }));
-  const ingredientSteps = recipe.steps.flatMap((step) =>
-    step.kind === 'ingredient' ? [{ id: step.id, name: step.name }] : [],
+  const ingredientSteps = workingStepsOf(
+    recipe.views,
+    recipePath,
+    new Map(aside.doors.map(({ stepId, stock }) => [stepId, stock])),
   );
   const canUpdate = rolePermits(membership.role, { spell: ['update'] });
   const canDelete = rolePermits(membership.role, { spell: ['delete'] });

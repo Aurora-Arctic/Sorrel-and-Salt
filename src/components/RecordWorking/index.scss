@@ -1,4 +1,5 @@
 @use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
 
 // The Share With the Coven switch, start-aligned as the spell builder's is rather than centred as the
 // primitive's filter-bar switch is.
@@ -10,34 +11,79 @@
   }
 }
 
-// The deduction preview: each step's name, then its amount against the right edge in figures of one
-// width so the amounts line up. The list stays a list for assistive technology.
+// The deduction preview: one line per step, the step's jar as In Coven Inventory draws it
+// (the paint is JarShelf's, picked by the modifier class) beside its name and the words.
 .working-deductions {
-  display: grid;
-  gap: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
   margin: 0;
   padding: 0;
   list-style: none;
+}
 
-  > li {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 1rem;
+.working-deductions__line {
+  display: grid;
+  grid-template-columns: 2.5rem minmax(0, 1fr);
+  column-gap: 0.75rem;
+  align-items: center;
+
+  // A one-off holds no stock: the jar is drawn in muted ink at the middling level.
+  &.is-one-off .working-deductions__jar {
+    .jar-shelf__glass,
+    .jar-shelf__lid,
+    .jar-shelf__facet,
+    .jar-shelf__wave {
+      stroke: $text-muted;
+    }
+
+    .jar-shelf__level {
+      fill: $text-muted;
+    }
   }
 }
 
-.working-deductions__amount {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
+.working-deductions__jar {
+  grid-row: 1 / 3;
+
+  svg {
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+    overflow: visible;
+  }
 }
 
-// A line that took nothing: quieter than one that took something, before and after Confirm alike.
-.working-deductions__none {
+.working-deductions__press {
+  @include button-reset;
+
+  display: block;
+  inline-size: 100%;
+
+  &:focus-visible {
+    @include focus-ring($text-primary, $focus-ring-strength);
+  }
+}
+
+.working-deductions__name {
+  font-weight: 500;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.working-deductions__words {
+  display: flex;
+  flex-wrap: wrap;
   color: $text-muted;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+
+  b {
+    font-weight: 500;
+    color: $text-primary;
+  }
 }
 
 .working-deductions__short {
-  display: block;
   color: $warning;
 }

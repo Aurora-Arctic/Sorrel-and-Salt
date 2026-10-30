@@ -4,14 +4,19 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { type ReactElement, useState } from 'react';
 import { graphql } from '../../gql';
 import type { WorkingDeductionPreviewQuery } from '../../gql/graphql';
+import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { graphqlQuery, graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
 import BusyButton from '../BusyButton';
+import { JarDrawing, ONE_OFF_HELD, pickJarShape } from '../JarShelf';
 import Notice from '../Notice';
+import { stockState } from '../StockBadge/stock-state';
+import { withUnit } from '../StockBadge/stock-words';
+import { StockJarButton } from '../StockDialog';
 import './index.scss';
-import type { WorkingCompletionProps } from './types';
-import { NOT_DEDUCTED } from './warnings';
+import type { WorkingCompletionProps, WorkingStep } from './types';
+import { SKIP_REASON } from './warnings';
 
 // The step before a working is completed: what completing it would take from each jar, read from
 // `workingDeductionPreview`, and a Confirm that runs `completeWorking`. The preview and the
@@ -59,11 +64,87 @@ export const CompleteWorkingDocument = graphql(`
 `);
 
 type Plan = WorkingDeductionPreviewQuery['workingDeductionPreview'];
+type Taken = Plan['deductions'][number];
+type Skipped = Plan['warnings'][number];
 type PreviewRow =
-  | { id: string; name: string; taken: Plan['deductions'][number] }
-  | { id: string; name: string; skipped: Plan['warnings'][number] };
+  | { step: WorkingStep; number: number; taken: Taken }
+  | { step: WorkingStep; number: number; skipped: Skipped };
 
-const amount = (quantity: number, unit: string) => `${Number(quantity.toFixed(3))} ${unit}`;
+const amount = (quantity: number, unit: string) => withUnit(Number(quantity.toFixed(3)), unit);
+
+/** One line of the preview: the step's jar as the recipe page's In Coven Inventory draws it, then what the step takes from it. */
+function DeductionLine({ row, onSaved }: { row: PreviewRow; onSaved: () => void }): ReactElement {
+  const { step, number } = row;
+  const taken = 'taken' in row ? row.taken : null;
+  const skipped = 'skipped' in row ? row.skipped : null;
+  const oneOff = step.oneOff === true || skipped?.reason === 'CUSTOM';
+  const unstocked = skipped?.reason === 'UNSTOCKED';
+  const short = taken !== null && taken.shortfall > 0;
+  const held = taken ? { quantity: taken.before, threshold: taken.lowStockThreshold } : null;
+  // Short is Low whatever the Low mark says: the jar is emptied.
+  const state = short ? 'low' : held ? stockState(held.quantity, held.threshold) : 'ok';
+  const modifier = oneOff
+    ? ''
+    : unstocked
+      ? 'jar-shelf__jar--empty'
+      : state === 'ok'
+        ? ''
+        : `jar-shelf__jar--${state}`;
+  const form = step.form ?? '';
+  const shape = pickJarShape(step.seed ?? step.name, form);
+  const drawing = <JarDrawing shape={shape} held={oneOff ? ONE_OFF_HELD : held} />;
+  const label = ['Edit Stock', step.stock?.ingredientName, form && formLabel(form)]
+    .filter(Boolean)
+    .join(', ');
+  return (
+    <li className={`working-deductions__line${oneOff ? ' is-one-off' : ''}`}>
+      <span className={`working-deductions__jar ${modifier}`}>
+        {step.stock && !oneOff ? (
+          // The same dialog and handler as a jar on the recipe page's In Coven Inventory.
+          <StockJarButton
+            {...step.stock}
+            ariaLabel={label}
+            className="working-deductions__press"
+            onSaved={onSaved}
+          >
+            {drawing}
+          </StockJarButton>
+        ) : (
+          drawing
+        )}
+      </span>
+      <span className="working-deductions__name">
+        {number}. {step.name}
+      </span>
+      <span className="working-deductions__words">
+        {taken ? (
+          <>
+            <span>
+              takes <b>{amount(taken.quantity, taken.unit)}</b>
+            </span>
+            <span>
+              {' · '}have {amount(taken.before, taken.unit)}
+            </span>
+            <span>
+              {' · '}left {amount(Math.max(taken.before - taken.quantity, 0), taken.unit)}
+            </span>
+            {short && (
+              <span className="working-deductions__short">
+                {' · '}short by {amount(taken.shortfall, taken.unit)}
+              </span>
+            )}
+          </>
+        ) : oneOff ? (
+          'one-off · not kept'
+        ) : unstocked ? (
+          'have no jar · takes nothing'
+        ) : (
+          `${SKIP_REASON[skipped!.reason]} · takes nothing`
+        )}
+      </span>
+    </li>
+  );
+}
 
 export default function WorkingCompletion({
   workspaceId,
@@ -105,10 +186,11 @@ export default function WorkingCompletion({
   }
   const plan = preview.data?.workingDeductionPreview;
   const rows: PreviewRow[] = plan
-    ? steps.flatMap(({ id, name }): PreviewRow[] => {
-        const taken = plan.deductions.find((deduction) => deduction.stepId === id);
-        const skipped = plan.warnings.find((warning) => warning.stepId === id);
-        return taken ? [{ id, name, taken }] : skipped ? [{ id, name, skipped }] : [];
+    ? steps.flatMap((step, i): PreviewRow[] => {
+        const number = step.number ?? i + 1;
+        const taken = plan.deductions.find((deduction) => deduction.stepId === step.id);
+        const skipped = plan.warnings.find((warning) => warning.stepId === step.id);
+        return taken ? [{ step, number, taken }] : skipped ? [{ step, number, skipped }] : [];
       })
     : [];
   // A step the spell no longer lists, which the preview still names.
@@ -130,30 +212,18 @@ export default function WorkingCompletion({
           </p>
           <ul aria-label="Deductions" className="working-deductions">
             {rows.map((row) => (
-              <li key={row.id}>
-                <strong>{row.name}</strong>{' '}
-                {'taken' in row ? (
-                  <span className="working-deductions__amount">
-                    {amount(row.taken.quantity, row.taken.unit)}
-                    {row.taken.shortfall > 0 && (
-                      <span className="working-deductions__short">
-                        {' '}
-                        jar short by {amount(row.taken.shortfall, row.taken.unit)}
-                      </span>
-                    )}
-                  </span>
-                ) : (
-                  <span className="working-deductions__amount working-deductions__none">
-                    {NOT_DEDUCTED[row.skipped.reason]}
-                  </span>
-                )}
-              </li>
+              <DeductionLine key={row.step.id} row={row} onSaved={() => void preview.refetch()} />
             ))}
             {orphans.map((warning) => (
-              <li key={warning.stepId}>
-                <strong>{warning.stepName ?? 'A removed step'}</strong>{' '}
-                <span className="working-deductions__amount working-deductions__none">
-                  {NOT_DEDUCTED[warning.reason]}
+              <li key={warning.stepId} className="working-deductions__line">
+                <span className="working-deductions__jar jar-shelf__jar--empty">
+                  <JarDrawing shape={pickJarShape('', '')} held={null} />
+                </span>
+                <span className="working-deductions__name">
+                  {warning.stepName ?? 'A removed step'}
+                </span>
+                <span className="working-deductions__words">
+                  {SKIP_REASON[warning.reason]} · takes nothing
                 </span>
               </li>
             ))}

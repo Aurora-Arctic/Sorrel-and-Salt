@@ -38,9 +38,28 @@ complete working's visibility only widens.
 ## Completing a working
 
 `WorkingCompletion` reads `workingDeductionPreview` afresh each time it opens and lists the spell's
-ingredient steps in order, as a list laid out in two columns: the step's name, then its amount to be
-taken in the jar's unit against the right edge in tabular figures, with "jar short by" beneath it in
-the warning colour if the jar is short, or why nothing is taken ("Not deducted: units differ", muted).
+ingredient steps in order, one line each, as the jar the recipe page's In Coven Inventory draws
+(`JarDrawing`, `pickJarShape`, the `jar-shelf__jar--low|out|empty` paint) beside "n. Name", n being
+the step's place among all the recipe's steps, and these words:
+
+- A take: "takes X · have Y · left Z", all in the jar's unit, with "short by N" in the warning colour
+  when the jar cannot cover it. `have` is what the jar held before this line's take, so two lines on
+  one jar show it running down. The preview returns it as `before`, with the jar's Low mark as
+  `lowStockThreshold`, from the plan that already read the jars, so it costs no extra read.
+  A short line draws its jar Low, whatever the Low mark says.
+- A one-off: a muted jar and "one-off · not kept".
+- A step with no jar: a dashed empty jar and "have no jar · takes nothing".
+- Any other skip (units differ, no amount, jar not measured): the reason and "takes nothing", over a
+  steady jar with no level, since the preview carries no jar quantity for a line that takes nothing.
+
+A step that carries `stock` (the same `StockDialogProps` the In Coven Inventory line gets, so only
+for a role that may edit stock, and never for a deleted ingredient or form) draws its jar inside a
+`StockJarButton`, which opens Edit Stock as it does on the recipe page. Its `onSaved` then reads the
+preview again, so have, left and short by are redrawn before Confirm. The stock dialog is a second
+modal opened over the Record a Working one. A step without `stock` keeps a plain drawing: the
+recipe page builds `stock` from the aside's doors, and the spell cards' Record a Working carries none,
+so a card's jars are not clickable.
+
 Confirm runs `completeWorking`, reads the page again and shows the same list, so it reads the same
 before and after. The preview and the completion share one plan on the
 server (`plan-deductions.ts`), so the two agree.

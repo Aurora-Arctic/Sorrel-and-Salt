@@ -192,6 +192,7 @@ const StockDialogForm = ({
   jars,
   openOn,
   close,
+  onSaved,
 }: StockDialogFormProps): ReactElement => {
   const { refresh } = usePendingNavigation();
   const addId = useId();
@@ -290,6 +291,7 @@ const StockDialogForm = ({
     sent.current = true;
     close();
     refresh();
+    onSaved?.();
   }
 
   return (

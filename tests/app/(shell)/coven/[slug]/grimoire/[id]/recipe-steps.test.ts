@@ -1,6 +1,9 @@
 import type { Route } from 'next';
 import { describe, expect, it } from 'vitest';
-import { recipeStepsOf } from '@/app/(shell)/coven/[slug]/grimoire/[id]/recipe-steps';
+import {
+  recipeStepsOf,
+  workingStepsOf,
+} from '@/app/(shell)/coven/[slug]/grimoire/[id]/recipe-steps';
 import type { SpellStepView } from '@/modules/grimoire';
 
 // The service's step views as the recipe draws them. Invented names throughout.
@@ -159,5 +162,40 @@ describe('recipeStepsOf', () => {
       look: null,
       safety: null,
     });
+  });
+});
+
+describe('workingStepsOf', () => {
+  it('numbers each ingredient by its place among all the steps and hands each its jar door', () => {
+    const door = { ingredientName: 'Testwort' } as never;
+    const steps = workingStepsOf(
+      [
+        step({ id: 'i', body: 'Stir.' }),
+        linked('a', 'Testwort', null, 'dried leaf'),
+        step({ id: 'o', name: 'Oddment', form: 'ash' }),
+      ],
+      HERE,
+      new Map([['step-a', door]]),
+    );
+    expect(steps).toEqual([
+      {
+        id: 'step-a',
+        name: 'Testwort',
+        number: 2,
+        form: 'dried leaf',
+        seed: 'a',
+        oneOff: false,
+        stock: door,
+      },
+      {
+        id: 'o',
+        name: 'Oddment',
+        number: 3,
+        form: 'ash',
+        seed: 'Oddment',
+        oneOff: true,
+        stock: null,
+      },
+    ]);
   });
 });

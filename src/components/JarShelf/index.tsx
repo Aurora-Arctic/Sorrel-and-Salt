@@ -40,6 +40,10 @@ function Part({ part }: { part: JarPart }): ReactElement {
   return <path className={className} {...part.attrs} />;
 }
 
+// A one-off holds no stock, but its jar is drawn with something in it, as a stocked jar is: an
+// unmeasured jar stands at the middling level, in muted ink; the caller's stylesheet mutes it.
+export const ONE_OFF_HELD = { quantity: null, threshold: null };
+
 /** How many bands fill the spell's jar; past it the bands shrink to keep fitting. */
 export const BANDS_FULL = 8;
 
