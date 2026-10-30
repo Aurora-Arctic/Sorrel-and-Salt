@@ -8,6 +8,6 @@ export interface IngredientCardListProps {
    * page's choice. Written as `data-density` on the list, which the card's styles read.
    */
   density?: 'regular' | 'compact';
-  /** One `IngredientCard` per child; each is wrapped in its own list item. */
+  /** One card per child, an `IngredientCard` or a `SpellCard`; each is wrapped in its own list item. */
   children: ReactNode;
 }
