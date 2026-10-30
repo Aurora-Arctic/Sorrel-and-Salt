@@ -70,7 +70,7 @@ the reference to the compendium or the parent's own coven inside the
 parent's `EXISTS`, so a link written past the service's tier rule, or one
 to a soft-deleted reference, reads as nothing. It is no hatch: every row it
 answers is live. A variant's links, `'ingredientVariantId'`, are read the same
-way through `readableVariantParent` (MB.218): the registry gave the column
+way through `inUseVariantParent` (MB.218, M12.24): the registry gave the column
 (MB.217), and the finder's one branch per parent table gives the tier, since a
 variant is a coven's where its ingredient is though it carries no
 `workspace_id`; read as global reference data, a coven's variant's links
@@ -94,8 +94,8 @@ inserted, stamped from the session.
 substitute that one form of an ingredient owns carries its `variant_id`
 beside the `ingredient_id` (MB.217), and a reference link its
 `ingredient_variant_id` alone. `findManyOfVariants(memberships, table,
-variantIds)` reads a form's rows under `readableVariantParent(memberships,
-variantColumn)`, beside `readableIngredientParent` in `ingredient-parent.ts`:
+variantIds)` reads a form's rows under `inUseVariantParent(memberships,
+variantColumn, heldBy)`, beside `readableIngredientParent` in `ingredient-parent.ts`:
 an `EXISTS` over the live variant, holding an `EXISTS` over its readable
 ingredient. Never by the variant's bare id, which carries no tier. Through the
 variant rather than the row's own `ingredient_id`, so a soft-deleted form

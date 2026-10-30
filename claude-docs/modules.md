@@ -272,7 +272,6 @@ through one of these.
 | `inTiers`                  | `predicates.ts`        | MB.206 | The compendium or the proofs' covens                                                         | both       |
 | `readableInTiers`          | `predicates.ts`        | MB.206 | `inTiers`, live rows only                                                                    | both       |
 | `readableIngredientParent` | `ingredient-parent.ts` | MB.206 | A child row's ingredient is readable                                                         | both       |
-| `readableVariantParent`    | `ingredient-parent.ts` | MB.218 | A row one form owns takes its ingredient's tier, through the form                            | both       |
 | `inUseIngredientParent`    | `ingredient-parent.ts` | M12.24 | `readableIngredientParent`, or a retired compendium entry the reading coven's cupboard names | both       |
 | `inUseVariantParent`       | `ingredient-parent.ts` | M12.24 | The same, through a form                                                                     | both       |
 | `findPageInTiers`          | `finders.ts`           | MB.206 | A cursor page (one that resumes from the last row) over `readableInTiers`                    | both       |
@@ -342,7 +341,7 @@ site tier, `workspace_id IS NULL` spelled for that table alone so that no
 invitation read calls `inCompendium`. It is listed because it spells the
 tier's predicate, and the extraction task leaves it behind.
 
-**MB.215: `ingredients` gains `ingredient_variants`.** The table of an ingredient's forms is `ingredients`' own, beside its other children, and `vocabulary` keeps `ingredient_forms`, the names a variant's form is picked from (DESIGN.md §5; MB.216). The vocabulary reaches variants as it reaches ingredients today: MB.220 points `IN_USE.ingredient_forms` and the `formId` filter at variants through the `TWO_TIER` registry, and a form's rename carries onto the compendium variants picking it, through the writer above, where it carried onto entries and moved their slugs. The seam gained MB.218's `readableVariantParent` and `findManyOfVariants`, each reading both tiers; both are in the tables above ([`design-decisions/mb.215-ingredient-variants.md`](design-decisions/mb.215-ingredient-variants.md)).
+**MB.215: `ingredients` gains `ingredient_variants`.** The table of an ingredient's forms is `ingredients`' own, beside its other children, and `vocabulary` keeps `ingredient_forms`, the names a variant's form is picked from (DESIGN.md §5; MB.216). The vocabulary reaches variants as it reaches ingredients today: MB.220 points `IN_USE.ingredient_forms` and the `formId` filter at variants through the `TWO_TIER` registry, and a form's rename carries onto the compendium variants picking it, through the writer above, where it carried onto entries and moved their slugs. The seam gained MB.218's `readableVariantParent` and `findManyOfVariants`, each reading both tiers; M12.24's `inUseVariantParent` took every caller of the first, which is gone, and the second is in the tables above ([`design-decisions/mb.215-ingredient-variants.md`](design-decisions/mb.215-ingredient-variants.md)).
 
 ## Where types live
 
