@@ -114,7 +114,7 @@ export function BuilderStepRow({
       name={`steps.${index}.body`}
       label="Instruction"
       labelSuffix={instruction ? `Step ${index + 1}` : name}
-      placeholder={instruction ? 'Light candle' : 'Add an instruction'}
+      placeholder="Add an instruction"
       multiline
       rows={2}
     />
@@ -167,7 +167,9 @@ export function BuilderStepRow({
       badge={oneOff ? <OneOffBadge /> : null}
       summary={
         instruction ? (
-          (bodyTyped ?? '').trim() || <span className="step-row__placeholder">Write the step</span>
+          (bodyTyped ?? '').trim() || (
+            <span className="step-row__placeholder">Add an instruction</span>
+          )
         ) : amountLine || bodyLine ? (
           // The amount never shrinks; only the instruction's tail is cut by the ellipsis.
           <span className="step-row__line">

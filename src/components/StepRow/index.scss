@@ -57,8 +57,8 @@
   min-width: 0;
 }
 
-// The card: the ingredient form's variant card look, one row of handle, number, icon, name, amount and Remove, with the marks, instruction and safety note beneath
-// (claude-docs/components/step-row.md, "The card").
+// The card: the ingredient form's variant card look. Its grid is the open-and-closed one below, or
+// the instruction step's (claude-docs/components/step-row.md, "The card").
 .step-row.step-row--card {
   display: grid;
   gap: 0 space(3);
@@ -379,9 +379,10 @@ $step-ink-drop: 0.05rem;
     color: $text-muted;
   }
 
-  // Closed, the instruction is one line of the height of a closed ingredient row's (two at the
-  // list's narrow width, below): its text runs on under an ellipsis, and the handle, number and buttons centre on that line, with no
-  // textarea's padding to stand clear of. Open, the textarea shows all of it.
+  // Closed, the instruction is one line the height of a closed ingredient row (two at the list's
+  // narrow width, below): its text runs on under an ellipsis, and the handle, number and buttons
+  // centre on that line, with no textarea's padding to stand clear of. Open, the textarea shows
+  // all of it.
   &.step-row--folded {
     .step-row__text {
       padding-block: 0;
