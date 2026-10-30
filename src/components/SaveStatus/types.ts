@@ -23,3 +23,12 @@ export interface SaveStatusProps {
   conflictInto?: HTMLElement | null;
   className?: string;
 }
+
+export interface RecoveryNoticeProps {
+  /** When the kept typing was last written. */
+  at: Date;
+  /** Load the kept typing into the form. */
+  onKeep: () => void;
+  /** Drop the kept typing, leaving the form as the server has it. */
+  onDiscard: () => void;
+}

@@ -331,7 +331,7 @@ describe('the spell builder’s Add to Jar', () => {
     await addOneOff('testwort');
 
     expect(stepRows()).toHaveLength(1);
-    expect(search()).toHaveAccessibleDescription('This ingredient is already in the jar');
+    expect(search()).toHaveAccessibleDescription(/This ingredient is already in the jar\.$/);
   });
 
   it('saves each step as its ingredient and form, or its one-off name and form, with its amount', async () => {
@@ -427,7 +427,9 @@ describe('the spell builder’s Add to Jar', () => {
     await add('Fixture', /Fixture Mockroot/);
 
     fireEvent.click(
-      within(stepRow('Fixture Rosewort')).getByRole('button', { name: 'Remove Fixture Rosewort' }),
+      within(stepRow('Fixture Rosewort')).getByRole('button', {
+        name: 'Remove Fixture Rosewort (Dried Leaf)',
+      }),
     );
 
     expect(stepRows()).toHaveLength(1);
@@ -442,9 +444,11 @@ describe('the spell builder’s Add to Jar', () => {
       within(stepRow('Fixture Rosewort')).getByRole('spinbutton', { name: /^Quantity/ });
     fireEvent.change(quantity(), { target: { value: '7' } });
     // The row is open after typing, and Remove shows only on a closed row.
-    fireEvent.click(screen.getByRole('button', { name: 'Close Fixture Rosewort' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Close Fixture Rosewort (Dried Leaf)' }));
     fireEvent.click(
-      within(stepRow('Fixture Rosewort')).getByRole('button', { name: 'Remove Fixture Rosewort' }),
+      within(stepRow('Fixture Rosewort')).getByRole('button', {
+        name: 'Remove Fixture Rosewort (Dried Leaf)',
+      }),
     );
     expect(stepRows()).toHaveLength(0);
 
@@ -471,7 +475,8 @@ describe('the spell builder’s Add to Jar', () => {
     renderBuilder();
     await add('Fixture', /Fixture Rosewort/);
     await add('Fixture', /Fixture Mockroot/);
-    const pencil = () => screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort$/ });
+    const pencil = () =>
+      screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort \(Dried Leaf\)$/ });
     // The second add opened Mockroot and closed Rosewort.
     expect(pencil()).toHaveAttribute('aria-expanded', 'false');
 
@@ -489,7 +494,9 @@ describe('the spell builder’s Add to Jar', () => {
     expect(pencil()).toHaveAttribute('aria-expanded', 'false');
 
     fireEvent.click(
-      within(stepRow('Fixture Mockroot')).getByRole('button', { name: 'Remove Fixture Mockroot' }),
+      within(stepRow('Fixture Mockroot')).getByRole('button', {
+        name: 'Remove Fixture Mockroot (Root)',
+      }),
     );
     expect(stepRows()).toHaveLength(1);
     expect(pencil()).toHaveAttribute('aria-expanded', 'false');
@@ -499,7 +506,8 @@ describe('the spell builder’s Add to Jar', () => {
     suggest(ROSEWORT);
     renderBuilder();
     await add('Fixture', /Fixture Rosewort/);
-    const pencil = () => screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort$/ });
+    const pencil = () =>
+      screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort \(Dried Leaf\)$/ });
     const open = () => expect(pencil()).toHaveAttribute('aria-expanded', 'true');
     open();
     const row = stepRow('Fixture Rosewort');
@@ -532,20 +540,28 @@ describe('the spell builder’s Add to Jar', () => {
     renderBuilder();
     await add('Fixture', /Fixture Rosewort/);
     const row = stepRow('Fixture Rosewort');
-    const pencil = screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort$/ });
+    const pencil = screen.getByRole('button', {
+      name: /^(Edit|Close) Fixture Rosewort \(Dried Leaf\)$/,
+    });
     expect(pencil).toHaveAttribute('aria-expanded', 'true');
-    expect(within(row).queryByRole('button', { name: 'Remove Fixture Rosewort' })).toBeNull();
+    expect(
+      within(row).queryByRole('button', { name: 'Remove Fixture Rosewort (Dried Leaf)' }),
+    ).toBeNull();
 
     act(() => pencil.focus());
-    fireEvent.click(within(row).getByRole('button', { name: 'Close Fixture Rosewort' }));
+    fireEvent.click(
+      within(row).getByRole('button', { name: 'Close Fixture Rosewort (Dried Leaf)' }),
+    );
 
     expect(pencil).toHaveAttribute('aria-expanded', 'false');
     expect(pencil).toHaveFocus();
     expect(stepRows()).toHaveLength(1);
     expect(
-      within(row).getByRole('button', { name: 'Remove Fixture Rosewort' }),
+      within(row).getByRole('button', { name: 'Remove Fixture Rosewort (Dried Leaf)' }),
     ).toBeInTheDocument();
-    expect(within(row).getByRole('button', { name: 'Edit Fixture Rosewort' })).toBe(pencil);
+    expect(within(row).getByRole('button', { name: 'Edit Fixture Rosewort (Dried Leaf)' })).toBe(
+      pencil,
+    );
   });
 
   it('refuses a unit the coven’s jar cannot be measured in, beside the unit, and holds Save', async () => {
@@ -659,7 +675,7 @@ describe('the spell builder’s Add to Jar', () => {
     expect(jar).toHaveAttribute('aria-expanded', 'false');
     expect(jar).toHaveAccessibleDescription('2 ingredients');
     fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
-    openRow('Fixture Rosewort');
+    openRow('Fixture Rosewort (Dried Leaf)');
     const row = stepRow('Fixture Rosewort');
     expect(within(row).getByRole('spinbutton', { name: /^Quantity/ })).toHaveValue(3);
     expect(within(row).getByRole('combobox', { name: /^Unit/ })).toHaveTextContent('g');
@@ -735,17 +751,23 @@ describe('the spell builder’s safety warning', () => {
     ).toContain('Warning: Toxic.');
   });
 
-  it('marks a step whose form carries notes with Caution, and says so', async () => {
+  it('warns of a form’s notes once: the notes while open, the Caution badge while closed, and says so', async () => {
     suggest(CAREWORT);
     renderBuilder();
 
     await add('Care', /Fixture Carewort/);
 
     const row = stepRow('Fixture Carewort');
-    expect(within(row).getByText('Caution', { selector: '.badge *, .badge' })).toBeInTheDocument();
+    const badge = () => within(row).queryByText('Caution', { selector: '.badge *, .badge' });
     expect(within(row).getByRole('region', { name: 'Caution' })).toHaveTextContent(
       'Wash your hands after.',
     );
+    expect(badge()).toBeNull();
+
+    fireEvent.click(within(row).getByRole('button', { name: 'Close Fixture Carewort (Leaf)' }));
+
+    expect(badge()).toBeInTheDocument();
+    expect(within(row).queryByRole('region', { name: 'Caution' })).toBeNull();
     expect(
       screen
         .getAllByRole('status')
@@ -915,10 +937,9 @@ describe('the spell builder’s open and closed steps', () => {
     expect(
       within(stepRow('Fixture Rosewort')).queryByRole('spinbutton', { name: /^Quantity/ }),
     ).toBeNull();
-    expect(screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort$/ })).toHaveAttribute(
-      'aria-expanded',
-      'false',
-    );
+    expect(
+      screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort \(Dried Leaf\)$/ }),
+    ).toHaveAttribute('aria-expanded', 'false');
   });
 
   it('keeps what was typed in a row after it is closed, and shows it in the row’s summary', async () => {
@@ -933,7 +954,7 @@ describe('the spell builder’s open and closed steps', () => {
     await add('Mock', /Fixture Mockroot/);
 
     expect(stepRow('Fixture Rosewort')).toHaveTextContent('2 g');
-    openRow('Fixture Rosewort');
+    openRow('Fixture Rosewort (Dried Leaf)');
     expect(
       within(stepRow('Fixture Rosewort')).getByRole('spinbutton', { name: /^Quantity/ }),
     ).toHaveValue(2);
@@ -967,17 +988,15 @@ describe('the spell builder’s open and closed steps', () => {
     });
     // Inside the row is not outside it.
     fireEvent.pointerDown(within(row).getByRole('spinbutton', { name: /^Quantity/ }));
-    expect(screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort$/ })).toHaveAttribute(
-      'aria-expanded',
-      'true',
-    );
+    expect(
+      screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort \(Dried Leaf\)$/ }),
+    ).toHaveAttribute('aria-expanded', 'true');
 
     fireEvent.click(screen.getByRole('heading', { name: 'What Goes In' }));
 
-    expect(screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort$/ })).toHaveAttribute(
-      'aria-expanded',
-      'false',
-    );
+    expect(
+      screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort \(Dried Leaf\)$/ }),
+    ).toHaveAttribute('aria-expanded', 'false');
     expect(stepRow('Fixture Rosewort')).toHaveTextContent('3');
   });
 
@@ -985,23 +1004,24 @@ describe('the spell builder’s open and closed steps', () => {
     suggest(ROSEWORT, MOCKROOT);
     renderBuilder();
     await add('Rose', /Fixture Rosewort/);
-    fireEvent.click(screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort$/ }));
-    expect(screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort$/ })).toHaveAttribute(
-      'aria-expanded',
-      'false',
+    fireEvent.click(
+      screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort \(Dried Leaf\)$/ }),
     );
-    fireEvent.click(screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort$/ }));
-    expect(screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort$/ })).toHaveAttribute(
-      'aria-expanded',
-      'true',
+    expect(
+      screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort \(Dried Leaf\)$/ }),
+    ).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(
+      screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort \(Dried Leaf\)$/ }),
     );
+    expect(
+      screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort \(Dried Leaf\)$/ }),
+    ).toHaveAttribute('aria-expanded', 'true');
 
     act(() => screen.getByRole('button', { name: 'Add Instruction' }).focus());
 
-    expect(screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort$/ })).toHaveAttribute(
-      'aria-expanded',
-      'false',
-    );
+    expect(
+      screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort \(Dried Leaf\)$/ }),
+    ).toHaveAttribute('aria-expanded', 'false');
   });
 
   it('keeps a row open while its unit is refused, even after a click outside it', async () => {
@@ -1020,34 +1040,30 @@ describe('the spell builder’s open and closed steps', () => {
     expect(
       within(stepRow('Fixture Rosewort')).getByRole('combobox', { name: /^Unit/ }),
     ).toHaveAttribute('aria-invalid', 'true');
-    expect(screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort$/ })).toHaveAttribute(
-      'aria-expanded',
-      'true',
-    );
+    expect(
+      screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort \(Dried Leaf\)$/ }),
+    ).toHaveAttribute('aria-expanded', 'true');
   });
 
   it('opens a new step while the focus stays in Add to Jar, and closes it on the next click outside the box and the row', async () => {
     suggest(ROSEWORT, MOCKROOT);
     renderBuilder();
     await add('Rose', /Fixture Rosewort/);
-    expect(screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort$/ })).toHaveAttribute(
-      'aria-expanded',
-      'true',
-    );
+    expect(
+      screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort \(Dried Leaf\)$/ }),
+    ).toHaveAttribute('aria-expanded', 'true');
 
     // The box is where the next ingredient is typed: still inside.
     fireEvent.click(search());
     act(() => search().focus());
-    expect(screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort$/ })).toHaveAttribute(
-      'aria-expanded',
-      'true',
-    );
+    expect(
+      screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort \(Dried Leaf\)$/ }),
+    ).toHaveAttribute('aria-expanded', 'true');
 
     fireEvent.click(screen.getByRole('heading', { name: 'What Goes In' }));
-    expect(screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort$/ })).toHaveAttribute(
-      'aria-expanded',
-      'false',
-    );
+    expect(
+      screen.getByRole('button', { name: /^(Edit|Close) Fixture Rosewort \(Dried Leaf\)$/ }),
+    ).toHaveAttribute('aria-expanded', 'false');
   });
 });
 
@@ -1187,10 +1203,10 @@ describe('the spell builder’s Add to Jar categories', () => {
     const rosewort = await lookUp('Fixture', /Fixture Rosewort/);
     const mockroot = screen.getByRole('option', { name: /Fixture Mockroot/ });
 
-    expect(rosewort).toHaveAccessibleName(/already in the jar/);
+    expect(rosewort).toHaveAccessibleName(/In Jar/);
     expect(within(rosewort).getByText('In Jar')).toBeInTheDocument();
     // Why it could have been marked: Mockroot is a form too, and no step lays it.
-    expect(mockroot).not.toHaveAccessibleName(/already in the jar/);
+    expect(mockroot).not.toHaveAccessibleName(/In Jar/);
     expect(within(mockroot).queryByText('In Jar')).toBeNull();
     // Information only: a repeat is allowed.
     expect(rosewort).not.toHaveAttribute('aria-disabled', 'true');

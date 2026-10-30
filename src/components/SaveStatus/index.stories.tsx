@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import { StatesGrid } from '../../../.storybook/states-grid';
-import SaveStatus from '.';
+import SaveStatus, { RecoveryNotice } from '.';
 import type { SaveStatusProps } from './types';
 
 // Every state an autosaving form's status line takes, side by side.
@@ -36,4 +36,9 @@ export const States: Story = {
       }}
     />
   ),
+};
+
+// The banner a form opens with when this browser kept typing it never saved.
+export const Recovery: Story = {
+  render: () => <RecoveryNotice at={at} onKeep={noop} onDiscard={noop} />,
 };

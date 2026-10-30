@@ -165,7 +165,7 @@ describe('the spell builder’s saves', () => {
     expect(screen.queryByText(/Failed|could not be saved/i)).toBeNull();
 
     // The new instruction is open, and an open row has no Remove: close it first.
-    fireEvent.click(screen.getByRole('button', { name: 'Close step 1' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Close New Instruction' }));
     fireEvent.click(screen.getByRole('button', { name: /^Remove/ }));
     await act(async () => {
       await vi.advanceTimersByTimeAsync(3100);
@@ -198,7 +198,7 @@ describe('the spell builder’s saves', () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
 
     fireEvent.click(screen.getByRole('button', { name: 'Jar' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Edit step 1' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Stir three times' }));
     fireEvent.change(screen.getByRole('textbox', { name: /Instruction/ }), {
       target: { value: '' },
     });
