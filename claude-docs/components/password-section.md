@@ -70,7 +70,8 @@ password sign-ins alone ([`auth/two-factor.md`](../auth/two-factor.md)).
   (`twoFactor.disable`), a destructive button.
 - **Refusals.** A wrong password (`INVALID_PASSWORD`) is `WRONG_PASSWORD`
   under the Password field; a wrong code is the sign-in step's `WRONG_CODE`
-  under the code field; a 429 is `TOO_MANY_ATTEMPTS`, anything else
+  under the code field; a session too old to turn it off (`SESSION_NOT_FRESH`)
+  is `STALE_SESSION`, in an alert; a 429 is `TOO_MANY_ATTEMPTS`, anything else
   `GENERIC_TWO_FACTOR_ERROR`.
 - **Success** says two-factor is on or off in a success notice.
 

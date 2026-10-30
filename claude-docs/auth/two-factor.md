@@ -32,6 +32,18 @@ options, so it does no redirect of its own: the password form reads
 ([`components/password-section.md`](../components/password-section.md),
 "Two-factor").
 
+### The password the settings take
+
+Turning on, turning off, showing the app's link again
+(`/two-factor/get-totp-uri`) and making new backup codes each take the
+account's password. A wrong one there counts toward the password lockout as a
+failed sign-in does, and while the lock is on the right one is refused too
+([`passwords.md`](passwords.md), "Lockout"). Turning off also needs a fresh
+session, one under a day old: the plugin checks only that a session exists, so
+the hook on `/two-factor/disable` in `src/lib/auth.ts` refuses an older one
+with Better Auth's `SESSION_NOT_FRESH`, and the account page says to sign out
+and sign back in.
+
 ### Which sign-ins are asked
 
 Only `/sign-in/email`, the password sign-in. The plugin's hook answers that
@@ -70,7 +82,9 @@ exist, so no two-factor row was ever written unversioned.
 ### Tests
 
 `tests/db/two-factor.test.ts` drives Better Auth's own endpoints against the
-database: turning on needs the password and a code, turning off the password;
+database: turning on needs the password and a code, turning off the password
+and a fresh session; a wrong password at each settings endpoint is counted and
+held as a sign-in's is;
 the right password alone does not sign in, the right code does and a wrong one
 does not; a backup code works once; a trusted device skips the step and
 another does not; the code lockout leaves the password count alone; and an

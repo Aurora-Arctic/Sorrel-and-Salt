@@ -107,7 +107,8 @@ Better Auth's rate limiter counts per client address, so guesses spread over
 many addresses pass it. Failed password sign-ins are also counted per account,
 in `sign_in_failures` (DESIGN.md §8, "Passwords"), by
 `src/modules/identity/services/sign-in-lockout.ts` and hooks on
-`/sign-in/email` and `/change-password` in `src/lib/auth.ts`:
+`/sign-in/email` and every endpoint that checks the password an account
+already holds, in `src/lib/auth.ts`:
 
 - **The schedule.** Every 5th failure starts a lock: the 5th for 1 minute,
   the 10th for 5 minutes, the 15th for 15 minutes, and the 20th and every 5th
@@ -125,7 +126,9 @@ in `sign_in_failures` (DESIGN.md §8, "Passwords"), by
   verification row, valid 15 minutes, `callbackURL` fixed to
   `/reset-password`), and goes, like the reset mail, only to a verified, real
   address. The whole mail runs in the background, after the answer, so a
-  failure that starts a lock answers like any other.
+  failure that starts a lock answers like any other. A mail that fails there
+  is logged and otherwise silent, by design: the answer has already gone, and
+  failing the guess it followed would tell the guesser the mail was tried.
 - **Only the first lock of a series is mailed.** A lock whose previous lock
   ended within the 24-hour quiet period sends nothing, so someone guessing on
   through every lock cannot mail the owner a live reset link each hour. The
@@ -154,13 +157,24 @@ in `sign_in_failures` (DESIGN.md §8, "Passwords"), by
   returned that error for an account that was not locked, and deletes the row
   on a successful sign-in. Attempts made during a lock are not counted, so a
   lock ends when its time does.
-- **A change counts too.** A wrong current password at `/change-password`
-  is a guess at the same password, so it counts the same way: the before hook
-  (`holdChange`) swaps the current password for random bytes while the
-  account is locked, so the change is refused as Better Auth's own
-  `INVALID_PASSWORD`, and the after hook (`countChange`) adds one for a wrong
-  current password on an unlocked account and deletes the row on a completed
-  change.
+- **Every check of a held password counts too.** A wrong password at an
+  endpoint that checks the signed-in account's own password is a guess at the
+  same password, so it counts the same way. `HELD_PASSWORD_FIELDS` in
+  `src/lib/held-password-paths.ts` names each such endpoint and the body field
+  it reads: `/change-password` (`currentPassword`), `/verify-password`,
+  `/delete-user`, `/two-factor/enable`, `/two-factor/disable`,
+  `/two-factor/get-totp-uri` and `/two-factor/generate-backup-codes`. For
+  each, the before hook (`holdHeldPassword`) swaps the password for random
+  bytes while the account is locked, so the request is refused as Better
+  Auth's own `INVALID_PASSWORD`, and the after hook (`countHeldPassword`)
+  adds one for a wrong password on an unlocked account and deletes the row
+  once a password is accepted. Like a sign-in, it counts only an account with
+  a `credential` row holding a password. `/verify-password` is reachable
+  from the server only and `/delete-user` is not enabled; both are on the
+  list so a later use of either is counted from the start.
+  `tests/guards/breached-password-paths.test.ts` builds its list of endpoints
+  that check a held password from `HELD_PASSWORD_FIELDS`, so an endpoint that
+  takes one is on the list, and so under the lock, or fails that test.
 - **What it leaves open.** A provider or passkey sign-in never reads the row.
   A completed reset deletes it, in `onPasswordReset`, and so does a passkey
   sign-in, in the after hook on `/passkey/verify-authentication`, since a

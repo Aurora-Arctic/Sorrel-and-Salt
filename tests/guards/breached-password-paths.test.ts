@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { auth } from '@/lib/auth';
 import { BREACHED_CHECK_PATHS } from '@/lib/breached-password';
+import { HELD_PASSWORD_FIELDS } from '@/lib/held-password-paths';
 
 // The breached-password check reaches only the routes `BREACHED_CHECK_PATHS` names, so an endpoint a Better Auth
 // upgrade or a new plugin adds would take a new password unchecked. This reads every endpoint the configured
@@ -10,16 +11,11 @@ import { BREACHED_CHECK_PATHS } from '@/lib/breached-password';
 /** The body fields an endpoint takes a password in, whether a new one or one it checks against the account. */
 const PASSWORD_FIELDS = ['password', 'newPassword'];
 
-/** Endpoints that check a password the account already holds, which the breached check has no reason to see. */
-const CHECKS_A_HELD_PASSWORD = [
-  '/sign-in/email',
-  '/verify-password',
-  '/delete-user',
-  '/two-factor/enable',
-  '/two-factor/disable',
-  '/two-factor/get-totp-uri',
-  '/two-factor/generate-backup-codes',
-];
+/**
+ * Endpoints that check a password the account already holds, which the breached check has no reason to see. Past
+ * sign-in, the list is the one the lockout hooks read, so naming an endpoint here also counts and holds its guesses.
+ */
+const CHECKS_A_HELD_PASSWORD = ['/sign-in/email', ...Object.keys(HELD_PASSWORD_FIELDS)];
 
 /** Endpoints with no route, so no path to match: each is called only inside `withBreachedCheck`, from the file named. */
 const SERVER_ONLY_WRAPPED: Record<string, string> = { setPassword: 'src/lib/password-setter.ts' };
@@ -71,6 +67,16 @@ describe('every endpoint that takes a password is checked or named', () => {
       )
       .map(([name, endpoint]) => endpoint.path ?? name);
     expect(unchecked).toEqual([]);
+  });
+
+  it('reads each held password from a field its endpoint takes', () => {
+    const shapes = new Map(
+      endpoints.map(([, endpoint]) => [endpoint.path, endpoint.options?.body?.shape]),
+    );
+    const misread = Object.entries(HELD_PASSWORD_FIELDS).filter(
+      ([path, field]) => !(field in (shapes.get(path) ?? {})),
+    );
+    expect(misread).toEqual([]);
   });
 
   it('wraps each server-only endpoint in the check where it is called', () => {

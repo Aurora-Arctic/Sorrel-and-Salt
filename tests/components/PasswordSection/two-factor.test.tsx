@@ -2,7 +2,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import PasswordSection from '@/components/PasswordSection';
-import { WRONG_PASSWORD } from '@/components/PasswordSection/two-factor';
+import { STALE_SESSION, WRONG_PASSWORD } from '@/components/PasswordSection/two-factor';
 import { WRONG_CODE } from '@/components/SignInPanel/two-factor-step';
 import { makeQueryClient } from '@/lib/graphql-client';
 
@@ -152,6 +152,17 @@ describe('PasswordSection, two-factor', () => {
     await press(button('Turn Off Two-Factor'));
 
     expect(field('Password')).toHaveAccessibleDescription(expect.stringContaining(WRONG_PASSWORD));
+    expect(isOn()).toBe(true);
+  });
+
+  it('says turning off needs a recent sign-in when the session is too old, and stays on', async () => {
+    disable.mockResolvedValue({ data: null, error: { status: 403, code: 'SESSION_NOT_FRESH' } });
+    renderSection(true);
+
+    type('Password', PASSWORD);
+    await press(button('Turn Off Two-Factor'));
+
+    expect(within(twoFactorRegion()).getByRole('alert')).toHaveTextContent(STALE_SESSION);
     expect(isOn()).toBe(true);
   });
 });

@@ -51,6 +51,8 @@ import { signedInLanding } from './landing';
 import { e2eTrustedOrigins, plainSessionCookie } from './e2e-session-cookie';
 import { impersonation, impersonationEnabled } from './impersonation';
 import { breachedPasswordCheck } from './breached-password';
+import { HELD_PASSWORD_FIELDS } from './held-password-paths';
+import { isFreshSession } from './session-fresh';
 import { primaryAdminEmail } from './primary-admin';
 import { verifyEmailMessage } from '../emails/verify-email';
 import { accountExistsMessage } from '../emails/account-exists';
@@ -381,33 +383,52 @@ async function mailResetLink({
   await send(await resetPasswordMessage({ to: user.email, url: link.toString() }));
 }
 
-// The account a password sign-in or change names, and whether its lock was on when the attempt arrived, carried from the
-// before hook to the after hook so the after hook does no second lookup.
+// The account a password sign-in, or an endpoint checking a held password, names, and whether its lock was on when the
+// attempt arrived, carried from the before hook to the after hook so the after hook does no second lookup.
 const passwordAttempt = defineRequestState<{ userId?: string; locked: boolean }>(() => ({
   locked: false,
 }));
 
+/** Whether the signed-in account has a password to guess at: a credential row of its own holding one. */
+async function holdsPassword(ctx: HookContext, userId: string): Promise<boolean> {
+  const accounts = await ctx.context.internalAdapter.findAccounts(userId);
+  return accounts.some(
+    (account) =>
+      account.providerId === 'credential' && account.accountId === userId && !!account.password,
+  );
+}
+
 /**
- * Changes `/change-password` to sign out every other session whatever the request asks, so a change always
- * shuts out whoever else held the old password. While the account's password lock is on, it also swaps the
- * current password for one no hash can match, so the change is refused as a wrong current password.
+ * Holds an endpoint that checks the signed-in account's own password: while the account's password lock is on, it
+ * swaps the password for one no hash can match, so the request is refused as a wrong password. `/change-password` also
+ * signs out every other session whatever the request asks, so a change always shuts out whoever else held the old
+ * password, and `/two-factor/disable` needs a fresh session, so a stolen old cookie and the password cannot turn the
+ * second factor off.
  */
-async function holdChange(ctx: HookContext) {
-  const userId = (await sessionOf(ctx))?.user.id;
+async function holdHeldPassword(ctx: HookContext, field: string) {
+  const session = await sessionOf(ctx);
+  if (ctx.path === '/two-factor/disable' && session) {
+    if (!isFreshSession(session.session.createdAt, ctx.context.sessionConfig.freshAge)) {
+      throw APIError.from('FORBIDDEN', BASE_ERROR_CODES.SESSION_NOT_FRESH);
+    }
+  }
+  const userId =
+    session && (await holdsPassword(ctx, session.user.id)) ? session.user.id : undefined;
   const locked = userId !== undefined && (await isPasswordSignInLocked(userId));
   await passwordAttempt.set({ userId, locked });
-  const body = { ...ctx.body, revokeOtherSessions: true };
-  if (locked) body.currentPassword = randomBytes(32).toString('hex');
+  const body = { ...ctx.body };
+  if (ctx.path === '/change-password') body.revokeOtherSessions = true;
+  if (locked && typeof body[field] === 'string') body[field] = randomBytes(32).toString('hex');
   return { context: { body } };
 }
 
 /**
- * Counts a wrong current password against an unlocked account as a failed sign-in, since it is a guess at the
- * same password, and clears the count once a change proves the password.
+ * Counts a wrong password against an unlocked account as a failed sign-in, since it is a guess at the same password,
+ * and clears the count once the endpoint accepts a password it was given.
  */
-async function countChange(ctx: HookContext) {
+async function countHeldPassword(ctx: HookContext, field: string) {
   const { userId, locked } = await passwordAttempt.get();
-  if (!userId) return;
+  if (!userId || typeof ctx.body?.[field] !== 'string') return;
   const returned = ctx.context.returned;
   if (!isAPIError(returned)) return clearFailedPasswordSignIns(userId);
   if (returned.body?.code !== BASE_ERROR_CODES.INVALID_PASSWORD.code) return;
@@ -696,7 +717,8 @@ export const auth = betterAuth({
     before: createAuthMiddleware(async (ctx) => {
       if (ctx.path === '/verify-email') return gateEmailChange(ctx);
       if (ctx.path === '/send-verification-email') return requireOwnResend(ctx);
-      if (ctx.path === '/change-password') return holdChange(ctx);
+      if (ctx.path in HELD_PASSWORD_FIELDS)
+        return holdHeldPassword(ctx, HELD_PASSWORD_FIELDS[ctx.path]);
       if (ctx.path === '/sign-in/email') return holdLockedSignIn(ctx);
       if (PASSKEY_VERIFY_PATHS.has(ctx.path)) return pinPasskeyOrigin(ctx);
       if (ctx.path !== '/callback/:id' && ctx.path !== '/sign-up/email') return;
@@ -704,9 +726,10 @@ export const auth = betterAuth({
     }),
     after: createAuthMiddleware(async (ctx) => {
       if (ctx.path === '/sign-up/email') return sameSignUpAnswer(ctx);
-      if (ctx.path === '/change-password') {
-        await countChange(ctx);
-        return mailChangeNotice(ctx);
+      if (ctx.path in HELD_PASSWORD_FIELDS) {
+        await countHeldPassword(ctx, HELD_PASSWORD_FIELDS[ctx.path]);
+        if (ctx.path === '/change-password') return mailChangeNotice(ctx);
+        return;
       }
       if (ctx.path === '/sign-in/email') return countPasswordSignIn(ctx);
       const newSession = ctx.context.newSession;

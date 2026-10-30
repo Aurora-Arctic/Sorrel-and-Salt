@@ -17,6 +17,9 @@ import type { TwoFactorSettingsProps } from './types';
 
 export const WRONG_PASSWORD = "That isn't your password.";
 export const GENERIC_TWO_FACTOR_ERROR = "We couldn't change two-factor. Please try again.";
+// Turning off wants a session younger than Better Auth's `freshAge`, a day, as removing a sign-in method does.
+export const STALE_SESSION =
+  'Turning two-factor off needs a recent sign-in. Sign out and sign back in, then turn it off.';
 
 interface Enrolment {
   totpURI: string;
@@ -37,6 +40,7 @@ interface Refusal {
 function refusal(failure: Failure): Refusal {
   if (failure.code === 'INVALID_PASSWORD') return { password: WRONG_PASSWORD };
   if (failure.code === 'INVALID_CODE') return { code: WRONG_CODE };
+  if (failure.code === 'SESSION_NOT_FRESH') return { alert: STALE_SESSION };
   if (failure.status === 429) return { alert: TOO_MANY_ATTEMPTS };
   return { alert: GENERIC_TWO_FACTOR_ERROR };
 }

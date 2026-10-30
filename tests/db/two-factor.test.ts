@@ -186,6 +186,71 @@ describe('Story 75: turning two-factor on and off', () => {
     const { body } = await passwordStep();
     expect(body.twoFactorRedirect).toBeUndefined();
   });
+
+  it('turns off only on a fresh session, saying why, even with the right password', async () => {
+    const { cookie } = await enrolled(await signedInAccount());
+    await sql`
+      update sessions set created_at = now() - interval '25 hours' where user_id = ${await userId()}
+    `;
+
+    const stale = await post(auth, '/two-factor/disable', { password: PASSWORD }, cookie);
+    expect(stale.status).toBe(403);
+    expect(((await stale.json()) as { code?: string }).code).toBe('SESSION_NOT_FRESH');
+    expect(await twoFactorEnabled()).toBe(true);
+
+    // Precondition: the same request on a fresh session turns it off, so the session's age is what refused it.
+    await sql`update sessions set created_at = now() where user_id = ${await userId()}`;
+    expect((await post(auth, '/two-factor/disable', { password: PASSWORD }, cookie)).status).toBe(
+      200,
+    );
+    expect(await twoFactorEnabled()).toBe(false);
+  });
+});
+
+describe('Story 72: a wrong password at a two-factor endpoint counts as a failed sign-in', () => {
+  const WRONG = 'Testwort is not it at all';
+
+  async function failureRow() {
+    const [row] = await sql`
+      select count, locked_until from sign_in_failures where user_id = ${await userId()}
+    `;
+    return row as { count: number; locked_until: Date | null } | undefined;
+  }
+
+  /** A signed-in account with the state each path needs before it reads the password; returns its cookie. */
+  async function readyFor(path: string): Promise<string> {
+    const cookie = await signedInAccount();
+    if (path === '/two-factor/enable') return cookie;
+    return (await enrolled(cookie)).cookie;
+  }
+
+  it.each([
+    '/two-factor/enable',
+    '/two-factor/disable',
+    '/two-factor/get-totp-uri',
+    '/two-factor/generate-backup-codes',
+  ])(
+    '%s: counts a wrong password, holds the right one during the lock, and clears the count once it is accepted',
+    async (path) => {
+      const cookie = await readyFor(path);
+      await sql`insert into sign_in_failures (user_id, count) values (${await userId()}, 4)`;
+
+      const wrong = await post(auth, path, { password: WRONG }, cookie);
+      expect(wrong.status).toBe(400);
+      const row = await failureRow();
+      expect(row?.count).toBe(5);
+      expect(row!.locked_until!.getTime()).toBeGreaterThan(Date.now());
+
+      expect((await post(auth, path, { password: PASSWORD }, cookie)).status).toBe(400);
+      expect((await failureRow())?.count).toBe(5);
+
+      // Precondition: once the lock is past, the same right password is accepted, so the lock is what held it.
+      await sql`update sign_in_failures set locked_until = now() - interval '1 second'`;
+      const right = await post(auth, path, { password: PASSWORD }, cookie);
+      expect(right.status, await right.clone().text()).toBe(200);
+      expect(await failureRow()).toBeUndefined();
+    },
+  );
 });
 
 describe('Story 75: signing in with two-factor on', () => {

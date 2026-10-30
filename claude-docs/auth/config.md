@@ -122,7 +122,10 @@ To rotate:
 3. Deploy. Cookies are now signed with the new key, so **everyone is signed
    out** and signs in again; an email-verification link mailed before the
    deploy no longer verifies, since it is checked against the current key
-   alone. Two-factor enrolments and provider tokens keep working.
+   alone. The two-factor "Trust this device" cookies and any two-factor
+   sign-in waiting for its code are signed the same way, so they are dropped
+   too: everyone with two-factor on is asked for a code at their next sign-in.
+   Two-factor enrolments and provider tokens keep working.
 4. Retire version 1 only once no row holds a `$ba$1$` value: a person who
    turns two-factor off and on again, or a provider sign-in, rewrites theirs
    under version 2. Removing a version while rows still name it makes those
