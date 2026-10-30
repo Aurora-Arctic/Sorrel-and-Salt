@@ -18,6 +18,8 @@ import { assertWorkshopAccess } from '@/modules/identity';
 const PUBLIC_ROUTES = [
   '/', // the entry page
   '/sign-in',
+  '/forgot-password', // asking for a password reset link
+  '/reset-password', // where the mailed reset link lands
   '/invite/*', // accepting an invitation
   '/email/*', // public/email/: a mail client fetches its images and fonts with no cookie
   '/compendium', // the one public surface, read by anyone, indexed by search engines

@@ -86,6 +86,10 @@ describe('public routes', () => {
     '/sign-in',
     '/sign-in?next=%2Fcoven%2Fhearth&error=access_denied',
     '/invite/2b7c5e2f8a',
+    // Asking for a reset link, and the page the mailed link opens.
+    '/forgot-password',
+    '/reset-password?token=abc',
+    '/reset-password?error=INVALID_TOKEN',
     // A mail client fetches the mail's images and fonts with no cookie.
     '/email/images/salt-dark.png',
     '/email/fonts/lexend-latin.woff2',
@@ -112,6 +116,8 @@ describe('public routes', () => {
   it.each([
     '/sign-in-help',
     '/sign-in/elsewhere',
+    '/forgot-password/x',
+    '/reset-password/abc',
     '/invites',
     '/invite',
     '/emails/x.png',

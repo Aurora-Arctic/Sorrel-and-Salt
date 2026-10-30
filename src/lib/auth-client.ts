@@ -19,3 +19,7 @@ export const { impersonateUser, stopImpersonating } = authClient.admin;
 
 // Email and password sign-up; its sign-in is `signIn.email` above.
 export const { signUp } = authClient;
+
+// Asking for a reset link, following it, and changing a password from a session; setting a first password
+// is the `setPassword` mutation, as Better Auth's endpoint for it answers only on the server.
+export const { requestPasswordReset, resetPassword, changePassword } = authClient;

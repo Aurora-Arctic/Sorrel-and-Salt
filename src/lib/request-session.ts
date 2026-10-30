@@ -158,14 +158,23 @@ export async function requireCovenMembership(slug: string): Promise<CovenMembers
   }
 }
 
+/** Every account row Better Auth holds for the signed-in user, provider and password alike. */
+const userAccounts = cache(async () => auth.api.listUserAccounts({ headers: await headers() }));
+
 /**
  * The signed-in user's provider accounts, asked of Better Auth, whose table
  * they are. For the account page, after `requireSession()`; Better Auth
  * refuses a request with no session.
  */
 export const linkedAccounts = cache(async (): Promise<LinkedAccount[]> => {
-  const accounts = await auth.api.listUserAccounts({ headers: await headers() });
+  const accounts = await userAccounts();
   return accounts.flatMap(({ id, providerId }) =>
     isRosterProvider(providerId) ? [{ id, providerId }] : [],
   );
+});
+
+/** Whether the signed-in account has a password, which the account page then changes rather than sets. */
+export const hasPassword = cache(async (): Promise<boolean> => {
+  const accounts = await userAccounts();
+  return accounts.some(({ providerId }) => providerId === 'credential');
 });

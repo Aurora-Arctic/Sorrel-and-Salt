@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { type FormEvent, type ReactElement, useId, useState } from 'react';
 import { signIn, signUp } from '../../lib/auth-client';
 import { reportLeaving } from '../../lib/navigation';
@@ -189,6 +190,11 @@ const PasswordForm = ({ next, lastUsed, onStart }: PasswordFormProps): ReactElem
           </BusyButton>
         </div>
       </form>
+      {!signingUp && (
+        <p className="sign-in-panel__switch">
+          <Link href="/forgot-password">Forgot Password?</Link>
+        </p>
+      )}
       <p className="sign-in-panel__switch">
         {signingUp ? 'Already have an account?' : 'New here?'}{' '}
         <button

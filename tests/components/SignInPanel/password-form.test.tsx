@@ -199,6 +199,17 @@ describe('SignInPanel, email and password', () => {
     expect(screen.getAllByRole('button', { name: /^Continue with Google$/ })).toHaveLength(2);
   });
 
+  it('links to the forgot-password page at sign-in, and not at sign-up', async () => {
+    expect(screen.getByRole('link', { name: 'Forgot Password?' })).toHaveAttribute(
+      'href',
+      '/forgot-password',
+    );
+
+    await press(screen.getByRole('button', { name: 'Create an Account' }));
+
+    expect(screen.queryByRole('link', { name: 'Forgot Password?' })).toBeNull();
+  });
+
   it('offers no password hint and no security question', () => {
     expect(screen.queryByLabelText(/hint|question/i)).toBeNull();
   });

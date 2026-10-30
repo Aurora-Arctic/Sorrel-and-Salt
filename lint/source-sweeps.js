@@ -302,6 +302,12 @@ export const rules = {
         'src/components/EmailForm/index.tsx': 'one short field, the account address (M13.14)',
         'src/components/SignInPanel/password-form.tsx':
           'sign-in credentials, which the browser’s password manager holds: nothing typed is lost by leaving',
+        'src/components/ForgotPasswordForm/index.tsx':
+          'one short field, an address the browser fills: nothing typed is lost by leaving',
+        'src/components/ResetPasswordForm/index.tsx':
+          'a new password, which the browser’s password manager offers to save: nothing typed is lost by leaving',
+        'src/components/PasswordSection/index.tsx':
+          'passwords, which the browser’s password manager holds: nothing typed is lost by leaving',
         'src/components/FilterForm/index.tsx':
           'a list filter that applies as it changes: nothing typed waits on a Save',
         'src/components/IngredientForm/reference-panel.tsx':

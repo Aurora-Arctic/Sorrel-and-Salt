@@ -10,9 +10,15 @@ import {
 import EmailForm from '../../../components/EmailForm';
 import NameForm from '../../../components/NameForm';
 import PageNav from '../../../components/PageNav';
+import PasswordSection from '../../../components/PasswordSection';
 import ReceivedInvitations from '../../../components/ReceivedInvitations';
 import SignInMethods from '../../../components/SignInMethods';
-import { linkedAccounts, requireSession, sessionIsFresh } from '../../../lib/request-session';
+import {
+  hasPassword,
+  linkedAccounts,
+  requireSession,
+  sessionIsFresh,
+} from '../../../lib/request-session';
 import { ACCOUNT_INVITATIONS_ID, ACCOUNT_PATH, linkErrorMessage } from '../../../lib/sign-in';
 import { signedInLanding } from '../../../lib/landing';
 import { isRosterProvider } from '../../../lib/social-providers';
@@ -26,15 +32,16 @@ export const metadata: Metadata = {
   title: 'Your Account — Sorrel & Salt',
 };
 
-// The one account page: name, address, ways in and waiting coven invitations, each its own section
+// The one account page: name, address, ways in, password and waiting coven invitations, each its own section
 // under its own heading, with ids prefixed so no form's id meets them. A failed provider link returns
 // with `?error=` and `?provider=` (claude-docs/auth/admin-bootstrap.md, "The account page").
 export default async function AccountPage({ searchParams }: AccountPageProps) {
   const [session, params] = await Promise.all([requireSession(), searchParams]);
   const { after, before } = readPageCursors(params);
-  const [me, linked, fresh, landing, invitations] = await Promise.all([
+  const [me, linked, passwordHeld, fresh, landing, invitations] = await Promise.all([
     getMe(session),
     linkedAccounts(),
+    hasPassword(),
     sessionIsFresh(),
     signedInLanding(session),
     readNumberedPage(
@@ -64,6 +71,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           { href: '#account-name', label: 'Name' },
           { href: '#account-email', label: 'Email' },
           { href: '#account-sign-in-methods', label: 'Sign-In Methods' },
+          { href: '#account-password', label: 'Password' },
           { href: `#${ACCOUNT_INVITATIONS_ID}`, label: 'Invitations' },
         ]}
       />
@@ -115,6 +123,21 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           fresh={fresh}
           error={linkError ? { providerId: failedProvider, message: linkError } : undefined}
         />
+      </section>
+      <section
+        id="account-password"
+        className="page-frame__section panel"
+        aria-labelledby="account-password-heading"
+      >
+        <div className="header">
+          <h2 id="account-password-heading">Password</h2>
+          <p className="lede">
+            {passwordHeld
+              ? 'Changing your password signs out every other device signed in to your account.'
+              : 'Set a password to sign in with your email address as well as your providers.'}
+          </p>
+        </div>
+        <PasswordSection hasPassword={passwordHeld} />
       </section>
       <section
         id={ACCOUNT_INVITATIONS_ID}

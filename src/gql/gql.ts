@@ -87,6 +87,7 @@ type Documents = {
     "\n  mutation RemoveMember($workspaceId: ID!, $userId: ID!) {\n    removeMember(workspaceId: $workspaceId, userId: $userId)\n  }\n": typeof types.RemoveMemberDocument,
     "\n  mutation UpdateMemberRole($workspaceId: ID!, $userId: ID!, $role: WorkspaceRole!) {\n    updateMemberRole(workspaceId: $workspaceId, userId: $userId, role: $role) {\n      role\n      user {\n        id\n      }\n    }\n  }\n": typeof types.UpdateMemberRoleDocument,
     "\n  mutation SetName($name: String!) {\n    setName(name: $name) {\n      id\n      name\n    }\n  }\n": typeof types.SetNameDocument,
+    "\n  mutation SetPassword($newPassword: String!) {\n    setPassword(newPassword: $newPassword)\n  }\n": typeof types.SetPasswordDocument,
     "\n  mutation RemoveDeclinedInvitation($workspaceId: ID!, $id: ID!) {\n    revokeInvitation(workspaceId: $workspaceId, id: $id) {\n      id\n    }\n  }\n": typeof types.RemoveDeclinedInvitationDocument,
     "\n  mutation RevokeInvitation($workspaceId: ID!, $id: ID!) {\n    revokeInvitation(workspaceId: $workspaceId, id: $id) {\n      id\n    }\n  }\n": typeof types.RevokeInvitationDocument,
     "\n  mutation AcceptInvitationById($id: ID!) {\n    acceptInvitationById(id: $id) {\n      id\n      acceptedAt\n    }\n  }\n": typeof types.AcceptInvitationByIdDocument,
@@ -184,6 +185,7 @@ const documents: Documents = {
     "\n  mutation RemoveMember($workspaceId: ID!, $userId: ID!) {\n    removeMember(workspaceId: $workspaceId, userId: $userId)\n  }\n": types.RemoveMemberDocument,
     "\n  mutation UpdateMemberRole($workspaceId: ID!, $userId: ID!, $role: WorkspaceRole!) {\n    updateMemberRole(workspaceId: $workspaceId, userId: $userId, role: $role) {\n      role\n      user {\n        id\n      }\n    }\n  }\n": types.UpdateMemberRoleDocument,
     "\n  mutation SetName($name: String!) {\n    setName(name: $name) {\n      id\n      name\n    }\n  }\n": types.SetNameDocument,
+    "\n  mutation SetPassword($newPassword: String!) {\n    setPassword(newPassword: $newPassword)\n  }\n": types.SetPasswordDocument,
     "\n  mutation RemoveDeclinedInvitation($workspaceId: ID!, $id: ID!) {\n    revokeInvitation(workspaceId: $workspaceId, id: $id) {\n      id\n    }\n  }\n": types.RemoveDeclinedInvitationDocument,
     "\n  mutation RevokeInvitation($workspaceId: ID!, $id: ID!) {\n    revokeInvitation(workspaceId: $workspaceId, id: $id) {\n      id\n    }\n  }\n": types.RevokeInvitationDocument,
     "\n  mutation AcceptInvitationById($id: ID!) {\n    acceptInvitationById(id: $id) {\n      id\n      acceptedAt\n    }\n  }\n": types.AcceptInvitationByIdDocument,
@@ -514,6 +516,10 @@ export function graphql(source: "\n  mutation UpdateMemberRole($workspaceId: ID!
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation SetName($name: String!) {\n    setName(name: $name) {\n      id\n      name\n    }\n  }\n"): (typeof documents)["\n  mutation SetName($name: String!) {\n    setName(name: $name) {\n      id\n      name\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation SetPassword($newPassword: String!) {\n    setPassword(newPassword: $newPassword)\n  }\n"): (typeof documents)["\n  mutation SetPassword($newPassword: String!) {\n    setPassword(newPassword: $newPassword)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
