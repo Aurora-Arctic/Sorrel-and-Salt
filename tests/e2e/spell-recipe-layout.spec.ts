@@ -494,3 +494,57 @@ test('on a phone the jump menu stands under the intent and over the facts', asyn
   expect(nav.top).toBeGreaterThanOrEqual(intent.bottom);
   expect(nav.bottom).toBeLessThanOrEqual(facts.top);
 });
+
+test('on a phone the keyboard reaches the jump menu after the intent and categories, and none of it before them', async ({
+  page,
+}) => {
+  const coven = await seedCoven(page, 'Fixture Coven Nav Focus', 'spell-nav-focus.test', {
+    A: 'owner',
+  });
+  const { A } = coven.users;
+  const spellId = await withSql(async (sql) => {
+    const held = await compendiumVariant(sql, 'Rosemary', 'Herb');
+    const id = await insertSpell(sql, coven.id, 'Fixture Nav Focus', 'workspace', A, 'complete');
+    await sql`update spells set intent = 'To draw a steady hand', jar_description = '4 oz jar' where id = ${id}`;
+    await sql`
+      insert into spell_categories (spell_id, category_id, created_by, updated_by)
+      select ${id}, id, ${A}, ${A} from categories where deleted_at is null limit 2`;
+    await insertStep(sql, id, held, { quantity: 2, unit: 'g', position: 0 }, A);
+    await insertWorking(sql, id, A, { workedOn: '2026-03-04' });
+    return id;
+  });
+  await signInAgainAs(page, A);
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+
+  const nav = page.getByRole('navigation', { name: 'On This Page' });
+  const chips = page.getByRole('article').getByRole('list', { name: 'Categories' }).first();
+  const lastChip = chips.getByRole('listitem').last();
+  // The chips are drawn above the menu, so a keyboard that met the menu first would read out of
+  // the order the screen shows.
+  await expect(chips.getByRole('listitem')).toHaveCount(2);
+  const chipsBottom = await chips.evaluate((el) => el.getBoundingClientRect().bottom);
+  expect(await nav.evaluate((el) => el.getBoundingClientRect().top)).toBeGreaterThanOrEqual(
+    chipsBottom,
+  );
+
+  // A click on the last chip, which takes no focus itself, starts the keyboard's sequence there.
+  await lastChip.click();
+  await page.keyboard.press('Tab');
+  await expect(nav.getByRole('link').first()).toBeFocused();
+
+  // Backwards from the same place the keyboard lands before the chips, outside the menu.
+  await lastChip.click();
+  await page.keyboard.press('Shift+Tab');
+  const before = await chips.evaluate((el) => {
+    const active = document.activeElement;
+    return {
+      inMenu: document.querySelector('nav[aria-label="On This Page"]')?.contains(active) ?? false,
+      precedes:
+        active !== null &&
+        active !== document.body &&
+        (el.compareDocumentPosition(active) & Node.DOCUMENT_POSITION_PRECEDING) !== 0,
+    };
+  });
+  expect(before).toEqual({ inMenu: false, precedes: true });
+});

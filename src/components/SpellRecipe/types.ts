@@ -135,6 +135,17 @@ export type SpellRecipeBodyProps = Pick<
 /** The level of the recipe's Steps and Ingredients headings: 2 under the page's h1, 3 under a dialog's or pane's h2. */
 export type RecipeHeadingLevel = 2 | 3;
 
+/** The lead's part of the body: the purpose and the chips. */
+export type SpellRecipeLeadProps = Pick<SpellRecipeBodyProps, 'title' | 'intent' | 'categories'>;
+
+/** The rest of the body: the facts strip, the steps and the note. */
+export type SpellRecipeRestProps = Omit<SpellRecipeBodyProps, keyof SpellRecipeLeadProps> & {
+  /** A section between the facts and the steps; the Preview pane puts the Ingredients summary here. */
+  beforeSteps?: ReactNode;
+  /** The Steps heading's level, one below the heading the body sits under. Defaults to 2. */
+  level?: RecipeHeadingLevel;
+};
+
 export interface SpellRecipeSummaryProps {
   steps: readonly RecipeStep[];
   /** The Ingredients heading's level, one below the heading it sits under. Defaults to 2. */

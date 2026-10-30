@@ -345,6 +345,30 @@ describe('SpellRecipe', () => {
       }
     });
 
+    it('comes after the intent and the categories in the source, and before the steps', () => {
+      render(
+        <SpellRecipe
+          {...props({
+            categories: [
+              {
+                category: { id: 'c1', name: 'Testwort Lore' },
+                group: { colorDark: '#112233', colorLight: '#445566' },
+              },
+            ],
+            steps: [instruction('s1', 'Stir.')],
+            aside,
+            workings,
+          })}
+        />,
+      );
+      const nav = screen.getByRole('navigation', { name: 'On This Page' });
+      const follows = (a: Node, b: Node) =>
+        Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+      expect(follows(screen.getByText('To keep the testwort fresh.'), nav)).toBe(true);
+      expect(follows(screen.getByRole('list', { name: 'Categories' }), nav)).toBe(true);
+      expect(follows(nav, screen.getByRole('list', { name: 'Steps' }))).toBe(true);
+    });
+
     it('leaves out an entry whose section is not drawn', () => {
       render(<SpellRecipe {...props({ steps: [] })} />);
       expect(screen.queryByRole('navigation', { name: 'On This Page' })).toBeNull();

@@ -7,12 +7,12 @@ import SpellMarks from '../SpellMarks';
 import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';
 import type { PageNavEntry } from '../PageNav/types';
-import SpellRecipeBody from './body';
+import { SpellRecipeLead, SpellRecipeRest } from './body';
 import SpellRecipeSummary from './summary';
 import { CATEGORY_MATCH_ID, INVENTORY_ID, JAR_ID, STEPS_ID, WORKINGS_ID } from './sections';
 import type { SpellRecipeProps } from './types';
 
-// A saved spell as a page: purpose, four facts, steps, note (`SpellRecipeBody`, which Quick Look
+// A saved spell as a page: purpose, four facts, steps, note (the body's two boxes, which Quick Look
 // also draws). Read-only; the page's controls (Record, Edit, Preview, the three dots) are the
 // `action` slot's, for the roles that may. Its print
 // layout is `src/scss/_print.scss` (claude-docs/components/spell-recipe.md).
@@ -89,13 +89,13 @@ const SpellRecipe = ({
         />
       </header>
       <SpellRecipeSummary steps={steps} />
+      {/* The menu after the purpose and the chips in the source, as it stands on a phone, so the
+          keyboard and a screen reader meet them in the order they are seen. */}
+      <SpellRecipeLead title={title} intent={intent} categories={categories} />
       {entries.length > 0 && <PageNav label="On This Page" entries={entries} />}
       <div className="spell-recipe__columns">
         <div className="spell-recipe__main">
-          <SpellRecipeBody
-            title={title}
-            intent={intent}
-            categories={categories}
+          <SpellRecipeRest
             note={note}
             steps={plain}
             jarDescription={jarDescription}
