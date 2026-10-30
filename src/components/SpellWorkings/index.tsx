@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { dayWords } from '../DateField/day';
 import SpellMarks from '../SpellMarks';
-import { WORKINGS_ID } from '../SpellRecipe/sections';
+import { WORKINGS_ID, WORKINGS_TITLE_ID } from '../SpellRecipe/sections';
 import DeleteWorkingAction from './delete-working';
 import type { SpellWorkingsProps, WorkingView } from './types';
 import './index.scss';
@@ -76,16 +76,16 @@ const SpellWorkings = ({
   <section
     id={WORKINGS_ID}
     className="spell-workings page-frame__section"
-    aria-labelledby="spell-workings-title"
+    aria-labelledby={WORKINGS_TITLE_ID}
   >
     <div className="spell-workings__title">
-      <h2 id="spell-workings-title">Workings</h2>
+      <h2 id={WORKINGS_TITLE_ID}>Workings</h2>
       {headingAction}
     </div>
     {workings.length === 0 ? (
       <p className="meta">This spell has not been worked yet.</p>
     ) : (
-      <ul className="spell-workings__list" aria-labelledby="spell-workings-title">
+      <ul className="spell-workings__list" aria-labelledby={WORKINGS_TITLE_ID}>
         {workings.map((working) => (
           <Working
             key={working.id}
