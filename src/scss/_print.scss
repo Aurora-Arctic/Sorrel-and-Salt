@@ -79,32 +79,65 @@
       }
     }
 
-    // One column: the side column is hidden, and the body takes the page. The wrappers around the
-    // body's two boxes dissolve, so the summary can stand between them: intent and categories
-    // first, then the summary, then the facts, steps and note.
+    // Two columns under a head that runs across: the facts strip over both, then the Ingredients
+    // in a narrow column beside the steps. The wrappers around the body dissolve, so the article
+    // is the one grid and each part is placed on it by row and column.
+    .spell-recipe {
+      display: grid;
+      grid-template-columns: 17em minmax(0, 1fr);
+      column-gap: space(6);
+      align-items: start;
+    }
+
     .spell-recipe__columns,
-    .spell-recipe__main {
+    .spell-recipe__main,
+    .spell-recipe__rest {
       display: contents;
     }
 
-    .spell-recipe__lead {
-      order: 1;
-      margin: 0;
+    .last-edit {
+      grid-row: 1;
+      grid-column: 1 / -1;
     }
 
-    .spell-recipe__summary {
-      order: 2;
+    .spell-recipe__head {
+      grid-row: 2;
     }
 
-    .spell-recipe__rest {
-      order: 3;
-    }
-
+    .spell-recipe__head,
     .spell-recipe__lead,
-    .spell-recipe__rest {
+    .spell-recipe__facts-box,
+    .spell-recipe__note {
+      grid-column: 1 / -1;
+    }
+
+    .spell-recipe__lead {
+      grid-row: 3;
       display: flex;
       flex-direction: column;
       gap: space(2);
+      margin: 0;
+    }
+
+    .spell-recipe__facts-box {
+      grid-row: 4;
+      max-width: none;
+      margin-block: space(2) space(3);
+    }
+
+    .spell-recipe__summary {
+      grid-row: 5;
+      grid-column: 1;
+    }
+
+    .spell-recipe__steps {
+      grid-row: 5;
+      grid-column: 2;
+      max-width: none;
+    }
+
+    .spell-recipe__note {
+      grid-row: 6;
     }
 
     .spell-recipe__summary {
