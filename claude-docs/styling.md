@@ -1268,7 +1268,7 @@ heavier than the reverse; light reverts to the browser default.
   an icon sized to the text beside it), `$text-stroke-hairline` (0.6px, the
   safety note heading's stroke), `$safety-bar-width` (the safety note's side
   bar, `$rule-heavy`), `$nav-link-size` (1.125rem, a grouped jump menu's
-  top-level link), `$notice-mark-size` (1.0125rem, a notice's warning triangle) and `$notice-mark-drop` (0.05rem, which sets it on the first line), `$step-ink-drop` (0.05rem, which sets a spell step's first-line icons level with its name), the small optical corrections in `em` (`$optical-nudge`
+  top-level link), `$notice-mark-size` (1.0125rem, a notice's warning triangle) and `$notice-mark-drop` (0.05rem, which sets it on the first line), `$step-ink-drop` (0.05rem, which sets a spell step's first-line icons level with its name), the date field's calendar sizes and fades (`$day-picker-*`, [`components/date-field.md`](components/date-field.md)), the small optical corrections in `em` (`$optical-nudge`
   0.04em, `$back-chevron-pull` 0.5em, `$link-hint-drop` 0.125em, `$cap-middle`
   0.648em, `$recency-icon-size` 1.375em, each explained where it is declared), and the ingredient card drawer's `$drawer-inset` (10px),
   `$drawer-wall` (7px), `$drawer-back-stop` and `$drawer-seam-stop` (38% and

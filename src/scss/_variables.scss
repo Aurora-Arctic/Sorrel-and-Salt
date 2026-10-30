@@ -791,6 +791,22 @@ $filter-search-basis: 16rem;
 // (`Modal/index.scss`), well past WCAG 2.2's 24px minimum.
 $close-target: 2rem;
 
+// The day picker's calendar (`DateField`). The previous and next steps are as high as the compact
+// month and year pickers beside them, and the caption is a little taller than both. The caption keeps
+// room at its end for the two steps, the 0.25rem gap between them and as much again before its text.
+$day-picker-step: $control-height-compact;
+$day-picker-caption-height: 2.5rem;
+$day-picker-nav-room: $day-picker-step * 2 + 0.5rem;
+// The pickers' chevron box, and the room their hidden sizer leaves at its end for it and the
+// select's end padding, rounded up.
+$day-picker-indicator: 1.25rem;
+$day-picker-sizer-end: 1.75rem;
+// A day's square button: 36px, over WCAG 2.2's 24px target.
+$day-picker-day: 2.25rem;
+// A step past the allowed months, and a day that cannot be chosen, fade this far.
+$day-picker-step-disabled-opacity: 0.4;
+$day-picker-day-disabled-opacity: 0.5;
+
 // The width of its own frame under which a `.data-table--stack` table turns each row into a card: a
 // container width, not the screen's, so a table in a narrow column stacks too
 // (claude-docs/styling.md, "Tables at phone width").
