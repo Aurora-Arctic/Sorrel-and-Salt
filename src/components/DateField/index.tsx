@@ -1,8 +1,17 @@
 'use client';
 
-import { type ReactElement, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
-import { DayPicker } from 'react-day-picker';
+import {
+  type ChangeEvent,
+  type ReactElement,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
+import { DayPicker, type DropdownProps } from 'react-day-picker';
 import { enGB } from 'react-day-picker/locale';
+import { ComboboxSelect } from '../Combobox/select';
 import { ChevronIcon } from '../Combobox/icons';
 import './index.scss';
 
@@ -74,6 +83,29 @@ function Sizer(): ReactElement {
   );
 }
 
+// The month and year pickers drawn as the app's select-only box rather than a native select, whose open list the page cannot style (claude-docs/components/date-field.md).
+function CaptionDropdown({ options, value, onChange, 'aria-label': label }: DropdownProps) {
+  const id = useId();
+  return (
+    <span className="day-picker__dropdown-root">
+      <ComboboxSelect
+        id={id}
+        label={label ?? ''}
+        value={String(value)}
+        // day-picker reads event.target.value and nothing else from the change.
+        onChange={(next) =>
+          onChange?.({ target: { value: next } } as ChangeEvent<HTMLSelectElement>)
+        }
+        choices={(options ?? []).map((option) => ({
+          value: String(option.value),
+          label: option.label,
+          disabled: option.disabled,
+        }))}
+      />
+    </span>
+  );
+}
+
 const hasPopover = (): boolean =>
   typeof HTMLElement !== 'undefined' && typeof HTMLElement.prototype.showPopover === 'function';
 
@@ -137,6 +169,8 @@ export default function DateField({
     if (!open) return undefined;
     const close = (event: KeyboardEvent) => {
       if (event.key !== 'Escape') return;
+      // An open month or year list takes the key and closes alone.
+      if ((event.target as HTMLElement).getAttribute?.('aria-expanded') === 'true') return;
       event.stopPropagation();
       setOpen(false);
       document.getElementById(id)?.focus();
@@ -185,6 +219,7 @@ export default function DateField({
             defaultMonth={selected ?? last}
             captionLayout="dropdown"
             components={{
+              Dropdown: CaptionDropdown,
               Chevron: ({ orientation = 'down', className }) => (
                 <span className={`${className ?? ''} day-picker__chevron--${orientation}`}>
                   <ChevronIcon />
@@ -207,8 +242,6 @@ export default function DateField({
               month_caption: 'day-picker__caption',
               dropdowns: 'day-picker__dropdowns',
               dropdown_root: 'day-picker__dropdown-root',
-              dropdown: 'select day-picker__dropdown',
-              caption_label: 'day-picker__label',
               nav: 'day-picker__nav',
               button_previous: 'day-picker__step',
               button_next: 'day-picker__step',
