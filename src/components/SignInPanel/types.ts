@@ -20,3 +20,10 @@ export interface ProviderButtonProps {
   /** Starts the sign-in; resolves to the failure's sentence, or nothing once the redirect starts. */
   onSignIn: (providerId: ProviderId) => Promise<string | undefined>;
 }
+
+export interface PasskeyButtonProps {
+  /** Where a successful sign-in returns to, as SignInPanelProps' `next`. */
+  next?: string;
+  /** Whether this browser last signed in with a passkey. */
+  lastUsed: boolean;
+}
