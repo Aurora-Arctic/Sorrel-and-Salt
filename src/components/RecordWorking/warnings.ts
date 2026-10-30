@@ -20,8 +20,8 @@ export const NOT_DEDUCTED: Record<NotDeductedReason, string> = {
   CUSTOM: `Not deducted: ${SKIP_REASON.CUSTOM}`,
 };
 
-/** What a draft working says beside Complete: how many steps it would skip, the reasons staying in the Complete dialog. */
+/** What a draft working says beside Complete: how many items it would leave out of inventory, the reasons staying in the Complete dialog. */
 export function skipSummary(count: number): string | null {
   if (count === 0) return null;
-  return `Completing skips ${count} ${count === 1 ? 'step' : 'steps'}`;
+  return `Completing does not affect inventory for ${count} ${count === 1 ? 'item' : 'items'}`;
 }
