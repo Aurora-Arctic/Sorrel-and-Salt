@@ -183,8 +183,14 @@ for (const [name, size] of [
     // The jar stands beside the recipe on a desktop, so the menu does not name it; on a phone it is
     // one entry, above Workings, and the jar section stands above Workings on the page too.
     await expect(nav.getByRole('link')).toHaveText(
-      name === 'desktop' ? ['Steps', 'Workings'] : ['Steps', 'The Jar', 'Workings'],
+      name === 'desktop'
+        ? ['Steps', 'Workings']
+        : ['Steps', 'Category Match', 'In Coven Inventory', 'Workings'],
     );
+    // The group label and its list go with the links on a desktop, and stand over them below it.
+    await expect(nav.getByText('The Jar', { exact: true })).toBeVisible({
+      visible: name !== 'desktop',
+    });
     if (name === 'phone') {
       const top = (label: string) =>
         page

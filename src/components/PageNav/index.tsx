@@ -91,7 +91,15 @@ export default function PageNav({ label, entries }: PageNavProps): ReactElement 
           ) : (
             <li
               key={`group-${at}`}
-              className={item.entries[0]?.apart ? 'page-nav__apart' : undefined}
+              className={
+                [
+                  item.entries[0]?.apart && 'page-nav__apart',
+                  // A group of narrow-only entries is hidden whole, label included.
+                  item.entries.every((entry) => entry.narrowOnly) && 'page-nav__narrow',
+                ]
+                  .filter(Boolean)
+                  .join(' ') || undefined
+              }
             >
               <span className="page-nav__group" id={`${groupId}-${at}`}>
                 {item.label}

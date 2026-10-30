@@ -92,7 +92,7 @@ column the page frame is, the menu above the sections. The class does not need
 `.page-frame`, so the coven index uses it inside `.coven-layout`. A page has at
 most three sections beside the menu for it to stick against; the account's
 fourth runs on below it. Giving both pages the one class is MB.119's: the two
-cannot drift, and the account page's layout was checked unchanged at four widths. The spell page uses the ingredient layout too (`entry-nav-grid`), and an entry may be `narrowOnly`: hidden from a tablet up, where the section it names stands beside the text.
+cannot drift, and the account page's layout was checked unchanged at four widths. The spell page uses the ingredient layout too (`entry-nav-grid`), and an entry may be `narrowOnly`: hidden from a tablet up, where the section it names stands beside the text. A group whose entries are all `narrowOnly` is hidden whole, its label too.
 
 ## Stories
 
