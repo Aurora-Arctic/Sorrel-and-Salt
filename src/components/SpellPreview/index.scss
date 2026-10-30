@@ -1,5 +1,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
+@use 'sass:list';
 @use '../SpellCard/smoulder' as card;
 
 // The pane covers the window: the native dialog's top layer, sized to the viewport and no longer a
@@ -86,6 +87,15 @@
 }
 
 $preview-ember-opacity: 0.4;
+// The pane's burn is bigger than a card's: it eats twice as deep and runs half as far again along
+// the bottom. The corner's curve, the spill under it and the edge embers' places are scaled by the
+// same two factors, so the curve keeps its proportions and the embers still leave the charred edge.
+$preview-burn-scale-x: 1.5;
+$preview-burn-scale-y: 2;
+$preview-burn-length: card.$burn-length * $preview-burn-scale-x;
+$preview-burn-depth: card.$burn-depth * $preview-burn-scale-y;
+$preview-burn-corner-radius: (list.nth(card.$burn-corner-radius, 1) * $preview-burn-scale-x)
+  (list.nth(card.$burn-corner-radius, 2) * $preview-burn-scale-y);
 // The burn's own breathing, cut to opacity frames: the rim at the card's 5.3s, the embers in the
 // burnt part at 3.7s, the spill on the table at 4.7s, and the hearth at 11s; none line up.
 $preview-rim-duration: card.$burn-ember-duration;
@@ -319,9 +329,9 @@ $preview-hearth-duration: 11s;
 
 // The spill on the table under the burn: the card's glow, grown in with the hole.
 .spell-preview__glow {
-  inset: auto -0.5rem -1.75rem auto;
-  width: calc(#{card.$burn-length} + 1.5rem);
-  height: 3.5rem;
+  inset: auto -0.5rem (-1.75rem * $preview-burn-scale-y) auto;
+  width: calc(#{$preview-burn-length} + 1.5rem);
+  height: 3.5rem * $preview-burn-scale-y;
   border-radius: 50%;
   background: linear-gradient(
     to right,
@@ -356,7 +366,7 @@ $preview-hearth-duration: 11s;
 .spell-preview__burn-curve {
   position: absolute;
   inset: -1rem;
-  border-bottom-right-radius: card.$burn-corner-radius;
+  border-bottom-right-radius: $preview-burn-corner-radius;
   animation: spell-preview-burn-corner card.$burn-duration card.$burn-easing both;
 }
 
@@ -370,8 +380,8 @@ $preview-hearth-duration: 11s;
   position: absolute;
   right: 0.5rem;
   bottom: 0.5rem;
-  width: card.$burn-length;
-  height: card.$burn-depth;
+  width: $preview-burn-length;
+  height: $preview-burn-depth;
   border-top-left-radius: 45% 100%;
   animation: spell-preview-burn-hole card.$burn-duration card.$burn-easing both;
 }
@@ -407,7 +417,7 @@ $preview-hearth-duration: 11s;
 
 .spell-preview__burn-curve {
   box-shadow: card.ember-rim(true, 0, 1.5px, 0.95, 3px, 0.85, 3.5px);
-  clip-path: inset(0 0 calc(0.6rem + #{card.$burn-depth}) 0);
+  clip-path: inset(0 0 calc(0.6rem + #{$preview-burn-depth}) 0);
   animation:
     spell-preview-burn-curve card.$burn-duration card.$burn-easing both,
     spell-preview-rim $preview-rim-duration ease-in-out card.$burn-duration infinite;
@@ -472,9 +482,11 @@ $preview-hearth-duration: 11s;
   animation-name: spell-preview-tumble;
 }
 
-// Starting on the charred edge, measured in from the corner, and brightest as it leaves it.
+// Starting on the charred edge, measured in from the corner on a card's burn and scaled to this
+// one, and brightest as it leaves it.
 .spell-preview__ember--edge {
-  inset: auto var(--r) var(--b) auto;
+  inset: auto calc(var(--r) * #{$preview-burn-scale-x}) calc(var(--b) * #{$preview-burn-scale-y})
+    auto;
   animation-name: spell-preview-float-edge;
 
   &.spell-preview__ember--hot {

@@ -54,7 +54,9 @@ and embers rising from the glow and from the charred edge. The owner chose it fr
 C6 for the light theme and C6b for the dark.
 
 - The burn is the card's, layer for layer: `index.scss` uses the card's smoulder partial for its
-  lengths, timings and `ember-rim`, and `SpellCardFilters` is drawn inside the pane while it is open,
+  timings and `ember-rim`, and sizes it from the card's lengths: twice as deep (`$burn-depth * 2`, 2rem)
+  and half as long again along the bottom (`$burn-length * 1.5`, 16.35rem), with the corner's curve, the
+  spill and the edge embers' places scaled by the same two factors, and `SpellCardFilters` is drawn inside the pane while it is open,
   since the spell page has no other copy of the burn filter. The scene is mounted with the content, so
   the burn comes in afresh on every open (the card's burn-in, as keyframes that start from the card's
   resting state) with no class flip.
@@ -62,7 +64,8 @@ C6 for the light theme and C6b for the dark.
   card's `box-shadow` and `filter` frames: a pane kept awake runs for minutes, and opacity frames do not
   repaint.
 - Each ember is an `<i>` placed and timed by custom properties from `embers.ts`: ten from the hearth
-  glow, ten from the charred edge (measured in from the corner), a quarter of them ash.
+  glow, ten from the charred edge (measured in from the corner of a card's burn, and scaled by the
+  stylesheet to this one), a quarter of them ash.
 - The glow's strength and the ember colours are theme custom properties (`--preview-glow`,
   `--preview-ember`, `--preview-ember-core`, `--preview-ember-char`, `--preview-ash`), set in the
   two theme blocks of `_mixins.scss` and aliased in `_variables.scss`: light is the wax red at 0.12,
