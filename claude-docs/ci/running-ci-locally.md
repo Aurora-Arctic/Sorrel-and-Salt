@@ -6,11 +6,11 @@
 one `-P …=catthehacker/ubuntu:act-latest` line per `runs-on` label the
 workflows pin — `ubuntu-26.04` alone — and `--pull=false`.
 
-- **One target covers every `checks.yml` leg** (MB.32), where there was one per
+- **One target covers every `checks.yml` job** (MB.32), where there was one per
   check workflow before the collapse: `make act-check` runs lint,
   `make act-check CHECK=typecheck` runs typecheck, and so on through `format`,
   `build`, `audit`, `destructive-ddl` (MB.37) and `migration-order` (MB.173).
-  `--matrix name:<leg>` is what keeps `act` from running all seven, and `make act-test` chains lint, format,
+  `-j <leg>` is what keeps `act` from running all eight, and `make act-test` chains lint, format,
   typecheck and destructive-ddl. `act-image` builds the `testing` target
   locally under the exact tag the job's required `image` input names, so
   `docker run` never reaches GHCR and the container `credentials:` block is a
@@ -30,7 +30,7 @@ workflows pin — `ubuntu-26.04` alone — and `--pull=false`.
 - **`CHECK=destructive-ddl` scans nothing locally, and that is the honest
   outcome rather than a gap.** Its
   `destructive-ddl-files` input comes from `pr-gate.yml`'s `changes` job, which
-  does not exist under a bare `act -W ... --matrix name:destructive-ddl`, so it
+  does not exist under a bare `act -W ... -j destructive-ddl`, so it
   arrives empty; `checks.yml` sets `DESTRUCTIVE_DDL_FILES` from the input
   regardless, and the script reads set-but-empty as "no migrations changed".
   The leg reads no `github.event.pull_request.body` (MB.48 retired its
@@ -52,7 +52,6 @@ vitest` would have to either execute `build-db-image.yml` for real (a
   than shipped in a form nobody could verify actually works.
 - **Every new reusable check workflow ships its `act-<name>` target in the same
   PR**, plus an `act-cache-*` pre-clone for any action that isn't cached yet
-  — except where that isn't possible yet, as above. A new `checks.yml` leg
-  needs no new target: it is `make act-check CHECK=<leg>` the day it lands. A
-  new `checks.yml` **job** would need one — `act-check` is
-  `-j check --matrix name:<leg>` and reaches only the matrix job.
+  — except where that isn't possible yet, as above. A new `checks.yml` job
+  needs no new target: it is `make act-check CHECK=<leg>` the day it lands,
+  because `act-check` is `-j <leg>`.

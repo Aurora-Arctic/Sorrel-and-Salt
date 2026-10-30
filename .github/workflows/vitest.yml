@@ -27,13 +27,12 @@ on:
         default: false
       should-run:
         description: >-
-          Set false to skip the actual vitest run while still completing this job
-          under its normal name. pr-gate passes this from its path-filter output
-          instead of putting an `if:` on the calling job — a job-level `if:` makes
-          GitHub report a differently-named, bare check run ("vitest" instead of
-          "vitest / vitest") when skipped, which never satisfies the "vitest / vitest"
-          required status check and leaves the PR stuck. Defaults true so a caller
-          that does no path filtering is unaffected.
+          Set false to skip every job here before it starts, so a run the path
+          filter rules out never pulls its container. pr-gate passes this from its
+          path-filter output instead of putting an `if:` on the calling job, which
+          would report one bare "vitest" check in place of "vitest / vitest"
+          (claude-docs/design-decisions/mb.39-job-level-if-and-check-names.md).
+          Defaults true so a caller that does no path filtering is unaffected.
         required: false
         type: boolean
         default: true
@@ -46,9 +45,11 @@ permissions:
 
 jobs:
   # Three parts run side by side, then `vitest` merges them. claude-docs/ci/runner-budget.md,
-  # "Splitting the Vitest job". A part is never path-skipped: the thresholds
-  # cover the whole tree, so a missing part would fail the merge.
+  # "Splitting the Vitest job". The parts and the merge skip together on
+  # `should-run`, never one without the others: the thresholds cover the whole
+  # tree, so a missing part would fail the merge.
   vitest-dom:
+    if: inputs.should-run
     # The `dom` project (happy-dom). No Postgres service: nothing in it reaches a database.
     runs-on: ubuntu-26.04
     container:
@@ -69,14 +70,12 @@ jobs:
       DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
     steps:
       - name: Checkout into /app
-        if: inputs.should-run
         uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
 
       # The blob reporter writes this part's results and its coverage map for
       # the `vitest` job to merge. The 80% thresholds are switched off here and
       # applied there: a part covers only its own projects' share of src/.
       - name: Run vitest (dom)
-        if: inputs.should-run
         run: |
           set -o pipefail
           echo "nproc: $(nproc)"
@@ -84,7 +83,7 @@ jobs:
 
       # A failing test still leaves a blob, so the merge job reports it.
       - name: Upload blob
-        if: ${{ !cancelled() && inputs.should-run }}
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
           name: vitest-blob-dom
@@ -93,6 +92,7 @@ jobs:
           retention-days: 1
 
   vitest-node:
+    if: inputs.should-run
     # The `unit` and `rsc` projects (node). No Postgres service.
     runs-on: ubuntu-26.04
     container:
@@ -113,14 +113,12 @@ jobs:
       DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
     steps:
       - name: Checkout into /app
-        if: inputs.should-run
         uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
 
       # The blob reporter writes this part's results and its coverage map for
       # the `vitest` job to merge. The 80% thresholds are switched off here and
       # applied there: a part covers only its own projects' share of src/.
       - name: Run vitest (unit rsc)
-        if: inputs.should-run
         run: |
           set -o pipefail
           echo "nproc: $(nproc)"
@@ -128,7 +126,7 @@ jobs:
 
       # A failing test still leaves a blob, so the merge job reports it.
       - name: Upload blob
-        if: ${{ !cancelled() && inputs.should-run }}
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
           name: vitest-blob-node
@@ -137,6 +135,7 @@ jobs:
           retention-days: 1
 
   vitest-db:
+    if: inputs.should-run
     # The `db` and `db-mocking` projects, which build the template database (tests/support/db-global-setup.ts) against the Postgres service.
     runs-on: ubuntu-26.04
     container:
@@ -175,14 +174,12 @@ jobs:
       DATABASE_URL: postgres://sorrel:sorrel@postgres:5432/sorrel
     steps:
       - name: Checkout into /app
-        if: inputs.should-run
         uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
 
       # The blob reporter writes this part's results and its coverage map for
       # the `vitest` job to merge. The 80% thresholds are switched off here and
       # applied there: a part covers only its own projects' share of src/.
       - name: Run vitest (db db-mocking)
-        if: inputs.should-run
         run: |
           set -o pipefail
           echo "nproc: $(nproc)"
@@ -190,7 +187,7 @@ jobs:
 
       # A failing test still leaves a blob, so the merge job reports it.
       - name: Upload blob
-        if: ${{ !cancelled() && inputs.should-run }}
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
           name: vitest-blob-db
@@ -202,8 +199,9 @@ jobs:
   # one. Keep this job named `vitest`; renaming it needs the ruleset changed.
   vitest:
     needs: [vitest-dom, vitest-node, vitest-db]
-    # Run after a failed part too, so the PR comment still appears.
-    if: ${{ !cancelled() }}
+    # Run after a failed part too, so the PR comment still appears. A
+    # path-filtered run skips the three parts, so it skips this job as well.
+    if: ${{ !cancelled() && inputs.should-run }}
     runs-on: ubuntu-26.04
     container:
       image: ${{ inputs.image }}
@@ -220,11 +218,10 @@ jobs:
         shell: bash
     steps:
       - name: Checkout into /app
-        if: inputs.should-run
         uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
 
       - name: Download blobs
-        if: ${{ !cancelled() && inputs.should-run }}
+        if: ${{ !cancelled() }}
         uses: actions/download-artifact@v8
         with:
           pattern: vitest-blob-*
@@ -236,7 +233,7 @@ jobs:
       # when a part left no blob (it crashed before writing one).
       - name: Run vitest
         id: run
-        if: ${{ !cancelled() && inputs.should-run }}
+        if: ${{ !cancelled() }}
         run: |
           set -o pipefail
           ls /app/.reports/blobs
@@ -248,12 +245,12 @@ jobs:
 
       - name: Summarize output
         id: summarize
-        if: ${{ !cancelled() && inputs.should-run }}
+        if: ${{ !cancelled() }}
         run: node .github/scripts/summarize-vitest.mjs
 
       # Not failure-only: a coverage report on every run.
       - name: Upload coverage artifact
-        if: ${{ !cancelled() && inputs.should-run }}
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
           name: vitest-coverage
@@ -261,7 +258,7 @@ jobs:
           retention-days: 7
 
       - name: Write job summary
-        if: ${{ !cancelled() && inputs.should-run }}
+        if: ${{ !cancelled() }}
         uses: ./.github/actions/job-summary
         with:
           check-name: Vitest
@@ -272,7 +269,7 @@ jobs:
 
       # .github/actions/pr-comment has the modes.
       - name: Comment on PR
-        if: ${{ !cancelled() && inputs.pr-number && inputs.should-run }}
+        if: ${{ !cancelled() && inputs.pr-number }}
         uses: ./.github/actions/pr-comment
         with:
           check-name: Vitest

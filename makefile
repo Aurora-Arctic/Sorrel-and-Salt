@@ -225,7 +225,7 @@ docker-codegen: playwright-server-up
 # builds the `testing` target under the tag the job asks for, so GHCR is
 # never reached and the `credentials:` block is a no-op (hence the dummy
 # token); checkout-to-app resolves by remote ref, so act needs a clone at its
-# cache path; `--matrix` keeps act from running all six legs.
+# cache path; `-j` names the one job to run.
 ACT_IMAGE := sorrel-and-salt-testing:local
 ACT_CHECKOUT_CACHE := $(HOME)/.cache/act/Aurora-Arctic-Sorrel-and-Salt-.github-actions-checkout-to-app@main
 CHECK ?= lint
@@ -243,7 +243,7 @@ act-cache-checkout:
 # pr-gate.yml's paths-filter job. This proves the wiring, not the scan.
 ## Run one checks.yml leg locally via act — CHECK=lint|format|typecheck|build|audit|destructive-ddl
 act-check: act-image act-cache-checkout
-	act -W .github/workflows/checks.yml -j check --matrix name:$(CHECK) --input image=$(ACT_IMAGE) -s GITHUB_TOKEN=dummy-token --action-offline-mode
+	act -W .github/workflows/checks.yml -j $(CHECK) --input image=$(ACT_IMAGE) -s GITHUB_TOKEN=dummy-token --action-offline-mode
 
 ## Run every locally runnable act check in sequence
 act-test:
