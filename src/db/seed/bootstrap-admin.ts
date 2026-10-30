@@ -4,7 +4,7 @@ import { BOOTSTRAP_USER_ID } from '../bootstrap';
 import type { AuditSession } from '../types';
 import type { SeedTransaction, SeedUser } from './types';
 
-// Every seeded row needs a creator, so the bootstrap user precedes any seed. One of rule 3's two identity bootstraps, stamping itself. A system user,
+// Every seeded row needs a creator, so the bootstrap user precedes any seed. One of rule 3's identity bootstraps, stamping itself. A system user,
 // not an admin: no OAuth account and unverified (the dev site keeps one unverified user to test that path), so no sign-in reaches it. Keeps its old
 // file and export names, as deploy.yml lists the file.
 

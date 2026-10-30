@@ -145,3 +145,46 @@ test(
     await expect(page.getByRole('link', { name: 'Ask for a New Link' })).toBeVisible();
   },
 );
+
+test(
+  'someone guessing at an account’s password is locked out after five wrong guesses, and the lock looks like a wrong password',
+  { tag: '@story-72' },
+  async ({ page }) => {
+    const email = `lockout-${randomUUID()}@password.test`;
+    const made = await page.request.post('/api/auth/sign-up/email', {
+      data: { name: 'Testwort Guarded', email, password: PASSWORD },
+    });
+    expect(made.status(), await made.text()).toBe(200);
+    await withSql((sql) => sql`update users set email_verified = true where email = ${email}`);
+    // Four wrong guesses already counted, so the browser's next is the fifth; the server allows three sign-in
+    // attempts in ten seconds from one client, which four more would pass.
+    await withSql(
+      (sql) => sql`
+        insert into sign_in_failures (user_id, count) select id, 4 from users where email = ${email}`,
+    );
+
+    await page.goto('/sign-in');
+    await field(page, 'Email Address').fill(email);
+    await field(page, 'Password').fill('not the password at all, sadly');
+    await page.getByRole('button', { name: 'Sign In', exact: true }).click();
+    const alert = page.getByRole('main').getByRole('alert');
+    await expect(alert).toBeVisible();
+    const wrongPassword = await alert.textContent();
+
+    // Locked: the right password is refused with the same words a wrong one gets.
+    await field(page, 'Password').fill(PASSWORD);
+    const refused = page.waitForResponse('**/api/auth/sign-in/email');
+    await page.getByRole('button', { name: 'Sign In', exact: true }).click();
+    expect((await refused).status()).toBe(401);
+    await expect(page).toHaveURL('/sign-in');
+    await expect(alert).toHaveText(wrongPassword!);
+
+    // The lock is what refused it: with the row gone, the same password signs in.
+    await withSql(
+      (sql) => sql`
+        delete from sign_in_failures where user_id = (select id from users where email = ${email})`,
+    );
+    await page.getByRole('button', { name: 'Sign In', exact: true }).click();
+    await expect(page).not.toHaveURL(/\/sign-in/);
+  },
+);

@@ -60,7 +60,7 @@ request to the Have I Been Pwned service per password set.
 password from many addresses stays under the per-address count, so M16.5 counts
 failed password sign-ins per account in `sign_in_failures`: 5 failures lock the
 password for 1 minute, 10 for 5 minutes, 20 for 1 hour, and 100 disable it until
-a reset (DESIGN.md §8, "Passwords"). The `twoFactor` plugin also locks an
+a reset (DESIGN.md §8, "Passwords"; [`passwords.md`](passwords.md), "Lockout"). The `twoFactor` plugin also locks an
 account after repeated wrong codes (10 failures for 900 seconds by default,
 `accountLockout` in its options); whether M16.5's count or that one governs wrong
 codes is M16.10's decision.

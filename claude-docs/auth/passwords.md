@@ -90,8 +90,35 @@ email page first. A sign-up gets no session (`autoSignIn: false`): the form
 returns to sign-in with the address filled, and the person signs in, then
 follows the mailed link from that browser.
 
-The lockout per account is M16.5's; until it lands, the rate limiter is the
-only bound on guesses.
+### Lockout
+
+Better Auth's rate limiter counts per client address, so guesses spread over
+many addresses pass it. Failed password sign-ins are also counted per account,
+in `sign_in_failures` (DESIGN.md §8, "Passwords"), by
+`src/modules/identity/services/sign-in-lockout.ts` and two hooks on
+`/sign-in/email` in `src/lib/auth.ts`:
+
+- **The schedule.** The 5th failure locks the password for 1 minute, the 10th
+  for 5 minutes, the 20th for 1 hour, and the 100th disables it until a reset.
+  A count between two of these adds no lock of its own.
+- **The before hook** (`holdLockedSignIn`) looks the address up and, while its
+  account is locked, replaces the submitted password with 32 random bytes in
+  hex, which no stored hash matches. Better Auth then runs its own lookup and
+  its own scrypt verify and refuses with its own `INVALID_EMAIL_OR_PASSWORD`.
+  A locked attempt therefore gets the same response as a wrong password, built
+  by the same code, and takes as long, since the slow part of both is the same
+  verify. Refusing in the hook instead would skip the verify and answer
+  measurably faster, which would show the lock and so that the address has an
+  account. What is left between the two is one indexed upsert that the wrong
+  password adds, a millisecond against the verify's tens.
+- **The after hook** (`countPasswordSignIn`) adds one when the endpoint
+  returned that error for an account that was not locked, and deletes the row
+  on a successful sign-in. Attempts made during a lock are not counted, so a
+  lock ends when its time does.
+- **What it leaves open.** A provider sign-in never reads the row. A completed
+  reset deletes it, in `onPasswordReset`.
+- **Outside `withAudit`.** A failed sign-in has no session to audit; the
+  counter is the third identity bootstrap in CLAUDE.md rule 3.
 
 ### Reset and change
 
@@ -176,10 +203,19 @@ following the mailed link gives it its first password the same way.
   after 15 minutes, every session signed out by a reset, every other one by a
   change, the rules for a new password, each notice, the current password a
   change needs, a first password set without one, and no periodic change.
+- `tests/db/password-lockout.test.ts`, story 72 through the real
+  `/sign-in/email`: each step of the schedule, the right password refused in
+  a lock and accepted after, the reset that lifts a disabled password, a lock
+  that leaves another account and the same account's provider sign-in open,
+  the count cleared by a sign-in, and a locked attempt's response compared
+  whole (status, headers but `date`, body) with a wrong password's and an
+  unknown address's. Each shows the guard refuses by deleting the row.
 - `tests/modules/identity/graphql/set-password.test.ts`: the mutation's
   refusals and that it sets the caller's own password.
 - `tests/e2e/stories/16-password.spec.ts`, story 70: the browser flow, with
   the e2e servers' stand-in for the range API
   ([`testing/e2e.md`](../testing/e2e.md), "A password sign-in in the browser"),
   and story 71: forgot, the mailed link, the reset, and signing in with the
-  new password, with axe on both pages.
+  new password, with axe on both pages, and story 72: the fifth wrong
+  password in the browser, the right one refused with the same words, and
+  signing in once the row is gone.

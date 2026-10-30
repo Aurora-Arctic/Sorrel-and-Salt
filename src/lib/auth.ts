@@ -1,3 +1,4 @@
+import { randomBytes } from 'node:crypto';
 import { betterAuth, type BetterAuthOptions } from 'better-auth';
 import type { AuthContext } from '@better-auth/core';
 import {
@@ -14,6 +15,7 @@ import {
   getCurrentAuthEndpointContext,
   hasRequestState,
 } from '@better-auth/core/context';
+import { BASE_ERROR_CODES } from '@better-auth/core/error';
 import { appendQueryParams } from '@better-auth/core/utils/url';
 // Better Auth's drizzleAdapter takes the client itself rather than a writer, so
 // this cannot go through withAudit — claude-docs/db/client-imports.md, "Who may import the client".
@@ -56,6 +58,9 @@ import {
   isPlaceholderEmail,
   placeholderEmail,
   sweepProvisionalAccounts,
+  clearFailedPasswordSignIns,
+  isPasswordSignInLocked,
+  recordFailedPasswordSignIn,
 } from '@/modules/identity';
 import type { ProviderId } from './types';
 
@@ -369,7 +374,10 @@ function emailAndPassword(): BetterAuthOptions['emailAndPassword'] {
     resetPasswordTokenExpiresIn: 15 * 60,
     revokeSessionsOnPasswordReset: true,
     sendResetPassword: mailResetLink,
-    onPasswordReset: ({ user }) => mailPasswordChanged(user.email, endpointOrigin(), 'reset'),
+    onPasswordReset: async ({ user }) => {
+      await clearFailedPasswordSignIns(user.id);
+      await mailPasswordChanged(user.email, endpointOrigin(), 'reset');
+    },
   };
 }
 
@@ -381,6 +389,39 @@ function sameSignUpAnswer(ctx: HookContext) {
   const returned = ctx.context.returned;
   if (isAPIError(returned) || returned instanceof Response) return;
   return ctx.json({ status: true });
+}
+
+// The account a password sign-in names, and whether its lock was on when the attempt arrived, carried from the
+// before hook to the after hook so the after hook does no second lookup.
+const passwordAttempt = defineRequestState<{ userId?: string; locked: boolean }>(() => ({
+  locked: false,
+}));
+
+/**
+ * While the account is locked, swaps the submitted password for a random one no hash can match. Better Auth then
+ * runs its own lookup and verify and refuses with its own wrong-password error, so a locked attempt answers and
+ * takes as long as a wrong password, where a refusal here would skip the verify and show the lock.
+ */
+async function holdLockedSignIn(ctx: HookContext) {
+  const email = (ctx.body as { email?: unknown } | undefined)?.email;
+  if (typeof email !== 'string') return;
+  const userId = (await ctx.context.internalAdapter.findUserByEmail(email.toLowerCase()))?.user.id;
+  const locked = userId !== undefined && (await isPasswordSignInLocked(userId));
+  await passwordAttempt.set({ userId, locked });
+  if (locked) {
+    return { context: { body: { ...ctx.body, password: randomBytes(32).toString('hex') } } };
+  }
+}
+
+/** Counts a wrong password against an unlocked account, and clears the count on a successful sign-in. */
+async function countPasswordSignIn(ctx: HookContext) {
+  const newSession = ctx.context.newSession;
+  if (newSession) return clearFailedPasswordSignIns(newSession.user.id);
+  const returned = ctx.context.returned;
+  if (!isAPIError(returned)) return;
+  if (returned.body?.code !== BASE_ERROR_CODES.INVALID_EMAIL_OR_PASSWORD.code) return;
+  const { userId, locked } = await passwordAttempt.get();
+  if (userId && !locked) await recordFailedPasswordSignIn(userId);
 }
 
 // /api/auth/* is the one exception to the GraphQL-only rule (CLAUDE.md rule 1).
@@ -539,12 +580,14 @@ export const auth = betterAuth({
       if (ctx.path === '/verify-email') return gateEmailChange(ctx);
       if (ctx.path === '/send-verification-email') return requireOwnResend(ctx);
       if (ctx.path === '/change-password') return revokeOtherSessions(ctx);
+      if (ctx.path === '/sign-in/email') return holdLockedSignIn(ctx);
       if (ctx.path !== '/callback/:id' && ctx.path !== '/sign-up/email') return;
       await sweepQuietly(ctx);
     }),
     after: createAuthMiddleware(async (ctx) => {
       if (ctx.path === '/sign-up/email') return sameSignUpAnswer(ctx);
       if (ctx.path === '/change-password') return mailChangeNotice(ctx);
+      if (ctx.path === '/sign-in/email') return countPasswordSignIn(ctx);
       const newSession = ctx.context.newSession;
       if (ctx.path !== '/callback/:id' || !newSession) return;
 
