@@ -29,10 +29,11 @@
     margin: space(2) 0 0;
   }
 
+  // Same reset as the list above: the global ◆ marker would otherwise lead each ingredient line.
   &__deductions {
-    margin: space(3) 0 0;
-    padding: 0;
-    list-style: none;
+    @include list-reset;
+
+    margin-top: space(3);
   }
 
   &__deduction {
