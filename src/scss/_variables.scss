@@ -1017,6 +1017,11 @@ $radii: (
 $notice-mark-size: 1.0125rem;
 $notice-mark-drop: 0.05rem;
 
+// A spell step's name in lettering that is mostly lowercase sits a little below the middle of its
+// line, measured at 0.8px under 16px type, so an icon centred on the line looks high beside it. Each
+// icon on the step's first line drops this far.
+$step-ink-drop: 0.05rem;
+
 // The recipe's step-number column: room for a two-digit number. The page's steps and the Preview pane share it.
 $step-position-width: 1.5rem;
 // The recipe sheet's Ingredients column beside the steps, in the sheet's own em, so it scales with the print root.

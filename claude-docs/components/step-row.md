@@ -113,8 +113,8 @@ page does not ask for the card and is unaffected.
 ## Styling
 
 `src/components/StepRow/index.scss`. Tokens: `$hairline`, `$surface-card`, `$text-muted`,
-`radius('surface')`, `space()`, `type-size('body')` and `$narrow-column`. Two local values:
-`$step-line` (the name's line, `type-size('body') * 1.65`) and `$step-ink-drop`. The move handle's
+`radius('surface')`, `space()`, `type-size('body')`, `$narrow-column` and `$step-ink-drop`. One local value:
+`$step-line` (the name's line, `type-size('body') * 1.65`). The move handle's
 own style (`.spell-step__handle`, its grip drawn 8 by 16 px with a `::before` that widens the hit
 area to 24 by 44 px) is in SpellBuilder's stylesheet, which owns the handle.
 
