@@ -39,7 +39,7 @@ right-aligned at the row's end: Toxic or Caution (`SafetyMark`, from the ingredi
 laid) and, for a one-off, the One-Off badge (`OneOffBadge`, `src/components/StepRow/one-off-badge.tsx`,
 a button named One-Off whose tip and description read "Used in this spell only; not kept in your
 cupboard.", the owner, 2026-10-29) at the default badge size (the owner, 2026-10-28). The note is a
-muted paragraph under its own hairline, drawn only when there is one; the strip and the list are
+paragraph in the body ink (`$text-primary`, where the intent is muted) under its own hairline, drawn only when there is one; the strip and the list are
 capped at the paragraphs' `$measure`, so the two hairlines end together on the page. A spell
 with no steps says so.
 

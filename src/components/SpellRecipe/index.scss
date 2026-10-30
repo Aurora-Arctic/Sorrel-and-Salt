@@ -172,8 +172,16 @@
 .spell-recipe__intent,
 .spell-recipe__note {
   margin: 0;
-  color: $text-muted;
   white-space: pre-line;
+}
+
+// The intent is a muted lead under the title; the note is read as the recipe is, in the body ink.
+.spell-recipe__intent {
+  color: $text-muted;
+}
+
+.spell-recipe__note {
+  color: $text-primary;
 }
 
 // The Steps heading shows on paper and in the Preview pane (recipe-columns); on the screen's page

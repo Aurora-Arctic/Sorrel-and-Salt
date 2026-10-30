@@ -1,5 +1,6 @@
 import type { ReactElement } from 'react';
 import { dayWords } from '../DateField/day';
+import Notice from '../Notice';
 import SpellMarks from '../SpellMarks';
 import { WORKINGS_ID, WORKINGS_TITLE_ID } from '../SpellRecipe/sections';
 import type { SpellWorkingsProps, WorkingView } from './types';
@@ -36,9 +37,9 @@ const Working = ({
       </div>
       {working.status === 'draft' &&
         working.warnings?.map((line) => (
-          <p key={line} className="meta">
+          <Notice key={line} kind="warn" quiet className="spell-workings__warning">
             {line}
-          </p>
+          </Notice>
         ))}
       <p className="meta">
         {working.recordedBy ? `Recorded by ${working.recordedBy}` : 'Recorded'}

@@ -29,7 +29,7 @@ The slots a row takes from the page:
 - `editAction(editable, name)`: the pencil (`edit-working.tsx`, `EditWorkingAction`), drawn on rows that carry `editable`, which `readWorkingsOf` gives to the recorder, or a member named on the working, whose role may update workings. It opens Record a Working on that working ("Edit Working"), and the pencil is named "Edit Working <date>"; and the focus returns to the pencil on close. On a row that also shows Complete the pencil takes the text ink (`icon-tip__edit--plain`, through `editAction`'s `plain`); Complete stays green.
   A row carries no bin. Delete Working lives in the Edit Working dialog, drawn when the working's `canChange` is true: the viewer's role may delete and the viewer is the recorder. `editAction` receives `canChange` as its fourth argument for it, and `delete-working.tsx` holds the mutation and the question (`useDeleteWorking`, `DeleteWorkingQuestion`) the dialog uses.
 
-A draft row also lists what completing it would skip (`warnings`), as one line giving the count, such as "Completing takes nothing from the jars for 4 ingredients.", beside its Complete; the reasons stay in the Complete dialog's confirm step. The wording is `skipSummary` in `@/components/RecordWorking/warnings`. It carries no shortfalls. `readWorkingsOf` reads the preview once per page, only when a draft of the viewer's own is there, and gives the lines to the viewer's own drafts; they are the spell's stock as it stands now.
+A draft row also lists what completing it would skip (`warnings`), as one line giving the count, such as "Completing takes nothing from the jars for 4 ingredients.", in a quiet warning `Notice` (`kind="warn"`, a status present from the start, `spell-workings__warning` for its top margin) under the date; the reasons stay in the Complete dialog's confirm step. The wording is `skipSummary` in `@/components/RecordWorking/warnings`. It carries no shortfalls. `readWorkingsOf` reads the preview once per page, only when a draft of the viewer's own is there, and gives the lines to the viewer's own drafts; they are the spell's stock as it stands now.
 
 An empty list reads "This spell has not been worked yet."
 
@@ -41,6 +41,7 @@ An empty list reads "This spell has not been worked yet."
 - **The heading row** (`__title`) is the Workings heading with Record a Working at its end.
 - **The list** (`__list`) is a grid with `space(5)` between rows and no marker (`list-reset`).
 - **A row's date** is an `h3` at `heading-size(4)`.
+- **A draft's warning** (`__warning`) is a quiet warning `Notice`, `space(2)` under the date line.
 - **The deductions** (`__deductions`) sit `space(3)` under the note, each line its name at the start and its amount at the end.
 
 ## Stories

@@ -58,6 +58,11 @@
     margin: space(2) 0 0;
   }
 
+  // What completing a draft would skip, clear of the date line above it.
+  &__warning {
+    margin-block-start: space(2);
+  }
+
   // Same reset as the list above: the global ◆ marker would otherwise lead each ingredient line.
   &__deductions {
     @include list-reset;

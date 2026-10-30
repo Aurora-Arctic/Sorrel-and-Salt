@@ -115,7 +115,7 @@ describe('SpellWorkings', () => {
     expect(lines[0]).toHaveTextContent(/^Testwort/);
   });
 
-  it('says on a draft row what completing it would skip, and on no complete row', () => {
+  it('warns on a draft row, in a warning notice, what completing it would skip, and on no complete row', () => {
     renderSection([
       working({
         id: 'w1',
@@ -124,9 +124,9 @@ describe('SpellWorkings', () => {
       }),
       working({ id: 'w2', warnings: ['Completing takes nothing from the jars for 1 ingredient.'] }),
     ]);
-    expect(
-      within(rows()[0]!).getByText('Completing takes nothing from the jars for 2 ingredients.'),
-    ).toBeVisible();
+    expect(within(rows()[0]!).getByRole('status')).toHaveTextContent(
+      'Completing takes nothing from the jars for 2 ingredients.',
+    );
     expect(
       screen.queryByText(/Completing takes nothing from the jars for 1 ingredient\./),
     ).not.toBeInTheDocument();
