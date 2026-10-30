@@ -140,8 +140,8 @@ Built on the form primitives in `_primitives.scss` ([`styling.md`](../styling.md
 "Form fields"): `.form` and `.form__actions`, and one field drawn by the
 shared `FieldShell` ([`field.md`](field.md)) around the form's own `.input`, and the `Notice` component
 ([`notice.md`](notice.md)) for the alert and the sent message. On the email
-page the `<h1>` and the status line are a `.header`, the status line its
-`.lede`; embedded, the status line is a `.lede` on its own, under the
+page the `<h1>` and the status line are a `PageHeader` ([`page-header.md`](page-header.md)), the status line its
+`lede`; embedded, the status line is a `.lede` on its own, under the
 section's head. Send Confirmation and Continue are each the view's one primary action,
 so both are `.btn--solid`; Continue is `.btn` on an anchor, which `.btn`
 itself keeps from underlining or taking the visited ink

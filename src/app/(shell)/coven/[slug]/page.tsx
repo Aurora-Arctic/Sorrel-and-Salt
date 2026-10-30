@@ -7,6 +7,7 @@ import DeleteWorkspaceButton from '../../../../components/DeleteWorkspaceButton'
 import LeaveWorkspaceButton from '../../../../components/LeaveWorkspaceButton';
 import type { Successor } from '../../../../components/LeaveWorkspaceButton/types';
 import { WORKSPACE_ROLE_ACCESS } from '../../../../components/MemberList/role-access';
+import PageHeader from '../../../../components/PageHeader';
 import PageNav from '../../../../components/PageNav';
 import type { PageNavEntry } from '../../../../components/PageNav/types';
 import { requireCovenMembership, requireSession } from '../../../../lib/request-session';
@@ -56,14 +57,16 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
 
   return (
     <main className="page-with-nav">
-      <div className="header">
-        <p className="eyebrow">Coven</p>
-        <h1>{workspace.name}</h1>
-        <p className="lede">
-          You are {ROLE_NAME[membership.role]} of this coven.{' '}
-          {WORKSPACE_ROLE_ACCESS[membership.role]}
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Coven"
+        title={workspace.name}
+        lede={
+          <>
+            You are {ROLE_NAME[membership.role]} of this coven.{' '}
+            {WORKSPACE_ROLE_ACCESS[membership.role]}
+          </>
+        }
+      />
       <PageNav label="On This Page" entries={entries} />
       <section
         id="coven-contents"

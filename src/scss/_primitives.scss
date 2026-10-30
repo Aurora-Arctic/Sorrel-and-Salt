@@ -357,6 +357,11 @@
     }
   }
 
+  // Inside a head's `.header` column the column's gap spaces it, as it spaces the eyebrow and the lede.
+  .header > .page-header {
+    margin-bottom: 0;
+  }
+
   // A mark before the heading (`lead`), kept on the heading's line.
   .page-header__title {
     display: flex;
