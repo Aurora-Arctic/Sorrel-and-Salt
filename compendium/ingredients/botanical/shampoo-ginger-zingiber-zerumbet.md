@@ -9,6 +9,8 @@ folkNames:
   - Bitter Ginger
   - Lempoyang
   - Pinecone Ginger
+categories:
+  - Banishing
 references:
   - source: wikipedia-zingiber-zerumbet
     nameBasis: stated
@@ -18,6 +20,11 @@ references:
       - description
       - folkNames
       - colours
+  - source: ntbg-herbarium-ptbg1000032570
+    locator: 'Ethnobotanical Notes, Pohnpei'
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Root
     description: The aromatic rhizome flavours food, was dried and pounded into a powder for kapa cloth, and its extracts are used in herbal medicine.
@@ -46,6 +53,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: f9fe9bb015e69aed2ea41d4aecc9d64076b9cdfc0900691dc072bb95b10830cb
 ---
 
 # Shampoo Ginger

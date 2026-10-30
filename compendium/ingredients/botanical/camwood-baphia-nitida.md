@@ -2,6 +2,9 @@
 status: needs-review
 nomenclature: botanical
 canonicalName: 'Baphia nitida'
+categories:
+  - Luck
+  - Purification
 folkNames:
   - 'Barwood'
   - 'African Sandalwood'
@@ -21,6 +24,11 @@ references:
     resolvedBy: wikipedia-baphia-nitida
     supports:
       - description
+  - source: quiroz-van-andel-2015
+    locator: 'Additional file 1 (species table), Baphia nitida, Benin row'
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Wood
     references:

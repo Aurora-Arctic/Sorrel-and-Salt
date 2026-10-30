@@ -2,17 +2,27 @@
 status: approved
 nomenclature: botanical
 canonicalName: 'Silene undulata'
+categories:
+  - Dream Work
+  - Prophetic Dreams
 folkNames:
   - 'Silene capensis'
   - 'Iindlela Zimhlophe'
 references:
   - source: wikipedia-silene-undulata
+    locator: Uses
     nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
       - description
       - folkNames
+      - categories
+  - source: sobiecki-2008-plant-use-in-divination
+    locator: 'Appendix 1, Silene undulata row'
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Root
     references:
@@ -20,6 +30,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: 38bff1f072c8a085058350c23dccae7882108696e935c6df6405f4930867a51c
 ---
 
 # African Dream Root

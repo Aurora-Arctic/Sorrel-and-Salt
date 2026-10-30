@@ -2,6 +2,8 @@
 status: needs-review
 nomenclature: botanical
 canonicalName: Argentina anserina
+categories:
+  - Warding
 folkNames:
   - Prince's Feathers
   - Trailing Tansy
@@ -22,9 +24,11 @@ references:
       - description
       - folkNames
   - source: wikipedia-argentina-anserina
+    locator: Uses
     nameBasis: stated
     supports:
       - canonicalName
+      - categories
       - description
       - folkNames
 variants:

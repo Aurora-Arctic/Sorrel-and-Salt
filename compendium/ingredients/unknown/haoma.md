@@ -1,12 +1,19 @@
 ---
 status: needs-review
 nomenclature: unknown
+categories:
+  - Protection
 references:
   - source: wikipedia-haoma
     supports:
       - name
       - nomenclature
       - description
+  - source: flattery-schwartz-1989-haoma
+    locator: p. 58 (Hom Yasht, "protecting the body of the righteous")
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Stem
     references:

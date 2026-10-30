@@ -9,6 +9,9 @@ folkNames:
   - Kanda
 deities:
   - Lakshmi
+categories:
+  - Warding
+  - Purification
 references:
   - source: wikipedia-cow-dung
     locator: lead; uses; religious views
@@ -17,12 +20,18 @@ references:
       - description
       - folkNames
       - deities
+  - source: thurston-1912-omens
+    locator: Chapter I, Omens (printed pp. 13-72); Chapter II, Animal Superstitions (printed pp. 73-108)
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Paste
     references:
       - source: wikipedia-cow-dung
         supports:
           - form
+seedUpdate: 24b36564608c8de833d18e243b7a33a0a3c62e0d507ec9cd3553c98be844094b
 ---
 
 # Cow Dung

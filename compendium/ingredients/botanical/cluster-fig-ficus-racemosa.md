@@ -10,6 +10,10 @@ folkNames:
   - Gular
 deities:
   - Dattatreya
+categories:
+  - Prosperity
+  - Warding
+  - Luck
 references:
   - source: wikipedia-ficus-racemosa
     locator: lead; description; religion; uses
@@ -20,6 +24,12 @@ references:
       - folkNames
       - deities
       - safetyNotes
+      - categories
+  - source: era-devi-kumar-sarkaghat
+    locator: annotated table, eth-mr-63
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Fruit
     references:
@@ -27,6 +37,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: 819984b4c2277b32d83f8827f7363b42da60d3a3e44bd3e4f3151d1bf55ea862
 ---
 
 # Cluster Fig

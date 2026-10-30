@@ -2,6 +2,11 @@
 status: approved
 nomenclature: botanical
 canonicalName: 'Elaeis guineensis'
+categories:
+  - Divination
+  - Protection
+  - Banishing
+  - Warding
 folkNames:
   - 'African Oil Palm'
   - 'Macaw-Fat'
@@ -13,6 +18,26 @@ references:
       - nomenclature
       - description
       - folkNames
+  - source: ajao-2021-yoruba
+    locator: 'Table 2, Elaeis guineensis row'
+    nameBasis: stated
+    supports:
+      - categories
+  - source: quiroz-van-andel-2015
+    locator: 'Additional file 1 (species table), Elaeis guineensis, Benin row'
+    nameBasis: stated
+    supports:
+      - categories
+  - source: gruca-van-andel-balslev-2014-palms-ritual
+    locator: 'Table 1, Elaeis guineensis inflorescence row (drive away bad spirits)'
+    nameBasis: stated
+    supports:
+      - categories
+  - source: azevedo-ramos-silva-2026-azerin
+    locator: 'section on the oil palm (Mariwo) and Table 1, Elaeis guineensis row'
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Whole
     references:
@@ -20,6 +45,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: 9c85cb9d8cac50d870f5a673228bd76a31b6c9d2407602ed6cbb06c0fa37bce2
 ---
 
 # Oil Palm

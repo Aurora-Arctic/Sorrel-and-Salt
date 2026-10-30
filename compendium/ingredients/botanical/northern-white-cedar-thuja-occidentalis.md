@@ -11,6 +11,10 @@ folkNames:
   - Swamp Cedar
   - American Arborvitae
   - Nookomis Giizhik
+categories:
+  - Protection
+  - Banishing
+  - Purification
 references:
   - source: wikipedia-thuja-occidentalis
     nameBasis: stated
@@ -21,6 +25,16 @@ references:
       - folkNames
       - safetyNotes
       - toxic
+  - source: naeb
+    locator: 'Potawatomi, Other: Protection; Smith 1933, p. 122 (NAEB record 39925); Ojibwa, Drug: Ceremonial Medicine; Smith 1932, p. 380 (NAEB record 39909)'
+    nameBasis: stated
+    supports:
+      - categories
+  - source: smith-1932-ojibwe
+    locator: p. 380
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Wood
     description: The preferred wood for the ribs and planking of birchbark canoes. Also used for rustic fencing, posts, shingles and log cabins.
@@ -40,6 +54,7 @@ variants:
           - form
           - description
           - safetyNotes
+seedUpdate: acf7da6962b7a7e1ada55691957e33b31486c61cfbf2f00b09d9f09ce41a1263
 ---
 
 # Northern White Cedar

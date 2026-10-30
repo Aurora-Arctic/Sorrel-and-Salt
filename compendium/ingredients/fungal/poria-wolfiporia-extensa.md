@@ -9,6 +9,8 @@ folkNames:
   - China Root
   - Fu Ling
   - Matsuhodo
+categories:
+  - Warding
 references:
   - source: wikipedia-wolfiporia-extensa
     nameBasis: stated
@@ -16,6 +18,13 @@ references:
       - canonicalName
       - description
       - folkNames
+  - source: bretschneider-botanicon-sinicum-v3
+    locator: p. 533
+    nameBasis: resolved
+    headedAs: fu ling
+    resolvedBy: wikipedia-wolfiporia-extensa
+    supports:
+      - categories
 variants:
   - form: Mushroom
     references:
@@ -23,6 +32,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: 6c96aa80fcebdbc6680be2d91c00cb6c491fa9ff9372a5712d8367eac5959bf4
 ---
 
 # Poria

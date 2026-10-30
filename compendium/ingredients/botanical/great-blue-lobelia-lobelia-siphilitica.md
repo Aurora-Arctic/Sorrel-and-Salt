@@ -5,6 +5,8 @@ canonicalName: Lobelia siphilitica
 folkNames:
   - Great Lobelia
   - Blue Cardinal Flower
+categories:
+  - Love
 references:
   - source: wikipedia-lobelia-siphilitica
     nameBasis: stated
@@ -13,6 +15,16 @@ references:
       - nomenclature
       - description
       - folkNames
+  - source: naeb
+    locator: 'Meskwaki, Drug: Love Medicine; Smith 1928, p. 273 (NAEB record 20705)'
+    nameBasis: stated
+    supports:
+      - categories
+  - source: usda-plant-guide-great-blue-lobelia
+    locator: 'Uses, Ethnobotanic'
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Herb
     description: Native Americans traditionally use the plant to treat respiratory and muscle disorders.
@@ -22,6 +34,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: fe5be4f04cd93df3a3982ece39bada62f95779bb569414201f660f01e006b695
 ---
 
 # Great Blue Lobelia

@@ -2,18 +2,28 @@
 status: approved
 nomenclature: botanical
 canonicalName: 'Halleria lucida'
+categories:
+  - Warding
+  - Protection
 folkNames:
   - 'Tree Fuchsia'
   - 'umBinza'
   - 'Notsung'
 references:
   - source: wikipedia-halleria-lucida
+    locator: 'Uses (Zulu religion): "summon the protective spirits of dead ancestors"'
     nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
       - description
       - folkNames
+      - categories
+  - source: watt-breyer-brandwijk-1932
+    locator: 'p. 169, "the Sutos use the plant as a charm against evil"'
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Leaf
     references:
@@ -21,6 +31,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: f3862dcbd8c97929ec63e0cf656853354c5376d942eda19da28a2ff31b59d951
 ---
 
 # Halleria lucida

@@ -8,14 +8,18 @@ folkNames:
   - Konda Pindi Aaku
   - Buikallan
   - Boor
+categories:
+  - Warding
+  - Luck
 references:
   - source: wikipedia-ouret-lanata
-    locator: lead and Dasapushpam sentence
+    locator: lead and Dasapushpam sentence; Uses
     nameBasis: stated
     supports:
       - canonicalName
       - description
       - folkNames
+      - categories
 variants:
   - form: Herb
     references:
@@ -23,6 +27,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: a2a93869d9fd3b10019bc5c48ab19901584b4175db222c3015d37b4326693f34
 ---
 
 # Aerva

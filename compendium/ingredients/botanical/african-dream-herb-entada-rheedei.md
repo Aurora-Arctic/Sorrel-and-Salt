@@ -2,17 +2,27 @@
 status: approved
 nomenclature: botanical
 canonicalName: 'Entada rheedei'
+categories:
+  - Dream Work
+  - Luck
 folkNames:
   - 'Snuff Box Sea Bean'
   - 'Cacoon Vine'
 references:
   - source: wikipedia-entada-rheedei
+    locator: Traditional use
     nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
       - description
       - folkNames
+      - categories
+  - source: sobiecki-2008-plant-use-in-divination
+    locator: 'Appendix 1, Entada rheedii row'
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Seed
     references:
@@ -20,6 +30,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: 0f29c1d58256668dbd0d1e4bbf8f39a79a02fb0068608354f4e097ee1c6fd15a
 ---
 
 # African Dream Herb

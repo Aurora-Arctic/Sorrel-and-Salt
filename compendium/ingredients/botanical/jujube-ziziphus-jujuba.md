@@ -7,6 +7,8 @@ folkNames:
   - Chinese Jujube
   - Red Date
   - Chinese Date
+categories:
+  - Longevity
 references:
   - source: wikipedia-jujube
     nameBasis: stated
@@ -14,6 +16,13 @@ references:
       - canonicalName
       - description
       - folkNames
+  - source: de-groot-religious-system-of-china-v4
+    locator: p. 403
+    nameBasis: resolved
+    headedAs: 'Jujube (Zizyphus)'
+    resolvedBy: wikipedia-jujube
+    supports:
+      - categories
 variants:
   - form: Fruit
     references:
@@ -21,6 +30,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: cf85fe6294d5612f4460c4d81841314aae8e77731f3c08fa057ee815d23755f3
 ---
 
 # Jujube

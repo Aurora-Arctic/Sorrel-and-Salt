@@ -28,9 +28,11 @@ folkNames:
 deities:
   - Vishnu
   - Krishna
+categories:
+  - Warding
 references:
   - source: wikipedia-abrus-precatorius
-    locator: lead; Symptoms and Siddha paragraphs
+    locator: lead; Symptoms and Siddha paragraphs; Uses
     nameBasis: stated
     supports:
       - canonicalName
@@ -40,6 +42,7 @@ references:
       - colours
       - safetyNotes
       - toxic
+      - categories
 variants:
   - form: Seed
     safetyNotes: One well-chewed seed can be fatal. The seeds contain abrin.
@@ -51,6 +54,7 @@ variants:
           - form
           - safetyNotes
           - toxic
+seedUpdate: d2ba2a284fc8071218df9d6109250e08252de0fc083c50b6714d9b4a3a53b658
 ---
 
 # Rosary Pea

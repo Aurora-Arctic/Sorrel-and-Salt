@@ -1,6 +1,10 @@
 ---
 status: approved
 nomenclature: unknown
+categories:
+  - Protection
+  - Luck
+  - Cleansing
 folkNames:
   - 'Chomane'
   - 'Ilibovu'
@@ -15,17 +19,20 @@ colours:
   - 'grey'
 references:
   - source: wikipedia-letsoku
+    locator: Medicinal applications
     supports:
       - nomenclature
       - description
       - folkNames
       - colours
+      - categories
 variants:
   - form: Earth
     references:
       - source: wikipedia-letsoku
         supports:
           - form
+seedUpdate: 8407a833fe9f02db8cefd366d40e7de9f1acbfddc4caaa799cc04a1c11cb16b1
 ---
 
 # Letsoku

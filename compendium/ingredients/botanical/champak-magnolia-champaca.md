@@ -11,6 +11,8 @@ folkNames:
   - Yellow Jade Orchid Tree
   - Fragrant Himalayan Champaca
   - Michelia champaca
+categories:
+  - Love
 references:
   - source: wikipedia-magnolia-champaca
     locator: lead; flowers; uses; religion paragraphs
@@ -20,6 +22,13 @@ references:
       - description
       - folkNames
       - colours
+  - source: folkard-1884-plant-lore
+    locator: Chapter X, Magical Plants (love-philtre passage)
+    nameBasis: resolved
+    headedAs: Champak
+    resolvedBy: wikipedia-magnolia-champaca
+    supports:
+      - categories
 variants:
   - form: Flower
     references:
@@ -27,6 +36,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: b191fd05d3b52a019b0b0ebbfa973d6380ce3179c4d05756f56a273c93091bf5
 ---
 
 # Champak

@@ -4,6 +4,8 @@ nomenclature: botanical
 canonicalName: 'Securidaca longepedunculata'
 safetyNotes: 'The article says root extracts make a poison used on arrows in West Africa.'
 toxic: true
+categories:
+  - Banishing
 folkNames:
   - 'Krinkhout'
   - 'Satene'
@@ -24,6 +26,11 @@ references:
       - colours
       - safetyNotes
       - toxic
+  - source: sobiecki-2008-plant-use-in-divination
+    locator: 'Appendix 1, Securidaca longepedunculata row'
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Root
     references:
@@ -31,6 +38,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: bae875132e839a650cad4ef538c68d1a5dc4d409c91430090facab562d216169
 ---
 
 # Violet Tree
