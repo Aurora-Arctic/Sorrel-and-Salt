@@ -50,7 +50,7 @@ with no steps says so.
   with the Ingredients page's `readViewedEntry` and draw it with `viewedDetailsOf`, without the
   card's actions. No eye for an ingredient deleted since or one the service withheld
   ("Unavailable Ingredient").
-- A one-off ingredient (MB.40) shows its own name and form, a One-Off badge (the muted tint, `badge--retired`: grey in the light theme, pale in the dark; the owner's call, 2026-10-29), no eye and no marks.
+- A one-off ingredient (MB.40) shows its own name and form, a One-Off badge (the muted tint, `badge--muted`: grey in the light theme, pale in the dark; the owner's call, 2026-10-29), no eye and no marks.
 - The formal name shows in brackets only where two different ingredients in the spell share a
   label. The same ingredient in two forms does not get one.
 - The `action` slot takes the page's controls, in a `.spell-recipe__actions` row at the heading's

@@ -73,7 +73,7 @@ function distinctSteps(spell: { steps?: StepIdentity[] }, context: z.RefinementC
     context.addIssue({ code: 'custom', path: ['steps', index, field], message });
   spell.steps?.forEach((step, index) => {
     if (step.id != null) {
-      if (seen.id.has(step.id)) flag(index, 'id', 'This step is already in the recipe');
+      if (seen.id.has(step.id)) flag(index, 'id', 'This step is already in the spell.');
       seen.id.add(step.id);
     }
     if (step.ingredientId == null && step.name != null) {
