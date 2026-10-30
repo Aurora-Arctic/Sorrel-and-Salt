@@ -15,6 +15,7 @@ export {
   CauldronIcon,
   CheckIcon,
   CloseIcon,
+  CompleteIcon,
   CopyIcon,
   DotsIcon,
   LinkIcon,
