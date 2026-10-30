@@ -15,6 +15,7 @@ import Combobox from '../../Combobox';
 import CategoryChips from '../../CategoryChips';
 import { FieldShell, fieldDescription } from '../../Field';
 import FormIcon from '../../FormIcon';
+import { CheckIcon } from '../../IconTip';
 import { useLookup } from '../../IngredientForm/suggestions';
 import { COMPENDIUM_HEADING, YOUR_INGREDIENTS } from '../../IngredientForm/values';
 import { SpellIngredientSuggestionsDocument } from './documents';
@@ -108,23 +109,6 @@ const noteOf = (formal: string | null | undefined, chips: ReactNode): ReactNode 
     </>
   );
 };
-
-/** Lucide's Check (not a dependency here), drawn at 12px: the mark on a pressed filter chip. */
-const CheckMark = (): ReactElement => (
-  <svg
-    width="12"
-    height="12"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="3"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-  >
-    <path d="M20 6 9 17l-5-5" />
-  </svg>
-);
 
 /** Every live form of every live ingredient found, under the heading of where it came from. */
 function pickRows(
@@ -348,7 +332,7 @@ export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): Re
                       }
                     >
                       {on ? (
-                        <CheckMark />
+                        <CheckIcon />
                       ) : (
                         <span className="spell-steps__filter-dot" aria-hidden="true" />
                       )}

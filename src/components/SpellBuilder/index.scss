@@ -246,6 +246,8 @@
 
 .spell-steps__filter-chip svg {
   flex: none;
+  inline-size: 12px;
+  block-size: 12px;
 }
 
 // A toggle: at rest a neutral outline with a dot in the group colour; pressed, a solid group fill,
