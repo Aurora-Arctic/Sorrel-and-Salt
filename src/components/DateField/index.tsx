@@ -199,7 +199,7 @@ export default function DateField({
               month_caption: 'day-picker__caption',
               dropdowns: 'day-picker__dropdowns',
               dropdown_root: 'day-picker__dropdown-root',
-              dropdown: 'day-picker__dropdown',
+              dropdown: 'select day-picker__dropdown',
               caption_label: 'day-picker__label',
               nav: 'day-picker__nav',
               button_previous: 'day-picker__step',
