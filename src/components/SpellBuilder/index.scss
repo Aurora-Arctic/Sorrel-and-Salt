@@ -410,7 +410,7 @@ body .spell-builder .collapsible-section__fields > section {
   }
 }
 
-// In Coven Inventory: a small jar, the name, and the words under it.
+// In Coven Inventory: the panel and its list of `JarLine`s.
 .spell-inventory {
   display: flex;
   flex-direction: column;
@@ -425,153 +425,12 @@ body .spell-builder .collapsible-section__fields > section {
   @include list-reset;
 }
 
-.spell-inventory__line {
-  // The Edit Stock press's stretch (`__press::after`) is placed against the line.
-  position: relative;
-  display: grid;
-  // The Quick Look eye has the right-hand column, level with the name.
-  grid-template-areas:
-    'jar name look'
-    'jar words .';
-  grid-template-columns: 2rem minmax(0, 1fr) auto;
-  column-gap: space(2);
-
-  // A one-off holds no stock, but its jar looks as if it holds something: the glass, the level
-  // and the wave are all muted ink in place of the stock green, at the middling level.
-  &.is-one-off .spell-inventory__jar {
-    .jar-shelf__glass,
-    .jar-shelf__lid,
-    .jar-shelf__facet,
-    .jar-shelf__wave {
-      stroke: $text-muted;
-    }
-
-    .jar-shelf__level {
-      fill: $text-muted;
-    }
-  }
+// The eye at seven eighths of its size, as the recipe's steps draw it, and the verdict raised above
+// the press's stretch, so each keeps its own press.
+.spell-inventory .jar-line__look .icon-tip__look {
+  @include icon-button($icon-size * 0.875, $glyph-size * 0.875);
 }
 
-.spell-inventory__jar {
-  grid-area: jar;
-  align-self: center;
-
-  svg {
-    display: block;
-    inline-size: 100%;
-    block-size: auto;
-    // As `.spell-jar svg`: the stroke on the bottom edge is not clipped.
-    overflow: visible;
-  }
-}
-
-// The name line: the name alone, cut short with an ellipsis.
-.spell-inventory__title {
-  display: flex;
-  grid-area: name;
-  gap: space(2);
-  align-items: baseline;
-  min-width: 0;
-}
-
-.spell-inventory__name {
-  min-width: 0;
-  overflow: hidden;
-  font-weight: 500;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-// The words line: the verdict's mark, then the need and the have.
-.spell-inventory__words {
-  display: flex;
-  grid-area: words;
-  gap: space(1);
-  align-items: center;
-  color: $text-muted;
-}
-
-// Edit Stock behind the jar and name: the button holds the name, stretched by its `::after` as
-// `.jar-shelf__press` is. The ellipsis and growth are on the inner span, since `overflow: hidden`
-// or a transform on the button would clip or contain the stretch.
-.spell-inventory__press {
-  @include button-reset;
-
-  display: inline-flex;
-  min-width: 0;
-  text-align: start;
-  color: inherit;
-  font: inherit;
-
-  .spell-inventory__name {
-    transition: transform $motion-short ease-out;
-    transform-origin: left center;
-  }
-
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-  }
-
-  &:focus-visible {
-    outline: 0;
-
-    &::after {
-      @include focus-ring($text-primary, $focus-ring-strength, inset);
-    }
-  }
-}
-
-.spell-inventory__line:has(.spell-inventory__press:focus-visible) {
-  .spell-inventory__jar > svg {
-    animation: jar-shelf-shake $jar-shake-duration ease-out;
-  }
-
-  .spell-inventory__name {
-    transform: scale($jar-name-grow);
-  }
-}
-
-@media (hover: hover) {
-  .spell-inventory__line:has(.spell-inventory__press:hover) {
-    .spell-inventory__jar > svg {
-      animation: jar-shelf-shake $jar-shake-duration ease-out;
-    }
-
-    .spell-inventory__name {
-      transform: scale($jar-name-grow);
-    }
-  }
-}
-
-@include reduced-motion {
-  .spell-inventory__line:has(.spell-inventory__press:hover),
-  .spell-inventory__line:has(.spell-inventory__press:focus-visible) {
-    .spell-inventory__jar > svg {
-      animation: none;
-    }
-
-    .spell-inventory__name {
-      transition: none;
-      transform: none;
-    }
-  }
-}
-
-// The eye at seven eighths of its size, as the recipe's steps draw it,
-// and raised above the press's stretch with the verdict, so each keeps its own press.
-.spell-inventory__look {
-  display: inline-flex;
-  grid-area: look;
-  align-self: center;
-
-  .icon-tip__look {
-    @include icon-button($icon-size * 0.875, $glyph-size * 0.875);
-  }
-}
-
-.spell-inventory__look,
 .spell-inventory__verdict {
   position: relative;
   z-index: 1;
@@ -612,7 +471,7 @@ body .spell-builder .collapsible-section__fields > section {
 }
 
 @container spell-column (max-width: #{$narrow-column}) {
-  .spell-inventory__name {
+  .spell-inventory .jar-line__name {
     overflow: visible;
     white-space: normal;
   }

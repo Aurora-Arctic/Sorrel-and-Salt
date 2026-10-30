@@ -11,8 +11,7 @@
   }
 }
 
-// The deduction preview: one line per step, the step's jar as In Coven Inventory draws it
-// (the paint is JarShelf's, picked by the modifier class) beside its name and the words.
+// The deduction preview: one `JarLine` per step, as the recipe page's In Coven Inventory draws it.
 .working-deductions {
   display: flex;
   flex-direction: column;
@@ -20,65 +19,22 @@
 
   // No ◆ beside the jars: the jar is each line's mark.
   @include list-reset;
-}
 
-.working-deductions__line {
-  display: grid;
-  grid-template-columns: 2.5rem minmax(0, 1fr);
-  column-gap: 0.75rem;
-  align-items: center;
-
-  // A one-off holds no stock: the jar is drawn in muted ink at the middling level.
-  &.is-one-off .working-deductions__jar {
-    .jar-shelf__glass,
-    .jar-shelf__lid,
-    .jar-shelf__facet,
-    .jar-shelf__wave {
-      stroke: $text-muted;
-    }
-
-    .jar-shelf__level {
-      fill: $text-muted;
-    }
-  }
-}
-
-.working-deductions__jar {
-  grid-row: 1 / 3;
-
-  svg {
-    display: block;
-    inline-size: 100%;
-    block-size: auto;
+  // A long name wraps here: the preview has the room, and a cut name hides which step it is.
+  .jar-line__name {
     overflow: visible;
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
-}
 
-.working-deductions__press {
-  @include button-reset;
+  .jar-line__words {
+    font-size: 0.875rem;
+    font-variant-numeric: tabular-nums;
 
-  display: block;
-  inline-size: 100%;
-
-  &:focus-visible {
-    @include focus-ring($text-primary, $focus-ring-strength);
-  }
-}
-
-.working-deductions__name {
-  font-weight: 500;
-  min-inline-size: 0;
-  overflow-wrap: anywhere;
-}
-
-.working-deductions__words {
-  color: $text-muted;
-  font-size: 0.875rem;
-  font-variant-numeric: tabular-nums;
-
-  b {
-    font-weight: 500;
-    color: $text-primary;
+    b {
+      font-weight: 500;
+      color: $text-primary;
+    }
   }
 }
 

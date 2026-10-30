@@ -1,5 +1,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
+@use '../../scss/jar-motion' as *;
 
 // The jar shelf: jars stand on a thin plank with a concave bracket at either end under each
 // (claude-docs/components/jar-shelf.md, "Shelf geometry").
@@ -11,10 +12,6 @@ $-drawing-width: $jar-drawing-width;
 $-drawing-height: $jar-drawing-height;
 $-plank: $jar-plank;
 $-bracket: 7px;
-// How far the name grows on hover and how long the jar's shake lasts; shared with the recipe page's
-// inventory lines, so they live in _variables.scss.
-$-name-grow: $jar-name-grow;
-$-shake-duration: $jar-shake-duration;
 
 .jar-shelf {
   // `$items: false`: the mixin's `> li::before { content: none }` is more specific than
@@ -131,82 +128,10 @@ $-shake-duration: $jar-shake-duration;
   }
 }
 
-// The hover on an editable jar: the drawing's `svg` shakes once and the name grows, only where
-// there is a button and a device that really hovers. Keyboard focus does both through
-// `:focus-visible`, outside the hover query (claude-docs/components/jar-shelf.md, "Hover, focus and motion").
-.jar-shelf__press .jar-shelf__name {
-  // Inline-block, since a transform has no effect on an inline box; the scale grows from the name's
-  // middle.
-  display: inline-block;
-  transition: transform $motion-short ease-out;
-}
-
-@media (hover: hover) {
-  .jar-shelf__press:hover .jar-shelf__name {
-    transform: scale($-name-grow);
-  }
-
-  .jar-shelf__jar:has(.jar-shelf__press:hover) > svg {
-    animation: jar-shelf-shake $-shake-duration ease-out;
-  }
-
-  @include reduced-motion {
-    .jar-shelf__jar:has(.jar-shelf__press:hover) > svg {
-      animation: none;
-    }
-  }
-}
-
-// Keyboard focus on an editable jar: the same shake and growth, on `:focus-visible` so a click does
-// not repeat it.
-.jar-shelf__jar:has(.jar-shelf__press:focus-visible) {
-  > svg {
-    animation: jar-shelf-shake $-shake-duration ease-out;
-  }
-
-  .jar-shelf__name {
-    transform: scale($-name-grow);
-  }
-}
-
-// Reduced motion: no shake and no transition on the name, which still changes size.
-@include reduced-motion {
-  .jar-shelf__press .jar-shelf__name {
-    transition: none;
-  }
-
-  .jar-shelf__jar:has(.jar-shelf__press:focus-visible) > svg {
-    animation: none;
-  }
-}
-
-// A wobble that dies away: each swing smaller than the last, in degrees because no token holds an
-// angle.
-@keyframes jar-shelf-shake {
-  0% {
-    transform: rotate(0);
-  }
-
-  20% {
-    transform: rotate(-6deg);
-  }
-
-  40% {
-    transform: rotate(4.5deg);
-  }
-
-  60% {
-    transform: rotate(-3deg);
-  }
-
-  80% {
-    transform: rotate(1.5deg);
-  }
-
-  100% {
-    transform: rotate(0);
-  }
-}
+// The hover and focus on an editable jar, shared with the recipe page's jar lines
+// (claude-docs/components/jar-line.md, "Hover, focus and motion").
+@include jar-press-motion('.jar-shelf__jar', '.jar-shelf__press', '> svg', '.jar-shelf__name');
+@include jar-shake-keyframes;
 
 // The amount of a Low or Out jar as the button that opens its tip: text with no box or tint and the
 // help cursor, raised above the press's stretch.

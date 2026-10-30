@@ -73,7 +73,7 @@ The owner's call (2026-10-21): when the pointer is over a jar the coven can edit
 - **The name** scales to 1.15 from its middle over `$motion-short` (150ms), and eases back when the pointer leaves. The name is `inline-block` so the scale takes effect, and a transform does not move its neighbours. A long name may reach a little past its cell for as long as the pointer is there.
 - **Who gets it.** Only a jar with a button: the rule starts from `.jar-shelf__press:hover`, which the button's stretched `::after` makes the whole cell, and the shake is found from its cell with `:has()`. A viewer's plain jars do not move. The effect sits in `@media (hover: hover)`, so a touch screen never gets one stuck half way. Keyboard focus shakes the drawing too (the owner, 2026-10-21), by the same animation from `:focus-visible` on the button, so a mouse click does not shake it twice; that rule sits outside the hover query. The name grows on focus too (the owner, 2026-10-21), by the same scale and transition, from the same `:focus-visible` button; the name's `inline-block` and transition also sit outside the query for that reason. Hovering a Low or Out amount, which is raised above the stretch as a button of its own, does not start the effect.
 - **Reduced motion.** No shake, from hover or from focus, and the name changes size with no transition.
-- The angles, the 500ms and the 1.15 have no token (no token holds an angle or a scale), so they are private variables and a keyframe list in `index.scss`, each with a comment saying so.
+- The angles, the 500ms and the 1.15 have no token (no token holds an angle or a scale), so the keyframe list is in `_jar-motion.scss`, with a comment saying so.
 
 ## Tests
 
@@ -121,7 +121,7 @@ With `$items: false`, the mixin's `> li::before { content: none }` (bullets off)
 
 On an editable jar the hover shakes the drawing once, gently, and the name grows a little. It applies only where there is a button, so a viewer's shelf is still, and only on a device that really hovers, so a touch screen is not left with a jar stuck mid-shake. Keyboard focus does both too, as `:focus-visible` so a mouse click does not repeat it. Those rules sit outside the hover query, since a keyboard on a touch device has no hover to wait for.
 
-The hover amounts (how far the name grows, how long the shake lasts) are shared with the recipe page's inventory lines (`SpellBuilder/index.scss`), whose press shakes the same jar. The values live in `_variables.scss` so both say the same.
+The rules are the `jar-press-motion` mixin in `src/scss/_jar-motion.scss`, which `JarLine` ([`jar-line.md`](jar-line.md)) includes too for the recipe page's inventory and the Complete Working preview, so a pressable jar moves the same everywhere. The amounts (how far the name grows, how long the shake lasts) are in `_variables.scss`.
 
 The shake moves the jar's whole `svg` (the cell's own child, never the amount's Low or Out symbol), not the level inside it, which has its own transform transition (`__rise`). The drawing pivots on its base, the plank. The name is `inline-block`, since a transform has no effect on an inline box, and the scale grows from the middle of the name and moves nothing around it. The wobble is a few degrees to one side and the other, each swing smaller than the last, then still. It is in degrees, not a token, because no token holds an angle.
 

@@ -9,11 +9,10 @@ import { graphqlQuery, graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
 import BusyButton from '../BusyButton';
-import { JarDrawing, ONE_OFF_HELD, pickJarShape } from '../JarShelf';
+import JarLine from '../JarLine';
 import Notice from '../Notice';
 import { stockState } from '../StockBadge/stock-state';
 import { withUnit } from '../StockBadge/stock-words';
-import { StockJarButton } from '../StockDialog';
 import './index.scss';
 import type { WorkingCompletionProps, WorkingStep } from './types';
 import { SKIP_REASON } from './warnings';
@@ -83,41 +82,31 @@ function DeductionLine({ row, onSaved }: { row: PreviewRow; onSaved: () => void 
   const held = taken ? { quantity: taken.before, threshold: taken.lowStockThreshold } : null;
   // Short is Low whatever the Low mark says: the jar is emptied.
   const state = short ? 'low' : held ? stockState(held.quantity, held.threshold) : 'ok';
-  const modifier = oneOff
-    ? ''
-    : unstocked
-      ? 'jar-shelf__jar--empty'
-      : state === 'ok'
-        ? ''
-        : `jar-shelf__jar--${state}`;
+  const tone = oneOff ? 'ok' : unstocked ? 'empty' : state;
   const form = step.form ?? '';
-  const shape = pickJarShape(step.seed ?? step.name, form);
-  const drawing = <JarDrawing shape={shape} held={oneOff ? ONE_OFF_HELD : held} />;
-  const label = ['Edit Stock', step.stock?.ingredientName, form && formLabel(form)]
-    .filter(Boolean)
-    .join(', ');
   return (
-    <li className={`working-deductions__line${oneOff ? ' is-one-off' : ''}`}>
-      <span className={`working-deductions__jar ${modifier}`}>
-        {step.stock && !oneOff ? (
-          // The same dialog and handler as a jar on the recipe page's In Coven Inventory.
-          <StockJarButton
-            {...step.stock}
-            ariaLabel={label}
-            className="working-deductions__press"
-            onSaved={onSaved}
-          >
-            {drawing}
-          </StockJarButton>
-        ) : (
-          drawing
-        )}
-      </span>
-      <span className="working-deductions__name">
-        {number}. {step.name}
-      </span>
-      <span className="working-deductions__words">
-        {taken ? (
+    <JarLine
+      className="working-deductions__line"
+      seed={step.seed ?? step.name}
+      kind={form}
+      held={held}
+      tone={tone}
+      oneOff={oneOff}
+      name={`${number}. ${step.name}`}
+      press={
+        step.stock
+          ? {
+              ...step.stock,
+              // The same dialog and handler as a jar on the recipe page's In Coven Inventory.
+              ariaLabel: ['Edit Stock', step.stock.ingredientName, form && formLabel(form)]
+                .filter(Boolean)
+                .join(', '),
+              onSaved,
+            }
+          : undefined
+      }
+      words={
+        taken ? (
           <>
             <span>
               takes <b>{amount(taken.quantity, taken.unit)}</b>
@@ -140,9 +129,9 @@ function DeductionLine({ row, onSaved }: { row: PreviewRow; onSaved: () => void 
           'have no jar · takes nothing'
         ) : (
           `${SKIP_REASON[skipped!.reason]} · takes nothing`
-        )}
-      </span>
-    </li>
+        )
+      }
+    />
   );
 }
 
@@ -215,17 +204,16 @@ export default function WorkingCompletion({
               <DeductionLine key={row.step.id} row={row} onSaved={() => void preview.refetch()} />
             ))}
             {orphans.map((warning) => (
-              <li key={warning.stepId} className="working-deductions__line">
-                <span className="working-deductions__jar jar-shelf__jar--empty">
-                  <JarDrawing shape={pickJarShape('', '')} held={null} />
-                </span>
-                <span className="working-deductions__name">
-                  {warning.stepName ?? 'A removed step'}
-                </span>
-                <span className="working-deductions__words">
-                  {SKIP_REASON[warning.reason]} · takes nothing
-                </span>
-              </li>
+              <JarLine
+                key={warning.stepId}
+                className="working-deductions__line"
+                seed=""
+                kind=""
+                held={null}
+                tone="empty"
+                name={warning.stepName ?? 'A removed step'}
+                words={`${SKIP_REASON[warning.reason]} · takes nothing`}
+              />
             ))}
           </ul>
           {rows.length + orphans.length === 0 && <p>Nothing will be taken from any jar.</p>}
