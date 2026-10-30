@@ -33,7 +33,8 @@ import { VISIBILITY_LABELS } from '../GrimoireList/params';
 import Notice from '../Notice';
 import SaveStatus, { RecoveryNotice } from '../SaveStatus';
 import Skeleton from '../Skeleton';
-import { SpellCategoriesField, sameCategories, useCategoryName } from './categories-field';
+import { SpellCategoriesField, sameCategories } from './categories-field';
+import { useCategoryIndex } from './category-index';
 import { SpellComparison } from './comparison-panel';
 import { JarDetails } from './jar-details';
 import { DAYS_OF_THE_WEEK, MOON_PHASES } from './constants';
@@ -271,7 +272,7 @@ const SpellBuilder = ({
   const status = useWatch({ control, name: 'status' });
   const steps = useWatch({ control, name: 'steps' });
   const values = useWatch({ control }) as SpellBuilderValues;
-  const categoryName = useCategoryName();
+  const { names: categoryNames } = useCategoryIndex();
   // The autosave never sends a blank new instruction: it stays in the form, unsaved and
   // unmentioned.
   const sendable = steps.filter((step) => !isBlankNewInstruction(step));
@@ -303,7 +304,7 @@ const SpellBuilder = ({
     });
   const lineOf = (name: SectionName): string =>
     SECTIONS[name]
-      .map((field) => lineOfField(field, values, categoryName))
+      .map((field) => lineOfField(field, values, (id) => categoryNames.get(id)))
       .filter(Boolean)
       .join(' · ') || 'Nothing yet';
   /** Opens each section one of whose fields now holds an error, so the error is seen. */

@@ -1,11 +1,8 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
 import { type ReactElement, useId, useMemo } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { CategoriesDocument } from '../IngredientForm/categories';
-import { graphqlQuery } from '../../lib/graphql-client';
-import { useCategoryColors } from './category-colors';
+import { useCategoryIndex } from './category-index';
 import CategoryChips, { type CardCategory } from '../CategoryChips';
 import type { GroupColors } from '../../lib/types';
 import type { SpellBuilderValues } from './types';
@@ -145,15 +142,15 @@ export function SpellComparison(): ReactElement {
   const { control } = useFormContext<SpellBuilderValues>();
   const watchedPicks = useWatch({ control, name: 'categoryIds' });
   const steps = useWatch({ control, name: 'steps' }) ?? [];
-  const { data } = useQuery({ ...graphqlQuery(CategoriesDocument), throwOnError: false });
-  const groups = useCategoryColors();
-  const intended = useMemo(() => {
-    const byId = new Map(data?.categories.edges.map(({ node }) => [node.id, node]));
-    // A pick whose name has not landed yet is left out until it does.
-    return (watchedPicks ?? []).flatMap((id) => {
-      const found = byId.get(id);
-      return found ? [{ id, name: found.name }] : [];
-    });
-  }, [data, watchedPicks]);
-  return <ComparisonPanel intended={intended} steps={steps} groups={groups} />;
+  const { names, colors } = useCategoryIndex();
+  const intended = useMemo(
+    () =>
+      // A pick whose name has not landed yet is left out until it does.
+      (watchedPicks ?? []).flatMap((id) => {
+        const name = names.get(id);
+        return name === undefined ? [] : [{ id, name }];
+      }),
+    [names, watchedPicks],
+  );
+  return <ComparisonPanel intended={intended} steps={steps} groups={colors} />;
 }

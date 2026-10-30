@@ -2,6 +2,8 @@ import type { Route } from 'next';
 import type { ReactNode } from 'react';
 import type { SpellBuilderStepsQuery } from '../../gql/graphql';
 import type { FieldProps } from '../Field/types';
+import type { PickerCategory } from '../CategoryPicker/types';
+import type { GroupColors } from '../../lib/types';
 import type { SpellStepSend, SpellStepValue } from './steps/types';
 import type { SpellStatus, SpellVisibility } from '@/modules/grimoire';
 
@@ -158,4 +160,13 @@ export interface SpellVisibilityFieldProps {
   created: boolean;
   /** Saves everything the form holds now (the autosave's flush); rejects when the save is refused. */
   flush: () => Promise<void>;
+}
+
+/** `useCategoryIndex`'s answer: every live category, and its name and group colours by id. */
+export interface CategoryIndex {
+  categories: PickerCategory[];
+  names: ReadonlyMap<string, string>;
+  colors: ReadonlyMap<string, GroupColors>;
+  isPending: boolean;
+  isError: boolean;
 }

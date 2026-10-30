@@ -7,7 +7,7 @@ import { useFormContext, useWatch } from 'react-hook-form';
 import { chipColors } from '../../../lib/chip-colors';
 import type { GroupColors } from '../../../lib/types';
 import { compareJar } from '../comparison-panel';
-import { useCategoryColors, useCategoryNames } from '../category-colors';
+import { useCategoryIndex } from '../category-index';
 import type { SpellBuilderValues } from '../types';
 import type { SpellIngredientSuggestionsQuery } from '../../../gql/graphql';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
@@ -194,8 +194,7 @@ export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): Re
   const [text, setText] = useState('');
   const [active, setActive] = useState(false);
   const [refused, setRefused] = useState(false);
-  const colors = useCategoryColors();
-  const names = useCategoryNames();
+  const { colors, names } = useCategoryIndex();
   const { control } = useFormContext<SpellBuilderValues>();
   const assignedIds = useWatch({ control, name: 'categoryIds' });
   const assigned = useMemo(() => new Set(assignedIds ?? []), [assignedIds]);
