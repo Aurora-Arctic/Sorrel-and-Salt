@@ -45,9 +45,7 @@ body .collapsible-section {
 // anywhere opens the section while only the button is what a keyboard reaches and what is announced.
 .collapsible-section__head {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: space(1);
+  @include stack(1);
   padding-block: space(3);
 }
 
@@ -122,9 +120,7 @@ body .collapsible-section {
 // Open, its fields beneath the heading at the form's own gap, as far from the
 // next hairline as the heading is from its own.
 body .collapsible-section__fields {
-  display: flex;
-  flex-direction: column;
-  gap: space(5);
+  @include stack(5);
   min-width: 0;
   padding-block: space(1) space(5);
 
@@ -139,6 +135,6 @@ body .collapsible-section__fields {
 // margins.
 body .collapsible-section__title {
   margin: 0;
-  font-size: 1.25rem;
+  font-size: type-size('title');
   line-height: 1.2;
 }

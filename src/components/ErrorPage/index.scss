@@ -1,11 +1,10 @@
 @use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
 
 // The same column as `.not-authorized`: a head and the way on, inside the
 // page's own `.page-frame`.
 .error-page {
-  display: flex;
-  flex-direction: column;
-  gap: space(5);
+  @include stack(5);
 }
 
 .error-page__title,

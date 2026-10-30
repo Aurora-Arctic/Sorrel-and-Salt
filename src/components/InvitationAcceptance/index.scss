@@ -1,11 +1,10 @@
 @use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
 
 // The page's `.page-frame--narrow` (src/app/invite/[token]/page.tsx) sets the width, so the panel
 // sets none. Its `.header` is the layout primitive's, so only the stack below it is set here.
 .invitation-acceptance {
-  display: flex;
-  flex-direction: column;
-  gap: space(3);
+  @include stack(3);
 }
 
 .invitation-acceptance__actions {

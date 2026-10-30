@@ -18,32 +18,9 @@
   cursor: pointer;
 }
 
-// The whole card is the link: the name's one `<a>` stretches an empty `::after` over the article. Not an
-// `<a>` around the card, which a screen reader would read whole and which cannot hold the Low badge's button.
+// The whole card is the link, so the Low badge's button can sit inside it.
 .ingredient-card .ingredient-card__name a {
-  color: $text-primary;
-  text-decoration: none;
-
-  &:hover {
-    color: $text-primary;
-  }
-
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: radius('surface');
-  }
-
-  // The ring goes round the card, drawn on the overlay, so the name shows none of
-  // its own and no `:has()` is needed.
-  &:focus-visible {
-    outline: none;
-
-    &::after {
-      @include focus-ring;
-    }
-  }
+  @include card-link;
 }
 
 // The slot: the hole in the cabinet the card's face sits in. It never moves or resizes, so a row of cards
@@ -127,8 +104,9 @@
   }
 }
 
-.ingredient-card-slot:hover,
-.ingredient-card-slot:focus-within {
+// The lift, on hover only where a pointer can hover, so a tap on a phone does not leave the card
+// slid down; keyboard focus lifts it everywhere.
+@mixin ingredient-card-lifted {
   .ingredient-card {
     background-color: $surface-card-hover;
     // The second shadow is cast upward, onto the drawer's rim above the face.
@@ -142,6 +120,16 @@
   .ingredient-card-slot__drawer::before {
     inset-block-start: 1px;
   }
+}
+
+@media (hover: hover) {
+  .ingredient-card-slot:hover {
+    @include ingredient-card-lifted;
+  }
+}
+
+.ingredient-card-slot:focus-within {
+  @include ingredient-card-lifted;
 }
 
 // The colour and shadow change stay; the movement and the fade go.

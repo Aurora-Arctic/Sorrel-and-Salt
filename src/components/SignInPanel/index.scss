@@ -1,5 +1,6 @@
 @use 'sass:map';
 @use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
 
 // The page around it is `.page-frame--narrow` (src/app/sign-in/page.tsx); the panel fills its
 // column on `.panel` with a step more padding, `border-box`. Compounded with `.panel` because in
@@ -52,9 +53,7 @@
 }
 
 .sign-in-panel__provider {
-  display: flex;
-  flex-direction: column;
-  gap: space(1);
+  @include stack(1);
 }
 
 // Each roster button carries `.btn` for its shape; this rule is only where a brand button differs:

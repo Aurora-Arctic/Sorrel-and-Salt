@@ -13,9 +13,7 @@ $jump-link-line: 1.25;
 // one: an entry is read, not filled in, and its sections hold a side column.
 .ingredient-entry {
   box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-  gap: space(6);
+  @include stack(6);
 
   > * {
     box-sizing: border-box;

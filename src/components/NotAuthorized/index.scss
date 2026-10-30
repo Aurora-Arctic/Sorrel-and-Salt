@@ -1,12 +1,11 @@
 @use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
 
 // The page's own column, as `.welcome` is: a head and a link. The frame that
 // centres it and caps it at the reading measure is `.page-frame` on
 // `forbidden.tsx`'s `main` (claude-docs/styling.md, "The page frame").
 .not-authorized {
-  display: flex;
-  flex-direction: column;
-  gap: space(5);
+  @include stack(5);
 }
 
 .not-authorized__title,

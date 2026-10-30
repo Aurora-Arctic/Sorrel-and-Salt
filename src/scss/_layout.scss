@@ -5,9 +5,7 @@
   // Bare elements carry document rhythm regardless of class, as _typography.scss's
   // `p`/`ul` do; `.header`/`.footer` opt an element into the flex treatment.
   section {
-    display: flex;
-    flex-direction: column;
-    gap: space(4);
+    @include stack(4);
     margin: space(4) 0;
   }
 
@@ -16,9 +14,7 @@
   }
 
   .header {
-    display: flex;
-    flex-direction: column;
-    gap: space(2);
+    @include stack(2);
 
     // The gap alone spaces a head: flex margins never collapse, so a heading's
     // bottom margin and a lede's top margin would otherwise add to it.

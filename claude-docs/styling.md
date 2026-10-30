@@ -60,7 +60,8 @@ to.
   number (MB.115): `$wide-column` (the admin area's column, 80rem),
   `$dialog-column` and `$dialog-column-wide` (a dialog's content, 32rem and
   48rem), `$icon-size` (a small control's 1.5rem square, WCAG 2.2's 24px
-  target) around a `$glyph-size` mark (1rem), `$icon-size-large` around
+  target) around a `$glyph-size` mark (1rem), `$glyph-size-small` (0.875rem,
+  a click callout's arrow and a round mark's icon), `$icon-size-large` around
   `$glyph-size-large` (2rem around 1.25rem, a list row's Edit pencil, larger
   outside a form on the owner's call), `$tip-width` (a tip's widest
   line, 18rem, capped at the window), `$close-target` (the dialog's close
@@ -412,7 +413,9 @@ happens at the element, and a theme toggle re-colours a chip without a render.
 It replaced one `--group-<slug>` custom property and one `.chip--<slug>` class
 per key of M0.7's `$category-groups` map (since retired), which a group created
 at runtime cannot have.
-`chip()` refuses a slug at compile time.
+`chip()` refuses a slug at compile time. A rule that needs the group's colour
+outside a chip (a combobox row's bar, a group's mark) takes `group-colour()`
+(`_mixins.scss`), the same `light-dark()` pick `chip()` makes.
 
 `light-dark()` is newer than the browser floor (it needs Safari 17.5, the floor
 is 17.4), so Turbopack's Lightning CSS lowers it: every `color-scheme` declaration also sets
@@ -646,8 +649,10 @@ Below body copy, type takes one of five sizes by role from `type-size()`:
 field errors; `caption` (0.8125rem) for hints, metadata, chips and badges;
 `overline` (0.75rem) for the `.eyebrow`; and `tab` (0.6875rem) for the one
 place five labels sit across a phone, under the icons of the section nav's
-bottom bar (MB.7). The headings' scale is
-`heading-size()`'s, above.
+bottom bar (MB.7). Two steps sit between body copy and the smallest
+heading: `title` (1.25rem) for a form section's or a detail panel's title
+(CollapsibleSection, UserDetail), and `lead` (1.125rem) for a form's group
+name (IngredientForm). The headings' scale is `heading-size()`'s, above.
 
 ### The top inset
 
@@ -1294,7 +1299,7 @@ heavier than the reverse; light reverts to the browser default.
   (the card surface, floating shadow and muted edge a list or summary
   floats on); `field-box` (the edge, ground and height a field and the
   admin menu's summary share); `arrived` (the fade a list or tab's new
-  content comes in with, the one `list-frame-fade-in` keyframe,
+  content comes in with, the one `fade-in` keyframe (`fade-out` beside it),
   `$arrive-duration` by default); `loading-motion($animation, $delay)`
   (applies a loading animation and, under `reduced-motion`, swaps it for the
   `loading-pulse` keyframe at `$pulse-duration`: the one slow opacity pulse

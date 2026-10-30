@@ -229,7 +229,7 @@ $skeleton-fade: 300ms;
     // out. Both linear, so the place is always just covered (eased, both sit half-faded and the text dims).
     // Only for a row over a fading one; filled backwards only, as forwards would hold the row opaque.
     .ingredient-form__row--arriving {
-      animation: list-frame-fade-in $skeleton-fade linear backwards;
+      animation: fade-in $skeleton-fade linear backwards;
 
       @include reduced-motion {
         animation: none;
@@ -382,9 +382,7 @@ $skeleton-fade: 300ms;
 // Closed, a row is one line (citation cut at its end, locator, edit and remove icons); open, the citation
 // wraps whole with the tier and Locator box beneath, so the row holds at 320px.
 .ingredient-form__references {
-  display: flex;
-  flex-direction: column;
-  gap: space(1);
+  @include stack(1);
 
   @include list-reset(0, false);
 }
@@ -470,9 +468,7 @@ $skeleton-fade: 300ms;
 // What the edit opens beneath the line: the tier, and the Locator box.
 .ingredient-form__reference-detail {
   grid-column: 1 / -1;
-  display: flex;
-  flex-direction: column;
-  gap: space(2);
+  @include stack(2);
 
   // Closed is the attribute's, which the display above would otherwise undo.
   &[hidden] {
@@ -608,9 +604,7 @@ $panel-head-gap: space(3);
 // small step apart. Spans given the list roles, so they are made blocks
 // here; the bubble's own `max-content` width keeps it to the longest rule.
 .ingredient-form__cite-rules {
-  display: flex;
-  flex-direction: column;
-  gap: space(1);
+  @include stack(1);
 }
 
 .ingredient-form__cite-rule {
@@ -647,9 +641,7 @@ $panel-head-gap: space(3);
 }
 
 .ingredient-form__variant-title {
-  display: flex;
-  flex-direction: column;
-  gap: space(1);
+  @include stack(1);
   min-width: 0;
   overflow-wrap: anywhere;
 }
@@ -692,9 +684,7 @@ $panel-head-gap: space(3);
 // Open, its sections flush beneath the line, between hairlines, as the
 // ingredient's are, and Done at the end.
 .ingredient-form__variant-fields {
-  display: flex;
-  flex-direction: column;
-  gap: space(3);
+  @include stack(3);
   margin-top: space(3);
   padding: 0 space(1) space(1) 0;
 
@@ -718,7 +708,7 @@ $panel-head-gap: space(3);
   }
 
   .collapsible-section__title {
-    font-size: 1.125rem;
+    font-size: type-size('lead');
   }
 }
 
@@ -769,9 +759,7 @@ $panel-head-gap: space(3);
 // The second pickers beneath a substitute list, one per linked ingredient in
 // forms, at a field's spacing.
 .ingredient-form__substitute-forms {
-  display: flex;
-  flex-direction: column;
-  gap: space(3);
+  @include stack(3);
 }
 
 // The summary while it reads: a tip's width, which a summary with a description grows to. The panel is as
@@ -809,9 +797,7 @@ $panel-head-gap: space(3);
 }
 
 .entry-summary__facts {
-  display: flex;
-  flex-direction: column;
-  gap: space(1);
+  @include stack(1);
   margin: 0;
 
   > div {
@@ -852,7 +838,7 @@ $panel-head-gap: space(3);
 // above its buttons. Not nested in the form: it is drawn in the modal's layer.
 .promote-question__title {
   display: block;
-  font-size: 1.125rem;
+  font-size: type-size('lead');
   font-weight: 500;
   line-height: 1.35;
 }
@@ -882,7 +868,7 @@ $panel-head-gap: space(3);
 
   dd {
     margin: space(1) 0 0;
-    font-size: 1.125rem;
+    font-size: type-size('lead');
     font-weight: 500;
     overflow-wrap: anywhere;
   }

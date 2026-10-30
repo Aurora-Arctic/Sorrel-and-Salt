@@ -379,8 +379,8 @@
 
   .add-action__plus svg {
     display: block;
-    width: 1.25rem;
-    height: 1.25rem;
+    width: $glyph-size-large;
+    height: $glyph-size-large;
   }
 
   // Under the forms' column, 28rem of its own width, an action goes beneath the heading rather than
@@ -524,8 +524,15 @@
     @include arrived;
   }
 
-  @keyframes list-frame-fade-in {
+  // The site's one fade in and one fade out, emitted once: a list's arrival, a callout, a mark leaving.
+  @keyframes fade-in {
     from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes fade-out {
+    to {
       opacity: 0;
     }
   }
@@ -636,9 +643,7 @@
   // A titled section of a framed page: its head, then its content. Clear of
   // the top inset when the page's own nav jumps to it.
   .page-frame__section {
-    display: flex;
-    flex-direction: column;
-    gap: space(3);
+    @include stack(3);
     scroll-margin-top: calc(#{$top-inset} + #{space(4)});
 
     > h2 {
@@ -669,9 +674,7 @@
   .page-column,
   .coven-layout {
     box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    gap: space(5);
+    @include stack(5);
     margin-inline: auto;
     padding: space(6) space(4);
   }
@@ -694,16 +697,12 @@
   }
 
   .admin-contents__list {
-    display: flex;
-    flex-direction: column;
-    gap: space(3);
+    @include stack(3);
 
     @include list-reset;
 
     > li {
-      display: flex;
-      flex-direction: column;
-      gap: space(1);
+      @include stack(1);
     }
   }
 
@@ -728,9 +727,7 @@
   // claude-docs/components/page-nav.md, "Where it stands";
   // claude-docs/auth/admin-bootstrap.md, "The account page".
   .page-with-nav {
-    display: flex;
-    flex-direction: column;
-    gap: space(6);
+    @include stack(6);
   }
 
   .page-with-nav > * {
@@ -788,7 +785,7 @@
     border-radius: 50%;
 
     > svg {
-      width: 0.875rem;
+      width: $glyph-size-small;
       height: auto;
     }
   }
@@ -873,9 +870,7 @@
       }
 
       > tbody {
-        display: flex;
-        flex-direction: column;
-        gap: space(3);
+        @include stack(3);
       }
 
       // Every card on the card surface, so the bands give way: each row is already its own box. Room around
@@ -1157,9 +1152,7 @@
   }
 
   .field {
-    display: flex;
-    flex-direction: column;
-    gap: space(2);
+    @include stack(2);
   }
 
   // A size, not a look, as `.btn--small` is, so it composes with every
@@ -1943,9 +1936,7 @@
 
   // Groups rows under one name — checkboxes, or a list of entries.
   .fieldset {
-    display: flex;
-    flex-direction: column;
-    gap: space(2);
+    @include stack(2);
     min-width: 0;
     margin: 0;
     padding: 0;
@@ -1974,9 +1965,7 @@
 
   // Chips and badges laid out as an IngredientCard will need; composes with `.modal`.
   .specimen {
-    display: flex;
-    flex-direction: column;
-    gap: space(3);
+    @include stack(3);
   }
 
   // The name block and the badges side by side while they fit; when they do not

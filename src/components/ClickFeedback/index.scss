@@ -29,11 +29,11 @@ $arrow-rise: 7px;
   }
 
   &.is-placed {
-    animation: click-feedback-fade-in $motion-short ease both;
+    animation: fade-in $motion-short ease both;
   }
 
   &.is-closing {
-    animation: click-feedback-fade-out $motion-short ease both;
+    animation: fade-out $motion-short ease both;
     pointer-events: none;
   }
 
@@ -42,18 +42,6 @@ $arrow-rise: 7px;
     &.is-closing {
       animation: none;
     }
-  }
-}
-
-@keyframes click-feedback-fade-in {
-  from {
-    opacity: 0;
-  }
-}
-
-@keyframes click-feedback-fade-out {
-  to {
-    opacity: 0;
   }
 }
 
@@ -124,8 +112,8 @@ $arrow-rise: 7px;
   color: $dismiss-ink;
 
   svg {
-    inline-size: 0.875rem;
-    block-size: 0.875rem;
+    inline-size: $glyph-size-small;
+    block-size: $glyph-size-small;
   }
 
   &:hover {

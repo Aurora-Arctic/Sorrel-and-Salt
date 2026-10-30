@@ -570,8 +570,12 @@ $font-heading: var(--font-display), 'Cormorant Unicase', Georgia, 'Times New Rom
 // No webfont: incidental inline code, and every platform ships a good monospace.
 $font-mono: ui-monospace, 'SF Mono', 'SFMono-Regular', 'Menlo', 'Consolas', monospace;
 
-// The sizes below body copy, by role. The headings' scale is $heading-sizes.
+// The sizes from just above body copy down, by role. The headings' scale is $heading-sizes.
 $type-sizes: (
+  // A form section's title and a detail panel's name: between body and the smallest heading.
+  'title': 1.25rem,
+  // A form's group name, a step above body copy.
+  'lead': 1.125rem,
   'body': 1rem,
   // Labels, buttons, notices and field errors: text a person acts on.
   'small': 0.875rem,
@@ -581,7 +585,7 @@ $type-sizes: (
   'overline': 0.75rem,
   // The label under an icon in the phone's bottom bar, where five sit across a 375px screen: the one
   // role below overline, since Lexend's "Compendium" is wider than a fifth of that at 0.75rem.
-  'tab': 0.6875rem,
+  'tab': 0.6875rem
 );
 
 @function type-size($role) {
@@ -733,6 +737,9 @@ $icon-size: 1.5rem;
 // The mark inside a `$icon-size` box: InfoTip's ⓘ, Combobox's icons, the
 // user list's marks. Each wrote 1rem.
 $glyph-size: 1rem;
+
+// A mark smaller than `$glyph-size`: a click callout's arrow, a round mark's icon.
+$glyph-size-small: 0.875rem;
 
 // The larger icon control outside a form: a list row's Edit pencil, a 2rem square around a 1.25rem
 // mark, so a column of them reads at a glance. A form keeps `$icon-size`, where its pencils sit

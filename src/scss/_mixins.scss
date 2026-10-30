@@ -275,6 +275,12 @@
   color: color-mix(in srgb, $text-primary 30%, $color);
 }
 
+// A category group's colour for the current theme, from its row's pair (set by chipColors() on the
+// element): `light-dark()` picks one off `color-scheme`, since a group an admin adds has no token.
+@function group-colour($dark: var(--chip-dark), $light: var(--chip-light)) {
+  @return light-dark($light, $dark);
+}
+
 // A pill in its group's colours, at one of two emphasis levels: `full` (a wash, the
 // category chip everywhere) and `quiet` (neutral: the +N control's look, not a category chip). The pair is the group
 // row's `colorDark` and `colorLight`, by default read from the element, where chipColors()
@@ -288,7 +294,7 @@
     }
   }
 
-  $color: light-dark($light, $dark);
+  $color: group-colour($dark, $light);
 
   display: inline-flex;
   align-items: center;
@@ -463,6 +469,33 @@
   display: flex;
   flex-direction: column;
   gap: space($step);
+}
+
+// A card whose name's one link is the whole card: plain ink, an empty `::after` stretched over the
+// card (which must be positioned), and the focus ring drawn on that overlay so it rounds the card. Not
+// an `<a>` around the card, which a screen reader would read whole and which cannot hold a button.
+@mixin card-link {
+  color: $text-primary;
+  text-decoration: none;
+
+  &:hover {
+    color: $text-primary;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: radius('surface');
+  }
+
+  &:focus-visible {
+    outline: none;
+
+    &::after {
+      @include focus-ring;
+    }
+  }
 }
 
 // The grid of a page whose jump menu stands to the left of content that fills
@@ -743,10 +776,10 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
 }
 
 // The new content of a list or tab, faded in as it replaces the skeleton
-// that stood in for it (`list-frame-fade-in`, _primitives.scss, the one
+// that stood in for it (`fade-in`, _primitives.scss, the one
 // keyframe); under reduced motion it shows at once.
 @mixin arrived($duration: $arrive-duration) {
-  animation: list-frame-fade-in $duration ease both;
+  animation: fade-in $duration ease both;
 
   @include reduced-motion {
     animation: none;

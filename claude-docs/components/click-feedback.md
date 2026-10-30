@@ -142,9 +142,9 @@ half each way up and down.
 
 ## Fades
 
-The callout and the badge fade in and out at `$motion-short`, by two
-keyframes of their own, as MenuButton's menu does: `click-feedback-fade-in`
-and `click-feedback-fade-out`. Under reduced motion neither fades.
+The callout and the badge fade in and out at `$motion-short`, on the site's
+one `fade-in` and `fade-out` keyframes (`_primitives.scss`). Under reduced
+motion neither fades.
 
 Two things look simpler and do not work. The fade in starts only once the
 piece is placed (`is-placed`): a piece is hidden until Floating UI has placed
