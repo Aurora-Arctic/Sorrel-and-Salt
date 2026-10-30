@@ -38,6 +38,7 @@ export default async function InvitationPanel({ token, here }: { token: string; 
       panel = {
         status: 'refused',
         message: standing.message,
+        token,
         emailHref: standing.reason === 'unverified' ? emailPagePath(here) : undefined,
       };
     } else if (standing.tier === 'site') {

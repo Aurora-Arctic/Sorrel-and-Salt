@@ -1,7 +1,7 @@
 'use client';
 
 import { usePendingNavigation } from '../../lib/navigation';
-import { type ReactElement, useState } from 'react';
+import { type ReactElement, useEffect, useRef, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
@@ -20,6 +20,12 @@ const AcceptInvitationDocument = graphql(`
     acceptInvitation(token: $token) {
       id
     }
+  }
+`);
+
+const RecordCardAttemptDocument = graphql(`
+  mutation RecordCardAttempt($token: String!) {
+    recordCardAttempt(token: $token)
   }
 `);
 
@@ -97,6 +103,18 @@ const Accept = ({
   );
 };
 
+// Tells the server a signed-in account opened a link it refused, once per view. The service decides whether
+// the open is worth a row; a failure is ignored, as the refusal on the page already says all there is to say.
+const RecordRefusal = ({ token }: { token: string }): null => {
+  const sent = useRef(false);
+  useEffect(() => {
+    if (sent.current) return;
+    sent.current = true;
+    graphqlRequest(RecordCardAttemptDocument, { token }).catch(() => undefined);
+  }, [token]);
+  return null;
+};
+
 const InvitationAcceptance = (props: InvitationAcceptanceProps): ReactElement => {
   const grant = grantOf(props);
   return (
@@ -115,6 +133,7 @@ const InvitationAcceptance = (props: InvitationAcceptanceProps): ReactElement =>
       {props.status === 'refused' && (
         <>
           <Notice kind="error">{props.message}</Notice>
+          {props.token && <RecordRefusal token={props.token} />}
           {props.emailHref && (
             <p className="invitation-acceptance__actions">
               <a className="btn btn--solid" href={props.emailHref}>

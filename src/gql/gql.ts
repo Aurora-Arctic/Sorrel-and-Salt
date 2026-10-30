@@ -85,6 +85,7 @@ type Documents = {
     "\n  query IngredientSearchCupboardMatches($workspaceId: ID!, $query: String, $first: Int) {\n    workspaceIngredients(workspaceId: $workspaceId, query: $query, first: $first) {\n      pageInfo {\n        hasNextPage\n      }\n      edges {\n        node {\n          id\n          slug\n          name\n          canonicalName\n          nomenclature\n          cupboardEntry(workspaceId: $workspaceId) {\n            label\n          }\n        }\n      }\n    }\n  }\n": typeof types.IngredientSearchCupboardMatchesDocument,
     "\n  query GrimoireSearchMatches(\n    $workspaceId: ID!\n    $query: String\n    $status: SpellStatus\n    $first: Int\n  ) {\n    grimoire(workspaceId: $workspaceId, query: $query, status: $status, first: $first) {\n      pageInfo {\n        hasNextPage\n      }\n      edges {\n        node {\n          id\n          title\n        }\n      }\n    }\n  }\n": typeof types.GrimoireSearchMatchesDocument,
     "\n  mutation AcceptInvitation($token: String!) {\n    acceptInvitation(token: $token) {\n      id\n    }\n  }\n": typeof types.AcceptInvitationDocument,
+    "\n  mutation RecordCardAttempt($token: String!) {\n    recordCardAttempt(token: $token)\n  }\n": typeof types.RecordCardAttemptDocument,
     "\n  mutation CreateInvitation($workspaceId: ID!, $email: String!, $role: InvitableRole!) {\n    createInvitation(workspaceId: $workspaceId, email: $email, role: $role) {\n      id\n    }\n  }\n": typeof types.CreateInvitationDocument,
     "\n  mutation LeaveWorkspace($workspaceId: ID!) {\n    leaveWorkspace(workspaceId: $workspaceId)\n  }\n": typeof types.LeaveWorkspaceDocument,
     "\n  mutation PromoteSuccessor($workspaceId: ID!, $userId: ID!, $role: WorkspaceRole!) {\n    updateMemberRole(workspaceId: $workspaceId, userId: $userId, role: $role) {\n      role\n    }\n  }\n": typeof types.PromoteSuccessorDocument,
@@ -186,6 +187,7 @@ const documents: Documents = {
     "\n  query IngredientSearchCupboardMatches($workspaceId: ID!, $query: String, $first: Int) {\n    workspaceIngredients(workspaceId: $workspaceId, query: $query, first: $first) {\n      pageInfo {\n        hasNextPage\n      }\n      edges {\n        node {\n          id\n          slug\n          name\n          canonicalName\n          nomenclature\n          cupboardEntry(workspaceId: $workspaceId) {\n            label\n          }\n        }\n      }\n    }\n  }\n": types.IngredientSearchCupboardMatchesDocument,
     "\n  query GrimoireSearchMatches(\n    $workspaceId: ID!\n    $query: String\n    $status: SpellStatus\n    $first: Int\n  ) {\n    grimoire(workspaceId: $workspaceId, query: $query, status: $status, first: $first) {\n      pageInfo {\n        hasNextPage\n      }\n      edges {\n        node {\n          id\n          title\n        }\n      }\n    }\n  }\n": types.GrimoireSearchMatchesDocument,
     "\n  mutation AcceptInvitation($token: String!) {\n    acceptInvitation(token: $token) {\n      id\n    }\n  }\n": types.AcceptInvitationDocument,
+    "\n  mutation RecordCardAttempt($token: String!) {\n    recordCardAttempt(token: $token)\n  }\n": types.RecordCardAttemptDocument,
     "\n  mutation CreateInvitation($workspaceId: ID!, $email: String!, $role: InvitableRole!) {\n    createInvitation(workspaceId: $workspaceId, email: $email, role: $role) {\n      id\n    }\n  }\n": types.CreateInvitationDocument,
     "\n  mutation LeaveWorkspace($workspaceId: ID!) {\n    leaveWorkspace(workspaceId: $workspaceId)\n  }\n": types.LeaveWorkspaceDocument,
     "\n  mutation PromoteSuccessor($workspaceId: ID!, $userId: ID!, $role: WorkspaceRole!) {\n    updateMemberRole(workspaceId: $workspaceId, userId: $userId, role: $role) {\n      role\n    }\n  }\n": types.PromoteSuccessorDocument,
@@ -514,6 +516,10 @@ export function graphql(source: "\n  query GrimoireSearchMatches(\n    $workspac
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation AcceptInvitation($token: String!) {\n    acceptInvitation(token: $token) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation AcceptInvitation($token: String!) {\n    acceptInvitation(token: $token) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RecordCardAttempt($token: String!) {\n    recordCardAttempt(token: $token)\n  }\n"): (typeof documents)["\n  mutation RecordCardAttempt($token: String!) {\n    recordCardAttempt(token: $token)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
