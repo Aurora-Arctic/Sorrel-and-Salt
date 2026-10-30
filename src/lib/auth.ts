@@ -276,6 +276,29 @@ function pinPasskeyOrigin(ctx: HookContext): void {
   }
 }
 
+/**
+ * Refuses to remove an account's last passkey when it has no other way to sign in: no provider account and no
+ * password. The plugin deletes any passkey its owner names, which could otherwise lock the account out for good.
+ */
+async function keepAWayIn(ctx: HookContext): Promise<void> {
+  const session = await sessionOf(ctx);
+  const id = ctx.body?.id;
+  if (!session || typeof id !== 'string') return;
+  const userId = session.user.id;
+  const passkeys = await ctx.context.adapter.findMany<{ id: string }>({
+    model: 'passkey',
+    where: [{ field: 'userId', value: userId }],
+  });
+  // Another account's id falls through to the plugin, which refuses it as not this account's.
+  if (!passkeys.some((row) => row.id === id) || passkeys.length > 1) return;
+  const accounts = await ctx.context.internalAdapter.findAccounts(userId);
+  if (accounts.some((row) => row.providerId !== 'credential' || row.password)) return;
+  throw new APIError('BAD_REQUEST', {
+    code: 'LAST_SIGN_IN_METHOD',
+    message: 'This passkey is the only way to sign in to this account, so it cannot be removed.',
+  });
+}
+
 /** The verification token's claims, decoded and not verified: a caller may only refuse on them. */
 function tokenClaims(token: unknown): { email?: string; updateTo?: string } | undefined {
   const payload = typeof token === 'string' ? token.split('.')[1] : undefined;
@@ -469,6 +492,7 @@ export const auth = betterAuth({
       if (ctx.path === '/verify-email') return gateEmailChange(ctx);
       if (ctx.path === '/send-verification-email') return requireOwnResend(ctx);
       if (PASSKEY_VERIFY_PATHS.has(ctx.path)) return pinPasskeyOrigin(ctx);
+      if (ctx.path === '/passkey/delete-passkey') return keepAWayIn(ctx);
       if (ctx.path !== '/callback/:id') return;
       await sweepQuietly(ctx);
     }),
