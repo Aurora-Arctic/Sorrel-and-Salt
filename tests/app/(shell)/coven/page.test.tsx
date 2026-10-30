@@ -141,6 +141,29 @@ describe('the /coven/[slug] page', () => {
       );
     });
 
+    it('lists the grimoire in Contents for a viewer, who reads it', async () => {
+      await renderAs('viewer');
+
+      const contents = screen.getByRole('region', { name: 'Contents' });
+      const grimoire = within(contents).getByRole('link', { name: 'Grimoire' });
+      expect(grimoire).toHaveAttribute('href', '/coven/fixture-coven/grimoire');
+      expect(grimoire).toHaveAccessibleDescription(
+        'What the coven makes: its spells, and the workings it has recorded.',
+      );
+    });
+
+    it('lists Ingredients, Grimoire and Members in that order for a member', async () => {
+      await renderAs('member');
+
+      const contents = screen.getByRole('region', { name: 'Contents' });
+      const links = within(contents).getAllByRole('link');
+      expect(links.map((link) => [link.textContent, link.getAttribute('href')])).toEqual([
+        ['Ingredients', '/coven/fixture-coven/ingredients'],
+        ['Grimoire', '/coven/fixture-coven/grimoire'],
+        ['Members', '/coven/fixture-coven/members'],
+      ]);
+    });
+
     it('lists no Members for a viewer, who cannot read it', async () => {
       await renderAs('viewer');
 

@@ -133,7 +133,7 @@ const PanelCategories = ({
       <div className="facet-panel__line">
         <div className="facet-panel__grow">
           <FacetCombobox
-            label="Moon Phase"
+            label="Moon Phases"
             name="moonPhase"
             typeahead
             placeholder="Add a moon phase"
@@ -149,7 +149,7 @@ const PanelCategories = ({
         </div>
         <div className="facet-panel__grow">
           <FacetCombobox
-            label="Day of Week"
+            label="Days of the Week"
             name="dayOfWeek"
             typeahead
             placeholder="Add a day"
@@ -164,7 +164,7 @@ const PanelCategories = ({
       <div className="facet-panel__line">
         <div className="facet-panel__grow">
           <FacetCombobox
-            label="Coven Member"
+            label="Coven Members"
             name="maker"
             typeahead
             placeholder="Add a member"

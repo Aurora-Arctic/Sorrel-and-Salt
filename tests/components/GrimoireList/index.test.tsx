@@ -39,6 +39,7 @@ const props = (over: Partial<GrimoireListProps> = {}): GrimoireListProps => ({
   workspaceId: 'w1',
   covenSlug: 'fixture-coven',
   status: 'complete',
+  canCreate: true,
   spells: [
     {
       id: 's1',
@@ -166,6 +167,19 @@ describe('GrimoireList', () => {
     expect(screen.queryByRole('list', { name: 'Spells' })).toBeNull();
   });
 
+  // A viewer, who cannot write a spell, is told which roles can, as an empty cupboard tells them. The
+  // roles named are the state's data: nothing else tells a viewer who to ask, and a member is not told.
+  it('names, to a viewer only, the roles that can write a spell on an empty Spells tab', () => {
+    const empty = { spells: [], total: 0, position: undefined };
+    const { unmount } = render(<List {...props({ ...empty, canCreate: false })} />);
+    const state = () => screen.getByRole('status', { name: 'No Spells' });
+    expect(state()).toHaveTextContent(/\bmember\b/i);
+    expect(state()).toHaveTextContent(/\bowner\b/i);
+    unmount();
+    render(<List {...props(empty)} />);
+    expect(state()).not.toHaveTextContent(/\bmember\b|\bowner\b/i);
+  });
+
   it('names the drafts tab in its empty region', () => {
     render(
       <List
@@ -262,7 +276,7 @@ describe('GrimoireList', () => {
     const open = () => {
       fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
     };
-    // Moon Phase, Day of Week and Coven Member type to narrow; Visibility is a chip of radios.
+    // Moon Phases, Days of the Week and Coven Members type to narrow; Visibility is a chip of radios.
     const show = (field: string) => {
       const box = screen.getByRole('combobox', { name: field });
       box.focus();
@@ -288,8 +302,8 @@ describe('GrimoireList', () => {
         </Navigating>,
       );
       open();
-      await pick('Moon Phase', /^Waxing Crescent/);
-      await pick('Day of Week', /^Friday/);
+      await pick('Moon Phases', /^Waxing Crescent/);
+      await pick('Days of the Week', /^Friday/);
       const params = await apply();
       expect(params.getAll('moonPhase')).toEqual(['Waxing Crescent']);
       expect(params.getAll('dayOfWeek')).toEqual(['Friday']);
@@ -302,7 +316,7 @@ describe('GrimoireList', () => {
         </Navigating>,
       );
       open();
-      await pick('Coven Member', /^Fixture Member/);
+      await pick('Coven Members', /^Fixture Member/);
       fireEvent.click(
         within(screen.getByRole('group', { name: 'Visibility' })).getByRole('radio', {
           name: 'Private 1',
@@ -320,7 +334,7 @@ describe('GrimoireList', () => {
         </Navigating>,
       );
       open();
-      show('Moon Phase');
+      show('Moon Phases');
       expect(screen.getByRole('option', { name: /^Waxing Crescent\D*2/ })).toBeInTheDocument();
       expect(screen.queryByRole('option', { name: /^Full/ })).not.toBeInTheDocument();
     });
@@ -387,6 +401,21 @@ describe('GrimoireList', () => {
       expect(chip).toBeDisabled();
     });
 
+    it('names each box in the plural, as it takes several, and says when it has none to offer', () => {
+      render(
+        <Navigating push={router.push}>
+          <List {...props({ facets: { ...props().facets, makers: [] } })} />
+        </Navigating>,
+      );
+      open();
+      const members = screen.getByRole('combobox', { name: 'Coven Members' });
+      expect(members).toHaveAttribute('placeholder', 'No Coven Members');
+      expect(screen.getByRole('combobox', { name: 'Days of the Week' })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'Show Moon Phases suggestions' }),
+      ).toBeInTheDocument();
+    });
+
     it('draws the icon of a moon phase beside it in the list', () => {
       render(
         <Navigating push={router.push}>
@@ -394,7 +423,7 @@ describe('GrimoireList', () => {
         </Navigating>,
       );
       open();
-      show('Moon Phase');
+      show('Moon Phases');
       expect(
         screen.getByRole('option', { name: /^Waxing Crescent/ }).querySelector('svg'),
       ).not.toBeNull();

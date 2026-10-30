@@ -24,7 +24,6 @@ import {
   readGrimoireCategoryCounts,
   readGrimoireFacetCounts,
   readLookedSpell,
-  readRecordingOf,
 } from './reads';
 import type { GrimoireTabProps } from './types';
 import { readViewedEntry } from '../../ingredients/reads';
@@ -112,9 +111,9 @@ export async function grimoireTab({
   const canDelete = rolePermits(role, { spell: ['delete'] });
   const closeHref = GRIMOIRE_PARAMS.href(path, filter, { after, before });
   // The members box needs the roster (`member: read`) as well as the right to record, as the spell page's.
+  // The dialog reads the roster and the steps itself once opened, so the list reads neither.
   const canRecord =
     rolePermits(role, { working: ['create'] }) && rolePermits(role, { member: ['read'] });
-  const recording = await readRecordingOf(workspace, page.spells, canRecord);
   // Where a delete from the card or the Quick Look lands: this tab as it was, filter and page
   // kept, `?spell` dropped, with the name for the Notice.
   const deletedHrefOf = (title: string | null): Route => deletedHrefFor(closeHref, title);
@@ -167,14 +166,10 @@ export async function grimoireTab({
           ...spell,
           lookHref: lookHrefOf(closeHref, spell.id),
           ...(canUpdate && { editHref: editHrefOf(closeHref, spell.id) }),
-          ...(recording.stepsById.has(spell.id) && {
-            recordWorking: {
-              workspaceId: workspace.id,
-              members: recording.members,
-              recorderId: membership.userId,
-              steps: recording.stepsById.get(spell.id) ?? [],
-            },
-          }),
+          ...(canRecord &&
+            spell.status === 'complete' && {
+              recordWorking: { workspaceId: workspace.id, recorderId: membership.userId },
+            }),
           ...((canCreate || canDelete) && {
             more: {
               workspaceId: workspace.id,
@@ -191,6 +186,7 @@ export async function grimoireTab({
         position={page.position}
         cursor={{ after, before }}
         total={page.totalCount}
+        canCreate={canCreate}
         {...pagerHrefs(page.pageInfo, (cursor) =>
           GRIMOIRE_PARAMS.href(path, filter, { ...cursor }),
         )}

@@ -1,7 +1,6 @@
 import type { Route } from 'next';
 import type { CardCategory } from '../CategoryChips/types';
 import type { LastEditProps } from '../LastEdit/types';
-import type { RecordWorkingButtonProps } from '../RecordWorking/types';
 import type { SpellMoreMenuProps } from '../SpellRecipe/types';
 import type { SpellStatus, SpellVisibility } from '@/modules/grimoire';
 
@@ -16,11 +15,11 @@ export interface SpellCardProps {
    */
   editHref?: Route;
   /**
-   * What the Record a Working button needs: the coven, its members for the participants box, the
-   * signed-in member and the spell's ingredient steps. Built by the page for a complete spell and a
-   * role that may record a working; none draws no button. The spell's id and visibility are the card's own.
+   * What the Record a Working button needs: the coven and the signed-in member. Given by the page for a
+   * complete spell and a role that may record a working; none draws no button. The dialog reads the
+   * members and steps when it opens; the spell's id and visibility are the card's own.
    */
-  recordWorking?: Omit<RecordWorkingButtonProps, 'spellId' | 'spellVisibility' | 'spellName'>;
+  recordWorking?: Pick<SpellCardRecordWorkingProps, 'workspaceId' | 'recorderId'>;
   /**
    * What the More menu needs: the coven, its slug and where a delete lands, with whether the role
    * may duplicate and delete. Built by the page; none draws no menu, and a menu with neither
@@ -50,4 +49,14 @@ export interface SpellCardProps {
   workingCount?: number;
   /** The heading level, 2 by default, as IngredientCard's. */
   level?: 2 | 3;
+}
+
+/** The card's Record a Working button, which reads what its dialog needs when it opens. */
+export interface SpellCardRecordWorkingProps {
+  workspaceId: string;
+  spellId: string;
+  spellName: string;
+  spellVisibility: SpellVisibility;
+  /** The signed-in member recording, who starts as a participant. */
+  recorderId: string;
 }

@@ -20,7 +20,9 @@
 the spell's name. The recipe
 page shows it to a role that may create a working (owner and member) on a complete spell, and
 passes `members` (`{ userId, name }`, from `memberRoster` and `displayNamesOf`, since a member may
-not list members themselves) and `steps` (`{ id, name }` for each ingredient step).
+not list members themselves) and `steps` (`{ id, name }` for each ingredient step). A spell card's
+Record a Working holds the same form but reads `members` and `steps` itself once its dialog opens
+([`spell-card.md`](spell-card.md), "Record a Working, Edit and the More menu").
 
 The dialog holds a date (today by default), participants (a `Combobox` of the members with chips;
 a typed name is added as a name chip), a note, and visibility. Participants is a `<fieldset>`, so while a save runs it shuts with the other fields, chips and all, and a refused name describes the box through `FieldError`. Visibility never exceeds the

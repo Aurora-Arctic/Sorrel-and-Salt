@@ -126,9 +126,17 @@ never the `User` type, whose email a scope would have to guard. The name
 resolves through `usersById` (MB.10;
 [`auth/display-names.md`](../auth/display-names.md)), so the names on a page
 of members are one read. Through `me`, a member's name sits eight levels
-down, one past the depth limit (["Protections"](protections.md)), and no
-query root reaches a `Workspace` more shallowly yet. The members page does not
-need one: a server component calls `listMembers` directly (M6.13).
+down, one past the depth limit (["Protections"](protections.md)), so
+`workspace(id: ID!): Workspace!` reaches a coven from the query root, where a
+name sits six levels down. Its service, `workspaceById` in
+`src/modules/coven/services/workspace-by-id.ts`, checks `workspace: read` and
+answers the same bare `FORBIDDEN` to a stranger and to an id no coven holds, so
+the answer says nothing of whether the coven exists. A spell card's Record a
+Working dialog reads its members through it once opened
+([`components/spell-card.md`](../components/spell-card.md), "Record a Working,
+Edit and the More menu"). The members page does not need it: a server component
+calls `listMembers` directly (M6.13). `tests/modules/coven/services/workspace-by-id.test.ts`
+holds the refusals, and `graphql/workspace-members.test.ts` the field.
 
 `users(query: String, awaitingApproval: Boolean, role: UserRole)` is the admin user list
 (MB.52), a paged connection of the ordinary `User`, so `email` resolves through
