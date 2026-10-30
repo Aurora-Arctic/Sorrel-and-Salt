@@ -18,7 +18,7 @@ export function SourceEditIcon(): ReactElement {
         d="M7 14H3.5a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1h5l3 3v2.5M8.5 2v3h3M13 9.5l1.5 1.5-4 4H9v-1.5z"
         fill="none"
         stroke="currentColor"
-        strokeWidth="1.25"
+        strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       />

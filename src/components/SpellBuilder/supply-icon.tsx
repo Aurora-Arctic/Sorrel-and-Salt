@@ -1,8 +1,8 @@
 import type { ReactElement } from 'react';
 
-// The two verdicts StockBadge has no symbol for, drawn as its `StockIcon` is (16 box, 1.6 round
+// The two verdicts StockBadge has no symbol for, drawn as its `StockIcon` is (16 box, 1.5 round
 // stroke, currentColor, hidden from screen readers) so the four match. Strokes stay half a stroke
-// (0.8) inside the box. The word beside each stays visible.
+// (0.75) inside the box. The word beside each stays visible.
 
 const Icon = ({ className, children }: { className: string; children: ReactElement }) => (
   <svg
@@ -10,7 +10,7 @@ const Icon = ({ className, children }: { className: string; children: ReactEleme
     viewBox="0 0 16 16"
     fill="none"
     stroke="currentColor"
-    strokeWidth="1.6"
+    strokeWidth="1.5"
     strokeLinecap="round"
     strokeLinejoin="round"
     aria-hidden="true"
