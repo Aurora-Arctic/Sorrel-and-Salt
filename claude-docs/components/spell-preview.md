@@ -30,7 +30,7 @@ full screen, with nothing else on screen. `src/components/SpellPreview/`.
   rows and spacing (`$columns: false`); the columns fit well above that width, so the breakpoint
   stays the one the recipe page stacks its own side column at. The bar holding the controls is the
   same width and centred the same way, so the close X ends where the content does. The steps carry
-  an "Instructions" heading, the Ingredients heading's twin and level with it, from `body.tsx`.
+  a "Steps" heading, the Ingredients heading's twin and level with it, from `body.tsx`.
 - Two controls at the end of the bar (at the top of the content, no wider than it), both plain icon buttons (`icon-tip__edit icon-tip__edit--plain`, a visually hidden name, no border, background or visible label): Screen Awake and Close (`CloseIcon`, an X, named "Close"). There is no site header, navigation, link or editing control.
 
 ## How it opens and closes

@@ -187,7 +187,7 @@
 // The Steps heading shows on paper and in the Preview pane (recipe-columns); on the screen's page
 // and Quick Look the jump menu heads the steps, so the heading is there for a screen reader alone.
 // The section around them is no box at all, so the steps stay the stack's own item.
-.spell-recipe__instructions {
+.spell-recipe__steps-section {
   display: contents;
 
   // An h3 where the body sits under a dialog's or pane's h2.
