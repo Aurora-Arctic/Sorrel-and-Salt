@@ -3,6 +3,7 @@ import type { ReactElement } from 'react';
 import { covenHome } from '../../lib/shell-home';
 import AccountMenu from '../AccountMenu';
 import ThemeToggle from '../ThemeToggle';
+import { ViewerIdProvider } from '../../lib/viewer-id';
 import AddIngredientButton from './add-ingredient-button';
 import BrandName from './brand-name';
 import MainBody from './main-body';
@@ -77,7 +78,9 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
           click, and the next Tab would restart at the top of the page. */}
       <span id="main" className="skip-target" tabIndex={-1} />
       <div className="app-shell__main">
-        <MainBody>{children}</MainBody>
+        <ViewerIdProvider id={viewer.id}>
+          <MainBody>{children}</MainBody>
+        </ViewerIdProvider>
       </div>
     </div>
   );

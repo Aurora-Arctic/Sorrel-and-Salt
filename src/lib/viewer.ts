@@ -32,6 +32,7 @@ async function viewerFor(session: Session): Promise<ShellContext> {
     : 0;
   return {
     viewer: {
+      id: session.userId,
       name: me.name,
       canCurate: curates(session.role),
       canCreate: me.canCreateWorkspace,
