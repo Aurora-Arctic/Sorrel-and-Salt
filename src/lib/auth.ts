@@ -1,8 +1,14 @@
 import { betterAuth, type BetterAuthOptions } from 'better-auth';
 import type { AuthContext } from '@better-auth/core';
-import { APIError, createAuthMiddleware, getOAuthState, getSessionFromCtx } from 'better-auth/api';
+import {
+  APIError,
+  createAuthMiddleware,
+  getOAuthState,
+  getSessionFromCtx,
+  isAPIError,
+} from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import { lastLoginMethod } from 'better-auth/plugins';
+import { haveIBeenPwned, lastLoginMethod } from 'better-auth/plugins';
 import {
   defineRequestState,
   getCurrentAuthEndpointContext,
@@ -32,6 +38,7 @@ import { plainSessionCookie } from './e2e-session-cookie';
 import { impersonation, impersonationEnabled } from './impersonation';
 import { primaryAdminEmail } from './primary-admin';
 import { verifyEmailMessage } from '../emails/verify-email';
+import { accountExistsMessage } from '../emails/account-exists';
 import {
   promotePrimaryAdmin,
   promotePrimaryAdminAtVerification,
@@ -278,6 +285,54 @@ async function gateEmailChange(ctx: HookContext): Promise<void> {
   await actingUser.set(session.user.id);
 }
 
+// Email and password: the policy is DESIGN.md §8, "Passwords", and the wiring claude-docs/auth/passwords.md.
+
+/** Why a breached password is refused, rather than only that it is. */
+const PASSWORD_BREACHED_MESSAGE =
+  'This password appears in a known data breach, so someone could guess it. Choose another.';
+
+/**
+ * Mails the holder of an address a sign-up arrived with, in place of the second account Better Auth does not
+ * make. The sign-up answers as a new one does, so only the mailbox learns the address is taken.
+ */
+async function mailExistingHolder({ user }: { user: { id: string; email: string } }) {
+  if (isPlaceholderEmail(user.email)) return;
+  const ctx = getCurrentAuthEndpointContext();
+  const accounts = await ctx.context.internalAdapter.findAccounts(user.id);
+  await send(
+    await accountExistsMessage({
+      to: user.email,
+      url: `${new URL(ctx.context.baseURL).origin}/sign-in`,
+      providers: accounts.map((account) => account.providerId).filter(isRosterProvider),
+      hasPassword: accounts.some((account) => account.providerId === 'credential'),
+    }),
+  );
+}
+
+function emailAndPassword(): BetterAuthOptions['emailAndPassword'] {
+  return {
+    enabled: true,
+    minPasswordLength: 15,
+    maxPasswordLength: 128,
+    // Off: on, an unverified account gets no session, and the link verifies only from the row's own session, so it
+    // could never be followed. The unverified account signs in and `requireSession()` holds it at the email page.
+    requireEmailVerification: false,
+    // Off, which is what makes a sign-up to a held address answer as a new one and call the hook below.
+    autoSignIn: false,
+    onExistingUserSignUp: mailExistingHolder,
+  };
+}
+
+/**
+ * The one answer every accepted sign-up gets. Better Auth's own carries the row, real or synthetic, and the two
+ * differ in the fields the database fills, which would tell a stranger the address is held.
+ */
+function sameSignUpAnswer(ctx: HookContext) {
+  const returned = ctx.context.returned;
+  if (isAPIError(returned) || returned instanceof Response) return;
+  return ctx.json({ status: true });
+}
+
 // /api/auth/* is the one exception to the GraphQL-only rule (CLAUDE.md rule 1).
 export const auth = betterAuth({
   // Better Auth's own `validateSecret` is swallowed — with the secret unset it
@@ -302,6 +357,8 @@ export const auth = betterAuth({
   // Impersonation is never constructed at production, nor where the flag is unset, so its endpoints are absent.
   plugins: [
     lastLoginMethod({ cookieName: LAST_USED_PROVIDER_COOKIE }),
+    // Fails closed: an unreachable service refuses the password, never waves it through.
+    haveIBeenPwned({ customPasswordCompromisedMessage: PASSWORD_BREACHED_MESSAGE }),
     ...(impersonationEnabled() ? [impersonation()] : []),
   ],
   advanced: {
@@ -383,6 +440,7 @@ export const auth = betterAuth({
       allowDifferentEmails: true,
     },
   },
+  emailAndPassword: emailAndPassword(),
   // `/update-user` writes `name` and `image` outside `withAudit`; the name
   // is `setName`'s, the audited write. Refused at the router, before
   // the endpoint or any hook runs, with a 404 (claude-docs/auth/admin-bootstrap.md,
@@ -421,17 +479,18 @@ export const auth = betterAuth({
     },
   },
   hooks: {
-    // Before the code exchange, so a lapsed account holding the arriving
-    // address is gone before Better Auth looks it up. Nothing yet knows which
-    // address that is, so it sweeps every lapsed row. A failure is logged and
+    // Before the code exchange or a password sign-up, so a lapsed account
+    // holding the arriving address is gone before Better Auth looks it up. A
+    // callback does not yet know which address that is, so it sweeps every lapsed row. A failure is logged and
     // never fails the sign-in: the sweep is housekeeping.
     before: createAuthMiddleware(async (ctx) => {
       if (ctx.path === '/verify-email') return gateEmailChange(ctx);
       if (ctx.path === '/send-verification-email') return requireOwnResend(ctx);
-      if (ctx.path !== '/callback/:id') return;
+      if (ctx.path !== '/callback/:id' && ctx.path !== '/sign-up/email') return;
       await sweepQuietly(ctx);
     }),
     after: createAuthMiddleware(async (ctx) => {
+      if (ctx.path === '/sign-up/email') return sameSignUpAnswer(ctx);
       const newSession = ctx.context.newSession;
       if (ctx.path !== '/callback/:id' || !newSession) return;
 

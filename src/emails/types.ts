@@ -52,3 +52,12 @@ export interface CovenInvitationProps extends BaseEmailProps {
   /** What the reader will be able to do there once they accept. */
   role: 'viewer' | 'member';
 }
+
+export interface AccountExistsProps extends BaseEmailProps {
+  /** The sign-in page, which the mail's one action opens. */
+  url: string;
+  /** The providers linked to the account, so the reader knows which one to sign in with. */
+  providers: readonly ProviderId[];
+  /** Whether the account already has a password. */
+  hasPassword: boolean;
+}

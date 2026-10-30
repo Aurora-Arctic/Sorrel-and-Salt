@@ -486,7 +486,7 @@ describe('last login method', () => {
   it('adds no column to the schema Better Auth writes', async () => {
     const { auth, plugin } = await lastLoginMethodPlugin();
 
-    expect(plugin.schema).toBeUndefined();
+    expect((plugin as { schema?: unknown }).schema).toBeUndefined();
     expect(Object.keys(getAuthTables(auth.options).user.fields)).not.toContain('lastLoginMethod');
   });
 });
