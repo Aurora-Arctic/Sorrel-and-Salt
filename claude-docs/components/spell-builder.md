@@ -556,11 +556,24 @@ The row's own look, the card, is in [`step-row.md`](step-row.md), "The card".
 
 ## Stories
 
-`index.stories.tsx`, titled "Grimoire / Spell Builder": `States`, with a
-control that chooses Empty, Title Typed, Saved Spell (shared with the coven,
-its visibility shut), Private Spell, Share Question, Phase Outside the List
-or Refused After Saving (the status reads Could not save, with Retry), each in its `SpellDialog` over the app shell, with
-Open Again to look once more after Close.
+`index.stories.tsx`, titled "Grimoire / Spell Builder": `States`, with a control that
+chooses one state, each in its `SpellDialog` over the app shell, with Open Again to look once
+more after Close:
+
+- Empty, Title Typed, and Refused After Saving: a new spell's first save refused, so the status
+  reads "Could not save." with Retry.
+- Saved Spell (shared with the coven, its visibility shut), Private Spell, Share Question and Phase
+  Outside the List.
+- With Steps (each kind of step: ingredient forms, a toxic one, an instruction and a one-off) and
+  Comparison (the same steps against three assigned categories: two carried, one missing, and
+  extras past the fold).
+- Steps Loading and Steps Failed: a saved spell's steps still on their way, and refused.
+- Complete Spell (Duplicate in place of Mark Complete), Restored Draft (the recovery notice),
+  Delete Question, Saved, and Conflict (Reload Latest and Keep My Version).
+
+Each state answers its own requests through the workshop's fake API (`useMockHandlers`): the
+categories from `.storybook/grimoire-fixtures.ts`, the saved spell's steps, and the save or
+refusal it shows.
 
 ## Testing
 

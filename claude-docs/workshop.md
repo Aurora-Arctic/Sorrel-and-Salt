@@ -261,6 +261,11 @@ The viewport is a Storybook global, like the theme, so a link can set both:
   and its list's story offer the same data: `GROUP_NAMES` (four names per kind
   of group), fixed ids with `asOptions()` and `asSlugs()` to shape them for a
   picker or a filter, and two pending `INVITATIONS`.
+- **`grimoire-fixtures.ts`** — invented categories the grimoire's stories share, in two
+  invented groups, so the builder's Category Match, the recipe and the cards draw the same
+  categories in the same colours: `CATEGORIES_ANSWER` (the categories query's answer),
+  `namedCategories()` and `cardCategories()` (named categories shaped for a step or a card), and
+  `GROUP_COLORS` (each category's group colours by id).
 - **`press.ts`** — `press(name)` and `usePressOnMount(name)`, for a story that
   opens on a state a button press reaches, such as a Delete question over its
   form.
@@ -355,7 +360,7 @@ node scripts/review-screenshots.mjs --out .reports/mb.116-screenshots \
 
 A story whose component asks the server gets an answer from Mock Service Worker (MSW), a library that answers a request in the browser. `.storybook/mock-api.ts` holds the helpers; `preview.tsx` starts the worker with `mswLoader(startMockWorker)`, which also resets the handlers before each story.
 
-- **A story states its answers in `beforeEach: ({ msw }) => msw.use(...)`.** The helpers are `answerQuery` and `answerMutation` (typed by the generated document, matched by operation name), `answerOperations` (one function for a story with many lookups), `hangOperation` and `hangAllOperations` (a request that never answers, for a loading state), `hangAuth` and `refuseAuth` (the same for `/api/auth`), and `refusal({ message, code, fieldErrors })` (a refusal as the server sends it: HTTP 200, no data, one error with its code). Anything unanswered gets a 501.
+- **A story states its answers in `beforeEach: ({ msw }) => msw.use(...)`.** The helpers are `answerQuery` and `answerMutation` (typed by the generated document, matched by operation name), `answerOperations` (one function for a story with many lookups), `hangOperation` and `hangAllOperations` (a request that never answers, for a loading state), `hangAuth` and `refuseAuth` (the same for `/api/auth`), and `refusal({ message, code, fieldErrors, currentRevision })` (a refusal as the server sends it: HTTP 200, no data, one error with its code; `currentRevision` goes with `STALE_WRITE`, for a story that shows a conflict). Anything unanswered gets a 501.
 - **`beforeEach` runs once per load.** A story that picks its answer from an arg or a `state` control calls `useMockHandlers(handlers)` in its render instead; it swaps the handlers whenever they change.
 - **The prefix.** Staging serves the workshop under `/workshop/` with a CSP of `connect-src <host>/workshop/`, so a request to `/api/graphql` would be refused. `apiPath()` in `src/lib/graphql-client.ts` and `src/lib/auth-client.ts` puts `WORKSHOP_API_PREFIX` in front of the path; it is empty in the app and `/workshop` in the workshop. The worker file is served at `/workshop/mockServiceWorker.js`.
 - **A refused auth request is a failed request.** A GraphQL refusal logs nothing in the browser; an `/api/auth` refusal is a non-OK response and logs "Failed to load resource". A story that does this carries the tag `expects-failed-request`, which the every-story check reads from `index.json`.
