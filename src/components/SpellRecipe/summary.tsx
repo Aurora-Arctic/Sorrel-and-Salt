@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import type { Unit } from '@/modules/ingredients/schema/units';
 import { needOf } from '../SpellBuilder/steps/supply';
 import { labelOf } from './body';
 import type { IngredientRecipeStep, RecipeStep } from './types';
@@ -30,7 +31,8 @@ const SpellRecipeSummary = ({ steps }: { steps: readonly RecipeStep[] }): ReactE
             step.variantId === null ? [step] : laid.filter((o) => o.variantId === step.variantId);
           const need = needOf(
             same.map((o) => ({ quantity: plain(o.quantity), unit: o.unit ?? '' })),
-            null,
+            // Mixed units of one dimension add up in the first step's unit; crossing dimensions, or a count, stay listed.
+            (same[0]!.unit || null) as Unit | null,
           );
           return (
             <li key={step.id}>

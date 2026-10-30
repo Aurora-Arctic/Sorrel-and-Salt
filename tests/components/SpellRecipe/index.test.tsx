@@ -121,6 +121,26 @@ describe('SpellRecipe', () => {
     expect(summary.compareDocumentPosition(steps) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
+  it("adds a form's amounts in one dimension in its first step's unit, and lists amounts that cross dimensions", () => {
+    render(
+      <SpellRecipe
+        {...props({
+          steps: [
+            ingredient('a', { name: 'Fixture Moss', variantId: 'v1', quantity: '1', unit: 'tbsp' }),
+            ingredient('b', { name: 'Fixture Moss', variantId: 'v1', quantity: '3', unit: 'tsp' }),
+            ingredient('c', { name: 'Testwort', variantId: 'v2', quantity: '1', unit: 'g' }),
+            ingredient('d', { name: 'Testwort', variantId: 'v2', quantity: '1', unit: 'tsp' }),
+          ],
+        })}
+      />,
+    );
+    const items = within(screen.getByRole('list', { name: 'Ingredients' })).getAllByRole(
+      'listitem',
+    );
+    expect(items[0]).toHaveTextContent('2 tbsp');
+    expect(items[1]).toHaveTextContent('1 g + 1 tsp');
+  });
+
   it('draws no Ingredients list for a spell with no ingredient step', () => {
     render(<SpellRecipe {...props({ steps: [instruction('a', 'Stir.')] })} />);
     expect(screen.queryByRole('list', { name: 'Ingredients' })).toBeNull();
