@@ -45,6 +45,13 @@
 
 // A popover is in the top layer and fixed to the window; the component sets its place as two custom
 // properties. Only a popover gets this class, so the in-flow fallback keeps its margin.
+// A row under the grid, its one button at the end.
+.date-field__footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-block-start: space(2);
+}
+
 .date-field__panel--floating {
   position: fixed;
   inset: auto;

@@ -53,6 +53,8 @@ function format(date: Date): string {
 const GAP = 8;
 const MARGIN = 8;
 // The earliest year the calendar lists.
+// With no `max` the year list still needs an end: it runs to the end of this many years after the current one.
+const YEARS_AHEAD = 1;
 const FIRST_YEAR = 1900;
 
 // Every month name, every day number and every year from 1900 to 2999 the button can show. The button
@@ -235,7 +237,7 @@ export default function DateField({
             startMonth={
               new Date(Math.min(FIRST_YEAR, (selected ?? last ?? new Date()).getFullYear()), 0)
             }
-            endMonth={last}
+            endMonth={last ?? new Date(new Date().getFullYear() + YEARS_AHEAD, 11)}
             disabled={last ? { after: last } : undefined}
             onSelect={(day) => {
               onChange(format(day));
@@ -262,6 +264,22 @@ export default function DateField({
               disabled: 'day-picker__day--disabled',
             }}
           />
+          {/* Hidden when max is before today, so a refused day is never offered. */}
+          {(!last || format(last) >= format(new Date())) && (
+            <div className="date-field__footer">
+              <button
+                type="button"
+                className="btn btn--quiet btn--small"
+                onClick={() => {
+                  onChange(format(new Date()));
+                  setOpen(false);
+                  document.getElementById(id)?.focus();
+                }}
+              >
+                Today
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
