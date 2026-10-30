@@ -138,15 +138,14 @@ These followed from rules already in force.
 - Raw `1.5rem` in the `SpellPreview` glow and `DateField`.
 - knip's 78 findings.
 
-## 5. Follow-up tasks to mint
+## 5. Follow-ups
 
-None is minted yet.
+The owner chose on 2026-10-30 to build the two stylesheet findings inside this review rather than mint tasks for them.
 
-- **One shared `ConfirmDialog`** for the five hand-written confirm modals (R39 and S30). The sweep changelog says S30 goes to MB.124; check MB.124's entry before minting a separate task.
-- **Split the builder panel's styles** (Category Match and In the Cupboard) out of `SpellBuilder/index.scss`, which `SpellRecipe/aside.tsx` imports whole (R44).
-- **One mixin for the Recipe Card's step styles** (`SpellRecipe/index.scss` lines 209 to 300 against `_recipe-columns.scss`) (R47).
-- **Clear knip's 78 findings.**
-- **Replace `DateField`'s raw rems** with tokens.
+- **One shared `ConfirmDialog`** for the five hand-written confirm modals (R39 and S30): not a task of its own. MB.124 already owns one shared row of confirm and safe buttons, and its entry in `tasks/mb.md` now names the five dialogs.
+- **Split the builder panels' styles** (R44): built. Category Match's and In the Cupboard's rules moved unchanged into `src/components/SpellBuilder/panels.scss`, which the builder's stylesheet and `SpellRecipe/aside.tsx` both import; the aside no longer imports the builder's whole stylesheet. The rendered CSS was compared rule by rule before and after and is the same set. The recipe page still loads the builder's CSS through the Edit dialog it mounts, so the change removes a wrong import and saves that page no bytes.
+- **One mixin for the Recipe Card's step styles** (R47): withdrawn. The audit's premise did not hold: the step rules exist once, in `SpellRecipe/index.scss`; `_recipe-columns.scss` and `SpellPreview/index.scss` lay out the steps section and have never held a step-row rule; the preview renders `SpellRecipeBody`, which imports that stylesheet, so nothing can drift. The only other step rule is the paper font size in `_print.scss`, which is deliberate. `spell-preview.md` now says so.
+- **Left as found, for the owner:** a dead `@container spell-column` rule for `.spell-inventory .jar-line__name` in `panels.scss` (no ancestor on the recipe page is that container, and the builder no longer renders In the Cupboard); knip's 78 findings; `DateField`'s raw rems. None is minted.
 
 Board syncs owed: MB.123 (estimate and entry) and M9.10 (amended by D37).
 
