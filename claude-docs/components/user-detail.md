@@ -78,13 +78,14 @@ which the workshop does not serve: the question can be seen, its answer cannot.
 
 `States` has a control that chooses:
 
-- Default: a user with three covens, each role once, and Impersonate.
+- Default: a user with three covens, each role once, and the red Impersonate.
 - No Covens: the same user holding none.
 - Several Providers: four sign-in methods and an unverified address.
 - Admin: the primary admin, marked, with no Impersonate, as the endpoint
   refuses an admin. Curator and Other Admin are the other roles.
 - Without Impersonation: the user where impersonation is not registered.
-- Changes Paused, May Create Covens and No Providers.
+- Changes Paused and No Providers. May Create Covens: the plain Revoke of coven
+  creation, beside the red Impersonate.
 - `InAModal`: the detail inside a `Modal`, in its own iframe, so Impersonate's
   question draws over it.
 

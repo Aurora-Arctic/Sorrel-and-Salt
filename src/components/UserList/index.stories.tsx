@@ -53,7 +53,7 @@ const USERS: readonly UserListEntry[] = [
     emailVerified: false,
     primaryAdmin: false,
   }),
-  // Approved, so the row offers Revoke rather than Approve.
+  // Approved, so the row shows Yes and no control: Revoke is in the user modal alone.
   listed({
     id: 'u-cy',
     name: 'Cy Fixturewort',
@@ -72,8 +72,8 @@ const USERS: readonly UserListEntry[] = [
 // open, with the switch on admin changes beside the heading where a story gives it.
 
 // The page as /admin/users draws it where impersonation is registered: seven columns,
-// facts no control changes muted, Impersonate ruled in red at the right. Impersonate
-// and Pause Admin Changes each ask first; the call reaches no server, so confirming
+// facts no control changes muted, Impersonate red in its red-ruled column at the right.
+// Impersonate and Pause Admin Changes, the two red controls that destroy nothing, each ask first; the call reaches no server, so confirming
 // shows the refusal. Drawn in the app shell, so the phone shows the bottom bar.
 const defaultNode = (
   <ShellFrame area="admin">
@@ -244,8 +244,7 @@ const adminChangesPausedNode = (
 );
 
 // Paused, to another admin: the warning, Resume locked with its reason in a
-// tip, and every Change Role, Approve and coven-creation Revoke locked with
-// the pause's reason.
+// tip, and every Change Role and Approve locked with the pause's reason.
 const adminChangesNotPrimaryNode = (
   <AdminTabbedFrame page="people" action={<PauseControl paused canToggle={false} />}>
     <UserList

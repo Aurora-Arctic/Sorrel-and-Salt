@@ -429,7 +429,8 @@ context row above the column) and the People page with its Users tab open:
   not registered; Unverified Approval, Admin Roles, Admin Changes Paused
   and Admin Changes Not Primary, each name led by its privilege changes icon,
   whose tip shows on hover or focus; the list holds an admin, a user awaiting
-  approval and an approved user, so each control shows. Unverified Approval
+  approval and an approved user, whose Yes stands alone, since Revoke is the user modal's;
+  Impersonate is red, in its red-ruled column at the right. Unverified Approval
   holds two users awaiting approval, one unverified and one verified, so the
   first's Approve opens the warning (MB.205) and the second's does not.
   Admin Roles holds the primary admin, its Change Role unusable with the reason beside it, a second admin, a curator (bold, with no coven-creation control) and users, each Change Role opening its modal, Bo's with the warning on a promotion (MB.59, M11.20). Admin Changes Paused

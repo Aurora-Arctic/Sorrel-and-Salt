@@ -8,8 +8,9 @@ import UserDetail from '.';
 import type { UserCoven, UserDetailUser } from './types';
 
 // Render-only; behaviour is asserted in tests/components/UserDetail.
-// Impersonate reaches Better Auth, which the workshop does not serve: the
-// question can be seen, its answer cannot.
+// Impersonate is red, as a high-risk control that destroys nothing; the coven-creation
+// Revoke is plain. Impersonate reaches Better Auth, which the workshop does not serve:
+// the question can be seen, its answer cannot.
 const meta = {
   title: 'Admin / User Detail',
 } satisfies Meta;
@@ -110,7 +111,7 @@ const changesPausedNode = inDialog(
   <UserDetail user={BO} memberships={COVENS} canImpersonate changesPaused />,
 );
 
-// A user who may create covens, so the control offers to revoke it.
+// A user who may create covens, so the control is a plain Revoke beside the red Impersonate.
 const mayCreateCovensNode = inDialog(
   BO,
   <UserDetail user={{ ...BO, canCreateWorkspace: true }} memberships={COVENS} canImpersonate />,
@@ -137,7 +138,7 @@ const noProvidersNode = inDialog(
   <UserDetail user={{ ...BO, providers: [] }} memberships={COVENS} />,
 );
 
-// Press Impersonate to see the question over the modal.
+// Press the red Impersonate to see its question, with a red confirm, over the modal.
 export const InAModal: Story = {
   render: () => {
     const [open, setOpen] = useState(true);
