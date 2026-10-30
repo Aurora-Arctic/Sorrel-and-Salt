@@ -244,7 +244,19 @@ endpoints, configured in `emailAndPassword` and the hooks in
 Both pages are public routes in `src/proxy.ts`
 ([`route-protection.md`](route-protection.md)), since a person who has
 forgotten their password has no session. A signed-in visitor is not sent
-away from either.
+away from either, by the owner's decision of 2026-10-30: `/forgot-password`
+is the only way back for a signed-in person who has forgotten their
+password, and a reset link opened in a browser where another account is
+signed in must still work.
+
+Both pages ask search engines not to index them: each page's `metadata`
+sets `robots: { index: false }`, which Next renders as a
+`<meta name="robots" content="noindex">` tag (the owner's decision of
+2026-10-30). It is a second guard: on production `robots.txt` already leaves
+both paths out of its allow list, and off production `src/proxy.ts` sends
+`X-Robots-Tag: noindex` on every response. The tag covers a crawler that
+fetches either page anyway. The reset link's life stays at 15 minutes, which
+the owner confirmed the same day.
 
 ### Setting a first password
 
