@@ -1,0 +1,17 @@
+name: probe-matrix
+on:
+  workflow_call:
+jobs:
+  matrix-if:
+    if: matrix.should-run
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - name: m-on
+            should-run: true
+          - name: m-off
+            should-run: false
+    name: matrix-if (${{ matrix.name }})
+    steps:
+      - run: echo ${{ matrix.name }}

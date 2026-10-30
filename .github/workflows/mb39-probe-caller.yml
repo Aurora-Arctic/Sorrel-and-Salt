@@ -6,10 +6,10 @@ jobs:
   # (1) job-level if on the calling job: one true, one false
   call-if-true:
     if: true
-    uses: ./.github/workflows/mb39-probe-inner.yml
+    uses: ./.github/workflows/mb39-probe-plain.yml
   call-if-false:
     if: false
-    uses: ./.github/workflows/mb39-probe-inner.yml
-  # inner jobs' own if: runs through this call
+    uses: ./.github/workflows/mb39-probe-plain.yml
+  # no if on the caller: inner jobs' own if: runs through this call
   call-plain:
-    uses: ./.github/workflows/mb39-probe-inner.yml
+    uses: ./.github/workflows/mb39-probe-plain.yml

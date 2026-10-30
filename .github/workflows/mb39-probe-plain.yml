@@ -1,4 +1,4 @@
-name: probe-inner
+name: probe-plain
 on:
   workflow_call:
     inputs:
@@ -9,21 +9,6 @@ on:
         type: boolean
         default: false
 jobs:
-  # (a) matrix job, job-level if on matrix.should-run
-  matrix-if:
-    if: matrix.should-run
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - name: m-on
-            should-run: true
-          - name: m-off
-            should-run: false
-    name: matrix-if (${{ matrix.name }})
-    steps:
-      - run: echo ${{ matrix.name }}
-  # (b) plain jobs, job-level if on inputs
   plain-yes:
     if: inputs.run-yes
     runs-on: ubuntu-latest
@@ -34,7 +19,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo no
-  # control: flag resolved in a step
   control-yes:
     runs-on: ubuntu-latest
     steps:
