@@ -18,6 +18,7 @@ The slots a row takes from the page:
 
 - `completeAction(workingId)`: Complete on a draft row. The page passes lane M13.7's
   `CompleteWorkingAction` (`@/components/RecordWorking/complete-action`).
+- `editAction(editable, name)`: the pencil (`edit-working.tsx`, `EditWorkingAction`), drawn on rows that carry `editable`, which `readWorkingsOf` gives to the recorder whose role may update workings. It opens Record a Working on that working ("Edit a Working"), and the focus returns to the pencil on close.
 - Delete Working, a bin and a confirmation dialog (`delete-working.tsx`), drawn when the working's
   `canChange` is true: the viewer's role may delete and the viewer is the recorder.
 
