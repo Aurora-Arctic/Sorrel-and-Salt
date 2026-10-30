@@ -250,6 +250,9 @@ two. What a caller also needs to know is here.
 - **`reviveMembership`** is the one writer that touches a deleted row, so it
   reaches only a deleted one. It always sets `invited_by`, to null when no
   sender is given, so an earlier inviter never lingers.
+- **`setSeatRole`** sets the role of a live member under no proof, as
+  `insertMembership` and `reviveMembership` take none: identity services seat an
+  admin in the demo coven and hold no membership of it.
 - **The invitation accepts and declines** run under no proof because the
   invitee holds neither a membership nor the site role yet. A link's token
   admits `acceptInvitation`; the by-id calls (`acceptReceivedInvitation`,
