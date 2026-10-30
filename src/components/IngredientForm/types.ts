@@ -802,3 +802,9 @@ export interface RemoveQuestionProps {
   /** Stops asking, the row kept. */
   onKeep: () => void;
 }
+
+/** What `ReadFailure` takes: the failed read's error, and what Try Again does. */
+export interface ReadFailureProps {
+  error: unknown;
+  onRetry: () => void;
+}

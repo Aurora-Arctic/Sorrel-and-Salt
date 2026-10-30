@@ -6,10 +6,10 @@ import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { useQuery } from '@tanstack/react-query';
 import { createContext, type ReactElement, type ReactNode, useContext } from 'react';
 import { graphql } from '../../gql';
-import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlQuery } from '../../lib/graphql-client';
 import FormIcon from '../FormIcon';
 import Skeleton from '../Skeleton';
+import ReadFailure from './read-failure';
 import type { EntrySummary } from '../Combobox/types';
 import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS, labelOf } from './options';
 import type { EntryHref, SubstituteListEntry, SubstituteSummaryProps } from './types';
@@ -85,12 +85,7 @@ export function SubstituteSummary({
   if (error) {
     return (
       <div className="entry-summary__status">
-        {/* The server's sentence, "No such ingredient" for one deleted since,
-            or else "That didn't work. Please try again." */}
-        <p role="alert">{readGraphqlFailure(error).alert}</p>
-        <button type="button" className="btn btn--small" onClick={() => void refetch()}>
-          Try Again
-        </button>
+        <ReadFailure error={error} onRetry={() => void refetch()} />
       </div>
     );
   }
