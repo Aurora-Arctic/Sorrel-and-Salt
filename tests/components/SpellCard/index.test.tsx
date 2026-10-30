@@ -12,7 +12,7 @@ import type {
   RecordWorkingSetupQueryVariables,
   WorkingDeductionPreviewQuery,
 } from '@/gql/graphql';
-import { HttpResponse } from 'msw';
+import { HttpResponse } from 'msw/http';
 import { graphqlLink, mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
 import { server } from '../../support/msw/server';
 

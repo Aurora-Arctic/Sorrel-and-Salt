@@ -2548,7 +2548,7 @@ _Story:_ As a developer, I want one workflow to describe how a check runs, so th
 
 Three more go with them. `merge-queue.yml` re-expresses `pr-gate.yml`'s whole job graph for a merge queue that is not enabled — M7.A.1 is explicitly trigger-based and a prerequisite for nothing — so it is deleted and restored from git history when that trigger fires. `composite-actions-check.yml` is a workflow testing the composite actions that exist to de-duplicate the workflows. `timer-start`/`timer-elapsed` are 46 lines across 12 workflows to print an elapsed time into a summary.
 
-**The `should-run` indirection survives the collapse and is not cosmetic.** `pr-gate` passes it from the paths-filter output instead of putting an `if:` on the job, because a job-level `if:` makes GitHub report a differently-named bare check that never satisfies a required status check and leaves the PR stuck. Every matrix leg runs; a leg whose flag is false exits after checkout.
+**The path-filter flag is passed in, not an `if:` on the calling job.** `pr-gate` passes it from the paths-filter output instead of putting an `if:` on the job, because a false `if:` on the job that calls a reusable workflow makes GitHub report one bare check name in place of `checks / lint` (verified by MB.39: [`mb.39-job-level-if-and-check-names.md`](../design-decisions/mb.39-job-level-if-and-check-names.md)). MB.39 later split the matrix into plain jobs, each with its own `if: inputs.run-<leg>`, so a filtered-off leg is skipped before its container is pulled.
 
 _Acceptance criteria:_
 
@@ -2695,7 +2695,9 @@ _Story:_ As a developer, I want to know whether the rule the whole CI filtering 
 
 Probe on a throwaway branch, PR'd into a `scratch/**` base so `pr-gate.yml` — which triggers only on `main`/`staging`/`release/**` — never fires: a `workflow_call` file with both shapes (a matrix job with `if: matrix.should-run`, and two plain jobs with `if: inputs.run-*`, the `vitest.yml` shape), and a caller triggered on `pull_request: branches: ['scratch/**']`. Whether `matrix` is even available to `jobs.<id>.if` is part of what the run answers — a startup failure naming an unrecognized `matrix` value settles the matrix half on its own.
 
-**Adoption is not in this task.** Its scope depends on the answer, and turning `if:` on across the gate is a change to the gate rather than a finding about it.
+**Result.** The rule holds for a job that calls a reusable workflow, is false for a job inside one, and a matrix job cannot use `matrix` in its job-level `if:`. A `skipped` check satisfies a required status check, and a required check that never reports blocks the pull request. Evidence: [`mb.39-job-level-if-and-check-names.md`](../design-decisions/mb.39-job-level-if-and-check-names.md).
+
+**Adoption is in this task.** At the owner's decision (2026-10-30) MB.39 adopts the inner-job `if:` for the plain jobs: `vitest.yml`'s four jobs and `playwright.yml`'s job carry `if: inputs.should-run`, and their step-level gating is removed. It also splits `checks.yml`'s matrix into eight plain jobs, each path-filtered leg carrying `if: inputs.run-<leg>`, because a matrix leg cannot skip itself and a leg left out of the matrix would never report. No `pr-gate.yml` job that calls a reusable workflow carries an `if:`.
 
 _Acceptance criteria:_
 
@@ -2705,6 +2707,9 @@ _Acceptance criteria:_
 - Live GitHub settings are unchanged unless the user authorised a scratch ruleset; a permissions-blocked write is reported, not routed around
 - The scratch branches and workflows are gone, and `gh api repos/:owner/:repo/rulesets` shows the same three rulesets with the same rule types as before
 - If the rule holds, it is recorded as **verified** with the evidence — a negative result is the deliverable just as much as a positive one
+- `vitest-dom`, `vitest-node`, `vitest-db`, the `vitest` merge and `playwright` carry a job-level `if:` on `inputs.should-run`, with no step-level `should-run` gating left in `vitest.yml` or `playwright.yml`; `vitest / vitest` and `playwright / playwright` keep their names, and `e2e-cache.yml`'s call still runs the job
+- `checks.yml` is eight plain jobs whose check names are identical to the matrix's (`lint`, `format`, `typecheck`, `codegen`, `build`, `destructive-ddl`, `migration-order`, `audit`); `lint`, `typecheck`, `build`, `destructive-ddl` and `migration-order` carry `if: inputs.run-<leg>`, and `pr-gate.yml`'s call is unchanged
+- The record names the ruleset probe: the 403 on ruleset writes, that the owner made the changes in the web UI, and that none of the three real rulesets requires a status check today
 
 **MB.40 — Custom one-off spell ingredients (schema)** · 2h
 
@@ -2951,7 +2956,7 @@ Comments are 28% of the lines in scope — 7,905 of 27,847 across 203 tracked fi
 
 **The rule is a division of labour, not a length limit**: the comment keeps the conclusion and `claude-docs/` the argument, as [`README.md`](../README.md)'s "Comments in code" now states it. It inverts nothing there: a summary still gives its reason in a clause and stands on its own. CLAUDE.md had **no rule about comments at all**, which is why the prose grew — so the convention lands first, and the sweep cites it.
 
-**What brevity may not cost** is that section's list, kept whatever its length; in this sweep it also covers oxlint's `overrides` replacing rather than merging, a job-level `if:` renaming a check and permanently blocking a PR, the Ladle `@type` JSDoc and shebangs.
+**What brevity may not cost** is that section's list, kept whatever its length; in this sweep it also covers oxlint's `overrides` replacing rather than merging, a false job-level `if:` on a calling job reporting a bare check name, the Ladle `@type` JSDoc and shebangs.
 
 **The dangling citations are the finding, and there are fourteen.** Scoping expected four; the guard found `.ladle/` citing m0.30, m0.32 and m0.34 as well, plus `tests/app/api/auth/[...all]/route.test.ts` citing `claude-docs/transcripts/auth.md`, which has never existed — so a hand-verification of the real OAuth URL shape is described as "recorded" nowhere. Thirteen of the fourteen resolve only under `claude-docs/archive/`, and were cited **without** the `archive/` prefix: the path was wrong and the destination is out of bounds, README.md having declared the archive never-read. Those comments are long precisely because the live doc was never written, so the prose moves into `styling.md`, `workshop.md` and `testing.md` and the citations are repointed.
 

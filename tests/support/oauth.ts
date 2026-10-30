@@ -1,5 +1,5 @@
 import { expect } from 'vitest';
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse } from 'msw/http';
 import type { SetupServer } from 'msw/node';
 import type { auth as Auth } from '@/lib/auth';
 import { socialSignInTarget } from '@/lib/sign-in';

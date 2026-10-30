@@ -84,6 +84,10 @@ $account-menu-avatar: 2rem;
   @include truncate;
 }
 
+.account-menu__count {
+  @include visually-hidden;
+}
+
 .account-menu__chevron {
   flex: none;
   width: 1rem;

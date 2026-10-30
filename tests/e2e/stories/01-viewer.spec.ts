@@ -194,6 +194,43 @@ test(
           'mutation ($w: ID!, $u: ID!) { updateMemberRole(workspaceId: $w, userId: $u, role: viewer) { role } }',
           { w: coven.id, u: B },
         ],
+        ['mutation ($w: ID!) { createSpell(workspaceId: $w, input: {}) { id } }', { w: coven.id }],
+        [
+          'mutation ($w: ID!, $s: ID!) { recordWorking(workspaceId: $w, spellId: $s, input: { workedOn: "2026-10-01" }) { id } }',
+          { w: coven.id, s: spellId },
+        ],
+        // A folk-name change rides on the ingredient's own save, so it takes the ingredient's gate.
+        [
+          'mutation ($w: ID!, $id: ID!, $input: IngredientUpdateInput!) { updateIngredient(workspaceId: $w, id: $id, input: $input) { id } }',
+          {
+            w: coven.id,
+            id: testwort.ingredientId,
+            input: {
+              name: 'Testwort',
+              canonicalName: '',
+              nomenclature: 'none',
+              folkNames: ['Changed Root'],
+              categoryIds: [],
+              celestialBodies: [],
+              colors: [],
+              deities: [],
+              description: '',
+              elements: [],
+              references: [],
+              safetyNotes: '',
+              substitutes: [],
+              toxic: false,
+              variants: [],
+              zodiacSigns: [],
+            },
+          },
+        ],
+        [
+          'mutation ($w: ID!, $i: ID!) { saveStock(workspaceId: $w, ingredientId: $i, input: { create: [], update: [{ id: "' +
+            stockId +
+            '", input: { quantityOnHand: 99 } }], delete: [] }) { id } }',
+          { w: coven.id, i: testwort.ingredientId },
+        ],
         ['mutation ($w: ID!) { deleteWorkspace(workspaceId: $w) }', { w: coven.id }],
       ];
       for (const [query, variables] of attempts) {
@@ -224,6 +261,14 @@ test(
           [B]: 'member',
           [C]: 'viewer',
         });
+        const folkNames = await sql`
+          select name from ingredient_folk_names
+          where ingredient_id = ${testwort.ingredientId} and deleted_at is null`;
+        expect(folkNames.map((row) => row.name)).toEqual(['Fixture Root']);
+        const workings = await sql`select id from spell_workings where spell_id = ${spellId}`;
+        expect(workings).toHaveLength(0);
+        const spells = await sql`select id from spells where workspace_id = ${coven.id}`;
+        expect(spells).toHaveLength(1);
         const [workspace] = await sql`select deleted_at from workspaces where id = ${coven.id}`;
         expect(workspace.deleted_at).toBeNull();
       });

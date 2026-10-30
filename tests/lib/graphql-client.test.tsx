@@ -2,7 +2,7 @@ import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { parse } from 'graphql';
-import { HttpResponse } from 'msw';
+import { HttpResponse } from 'msw/http';
 import { Component, type ReactNode } from 'react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 

@@ -53,9 +53,6 @@ const ProviderButton = ({
         // would drop the focus a pressed one holds for a failure's callout.
         aria-disabled={!available || busy || undefined}
         aria-describedby={available ? undefined : noteId}
-        // Read as one phrase with a pause, where the text alone would run the
-        // label into the badge: "Discord Last Used".
-        aria-label={lastUsed && !busy ? `${name}, last used` : undefined}
         // The others wait for the pressed one; `disabled`, since a page being
         // left has no use for their tab stops.
         disabled={signingIn !== null && !busy}
@@ -64,7 +61,10 @@ const ProviderButton = ({
         <Mark chip />
         {name}
         {lastUsed && (
-          <span className="badge badge--last-used sign-in-panel__last-used">Last Used</span>
+          <>
+            {' '}
+            <span className="badge badge--last-used sign-in-panel__last-used">Last Used</span>
+          </>
         )}
       </BusyButton>
       {feedback}

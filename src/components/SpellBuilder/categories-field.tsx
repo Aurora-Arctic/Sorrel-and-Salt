@@ -1,7 +1,13 @@
 'use client';
 
 import { type ReactElement, useId } from 'react';
-import { get, useController, useFormContext, useFormState } from 'react-hook-form';
+import {
+  type FieldError as FormFieldError,
+  get,
+  useController,
+  useFormContext,
+  useFormState,
+} from 'react-hook-form';
 import CategoryPicker from '../CategoryPicker';
 import { FieldError } from '../Field';
 import { useCategoryIndex } from './category-index';
@@ -33,7 +39,7 @@ export function SpellCategoriesField(): ReactElement {
 
   // An issue on one pick is pathed to its index, as the ids were sent, and
   // names the pick; one on the field is the field's.
-  const issue = get(errors, 'categoryIds');
+  const issue = get<unknown, FormFieldError | undefined>(errors, 'categoryIds');
   const entryIssues: { id: string; message: string }[] = Array.isArray(issue)
     ? issue.flatMap((entry, index) =>
         entry?.message && picked[index] !== undefined

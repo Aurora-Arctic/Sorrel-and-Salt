@@ -46,11 +46,11 @@ panel it opens (MB.7). It is a client component.
   - **A dot on the avatar disc**, at its top right, in the `attention` palette's
     red and ringed in `$surface-card`. It is seen only; it is `aria-hidden`
     with the disc.
-  - **The button's name gains ", N coven invitations"**, set whole as its
-    `aria-label` so a screen reader hears what the dot shows. A label rather
-    than hidden text: the button is a flex container, whose children a browser
-    joins with a space ("Name , 2 …"). It starts with the visible name
-    (WCAG 2.5.3).
+  - **The button's name gains ", N coven invitations"**, as hidden text
+    (`account-menu__count`) that repeats the name and adds the count, the visible
+    name then `aria-hidden`, so the button reads "Name, 2 coven invitations" with no
+    stray space. Not an `aria-label`: axe's `label-content-name-mismatch` wants a
+    label to repeat every visible word, the avatar's initials among them.
   - **A count link at the right end of the Your Account row**: a red circle
     (a pill from two digits), a link of its own to `/account#account-invitations`
     (`ACCOUNT_INVITATIONS_PATH`), named "N Coven Invitations" ("1 Coven

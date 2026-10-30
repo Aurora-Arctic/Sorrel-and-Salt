@@ -266,7 +266,9 @@ test('the toxic toggle starts off, saves, and reads back on reopening', async ({
   await page.keyboard.press('Space');
   await expect(toggle).toBeChecked();
   await assertNoAccessibilityViolations(page);
-  await adding.getByRole('button', { name: 'Save Ingredient' }).click();
+  // Save Ingredient is shut once nothing is left to save, which is when the autosave has stored the
+  // toggle; clicking it instead would race the autosave.
+  await expect(adding.getByRole('button', { name: 'Save Ingredient' })).toBeDisabled();
 
   // Read back from the server after a reload.
   const editing = page.getByRole('dialog', { name: 'Edit Ingredient, Aaa Toxicwort', exact: true });

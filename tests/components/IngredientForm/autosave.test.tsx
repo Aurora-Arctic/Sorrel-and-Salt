@@ -1,5 +1,5 @@
 import { act, fireEvent, screen } from '@testing-library/react';
-import { HttpResponse } from 'msw';
+import { HttpResponse } from 'msw/http';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import IngredientForm from '@/components/IngredientForm';
 import type { IngredientFormProps, IngredientFormValues } from '@/components/IngredientForm/types';

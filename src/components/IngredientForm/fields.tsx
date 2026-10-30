@@ -6,6 +6,7 @@ import {
   useFormContext,
   useFormState,
   useWatch,
+  type FieldError as FormFieldError,
 } from 'react-hook-form';
 import Combobox, { ComboboxEntry, ComboboxMultiSelect, ComboboxSortableEntries } from '../Combobox';
 import type { ComboboxOption } from '../Combobox/types';
@@ -219,9 +220,13 @@ export function ListField({
   );
 
   const entryErrors = fields.map(
-    (_, index): string | undefined => get(errors, `${name}.${index}.value`)?.message,
+    (_, index): string | undefined =>
+      get<unknown, FormFieldError | undefined>(errors, `${name}.${index}.value`)?.message,
   );
-  const boxError: string | undefined = get(errors, box)?.message;
+  const boxError: string | undefined = get<unknown, FormFieldError | undefined>(
+    errors,
+    box,
+  )?.message;
   const message = [
     ...fields.flatMap((row, index) =>
       entryErrors[index] ? [`${entryText(row)}: ${entryErrors[index]}`] : [],

@@ -130,7 +130,7 @@ describe('SignInPanel', () => {
     socialMock.mockResolvedValue({ error: { message: 'x' } });
     render(<SignInPanel next="/" configured={['google']} />);
 
-    await press(screen.getByRole('button', { name: 'Continue with Google, last used' }));
+    await press(screen.getByRole('button', { name: 'Continue with Google Last Used' }));
 
     expect(await screen.findByRole('alert')).toBeVisible();
     expect(
@@ -201,7 +201,7 @@ describe('SignInPanel', () => {
     const roster = ['google', 'discord', 'facebook', 'microsoft'] as const;
     const { unmount } = render(<SignInPanel next="/coven" configured={[...roster]} />);
 
-    const marked = screen.getByRole('button', { name: 'Continue with Discord, last used' });
+    const marked = screen.getByRole('button', { name: 'Continue with Discord Last Used' });
     for (const name of ['Google', 'Facebook', 'Microsoft']) {
       expect(screen.getByRole('button', { name: `Continue with ${name}` })).toBeInTheDocument();
     }
@@ -236,7 +236,7 @@ describe('SignInPanel', () => {
       });
 
       expect(
-        within(container).getByRole('button', { name: 'Continue with Google, last used' }),
+        within(container).getByRole('button', { name: 'Continue with Google Last Used' }),
       ).toBeInTheDocument();
       expect(onRecoverableError).not.toHaveBeenCalled();
     } finally {

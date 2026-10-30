@@ -12,7 +12,7 @@ import type {
   WorkingDeductionPreviewQuery,
 } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
-import { HttpResponse } from 'msw';
+import { HttpResponse } from 'msw/http';
 import {
   graphqlLink,
   mockGraphQLError,

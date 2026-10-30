@@ -23,7 +23,11 @@ import { mockGraphQLQuery } from './msw/graphql';
 
 // The Name box is IngredientSearch's type-ahead, which asks the server through
 // TanStack Query, so every render sits under a client, as the app's providers give it.
-const client = makeQueryClient();
+let client = makeQueryClient();
+// A client of each test's own: one shared by a file would hand a test the answers its neighbours cached.
+beforeEach(() => {
+  client = makeQueryClient();
+});
 export const CompendiumList = (listProps: CompendiumListProps): ReactElement => (
   <QueryClientProvider client={client}>
     <CompendiumListBase {...listProps} />

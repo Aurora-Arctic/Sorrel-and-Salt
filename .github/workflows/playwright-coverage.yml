@@ -37,6 +37,7 @@ on:
         default: false
 
 permissions:
+  actions: read
   contents: read
   packages: read
   pull-requests: write
@@ -68,6 +69,7 @@ jobs:
       # suite that did not run, or died before uploading, has no artifact; its
       # step fails under continue-on-error and the merge leaves it out.
       - name: Download the gate suite's coverage
+        id: download-gate
         if: inputs.should-run
         continue-on-error: true
         uses: actions/download-artifact@v8
@@ -76,6 +78,7 @@ jobs:
           path: /app/.reports/coverage-downloads/playwright-coverage
 
       - name: Download the story suite's coverage
+        id: download-stories
         if: inputs.should-run
         continue-on-error: true
         uses: actions/download-artifact@v8
@@ -83,13 +86,27 @@ jobs:
           name: playwright-coverage-stories
           path: /app/.reports/coverage-downloads/playwright-coverage-stories
 
+      # A failed download is either an artifact that was never uploaded, which
+      # the merge leaves out, or one that exists and could not be fetched, which
+      # would leave the last commit's comment standing. This tells them apart by
+      # asking the run for the artifact; `missing` names the second kind.
+      - name: Check no coverage artifact was lost in download
+        id: check
+        if: inputs.should-run
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ARTIFACTS: >-
+            [{"name":"playwright-coverage","outcome":"${{ steps.download-gate.outcome }}"},
+            {"name":"playwright-coverage-stories","outcome":"${{ steps.download-stories.outcome }}"}]
+        run: node .github/scripts/check-coverage-downloads.mjs 2>&1 | tee /app/output.log
+
       - name: Merge coverage
         id: merge
-        if: inputs.should-run
+        if: inputs.should-run && steps.check.outputs.missing == ''
         run: node .github/scripts/merge-playwright-coverage.mjs 2>&1 | tee /app/output.log
 
       - name: Upload merged coverage artifact
-        if: inputs.should-run && steps.merge.outputs.ran == 'true'
+        if: inputs.should-run && steps.check.outputs.missing == '' && steps.merge.outputs.ran == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: playwright-coverage-merged
@@ -97,7 +114,7 @@ jobs:
           retention-days: 7
 
       - name: Write job summary
-        if: inputs.should-run && steps.merge.outputs.ran == 'true'
+        if: inputs.should-run && steps.check.outputs.missing == '' && steps.merge.outputs.ran == 'true'
         uses: ./.github/actions/job-summary
         with:
           check-name: Playwright Coverage
@@ -107,7 +124,7 @@ jobs:
           details: ${{ steps.merge.outputs.details }}
 
       - name: Comment on PR
-        if: inputs.should-run && steps.merge.outputs.ran == 'true'
+        if: inputs.should-run && steps.check.outputs.missing == '' && steps.merge.outputs.ran == 'true'
         uses: ./.github/actions/pr-comment
         with:
           check-name: Playwright Coverage
@@ -118,3 +135,21 @@ jobs:
           success-mode: comment
           summary: ${{ steps.merge.outputs.summary }}
           details: ${{ steps.merge.outputs.details }}
+
+      # The same comment, so it never keeps an earlier commit's figures. Posted
+      # as a failure whose output is the check's log.
+      - name: Comment on PR that coverage is missing
+        if: inputs.should-run && steps.check.outputs.missing != ''
+        uses: ./.github/actions/pr-comment
+        with:
+          check-name: Playwright Coverage
+          marker-slug: playwright-coverage
+          pr-number: ${{ inputs.pr-number }}
+          outcome: failure
+          log-file: /app/output.log
+          success-mode: comment
+          summary: Coverage is missing for this commit, because an uploaded artifact could not be downloaded. Re-run the job.
+
+      - name: Fail when a coverage artifact could not be downloaded
+        if: inputs.should-run && steps.check.outputs.missing != ''
+        run: exit 1
