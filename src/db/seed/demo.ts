@@ -1,36 +1,38 @@
-import { and, eq, isNull } from 'drizzle-orm';
-import { beginSeedTransaction, insertMissing, insertMissingBy, requireFrom } from './idempotent';
-import { ingredients } from '../../modules/ingredients/schema/ingredients';
-import { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
-import { spells } from '../../modules/grimoire/schema/spells';
-import { spellCategories } from '../../modules/grimoire/schema/spell-categories';
-import { spellSteps } from '../../modules/grimoire/schema/spell-steps';
+import { beginSeedTransaction } from './idempotent';
 import { categoryIdByName } from './categories';
 import { assertCompendiumValid, seedCompendiumContent } from './compendium';
 import { loadCompendium } from './compendium/load';
-import { ingredientSlug } from '../../lib/slugify';
 import { seedDemoCovenSeats } from './demo-coven';
-import { insertMissingWorkings } from './demo-workings';
+import { DEMO_WORKINGS } from './demo-workings';
+import {
+  identityOf,
+  ingredientIdByIdentity,
+  insertMissingCupboardEntries,
+  insertMissingSpellCategories,
+  insertMissingSpells,
+  insertMissingStock,
+  insertMissingSteps,
+  insertMissingVariants,
+  insertMissingWorkings,
+  insertMissingWorkspaceIngredients,
+  variantIdByIngredient,
+  workspaceIngredientIds,
+} from './coven-content';
 import {
   COMPENDIUM_INGREDIENTS,
   FIXTURE_USERS,
   STANDARD_CUPBOARD,
   STANDARD_STOCK,
   WORKSPACE_W_ID,
-  identityOf,
-  ingredientIdByIdentity,
-  insertMissingCupboardEntries,
-  insertMissingStock,
-  insertMissingVariants,
-  namedIngredientId,
   reslugIngredients,
   seedStandardContent,
 } from './standard';
-import type { NamedIngredient, SeedCupboardEntry, SeedStock } from './standard';
 import type {
+  NamedIngredient,
+  SeedCupboardEntry,
   SeedDatabase,
-  SeedLayerIngredient,
   SeedSpell,
+  SeedStock,
   SeedTransaction,
   SeedWorkspaceIngredient,
 } from './types';
@@ -163,6 +165,8 @@ const ASH = fromWorkspace(HEARTH_ASH);
 
 /** Fixture B, a member of W, who writes the private spells. */
 const MEMBER_B = FIXTURE_USERS.B.id;
+// W's content is written as a member would, so the demo's private spells are B's.
+const W_COVEN = { workspaceId: WORKSPACE_W_ID, authorId: MEMBER_B };
 
 /** The jars, fixed ids in a block of their own (`…0002-…`). */
 export const DEMO_SPELLS: SeedSpell[] = [
@@ -1091,7 +1095,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     note: null,
     status: 'complete',
     visibility: 'private',
-    author: MEMBER_B,
+    byAuthor: true,
     categories: ['Fidelity'],
     steps: [{ body: 'Say it to the embers, once, and never write it down.' }],
   },
@@ -1106,7 +1110,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     note: null,
     status: 'complete',
     visibility: 'private',
-    author: MEMBER_B,
+    byAuthor: true,
     categories: ['Peace', 'Legal Matters'],
     steps: [
       { ingredient: CHAMOMILE, quantity: '1.000', unit: 'tbsp' },
@@ -1124,7 +1128,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     note: null,
     status: 'draft',
     visibility: 'private',
-    author: MEMBER_B,
+    byAuthor: true,
     categories: ['Warding'],
     steps: [{ body: 'Work out what goes in it.' }],
   },
@@ -1139,7 +1143,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     note: null,
     status: 'draft',
     visibility: 'private',
-    author: MEMBER_B,
+    byAuthor: true,
     categories: ['Grief Work', 'Release'],
     steps: [{ body: 'Write the letter, fold it into a boat, and let the tide take it.' }],
   },
@@ -1160,8 +1164,8 @@ export async function seedDemo(db: SeedDatabase): Promise<void> {
     // Reference data on every environment, so the scenario shows it too; `standard` leaves it out.
     await seedDemoCovenSeats(tx);
 
-    await insertMissingWorkspaceIngredients(tx);
-    const own = await workspaceIngredientIds(tx);
+    await insertMissingWorkspaceIngredients(tx, W_COVEN, WORKSPACE_W_INGREDIENTS);
+    const own = await workspaceIngredientIds(tx, W_COVEN, WORKSPACE_W_INGREDIENTS);
     // W's entries' slugs and forms; the compendium's `standard` wrote already.
     await reslugIngredients(tx, [...own.values()]);
     await insertMissingVariants(
@@ -1171,11 +1175,11 @@ export async function seedDemo(db: SeedDatabase): Promise<void> {
         return ingredientId ? [{ ingredientId, variants: entry.variants }] : [];
       }),
     );
-    await insertMissingCupboardEntries(tx, WORKSPACE_W_CUPBOARD);
+    await insertMissingCupboardEntries(tx, W_COVEN, WORKSPACE_W_CUPBOARD);
     await seedDemoSpells(tx);
-    await insertMissingStock(tx, DEMO_STOCK, await ingredientIdByIdentity(tx));
+    await insertMissingStock(tx, W_COVEN, DEMO_STOCK, await ingredientIdByIdentity(tx, W_COVEN));
     // After the stock: a complete working has already taken from the jars.
-    await insertMissingWorkings(tx);
+    await insertMissingWorkings(tx, DEMO_WORKINGS);
   });
 }
 
@@ -1185,179 +1189,12 @@ export async function seedDemo(db: SeedDatabase): Promise<void> {
  * take spells added since, writing nothing else.
  */
 export async function seedDemoSpells(tx: SeedTransaction): Promise<void> {
-  await insertMissingSpells(tx);
-  await insertMissingSteps(tx, await ingredientIdByIdentity(tx), await variantIdByIngredient(tx));
-  await insertMissingSpellCategories(tx, await categoryIdByName(tx));
-}
-
-// Idempotent the way `standard` is: inserts what is missing by identity,
-// ignoring `deleted_at` so a soft-deleted spell is not restored, updating
-// nothing already present.
-
-/**
- * W's entries, keyed by identity over W's rows, deleted or not, as the
- * compendium's are.
- */
-async function insertMissingWorkspaceIngredients(tx: SeedTransaction): Promise<void> {
-  await insertMissing(tx, ingredients, WORKSPACE_W_INGREDIENTS, {
-    existing: async (tx) =>
-      (
-        await tx
-          .select({ identityKey: ingredients.identityKey })
-          .from(ingredients)
-          .where(eq(ingredients.workspaceId, WORKSPACE_W_ID))
-      ).map((row) => row.identityKey),
-    keyOf: identityOf,
-    toRow: ({ variants: _variants, ...entry }) => ({
-      ...entry,
-      workspaceId: WORKSPACE_W_ID,
-      slug: ingredientSlug(entry.name, entry.canonicalName),
-    }),
-  });
-}
-
-/**
- * The ids of W's live entries this scenario seeds, by identity: its own, and
- * no member's, a deleted one left out, so nothing is written beside it.
- */
-async function workspaceIngredientIds(tx: SeedTransaction): Promise<Map<string, string>> {
-  const seeded = new Set(WORKSPACE_W_INGREDIENTS.map(identityOf));
-  const rows = await tx
-    .select({ id: ingredients.id, identityKey: ingredients.identityKey })
-    .from(ingredients)
-    .where(and(eq(ingredients.workspaceId, WORKSPACE_W_ID), isNull(ingredients.deletedAt)));
-  return new Map(
-    rows.filter((row) => seeded.has(row.identityKey)).map((row) => [row.identityKey, row.id]),
+  await insertMissingSpells(tx, W_COVEN, DEMO_SPELLS);
+  await insertMissingSteps(
+    tx,
+    DEMO_SPELLS,
+    await ingredientIdByIdentity(tx, W_COVEN),
+    await variantIdByIngredient(tx),
   );
-}
-
-/** Each spell stamped by its author, so a private one is its author's to read. */
-async function insertMissingSpells(tx: SeedTransaction): Promise<void> {
-  const authors = new Set(DEMO_SPELLS.map((spell) => spell.author));
-  for (const author of authors) {
-    await insertMissingBy(
-      tx,
-      spells,
-      DEMO_SPELLS.filter((spell) => spell.author === author),
-      {
-        columns: ['id'],
-        toRow: ({ categories: _categories, steps: _steps, author: _author, ...spell }) => ({
-          ...spell,
-          workspaceId: WORKSPACE_W_ID,
-        }),
-        session: author === undefined ? undefined : { userId: author },
-      },
-    );
-  }
-}
-
-/**
- * Each ingredient's first live variant in form order, what a linked
- * layer lays: every entry a jar names has exactly one, written by
- * `insertMissingVariants`; Rosemary's two are laid by no jar.
- */
-async function variantIdByIngredient(tx: SeedTransaction): Promise<Map<string, string>> {
-  const rows = await tx
-    .select({
-      id: ingredientVariants.id,
-      ingredientId: ingredientVariants.ingredientId,
-      form: ingredientVariants.form,
-    })
-    .from(ingredientVariants)
-    .where(isNull(ingredientVariants.deletedAt));
-  const first = new Map<string, { id: string; form: string }>();
-  for (const row of rows) {
-    const held = first.get(row.ingredientId);
-    if (!held || row.form.toLowerCase() < held.form.toLowerCase()) first.set(row.ingredientId, row);
-  }
-  return new Map([...first].map(([ingredientId, row]) => [ingredientId, row.id]));
-}
-
-/** An instruction-only step: no identity, and so no amount. */
-const NO_LAYER = {
-  ingredientId: null,
-  variantId: null,
-  name: null,
-  form: null,
-  quantity: null,
-  unit: null,
-  note: null,
-} as const;
-
-/**
- * For a layer, exactly one of `ingredientId` and `name` is set, `variantId` rides with the
- * first and `form` with the second.
- */
-function layerIdentity(
-  ingredient: SeedLayerIngredient,
-  ingredientIds: Map<string, string>,
-  variantIds: Map<string, string>,
-):
-  | { ingredientId: string; variantId: string; name: null; form: null }
-  | { ingredientId: null; variantId: null; name: string; form: string } {
-  if (ingredient.tier === 'custom') {
-    return { ingredientId: null, variantId: null, name: ingredient.name, form: ingredient.form };
-  }
-  const ingredientId = namedIngredientId(ingredient, ingredientIds);
-  const variantId = requireFrom(
-    variantIds,
-    ingredientId,
-    () => `A demo layer names "${ingredient.entry.name}", which has no variant to lay.`,
-  );
-  return { ingredientId, variantId, name: null, form: null };
-}
-
-/**
- * A jar's recipe is seeded whole or not at all: a step's identity is a place in a shared sequence, so patching one into an
- * edited recipe collides on either index (claude-docs/db/demo-scenario.md, "A jar's stack is seeded whole or not at all").
- */
-async function insertMissingSteps(
-  tx: SeedTransaction,
-  ingredientIds: Map<string, string>,
-  variantIds: Map<string, string>,
-): Promise<void> {
-  const wanted = DEMO_SPELLS.flatMap((spell) =>
-    spell.steps.map((step, index) => ({ spellId: spell.id, step, index })),
-  );
-
-  // Keyed by the jar, not the step, so a stocked jar keeps every step out —
-  // a removed step's tombstone included, since the jar has been edited.
-  await insertMissingBy(tx, spellSteps, wanted, {
-    columns: ['spellId'],
-    toRow: ({ spellId, step, index }) => ({
-      spellId,
-      body: step.body ?? null,
-      ...(step.ingredient
-        ? {
-            ...layerIdentity(step.ingredient, ingredientIds, variantIds),
-            quantity: step.quantity,
-            unit: step.unit,
-          }
-        : NO_LAYER),
-      // The place in the array, one per jar from 1.
-      position: index + 1,
-    }),
-  });
-}
-
-async function insertMissingSpellCategories(
-  tx: SeedTransaction,
-  categoryIds: Map<string, string>,
-): Promise<void> {
-  const wanted = DEMO_SPELLS.flatMap((spell) =>
-    spell.categories.map((name) => ({
-      spellId: spell.id,
-      categoryId: requireFrom(
-        categoryIds,
-        name,
-        () =>
-          `"${spell.title ?? `Untitled spell ${spell.id}`}" names category "${name}", which is not in the database.`,
-      ),
-    })),
-  );
-
-  await insertMissingBy(tx, spellCategories, wanted, {
-    columns: ['spellId', 'categoryId'],
-    toRow: (assignment) => assignment,
-  });
+  await insertMissingSpellCategories(tx, DEMO_SPELLS, await categoryIdByName(tx));
 }

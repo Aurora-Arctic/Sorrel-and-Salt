@@ -4,7 +4,7 @@ import { BOOTSTRAP_USER_ID } from '../../bootstrap';
 import { BOOTSTRAP_SESSION } from '../bootstrap-admin';
 import { insertStamped } from '../idempotent';
 import { insertMissingReferences } from '../reference-rows';
-import { identityOf } from '../standard';
+import { identityOf } from '../coven-content';
 import {
   categoryRows,
   citing,
