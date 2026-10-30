@@ -149,7 +149,10 @@
   pointer-events: none;
 }
 
-.spell-card .last-edit {
+// The made count and the foot pass a click through as well, so a press beside the actions opens the
+// recipe; the actions row takes the pointer back for its controls alone (_primitives.scss).
+.spell-card > .meta,
+.spell-card > .specimen__foot {
   pointer-events: none;
 }
 

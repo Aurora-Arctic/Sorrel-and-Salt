@@ -71,8 +71,8 @@ has no drawer behind it, since nothing opens from it.
 The link covers the whole card, as IngredientCard's does: the title's `<a>` stretches an
 empty `::after` over the article, so a press anywhere opens the recipe. While the link holds
 focus, the focus ring is drawn round the card on the article's own `::after`, which comes after
-the burn layers and so is not covered by the burnt corner. The intent, the chips' plain items and the last-edit
-line pass the pointer through to it; the foot's four actions and the category chips' +N button
+the burn layers and so is not covered by the burnt corner. The intent, the chips' plain items, the made count and the
+foot (the last-edit line and the gaps between the actions) pass the pointer through to it; the foot's four actions and the category chips' +N button
 sit above it and keep their own press, hover and focus.
 
 ## The Edit pencil
