@@ -49,6 +49,7 @@ ingredient steps in order, one line each, as the jar the recipe page's In Coven 
   one jar show it running down. The preview returns it as `before`, with the jar's Low mark as
   `lowStockThreshold`, from the plan that already read the jars, so it costs no extra read.
   A short line draws its jar Low, whatever the Low mark says.
+  Each part is its own span, and the words wrap between parts, so on a phone a part moves whole to the next line.
 - A one-off: a muted jar and "one-off · not kept".
 - A step with no jar: a dashed empty jar and "have no jar · takes nothing".
 - Any other skip (units differ, no amount, jar not measured): the reason and "takes nothing", over a

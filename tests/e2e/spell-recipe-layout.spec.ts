@@ -5,6 +5,7 @@ import { signInAgainAs } from './session';
 import {
   insertSpell,
   insertStep,
+  insertStock,
   insertWorking,
   compendiumVariant,
   seedCoven,
@@ -402,3 +403,40 @@ for (const [name, size] of [
     expect(await widthOf()).toBe(todayWidth);
   });
 }
+
+test("a short jar's deduction line keeps each part whole at 375px", async ({ page }) => {
+  const coven = await seedCoven(page, 'Fixture Coven Deduction', 'spell-deduction.test', {
+    A: 'owner',
+  });
+  const { A } = coven.users;
+  const spellId = await withSql(async (sql) => {
+    const held = await compendiumVariant(sql, 'Rosemary', 'Herb');
+    await insertStock(sql, coven.id, held, { quantity: 1, unit: 'g', threshold: 0 }, A);
+    const id = await insertSpell(sql, coven.id, 'Fixture Deduction', 'workspace', A, 'complete');
+    await insertStep(sql, id, held, { quantity: 3, unit: 'g', position: 0 }, A);
+    return id;
+  });
+  await signInAgainAs(page, A);
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+  await page
+    .getByRole('region', { name: 'Workings' })
+    .getByRole('button', { name: 'Record a Working' })
+    .click();
+  const dialog = page.getByRole('dialog', { name: 'Record a Working' });
+  await dialog.getByRole('button', { name: 'Complete' }).click();
+  const words = dialog.getByRole('list', { name: 'Deductions' }).locator('.jar-line__words');
+  await expect(words).toContainText('short by');
+
+  // Every part (takes, have, left, short by) stands on one line, so no unit sits alone under its number.
+  const parts = await words.locator('> span').evaluateAll((spans) =>
+    spans.map((span) => {
+      const range = document.createRange();
+      range.selectNodeContents(span);
+      const tops = new Set([...range.getClientRects()].map((rect) => Math.round(rect.top)));
+      return { text: span.textContent, lines: tops.size };
+    }),
+  );
+  expect(parts).toHaveLength(4);
+  for (const part of parts) expect(part, part.text ?? '').toMatchObject({ lines: 1 });
+});
