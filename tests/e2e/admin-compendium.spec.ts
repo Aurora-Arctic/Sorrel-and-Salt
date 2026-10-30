@@ -245,7 +245,11 @@ test('the edit source panel leaves the dialog in place and closes from its top b
 test('the toxic toggle starts off, saves, and reads back on reopening', async ({ page }) => {
   await signInAs(page, 'toxic-admin@admin-compendium.test', ['discord'], 'admin');
   await page.goto('/admin/compendium?new=ingredient-compendium');
-  const adding = page.getByRole('dialog', { name: 'Add Ingredient' });
+  // The autosave creates the entry once the name is set and the form pauses, which moves the address
+  // to ?edit= and the heading to Edit Ingredient while the same form stays open, so match either.
+  const adding = page.getByRole('dialog', {
+    name: /^(Add Ingredient|Edit Ingredient, Aaa Toxicwort)/,
+  });
   await adding.getByRole('textbox', { name: 'Name', exact: true }).fill('Aaa Toxicwort');
   await adding.getByRole('combobox', { name: 'Classification' }).click();
   await adding

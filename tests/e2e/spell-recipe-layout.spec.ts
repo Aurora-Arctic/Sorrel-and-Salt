@@ -120,9 +120,9 @@ test('the moon phase sits on one line in the facts strip on a desktop', async ({
   expect(lines).toEqual([1, 1, 1, 1]);
 });
 
-// Each working row's badges sit in their own column and its buttons in a slot at the far right, so
-// the badges start the same distance from the row's right edge whatever the row holds.
-test('the badges of a draft and a complete working start at the same place on a desktop', async ({
+// Each working row's badges sit right after its date, whatever else the row holds, so the gap from
+// the date to the first badge is the same on a draft row and a complete one.
+test('the badges of a draft and a complete working sit the same distance after the date on a desktop', async ({
   page,
 }) => {
   const coven = await seedCoven(page, 'Fixture Coven Badges', 'spell-badges.test', { A: 'owner' });
@@ -146,9 +146,12 @@ test('the badges of a draft and a complete working start at the same place on a 
     [0, 1].map((i) =>
       rows
         .nth(i)
-        .locator('.specimen__badges .badge')
-        .first()
-        .evaluate((el) => el.getBoundingClientRect().left),
+        .locator('.spell-workings__head')
+        .evaluate((head) => {
+          const date = head.querySelector('time')!.getBoundingClientRect();
+          const badge = head.querySelector('.specimen__badges .badge')!.getBoundingClientRect();
+          return badge.left - date.right;
+        }),
     ),
   );
   // The draft row has the extra Draft badge and the extra Complete button, the complete row neither.
