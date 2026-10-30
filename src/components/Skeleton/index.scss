@@ -160,9 +160,7 @@
 }
 
 .skeleton__card {
-  display: flex;
-  flex-direction: column;
-  gap: space(3);
+  @include stack(3);
   min-height: 11.25rem;
   padding: space(4);
   border-radius: radius('surface');
@@ -218,9 +216,7 @@
 // surface, the action across the card's foot.
 @container skeleton (max-width: #{$table-stack-width}) {
   .skeleton__table {
-    display: flex;
-    flex-direction: column;
-    gap: space(3);
+    @include stack(3);
   }
 
   .skeleton__head {

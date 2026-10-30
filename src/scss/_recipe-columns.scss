@@ -49,9 +49,7 @@
 
   .spell-recipe__lead {
     grid-row: 3;
-    display: flex;
-    flex-direction: column;
-    gap: space(2);
+    @include stack(2);
     margin: 0;
   }
 

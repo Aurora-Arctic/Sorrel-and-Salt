@@ -177,9 +177,7 @@
 // the caption (and Clear) on one line, its sentence beneath, the chips on the next. Each chip is a
 // toggle.
 .spell-steps__filter {
-  display: flex;
-  flex-direction: column;
-  gap: space(1);
+  @include stack(1);
   padding: space(2);
   border-block-start: 1px solid $hairline;
 }
@@ -360,9 +358,7 @@
 // The jar details above the step list: the jar at the left of Seal Wax, then Jar
 // Description on its own line.
 .jar-details {
-  display: flex;
-  flex-direction: column;
-  gap: space(5);
+  @include stack(5);
 }
 
 // Seal Wax takes the width the jar leaves. The jar stretches to the row's height, so it spans
@@ -407,15 +403,11 @@
 
 // In Coven Inventory: the panel and its list of `JarLine`s.
 .spell-inventory {
-  display: flex;
-  flex-direction: column;
-  gap: space(2);
+  @include stack(2);
 }
 
 .spell-inventory__list {
-  display: flex;
-  flex-direction: column;
-  gap: space(2);
+  @include stack(2);
   // Not a bulleted list: no ◆ marker from typography-base's `ul li::before`.
   @include list-reset;
 }
@@ -476,9 +468,7 @@
 
 // Category Match: Carried, Missing and Extra, each a row of chips.
 .comparison-panel {
-  display: flex;
-  flex-direction: column;
-  gap: space(2);
+  @include stack(2);
 
   h4 {
     margin: 0;
@@ -486,9 +476,7 @@
 }
 
 .comparison-panel__rows {
-  display: flex;
-  flex-direction: column;
-  gap: space(2);
+  @include stack(2);
   margin: 0;
 }
 

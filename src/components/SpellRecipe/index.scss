@@ -31,9 +31,7 @@
 }
 
 .spell-recipe__main {
-  display: flex;
-  flex-direction: column;
-  gap: space(4);
+  @include stack(4);
   min-width: 0;
 }
 
@@ -391,9 +389,7 @@
 
 // The Quick Look body: the recipe body's sections in a column, spaced as the page's.
 .spell-recipe-look {
-  display: flex;
-  flex-direction: column;
-  gap: space(4);
+  @include stack(4);
 }
 
 // The jump menu (PageNav) is the ingredient entry page's grid (`entry-nav-grid`): a sticky column left of
