@@ -203,8 +203,8 @@ each inside the page's real frame, section, panel and head: `States`, with a con
 Two Linked, Stale Session (the same two from a stale session), Failed
 (a failed link in Microsoft's row, reading `linkErrorMessage` rather than a
 copied sentence) and Some Unavailable; `PendingAdd`; `FailedRemove` (Remove Microsoft
-pressed on mount, failing into its callout, since the workshop serves no
-`/api/auth`), and `WholePage`, with a control that chooses Whole Page, the whole `/account`
+pressed on mount, then the red Remove in the Remove Sign-In Method question, the
+removal failing into its callout, since the workshop serves no `/api/auth`), and `WholePage`, with a control that chooses Whole Page, the whole `/account`
 page composed with fixture props, since the page is a server component.
 It is composed as `src/app/(shell)/account/page.tsx` composes it: a bare
 heading, `PageNav` with the same four entries, the Invitations section with

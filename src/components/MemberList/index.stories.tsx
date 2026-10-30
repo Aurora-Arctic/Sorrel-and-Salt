@@ -7,7 +7,8 @@ import type { MemberListEntry } from './types';
 
 // Render-only; behaviour is asserted in tests/components/MemberList. A member's
 // view leaves the addresses out; an owner's draws them. The controls are plain
-// buttons styled as the admin user table's: Change Role quiet, Remove destructive.
+// buttons styled as the real controls: Change Role and Remove both quiet, the red
+// kept for the confirm in Remove's question.
 const meta = {
   title: 'Coven / Member List',
 } satisfies Meta;
@@ -61,7 +62,7 @@ const withActionsNode = (
     )}
     removeAction={(member) =>
       member.role === 'owner' ? null : (
-        <button type="button" className="btn btn--destructive btn--small">
+        <button type="button" className="btn btn--quiet btn--small">
           Remove
         </button>
       )
@@ -90,7 +91,7 @@ const SoleOwnerPage = () => (
         )}
         removeAction={(member) =>
           member.role === 'owner' ? null : (
-            <button type="button" className="btn btn--destructive btn--small">
+            <button type="button" className="btn btn--quiet btn--small">
               Remove
             </button>
           )

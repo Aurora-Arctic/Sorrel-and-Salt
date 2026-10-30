@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
 import { GENERIC_LINK_ERROR, linkErrorMessage } from '../../lib/sign-in';
 import { hangAuth, refuseAuth } from '../../../.storybook/mock-api';
-import { usePressOnMount } from '../../../.storybook/press';
+import { press, pressLast, usePressOnMount, useSteps } from '../../../.storybook/press';
 import EmailForm from '../EmailForm';
 import NameForm from '../NameForm';
 import PageNav from '../PageNav';
@@ -161,14 +161,15 @@ export const PendingAdd: Story = {
   },
 };
 
-// Remove pressed on Microsoft, as a person would: the fake API refuses
-// /api/auth, so the removal fails into its callout under Remove Microsoft,
-// with the badge on the button (claude-docs/components/click-feedback.md).
+// Remove pressed on Microsoft, then the red Remove in the Remove Sign-In Method
+// question, as a person would: the fake API refuses /api/auth, so the question
+// closes and the removal fails into its callout under Remove Microsoft, with the
+// badge on the button (claude-docs/components/click-feedback.md).
 export const FailedRemove: Story = {
   tags: ['expects-failed-request'],
   beforeEach: ({ msw }) => msw.use(refuseAuth()),
   render: () => {
-    usePressOnMount('Remove Microsoft');
+    useSteps([() => press('Remove Microsoft'), () => pressLast('Remove')]);
     return <Page linked={[DISCORD, MICROSOFT]} configured={ALL_PROVIDERS} />;
   },
 };
