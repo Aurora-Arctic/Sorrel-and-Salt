@@ -36,3 +36,10 @@ export interface PasskeyButtonProps {
   /** Whether this browser last signed in with a passkey. */
   lastUsed: boolean;
 }
+
+export interface TwoFactorStepProps {
+  /** Where a successful sign-in returns to, as the panel's `next`. */
+  next?: string;
+  /** Back to the password, with the reason when the server ended the attempt. */
+  onRestart: (reason?: string) => void;
+}

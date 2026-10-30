@@ -11,6 +11,7 @@ import BusyButton from '../BusyButton';
 import Notice from '../Notice';
 import PasswordField from '../PasswordField';
 import { TOO_MANY_ATTEMPTS } from '../SignInPanel/password-form';
+import TwoFactorSettings from './two-factor';
 import type { PasswordSectionProps } from './types';
 import './index.scss';
 
@@ -49,7 +50,10 @@ function changeRefusal(failure: Failure): Refusal {
   return { alert: failure.status === 500 ? PASSWORD_CHECK_UNAVAILABLE : GENERIC_CHANGE_ERROR };
 }
 
-const PasswordSection = ({ hasPassword }: PasswordSectionProps): ReactElement => {
+const PasswordSection = ({
+  hasPassword,
+  twoFactorEnabled = false,
+}: PasswordSectionProps): ReactElement => {
   // Whether the account holds a password: the props' answer until a first one is set here.
   const [held, setHeld] = useState(hasPassword);
   const [current, setCurrent] = useState('');
@@ -149,6 +153,7 @@ const PasswordSection = ({ hasPassword }: PasswordSectionProps): ReactElement =>
           </BusyButton>
         </div>
       </form>
+      {held && <TwoFactorSettings enabled={twoFactorEnabled} />}
     </div>
   );
 };

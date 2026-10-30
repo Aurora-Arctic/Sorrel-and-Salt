@@ -137,7 +137,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
               : 'Set a password to sign in with your email address as well as your providers.'}
           </p>
         </div>
-        <PasswordSection hasPassword={passwordHeld} />
+        <PasswordSection hasPassword={passwordHeld} twoFactorEnabled={me.twoFactorEnabled} />
       </section>
       <section
         id={ACCOUNT_INVITATIONS_ID}

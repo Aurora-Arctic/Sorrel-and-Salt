@@ -10,6 +10,7 @@ import { FieldShell, fieldDescription } from '../Field';
 import Notice from '../Notice';
 import PasswordField from '../PasswordField';
 import { PASSKEY_AUTOCOMPLETE } from './passkey-autofill';
+import TwoFactorStep from './two-factor-step';
 import type { PasswordFormProps } from './types';
 
 // The email and password half of the panel: sign in, or switch to create an account. Every refusal is
@@ -70,6 +71,8 @@ const PasswordForm = ({ next, lastUsed, onStart }: PasswordFormProps): ReactElem
   const [problem, setProblem] = useState<Refusal>({});
   // The address a sign-up was answered for: every sign-up gets the same answer, held or not.
   const [signedUp, setSignedUp] = useState<string>();
+  // The right password was given for an account with two-factor on: the code step replaces this form.
+  const [askingForCode, setAskingForCode] = useState(false);
 
   const signingUp = mode === 'sign-up';
   const ready =
@@ -90,7 +93,7 @@ const PasswordForm = ({ next, lastUsed, onStart }: PasswordFormProps): ReactElem
     setSignedUp(undefined);
     onStart?.();
     const address = email.trim();
-    const { error } = await (
+    const { data, error } = await (
       signingUp
         ? signUp.email({
             name: name.trim(),
@@ -99,7 +102,7 @@ const PasswordForm = ({ next, lastUsed, onStart }: PasswordFormProps): ReactElem
             ...(next && { callbackURL: next }),
           })
         : signIn.email({ email: address, password })
-    ).catch(() => ({ error: {} as Failure }));
+    ).catch(() => ({ data: null, error: {} as Failure }));
     if (error) {
       setPending(false);
       setProblem(refusal(mode, error));
@@ -113,11 +116,30 @@ const PasswordForm = ({ next, lastUsed, onStart }: PasswordFormProps): ReactElem
       setSignedUp(address.toLowerCase());
       return;
     }
+    // No session yet: the server holds the attempt until a code completes it.
+    if (data && 'twoFactorRedirect' in data && data.twoFactorRedirect) {
+      setPending(false);
+      setPassword('');
+      setAskingForCode(true);
+      return;
+    }
     // A full load of the sign-in page, which sends a signed-in account on: to `next` or its
     // landing, and an unverified one to the email page first.
     reportLeaving();
     window.location.assign(signInPath(next));
   };
+
+  if (askingForCode) {
+    return (
+      <TwoFactorStep
+        next={next}
+        onRestart={(reason) => {
+          setAskingForCode(false);
+          setProblem(reason ? { alert: reason } : {});
+        }}
+      />
+    );
+  }
 
   const nameField = fieldDescription({ id: nameId });
   const emailField = fieldDescription({ id: emailId, error: problem.email });

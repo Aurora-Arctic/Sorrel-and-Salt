@@ -1,0 +1,233 @@
+'use client';
+
+import { QrCode } from '@ark-ui/react/qr-code';
+import { type FormEvent, type ReactElement, useId, useState } from 'react';
+import { twoFactor } from '../../lib/auth-client';
+import BusyButton from '../BusyButton';
+import { FieldShell, fieldDescription } from '../Field';
+import Notice from '../Notice';
+import PasswordField from '../PasswordField';
+import { TOO_MANY_ATTEMPTS } from '../SignInPanel/password-form';
+import { WRONG_CODE } from '../SignInPanel/two-factor-step';
+import type { TwoFactorSettingsProps } from './types';
+
+// Turning two-factor on and off, inside the Password section. Turning on takes the password, then
+// shows the app's QR code and the backup codes once, and is on only when a code from the app is
+// confirmed; turning off takes the password (claude-docs/components/password-section.md, "Two-factor").
+
+export const WRONG_PASSWORD = "That isn't your password.";
+export const GENERIC_TWO_FACTOR_ERROR = "We couldn't change two-factor. Please try again.";
+
+interface Enrolment {
+  totpURI: string;
+  backupCodes: string[];
+}
+
+interface Failure {
+  status?: number;
+  code?: string;
+}
+
+interface Refusal {
+  alert?: string;
+  password?: string;
+  code?: string;
+}
+
+function refusal(failure: Failure): Refusal {
+  if (failure.code === 'INVALID_PASSWORD') return { password: WRONG_PASSWORD };
+  if (failure.code === 'INVALID_CODE') return { code: WRONG_CODE };
+  if (failure.status === 429) return { alert: TOO_MANY_ATTEMPTS };
+  return { alert: GENERIC_TWO_FACTOR_ERROR };
+}
+
+/** The key the app is given, for typing in when the QR code cannot be scanned. */
+function keyOf(totpURI: string): string {
+  return new URL(totpURI).searchParams.get('secret') ?? '';
+}
+
+const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement => {
+  const headingId = useId();
+  const codeId = useId();
+  const [on, setOn] = useState(enabled);
+  const [enrolment, setEnrolment] = useState<Enrolment>();
+  const [password, setPassword] = useState('');
+  const [code, setCode] = useState('');
+  const [pending, setPending] = useState(false);
+  const [problem, setProblem] = useState<Refusal>({});
+  const [saved, setSaved] = useState<'on' | 'off'>();
+
+  const entered = code.replace(/\s/g, '');
+
+  // Better Auth answers `{ error }` for a refusal and throws for a dropped connection; both arrive here.
+  const run = async <T,>(
+    call: () => Promise<{ data: T | null; error: Failure | null }>,
+  ): Promise<T | undefined> => {
+    setPending(true);
+    setProblem({});
+    setSaved(undefined);
+    const { data, error } = await call().catch(() => ({ data: null, error: {} as Failure }));
+    setPending(false);
+    if (error || !data) {
+      setProblem(refusal(error ?? {}));
+      return undefined;
+    }
+    return data;
+  };
+
+  const start = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
+    event.preventDefault();
+    if (password === '' || pending) return;
+    const data = await run(() => twoFactor.enable({ password }));
+    if (!data) return;
+    // The emailed-code method is not configured, so the answer always carries the app's details.
+    if (!('totpURI' in data)) {
+      setProblem({ alert: GENERIC_TWO_FACTOR_ERROR });
+      return;
+    }
+    setPassword('');
+    setEnrolment({ totpURI: data.totpURI, backupCodes: data.backupCodes });
+  };
+
+  const confirm = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
+    event.preventDefault();
+    if (entered === '' || pending) return;
+    const data = await run(() => twoFactor.verifyTotp({ code: entered }));
+    if (!data) return;
+    setCode('');
+    setEnrolment(undefined);
+    setOn(true);
+    setSaved('on');
+  };
+
+  const turnOff = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
+    event.preventDefault();
+    if (password === '' || pending) return;
+    const data = await run(() => twoFactor.disable({ password }));
+    if (!data) return;
+    setPassword('');
+    setOn(false);
+    setSaved('off');
+  };
+
+  const cancel = (): void => {
+    setEnrolment(undefined);
+    setCode('');
+    setProblem({});
+  };
+
+  const codeField = fieldDescription({ id: codeId, error: problem.code });
+
+  return (
+    <section className="two-factor" aria-labelledby={headingId}>
+      <h3 id={headingId}>Two-Factor Sign-In</h3>
+      {problem.alert && <Notice kind="error">{problem.alert}</Notice>}
+      {saved === 'on' && (
+        <Notice kind="success">
+          Two-factor is on. Signing in with your password now also asks for a code from your app.
+        </Notice>
+      )}
+      {saved === 'off' && <Notice kind="success">Two-factor is off.</Notice>}
+      {enrolment ? (
+        <>
+          <ol className="two-factor__steps">
+            <li>
+              <p>Scan this QR code with your authenticator app.</p>
+              <QrCode.Root value={enrolment.totpURI} className="two-factor__qr">
+                <QrCode.Frame role="img" aria-label="QR code for your authenticator app">
+                  <QrCode.Pattern />
+                </QrCode.Frame>
+              </QrCode.Root>
+              <p>
+                If you can&apos;t scan it, enter this key in the app instead:{' '}
+                <code className="two-factor__key">{keyOf(enrolment.totpURI)}</code>
+              </p>
+            </li>
+            <li>
+              <p>
+                Save these backup codes somewhere safe. Each one signs you in once if you lose your
+                app. They won&apos;t be shown again.
+              </p>
+              <ul className="two-factor__codes" aria-label="Backup Codes">
+                {enrolment.backupCodes.map((backupCode) => (
+                  <li key={backupCode}>
+                    <code>{backupCode}</code>
+                  </li>
+                ))}
+              </ul>
+            </li>
+            <li>
+              <p>Enter the six-digit code the app now shows to turn two-factor on.</p>
+            </li>
+          </ol>
+          {/* `noValidate`: every refusal is the server's, worded and placed like the rest. */}
+          <form className="form" onSubmit={(event) => void confirm(event)} noValidate>
+            <FieldShell label="Code From Your App" required {...codeField}>
+              <input
+                id={codeField.controlId}
+                className="input"
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                spellCheck={false}
+                value={code}
+                onChange={(event) => setCode(event.target.value)}
+                aria-required
+                {...codeField.aria}
+              />
+            </FieldShell>
+            <div className="form__actions">
+              <button type="button" className="btn btn--quiet" onClick={cancel}>
+                Cancel
+              </button>
+              <BusyButton
+                type="submit"
+                className="btn btn--solid"
+                disabled={entered === '' || pending}
+                busy={pending}
+                busyLabel="Turning On"
+              >
+                Confirm and Turn On
+              </BusyButton>
+            </div>
+          </form>
+        </>
+      ) : (
+        <>
+          <p>
+            {on
+              ? 'Two-factor is on: signing in with your password also asks for a code from your authenticator app. Enter your password to turn it off.'
+              : 'Two-factor is off. With it on, signing in with your password also asks for a code from an authenticator app, so a stolen password alone does not open your account.'}
+          </p>
+          <form
+            className="form"
+            onSubmit={(event) => void (on ? turnOff(event) : start(event))}
+            noValidate
+          >
+            <PasswordField
+              label="Password"
+              purpose="current"
+              value={password}
+              onChange={setPassword}
+              error={problem.password}
+              required
+            />
+            <div className="form__actions">
+              <BusyButton
+                type="submit"
+                className={on ? 'btn btn--destructive' : 'btn btn--solid'}
+                disabled={password === '' || pending}
+                busy={pending}
+                busyLabel={on ? 'Turning Off' : 'Turning On'}
+              >
+                {on ? 'Turn Off Two-Factor' : 'Turn On Two-Factor'}
+              </BusyButton>
+            </div>
+          </form>
+        </>
+      )}
+    </section>
+  );
+};
+
+export default TwoFactorSettings;
