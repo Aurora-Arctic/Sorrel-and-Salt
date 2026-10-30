@@ -9,6 +9,7 @@ import { categoryIdByName } from './categories';
 import { assertCompendiumValid, seedCompendiumContent } from './compendium';
 import { loadCompendium } from './compendium/load';
 import { ingredientSlug } from '../../lib/slugify';
+import { insertMissingWorkings } from './demo-workings';
 import {
   COMPENDIUM_INGREDIENTS,
   FIXTURE_USERS,
@@ -181,8 +182,8 @@ export const DEMO_SPELLS: SeedSpell[] = [
       { body: 'Layer dry to damp, from the bottom of the jar up.' },
       {
         ingredient: fromCompendium('Sea Salt', 'Sodium chloride'),
-        quantity: '2.000',
-        unit: 'tbsp',
+        quantity: '30.000',
+        unit: 'g',
         body: 'The base. Everything above it sits on salt.',
       },
       {
@@ -270,8 +271,8 @@ export const DEMO_SPELLS: SeedSpell[] = [
       { body: 'Sweep the grate clean before the first fire is laid.' },
       {
         ingredient: ASH,
-        quantity: '1.000',
-        unit: 'pinch',
+        quantity: '5.000',
+        unit: 'g',
         body: 'Last winter’s, scattered under the new kindling.',
       },
       { body: 'Say the blessing once the flames catch, and not before.' },
@@ -290,7 +291,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     categories: ['Cleansing', 'Purification'],
     steps: [
       { body: 'Open every window in the room first.' },
-      { ingredient: SEA_SALT, quantity: '1.000', unit: 'tbsp', body: 'Heaped in the saucer.' },
+      { ingredient: SEA_SALT, quantity: '15.000', unit: 'g', body: 'Heaped in the saucer.' },
       { body: 'Leave the saucer in the cold grate overnight and throw the salt out at dawn.' },
     ],
   },
@@ -327,7 +328,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     status: 'complete',
     categories: ['Warding', 'Protection'],
     steps: [
-      { ingredient: SEA_SALT, quantity: '2.000', unit: 'tbsp' },
+      { ingredient: SEA_SALT, quantity: '30.000', unit: 'g' },
       { body: 'Pour it in one unbroken line along the inside of the front step.' },
     ],
   },
@@ -505,7 +506,7 @@ export const DEMO_SPELLS: SeedSpell[] = [
     status: 'complete',
     categories: ['Divination', 'Psychic Work'],
     steps: [
-      { ingredient: MUGWORT, quantity: '1.000', unit: 'tbsp' },
+      { ingredient: MUGWORT, quantity: '3.000', unit: 'g' },
       { body: 'Infuse in hot water, let it cool, and wipe the bowl with it.' },
     ],
   },
@@ -1170,6 +1171,8 @@ export async function seedDemo(db: SeedDatabase): Promise<void> {
     await insertMissingCupboardEntries(tx, WORKSPACE_W_CUPBOARD);
     await seedDemoSpells(tx);
     await insertMissingStock(tx, DEMO_STOCK, await ingredientIdByIdentity(tx));
+    // After the stock: a complete working has already taken from the jars.
+    await insertMissingWorkings(tx);
   });
 }
 

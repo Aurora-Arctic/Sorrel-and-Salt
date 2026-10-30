@@ -460,3 +460,31 @@ export interface AuditReport {
   candidates: AuditCandidate[];
   stated: AuditStated[];
 }
+
+/**
+ * One seeded working, a time a spell was made. A complete working carries what completing it took from the coven's
+ * jars, one entry per step it took from, written as the working service would write it.
+ */
+export interface SeedWorking {
+  id: string;
+  spellId: string;
+  /** The member who recorded it, and so the one stamped on every row. */
+  recorder: string;
+  status: 'draft' | 'complete';
+  /** The day it was made, `YYYY-MM-DD`. */
+  workedOn: string;
+  note: string | null;
+  /** Never wider than its spell's. */
+  visibility: 'private' | 'workspace';
+  /** In order, from position 0: a coven member, or a name typed for someone without an account. */
+  participants: ({ userId: string } | { name: string })[];
+  deductions: {
+    /** The place of the spell step it took from. */
+    stepPosition: number;
+    /** The id of the jar it took from, in `DEMO_STOCK`. */
+    jarId: string;
+    quantity: string;
+    unit: 'g';
+    shortfall: string;
+  }[];
+}
