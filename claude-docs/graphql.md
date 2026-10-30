@@ -137,4 +137,4 @@ A schema from one of `graphql`'s CommonJS and ESM builds fails the other's `inst
 
 ## `graphql` is pinned to 16
 
-`graphql@^16` is a direct dependency although Yoga, Pothos and codegen accept 17, because `@escape.tech/graphql-armor` (`^16.10.0`, issue #885) stops at 16 (`graphql-request`, the other, was dropped by M10.31) and one copy in the tree avoids the two-realm failure, and it moves to 17 once armor accepts it, the only blocker left. [`graphql/graphql-pin.md`](graphql/graphql-pin.md)
+`graphql@^16` is a direct dependency although Yoga, Pothos and codegen accept 17, because `@escape.tech/graphql-armor` (a hard dependency on `graphql@^16.10.0` in each sub-package, issue #885) stops at 16 (`graphql-request`, the other, was dropped by M10.31) and one copy in the tree avoids the two-realm failure, and it moves to 17 once armor accepts it, the only blocker left. [`graphql/graphql-pin.md`](graphql/graphql-pin.md)
