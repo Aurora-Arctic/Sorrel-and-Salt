@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildCardSheetsPdf } from '@/lib/invitation-cards';
 import AdminCards, { MintCards } from '@/components/AdminCards';
 import AdminArrivals from '@/components/AdminCards/arrivals';
@@ -55,11 +55,25 @@ const CARDS = [
   },
 ];
 
+// A fixed clock, so the earliest pickable expiry and the calendar's first month do not move.
 beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-10-30T12:00:00Z') });
   router.push.mockClear();
   router.replace.mockClear();
   router.refresh.mockClear();
 });
+
+afterEach(() => vi.useRealTimers());
+
+// Opens the Expires On calendar and picks 1 December 2026, two months on from the clock.
+function pickFirstOfDecember() {
+  fireEvent.click(within(dialog()).getByRole('button', { name: /Expires On/ }));
+  fireEvent.click(screen.getByRole('button', { name: /Next Month/ }));
+  fireEvent.click(screen.getByRole('button', { name: /Next Month/ }));
+  fireEvent.click(
+    within(screen.getByRole('grid')).getByRole('button', { name: /, 1 December 2026/ }),
+  );
+}
 
 const dialog = () => screen.getByRole('dialog', { name: 'Mint Cards' });
 const mint = () => within(dialog()).getByRole('button', { name: 'Mint Cards' });
@@ -113,9 +127,7 @@ describe('AdminCards', () => {
       target: { value: '3' },
     });
     expect(mint()).toBeDisabled();
-    fireEvent.change(within(dialog()).getByLabelText(/Expires On/), {
-      target: { value: '2026-12-01' },
-    });
+    pickFirstOfDecember();
     expect(mint()).toBeEnabled();
     fireEvent.click(mint());
 
@@ -171,9 +183,7 @@ describe('AdminCards', () => {
     fireEvent.change(within(dialog()).getByLabelText(/Number of Cards/), {
       target: { value: '2' },
     });
-    fireEvent.change(within(dialog()).getByLabelText(/Expires On/), {
-      target: { value: '2026-12-01' },
-    });
+    pickFirstOfDecember();
     fireEvent.click(mint());
     fireEvent.click(await within(dialog()).findByRole('button', { name: 'Download PDF' }));
 

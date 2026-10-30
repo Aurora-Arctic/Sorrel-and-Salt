@@ -5,6 +5,7 @@ import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import type { Failure } from '../../lib/types';
+import DateField from '../DateField';
 import { FieldShell, FormActions, fieldDescription } from '../Field';
 import { DiscardQuestion, RouteModal, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
@@ -31,6 +32,10 @@ export const MINT_TITLE = 'Mint Cards';
 
 /** A day as an expiry: midnight UTC at its start, as an invitation's is. */
 const expiryOf = (day: string): string => `${day}T00:00:00.000Z`;
+
+/** The first day an expiry may be: the day after today in UTC, as the service refuses an expiry at or before now. */
+const earliestDay = (): string =>
+  new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
 /** The count a field holds, or undefined while it is not a whole number the field can send. */
 const countOf = (text: string): number | undefined => {
@@ -106,15 +111,14 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
         />
       </FieldShell>
       <FieldShell label="Expires On" required {...dayShell}>
-        <input
+        <DateField
           id={dayShell.controlId}
-          className="input"
-          type="date"
-          aria-required
-          {...dayAria}
+          labelledBy={dayShell.labelId}
           value={day}
+          min={earliestDay()}
           disabled={minting}
-          onChange={(event) => setDay(event.target.value)}
+          onChange={setDay}
+          {...dayAria}
         />
       </FieldShell>
       <FormActions
