@@ -49,7 +49,8 @@ convention) and split across two schema files:
   (["Passkeys"](plugins.md)). The plugin alone writes it, through the
   adapter, outside `withAudit`, so it carries no audit columns.
 - **`sign_in_failures`**, in the same file — one row per account counting
-  failed password sign-ins (`user_id` is its key), read and written by the
+  failed password sign-ins (`user_id` is its key) and when the latest was
+  (`last_failed_at`), read and written by the
   lockout service through `repository/sign-in-failures.ts`, outside
   `withAudit` (["Passwords"](passwords.md)).
 - **`two_factors`**, in the same file, with `users.two_factor_enabled` —

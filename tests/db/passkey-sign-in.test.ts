@@ -46,6 +46,7 @@ beforeEach(async () => {
   await sql`delete from sessions where user_id in (${mine})`;
   await sql`delete from accounts where user_id in (${mine})`;
   await sql`delete from passkeys where user_id in (${mine})`;
+  await sql`delete from sign_in_failures where user_id in (${mine})`;
   await sql`delete from workspace_members where user_id in (${mine})`;
   await sql`delete from users where email like ${`%${DOMAIN}`}`;
 });
@@ -153,5 +154,39 @@ describe('Story 73: sign in with a passkey', () => {
         (select count(*)::int from workspace_members m where m.user_id = u.id) as seats
       from users u where u.id = ${owner.id}`;
     expect(after).toEqual(before);
+  });
+});
+
+describe('a passkey sign-in and the password failure count', () => {
+  const failures = async (userId: string) =>
+    (
+      await sql<{ count: number }[]>`select count from sign_in_failures where user_id = ${userId}`
+    )[0]?.count;
+
+  it('forgets the failures once a passkey signs the account in', async () => {
+    const owner = await account(OWNER);
+    const key = softKey();
+    await enrol(auth, owner.session, key);
+    await sql`insert into sign_in_failures (user_id, count) values (${owner.id}, 3)`;
+    // Precondition: the failures are on record before the sign-in.
+    expect(await failures(owner.id)).toBe(3);
+
+    const signedIn = await signInWithPasskey(auth, key);
+
+    expect(await signedInAs(signedIn)).toBe(owner.id);
+    expect(await failures(owner.id)).toBeUndefined();
+  });
+
+  it('keeps the failures when the passkey sign-in is refused', async () => {
+    const owner = await account(OWNER);
+    const key = softKey();
+    await enrol(auth, owner.session, key);
+    await sql`delete from passkeys where user_id = ${owner.id}`;
+    await sql`insert into sign_in_failures (user_id, count) values (${owner.id}, 3)`;
+
+    const refused = await signInWithPasskey(auth, key);
+
+    expect(refused.status).toBe(401);
+    expect(await failures(owner.id)).toBe(3);
   });
 });

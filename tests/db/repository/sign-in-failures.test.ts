@@ -10,6 +10,12 @@ import { sql, useRawClient } from '../../support/db/probe-tables';
 
 useRawClient();
 
+const DAY = 24 * 60 * 60_000;
+const NOW = new Date('2026-10-30T12:00:00Z');
+/** One failure at `at`, counting on from any failure within the day before it. */
+const fail = (userId: string, at = NOW) =>
+  recordSignInFailure(userId, at, new Date(at.getTime() - DAY));
+
 // The per-account counter of failed password sign-ins (claude-docs/db/write-path.md): a write outside `withAudit`, as a failed sign-in has no session to audit.
 
 beforeEach(async () => {
@@ -22,47 +28,49 @@ describe('sign_in_failures', () => {
   });
 
   it('counts each failure from one, keeping the first failure time', async () => {
-    const first = await recordSignInFailure(A.id);
-    const second = await recordSignInFailure(A.id);
+    const first = await fail(A.id);
+    const second = await fail(A.id);
 
     expect(first.count).toBe(1);
     expect(second.count).toBe(2);
     expect(second.firstFailedAt).toEqual(first.firstFailedAt);
     expect(second.lockedUntil).toBeNull();
-    expect(second.passwordDisabled).toBe(false);
+  });
+
+  it('starts the count over at one when the last failure came before the quiet period, keeping it within it', async () => {
+    await fail(A.id, NOW);
+    const within = await fail(A.id, new Date(NOW.getTime() + DAY - 1_000));
+    expect(within.count).toBe(2);
+
+    const after = await fail(A.id, new Date(within.lastFailedAt.getTime() + DAY + 1_000));
+    expect(after.count).toBe(1);
+    expect(after.firstFailedAt).toEqual(after.lastFailedAt);
   });
 
   it('counts one account without touching another', async () => {
-    await recordSignInFailure(A.id);
-    await recordSignInFailure(A.id);
+    await fail(A.id);
+    await fail(A.id);
 
     expect(await readSignInFailure(B.id)).toBeNull();
-    expect((await recordSignInFailure(B.id)).count).toBe(1);
+    expect((await fail(B.id)).count).toBe(1);
     expect((await readSignInFailure(A.id))?.count).toBe(2);
   });
 
-  it('locks until a time, or disables the password, keeping the count', async () => {
-    await recordSignInFailure(A.id);
+  it('locks until a time, keeping the count', async () => {
+    await fail(A.id);
     const until = new Date(Date.now() + 60_000);
 
-    await lockPasswordSignIn(A.id, { lockedUntil: until });
+    await lockPasswordSignIn(A.id, until);
     expect(await readSignInFailure(A.id)).toMatchObject({ count: 1, lockedUntil: until });
-
-    await lockPasswordSignIn(A.id, { passwordDisabled: true });
-    expect(await readSignInFailure(A.id)).toMatchObject({
-      count: 1,
-      lockedUntil: until,
-      passwordDisabled: true,
-    });
   });
 
   it('clears the row, and a later failure counts from one again', async () => {
-    await recordSignInFailure(A.id);
-    await recordSignInFailure(A.id);
+    await fail(A.id);
+    await fail(A.id);
 
     await clearSignInFailures(A.id);
 
     expect(await readSignInFailure(A.id)).toBeNull();
-    expect((await recordSignInFailure(A.id)).count).toBe(1);
+    expect((await fail(A.id)).count).toBe(1);
   });
 });

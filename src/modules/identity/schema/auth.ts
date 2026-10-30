@@ -91,15 +91,17 @@ export const rateLimits = pgTable('rate_limits', {
 
 // One row per account with a failed password sign-in, and none otherwise. No
 // audit columns: nobody writes it by hand and a failed sign-in has no session.
-// `locked_until` is the end of a timed lock and `password_disabled` the stop
-// that only a reset lifts; the schedule that sets them is the lockout's, not
-// the table's.
+// `last_failed_at` is when the last failure came, which the quiet period runs
+// from, and `locked_until` the end of the current lock; the schedule that
+// sets them is the lockout's, not the table's. Nothing reads
+// `password_disabled`: no count switches a password off.
 export const signInFailures = pgTable('sign_in_failures', {
   userId: uuid('user_id')
     .primaryKey()
     .references(() => users.id, { onDelete: 'cascade' }),
   count: integer('count').notNull().default(0),
   firstFailedAt: timestamp('first_failed_at').defaultNow().notNull(),
+  lastFailedAt: timestamp('last_failed_at').defaultNow().notNull(),
   lockedUntil: timestamp('locked_until'),
   passwordDisabled: boolean('password_disabled').default(false).notNull(),
 });

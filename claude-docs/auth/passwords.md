@@ -109,9 +109,25 @@ in `sign_in_failures` (DESIGN.md §8, "Passwords"), by
 `src/modules/identity/services/sign-in-lockout.ts` and hooks on
 `/sign-in/email` and `/change-password` in `src/lib/auth.ts`:
 
-- **The schedule.** The 5th failure locks the password for 1 minute, the 10th
-  for 5 minutes, the 20th for 1 hour, and the 100th disables it until a reset.
-  A count between two of these adds no lock of its own.
+- **The schedule.** Every 5th failure starts a lock: the 5th for 1 minute,
+  the 10th for 5 minutes, the 15th for 15 minutes, and the 20th and every 5th
+  after it for 1 hour, the ceiling. A count between two of these adds no lock
+  of its own. No count switches the password off for good, since anyone who
+  knows an address could otherwise do that to its owner.
+- **The count decays.** `last_failed_at` records the latest failure, and a
+  failure more than 24 hours after it starts the count again at 1, so
+  failures spread over days never climb the ladder. The upsert in
+  `repository/sign-in-failures.ts` decides it in one statement.
+- **The owner is told.** When a failure starts a lock, `countFailure` mails
+  `src/emails/password-locked.tsx` to the account: how long the lock lasts,
+  and a reset link, so the owner can choose a new password at once instead of
+  waiting. The link is made as Better Auth makes its own (a `reset-password:`
+  verification row, valid 15 minutes, `callbackURL` fixed to
+  `/reset-password`), and goes, like the reset mail, only to a verified, real
+  address. The whole mail runs in the background, after the answer, so a
+  failure that starts a lock answers like any other.
+- **`password_disabled`** is left from the first schedule and read by
+  nothing; a later task drops it.
 - **The before hook** (`holdLockedSignIn`) looks the address up and, while its
   account is locked, replaces the submitted password with 32 random bytes in
   hex, which no stored hash matches. Better Auth then runs its own lookup and
@@ -133,8 +149,10 @@ in `sign_in_failures` (DESIGN.md §8, "Passwords"), by
   `INVALID_PASSWORD`, and the after hook (`countChange`) adds one for a wrong
   current password on an unlocked account and deletes the row on a completed
   change.
-- **What it leaves open.** A provider sign-in never reads the row. A completed
-  reset deletes it, in `onPasswordReset`.
+- **What it leaves open.** A provider or passkey sign-in never reads the row.
+  A completed reset deletes it, in `onPasswordReset`, and so does a passkey
+  sign-in, in the after hook on `/passkey/verify-authentication`, since a
+  passkey proves the owner as the password would.
 - **Outside `withAudit`.** A failed sign-in has no session to audit; the
   counter is the third identity bootstrap in CLAUDE.md rule 3.
 
@@ -242,14 +260,19 @@ following the mailed link gives it its first password the same way.
   change needs, a first password set without one and refused from a session
   older than a day, and no periodic change.
 - `tests/db/password-lockout.test.ts`, story 72 through the real
-  `/sign-in/email`: each step of the schedule, the right password refused in
-  a lock and accepted after, the reset that lifts a disabled password, a lock
+  `/sign-in/email`: each step of the schedule up to its ceiling, the right
+  password refused in a lock and accepted after, no count switching the
+  password off, the count starting over after 24 quiet hours and not before,
+  the lock mail at each lock with its length, its link resetting the password
+  during the lock, and no mail below a lock or for an unknown address, a lock
   that leaves another account and the same account's provider sign-in open,
   the count cleared by a sign-in, by a completed change and by a completed
   reset, a wrong current password at a change counted and a change refused
   during a lock, and a locked attempt's response compared
   whole (status, headers but `date`, body) with a wrong password's and an
   unknown address's. Each shows the guard refuses by deleting the row.
+- `tests/db/passkey-sign-in.test.ts` also shows a passkey sign-in clearing the
+  count and a refused one leaving it.
 - `tests/modules/identity/graphql/set-password.test.ts`: the mutation's
   refusals, a stale session among them, and that it sets the caller's own
   password.

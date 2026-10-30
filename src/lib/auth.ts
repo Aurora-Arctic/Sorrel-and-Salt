@@ -51,6 +51,7 @@ import { primaryAdminEmail } from './primary-admin';
 import { verifyEmailMessage } from '../emails/verify-email';
 import { accountExistsMessage } from '../emails/account-exists';
 import { resetPasswordMessage } from '../emails/reset-password';
+import { passwordLockedMessage } from '../emails/password-locked';
 import { mailPasswordChanged } from './password-notice';
 import {
   promotePrimaryAdmin,
@@ -350,6 +351,9 @@ async function mailExistingHolder({ user }: { user: { id: string; email: string 
 /** The page a reset link opens, whatever page the request for it named. */
 const RESET_PASSWORD_PAGE = '/reset-password';
 
+/** How long a reset link lasts. Short, because Better Auth stores the reset token unhashed in `verifications`. */
+const RESET_TOKEN_SECONDS = 15 * 60;
+
 /** This request's site origin, for a link in a mail sent from inside one of Better Auth's endpoints. */
 function endpointOrigin(): string {
   return new URL(getCurrentAuthEndpointContext().context.baseURL).origin;
@@ -403,7 +407,34 @@ async function countChange(ctx: HookContext) {
   const returned = ctx.context.returned;
   if (!isAPIError(returned)) return clearFailedPasswordSignIns(userId);
   if (returned.body?.code !== BASE_ERROR_CODES.INVALID_PASSWORD.code) return;
-  if (!locked) await recordFailedPasswordSignIn(userId);
+  if (!locked) await countFailure(ctx, userId);
+}
+
+/**
+ * Counts one failure and, when it starts a lock, mails the account's owner. The mail carries a reset link made the way
+ * Better Auth makes its own, so the owner can choose a new password at once rather than wait out the lock. Like the
+ * reset mail, it goes only to a verified address, and runs after the answer, so the answer shows nothing.
+ */
+async function countFailure(ctx: HookContext, userId: string) {
+  const length = await recordFailedPasswordSignIn(userId);
+  if (length === null) return;
+  await ctx.context.runInBackgroundOrAwait(mailLockNotice(ctx, userId, length));
+}
+
+async function mailLockNotice(ctx: HookContext, userId: string, length: number) {
+  const user = await ctx.context.internalAdapter.findUserById(userId);
+  if (!user?.emailVerified || isPlaceholderEmail(user.email)) return;
+  const token = randomBytes(18).toString('base64url');
+  await ctx.context.internalAdapter.createVerificationValue({
+    value: user.id,
+    identifier: `reset-password:${token}`,
+    expiresAt: new Date(Date.now() + RESET_TOKEN_SECONDS * 1000),
+  });
+  const link = new URL(`${ctx.context.baseURL}/reset-password/${token}`);
+  link.searchParams.set('callbackURL', RESET_PASSWORD_PAGE);
+  await send(
+    await passwordLockedMessage({ to: user.email, url: link.toString(), minutes: length / 60_000 }),
+  );
 }
 
 /** Tells the account a change on its account page replaced its password. */
@@ -425,8 +456,7 @@ function emailAndPassword(): BetterAuthOptions['emailAndPassword'] {
     // Off, which is what makes a sign-up to a held address answer as a new one and call the hook below.
     autoSignIn: false,
     onExistingUserSignUp: mailExistingHolder,
-    // Short, because Better Auth stores the reset token unhashed in `verifications`.
-    resetPasswordTokenExpiresIn: 15 * 60,
+    resetPasswordTokenExpiresIn: RESET_TOKEN_SECONDS,
     revokeSessionsOnPasswordReset: true,
     sendResetPassword: mailResetLink,
     onPasswordReset: async ({ user }) => {
@@ -470,7 +500,7 @@ async function countPasswordSignIn(ctx: HookContext) {
   if (!isAPIError(returned)) return;
   if (returned.body?.code !== BASE_ERROR_CODES.INVALID_EMAIL_OR_PASSWORD.code) return;
   const { userId, locked } = await passwordAttempt.get();
-  if (userId && !locked) await recordFailedPasswordSignIn(userId);
+  if (userId && !locked) await countFailure(ctx, userId);
 }
 
 // /api/auth/* is the one exception to the GraphQL-only rule (CLAUDE.md rule 1).
@@ -655,6 +685,10 @@ export const auth = betterAuth({
       }
       if (ctx.path === '/sign-in/email') return countPasswordSignIn(ctx);
       const newSession = ctx.context.newSession;
+      // A passkey proves the account's owner as a password would, so it forgets the failures too.
+      if (ctx.path === '/passkey/verify-authentication' && newSession) {
+        return clearFailedPasswordSignIns(newSession.user.id);
+      }
       if (ctx.path !== '/callback/:id' || !newSession) return;
 
       const { user } = newSession;

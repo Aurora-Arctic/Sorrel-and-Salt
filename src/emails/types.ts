@@ -75,3 +75,10 @@ export interface PasswordChangedProps extends BaseEmailProps {
   url: string;
   how: PasswordChange;
 }
+
+export interface PasswordLockedProps extends BaseEmailProps {
+  /** Better Auth's reset link, which checks the token and opens `/reset-password` carrying it. */
+  url: string;
+  /** How long the lock lasts, in minutes. */
+  minutes: number;
+}

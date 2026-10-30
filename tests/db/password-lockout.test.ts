@@ -69,17 +69,16 @@ async function seedFailures(count: number, email = OWNER) {
   await sql`
     insert into sign_in_failures (user_id, count)
     select id, ${count} from users where email = ${email}
-    on conflict (user_id) do update set count = excluded.count, locked_until = null, password_disabled = false
+    on conflict (user_id) do update set count = excluded.count, locked_until = null
   `;
 }
 
 async function failureRow(email = OWNER) {
   const [row] = await sql`
-    select count, locked_until, password_disabled from sign_in_failures
+    select count, locked_until from sign_in_failures
     where user_id = (select id from users where email = ${email})
   `;
-  return row as
-    { count: number; locked_until: Date | null; password_disabled: boolean } | undefined;
+  return row as { count: number; locked_until: Date | null } | undefined;
 }
 
 /** Removes the row: what the guard reads, and nothing else. */
@@ -127,33 +126,33 @@ describe('Story 72: wrong passwords lock the account', () => {
   });
 
   it.each([
-    [10, 5 * 60_000],
-    [20, 60 * 60_000],
-  ])('locks for longer at the %ith failure', async (count, length) => {
-    await verifiedAccount();
-    await seedFailures(count - 1);
-    expect((await signIn(WRONG)).status).toBe(401);
-    const until = (await failureRow())!.locked_until!.getTime() - Date.now();
-    expect(until).toBeGreaterThan(length - 5_000);
-    expect(until).toBeLessThanOrEqual(length);
-  });
+    [10, 5],
+    [15, 15],
+    [20, 60],
+    [25, 60],
+    [100, 60],
+  ])(
+    'locks for longer at each fifth failure, up to an hour: at the %ith, %i minutes',
+    async (count, minutes) => {
+      await verifiedAccount();
+      await seedFailures(count - 1);
+      expect((await signIn(WRONG)).status).toBe(401);
+      const until = (await failureRow())!.locked_until!.getTime() - Date.now();
+      expect(until).toBeGreaterThan(minutes * 60_000 - 5_000);
+      expect(until).toBeLessThanOrEqual(minutes * 60_000);
+    },
+  );
 
-  it('disables the password at the hundredth failure until a reset, and the reset signs in', async () => {
+  it('never switches the password off: past a hundred failures the right one signs in once the lock ends', async () => {
     await verifiedAccount();
-    await seedFailures(99);
+    await seedFailures(199);
     expect((await signIn(WRONG)).status).toBe(401);
-    expect((await failureRow())?.password_disabled).toBe(true);
-
-    await expireLock();
+    // The precondition: the two hundredth failure started a lock, and it refuses the right password.
+    expect((await failureRow())?.count).toBe(200);
     expect((await signIn(RIGHT)).status).toBe(401);
 
-    expect((await post(auth, '/request-password-reset', { email: OWNER })).status).toBe(200);
-    const text = send.mock.calls[send.mock.calls.length - 1][0].text;
-    const token = text.match(/\/reset-password\/([^\s\]?]+)/)![1];
-    expect((await post(auth, '/reset-password', { token, newPassword: NEW })).status).toBe(200);
-
-    expect(await failureRow()).toBeUndefined();
-    expect((await signIn(NEW)).status).toBe(200);
+    await expireLock();
+    expect((await signIn(RIGHT)).status).toBe(200);
   });
 
   it('does not count attempts made during a lock', async () => {
@@ -219,7 +218,7 @@ describe('Story 72: a lock looks like a wrong password', () => {
     await seedFailures(99);
     await signIn(WRONG);
     // The precondition: the lock is on, and the password it refuses is right.
-    expect((await failureRow())?.password_disabled).toBe(true);
+    expect((await failureRow())?.locked_until?.getTime()).toBeGreaterThan(Date.now());
     const locked = await observable(await signIn(RIGHT));
 
     const wrong = await observable(await signIn(WRONG, OTHER));
@@ -293,5 +292,87 @@ describe('Story 72: a reset clears the count', () => {
 
     expect((await post(auth, '/reset-password', { token, newPassword: NEW })).status).toBe(200);
     expect(await failureRow()).toBeUndefined();
+  });
+});
+
+describe('Story 72: a lock lifts on its own', () => {
+  it('forgets the count after a day with no failure, so the next wrong password starts again at one', async () => {
+    await verifiedAccount();
+    await seedFailures(4);
+    // Only the clock is faked, so scrypt's own timers run; the day passes for the app, not the database.
+    vi.useFakeTimers({ toFake: ['Date'], now: Date.now() + 25 * 60 * 60_000 });
+
+    expect((await signIn(WRONG)).status).toBe(401);
+
+    const row = await failureRow();
+    expect(row?.count).toBe(1);
+    expect(row?.locked_until).toBeNull();
+    expect((await signIn(RIGHT)).status).toBe(200);
+  });
+
+  it('keeps the count within the day, so the fifth failure still locks', async () => {
+    await verifiedAccount();
+    await seedFailures(4);
+    vi.useFakeTimers({ toFake: ['Date'], now: Date.now() + 23 * 60 * 60_000 });
+
+    expect((await signIn(WRONG)).status).toBe(401);
+
+    expect((await failureRow())?.count).toBe(5);
+    expect((await signIn(RIGHT)).status).toBe(401);
+  });
+});
+
+describe('Story 72: a lock is mailed to the account', () => {
+  const lockMails = () =>
+    send.mock.calls
+      .map(([message]) => message)
+      .filter((message) => /paused/i.test(message.subject));
+
+  it.each([
+    [5, '1 minute'],
+    [10, '5 minutes'],
+    [20, '1 hour'],
+  ])(
+    'mails the owner once at the %ith failure, saying the lock lasts %s',
+    async (count, length) => {
+      await verifiedAccount();
+      await seedFailures(count - 1);
+
+      await signIn(WRONG);
+      await signIn(WRONG);
+      await signIn(RIGHT);
+
+      const mails = lockMails();
+      expect(mails).toHaveLength(1);
+      expect(mails[0].to).toBe(OWNER);
+      expect(mails[0].text).toContain(length);
+    },
+  );
+
+  it('carries a reset link that works during the lock, and the reset lifts it', async () => {
+    await verifiedAccount();
+    await seedFailures(4);
+    await signIn(WRONG);
+    expect((await signIn(RIGHT)).status).toBe(401);
+
+    const token = lockMails()[0].text.match(/\/reset-password\/([^\s\]?]+)/)![1];
+    expect((await post(auth, '/reset-password', { token, newPassword: NEW })).status).toBe(200);
+
+    expect(await failureRow()).toBeUndefined();
+    expect((await signIn(NEW)).status).toBe(200);
+  });
+
+  it('sends nothing for a wrong password below a lock', async () => {
+    await verifiedAccount();
+    await seedFailures(2);
+    await signIn(WRONG);
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it('sends nothing for an address with no account', async () => {
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      expect((await signIn(WRONG, `nobody${DOMAIN}`)).status).toBe(401);
+    }
+    expect(send).not.toHaveBeenCalled();
   });
 });

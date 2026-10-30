@@ -6,41 +6,43 @@ import {
   recordSignInFailure,
 } from '../../../db/repository';
 
-// The per-account lock on password sign-in (claude-docs/auth/passwords.md, "Lockout"). Provider sign-in never
-// reads it. Written outside `withAudit`: a failed sign-in has no session to audit (CLAUDE.md rule 3).
+// The per-account lock on password sign-in (claude-docs/auth/passwords.md, "Lockout"). Provider and passkey sign-in
+// never read it. Written outside `withAudit`: a failed sign-in has no session to audit (CLAUDE.md rule 3).
 
 const MINUTE = 60_000;
 
-/** Each count that starts a timed lock, with its length; a count between two of them adds no lock. */
-const TIMED_LOCKS = [
-  { from: 20, length: 60 * MINUTE },
-  { from: 10, length: 5 * MINUTE },
-  { from: 5, length: MINUTE },
-] as const;
+/** How long an account goes with no failure before its count starts over. */
+export const QUIET_PERIOD = 24 * 60 * MINUTE;
 
-/** The count at which only a reset lifts the lock. */
-export const PASSWORD_DISABLED_AT = 100;
+/** Every this many failures starts a lock. */
+export const FAILURES_PER_LOCK = 5;
+
+/** Each lock's length in turn; every lock past the last is as long as the last, the ceiling. */
+export const LOCK_LENGTHS = [MINUTE, 5 * MINUTE, 15 * MINUTE, 60 * MINUTE] as const;
 
 /** Whether password sign-in is refused for this account at `now`. */
 export async function isPasswordSignInLocked(userId: string, now = new Date()): Promise<boolean> {
   const row = await readSignInFailure(userId);
-  if (!row) return false;
-  return row.passwordDisabled || (row.lockedUntil !== null && row.lockedUntil > now);
+  return row?.lockedUntil != null && row.lockedUntil > now;
 }
 
-/** Counts one wrong password and starts the lock the new count reaches, if any. */
-export async function recordFailedPasswordSignIn(userId: string, now = new Date()): Promise<void> {
-  const { count } = await recordSignInFailure(userId);
-  if (count >= PASSWORD_DISABLED_AT) {
-    await lockPasswordSignIn(userId, { passwordDisabled: true });
-    return;
-  }
-  const lock = TIMED_LOCKS.find(({ from }) => count === from);
-  if (lock)
-    await lockPasswordSignIn(userId, { lockedUntil: new Date(now.getTime() + lock.length) });
+/**
+ * Counts one wrong password, starting over after a quiet period, and starts a lock when the count reaches a multiple of
+ * `FAILURES_PER_LOCK`. Returns the new lock's length in milliseconds, or null when this failure starts none.
+ */
+export async function recordFailedPasswordSignIn(
+  userId: string,
+  now = new Date(),
+): Promise<number | null> {
+  const { count } = await recordSignInFailure(userId, now, new Date(now.getTime() - QUIET_PERIOD));
+  if (count % FAILURES_PER_LOCK !== 0) return null;
+  const nth = count / FAILURES_PER_LOCK;
+  const length = LOCK_LENGTHS[Math.min(nth, LOCK_LENGTHS.length) - 1];
+  await lockPasswordSignIn(userId, new Date(now.getTime() + length));
+  return length;
 }
 
-/** Forgets every failure, on a successful password sign-in or a completed reset. */
+/** Forgets every failure, on a successful password or passkey sign-in, or a completed reset. */
 export function clearFailedPasswordSignIns(userId: string): Promise<void> {
   return clearSignInFailures(userId);
 }

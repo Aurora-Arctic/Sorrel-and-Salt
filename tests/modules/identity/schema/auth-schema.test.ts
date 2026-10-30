@@ -105,6 +105,7 @@ describe('sign_in_failures schema', () => {
     expect(columns.map((column) => column.name).sort()).toEqual([
       'count',
       'first_failed_at',
+      'last_failed_at',
       'locked_until',
       'password_disabled',
       'user_id',
