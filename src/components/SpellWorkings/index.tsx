@@ -29,6 +29,7 @@ const Working = ({
   editAction: SpellWorkingsProps['editAction'];
 }): ReactElement => {
   const day = dayOf(working.workedOn);
+  const showsComplete = working.status === 'draft' && Boolean(working.editable);
   return (
     <li className="spell-workings__row">
       <div className="spell-workings__head">
@@ -42,8 +43,8 @@ const Working = ({
           )}
         </div>
         <div className="spell-workings__actions">
-          {working.status === 'draft' && working.editable && completeAction?.(working.id)}
-          {working.editable && editAction?.(working.editable, day)}
+          {showsComplete && completeAction?.(working.id)}
+          {working.editable && editAction?.(working.editable, day, showsComplete)}
           {working.canChange && (
             <DeleteWorkingAction workspaceId={workspaceId} workingId={working.id} name={day} />
           )}

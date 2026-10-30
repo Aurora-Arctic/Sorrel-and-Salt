@@ -2,7 +2,8 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import SpellWorkings from '@/components/SpellWorkings';
-import type { WorkingView } from '@/components/SpellWorkings/types';
+import EditWorkingAction from '@/components/SpellWorkings/edit-working';
+import type { SpellWorkingsProps, WorkingView } from '@/components/SpellWorkings/types';
 import type { DeleteWorkingMutation, DeleteWorkingMutationVariables } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { press } from '../../support/interact';
@@ -28,10 +29,19 @@ const working = (over: Partial<WorkingView> & Pick<WorkingView, 'id'>): WorkingV
   ...over,
 });
 
-function renderSection(workings: WorkingView[], complete?: (id: string) => React.ReactNode) {
+function renderSection(
+  workings: WorkingView[],
+  complete?: (id: string) => React.ReactNode,
+  edit?: SpellWorkingsProps['editAction'],
+) {
   return render(
     <QueryClientProvider client={makeQueryClient()}>
-      <SpellWorkings workspaceId={WORKSPACE_ID} workings={workings} completeAction={complete} />
+      <SpellWorkings
+        workspaceId={WORKSPACE_ID}
+        workings={workings}
+        completeAction={complete}
+        editAction={edit}
+      />
     </QueryClientProvider>,
   );
 }
@@ -115,6 +125,41 @@ describe('SpellWorkings', () => {
     );
     expect(screen.getAllByRole('button', { name: /^Complete / })).toHaveLength(1);
     expect(within(rows()[0]!).getByRole('button', { name: 'Complete w1' })).toBeInTheDocument();
+  });
+
+  it("takes the Edit pencil's ink from the text only on a row that shows Complete", () => {
+    const editable = (id: string, status: 'draft' | 'complete'): WorkingView['editable'] => ({
+      id,
+      workedOn: '2026-03-04',
+      note: null,
+      visibility: 'workspace',
+      status,
+      participants: [],
+    });
+    renderSection(
+      [
+        working({ id: 'w1', status: 'draft', editable: editable('w1', 'draft') }),
+        working({ id: 'w2', editable: editable('w2', 'complete') }),
+      ],
+      (id) => <button type="button">Complete {id}</button>,
+      (working, name, plain) => (
+        <EditWorkingAction
+          name={name}
+          plain={plain}
+          workspaceId={WORKSPACE_ID}
+          spellId="s1"
+          spellVisibility="workspace"
+          members={[]}
+          steps={[]}
+          working={working}
+        />
+      ),
+    );
+    const edit = (row: HTMLElement) => within(row).getByRole('button', { name: /^Edit Working/ });
+    expect(within(rows()[0]!).getByRole('button', { name: 'Complete w1' })).toBeInTheDocument();
+    expect(edit(rows()[0]!)).toHaveClass('icon-tip__edit--plain');
+    expect(within(rows()[1]!).queryByRole('button', { name: /^Complete / })).toBeNull();
+    expect(edit(rows()[1]!)).not.toHaveClass('icon-tip__edit--plain');
   });
 
   it('draws Delete Working only for a working its viewer may change, and deletes it after a confirmation', async () => {

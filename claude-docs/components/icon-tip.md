@@ -270,6 +270,8 @@ The mystic eye (Quick Look) is an almond eye whose iris is a tilted waxing cresc
 
 ## Ink and size
 
+The Edit pencil beside Complete on a draft working's row (`EditButton`'s `plain`) uses the same `$text-primary`, while Complete keeps the green.
+
 A coven card foot's Edit and Annotate icons use `$text-primary` (chalk on the dark page, the body text on the light one, where pure white would vanish on a card) in place of the accent green, which its Edit Stock pencil keeps. The hover and focus tint stays the edit pencil's.
 
 The three dots use `$card-more-ink` wherever they stand (a card's foot, the entry page, the Quick Look window), at rest and pressed alike, where the pencil and bin beside them keep their green and wax. The compendium card's Edit in Compendium wears the same ink (`icon-tip__edit--ink`). Its hover and focus tint stays the edit pencil's green and the focus ring is the link's own.
