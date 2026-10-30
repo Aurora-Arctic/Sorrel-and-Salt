@@ -183,7 +183,9 @@ already holds, in `src/lib/auth.ts`:
   goes to the `twoFactor` plugin's own lockout, and the password row never
   hears of it ([`two-factor.md`](two-factor.md), "Wrong codes").
 - **Outside `withAudit`.** A failed sign-in has no session to audit; the
-  counter is the third identity bootstrap in CLAUDE.md rule 3.
+  counter's repository file, `src/db/repository/sign-in-failures.ts`, is one of the two
+  repository files CLAUDE.md rule 3 names as writing outside it
+  ([`design-decisions/m16.4-repository-writes-outside-the-audit.md`](../design-decisions/m16.4-repository-writes-outside-the-audit.md)).
 
 ### Reset and change
 
