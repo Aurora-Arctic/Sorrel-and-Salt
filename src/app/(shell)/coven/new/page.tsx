@@ -8,7 +8,7 @@ import { requireSession } from '../../../../lib/request-session';
 import { viewerOf } from '../../../../lib/viewer';
 
 export const metadata: Metadata = {
-  title: 'Create Coven — Sorrel & Salt',
+  title: 'Create Coven',
 };
 
 // The create-workspace page. It belongs to no one coven, so the coven guard does not run;

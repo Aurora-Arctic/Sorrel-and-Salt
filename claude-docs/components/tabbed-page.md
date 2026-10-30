@@ -128,7 +128,7 @@ it renders. A tab's `shape`, `table` by default, is the skeleton's shape while t
   look does not change what pressing a tab does. So `tab-links.tsx` is the
   one client part; the rest renders on the server.
 - **Each tab names itself in its `page.tsx` `metadata.title`** ("Category Groups"); `src/app/(shell)/admin/layout.tsx`
-  sets `title.template`, so the tab shows "Category Groups — Admin — Sorrel & Salt".
+  sets `title.template`, so the tab shows "Category Groups | Admin | Sorrel & Salt".
 
 ## Styling
 

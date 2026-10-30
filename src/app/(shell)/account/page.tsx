@@ -23,7 +23,7 @@ import { configuredProviders } from '../../../lib/social-providers-config';
 import type { AccountPageProps } from './types';
 
 export const metadata: Metadata = {
-  title: 'Your Account — Sorrel & Salt',
+  title: 'Your Account',
 };
 
 // The one account page: name, address, ways in and waiting coven invitations, each its own section

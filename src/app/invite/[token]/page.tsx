@@ -9,7 +9,7 @@ import { invitationStanding } from '@/modules/identity';
 import type { InvitePageProps } from './types';
 
 export const metadata: Metadata = {
-  title: 'Your Invitation — Sorrel & Salt',
+  title: 'Your Invitation',
 };
 
 // Cached so a second render in the request reads once (CLAUDE.md rule 1).

@@ -13,7 +13,7 @@ import { configuredProviders } from '../../lib/social-providers-config';
 import type { SignInPageProps } from './types';
 
 export const metadata: Metadata = {
-  title: 'Sign In — Sorrel & Salt',
+  title: 'Sign In',
 };
 
 // No AppShell: DESIGN.md §9 scopes it to signed-in pages, and this page is

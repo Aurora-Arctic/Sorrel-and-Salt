@@ -38,7 +38,9 @@ visitors three ways, all from the server:
   query between them.
 - **The layout also names the coven in the page title.** Each page gives its
   own name ('Grimoire'), and the layout's title template adds the coven's:
-  `Grimoire — Whitethorn Coven — Sorrel & Salt`.
+  `Grimoire | Whitethorn Coven | Sorrel & Salt`. The template comes from
+  `titleTemplate()` in `src/lib/site.ts`, so " | " is the one separator and no
+  page writes the site's name itself (`tests/guards/page-titles.test.ts`).
 
 Tests: `tests/modules/coven/services/workspace-by-slug.test.ts` (against
 Postgres, every fixture user), `tests/lib/request-session.test.ts` (the 404

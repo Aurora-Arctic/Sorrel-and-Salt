@@ -8,7 +8,7 @@ import { ACCOUNT_INVITATIONS_PATH } from '../../../lib/sign-in';
 import { viewerOf } from '../../../lib/viewer';
 
 export const metadata: Metadata = {
-  title: 'Your Coven — Sorrel & Salt',
+  title: 'Your Coven',
 };
 
 // The post-sign-in landing for someone with no return path. A member goes into the first coven; one who
