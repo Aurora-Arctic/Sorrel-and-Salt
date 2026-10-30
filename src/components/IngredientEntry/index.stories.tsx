@@ -61,6 +61,7 @@ function entryRow(overrides: Partial<IngredientRow> = {}): IngredientRow {
     safetyNotes: 'Not for use while pregnant.',
     toxic: false,
     seedKey: null,
+    revision: 1,
     curatorReviewedAt: null,
     seedContentHash: null,
     ...STAMPS,
