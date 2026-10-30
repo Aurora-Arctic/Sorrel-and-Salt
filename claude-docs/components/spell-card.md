@@ -61,7 +61,8 @@ when a spell is both.
 
 Given an `href`, the title is a `PendingLink` with a `LinkHint`, as IngredientCard's name
 is; the grimoire list passes each spell's recipe page (MB.6, `recipeHref`). Without one the
-title is plain text. The card has no drawer behind it, since nothing opens from it.
+title is plain text, and the card keeps the default cursor, since a press does nothing. The card
+has no drawer behind it, since nothing opens from it.
 
 The link covers the whole card, as IngredientCard's does: the title's `<a>` stretches an
 empty `::after` over the article, so a press anywhere opens the recipe. While the link holds

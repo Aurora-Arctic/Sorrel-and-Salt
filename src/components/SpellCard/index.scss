@@ -14,7 +14,6 @@
   // The containing block for the title link's stretched `::after` below.
   position: relative;
   padding: space(4);
-  cursor: pointer;
   color: $text-primary;
   border-radius: radius('surface');
 
@@ -29,6 +28,11 @@
   > * {
     position: relative;
   }
+}
+
+// The pointer promises a press only on a card whose title links somewhere.
+.spell-card:has(.spell-card__title a) {
+  cursor: pointer;
 }
 
 // The hover, on pointers that can hover only, so a tap on a phone does not leave a card
@@ -101,8 +105,7 @@
   pointer-events: none;
 }
 
-// The title block and the Edit pencil share the top row; the title's first word decides
-// when the pencil wraps below, as an ingredient card's name does.
+// The title block fills the top row; a long word breaks anywhere rather than widen the card.
 .spell-card__heading {
   flex: 1 1 0;
   max-width: 100%;

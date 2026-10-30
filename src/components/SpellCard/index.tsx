@@ -11,7 +11,7 @@ import type { SpellCardProps } from './types';
 import './index.scss';
 
 // One spell in the grimoire's list: title, intent, Draft and Private badges, assigned categories,
-// last editor. Presentational, in IngredientCard's pattern, with no drawer; the title links where
+// the made count, last editor and the actions. Presentational, in IngredientCard's pattern, with no drawer; the title links where
 // `href` is given (claude-docs/components/spell-card.md).
 
 /** What a spell with no title is called, here and wherever it is listed. */
@@ -92,14 +92,14 @@ const SpellCard = ({
       <CategoryChips categories={categories} label={name} />
       {/* How often it has been made: none draws nothing, as a spell never worked has nothing to say. */}
       {workingCount != null && workingCount > 0 && (
-        <p className="meta spell-card__made">
+        <p className="meta">
           Made {workingCount} {workingCount === 1 ? 'Time' : 'Times'}
         </p>
       )}
-      {/* In the foot, as IngredientCard's, so cards in one grid row end on the same line. */}
       {(lastEdit != null || lookHref || editHref || recordWorking || more) && (
-        // The foot, as IngredientCard's: who last edited, then the actions on one row, the
-        // Quick Look eye at the bottom left (the start group) and the Edit pencil and Delete Spell bin at the right.
+        // The foot, as IngredientCard's, so cards in one grid row end on the same line: who last edited,
+        // then the actions on one row, the Quick Look eye at the left (the start group) and Record a
+        // Working, the Edit pencil and the More menu at the right.
         <div className="specimen__foot">
           {lastEdit != null && <LastEdit by={lastEdit.by} at={lastEdit.at} />}
           {(lookHref || editHref || recordWorking || more) && (

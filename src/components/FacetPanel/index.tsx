@@ -99,7 +99,7 @@ export default function FacetPanel({
   // A call, not a component, so the fields inside keep their state across renders.
   const formsHalf = (children: ReactNode): ReactNode =>
     halves && covens.length > 0 ? (
-      <div className="facet-panel__line facet-panel__grow facet-panel__half">{children}</div>
+      <div className="facet-panel__line facet-panel__grow">{children}</div>
     ) : (
       children
     );
@@ -256,7 +256,7 @@ export default function FacetPanel({
         {/* The viewer's own covens beside the In / Not In choice, only for a viewer in one. No counts: the
             rest read cached, public counts, and a count per coven would make them the viewer's (rule 6). */}
         {covens.length > 0 && (
-          <div className="facet-panel__line facet-panel__grow facet-panel__half">
+          <div className="facet-panel__line facet-panel__grow">
             <div className="facet-panel__grow">
               <FacetCombobox
                 label="In My Covens"
