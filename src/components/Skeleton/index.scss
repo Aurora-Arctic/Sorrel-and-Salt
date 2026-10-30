@@ -1,8 +1,8 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The shared loading skeleton: `table`, `cards`, `form` and `page`, drawn by the tab panel and the
-// route modal. Each shape is the shared `skeleton-shape` (_mixins.scss), a quiet fill with a
+// The shared loading skeleton in each of its shapes, drawn wherever a page part is on its way.
+// Each shape is the shared `skeleton-shape` (_mixins.scss), a quiet fill with a
 // lighter band, and a single slow pulse under reduced motion.
 
 // Shown at once with a short fade: the press has taken the old content away, so holding the
@@ -180,6 +180,24 @@
   > span:nth-child(3) {
     width: 75%;
     margin-block-start: auto;
+  }
+}
+
+// Compact, inside an ancestor that says `data-density="compact"` (the coven lists), unless a
+// stored Regular choice sits on <html>: the narrower column, tighter gap and padding of the compact
+// cards (`.ingredient-card-list`, IngredientCard/_compact.scss), so the list does not jump on arrival.
+[data-density='compact']:not(:root[data-card-density='regular'] *) {
+  .skeleton__cards {
+    grid-template-columns: repeat(
+      auto-fill,
+      minmax(min(100%, #{$ingredient-card-min-compact}), 1fr)
+    );
+    gap: space(3);
+  }
+
+  .skeleton__card {
+    gap: space(2);
+    padding: space(3) space(4);
   }
 }
 

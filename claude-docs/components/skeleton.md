@@ -38,6 +38,27 @@ way (M12.33). It was the tab panel's skeleton (MB.115) and the route modal's
   `loading-pulse` of `$pulse-duration` (2s).
 - It is a size container, so the table's rows turn to cards under the width
   the real table stacks at.
+- **The `cards` shape stands in for a card list**: the public Compendium and the admin Compendium draw it at the
+  regular density; the coven's Ingredients list (`CovenCards`) and the grimoire (`GrimoireList`) draw it compact.
+  Compact is not a prop: inside an ancestor that says `data-density="compact"`, unless a stored Regular choice sits
+  on `<html>` (`data-card-density="regular"`), the column, gap and padding follow the compact cards
+  (`IngredientCard/_compact.scss`), so the list does not jump when it arrives. The two coven lists put that
+  attribute on a wrapper round their search. The skeleton a tab switch or a navigation draws sits outside that
+  wrapper and stays regular.
+
+## Styling
+
+`index.scss`, built from the tokens and the shared mixins:
+
+- Every bar is a `span` inside `.skeleton__shapes`, drawn by the `skeleton-shape` mixin (`_mixins.scss`): the quiet
+  fill, the band and the reduced-motion pulse.
+- The block classes name the part each bar stands in for: `skeleton__header`, `__title`, `__tabs` and `__action` for
+  the heading row; `__filter`, `__field` and `__count` for the filter row; `__head`, `__row` and `__pager` for the
+  table; `__cards` and `__card` for the cards; `__intro`, `__eyebrow`, `__lede`, `__menu` and the `__entry-*`
+  classes for the pages.
+- The cards' column is `$ingredient-card-min`, or `$ingredient-card-min-compact` under the compact selector (see
+  Contracts). The table turns to cards under `$table-stack-width`, through the `skeleton` size container.
+- `.skeleton-frame` is the class `MainBody` adds to a `main` wait, which draws it from the top rather than centred.
 
 ## SwapPanel
 
