@@ -817,7 +817,7 @@ const IngredientForm = ({
   const recovery = recovered && (
     <Notice kind="warn" block>
       <span>Restored unsaved changes from {clockTime(recovered.at)}</span>
-      <span className="ingredient-form__recovered">
+      <span>
         <button
           type="button"
           className="btn btn--small btn--solid"
