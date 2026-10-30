@@ -11,6 +11,11 @@ folkNames:
   - Nimtree
   - Indian Lilac
   - Nim
+categories:
+  - Protection
+  - Purification
+  - Luck
+  - Warding
 references:
   - source: wikipedia-azadirachta-indica
     locator: lead; Uses; Safety; taxobox
@@ -22,6 +27,23 @@ references:
       - colours
       - safetyNotes
       - toxic
+  - source: era-devi-kumar-sarkaghat
+    locator: annotated table, eth-mr-87; Discussion
+    nameBasis: stated
+    supports:
+      - categories
+  - source: thurston-1912-omens
+    locator: Chapter I, Omens (printed pp. 13-72); Chapter XI, Some Agricultural Ceremonies (printed pp. 289-304)
+    nameBasis: resolved
+    headedAs: Melia Azadirachta
+    resolvedBy: wikipedia-azadirachta-indica
+    supports:
+      - categories
+  - source: aulakh-mukerjee-1984
+    locator: pp. 58-60, paragraph on neem leaves
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Leaf
     references:
@@ -47,6 +69,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: fa27ab6e0aa4b72db67532b440aa0fd17ace8485818c64e4c5735b86f0d01bc5
 ---
 
 # Neem

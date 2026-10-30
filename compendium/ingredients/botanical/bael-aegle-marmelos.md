@@ -15,6 +15,12 @@ folkNames:
 deities:
   - Lakshmi
   - Shiva
+categories:
+  - Luck
+  - Prosperity
+  - Blessing
+  - Purification
+  - Warding
 references:
   - source: wikipedia-aegle-marmelos
     locator: lead; Religious significance and aegeline paragraphs
@@ -25,6 +31,21 @@ references:
       - folkNames
       - deities
       - safetyNotes
+  - source: era-devi-kumar-sarkaghat
+    locator: annotated table, eth-mr-28
+    nameBasis: stated
+    supports:
+      - categories
+  - source: era-uttarakhand-2022
+    locator: annotated table, Aegle marmelos row
+    nameBasis: stated
+    supports:
+      - categories
+  - source: dwivedi-2012-bilva
+    locator: p. 40, section 4 (Vrikshayurveda 1.10)
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Fruit
     references:
@@ -32,6 +53,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: 35498a8500118fca9638987154f7be6e925fe8c32d158e73ff6a9967af3d0cf3
 ---
 
 # Bael

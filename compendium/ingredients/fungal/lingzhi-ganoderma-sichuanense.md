@@ -7,13 +7,17 @@ folkNames:
   - Mushroom of Immortality
   - Língzhī
   - Ruìcǎo
+categories:
+  - Luck
 references:
   - source: wikipedia-lingzhi-mushroom
     nameBasis: stated
+    locator: Cultural significance
     supports:
       - canonicalName
       - description
       - folkNames
+      - categories
 variants:
   - form: Mushroom
     references:

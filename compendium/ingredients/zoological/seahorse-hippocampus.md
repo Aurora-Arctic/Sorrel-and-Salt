@@ -5,6 +5,8 @@ canonicalName: Hippocampus
 folkNames:
   - Sea-Horse
   - Sea Horse
+categories:
+  - Protection
 references:
   - source: wikipedia-seahorse
     nameBasis: stated
@@ -12,6 +14,11 @@ references:
       - canonicalName
       - description
       - folkNames
+  - source: mwm-object-761
+    locator: Object 761, Seahorses (page heading "Sea horses")
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Specimen
     references:

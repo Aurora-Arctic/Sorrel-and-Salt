@@ -6,7 +6,15 @@ folkNames:
   - sage apple
   - Khokh barri
   - Na'ama Hobeiq'es-sedr
+categories:
+  - Warding
+  - Banishing
 references:
+  - source: dafni-2019-ritual-plants
+    locator: pp. 13 and 18
+    nameBasis: stated
+    supports:
+      - categories
   - source: wikipedia-salvia-fruticosa
     nameBasis: stated
     supports:
@@ -22,6 +30,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: 6505910bbdb0ee7d269ab16c94bf73a79fb0bee2df8f3486ce59af905442d9ce
 ---
 
 # Greek Sage

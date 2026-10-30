@@ -4,6 +4,9 @@ nomenclature: botanical
 canonicalName: Tetradium ruticarpum
 folkNames:
   - Goshuyu
+categories:
+  - Warding
+  - Banishing
 references:
   - source: wikipedia-tetradium-ruticarpum
     nameBasis: stated
@@ -11,6 +14,16 @@ references:
       - canonicalName
       - description
       - folkNames
+  - source: stuart-chinese-materia-medica-1911
+    locator: p. 69
+    nameBasis: stated
+    supports:
+      - categories
+  - source: bretschneider-botanicon-sinicum-v3
+    locator: p. 436
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Fruit
     references:
@@ -18,6 +31,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: 30d6e3b472f141ad418dbc205e5279b30671a572e762a3e7f7628e908e4be4dc
 ---
 
 # Evodia

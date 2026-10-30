@@ -8,6 +8,9 @@ folkNames:
   - Goat's Foot
   - Salsa-da-Praia
   - Bagasua
+categories:
+  - Protection
+  - Warding
 references:
   - source: wikipedia-ipomoea-pes-caprae
     nameBasis: stated
@@ -16,6 +19,16 @@ references:
       - nomenclature
       - description
       - folkNames
+  - source: aulakh-mukerjee-1984
+    locator: 'PDF p. 2 (Ancient Science of Life 4(1), pp. 58-60)'
+    nameBasis: stated
+    supports:
+      - categories
+  - source: akinniyi-2022
+    locator: 'Traditional uses, ritual bath paragraph'
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Whole
     references:
@@ -23,6 +36,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: 236adbce1a87722840dd1a3d0e2612503179b9fcc0e979051c83f4a6635a52c1
 ---
 
 # Beach Morning Glory

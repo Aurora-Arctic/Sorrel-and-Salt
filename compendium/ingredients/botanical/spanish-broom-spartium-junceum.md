@@ -7,9 +7,11 @@ safetyNotes: The page says the alkaloids found in all parts of the plant have to
 folkNames:
   - rush broom
   - weaver's broom
+categories:
+  - Protection
 references:
   - source: wikipedia-spartium
-    locator: lead
+    locator: lead; Culture
     nameBasis: stated
     supports:
       - name
@@ -19,6 +21,7 @@ references:
       - folkNames
       - safetyNotes
       - toxic
+      - categories
 variants:
   - form: Flower
     references:
@@ -27,6 +30,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: e65c7489a27de7d3b672e4e99c574200d9af36843828213fc23f33ab3b3b6e05
 ---
 
 # Spanish Broom

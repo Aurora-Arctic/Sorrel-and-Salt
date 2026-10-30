@@ -7,14 +7,18 @@ colours:
   - 'white'
   - 'grey'
   - 'yellow'
+categories:
+  - Purification
 references:
   - source: wikipedia-natron
+    locator: Importance in antiquity
     nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
       - description
       - colours
+      - categories
 variants:
   - form: Salt
     references:
@@ -22,6 +26,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: 35bcd4bf73a504d4f43e979dc796f6b2274c7e8f5a2dc0d3e03250af11b8dddc
 ---
 
 # Natron

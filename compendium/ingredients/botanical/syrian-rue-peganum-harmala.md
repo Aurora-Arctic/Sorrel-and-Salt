@@ -10,6 +10,10 @@ folkNames:
   - esfand
   - espand
   - harmel
+categories:
+  - Protection
+  - Warding
+  - Banishing
 references:
   - source: wikipedia-peganum-harmala
     locator: lead
@@ -22,6 +26,26 @@ references:
       - folkNames
       - safetyNotes
       - toxic
+  - source: wikipedia-peganum-harmala
+    locator: Traditional medicine and superstitions
+    nameBasis: stated
+    supports:
+      - categories
+  - source: westermarck-ritual-belief-morocco-v1
+    locator: p. 111; p. 308; p. 430; p. 431
+    nameBasis: stated
+    supports:
+      - categories
+  - source: westermarck-ritual-belief-morocco-v2
+    locator: p. 228; p. 381
+    nameBasis: stated
+    supports:
+      - categories
+  - source: flattery-schwartz-1989-haoma
+    locator: p. 47 (§66, n. 5); p. 49 (§67); p. 52 (§76); p. 63 (§96)
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Seed
     references:

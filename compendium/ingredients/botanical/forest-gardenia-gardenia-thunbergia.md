@@ -2,6 +2,8 @@
 status: approved
 nomenclature: botanical
 canonicalName: 'Gardenia thunbergia'
+categories:
+  - Warding
 folkNames:
   - 'Mutarara'
   - 'Tree Gardenia'
@@ -12,12 +14,14 @@ folkNames:
   - 'Wildekatjiepiering'
 references:
   - source: wikipedia-gardenia-thunbergia
+    locator: Lead section
     nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
       - description
       - folkNames
+      - categories
 variants:
   - form: Wood
     references:
@@ -25,6 +29,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: 8ed4002abe47305c6f9602b825895e04e5597a99590891d063ec7f7825540025
 ---
 
 # Forest Gardenia

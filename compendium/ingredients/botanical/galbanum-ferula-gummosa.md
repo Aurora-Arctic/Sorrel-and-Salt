@@ -8,6 +8,8 @@ colours:
 folkNames:
   - Bubonion
   - Mother Resin
+categories:
+  - Snake Repelling
 references:
   - source: wikipedia-ferula-gummosa
     nameBasis: stated
@@ -37,6 +39,13 @@ references:
     supports:
       - description
       - folkNames
+  - source: pliny-natural-history
+    locator: Book XII, ch. 56
+    nameBasis: resolved
+    headedAs: galbanum
+    resolvedBy: wikipedia-galbanum
+    supports:
+      - categories
 variants:
   - form: Resin
     references:

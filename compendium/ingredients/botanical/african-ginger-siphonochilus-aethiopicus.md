@@ -2,13 +2,23 @@
 status: approved
 nomenclature: botanical
 canonicalName: 'Siphonochilus aethiopicus'
+categories:
+  - Protection
+  - Divination
 references:
   - source: wikipedia-siphonochilus-aethiopicus
+    locator: Other
     nameBasis: stated
     supports:
       - canonicalName
       - nomenclature
       - description
+      - categories
+  - source: sobiecki-2008-plant-use-in-divination
+    locator: 'Appendix 1, Siphonochilus aethiopicus row'
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Root
     references:
@@ -16,6 +26,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: f38e329e0510d3c5024e236a794b6f89875f7913d532ced7c2e27d684234064f
 ---
 
 # African Ginger

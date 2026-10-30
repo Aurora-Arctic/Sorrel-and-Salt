@@ -13,6 +13,8 @@ folkNames:
   - Sweet Yellow Clover
   - Ribbed Melilot
   - Common Melilot
+categories:
+  - Protection
 references:
   - source: grieve-melilot
     nameBasis: stated
@@ -26,6 +28,11 @@ references:
       - canonicalName
       - description
       - folkNames
+  - source: janackovic-2022-central-balkans
+    locator: Table 6
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Herb
     description: Grieve says the whole herb is used dried, the flowering shoots gathered in May, with coumarin as its only important constituent. She calls it aromatic, emollient and carminative, an old country plaster or fomentation for abdominal and rheumatic pains, also laid among linen and with furs to deter moths.

@@ -14,6 +14,8 @@ folkNames:
   - Checker Berry
   - Tea Berry
   - Binemiin
+categories:
+  - Love
 references:
   - source: wikipedia-mitchella-repens
     nameBasis: stated
@@ -23,6 +25,11 @@ references:
       - description
       - folkNames
       - colours
+  - source: naeb
+    locator: 'Iroquois, Drug: Love Medicine; Herrick 1977, p. 441 (NAEB record 23131)'
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Berry
     description: The scarlet berries are edible but rather tasteless, with a faint flavour of wintergreen.
@@ -43,6 +50,7 @@ variants:
         supports:
           - form
           - description
+seedUpdate: 5c0fb5241f2e72ffef3417947399da76becd5ab23c3cddd5970d7547eebb286e
 ---
 
 # Partridgeberry

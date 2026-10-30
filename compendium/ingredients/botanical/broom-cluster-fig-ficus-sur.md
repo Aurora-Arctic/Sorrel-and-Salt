@@ -2,6 +2,8 @@
 status: approved
 nomenclature: botanical
 canonicalName: 'Ficus sur'
+categories:
+  - Protection
 folkNames:
   - 'Cape Fig'
 references:
@@ -12,6 +14,11 @@ references:
       - nomenclature
       - description
       - folkNames
+  - source: quiroz-van-andel-2015
+    locator: 'Additional file 1 (species table), Ficus sur, Benin row'
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Sap
     references:
@@ -19,6 +26,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: af376e053772fda6a1b655f3af739ce9e44d099099918d689bf42ac43e295120
 ---
 
 # Broom Cluster Fig

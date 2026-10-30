@@ -9,6 +9,9 @@ colours:
 folkNames:
   - Ashoka Tree
   - Saraca indica
+categories:
+  - Love
+  - Chastity
 references:
   - source: wikipedia-saraca-asoca
     locator: lead; Mythology and tradition section
@@ -18,6 +21,20 @@ references:
       - description
       - folkNames
       - colours
+  - source: folkard-1884-plant-lore
+    locator: Chapter X, Magical Plants (love-philtre passage)
+    nameBasis: resolved
+    headedAs: Asoka
+    resolvedBy: wikipedia-saraca-asoca
+    supports:
+      - categories
+  - source: thiselton-dyer-1889-folklore-of-plants
+    locator: Chapter XIX (sacred trees of India)
+    nameBasis: resolved
+    headedAs: Saraca indica
+    resolvedBy: wikipedia-saraca-asoca
+    supports:
+      - categories
 variants:
   - form: Flower
     references:
@@ -25,6 +42,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: 6cfa9432a30b663c9d83874b1084950b05182ef4e888ff6977734b4175400a58
 ---
 
 # Ashoka

@@ -13,6 +13,14 @@ folkNames:
   - False Hellebore
   - Corn Lily
   - Green False Hellebore
+categories:
+  - Luck
+  - Protection
+  - Gambling
+  - Purification
+  - Warding
+  - Banishing
+  - Cleansing
 references:
   - source: grieve-hellebore-green
     nameBasis: stated
@@ -37,6 +45,16 @@ references:
       - canonicalName
       - folkNames
       - safetyNotes
+  - source: naeb
+    locator: 'Bella Coola, Other: Good Luck Charm; Gottesfeld and Anderson 1988, p. 26 (NAEB record 42644); Bella Coola, Other: Protection; Turner 1973, p. 199 (NAEB record 42645); Kwakiutl, Other: Protection; Turner and Bell 1973, p. 273 (NAEB record 42718); Gitksan, Other: Good Luck Charm; Gottesfeld and Anderson 1988, p. 26 (NAEB record 42668); Gitksan, Drug: Hunting Medicine; Gottesfeld and Anderson 1988, p. 26 (NAEB record 42664); Gitksan, Other: Ceremonial Items; Gottesfeld and Anderson 1988, p. 26 (NAEB record 42666); Gitksan, Other: Ceremonial Items; Gottesfeld and Anderson 1988, p. 26 (NAEB record 42667); Hanaksiala, Other: Ceremonial Items; Compton 1993, p. 201 (NAEB record 42689); Kwakiutl, Drug: Hunting Medicine; Turner and Bell 1973, p. 273 (NAEB record 42710)'
+    nameBasis: stated
+    supports:
+      - categories
+  - source: armstrong-2018-veratrum
+    locator: pp. 199-200
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Root
     description: Grieve names the dried rhizome and roots as the part used, usually broken into small pieces, with any attached stem or leafstalk rejected as inert. She calls it emetic, diaphoretic, sedative and highly poisonous. The AHPA handbook lists the root.

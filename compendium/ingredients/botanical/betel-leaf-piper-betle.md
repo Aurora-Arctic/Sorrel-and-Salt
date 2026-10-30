@@ -8,6 +8,10 @@ folkNames:
   - Betel Vine
   - Paan
   - Vettila
+categories:
+  - Prosperity
+  - Banishing
+  - Warding
 references:
   - source: wikipedia-betel
     locator: lead; the paragraph on health effects; the paragraph on offerings
@@ -17,6 +21,18 @@ references:
       - description
       - folkNames
       - safetyNotes
+  - source: era-singh-kishtwar-2024
+    locator: p. 13, Discussion
+    nameBasis: resolved
+    headedAs: betel leaf
+    resolvedBy: wikipedia-betel
+    supports:
+      - categories
+  - source: biswas-2022-betel
+    locator: Section 7, Traditional and Ethno-Medicinal Use
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Leaf
     safetyNotes: Betel quid, in which the leaf wraps areca nut, is carcinogenic.
@@ -26,6 +42,7 @@ variants:
         supports:
           - form
           - safetyNotes
+seedUpdate: ece24b2e8f887ed9f2e9b130c2458b978b6ff77eebfaffcbbccf345ed839d964
 ---
 
 # Betel Leaf

@@ -11,6 +11,8 @@ folkNames:
   - Jand
   - Shami
   - Jammi
+categories:
+  - Luck
 references:
   - source: wikipedia-prosopis-cineraria
     locator: lead; Description; Culture
@@ -20,6 +22,11 @@ references:
       - description
       - folkNames
       - colours
+  - source: era-devi-kumar-sarkaghat
+    locator: annotated table, eth-mr-66
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Leaf
     references:
@@ -33,6 +40,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: ca62db0797f9fb75c0dcadcf8fbede8a3c3ec5c9dc3291d936c4cb35f2be41e6
 ---
 
 # Khejri

@@ -4,11 +4,15 @@ nomenclature: botanical
 canonicalName: 'Kigelia africana'
 safetyNotes: 'The article says the fruit is poisonous for humans when raw.'
 toxic: true
+categories:
+  - Luck
+  - Protection
 folkNames:
   - 'Cucumber Tree'
   - 'Worsboom'
 references:
   - source: wikipedia-kigelia
+    locator: Uses
     nameBasis: stated
     supports:
       - canonicalName
@@ -17,6 +21,12 @@ references:
       - folkNames
       - safetyNotes
       - toxic
+      - categories
+  - source: johnson-fongnzossie-2020-banen
+    locator: 'Table II and Fig. 12'
+    nameBasis: stated
+    supports:
+      - categories
 variants:
   - form: Fruit
     references:
@@ -24,6 +34,7 @@ variants:
         nameBasis: stated
         supports:
           - form
+seedUpdate: e5bd906a5044ae63253848eecc3bdddde1a16da0e67d4f4105c8ef5e1dce1acc
 ---
 
 # Sausage Tree

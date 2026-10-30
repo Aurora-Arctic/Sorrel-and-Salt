@@ -2,15 +2,19 @@
 status: needs-review
 nomenclature: botanical
 canonicalName: Gomphrena globosa
+categories:
+  - Protection
 folkNames:
   - Thousand Day Red
   - Makhamali Ful
   - Rakta Mallika
 references:
   - source: wikipedia-gomphrena-globosa
+    locator: Uses (Nepal)
     nameBasis: stated
     supports:
       - canonicalName
+      - categories
       - description
       - folkNames
 variants:
