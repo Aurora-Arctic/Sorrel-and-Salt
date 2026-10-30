@@ -612,11 +612,22 @@ Coven. `ModalButtonProps` (`types.ts`):
 | `ariaLabel` | The button's name where its text repeats down a list: "Edit Stock, Rosemary"                   |
 | `tip`       | A tip over an icon button, "Edit Stock" over the pencil; it wraps the button, never the dialog |
 | `size`      | As `Modal`'s                                                                                   |
+| `ref`       | The button, for an owner that anchors something to it: a ClickFeedback callout                 |
+| `onOpen`    | Runs on the press before the modal opens, where an owner clears an earlier refusal             |
 | `children`  | A function of the modal's close, so a form can close it once it has sent                       |
 
 It gives the focus back through Modal's own return
 ([above](#giving-the-focus-back)), naming its button as `returnTo` for
-WebKit, where a click focuses no button.
+WebKit, where a click focuses no button. Once a write has led the page away
+the button is gone, its ref is null, and Modal gives the focus to the heading.
+
+It is for a page's own button. A menu item is not one: the More menu's Delete
+Spell opens its dialog by state, as the menu has closed by the time it opens.
+
+A delete bin that reports a refusal (Delete Spell, Delete Working) is a
+`ModalButton` whose `ref` is the ClickFeedback anchor, whose `onOpen` clears
+the last refusal, and whose contents close the dialog before the refusal is
+reported, so the callout stands beside the bin and not behind the dialog.
 
 A button repeated down a list, the Edit Stock on each coven card (M9.9), is an
 icon (the pencil) whose `ariaLabel` is its whole name. Its `tip` wraps the

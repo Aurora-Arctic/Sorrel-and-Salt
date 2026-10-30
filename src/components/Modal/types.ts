@@ -1,5 +1,5 @@
 import type { Route } from 'next';
-import type { ReactNode, RefObject } from 'react';
+import type { ReactNode, Ref, RefObject } from 'react';
 
 /** What a modal's head says: a title alone for an add dialog, an eyebrow over the entry's saved name for an edit dialog (claude-docs/components/modal.md, "An edit dialog's head"). */
 export interface ModalHeading {
@@ -59,6 +59,10 @@ export interface ModalButtonProps {
   /** A tip over an icon button, "Edit Stock" over the pencil. Wraps the button alone, never the dialog, which would open the tip on its focus. */
   tip?: string;
   size?: ModalProps['size'];
+  /** The button, for an owner that anchors something to it, as ClickFeedback's callout is. */
+  ref?: Ref<HTMLButtonElement>;
+  /** Runs on the press, before the modal opens: an owner clears an earlier refusal here. */
+  onOpen?: () => void;
   /** What the modal holds, given the modal's close, so a form can close it after its send. */
   children: (close: () => void) => ReactNode;
 }
