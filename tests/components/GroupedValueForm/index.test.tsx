@@ -144,6 +144,19 @@ describe('GroupedValueForm, its Description tip', () => {
   });
 });
 
+// A group field restates its label, so a category's and a form's carry no tip.
+describe('GroupedValueForm, its Group field', () => {
+  it.each([
+    { kind: 'category', groups: CATEGORY_GROUPS },
+    { kind: 'form', groups: FORM_GROUPS },
+  ] as const)('a $kind: no tip', ({ kind, groups }) => {
+    renderForm({ kind, groups });
+
+    expect(screen.getByRole('combobox', { name: 'Group' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'About Group' })).not.toBeInTheDocument();
+  });
+});
+
 describe('GroupedValueForm, its unsaved changes', () => {
   it('asks before Cancel or Escape discards a change, and closes on Discard Changes', () => {
     const onClose = renderInModal((done) => (

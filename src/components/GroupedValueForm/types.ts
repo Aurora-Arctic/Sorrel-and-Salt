@@ -61,8 +61,8 @@ export interface GroupedValueGroupField {
   label: string;
   /** What the field shows until one is chosen: "Choose a group". */
   placeholder: string;
-  /** What the group does for the value, behind the field's info tip. */
-  hint: string;
+  /** The field's info tip, a filing rule its label does not say (a deity's tradition); absent where the label says it all. */
+  hint?: string;
 }
 
 /** What a kind's form says: its noun, its group field if it has one, and its confirmations. */
