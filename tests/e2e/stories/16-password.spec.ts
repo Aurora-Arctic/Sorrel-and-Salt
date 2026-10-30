@@ -81,3 +81,67 @@ test(
     expect(proved).toEqual({ email_verified: true, can_create_workspace: false });
   },
 );
+
+const RESET_LINK = /https?:\/\/[^\s\])>"]+\/reset-password\/[^\s\])>"]+/;
+const NEW_PASSWORD = 'heron wading past the salt marsh gate';
+
+test(
+  'someone who has forgotten their password asks for a link, follows the mailed link once, chooses a new password, and signs in with it',
+  { tag: '@story-71' },
+  async ({ page }) => {
+    // A verified password account, made through Better Auth's own sign-up so its password is hashed as a
+    // real one is; verified, since an unproved address is mailed no reset link.
+    const email = `reset-${randomUUID()}@password.test`;
+    const made = await page.request.post('/api/auth/sign-up/email', {
+      data: { name: 'Testwort Resetter', email, password: PASSWORD },
+    });
+    expect(made.status(), await made.text()).toBe(200);
+    await withSql((sql) => sql`update users set email_verified = true where email = ${email}`);
+
+    await page.goto('/sign-in');
+    await page.getByRole('link', { name: 'Forgot Password?' }).click();
+    await expect(page).toHaveURL('/forgot-password');
+    await assertNoAccessibilityViolations(page);
+
+    await field(page, 'Email Address').fill(email);
+    await page.getByRole('button', { name: 'Send Reset Link' }).click();
+    await expect(page.getByRole('main').getByRole('status')).toContainText(email);
+
+    const message = await latestMessageTo(email, 10_000, 'Reset Your Password');
+    expect(message.subject).toBe('Reset Your Password');
+    const link = new URL(message.text.match(RESET_LINK)![0]);
+    // The mailed link is Better Auth's endpoint, which redirects to the page with the token. Its redirect
+    // names the production origin, the fallback for a host it does not know such as an e2e slot's, so the
+    // spec reads the redirect and follows its path on this server.
+    const followed = await page.request.get(`${link.pathname}${link.search}`, { maxRedirects: 0 });
+    const landing = new URL(followed.headers().location!);
+    expect(landing.pathname).toBe('/reset-password');
+    expect(landing.searchParams.get('token')).toBeTruthy();
+    await page.goto(`${landing.pathname}${landing.search}`);
+    await expect(field(page, 'New Password')).toBeVisible();
+    await assertNoAccessibilityViolations(page);
+
+    await field(page, 'New Password').fill(NEW_PASSWORD);
+    await page.getByRole('button', { name: 'Set New Password' }).click();
+    await expect(page.getByRole('main').getByRole('status')).toBeVisible();
+
+    // From the notice to sign-in. The old password no longer signs in, and the new one does.
+    await page.getByRole('link', { name: 'Sign In', exact: true }).click();
+    await expect(page).toHaveURL('/sign-in');
+    await field(page, 'Email Address').fill(email);
+    await field(page, 'Password').fill(PASSWORD);
+    await page.getByRole('button', { name: 'Sign In', exact: true }).click();
+    await expect(page.getByRole('main').getByRole('alert')).toBeVisible();
+
+    await field(page, 'Password').fill(NEW_PASSWORD);
+    await page.getByRole('button', { name: 'Sign In', exact: true }).click();
+    await expect(page).not.toHaveURL(/\/sign-in/);
+
+    // The link works once: a second follow is sent to the page with Better Auth's error and no token.
+    const again = await page.request.get(`${link.pathname}${link.search}`, { maxRedirects: 0 });
+    const spent = new URL(again.headers().location!);
+    expect(spent.searchParams.get('error')).toBe('INVALID_TOKEN');
+    await page.goto(`${spent.pathname}${spent.search}`);
+    await expect(page.getByRole('link', { name: 'Ask for a New Link' })).toBeVisible();
+  },
+);

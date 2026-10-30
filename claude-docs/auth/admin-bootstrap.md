@@ -501,24 +501,28 @@ writes to, the ways in, and the coven invitations waiting for that address,
 in one place. Stories 1, 2, 6 and 59; the
 component docs are [`components/name-form.md`](../components/name-form.md),
 [`components/email-form.md`](../components/email-form.md),
-[`components/sign-in-methods.md`](../components/sign-in-methods.md) and
+[`components/sign-in-methods.md`](../components/sign-in-methods.md),
+[`components/password-section.md`](../components/password-section.md) and
 [`components/received-invitations.md`](../components/received-invitations.md).
 
 - **The page.** `src/app/(shell)/account/page.tsx` calls `requireSession()`, so an
   unverified account is sent to the email page instead, and reads `getMe`,
   `linkedAccounts()`, `sessionIsFresh()` and one page of
   `listReceivedInvitations`. Under its `<h1>` "Your
-  Account" are four sections, each a region named by its own `<h2>`, which
+  Account" are five sections, each a region named by its own `<h2>`, which
   the page writes in a `.header` with the section's intro as its `.lede`:
   Name ("The name Sorrel & Salt shows for you.", then `NameForm`), Email
   (`EmailForm`, embedded, whose own status line says what the section is
   for) and Sign-In Methods ("You can sign in to this account with any of
-  these.", then `SignInMethods`) and Invitations ("Covens that have invited
+  these.", then `SignInMethods`), Password (`PasswordSection`: a change that
+  asks for the current password, or, for an account with none, setting a
+  first one; [`passwords.md`](passwords.md)) and Invitations ("Covens that have invited
   this email address to join them.", then `ReceivedInvitations`, M10.32). It
   carries no link to `/account/email`.
   Under the heading, a nav labelled "On This Page"
   links to each section by its prefixed id (`#account-name`,
-  `#account-email`, `#account-sign-in-methods`, `#account-invitations`).
+  `#account-email`, `#account-sign-in-methods`, `#account-password`,
+  `#account-invitations`).
   The Invitations section is always shown, with the table's empty state when
   none wait. It pages with `?after=` and `?before=`, and its pager links keep
   `#account-invitations`. Its id, `ACCOUNT_INVITATIONS_ID`, and the link to it,

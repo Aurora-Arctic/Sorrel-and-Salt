@@ -130,7 +130,7 @@ In [`auth/plugins.md`](auth/plugins.md#the-last-used-provider-mb77).
 
 ## Email and password (M16.2)
 
-Sign-up and sign-in by address and password through `emailAndPassword`, 15 to 128 characters, with `requireEmailVerification` off so `requireSession()` holds an unverified account at the email page; the project's own breached-password plugin sends Have I Been Pwned a five-character hash prefix, waits three seconds at most and fails closed; a sign-up to a held address answers as a new one and mails the holder. [`auth/passwords.md`](auth/passwords.md)
+Sign-up and sign-in by address and password through `emailAndPassword`, 15 to 128 characters, with `requireEmailVerification` off so `requireSession()` holds an unverified account at the email page; the project's own breached-password plugin sends Have I Been Pwned a five-character hash prefix, waits three seconds at most and fails closed; a sign-up to a held address answers as a new one and mails the holder. A forgotten password is reset by a single-use link that lasts 15 minutes and is mailed to a verified address only, and signs out every session; a change asks for the current password and signs out every other session; an account with providers only sets a first password through the GraphQL `setPassword`; each mails a notice (M16.3). [`auth/passwords.md`](auth/passwords.md)
 
 ## Impersonation (MB.53)
 

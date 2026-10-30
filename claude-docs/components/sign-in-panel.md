@@ -230,6 +230,8 @@ is [`auth/passwords.md`](../auth/passwords.md).
 - **A sign-in does a full load of `/sign-in?next=…`**, after
   `reportLeaving()`, and the page's own server redirect sends the account on
   (the top of this page), an unverified one to the email page first.
+- **Forgot Password?** In sign-in mode, a link under the form goes
+  to `/forgot-password` ([`forgot-password-form.md`](forgot-password-form.md)).
 - **Last used.** `lastLoginMethod` writes `email` to the same cookie the
   provider buttons read, so the heading carries the "Last Used" badge when
   this browser last signed in with a password.

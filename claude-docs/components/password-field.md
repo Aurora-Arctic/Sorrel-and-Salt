@@ -2,8 +2,10 @@
 
 `src/components/PasswordField/` — one password control: a labelled input, a
 show-password toggle, and, for a password being chosen, a strength meter.
-Its user is the sign-in panel's form
-([`sign-in-panel.md`](sign-in-panel.md), "Email and password").
+Its users are the sign-in panel's form
+([`sign-in-panel.md`](sign-in-panel.md), "Email and password"),
+[`ResetPasswordForm`](reset-password-form.md) and
+[`PasswordSection`](password-section.md).
 
 ## Props
 

@@ -240,7 +240,9 @@ goes", below).
   `latestMessageTo(address)` searches Mailpit's REST API at `MAILPIT_URL` for
   the newest message to that address and returns its sender, recipients,
   subject, text and HTML, polling up to ten seconds because the app sends in
-  the background of the request that caused it. The address goes in quoted:
+  the background of the request that caused it. An optional third argument
+  narrows the search to one subject, for a flow that mails one address twice
+  (story 71: the verification link, then the reset link). The address goes in quoted:
   unquoted, Mailpit's query language splits it at a `+`. A spec that follows
   a mailed link gives its recipient a fresh address, so a retry or a parallel
   worker cannot read another's message;
@@ -397,6 +399,11 @@ the provider flows above, so two things about the e2e servers make it work.
   origins for the server's own `PORT` as `trustedOrigins`. It gives none
   wherever `VERCEL_ENV` is set, or without the flag; `tests/lib/e2e-session-cookie.test.ts`
   pins both.
+- **A mailed reset link redirects to the production host.** Better Auth
+  builds the redirect from its `baseURL`, which falls back to the production
+  host for an origin it does not know, such as `devcontainer:<port>`. Story
+  71 therefore follows the link with `maxRedirects: 0`, reads the
+  `Location` header, and opens its path and query on the slot's own server.
 
 The flow, story 70, is `tests/e2e/stories/16-password.spec.ts`
 ([`auth/passwords.md`](../auth/passwords.md)).

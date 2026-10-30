@@ -19,12 +19,18 @@ async function get<T>(url: URL): Promise<T> {
 
 /**
  * The newest message to `address`, waiting up to `timeout` ms: a send the app makes in the background
- * lands after the click that caused it.
+ * lands after the click that caused it. With `subject`, the newest with that subject, so an earlier
+ * mail to the same address is never read in its place.
  */
-export async function latestMessageTo(address: string, timeout = 10_000): Promise<MailpitMessage> {
+export async function latestMessageTo(
+  address: string,
+  timeout = 10_000,
+  subject?: string,
+): Promise<MailpitMessage> {
   const search = mailpitUrl('/api/v1/search');
   // Quoted: Mailpit's query language splits an unquoted address on `+`.
-  search.searchParams.set('query', `to:"${address}"`);
+  const to = `to:"${address}"`;
+  search.searchParams.set('query', subject ? `${to} subject:"${subject}"` : to);
   search.searchParams.set('limit', '1');
 
   const deadline = Date.now() + timeout;

@@ -93,6 +93,76 @@ follows the mailed link from that browser.
 The lockout per account is M16.5's; until it lands, the rate limiter is the
 only bound on guesses.
 
+### Reset and change
+
+The rules for both are DESIGN.md §8, "Passwords". Both are Better Auth's own
+endpoints, configured in `emailAndPassword` and the hooks in
+`src/lib/auth.ts`; the forms are
+[`components/forgot-password-form.md`](../components/forgot-password-form.md),
+[`components/reset-password-form.md`](../components/reset-password-form.md) and
+[`components/password-section.md`](../components/password-section.md).
+
+- **Asking for a link.** `/forgot-password`, linked as "Forgot Password?"
+  from the sign-in form, posts to `/request-password-reset`. Better Auth
+  answers every address alike. `mailResetLink` mails
+  `src/emails/reset-password.tsx` to a verified address only, so a reset
+  never reaches an inbox the account has not proved, and never to a
+  placeholder address. It sets the link's `callbackURL` to `/reset-password`
+  whatever the request asked, so a request cannot point the link anywhere
+  else.
+- **The link.** It is Better Auth's `/reset-password/:token`, which
+  redirects to `/reset-password?token=…`, or to
+  `/reset-password?error=INVALID_TOKEN` for a token spent or past its life.
+  `resetPasswordTokenExpiresIn` is 15 minutes, short because Better Auth
+  stores the token unhashed in `verifications`; a reset deletes it, so it
+  works once.
+- **Resetting.** `/reset-password` posts the token and the new password.
+  `revokeSessionsOnPasswordReset` signs out every session the account had.
+  A reset gives no session: the person signs in with the new password.
+- **Changing.** The account page's Password section posts the current and
+  the new password to `/change-password`. A `before` hook sets
+  `revokeOtherSessions: true` whatever the request says, so every other
+  session is signed out and the one that made the change is kept.
+- **The rules.** `/reset-password` and `/change-password` are hashed
+  through `ctx.password.hash`, so the length rules and the breached-password
+  check, failing closed, hold for both as they do at sign-up. No rule makes
+  anyone change a password on a schedule (DESIGN.md §8).
+- **The notice.** A reset (`onPasswordReset`), a change (an `after` hook on
+  `/change-password`) and a first password set each mail
+  `src/emails/password-changed.tsx` through `mailPasswordChanged`
+  (`src/lib/password-notice.ts`): the password was replaced, how, and a link to
+  `/forgot-password` for a holder who made no change.
+
+Both pages are public routes in `src/proxy.ts`
+([`route-protection.md`](route-protection.md)), since a person who has
+forgotten their password has no session. A signed-in visitor is not sent
+away from either.
+
+### Setting a first password
+
+An account that signs in with providers alone has no credential row, so it
+has no current password to give. Better Auth's `setPassword` gives it one,
+but that endpoint answers only on the server, so the account page reaches it
+through the GraphQL mutation `setPassword(newPassword: String!)`:
+
+- The service `setPassword` (`src/modules/identity/services/password.ts`)
+  refuses an account whose address is unverified, as every service but `me`
+  and `setEmail` does, then calls the setter it is handed.
+- The setter is `passwordSetter(request)` (`src/lib/password-setter.ts`),
+  put on the GraphQL context as `context.passwords`, because a service may
+  not import `auth`. It calls `auth.api.setPassword` with the request's own
+  headers, so the only account it can name is the caller's. It runs the call
+  inside `withBreachedCheck`, so the breached-password check holds here too
+  ("The breached-password check" above), and words every refusal of the
+  password, and Better Auth's `PASSWORD_ALREADY_SET`, as a `ValidationError`
+  on `newPassword`.
+- The write is Better Auth's, to its `accounts` table, so it is outside
+  `withAudit` as every write to that table is.
+- A first password signs no session out, and mails the notice.
+
+A provider account that never sets one can still use "Forgot Password?":
+following the mailed link gives it its first password the same way.
+
 ### Tests
 
 - `tests/db/password-sign-in.test.ts`: the length rules, the 72-character
@@ -101,6 +171,15 @@ only bound on guesses.
   three-second bound), the held-address answer and mail, the same 401, and
   that a sign-up earns no `canCreateWorkspace`. The range API is MSW
   (`tests/support/password.ts`), never the real service.
+- `tests/db/password-reset.test.ts`, story 71 through Better Auth's real
+  endpoints: the same answer for every address, the link working once and not
+  after 15 minutes, every session signed out by a reset, every other one by a
+  change, the rules for a new password, each notice, the current password a
+  change needs, a first password set without one, and no periodic change.
+- `tests/modules/identity/graphql/set-password.test.ts`: the mutation's
+  refusals and that it sets the caller's own password.
 - `tests/e2e/stories/16-password.spec.ts`, story 70: the browser flow, with
   the e2e servers' stand-in for the range API
-  ([`testing/e2e.md`](../testing/e2e.md), "A password sign-in in the browser").
+  ([`testing/e2e.md`](../testing/e2e.md), "A password sign-in in the browser"),
+  and story 71: forgot, the mailed link, the reset, and signing in with the
+  new password, with axe on both pages.
