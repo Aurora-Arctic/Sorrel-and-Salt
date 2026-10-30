@@ -24,6 +24,7 @@ export {
   PencilIcon,
   PlusIcon,
   PreviewIcon,
+  PrintIcon,
   RedoIcon,
   StockIcon,
   UndoIcon,

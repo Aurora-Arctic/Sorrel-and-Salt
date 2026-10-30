@@ -296,3 +296,19 @@ export function CompleteIcon(): ReactElement {
     </svg>
   );
 }
+
+/** A printer: print this page. */
+export function PrintIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M4.5 6V2.5h7V6M4.5 11.5h-2v-5h11v5h-2M4.5 9.5h7v4h-7z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
