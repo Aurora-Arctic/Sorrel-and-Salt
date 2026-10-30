@@ -115,10 +115,12 @@ a user sits in the covens they joined, and no more.
 `Workspace.members` is a coven's live members, in the order they joined, and
 is a paged connection rather than a bare list, because a coven's roll grows
 with every invitation and nothing about its parent bounds it (CLAUDE.md rule
-8; M6.11). Its service, `listMembers(session, workspace, page)` in
+8; M6.11). Its service, `listMembers(session, workspace, page, search?)` in
 `src/modules/coven/services/members.ts`, checks `member: read`, which the
 owner holds and, from M6.13, the member too, and reads one page through the
-repository's `findMemberPage`. A coven at a time, not batched across covens by
+repository's `findMemberPage`. The optional `search: String` argument narrows
+the page to the members whose name holds the text, case-insensitively and with
+`%` and `_` read literally, in SQL; blank is no search. A coven at a time, not batched across covens by
 a loader: no page lists two covens' members at once
 ([`m6.11-members-without-a-loader.md`](../design-decisions/m6.11-members-without-a-loader.md)).
 `WorkspaceMember.user` is a `CoMember`, an `id` and a nullable `name`, and
@@ -131,8 +133,8 @@ down, one past the depth limit (["Protections"](protections.md)), so
 name sits six levels down. Its service, `workspaceById` in
 `src/modules/coven/services/workspace-by-id.ts`, checks `workspace: read` and
 answers the same bare `FORBIDDEN` to a stranger and to an id no coven holds, so
-the answer says nothing of whether the coven exists. A spell card's Record a
-Working dialog reads its members through it once opened
+the answer says nothing of whether the coven exists. The Record a Working dialog's
+participant box searches the members through it as the user types
 ([`components/spell-card.md`](../components/spell-card.md), "Record a Working,
 Edit and the More menu"). The members page does not need it: a server component
 calls `listMembers` directly (M6.13). `tests/modules/coven/services/workspace-by-id.test.ts`

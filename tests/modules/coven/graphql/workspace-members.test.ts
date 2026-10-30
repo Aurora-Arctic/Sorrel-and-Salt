@@ -129,6 +129,23 @@ describe('Workspace.members', () => {
   });
 });
 
+describe('Workspace.members(search:)', () => {
+  it('hands the search to the service, which answers only the members it matches', async () => {
+    const result = await run<{
+      workspace: { members: { edges: { node: { user: { id: string } } }[] } };
+    }>(
+      asUser(A),
+      `query ($id: ID!, $search: String) {
+        workspace(id: $id) { members(first: 10, search: $search) { edges { node { user { id } } } } }
+      }`,
+      { id: WORKSPACE_W_ID, search: B.name.slice(-3).toUpperCase() },
+    );
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data!.workspace.members.edges.map(({ node }) => node.user.id)).toEqual([B.id]);
+  });
+});
+
 describe('WorkspaceMember.invitedBy', () => {
   const INVITED = /* GraphQL */ `
     query {
