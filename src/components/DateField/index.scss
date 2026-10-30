@@ -9,6 +9,7 @@
   display: inline-grid;
   inline-size: auto;
   max-inline-size: 100%;
+  align-content: center;
   text-align: start;
   cursor: pointer;
 }
@@ -67,7 +68,8 @@
 .day-picker__caption {
   display: flex;
   align-items: center;
-  block-size: 2rem;
+  // Clear of the previous and next steps, which sit over the caption's end: the panel grows to hold both.
+  min-block-size: 2rem;
   padding-inline-end: 4.5rem;
 }
 
@@ -81,22 +83,19 @@
   display: none;
 }
 
-.day-picker__dropdown {
-  padding: space(1);
-  border: 1px solid $text-muted;
-  border-radius: radius('surface');
-  background-color: $surface-card;
-  color: $text-primary;
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
+// The shared `.select` box and chevron (_primitives.scss), compacted to sit in the caption.
+.select.day-picker__dropdown {
+  inline-size: auto;
+  min-block-size: 0;
+  padding-block: space(1);
+  font-size: type-size('small');
 }
 
 .day-picker__label {
   font-weight: 600;
 }
 
-// Previous and next sit at the caption's end, over the space its padding keeps clear.
+// Previous and next sit at the caption's end, over the space its padding keeps clear (the nav is a sibling of the caption, so it is placed, not flowed).
 .day-picker__nav {
   position: absolute;
   inset-block-start: 0;
