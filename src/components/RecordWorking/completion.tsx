@@ -65,15 +65,13 @@ export const CompleteWorkingDocument = graphql(`
 type Plan = WorkingDeductionPreviewQuery['workingDeductionPreview'];
 type Taken = Plan['deductions'][number];
 type Skipped = Plan['warnings'][number];
-type PreviewRow =
-  | { step: WorkingStep; number: number; taken: Taken }
-  | { step: WorkingStep; number: number; skipped: Skipped };
+type PreviewRow = { step: WorkingStep; taken: Taken } | { step: WorkingStep; skipped: Skipped };
 
 const amount = (quantity: number, unit: string) => withUnit(Number(quantity.toFixed(3)), unit);
 
 /** One line of the preview: the step's jar as the recipe page's In Coven Inventory draws it, then what the step takes from it. */
 function DeductionLine({ row, onSaved }: { row: PreviewRow; onSaved: () => void }): ReactElement {
-  const { step, number } = row;
+  const { step } = row;
   const taken = 'taken' in row ? row.taken : null;
   const skipped = 'skipped' in row ? row.skipped : null;
   const oneOff = step.oneOff === true || skipped?.reason === 'CUSTOM';
@@ -92,7 +90,7 @@ function DeductionLine({ row, onSaved }: { row: PreviewRow; onSaved: () => void 
       held={held}
       tone={tone}
       oneOff={oneOff}
-      name={`${number}. ${step.name}`}
+      name={step.name}
       press={
         step.stock
           ? {
@@ -175,11 +173,10 @@ export default function WorkingCompletion({
   }
   const plan = preview.data?.workingDeductionPreview;
   const rows: PreviewRow[] = plan
-    ? steps.flatMap((step, i): PreviewRow[] => {
-        const number = step.number ?? i + 1;
+    ? steps.flatMap((step): PreviewRow[] => {
         const taken = plan.deductions.find((deduction) => deduction.stepId === step.id);
         const skipped = plan.warnings.find((warning) => warning.stepId === step.id);
-        return taken ? [{ step, number, taken }] : skipped ? [{ step, number, skipped }] : [];
+        return taken ? [{ step, taken }] : skipped ? [{ step, skipped }] : [];
       })
     : [];
   // A step the spell no longer lists, which the preview still names.

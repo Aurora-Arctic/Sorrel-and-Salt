@@ -76,8 +76,7 @@ export function recipeStepsOf(views: readonly SpellStepView[], hereHref: Route):
 }
 
 /**
- * The ingredient steps of `views` as Record a Working's preview lines read them: the step's number
- * among all the recipe's steps, the form and the jar's look, and `stock` where `stocks` holds that
+ * The ingredient steps of `views` as Record a Working's preview lines read them: the form and the jar's look, and `stock` where `stocks` holds that
  * step's Edit Stock (none for a role that may not edit stock, so its jar stays a drawing).
  */
 export function workingStepsOf(
@@ -92,7 +91,6 @@ export function workingStepsOf(
       {
         id: step.id,
         name: step.name,
-        number: index + 1,
         form: step.form,
         seed: view?.ingredientId ?? step.name,
         oneOff: step.oneOff,
