@@ -46,11 +46,14 @@ interface Box {
 type Matrix = [number, number, number, number, number, number];
 
 // Just enough of a content-stream reader to follow the transforms and see what each page draws, in page points.
+type Vector = [number, number];
+
 interface Drawn {
   fills: Box[];
   clips: Box[];
   strokes: { from: [number, number]; to: [number, number] }[];
-  images: { name: string; box: Box }[];
+  // up and right are the directions, on the page, of the image's top and of its right-hand side.
+  images: { name: string; box: Box; up: Vector; right: Vector }[];
   textRuns: number;
 }
 
@@ -151,6 +154,8 @@ function drawn(doc: PDFDocument, pageIndex: number): Drawn {
           result.images.push({
             name: operands[operands.length - 1].slice(1),
             box: boxOf([apply(ctm, 0, 0), apply(ctm, 1, 0), apply(ctm, 0, 1), apply(ctm, 1, 1)]),
+            up: [Math.sign(ctm[2]) + 0, Math.sign(ctm[3]) + 0],
+            right: [Math.sign(ctm[0]) + 0, Math.sign(ctm[1]) + 0],
           });
           break;
         case 'TJ':
@@ -283,6 +288,21 @@ describe('the card sheets PDF', () => {
     );
     expect(new Set(fronts).size).toBe(4);
     expect(backs).toEqual(fronts);
+  });
+
+  it('stands each back right way up when the card is turned side over side, like a book page', () => {
+    const [front] = drawn(nine, 0).images;
+    const backs = drawn(nine, 1).images;
+    expect(backs).toHaveLength(9);
+    // A long-edge print turns the sheet over its long side, which mirrors the back page left to right.
+    const turnSheet = ([x, y]: Vector): Vector => [0 - x, y];
+    for (const back of backs) {
+      // A side-over-side turn spins the card about its own up line, so its up holds and its right reverses.
+      expect(turnSheet(back.up)).toEqual(front.up);
+      expect(turnSheet(back.right)).toEqual(front.right.map((v) => 0 - v));
+    }
+    // Every front faces the same way, so the first one stands for them all.
+    for (const other of drawn(nine, 0).images) expect(other.up).toEqual(front.up);
   });
 
   it('keeps every picture inside the block', () => {
