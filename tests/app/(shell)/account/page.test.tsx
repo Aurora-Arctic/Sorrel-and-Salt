@@ -11,7 +11,15 @@ import type { Session } from '@/lib/session';
 const requireSession = vi.fn<() => Promise<Session>>();
 const linkedAccounts = vi.fn(async () => [{ id: 'a1', providerId: 'discord', accountId: 'd-1' }]);
 const sessionIsFresh = vi.fn(async () => true);
-vi.mock('@/lib/request-session', () => ({ requireSession, linkedAccounts, sessionIsFresh }));
+const accountPasskeys = vi.fn(async () => [
+  { id: 'pk-1', name: 'Fixture Laptop', createdAt: '2026-10-01T09:00:00.000Z' },
+]);
+vi.mock('@/lib/request-session', () => ({
+  requireSession,
+  linkedAccounts,
+  sessionIsFresh,
+  accountPasskeys,
+}));
 vi.mock('@/modules/coven', () => ({ firstCovenSlugOf: async () => undefined }));
 vi.mock('@/lib/social-providers-config', () => ({ configuredProviders: () => [] }));
 // Accept reads the router, which a page test has no app to give.
@@ -75,7 +83,7 @@ describe('the /account page', () => {
 
     const nav = screen.getByRole('navigation', { name: 'On This Page' });
     const links = within(nav).getAllByRole('link');
-    expect(links).toHaveLength(4);
+    expect(links).toHaveLength(5);
     // Each link lands on the section headed by its own words.
     for (const link of links) {
       const target = document.getElementById(link.getAttribute('href')?.slice(1) ?? '');
@@ -95,6 +103,14 @@ describe('the /account page', () => {
     expect(within(section('Email')).getByRole('textbox', { name: 'Email Address' })).toHaveValue(
       'ada@example.test',
     );
+  });
+
+  it("lists the session's passkeys in their section", async () => {
+    await renderPage();
+
+    const passkeys = within(section('Passkeys')).getByRole('list', { name: 'Passkeys' });
+    expect(within(passkeys).getAllByRole('listitem')).toHaveLength(1);
+    expect(within(passkeys).getByRole('button', { name: 'Remove Fixture Laptop' })).toBeEnabled();
   });
 
   it('never shows a placeholder address', async () => {

@@ -10,7 +10,7 @@ import { emailPagePath, isEmailPage } from './account-email';
 import { RETURN_PATH_HEADER, safeReturnPath, signInPath } from './sign-in';
 import { isRosterProvider } from './social-providers';
 import { toUserRole } from './session-role';
-import type { LinkedAccount } from './types';
+import type { AccountPasskey, LinkedAccount } from './types';
 
 // Where the request becomes a service-level `Session`: server components and
 // the GraphQL context call this, then hand the result to a service. A service
@@ -168,4 +168,17 @@ export const linkedAccounts = cache(async (): Promise<LinkedAccount[]> => {
   return accounts.flatMap(({ id, providerId }) =>
     isRosterProvider(providerId) ? [{ id, providerId }] : [],
   );
+});
+
+/**
+ * The signed-in user's passkeys, asked of the passkey plugin, whose table they are, and cut to what the account page
+ * shows. For the account page, after `requireSession()`.
+ */
+export const accountPasskeys = cache(async (): Promise<AccountPasskey[]> => {
+  const passkeys = await auth.api.listPasskeys({ headers: await headers() });
+  return passkeys.map(({ id, name, createdAt }) => ({
+    id,
+    name: name ?? null,
+    createdAt: new Date(createdAt).toISOString(),
+  }));
 });

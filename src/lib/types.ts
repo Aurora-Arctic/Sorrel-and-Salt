@@ -94,6 +94,15 @@ export interface LinkedAccount {
   providerId: ProviderId;
 }
 
+/** One of a user's passkeys as the account page lists it: the row id the plugin's rename and remove take. */
+export interface AccountPasskey {
+  id: string;
+  /** What the person called it, or `null` for one never named. */
+  name: string | null;
+  /** When it was added, as an ISO string. */
+  createdAt: string;
+}
+
 /** One rule a value broke, pathed to the input field it is about. */
 export interface ValidationIssue {
   /** In the shape of the operation's input — `['folkNames', 2]`; empty for no one field. */
