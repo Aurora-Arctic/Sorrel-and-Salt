@@ -64,3 +64,7 @@ unchanged. `tests/scss/tokens.test.ts` holds both on the card and the page.
 The compact line reads "Edited 3 days ago" once the page has hydrated and "Edited 1 Sep 2026" before it, inside a `<time>`. The full sentence is the tip. The relative phrase depends on the reader's clock, so it is drawn only after hydration (`useHydrated`), which keeps the server's HTML and the first client render in agreement.
 
 The text is a button, so a keyboard reaches the tip. It follows InfoTip's pattern rather than IconTip's: the tip holds what the line leaves out, so the button lists it in `aria-describedby` and the sentence stays in the page while the tip is closed.
+
+## Stories
+
+`src/components/LastEdit/index.stories.tsx`, titled "Ingredients / Last Edit": `States`, a grid of Just Now, Hours Ago, Days Ago, Months Ago, Years Ago, Unnamed (an editor the viewer cannot name, so the time stays and the name goes), Clock In The Future, and Invalid Date: Nothing Drawn.

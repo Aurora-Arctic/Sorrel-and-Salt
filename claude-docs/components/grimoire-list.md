@@ -173,8 +173,20 @@ One thing in the list exists for the cards' smouldering edge ([spell-card.md](sp
 
 ## Stories
 
-GrimoireList has no story of its own. Its cards are drawn in SpellCard's `Grimoire / Spell Card`
-stories (`States`, `Hover` and `Compact`; [spell-card.md](spell-card.md), "Stories").
+`src/components/GrimoireList/index.stories.tsx`, titled "Grimoire / Grimoire List": `States`,
+with a control that chooses one state, each drawn in the Grimoire page's Spells and Drafts tabs
+over the app shell, with the page's own New Spell button:
+
+- Spells and Drafts: four complete spells, and two drafts.
+- No Spells and No Drafts: each tab with nothing in it.
+- No Matches: a search and filters that match nothing.
+- First Page, Middle Page and Last Page: the pager at each end and between.
+- Facets and Categories Picked: two categories, a moon phase, a day, a visibility and a maker
+  picked, with the one spell they match.
+- Filters Open With Picks: the same picks, with the Filters panel open.
+
+The cards themselves are drawn in SpellCard's `Grimoire / Spell Card` stories
+([spell-card.md](spell-card.md), "Stories").
 
 ## Testing
 

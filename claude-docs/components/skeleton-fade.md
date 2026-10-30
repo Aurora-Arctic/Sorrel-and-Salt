@@ -36,3 +36,7 @@ While a wait is on, the page stays mounted at its full height but unseen (`visib
 ## The fade out
 
 When a wait ends, the bodies (`MainBody`, `SectionBody`) do not drop the skeleton at once. They keep the last one over the page that has arrived, and it fades away while the page shows through. This is a client part, since the timer is the browser's. The skeleton fades rather than the page fading in, because wrapping the arriving page would put a box round it that the section layouts' flex columns would feel. The overlay is out of layout and unmounts when it has gone.
+
+## Stories
+
+`src/components/SkeletonFade/index.stories.tsx`, titled "Feedback / Skeleton Fade": `Default`. A press of its button starts a wait and a second press ends it, and the skeleton fades for 200ms over the page that arrived.

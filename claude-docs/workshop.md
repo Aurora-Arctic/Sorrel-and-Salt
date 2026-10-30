@@ -221,7 +221,7 @@ The viewport is a Storybook global, like the theme, so a link can set both:
   (0,1,0), so the workshop drew `EmailForm`'s notice at body size with the
   paragraph margin, and `AdminNav`'s rows with the ◆ bullet the page never
   shows (MB.114).
-- **`navigation.tsx`** — two wrappers for the two stories that need more than the
+- **`navigation.tsx`** — three wrappers for the stories that need more than the
   framework's fixed answer, which put a different value in the same contexts
   Next's real hooks read. `WorkshopPathname` sets another address for
   `usePathname`, so AdminNav's stories show the current-page marker on People, and
@@ -231,6 +231,11 @@ The viewport is a Storybook global, like the theme, so a link can set both:
   once faded and holding the whole page inert (M10.33). The framework's
   `useSearchParams` answers an empty query, so the shell's Add Ingredient button,
   which opens its dialog on `?new` (M8.16), draws closed in a story.
+  `WorkshopSearch` is that query for a component whose open state is a search
+  parameter, such as Spell Preview's `?preview`: it follows the story's own
+  `history.pushState`, `replaceState` and Back as the router does, adds its
+  `initial` parameters to the frame's address, and puts the address back when it
+  unmounts. The Spell Preview and Spell Recipe stories draw inside it.
 - **`reopenable.tsx`** — `Reopenable`, what stands in for a modal's owner in a
   story. The app's owners close a modal by unmounting it, and a story has no
   owner. It renders its children while open, hands them a `close`, answers a
@@ -265,14 +270,34 @@ The viewport is a Storybook global, like the theme, so a link can set both:
   and its list's story offer the same data: `GROUP_NAMES` (four names per kind
   of group), fixed ids with `asOptions()` and `asSlugs()` to shape them for a
   picker or a filter, and two pending `INVITATIONS`.
-- **`grimoire-fixtures.ts`** — invented categories the grimoire's stories share, in two
-  invented groups, so the builder's Category Match, the recipe and the cards draw the same
-  categories in the same colours: `CATEGORIES_ANSWER` (the categories query's answer),
-  `namedCategories()` and `cardCategories()` (named categories shaped for a step or a card), and
-  `GROUP_COLORS` (each category's group colours by id).
+- **`grimoire-fixtures.ts`** — invented rows the grimoire's stories share, so the builder's
+  Category Match, the recipe and the cards draw the same categories in the same colours:
+  `GRIMOIRE_CATEGORIES` (fourteen categories in two invented groups), `CATEGORIES_ANSWER` (the
+  categories query's answer), `namedCategories()` and `cardCategories()` (named categories shaped
+  for a step or a card), `GROUP_COLORS` (each category's group colours by id), `BUILDER_STEPS`
+  (one spell's steps as the builder reads them: ingredient forms with a toxic one, an instruction
+  and a one-off), `RECIPE_STEPS` (the same spell as the recipe draws it), `WORKINGS` (a draft, a
+  private and a complete working), `MEMBERS` (the coven's members) and `WORKING_STEPS` (the
+  ingredient steps a working's preview names).
+- **`grimoire-workings.tsx`** — the Workings section with the recipe page's own controls, as
+  the page passes them: `WorkingsSection` (Spell Workings with Record a Working, Complete Working
+  and Edit Working), `RecordButton`, and the fixture coven and spell ids. The Spell Workings and
+  Spell Recipe stories share it.
+- **`compendium-fixtures.ts`** — `NO_FILTER` and `NO_FACETS`: a compendium filter with
+  nothing chosen and facet counts with nothing in them, which the list and card stories start
+  from.
+- **`states-grid.tsx`** — `StatesGrid`, every data state of one small component side by side,
+  each under its name (rule 5). A state that needs a canvas of its own (a click, an open dialog, a
+  hanging request, a viewport) stays a story.
+- **`in-modal.tsx`** — `InModal`, a form drawn in the modal the admin pages open it in, with
+  Open Again once it is closed (`reopenable.tsx`).
 - **`press.ts`** — `press(name)` and `usePressOnMount(name)`, for a story that
   opens on a state a button press reaches, such as a Delete question over its
-  form.
+  form. `pressLast(name)` presses the last button of that name (a dialog's
+  confirm over a same-named button), `setInputValue(input, value)` types into a
+  field so React hears it, `submitForm(selector)` submits a form as Enter does,
+  and `useSteps(steps, gap)` runs a list of these once the story has mounted, a
+  short wait between each.
 - **`types.ts`** — the types the workshop's helpers share, kept apart from
   their components as the repo keeps types: `AdminTabbedFrameProps` and
   `ShellFrameProps`.

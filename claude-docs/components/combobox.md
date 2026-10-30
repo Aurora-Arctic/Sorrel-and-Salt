@@ -29,6 +29,7 @@ movable, on dnd-kit.
 | `label`            | What the box is called. The text of a visually hidden `<label>` of its own unless `labelId` is given, not an `aria-label`: Chrome's Issues panel flags an input no `<label>` names. Also the name of its list, "Form suggestions", its status region and its chevron, "Show Form suggestions".                                                          |
 | `labelId`          | The id of a label element naming the box, which then renders no label of its own.                                                                                                                                                                                                                                                                       |
 | `value`/`onChange` | The text, held by the caller: a form field's value, or a list's box.                                                                                                                                                                                                                                                                                    |
+| `onFocus`/`onBlur` | Called as the box takes and loses the focus, after the box shows or hides its own tip                                                                                                                                                                                                                                                                   |
 | `onPick`           | `(value, option)`: a suggestion chosen, or the typed row, which comes with `null`. The text is the caller's to change, so a field fills itself and a list empties its box.                                                                                                                                                                              |
 | `onCommit`         | Enter with no suggestion highlighted: a list's add. Without it, Enter closes an open list and otherwise reaches the form, as a text box's does.                                                                                                                                                                                                         |
 | `onRemoveLast`     | Backspace or Delete in an empty box: a list takes its last entry, as react-select does. With text in the box the keys edit it as usual.                                                                                                                                                                                                                 |
@@ -48,6 +49,7 @@ movable, on dnd-kit.
 | `actionFirst`      | Whether the action row is the list's first row, nearest the box, rather than its last. `false` unless said. The spell builder's Add to Jar passes it: its action, `Add "<typed>" as a one-off ingredient`, stands for the typed text.                                                                                                                   |
 | `keepOpen`         | Whether the list stays open after a pick of a row, for the next; `false` unless said, so a single-value box closes. A list field, a facet type-ahead and the category picker pass it, since each pick adds an entry (M12.54). Escape, Tab and a press outside still close it, and the focus stays in the box. An action row closes the list either way. |
 | `offerTyped`       | Whether the typed row is offered; `true` unless said. A list passes `false` for text it would refuse, a repeat (MB.174). Left out too when a suggestion reads as the typed text, case and spaces aside. Enter with nothing highlighted still reaches `onCommit`.                                                                                        |
+| `typedIcon`        | The mark on the typed row, "Use what you typed": the same slot as an option's `icon`                                                                                                                                                                                                                                                                    |
 | `empty`            | Optional: what the popup says once the lookup has settled with no rows and the text is not blank; the default is No match for “text”, and `false` says nothing. Outside the listbox, and read by the status. See "The empty message".                                                                                                                   |
 | `inputRef`, `name` | The box's, for react-hook-form.                                                                                                                                                                                                                                                                                                                         |
 | `aria-describedby` | The field's hint and error, read with the box; `aria-invalid` draws the error edge on the control.                                                                                                                                                                                                                                                      |
@@ -317,7 +319,7 @@ alone: the box marks the key handled (`keepEscapeInList`, `escape.ts`),
 which `useSelect`, unlike `useCombobox`'s typed box, does not, so a modal
 around it does not take the key as a close request and shut, or ask a
 changed form to discard (MB.115). With the list shut, Escape reaches the
-modal as ever. The Modal workshop's `WithPickers` story holds both pickers
+modal as ever. The Modal workshop's `States`, state 'With Pickers', holds both pickers
 in a modal to try it. The DateField's month and year pickers are two of these
 boxes ([`date-field.md`](date-field.md)).
 
@@ -819,7 +821,15 @@ and text, by pointer or keyboard; `NoSource`, a box that never opens; `Qualifier
 Substance, the group in the box and its description in a tooltip, dropped by
 an edit; `SelectOnly`, the select-only box; `SelectWithIcons`, the same with an icon on each choice; `Typeahead`, the type-ahead box over five
 traditions, the value shown beneath it; and
-`MultiSelect`, the multi-select box with two elements chosen (`States` is a grid of Plain and With A Summary, the box with and without the line under it) (the filter's version, with counts, is `FacetCombobox`'s stories, [`facet-combobox.md`](facet-combobox.md));
+`MultiSelect`, the multi-select box with two elements chosen (the filter's version, with counts, is `FacetCombobox`'s stories, [`facet-combobox.md`](facet-combobox.md));
+`EmptyMessage`, a lookup that settled with no rows, the popup saying so outside the list;
+`Leading`, a caller's own control at the box's start; `LoadingSearch`, a lookup under way, the box
+`aria-busy` with the ring beside the chevron; `LoadingSelect`, the select-only box while its change
+is on its way; `GroupedRows`, an open list with every kind of row (buckets under a group heading
+edged in the group's colour, a count, a disabled row with its reason, the typed row with its mark);
+`EntryChips`, a grid of one chip in each form (Plain, With A Summary, Outlined, With A Count, Count
+Loading, Naming What It Removes, Named By The List Error, With An Action, With An Action Shut, With
+An Icon, With A Qualifier And Detail, Coloured By Its Group);
 `CreateRow`, its list open on "New Reference" last whatever is typed, saying beneath the
 box each time it is picked; and `QualifierInForm`, the ingredient form's Form box under a Name
 field, "Wax" picked under Substance with a detail long enough to wrap, whose

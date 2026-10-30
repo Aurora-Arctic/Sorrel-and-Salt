@@ -19,7 +19,9 @@ None of its own: `.specimen__badges`, `.badge--draft` and `.badge--private` are 
 
 ## Stories
 
-None of its own: the Grimoire / Spell Recipe stories draw it in the recipe's head.
+`src/components/SpellMarks/index.stories.tsx`, titled "Grimoire / Spell Marks": `States`, a grid of
+Draft, Private, Draft and Private, and Complete and Shared: Nothing Drawn. The Grimoire / Spell
+Recipe stories draw the marks in the recipe's head.
 
 ## Where it is tested
 

@@ -156,6 +156,10 @@ piece jumped to nothing instead of fading. A fading piece stays drawn, `inert` a
 animation ends or 400ms pass; whether it is open (`aria-expanded`, the focus
 going back) never waits for the fade.
 
+## Stories
+
+`src/components/ClickFeedback/index.stories.tsx`, titled "Surfaces / Click Feedback": `States`, with the states Resting, Bordered (the badge on the button's corner), Borderless (the badge beside the button), Near Right Edge (the callout's end under the control's end) and Pinned (a box too narrow for either alignment, so the callout is pinned inside it). Each state but Resting presses its button once drawn, so it opens on the refusal. `ThenSucceeds` is refused, then a later try succeeds, and the badge and the callout fade out. `tests/e2e/workshop/click-feedback.spec.ts` measures these stories.
+
 ## Tests
 
 - `tests/components/ClickFeedback/index.test.tsx` — opening, closing, focus,

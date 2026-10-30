@@ -114,7 +114,13 @@ and the embers.
 
 ## Stories
 
-`index.stories.tsx`, titled "Grimoire / Spell Preview", has one story, `Closed`: the preview for a
-short spell (one ingredient step, one instruction) before it is opened. It is render-only; what
-shows and when is asserted in `tests/components/SpellPreview/index.test.tsx`, and the pane's
-behaviour in the browser by story 85.
+`index.stories.tsx`, titled "Grimoire / Spell Preview": `States`, with a control that chooses one
+state:
+
+- Closed: the Preview button, before the pane is opened.
+- Open: the pane over the page, with categories, a toxic step, a one-off and a step whose
+  ingredient was deleted since, and the screen kept awake as the pane asks on opening.
+- Screen Awake Off: the same pane with its Screen Awake button pressed off.
+
+It is render-only; what shows and when is asserted in `tests/components/SpellPreview/index.test.tsx`,
+and the pane's behaviour in the browser by story 85.

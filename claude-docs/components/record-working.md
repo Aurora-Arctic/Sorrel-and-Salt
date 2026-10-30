@@ -84,4 +84,6 @@ Browser flows: stories 76 and 78 in `tests/e2e/stories/06-grimoire.spec.ts`.
 
 ## Stories
 
-Grimoire / Record Working: States, one story with a control choosing Closed, Open, Private Spell or Deduction Preview.
+`src/components/RecordWorking/index.stories.tsx`, titled "Grimoire / Record Working": `States`,
+with a control that chooses one of Closed, Open, Private Spell, Deduction Preview, Shortfall, Edit
+Working, Edit Complete Working, Delete Working or Dated Ahead.

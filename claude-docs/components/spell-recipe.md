@@ -181,4 +181,12 @@ Tokens only, in three stylesheets:
 
 ## Stories
 
-Grimoire / Spell Recipe: Complete, the full page of a complete shared spell; Quick Look, the dialog for a member; Quick Look, Read Only, for a viewer; and Quick Look, Read Failed, the dialog when the spell could not be read.
+`src/components/SpellRecipe/index.stories.tsx`, titled "Grimoire / Spell Recipe": `States`, with a
+control that chooses one state:
+
+- Complete: the full page of a complete shared spell, every slot filled.
+- Draft: a draft, with no Record a Working and Workings empty.
+- Private: a private spell.
+- Quick Look: the dialog for a member, with the Edit pencil and the bin beside the title.
+- Quick Look Read Only: the dialog for a viewer.
+- Quick Look Read Failed: the dialog when the spell could not be read.

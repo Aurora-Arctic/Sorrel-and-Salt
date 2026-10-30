@@ -443,7 +443,9 @@ Field`: `States`, a grid of the text field in each shape (Plain, Required, Pendi
 `RadioStrip`, the radio group as a strip of icons, with `RadioGroup`, `RadioSegmented` and `RadioSegmentedDisabled`; `PlainShell`, the shell around a native input with an error; `Switch`,
 `SwitchField` off, on, and disabled off and on; `Actions`, `FormActions` with
 nothing to save, with something to save and Delete, saving, and renamed to
-Send Invitation; `HistoryButtons`; `Reason`,
+Send Invitation; `ActionsInUse`, the row at work in a form of one field (Save wakes when the field
+changes, holds busy, then settles; Cancel restores the field; Delete removes the form), its
+`status` set from the controls panel; `HistoryButtons`; `Reason`,
 `ReasonField`; `SearchBox`, `SearchField` in a form that goes nowhere; and
 `FilterSelect`, `FilterSelectField` as a select and as a type-ahead in a
 filter row.

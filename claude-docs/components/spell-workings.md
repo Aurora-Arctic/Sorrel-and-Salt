@@ -46,7 +46,17 @@ An empty list reads "This spell has not been worked yet."
 
 ## Stories
 
-None: no story draws the section on its own. The workshop's Grimoire / Spell Recipe stories draw the recipe without it.
+`src/components/SpellWorkings/index.stories.tsx`, titled "Grimoire / Spell Workings": `States`,
+with a control that chooses one state, each with the recipe page's own controls (Record a Working,
+Complete, the Edit pencil and the bin), drawn by `.storybook/grimoire-workings.tsx`:
+
+- Every Kind of Row: a draft, a private working the viewer recorded, and one another member
+  recorded.
+- None, and None for a Viewer: no workings, with and without Record a Working.
+- Draft and Private: one row of each kind.
+- A Viewer Reads Them: a complete working, with no controls.
+
+What each control opens is drawn in Grimoire / Record Working ([record-working.md](record-working.md)).
 
 ## Reading
 

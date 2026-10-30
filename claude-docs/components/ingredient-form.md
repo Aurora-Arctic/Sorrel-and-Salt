@@ -1849,11 +1849,11 @@ length, and no other text field has one either.
 
 ## Stories
 
-The promote control has its own stories: `PromoteControl`, `PromoteQuestion` (clean), `PromoteQuestionWithChanges`, phone dark and light, and `PromoteQuestionCoven`.
+The promote control has its own stories: `PromoteControl`, `PromoteQuestion` (clean), `PromoteQuestionWithChanges` and `PromoteQuestionCoven`.
 
 [`index.stories.tsx`](../../src/components/IngredientForm/index.stories.tsx),
 titled "Ingredients / Ingredient Form":
-`Blank`, unframed, with every lookup answered and the save faked (MB.131),
+`States`, state 'Coven', unframed, with every lookup answered and the save faked (MB.131),
 under a "What to try" panel saying what to type for each state: the
 suggestions, free text, the duplicate warning, the missing name, the
 classification coupling, a pick of a form or a deity, moving an entry, text left in a box, a
@@ -1861,14 +1861,12 @@ repeated entry, a long entry,
 the two server refusals, a save, and the references: picking sources,
 a locator, the panel per kind and its refusals. The workshop has no API, and on staging
 its pages may not fetch at all ([`workshop.md`](../workshop.md), "On
-staging"), so the story answers the form itself: while it is mounted it
-stands in for `window.fetch`, which the client wrapper looks up on every
-request, and answers a request to `/api/graphql` naming one of the eight
+staging"), so the workshop's fake API (`.storybook/mock-api.ts`, set for the whole
+file by its `beforeEach`) answers a request to `/api/graphql` naming one of the
 lookups, the categories, or either save, from invented rows filtered by what was typed. Each
 answer is checked against its query's generated type with `satisfies`, so a
 fixture that drifts from the schema stops compiling. A name holding "cat"
-shows the duplicate warning. `DuplicatesNotice`, with a phone dark and a phone
-light, draws the warning and the held state in one column from fixed state. A save is answered after two seconds
+shows the duplicate warning. `DuplicatesNotice` draws the warning and the held state in one column from fixed state. A save is answered after two seconds
 (`SAVE_DELAY_MS`), so Save can be watched busy and shut with its spinner: a
 name holding "taken" is refused as a `VALIDATION` error on the name, one
 holding "refuse" as a `FORBIDDEN` above the fields, one holding "retired"
@@ -1883,18 +1881,18 @@ same pause, and refused by its title as an ingredient is by its name. The worksh
 the story says beneath the buttons where its page would go,
 "/ingredients/<id>", in a `.story-note` from `.storybook/story-frame.scss`;
 Save & Add Another clears it.
-`Compendium` and `CompendiumEntry` (M5.5) are the form on the compendium,
-new and given an entry to edit, on the same stand-in, which also answers the
+States 'Compendium' and 'Compendium Entry' (M5.5) are the form on the compendium,
+new and given an entry to edit, on the same fake API, which also answers the
 compendium's substitute search and its three writes: a name holding
 "redirect" meets MB.82's question until it is sent again confirmed.
-The original `fetch` is put back on unmount. The TanStack Query client is the
-workshop's global provider's: a second provider would split the cache. This replaces M5.10's
-`DuplicateWarning` story, which filled that cache ahead for one exact name.
-`CompendiumEntry` holds two linked substitutes, Fixturewort and Testwort in
+The TanStack Query client is the
+workshop's global provider's: a second provider would split the cache.
+'Compendium Entry' holds two linked substitutes, Fixturewort and Testwort in
 its oil, and a typed one, Hedge Mockroot, so both kinds of chip show; the
-stand-in answers `IngredientSummary` for each invented ingredient, and
+fake API answers `IngredientSummary` for each invented ingredient, and
 `CompendiumEntrySubstituteSummary` is the same entry with Fixturewort's
-summary open (MB.115). It also holds three sources, so its rows show each short form —
+summary open (MB.115), and `LoadingSubstituteSummary` a linked substitute's summary
+pressed open with its read left unanswered, so its loading line shows. It also holds three sources, so its rows show each short form —
 a book with a locator, an article by two authors with one, and an
 authorless web page — and two forms,
 Dried leaf carrying a safety note, its own toxic flag (the entry's is off), a celestial body, two categories, a source and
@@ -1909,10 +1907,10 @@ the ingredient's substitutes, opens Dried leaf and its Relations and presses its
 Ingredients' Copy From Ingredient: Testwort links its Dried leaf, and the
 notice beneath the list names Mockleaf with Copy Anyway;
 And `CompendiumEntryEditSource` is the same entry with its first
-source's row open and Edit Source pressed, the panel prefilled; the stand-in
+source's row open and Edit Source pressed, the panel prefilled; the fake API
 answers `Reference` from each source's whole fields and keeps what
-`UpdateReference` saves. `Compendium` and `Blank` show a new entry's sections all open,
-`CompendiumEntry` an edit's all closed to their summaries,
+`UpdateReference` saves. 'Compendium' and 'Coven' show a new entry's sections all open,
+'Compendium Entry' an edit's all closed to their summaries,
 `CompendiumEntrySectionOpen` the edit with Correspondences open, and
 `CompendiumEntrySaveError` the edit, a colour left in its box, submitted
 once drawn: Correspondences opens on the error, flagged, the box focused
