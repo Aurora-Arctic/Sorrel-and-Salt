@@ -114,9 +114,9 @@
       font-size: 1.1em;
     }
 
-    // Amounts in one right-aligned column, names in a left-aligned one beside it, so the numbers
-    // line up; each line shares the list's two columns (subgrid), and a line with no amount leaves
-    // its first cell empty.
+    // Amounts in one column, names in another beside it, both set to the left so the amounts and
+    // the names each start on one line; each line shares the list's two columns (subgrid), and a
+    // line with no amount leaves its first cell empty.
     ul {
       display: grid;
       grid-template-columns: max-content minmax(0, 1fr);
@@ -132,7 +132,7 @@
     }
 
     .spell-recipe__need {
-      text-align: end;
+      text-align: start;
       font-weight: 500;
       font-variant-numeric: tabular-nums;
     }

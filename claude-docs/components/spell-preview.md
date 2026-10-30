@@ -11,8 +11,8 @@ full screen, with nothing else on screen. `src/components/SpellPreview/`.
 - The pane, opened by the button: everything the printed spell shows, in print order, by drawing
   the recipe's own body (`SpellRecipeBody`) and Ingredients summary (`SpellRecipeSummary`), so the
   two cannot drift. That is the title, the intent and categories, the facts (Jar, Seal Wax, Moon
-  Phase, Day), the Ingredients section (each amount right-aligned in a column beside its name, in
-  bold), the Steps and the note. What print leaves out stays out: the Edited line, the back link and
+  Phase, Day), the Ingredients section (each amount in a column beside its name, both set to the left, the
+  amount in bold), the Steps and the note. What print leaves out stays out: the Edited line, the back link and
   the page's actions. The page cuts the recipe's steps down with `previewStepsOf`
   (`preview-steps.ts`, on the server), so the pane's props carry no Quick Look links, safety marks
   or stock verdicts.
