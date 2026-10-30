@@ -1,6 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { useState } from 'react';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import DateField from '@/components/DateField';
 
 // The day picker field: a button showing the day, opening a calendar that cannot pick past `max`
@@ -23,6 +23,8 @@ function Harness({
 }
 
 describe('DateField', () => {
+  afterEach(() => vi.useRealTimers());
+
   it('shows the day in words, on a button named by its label', () => {
     render(<Harness />);
     expect(screen.getByRole('button', { name: /Date.*10 March 2026/ })).toHaveAttribute(
@@ -89,6 +91,25 @@ describe('DateField', () => {
     fireEvent.keyDown(year, { key: 'Escape' });
     expect(screen.queryByRole('option', { name: '2020' })).toBeNull();
     expect(screen.getByRole('grid')).toBeInTheDocument();
+  });
+
+  it('picks today from a calendar open on another month and closes', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(2026, 2, 12, 9));
+    render(<Harness initial="2026-01-05" max="2026-03-15" />);
+    fireEvent.click(screen.getByRole('button', { name: /Date/ }));
+    expect(screen.getByRole('grid')).toHaveAccessibleName(/January 2026/);
+    fireEvent.click(screen.getByRole('button', { name: 'Today' }));
+    expect(screen.queryByRole('grid')).toBeNull();
+    expect(screen.getByRole('button', { name: /Date.*12 March 2026/ })).toBeInTheDocument();
+  });
+
+  it('offers no Today when max is before today', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(2026, 2, 12, 9));
+    render(<Harness initial="2026-01-05" max="2026-03-01" />);
+    fireEvent.click(screen.getByRole('button', { name: /Date/ }));
+    expect(screen.queryByRole('button', { name: 'Today' })).toBeNull();
   });
 
   it('closes on Escape without changing the day', () => {

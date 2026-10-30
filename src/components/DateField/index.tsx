@@ -262,6 +262,22 @@ export default function DateField({
               disabled: 'day-picker__day--disabled',
             }}
           />
+          {/* Hidden when max is before today, so a refused day is never offered. */}
+          {(!last || format(last) >= format(new Date())) && (
+            <div className="date-field__footer">
+              <button
+                type="button"
+                className="btn btn--quiet btn--small"
+                onClick={() => {
+                  onChange(format(new Date()));
+                  setOpen(false);
+                  document.getElementById(id)?.focus();
+                }}
+              >
+                Today
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
