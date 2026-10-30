@@ -71,14 +71,22 @@
     border-radius: radius('surface');
   }
 
-  // The ring goes round the card, drawn on the overlay.
+  // The ring goes round the card, drawn on the article below.
   &:focus-visible {
     outline: none;
-
-    &::after {
-      @include focus-ring;
-    }
   }
+}
+
+// The focus ring, on the article's own `::after`: it comes after the burn layers in the markup,
+// so it paints over the burnt corner, which the title link's overlay, earlier, does not.
+.spell-card:has(.spell-card__title a:focus-visible)::after {
+  @include focus-ring;
+
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: radius('surface');
+  pointer-events: none;
 }
 
 // The words and the badges are positioned so they paint over the face and the glow, as the

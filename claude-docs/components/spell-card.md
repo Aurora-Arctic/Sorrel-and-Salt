@@ -64,8 +64,9 @@ is; the grimoire list passes each spell's recipe page (MB.6, `recipeHref`). With
 title is plain text. The card has no drawer behind it, since nothing opens from it.
 
 The link covers the whole card, as IngredientCard's does: the title's `<a>` stretches an
-empty `::after` over the article, so a press anywhere opens the recipe, and the focus ring
-is drawn round the card on that overlay. The intent, the chips' plain items and the last-edit
+empty `::after` over the article, so a press anywhere opens the recipe. While the link holds
+focus, the focus ring is drawn round the card on the article's own `::after`, which comes after
+the burn layers and so is not covered by the burnt corner. The intent, the chips' plain items and the last-edit
 line pass the pointer through to it; the Edit pencil and the +N button sit above it and keep
 their own press, hover and focus.
 
