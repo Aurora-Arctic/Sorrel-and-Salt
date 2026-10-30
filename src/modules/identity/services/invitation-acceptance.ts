@@ -8,7 +8,12 @@ import {
   findWorkspaceRole,
   withAudit,
 } from '../../../db/repository';
-import type { AuditWriter, InvitationRow, SiteInvitationRow } from '../../../db/repository';
+import type {
+  AuditWriter,
+  CardAttemptReason,
+  InvitationRow,
+  SiteInvitationRow,
+} from '../../../db/repository';
 import { Forbidden, NotFound } from '../../../lib/errors';
 import { RowId } from '../../../lib/validation';
 import { sameAddress } from '../../../lib/primary-admin';
@@ -253,4 +258,28 @@ async function acceptChecked(
     throw refusalError(again.refusal ?? 'invalid', byId);
   }
   return accepted;
+}
+
+// A refused card open the admin hears of: the card is dead for one of these reasons. A declined card cannot occur.
+function recordableReason(card: InvitationRow, userId: string): CardAttemptReason | undefined {
+  const dead = deadLink(card);
+  if (dead === 'revoked' || dead === 'expired') return dead;
+  // The account that accepted the card is the one it worked for, so its return to the link is no refusal.
+  if (dead === 'accepted' && card.acceptedBy !== userId) return dead;
+  return undefined;
+}
+
+/**
+ * Notes that the session's account opened a card link and was refused: a row per card, account and reason, counting.
+ * Works out the reason itself and records nothing for an unknown token, an address invitation, a pending card, an
+ * unverified account or the account that accepted the card; the caller names the token and nothing else.
+ */
+export async function recordCardAttempt(session: Session, token: string): Promise<void> {
+  const card = await findInvitationByToken(token);
+  if (!card || card.kind !== 'card') return;
+  const reason = recordableReason(card, session.userId);
+  if (!reason) return;
+  const user = await findOneById(users, session.userId);
+  if (!user?.emailVerified) return;
+  await withAudit(session, (write) => write.recordCardAttempt(card.id, reason));
 }

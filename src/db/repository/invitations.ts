@@ -2,6 +2,7 @@ import { and, eq, gt, inArray, isNotNull, isNull, lte, or, sql, type SQL } from 
 import { applyAudit } from '../audit';
 import { workspaces } from '../../modules/coven/schema/workspaces';
 import { invitations } from '../../modules/coven/schema/invitations';
+import { cardInvitationAttempts } from '../../modules/coven/schema/card-invitation-attempts';
 import { users } from '../../modules/identity/schema/users';
 import type { AuditSession } from '../types';
 import { containsText, notSoftDeleted, scopedTo } from './predicates';
@@ -15,8 +16,11 @@ import type {
   AuditWriter,
   AddressInvitationRow,
   CardArrivalRow,
+  CardAttemptRow,
+  CardAttemptTotal,
   CardInvitationValues,
   CardRow,
+  CardAttemptReason,
   InvitationRow,
   InvitedCoven,
   ReceivedInvitationCoven,
@@ -421,6 +425,69 @@ export function findCardCount(
   return findPageCountInScope(invitations, cardsOf(batchId), CARD_ORDER, start);
 }
 
+/** A card's attempts, latest first: the key is ascending, so the instant is negated, as the other lists' is. */
+const CARD_ATTEMPT_ORDER: readonly SortPart[] = [
+  {
+    expression: sql`-extract(epoch from ${cardInvitationAttempts.lastAttemptedAt})`,
+    type: 'numeric',
+  },
+];
+
+function attemptsOn(invitationId: string): SQL {
+  return eq(cardInvitationAttempts.invitationId, invitationId);
+}
+
+/** One page of the refused opens of one card, latest first: a row per account and reason. A site admin's read. */
+export function findCardAttemptPage(
+  _admin: SiteAdmin,
+  invitationId: string,
+  page: PageRequest,
+): Promise<PageEntry<CardAttemptRow>[]> {
+  return findPageInScope(
+    cardInvitationAttempts,
+    attemptsOn(invitationId),
+    CARD_ATTEMPT_ORDER,
+    page,
+  ) as Promise<PageEntry<CardAttemptRow>[]>;
+}
+
+/** How many rows `findCardAttemptPage` pages for the card, and how many come before `start`, a page's first row. */
+export function findCardAttemptCount(
+  _admin: SiteAdmin,
+  invitationId: string,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  return findPageCountInScope(
+    cardInvitationAttempts,
+    attemptsOn(invitationId),
+    CARD_ATTEMPT_ORDER,
+    start,
+  );
+}
+
+/** The refused opens of each of these cards, counted: the sum of `attempts`, with no entry for a card never refused. A site admin's read. */
+export function findCardAttemptTotals(
+  _admin: SiteAdmin,
+  invitationIds: readonly string[],
+): Promise<CardAttemptTotal[]> {
+  if (invitationIds.length === 0) return Promise.resolve([]);
+  return selectFrom(
+    cardInvitationAttempts,
+    and(
+      notSoftDeleted(cardInvitationAttempts),
+      inArray(cardInvitationAttempts.invitationId, [...invitationIds]),
+    ),
+    {
+      aggregate: {
+        invitationId: sql<string>`${cardInvitationAttempts.invitationId}`,
+        total: sql<number>`sum(${cardInvitationAttempts.attempts})::int`,
+      },
+      over: {},
+      groupBy: [cardInvitationAttempts.invitationId],
+    },
+  );
+}
+
 /**
  * The invitation's named writes, beside its finders: the table is marked `namedWrites`, so these are its only
  * writes. Each decides the tier from the proof it is handed, never from `values`.
@@ -436,6 +503,7 @@ export function invitationWrites({
   | 'insertInvitationCards'
   | 'revokeInvitationCard'
   | 'revokeInvitationCardBatch'
+  | 'recordCardAttempt'
   | 'acceptInvitation'
   | 'acceptReceivedInvitation'
   | 'declineReceivedInvitation'
@@ -502,6 +570,32 @@ export function invitationWrites({
         { revokedAt: sql`now()` },
         pendingInvitation(cardKind(), eq(invitations.batchId, batchId)),
       ),
+    // One row per card, account and reason: a repeat open adds to the count and moves the latest time, on the live
+    // row's partial unique index. The account is the session's, never an argument.
+    recordCardAttempt: (invitationId: string, reason: CardAttemptReason) =>
+      tx
+        .insert(cardInvitationAttempts)
+        .values(
+          applyAudit(
+            'insert',
+            { invitationId, userId: session.userId, reason, attempts: 1 },
+            session,
+          ) as never,
+        )
+        .onConflictDoUpdate({
+          target: [
+            cardInvitationAttempts.invitationId,
+            cardInvitationAttempts.userId,
+            cardInvitationAttempts.reason,
+          ],
+          targetWhere: isNull(cardInvitationAttempts.deletedAt),
+          set: {
+            attempts: sql`${cardInvitationAttempts.attempts} + 1`,
+            lastAttemptedAt: sql`now()`,
+            ...applyAudit('update', {}, session),
+          },
+        })
+        .returning() as never,
     // The match in the statement, not only in the accept service: the service checks first to say why, and this is
     // what holds if it forgot. An address invitation needs the invited address, verified; a card needs a verified
     // account and no address.
