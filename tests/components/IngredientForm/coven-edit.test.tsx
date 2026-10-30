@@ -108,6 +108,19 @@ describe("IngredientForm editing a coven's own entry", () => {
 
   // Delete sits at the dialog's foot as the compendium's does,
   // and deletes from this coven alone.
+  it('draws Delete Ingredient as the bin icon with no visible text, and it still opens the question', () => {
+    renderEdit();
+
+    const bin = screen.getByRole('button', { name: 'Delete Ingredient' });
+    expect(bin.querySelector('svg')).not.toBeNull();
+    expect(bin.className).toContain('icon-tip__remove');
+    expect(bin.className).not.toContain('btn');
+    // Its words are for assistive technology alone.
+    expect(bin.querySelector('.visually-hidden')).not.toBeNull();
+    press('Delete Ingredient');
+    expect(button('Keep It')).toBeInTheDocument();
+  });
+
   it('deletes the entry from the coven once confirmed, naming it, and says why when refused', async () => {
     const onDeleted = vi.fn();
     renderEdit({ onDeleted });
