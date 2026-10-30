@@ -92,7 +92,7 @@ the note says the same; the Toxic badge stays, because the note never says Toxic
 
 **The One-Off badge** (`OneOffBadge`, `one-off-badge.tsx`) is a button named One-Off in an
 `IconTip` whose description is "Used in this spell only; not kept in your cupboard.", reached by
-hover, focus or tap. It takes the muted tint (`badge--retired`), and the recipe page draws the
+hover, focus or tap. It takes the muted tint (`badge--muted`), and the recipe page draws the
 same badge in its marks.
 
 **The Quick Look eye** (`QuickLookButton size="small"`) sits in `look`, after the badges and

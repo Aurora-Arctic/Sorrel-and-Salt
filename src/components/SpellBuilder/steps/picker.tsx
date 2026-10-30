@@ -131,7 +131,7 @@ function pickRows(
             label: `${name} (${formLabel(form)})`,
             // Information only: the row stays pickable, since a form may be laid again.
             badge: inJar.has(variant.id) ? (
-              <span className="badge badge--retired spell-steps__in-jar">In Jar</span>
+              <span className="badge badge--muted spell-steps__in-jar">In Jar</span>
             ) : undefined,
             // The form's categories, else the ingredient's, as small print on that line.
             // The formal name in italics, then the chips, with a dot between the two only.

@@ -292,6 +292,8 @@ and needs no new contrast check. It is its own palette so that the entry page
 does not name a retired entry after stock, and so that the section's design
 review can give it a look of its own.
 
+**Muted** marks a plain fact beside a name that is no warning: a one-off ingredient in a spell's steps, and a picker row whose form is already in the jar. It takes the same treatment and inks as Retired and Low, so it needs no new contrast check, and is its own palette so that neither use borrows a name about the compendium.
+
 Each palette is one ink per theme plus the **treatment** it is drawn in, and the
 treatment decides which parts it emits:
 

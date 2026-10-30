@@ -238,6 +238,13 @@ $badge-palettes: (
       dark: $chalk-muted,
       light: $ink-muted,
     ),
+  // A plain fact beside a name, such as a one-off ingredient or one already in the jar: the same
+  // muted tint and checked inks, under a name that says nothing about the compendium.
+  'muted': (
+      treatment: tinted,
+      dark: $chalk-muted,
+      light: $ink-muted,
+    ),
   // The accent's own inks: $text-on-color on them is 7.95:1 dark, 4.68:1 light.
   'last-used': (
       treatment: solid,
