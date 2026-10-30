@@ -53,20 +53,11 @@
     max-width: calc(#{$measure} + #{space(8)} + #{$side-column});
   }
 
-  // Under a tablet's width the jar stands over Workings, as the menu lists it: the body's boxes
-  // and Workings become the stack's items, and Workings goes last.
-  @media (max-width: $shell-tablet-width) {
-    .spell-recipe__main {
-      display: contents;
-    }
-
-    .spell-recipe__aside {
-      order: 1;
-    }
-
-    .spell-workings {
-      order: 2;
-    }
+  // The main box holds the rest, the side column and Workings, in that order, and dissolves at
+  // every width: below a tablet the three are the columns' stack, the jar standing over Workings
+  // as the menu lists it, and from a tablet up they are the columns' grid items.
+  .spell-recipe__main {
+    display: contents;
   }
 
   @media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
@@ -75,14 +66,10 @@
     }
 
     // The side column starts level with the facts strip, the lead standing above the columns: the
-    // rest and Workings become grid items in the text column. Rows are pinned so Workings closes
-    // the text column under the rest and the side column spans both (the last row takes the slack,
-    // so a tall column never pushes Workings down). The rows carry no gap: Workings' own margin
-    // spaces it from the rest.
-    .spell-recipe__main {
-      display: contents;
-    }
-
+    // rest and Workings take the text column. Rows are pinned so Workings closes the text column
+    // under the rest and the side column spans both (the last row takes the slack, so a tall column
+    // never pushes Workings down), whatever their order in the source. The rows carry no gap:
+    // Workings' own margin spaces it from the rest.
     .spell-recipe__columns {
       grid-template-rows: auto 1fr;
       row-gap: 0;

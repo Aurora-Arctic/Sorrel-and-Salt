@@ -369,6 +369,19 @@ describe('SpellRecipe', () => {
       expect(follows(nav, screen.getByRole('list', { name: 'Steps' }))).toBe(true);
     });
 
+    it('puts the side column before Workings in the source, as the menu lists them', () => {
+      render(<SpellRecipe {...props({ steps: [instruction('s1', 'Stir.')], aside, workings })} />);
+      const side = screen.getByRole('complementary', { name: 'The Cupboard' });
+      const section = screen.getByRole('region', { name: 'Workings' });
+      // The menu names them in this order, so the keyboard and a screen reader meet them so too.
+      expect(
+        linksOf()
+          .map((link) => link.textContent)
+          .slice(-2),
+      ).toEqual(['In the Cupboard', 'Workings']);
+      expect(side.compareDocumentPosition(section) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
     it('leaves out an entry whose section is not drawn', () => {
       render(<SpellRecipe {...props({ steps: [] })} />);
       expect(screen.queryByRole('navigation', { name: 'On This Page' })).toBeNull();

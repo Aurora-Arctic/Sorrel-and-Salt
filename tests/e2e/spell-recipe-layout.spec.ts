@@ -548,3 +548,52 @@ test('on a phone the keyboard reaches the jump menu after the intent and categor
   });
   expect(before).toEqual({ inMenu: false, precedes: true });
 });
+
+test('on a phone the keyboard reaches The Cupboard after the recipe and before Workings, as they stand', async ({
+  page,
+}) => {
+  const coven = await seedCoven(page, 'Fixture Coven Side Focus', 'spell-side-focus.test', {
+    A: 'owner',
+  });
+  const { A } = coven.users;
+  const spellId = await withSql(async (sql) => {
+    const held = await compendiumVariant(sql, "Cat's Claw", 'Bark', 'Uncaria tomentosa');
+    const id = await insertSpell(sql, coven.id, 'Fixture Side Focus', 'workspace', A, 'complete');
+    await sql`update spells set note = 'A closing note' where id = ${id}`;
+    await insertStep(sql, id, held, { quantity: 2, unit: 'g', position: 0 }, A);
+    await insertStock(sql, coven.id, held, { quantity: 10, unit: 'g', threshold: 0 }, A);
+    await insertWorking(sql, id, A, { workedOn: '2026-03-04' });
+    return id;
+  });
+  await signInAgainAs(page, A);
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+
+  const side = page.getByRole('complementary', { name: 'The Cupboard' });
+  const workings = page.getByRole('region', { name: 'Workings' });
+  // The side column is drawn above Workings, so a keyboard that met Workings first would read out
+  // of the order the screen shows.
+  const sideTop = await side.evaluate((el) => el.getBoundingClientRect().top);
+  expect(await workings.evaluate((el) => el.getBoundingClientRect().top)).toBeGreaterThan(sideTop);
+
+  // Where each Tab lands: in the side column, in Workings, or elsewhere.
+  const where = () =>
+    page.evaluate(() => {
+      const active = document.activeElement;
+      if (document.querySelector('aside[aria-label="The Cupboard"]')?.contains(active))
+        return 'side';
+      if (document.getElementById('spell-workings')?.contains(active)) return 'workings';
+      return 'elsewhere';
+    });
+
+  // The note closes the recipe and holds nothing focusable; a click on it starts the sequence there.
+  await page.getByText('A closing note').click();
+  const seen: string[] = [];
+  for (let i = 0; i < 30 && !seen.includes('workings'); i++) {
+    await page.keyboard.press('Tab');
+    seen.push(await where());
+  }
+  expect(seen[0]).toBe('side');
+  expect(seen).toContain('workings');
+  expect(seen.slice(0, seen.indexOf('workings')).every((at) => at === 'side')).toBe(true);
+});

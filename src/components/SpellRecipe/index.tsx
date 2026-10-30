@@ -103,14 +103,15 @@ const SpellRecipe = ({
             moonPhase={moonPhase}
             dayOfWeek={dayOfWeek}
           />
+          {/* Named: an aside inside an article is a landmark only with a name. Between the body and
+              Workings in the source, as it stands below a tablet and as the menu lists it. */}
+          {aside && (
+            <aside id={JAR_ID} className="spell-recipe__aside" aria-label="The Cupboard">
+              {aside}
+            </aside>
+          )}
           {workings}
         </div>
-        {/* Named: an aside inside an article is a landmark only with a name. */}
-        {aside && (
-          <aside id={JAR_ID} className="spell-recipe__aside" aria-label="The Cupboard">
-            {aside}
-          </aside>
-        )}
       </div>
     </article>
   );
