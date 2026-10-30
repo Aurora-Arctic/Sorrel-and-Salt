@@ -93,7 +93,7 @@ variables, so a search and its categories live in the address and combine.
     picks nothing. Addresses: `moonPhase` and `dayOfWeek`, repeated.
   - **Coven Member** is the spell's maker (`created_by`), address `maker=<user id>`, an id
     that is not a uuid is dropped. Makers are named in one `displayNamesOf` batch, a former
-    member included. A maker the viewer cannot name (a seed author, say) is still offered, reading Unknown Member.
+    member included. A maker the viewer cannot name (a seed author, say) is still offered, reading A former member.
   - **Visibility** is a `ChoiceChip` ([`FacetPanel/choice-chip.tsx`](../../src/components/FacetPanel/choice-chip.tsx)),
     the control the compendium filter draws Toxic with and placed the same way, in a
     `facet-panel__quick` wrapper after Coven Member on the panel's last line (the owner's call of
