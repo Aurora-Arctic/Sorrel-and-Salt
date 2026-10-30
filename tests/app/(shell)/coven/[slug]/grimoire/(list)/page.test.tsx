@@ -307,6 +307,26 @@ describe('the Grimoire tabs', () => {
     expect(edited('Testwort Charm')).toHaveAccessibleDescription('Last edited on 1 September 2026');
   });
 
+  it('offers a maker the viewer cannot name as Unknown Member, so the facet is never empty of them', async () => {
+    const STRANGER = '00000000-0000-4000-8000-0000000000bb';
+    countGrimoireFacets.mockResolvedValue({
+      moonPhases: [],
+      daysOfWeek: [],
+      visibilities: [],
+      makers: [
+        { value: MAKER, count: 3 },
+        { value: STRANGER, count: 52 },
+      ],
+    });
+    const { readGrimoireFacetCounts } =
+      await import('@/app/(shell)/coven/[slug]/grimoire/(list)/reads');
+    const { makers } = await readGrimoireFacetCounts(COVEN.id, '{}', 'complete');
+    expect(makers).toEqual([
+      { value: MAKER, label: 'Fixture Maker', count: 3 },
+      { value: STRANGER, label: 'Unknown Member', count: 52 },
+    ]);
+  });
+
   it('throws a refused category batch rather than drawing a card without its categories', async () => {
     assignedCategoriesOf.mockResolvedValue([new Error('Forbidden'), []]);
     await expect(renderTab(SpellsPage)).rejects.toThrow('Forbidden');
