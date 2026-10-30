@@ -6,11 +6,13 @@ import AdminArrivals from '@/components/AdminCards/arrivals';
 import type {
   CreateInvitationCardsMutation,
   CreateInvitationCardsMutationVariables,
+  InvitationCardAttemptsQuery,
+  InvitationCardAttemptsQueryVariables,
   RevokeInvitationCardBatchMutation,
   RevokeInvitationCardBatchMutationVariables,
 } from '@/gql/graphql';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
-import { mockGraphQLMutation } from '../../support/msw/graphql';
+import { mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
 
 // The Cards and Arrivals tabs: render-only, so the page owns the read and this owns what an admin sees of it
 // and sends (claude-docs/components/admin-cards.md).
@@ -31,6 +33,7 @@ const CARDS = [
     state: 'pending' as const,
     expiresAt: new Date('2026-12-01T00:00:00Z'),
     accountName: null,
+    attemptCount: 0,
   },
   {
     id: 'c2aaaaaa-0000-4000-8000-000000000002',
@@ -38,6 +41,7 @@ const CARDS = [
     state: 'accepted' as const,
     expiresAt: new Date('2026-12-01T00:00:00Z'),
     accountName: 'Wort Tester',
+    attemptCount: 3,
   },
   {
     id: 'c3aaaaaa-0000-4000-8000-000000000003',
@@ -45,6 +49,7 @@ const CARDS = [
     state: 'expired' as const,
     expiresAt: new Date('2026-01-01T00:00:00Z'),
     accountName: null,
+    attemptCount: 0,
   },
   {
     id: 'c4aaaaaa-0000-4000-8000-000000000004',
@@ -52,6 +57,7 @@ const CARDS = [
     state: 'revoked' as const,
     expiresAt: new Date('2026-12-01T00:00:00Z'),
     accountName: null,
+    attemptCount: 0,
   },
 ];
 
@@ -94,6 +100,50 @@ describe('AdminCards', () => {
     for (const row of rows.slice(1)) {
       expect(within(row).queryByRole('button', { name: /^Revoke card/ })).toBeNull();
     }
+  });
+
+  it('shows how many refused opens each card has, and a way to the list only where there are some', () => {
+    render(<AdminCards cards={CARDS} />);
+
+    const rows = screen.getAllByRole('row').slice(1);
+    expect(within(rows[1]).getByText('3')).toBeInTheDocument();
+    expect(within(rows[1]).getByRole('button', { name: /^View Attempts/ })).toBeInTheDocument();
+    expect(within(rows[0]).queryByRole('button', { name: /^View Attempts/ })).toBeNull();
+  });
+
+  it('lists the account, the reason, the count and the latest time of one card refused opens', async () => {
+    mockGraphQLQuery<InvitationCardAttemptsQuery, InvitationCardAttemptsQueryVariables>(
+      'InvitationCardAttempts',
+      ({ invitationId }) => {
+        expect(invitationId).toBe(CARDS[1].id);
+        return {
+          invitationCardAttempts: {
+            edges: [
+              {
+                node: {
+                  id: 'a1',
+                  reason: 'revoked',
+                  attempts: 2,
+                  lastAttemptedAt: '2026-10-29T09:30:00.000Z',
+                  account: { id: 'u1', name: 'Other Wort' },
+                },
+              },
+            ],
+            pageInfo: { hasNextPage: false, endCursor: null },
+          },
+        };
+      },
+    );
+    render(<AdminCards cards={CARDS} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /^View Attempts/ }));
+
+    const list = await screen.findByRole('dialog', { name: 'Refused Opens' });
+    expect(await within(list).findByText('Other Wort')).toBeInTheDocument();
+    const row = within(list).getByText('Other Wort').closest('tr') as HTMLElement;
+    expect(within(row).getByText('Revoked')).toBeInTheDocument();
+    expect(within(row).getByText('2')).toBeInTheDocument();
+    expect(row.querySelector('time')).toHaveAttribute('datetime', '2026-10-29T09:30:00.000Z');
   });
 
   it('opens the mint form by the address, from a link', () => {

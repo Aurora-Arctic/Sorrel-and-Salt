@@ -13,6 +13,21 @@ export interface CardEntry {
   expiresAt: Date;
   /** The account that accepted it; null while unaccepted. */
   accountName: string | null;
+  /** How many refused opens of the card are on record, over every account and reason. */
+  attemptCount: number;
+}
+
+/** Why an open of a card link was refused and recorded. */
+export type CardAttemptReason = 'revoked' | 'expired' | 'accepted';
+
+/** One account's refused opens of one card for one reason. */
+export interface CardAttemptEntry {
+  id: string;
+  reason: CardAttemptReason;
+  attempts: number;
+  lastAttemptedAt: Date;
+  /** Null once the account is gone. */
+  accountName: string | null;
 }
 
 /** The page of the list the address shows, by the cursor it turned on; none for the first. */

@@ -10,6 +10,7 @@ import {
   cardState,
   countInvitationCards,
   listInvitationCards,
+  totalCardAttempts,
   usersForAdmin,
 } from '@/modules/identity';
 import { readListPlace } from '../../list-page';
@@ -36,6 +37,14 @@ const readCards = cache(
         user && !(user instanceof Error) ? [[ids[index] as string, user.name] as const] : [],
       ),
     );
+    const attempts = new Map(
+      (
+        await totalCardAttempts(
+          session,
+          page.edges.map(({ node }) => node.id),
+        )
+      ).map(({ invitationId, total }) => [invitationId, total] as const),
+    );
     // What the list shows of each: no token or hash leaves the page.
     const cards = page.edges.map(({ node }) => ({
       id: node.id,
@@ -43,6 +52,7 @@ const readCards = cache(
       state: cardState(node),
       expiresAt: node.expiresAt,
       accountName: node.acceptedBy ? (accounts.get(node.acceptedBy) ?? null) : null,
+      attemptCount: attempts.get(node.id) ?? 0,
     }));
     return { cards, pageInfo: page.pageInfo, position: page.position };
   },
