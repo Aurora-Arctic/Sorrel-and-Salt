@@ -85,6 +85,20 @@ describe('a new ingredient', () => {
     expect(updated[0].input.name).toBe('Testworts');
   });
 
+  it('is created once when Save is pressed, and the autosave then has nothing to create', async () => {
+    const created = acceptCreate();
+    const { onSaved } = renderForm();
+
+    type('Name', 'Testwort');
+    press('Save Ingredient');
+    // The button goes busy and loses focus to nothing, which the autosave reads as leaving the form.
+    fireEvent.focusOut(screen.getByRole('textbox', { name: 'Name' }), { relatedTarget: null });
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    await wait(4000);
+
+    expect(created).toHaveLength(1);
+  });
+
   it('is not created while it has no name', async () => {
     const created = acceptCreate();
     renderForm();
