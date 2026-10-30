@@ -47,6 +47,8 @@ export interface GrimoireListProps {
   cursor?: SearchCursor;
   /** How many spells the filter found on this tab, every page. */
   total: number;
+  /** The viewer may write a spell: an empty Spells tab then names no roles. */
+  canCreate: boolean;
   previousHref?: Route;
   nextHref?: Route;
 }
@@ -56,4 +58,7 @@ export interface GrimoireFilterProps extends Pick<
   'path' | 'workspaceId' | 'status' | 'filter' | 'categories' | 'facets' | 'total' | 'cursor'
 > {}
 
-export interface EmptyGrimoireProps extends Pick<GrimoireListProps, 'status' | 'filter'> {}
+export interface EmptyGrimoireProps extends Pick<
+  GrimoireListProps,
+  'status' | 'filter' | 'canCreate'
+> {}

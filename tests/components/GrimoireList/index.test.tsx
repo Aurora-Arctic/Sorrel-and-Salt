@@ -39,6 +39,7 @@ const props = (over: Partial<GrimoireListProps> = {}): GrimoireListProps => ({
   workspaceId: 'w1',
   covenSlug: 'fixture-coven',
   status: 'complete',
+  canCreate: true,
   spells: [
     {
       id: 's1',
@@ -164,6 +165,19 @@ describe('GrimoireList', () => {
     expect(screen.getByRole('status', { name: 'No Spells' })).toBeInTheDocument();
     expect(screen.queryByRole('status', { name: 'No Matches' })).toBeNull();
     expect(screen.queryByRole('list', { name: 'Spells' })).toBeNull();
+  });
+
+  // A viewer, who cannot write a spell, is told which roles can, as an empty cupboard tells them. The
+  // roles named are the state's data: nothing else tells a viewer who to ask, and a member is not told.
+  it('names, to a viewer only, the roles that can write a spell on an empty Spells tab', () => {
+    const empty = { spells: [], total: 0, position: undefined };
+    const { unmount } = render(<List {...props({ ...empty, canCreate: false })} />);
+    const state = () => screen.getByRole('status', { name: 'No Spells' });
+    expect(state()).toHaveTextContent(/\bmember\b/i);
+    expect(state()).toHaveTextContent(/\bowner\b/i);
+    unmount();
+    render(<List {...props(empty)} />);
+    expect(state()).not.toHaveTextContent(/\bmember\b|\bowner\b/i);
   });
 
   it('names the drafts tab in its empty region', () => {

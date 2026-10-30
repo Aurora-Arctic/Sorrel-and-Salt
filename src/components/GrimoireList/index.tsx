@@ -25,6 +25,7 @@ const GrimoireList = ({
   position,
   cursor,
   total,
+  canCreate,
   previousHref,
   nextHref,
 }: GrimoireListProps): ReactElement => (
@@ -48,7 +49,7 @@ const GrimoireList = ({
       position={position}
     >
       {spells.length === 0 ? (
-        <EmptyGrimoire status={status} filter={filter} />
+        <EmptyGrimoire status={status} filter={filter} canCreate={canCreate} />
       ) : (
         <>
           <SpellCardFilters />

@@ -62,6 +62,7 @@ address is the only way to see it again.
 | `position`                 | The page number and the page count, for the pager                                                                 |
 | `cursor`                   | The cursor of the page shown, which a picked title's Quick Look opens over and closes back to                     |
 | `total`                    | How many spells the filter found on this tab, every page                                                          |
+| `canCreate`                | The viewer may write a spell; when false, an empty Spells tab names the roles that can                            |
 | `previousHref`, `nextHref` | The pager's links, which keep the tab's path and the filter                                                       |
 
 `GRIMOIRE_PARAMS` (`params.ts`) is the grimoire's parameter set in `defineSearchParams`:
@@ -124,7 +125,10 @@ spells them, and `VISIBILITY_LABELS`, what each is called on screen (Private and
 - **Two empty states**, each a status region named so a test or a screen reader can tell them
   apart, as the coven cards' are ([`coven-cards.md`](coven-cards.md)):
   - **No Spells**, "There are no complete spells here yet.", or **No Drafts**, "There are
-    no drafts here yet.", when the tab holds nothing and no filter is in force;
+    no drafts here yet.", when the tab holds nothing and no filter is in force. On the Spells
+    tab a viewer, who may not write a spell (`canCreate` false), is also told "A member or
+    owner of this coven can write them.", as an empty cupboard tells a viewer who can add;
+    the Drafts tab says nothing more;
   - **No Matches** when a filter is in force and matched nothing. The search sentence above
     already names the filter, so this says only what to do.
 
@@ -170,7 +174,7 @@ look is [spell-card.md](spell-card.md), "Compact".
 ## Styling
 
 Tokens only, before the section's design review. `index.scss` makes the filter row
-(`.grimoire-list__row`) the positioned ancestor the facet panel opens under, and sets the two empty regions as the coven's empty cupboard is (`CovenCards/index.scss`): the empty tab's sentence centred and larger than body copy, the no-match hint in muted body copy. The cards are `SpellCard`'s own.
+(`.grimoire-list__row`) the positioned ancestor the facet panel opens under, and sets the two empty regions as the coven's empty cupboard is (`CovenCards/index.scss`): the empty tab's sentences centred, stacked a step apart and larger than body copy, the no-match hint in muted body copy. The cards are `SpellCard`'s own.
 
 One thing in the list exists for the cards' smouldering edge ([spell-card.md](spell-card.md), "The smouldering edge"): **one `SpellCardFilters` before the list.** It holds the SVG filter the burn front uses, by id. An id must be unique on the page, so the list renders it once rather than each card. The list needs no stacking context of its own: the card's layers stack by the order of the markup, with no `z-index`.
 

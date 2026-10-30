@@ -145,6 +145,7 @@ const Tab = ({
         workspaceId="fixture-coven"
         covenSlug="fixture-coven"
         status={drafts ? 'draft' : 'complete'}
+        canCreate
         spells={spells}
         filter={filter}
         categories={CATEGORIES}

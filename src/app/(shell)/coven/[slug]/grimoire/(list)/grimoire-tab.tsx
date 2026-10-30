@@ -186,6 +186,7 @@ export async function grimoireTab({
         position={page.position}
         cursor={{ after, before }}
         total={page.totalCount}
+        canCreate={canCreate}
         {...pagerHrefs(page.pageInfo, (cursor) =>
           GRIMOIRE_PARAMS.href(path, filter, { ...cursor }),
         )}
