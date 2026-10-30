@@ -4,6 +4,7 @@ import { cache } from 'react';
 import { readCategories } from '@/app/compendium-reads';
 import type { GrimoireSpell } from '@/components/GrimoireList/types';
 import type { CardCategory } from '@/components/IngredientCard/types';
+import type { WorkingStep } from '@/components/RecordWorking/types';
 import { Forbidden, NotFound } from '@/lib/errors';
 import { readNumberedPage } from '@/lib/numbered-page';
 import { CARD_PAGE_SIZE } from '@/lib/pagination';
@@ -22,7 +23,7 @@ import type { SpellStatus } from '@/modules/grimoire';
 import { memberRoster } from '@/modules/coven';
 import { displayNamesOf } from '@/modules/identity';
 import { readRecipeOf } from '../recipe-read';
-import { recipeStepsOf } from '../[id]/recipe-steps';
+import { workingStepsOf } from '../[id]/recipe-steps';
 import { readStepSuppliesOf } from '../[id]/recipe-supply';
 import type { SpellDialogSpell } from '@/components/SpellBuilder/types';
 
@@ -214,7 +215,7 @@ export async function readRecordingOf(
   canRecord: boolean,
 ): Promise<{
   members: { userId: string; name: string }[];
-  stepsById: Map<string, { id: string; name: string }[]>;
+  stepsById: Map<string, WorkingStep[]>;
 }> {
   const complete = spells.filter(({ status }) => status === 'complete');
   if (!canRecord || complete.length === 0) return { members: [], stepsById: new Map() };
@@ -233,12 +234,10 @@ export async function readRecordingOf(
   const stepsById = new Map(
     complete.map(({ id }, i) => {
       const view = views[i];
-      const steps = view instanceof Error || !view ? [] : recipeStepsOf(view, '/' as Route);
+      // No stock door: a card's jars are drawings, Edit Stock is the recipe page's.
       return [
         id,
-        steps.flatMap((step) =>
-          step.kind === 'ingredient' ? [{ id: step.id, name: step.name }] : [],
-        ),
+        view instanceof Error || !view ? [] : workingStepsOf(view, '/' as Route),
       ] as const;
     }),
   );

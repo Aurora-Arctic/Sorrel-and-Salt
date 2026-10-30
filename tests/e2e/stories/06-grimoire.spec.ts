@@ -742,7 +742,7 @@ test(
     await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
     await page.getByRole('button', { name: 'Record a Working' }).click();
     const dialog = page.getByRole('dialog', { name: 'Record a Working' });
-    await dialog.getByRole('button', { name: 'Save & Complete' }).click();
+    await dialog.getByRole('button', { name: 'Complete' }).click();
     // The preview says what will be taken before anything is.
     await expect(dialog.getByRole('list', { name: 'Deductions' })).toContainText('2 g');
     await assertNoAccessibilityViolations(page);
@@ -839,7 +839,7 @@ test(
     await first.getByRole('button', { name: /^Edit Working / }).click();
     const edit = page.getByRole('dialog', { name: /^Edit (a )?Working$/ });
     await edit.getByRole('textbox', { name: 'Note' }).fill('First brewing, revised');
-    await edit.getByRole('button', { name: 'Save as Draft' }).click();
+    await edit.getByRole('button', { name: 'Save Working' }).click();
     await expect(workings.getByText('First brewing, revised')).toBeVisible();
     // Deleting B's own working takes it out of the list and the count.
     await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);

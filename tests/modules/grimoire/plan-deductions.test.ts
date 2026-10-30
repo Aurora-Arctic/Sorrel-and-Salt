@@ -34,6 +34,7 @@ const jar = (over: Partial<PlanJar> = {}): PlanJar => ({
   variantId: VARIANT,
   quantityOnHand: '100',
   unit: 'g',
+  lowStockThreshold: null,
   ...over,
 });
 
@@ -49,10 +50,25 @@ describe('planDeductions', () => {
         stepId: 's1',
         inventoryItemId: 'jar1',
         amount: 2000,
+        before: 5000,
+        lowStockThreshold: null,
         unit: 'g',
         shortfall: 0,
       },
     ]);
+  });
+
+  it('says what the jar held before each take and carries its Low mark', () => {
+    // Why the second step's figure differs: both steps lay one form, so the first leaves less.
+    const plan = planDeductions(
+      [
+        step({ id: 's1', position: 1, quantity: '10' }),
+        step({ id: 's2', position: 2, quantity: '30' }),
+      ],
+      [jar({ quantityOnHand: '30', lowStockThreshold: '12.5' })],
+    );
+    expect(plan[0]).toMatchObject({ before: 30, lowStockThreshold: 12.5 });
+    expect(plan[1]).toMatchObject({ before: 20, lowStockThreshold: 12.5, shortfall: 10 });
   });
 
   it('takes what the jar holds and records the rest as the shortfall', () => {

@@ -1,7 +1,19 @@
-/** An ingredient step of the spell, named so a preview row can say which step it is about. */
+import type { StockDialogProps } from '../StockDialog/types';
+
+/** An ingredient step of the spell, named so a preview line can say which step it is about and draw its jar. */
 export interface WorkingStep {
   id: string;
   name: string;
+  /** The step's place among all the spell's steps, instructions included; the list's own order when left out. */
+  number?: number;
+  /** The form laid, as stored: it picks the jar's shape. */
+  form?: string | null;
+  /** What picks the jar's shape with the form: the ingredient's id, or a one-off's name. */
+  seed?: string;
+  /** A step that names its ingredient by typing it, so no jar is kept for it. */
+  oneOff?: boolean;
+  /** Present only for a role that may edit stock, and an ingredient not deleted: the jar opens this dialog. */
+  stock?: StockDialogProps | null;
 }
 
 export interface WorkingCompletionProps {

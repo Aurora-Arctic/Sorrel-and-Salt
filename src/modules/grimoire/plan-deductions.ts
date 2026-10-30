@@ -25,6 +25,8 @@ export interface PlanJar {
   variantId: string;
   quantityOnHand: string | number | null;
   unit: Unit | null;
+  /** The Low mark, `numeric` text from the column, or a number. */
+  lowStockThreshold: string | number | null;
 }
 
 /**
@@ -42,6 +44,10 @@ export type StepPlan =
       amount: number;
       unit: Unit;
       shortfall: number;
+      /** What the jar held before this take, in the jar's unit. */
+      before: number;
+      /** The jar's Low mark, in the jar's unit. */
+      lowStockThreshold: number | null;
     }
   | { kind: 'skip'; stepId: string; reason: NotDeductedReason }
   /** An instruction-only step: it has nothing to take, so it is not a warning. */
@@ -92,6 +98,8 @@ export function planDeductions(steps: readonly PlanStep[], jars: readonly PlanJa
         amount: taken / SCALE,
         unit: jar.unit,
         shortfall: (need - taken) / SCALE,
+        before: held / SCALE,
+        lowStockThreshold: jar.lowStockThreshold == null ? null : Number(jar.lowStockThreshold),
       };
     });
 }

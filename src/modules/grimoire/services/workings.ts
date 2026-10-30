@@ -341,6 +341,8 @@ export async function previewWorkingDeductions(
             quantity: entry.amount,
             unit: entry.unit,
             shortfall: entry.shortfall,
+            before: entry.before,
+            lowStockThreshold: entry.lowStockThreshold,
           },
         ]
       : [],

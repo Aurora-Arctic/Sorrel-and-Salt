@@ -1083,7 +1083,12 @@ type PageInfo {
 
 """What completing a working would take from one jar for one step."""
 type PlannedDeduction {
+  """What the jar held before this take, in the jar unit."""
+  before: Float!
   inventoryItemId: ID!
+
+  """The jar Low mark, in the jar unit."""
+  lowStockThreshold: Float
   quantity: Float!
   shortfall: Float!
   stepId: ID!
