@@ -33,6 +33,11 @@
 .step-row__one-off {
   font-family: inherit;
   cursor: default;
+
+  // A badge is not a `.btn`, so it takes the shared ring here rather than the browser's own.
+  &:focus-visible {
+    @include focus-ring;
+  }
 }
 
 .step-row__marks {

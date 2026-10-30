@@ -121,7 +121,8 @@ verdict raised above it. The builder's own inventory carries no doors.
 
 A line's verdict is `VerdictMark` (`SpellBuilder/verdict-mark.tsx`): Out, Not Enough, Units Differ or
 Low as a symbol alone, in a button named by the verdict whose tip says why. One-Off and No Jar
-draw no mark; the line's words say them.
+draw no mark; the line's words say them. The button (`.spell-inventory__mark`) is bare, so it takes
+the shared `focus-ring` itself.
 
 ## Quick Look
 

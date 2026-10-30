@@ -454,6 +454,11 @@
   // A button does not inherit the font; its own size (13.33px) would shrink the 1em icon inside.
   font: inherit;
   cursor: default;
+
+  // A bare mark, not a `.btn`, so it takes the shared ring here rather than the browser's own.
+  &:focus-visible {
+    @include focus-ring;
+  }
 }
 
 .spell-inventory__icon {
