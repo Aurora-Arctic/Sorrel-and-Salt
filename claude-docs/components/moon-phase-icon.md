@@ -2,6 +2,8 @@
 
 The small moon drawn beside a moon phase's name in the spell builder (`src/components/MoonPhaseIcon/`).
 
+`moonPhaseIcon(phase)` (`for-phase.tsx`) returns the drawing for a phase typed as free text, matched to the builder's list ignoring case and surrounding spaces, and `null` for a phase not on it. The builder's Moon Phase field and the grimoire filter's Moon Phase facet both call it, so the list does not import from the builder.
+
 ## Lit parts
 
 Each phase's lit part sits on a disc of radius 8 centred on (12, 12), drawn for the northern hemisphere: a waxing moon is lit on its right and a waning one on its left, and the sides swap in the southern hemisphere. Each crescent and gibbous edge is the half-ellipse from the top of the disc (12, 4) to its foot (12, 20), 4.5 wide. New Moon is the shadowed disc. Dark Moon is the outline alone, with no shadow inside, so it reads apart from New Moon.

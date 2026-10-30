@@ -1,7 +1,7 @@
 'use client';
 
 import type { Route } from 'next';
-import { moonPhaseIcon } from '../SpellBuilder/moon-phase-icon';
+import { moonPhaseIcon } from '../MoonPhaseIcon/for-phase';
 import FacetCombobox from '../FacetCombobox';
 import CardDensitySwitch from '../CardDensitySwitch';
 import { type ReactElement, useMemo, useState } from 'react';

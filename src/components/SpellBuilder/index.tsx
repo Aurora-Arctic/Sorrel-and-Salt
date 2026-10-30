@@ -24,7 +24,7 @@ import {
   TextField,
   useFormHistory,
 } from '../Field';
-import { moonPhaseIcon } from './moon-phase-icon';
+import { moonPhaseIcon } from '../MoonPhaseIcon/for-phase';
 import { BinButton } from '../IconTip';
 import { ConfirmQuestion, useModalHeaderNote } from '../Modal';
 import { useDeleteSpell } from '../SpellRecipe/delete-spell';
