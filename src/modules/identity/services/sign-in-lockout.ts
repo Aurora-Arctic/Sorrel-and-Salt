@@ -26,20 +26,30 @@ export async function isPasswordSignInLocked(userId: string, now = new Date()): 
   return row?.lockedUntil != null && row.lockedUntil > now;
 }
 
+/** A lock a failure has just started. */
+export interface NewLock {
+  /** How long it lasts, in milliseconds. */
+  length: number;
+  /** Whether it opens a series: no earlier lock ended within the quiet period. Only the first of a series is mailed. */
+  firstOfSeries: boolean;
+}
+
 /**
  * Counts one wrong password, starting over after a quiet period, and starts a lock when the count reaches a multiple of
- * `FAILURES_PER_LOCK`. Returns the new lock's length in milliseconds, or null when this failure starts none.
+ * `FAILURES_PER_LOCK`. Returns the new lock, or null when this failure starts none.
  */
 export async function recordFailedPasswordSignIn(
   userId: string,
   now = new Date(),
-): Promise<number | null> {
-  const { count } = await recordSignInFailure(userId, now, new Date(now.getTime() - QUIET_PERIOD));
+): Promise<NewLock | null> {
+  const quietSince = new Date(now.getTime() - QUIET_PERIOD);
+  // The upsert leaves `lockedUntil`, so the row it returns still holds the previous lock.
+  const { count, lockedUntil } = await recordSignInFailure(userId, now, quietSince);
   if (count % FAILURES_PER_LOCK !== 0) return null;
   const nth = count / FAILURES_PER_LOCK;
   const length = LOCK_LENGTHS[Math.min(nth, LOCK_LENGTHS.length) - 1];
   await lockPasswordSignIn(userId, new Date(now.getTime() + length));
-  return length;
+  return { length, firstOfSeries: lockedUntil === null || lockedUntil <= quietSince };
 }
 
 /** Forgets every failure, on a successful password or passkey sign-in, or a completed reset. */

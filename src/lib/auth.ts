@@ -411,14 +411,15 @@ async function countChange(ctx: HookContext) {
 }
 
 /**
- * Counts one failure and, when it starts a lock, mails the account's owner. The mail carries a reset link made the way
+ * Counts one failure and, when it starts the first lock of a series, mails the account's owner; a later lock in the same
+ * series sends nothing, so guessing on cannot mail the owner every hour. The mail carries a reset link made the way
  * Better Auth makes its own, so the owner can choose a new password at once rather than wait out the lock. Like the
  * reset mail, it goes only to a verified address, and runs after the answer, so the answer shows nothing.
  */
 async function countFailure(ctx: HookContext, userId: string) {
-  const length = await recordFailedPasswordSignIn(userId);
-  if (length === null) return;
-  await ctx.context.runInBackgroundOrAwait(mailLockNotice(ctx, userId, length));
+  const lock = await recordFailedPasswordSignIn(userId);
+  if (!lock?.firstOfSeries) return;
+  await ctx.context.runInBackgroundOrAwait(mailLockNotice(ctx, userId, lock.length));
 }
 
 async function mailLockNotice(ctx: HookContext, userId: string, length: number) {
