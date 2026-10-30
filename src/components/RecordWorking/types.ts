@@ -69,6 +69,8 @@ export interface RecordWorkingDialogProps {
   steps: readonly WorkingStep[];
   /** Present: the dialog changes this working (`updateWorking`) rather than recording a new one. Only its recorder may. */
   working?: EditableWorking;
+  /** Draws Delete Working on an edit, for a viewer who may delete the working: `name` is the day it was worked, `remove` runs the write and rejects with the server's refusal. */
+  deleteWorking?: { name: string; remove: () => Promise<unknown> };
   onClose: () => void;
   /** Where the focus goes when it closes and the opener is gone. */
   returnTo?: (gone: Element | null) => HTMLElement | null | undefined;

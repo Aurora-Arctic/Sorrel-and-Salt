@@ -591,7 +591,9 @@ test(
     await signInAgainAs(page, B);
     await page.goto(`${listPath}?edit=${gone}`);
     const edit = page.getByRole('dialog', { name: 'Edit Spell, Builder Doomed Working' });
-    await edit.getByRole('button', { name: 'Delete Spell', exact: true }).click();
+    await edit
+      .getByRole('button', { name: 'Delete Spell Builder Doomed Working', exact: true })
+      .click();
     await expect(page.getByText('Delete Builder Doomed Working?')).toBeVisible();
     await assertNoAccessibilityViolations(page);
     await page.getByRole('button', { name: 'Delete', exact: true }).click();
@@ -856,6 +858,15 @@ test(
     await edit.getByRole('textbox', { name: 'Note' }).fill('First brewing, revised');
     await edit.getByRole('button', { name: 'Save Working' }).click();
     await expect(workings.getByText('First brewing, revised')).toBeVisible();
+    // The Edit dialog carries its own Delete Working, which asks first and then closes.
+    await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+    const waiting = workings.getByRole('listitem').filter({ hasText: 'Waiting rite' });
+    await waiting.getByRole('button', { name: /^Edit Working / }).click();
+    const waitingEdit = page.getByRole('dialog', { name: /^Edit (a )?Working$/ });
+    await waitingEdit.getByRole('button', { name: /^Delete Working/ }).click();
+    await waitingEdit.getByRole('button', { name: 'Delete', exact: true }).click();
+    await expect(waitingEdit).toHaveCount(0);
+    await expect(workings.getByText('Waiting rite')).toHaveCount(0);
     // Deleting B's own working takes it out of the list and the count.
     await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
     await first.getByRole('button', { name: /^Delete Working/ }).click();
@@ -864,7 +875,7 @@ test(
       .getByRole('button', { name: 'Delete' })
       .click();
     await expect(workings.getByText('First brewing')).toHaveCount(0);
-    await expect(workings.getByRole('listitem')).toHaveCount(3);
+    await expect(workings.getByRole('listitem')).toHaveCount(2);
     await page.goto(`/coven/${coven.slug}/grimoire`);
     await expect(card.getByText('Made 1 Time')).toBeVisible();
   },

@@ -10,10 +10,12 @@ import type { Failure } from '../../lib/types';
 import Combobox, { ComboboxEntry } from '../Combobox';
 import DateField from '../DateField';
 import { FieldShell, FormActions, VisibilitySwitch, fieldDescription } from '../Field';
-import { DiscardQuestion, useDiscardGuard } from '../Modal';
+import { BinButton } from '../IconTip';
+import { ConfirmQuestion, DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import WorkingCompletion from './completion';
 import './index.scss';
+import { DeleteWorkingQuestion } from '../SpellWorkings/delete-working';
 import type { RecordWorkingDialogProps, WorkingParticipantValue } from './types';
 
 // The form inside the Record a Working dialog, which records a draft working of a complete spell or
@@ -76,6 +78,7 @@ export default function RecordWorkingForm({
   recorderId,
   steps,
   working,
+  deleteWorking,
   close,
 }: Omit<RecordWorkingDialogProps, 'onClose' | 'returnTo'> & { close: () => void }): ReactElement {
   const { refresh } = usePendingNavigation();
@@ -98,6 +101,9 @@ export default function RecordWorkingForm({
   const [submitting, setSubmitting] = useState(false);
   const [failure, setFailure] = useState<Failure>({});
   const [completing, setCompleting] = useState<string>();
+  const [deleting, setDeleting] = useState(false);
+  // Once the delete is sent the form has nothing left to save.
+  const [removed, setRemoved] = useState(false);
 
   const complete = working?.status === 'complete';
   const changed =
@@ -110,7 +116,7 @@ export default function RecordWorkingForm({
         p.userId !== initial.participants[i]?.userId || p.name !== initial.participants[i]?.name,
     );
   const valid = DAY.test(workedOn) && workedOn <= today();
-  const dirty = completing === undefined && changed;
+  const dirty = completing === undefined && changed && !removed;
   const discard = useDiscardGuard(dirty);
 
   // Never wider than the spell, and a complete working that is shared stays so.
@@ -276,6 +282,15 @@ export default function RecordWorkingForm({
         submitting={submitting}
         holdCancel
         onCancel={() => discard.request(close)}
+        aside={
+          working && deleteWorking ? (
+            <BinButton
+              verb="Delete Working"
+              name={deleteWorking.name}
+              onClick={() => setDeleting(true)}
+            />
+          ) : undefined
+        }
       >
         {!complete && (
           <button
@@ -289,6 +304,28 @@ export default function RecordWorkingForm({
         )}
       </FormActions>
       {discard.asking && <DiscardQuestion guard={discard} />}
+      {working && deleteWorking && (
+        <ConfirmQuestion
+          asked={deleting}
+          busy={removed}
+          question={<DeleteWorkingQuestion name={deleteWorking.name} />}
+          onConfirm={async () => {
+            setRemoved(true);
+            try {
+              await deleteWorking.remove();
+            } catch (error) {
+              setRemoved(false);
+              throw error;
+            }
+            close();
+          }}
+          onKeep={() => setDeleting(false)}
+          onRefused={(message) => {
+            setDeleting(false);
+            setFailure({ alert: message });
+          }}
+        />
+      )}
     </form>
   );
 }

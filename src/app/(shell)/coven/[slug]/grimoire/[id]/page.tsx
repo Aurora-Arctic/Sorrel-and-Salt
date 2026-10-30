@@ -159,10 +159,11 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
                   steps={ingredientSteps}
                 />
               )}
-              editAction={(editable, name, plain) => (
+              editAction={(editable, name, plain, canDelete) => (
                 <EditWorkingAction
                   name={name}
                   plain={plain}
+                  canDelete={canDelete}
                   workspaceId={workspace.id}
                   spellId={spell.id}
                   spellVisibility={spell.visibility}
