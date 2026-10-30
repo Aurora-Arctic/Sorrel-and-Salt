@@ -15,6 +15,7 @@ import {
   countGrimoireFacets,
   listGrimoire,
   readSpell,
+  workingCountsOf,
 } from '@/modules/grimoire';
 import type { SpellStatus } from '@/modules/grimoire';
 import { displayNamesOf } from '@/modules/identity';
@@ -49,7 +50,7 @@ export const readGrimoire = cache(
       (start) => countGrimoire(session, workspaceId, query, start),
       CARD_PAGE_SIZE,
     );
-    const [answers, known, editors] = await Promise.all([
+    const [answers, known, editors, made] = await Promise.all([
       assignedCategoriesOf(
         session,
         page.edges.map(({ node }) => ({ id: node.id, workspaceId: node.workspaceId })),
@@ -61,11 +62,18 @@ export const readGrimoire = cache(
         session,
         page.edges.map(({ node }) => node.updatedBy),
       ),
+      // How often each was made: the count loader's one query for the page.
+      workingCountsOf(
+        session,
+        page.edges.map(({ node }) => ({ id: node.id, workspaceId: node.workspaceId })),
+      ),
     ]);
     const byId = new Map(known.map((category) => [category.id, category]));
     const spells = page.edges.map(({ node }, i): GrimoireSpell => {
       const answer = answers[i];
       if (answer instanceof Error) throw answer;
+      const count = made[i];
+      if (count instanceof Error) throw count;
       return {
         id: node.id,
         title: node.title,
@@ -77,6 +85,7 @@ export const readGrimoire = cache(
           return category ? [{ category: { id, name: category.name }, group: category.group }] : [];
         }),
         lastEdit: { by: editors[i] ?? null, at: node.updatedAt.toISOString() },
+        workingCount: count,
       };
     });
     return { ...page, spells };

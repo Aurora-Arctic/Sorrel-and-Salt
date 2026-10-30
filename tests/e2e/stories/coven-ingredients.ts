@@ -215,6 +215,67 @@ export async function insertStep(
   });
 }
 
+/**
+ * A working of `spellId` recorded by `author`, with `participants` (user ids, in order) as raw SQL: complete unless `status` says
+ * draft. Nothing is deducted; a test that needs a deduction line writes it with `insertDeduction`.
+ */
+export async function insertWorking(
+  sql: postgres.Sql,
+  spellId: string,
+  author: string,
+  {
+    workedOn,
+    status = 'complete',
+    visibility = 'workspace',
+    note = null,
+    participants = [author],
+  }: {
+    workedOn: string;
+    status?: 'draft' | 'complete';
+    visibility?: 'private' | 'workspace';
+    note?: string | null;
+    participants?: readonly string[];
+  },
+): Promise<string> {
+  return sql.begin(async (tx) => {
+    await tx`select set_config('app.current_user_id', ${author}, true)`;
+    const [row] = await tx<{ id: string }[]>`
+      insert into spell_workings (
+        spell_id, status, worked_on, completed_at, note, visibility, created_by, updated_by
+      )
+      values (
+        ${spellId}, ${status}, ${workedOn}, ${status === 'complete' ? new Date() : null},
+        ${note}, ${visibility}, ${author}, ${author}
+      )
+      returning id`;
+    for (const [position, userId] of participants.entries()) {
+      await tx`
+        insert into spell_working_participants (working_id, user_id, position, created_by, updated_by)
+        values (${row.id}, ${userId}, ${position + 1}, ${author}, ${author})`;
+    }
+    return row.id;
+  });
+}
+
+/** A deduction of `quantity` `unit` on `workingId` for `stepId`, taken from `inventoryItemId`. */
+export async function insertDeduction(
+  sql: postgres.Sql,
+  workingId: string,
+  stepId: string,
+  inventoryItemId: string,
+  { quantity, unit }: { quantity: number; unit: StockUnit },
+  author: string,
+): Promise<void> {
+  await sql.begin(async (tx) => {
+    await tx`select set_config('app.current_user_id', ${author}, true)`;
+    await tx`
+      insert into spell_working_deductions (
+        working_id, spell_step_id, inventory_item_id, quantity, unit, created_by, updated_by
+      )
+      values (${workingId}, ${stepId}, ${inventoryItemId}, ${quantity}, ${unit}, ${author}, ${author})`;
+  });
+}
+
 interface GraphqlAnswer {
   data?: Record<string, unknown> | null;
   errors?: { message: string; extensions?: { code?: string } }[];

@@ -139,6 +139,10 @@ sets no `supply`, since its column already says it.
 
 The Quick Look modal is what a grimoire card's eye opens over the list, the spell's twin of the ingredient details modal. It shows the spell read in the shared body with the last edit over its title, a link through to the recipe page at the foot's start, and, for a role that may update the spell, Edit Spell at the foot's end. Edit Spell is a plain link to the list's address with `?edit=<id>` in place of `?spell=<id>`, which the spell builder's dialog answers. One dialog therefore shows at a time, and closing the builder returns to the list rather than to this modal. The component is a client part because `RouteModal` takes its body as a function, which a server page cannot hand down. The body arrives as the page's rendered children.
 
+## The workings slot
+
+`SpellRecipe` takes a `workings` slot, drawn beneath the recipe body in the main column. The page fills it with `SpellWorkings` ([spell-workings.md](spell-workings.md)); the Quick Look modal leaves it empty.
+
 ## The aside component
 
 The aside is the recipe page's side column: Category Match and In Coven Inventory, the builder's Jar aside panels, read for the saved spell. They are laid out as the ingredient entry page lays its side column, beside the text past a tablet's width and beneath it on a phone. Only the page draws it; the Quick Look modal keeps to the recipe body. Both panels are read-only here, as in the builder, since the page hands them the saved steps. It is a client part because the panels are, and the landmark around them is `SpellRecipe`'s own (see "The side column").

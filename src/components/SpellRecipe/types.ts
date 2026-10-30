@@ -87,6 +87,8 @@ export interface SpellRecipeProps {
   back: { href: Route; label: string };
   /** The Edit control, for a role that may update the spell. */
   action?: ReactNode;
+  /** The Workings section (`SpellWorkings`), beneath the body; the Quick Look modal gives none. */
+  workings?: ReactNode;
   /** The page's side column (`SpellRecipeAside`), beside the body; the Quick Look modal gives none. */
   aside?: ReactNode;
 }

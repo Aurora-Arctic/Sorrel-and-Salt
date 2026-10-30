@@ -100,6 +100,7 @@ type Documents = {
     "\n  query SpellBuilderSteps($workspaceId: ID!, $id: ID!) {\n    spell(workspaceId: $workspaceId, id: $id) {\n      id\n      steps {\n        id\n        name\n        form\n        quantity\n        unit\n        body\n        ingredient {\n          id\n          toxic\n          safetyNotes\n          categories {\n            id\n            name\n          }\n          stock(workspaceId: $workspaceId) {\n            unit\n            quantityOnHand\n            lowStockThreshold\n            variant {\n              id\n            }\n          }\n        }\n        variant {\n          id\n          toxic\n          safetyNotes\n          categories {\n            id\n            name\n          }\n          formChoice {\n            group {\n              icon\n            }\n          }\n        }\n      }\n    }\n  }\n": typeof types.SpellBuilderStepsDocument,
     "\n  mutation DeleteSpell($workspaceId: ID!, $id: ID!) {\n    deleteSpell(workspaceId: $workspaceId, id: $id)\n  }\n": typeof types.DeleteSpellDocument,
     "\n  mutation DuplicateSpell($workspaceId: ID!, $id: ID!) {\n    duplicateSpell(workspaceId: $workspaceId, id: $id) {\n      id\n    }\n  }\n": typeof types.DuplicateSpellDocument,
+    "\n  mutation DeleteWorking($workspaceId: ID!, $id: ID!) {\n    deleteWorking(workspaceId: $workspaceId, id: $id)\n  }\n": typeof types.DeleteWorkingDocument,
     "\n  mutation SaveStock($workspaceId: ID!, $ingredientId: ID!, $input: SaveStockInput!) {\n    saveStock(workspaceId: $workspaceId, ingredientId: $ingredientId, input: $input) {\n      id\n    }\n  }\n": typeof types.SaveStockDocument,
     "\n  mutation GrantWorkspaceCreation($userId: ID!, $note: String) {\n    grantWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": typeof types.GrantWorkspaceCreationDocument,
     "\n  mutation RevokeWorkspaceCreation($userId: ID!, $note: String) {\n    revokeWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": typeof types.RevokeWorkspaceCreationDocument,
@@ -194,6 +195,7 @@ const documents: Documents = {
     "\n  query SpellBuilderSteps($workspaceId: ID!, $id: ID!) {\n    spell(workspaceId: $workspaceId, id: $id) {\n      id\n      steps {\n        id\n        name\n        form\n        quantity\n        unit\n        body\n        ingredient {\n          id\n          toxic\n          safetyNotes\n          categories {\n            id\n            name\n          }\n          stock(workspaceId: $workspaceId) {\n            unit\n            quantityOnHand\n            lowStockThreshold\n            variant {\n              id\n            }\n          }\n        }\n        variant {\n          id\n          toxic\n          safetyNotes\n          categories {\n            id\n            name\n          }\n          formChoice {\n            group {\n              icon\n            }\n          }\n        }\n      }\n    }\n  }\n": types.SpellBuilderStepsDocument,
     "\n  mutation DeleteSpell($workspaceId: ID!, $id: ID!) {\n    deleteSpell(workspaceId: $workspaceId, id: $id)\n  }\n": types.DeleteSpellDocument,
     "\n  mutation DuplicateSpell($workspaceId: ID!, $id: ID!) {\n    duplicateSpell(workspaceId: $workspaceId, id: $id) {\n      id\n    }\n  }\n": types.DuplicateSpellDocument,
+    "\n  mutation DeleteWorking($workspaceId: ID!, $id: ID!) {\n    deleteWorking(workspaceId: $workspaceId, id: $id)\n  }\n": types.DeleteWorkingDocument,
     "\n  mutation SaveStock($workspaceId: ID!, $ingredientId: ID!, $input: SaveStockInput!) {\n    saveStock(workspaceId: $workspaceId, ingredientId: $ingredientId, input: $input) {\n      id\n    }\n  }\n": types.SaveStockDocument,
     "\n  mutation GrantWorkspaceCreation($userId: ID!, $note: String) {\n    grantWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": types.GrantWorkspaceCreationDocument,
     "\n  mutation RevokeWorkspaceCreation($userId: ID!, $note: String) {\n    revokeWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": types.RevokeWorkspaceCreationDocument,
@@ -560,6 +562,10 @@ export function graphql(source: "\n  mutation DeleteSpell($workspaceId: ID!, $id
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation DuplicateSpell($workspaceId: ID!, $id: ID!) {\n    duplicateSpell(workspaceId: $workspaceId, id: $id) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation DuplicateSpell($workspaceId: ID!, $id: ID!) {\n    duplicateSpell(workspaceId: $workspaceId, id: $id) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation DeleteWorking($workspaceId: ID!, $id: ID!) {\n    deleteWorking(workspaceId: $workspaceId, id: $id)\n  }\n"): (typeof documents)["\n  mutation DeleteWorking($workspaceId: ID!, $id: ID!) {\n    deleteWorking(workspaceId: $workspaceId, id: $id)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

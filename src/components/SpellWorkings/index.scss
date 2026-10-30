@@ -1,0 +1,37 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The recipe page's Workings section: a stack of rows, each a plain block under its date.
+
+.spell-workings {
+  margin-top: space(6);
+
+  &__list {
+    display: grid;
+    gap: space(4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: space(2);
+
+    h3 {
+      margin: 0;
+    }
+  }
+
+  &__note {
+    margin: space(2) 0 0;
+  }
+
+  &__deductions {
+    margin: space(3) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+}

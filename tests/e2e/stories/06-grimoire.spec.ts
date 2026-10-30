@@ -8,9 +8,11 @@ import {
   chooseChip,
   compendiumVariant,
   graphqlFromPage,
+  insertDeduction,
   insertSpell,
   insertStep,
   insertStock,
+  insertWorking,
   localIngredient,
   openFilters,
   seedCoven,
@@ -734,29 +736,78 @@ test.fixme(
   },
 );
 
-test.fixme(
+test(
   "a member sees a spell's workings on its recipe page and how many times it has been made on its card",
-  {
-    tag: '@story-79',
-    annotation: {
-      type: 'fixme',
-      description: 'M13.8 builds the Workings section and the count on the grimoire card',
-    },
-  },
+  { tag: '@story-79' },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Seventy-Nine', 'story-79.test', {
       A: 'owner',
       B: 'member',
     });
-    const spellId = await withSql((sql) =>
-      insertSpell(sql, coven.id, 'Fixture Working', 'workspace', coven.users.B),
-    );
-    await signInAgainAs(page, coven.users.B);
+    const { A, B } = coven.users;
+    const spellId = await withSql(async (sql) => {
+      const rosemary = await compendiumVariant(sql, 'Rosemary', 'Herb');
+      const jar = await insertStock(
+        sql,
+        coven.id,
+        rosemary,
+        { quantity: 20, unit: 'g', threshold: 0 },
+        A,
+      );
+      const id = await insertSpell(sql, coven.id, 'Fixture Working', 'workspace', B, 'complete');
+      const step = await insertStep(sql, id, rosemary, { quantity: 2, unit: 'g', position: 1 }, B);
+      // B's own, with A named beside them, and the jar's deduction.
+      const mine = await insertWorking(sql, id, B, {
+        workedOn: '2026-03-04',
+        note: 'First brewing',
+        participants: [B, A],
+      });
+      await insertDeduction(sql, mine, step, jar, { quantity: 2, unit: 'g' }, B);
+      await insertWorking(sql, id, A, { workedOn: '2026-02-01' });
+      // A's private one, with B not on it: B must not see it or count it.
+      await insertWorking(sql, id, A, {
+        workedOn: '2026-01-01',
+        visibility: 'private',
+        note: 'Secret rite',
+      });
+      // A's private draft naming B: B sees it, and it is not yet made.
+      await insertWorking(sql, id, A, {
+        workedOn: '2025-12-01',
+        status: 'draft',
+        visibility: 'private',
+        note: 'Named rite',
+        participants: [A, B],
+      });
+      return id;
+    });
+    await signInAgainAs(page, B);
     await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
-    await expect(page.getByRole('list', { name: 'Workings' }).getByRole('listitem')).toHaveCount(2);
+    const workings = page.getByRole('list', { name: 'Workings' });
+    await expect(workings.getByText('First brewing')).toBeVisible();
+    await expect(workings.getByText('Named rite')).toBeVisible();
+    await expect(workings.getByText('Secret rite')).toHaveCount(0);
+    await expect(workings.getByRole('button', { name: 'Complete' })).toHaveCount(1);
+    const first = workings.getByRole('listitem').filter({ hasText: 'First brewing' });
+    await expect(first).toContainText('Fixture B');
+    await expect(first).toContainText('Fixture A');
+    await expect(
+      first.getByRole('list', { name: 'Deductions' }).getByRole('listitem'),
+    ).toContainText('Rosemary');
+    await assertNoAccessibilityViolations(page);
     await page.goto(`/coven/${coven.slug}/grimoire`);
     const card = grimoireList(page).getByRole('listitem', { name: /Fixture Working/ });
     await expect(card.getByText('Made 2 Times')).toBeVisible();
+    // Deleting B's own working takes it out of the list and the count.
+    await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+    await first.getByRole('button', { name: /^Delete Working/ }).click();
+    await page
+      .getByRole('dialog', { name: 'Delete Working' })
+      .getByRole('button', { name: 'Delete' })
+      .click();
+    await expect(workings.getByText('First brewing')).toHaveCount(0);
+    await expect(workings.getByRole('listitem')).toHaveCount(2);
+    await page.goto(`/coven/${coven.slug}/grimoire`);
+    await expect(card.getByText('Made 1 Time')).toBeVisible();
   },
 );
 

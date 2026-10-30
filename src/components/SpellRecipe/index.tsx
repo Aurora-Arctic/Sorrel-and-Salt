@@ -28,6 +28,7 @@ const SpellRecipe = ({
   back,
   action,
   aside,
+  workings,
 }: SpellRecipeProps): ReactElement => {
   const name = (title ?? '').trim() || UNTITLED_SPELL;
   return (
@@ -68,6 +69,7 @@ const SpellRecipe = ({
             moonPhase={moonPhase}
             dayOfWeek={dayOfWeek}
           />
+          {workings}
         </div>
         {/* Named: an aside inside an article is a landmark only with a name. */}
         {aside && (

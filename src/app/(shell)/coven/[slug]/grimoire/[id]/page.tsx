@@ -10,6 +10,8 @@ import SpellPreview from '@/components/SpellPreview';
 import { previewStepsOf } from '@/components/SpellPreview/preview-steps';
 import DuplicateSpellAction from '@/components/SpellRecipe/duplicate-spell';
 import SpellRecipe from '@/components/SpellRecipe';
+import CompleteWorkingAction from '@/components/RecordWorking/complete-action';
+import SpellWorkings from '@/components/SpellWorkings';
 import SpellRecipeAside from '@/components/SpellRecipe/aside';
 import { UNTITLED_SPELL } from '@/components/SpellCard';
 import { Forbidden, NotFound } from '@/lib/errors';
@@ -21,6 +23,7 @@ import { readEditedSpell } from '../(list)/reads';
 import { readViewedEntry } from '../../ingredients/reads';
 import { viewedDetailsOf } from '../../ingredients/viewed-details';
 import { readRecipeOf } from '../recipe-read';
+import { readWorkingsOf } from './workings-read';
 import { readRecipeAsideOf } from './recipe-aside';
 import type { SpellRecipeParams } from './types';
 
@@ -64,6 +67,16 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
     // Edit Stock on the inventory's lines, on the permission `saveStock` asserts: none for a viewer.
     rolePermits(membership.role, { inventory: ['update'] }),
   );
+  const workings = await readWorkingsOf(
+    session,
+    workspace.id,
+    spell.id,
+    recipe.steps,
+    rolePermits(membership.role, { working: ['delete'] }),
+  );
+  const ingredientSteps = recipe.steps.flatMap((step) =>
+    step.kind === 'ingredient' ? [{ id: step.id, name: step.name }] : [],
+  );
   const canUpdate = rolePermits(membership.role, { spell: ['update'] });
   const canDelete = rolePermits(membership.role, { spell: ['delete'] });
   const canDuplicate = rolePermits(membership.role, { spell: ['create'] });
@@ -98,6 +111,21 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
           moonPhase={spell.moonPhase}
           dayOfWeek={spell.dayOfWeek}
           steps={recipe.steps}
+          workings={
+            <SpellWorkings
+              workspaceId={workspace.id}
+              workings={workings}
+              completeAction={(workingId) => (
+                <CompleteWorkingAction
+                  workspaceId={workspace.id}
+                  spellId={spell.id}
+                  workingId={workingId}
+                  steps={ingredientSteps}
+                />
+              )}
+              // SPOT (M13.7): the pencil that opens Record a Working on the row is given here once the dialog opens on an existing working.
+            />
+          }
           aside={<SpellRecipeAside {...aside} />}
           action={
             <div className="spell-recipe__actions">
