@@ -86,14 +86,32 @@ describe('AppShell', () => {
     expect(screen.getByRole('link', { name: 'Your Coven' })).toHaveAttribute('href', '/coven');
   });
 
-  it('offers anyone else the Compendium alone, though they are signed in and verified', () => {
-    shell(MEMBER);
+  it('offers a verified member of a coven Your Coven and not Admin', () => {
+    shell(MEMBER, COVENS.slice(0, 1));
 
     // The precondition: a verified viewer does get the rest of the bar.
     expect(screen.getByRole('button', { name: 'Add Ingredient' })).toBeEnabled();
     expect(screen.getByRole('link', { name: 'Compendium' })).toHaveAttribute('href', '/compendium');
+    expect(screen.getByRole('link', { name: 'Your Coven' })).toHaveAttribute(
+      'href',
+      '/coven/fixture-coven',
+    );
     expect(screen.queryByRole('link', { name: 'Admin' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Your Coven' })).not.toBeInTheDocument();
+  });
+
+  it('offers a verified viewer in a coven Your Coven and not Admin', () => {
+    shell(MEMBER, [{ ...COVENS[0], canWrite: false, canInvite: false }]);
+
+    expect(screen.getByRole('link', { name: 'Your Coven' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Admin' })).not.toBeInTheDocument();
+  });
+
+  it('offers a verified account in no coven, who is not a curator, the Compendium alone', () => {
+    shell(MEMBER, []);
+
+    expect(screen.getByRole('link', { name: 'Compendium' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /^Your Covens?$/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Admin' })).not.toBeInTheDocument();
   });
 
   it('names the coven link for one coven or several', () => {
@@ -112,6 +130,7 @@ describe('AppShell', () => {
 
     expect(screen.getByRole('link', { name: 'Sorrel & Salt' })).toHaveAttribute('href', '/');
     expect(screen.queryByRole('button', { name: 'Add Ingredient' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /^Your Covens?$/ })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Fixture Member' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Toggle light and dark mode' })).toBeInTheDocument();
   });
