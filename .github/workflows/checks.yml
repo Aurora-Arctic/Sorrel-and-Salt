@@ -32,9 +32,8 @@ on:
         default: false
       # One flag per path-filtered leg, since pr-gate.yml filters them
       # independently; format and audit are unfiltered. The flags skip work
-      # INSIDE the leg: a job-level `if:` on the calling job would make GitHub
-      # report a bare check name ("checks", not "checks / lint") that never
-      # satisfies a required check, leaving the PR stuck forever.
+      # inside the leg, because `matrix` is not available to a job-level `if:`.
+      # (claude-docs/design-decisions/mb.39-job-level-if-and-check-names.md)
       run-lint:
         description: Set false to skip the lint run while still completing its leg under its normal name
         required: false

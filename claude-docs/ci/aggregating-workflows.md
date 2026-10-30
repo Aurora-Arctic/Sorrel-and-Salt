@@ -148,36 +148,33 @@
   old names will never report again — but whatever enables protection must use
   the new ones. A required check that no workflow publishes is permanently
   pending, and blocks every PR after it.
-- **A required-check job must never carry a job-level `if:`** — the rule the
-  whole filtering design is built on, and it **has never been verified here**.
-  The claim is that GitHub then reports a bare, unqualified check name that
-  `job / job` protection can never match. It is why skipping is always done
-  through inputs instead — `run-lint`/`run-typecheck`/`run-build` on
-  `checks.yml`, `should-run` elsewhere — and every calling job itself runs
-  unconditionally.
-  - **Provenance.** Copied in from another repo's comments at M0.16 and
-    re-cited since (M0.20 `860d10f`, `ecce1f1`, MB.32 `2e7dcfe`), never
-    observed: **nothing in this repo records the symptom**, and nothing could
-    have, with no status check ever required here. MB.39 has the trace.
-  - **Its scope is narrower than this bullet has been stating.** Every
-    assertion in the workflow files is written about _the job that calls a
-    reusable workflow_ — `pr-gate.yml`'s `checks`/`vitest`/`playwright`. Whether
-    an `if:` on an _inner_ job (`checks.yml`'s own `check`, `vitest.yml`'s
-    `vitest`) renames its check is a separate question nothing here answers.
-    This file previously asserted "a matrix does not change this"; that
-    sentence was an extrapolation, not a finding, and is withdrawn.
-  - **Contrary evidence sits in the repo.** `audit / audit` carried
-    `if: github.event_name == 'pull_request'` from M0.20 until MB.32 removed it
-    as redundant, and `deploy.yml`'s `resolve-target`, `deploy` and `teardown`
-    still carry job-level `if:` while reporting on `pull_request` into `main`.
-    None is a _required_ check, so none disproves the rule — but none exhibited
-    the symptom either.
-  - **The rule stays in force until MB.39 settles it.** It costs a container
-    pull per filtered-off leg (~20s on a `checks` leg, 46s on `playwright`, and
-    37s on `vitest` — the flag is resolved in the first step, which runs
-    _after_ `Initialize containers`), and that is the cheaper side of the bet
-    while the naming behaviour is unknown. GitHub's minutes are free on a
-    public repo ([Runner budget](runner-budget.md)).
+- **A job-level `if:` renames a check only on a job that calls a reusable
+  workflow** (verified by a probe, MB.39; the run, the raw check-run output and
+  the YAML are in
+  [`design-decisions/mb.39-job-level-if-and-check-names.md`](../design-decisions/mb.39-job-level-if-and-check-names.md)).
+  - **A calling job with a false `if:`** reports one bare check named after
+    the caller (`checks`, not `checks / lint`), `skipped`. No `checks / lint`
+    check run exists. That is why `pr-gate.yml` passes the path filter down as
+    `run-*` / `should-run` inputs instead of putting an `if:` on its calling
+    jobs.
+  - **An inner job with a false `if:`** (a plain job inside the reusable
+    workflow, such as `vitest.yml`'s `vitest`) keeps its qualified name
+    (`caller / inner`) and reports `skipped`. The old claim that it is renamed
+    is false.
+  - **A matrix job cannot use one on its own matrix values.** `if: matrix.x` on
+    the job is rejected when the file loads: `Unrecognized named-value:
+'matrix'`. `checks.yml`'s legs resolve their flag in a step for that reason.
+  - **Not tested:** whether a `skipped` check satisfies a required status
+    check. No ruleset here requires one, and no scratch ruleset was
+    authorised. Until that is answered, nothing moves `if:` onto an inner job.
+  - **Cost of the current pattern.** A filtered-off leg still pulls its
+    container before its first step decides to do nothing: about 20s on a
+    `checks` leg, 24s on `lint`, 37s on `vitest` and 46s on `playwright`.
+    GitHub's minutes are free on a public repo ([Runner budget](runner-budget.md)).
+  - **Other `if:` keys in the repo.** `audit / audit` carried one from M0.20
+    until MB.32 removed it, and `deploy.yml`'s `resolve-target`, `deploy` and
+    `teardown` still carry them. Those are not required checks, so they never
+    tested the rule.
 - **Live GitHub settings are confirmed with the user before being changed**, and
   a permissions-blocked write is reported rather than routed around.
 - **Runners are pinned to `ubuntu-26.04`** (MB.37), not `ubuntu-latest`. GitHub

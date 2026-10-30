@@ -29,10 +29,9 @@ on:
         description: >-
           Set false to skip the actual e2e run while still completing this job under
           its normal name. pr-gate passes this from its path-filter output instead of
-          putting an `if:` on the calling job — a job-level `if:` makes GitHub report
-          a differently-named, bare check run ("playwright" instead of
-          "playwright / playwright") when skipped, which never satisfies the
-          "playwright / playwright" required status check and leaves the PR stuck.
+          putting an `if:` on the calling job, which would report one bare
+          "playwright" check in place of "playwright / playwright"
+          (claude-docs/design-decisions/mb.39-job-level-if-and-check-names.md).
           Defaults true so a caller that does no path filtering is unaffected.
         required: false
         type: boolean

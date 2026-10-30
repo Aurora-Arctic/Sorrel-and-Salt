@@ -2548,7 +2548,7 @@ _Story:_ As a developer, I want one workflow to describe how a check runs, so th
 
 Three more go with them. `merge-queue.yml` re-expresses `pr-gate.yml`'s whole job graph for a merge queue that is not enabled — M7.A.1 is explicitly trigger-based and a prerequisite for nothing — so it is deleted and restored from git history when that trigger fires. `composite-actions-check.yml` is a workflow testing the composite actions that exist to de-duplicate the workflows. `timer-start`/`timer-elapsed` are 46 lines across 12 workflows to print an elapsed time into a summary.
 
-**The `should-run` indirection survives the collapse and is not cosmetic.** `pr-gate` passes it from the paths-filter output instead of putting an `if:` on the job, because a job-level `if:` makes GitHub report a differently-named bare check that never satisfies a required status check and leaves the PR stuck. Every matrix leg runs; a leg whose flag is false exits after checkout.
+**The `should-run` indirection survives the collapse and is not cosmetic.** `pr-gate` passes it from the paths-filter output instead of putting an `if:` on the job, because a false `if:` on the job that calls a reusable workflow makes GitHub report one bare check name in place of `checks / lint`, and on a matrix leg `if: matrix.*` is rejected outright (verified by MB.39: [`mb.39-job-level-if-and-check-names.md`](../design-decisions/mb.39-job-level-if-and-check-names.md)). Every matrix leg runs; a leg whose flag is false exits after checkout.
 
 _Acceptance criteria:_
 
@@ -2694,6 +2694,8 @@ _Story:_ As a developer, I want to know whether the rule the whole CI filtering 
 **Two questions, and they are not the same question.** Every assertion in the workflow files is scoped to _the job that calls a reusable workflow_. Whether an `if:` on an **inner** job — `checks.yml`'s `check`, `vitest.yml`'s `vitest` — renames its check is unanswered, and it is the one that matters, since that is where the container is. A third question, whether a `skipped` conclusion satisfies a required check, needs a ruleset to test against and is scoped out unless the user authorises a scratch one.
 
 Probe on a throwaway branch, PR'd into a `scratch/**` base so `pr-gate.yml` — which triggers only on `main`/`staging`/`release/**` — never fires: a `workflow_call` file with both shapes (a matrix job with `if: matrix.should-run`, and two plain jobs with `if: inputs.run-*`, the `vitest.yml` shape), and a caller triggered on `pull_request: branches: ['scratch/**']`. Whether `matrix` is even available to `jobs.<id>.if` is part of what the run answers — a startup failure naming an unrecognized `matrix` value settles the matrix half on its own.
+
+**Result.** The rule holds for a job that calls a reusable workflow, is false for a job inside one, and a matrix job cannot use `matrix` in its job-level `if:`. The third question was not tested. Evidence: [`mb.39-job-level-if-and-check-names.md`](../design-decisions/mb.39-job-level-if-and-check-names.md).
 
 **Adoption is not in this task.** Its scope depends on the answer, and turning `if:` on across the gate is a change to the gate rather than a finding about it.
 
@@ -2951,7 +2953,7 @@ Comments are 28% of the lines in scope — 7,905 of 27,847 across 203 tracked fi
 
 **The rule is a division of labour, not a length limit**: the comment keeps the conclusion and `claude-docs/` the argument, as [`README.md`](../README.md)'s "Comments in code" now states it. It inverts nothing there: a summary still gives its reason in a clause and stands on its own. CLAUDE.md had **no rule about comments at all**, which is why the prose grew — so the convention lands first, and the sweep cites it.
 
-**What brevity may not cost** is that section's list, kept whatever its length; in this sweep it also covers oxlint's `overrides` replacing rather than merging, a job-level `if:` renaming a check and permanently blocking a PR, the Ladle `@type` JSDoc and shebangs.
+**What brevity may not cost** is that section's list, kept whatever its length; in this sweep it also covers oxlint's `overrides` replacing rather than merging, a false job-level `if:` on a calling job reporting a bare check name, the Ladle `@type` JSDoc and shebangs.
 
 **The dangling citations are the finding, and there are fourteen.** Scoping expected four; the guard found `.ladle/` citing m0.30, m0.32 and m0.34 as well, plus `tests/app/api/auth/[...all]/route.test.ts` citing `claude-docs/transcripts/auth.md`, which has never existed — so a hand-verification of the real OAuth URL shape is described as "recorded" nowhere. Thirteen of the fourteen resolve only under `claude-docs/archive/`, and were cited **without** the `archive/` prefix: the path was wrong and the destination is out of bounds, README.md having declared the archive never-read. Those comments are long precisely because the live doc was never written, so the prose moves into `styling.md`, `workshop.md` and `testing.md` and the citations are repointed.
 

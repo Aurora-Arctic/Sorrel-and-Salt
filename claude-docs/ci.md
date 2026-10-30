@@ -25,7 +25,7 @@ The five actions under `.github/actions/` — `checkout-to-app`, referenced by i
 
 ## Aggregating workflows
 
-`pr-gate.yml` path-filters and calls the reusable checks under one cancellable concurrency group per PR, beside `close-task-on-merge.yml`, `e2e-cache.yml`, which saves the e2e build cache on a push to `staging` so pull requests can restore it, the branch rulesets, the rule that a required-check job never carries a job-level `if:`, and the `ubuntu-26.04` pin. [`ci/aggregating-workflows.md`](ci/aggregating-workflows.md)
+`pr-gate.yml` path-filters and calls the reusable checks under one cancellable concurrency group per PR, beside `close-task-on-merge.yml`, `e2e-cache.yml`, which saves the e2e build cache on a push to `staging` so pull requests can restore it, the branch rulesets, the finding that a false `if:` on a job that calls a reusable workflow reports one bare check name while the same `if:` on a job inside it keeps its name ([`design-decisions/mb.39-job-level-if-and-check-names.md`](design-decisions/mb.39-job-level-if-and-check-names.md)), and the `ubuntu-26.04` pin. [`ci/aggregating-workflows.md`](ci/aggregating-workflows.md)
 
 ## Runner budget
 

@@ -15,11 +15,10 @@ run-name: >-
 # and gitflow always run; the rest are path-filtered by `changes`.
 # claude-docs/ci/aggregating-workflows.md, "Aggregating workflows" is the walkthrough.
 #
-# NO JOB HERE MAY CARRY A JOB-LEVEL `if:`, bar `playwright-coverage`'s, which is no
-# required check and so has no name to satisfy. A job-level `if:` makes GitHub report the check
-# under a bare name ("checks" instead of "checks / lint") that never
-# satisfies the required check, permanently blocking the PR. Every job runs
-# unconditionally and passes its filter result down as a workflow_call input.
+# No job here carries a job-level `if:`, bar `playwright-coverage`'s. A false `if:` on a
+# job that calls a reusable workflow reports one bare check ("checks", not "checks / lint").
+# Every job runs and passes its filter result down as a workflow_call input.
+# (claude-docs/design-decisions/mb.39-job-level-if-and-check-names.md)
 #
 # `edited` is in the trigger types so retargeting a PR's base re-runs the gate
 # against the new one. Every other edit — a title or a description —

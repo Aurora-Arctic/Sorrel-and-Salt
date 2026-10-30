@@ -29,11 +29,10 @@ on:
         description: >-
           Set false to skip the actual vitest run while still completing this job
           under its normal name. pr-gate passes this from its path-filter output
-          instead of putting an `if:` on the calling job — a job-level `if:` makes
-          GitHub report a differently-named, bare check run ("vitest" instead of
-          "vitest / vitest") when skipped, which never satisfies the "vitest / vitest"
-          required status check and leaves the PR stuck. Defaults true so a caller
-          that does no path filtering is unaffected.
+          instead of putting an `if:` on the calling job, which would report one bare
+          "vitest" check in place of "vitest / vitest"
+          (claude-docs/design-decisions/mb.39-job-level-if-and-check-names.md).
+          Defaults true so a caller that does no path filtering is unaffected.
         required: false
         type: boolean
         default: true
