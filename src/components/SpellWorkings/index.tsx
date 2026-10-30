@@ -1,4 +1,5 @@
 import type { ReactElement } from 'react';
+import { dayWords } from '../DateField/day';
 import { WORKINGS_ID } from '../SpellRecipe/sections';
 import DeleteWorkingAction from './delete-working';
 import type { SpellWorkingsProps, WorkingView } from './types';
@@ -7,15 +8,6 @@ import './index.scss';
 // A spell's history on its recipe page: one row per working, newest day first. A working is not a
 // step, so the row is its own, and a complete working's deduction lines are plain lines beneath it.
 // Complete on a draft row is the page's to give (`completeAction`).
-
-/** The day as people say it: "4 March 2026". The date is a calendar day, so no zone shifts it. */
-const dayOf = (workedOn: string): string =>
-  new Date(`${workedOn}T00:00:00Z`).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC',
-  });
 
 const Working = ({
   working,
@@ -28,7 +20,7 @@ const Working = ({
   completeAction: SpellWorkingsProps['completeAction'];
   editAction: SpellWorkingsProps['editAction'];
 }): ReactElement => {
-  const day = dayOf(working.workedOn);
+  const day = dayWords(working.workedOn);
   const showsComplete = working.status === 'draft' && Boolean(working.editable);
   return (
     <li className="spell-workings__row">

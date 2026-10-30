@@ -5,6 +5,9 @@ It replaces the browser's `<input type="date">`, whose look and highlight differ
 
 - Props: `id`, `labelledBy` (the id of the label, so the button reads "Date, 12 March 2026"), `value`
   and `onChange` (a `YYYY-MM-DD` string), `max` (last pickable day), `disabled`.
+- `day.ts` holds the day helpers the grimoire shares: `isoDay(date)` (a local date as `YYYY-MM-DD`), `today()`
+  and `dayWords(day)` ("12 March 2026", read at UTC midnight so no zone shifts it). The button, the
+  Workings rows and the reason Complete is off all write a day through `dayWords`.
 - Built on `react-day-picker`. Its own stylesheet is not imported: `index.scss` styles it with the
   tokens, inside the browser floor. Only classes are given, no `style`.
 - The calendar is a manual popover in the top layer, so it floats over the fields below and the

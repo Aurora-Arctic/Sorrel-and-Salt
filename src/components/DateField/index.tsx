@@ -13,6 +13,7 @@ import { DayPicker, type DropdownProps } from 'react-day-picker';
 import { enGB } from 'react-day-picker/locale';
 import { ComboboxSelect } from '../Combobox/select';
 import { ChevronIcon } from '../Combobox/icons';
+import { dayWords, isoDay, today } from './day';
 import './index.scss';
 
 // A day field: a button showing the day in words, opening a calendar. It replaces the browser's date
@@ -42,11 +43,6 @@ function parse(day: string): Date | undefined {
   if (!match) return undefined;
   const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
   return date.getMonth() === Number(match[2]) - 1 ? date : undefined;
-}
-
-function format(date: Date): string {
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
 // The gap between the button and the calendar, and the margin the calendar keeps from the window.
@@ -116,8 +112,6 @@ function CaptionDropdown({ options, value, onChange, 'aria-label': label }: Drop
 
 const hasPopover = (): boolean =>
   typeof HTMLElement !== 'undefined' && typeof HTMLElement.prototype.showPopover === 'function';
-
-const WORDS = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 
 export default function DateField({
   id,
@@ -203,9 +197,7 @@ export default function DateField({
         onClick={() => setOpen(!open)}
       >
         <Sizer />
-        <span className="date-field__text">
-          {selected ? WORDS.format(selected) : 'Choose a day'}
-        </span>
+        <span className="date-field__text">{selected ? dayWords(value) : 'Choose a day'}</span>
       </button>
       {open && (
         <div
@@ -243,7 +235,7 @@ export default function DateField({
             endMonth={last ?? new Date(new Date().getFullYear() + YEARS_AHEAD, 11)}
             disabled={last ? { after: last } : undefined}
             onSelect={(day) => {
-              onChange(format(day));
+              onChange(isoDay(day));
               setOpen(false);
               document.getElementById(id)?.focus();
             }}
@@ -268,13 +260,13 @@ export default function DateField({
             }}
           />
           {/* Hidden when max is before today, so a refused day is never offered. */}
-          {(!last || format(last) >= format(new Date())) && (
+          {(!last || isoDay(last) >= today()) && (
             <div className="date-field__footer">
               <button
                 type="button"
                 className="btn btn--quiet btn--small"
                 onClick={() => {
-                  onChange(format(new Date()));
+                  onChange(today());
                   setOpen(false);
                   document.getElementById(id)?.focus();
                 }}
