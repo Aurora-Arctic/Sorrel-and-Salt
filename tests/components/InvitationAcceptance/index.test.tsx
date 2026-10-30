@@ -5,7 +5,7 @@ import InvitationAcceptance from '@/components/InvitationAcceptance';
 import type { AcceptInvitationMutation, AcceptInvitationMutationVariables } from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
-// `/invite/[token]`'s one panel (MB.70): the page reads where the visitor
+// `/invite/[token]`'s one panel: the page reads where the visitor
 // stands, and this shows it, and sends the accept
 // (claude-docs/components/invitation-acceptance.md).
 
@@ -89,7 +89,7 @@ describe('InvitationAcceptance', () => {
     expect(calls).toHaveLength(1);
   });
 
-  // M11.20: the role is the invitation's data, as a coven's name is.
+  // The role is the invitation's data, as a coven's name is.
   it('names what the invitation grants: the site role of a site one, the coven of a coven’s', () => {
     render(
       <InvitationAcceptance

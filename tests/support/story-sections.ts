@@ -1,7 +1,5 @@
-// The part of the site each v1 story walks, as "Area - Page - Part". A story's
-// wording in DESIGN.md §10 says what a user wants; this says where in the site
-// to look when it fails. Kept here, not in DESIGN.md, so the spec's list stays
-// plain prose. A story without a section here is listed under "Other".
+// The part of the site each v1 story walks, as "Area - Page - Part": where in the site to look when a story
+// fails. A story without a section here is listed under "Other".
 
 export const STORY_SECTIONS: Readonly<Record<number, string>> = {
   1: 'Account - Sign In',

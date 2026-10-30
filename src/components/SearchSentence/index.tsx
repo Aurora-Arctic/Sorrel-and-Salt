@@ -85,13 +85,9 @@ function tailNode(parts: readonly ClausePart[], shown: number, caret: ReactNode)
 }
 
 /**
- * The sentence above a list that says what it is searching for. Settled, it is one closed
- * line, "12 ingredients matching rue", that opens to the clauses beneath. While a search is
- * on its way the whole sentence is typed out in its place as the loading animation: the
- * count is "Searching for ingredients" until it comes back, then backspaced to the real one,
- * and the clauses finish typing, are held for a moment and slide up into the closed line.
- * The typed line is hidden from assistive technology; a status region is given the
- * finished sentence once, when the search returns (claude-docs/components/search-sentence.md).
+ * The sentence above a list saying what it searches for: one closed line, opening to its clauses, typed out while a search is in flight;
+ * a status region announces the finished sentence once (claude-docs/components/search-sentence.md).
+ * (claude-docs/components/search-sentence.md, "The sentence and its loading animation").
  */
 export default function SearchSentence({
   sentence,

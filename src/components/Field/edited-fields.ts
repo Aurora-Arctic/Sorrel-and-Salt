@@ -16,17 +16,8 @@ export const useEditedFieldsContext = (): ReadonlySet<string> | null =>
   useContext(EditedFieldsContext);
 
 /**
- * Records every field the person has ever edited: one that has had a `change`
- * event, kept even when its value later returns to the default. react-hook-form's
- * `dirtyFields` is not that record: it unsets a field whose value goes back to
- * its default, so a name typed and then deleted would read as never edited and
- * its "Required" would stay unshown. `clear` empties the record when the form
- * starts over (after a reset), so the restarted form is quiet again.
- *
- * It listens through the form's `subscribe` (pass `useForm`'s), asking for `values` so react-hook-form
- * sends it the field name and event type of each input event. A `setValue` (undo
- * and redo restore through it) carries no event type and so does not count as an
- * edit by the person.
+ * Records every field ever edited, even if its value returns to the default (react-hook-form's `dirtyFields` unsets it); `clear` empties it on reset
+ * (claude-docs/components/field.md, "The edited-fields record").
  */
 export function useEditedFields<V extends FieldValues>(
   subscribe: UseFormSubscribe<V>,

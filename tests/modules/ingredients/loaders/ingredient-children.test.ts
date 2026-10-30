@@ -102,11 +102,7 @@ async function addIngredient(
   };
 }
 
-/**
- * Fifty ingredients, the first half in the compendium and the second in W,
- * each with its own folk names and a different subset of the categories —
- * so a slot answered with a neighbour's children shows up as a mismatch.
- */
+/** Fifty ingredients, the first half in the compendium and the second in W, each with its own folk names and a different subset of the categories, so a slot answered with a neighbour's children shows as a mismatch. */
 // Written concurrently, each in its own transaction over the client's pool:
 // fifty one after another were most of this file's run time, and no case
 // reads the order they were written in.
@@ -144,21 +140,14 @@ type Loaders = ReturnType<typeof loadersFor>;
 /** The second form each ingredient a test gave one has, by the ingredient's id. */
 const variantOf = new Map<string, string>();
 
-/**
- * The key of the second form of `ref`'s ingredient, claiming `ref`'s tier: how
- * a variant's loaders are asked (MB.218), so a key that lies about its
- * ingredient's tier lies about the variant's too.
- */
+/** The key of the second form of `ref`'s ingredient, claiming `ref`'s tier: how a variant's loaders are asked, so a key that lies about its ingredient's tier lies about the variant's too. */
 const variantKey = (ref: IngredientKey): VariantKey => ({
   id: variantOf.get(ref.id) ?? '',
   ingredientId: ref.id,
   workspaceId: ref.workspaceId,
 });
 
-/**
- * Gives `ref`'s ingredient a second form, Fixture Gum, which adds the
- * category Protection, the typed substitute Testbane and a compendium book.
- */
+/** Gives `ref`'s ingredient a second form, Fixture Gum, which adds the category Protection, the typed substitute Testbane and a compendium book. */
 async function addVariant({ ref }: Written): Promise<void> {
   const id = await insertVariant(
     sql,
@@ -390,7 +379,7 @@ describe('who the ingredient-children loaders answer', () => {
     categoriesByIngredient: ['Protection'],
     folkNamesByIngredient: ['Testbane'],
     substitutesByIngredient: ['Testbane'],
-    // The fixture's own form, a variant since MB.216, and the one added.
+    // The fixture's own form, a variant, and the one added.
     variantsByIngredient: ['Fixture Gum', 'Testform'],
     referencesByIngredient: ['Fixture Herbal'],
     categoriesByVariant: ['Protection'],

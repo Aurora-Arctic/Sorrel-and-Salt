@@ -12,7 +12,7 @@ import type {
   IngredientUpdateInput,
 } from '../../gql/graphql';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { placeServerIssues } from '../../lib/graphql-failure';
+import { placeServerIssues, readGraphqlFailure } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
 import { ConfirmQuestion, useDiscardGuard, useModalHeaderNote } from '../Modal';
 import { PanelChangesContext, usePanelChanges } from './panel-changes';
@@ -26,6 +26,7 @@ import {
 import { PromoteIcon } from './icons';
 import { DeleteUsers } from './delete-users';
 import Notice from '../Notice';
+import { SetCompendiumEntryReviewedDocument } from '../IngredientEntry/review-mark';
 import { COMPENDIUM_EDIT_NOTICE } from './compendium-notice';
 import { NAMELESS_KIND, UNSETTLED_KIND } from '@/modules/ingredients/schema/ingredient-enums';
 import { CategoryField } from './categories';
@@ -85,13 +86,11 @@ import {
 } from './values';
 import { VariantsField, useVariantFolds } from './variants';
 import './index.scss';
+import ReviewRow from '../IngredientEntry/review-row';
 
-// Every property of an ingredient, validated by the shared schema before the
-// mutation is sent, and by the service again after. An error from either side
-// lands beside the field its path names, through the same element; one naming
-// no field lands above them all. A coven's ingredient, new or its own given to
-// edit (M8.17), or a compendium entry, new or given to edit (M5.5).
-// See claude-docs/components/ingredient-form.md.
+// Every property of an ingredient, validated by the shared schema before the mutation is sent and by
+// the service after; an error lands beside the field its path names, or above them all. A coven's
+// ingredient or a compendium entry, new or edited (claude-docs/components/ingredient-form.md).
 
 const CreateWorkspaceIngredientDocument = graphql(`
   mutation CreateWorkspaceIngredient($workspaceId: ID!, $input: IngredientInput!) {
@@ -110,9 +109,8 @@ const CreateWorkspaceIngredientDocument = graphql(`
   }
 `);
 
-// A coven's own entry saved over (M8.17). The update takes the whole entry,
-// every field present (MB.159), and reads back what the create does but the
-// jars, which a save has not moved since M12.27.
+// A coven's own entry saved over. The update takes every field and reads back what the create does
+// but the jars.
 const UpdateWorkspaceIngredientDocument = graphql(`
   mutation UpdateWorkspaceIngredient($workspaceId: ID!, $id: ID!, $input: IngredientUpdateInput!) {
     updateIngredient(workspaceId: $workspaceId, id: $id, input: $input) {
@@ -123,8 +121,7 @@ const UpdateWorkspaceIngredientDocument = graphql(`
   }
 `);
 
-// A match's + (M12.20's Use It, an icon since M12.48): the compendium entry goes
-// into the cupboard, no jar with it.
+// A match's +: the compendium entry goes into the cupboard, no jar with it.
 const AddCupboardEntryDocument = graphql(`
   mutation AddCupboardEntryFromForm(
     $workspaceId: ID!
@@ -167,22 +164,22 @@ const DeleteCompendiumIngredientDocument = graphql(`
   }
 `);
 
-// A coven's own entry is deleted from its edit dialog too (M8.17, moved from
-// M9.10): from this coven alone, a spell holding it still reaching it (M5.3).
+// A coven's own entry is deleted from its edit dialog too: from this coven alone, a spell holding
+// it still reaching it.
 const DeleteWorkspaceIngredientDocument = graphql(`
   mutation DeleteWorkspaceIngredient($id: ID!, $workspaceId: ID!) {
     deleteIngredient(id: $id, workspaceId: $workspaceId)
   }
 `);
 
-/** Keys pressed inside a reference panel are its own history's (M12.10). */
+/** Keys pressed inside a reference panel are its own history's. */
 const inReferencePanel = (target: HTMLElement): boolean =>
   target.closest('.ingredient-form__panel') !== null;
 
 /** A panel opening or closing is interface state among the values, not an edit to undo. */
 const isPanelState = (name: string): boolean => /(^|\.)referencePanelOpen$/.test(name);
 
-/** The path of MB.82's refusal: the write would end another entry's redirect, unless confirmed. */
+/** The error path of the refusal when a write would end another entry's redirect. */
 const END_REDIRECT = 'endRedirect';
 
 const IngredientForm = ({
@@ -196,10 +193,11 @@ const IngredientForm = ({
   quickLookOf,
   entryHref,
   mayPromote = false,
+  review,
 }: IngredientFormProps): ReactElement => {
   // A null coven is the compendium: the classification answered, the
   // vocabulary boxes picked from the curated rows, and every lookup asking
-  // about the compendium alone (M5.5; MB.162).
+  // about the compendium alone.
   const compendium = workspaceId === null;
   const methods = useForm<IngredientFormValues, unknown, IngredientFormInput>({
     defaultValues: entry ? openingValues(entry.values) : EMPTY_VALUES,
@@ -209,7 +207,7 @@ const IngredientForm = ({
     shouldFocusError: false,
     // A field is checked when it is first left, and on every change after, so
     // an untouched one stays quiet until submit. Not the default (submit, then
-    // change): story 31 wants the error beside the field as the person moves on.
+    // change): the error appears beside the field as the person moves on.
     mode: 'onTouched',
     reValidateMode: 'onChange',
   });
@@ -238,17 +236,15 @@ const IngredientForm = ({
   const { blocking } = duplicates;
   const kind = useWatch({ control, name: 'nomenclature' });
   // An edit saves over the entry, and opens nothing new; a new entry offers
-  // both saves (MB.131).
+  // both saves.
   const editing = entry !== undefined;
 
-  // Which of the six sections are open, several at once, each by its own
-  // heading (MB.115, the owner's calls): a new entry opens with every one
-  // open, as the long form it is; an edit with every one closed, its entry
-  // read at a glance from the summary lines.
+  // Which of the six sections are open, each by its own heading: a new entry opens with every one
+  // open, an edit with every one closed, read at a glance from the summary lines.
   const [open, setOpen] = useState<ReadonlySet<SectionKey>>(
     () => new Set(editing ? [] : SECTION_KEYS),
   );
-  // Each variant's own sections, which fold the same way (MB.115): one added
+  // Each variant's own sections, which fold the same way: one added
   // here opens with every one open, one an edit opened with, every one closed.
   const variantFolds = useVariantFolds();
   // Standing still through a press, as the fields' errors do.
@@ -291,14 +287,9 @@ const IngredientForm = ({
     if (blocking) createAnyway.current?.focus();
   }, [blocking, submitCount]);
 
-  // Save & Add Another leaves the form ready for the next ingredient, the owner's call
-  // (MB.131): once the save has landed, every field and list empties and the
-  // name takes the focus. In an effect rather than in `save`, so the reset
-  // comes after react-hook-form's own end-of-submit update, and counted here
-  // rather than read off `isSubmitSuccessful`, which a save held on the
-  // duplicate warning sets too. The name is found in the page, as the error
-  // focus above finds its field: `setFocus` reads a ref the reset has just
-  // dropped, and the field registers again only on the next render.
+  // Save & Add Another empties every field and list once the save has landed, and the name takes
+  // the focus. It runs in an effect, counted here, not read off `isSubmitSuccessful`
+  // (claude-docs/components/ingredient-form.md, "Save & Add Another and the toolbar").
   const [saves, setSaves] = useState(0);
   // What the last save wrote, said above the fields where a refusal would be,
   // so the cleared form is not the only sign it landed. A new save drops it.
@@ -308,31 +299,32 @@ const IngredientForm = ({
   const next = useRef<AfterSave>('open');
   const [pressed, setPressed] = useState<AfterSave>('open');
   const busy = (button: AfterSave): boolean => isSubmitting && pressed === button;
-  // MB.82's question while it waits for an answer: the save is kept, and End
+  // The end-redirect question while it waits for an answer: the save is kept, and End
   // Redirect & Save sends it again, confirmed.
   const [question, setQuestion] = useState<RedirectQuestion | null>(null);
   // The delete's own confirmation, and why a delete was refused.
   const [deleting, setDeleting] = useState(false);
   const [refusal, setRefusal] = useState<string>();
-  // The folk name whose promotion is being asked about (M12.1), if any.
+  // The folk name whose promotion is being asked about, if any.
   const [promoting, setPromoting] = useState<PromotedName | null>(null);
   // Whether the last save sent through `handleSubmit(save)` landed: Save and
   // Promote promotes only if it did.
   const landed = useRef(false);
-  // Cancel, and every other way out of the modal, asks first while the form
-  // has changes (MB.115, the owner's call), ahead of any other question; a
-  // save or a delete does not. A reference panel's own edits count too:
-  // they are in a form of their own, which `isDirty` never sees.
+  // Cancel, and every other way out of the modal, asks first while the form has changes, ahead of any
+  // other question; a save or a delete does not. A reference panel's own edits count too, though
+  // `isDirty` never sees them.
   const panels = usePanelChanges();
-  const discard = useDiscardGuard(isDirty || panels.changed);
+  // The Reviewed switch lives beside react-hook-form's values, not in the entry's input, and is
+  // saved on its own once the entry is. A flip still counts as a change: Save enables, Cancel and the guard ask.
+  const [reviewed, setReviewed] = useState(review?.reviewed ?? false);
+  const [reviewedSaved, setReviewedSaved] = useState(review?.reviewed ?? false);
+  const reviewChanged = compendium && review !== undefined && reviewed !== reviewedSaved;
+  const changed = isDirty || reviewChanged;
+  const discard = useDiscardGuard(changed || panels.changed);
 
-  // Open All / Close All: Close All while any section is open, so a press
-  // from any mix folds the form to its summary lines, the view the sections
-  // are for, and a new entry, all open, offers it at once. It reaches every
-  // variant's sections too; a variant's are in view only while Variants is
-  // open, which already reads Close All. Off while the form asks a question
-  // over itself, as Undo and Redo are then, the owner's call: a control that
-  // cannot be used reads as one, rather than faded with the form behind.
+  // Open All / Close All: Close All while any section is open, and it reaches every variant's
+  // sections too. Off while the form asks a question over itself, as Undo and Redo are then
+  // (claude-docs/components/ingredient-form.md, "Save & Add Another and the toolbar").
   const anyOpen = open.size > 0;
   const headerNote = useModalHeaderNote();
   const compendiumNotice = <Notice kind="plain">{COMPENDIUM_EDIT_NOTICE}</Notice>;
@@ -347,11 +339,9 @@ const IngredientForm = ({
     />
   );
 
-  // Undo and redo (M12.9, adopted here by M12.10), off while a save is in
-  // flight (its success handler resets over the values) or a question is up
-  // over the form. A restore opens whatever folds around the field it wrote,
-  // and a classification pick is one step with the formal name it emptied, so
-  // focus is named rather than left to the first of the two.
+  // Undo and redo, off while a save is in flight or a question is up over the form. A restore opens
+  // whatever folds around the field it wrote, and a classification pick is one step with the formal
+  // name it emptied, so focus is named rather than left to the first of the two.
   const history = useFormHistory(methods, {
     root: form,
     enabled: !discard.asking && !deleting && question === null && !isSubmitting,
@@ -381,7 +371,7 @@ const IngredientForm = ({
   });
   const { clear: clearHistory } = history;
   // The form starts over after its own save: what came before no longer
-  // leads anywhere (M12.10).
+  // leads anywhere.
   useEffect(() => {
     if (saves === 0) return;
     reset(EMPTY_VALUES);
@@ -412,7 +402,7 @@ const IngredientForm = ({
       // The compendium resolver has refused a missing classification, so the
       // input is the compendium's, whose `nomenclature` is required.
       if (entry) {
-        // The update takes the whole entry, every field present (MB.159),
+        // The update takes the whole entry, every field present,
         // which the form's input always is.
         const answer = await graphqlRequest(UpdateCompendiumIngredientDocument, {
           id: entry.id,
@@ -442,13 +432,27 @@ const IngredientForm = ({
   const deliver = async (input: IngredientFormInput, endRedirect: boolean): Promise<boolean> => {
     try {
       const row = await mutation.mutateAsync({ input, endRedirect });
+      // The review mark goes after the entry, which a new one has no id before. The entry is
+      // saved either way: a refusal here is said above the fields and leaves the switch changed.
+      let reviewRefusal: string | undefined;
+      if (reviewChanged) {
+        try {
+          await graphqlRequest(SetCompendiumEntryReviewedDocument, { id: row.id, reviewed });
+          setReviewedSaved(reviewed);
+        } catch (error) {
+          reviewRefusal = `Saved, but the review mark was not: ${readGraphqlFailure(error).alert}`;
+        }
+      }
       onSaved?.(row, next.current);
+      if (reviewRefusal) setRefusal(reviewRefusal);
       setSaved(row.name);
       // Save Ingredient's page opens what it made, so its form is about to go
       // and keeps its values; Save & Add Another clears for the next one. An
       // edit keeps what it saved, now nothing to save until it changes again.
       if (next.current === 'another') {
         setSaves((count) => count + 1);
+        setReviewed(review?.reviewed ?? false);
+        setReviewedSaved(review?.reviewed ?? false);
         // The next entry is a new one, so every section opens, as for this one.
         setOpen(new Set(SECTION_KEYS));
         variantFolds.setAll(true, 0);
@@ -460,7 +464,7 @@ const IngredientForm = ({
       return true;
     } catch (error) {
       // setError, as the resolver's own errors are set: the next submit or an
-      // edit to the field clears them the same way. MB.82's refusal is a
+      // edit to the field clears them the same way. The end-redirect refusal is a
       // question rather than an error: it asks before the save goes again.
       placeServerIssues(error, setError, ({ path, message }) => {
         if (path[0] !== END_REDIRECT) return fieldNameOf(path, getValues());
@@ -472,15 +476,9 @@ const IngredientForm = ({
   };
 
   /**
-   * A compendium match's +: the entry goes in under its own name, and what else
-   * was typed rides as the coven's overrides. The typed name is never sent as a
-   * label: it was a search that found the entry, and as a label it could clash
-   * with one the coven already gives another entry, which refused the add (the
-   * owner's call, M12.48). The entry can be relabelled on its page. The form
-   * stays open with what was typed, reported as Save & Add Another's save is
-   * (`another`), and the + says the add itself: its check, then the eye, and
-   * the row moving under In This Coven (the owner's calls, M12.48, in place of
-   * opening the entry's page). Answers whether it went in.
+   * A compendium match's +: the entry goes in under its own name, and what else was typed rides as
+   * the coven's overrides. The form stays open with what was typed; answers whether it went in
+   * (claude-docs/components/ingredient-form.md, "How the duplicate list behaves").
    */
   const useEntry = async (match: Duplicate): Promise<boolean> => {
     if (workspaceId === null) return false;
@@ -517,24 +515,20 @@ const IngredientForm = ({
   };
 
   const save = async (input: IngredientFormInput): Promise<void> => {
-    // A near match not yet dismissed holds a save that would otherwise go,
-    // asked about the name being sent rather than waiting out the debounce.
-    // After validation, so an error to fix comes first. An edit renames what
-    // exists rather than making another, so its warning holds nothing (MB.115,
-    // the owner's call).
+    // A near match not yet dismissed holds a save that would otherwise go, asked about the name being
+    // sent. After validation, so an error to fix comes first. An edit's warning holds nothing, as it
+    // renames what exists.
     if (!editing && (await duplicates.check(input.name))) return;
     landed.current = await deliver(input, false);
   };
 
-  // Promoting a folk name (M12.1). Only a saved entry has folk names with ids.
+  // Promoting a folk name. Only a saved entry has folk names with ids.
   const promotion = usePromoteFolkName(workspaceId, entry?.id ?? '');
   const promoteOffered = mayPromote && entry !== undefined;
 
   /**
-   * Save & Promote's first half: the form's own save, validated and drawn as
-   * any save is. When it does not land the question closes and the first
-   * invalid field takes the focus by hand, since the question's overlay would
-   * otherwise hand the focus back to the control that opened it.
+   * Save & Promote's first half: the form's own save, validated and drawn as any save is. When it
+   * does not land the question closes and the first invalid field takes the focus by hand.
    */
   const saveForPromotion = async (): Promise<boolean> => {
     landed.current = false;
@@ -593,11 +587,11 @@ const IngredientForm = ({
           the unsaved changes' asks, drawn in the same place. */}
             <DiscardAskingContext.Provider value={discard.asking}>
               {/* Where each linked substitute's summary links its entry, read by
-          the chips however deep their list sits (MB.115). */}
+          the chips however deep their list sits. */}
               <EntryHrefContext.Provider value={entryHref}>
-                {/* An edit of the compendium says so (M8.17), drawn here so every
+                {/* An edit of the compendium says so, drawn here so every
           dialog that opens it shows it once: under a modal's title, above
-          its Open All row (the owner's call, 2026-10-19), or outside a modal
+          its Open All row, or outside a modal
           above the form. */}
                 {compendium &&
                   editing &&
@@ -624,10 +618,9 @@ const IngredientForm = ({
                   {saved !== null && <Notice kind="success">Saved {saved}.</Notice>}
                   {errors.root && <Notice kind="error">{errors.root.message}</Notice>}
                   {refusal && <Notice kind="error">{refusal}</Notice>}
-                  {/* The sections flush, between hairlines. The one control that
-              opens or closes them all sits beside the modal's title, the
-              owner's call (MB.115); outside a modal, at the end of the line
-              above the first section. */}
+                  {/* The sections flush, between hairlines. The one control that opens or closes them
+              all sits beside the modal's title; outside a modal, at the end of the line above the
+              first section. */}
                   <div className="collapsible-sections">
                     {foldAll}
                     {/* After Open All, so the header reads Open All, Undo, Redo. */}
@@ -652,7 +645,7 @@ const IngredientForm = ({
                       {/* The kind decides the formal name's error, so a change to it
             revalidates the formal name. A named kind marks it required;
             Unknown leaves it open and optional. A coven's formal name with no
-            kind saves as unknown, so nothing marks the kind there (MB.161);
+            kind saves as unknown, so nothing marks the kind there;
             a compendium entry declares one always (§5). None takes no formal
             name at all, so choosing it empties the field and shuts it, with
             the reason in view rather than in a tip: a shut field that does
@@ -681,8 +674,8 @@ const IngredientForm = ({
                         disabled={kind === NAMELESS_KIND}
                         required={kind !== '' && kind !== NAMELESS_KIND && kind !== UNSETTLED_KIND}
                       />
-                      {/* Suggests from this coven and the compendium (M4.7a): the folk
-            names in use. The form is each variant's, beneath (MB.221). */}
+                      {/* Suggests from this coven and the compendium: the folk
+            names in use. The form is each variant's, beneath. */}
                       <LookupListField
                         workspaceId={workspaceId}
                         useSuggestions={useCommonNameSuggestions}
@@ -716,7 +709,7 @@ const IngredientForm = ({
                         label="Description"
                         placeholder="What it is, where it comes from and how it is used"
                         multiline
-                        // Seven lines, as each variant's Description (MB.115, the owner's call).
+                        // Seven lines, as each variant's Description.
                         rows={7}
                       />
                       <TextField<IngredientFormValues>
@@ -725,7 +718,7 @@ const IngredientForm = ({
                         placeholder="Add safety notes"
                         multiline
                       />
-                      {/* Its own flag: a toxic form says so on its own (M11.21). */}
+                      {/* Its own flag: a toxic form says so on its own. */}
                       <ToggleField name="toxic" label="Toxic" />
                     </CollapsibleSection>
                     <CollapsibleSection
@@ -733,7 +726,7 @@ const IngredientForm = ({
                       summary={<SectionSummary section="correspondences" />}
                       fold={fold('correspondences')}
                     >
-                      {/* Several at once, in the order chosen (MB.159); none chosen is
+                      {/* Several at once, in the order chosen; none chosen is
             the answer "none", so there is no None to choose. */}
                       <MultiSelectField
                         name="elements"
@@ -741,16 +734,9 @@ const IngredientForm = ({
                         placeholder="Add an element"
                         options={ELEMENT_OPTIONS}
                       />
-                      {/* Each list but the colours suggests (MB.131): celestial bodies, signs and
-            deities from their curated vocabularies and the values in use, a
-            pick adding the text, and a curated deity's a link to it as well
-            (MB.169); substitutes from the compendium and this coven, a pick
-            adding a link to the ingredient. On the compendium the celestial bodies,
-            signs and deities are picks of the curated rows alone, and the
-            substitutes its other entries (MB.162, MB.138). Celestial bodies, signs,
-            colours and deities keep the order entered, so their entries move
-            (MB.170); folk names and substitutes read alphabetically, so
-            theirs do not. */}
+                      {/* Each list but the colours suggests, from the curated vocabularies where
+            there are some and from this coven and the compendium otherwise
+            (claude-docs/components/ingredient-form.md, "Suggestion lists and fields"). */}
                       <LookupListField
                         workspaceId={workspaceId}
                         useSuggestions={useCelestialBodySuggestions}
@@ -795,13 +781,13 @@ const IngredientForm = ({
                       summary={<SectionSummary section="relations" />}
                       fold={fold('relations')}
                     >
-                      {/* First in Relations, on the owner's call at MB.115 (MB.126 had put it
-            after the lists): every live category, picked from chips grouped by
+                      {/* First in Relations: every live category, picked from chips grouped by
             category group. */}
                       <CategoryField />
                       <LookupListField
                         workspaceId={workspaceId}
-                        // Fixed for the form's life, since its tier is, so the hook called is always the same.
+                        // Fixed for the form's life, since its tier is, so the hook called is
+                        // always the same.
                         useSuggestions={
                           compendium ? useCompendiumSubstitutes : useSubstituteSuggestions
                         }
@@ -811,7 +797,7 @@ const IngredientForm = ({
                         entry="Substitute Ingredient"
                         placeholder="Add a substitute"
                       />
-                      {/* Which form of each linked ingredient, when it comes in several (MB.215). */}
+                      {/* Which form of each linked ingredient, when it comes in several. */}
                       <SubstituteForms name="substitutes" />
                     </CollapsibleSection>
                     <CollapsibleSection
@@ -819,27 +805,39 @@ const IngredientForm = ({
                       summary={<SectionSummary section="sources" />}
                       fold={fold('sources')}
                     >
-                      {/* Last, as a bibliography is (MB.154): the sources picked, each
+                      {/* Last, as a bibliography is: the sources picked, each
             with its locator, and a panel for a new one. */}
                       <ReferencesField workspaceId={workspaceId} />
                     </CollapsibleSection>
-                    {/* After the ingredient's own fields, as the page shows its forms
-            after it (MB.215): each form, and what it adds. */}
+                    {/* After the ingredient's own fields, as the page shows its forms after it:
+            each form, and what it adds. */}
                     <VariantsField
                       workspaceId={workspaceId}
                       fold={fold('variants')}
                       folds={variantFolds}
                     />
                   </div>
-                  {/* Two saves, both held down from the press to the answer, the
-              duplicate check included: Save Ingredient, first and so the
-              default Enter presses, opens what it made; Save & Add Another
-              clears the form for the next. The one pressed says so, the
-              owner's call during MB.131. An edit has the first alone, and
-              Delete apart at the far end, in either tier (M8.17). */}
+                  {/* The compendium's review row: after the last section and before the buttons, the
+              same row the Quick Look ends its head with. Its words show the saved state, the
+              switch the form's own value, a field that Save carries and Cancel discards. For a
+              curator or admin only (claude-docs/components/ingredient-entry.md, "Structure"). */}
+                  {compendium && review && (
+                    <div data-focus-skip>
+                      <ReviewRow
+                        standing={reviewedSaved}
+                        reviewedAt={reviewedSaved === review.reviewed ? review.reviewedAt : null}
+                        checked={reviewed}
+                        onChange={setReviewed}
+                      />
+                    </div>
+                  )}
+                  {/* Two saves, held down from the press to the answer (the duplicate check
+              included): Save Ingredient, first and so the default Enter, opens what it made;
+              Save & Add Another clears the form. An edit has the first alone, and Delete apart at
+              the far end, in either tier. */}
                   <FormActions
                     noun="Ingredient"
-                    dirty={isDirty}
+                    dirty={changed}
                     submitting={isSubmitting}
                     busy={busy('open')}
                     saveValue="open"
@@ -857,7 +855,7 @@ const IngredientForm = ({
                       <BusyButton
                         type="submit"
                         value="another"
-                        disabled={!isDirty || isSubmitting}
+                        disabled={!changed || isSubmitting}
                         busy={busy('another')}
                         busyLabel="Saving Ingredient"
                       >
@@ -865,18 +863,21 @@ const IngredientForm = ({
                       </BusyButton>
                     )}
                   </FormActions>
-                  {/* A question is asked over the form, centred in view however far
-              the form is scrolled, the focus on Keep It (MB.115, the owner's
-              call): the unsaved changes' first, then MB.82's, then Delete's. */}
+                  {/* A question is asked over the form, centred in view however far it is scrolled,
+              the focus on Keep It: the unsaved changes' first, then the end-redirect's, then
+              Delete's. */}
                   {promoteOffered && (
                     <PromoteFolkNameQuestion
                       promotion={promotion}
                       folkName={promoting}
                       displayName={entry?.values.name ?? ''}
                       tier={compendium ? 'compendium' : 'coven'}
-                      dirty={isDirty || panels.changed}
+                      dirty={changed || panels.changed}
                       saveFirst={saveForPromotion}
-                      discardFirst={() => reset()}
+                      discardFirst={() => {
+                        reset();
+                        setReviewed(reviewedSaved);
+                      }}
                       onPromoted={promoted}
                       onKeep={() => setPromoting(null)}
                       onRefused={(message) => {
@@ -886,9 +887,8 @@ const IngredientForm = ({
                     />
                   )}
                   {question ? (
-                    // MB.82: the address this save takes is another entry's redirect.
-                    // Asked before anything else is pressed; Keep It leaves the entry
-                    // as typed, unsaved.
+                    // The address this save takes is another entry's redirect. Asked before anything
+                    // else is pressed; Keep It leaves the entry as typed, unsaved.
                     <ConfirmQuestion
                       key="redirect"
                       guard={discard}

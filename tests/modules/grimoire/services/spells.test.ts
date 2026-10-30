@@ -19,7 +19,7 @@ import { makeIngredient, makeSpell, makeVariant } from '../../../support/fixture
 import type { SpellVisibility } from '@/modules/grimoire';
 import type { Session } from '@/lib/session';
 
-// The grimoire's service (M10.5): members and owners write, viewers read, and
+// The grimoire's service: members and owners write, viewers read, and
 // a private spell is its author's alone. Every row a result could come from is
 // one this file wrote, through the raw client.
 
@@ -326,7 +326,7 @@ describe('a linked step’s ingredient', () => {
   });
 });
 
-// M10.10: a save writes the spell's fields and its whole recipe, one ordered
+// A save writes the spell's fields and its whole recipe, one ordered
 // list of steps, in one transaction. What each test asserts is the rows the
 // save left behind, read raw, tombstones included.
 
@@ -749,7 +749,7 @@ describe('updateSpell, with its recipe', () => {
     );
   });
 
-  it('lets a draft narrow and widen freely (M10.20)', async () => {
+  it('lets a draft narrow and widen freely', async () => {
     const draft = await createSpell(asUser(B), WORKSPACE_W_ID, {
       status: 'draft',
       visibility: 'workspace',
@@ -917,7 +917,7 @@ describe('a spell’s assigned categories', () => {
   });
 });
 
-describe('updateSpell, against the revision it was read at (M13.18)', () => {
+describe('updateSpell, against the revision it was read at', () => {
   /** A spell two members have both read at the same revision. */
   async function readByBoth() {
     const id = await seed(A, 'workspace', { title: 'Shared Jar' });

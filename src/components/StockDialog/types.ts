@@ -26,12 +26,7 @@ export interface StockDialogProps {
   forms: readonly StockForm[];
   /** The jars held, one per form at most. */
   jars: readonly StockJar[];
-  /**
-   * A form, by its variant id, to open on: it is the chosen one as the dialog
-   * opens. A form the coven holds no jar of is added as a new row first, as
-   * Add Form would, so a press on an empty jar on the entry page lands on its
-   * fields. Left out, the first jar is chosen.
-   */
+  /** A form, by its variant id, to open on; a form with no jar is added as a new row first. Left out, the first jar is chosen. */
   openOn?: string;
 }
 

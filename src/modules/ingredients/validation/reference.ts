@@ -12,14 +12,8 @@ import {
 } from './reference-format';
 import type { ReferenceTextField } from './types';
 
-// One reference as the form submits it and the service parses it (MB.153):
-// the CHECKs MB.152 put on `references`, each refusal pathed to the field it
-// is about rather than surfacing as a constraint name, plus the form's own
-// rule that a book needs a date (claude-docs/db/references.md). Each field is
-// tidied as it is parsed — spacing, a title's wrapping quotes, a range's
-// dash, an address's scheme, an edition's form — and held to MB.154's
-// checks, the owner's calls: a day not yet come, a page that is not a number
-// (reference-format.ts; the same doc, "Formatting and checks").
+// One reference as the form submits it: the database CHECKs on `references`, each refusal pathed to its field, plus the rule that a
+// book needs a date. Each field is tidied as it is parsed, then checked (claude-docs/db/references.md, "Formatting and checks").
 
 /**
  * A text field as Chicago prints it: formatted as the form formats it when
@@ -39,11 +33,7 @@ const TEXT_FIELDS = Object.fromEntries(
 const optionalDay = (field: 'modified' | 'accessed') =>
   textField(field).pipe(CalendarDay.nullish());
 
-/**
- * Absolute http(s), as `references_url_absolute` holds it, and an address a
- * browser can follow to a named site; one typed without its scheme is taken
- * as https first.
- */
+/** Absolute http(s), as `references_url_absolute` holds it; one typed without its scheme is taken as https first. */
 const url = textField('url').superRefine((value, ctx) => {
   const problem = value == null ? undefined : addressProblem(value);
   if (problem) ctx.addIssue({ code: 'custom', message: problem });

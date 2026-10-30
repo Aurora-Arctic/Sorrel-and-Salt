@@ -25,11 +25,9 @@ import {
   fieldDescription,
 } from '.';
 
-// Render-only; the fields are exercised by the forms that use them
-// (IngredientForm, the admin forms, NameForm, EmailForm). Each TextField sits
-// in a react-hook-form `FormProvider`, as it does in a form; the error is put
-// in the form's state rather than found by a resolver. The hint's tip opens
-// on hover, a tap, or the ⓘ's focus.
+// Render-only; the forms that use the fields assert them. Each TextField sits in a
+// react-hook-form `FormProvider`, with the error put in the form's state. The
+// hint's tip opens on hover, a tap, or the ⓘ's focus.
 const meta = {
   title: 'Forms / Field',
 } satisfies Meta;
@@ -282,10 +280,9 @@ export const PlainShell: Story = {
   },
 };
 
-// An on-or-off choice as a slide toggle, held in the caller's state as a
-// list filter holds it: off, on, and shut either way, each label above its
-// toggle as a field's is. Tab to one for the focus ring; press and hold for
-// the stretched thumb.
+// A slide toggle held in the caller's state as a list filter holds it: off, on,
+// and shut either way, each label above its toggle. Tab to one for the focus
+// ring; press and hold for the stretched thumb.
 const Toggle = ({
   label,
   on = false,
@@ -370,7 +367,7 @@ export const RadioStrip: Story = {
   },
 };
 
-// The segmented layout (M12.4): a text bar, each segment's name with how many
+// The segmented layout: a text bar, each segment's name with how many
 // entries it would leave. The compendium filter's Toxic, and its Match without counts.
 export const RadioSegmented: Story = {
   render: () => {
@@ -482,10 +479,9 @@ export const Actions: StoryObj<ActionHandlers> = {
   ),
 };
 
-// The row at work, a form of one field: Save wakes when the field changes,
-// holds busy for a moment, then settles; Cancel puts the field back; Delete
-// removes the form. `status` is the arg that carries it, so the controls
-// panel shows and sets it.
+// The row at work, a form of one field: Save wakes when the field changes, holds
+// busy, then settles; Cancel restores the field; Delete removes the form.
+// `status` is an arg so the controls panel sets it.
 type InUseArgs = ActionHandlers & {
   status: 'editing' | 'saving' | 'saved' | 'cancelled' | 'deleted';
 };
@@ -616,10 +612,8 @@ const Search = () => {
 export const SearchBox: Story = { render: () => <Search /> };
 
 // A list filter's closed set as the browser draws it once hydrated: the
-// select-only box, its blank first choice no filter, and the same set typed
-// into, as the curated lists' group is. The server draws each as a native
-// select at the same width, so hydration moves nothing. Each applies nowhere
-// here: a filter's FilterForm opens the list (Forms / Filter Form).
+// select-only box and the same set typed into. The server draws each as a native
+// select at the same width, so hydration moves nothing.
 const GROUPS = [
   { value: 'fixture-substance', label: 'Fixture Substance' },
   { value: 'testwort-wards', label: 'Testwort Wards' },

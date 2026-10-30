@@ -19,11 +19,8 @@ import { insertIngredient } from '../../support/db/insert-ingredient';
 import { insertSpell } from '../../support/db/insert-spell';
 import { makeIngredient, makeSpell } from '../../support/fixtures';
 
-// What a spell holds, read past a tombstone: a spell is a record of a working,
-// so an ingredient deleted after it went into the jar is still in it — and
-// its categories still count — for everyone who may read the spell and nobody
-// else (claude-docs/db/spell-visibility.md, "What a spell holds"). Every row a result could
-// come from is one this file wrote.
+// What a spell holds, read past a tombstone: a spell records a working, so an ingredient deleted after it went into the jar is still in it, and its categories still count, for everyone who may read the spell and nobody else
+// (claude-docs/db/spell-visibility.md, "What a spell holds"). Every row a result could come from is one this file wrote.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -133,12 +130,8 @@ describe('findIngredientsInSpellsIncludingSoftDeleted', () => {
     ).resolves.toEqual([]);
   });
 
-  // Who may read which spell is readableSpells, the rule
-  // tests/db/repository/readable-spells.test.ts proves over findOneSpell and
-  // findManyInSpell. What this finder adds is that it ANDs that rule in,
-  // proved once for each half — the visibility here, the proof's workspace
-  // below; a deleted spell is existsIn's, which ANDs a parent's filter by
-  // construction (tests/guards/soft-delete-finder-guard.test.ts).
+  // Who may read which spell is readableSpells, proved over findOneSpell and findManyInSpell in readable-spells.test.ts. This finder adds that it ANDs that rule in, proved once for each half: the visibility here, the proof's workspace below.
+  // A deleted spell is existsIn's, which ANDs a parent's filter by construction (tests/guards/soft-delete-finder-guard.test.ts).
   it('withholds what a private spell holds from every member but its author, the owner included', async () => {
     const localId = await local(WORKSPACE_W_ID, A);
     await spellHolding([localId], { author: B, visibility: 'private' });
@@ -289,7 +282,7 @@ describe('findFormsInSpellsIncludingSoftDeleted', () => {
   });
 });
 
-// A layer pulled out of a jar is a tombstone (MB.110), and every read of the
+// A layer pulled out of a jar is a tombstone, and every read of the
 // jar lets it go: the ingredient it held is no longer something the spell holds.
 describe('a layer removed from a spell', () => {
   it('is gone from findManyInSpell, beside the layer still in the jar', async () => {

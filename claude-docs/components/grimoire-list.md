@@ -37,6 +37,12 @@ named in one batch too: the page reads through the services rather than GraphQL,
 `displayNamesOf` (`@/modules/identity`) once with every spell's `updatedBy`, and each card's
 `lastEdit` is that name, or null for an editor the viewer cannot name, with `updatedAt`.
 
+A delete on a spell's page (M13.11) leaves for the tab the spell was listed on with
+`?deleted=<name>`, which the tab draws as a success Notice above the list, "**Hearth Warding**
+was deleted.", a status region so it is announced as the list shows. It is read once: the
+next address the tab builds (a filter, a page, a dialog's close) drops it, so a reload of that
+address is the only way to see it again.
+
 ## Props
 
 `GrimoireListProps` (`types.ts`):
@@ -133,7 +139,7 @@ assigned categories and editor come from `readRecipeOf` (`grimoire/recipe-read.t
 function the recipe page calls, with the editor named in one `displayNamesOf` call. Each ingredient step then carries its stock mark (`supply`), from one `readStepSuppliesOf` call (`grimoire/[id]/recipe-supply.ts`), since the modal has no In Coven Inventory column to show it (story 54; [spell-recipe.md](spell-recipe.md), "Quick Look"). A malformed
 id reads nothing, and `?new` or `?edit` hold the modal back so one dialog shows at a time. The
 modal's Edit shows for the same `rolePermits(role, { spell: ['update'] })` check as the card's
-pencil and links to `?edit=<id>` in place of `?spell=<id>`. An ingredient step's Quick Look eye
+pencil and links to `?edit=<id>` in place of `?spell=<id>`. Delete Spell's bin, with the same confirmation dialog, sits beside it in the Quick Look's heading and on each card, for the roles that may delete (`rolePermits(role, { spell: ['delete'] })`: owner and member, not viewer). A confirmed delete from either lands on this tab's address, filter and page kept and `?spell` dropped, with `deleted=<name>` added for the Notice (M13.11). The confirmation dialog stacks over the Quick Look. An ingredient step's Quick Look eye
 opens the ingredient's details (`DetailsDialog`, M12.5) over the spell's modal, at the same
 address plus `&entry=<id>`, read with the Ingredients page's `readViewedEntry` and drawn with
 its `viewedDetailsOf` (`ingredients/viewed-details.tsx`), without the card's actions; closing
@@ -174,3 +180,20 @@ One thing in the list exists for the cards' smouldering edge ([spell-card.md](sp
 - Visibility, search, categories and counts are proved below the page, in
   `tests/db/repository/readable-spell-page.test.ts` and
   `tests/modules/grimoire/services/spell-reads.test.ts`.
+
+## The empty states
+
+A grimoire tab with no card to show draws one of two status regions, named so a test or a screen reader can tell them apart, as the coven's cards do.
+
+- No Spells (No Drafts on the Drafts tab): the tab holds nothing yet.
+- No Matches: a filter is in force and matched nothing. The search sentence above already names the filter, so this only says what to do. `hasFilter` is the search sentence's own test, so the two never disagree.
+
+There is no first add here: New Spell at the Grimoire's heading opens the builder.
+
+## Search parameters
+
+The grimoire takes the compendium's search text and its category filter with the match mode as they are, so the filter row and the pager write the grimoire's address as they write every other list's (see "The parameter table" in `ingredient-search.md`). There is no status parameter, because Spells and Drafts are two addresses. Four facets sit beside them:
+
+- Moon Phase and Day of Week are free text, a spell's own words, so an uncurated value stays valid.
+- Visibility is one of a fixed pair.
+- Coven Member is the ids of the members who made the spells; each is checked as an id and a repeat is dropped.

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Marks one compendium entry file for update (M14.7): writes `seedUpdate:
+// Marks one compendium entry file for update: writes `seedUpdate:
 // <hash>` into its frontmatter, the hash of the file as it stands, so the
 // next seed run applies the change. Refuses a file that is not `approved`.
 //

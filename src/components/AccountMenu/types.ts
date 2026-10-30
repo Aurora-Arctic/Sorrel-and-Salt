@@ -15,10 +15,8 @@ export interface AccountMenuProps {
    */
   links?: readonly SiteLink[];
   /**
-   * How many coven invitations wait for their address (M10.32). Above 0, and
-   * verified, the avatar wears a dot, a count beside Your Account links to the
-   * account page's Invitations section with a tip below it, and the button
-   * says how many to a screen reader. Defaults to 0.
+   * How many coven invitations wait for their address. Above 0, and verified, the
+   * avatar wears a dot, a count beside Your Account links to the Invitations section with a tip below it, and the button says how many to a screen reader. Defaults to 0.
    */
   pendingInvitations?: number;
 }

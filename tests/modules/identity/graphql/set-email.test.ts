@@ -5,12 +5,8 @@ import { noSender } from '../../../support/email-verification';
 import { B, asUser } from '../../../support/as-user';
 import { run as runOperation } from '../../../support/graphql/run';
 
-// `setEmail` over the real schema, with a sender that records what it was
-// asked to mail: the mutation's `next` is where the link lands afterwards
-// (claude-docs/auth/admin-bootstrap.md, "The email page"), and its one
-// `VALIDATION` read as the browser reads it. What the service refuses, and
-// why, is services/email.test.ts's; a signed-out caller is
-// tests/db/graphql-query-scopes.test.ts's.
+// `setEmail` over the real schema, with a sender that records what it was asked to mail: the mutation's `next` is where the link lands afterwards (claude-docs/auth/admin-bootstrap.md, "The email page"), and its one `VALIDATION` is read as the browser reads it.
+// What the service refuses is services/email.test.ts's; a signed-out caller is tests/db/graphql-query-scopes.test.ts's.
 
 const NEW = 'new@set-email.test';
 

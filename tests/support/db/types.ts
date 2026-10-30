@@ -16,10 +16,7 @@ export interface CatalogueReads {
 }
 
 export interface ForeignKeyFacts {
-  /**
-   * The referencing columns joined by `, `: one name for a single-column key,
-   * `variant_id, ingredient_id` for MB.217's composite ones.
-   */
+  /** The referencing columns joined by `, `: one name for a single-column key, `variant_id, ingredient_id` for a composite one. */
   column: string;
   /** The referencing columns, in the key's order. */
   columns: string[];

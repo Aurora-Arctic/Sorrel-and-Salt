@@ -9,7 +9,7 @@ import { A, B, C, D, asUser } from '../../../support/as-user';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 
-// M12.22: the compendium entries a coven's own entry is (same identity) or may
+// The compendium entries a coven's own entry is (same identity) or may
 // be (same label, when it declares no formal name). The table is emptied
 // per test, so every row a result could come from is one this file wrote.
 

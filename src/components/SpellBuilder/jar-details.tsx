@@ -8,11 +8,10 @@ import { useCategoryColors } from './category-colors';
 import type { SpellStepsValues } from './steps/types';
 import { isInstruction } from './steps/values';
 
-// The Jar section's details, above its step list (the owner's call, 2026-10-29: with In Coven
-// Inventory gone, one column): the Seal Wax field with the jar drawn at its left, level with
-// the label and the input together (the owner's call, 2026-10-29), then the Jar Description on its own line.
-// The jar fills as steps are added.
-// claude-docs/components/spell-builder.md, "The jar details".
+// The Jar section's details, above its step list, in one column: the Seal Wax field with the jar
+// drawn at its left, level with the label and the input together, then the Jar Description on its
+// own line. The jar fills as steps are added. claude-docs/components/spell-builder.md, "The jar
+// details".
 
 /**
  * The colour of a layer: the group colour of the step's first category in its listed order

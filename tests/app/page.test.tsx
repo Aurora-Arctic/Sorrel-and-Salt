@@ -2,11 +2,8 @@ import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Session } from '@/lib/session';
 
-// `/` offers a signed-in visitor the landing for their role and a signed-out
-// one the sign-in page (claude-docs/components/welcome.md). What the session
-// is, is tests/lib/request-session.test.ts's, and which landing a role gets
-// tests/lib/sign-in.test.ts's; here the session and the viewer's first coven
-// are mocked.
+// `/` offers a signed-in visitor the landing for their role and a signed-out one the sign-in page (claude-docs/components/welcome.md).
+// The session is tests/lib/request-session.test.ts's and the landing per role tests/lib/sign-in.test.ts's; here both and the viewer's first coven are mocked.
 
 const getSession = vi.fn<() => Promise<Session | null>>();
 const sessionIsVerified = vi.fn<() => Promise<boolean>>();
@@ -70,7 +67,7 @@ describe('the / page', () => {
     expect(screen.getByRole('link', { name: 'Continue' })).toHaveAttribute('href', '/admin');
   });
 
-  // Into the coven itself, never via the /coven landing's redirect (MB.257).
+  // Into the coven itself, never via the /coven landing's redirect.
   it('continues a signed-in member straight into their first coven', async () => {
     getSession.mockResolvedValue({ userId: USER_ID, role: 'user' });
     firstCovenSlugOf.mockResolvedValue('fixture-coven');

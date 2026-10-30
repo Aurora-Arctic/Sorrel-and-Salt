@@ -5,9 +5,8 @@ import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons
 import type { GroupColorColumn, GroupColors } from '../../lib/types';
 
 /**
- * Which group vocabulary the form writes: the category groups, whose rows
- * carry a chip's two colours; the ingredient form groups; or the deity
- * traditions (MB.132), which carry none.
+ * Which group vocabulary the form writes: the category groups, whose rows carry a chip's
+ * two colours; the ingredient form groups; or the deity traditions, which carry none.
  */
 export type GroupKind = 'category' | 'form' | 'tradition';
 
@@ -62,10 +61,8 @@ export interface GroupChoice extends Partial<GroupColors> {
 }
 
 /**
- * The fields as typed. A form group has no colours, so its two stay `''` and
- * its schema drops them before the request; the other kinds have no glyph, so
- * their `icon` stays `''` too, and a form group's `''` is None, which its
- * schema sends as null.
+ * The fields as typed. A form group has no colours and its schema drops them before the request; the
+ * other kinds have no glyph, so `icon` stays `''`, and a form group's `''` is None, sent as null.
  */
 export interface GroupValues {
   name: string;
@@ -84,7 +81,7 @@ export interface GroupFormProps {
   kind: GroupKind;
   /** The group to edit; none adds one. */
   group?: EditedGroup;
-  /** Every live group, alphabetical (MB.35): the edited one's rows move to one of the others. */
+  /** Every live group, alphabetical: the edited one's rows move to one of the others. */
   groups: readonly GroupChoice[];
   /** How many live rows are filed under the edited group, which a delete must move. */
   memberCount?: number;

@@ -192,3 +192,36 @@ redirect, and the forms read past their first page, each name once. The Categori
 - **The Categories column has a floor where the table is wide.** At a frame of 75rem or more the column is at least 16.75rem of content (plus the cell inset), measured against the widest row of chips any of the 313 seeded entries shows with the final compact, dot-less chips: Aspen's Ancestor Work and Communication with its +8 button, 266px (16.625rem), rounded up to the next 0.25rem. Narrower, the floor does not apply and the table scrolls instead of wrapping the chips; as a card the rule never applies.
 - **A row stays on one line while the table is a table** (2026-10-19, the owner's call). The table takes `data-table--nowrap`, so no cell wraps and the table scrolls sideways in its frame. That class alone does not hold the two flex rows, so the Form column's `.compendium-list__forms` and the Categories cell's chip row are set to `flex-wrap: nowrap` too (the chip rule is scoped to the Categories cell, so cards elsewhere still wrap). As a card (the frame under `$table-stack-width`) the cells, the forms and the chips all wrap again.
 - **The dot between forms is centred on the form's own box** (`inset-block: 0; margin-block: auto`), and the table's form wrapper is a flex box so that box is as tall as the form. Measured in Chromium: the dot's centre equals the icon's centre on the card and in the table; the lowercase x-height centre sits 0.5px (card) and 1.5px (table) lower.
+
+## The compendium page
+
+`src/app/(public)/compendium/page.tsx` draws the list per request over the cached reads (`readCompendium` and the rest take no session), so every card and link is in the server HTML. The viewer is asked only for the foot of each card, and never redirects (M8.18, MB.80).
+
+- **Curator Edit (M8.17).** A curator (`canCurate`) gets Edit on each card, which opens the compendium's edit dialog over the results from `?edit=<slug>` and closes back to the same search. `?edit=` is read only once the viewer is known to curate; for anyone else it opens nothing and reads nothing. The list's reads stay the cached, sessionless ones, keyed by the address alone (rule 6).
+- **Filters the page drops (M14.8).** The address carries the admin list's filters bar three: No Refs, No Form and Reviewed are the curators' to-do lists, so `?withoutReferences=1`, `?withoutForms=1` and `?reviewed=` are dropped before the table reads them. The services refuse a review filter from anyone who does not curate, so dropping it is what keeps the page from failing on one.
+- **In My Covens and Not In (M12.55).** In My Covens narrows the list to the entries the viewer's picked covens hold, any role. Not In (`?covensNot=1`) narrows it to the entries none of them holds, or with none picked, none of the viewer's covens. Only then, and only with a session, the list and its counts are read through the uncached held-in reads, which prove each coven and drop the rest (reading the cached ones when every coven is dropped). Otherwise, and for a visitor whatever the address says, the reads are the cached ones. Each card's plus or check counts and names every coven of the viewer's that holds the entry, including the ones they only view.
+- **Quick Look (M12.5).** Each card's Quick Look, for anyone, opens the entry's details over the results from `?entry=<id>`, read by id with no session through the public entry page's cached read: the compendium as the compendium has it, with no coven's label, annotations or held state. An id naming no compendium entry (a coven's own included) opens nothing and says nothing. A curator's Edit in the details opens the edit dialog over them and closes back to them.
+
+## The filter row
+
+The filter row is the name search, then the Filters (n) button with its Clear All link and the panel of facets it opens. Above the results sits the search sentence that says what the list is searching for.
+
+The panel covers the results, so a change in it is held and nothing applies until it shuts. Apply Filters, Escape and every other close apply the held facets in one soft navigation (Back steps through, reload restores), and nothing held is thrown away. While the panel is open its counts follow the held filter (`live-facets.ts`) and the list and the sentence do not move. Clear All, which sits where the page is in view, applies at once.
+
+Before hydration the panel is drawn open inside the GET form. Each facet is a native control under the name the parameter table reads, and Apply Filters (or Enter in the search box) submits them all.
+
+Picking a name in the search box's dropdown opens that entry's Quick Look over the list as it is shown, with its page kept and the typed text not applied. This holds for every list with a Quick Look. The row has no Clear of its own.
+
+A coven's list (`audience="coven"`) is the same row on `COVEN_PARAMS`. It adds the Source, In Stock and Low Stock Only choices, reads its live counts from the coven's cupboard, and suggests from it.
+
+## Facet choices and their order
+
+`types.ts` carries every filter's choices with their counts, read for the filter the page shows (the compendium's `compendiumFacets`, public like the list). Each list is in the order to offer them. Forms, deities and categories go most entries first, then by label, and hold only the values some entry carries plus the ones chosen, which sit at zero if no entry carries them. Signs, celestial bodies and elements list all of them, zeros included, in the vocabulary's order. Toxic comes as toxic, then not toxic.
+
+## The empty list
+
+The empty list names the filters in use so an admin sees what to change: "No entries match “wort”, the form “Oil” and the element Fire. Change or clear the filter to see more." With no filter it says how to begin the compendium. It is a node because the values are bold. `noMatchText` stays the string form for the other admin lists, and both build from `noMatchLead` and `NO_MATCH_ADVICE`.
+
+## The Categories column floor
+
+The Categories column has a floor width: the widest row of chips any seeded entry shows, measured in Chromium at a 16px root with the final compact, dot-less chips. That row is Aspen's Ancestor Work and Communication with its +8 button and the row's 4px gaps, 266px (16.625rem), rounded up to the next 0.25rem. The cell's own inset is added on each side. The floor applies only where the table is wide. Below that the table scrolls rather than wraps its chips, so the floor keeps the column from being squeezed under them. As a card (under `$table-stack-width`) it never applies and the chips wrap.

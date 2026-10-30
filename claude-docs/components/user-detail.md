@@ -96,3 +96,9 @@ no links, no coven list when empty, Impersonate present for a user and absent fo
 admin or when off, the question before any send, Cancel, a confirm sending
 `{ userId }` then landing on `/`, and a refusal showing an alert and not
 navigating.
+
+## The modal body
+
+The component is the body of the modal that opens over `/admin/users` on a user. It shows the facts the users table holds about them, read-only, then the covens they belong to and, where impersonation is registered, the action to act as them. The row's Grant or Revoke and Approve or Revoke sit beside the facts they change, and each asks over this modal rather than opening another.
+
+It is laid out as the ingredient modal is, in sections parted by hairlines, because a table's labels repeat on every card at a modal's width. It only renders: the page reads the memberships through the coven service.

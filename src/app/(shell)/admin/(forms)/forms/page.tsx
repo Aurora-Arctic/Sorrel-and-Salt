@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: 'Forms',
 };
 
-// The curated ingredient forms (M5.6a), in the page shape every curated value shares.
+// The curated ingredient forms, in the page shape every curated value shares.
 export default function AdminFormsPage({ searchParams }: ValueRouteProps) {
   return ValuePage({ kind: 'form', searchParams });
 }

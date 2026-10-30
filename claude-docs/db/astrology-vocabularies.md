@@ -126,3 +126,13 @@ these writes keep them so after the write.
 
 Each write expires the `compendium` tag once it has committed (M8.7;
 ([`compendium-cache.md`](compendium-cache.md), "Expiring the tag")).
+
+## Astrology service details
+
+`src/modules/vocabulary/services/astrology.ts` is one code path for both curated astrology vocabularies (celestial bodies and zodiac signs), keyed by the ingredient list each curates. Reads are public; writes are for a curator or an admin alone.
+
+- A compendium entry's celestial bodies and signs are spellings the vocabulary curates, so a value a live entry's list holds is held: its delete is refused (the message names the entries) and its rename, a change of case included, is carried onto the list in the same write. No slug moves, since a value is no part of an entry's identity or slug. A soft-deleted entry keeps the old spelling. A rewrite leaves `seedKey` as it was.
+- A coven's ingredient never holds a value and is never rewritten: its spelling moves into the coven's in-use values, and an admin writes nothing of a coven's.
+- A value folds as a slug does, trimmed and lower-cased, so every live row is the last live spelling of its value: two live rows of one fold would share a slug, which the partial unique index refuses.
+- The entries are read before the delete's transaction, so an entry saved with the value in the instant between is left holding a retired spelling.
+- The list and its count are cached under the `compendium` tag, keyed by the field's name rather than handed its table, since the arguments are the cache key.

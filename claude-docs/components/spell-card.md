@@ -17,18 +17,19 @@ The card is presentational: it takes props and works nothing out from the data, 
 
 ## Props
 
-| Prop         | What it is                                                                                            |
-| ------------ | ----------------------------------------------------------------------------------------------------- |
-| `id`         | The spell's id. It names the title heading, `spellTitleId(id)`                                        |
-| `title`      | The title, or null. Null or blank lists as "Untitled Spell"                                           |
-| `intent`     | The intent, or null. Without one the card draws no paragraph                                          |
-| `status`     | `draft` or `complete`                                                                                 |
-| `visibility` | `private` or `workspace`: who can see it                                                              |
-| `categories` | The assigned categories, each with its group's colours. Never the derived ones (DESIGN.md §5)         |
-| `lastEdit`   | Who last edited it and when, `{ by, at }`, worked out by the caller. None draws no line               |
-| `editHref`   | Where the Edit pencil opens the spell, the tab's own address plus `?edit=<id>`. None draws no pencil  |
-| `lookHref`   | Where the Quick Look eye opens the spell, the tab's own address plus `?spell=<id>`. None draws no eye |
-| `level`      | The title's heading level, 2 by default                                                               |
+| Prop          | What it is                                                                                            |
+| ------------- | ----------------------------------------------------------------------------------------------------- |
+| `id`          | The spell's id. It names the title heading, `spellTitleId(id)`                                        |
+| `title`       | The title, or null. Null or blank lists as "Untitled Spell"                                           |
+| `intent`      | The intent, or null. Without one the card draws no paragraph                                          |
+| `status`      | `draft` or `complete`                                                                                 |
+| `visibility`  | `private` or `workspace`: who can see it                                                              |
+| `categories`  | The assigned categories, each with its group's colours. Never the derived ones (DESIGN.md §5)         |
+| `lastEdit`    | Who last edited it and when, `{ by, at }`, worked out by the caller. None draws no line               |
+| `editHref`    | Where the Edit pencil opens the spell, the tab's own address plus `?edit=<id>`. None draws no pencil  |
+| `deleteSpell` | What the Delete Spell bin needs: `{ workspaceId, deletedHref }`. None draws no bin (M13.11)           |
+| `lookHref`    | Where the Quick Look eye opens the spell, the tab's own address plus `?spell=<id>`. None draws no eye |
+| `level`       | The title's heading level, 2 by default                                                               |
 
 ## Its name
 
@@ -72,6 +73,10 @@ card's foot, at the right of the `specimen__actions` row, as IngredientCard draw
 out and passes it only for a role that may update a spell (`rolePermits(role, { spell:
 ['update'] })`), so a viewer's cards have none. It keeps the tab's filter, page and tab in
 the address, so closing the dialog returns to the list as it was.
+
+## The Delete Spell bin
+
+Given `deleteSpell`, the card draws `DeleteSpellAction` (`SpellRecipe/delete-spell.tsx`, the recipe page's own component, so there is one delete and one confirmation dialog) after the Edit pencil in the `specimen__actions` row: a bin named "Delete Spell <title>" that asks in a dialog naming the spell before deleting (M13.11; the owner, 2026-10-29). The card passes its own `id` and name; the props carry the coven and `deletedHref`. Data rather than a React node is passed, as `editHref` is. The grimoire tab passes it only for a role that may delete a spell (`rolePermits(role, { spell: ['delete'] })`: owner and member, never viewer). `deletedHref` is the tab's address with its filter and page kept and `deleted=<name>` added, so a confirmed delete lands back on the same list with the success Notice. The card has no story with the bin: it needs a query client, which the workshop does not provide.
 
 ## The Quick Look eye
 
@@ -152,3 +157,21 @@ as any warm tint on parchment is. On the hovered card the intent measures 6.95:1
 and 7.99:1 (dark), the title 15.56:1 and 12.20:1.
 
 The Workshop's `Hover` story holds the effect lit on one card and leaves a second to hover.
+
+## How the burn is built
+
+What burns is gone. The hole in the card's foot corner goes through the card's face and its shadow, so the page shows through and no edge of the whole card is left. The face and its shadow are one layer (`.spell-card__face`). The face is the spread shadow of a hole-shaped box, so it covers everything but the hole. The shadow is a `drop-shadow()` of that, so it follows the burnt edge, not the rectangle.
+
+Over the content, a thin bright ember line and a thin dark char rim run round the burn front. One SVG filter, `#spell-card-burn` from `SpellCardFilters`, tears the hole and the rim alike so their edges meet. Faint embers glow in the burnt part, brightest along the ember line and fading towards the corner. A little warmth spills onto the table below the card, behind it, and shows through the hole.
+
+The layers stack by markup order with no `z-index`. Nothing transforms the card or any ancestor of it, because a transformed ancestor becomes the containing block of the category chips' `position: fixed` tip bubbles.
+
+## Timing and the text clearance
+
+The burn creeps along the bottom edge for 1.3s, then holds while the ember glows unevenly. On leaving, the burn fades while the hole and the spill shrink back to the corner, so a quick return burns on from where they have shrunk to.
+
+Nothing warm sits under text. The hole is under 1rem deep, half of it past the card's edge, so with its rim and the tearing it stays inside the card's padding. Only at the corner does it climb higher, about 1.25rem up the right edge, where no text runs. The card's face takes `IngredientCard`'s hover tint and lifted shadow and nothing else.
+
+## The burn filter
+
+`SpellCardFilters` renders the filter once per page beside the list of cards (`GrimoireList`), not once per card: an id must be unique and one filter serves every card. Without it the burn front is a smooth curve. The filter uses coarse noise to displace the hole and its ember and char bands. The noise is still, since a burn line does not wriggle.

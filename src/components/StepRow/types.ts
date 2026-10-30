@@ -6,7 +6,7 @@ export interface StepRowProps {
   position: number;
   /**
    * The ingredient and its form as the step reads them; null for an instruction-only step.
-   * Markup where a read-only caller links the ingredient (the recipe body, M13.21).
+   * Markup where a read-only caller links the ingredient (the recipe body).
    */
   name: ReactNode;
   /** The form's group icon; null draws the generic spoon. Only drawn beside a name. */
@@ -15,9 +15,9 @@ export interface StepRowProps {
   quantity?: string | null;
   /** The unit, as text. Read-only; `unitField` replaces it. */
   unit?: string | null;
-  /** A badge beside the name, such as the safety mark (M10.18). Only drawn beside a name. */
+  /** A badge beside the name, such as the safety mark. Only drawn beside a name. */
   marks?: ReactNode;
-  /** A block beneath the row's controls, the width of the row, such as the safety note (M10.18). */
+  /** A block beneath the row's controls, the width of the row, such as the safety note. */
   note?: ReactNode;
   /** The step's instruction. Read-only; `bodyField` replaces it. */
   body?: string | null;

@@ -4,12 +4,8 @@ import { describe, expect, inject, it } from 'vitest';
 import { DEFINE_LOADER, runtimeProbe } from '../support/lint-probes/loader-boundary';
 import { REPO_ROOT } from '../support/paths';
 
-// A DataLoader's cache lives as long as the instance, so one built at module
-// level serves one request's answers to the next — another viewer's included
-// (CLAUDE.md rule 9). `.oxlintrc.json` bans importing `dataloader` at runtime
-// everywhere, and `src/graphql/loaders/define-loader.ts` is the one exempt
-// file: it hands out factories the request context calls. The probe is
-// written and linted once by the unit project's setup (MB.184).
+// A DataLoader's cache lives as long as the instance, so one built at module level serves one request's answers to the next, another viewer's included (CLAUDE.md rule 9).
+// `.oxlintrc.json` bans importing `dataloader` at runtime everywhere except `src/graphql/loaders/define-loader.ts`, which hands out factories the request context calls. The probe is linted once by the unit project's setup.
 
 const RULE = 'eslint(no-restricted-imports)';
 

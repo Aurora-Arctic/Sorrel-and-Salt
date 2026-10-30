@@ -21,17 +21,9 @@ export const metadata: Metadata = {
   title: 'Members',
 };
 
-// Who is in the coven and what each may do (story 9; M6.13). Owners and
-// members see it; a viewer gets the 404 a stranger does, since the page's
-// existence would otherwise say who holds which role. The read is
-// `listMembers`, the service behind `Workspace.members`, so the page and
-// GraphQL end at one check (CLAUDE.md rule 1). The role controls are drawn for
-// owners only and the service refuses anyone else again. The page checks
-// `member: read` through the service rather than reading the role itself
-// (claude-docs/auth/coven-guard.md, "The members page"). Each member's address
-// is an owner's alone (M11.19): asked for only when the role holds
-// `member: readEmail`, and checked again by `memberEmails`. The heading, the
-// tabs and the Invite button are the `(people)` layout's.
+// Who is in the coven and what each may do. A viewer gets the stranger's 404. The read is
+// `listMembers`, which GraphQL ends at too (rule 1). An address is an owner's alone, asked only when
+// the role holds `member: readEmail` and checked again by `memberEmails`.
 export default async function MembersPage({
   params,
   searchParams,
@@ -52,8 +44,7 @@ export default async function MembersPage({
     throw error;
   }
 
-  // Read to the end, since one page of the list cannot say how many owners
-  // there are (M6.16).
+  // Read to the end, since one page of the list cannot say how many owners there are.
   const soleOwner =
     (await memberRoster(session, workspace)).filter(({ role }) => role === 'owner').length === 1;
 

@@ -1,15 +1,13 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden, NotFound } from '@/lib/errors';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLQuery } from '../../../../../../support/msw/graphql';
 import { offerCategories } from '../../../../../../support/msw/ingredient-lookups';
 
-// MB.6: the spell recipe page. The guard and the services are mocked, since what they decide
-// is their own tests' (tests/modules/grimoire/services/spell-reads.test.ts proves a private
-// spell reads as NotFound to anyone but its author); here: the page guards itself, a refusal
-// is the 404, and what the services give is drawn.
+// The spell recipe page, with the guard and services mocked (tests/modules/grimoire/services/spell-reads.test.ts proves a private spell reads as NotFound to anyone but its author).
+// It proves the page guards itself, a refusal is the 404, and what the services give is drawn.
 
 const SPELL_ID = '0f6d2c8e-3b1a-4e5f-9a7c-2d4b6e8f1a3c';
 const COVEN = { id: 'c0ffee00-0000-4000-8000-000000000001', slug: 'fixture-coven' };
@@ -182,7 +180,7 @@ describe('the spell recipe page', () => {
     const match = within(aside).getByRole('region', { name: 'Category Match' });
     expect(within(match).getByText('Carried')).toBeInTheDocument();
     expect(within(match).getByText('Testwarding')).toBeInTheDocument();
-    // Category Match stands over the inventory (the owner, 2026-10-29).
+    // Category Match stands over the inventory.
     expect(
       match.compareDocumentPosition(inventory) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
@@ -191,7 +189,7 @@ describe('the spell recipe page', () => {
     ]);
   });
 
-  describe('editing (M13.10)', () => {
+  describe('editing', () => {
     const as = (role: 'owner' | 'member' | 'viewer') =>
       requireCovenMembership.mockResolvedValue({ workspace: COVEN, membership: { role } });
     const SAVED = {
@@ -252,6 +250,31 @@ describe('the spell recipe page', () => {
       readSpell.mockRejectedValue(new NotFound('No such spell in this coven'));
       await expect(Page(params(SPELL_ID, { edit: SPELL_ID }))).rejects.toThrow('NEXT_NOT_FOUND');
       expect(readSpell).toHaveBeenCalledWith(session, COVEN.id, SPELL_ID);
+    });
+  });
+
+  describe('deleting', () => {
+    const as = (role: 'owner' | 'member' | 'viewer') =>
+      requireCovenMembership.mockResolvedValue({ workspace: COVEN, membership: { role } });
+
+    it('gives a member a Delete Spell bin beside Edit, which asks in a dialog naming the spell', async () => {
+      as('member');
+      await draw();
+      const bin = screen.getByRole('button', { name: 'Delete Spell Fixture Working' });
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      fireEvent.click(bin);
+      expect(screen.getByRole('dialog', { name: 'Delete Spell' })).toHaveTextContent(
+        'Fixture Working',
+      );
+    });
+
+    it('shows a viewer no Delete, though they read the same spell', async () => {
+      as('viewer');
+      await draw();
+      expect(
+        screen.getByRole('heading', { level: 1, name: 'Fixture Working' }),
+      ).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /^Delete / })).not.toBeInTheDocument();
     });
   });
 

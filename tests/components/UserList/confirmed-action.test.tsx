@@ -8,11 +8,8 @@ import { announced, expectRefusalUnder } from '../../support/click-feedback';
 const router = { refresh: vi.fn(), push: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The ask-first action every admin control is built on (Approve, Revoke,
-// Change Role, Impersonate, the pause switch, an invitation's Revoke): its
-// asking, its busy confirm, its refusal and its success are proved once
-// here, so each control's own file proves only what it sends and what it
-// says (layer-ownership.md, rule 6).
+// The ask-first action every admin control is built on (Approve, Revoke, Change Role, Impersonate, the pause switch, an invitation's Revoke).
+// Its asking, busy confirm, refusal and success are proved once here, so each control's own file proves only what it sends and says (layer-ownership.md, rule 6).
 
 const NAME = 'Approve Testwort Fixture';
 

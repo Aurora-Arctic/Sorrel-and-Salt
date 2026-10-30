@@ -70,7 +70,7 @@ export const Complete: Story = {
   ),
 };
 
-// Quick Look (M13.21): the recipe's body in a modal over the grimoire list. The workshop's
+// Quick Look: the recipe's body in a modal over the grimoire list. The workshop's
 // router goes nowhere, so Close, Escape and the links leave Open Again (`Reopenable`).
 const look = (editHref?: Route) => (
   <Reopenable>

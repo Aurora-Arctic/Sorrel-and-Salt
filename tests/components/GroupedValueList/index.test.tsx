@@ -14,15 +14,9 @@ import type { FilterFormSubject, GroupedValueListSubject } from '../../support/t
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// A curated vocabulary's filter, table and pager — `/admin/categories`' (M5.6,
-// MB.178), `/admin/forms`' (M5.6a) and `/admin/deities`' (MB.132): each value
-// with its group, an Edit link opening it in the page's modal, and the filter
-// that narrows them, and the flat celestial bodies and signs (MB.95) with no group at
-// all (claude-docs/components/grouped-value-list.md). The kinds
-// share every behaviour, so it runs on the deities, whose group goes by its
-// own name; the other kinds get only what they change, their page and their
-// group's parameter. Paging is Pager's, the filter's spinner and its reset to
-// the filter shown CompendiumList's.
+// A curated vocabulary's filter, table and pager (`/admin/categories`, `/admin/forms`, `/admin/deities`): each value with its group, an Edit link opening it in the page's modal, and the filter that narrows them,
+// plus the flat celestial bodies and signs with no group (claude-docs/components/grouped-value-list.md). The kinds share every behaviour, so it runs on the deities, whose group goes by its own name; the others get only what they change, their page and their group's parameter.
+// Paging is Pager's, and the filter's spinner and its reset to the filter shown are CompendiumList's.
 
 const DEITIES: GroupedValueListSubject = {
   kind: 'deity',
@@ -82,7 +76,7 @@ describe('GroupedValueList', () => {
     expect(within(rows[1]).getByRole('cell', { name: entries[0].description })).toBeInTheDocument();
   });
 
-  // M14.23: a deity is found by any of its other names, so its row says them.
+  // A deity is found by any of its other names, so its row says them.
   it("names a deity's other names under its name, and nothing for a deity with none", () => {
     const [testra, mockra] = entries;
     render(
@@ -98,7 +92,7 @@ describe('GroupedValueList', () => {
     expect(within(rows[2]).getByRole('cell', { name: 'Mockra' })).toBeInTheDocument();
   });
 
-  // MB.260: who last edited each row, and when, as the coven's member list has it.
+  // Who last edited each row, and when, as the coven's member list has it.
   it('draws an Updated column', () => {
     render(<GroupedValueList {...props()} />);
 
@@ -114,7 +108,7 @@ describe('GroupedValueList', () => {
     );
   });
 
-  // MB.95's flat kinds, folded in at MB.115: filed under nothing, so
+  // The flat kinds: filed under nothing, so
   // neither the table nor the filter offers a group.
   it('shows a flat kind with no group column and no group filter', () => {
     render(<GroupedValueList {...props({ kind: 'celestialBody', groups: undefined })} />);
@@ -175,8 +169,8 @@ describe('GroupedValueList', () => {
     });
   });
 
-  // MB.178: a GET form to the page itself, as the user list's (MB.52),
-  // applying as each field changes (MB.115, the owner's call): the group once
+  // A GET form to the page itself, as the user list's,
+  // applying as each field changes: the group once
   // a choice settles, the name on its Search submit.
   describe('the filter', () => {
     beforeEach(() => {
@@ -222,7 +216,7 @@ describe('GroupedValueList', () => {
 
     it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));
 
-    // The owner's call (MB.115): typed into once hydrated, but drawn as a
+    // Typed into once hydrated, but drawn as a
     // native select by the server, so the filter works before JavaScript.
     it('draws the group as a native select on the server, and as a type-ahead once hydrated', async () => {
       const { container, hydrate } = drawnOnServer(

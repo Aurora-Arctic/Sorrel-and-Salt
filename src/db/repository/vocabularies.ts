@@ -55,12 +55,8 @@ import type {
 } from './types';
 
 /**
- * One page of the curated form vocabulary under `filter` in `(name, id)`
- * order, for `ingredientFormValues` and the admin list: the live forms whose
- * group is live too, which is what "curated" means to
- * `findVocabularySuggestions` as well, with the group's `deleted_at` read by
- * the builder's correlated `EXISTS`. Public reference data, so no proof
- * (claude-docs/db/compendium-read.md, "The compendium read").
+ * One page of the curated forms under `filter` in `(name, id)` order: live forms whose group is live too,
+ * which is what "curated" means. Public reference data, so no proof. (claude-docs/db/compendium-read.md, "Vocabulary finders")
  */
 export function findIngredientFormValues(
   filter: IngredientFormValueFilter,
@@ -75,10 +71,8 @@ export function findIngredientFormValues(
 }
 
 /**
- * How many forms `findIngredientFormValues` pages under `filter`, and how
- * many come before `start` in its order — "Page X of Y" on the admin page
- * (M5.6a) and `ingredientFormValues`' `totalCount`, as `findCategoryCount`
- * counts the categories: one statement, over the page's own filter and key.
+ * How many forms `findIngredientFormValues` pages under `filter`, and how many come before `start`,
+ * for "Page X of Y"; one statement over the page's own filter and key.
  */
 export function findIngredientFormValueCount(
   filter: IngredientFormValueFilter,
@@ -93,10 +87,8 @@ export function findIngredientFormValueCount(
 }
 
 /**
- * One page of a curated astrology vocabulary under `filter` in `(name, id)`
- * order, for `celestialBodies`, `zodiacSigns` and their admin lists (MB.95): its
- * live rows, since a flat vocabulary has no group to be curated under.
- * Public reference data, so no proof.
+ * One page of a flat astrology vocabulary under `filter` in `(name, id)` order: its live rows, as it has
+ * no group to be curated under. Public reference data, so no proof.
  */
 export function findAstrologyValues<TVocabulary extends AstrologyVocabulary>(
   vocabulary: TVocabulary,
@@ -120,10 +112,8 @@ export function findAstrologyValueCount(
 }
 
 /**
- * One page of the category vocabulary under `filter`, by its group's name,
- * then its own, then id, for `categories` and the admin list: the live
- * categories whose group is live too, read as `findIngredientFormValues`
- * reads the forms. Public reference data, so no proof.
+ * One page of the categories under `filter`, by group name, then name, then id: live categories whose group
+ * is live, read as the forms are. Public reference data, so no proof.
  */
 export function findCategoryPage(
   filter: CategoryFilter,
@@ -133,10 +123,8 @@ export function findCategoryPage(
 }
 
 /**
- * How many categories `findCategoryPage` pages under `filter`, and how many
- * come before `start` in its order — the position of the page whose first row
- * `start` is, null with none: "Page X of Y" on the admin page and
- * `categories`' `totalCount`. One statement, over the page's own filter and key.
+ * How many categories `findCategoryPage` pages under `filter`, and how many come before `start`
+ * (null with none), for "Page X of Y"; one statement over the page's own filter and key.
  */
 export function findCategoryCount(
   filter: CategoryFilter,
@@ -146,11 +134,8 @@ export function findCategoryCount(
 }
 
 /**
- * One page of the deity vocabulary under `filter`, by its tradition's name,
- * then its own, then id, for the admin's deities page (MB.132): the live
- * deities whose tradition is live too, read as `findCategoryPage` reads the
- * categories, so a page lists each deity under its tradition. Public
- * reference data, so no proof.
+ * One page of the deities under `filter`, by tradition name, then name, then id: live deities whose
+ * tradition is live, read as the categories are. Public reference data, so no proof.
  */
 export function findDeityPage(
   filter: DeityFilter,
@@ -169,10 +154,8 @@ export function findDeityCount(filter: DeityFilter, start: Cursor | undefined): 
 }
 
 /**
- * One page of a group vocabulary — the category groups, the form groups or
- * the deity traditions — alphabetical by name (MB.35), narrowed by a name
- * fragment as the values' lists are (MB.115): what a group's admin page
- * lists. Public reference data, so no proof.
+ * One page of a group vocabulary (category groups, form groups or deity traditions), alphabetical,
+ * narrowed by a name fragment. Public reference data, so no proof.
  */
 export function findGroupPage<TTable extends GroupTable>(
   table: TTable,
@@ -200,10 +183,8 @@ function groupArms(table: GroupTable, { query }: GroupFilter): SQL | undefined {
 }
 
 /**
- * What a vocabulary's admin page and its count both read beside the row's own
- * filter: its group or tradition live, by the builder's correlated `EXISTS`,
- * and the filter's arms — a name fragment, and the group a row is filed
- * under — each absent when its part is. A flat vocabulary has no group.
+ * The filter a vocabulary's admin page and its count share: the group or tradition live (a correlated
+ * `EXISTS`) plus the name and group arms, each absent when unset. A flat vocabulary has no group.
  */
 function vocabularyArms(
   vocabulary: ListedVocabulary,
@@ -218,11 +199,8 @@ function vocabularyArms(
 }
 
 /**
- * A deity filter's arms: its tradition is the group it is filed under, and
- * its name fragment finds a deity by its own name or by a live other name
- * (M14.23), so "Ganish" finds Ganesha. An `EXISTS` rather than a join, so a
- * deity with two matching other names is still one row, in the page and in
- * its count alike.
+ * A deity filter's arms: tradition, and a name fragment matching the deity's name or a live other name
+ * ("Ganish" finds Ganesha). An `EXISTS` rather than a join, so two matching names are still one row.
  */
 function deityArms({ query, traditionId }: DeityFilter): SQL | undefined {
   return and(
@@ -240,11 +218,8 @@ function deityArms({ query, traditionId }: DeityFilter): SQL | undefined {
 }
 
 /**
- * The key of a vocabulary filed under groups: by its group's name, then its
- * own, both under the natural collation (M12.52), then id, the owner's call during MB.126, so a page reads as the picker
- * lists it and two groups' namesakes sit apart. A page and its count share
- * it, with the join that reads the group's name — for its name alone, since
- * the row's own filter already holds the group live.
+ * The key of a grouped vocabulary: group name, own name (natural collation), then id, so namesakes in
+ * different groups sit apart. A page and its count share it.
  */
 function groupedOrder({ items, groups, column }: TwoTierPair): ListOrder {
   const grouped = sql.identifier('grouped');
@@ -265,12 +240,9 @@ const CATEGORY_ORDER = groupedOrder(TWO_TIER.categories);
 const DEITY_ORDER = groupedOrder(TWO_TIER.deities);
 
 /**
- * The live rows of `vocabulary` whose lower-cased name is one of `folds` —
- * values trimmed and lower-cased as the suggestions fold one — which is how
- * the compendium is held to the curated spellings (MB.162). A form or a deity
- * counts only while its group or tradition is live, as in
- * `findVocabularySuggestions`. Global reference data, so no proof. Two live
- * rows may share a name, a form's "Wax" under two groups, and both come back.
+ * The live rows of `vocabulary` whose lower-cased name is one of `folds`, which holds the compendium to
+ * the curated spellings; a form or deity counts only while its group or tradition is live. Global
+ * reference data, so no proof. Two live rows may share a name ("Wax" under two groups) and both come back.
  */
 export function findCuratedRowsByName(
   vocabulary: SuggestingVocabulary,
@@ -283,11 +255,8 @@ export function findCuratedRowsByName(
 }
 
 /**
- * The curated rows of a two-tier vocabulary among `ids`: live, under a live
- * group or tradition, as `findCuratedRowsByName` reads them. How a pick is
- * checked before it is written, and how `formChoice` reads one back, so a
- * pick whose row or group is retired reads as no pick (MB.167). Global
- * reference data, so no proof.
+ * The curated rows of a two-tier vocabulary among `ids`, live under a live group or tradition: how a pick
+ * is checked before it is written and read back, so a retired row or group reads as no pick.
  */
 export function findCuratedRowsByIds<TVocabulary extends PickedTable>(
   vocabulary: TVocabulary,
@@ -298,7 +267,7 @@ export function findCuratedRowsByIds<TVocabulary extends PickedTable>(
 }
 
 /**
- * The live other names of the deities among `deityIds` (M14.22), in no
+ * The live other names of the deities among `deityIds`, in no
  * particular order — a loader's batch read. Global reference data, so no proof.
  */
 export function findDeityOtherNames(
@@ -312,10 +281,8 @@ export function findDeityOtherNames(
 }
 
 /**
- * The live other names among `folds` — trimmed and lower-cased — that a live
- * deity of `traditionId` holds, `exceptId` excepted: what refuses one name on
- * two deities of one tradition (M14.23), which no index can, since the
- * tradition is the deity's column and not the name's.
+ * The live other names among `folds` that a live deity of `traditionId` holds, `exceptId` excepted:
+ * what refuses one name on two deities of a tradition, which no index can (the tradition is the deity's column).
  */
 export function findDeityOtherNameHolders(
   traditionId: string,
@@ -343,17 +310,15 @@ export function findDeityOtherNameHolders(
 /**
  * A curated row: live, and filed under a live group or tradition where its
  * vocabulary files rows — what a member's pick, the compendium's spellings
- * and an ingredient's deity link are each held to (MB.162, MB.167).
+ * and an ingredient's deity link are each held to.
  */
 export function curated(vocabulary: SuggestingVocabulary): SQL | undefined {
   return and(notSoftDeleted(vocabulary), inLiveGroup(vocabulary));
 }
 
 /**
- * The half of "curated" a two-tier row adds to its own `deleted_at`: a form's
- * group or a deity's tradition live too, read by the builder's correlated
- * `EXISTS`. None for a flat vocabulary. Every reader of a curated row ANDs it
- * beside the row's own filter.
+ * The half of "curated" a two-tier row adds to its own `deleted_at`: its group or tradition live too, by a
+ * correlated `EXISTS`. None for a flat vocabulary. Every reader of a curated row ANDs it in.
  */
 export function inLiveGroup(vocabulary: ListedVocabulary): SQL | undefined {
   const grouping = groupingOf(vocabulary);
@@ -361,14 +326,9 @@ export function inLiveGroup(vocabulary: ListedVocabulary): SQL | undefined {
 }
 
 /**
- * The live compendium entries a curated form's rename to `name` would give
- * two forms of one name (MB.220): each holds a live variant that picked
- * `formId`, which the rename rewrites, and another live variant whose form
- * already folds to `name`, under the fold `ingredient_variants_form_unique`
- * holds. What the rename is refused on, naming them, before its write and
- * again after the index refuses one. A coven's entry is never rewritten, so
- * never named. Unordered; the pick is read through
- * `ingredient_variants_form_id_idx`.
+ * The live compendium entries a curated form's rename to `name` would leave with two forms of one name: a
+ * live variant that picked `formId` and another whose form already folds to `name`.
+ * The rename is refused on them, before its write and again after the index refuses one. (claude-docs/db/compendium-read.md, "Vocabulary finders")
  */
 export function findCompendiumFormRenameClashes(
   formId: string,
@@ -396,13 +356,9 @@ export function findCompendiumFormRenameClashes(
 }
 
 /**
- * Where each vocabulary's in-use values are written, keyed by table name: a
- * vocabulary added to `SuggestingVocabulary` fails to compile until it names
- * its column, and a caller passes a table alone, so it cannot pair one with
- * the other's column. A list is read entry by entry (MB.136); the deities are
- * their own table's rows (MB.167), and the forms an entry's variants (MB.220),
- * so a form is in use while any live variant holds it, not only the one the
- * ingredient row mirrors.
+ * Where each vocabulary's in-use values are written, keyed by table, so a new `SuggestingVocabulary` fails
+ * to compile until it names its column. A form is in use while any live variant holds it, not only the one
+ * the ingredient row mirrors.
  */
 const IN_USE = {
   celestial_bodies: { list: ingredients.celestialBodies },
@@ -414,10 +370,8 @@ const IN_USE = {
 const ENTRY = sql.identifier('entry');
 
 /**
- * The rows an in-use scan reads, and the value each holds: one row per entry
- * for a list, unnested before anything trims or folds it — so a value held by
- * several lists, or twice by one, is grouped as one; or a child table's live
- * rows beside their ingredient, for the deities and the forms.
+ * The rows an in-use scan reads: one row per entry for a list (unnested before trimming or folding, so a
+ * value held twice is one), or a child table's live rows beside their ingredient.
  */
 function inUseRows(source: InUseSource): { rows: SQLWrapper; value: SQLWrapper } {
   if ('child' in source) {
@@ -445,23 +399,9 @@ function groupingOf(vocabulary: ListedVocabulary): TwoTierPair | undefined {
 }
 
 /**
- * One page of what a member's autofill offers for `vocabulary`'s column:
- * the live curated rows matching `query`, name matches before description
- * matches, then the values written on live ingredients in the compendium or
- * a coven one of `memberships` proves that match it and fold to no live
- * row's name. No proofs reads the compendium alone, which is the admin's
- * compendium form (M5.5). Each tier is alphabetical, case-folded. A blank
- * `query` matches everything.
- *
- * A name or value matches by `%` or `<%` and a description by `<%` alone, so
- * a query finds a word inside a description and completes a typed prefix
- * (claude-docs/db/member-autofill.md, "The member's autofill"). A form or a
- * deity also matches when its group or tradition name holds the query as a
- * case-folded substring, so typing the heading lists everything under it.
- *
- * A form suggestion also carries its group and the in-scope ingredients whose
- * form folds to it, and a deity suggestion its tradition. A form or a deity
- * is curated only while its group or tradition is live too.
+ * One page of what a member's autofill offers for `vocabulary`'s column: live
+ * curated rows matching `query`, then values written on live ingredients the
+ * `memberships` prove. No proofs reads the compendium alone. (claude-docs/db/compendium-read.md, "Tier-scoped reads")
  */
 export function findVocabularySuggestions(
   memberships: readonly Membership[],
@@ -494,7 +434,7 @@ export async function findVocabularySuggestions(
 
   const grouping = groupingOf(vocabulary);
   // Only a form names its claimants: the entries already holding it, one of
-  // which a member adding a form may mean to add it to instead (MB.215).
+  // which a member adding a form may mean to add it to instead.
   const claimed = vocabulary === ingredientForms;
   const curatedRows = grouping
     ? sql`${vocabulary} inner join ${grouping.groups} on ${grouping.groups.id} = ${grouping.column}`
@@ -505,7 +445,7 @@ export async function findVocabularySuggestions(
     ? sql`lower(${grouping.groups.name}) || ' ' || ${vocabulary.id}::text`
     : sql`${vocabulary.id}::text`;
 
-  // A deity also matches on its live other names (M14.23), and carries the
+  // A deity also matches on its live other names, and carries the
   // nearest one that matched, so the picker can say why "Ashtoreth" found
   // Astarte; a deity its own name finds carries none.
   const matchedName =

@@ -41,11 +41,9 @@ describe('slugify', () => {
   });
 });
 
-// MB.80/MB.81: an ingredient's address is its label and its formal name,
-// always, so two entries sharing a label are told apart by the name that is
-// their identity rather than by insertion order —
-// claude-docs/db/ingredient-slugs.md, "Ingredient slugs". A form is no part of
-// an entry's address (MB.215), so the slug takes none.
+// An ingredient's address is its label and its formal name, always, so two entries sharing a
+// label are told apart by the name that is their identity, not by insertion order
+// (claude-docs/db/ingredient-slugs.md, "Ingredient slugs"). A form is no part of the address.
 describe('ingredientSlug', () => {
   it('joins the label and the formal name under the one slug rule', () => {
     expect(ingredientSlug("Cat's Claw", 'Uncaria tomentosa')).toBe('cats-claw-uncaria-tomentosa');
@@ -67,8 +65,8 @@ describe('ingredientSlug', () => {
   });
 });
 
-// A form's address carries its group (M5.6a), so two live forms called "Wax"
-// under two groups hold two addresses, as DESIGN.md §5 lets them.
+// A form's address carries its group, so two live forms called "Wax" under two groups hold two
+// addresses, as DESIGN.md §5 lets them.
 describe('formSlug', () => {
   it('joins the name and the group under the one slug rule', () => {
     expect(formSlug('Wax', 'Substance')).toBe('wax-substance');
@@ -77,8 +75,8 @@ describe('formSlug', () => {
   });
 });
 
-// A deity's address carries its tradition (MB.132), as a form's carries its
-// group, so a Greek and a Roman Hecate hold two addresses.
+// A deity's address carries its tradition, as a form's carries its group, so a Greek and a Roman
+// Hecate hold two addresses.
 describe('deitySlug', () => {
   it('joins the name and the tradition under the one slug rule', () => {
     expect(deitySlug('Hecate', 'Greek')).toBe('hecate-greek');

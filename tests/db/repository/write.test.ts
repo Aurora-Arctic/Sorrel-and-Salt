@@ -138,7 +138,7 @@ describe('withAudit', () => {
   });
 });
 
-describe('app.current_user_id (M1.19)', () => {
+describe('app.current_user_id', () => {
   it('exposes the acting user to SQL running inside the transaction', async () => {
     const [row] = await withAudit(session, (write) => write.insert(herbs, { name: 'Vervain' }));
 
@@ -185,7 +185,7 @@ describe('app.current_user_id (M1.19)', () => {
     expect(value ?? null).toBeNull();
   });
 
-  it('publishes the impersonating admin as app.impersonated_by, stamping the user acted as (MB.53)', async () => {
+  it('publishes the impersonating admin as app.impersonated_by, stamping the user acted as', async () => {
     const acting = { userId: session.userId, impersonatedBy: impostor.userId };
 
     const [row] = await withAudit(acting, (write) => write.insert(herbs, { name: 'Mugwort' }));
@@ -196,7 +196,7 @@ describe('app.current_user_id (M1.19)', () => {
     expect(row.impersonatingAdmin).toBe(impostor.userId);
   });
 
-  it('publishes app.impersonated_by empty on every other write, so none inherits a pooled value (MB.53)', async () => {
+  it('publishes app.impersonated_by empty on every other write, so none inherits a pooled value', async () => {
     await withAudit({ ...session, impersonatedBy: impostor.userId }, (write) =>
       write.insert(herbs, { name: 'Tansy' }),
     );
@@ -210,7 +210,7 @@ describe('app.current_user_id (M1.19)', () => {
     for (const [row] of rows) expect(row.impersonatingAdmin).toBe('');
   });
 
-  it('publishes a declared route and note as app.privilege_route and app.privilege_note (MB.195)', async () => {
+  it('publishes a declared route and note as app.privilege_route and app.privilege_note', async () => {
     const [row] = await withAudit(session, (write) => write.insert(herbs, { name: 'Yarrow' }), {
       via: 'admin',
       note: 'Keeps the herb garden',
@@ -221,7 +221,7 @@ describe('app.current_user_id (M1.19)', () => {
     expect(row.actingUser).toBe(session.userId);
   });
 
-  it('publishes both empty when nothing is declared, so none inherits a pooled value (MB.195)', async () => {
+  it('publishes both empty when nothing is declared, so none inherits a pooled value', async () => {
     await withAudit(session, (write) => write.insert(herbs, { name: 'Woad' }), {
       via: 'manual',
       note: 'Fixed by hand',
@@ -239,7 +239,7 @@ describe('app.current_user_id (M1.19)', () => {
     }
   });
 
-  it('publishes an empty note when a route is declared without one (MB.195)', async () => {
+  it('publishes an empty note when a route is declared without one', async () => {
     const [row] = await withAudit(session, (write) => write.insert(herbs, { name: 'Madder' }), {
       via: 'bootstrap',
     });
@@ -248,7 +248,7 @@ describe('app.current_user_id (M1.19)', () => {
     expect(row.privilegeNote).toBe('');
   });
 
-  it('leaves the route and note unset on a connection outside any withAudit transaction (MB.195)', async () => {
+  it('leaves the route and note unset on a connection outside any withAudit transaction', async () => {
     await withAudit(session, (write) => write.insert(herbs, { name: 'Agrimony' }), {
       via: 'admin',
       note: 'Transaction-local',
@@ -273,8 +273,8 @@ describe('app.current_user_id (M1.19)', () => {
 });
 
 // `write.delete` is how the two hard-deleted join tables are written, typed so it cannot
-// be pointed at anything else (MB.34).
-describe('hard delete on a table with no delete columns (MB.34)', () => {
+// be pointed at anything else.
+describe('hard delete on a table with no delete columns', () => {
   const herbId = '22222222-2222-2222-2222-222222222222';
   const charmId = '33333333-3333-3333-3333-333333333333';
   const otherCharmId = '44444444-4444-4444-4444-444444444444';
@@ -306,8 +306,8 @@ describe('hard delete on a table with no delete columns (MB.34)', () => {
     expect(rows.map((row) => row.charm_id)).toEqual([otherCharmId]);
   });
 
-  // MB.125: a service names the rows by value, since it may not build an `SQL`
-  // predicate (MB.33).
+  // A service names the rows by value, since it may not build an `SQL`
+  // predicate.
   it('deletes every pair whose column is in a list, and nothing for an empty one', async () => {
     const thirdCharmId = '55555555-5555-5555-5555-555555555555';
     for (const charm of [charmId, otherCharmId, thirdCharmId]) {
@@ -451,7 +451,7 @@ describe('the compendium tier, under the Curator proof', () => {
     });
   });
 
-  // M11.20: a curator's proof is what the compendium tier asks for, and an
+  // A curator's proof is what the compendium tier asks for, and an
   // admin's is one, so the tests above write under either.
   it('inserts into the compendium under a curator’s proof', async () => {
     const curator = assertCurator({ ...session, role: 'curator' });
@@ -545,21 +545,15 @@ describe('the compendium tier, under the Curator proof', () => {
   });
 });
 
-// MB.198: a table marked `namedWrites` is reached only through its own named
-// writer methods, and the mark is the whole refusal: no column name is read
-// (claude-docs/db/write-path.md, "Table marks"). No body runs: each
-// `@ts-expect-error` fails `npm run typecheck` the moment a generic method
-// stops demanding `Generic`, which a runtime assertion cannot see.
+// A table marked `namedWrites` is reached only through its own named writer methods, and the mark is the whole refusal: no column name is read (claude-docs/db/write-path.md, "Table marks").
+// No body runs: each `@ts-expect-error` fails `npm run typecheck` the moment a generic method stops demanding `Generic`, which a runtime assertion cannot see.
 describe('a table marked namedWrites, refused by every generic writer method', () => {
   const admin = assertSiteAdmin({ ...session, role: 'admin' });
   const id = session.userId;
   const where = eq(herbs.id, id);
 
-  // Why each refusal below is the mark's: `switches` is `herbs`' shape and
-  // `tiers` is `tinctures`', and every call below compiles against those
-  // unmarked. `switches` carries `deleted_at`, which refuses the hard delete
-  // too, so that one is also asserted against `pairs` marked, the shape
-  // `delete` otherwise takes.
+  // Why each refusal below is the mark's: `switches` is `herbs`' shape and `tiers` is `tinctures`', and every call below compiles against those unmarked.
+  // `switches` carries `deleted_at`, which refuses the hard delete too, so that one is also asserted against `pairs` marked, the shape `delete` otherwise takes.
   it('takes every call below against the same shapes unmarked', () => {
     const unmarked = [
       (write: AuditWriter) => write.insert(herbs, { name: 'Testwort' }),
@@ -645,10 +639,8 @@ describe('a table marked namedWrites, refused by every generic writer method', (
   });
 });
 
-// CLAUDE.md rule 4 on the write side: a soft-deleted row is out of reach of
-// every update and every soft delete, decided by the table's shape as the
-// finders' filter is (claude-docs/db/write-path.md, "The write path"). The way back to
-// one is a restore, which is v2's.
+// CLAUDE.md rule 4 on the write side: a soft-deleted row is out of reach of every update and soft delete, decided by the table's shape as the finders' filter is (claude-docs/db/write-path.md, "The write path").
+// The way back to one is a restore, which is v2's.
 describe('a soft-deleted row, out of reach of every update and soft delete', () => {
   const DELETED_AT = new Date('2020-01-01T00:00:00Z');
   const stamps = { created_by: session.userId, updated_by: session.userId };
@@ -707,10 +699,8 @@ describe('a soft-deleted row, out of reach of every update and soft delete', () 
     ['softDeleteByIdInWorkspace', (write, id) => write.softDeleteByIdInWorkspace(inW, jars, id)],
   ];
 
-  // Why each could have written the tombstone: the same call, naming its live
-  // twin the same way, writes that one. The deleted row keeps its stamps —
-  // `updated_at` and `deleted_by` included — so a second delete cannot
-  // rewrite who made the first.
+  // Why each could have written the tombstone: the same call, naming its live twin the same way, writes that one.
+  // The deleted row keeps its stamps, `updated_at` and `deleted_by` included, so a second delete cannot rewrite who made the first.
   it.each(unscoped)(
     '%s writes the live row and leaves the deleted one as it was',
     async (_method, call) => {

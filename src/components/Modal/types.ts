@@ -1,57 +1,21 @@
 import type { Route } from 'next';
 import type { ReactNode, RefObject } from 'react';
 
-/**
- * What a modal's head says. An add dialog's is its title alone, "Add
- * Ingredient". An edit dialog's (MB.115, the owner's call) is an eyebrow
- * naming the action and the kind, "Edit Ingredient", over a title naming the
- * entry by the name it was saved under, so the head holds still while the
- * Name field is changed, and a qualifier where the entry's list names it by a
- * second thing too.
- */
+/** What a modal's head says: a title alone for an add dialog, an eyebrow over the entry's saved name for an edit dialog (claude-docs/components/modal.md, "An edit dialog's head"). */
 export interface ModalHeading {
   /** The dialog's heading: what it is for, or the entry it edits. */
   title: string;
-  /**
-   * The small line over the title, "Edit Ingredient": absent on an add
-   * dialog, whose title says it. The dialog's accessible name is the two
-   * together, "Edit Ingredient, Mugwort".
-   */
+  /** The small line over the title, "Edit Ingredient": absent on an add dialog. The dialog's accessible name is both, "Edit Ingredient, Mugwort". */
   eyebrow?: string;
-  /**
-   * Where an add lands, "Whitethorn Coven" or "Compendium", drawn in the
-   * eyebrow's place over the title (M8.16, the owner's call). Spoken after the
-   * title and joined to it by a hidden "to", so the dialog's name is the
-   * phrase "Add Ingredient to Whitethorn Coven"; never with an eyebrow.
-   */
+  /** Where an add lands ("Whitethorn Coven"), drawn in the eyebrow's place and spoken after the title joined by a hidden "to"; never with an eyebrow. */
   destination?: string;
-  /**
-   * After the title, quieter, and in its accessible name: a second identifier
-   * the entry's list shows, an ingredient's formal name or a deity's
-   * tradition. The caller sets a binomial's italics, since only it knows the
-   * nomenclature.
-   */
+  /** After the title, quieter, and in its accessible name: a second identifier, an ingredient's formal name or a deity's tradition. The caller sets a binomial's italics. */
   qualifier?: ReactNode;
-  /**
-   * The entry's formal name over the title, in the eyebrow's place (the owner's call,
-   * 2026-10-20): the entry page's own (`FormalName`), with its tip and its states, built by
-   * the caller. Never with an eyebrow, and not in the dialog's name, which is the title's
-   * alone: the name is read in the body, first, with its term.
-   */
+  /** The entry's formal name over the title, in the eyebrow's place; never with an eyebrow, and not in the dialog's name (claude-docs/components/modal.md, "A title with its own end"). */
   formalName?: ReactNode;
-  /**
-   * The head's top line, beside the Close button, over everything else in the head: the marks
-   * the entry page's own top bar carries, New or Updated and the safety badge (the owner's
-   * call, 2026-10-20). Its presence, even empty, gives the head that line to itself, with Close
-   * on it, so what stands under it, a formal name's actions, is clear of Close. Without it
-   * Close stands at the corner beside the head's first line. Not in the dialog's name.
-   */
+  /** The head's top line beside Close, holding the entry page's marks; its presence, even empty, gives the head that line to itself. Not in the dialog's name (claude-docs/components/modal.md, "A title with its own end"). */
   topEnd?: ReactNode;
-  /**
-   * The title's controls: a pencil, a plus. At the end of the formal name's line, over the
-   * title, as the entry page has them (the owner's call, 2026-10-20), and after the title in
-   * the markup. The formal name wraps short of them. Not in the dialog's name.
-   */
+  /** The title's controls, at the end of the formal name's line and after the title in the markup. Not in the dialog's name (claude-docs/components/modal.md, "A title with its own end"). */
   formalActions?: ReactNode;
   /** A line above the formal name and the title, under any top line (the details window's last edit). Not in the dialog's name. */
   aboveName?: ReactNode;
@@ -60,60 +24,25 @@ export interface ModalHeading {
 }
 
 export interface ModalProps extends ModalHeading {
-  /**
-   * Asked for by the Close button, Escape and a click outside, once the modal
-   * has faded out (M5.5), unless a form inside asks about its unsaved changes
-   * first (MB.115). The owner closes the modal by unmounting it — a
-   * URL-driven one by navigating away from its address.
-   */
+  /** Asked for by the Close button, Escape and a click outside once the modal has faded out, unless a form inside asks about its unsaved changes first. The owner unmounts the modal; a URL-driven one navigates away. */
   onClose: () => void;
-  /**
-   * Where the focus goes as the modal closes when what opened it is gone, or
-   * nothing held the focus as it opened: a click in WebKit focuses no button.
-   * Handed what opened it, already out of the page, or null. The modal gives
-   * the focus back to its opener itself whenever the opener is still there
-   * (claude-docs/components/modal.md, "Giving the focus back").
-   */
+  /** Where the focus goes as the modal closes when its opener is gone or held none (a click in WebKit focuses no button), given the opener already out of the page, or null (claude-docs/components/modal.md, "Giving the focus back"). */
   returnTo?: (gone: Element | null) => HTMLElement | null | undefined;
-  /**
-   * The width: 32rem by default, for a short form or a confirmation; `wide`,
-   * 48rem, for a long form such as the compendium entry's (M5.5); `listed`,
-   * the default column with an 11rem list beside it (the Edit Stock dialog, M9.9).
-   */
+  /** The width: 32rem by default; `wide`, 48rem, for a long form; `listed`, the default column with an 11rem list beside it. */
   size?: 'wide' | 'listed';
-  /**
-   * A body that holds nothing to fill in, only to read (M12.5's details): Tab
-   * stops on the body itself, so a keyboard can scroll it. Off by default,
-   * since a form's fields already let a keyboard reach every part of it.
-   */
+  /** A body with nothing to fill in, only to read: Tab stops on the body itself so a keyboard can scroll it. Off by default, as a form's fields already reach every part. */
   readingBody?: boolean;
-  /**
-   * Its contents are on their way (M9.18): the body is marked busy, and when
-   * they arrive the focus moves from the dialog to their first field.
-   */
+  /** Its contents are on their way: the body is marked busy, and the focus moves to their first field on arrival. */
   loading?: boolean;
-  /**
-   * A bar under the body rather than in it (the details' See in Compendium or See in Your Cupboard): outside the
-   * element that scrolls, so the body's scrollbar ends above it and the bar never
-   * moves. Held inert while a question is asked, as the body is.
-   */
+  /** A bar under the body, outside the element that scrolls, so the scrollbar ends above it. Held inert while a question is asked, as the body is. */
   foot?: ReactNode;
-  /**
-   * What it holds; or a function of the modal's own close, for contents that
-   * close it themselves — a form after its save — so that fades out too.
-   */
+  /** What it holds; or a function of the modal's own close, for contents that close it themselves so that fades out too. */
   children: ReactNode | ((close: () => void) => ReactNode);
 }
 
-/**
- * A button that opens a modal, and takes the focus back when it closes: an
- * Invite, a Leave Coven. The modal's heading is its title alone.
- */
+/** A button that opens a modal and takes the focus back when it closes: an Invite, a Leave Coven. The heading is its title alone. */
 export interface ModalButtonProps {
-  /**
-   * The button's text and accessible name, in title case: "Invite". An icon
-   * (a jar line's pencil) is the label where `ariaLabel` names the button.
-   */
+  /** The button's text and accessible name, in title case: "Invite". An icon is the label where `ariaLabel` names the button. */
   label: ReactNode;
   /** The button's classes: `btn btn--solid`. */
   className: string;
@@ -123,45 +52,28 @@ export interface ModalButtonProps {
   eyebrow?: string;
   /** After the title, in the dialog's name: the jar's form under its ingredient's name. */
   qualifier?: ReactNode;
-  /**
-   * The button's accessible name where its text alone would not tell one
-   * button from the next: a row's "Edit" is named "Edit Stock, Rosemary, Oil".
-   * It starts with the text, so a voice command for what is shown still works;
-   * an icon label has no text, so the name is this alone.
-   */
+  /** The accessible name where the text alone would not tell one button from the next ("Edit Stock, Rosemary, Oil"). It starts with the text; an icon label has no text, so the name is this alone. */
   ariaLabel?: string;
-  /**
-   * A tip over an icon button, "Edit Stock" over the pencil. Wraps the button
-   * alone, never the dialog, which would open the tip on the dialog's own focus.
-   */
+  /** A tip over an icon button, "Edit Stock" over the pencil. Wraps the button alone, never the dialog, which would open the tip on its focus. */
   tip?: string;
   size?: ModalProps['size'];
   /** What the modal holds, given the modal's close, so a form can close it after its send. */
   children: (close: () => void) => ReactNode;
 }
 
-/**
- * Where a modal is in its close: open; fading out (M5.5); closed, the fade
- * over and its owner to be asked; or asked already, with no fade to wait on.
- */
+/** Where a modal is in its close: open; fading out; closed, the fade over and its owner to be asked; or asked already, with no fade to wait on. */
 export type ModalPhase = 'open' | 'fading' | 'closed' | 'asked';
 
 /** What an open route modal holds, from the page its address renders. */
 export interface RouteModalContent {
   heading: ModalHeading;
-  /**
-   * What it holds, given `done`: the modal's own close, for a form's save or
-   * delete, so the modal fades out before the page goes back.
-   */
+  /** What it holds, given `done`, the modal's own close, so it fades out before the page goes back. */
   body: (done: () => void) => ReactNode;
   /** A bar under the body, outside its scroll (`ModalProps.foot`). */
   foot?: ReactNode;
 }
 
-/**
- * A page's one modal place, opened by its address (`?new`, `?edit=<slug>`),
- * or by a press while that address is on its way (M9.18).
- */
+/** A page's one modal place, opened by its address (`?new`, `?edit=<slug>`) or by a press while that address is on its way. */
 export interface RouteModalProps {
   /** The page it opened over, the modal's own parameter dropped: closing goes back there. */
   closeHref: Route;
@@ -169,25 +81,13 @@ export interface RouteModalProps {
   readingBody?: ModalProps['readingBody'];
   /** What the address opens; absent when it opens nothing, or while a press's is on its way. */
   content?: RouteModalContent;
-  /**
-   * Which of a page's modal places this is, where it has more than one: a
-   * press shows only in the place it names, so a list whose names open a
-   * details modal and whose Edit opens the edit modal over it draws each in
-   * its own (M12.5). Unnamed, as every page with one place leaves it.
-   */
+  /** Which of a page's modal places this is, where it has more than one: a press shows only in the place it names. Unnamed, as every one-place page leaves it. */
   place?: string;
-  /**
-   * Where the focus goes as it closes when neither what opened it nor a link
-   * to the address it opened is in the page, before the page's heading: a
-   * menu's button, when the link pressed was one of the menu's items.
-   */
+  /** Where the focus goes as it closes when neither its opener nor a link to its address is in the page: a menu's button, when the pressed link was one of the menu's items. */
   returnTo?: () => HTMLElement | null | undefined;
 }
 
-/**
- * A modal pressed open and on its way (`RouteModalProvider`): the head it
- * shows over the skeleton until its page arrives, and the way to open one.
- */
+/** A modal pressed open and on its way (`RouteModalProvider`): the head it shows over the skeleton until its page arrives, and the way to open one. */
 export interface RouteModalOpener {
   /** The head of the modal on its way, while its navigation is pending; undefined otherwise. */
   loading: ModalHeading | undefined;
@@ -197,10 +97,7 @@ export interface RouteModalOpener {
   open: (href: Route, heading: ModalHeading, place?: string) => void;
   /** Forgets the modal on its way, which a close while it loads asks for. */
   cancel: () => void;
-  /**
-   * The address the last press opened, which a link drawn afresh shares: the
-   * focus goes back to it as the modal closes. Absent in the workshop's stub.
-   */
+  /** The address the last press opened, which a link drawn afresh shares: the focus goes back to it as the modal closes. Absent in the workshop's stub. */
   opened?: Route;
 }
 
@@ -208,12 +105,7 @@ export interface RouteModalProviderProps {
   children: ReactNode;
 }
 
-/**
- * Consulted by the modal before the Close button, Escape or a click outside
- * closes it, given the close it would make: true to let it close, false when
- * the contents are asking first (a form's unsaved changes) and will call
- * `close` themselves if the answer is to go.
- */
+/** Consulted before the Close button, Escape or a click outside closes the modal, given the close it would make: true to let it close, false when the contents are asking first and will call `close` themselves if the answer is to go. */
 export type CloseGuard = (close: () => void) => boolean;
 
 /** Where a modal's contents put their guard: one slot, the latest form's. */
@@ -224,17 +116,11 @@ export interface CloseGuardSlot {
   consult: CloseGuard;
 }
 
-/**
- * A form's guard over its unsaved changes (`useDiscardGuard`): whether it is
- * asking, and the parts its Cancel and its question are wired from.
- */
+/** A form's guard over its unsaved changes (`useDiscardGuard`): whether it is asking, and the parts its Cancel and its question are wired from. */
 export interface DiscardGuard {
   /** The question is showing, over the form. */
   asking: boolean;
-  /**
-   * Cancel's handler: closes through `close` at once when nothing has
-   * changed, and otherwise asks first.
-   */
+  /** Cancel's handler: closes through `close` at once when nothing has changed, and otherwise asks first. */
   request: (close: () => void) => void;
   /** Ways out tried again while asking, each a flash of the question; 0 when none. */
   flashes: number;
@@ -251,35 +137,22 @@ export interface DiscardQuestionProps {
   guard: DiscardGuard;
 }
 
-/**
- * The layer a modal draws a form's question in (`ConfirmLayerContext`), over
- * its body and below its title.
- */
+/** The layer a modal draws a form's question in (`ConfirmLayerContext`), over its body and below its title. */
 export interface ConfirmLayer {
   /** The element the question is drawn into; null until the modal has drawn it. */
   host: HTMLElement | null;
-  /**
-   * Makes the modal's body, and any control beside its title, inert until
-   * the call it answers: the form behind a question can be neither pressed
-   * nor typed into. Counted, so two holds overlapping release once both have.
-   */
+  /** Makes the body, and any control beside the title, inert until the call it answers; counted, so two overlapping holds release once both have. */
   hold: () => () => void;
   /** The modal's body, whose first field takes the focus if what had it has gone. */
   body: RefObject<HTMLElement | null>;
 }
 
 export interface ConfirmOverlayProps {
-  /**
-   * The question, "Delete this?", which names the group the card is. Absent
-   * when a field's label names it instead, through `labelledBy`.
-   */
+  /** The question, "Delete this?", which names the card; absent when a field's label names it through `labelledBy`. */
   question?: ReactNode;
   /** The id of what names the card when there is no `question`. */
   labelledBy?: string;
-  /**
-   * The safe answer, Keep It or Keep Editing: it takes the focus when the
-   * question comes, and again on each flash. Never the destructive one.
-   */
+  /** The safe answer, Keep It or Keep Editing: it takes the focus when the question comes and on each flash. Never the destructive one. */
   safe: RefObject<HTMLElement | null>;
   /** Ways out tried again while asking, each a flash of the card; absent for none. */
   flashes?: number;
@@ -291,11 +164,7 @@ export interface ConfirmOverlayProps {
 export interface ConfirmQuestionProps {
   /** The question, "Delete "Fixture Healing"? …", which names the card. */
   question: ReactNode;
-  /**
-   * What the question needs said beneath it, apart from its name: what the
-   * answer will change, and anything to weigh first (M12.1). Absent for a
-   * question that says it all in its one line.
-   */
+  /** What the question says beneath it, apart from its name: what the answer will change, and anything to weigh first. Absent when the one line says it all. */
   details?: ReactNode;
   /** Its own question is being asked; true when the form draws it only then. */
   asked?: boolean;
@@ -313,13 +182,7 @@ export interface ConfirmQuestionProps {
   busy: boolean;
   /** The action. A rejection is a refusal, handed to `onRefused` where given. */
   onConfirm: () => Promise<void>;
-  /**
-   * A second acting answer beside the first, for a question with two ways
-   * forward: "Discard & Promote" next to "Save & Promote" (M12.1). It is
-   * drawn destructive, being the one that gives something up. While either
-   * runs, both are shut and the safe answer with them, so the question cannot
-   * be left mid-action.
-   */
+  /** A second acting answer for a question with two ways forward ("Discard & Promote" beside "Save & Promote"), drawn destructive. While either runs, both and the safe answer are shut. */
   also?: {
     label: string;
     busyLabel: string;
@@ -331,11 +194,7 @@ export interface ConfirmQuestionProps {
   onRefused?: (message: string) => void;
 }
 
-/**
- * A route modal a control opens: its address, and the head a press shows at
- * once while that address is on its way (M9.18). An ingredient name's
- * details modal is one (M12.5), and so is the Edit a page hands down.
- */
+/** A route modal a control opens: its address, and the head a press shows at once while that address is on its way. */
 export interface RouteModalLink {
   href: Route;
   heading: ModalHeading;

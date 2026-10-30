@@ -1,10 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden } from '@/lib/errors';
 
-// What the public compendium page tells each card about the viewer's covens (M9.12): whether
-// every coven they may write in holds the entry, and which ones do. The cards, the cached reads and the viewer
-// are mocked; here: which coven is asked, for which entries, and that a visitor and a viewer are
-// asked nothing. The held read is per viewer and sits beside the cached ones (CLAUDE.md rule 6).
+// What the public compendium page tells each card about the viewer's covens: whether every coven they may write in holds the entry, and which ones do.
+// The cards, cached reads and viewer are mocked; a visitor and a viewer are asked nothing. The held read is per viewer and sits beside the cached ones (CLAUDE.md rule 6).
 
 vi.mock('next/navigation', () => ({ redirect: vi.fn() }));
 
@@ -135,7 +133,7 @@ describe('the public compendium page, for the cards’ held state', () => {
     const [held, free] = await entriesGiven();
 
     // Every coven of the viewer's is asked, the one they only view too, for the holding count
-    // (M12.55); held and heldIn still count only the writable ones.
+    // ; held and heldIn still count only the writable ones.
     expect(heldCompendiumEntryIdsIn).toHaveBeenCalledWith(
       expect.objectContaining({ userId: 'user-b' }),
       ['w-view', 'w-1'],
@@ -148,7 +146,7 @@ describe('the public compendium page, for the cards’ held state', () => {
     });
     expect(held).toMatchObject({ id: 'id-held', held: true, heldIn: ['w-1'] });
     expect(free).toMatchObject({ id: 'id-free', held: false, heldIn: [] });
-    // The check is a mark, not a link (the owner’s call, 2026-10-20): no address for it.
+    // The check is a mark, not a link: no address for it.
     for (const each of [held, free]) expect(each).not.toHaveProperty('heldHref');
   });
 
@@ -212,7 +210,7 @@ describe('the public compendium page, for the cards’ held state', () => {
     });
   });
 
-  // The three dots (the owner's call, 2026-10-20): the covens that hold the entry, where the
+  // The three dots: the covens that hold the entry, where the
   // viewer's role lets them annotate, make it theirs or remove it.
   describe('the places the three dots act in', () => {
     const placesOf = (each: Record<string, unknown>) =>
@@ -294,7 +292,7 @@ describe('the public compendium page, for the cards’ held state', () => {
   });
 });
 
-// M12.55: how many of the viewer's covens hold each entry, any role, for the count on its plus or
+// How many of the viewer's covens hold each entry, any role, for the count on its plus or
 // check; and every coven of theirs for the filter's In My Covens, the ones they only view too.
 describe('the public compendium page, for the holding count and In My Covens', () => {
   it('names every coven holding each entry, one the viewer only views included', async () => {

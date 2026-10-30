@@ -5,7 +5,7 @@ import { renderEntryFile } from '@/db/seed/compendium/render-entry';
 import { wordsOf } from '../compendium-fixture';
 import { fileOf, TESTWORT } from './files-fixture';
 
-// M14.6: one entry file to the entry the seed writes. The fixture file is
+// One entry file to the entry the seed writes. The fixture file is
 // rendered from the invented Testwort and read back; every other case is a
 // hand-written file breaking one rule, so the issue found is the one written.
 

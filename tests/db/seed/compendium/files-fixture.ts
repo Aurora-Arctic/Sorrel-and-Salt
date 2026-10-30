@@ -13,12 +13,8 @@ import type {
   SeedCompendiumShard,
 } from '@/db/seed/types';
 
-// The invented two-entry shard (compendium-fixture.ts) as a folder of files
-// (M14.6): Testwort and Samplewort each in `ingredients/botanical/`, the two
-// fixture sources in `sources/`, and the template. Every citation gains
-// `nameBasis: stated`, which a file of an entry with a formal name must carry
-// and a literal never did. A test writes the folder to a temporary directory,
-// edits one file's text or frontmatter, and loads it.
+// The invented two-entry shard (compendium-fixture.ts) as a folder of files: Testwort and Samplewort in `ingredients/botanical/`, the two fixture sources in `sources/`, and the template.
+// Every citation gains `nameBasis: stated`, which a file of an entry with a formal name must carry. A test writes the folder to a temporary directory, edits one file and loads it.
 
 /** The citation with `nameBasis: stated`, as the files carry it. */
 function stated<Field extends string>(citation: SeedCitation<Field>): SeedCitation<Field> {
@@ -70,10 +66,7 @@ export interface FixtureFolder {
   remove: () => void;
 }
 
-/**
- * A fresh temporary folder holding the template, the two sources and, unless
- * `entries` says otherwise, the two fixture entries as `approved` files.
- */
+/** A fresh temporary folder holding the template, the two sources and, unless `entries` says otherwise, the two fixture entries as `approved` files. */
 export function fixtureFolder(
   entries: readonly RenderableEntryFile[] = [fileOf(TESTWORT), fileOf(SAMPLEWORT)],
 ): FixtureFolder {
@@ -111,10 +104,7 @@ export function parsed(file: RenderableEntryFile): SeedCompendiumFile {
   return loaded;
 }
 
-/**
- * `files` as `loadCompendium` would return them, without a folder on disk:
- * each rendered and parsed, under the fixture's sources and any `more`.
- */
+/** `files` as `loadCompendium` would return them without a folder on disk: each rendered and parsed, under the fixture's sources and any `more`. */
 export function loadedOf(
   files: readonly RenderableEntryFile[],
   more: SeedCompendiumShard['sources'] = {},

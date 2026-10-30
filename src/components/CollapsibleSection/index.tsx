@@ -6,10 +6,9 @@ import './index.scss';
 export { FoldAll } from './fold-all';
 
 /**
- * What a folding block, a section or a variant's card, names its parts by:
- * the ids its toggle points at, its class with `is-open` and `is-invalid`,
- * and the toggle's description, its closed line while closed and its flag
- * while `flagged`. One hook, so the two folds wire their parts alike.
+ * What a folding block (a section or a variant's card) names its parts by: the ids its toggle points
+ * at, its `is-open` and `is-invalid` class, and the toggle's description. One hook, so the two folds
+ * wire alike.
  */
 export function useFoldIds({ block, open, invalid, flagged }: FoldIdsOptions): FoldIds {
   const id = useId();
@@ -35,19 +34,9 @@ export function FoldFlag({ id, className, shown }: FoldFlagProps): ReactNode {
 }
 
 /**
- * A section of a form as a disclosure (MB.115, the owner's calls), under an
- * `h3`, or an `h4` for a section inside one: the ingredient form's six and
- * an open variant's five, and the spell builder's four (M10.12), each run
- * wrapped in `.collapsible-sections` with a `FoldAll` (./fold-all.tsx). Its heading's text is
- * a button that opens and shuts it, with a chevron at the end of the line;
- * beneath the heading, while closed, one muted line of what has been entered,
- * and while it holds an error, a flag, open or closed. The button sits inside
- * the heading rather than a `<details>`'s `<summary>`, which is a button
- * itself and so would stop the heading being one a screen reader moves by,
- * and whose own toggle would fight the form opening a section on Save. The
- * fields stay in the page while closed, hidden, so nothing typed in them is
- * lost, and an error can still be set on them
- * (claude-docs/components/collapsible-section.md).
+ * A form section as a disclosure under an `h3` (`h4` when nested): the heading's text is a button,
+ * with a one-line summary of what is entered while closed and a flag on error. Fields stay in the
+ * page while closed, hidden (claude-docs/components/collapsible-section.md, "How a section is built").
  */
 export function CollapsibleSection({
   title,

@@ -22,16 +22,10 @@ import type {
   VariantFields,
 } from './types';
 
-// One ingredient as IngredientForm submits it and the service parses it: the
-// resolver runs these before a request is sent, and the service runs them
-// again because the browser is not the only caller. Two variants, one per
-// tier — see claude-docs/validation.md, "The two ingredient variants".
+// One ingredient as IngredientForm submits it: the resolver and the service both parse it, since the browser is not
+// the only caller. Two variants, one per tier (claude-docs/validation.md, "The two ingredient variants").
 
-/**
- * Blank entries are kept through the cross-field rules — an issue's index
- * must count the rows the form sent — and dropped by `dropBlankEntries` after,
- * which takes a list left with none as absent, as a blank text field is.
- */
+/** Blank entries stay through the cross-field rules so an issue's index counts the rows sent; `dropBlankEntries` then drops them, and a list left with none is absent. */
 const textList = z.array(z.string().trim()).nullish();
 
 /** The entries of a list that are not blank, in order. */
@@ -52,12 +46,7 @@ const dropBlankEntries = <T extends Lists>(value: T): T => ({
   folkNames: withoutBlanks(value.folkNames),
 });
 
-/**
- * Closed, unlike the lists above: the five values and nothing typed (DESIGN.md
- * §5, MB.157). Kept in the order chosen, never sorted, and each element once —
- * a repeat is refused at the repeat rather than dropped, since the form never
- * offers a chosen element twice, so one arriving is a caller to correct.
- */
+/** Closed: the five values and nothing typed (DESIGN.md §5). Kept in the order chosen, and a repeat is refused rather than dropped, as the form never offers an element twice. */
 const elementArray = z
   .array(z.enum(INGREDIENT_ELEMENTS, { error: 'Choose one of the five elements' }))
   .superRefine((elements, ctx) => {
@@ -72,36 +61,18 @@ const elementArray = z
   });
 const elementList = elementArray.nullish();
 
-/**
- * A substitute links an ingredient or names one (DESIGN.md §5,
- * `ingredient_substitutes`): either half trimmed, and blank as absent, so
- * `linkOrNameRules` decides between them. A blank entry is refused rather
- * than dropped, so a service's refusal, made after the parse, still counts
- * the entries the caller sent.
- */
+/** A substitute links an ingredient or names one (DESIGN.md §5, `ingredient_substitutes`): halves trimmed and blank as absent, a blank entry refused later so the service's refusal still counts the rows sent. */
 const substitute = z.object({
   ingredientId: optionalText(),
-  // The linked ingredient's form it names (MB.215): whether it is a form of
-  // that ingredient reads the database, so it is the service's.
+  // Whether the form named is a form of the linked ingredient reads the database, so it is the service's.
   substituteVariantId: optionalText(),
   name: optionalText(),
 });
 
-/**
- * A deity links the curated one picked or names one (DESIGN.md §5,
- * `ingredient_deities`), as a substitute does, and is refused rather than
- * dropped when blank for the same reason: its index is its position.
- */
+/** A deity links the curated one picked or names one (DESIGN.md §5, `ingredient_deities`), refused rather than dropped when blank, as its index is its position. */
 const deity = z.object({ deityId: optionalText(), name: optionalText() });
 
-/**
- * A reference the ingredient cites (DESIGN.md §7): an existing reference's id,
- * trimmed, and its locator, blank as none — every place the source is cited
- * at, in one, tidied and its ranges dashed as the form shows it (MB.154). The id is required, as
- * `ReferenceLinkInput`'s `ID!` is; a blank one is refused by `referenceRules`
- * rather than dropped, as a blank substitute is, so a service's refusal counts
- * the entries the caller sent.
- */
+/** A reference the ingredient cites (DESIGN.md §7): an existing reference's id and its locator, tidied with ranges dashed. A blank id is refused by `referenceRules` rather than dropped, so the service's refusal counts the rows sent. */
 const referenceLink = z.object({
   referenceId: z.string({ error: 'Choose a source' }).trim(),
   locator: optionalText(formatLocator),
@@ -142,10 +113,7 @@ function asReferences(entries: ReferenceLinkFields[]): ReferenceLinkEntry[] {
   return entries.map(({ referenceId, locator }) => ({ referenceId, locator: locator ?? null }));
 }
 
-/**
- * Each substitute and deity as the one half it carries, and each reference as
- * its id and locator, once `referenceRules` has held it to an id.
- */
+/** Each substitute and deity as the one half it carries, and each reference as its id and locator. */
 function asEntries<
   T extends {
     substitutes?: SubstituteFields[] | null;
@@ -168,17 +136,8 @@ function asEntries<
 }
 
 /**
- * One form the ingredient comes in (DESIGN.md §5, `ingredient_variants`;
- * MB.215): its text, never blank, and its pick, its own description, safety
- * note, toxic flag and lists, and its own substitutes, references and categories, each
- * held to the ingredient's own rules and pathed beneath the variant. `id`
- * names a form the ingredient already holds, so a save keeps that row across
- * a respelling; whether it is this ingredient's is the service's to read.
- * Every field but `id` is sent, `""` or `[]` for none, as the input type
- * declares it: an entry replaces the row it names, so a field left out would
- * be a silent clear (MB.159). The parse keeps `""` and `[]` as sent, blank
- * list entries dropped after the rules, so what it gives back is still an
- * input the type takes; `resolvePicks` reads each as none.
+ * One form the ingredient comes in (DESIGN.md §5, `ingredient_variants`) with its own lists, each held to the ingredient's rules and pathed beneath the variant.
+ * `id` names a form already held; every other field is sent (`""` or `[]` for none) because an entry replaces its row, and `resolvePicks` reads each as none.
  */
 const variant = z
   .object({
@@ -187,7 +146,7 @@ const variant = z
     formId: z.string().trim(),
     description: z.string().trim(),
     safetyNotes: z.string().trim(),
-    // Its own flag, never its ingredient's (M11.21): sent whole, as the rest is.
+    // Its own flag, never its ingredient's; sent whole, as the rest is.
     toxic: z.boolean(),
     elements: elementArray,
     celestialBodies: z.array(z.string().trim()),
@@ -198,7 +157,7 @@ const variant = z
     references: z.array(referenceLink),
   })
   .superRefine((value, ctx) => {
-    // Not a uuid names nothing, and would be a driver error at the comparison.
+    // Not a uuid names nothing and would be a driver error at the comparison.
     for (const key of ['id', 'formId'] as const) {
       const id = value[key];
       if (id && !RowId.safeParse(id).success) {
@@ -228,25 +187,20 @@ const fields = {
   canonicalName: optionalText(),
   description: optionalText(),
   elements: elementList,
-  // Lists of free text like a variant's form (MB.134): the vocabularies
-  // suggest, and nothing here refuses — the compendium service holds its tier
-  // to them against the database (MB.162), and a coven's stay free text.
+  // Free text lists like a form: the vocabularies suggest and nothing here refuses; the compendium service holds its tier to them, and a coven's stay free text.
   celestialBodies: textList,
   zodiacSigns: textList,
   deities: z.array(deity).nullish(),
   colors: textList,
   safetyNotes: optionalText(),
-  // The ingredient's own flag, independent of each form's (M11.21). Absent
-  // on a create is off.
+  // The ingredient's own flag, independent of each form's; absent on a create is off.
   toxic: z.boolean().nullish(),
   substitutes: z.array(substitute).nullish(),
   references: z.array(referenceLink).nullish(),
   folkNames: textList,
-  // The categories it is filed under (MB.125): whether each names a live
-  // category is the service's to read, and a repeat is written once there.
+  // The categories it is filed under: whether each is live is the service's to read, and a repeat is written once.
   categoryIds: z.array(z.string().trim()).nullish(),
-  // Its forms (MB.215), the only place a form is written since MB.222.
-  // Absent is none, as every child list's absence is.
+  // Its forms, the only place a form is written; absent is none, as for every child list.
   variants: z.array(variant).nullish(),
 };
 
@@ -257,11 +211,7 @@ const nomenclature = z.enum(NOMENCLATURE_KINDS, {
       : 'Not a classification',
 });
 
-/**
- * The rules across fields: the database's kind↔name CHECK — `none` takes no
- * formal name, a named kind needs one, `unknown` takes either — a folk name
- * that is neither the name nor another folk name, and each list entry once.
- */
+/** The rules across fields: the database's kind-to-name CHECK, a folk name that is neither the name nor another folk name, and each list entry once. */
 function crossFieldRules(value: Parsed, ctx: z.RefinementCtx) {
   const kind = value.nomenclature;
   const named = value.canonicalName != null;
@@ -310,12 +260,7 @@ function crossFieldRules(value: Parsed, ctx: z.RefinementCtx) {
   variantRules(value.variants ?? [], ctx);
 }
 
-/**
- * The forms across the list (MB.215): each folded form once, as
- * `ingredient_variants_form_unique` holds it, and each id once, since two
- * entries keeping one row would each rewrite it. Refused at the repeat; each
- * variant's own rules ran in its schema.
- */
+/** The forms across the list: each folded form once, as `ingredient_variants_form_unique` holds it, and each id once; refused at the repeat. */
 function variantRules(entries: readonly VariantFields[], ctx: z.RefinementCtx) {
   for (const index of repeatsOf(entries.map((entry) => entry.form))) {
     ctx.addIssue({
@@ -338,11 +283,7 @@ function variantRules(entries: readonly VariantFields[], ctx: z.RefinementCtx) {
   });
 }
 
-/**
- * Where each entry repeats an earlier one but for case, the fold the
- * lower(name) unique indexes make: its position in the list as sent, blanks
- * skipped but counted, so a refusal lands at the row the form sent it in.
- */
+/** Where each entry repeats an earlier one but for case (the `lower(name)` fold), by its position as sent with blanks counted. */
 function repeatsOf(entries: readonly string[]): number[] {
   const seen = new Set<string>();
   return entries.flatMap((entry, index) => {
@@ -354,10 +295,7 @@ function repeatsOf(entries: readonly string[]): number[] {
   });
 }
 
-/**
- * Each entry of an ordered list once, folded as folk names are: a repeat but
- * for case and spacing is refused at the repeat (MB.167).
- */
+/** Each entry of an ordered list once, folded as folk names are; a repeat but for case and spacing is refused at the repeat. */
 function refuseRepeats(field: string, entries: readonly string[], ctx: z.RefinementCtx) {
   for (const index of repeatsOf(entries)) {
     ctx.addIssue({ code: 'custom', path: [field, index], message: 'This is already listed' });
@@ -365,12 +303,8 @@ function refuseRepeats(field: string, entries: readonly string[], ctx: z.Refinem
 }
 
 /**
- * Each entry of `field` is exactly one of a link, by `idKey`, and a name,
- * and listed once: the same row linked twice, or the same name typed twice in
- * any case — each table's two partial unique indexes' keys — is refused at
- * the repeat. Two links to rows sharing a name are two rows, and a name equal
- * to a linked row's is text beside a link, so neither is a repeat. A link is
- * compared as sent, as the index compares it.
+ * Each entry of `field` is exactly one of a link (by `idKey`) and a name, and listed once; a name equal to a linked
+ * row's is text beside a link, not a repeat. A link is compared as sent, as the index compares it.
  */
 function linkOrNameRules<IdKey extends string>(
   field: string,
@@ -391,7 +325,7 @@ function linkOrNameRules<IdKey extends string>(
       if (link && entry.name) {
         refuse(index, messages.both);
       } else if (link) {
-        // Not a uuid names nothing, and would be a driver error at the comparison.
+        // Not a uuid names nothing and would be a driver error at the comparison.
         if (!RowId.safeParse(link).success) refuse(index, messages.noSuchLink);
         else if (links.has(link)) refuse(index, messages.linkRepeated);
         links.add(link);
@@ -404,7 +338,7 @@ function linkOrNameRules<IdKey extends string>(
   };
 }
 
-/** A deity picked from the curated list, or typed (MB.165). */
+/** A deity picked from the curated list, or typed. */
 const deityRules = linkOrNameRules('deities', 'deityId', {
   both: 'A deity is picked or typed, not both',
   neither: 'Name the deity, or pick one',
@@ -422,16 +356,13 @@ const substituteLinkRules = linkOrNameRules('substitutes', 'ingredientId', {
   nameRepeated: 'This substitute is already listed',
 });
 
-/**
- * Each substitute a link or a name, and a form it names an id beside a link,
- * as `ingredient_substitutes_substitute_variant_has_link` holds it (MB.215).
- */
+/** Each substitute a link or a name, and a form it names an id beside a link, as `ingredient_substitutes_substitute_variant_has_link` holds it. */
 function substituteRules(entries: readonly SubstituteFields[], ctx: z.RefinementCtx) {
   substituteLinkRules(entries, ctx);
   entries.forEach(({ ingredientId, substituteVariantId }, index) => {
     if (!substituteVariantId) return;
     const path = ['substitutes', index, 'substituteVariantId'];
-    // Not a uuid names nothing, and would be a driver error at the comparison.
+    // Not a uuid names nothing and would be a driver error at the comparison.
     if (!RowId.safeParse(substituteVariantId).success) {
       ctx.addIssue({ code: 'custom', path, message: 'No such form to pick' });
     } else if (!ingredientId) {
@@ -440,13 +371,7 @@ function substituteRules(entries: readonly SubstituteFields[], ctx: z.Refinement
   });
 }
 
-/**
- * A variant's substitute that links an ingredient names one of its forms
- * (MB.115, the owner's call): a form stands in for a form, so a link to the
- * whole ingredient is refused, pathed to its form as a wrong form is. A name
- * stays a name. The ingredient's own list may still link the whole
- * ingredient, so this is the variant schema's alone.
- */
+/** A variant's substitute that links an ingredient names one of its forms, so a link to the whole ingredient is refused; the ingredient's own list may still link it whole. */
 function formLinkRules(entries: readonly SubstituteFields[], ctx: z.RefinementCtx) {
   entries.forEach(({ ingredientId, substituteVariantId }, index) => {
     if (!ingredientId || substituteVariantId) return;
@@ -458,10 +383,7 @@ function formLinkRules(entries: readonly SubstituteFields[], ctx: z.RefinementCt
   });
 }
 
-/**
- * Each reference names one by its id, and is listed once whatever its locator:
- * `reference_links_ingredient_unique`'s key, refused at the repeat.
- */
+/** Each reference names one by its id and is listed once whatever its locator (`reference_links_ingredient_unique`). */
 function referenceRules(entries: ReferenceLinkFields[], ctx: z.RefinementCtx) {
   const refuse = (index: number, message: string) =>
     ctx.addIssue({ code: 'custom', path: ['references', index], message });
@@ -469,21 +391,17 @@ function referenceRules(entries: ReferenceLinkFields[], ctx: z.RefinementCtx) {
 
   entries.forEach(({ referenceId }, index) => {
     if (!referenceId) refuse(index, 'Choose a source');
-    // Not a uuid names nothing, and would be a driver error at the comparison.
+    // Not a uuid names nothing and would be a driver error at the comparison.
     else if (!RowId.safeParse(referenceId).success) refuse(index, 'No such source');
     else if (listed.has(referenceId)) refuse(index, 'This source is already listed');
     else listed.add(referenceId);
   });
 }
 
-/**
- * Each category is an id. A repeat is not refused, unlike a reference's: a
- * category is a chip, on or off, so one sent twice is one, and the service
- * writes it once.
- */
+/** Each category is an id; a repeat is not refused, since a category is a chip, on or off, and the service writes it once. */
 function categoryRules(ids: readonly string[], ctx: z.RefinementCtx) {
   ids.forEach((id, index) => {
-    // Not a uuid names nothing, and would be a driver error at the comparison.
+    // Not a uuid names nothing and would be a driver error at the comparison.
     if (!RowId.safeParse(id).success) {
       ctx.addIssue({ code: 'custom', path: ['categoryIds', index], message: 'No such category' });
     }
@@ -500,12 +418,7 @@ export const CompendiumIngredientInput = z
   .transform(dropBlankEntries)
   .transform(asEntries);
 
-/**
- * The workspace tier: only `name` is required. With no kind, absent or null,
- * `nomenclature` is `none` when there is no formal name either, so story 29's
- * one-field stub saves, and `unknown` when there is one (MB.161): `none`
- * would contradict the name and `botanical` would guess its system.
- */
+/** The workspace tier: only `name` is required. With no kind, `nomenclature` is `none` when there is no formal name and `unknown` when there is, since `none` would contradict the name and `botanical` would guess. */
 export const LocalIngredientInput = z
   .object({
     ...fields,

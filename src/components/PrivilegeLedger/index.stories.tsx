@@ -10,7 +10,6 @@ const meta = {
   title: 'Admin / Privilege Ledger',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const ADA = { name: 'Ada Fixturewort', href: '/admin/users?query=ada%40users.test' };
@@ -157,8 +156,6 @@ const noMatchesNode = (
   />
 );
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const LEDGER_STATES: Record<string, ReactNode> = {
   'First Page': firstPageNode,
   'Middle Page': middlePageNode,

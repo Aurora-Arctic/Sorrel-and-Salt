@@ -29,11 +29,8 @@ import {
 } from '../../../support/fixtures';
 import { curatedFormId } from '../../../support/db/curated-ids';
 
-// M14.8: a curator's review mark on a compendium entry. Set and cleared by hand through
-// `setCompendiumEntryReviewed` alone, and left as it was by every other curator
-// write to the entry; read
-// back only through the curator's own read, never through the public one.
-// The table is emptied per test, so every row read back is one this file wrote.
+// A curator's review mark on a compendium entry: set and cleared by hand through `setCompendiumEntryReviewed` alone, and left as it was by every other curator write to the entry.
+// It is read back only through the curator's own read, never the public one. The table is emptied per test, so every row read back is one this file wrote.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -284,7 +281,7 @@ describe('the public compendium reads', () => {
 
     for (const row of [listed, entry, shown.kind === 'entry' ? shown.detail.entry : undefined]) {
       expect(row).toBeDefined();
-      // The date is public (the owner's call, 2026-10-23); who marked it is not.
+      // The date is public; who marked it is not.
       expect(row).toHaveProperty('curatorReviewedAt', expect.any(Date));
       expect(row).not.toHaveProperty('curatorReviewedBy');
     }
@@ -296,7 +293,7 @@ async function stampsOfSlug(id: string) {
   return row;
 }
 
-describe('the Reviewed filter (M14.8)', () => {
+describe('the Reviewed filter', () => {
   const PAGE = { limit: 26, inverted: false } as const;
 
   /** A compendium entry of its own name and no formal one, so several can stand together. */
@@ -349,8 +346,8 @@ describe('the Reviewed filter (M14.8)', () => {
     }
   });
 
-  // The coven-held reads (M12.55) filter the compendium by what covens hold, and
-  // must keep M14.8's gate: a read that parses the filter without it answers anyone.
+  // The coven-held reads filter the compendium by what covens hold, and
+  // must keep the gate: a read that parses the filter without it answers anyone.
   it.each([
     ['no coven picked, the cached read', []],
     ['W picked, the scoped read', [WORKSPACE_W_ID]],

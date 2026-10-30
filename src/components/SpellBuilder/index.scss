@@ -1,11 +1,9 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The Share With the Coven switch (M10.13) stands at the start of its column,
-// its label and the note under it at the start too, as the ingredient form's
-// Toxic switch does (the owner's call, 2026-10-16). Not the primitive's
-// centring, which lines a filter bar's switch up under its label among boxes;
-// here it sits alone on its row beneath full-width fields.
+// The Share With the Coven switch, label and note start-aligned as the ingredient form's Toxic
+// switch is. Not the primitive's centring, which suits a filter bar; here it sits alone beneath
+// full-width fields.
 .spell-builder .switch {
   align-items: flex-start;
 
@@ -14,10 +12,10 @@
   }
 }
 
-// A step's handle (M10.16): the grip it is moved by, a button unboxed as the
+// A step's handle: the grip it is moved by, a button unboxed as the
 // combobox's chip handle is. `touch-action` is dnd-kit's ask, so that a drag
 // by touch moves the step rather than the page. Muted, as a grip is a
-// means to move a step and not the step itself (the owner's pass, 2026-10-28).
+// means to move a step and not the step itself.
 .spell-step__handle {
   @include button-reset(grab);
 
@@ -56,7 +54,7 @@
   box-shadow: $shadow-lifted;
 }
 
-// The jar's list and what surrounds it (the owner's pass, 2026-10-28): one
+// The jar's list and what surrounds it: one
 // column, spaced by its gap alone, so a row carries no margin of its own. The
 // list is the size container the row stacks by, declared in StepRow's
 // stylesheet beside its only query.
@@ -122,14 +120,14 @@
   white-space: nowrap;
 }
 
-// The picker row's chips are the compact size Category Match uses (the owner's call, 2026-10-29),
+// The picker row's chips are the compact size Category Match uses,
 // still in their group colours.
 .combobox__list .combobox__note--meta .chip {
   @include chip($size: compact);
 }
 
-// A row's category chips may wrap onto a second line rather than be clipped (the owner's call,
-// 2026-10-29): the one-line clip would cut the pills' tops. The line height gives wrapped lines
+// A row's category chips may wrap onto a second line rather than be clipped:
+// the one-line clip would cut the pills' tops. The line height gives wrapped lines
 // the room the chips have side to side, and the block padding keeps the first line clear of the
 // name above. Only a note holding chips, so a plain-text note keeps its single ellipsised line.
 .combobox__list .combobox__note--meta:has(.chip) {
@@ -176,7 +174,8 @@
 }
 
 // The picker's category filter, the tray under the box inside the frame, separated by a hairline:
-// the caption and its InfoTip on one line, the chips (and Clear) on the next. Each chip is a toggle.
+// the caption and its InfoTip on one line, the chips (and Clear) on the next. Each chip is a
+// toggle.
 .spell-steps__filter {
   display: flex;
   flex-direction: column;
@@ -249,11 +248,9 @@
   flex: none;
 }
 
-// A toggle, not a label (the owner's call, 2026-10-29): at rest a neutral outline and ink with a
-// dot in the group colour; pressed, a solid fill of the group colour, card-coloured ink and a
-// check, so the state is not carried by colour alone. Under .spell-steps__filter so these beat the
-// global .chip's own 400ms transition. Border width and style stay fixed across states; only
-// colours change, so each eases.
+// A toggle: at rest a neutral outline with a dot in the group colour; pressed, a solid group fill,
+// card-coloured ink and a check, so colour is not alone. Under .spell-steps__filter to beat .chip's
+// 400ms transition; border width and style stay fixed so colours ease.
 .spell-steps__filter .spell-steps__filter-chip {
   @include chip($state: quiet);
   display: inline-flex;
@@ -316,7 +313,7 @@
     grid-column: 1;
   }
 
-  // The dashed last line of the list, full width, with no number (the owner, 2026-10-29).
+  // The dashed last line of the list, full width, with no number.
   .spell-steps__add-step {
     grid-column: 1;
     grid-row: 3;
@@ -331,8 +328,7 @@
 }
 
 // The steps themselves: unnumbered, unindented, a gap between them: space(4),
-// where it was space(3), so the cards do not blur into one column (design review,
-// 2026-10-28, finding 3).
+// where it was space(3), so the cards do not blur into one column.
 .spell-steps__list {
   display: flex;
   flex-direction: column;
@@ -354,8 +350,8 @@
 }
 
 // The builder's sections: space(6) under the fields of an open one, so the gap between
-// sections is plainly bigger than the space(5) between fields (design review,
-// 2026-10-28). Here and not in the shared component, which IngredientForm also uses.
+// sections is plainly bigger than the space(5) between fields.
+// Here and not in the shared component, which IngredientForm also uses.
 body .spell-builder .collapsible-section__fields {
   padding-block-end: space(6);
 }
@@ -367,7 +363,7 @@ body .spell-builder .collapsible-section__fields > section {
 }
 
 // The jar details above the step list: the jar at the left of Seal Wax, then Jar
-// Description on its own line (the owner's call, 2026-10-29).
+// Description on its own line.
 .jar-details {
   display: flex;
   flex-direction: column;
@@ -375,7 +371,7 @@ body .spell-builder .collapsible-section__fields > section {
 }
 
 // Seal Wax takes the width the jar leaves. The jar stretches to the row's height, so it spans
-// the label and the input together (the owner's call, 2026-10-29).
+// the label and the input together.
 .jar-details__wax {
   display: flex;
   align-items: stretch;
@@ -433,7 +429,7 @@ body .spell-builder .collapsible-section__fields > section {
   // The Edit Stock press's stretch (`__press::after`) is placed against the line.
   position: relative;
   display: grid;
-  // The Quick Look eye has the right-hand column, level with the name (the owner, 2026-10-29).
+  // The Quick Look eye has the right-hand column, level with the name.
   grid-template-areas:
     'jar name look'
     'jar words .';
@@ -495,12 +491,9 @@ body .spell-builder .collapsible-section__fields > section {
   color: $text-muted;
 }
 
-// Edit Stock behind the jar and the name on the recipe page (M13.21; the owner, 2026-10-29):
-// the button holds the name, stretched over the whole line by its `::after`, as the entry page's
-// shelf stretches a jar's button (`.jar-shelf__press`), and on hover and focus the name grows and
-// the jar shakes as they do there. The name's ellipsis is the inner span's, never the button's:
-// `overflow: hidden` on the button would clip the stretch to the name. The growth is on the
-// span too, since a transform on the button would make it the stretch's containing block.
+// Edit Stock behind the jar and name: the button holds the name, stretched by its `::after` as
+// `.jar-shelf__press` is. The ellipsis and growth are on the inner span, since `overflow: hidden`
+// or a transform on the button would clip or contain the stretch.
 .spell-inventory__press {
   @include button-reset;
 
@@ -566,7 +559,7 @@ body .spell-builder .collapsible-section__fields > section {
   }
 }
 
-// The eye (the owner, 2026-10-29) at seven eighths of its size, as the recipe's steps draw it,
+// The eye at seven eighths of its size, as the recipe's steps draw it,
 // and raised above the press's stretch with the verdict, so each keeps its own press.
 .spell-inventory__look {
   display: inline-flex;
@@ -664,12 +657,9 @@ body .spell-builder .collapsible-section__fields > section {
   }
 }
 
-// The recovery banner: a warning (the owner's call, 2026-10-29), a flex row like the save
-// status's notices, so the buttons wrap to their own line, not touch the text, when the
-// sentence fills the width. Doubled to outrank the notice's margin; its own class rather than
-// the form's, since in a dialog it is portalled under the title (M13.18). The room is the
-// conflict notice's (SaveStatus's index.scss says why the triangle moves with it), so the two
-// line up when both show.
+// The recovery banner: a warning in a flex row like the save status's notices, doubled to outrank
+// the notice's margin. Its own class, since in a dialog it is portalled under the title; its room
+// is the conflict notice's, so the two line up (SaveStatus's index.scss).
 .spell-builder__restored.spell-builder__restored {
   display: flex;
   flex-wrap: wrap;
@@ -685,7 +675,7 @@ body .spell-builder .collapsible-section__fields > section {
   }
 }
 
-// The recovery banner's two choices (M13.17), side by side after the sentence.
+// The recovery banner's two choices, side by side after the sentence.
 .spell-builder__recovered {
   display: inline-flex;
   flex-wrap: wrap;

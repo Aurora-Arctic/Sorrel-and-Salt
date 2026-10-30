@@ -45,14 +45,9 @@ import type {
   GroupValues,
 } from './types';
 
-// The admin's form for a group (M5.6b), one for both group vocabularies so
-// MB.132's traditions can take it too: a name and a description, and for a
-// category group its chip's two colours, validated by the shared schema before
-// the mutation — the contrast floor included (MB.36) — and again by the
-// service. A group holding rows is deleted only once they have somewhere to
-// go: Delete Group first asks which group, then asks to confirm that move, the
-// owner's call. It holds no modal of its own; the page puts it in one
-// (claude-docs/components/group-form.md).
+// The admin's form for a group, for both group vocabularies and the deity traditions: a name, a
+// description and, for a category group, its chip's two colours, validated by the shared schema and the
+// service. Delete Group asks which group takes the rows (claude-docs/components/group-form.md).
 
 const CreateCategoryGroupDocument = graphql(`
   mutation CreateCategoryGroup($input: CategoryGroupInput!) {
@@ -188,7 +183,7 @@ const KINDS: Record<GroupKind, GroupFormKind> = {
     update: UpdateIngredientFormGroupDocument,
     remove: DeleteIngredientFormGroupDocument,
   }),
-  // A deity's tradition (MB.132): a form group's shape, under its own name.
+  // A deity's tradition: a form group's shape, under its own name.
   tradition: defineKind({
     // A deity's address carries its tradition's name, as a form's does its group's.
     moved: "Each deity keeps its name and takes its new tradition's address.",
@@ -240,7 +235,7 @@ const GroupForm = ({
 }: GroupFormProps): ReactElement => {
   const id = useId();
   const spec = KINDS[kind];
-  // What the group and the rows it holds are called is the lists' (MB.115).
+  // What the group and the rows it holds are called is the lists'.
   const { noun, holds } = GROUP_LIST_KINDS[kind];
   const { noun: one, plural: many } = VALUE_LIST_KINDS[holds];
   const title = capitalise(noun);
@@ -283,11 +278,11 @@ const GroupForm = ({
     setValue(partner, paired, { shouldDirty: true });
   };
   const [step, setStep] = useState<DeleteStep>({ at: 'idle' });
-  // Cancel, and every other way out of the modal, asks first while the form
-  // has changes (MB.115, the owner's call); a save or a delete does not.
+  // Cancel, and every other way out of the modal, asks first while the form has changes;
+  // a save or a delete does not.
   const discard = useDiscardGuard(isDirty);
-  // Undo and redo (M12.9), off while a question is up over the form: the
-  // unsaved changes', or a step of the delete.
+  // Undo and redo, off while a question is up over the form: the unsaved changes', or a
+  // step of the delete.
   const root = useRef<HTMLFormElement>(null);
   const history = useFormHistory(methods, {
     root,
@@ -364,8 +359,8 @@ const GroupForm = ({
     </button>
   );
 
-  // Each step a question over the form (MB.115, the owner's call), keyed by
-  // the step, so each takes the focus on its own safe answer as it comes.
+  // Each step a question over the form, keyed by the step, so each takes the focus on its
+  // own safe answer as it comes.
   const choosing = (): ReactElement => {
     if (others.length === 0) {
       return (
@@ -383,7 +378,7 @@ const GroupForm = ({
         </ConfirmOverlay>
       );
     }
-    // A label, so title case (the MB.115 sign-off): "Move Its 3 Categories To".
+    // A label, so title case: "Move Its 3 Categories To".
     const label = `Move Its ${memberCount} ${capitalise(rowNoun)} To`;
     const { aria, ...move } = fieldDescription({ id: `${id}-move`, error: moveError });
     // Named by the picker's label, the question this step asks.
@@ -503,10 +498,8 @@ const GroupForm = ({
                 hint,
                 error: errors[column]?.message,
               });
-              // The shell draws the label and its mark, naming the hex box by
-              // `controlId`, but not the error: ChipColorField places that
-              // itself, between its ratio and its near-colour warning, so the
-              // shell's own would show it twice.
+              // The shell draws the label and its mark, naming the hex box by `controlId`, but not the error:
+              // ChipColorField places it between its ratio and its near-colour warning, so the shell's would show it twice.
               return (
                 <FieldShell
                   key={column}

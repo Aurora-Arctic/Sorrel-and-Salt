@@ -9,7 +9,7 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/here',
 }));
 
-// MB.6 (claude-docs/components/spell-recipe.md): the page body is presentational, so each
+// (claude-docs/components/spell-recipe.md): the page body is presentational, so each
 // case is props in and what rendered out. The spells are the test's own data.
 
 const instruction = (id: string, body: string): RecipeStep => ({ kind: 'instruction', id, body });

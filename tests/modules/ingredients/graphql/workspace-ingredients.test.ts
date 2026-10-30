@@ -19,14 +19,9 @@ import {
 import { run } from '../../../support/graphql/run';
 import type { WorkspaceIngredientNode } from './types';
 
-// Stories 15, 25 and 34 over the wire: the three mutations a coven's
-// ingredient form saves and deletes through. This file holds the transport's
-// half (claude-docs/testing/layer-ownership.md): the SDL's own refusals, the
-// answer as a fresh read gives it, the loaders cleared between two writes in
-// one request, and one refusal per error code per mutation, read as the browser
-// reads it. Which roles are refused at which rows, and every Zod rule, are
-// services/workspace-ingredients.test.ts's and validation/ingredient.test.ts's;
-// a signed-out caller at every field is tests/db/graphql-query-scopes.test.ts's.
+// Over the wire: the three mutations a coven's ingredient form saves and deletes through (the transport's half, claude-docs/testing/layer-ownership.md).
+// That is the SDL's own refusals, the answer as a fresh read gives it, the loaders cleared between two writes in one request, and one refusal per error code per mutation.
+// Roles and Zod rules are services/workspace-ingredients.test.ts's and validation/ingredient.test.ts's; a signed-out caller is tests/db/graphql-query-scopes.test.ts's.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -86,10 +81,7 @@ function local(overrides: Overrides<IngredientFixture> = {}): IngredientFixture 
 
 const seed = (fixture: IngredientFixture) => insertIngredient(sql, fixture, A.id);
 
-/**
- * The whole ingredient as the update input takes it: every field sent, and
- * an empty value where the fixture has none.
- */
+/** The whole ingredient as the update input takes it: every field sent, and an empty value where the fixture has none. */
 function wholeInput(fixture: IngredientFixture): Record<string, unknown> {
   return {
     name: fixture.name,
@@ -146,7 +138,7 @@ describe('createWorkspaceIngredient', () => {
       { name: 'Mockleaf', ingredient: { id: mockleaf } },
       { name: 'Zest Root', ingredient: null },
     ]);
-    // MB.167: the picks read back as picks, the typed deity as its name, in order.
+    // The picks read back as picks, the typed deity as its name, in order.
     expect(answered.variants).toEqual([
       { form: 'Root', formChoice: { id: root, name: 'Root', group: { name: 'Botanical' } } },
     ]);
@@ -431,7 +423,7 @@ describe('updateIngredient', () => {
   });
 });
 
-// Story 25 over the wire. The answer is the deleted id rather than the
+// Deleting over the wire. The answer is the deleted id rather than the
 // entity: a list evicts a row by its id, and a deleted ingredient's children
 // would read as empty (claude-docs/graphql/schema.md, "The workspace ingredient mutations").
 describe('deleteIngredient', () => {

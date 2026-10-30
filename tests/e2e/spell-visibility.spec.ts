@@ -3,12 +3,9 @@ import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
 import { seedCoven, withSql } from './stories/coven-ingredients';
 
-// The spell builder's Visibility control (M10.13), which no numbered story
-// walks: DESIGN.md §5 governs visibility by its one-way rule rather than a
-// story. A draft is shared and made private again freely, with no question;
-// once the spell is marked complete the control shuts with its reason (M10.20). What was
-// stored is read from the database. Story 56 walks the Private badge, and the
-// service's refusal of a narrowing is tests/modules/grimoire/services's (M10.6).
+// The spell builder's Visibility control (DESIGN.md §5): a draft is shared and made private again freely,
+// and once the spell is marked complete the control shuts with its reason. What was stored is read from the
+// database; the service's refusal is tests/modules/grimoire/services's.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -24,7 +21,7 @@ test('a new spell starts private, a draft moves between private and shared freel
   await signInAgainAs(page, coven.users.B);
   await page.goto(`/coven/${coven.slug}/grimoire?new=spell-${coven.slug}`);
 
-  // A switch (the owner's call, 2026-10-27): on is the coven, off is private; a new spell starts off (2026-10-28).
+  // A switch: on is the coven, off is private; a new spell starts off.
   const visibility = page.getByRole('switch', { name: 'Share With the Coven', exact: true });
   const save = page.getByRole('button', { name: 'Save Spell' });
   await expect(visibility).not.toBeChecked();

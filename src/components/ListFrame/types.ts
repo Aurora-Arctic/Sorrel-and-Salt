@@ -1,11 +1,9 @@
 import type { ReactNode } from 'react';
 
 /**
- * How a list moves to another of its pages: `soft`, a client-side navigation
- * inside a transition; `page`, a soft one for a pager end, which keeps the
- * reader at the list instead of scrolling to the page top; or `full`, a whole
- * page load, which runs the admin layout's guard again
+ * How a list moves to another page: `soft` (client-side, in a transition), `page` (soft, keeps the reader at the list) or `full` (whole load, which reruns the admin layout's guard)
  * (claude-docs/components/pager.md).
+ * (claude-docs/components/list-frame.md, "Navigation modes").
  */
 export type ListNavigationKind = 'soft' | 'page' | 'full';
 

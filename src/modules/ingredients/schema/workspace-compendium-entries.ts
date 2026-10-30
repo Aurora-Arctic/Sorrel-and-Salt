@@ -5,13 +5,9 @@ import { auditColumns } from '../../identity/schema/users';
 import { workspaces } from '../../coven/schema/workspaces';
 import { idColumn, liveUnique } from '../../../db/schema-parts';
 
-// A compendium entry's presence in one coven's cupboard (M12.13): the row says
-// "this coven has this entry", and its seven nullable columns are the coven's
-// own overrides of what the compendium says. A null override reads as the
-// compendium's value; an empty array is an answer, cleared on purpose. That
-// the ingredient is compendium-tier is a service rule and a read filter, not
-// a constraint. Why a table of its own rather than an `ingredients` row:
-// claude-docs/db/workspace-compendium-entries.md.
+// A compendium entry's presence in one coven's cupboard: its seven nullable columns are the coven's own overrides. A null reads as the
+// compendium's value; an empty array is an answer, cleared on purpose. That the ingredient is compendium-tier is a service rule, not a constraint
+// (claude-docs/db/workspace-compendium-entries.md).
 export const workspaceCompendiumEntries = pgTable(
   'workspace_compendium_entries',
   {
@@ -45,9 +41,9 @@ export const workspaceCompendiumEntries = pgTable(
     uniqueIndex('workspace_compendium_entries_workspace_label_unique')
       .on(table.workspaceId, sql`lower(${table.label})`)
       .where(sql`${table.label} is not null and ${table.deletedAt} is null`),
-    // The curator's count of the covens holding an entry (M12.25).
+    // The curator's count of the covens holding an entry.
     index('workspace_compendium_entries_ingredient_id_idx').on(table.ingredientId),
-    // Folded through `unaccent_immutable` for the cupboard search (M12.18), as
+    // Folded through `unaccent_immutable` for the cupboard search, as
     // `ingredients_unaccent_trgm` is for the compendium's.
     index('workspace_compendium_entries_label_unaccent_trgm').using(
       'gin',

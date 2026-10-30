@@ -1,22 +1,7 @@
 import type { ProviderId, SocialProvider } from './types';
-// The roster src/lib/auth.ts registers providers from and /sign-in greys
-// buttons from — one source, so a button cannot be live for a provider
-// Better Auth never registered, or greyed for one that works. Adding a
-// provider is its id in `ProviderId`, an entry here, and its two entries in
-// social-providers-config.ts, which the compiler demands once the id exists;
-// src/lib/auth.ts takes no edit.
-//
-// Deliberately id/label only, with no env var names anywhere in this file:
-// SignInPanel ('use client') imports this to render its buttons, and a
-// client bundle should never carry the *names* of the environment variables
-// that back a secret, even though it never sees their values. That mapping
-// lives in social-providers-config.ts, which nothing client-side may import
-// (.oxlintrc.json's no-restricted-imports).
-//
-// Apple was considered and dropped (claude-docs/auth/social-providers.md, "Social providers"):
-// its client secret is a JWT Apple caps at six months, expiring silently
-// rather than failing loudly, on top of a paid Developer Program membership
-// the other four don't need.
+// The roster src/lib/auth.ts registers providers from and /sign-in greys buttons from, one source so no button is live for an unregistered provider. Id and label only:
+// SignInPanel ('use client') imports it, and a client bundle should not carry the names of the variables behind a secret, which live in social-providers-config.ts.
+// Adding a provider is an id in `ProviderId` and its two entries there; Apple was dropped (claude-docs/auth/social-providers.md, "Social providers").
 
 export const SOCIAL_PROVIDERS: readonly SocialProvider[] = [
   { id: 'discord', label: 'Discord' },

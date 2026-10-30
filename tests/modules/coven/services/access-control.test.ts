@@ -17,7 +17,7 @@ const PERMITTED: Record<WorkspaceRole, Partial<Record<string, readonly string[]>
     spell: ['read'],
     workspace: ['read'],
   },
-  // The coven's own work, and the right to read who else is in it (M6.13).
+  // The coven's own work, and the right to read who else is in it.
   // Inviting, changing a role and removing stay with owners.
   member: {
     member: ['read'],
@@ -26,7 +26,7 @@ const PERMITTED: Record<WorkspaceRole, Partial<Record<string, readonly string[]>
     spell: ['read', 'create', 'update', 'delete'],
     workspace: ['read'],
   },
-  // The roll, plus each member's address (M11.19), and the writes to it.
+  // The roll, plus each member's address, and the writes to it.
   owner: {
     ingredient: ['read', 'create', 'update', 'delete'],
     inventory: ['read', 'update'],

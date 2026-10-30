@@ -11,7 +11,7 @@ import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 import { clearDataCache } from '../../../support/next-data-cache';
 
-// M12.2: llms.txt and the catalog list the public compendium and nothing a
+// Llms.txt and the catalog list the public compendium and nothing a
 // coven owns, over the real cached read with no session.
 vi.mock('next/cache', () => import('../../../support/next-data-cache'));
 
@@ -48,7 +48,7 @@ const bodies = async () => [
   await (await ard()).text(),
 ];
 
-describe('M12.2: what the public files list', () => {
+describe('what the public files list', () => {
   // What the read lists, its description included, is compendium-slugs.test.ts's,
   // and how a link is written is tests/app/ai-discovery.test.ts's: this holds
   // that the files list only what the public read answers.

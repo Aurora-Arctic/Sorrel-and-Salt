@@ -3,13 +3,9 @@ import SectionLinks from './section-links';
 import type { SectionNavProps } from './types';
 import './index.scss';
 
-// The coven's and the admin area's section nav (MB.7): tabs along the context
-// row on a wide screen, the same tabs with the later ones behind More on a
-// tablet, and a bar along the bottom of the window on a phone, all one
-// markup and the stylesheet's choice. No client directive here: the list is
-// built on the server and handed down as plain data, and the links, which
-// must know which page is open, are the client part
-// (claude-docs/components/section-nav.md).
+// The coven's and admin area's section nav: tabs on a wide screen, later ones behind More on a
+// tablet, a bottom bar on a phone, all one markup. No client directive: the list is plain data from
+// the server and the links are the client part (claude-docs/components/section-nav.md).
 const SectionNav = (props: SectionNavProps): ReactElement => <SectionLinks {...props} />;
 
 export default SectionNav;

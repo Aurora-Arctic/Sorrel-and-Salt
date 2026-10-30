@@ -8,14 +8,11 @@ const meta = {
   title: 'Layout / Theme Toggle',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
-// Follows the toolbar's theme control. The first four stories draw the
-// `corner` variant, as the root layout mounts it on the pages with no shell
-// (Welcome, Sign In and the invitation page): a
-// quarter disc pinned to the story frame's top-right corner and clipped by its
-// edge, which is the design.
+// Follows the toolbar's theme control. The first four stories draw the `corner`
+// variant, as the root layout mounts it on pages with no shell: a quarter disc
+// pinned to the frame's top-right corner and clipped by its edge.
 const defaultNode = <ThemeToggle />;
 
 // `.meta = { reducedMotion: true }` simulates the OS setting (.storybook/components.tsx):
@@ -28,8 +25,6 @@ export const ReducedMotion: Story = {
 // there, in the bar). No clip, no fixed position.
 const inlineNode = <ThemeToggle variant="inline" />;
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const TOGGLE_STATES: Record<string, ReactNode> = {
   Corner: defaultNode,
   Inline: inlineNode,

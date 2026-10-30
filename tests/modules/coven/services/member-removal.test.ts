@@ -8,8 +8,8 @@ import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 
 useRawClient();
 
-// Removing a member and leaving (M6.15): both soft-delete the membership row,
-// stamped from the session, and both run M6.8's last-owner guard. The revive
+// Removing a member and leaving: both soft-delete the membership row,
+// stamped from the session, and both run the last-owner guard. The revive
 // write is the way back for a person invited again.
 
 type Role = 'owner' | 'member' | 'viewer';
@@ -219,7 +219,7 @@ describe('reviveMembership', () => {
   });
 });
 
-describe('handing a coven over, then leaving (M6.16)', () => {
+describe('handing a coven over, then leaving', () => {
   it('promotes first, so the leave that follows finds a second owner and the coven keeps one', async () => {
     const covenId = await insertCoven('Fixture Handover Coven', [
       [A.id, 'owner'],

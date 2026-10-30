@@ -17,7 +17,7 @@ import { sql, useRawClient } from '../../support/db/probe-tables';
 
 useRawClient();
 
-describe('the Membership proof (M6.3)', () => {
+describe('the Membership proof', () => {
   describe('findWorkspaceRole, the read that mints a proof', () => {
     it('answers with the role the seeded membership names', async () => {
       await expect(findWorkspaceRole(A.id, WORKSPACE_W_ID)).resolves.toBe('owner');
@@ -31,7 +31,7 @@ describe('the Membership proof (M6.3)', () => {
       await expect(findWorkspaceRole(A.id, WORKSPACE_X_ID)).resolves.toBeUndefined();
     });
 
-    it('answers undefined for a live membership of a soft-deleted workspace (M6.14)', async () => {
+    it('answers undefined for a live membership of a soft-deleted workspace', async () => {
       const { slug } = makeWorkspace({ name: 'Fixture Coven Role Razed' });
       const [workspace] = await withAudit(asUser(A), (write) =>
         write.insert(workspaces, { name: 'Fixture Coven Role Razed', slug }),
@@ -126,7 +126,7 @@ describe('the Membership proof (M6.3)', () => {
   });
 });
 
-describe('findMemberPage, a coven roll keyed on the pair (M6.11)', () => {
+describe('findMemberPage, a coven roll keyed on the pair', () => {
   /** A coven owned by A whose seats all joined at one instant, so only the tiebreak orders them. */
   async function covenJoinedAtOnce(name: string, others: string[]) {
     const { slug } = makeWorkspace({ name });
@@ -162,7 +162,7 @@ describe('findMemberPage, a coven roll keyed on the pair (M6.11)', () => {
   });
 });
 
-describe("findMemberEmails, the roll's addresses under the proof (M11.19)", () => {
+describe("findMemberEmails, the roll's addresses under the proof", () => {
   it("answers the proof's coven's live members alone, whichever ids are asked about", async () => {
     // Why D could have been answered: D holds a live seat, in X, and a user row.
     await expect(findWorkspaceRole(D.id, WORKSPACE_X_ID)).resolves.toBe('member');

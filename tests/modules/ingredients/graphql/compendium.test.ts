@@ -8,12 +8,9 @@ import { run as runOperation } from '../../../support/graphql/run';
 import { makeIngredient } from '../../../support/fixtures';
 import type { CompendiumConnection, SubstituteNode } from './types';
 
-// The `compendium` query over the standard seed's 26 entries: public (MB.80),
-// a page at a time, with folk names and categories batched. What each filter
-// matches is tests/db/repository/ingredients.test.ts's, and how the service
-// reads the filter services/compendium.test.ts's; this file holds the
-// transport's half — the arguments reaching the read, the edge's score, the
-// page numbers, one read per page, and the one refusal on the wire.
+// The `compendium` query over the standard seed's 26 entries: public, a page at a time, with folk names and categories batched.
+// What each filter matches is tests/db/repository/ingredients.test.ts's and how the service reads it is services/compendium.test.ts's.
+// Here: the arguments reaching the read, the edge's score, the page numbers, one read per page, and the one refusal on the wire.
 
 // The reads a page makes, counted at the repository so the batching is a
 // number rather than a hope; the role lookup is counted to show a public
@@ -149,13 +146,9 @@ describe('compendium', () => {
     expect(nodes.map((node) => node.name)).not.toContain('Fixture Wroot');
   });
 
-  // `sal` matches three seeded labels and Rosemary's formal name, Salvia
-  // rosmarinus, each holding it verbatim, so each scores a full 1 however
-  // short of a word it falls; and a folk name each of Mugwort and Selenite,
-  // Sailor's Tobacco and Satin Spar, at a word similarity of 0.5, neither
-  // holding it. Each field's weight then sets the rank — the label at 1, the
-  // formal name at 0.9, a folk name at 0.8 — so the order shows the weighted
-  // rank first and the name second.
+  // `sal` matches three seeded labels and Rosemary's formal name (Salvia rosmarinus), each holding it verbatim, so each scores a full 1.
+  // It also matches a folk name of Mugwort and of Selenite (Sailor's Tobacco, Satin Spar) at a word similarity of 0.5, neither holding it.
+  // Each field's weight sets the rank (label 1, formal name 0.9, folk name 0.8), so the order shows the weighted rank first and the name second.
   it('ranks a search best match first, with the score on each edge', async () => {
     const result = await run(null, { query: 'sal', first: 50 });
     expect(result.errors).toBeUndefined();
@@ -174,7 +167,7 @@ describe('compendium', () => {
     ]);
   });
 
-  // M11.22's facets: the four lists, the toxic setting and the two
+  // The facets: the four lists, the toxic setting and the two
   // to-do switches reach the read as the service parses them, and `any` as no
   // filter. What each matches is tests/db/repository/ingredients.test.ts's.
   it('passes the facet arguments to the read, the toxic setting as a ToxicFilter', async () => {
@@ -205,7 +198,7 @@ describe('compendium', () => {
     ]);
   });
 
-  // M8.12: `all` is the default and no change, so only `any` reaches the read.
+  // `all` is the default and no change, so only `any` reaches the read.
   it('passes categoryMode any to the read, takes all as the default, and refuses another mode', async () => {
     const ids = [category('Protection'), category('Cleansing')];
     await nodesOf({ categoryIds: ids, categoryMode: 'any' });
@@ -223,7 +216,7 @@ describe('compendium', () => {
     expect(repository.findCompendiumPage).toHaveBeenCalledTimes(3);
   });
 
-  // M8.13: the element list is a typed enum list, and reaches the read as the service parses it.
+  // The element list is a typed enum list, and reaches the read as the service parses it.
   it('passes the elements argument to the read, and refuses a name that is no element', async () => {
     await nodesOf({ elements: ['fire', 'water'] });
     await nodesOf({ elements: [] });
@@ -238,7 +231,7 @@ describe('compendium', () => {
     expect(repository.findCompendiumPage).toHaveBeenCalledTimes(2);
   });
 
-  // MB.140: every entry on the page asks for its substitutes, and one read
+  // Every entry on the page asks for its substitutes, and one read
   // answers them all, the linked ingredients joined in.
   it('resolves the substitutes of a page, linked and typed, in one read', async () => {
     const [mugwort, wormwood, lavender] = await Promise.all(
@@ -284,7 +277,7 @@ describe('compendium', () => {
     expect(repository.findSubstitutesIncludingSoftDeleted).toHaveBeenCalledTimes(1);
   });
 
-  // MB.167: every entry on the page asks for its forms' picks and its deities,
+  // Every entry on the page asks for its forms' picks and its deities,
   // and one read answers each, the curated deities joined in.
   it('resolves the picked forms and the deities of a page in one read each', async () => {
     const result = await runOperation(

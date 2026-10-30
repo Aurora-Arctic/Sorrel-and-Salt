@@ -10,7 +10,7 @@ import type { z } from 'zod';
 import type { SpellStepInput } from '../validation/spell-step';
 import { UNMEASURABLE_UNIT, measurable } from '../validation/step-unit';
 
-// How a save writes a spell's recipe (M10.10): the steps a member sends are
+// How a save writes a spell's recipe: the steps a member sends are
 // the whole recipe, in order, so a step's place is its index, a saved step
 // left out is removed, and a step with no id is new. claude-docs/db/grimoire.md,
 // "Saving a recipe", says why each part is the way it is.
@@ -102,13 +102,8 @@ export async function checkRecipe(
 }
 
 /**
- * Story 77 (M13.2): a step laying a form the coven holds a jar of, in a unit
- * that jar cannot be measured in, so a working could not take it out of stock.
- * One read for every step's jar, under the caller's proof, so only this
- * coven's live jars count. A custom step, a step with no unit, a form with no
- * jar and a jar with no unit are not checked; nor is a saved step whose form
- * and unit are unchanged, so a jar whose unit changed after the spell was
- * saved does not refuse its next save (the working warns of it instead).
+ * A step laying a form the coven holds a jar of, in a unit that jar cannot be measured in. Which steps are exempt:
+ * claude-docs/db/grimoire.md, "Grimoire service and schema details".
  */
 async function unmeasurableSteps(
   membership: Membership,
@@ -138,11 +133,8 @@ async function unmeasurableSteps(
 }
 
 /**
- * Writes the recipe `steps` over the spell's live `existing` steps, inside the
- * caller's transaction. Every unique index over a jar's live steps is checked
- * row by row, so a step that changes its place, or to or from a custom name, is
- * first moved aside to a place and a name no other step holds, and only then
- * given its own. Call `checkRecipe` first.
+ * Writes the recipe `steps` over the spell's live `existing` steps, inside the caller's transaction. A moving step is first
+ * moved aside to a free place and name, because the unique indexes are checked row by row. Call `checkRecipe` first.
  */
 export async function writeRecipe(
   write: AuditWriter,

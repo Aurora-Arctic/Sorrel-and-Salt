@@ -14,7 +14,6 @@ const meta = {
   title: 'Sign In / Panel',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const ALL_PROVIDERS = ['discord', 'google', 'facebook', 'microsoft'] as const;
@@ -65,7 +64,7 @@ const someUnavailableNode = <SomeUnavailableView />;
 
 // Continue with Google pressed, as a person would, with the sign-in request
 // left unanswered: that button reads "Signing In" and the others are disabled,
-// as while the browser is on its way to the provider (M12.33).
+// as while the browser is on its way to the provider.
 export const Pending: Story = {
   beforeEach: ({ msw }) => msw.use(hangAuth()),
   render: () => {
@@ -88,8 +87,6 @@ export const Failed: Story = {
   },
 };
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES_STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   'Last Used': lastUsedNode,

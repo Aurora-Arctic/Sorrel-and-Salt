@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { COMPENDIUM_PARAMS } from '@/components/CompendiumList/params';
 import { COVEN_PARAMS } from '@/components/IngredientSearch/coven-params';
 
-// The coven's ingredient search (M9.7) is the compendium's table with two more
+// The coven's ingredient search is the compendium's table with two more
 // entries, so adding them is the proof that a filter is one new entry
 // (claude-docs/components/ingredient-search.md, "The parameter table").
 const PATH = '/coven/test-coven/ingredients';

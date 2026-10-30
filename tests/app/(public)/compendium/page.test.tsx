@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { CARD_PAGE_SIZE, encodeCursor } from '@/lib/pagination';
@@ -7,10 +7,8 @@ import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { NotFound } from '@/lib/errors';
 import { entryDetail } from '../../../support/entry-detail';
 
-// The public compendium page (M8.18; MB.80). The reads and the viewer are mocked, since what
-// they decide is their own tests' (the admin page's test runs the reads). Here: what the
-// address becomes in the read, which foot each kind of visitor gets, and when the page asks
-// to be kept out of search results.
+// The public compendium page, with the reads and the viewer mocked (the admin page's test runs the reads). It proves what the address becomes in the read,
+// which foot each kind of visitor gets, and when the page asks to be kept out of search results.
 
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
 const redirect = vi.fn((_to: string) => {
@@ -25,10 +23,10 @@ vi.mock('@/lib/viewer', () => ({ viewerIfSignedIn, covenRolesIfSignedIn }));
 
 const readCompendium = vi.fn();
 const readFacets = vi.fn();
-// The details a Quick Look opens (M12.5), by id with no session: what it admits is its own
+// The details a Quick Look opens, by id with no session: what it admits is its own
 // test's (tests/app/compendium-reads.test.ts); here, what the page does with its answer.
 const readCompendiumDetails = vi.fn();
-// The reads narrowed to the viewer's picked covens (M12.55): uncached, with the session.
+// The reads narrowed to the viewer's picked covens: uncached, with the session.
 const readCompendiumHeldIn = vi.fn();
 const readFacetsHeldIn = vi.fn();
 vi.mock('@/app/compendium-reads', () => ({
@@ -43,16 +41,19 @@ vi.mock('@/app/compendium-reads', () => ({
   readCardCategories: async (ids: readonly string[]) => ids.map(() => []),
 }));
 
-// What a curator's ?edit=<slug> reads (M8.17): the entry at the slug, then its form's values.
+// What a curator's ?edit=<slug> reads: the entry at the slug, then its form's values.
 const resolveCompendiumSlug = vi.fn();
 // The held read is `held.test.tsx`'s; here the coven holds nothing.
 const SESSION = { userId: 'user-fixture' };
 const getSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ getSession }));
-// The viewer's own covens that hold the open entry, for the details' In Your Cupboards (M12.5).
+// The viewer's own covens that hold the open entry, for the details' In Your Cupboards.
 // Which covens it admits is tests/modules/ingredients/services/covens-holding.test.ts's.
 const covensHoldingEntry = vi.fn();
+// The review switch's read, per viewer, made for a curator or admin only.
+const readCompendiumReview = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
+  readCompendiumReview,
   resolveCompendiumSlug,
   covensHoldingEntry,
   heldCompendiumEntryIdsIn: async () => new Map<string, ReadonlySet<string>>(),
@@ -69,7 +70,18 @@ const entryValues = vi.fn();
 vi.mock('@/app/entry-values', () => ({ entryValues }));
 // The form is its own tests'; here only that the dialog holds one.
 vi.mock('@/components/IngredientForm', () => ({
-  default: () => <form aria-label="Fixture Form" />,
+  default: ({ review }: { review?: { reviewed: boolean } }) => (
+    <form aria-label="Fixture Form">
+      {review && (
+        <input
+          type="checkbox"
+          role="switch"
+          aria-label="Reviewed"
+          defaultChecked={review.reviewed}
+        />
+      )}
+    </form>
+  ),
 }));
 
 const { default: Page, generateMetadata } = await import('@/app/(public)/compendium/page');
@@ -144,6 +156,8 @@ beforeEach(() => {
   readCompendiumDetails.mockResolvedValue(undefined);
   getSession.mockResolvedValue(SESSION);
   covensHoldingEntry.mockResolvedValue([]);
+  readCompendiumReview.mockReset();
+  readCompendiumReview.mockResolvedValue(null);
 });
 
 describe('the public compendium page', () => {
@@ -182,7 +196,7 @@ describe('the public compendium page', () => {
     expect(variablesRead()).not.toHaveProperty('withoutForms');
   });
 
-  // M14.8: the review filter is the admin list's; the services refuse it to anyone else.
+  // The review filter is the admin list's; the services refuse it to anyone else.
   it('reads the same list with ?reviewed=1 as without it, for a curator too', async () => {
     await renderPage();
     const unfiltered = readCompendium.mock.lastCall![0];
@@ -219,7 +233,7 @@ describe('the public compendium page', () => {
   );
 });
 
-// M12.55: In My Covens. A pick reads the uncached reads with the session; none, and a visitor
+// In My Covens. A pick reads the uncached reads with the session; none, and a visitor
 // whatever the address says, read the cached ones. Which ids those reads admit is
 // tests/modules/ingredients/services/compendium-held-in.test.ts's.
 describe('the public compendium page, narrowed to the viewer’s covens', () => {
@@ -277,7 +291,7 @@ describe('the public compendium page, narrowed to the viewer’s covens', () => 
   });
 });
 
-// M8.17: a curator edits an entry from the search, in the compendium's edit dialog over the
+// A curator edits an entry from the search, in the compendium's edit dialog over the
 // results, as the admin Compendium does; anyone else reads the page as ever.
 describe('the public compendium page, for a curator', () => {
   const curator = (canCurate = true) => ({ ...shellOf(), viewer: { name: 'Fixture', canCurate } });
@@ -371,7 +385,7 @@ describe('the public compendium page, for a curator', () => {
   });
 });
 
-// M12.5: each card's Quick Look opens the entry's details over the search, `?entry=<id>`, for
+// Each card's Quick Look opens the entry's details over the search, `?entry=<id>`, for
 // anyone, a visitor included: the compendium as the compendium has it, read with no session.
 describe("the public compendium page, with an entry's details open", () => {
   const SEARCH = { query: 'Test' };
@@ -436,7 +450,7 @@ describe("the public compendium page, with an entry's details open", () => {
     );
   });
 
-  // The window mirrors the card it was opened from (the owner's call, 2026-10-20): the three dots
+  // The window mirrors the card it was opened from: the three dots
   // for a member of a coven that holds the entry, and none for anyone else.
   describe('the three dots in the details', () => {
     const member = () => ({
@@ -528,12 +542,12 @@ describe("the public compendium page, with an entry's details open", () => {
       viewerIfSignedIn.mockResolvedValue(who ? curator() : null);
       await renderPage(SEARCH);
       const bare = cardLinks();
-      document.body.innerHTML = '';
+      cleanup();
       // Why it could open: the same address opens the details when the read finds the entry.
       readCompendiumDetails.mockResolvedValue(DETAIL);
       await renderPage({ ...SEARCH, entry: NODE.id });
       expect(details()).not.toBeNull();
-      document.body.innerHTML = '';
+      cleanup();
 
       readCompendiumDetails.mockResolvedValue(undefined);
       await renderPage({ ...SEARCH, entry: NODE.id });
@@ -589,7 +603,7 @@ describe('the public compendium page metadata', () => {
 
   it.each<Record<string, string>>([
     { query: 'wort' },
-    // M12.55: a view narrowed to the viewer's covens is filtered too, whoever asks.
+    // A view narrowed to the viewer's covens is filtered too, whoever asks.
     { covens: 'w0' },
   ])(
     'keeps a filtered view (%o) out of search results, canonical to the unfiltered page',
@@ -599,4 +613,59 @@ describe('the public compendium page metadata', () => {
       expect(result.alternates?.canonical).toBe('https://sorrelandsalt.com/compendium');
     },
   );
+});
+
+// The Reviewed switch in the Quick Look and the edit dialog, for a curator or
+// admin. The review read is per viewer and made only for them, never inside the cached reads.
+describe('the public compendium page, with the review switch', () => {
+  const DETAIL = entryDetail({ id: NODE.id, slug: NODE.slug, name: NODE.name });
+  const viewerOf = (canCurate: boolean) => ({
+    ...shellOf(),
+    viewer: { name: 'Fixture', canCurate },
+  });
+  const switchIn = (dialog: HTMLElement) =>
+    within(dialog).queryByRole('switch', { name: 'Reviewed' });
+  const details = () => screen.getByRole('dialog', { name: 'Testwort' });
+  const editor = () => screen.getByRole('dialog', { name: /Edit Compendium Entry/ });
+  const REVIEWED = { reviewedAt: new Date('2026-10-01T09:30:00.000Z') };
+
+  it("shows a curator the switch in the details' foot, read with their session", async () => {
+    viewerIfSignedIn.mockResolvedValue(viewerOf(true));
+    readCompendiumDetails.mockResolvedValue(DETAIL);
+    readCompendiumReview.mockResolvedValue(REVIEWED);
+    await renderPage({ entry: NODE.id });
+
+    expect(readCompendiumReview).toHaveBeenCalledExactlyOnceWith(SESSION, NODE.id);
+    expect(switchIn(details())).toBeChecked();
+  });
+
+  it('shows a curator the switch above the edit form on ?edit=', async () => {
+    viewerIfSignedIn.mockResolvedValue(viewerOf(true));
+    await renderPage({ edit: NODE.slug });
+
+    expect(readCompendiumReview).toHaveBeenCalledExactlyOnceWith(SESSION, NODE.id);
+    expect(switchIn(editor())).not.toBeChecked();
+  });
+
+  // The preconditions: the same address shows the switch to a curator (asserted first).
+  it.each([
+    ['a visitor with no account', null],
+    ['a signed-in account that cannot curate', viewerOf(false)],
+  ] as const)('draws %s no switch and reads no review', async (_who, shell) => {
+    const address = { entry: NODE.id, edit: NODE.slug };
+    readCompendiumDetails.mockResolvedValue(DETAIL);
+    viewerIfSignedIn.mockResolvedValue(viewerOf(true));
+    await renderPage(address);
+    expect(switchIn(details())).not.toBeNull();
+    expect(switchIn(editor())).not.toBeNull();
+    document.body.innerHTML = '';
+    readCompendiumReview.mockClear();
+
+    viewerIfSignedIn.mockResolvedValue(shell);
+    await renderPage(address);
+
+    expect(screen.getByRole('dialog', { name: 'Testwort' })).toBeInTheDocument();
+    expect(screen.queryByRole('switch', { name: 'Reviewed' })).toBeNull();
+    expect(readCompendiumReview).not.toHaveBeenCalled();
+  });
 });

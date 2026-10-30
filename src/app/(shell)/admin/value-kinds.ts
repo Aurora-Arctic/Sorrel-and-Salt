@@ -18,13 +18,9 @@ import {
 import { GROUP_READERS } from './group-readers';
 import type { ValueKindSource } from './types';
 
-// Each curated value page's readers, from the vocabulary module: what tells
-// `/admin/categories` from `/admin/celestial-bodies` once the copy is the list's
-// (`GroupedValueList/kinds.ts`). Written once (MB.115) after five pages had
-// each carried the same reads under their own names. Every reader is mapped
-// onto the page's own names here, so `value-page.tsx` reads every kind alike:
-// the deities' service calls the group `traditionId`, and the astrology
-// services take the vocabulary first.
+// Each curated value page's readers, from the vocabulary module, mapped onto the page's own names
+// so `value-page.tsx` reads every kind alike: the deities' service calls the group `traditionId`,
+// and the astrology services take the vocabulary first (`GroupedValueList/kinds.ts` holds the copy).
 
 /** A flat vocabulary, read through the astrology services by its field. */
 const flat = (field: 'celestialBodies' | 'zodiacSigns'): ValueKindSource => ({
@@ -49,7 +45,7 @@ export const VALUE_KINDS: Record<GroupedValueKind, ValueKindSource> = {
   },
   // A deity's group is its tradition, by that name in its service.
   deity: {
-    // Its other names (M14.23) in one read for the page, so its row can say them.
+    // Its other names in one read for the page, so its row can say them.
     list: async ({ query, groupId }, page) => {
       const entries = await listDeities({ query, traditionId: groupId }, page);
       const otherNames = await deityOtherNamesOf(entries.map(({ node }) => node.id));

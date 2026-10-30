@@ -1,11 +1,8 @@
 import type { GroupKind } from '../GroupForm/types';
 import type { GroupListKind } from './types';
 
-// What tells one group vocabulary from another, in one place: its address,
-// what it is called and what it calls its rows. The list, its links, the
-// form, the page and the nav's tabs all read it (MB.115), so a new kind is an
-// entry here. Its readers are `group-page.tsx`'s, the form's requests are
-// `GroupForm`'s.
+// What tells one group vocabulary from another: its address, name and what it calls its rows. The list,
+// links, form, page and nav's tabs all read it, so a new kind is an entry here.
 export const KINDS: Record<GroupKind, GroupListKind> = {
   category: {
     path: '/admin/category-groups',

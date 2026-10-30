@@ -13,11 +13,8 @@ import { useTestDatabase } from '../../../support/db/database';
 import { asManualFix } from '../../../support/db/privileges';
 import type { CreationChangeRow, CreationFlagRow } from './types';
 
-// M5.8: an admin approves someone who has no invitation, or revokes the
-// approval, by writing `canCreateWorkspace` on their row, declared `via:
-// 'admin'` so the trigger on `users` records it in the privilege ledger
-// (MB.195; claude-docs/auth/admin-users.md, "Approving workspace creation"). A non-admin's
-// refusal is curator-boundary.test.ts's, once for every people-page service.
+// An admin approves someone who has no invitation, or revokes the approval, by writing `canCreateWorkspace` on their row, declared `via: 'admin'` so the trigger on `users` records it (claude-docs/auth/admin-users.md, "Approving workspace creation").
+// A non-admin's refusal is curator-boundary.test.ts's, once for every people-page service.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -112,7 +109,7 @@ describe('grantWorkspaceCreation', () => {
   });
 });
 
-// The confirmation's optional reason, as MB.59's grant of admin takes one: the
+// The confirmation's optional reason, as a grant of admin takes one: the
 // trigger copies it onto the ledger row, a blank one as none.
 describe('the reason an approval or a revoke gives', () => {
   const notes = () => sql`
@@ -171,7 +168,7 @@ describe('revokeWorkspaceCreation', () => {
     expect(await owned()).toEqual([{ id: WORKSPACE_W_ID, deleted_at: null, role: 'owner' }]);
   });
 
-  // MB.177's CHECK would refuse the write; the service says why first.
+  // The CHECK would refuse the write; the service says why first.
   it("refuses an admin's flag as Forbidden, before the CHECK would", async () => {
     expect(await flagOf(E.id)).toMatchObject({ can_create_workspace: true });
     expect(E.role).toBe('admin');
@@ -194,7 +191,7 @@ describe('revokeWorkspaceCreation', () => {
   });
 });
 
-// MB.63, amended on the owner's call: while the primary admin has paused admin
+// While the primary admin has paused admin
 // changes, approving and revoking coven creation are paused too, for every
 // admin but the primary one.
 describe('approving and revoking while admin changes are paused', () => {

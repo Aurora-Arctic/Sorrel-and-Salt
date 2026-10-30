@@ -3,15 +3,10 @@ import { celestialBodies, zodiacSigns } from '../../modules/vocabulary/schema/as
 import { seedFlatVocabulary } from './flat-vocabulary';
 import type { SeedAstrologyValue, SeedDatabase, SeedRunOptions, SeedTransaction } from './types';
 
-// DESIGN.md §5's celestial body and zodiac vocabularies, a starting set an admin may
-// edit. Reference data, not a scenario — migrate.yml seeds it alone, so it
-// inserts the bootstrap user itself. §5's table is lower-case; each name here
-// is the proper noun it renders as, and no slug is written down. A description
-// is search surface, so it carries the words a reader reaches for — Black
-// Moon, Rahu, Serpentarius (claude-docs/db/astrology-vocabulary-seed.md, "The
-// astrology vocabulary seed").
+// The celestial body and zodiac vocabularies, a starting set an admin may edit. Reference data, so it inserts the bootstrap user itself. Names are
+// proper nouns and no slug is written down; a description is search surface, so it carries the words a reader reaches for (claude-docs/db/astrology-vocabulary-seed.md, "The astrology vocabulary seed").
 
-// `position` is where a facet lists the row (M12.52): the calendar for signs,
+// `position` is where a facet lists the row: the calendar for signs,
 // Ophiuchus after Pisces, and the Sun outward for the bodies. The rest have none,
 // as a curator's additions have none, and sort after by name.
 

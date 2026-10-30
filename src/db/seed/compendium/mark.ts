@@ -1,12 +1,8 @@
 import { parseDocument } from 'yaml';
 import { parseEntryFile } from './parse-entry';
 
-// `npm run seed:mark <file>` (M14.7): the owner's one move to let the seed
-// update a present entry. It writes `seedUpdate: <hash>` into the file's
-// frontmatter, the hash of the file as it stands, so the seed applies the
-// change only while the file stays as read. Through yaml's `parseDocument`
-// rather than parse-and-stringify, so the owner's comments and key order
-// survive the edit; the body is kept byte for byte.
+// `npm run seed:mark <file>`: writes `seedUpdate: <hash>` into the file's frontmatter, the hash of the file as it stands, so the seed applies the change only
+// while the file stays as read. Through yaml's `parseDocument`, so comments and key order survive; the body is kept byte for byte.
 
 export type MarkResult = { text: string; hash: string } | { issue: string };
 

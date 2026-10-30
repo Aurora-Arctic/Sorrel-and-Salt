@@ -4,27 +4,17 @@ import { BAR_FADE_MS, LOADING_DELAY_MS } from '../src/lib/navigation/timing';
 import '../src/lib/navigation/navigation-bar.scss';
 import { ShellFrame } from './shell-frame';
 
-// The page bar's look, as static markup: the component's own timers and the
-// navigation store are not needed to see how it is drawn. It is fixed along the
-// bottom edge of the global bar, so each story sits in the shell frame, where
-// that bar is drawn as in the app. Look for the thin accent line under the bar.
-//
-// Reduced motion: the sweep becomes a slow `loading-pulse`. The story pin
-// (`meta.reducedMotion`) does not reach a CSS media query, so to see it turn on
-// the OS "reduce motion" setting, or emulate `prefers-reduced-motion: reduce`
-// in devtools (Rendering tab). The theme follows the workshop's toolbar switch.
+// The page bar's look as static markup, fixed along the bottom edge of the global bar, so each
+// story sits in the shell frame. Look for the thin accent line under the bar. Reduced motion:
+// claude-docs/workshop.md, "Notes the `.storybook/` files cite".
 const meta = {
   title: 'Feedback / Navigation Bar',
 } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-// The bar is `position: fixed` against the window, but the frame pads the shell
-// in from the window's edge. A transformed box makes it the bar's containing
-// block, so the bar lands on the bottom edge of the global bar as in the app.
-// The box also becomes the skip link's, whose hiding (lifted above the page's
-// top edge) then leaves it in view; the clip hides it again, and it still shows
-// on focus, where it moves back inside the box.
+// A transformed box, so the bar sits under the global bar as in the app
+// (claude-docs/workshop.md, "Notes the `.storybook/` files cite").
 const BarFrame = ({ children }: { children: ReactNode }): ReactElement => (
   <div style={{ transform: 'translateZ(0)', overflow: 'hidden' }}>
     <ShellFrame area="none">{children}</ShellFrame>

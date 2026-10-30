@@ -15,10 +15,9 @@ import {
 } from '@/lib/group-colors';
 import { colorDistance } from '@/lib/near-color';
 
-// A category group's two colours as one family (M5.6b, the owner's call): one
-// hue to within MAX_HUE_DISTANCE, as every seeded pair is, and a partner
-// derived from whichever is chosen first — the hue kept, the saturation scaled
-// as the seeds scale it, the lightness solved for the partner's own ground.
+// A category group's two colours as one family: one hue to within MAX_HUE_DISTANCE, as every
+// seeded pair is, and a partner derived from whichever is chosen first (hue kept, saturation
+// scaled as the seeds scale it, lightness solved for the partner's own ground).
 
 describe('toHsl', () => {
   it('reads a hex as hue, saturation and lightness', () => {

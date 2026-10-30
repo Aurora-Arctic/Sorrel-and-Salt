@@ -24,10 +24,8 @@ import type {
   WriterContext,
 } from './types';
 
-// The invitation's finders and named writes, both tiers (MB.202): a workspace
-// invitation is read and written under its workspace's `Membership`, a
-// site-tier one, which grants a site role, under the `SiteAdmin` proof, and the
-// accept and the token read under no proof at all
+// The invitation finders and named writes for both tiers: a workspace invitation under its `Membership`, a
+// site-tier one under `SiteAdmin`, and the accept and token read under no proof
 // (claude-docs/db/invitations.md, "Invitations").
 
 /**
@@ -63,12 +61,8 @@ function pendingInvitation(...which: (SQL | undefined)[]) {
   );
 }
 
-// What the inviter still has to deal with (M10.34): a pending invitation, or
-// one the invitee declined and the inviter has not removed, whatever its
-// expiry, since a declined invitation is an answer to read rather than a link
-// that lapses. What the coven's list shows and what its Revoke, or Remove on
-// a declined one, may stamp. A site-tier row is never declined (a CHECK), so
-// on that tier it is the pending filter.
+// What the inviter still has to deal with: pending, or declined and not yet removed, whatever the expiry (a
+// declined invitation is an answer, not a lapsing link). A site-tier row is never declined, so there it is pending.
 function openInvitation(...which: (SQL | undefined)[]) {
   return and(
     ...which,
@@ -78,13 +72,13 @@ function openInvitation(...which: (SQL | undefined)[]) {
   );
 }
 
-// A workspace invitation names a workspace that is still live (M6.14); a
+// A workspace invitation names a workspace that is still live; a
 // site-tier one has none to check.
 function inLiveWorkspaceOrSite() {
   return or(onSiteTier(), existsIn(workspaces, eq(workspaces.id, invitations.workspaceId)));
 }
 
-// The invitation's workspace is live: the check M6.14 puts on an accept, without
+// The invitation's workspace is live: the check an accept makes, without
 // the site-tier arm, since the received invitations never reach that tier.
 function inLiveWorkspace() {
   return existsIn(workspaces, eq(workspaces.id, invitations.workspaceId));
@@ -111,11 +105,8 @@ function receivedBy(session: AuditSession) {
 }
 
 /**
- * The live invitation a link's token names, on either tier, or `undefined`:
- * what the accept service reads. Under no proof, since the invitee holds
- * none yet; holding the token is what admits, and the hash it is matched as
- * is taken here, so a dumped row's hash finds nothing. Expired, revoked and
- * accepted rows come back alike, so the service can tell the three apart.
+ * The live invitation a link's token names, on either tier, for the accept service. No proof: holding the
+ * token admits, and its hash is taken here. Expired, revoked and accepted rows come back alike for the service to tell apart.
  */
 export function findInvitationByToken(token: string): Promise<InvitationRow | undefined> {
   return selectOne(
@@ -125,13 +116,9 @@ export function findInvitationByToken(token: string): Promise<InvitationRow | un
 }
 
 /**
- * The name and slug of the live workspace an invitation names, or `undefined`
- * once it is deleted: where an accepted invitation lands, what refuses one
- * into a deleted coven before Accept is offered, and the name the Accept page
- * shows. Under no proof, for the token read's reason, and narrow on purpose —
- * two fields, never the row. The caller has checked that the session's
- * verified address is the invited one, since only that account may be told
- * the name.
+ * The name and slug of the live workspace an invitation names, `undefined` once it is deleted. No proof, and
+ * two fields never the row: the caller has checked the session's verified address is the invited one, the only
+ * account that may be told the name.
  */
 export async function findInvitedCoven(workspaceId: string): Promise<InvitedCoven | undefined> {
   const row = await selectOne(
@@ -142,11 +129,8 @@ export async function findInvitedCoven(workspaceId: string): Promise<InvitedCove
 }
 
 /**
- * One invitation of the proof's workspace by id, in any state — pending,
- * accepted, revoked or expired — or `undefined` for a missing one, another
- * workspace's or a deleted one. `revokeInvitation` matches pending rows
- * only, so this is how a service tells an accepted invitation from a missing
- * one (M7.6).
+ * One invitation of the proof's workspace by id, in any state, or `undefined` for a missing, other-workspace or
+ * deleted one. `revokeInvitation` matches pending rows only, so this tells an accepted invitation from a missing one.
  */
 export function findInvitationInWorkspace(
   membership: Membership,
@@ -159,10 +143,8 @@ export function findInvitationInWorkspace(
 }
 
 /**
- * Both tiers' pending lists' order, newest first, as the ledger's is: a page's key
- * is ascending, so the instant is written negated, and as `numeric`, which
- * keeps the microseconds a `Date` would drop from a cursor. Invitations of
- * one instant follow by id.
+ * The pending lists' order, newest first: the key is ascending, so the instant is negated, as `numeric` to keep
+ * the microseconds a `Date` drops. Invitations of one instant follow by id.
  */
 const PENDING_INVITATION_ORDER: readonly SortPart[] = [
   { expression: sql`-extract(epoch from ${invitations.createdAt})`, type: 'numeric' },
@@ -181,11 +163,8 @@ function pendingOnSite({ email, expiresWithinHours }: SiteInvitationFilter): SQL
 }
 
 /**
- * One page of the site tier's pending invitations, newest first, for
- * `/admin/invitations` (MB.70), narrowed in SQL by a `SiteInvitationFilter`
- * and paged by the cursor helper (MB.115; CLAUDE.md rule 8). Typed as the site
- * tier's rows, since the scope keeps to it and the CHECKs give every one there
- * its site role (M11.20).
+ * One page of the site tier's pending invitations, newest first, for `/admin/invitations`, narrowed in SQL by a
+ * `SiteInvitationFilter`. Typed as site-tier rows, since the CHECKs give each one a site role.
  */
 export function findPendingSiteInvitationPage(
   _admin: SiteAdmin,
@@ -204,7 +183,7 @@ export function findPendingSiteInvitationPage(
 /**
  * How many invitations `findPendingSiteInvitationPage` pages under `filter`,
  * and how many come before `start`, a page's first row, none on an empty
- * page: the Invitations tab's "Page X of Y" (MB.115).
+ * page: the Invitations tab's "Page X of Y".
  */
 export function findPendingSiteInvitationCount(
   _admin: SiteAdmin,
@@ -222,8 +201,8 @@ export function findPendingSiteInvitationCount(
 
 /**
  * One page of the proof's workspace's open invitations, newest first, for
- * the members page (M7.6): the site tier's pager under the `Membership` proof.
- * Open: pending, or declined and not yet removed (M10.34).
+ * the members page: the site tier's pager under the `Membership` proof.
+ * Open: pending, or declined and not yet removed.
  */
 export function findPendingWorkspaceInvitationPage(
   membership: Membership,
@@ -256,12 +235,9 @@ export function findPendingWorkspaceInvitationCount(
 }
 
 /**
- * One page of the coven invitations addressed to the session's account,
- * pending, in a live coven, newest first, for the account page (M10.32).
- * Under no proof: the invitee holds no membership yet, and the session row is
- * the scope, matched in SQL on the verified address, as `findInvitationByToken`
- * takes no proof and is admitted by its token. The site tier is never listed:
- * an admin invitation is accepted by its mailed link alone.
+ * One page of the pending coven invitations addressed to the session's account in a live coven, newest first.
+ * No proof: the invitee holds no membership, so the scope is the session's verified address, matched in SQL. The
+ * site tier is never listed; an admin invitation is accepted by its mailed link alone.
  */
 export function findReceivedInvitationPage(
   session: AuditSession,
@@ -295,11 +271,8 @@ export function findReceivedInvitationCount(
 }
 
 /**
- * One coven invitation by id, in any state, or `undefined` when it is not the
- * session's: another address, the site tier, a deleted row. What the accept by
- * id reads, so the service can tell an accepted, withdrawn or lapsed invitation
- * from a missing one. Under no proof, for the page's reason; a deleted coven is
- * the service's check, as it is on the token's path.
+ * One coven invitation by id, in any state, or `undefined` when it is not the session's (other address, site
+ * tier, deleted). Read by the accept-by-id service, which tells accepted, withdrawn and lapsed from missing; no proof.
  */
 export function findReceivedInvitation(
   session: AuditSession,
@@ -312,11 +285,8 @@ export function findReceivedInvitation(
 }
 
 /**
- * The id, name and slug of each live coven in `ids` that holds a pending
- * invitation to the session's account: the names a page of received
- * invitations shows. Under no proof, for the page's reason, and narrow on
- * purpose: three fields, never the row, and only for a coven that invited this
- * account.
+ * The id, name and slug of each live coven in `ids` holding a pending invitation to the session's account, for
+ * a page of received invitations. No proof, and three fields never the row.
  */
 export async function findReceivedInvitationCovens(
   session: AuditSession,
@@ -338,10 +308,8 @@ export async function findReceivedInvitationCovens(
 }
 
 /**
- * The id and name of each live user in `ids` who sent the session's account a
- * pending coven invitation: the "from" of a received invitation. Under no
- * proof, for the page's reason. The invitee reads a name they share no coven
- * with, which the invitation's mail already carries; two fields, never the row.
+ * The id and name of each live user in `ids` who sent the session's account a pending coven invitation. No
+ * proof; two fields never the row, a name the invitation's mail already carries.
  */
 export async function findReceivedInvitationInviters(
   session: AuditSession,
@@ -363,10 +331,8 @@ export async function findReceivedInvitationInviters(
 }
 
 /**
- * The invitation's named writes, beside its finders rather than in
- * `write.ts`: the table is marked `namedWrites`, so these are the only
- * writes it takes, and `writerFor` spreads them into the writer (MB.198).
- * Each decides the tier from the proof it is handed, never from `values`.
+ * The invitation's named writes, beside its finders: the table is marked `namedWrites`, so these are its only
+ * writes. Each decides the tier from the proof it is handed, never from `values`.
  */
 export function invitationWrites({
   session,
@@ -429,14 +395,14 @@ export function invitationWrites({
       ),
     // The invitee's no, found by id and matched to the session's verified
     // address in the statement, as the accept by id is: a pending coven
-    // invitation only (M10.34).
+    // invitation only.
     declineReceivedInvitation: (id: string) =>
       update(
         invitations,
         { declinedAt: sql`now()` },
         pendingInvitation(eq(invitations.id, id), receivedBy(session), inLiveWorkspace()),
       ),
-    // Revoke on a pending invitation, and Remove on a declined one (M10.34):
+    // Revoke on a pending invitation, and Remove on a declined one:
     // either way the row leaves the inviter's list and stays for the audit.
     revokeInvitation: (proof: Membership | SiteAdmin, id: string) =>
       update(
@@ -444,7 +410,7 @@ export function invitationWrites({
         { revokedAt: sql`now()` },
         openInvitation(inTierOf(proof), eq(invitations.id, id)),
       ),
-    // A repeat invitation withdraws the one waiting (MB.269): the same tier
+    // A repeat invitation withdraws the one waiting: the same tier
     // and, on the workspace tier, the same coven, by the proof; the address
     // matched as the accept matches it, lowered on both sides.
     revokePendingInvitationsTo: (proof: Membership | SiteAdmin, email: string) =>

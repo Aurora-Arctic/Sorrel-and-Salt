@@ -4,10 +4,8 @@ const ENDPOINT = 'http://localhost/api/graphql';
 
 vi.mock('@/lib/request-session', () => ({ sessionFromHeaders: async () => null }));
 
-// The real schema is one `ok` field, one level deep, so no query against it
-// can reach a depth or cost limit. The route is loaded over a schema that
-// nests without end and pages without running out of rows, so the limits are
-// the only thing that can refuse a query here.
+// The real schema is one `ok` field, one level deep, so no query against it can reach a depth or cost limit.
+// The route is loaded over a schema that nests without end and pages without running out of rows, so the limits are the only thing that can refuse a query here.
 vi.mock('@/graphql/schema', async () => {
   const { createBuilder } = await import('@/graphql/builder');
   const scratch = createBuilder();
@@ -35,10 +33,8 @@ vi.mock('@/graphql/schema', async () => {
   return { schema: scratch.toSchema() };
 });
 
-// Staging and every preview run at NODE_ENV=production, and the depth and cost
-// limits read no environment (src/graphql/armor.ts), so one environment is
-// the whole of their behaviour. The route is loaded once for the file: loading it builds
-// the schema, about 1.5 s, and every case reads the same environment.
+// Staging and every preview run at NODE_ENV=production and the limits read no environment (src/graphql/armor.ts), so one environment is the whole of their behaviour.
+// The route is loaded once for the file, because loading it builds the schema in about 1.5 s.
 let POST: (typeof import('@/app/api/graphql/route'))['POST'];
 
 beforeAll(async () => {
@@ -68,10 +64,7 @@ function nested(depth: number): string {
   return `{ node { ${selection} } }`;
 }
 
-/**
- * Two pages, one inside the other: `size` squared rows, at depth 7. `size` is
- * written as given, so `(first: 10)` and `(first: $n)` are the same shape.
- */
+/** Two pages, one inside the other: `size` squared rows at depth 7. `size` is written as given, so `(first: 10)` and `(first: $n)` are the same shape. */
 function paged(size: string): string {
   return `{ nodes${size} { edges { node { children${size} { edges { node { name } } } } } } }`;
 }

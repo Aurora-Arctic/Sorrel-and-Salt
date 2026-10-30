@@ -9,11 +9,7 @@ export interface AdminInvitationsPageProps {
   searchParams: Promise<InvitationsSearchParams>;
 }
 
-/**
- * The tab's address: its filter, `email` and the `expiring` flag (MB.115),
- * at most one cursor, and the invite form open over it, by `?invite`'s
- * presence.
- */
+/** The tab's address: its filter (`email`, `expiring`), at most one cursor, and `?invite` for the form. */
 export interface InvitationsSearchParams {
   email?: string | string[];
   expiring?: string | string[];

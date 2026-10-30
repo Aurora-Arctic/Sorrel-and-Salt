@@ -25,6 +25,15 @@ Everything written here is read by developers with very different amounts of exp
 - **Keep the sentences short and the structure visible.** One idea per sentence. Steps as a numbered list, options as bullets, several facts of the same shape as a table.
 - **Read it back as a developer six months into their career.** Anything that would make that reader open a search engine gets a clause of explanation or a plainer word.
 
+## Code comments
+
+A comment is read in the editor, by someone with the code and nothing else open, so these rules apply there most of all. The rule for what a comment may say is in claude-docs/README.md, "Comments in code"; this is how it is worded.
+
+- **Say what the thing is first, in everyday words**, then the one clause of why if the obvious alternative would be wrong. `Rows the viewer may see, filtered in SQL so a private spell never reaches the resolver.`
+- **Present tense, no actors, no time.** Not "X was added so that", "the owner chose", "until Y lands" or a date; the code is, and the comment says what it is.
+- **One idea per line, one line per field or prop.** A second sentence is allowed when the first cannot carry the fact. A third is the limit; past it the explanation belongs in a doc section, cited by path and heading.
+- **A doc pointer is a citation, not a summary.** `(claude-docs/db/keyset-pages.md, "Keyset pages")` after the clause it supports; never a paragraph restating the section.
+
 ## Where precision still wins
 
 "When possible" means a precise term stays wherever the precise thing is the point, and is explained the first time rather than replaced:
@@ -37,5 +46,5 @@ Everything written here is read by developers with very different amounts of exp
 ## What this does not change
 
 - A doc still stands on its own and gives the reason for a constraint in a clause (claude-docs/README.md, "One home per fact").
-- A code comment still says what the thing is and why it is not the obvious alternative, and no shorter (claude-docs/README.md, "Comments in code"). Plain language is about the words chosen, never a licence to cut a fact.
+- A code comment still carries every fact the reader cannot recover from the code, in the words these rules ask for (claude-docs/README.md, "Comments in code"). Plain language is about the words chosen, never a licence to cut a fact.
 - A PR body or issue comment still names and never carries values (`CLAUDE.md`, GitHub task tracking).

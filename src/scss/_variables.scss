@@ -42,7 +42,7 @@ $sorrel-deep: color.adjust($sorrel-vivid, $lightness: -8%); // light accent, hov
 // step under the pointer barely registers. More saturated, rather than only
 // further from the ground.
 $sorrel-spring: color.adjust($sorrel, $lightness: 38%, $saturation: 40%); // dark
-// The light button ink on a warning or an error notice, which the accent falls short of (M12.56).
+// The light button ink on a warning or an error notice, which the accent falls short of.
 $sorrel-notice-button: #33680f;
 $sorrel-rich: color.adjust($sorrel-vivid, $lightness: -8%, $saturation: 20%); // light
 $wax-warm: color.adjust($wax, $lightness: 22%); // dark secondary
@@ -54,10 +54,9 @@ $wax-glow: color.adjust(
 $wax-vivid: color.adjust($wax, $saturation: 30%, $lightness: 4%); // light secondary
 $wax-deep: color.adjust($wax-vivid, $lightness: -6%); // light secondary, hover
 
-// The warning ochre: a notice that cautions without blocking, its bar, tint and
-// triangle. Picked rather than derived, the owner's call (2026-10-19), so it
-// reads apart from both the sorrel and the wax. A mark, held to 3:1 on both of
-// its theme's surfaces: 4.89:1 and 5.44:1 light, 8.32:1 and 7.55:1 dark.
+// The warning ochre: a notice that cautions without blocking, its bar, tint and triangle. Picked so
+// it reads apart from both the sorrel and the wax. A mark held to 3:1 on both of its theme's
+// surfaces: 4.89:1 and 5.44:1 light, 8.32:1 and 7.55:1 dark.
 $ochre-deep: #8a5a00; // light warning
 $ochre-bright: #d9a441; // dark warning
 
@@ -67,32 +66,28 @@ $ochre-bright: #d9a441; // dark warning
 $chalk-muted: color.mix($chalk, $soot, 80%);
 $ink-muted: color.adjust($iron-gall, $lightness: 20%);
 
-// The muted red of Out of Stock (M9.8), a tint of the sealing wax with its
-// saturation pulled down, so it is plainly a red but quieter than safety's solid
-// fill. Dark lifts lightness for text on soot; light darkens slightly.
+// The muted red of Out of Stock, a tint of the sealing wax with its saturation pulled down, plainly
+// red but quieter than safety's solid fill. Dark lifts lightness for text on soot; light darkens.
 $wax-muted-dark: color.adjust($wax, $saturation: -10%, $lightness: 30%);
 $wax-muted-light: color.adjust($wax, $saturation: -8%, $lightness: -2%);
 
-// The red of Caution (M8.14): the same wax with its saturation raised instead of
-// lowered, so it reads as the fuller safety red beside Out of Stock's greyed one.
+// The red of Caution: the same wax with its saturation raised, the fuller safety red beside Out of
+// Stock's greyed one.
 $wax-caution-dark: color.adjust($wax, $saturation: 15%, $lightness: 30%);
 $wax-caution-light: color.adjust($wax, $saturation: 15%, $lightness: -4%);
 
-// A card under the pointer (M8.14): its own surface a step lighter, and in
-// light "lighter" is brighter, toward white, not darker. Small steps, so text
-// contrast holds (claude-docs/components/ingredient-card.md has the ratios).
+// A card under the pointer: its own surface a step lighter, and in light "lighter" is brighter,
+// toward white. Small steps, so text contrast holds (claude-docs/components/ingredient-card.md).
 $soot-lifted: color.adjust($soot-raised, $lightness: 3%);
 $parchment-lifted: color.adjust($parchment-raised, $lightness: 2.5%);
 
 // The ink of the dark shadow, kept as a colour so the drawer's slot can mix with it.
 $shadow-ink-dark: #060503;
 
-// The drawer behind an ingredient card's face (M12.44): each plane is the page's own ink
-// stirred into the page, so none is picked by eye. Light darkens toward iron-gall; dark
-// lifts toward chalk, so the floor and sides come forward of the page and the back wall
-// sits almost on it. The slot's interior is the page under the site's shadow ink in dark
-// (the same ink the shadows use), and iron-gall into parchment in light. The seam is the
-// back wall easing into the floor. Percentages are the owner's; light was lightened from the mock's after review (2026-10-20).
+// The drawer behind an ingredient card's face: each plane is the page's own ink stirred into the
+// page, so none is picked by eye. Light darkens toward iron-gall; dark lifts toward chalk, so the
+// floor and sides come forward and the back wall sits almost on the page. The slot's interior is
+// the page under the shadow ink in dark, iron-gall into parchment in light.
 $drawer-slot-light: color.mix($iron-gall, $parchment, 25%);
 $drawer-floor-light: color.mix($iron-gall, $parchment, 9%);
 $drawer-side-light: color.mix($iron-gall, $parchment, 18%);
@@ -104,11 +99,9 @@ $drawer-side-dark: color.mix($chalk, $soot, 25%);
 $drawer-back-dark: color.mix($chalk, $soot, 2%);
 $drawer-seam-dark: color.mix($drawer-back-dark, $drawer-floor-dark, 55%);
 
-// The shading over the drawer: the shadow the face casts (a strong stop, then a second just
-// under it where the band begins to fade) and the wash from each side wall. Dark shades with
-// black, as the site's shadows do. Light shades with iron-gall at alpha, so it stays in the
-// palette, and lighter: the dark's strengths laid over a light floor read as a hole, which
-// the owner found too dark (2026-10-20).
+// The shading over the drawer: the shadow the face casts and the wash from each side wall. Dark
+// shades with black, as the site's shadows do. Light shades with iron-gall at alpha and lighter, as
+// the dark's strengths over a light floor read as a hole.
 $drawer-shade-dark: rgba(0, 0, 0, 0.5);
 $drawer-shade-fade-dark: rgba(0, 0, 0, 0.45);
 $drawer-shade-edge-dark: rgba(0, 0, 0, 0.22);
@@ -116,10 +109,9 @@ $drawer-shade-light: rgba($iron-gall, 0.22);
 $drawer-shade-fade-light: rgba($iron-gall, 0.2);
 $drawer-shade-edge-light: rgba($iron-gall, 0.12);
 
-// The moon phase icons' three fills (MoonPhaseIcon): the lit part always the
-// paler of lit and shadow, in either theme, and the maria between the two, so
-// they read on the lit part (the owner, 2026-10-27). Dark lights the moon in
-// chalk; light lights it in the card's own parchment, edged by the outline.
+// The moon phase icons' three fills (MoonPhaseIcon): the lit part always the paler of lit and
+// shadow, and the maria between, so they read on the lit part. Dark lights the moon in chalk; light
+// in the card's own parchment, edged by the outline.
 $moon-lit-dark: $chalk;
 $moon-shadow-dark: rgba($chalk, 0.2);
 $moon-mare-dark: color.mix($chalk, $soot, 75%);
@@ -141,12 +133,12 @@ $burn-char-line-light: rgba($iron-gall, 0.85);
 $shadow-dark: rgba($shadow-ink-dark, 0.8);
 $shadow-light: rgba(35, 32, 26, 0.18);
 
-// The click-feedback callout's Dismiss cross in the dark theme, pure white
-// over the card where the body text is chalk, as design F has it (M12.31).
+// The click-feedback callout's Dismiss cross in dark, pure white over the card where the body text
+// is chalk.
 $dismiss-ink-dark: #fff;
 
-// A coven card's More (the three dots) in the dark theme, pure white, the owner's call
-// (2026-10-20); the light theme draws them in $iron-gall, its body text.
+// A coven card's More (the three dots) in dark, pure white; light draws them in $iron-gall, its body
+// text.
 $card-more-ink-dark: #fff;
 
 // Otherwise a mistyped theme surfaces as a null ink rather than an error naming it.
@@ -161,14 +153,11 @@ $card-more-ink-dark: #fff;
 // ---------------------------------------------------------------------------
 // Badge palettes
 // ---------------------------------------------------------------------------
-// Safety is a warning and low stock an inventory state, so one is a solid
-// sealing-wax fill and the other a muted tint. Attention, something waiting on
-// the reader, wears safety's fill. Last used is a pointer, not a warning, so
-// it is solid in the accent, which spends no new hue. A palette
-// emits only its own treatment's parts: safety's ink fails AA as a tint, so
-// asking for its `bg` is a compile error. claude-docs/styling.md, "Badge palettes".
-// An ink palette is its text colour alone, for a mark that draws no box (the stock
-// badge's Out of Stock, 2026-10-21); it emits no `.badge--<palette>` class.
+// Safety is a warning and low stock an inventory state, so one is a solid sealing-wax fill and the
+// other a muted tint. Attention wears safety's fill; last used is a pointer, so solid in the accent.
+// A palette emits only its own treatment's parts: safety's ink fails AA as a tint, so asking for its
+// `bg` is a compile error (claude-docs/styling.md, "Badge palettes"). An ink palette is its text
+// colour alone, for a mark that draws no box; it emits no `.badge--<palette>` class.
 $badge-treatments: (
   solid: ('fill'),
   ink: ('fg'),
@@ -195,9 +184,8 @@ $badge-palettes: (
       dark: $wax-badge-dark,
       light: $wax-badge-light,
     ),
-  // Something waiting on the reader, such as the account menu's count of
-  // pending invitations (M10.32): safety's inks, already contrast-checked for
-  // the label, under a name that does not call the count a hazard.
+  // Something waiting on the reader, such as the account menu's count of pending invitations:
+  // safety's contrast-checked inks, under a name that does not call the count a hazard.
   'attention': (
       treatment: solid,
       dark: $wax-badge-dark,
@@ -208,32 +196,26 @@ $badge-palettes: (
     dark: $chalk-muted,
     light: $ink-muted,
   ),
-  // A jar at nothing (M9.8): a muted red, owner's call 2026-10-18, so safety stays the
-  // one solid, alarming badge. Ink only since 2026-10-21: the stock badge draws no box,
-  // so the tint and edge it once had are gone, and the ink is read as text by the badge
-  // and the jar shelf. As text 6.40:1 on the dark card, 7.04:1 on the dark page, 7.45:1
-  // on the light card, 6.70:1 on the light page.
+  // A jar at nothing: a muted red, so safety stays the one solid, alarming badge. Ink only: the stock
+  // badge draws no box, and the ink is read as text by the badge and the jar shelf. As text 6.40:1 on
+  // the dark card, 7.04:1 on the dark page, 7.45:1 on the light card, 6.70:1 on the light page.
   'out-of-stock': (
       treatment: ink,
       dark: $wax-muted-dark,
       light: $wax-muted-light,
     ),
-  // An ingredient or a form that carries safety notes (M8.14, owner's call
-  // 2026-10-18): the safety red as a tint with a red edge, so Toxic stays the
-  // one solid, alarming badge. Inks are the wax at +15% saturation, lifted 30%
-  // for dark and darkened 4% for light. Label on tint 4.94:1 dark, 6.49:1 light;
-  // edge on the card 3.68:1 dark, 4.47:1 light (3.89 and 4.18 on the page).
-  // Beside Out of Stock (same family, 5.10 and 6.18) it differs only in
-  // saturation, 88% against 80% in dark and 54% against 49% in light, so the
-  // word, never the colour, tells them apart.
+  // An ingredient or a form that carries safety notes: the safety red as a tint with a red edge, so
+  // Toxic stays the one solid badge. Inks are the wax at +15% saturation, lifted 30% for dark and
+  // darkened 4% for light. Label on tint 4.94:1 dark, 6.49:1 light; edge on the card 3.68:1 dark,
+  //   4.47:1 light. Beside Out of Stock (same family) it differs only in saturation, so the word, never
+  // the colour, tells them apart.
   'caution': (
       treatment: tinted,
       dark: $wax-caution-dark,
       light: $wax-caution-light,
     ),
-  // A compendium entry the curators retired, still read by a coven that uses
-  // it (M12.24): a fact about the entry, not a hazard, so low-stock's muted
-  // tint and its checked inks (signed off in MB.120, 2026-10-20).
+  // A compendium entry the curators retired, still read by a coven that uses it: a fact about the
+  // entry, not a hazard, so low-stock's muted tint and its checked inks.
   'retired': (
       treatment: tinted,
       dark: $chalk-muted,
@@ -245,48 +227,43 @@ $badge-palettes: (
       dark: $sorrel-bright,
       light: $sorrel-vivid,
     ),
-  // A coven's own entry rather than the compendium's (M8.19): where the row
-  // lives, not a warning, so a tint, in the accent's inks, which spend no hue
-  // the groups need, and tinted so it never reads as last-used's pointer.
-  // Light takes the accent's hover ink: $sorrel-vivid's label on its tint
-  // was 4.42:1. Label on tint 5.60:1 dark, 6.98:1 light; edge at least 4.01:1.
+  // A coven's own entry rather than the compendium's: where the row lives, not a warning, so a tint
+  // in the accent's inks, never reading as last-used's pointer. Light takes the accent's hover ink,
+  // as $sorrel-vivid's label on its tint was 4.42:1. Label on tint 5.60:1 dark, 6.98:1 light; edge
+  // at least 4.01:1.
   'local': (
       treatment: tinted,
       dark: $local-badge-dark,
       light: $local-badge-light,
     ),
-  // A compendium entry with this coven's own changes (M8.14): the same idea as
-  // an entry of its own, so Local's inks, already contrast-checked.
+  // A compendium entry with this coven's own changes: Local's contrast-checked inks.
   'annotated': (
       treatment: tinted,
       dark: $local-badge-dark,
       light: $local-badge-light,
     ),
-  // A compendium entry added in the last 30 days (MB.106): last-used's solid accent
-  // inks, already contrast-checked (signed off in MB.120, 2026-10-20).
+  // A compendium entry added in the last 30 days: last-used's solid accent inks, contrast-checked.
   'new': (
       treatment: solid,
       dark: $sorrel-bright,
       light: $sorrel-vivid,
     ),
-  // A compendium entry changed in the last 30 days (MB.106): Local's tinted inks,
-  // already contrast-checked. Never beside Local, which marks a coven's own entry.
+  // A compendium entry changed in the last 30 days: Local's contrast-checked tinted inks. Never
+  // beside Local, which marks a coven's own entry.
   'updated': (
       treatment: tinted,
       dark: $local-badge-dark,
       light: $local-badge-light,
     ),
-  // A spell still being written (M10.11): a fact about it, not a warning, so
-  // Retired's muted tint and its checked inks. A complete spell takes no badge:
-  // complete is the default, so marking it says nothing (the owner, 2026-10-27).
+  // A spell still being written: a fact about it, not a warning, so Retired's muted tint and checked
+  // inks. A complete spell takes no badge, as complete is the default.
   'draft': (
       treatment: tinted,
       dark: $chalk-muted,
       light: $ink-muted,
     ),
-  // A spell its author alone can see (M10.13): a fact about it, like Draft, so
-  // Draft's muted tint and checked inks; the word, not the colour, tells the two
-  // apart. A spell shared with the coven takes no badge: that is the default.
+  // A spell its author alone can see: a fact about it, like Draft, so Draft's muted tint and checked
+  // inks; the word, not the colour, tells them apart. A shared spell takes no badge.
   'private': (
       treatment: tinted,
       dark: $chalk-muted,
@@ -294,18 +271,15 @@ $badge-palettes: (
     )
 );
 
-// The stock badge's square (M9.8): its drawing alone, as tall as a medium or small badge
-// (24px). The jar lines inset it from the card's right edge by half the difference to the
-// large icon button below it, so the two centre on one line (_primitives.scss).
+// The stock badge's square: its drawing alone, as tall as a medium or small badge (24px). The jar
+// lines inset it from the card's right edge by half the difference to the large icon button below
+// it, so the two centre on one line (_primitives.scss).
 $stock-badge-size: 1.5rem;
 
-// The three sizes of a badge (the owner, M8.14), set in one place. Default is what a
-// badge has everywhere; medium and small are for the ingredient card only (regular and
-// compact), one step down in text. The two smaller sizes hold 24px (1.5rem) tall, the
-// least a tipped badge may be as a target; default needs no floor, its text sets it.
-// optical-drop lowers the label so its capitals centre on the box (the owner's call,
-// 2026-10-20), measured per size because Chrome rounds the font's ascent and descent
-// to whole pixels, so 12px and 13px Lexend sit differently in their line boxes.
+// The three sizes of a badge, set in one place. Default is what a badge has everywhere; medium and
+// small are for the ingredient card only, one step down in text, and hold 24px (1.5rem) tall, the
+// least a tipped badge may be as a target. optical-drop lowers the label so its capitals centre on
+// the box, measured per size because Chrome rounds the font's ascent and descent to whole pixels.
 $badge-sizes: (
   'default': (
     font-size: caption,
@@ -381,18 +355,12 @@ $badge-edge-weight: (
 // ---------------------------------------------------------------------------
 // Third-party brand colours
 // ---------------------------------------------------------------------------
-// Each sign-in provider's own published button colours, which are theirs
-// rather than ours: `fill` the ground, `ink` the label, `edge` the outline
-// a white button needs on our page, `hover` the ground under the pointer.
-// A compile-time map rather than custom properties, since the hues do not
-// follow the theme and nothing reads them at runtime; a part that ever does
-// differ by theme is written `(dark: …, light: …)`, and brand-color() turns
-// it into `light-dark()`, which Lightning CSS lowers to the browser
-// baseline. Google's edge is its current light-button grey, the first that
-// clears 3:1 on parchment, and Microsoft keeps its white button in both
-// themes, its edge #808080, which clears 3:1 on parchment (the owner's call,
-// MB.116).
-// claude-docs/styling.md, "Brand colours".
+// Each sign-in provider's own published button colours: `fill` the ground, `ink` the label, `edge`
+// the outline a white button needs on our page, `hover` the ground under the pointer. A compile-time
+// map, as the hues do not follow the theme; a part that differs by theme is written
+// `(dark: …, light: …)` and brand-color() turns it into `light-dark()`. Google's edge is its current
+// light-button grey, the first that clears 3:1 on parchment; Microsoft keeps its white button in both
+// themes with edge #808080, which clears 3:1 on parchment (claude-docs/styling.md, "Brand colours").
 $brand-palettes: (
   'google': (
     fill: #ffffff,
@@ -459,10 +427,9 @@ $warning: var(--warning);
 $shadow-elevated: var(--shadow-elevated);
 $shadow-floating: var(--shadow-floating);
 $shadow-lifted: var(--shadow-lifted);
-// A halo of the page colour behind small text that sits over a backdrop ornament, so the
-// sorrel is pushed back to the page under the letters: two blurs, the tight one for density,
-// the wide one for a soft edge, in the theme's own page colour, so it darkens in dark and
-// lightens in light (the owner's call, 2026-10-20).
+// A halo of the page colour behind small text over a backdrop ornament, pushing the sorrel back
+// under the letters: two blurs, the tight one for density, the wide one for a soft edge, in the
+// theme's own page colour.
 $text-halo:
   0 0 0.5rem $surface-page,
   0 0 1rem $surface-page;
@@ -480,9 +447,9 @@ $burn-char-line: var(--burn-char-line);
 $dismiss-ink: var(--dismiss-ink);
 $card-more-ink: var(--card-more-ink);
 // The Last Edit line's ink: the placeholder's mix in dark, where it holds 4.5:1; the muted ink in
-// light, where the placeholder mix is 4.22:1 on the page and falls short (M12.56).
+// light, where the placeholder mix is 4.22:1 on the page and falls short.
 $last-edit-ink: var(--last-edit-ink);
-// The ink of a button inside a warning or an error notice: the accent in dark, a darker green in light (M12.56).
+// The ink of a button inside a warning or an error notice: the accent in dark, a darker green in light.
 $notice-button-ink: var(--notice-button-ink);
 
 // How `Backdrop`'s grey ornaments meet the page: the opacity of its `screen`
@@ -511,13 +478,10 @@ $text-placeholder: color-mix(in srgb, $text-muted 85%, $surface-card);
 // 4.5:1 on it (tests/scss/tokens.test.ts).
 $fill-quiet: color-mix(in srgb, $text-muted 18%, $surface-card);
 
-// A highlight: the accent 12% into whatever is behind. MenuButton's one
-// primary item, and the account menu's, the shell's menu's
-// and a suggestion list's row, pointed at, focused or chosen, and the same over the
-// field's ground for a quiet button pointed at (M8.17, the owner's call of
-// 2026-10-20). A wash of the accent rather than of the muted ink, so the row
-// in hand reads as the one about to act; the body and muted inks hold 4.5:1
-// on it (tests/scss/tokens.test.ts).
+// A highlight: the accent 12% into whatever is behind. MenuButton's one primary item, the account
+// and shell menus' and a suggestion list's row, pointed at, focused or chosen, and the field's ground
+// for a quiet button pointed at. A wash of the accent, so the row in hand reads as the one about to
+// act; the body and muted inks hold 4.5:1 on it (tests/scss/tokens.test.ts).
 $fill-highlight: color-mix(in srgb, $accent 12%, transparent);
 $fill-highlight-field: color-mix(in srgb, $accent 12%, $surface-card);
 
@@ -529,11 +493,9 @@ $hairline: color-mix(in srgb, $text-muted 45%, transparent);
 // A quiet button's hairline pointed at: partway from the line to the accent.
 $edge-highlight: color-mix(in srgb, $accent 45%, $hairline);
 
-// The focus ring's strength (M12.45): how much of its colour the ring keeps,
-// mixed towards transparent, so it marks the focus without overpowering the
-// page. One number for both themes, shared by the `focus-ring` mixin and the
-// rings that set their own colour; each clears 3:1 where it is drawn
-// (tests/scss/tokens.test.ts; claude-docs/styling.md, "The focus ring").
+// The focus ring's strength: how much of its colour the ring keeps, mixed towards transparent. One
+// number for both themes, shared by the `focus-ring` mixin and the rings that set their own colour;
+// each clears 3:1 where it is drawn (tests/scss/tokens.test.ts; claude-docs/styling.md, "The focus ring").
 $focus-ring-strength: 66.6%;
 
 // A link's ring, in the accent, at its own strength per theme: the shared one
@@ -567,10 +529,9 @@ $opacity-disabled: 0.55;
   @return var(--badge-#{$palette}-#{$part});
 }
 
-// The inks a jar's Low Stock and Out of Stock states are drawn in: the card's stock badge
-// and the entry page's jar shelf alike, so the two can never disagree on which colour
-// means Low (MB.121's repetition check). Low is the warning amber; Out is the Out of Stock
-// badge palette's ink, which reaches 4.5:1 on the card and the page in both themes.
+// The inks of a jar's Low Stock and Out of Stock states, shared by the card's stock badge and the
+// entry page's jar shelf so they never disagree. Low is the warning amber; Out is the Out of Stock
+// palette's ink, which reaches 4.5:1 on the card and the page in both themes.
 $stock-low-ink: $warning;
 $stock-out-ink: badge-token('out-of-stock', 'fg');
 
@@ -596,9 +557,8 @@ $type-sizes: (
   'caption': 0.8125rem,
   // The uppercase, letter-spaced .eyebrow.
   'overline': 0.75rem,
-  // The label under an icon in the phone's bottom bar (MB.7), where five
-  // sit across a 375px screen: the one role below overline, since Lexend's
-  // "Compendium" is wider than a fifth of that at 0.75rem.
+  // The label under an icon in the phone's bottom bar, where five sit across a 375px screen: the one
+  // role below overline, since Lexend's "Compendium" is wider than a fifth of that at 0.75rem.
   'tab': 0.6875rem,
 );
 
@@ -637,25 +597,20 @@ $heading-sizes: (
 // this is a name set in the heading face outside a heading.
 $brand-size: 1.375rem;
 
-// An icon set inline with a line of text and sized to it: the entry page's held
-// check beside its name, which takes the heading's size. In `em` where the type
-// sizes are `rem`, because it is the text's own size it follows, not the page's
-// (MB.120, consumed by IngredientEntry).
+// An icon set inline with a line of text and sized to it: the entry page's held check beside its
+// name. In `em` where the type sizes are `rem`, as it follows the text's own size, not the page's.
 $inline-mark-size: 0.72em;
 
-// Small optical corrections, each in `em` of the text it sits in so it follows
-// that text's size (MB.120, where each was a raw value in its component).
-// - `$optical-nudge`: the shift that sets a mark level with the text beside it,
-//   by eye: the entry page's held shelf's gap before the name, and the recency
-//   mark's sparkle and label, each about half a pixel off (measured 2026-10-19).
-// - `$back-chevron-pull`: how far the entry page's back link pulls its chevron
-//   back, as the drawing starts inside its 1em box and read as an indent.
-// - `$link-hint-drop`: the drop that sets a 1rem chain icon level with a
-//   link's first line, which is taller than the icon.
-// - `$cap-middle`: the middle of Lexend's capitals measured from the top of a
-//   body line, what the details modal centres the coven shelf on.
-// - `$recency-icon-size`: the recency mark's sparkle, larger than its small
-//   bold label so the drawing's thin rays read.
+// Small optical corrections, each in `em` of the text it sits in so it follows that text's size.
+// - `$optical-nudge`: the shift that sets a mark level with the text beside it, by eye, about half a
+// pixel: the entry page's held shelf's gap before the name, and the recency mark's sparkle and label.
+// - `$back-chevron-pull`: how far the entry page's back link pulls its chevron back, as the drawing
+// starts inside its 1em box and read as an indent.
+// - `$link-hint-drop`: the drop that sets a 1rem chain icon level with a link's first line.
+// - `$cap-middle`: the middle of Lexend's capitals from the top of a body line, what the details
+// modal centres the coven shelf on.
+// - `$recency-icon-size`: the recency mark's sparkle, larger than its small bold label so the thin
+// rays read.
 $optical-nudge: 0.04em;
 $back-chevron-pull: 0.5em;
 $link-hint-drop: 0.125em;
@@ -672,10 +627,9 @@ $nav-link-size: 1.125rem;
 // table, a grid — still sets its prose readably.
 $measure: 66ch;
 
-// How far the top of the window is taken by chrome in the page's flow above
-// everything else: the impersonation banner on a touch screen (MB.53), and 0
-// otherwise. What pins itself to the top of the window, or sizes itself to it,
-// offsets by it (claude-docs/styling.md, "The top inset").
+// How far the top of the window is taken by chrome above everything else: the impersonation banner
+// on a touch screen, and 0 otherwise. What pins to the top of the window, or sizes to it, offsets by
+// it (claude-docs/styling.md, "The top inset").
 $top-inset: var(--top-inset, 0px);
 
 // ---------------------------------------------------------------------------
@@ -684,8 +638,7 @@ $top-inset: var(--top-inset, 0px);
 $theme-transition-duration: 400ms;
 $theme-transition-easing: ease-in-out;
 
-// How long a tip bubble takes to fade in and out: 500ms, the owner's pace
-// (claude-docs/components/info-tip.md, "Styling").
+// How long a tip bubble takes to fade in and out: 500ms (claude-docs/components/info-tip.md, "Styling").
 $tip-fade: 500ms;
 
 // IconTip's one word fades in 120ms instead: it repeats what the control
@@ -706,42 +659,35 @@ $menu-min-width: 11rem;
 // narrower than the measure, since a form's line is a field, not prose.
 $narrow-column: 28rem;
 
-// The pager's width below which Prev, "Page X of Y" and Next close up to stay
-// on one line (the owner's call at MB.115's review): at full spacing the
-// three need about 22rem, more than a 375px phone leaves.
+// The pager's width below which Prev, "Page X of Y" and Next close up to stay on one line: at full
+// spacing the three need about 22rem, more than a 375px phone leaves.
 $pager-tight-width: 23rem;
 
-// The height every one-line control shares, so a field, a select or
-// suggesting box and a button stand level in a row: 44.5px, the owner's call
-// (MB.154), what a button measured at its own padding, and over WCAG 2.5.5's
-// 44px target. A minimum, so a list's box still grows with its entries.
+// The height every one-line control shares, so a field, a select or suggesting box and a button
+// stand level in a row: 44.5px, what a button measured at its own padding, over WCAG 2.5.5's 44px
+// target. A minimum, so a list's box still grows with its entries.
 $control-height: 2.78125rem;
 
-// A compact field's height (`.field--compact`, M9.9): 32px, for a field
-// that sits on one short line, the StockDialog's Add Form. Under the
-// full height's 44px but over WCAG 2.5.8's 24px target, as `.btn--small` is.
+// A compact field's height (`.field--compact`): 32px, for a field on one short line, the
+// StockDialog's Add Form. Under the full 44px but over WCAG 2.5.8's 24px target, as `.btn--small` is.
 $control-height-compact: 2rem;
 
-// The wide page column's width (`.page-column`, MB.115): wider than the
-// measure, for the tables the admin pages hold, whose prose still stops at it. 80rem, the owner's
-// call at the design review: the user list's seven columns need about 77rem
-// before they stop scrolling in their frame, and the privilege ledger has
-// seven too. It was the admin column's own 64rem in `AdminNav/index.scss`.
+// The wide page column's width (`.page-column`): wider than the measure, for the admin tables, whose
+// prose still stops at it. 80rem, as the user list's seven columns need about 77rem before they stop
+// scrolling in their frame, and the privilege ledger has seven too.
 $wide-column: 80rem;
 
-// A dialog's content column, and the wide one for a form with nested panels,
-// such as the ingredient form (M5.5), or two columns side by side, the spell
-// builder's jar (55rem: its step list at 30rem or more beside an 18rem aside). Each was a
-// raw width in `Modal/index.scss`; the modal adds its padding and caps both at the window.
+// A dialog's content column, and the wide one for a form with nested panels or two columns side by
+// side, such as the ingredient form or the spell builder's jar (55rem: its step list at 30rem or
+// more beside an 18rem aside). The modal adds its padding and caps both at the window.
 $dialog-column: 32rem;
 $dialog-column-wide: 55rem;
 
-// The page's ground at three quarters over what lies behind: a dialog's backdrop
-// over the page, and a question's scrim over the form it asks about (MB.115). The
-// Filters sheet shares it.
+// The page's ground at three quarters over what lies behind: a dialog's backdrop over the page, and
+// a question's scrim over the form it asks about. The Filters sheet shares it.
 $modal-scrim: color-mix(in srgb, $surface-page 75%, transparent);
 
-// How a dialog and its backdrop fade in and out (M5.5), the Filters sheet's backdrop with them.
+// How a dialog and its backdrop fade in and out, the Filters sheet's backdrop with them.
 $modal-fade: 150ms ease-out;
 
 // A small control's square box: WCAG 2.2's 24px minimum target, around a
@@ -753,9 +699,8 @@ $icon-size: 1.5rem;
 // user list's marks. Each wrote 1rem.
 $glyph-size: 1rem;
 
-// The larger icon control outside a form (MB.115, the owner's call): a list
-// row's Edit pencil, a 2rem square around a 1.25rem mark, so a column of
-// them reads at a glance. A form keeps `$icon-size`, where its pencils sit
+// The larger icon control outside a form: a list row's Edit pencil, a 2rem square around a 1.25rem
+// mark, so a column of them reads at a glance. A form keeps `$icon-size`, where its pencils sit
 // beside its fields' text.
 $icon-size-large: 2rem;
 
@@ -764,16 +709,15 @@ $icon-size-large: 2rem;
 $radio-size: 1.125rem;
 $glyph-size-large: 1.25rem;
 
-// The action icons of an ingredient card's foot, an entry page's head and the Quick Look
-// window's head (the pencils, the plus, the eye, the bin, the three dots) 13% larger than
-// the `$icon-size-large` they were, box and mark alike (the owner's call, 2026-10-21). Their own
-// tokens, not a change to the large size: that one still sets every other list row's pencil.
+// The action icons of an ingredient card's foot, an entry page's head and the Quick Look window's
+// head (the pencils, the plus, the eye, the bin, the three dots), 13% larger than
+// `$icon-size-large`, box and mark alike. Their own tokens, as that size still sets every other
+// list row's pencil.
 $action-icon-scale: 1.13;
 $action-icon-size: $icon-size-large * $action-icon-scale;
 $action-glyph-size: $glyph-size-large * $action-icon-scale;
-// The jar (the Edit Stock button's mark, `StockIcon`) and the Quick Look eye's mark 11% larger
-// again, on top of the 13% (the owner's calls, 2026-10-21); their buttons keep the
-// `$action-icon-size` box.
+// The jar (the Edit Stock button's mark, `StockIcon`) and the Quick Look eye's mark 11% larger again,
+// on top of the 13%; their buttons keep the `$action-icon-size` box.
 $action-mark-scale: 1.11;
 $action-jar-glyph-size: $action-glyph-size * $action-mark-scale;
 $action-look-glyph-size: $action-glyph-size * $action-mark-scale;
@@ -783,30 +727,24 @@ $action-look-glyph-size: $action-glyph-size * $action-mark-scale;
 // user list's locked-control tip each wrote 18rem.
 $tip-width: 18rem;
 
-// A filter's type-ahead field, the curated lists' Group and Tradition
-// (MB.115): one width for the native select the server draws and the
-// type-ahead that replaces it once hydrated, so the swap moves nothing. 14rem
-// on the owner's call: most names fit, and the longest seeded one, "Anglo-
-// Saxon & Continental Germanic" (18rem as the box draws it), runs on inside
-// the box; its option in the list is drawn whole.
+// A filter's type-ahead field, the curated lists' Group and Tradition: one width for the native
+// select the server draws and the type-ahead that replaces it once hydrated, so the swap moves
+// nothing. 14rem: most names fit, and the longest seeded one, "Anglo-Saxon & Continental Germanic"
+// (18rem as the box draws it), runs on inside the box; its option in the list is drawn whole.
 $filter-choice-width: 14rem;
 
-// Where a filter's search box starts before it grows into the row's spare
-// room (MB.115): wide enough for its placeholder and a name or an email typed
-// in, so on a row with a select or two beside it the search keeps the line's
-// lead rather than shrinking to their width, and the choices wrap beneath it
-// sooner than the search gives way.
+// Where a filter's search box starts before it grows into the row's spare room: wide enough for its
+// placeholder and a name or an email, so beside a select or two the search keeps the line's lead and
+// the choices wrap beneath it sooner than the search gives way.
 $filter-search-basis: 16rem;
 
 // The dialog's close button: a 2rem × in a 2rem square, set in from the dialog's corner
-// (`Modal/index.scss`); the owner's call during M5.5 made it 2.5rem, and again on
-// 2026-10-20 moved it up and right, where 2rem is still well past WCAG 2.2's 24px minimum.
+// (`Modal/index.scss`), well past WCAG 2.2's 24px minimum.
 $close-target: 2rem;
 
-// The width of its own frame under which a `.data-table--stack` table turns
-// each row into a card (MB.115): a container width, not the screen's, so a
-// table in a narrow column stacks too. claude-docs/styling.md, "Tables at
-// phone width".
+// The width of its own frame under which a `.data-table--stack` table turns each row into a card: a
+// container width, not the screen's, so a table in a narrow column stacks too
+// (claude-docs/styling.md, "Tables at phone width").
 $table-stack-width: 40rem;
 // The narrowest an ingredient card is drawn: the grid of cards (IngredientCardList)
 // and the skeleton standing in for it both fill a row with as many as fit.
@@ -815,93 +753,78 @@ $ingredient-card-min: 20rem;
 // narrower card, so more fit across. No space step or other width is this size.
 $ingredient-card-min-compact: 16rem;
 
-// The heavy rule, for a line that must read by its weight as well as its
-// colour: the impersonation banner's foot, the owner's call in MB.53, where it
-// was the banner's own `$impersonation-banner-rule`.
+// The heavy rule, for a line that must read by its weight as well as its colour: the impersonation
+// banner's foot.
 $rule-heavy: 3px;
 
-// The medium rule, a step heavier than a 1px edge and lighter than $rule-heavy:
-// the bar down a quoted row's side in IngredientForm and the divider between
-// ChipColorField's channels and its hex, each of which wrote its own 2px
-// until MB.115.
+// The medium rule, a step heavier than a 1px edge and lighter than $rule-heavy: the bar down a
+// quoted row's side in IngredientForm and the divider between ChipColorField's channels and its hex.
 $rule-medium: 2px;
 
-// The corner the theme toggle sits in: its backdrop's radius and the button's
-// own size, and the space the impersonation banner keeps clear of it. Each
-// component held its own 3.9rem and kept them equal by hand until MB.115.
+// The corner the theme toggle sits in: its backdrop's radius and the button's own size, and the
+// space the impersonation banner keeps clear of it.
 $toggle-corner: 3.9rem;
 
-// The switch's track (MB.115): `$icon-size` high, since a `$glyph-size` thumb
-// rides in it, and this wide, so the thumb travels a little over its own
-// width (the width less the height, 1.25rem) and its side reads at a glance.
+// The switch's track: `$icon-size` high, since a `$glyph-size` thumb rides in it, and this wide, so
+// the thumb travels a little over its own width (the width less the height, 1.25rem).
 $switch-width: 2.75rem;
 
-// How long a control takes to answer a press with a movement of its own: the
-// switch's thumb sliding (MB.115). Short, so the new state shows before the
-// finger lifts; the combobox's group bar widens on a highlight in the same 150ms.
+// How long a control takes to answer a press with a movement of its own: the switch's thumb sliding.
+// Short, so the new state shows before the finger lifts; the combobox's group bar widens in the same 150ms.
 $motion-short: 150ms;
 
 // A jar's press on the entry page's shelf and on a recipe's inventory line: how far the name
 // grows on hover and focus, and how long the jar's wobble lasts (JarShelf/index.scss).
 $jar-name-grow: 1.15;
 $jar-shake-duration: 500ms;
-// A larger thing moving into place: an ingredient card's face sliding out (M12.44).
+// A larger thing moving into place: an ingredient card's face sliding out.
 $motion-medium: 300ms;
-// How far a card's face slides down out of its slot, and so how tall the drawer body
-// behind it must be to leave no gap (M12.44).
+// How far a card's face slides down out of its slot, and so how tall the drawer body behind it must
+// be to leave no gap.
 $drawer-travel: 11px;
-// How far the drawer's body sits in from the slot's sides, and so the band under the
-// face it keeps clear: the drawer is no wider than the slot, with this much each side
-// (M12.44 and MB.120, consumed by IngredientCard).
+// How far the drawer's body sits in from the slot's sides, and so the band under the face it keeps
+// clear: the drawer is no wider than the slot, with this much each side (IngredientCard).
 $drawer-inset: 10px;
-// The drawer's side walls, each this wide, and where the back wall ends and the seam
-// into the floor begins and ends, as shares of the drawer's height (M12.44).
+// The drawer's side walls, each this wide, and where the back wall ends and the seam into the floor
+// begins and ends, as shares of the drawer's height.
 $drawer-wall: 7px;
 $drawer-back-stop: 38%;
 $drawer-seam-stop: 48%;
-// The slot the face sits in, shaded inward from its top and left, and the shadow the
-// face casts up onto the drawer's rim as it slides down. Black at alpha in both themes,
-// as `$shadow-ink-dark` is the site's shadow ink; they are lists, so a box-shadow
-// takes them whole (MB.120).
+// The slot the face sits in, shaded inward from its top and left, and the shadow the face casts up
+// onto the drawer's rim as it slides down. Black at alpha in both themes, as `$shadow-ink-dark` is the
+// site's shadow ink; lists, so a box-shadow takes them whole.
 $drawer-slot-shadow:
   inset 0 3px 6px rgba(0, 0, 0, 0.45),
   inset 2px 0 4px rgba(0, 0, 0, 0.3);
 $drawer-rim-shadow: 0 -3px 5px rgba(0, 0, 0, 0.3);
 
-// The bar down a safety note's side (SafetyNote): the heavy rule, so it reads by its
-// weight as well as its colour (MB.120).
+// The bar down a safety note's side (SafetyNote): the heavy rule, so it reads by its weight as well
+// as its colour.
 $safety-bar-width: $rule-heavy;
-// The hairline stroke that fakes a weight above the heading face's 700 on the safety
-// note's heading (the owner's call, 2026-10-17). A stroke is not a border or a rule,
-// and under 1px, so it is no `$rule-*`. MB.120 kept it (the owner, 2026-10-20).
+// The hairline stroke that fakes a weight above the heading face's 700 on the safety note's
+// heading. A stroke is not a border or a rule, and under 1px, so it is no `$rule-*`.
 $text-stroke-hairline: 0.6px;
 
-// A movement the eye should follow, not just register: the details window's
-// description opening and closing under its Show More bar (the owner's call,
-// 2026-10-20). Twice `$motion-short`, since a block of text
-// changing height needs longer than a thumb sliding to read as one move.
+// A movement the eye should follow, not just register: the details window's description opening and
+// closing under its Show More bar. Twice `$motion-short`, as a block of text changing height needs
+// longer than a thumb sliding to read as one move.
 $motion-medium: 300ms;
 
-// The loading standard (M12.33; claude-docs/design-decisions/m12.33-plan.md).
-// How long a wait must last before an indicator shows (the spinner, the link
-// dot and the page bar), so an answer that is quick never flashes one;
-// skeletons are not held back. The spinner's turn, the shimmer's pass, the one
-// slow pulse every piece falls back to under reduced motion, and the fade
-// that brings new content in over its skeleton (`arrived`, _mixins.scss).
+// The loading standard (claude-docs/design-decisions/m12.33-plan.md). How long a wait must last
+// before an indicator shows (the spinner, the link dot and the page bar), so a quick answer never
+// flashes one; skeletons are not held back. Also the spinner's turn, the shimmer's pass, the slow
+// pulse every piece falls back to under reduced motion, and the fade over a skeleton (`arrived`).
 $loading-delay: 100ms;
 $spin-duration: 0.8s;
 $shimmer-duration: 1.4s;
 $pulse-duration: 2s;
 $arrive-duration: 200ms;
 
-// The application shell (MB.7, drawn in its design review): the global bar
-// across the top of every signed-in page, the context row beneath it that
-// names the coven (as the switcher) or the admin area and carries the section
-// nav, and at a phone's width the section nav's bar along the bottom instead.
-// The bar is a little taller than a control, so a control sits inside it
-// with a step of air; the context row on a phone is exactly a control, the
-// switcher's own height. The page keeps the bottom bar's height clear
-// beneath its content, so the last row is never under it.
+// The application shell: the global bar across the top of every signed-in page, the context row
+// beneath it that names the coven (as the switcher) or the admin area and carries the section nav,
+// and at phone width the section nav's bar along the bottom. The bar is a little taller than a
+// control; the context row on a phone is exactly a control, the switcher's own height. The page keeps
+// the bottom bar's height clear beneath its content.
 $shell-bar-height: 3.25rem;
 $bottom-bar-height: 4rem;
 
@@ -921,38 +844,27 @@ $shell-tablet-width: 56rem;
 // Under this the bar's brand is its initials: a narrow phone, since the bar
 // has room for the full name wider than that once the site links have gone.
 $shell-brand-width: 26rem;
-// Under this width of its own (680px, the owner's measure on the Astrology
-// page at MB.7's review, 2026-10-12) a tabbed page's Add is a plus; the pills
-// keep the heading's line.
+// Under this width of its own (680px) a tabbed page's Add is a plus; the pills keep the heading's line.
 $tabbed-plus-width: 42.5rem;
-// Under this width of its own (a 568px window's header, the owner's measure
-// at MB.7's review, 2026-10-12) a tabbed page's pills drop beneath the
+// Under this width of its own (a 568px window's header) a tabbed page's pills drop beneath the
 // heading and the plus, a concern of its own, apart from the plus's switch.
 $tabbed-reflow-width: 33.5rem;
-// The same for a tabbed page whose action keeps its label (People's Pause
-// Admin Changes): under 700px of the header's own width the pills drop
-// beneath the heading and the action, which keep the line (the owner's
-// measure at MB.7's review, 2026-10-12).
+// The same for a tabbed page whose action keeps its label (People's Pause Admin Changes): under
+// 700px of the header's own width the pills drop beneath the heading and the action.
 $tabbed-reflow-width-labelled: 43.75rem;
-// Under 400px of the header's own width that labelled action goes beneath
-// the heading, at the line's start (the owner's measure at MB.7's review,
-// 2026-10-12); wider, the two keep the line, the forms' column included.
+// Under 400px of the header's own width that labelled action goes beneath the heading, at the line's
+// start; wider, the two keep the line, the forms' column included.
 $tabbed-action-below-width: 25rem;
-// At 350px of the header's own width and under, the Add is the labelled
-// button again, beneath the heading at the line's start (the owner's measure
-// at MB.7's review, 2026-10-12): the plus is for the widths between.
+// At 350px of the header's own width and under, the Add is the labelled button again, beneath the
+// heading at the line's start: the plus is for the widths between.
 $add-below-width: 21.875rem;
 
-// The one place a z-index comes from (MB.124's handoff, settled by MB.7):
-// what stacks above the page, named by what it is rather than by a number
-// each component chose for itself. A component inside its own stacking
-// context (a combobox's list over its field) keeps a small local index; these
-// are the layers that meet each other at the window. `floating` is a popover
-// or list opened from the shell, over the bars; `dialog` is a non-native
-// overlay, since a <dialog> sits in the browser's top layer above every one. `sticky-row` is a
-// page's own row stuck under the bar: above the cards, below the bar and everything opened from it.
-// `callout` is a click's failure under its control (ClickFeedback): over a
-// popover it may sit beside, under a non-native overlay that covers the page.
+// The one place a z-index comes from: what stacks above the page, named by what it is. A component
+// inside its own stacking context keeps a small local index; these are the layers that meet at the
+// window. `floating` is a popover or list opened from the shell, over the bars; `dialog` a non-native
+// overlay, since a <dialog> sits in the browser's top layer above every one. `sticky-row` is a page's
+// own row stuck under the bar: above the cards, below the bar. `callout` is a click's failure under
+// its control (ClickFeedback): over a popover it may sit beside, under a non-native overlay.
 $layers: (
   'sticky-row': 5,
   'shell': 10,
@@ -1001,10 +913,9 @@ $space-steps: (
 // Shared with the entry's wait (Skeleton) so the two lay out alike.
 $side-column: calc(#{space(8)} * 5);
 
-// The jar shelf's measures (M12.29), shared with the entry's wait (Skeleton) so the
-// stand-in jars are the real ones' size and the page does not drop when Stock loads: the
-// cell's top padding, the drawing's size (the owner's 11% bigger, 2026-10-21), the plank's
-// thickness, and the narrowest a cell goes, on a wide and on a narrow screen.
+// The jar shelf's measures, shared with the entry's wait (Skeleton) so the stand-in jars are the real
+// ones' size and the page does not drop when Stock loads: the cell's top padding, the drawing's size,
+// the plank's thickness, and the narrowest a cell goes, on a wide and on a narrow screen.
 $jar-top: 0.7rem;
 $jar-drawing-width: 35.52px;
 $jar-drawing-height: 29.97px;
@@ -1026,9 +937,8 @@ $ingredient-card-forms-air: space(1);
 $context-row-height: calc(#{$control-height} + 2 * #{space(2)});
 $context-row-height-phone: calc(#{$control-height} + #{space(3)});
 
-// The admin table's inline cell padding (MB.115): a step of space, written
-// once so the filter row above a table insets its fields by the same amount
-// and each label stands flush with the column heading beneath it.
+// The admin table's inline cell padding: a step of space, written once so the filter row above a
+// table insets its fields by the same amount and each label stands flush with its column heading.
 $table-cell-inset: space(3);
 
 $radii: (

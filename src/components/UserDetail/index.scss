@@ -53,9 +53,8 @@
   }
 }
 
-// A value, and the control that changes it at the right edge (the owner's
-// call). A refusal of that control is its callout, which floats over the rows
-// rather than taking room in one (M12.31).
+// A value, and the control that changes it at the right edge. A refusal of that control is
+// its callout, which floats over the rows rather than taking room in one.
 .user-detail__value {
   display: flex;
   flex-wrap: wrap;

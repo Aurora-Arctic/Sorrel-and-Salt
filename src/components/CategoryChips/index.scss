@@ -80,10 +80,9 @@
   }
 }
 
-// The compact size (the admin table's, 2026-10-19): tighter padding and gap through the
-// `chip()` mixin's `$size`, at the card's font size, with the same wash, border and label
-// mix, so the contrast figures in styling.md hold. The +N button's visible pill is as short,
-// and its hit area is grown to 24px (WCAG 2.5.8) by a transparent pseudo-element.
+// The compact size (the admin table's): tighter padding and gap through the `chip()` mixin's `$size`,
+// with the same wash, border and label mix. The +N pill's hit area is grown to 24px (WCAG 2.5.8) by a
+// pseudo-element.
 .category-chips--compact {
   gap: space(1);
 
@@ -106,10 +105,8 @@
   }
 }
 
-// Absent chips (Category Match's Missing row, the owner's call): hollow, so the category is
-// named but reads as not there. No fill, a dashed border and text both muted (wholly grey); the
-// size and spacing are the chip's own. Muted text on the card surface is the same pairing the
-// panel's row labels use.
+// Absent chips (Category Match's Missing row): hollow, with a dashed border and muted text, so the
+// category is named but reads as not there. Muted text on the card surface is the row labels' pairing.
 .category-chips--absent .chip {
   background-color: transparent;
   border-style: dashed;

@@ -2,15 +2,13 @@ import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactNode } from 'react';
 import Backdrop from '.';
 
-// Render-only. The element is fixed to the viewport corner, so the story frame
-// itself is not where it appears — look at the corners of the preview. Two
-// fixed layers cannot sit side by side, so the state is chosen with a control.
-// The theme is the toolbar's: choose Dark or Light there for the other view.
+// Render-only. The element is fixed to the viewport corner, so look at the
+// corners of the preview, not the frame. Two fixed layers cannot sit side by
+// side, so one control chooses the state. The theme is the toolbar's.
 const meta = {
   title: 'Layout / Backdrop',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const BACKDROP_STATES: Record<string, ReactNode> = {

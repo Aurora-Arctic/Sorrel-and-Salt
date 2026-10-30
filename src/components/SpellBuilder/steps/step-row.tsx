@@ -15,11 +15,9 @@ import type { SpellStepValue, SpellStepsValues } from './types';
 import { type QuickLookCoven, StepQuickLook } from '../step-quick-look';
 import { isInstruction, safetyOf, stepNameOf } from './values';
 
-// One step of the jar (M10.15, M13.3): the handle it is moved by (M10.16), then
-// StepRow's drawing of it with the controls around it. An ingredient's step is a
-// line, open or closed like the ingredient form's variant card: closed it reads
-// its amount and its instruction on one muted line beneath the name; open it shows its amount, unit and instruction (and,
-// for a one-off, its form). An instruction-only step has the instruction alone. See claude-docs/components/spell-builder.md, "Steps".
+// One step of the jar: its drag handle, then StepRow's drawing with the controls around it. Closed
+// it reads amount and instruction on one muted line; open it shows amount, unit, instruction and,
+// for a one-off, form (claude-docs/components/spell-builder.md, "Steps").
 
 export interface BuilderStepRowProps {
   /** The row's field-array key, its place in the sortable list. */
@@ -151,7 +149,7 @@ export function BuilderStepRow({
       name={instruction ? null : name}
       icon={step.icon}
       // The care the ingredient needs, kept in view beside the step and never in the way of
-      // saving it (M10.18). A one-off has none to show: it draws nothing, not "safe".
+      // saving it. A one-off has none to show: it draws nothing, not "safe".
       marks={safety && <SafetyMark {...safety} />}
       // The eye comes after every badge, with Edit and Remove in one tight group.
       look={
@@ -241,7 +239,7 @@ export function BuilderStepRow({
           options={UNIT_OPTIONS}
           errorInto={errorNode}
           // Checked as it is chosen, not when it is left: a unit the jar cannot
-          // be measured in is said at once (story 77).
+          // be measured in is said at once.
           onChange={(value) =>
             setValue(unit, value, { shouldTouch: true, shouldDirty: true, shouldValidate: true })
           }

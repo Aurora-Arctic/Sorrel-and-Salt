@@ -17,7 +17,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), refresh: 
 
 const { default: SpellBuilder } = await import('@/components/SpellBuilder');
 
-// The spell builder's step text (M13.3, story 80): an instruction-only step,
+// The spell builder's step text: an instruction-only step,
 // and the instruction beneath an ingredient step. That the service keeps the
 // order and the texts is tests/modules/grimoire/services's.
 
@@ -95,7 +95,7 @@ function renderBuilder(props: Partial<SpellBuilderProps> = {}) {
   );
 }
 
-// A saved spell opens with its sections shut (M10.12): Open All shows its jar.
+// A saved spell opens with its sections shut: Open All shows its jar.
 function renderSaved() {
   const view = renderBuilder({ spell: SPELL });
   fireEvent.click(screen.getByRole('button', { name: 'Open All' }));

@@ -1,7 +1,7 @@
 import type { WorkspaceRole } from '@/modules/coven';
 import type { PagePosition } from '../../lib/types';
 
-/** One coven invitation addressed to the signed-in account, as the landing lists it (M10.32). */
+/** One coven invitation addressed to the signed-in account, as the landing lists it. */
 export interface ReceivedInvitationEntry {
   id: string;
   covenName: string;

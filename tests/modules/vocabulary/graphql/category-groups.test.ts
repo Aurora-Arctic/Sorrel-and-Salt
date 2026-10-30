@@ -6,15 +6,9 @@ import { E, asUser } from '../../../support/as-user';
 import { run } from '../../../support/graphql/run';
 import type { CategoryGroupNode } from './types';
 
-// M5.6b's three category-group writes over the wire. This file holds the
-// transport's half (claude-docs/testing/layer-ownership.md): the loaders
-// cleared by a write, `moveTo` reaching the delete, and per write one refusal
-// per error code, read as the browser reads it — a colour under the floor
-// beside its own picker, a delete without a group to move the categories to
-// beside the move picker. Which roles are refused, and every colour and
-// collision rule, are services/category-groups.test.ts's; a signed-out caller
-// at every field, and a non-admin at the `admin` scope, are
-// tests/db/graphql-query-scopes.test.ts's.
+// The three category-group writes over the wire: the transport's half (claude-docs/testing/layer-ownership.md).
+// That is the loaders cleared by a write, `moveTo` reaching the delete, and per write one refusal per error code, read as the browser reads it. Roles and colour and collision rules are services/category-groups.test.ts's;
+// signed-out and non-admin scope refusals are tests/db/graphql-query-scopes.test.ts's.
 
 let sql: ReturnType<typeof postgres>;
 beforeAll(() => {

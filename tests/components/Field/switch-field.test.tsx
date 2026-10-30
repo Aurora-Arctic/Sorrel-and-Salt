@@ -4,7 +4,7 @@ import { SwitchField } from '@/components/Field';
 
 // A native checkbox flips on Space alone, and Enter only submits the form
 // around it, so a keyboard user pressing Enter on a switch got nothing
-// (MB.261). Every SwitchField turns on Enter as a click does.
+// . Every SwitchField turns on Enter as a click does.
 
 function renderSwitch(onChange = vi.fn(), onSubmit = vi.fn()) {
   render(
@@ -61,7 +61,7 @@ describe('SwitchField', () => {
     expect(screen.getByRole('switch', { name: 'No Refs' })).not.toHaveAccessibleDescription();
   });
 
-  // A note is a line under the toggle saying what its state means (M10.13), read with it.
+  // A note is a line under the toggle saying what its state means, read with it.
   it('is described by its note, which shows under it', () => {
     render(
       <SwitchField

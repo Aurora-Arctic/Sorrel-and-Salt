@@ -16,10 +16,9 @@ export interface SaveStatusProps {
   /** Keep My Version: send this copy over the server's. */
   onKeepMine: () => void;
   /**
-   * Where the conflict notice goes instead of this line: a modal's header
-   * note, under the title, so it is in view however far the form has scrolled
-   * (the owner's call, 2026-10-29). Left out or null, the notice replaces the
-   * line, beside Save.
+   * Where the conflict notice goes instead of this line: a modal's header note, under the
+   * title, so it is in view however far the form has scrolled. Left out or null, the notice
+   * replaces the line, beside Save.
    */
   conflictInto?: HTMLElement | null;
   className?: string;

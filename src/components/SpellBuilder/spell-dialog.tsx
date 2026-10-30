@@ -10,28 +10,15 @@ import { usePendingNavigation } from '../../lib/navigation';
 import { RouteModal } from '../Modal';
 import type { ModalHeading } from '../Modal/types';
 import { UNTITLED_SPELL } from '../SpellCard';
+import { deletedHrefOf } from '../SpellRecipe/deleted-href';
 import SpellBuilder from '.';
 import { SpellBuilderStepsDocument } from './steps/documents';
 import type { SpellDialogProps } from './types';
 
-// The spell builder as a modal over the grimoire (M10.12), the owner's call on
-// 2026-10-27, in step with Add Ingredient: New Spell opens it under `?new=spell-<slug>`
-// (or `?new=spell`, the current grimoire's; the owner's call, 2026-10-28),
-// and a spell's Edit under `?edit=<id>` (claude-docs/design-decisions/
-// m10.12-spell-builder-modal.md). A draft's first save replaces `?new`
-// with its own `?edit=<id>`, so a reload or Back opens the saved draft, never an
-// empty form. The builder reports that save through `onCreated`, whichever
-// way it was made, so M13.17's autosave moves the address the same way.
-// Close saves first (./save-on-close.ts). A client part because the
-// builder's handlers are functions, which a server page cannot hand down.
-// New Spell's press writes `?new=spell-<slug>` with the browser's pushState (AddAction's
-// `drawnHere`), so the dialog reads the address itself and draws the empty builder at
-// once, at its full size, as Add Ingredient does: a skeleton the server's form replaced
-// grew the centred dialog and moved it under the pointer. Any other `?new` is Add
-// Ingredient's, and holds a saved spell's dialog back until it closes.
-// A saved spell's steps are read here, through /api/graphql, once it opens: the page's
-// server read gives its fields alone, and the builder sends nothing until the steps
-// land, since an update's steps are the whole recipe (M10.15).
+// The spell builder as a modal over the grimoire: New Spell opens it under `?new=spell-<slug>`, a
+// spell's Edit under `?edit=<id>`, and a draft's first save swaps `?new` for `?edit=<id>`. Close
+// saves first (./save-on-close.ts). A client part because the builder's handlers are functions.
+// (claude-docs/components/spell-builder.md, "The spell dialog and its address")
 
 /**
  * `closeHref` with a saved spell's dialog open over it, `?edit=<id>`. Built here rather than
@@ -41,7 +28,7 @@ const withEdit = (closeHref: Route, id: string) =>
   `${closeHref}${closeHref.includes('?') ? '&' : '?'}${new URLSearchParams({ edit: id })}` as Route;
 
 /**
- * The dialog's head for a new spell, headed as Add Ingredient's is (M8.16): the coven it
+ * The dialog's head for a new spell, headed as Add Ingredient's is: the coven it
  * lands in over the title, and the dialog named by the phrase, "New Spell to Whitethorn Coven".
  */
 export const newSpellHeading = (covenName: string): ModalHeading => ({
@@ -56,6 +43,7 @@ export default function SpellDialog({
   closeHref,
   opened: read,
   canCreate,
+  canDelete = false,
   userId,
 }: SpellDialogProps): ReactElement | null {
   const { navigate } = usePendingNavigation();
@@ -95,6 +83,7 @@ export default function SpellDialog({
               workspaceId={workspaceId}
               covenSlug={covenSlug}
               userId={userId}
+              deletedHrefOf={canDelete ? (title) => deletedHrefOf(closeHref, title) : undefined}
               spell={spell && { ...spell, steps: steps ?? [] }}
               stepsRead={
                 editing === undefined || steps !== undefined

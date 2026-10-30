@@ -136,7 +136,7 @@ describe('viewerOf', () => {
   });
 });
 
-// The public frame's read (MB.83): the same viewer, or nothing, and never a redirect.
+// The public frame's read: the same viewer, or nothing, and never a redirect.
 describe('viewerIfSignedIn', () => {
   it('is null for a signed-out visitor, without asking for the viewer or redirecting', async () => {
     getSession.mockResolvedValue(null);
@@ -156,9 +156,9 @@ describe('viewerIfSignedIn', () => {
   });
 });
 
-// The public entry page's read (M9.12): which role the viewer holds in each of their covens, for
-// the cupboard choices each coven permits there. The shell carries a coven's permissions as
-// flags, not its role, so the page reads the role here, from the same memberships.
+// The public entry page's read: which role the viewer holds in each of their covens, for the
+// cupboard choices each coven permits there. The shell carries a coven's permissions as flags,
+// not its role, so the page reads the role here, from the same memberships.
 describe('covenRolesIfSignedIn', () => {
   it('is null for a signed-out visitor, asking for no memberships', async () => {
     getSession.mockResolvedValue(null);

@@ -10,12 +10,9 @@ import { newSpellHeading } from '@/components/SpellBuilder/spell-dialog';
 import type { NewSpellActionProps } from './types';
 
 /**
- * New Spell (M10.12), the Grimoire's action at its heading line's end: the admin lists' Add,
- * opening the spell builder's dialog at once under `?new=spell-<slug>` over the open tab, its filter
- * and page kept. The press writes the address in the browser (`drawnHere`), and the dialog
- * draws its empty form there, so it opens at its full size with no skeleton first. It replaces any other `?new`, the shell's Add Ingredient's, and drops a saved
- * spell's `?edit`, so one dialog opens. A client part because the layout holds it, and a
- * layout is not handed the tab's address; it reads it here instead.
+ * New Spell, the Grimoire's action: opens the builder's dialog at once under `?new=spell-<slug>`,
+ * keeping the tab's filter. The press writes the address in the browser (`drawnHere`) and drops
+ * `?edit`. A client part, as a layout is not handed the tab's address.
  */
 export default function NewSpellAction({ covenName }: NewSpellActionProps): ReactElement {
   const path = usePathname();

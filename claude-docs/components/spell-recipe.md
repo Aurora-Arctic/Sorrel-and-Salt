@@ -53,9 +53,19 @@ with no steps says so.
 - A one-off ingredient (MB.40) shows its own name and form, a One-Off badge (the muted tint, `badge--retired`: grey in the light theme, pale in the dark; the owner's call, 2026-10-29), no eye and no marks.
 - The formal name shows in brackets only where two different ingredients in the spell share a
   label. The same ingredient in two forms does not get one.
-- No Delete control. The `action` slot takes the Edit control, which the page passes for a role
-  that may update the spell (M13.10): an `EditLink` to `?edit=<id>`, over which the page
-  renders the spell builder's dialog, closing back to this page.
+- The `action` slot takes the page's controls, in a `.spell-recipe__actions` row at the heading's
+  end: the Edit pencil for a role that may update the spell (M13.10), an `EditLink` to
+  `?edit=<id>`, over which the page renders the spell builder's dialog, closing back to this
+  page; and Delete Spell's bin for a role that may delete one (M13.11), `delete-spell.tsx`.
+  The bin is named for the spell ("Delete Spell Hearth Warding") and asks in a `Modal` titled
+  Delete Spell, as a coven's own ingredient's page asks (M8.17, M9.10): the question names the
+  spell and says the coven loses it, Delete is `.btn--destructive` and busy "Deleting", Cancel
+  is quiet. Not a `ConfirmQuestion`: that card asks over a form, and this page has none. Confirmed,
+  `deleteSpell` runs and the page leaves, replacing its history entry, for the tab the spell was
+  listed on (Spells, or Drafts for a draft) with `?deleted=<name>`, which the tab says in a
+  Notice ([grimoire-list.md](grimoire-list.md)); the Modal, gone with the page, gives the focus to
+  the list's heading. A refusal is the callout under the bin (M12.31). A viewer gets neither
+  icon, and the service refuses them by id.
 - No `PageNav`: the sections fit one screen. No print rules: M10.22 styles this page.
 - Steps are drawn by `StepRow` (M13.3) with no editing controls, so the page and the Quick Look modal read them the same way as the builder draws them. The body keeps no step renderer of its own. The ingredient's name is passed to `StepRow` as markup (the name, the formal name, the Deleted mark and the Quick Look eye), and its marks as `marks`.
 
@@ -106,11 +116,7 @@ draw no mark; the line's words say them.
 The body below the head is `SpellRecipeBody` (`body.tsx`), described above. The recipe page and
 the grimoire list's Quick Look modal (M13.21) both render it, so nothing is drawn twice.
 `look-dialog.tsx` (`SpellLookDialog`) puts it in a `RouteModal`: the title as the heading,
-`LastEdit` above it, no pencil, and a foot bar (`ingredient-details-foot spell-look-foot`, the bar
-shared with the ingredient's Quick Look and defined in `_primitives.scss`) holding See Recipe
-Page at its start and, only when given an `editHref`, Edit Spell (`btn--solid`) at its end; See
-Recipe Page alone stands centred. Edit Spell is a link to the `?edit=<id>` address, so one
-dialog shows at a time. `failed` draws a Notice that the spell could not be read. The page and the modal read through `readRecipeOf`
+`LastEdit` above it. Edit and Delete are icons in the heading's `formalActions` slot, as the ingredient's Quick Look has them (owner's call, 2026-10-29): the pencil (`EditLink`, named **Edit <title>**, only when given an `editHref`) and, given a `deleteSpell` (`{ workspaceId, spellId, deletedHref }`), `DeleteSpellAction`'s bin, for a role that may delete the spell (M13.11); the confirmation dialog opens over the Quick Look. The pair is wrapped in `.spell-look-actions` (`index.scss`), which stands them on the middle of the title's first line, so a wrapped title keeps them level with its first line, and runs them to the dialog's right edge beneath the ×; the wrapper scopes this, since a spell has no formal name for the Modal's placement to ride on and the ingredient's Quick Look is left as it is. The pencil links to the `?edit=<id>` address, so one dialog shows at a time. The foot bar (`ingredient-details-foot spell-look-foot`, the bar shared with the ingredient's Quick Look and defined in `_primitives.scss`) holds only See Full Recipe. `failed` draws a Notice that the spell could not be read. The page and the modal read through `readRecipeOf`
 (`grimoire/recipe-read.ts`).
 
 The modal has no side column, so each ingredient step carries its stock verdict in its own
@@ -124,3 +130,21 @@ sets no `supply`, since its column already says it.
 
 - The form is stored lower case and set in title case by the component. The form icon is not drawn on steps, as the step view carries no form group.
 - A spell search row's `match` reuses `IngredientSearchMatch`, with `slug` set to the spell id.
+
+## The Quick Look component
+
+The Quick Look modal is what a grimoire card's eye opens over the list, the spell's twin of the ingredient details modal. It shows the spell read in the shared body with the last edit over its title, a link through to the recipe page at the foot's start, and, for a role that may update the spell, Edit Spell at the foot's end. Edit Spell is a plain link to the list's address with `?edit=<id>` in place of `?spell=<id>`, which the spell builder's dialog answers. One dialog therefore shows at a time, and closing the builder returns to the list rather than to this modal. The component is a client part because `RouteModal` takes its body as a function, which a server page cannot hand down. The body arrives as the page's rendered children.
+
+## The aside component
+
+The aside is the recipe page's side column: Category Match and In Coven Inventory, the builder's Jar aside panels, read for the saved spell. They are laid out as the ingredient entry page lays its side column, beside the text past a tablet's width and beneath it on a phone. Only the page draws it; the Quick Look modal keeps to the recipe body. Both panels are read-only here, as in the builder, since the page hands them the saved steps. It is a client part because the panels are, and the landmark around them is `SpellRecipe`'s own (see "The side column").
+
+## The inventory panel
+
+In Coven Inventory shows one line for each form, at its first step's place. The line says what all the form's steps need together (`needOf`) against what the coven's jar holds, as `supplyOf` judges it. A one-off keeps a line for each step, and a step with an instruction only has none. The verdict's mark (`VerdictMark`) stands at the right end of the name's line, so the name is cut short before it is.
+
+A line may carry doors (`doorsOf`): a Quick Look eye in a column of its own at the line's right, and Edit Stock behind the jar and the name, as a `StockJarButton` stretched over both, the way the entry page's shelf stretches it over a jar. The builder draws no stock, so doors serve the page alone.
+
+## Delete Spell
+
+The bin beside the Edit pencil, in `delete-spell.tsx`, for a role that may delete a spell. It is named for the spell ("Delete Spell Hearth Warding") and asks in a `Modal` titled Delete Spell, as a coven's own ingredient's page asks: the question names the spell and says the coven loses it, since a shared spell can be deleted (the visibility lock governs widening, not existence). Delete is `.btn--destructive` and busy "Deleting"; Cancel is quiet. It is not a `ConfirmQuestion`, which asks over a form, and this page has none. Confirmed, `deleteSpell` runs and the page leaves, replacing its history entry so Back does not return to a 404, for the tab the spell was listed on with `?deleted=<name>` (`deleted-href.ts`). The Modal, gone with the page, gives the focus to the list's heading. A refusal is the callout under the bin.

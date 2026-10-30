@@ -22,20 +22,15 @@ import { readRecipeOf } from '../recipe-read';
 import { readStepSuppliesOf } from '../[id]/recipe-supply';
 import type { SpellDialogSpell } from '@/components/SpellBuilder/types';
 
-// The read a grimoire tab makes (M10.11), twin of the Ingredients page's `reads.ts`. The
-// spells are the coven's, so the read goes through the services for the signed-in
-// session, which assert membership and keep a private spell its author's, and nothing is
-// held in the data cache (CLAUDE.md rule 6). React's `cache` keeps a second call in one
-// request to one read, so it is keyed by primitives: the coven's id, the filter as the
-// parameter table's variables written as JSON, the tab's status and the cursors.
+// The grimoire tab's read, twin of the Ingredients page's `reads.ts`. Read through the services as
+// the signed-in session, which assert membership and keep a private spell its author's; nothing is
+// data-cached (rule 6). `cache` is keyed by primitives, the filter as JSON.
 
 type Query = Parameters<typeof listGrimoire>[3];
 
 /**
- * One page of `CARD_PAGE_SIZE` spells of one status, with its count, each spell with the
- * categories its author assigned it and the name of whoever last edited it: one batch each
- * for the page, whatever its length. Newest
- * edit first, or best match first while a search is in force (the service's rule).
+ * One page of `CARD_PAGE_SIZE` spells of one status with its count, each with its assigned
+ * categories and last editor: one batch each. Newest edit first, or best match while searching.
  */
 export const readGrimoire = cache(
   async (
@@ -89,12 +84,9 @@ export const readGrimoire = cache(
 );
 
 /**
- * The spell `?edit=<id>` opens the builder's dialog on (M10.12), read as the signed-in
- * member, with the fields the builder edits and the categories it is assigned. Not its
- * steps: the dialog reads those through /api/graphql once it opens (M10.15). Nothing for a
- * spell the service will not give this member, a private one of another member's included,
- * so the tab opens no dialog, as the Ingredients page's `readEditedEntry` does. Any other
- * failure of the read is let through rather than called no spell.
+ * The spell `?edit=<id>` opens the builder on, read as the signed-in member, with its fields and
+ * assigned categories; its steps the dialog reads through /api/graphql. Nothing for a spell the
+ * service withholds (another member's private one included); other failures are let through.
  */
 export async function readEditedSpell(
   workspaceId: string,
@@ -106,8 +98,8 @@ export async function readEditedSpell(
     const { revision, title, intent, jarDescription, sealWaxColor, moonPhase, dayOfWeek, note } =
       spell;
     const { visibility, status } = spell;
-    // The categories its author assigned it, so the builder opens with them picked and a
-    // save sends the set as edited, not as if it had none (M10.14).
+    // The categories its author assigned it, so the builder opens with them picked and a save sends
+    // the set as edited, not as if it had none.
     const [assigned] = await assignedCategoriesOf(session, [{ id, workspaceId }]);
     if (assigned instanceof Error) throw assigned;
     return {
@@ -132,10 +124,8 @@ export async function readEditedSpell(
 }
 
 /**
- * How many spells of one status each category holds under the filter, as a map from the
- * category's id to its count: the Categories filter's counts (M10.11), one grouped read, a
- * private spell counted for its author alone (the service's rule). A category absent from
- * the map holds no spell here.
+ * How many spells of one status each category holds under the filter, by category id: one grouped
+ * read, a private spell counted for its author alone. An absent category holds none here.
  */
 export const readGrimoireCategoryCounts = cache(
   async (workspaceId: string, variables: string, status: SpellStatus) => {
@@ -147,11 +137,9 @@ export const readGrimoireCategoryCounts = cache(
 );
 
 /**
- * How many spells of one status each Moon Phase, Day of Week, Visibility and Coven Member
- * holds under the filter (M13.22): the four facets' counts, one grouped read each, each
- * dropping its own picks so a second pick can still be added. A private spell is counted for
- * its author alone (the service's rule), and nothing is data-cached. The makers are named in
- * one `displayNamesOf` batch; one the viewer cannot name is left out of the offer.
+ * How many spells each Moon Phase, Day of Week, Visibility and Coven Member holds under the
+ * filter: one grouped read each, dropping its own picks so another can be added. Makers are named
+ * in one `displayNamesOf` batch; one the viewer cannot name is left out.
  */
 export const readGrimoireFacetCounts = cache(
   async (workspaceId: string, variables: string, status: SpellStatus) => {
@@ -181,11 +169,8 @@ export const readGrimoireFacetCounts = cache(
 );
 
 /**
- * The spell `?spell=<id>` opens Quick Look on (M13.21), read as the signed-in member through
- * `readSpell`, with what the recipe body shows. `undefined` for a spell the service will not
- * give this member (another member's private spell, another coven's, one that is gone), so the
- * tab opens nothing and tells a stranger nothing. Any other failure is `failed`, which the
- * modal says in a Notice rather than drawing an empty spell.
+ * The spell `?spell=<id>` opens Quick Look on, read as the signed-in member. `undefined` for a
+ * spell the service withholds; any other failure is `failed`, which the modal says in a Notice.
  */
 /** The spell `?spell=<id>` opens at `lookHref`, the tab's address with it, and its recipe drawn there. */
 export async function readLookedSpell(workspaceId: string, lookHref: Route, id: string) {

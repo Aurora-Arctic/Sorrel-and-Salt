@@ -5,11 +5,9 @@ import { Suspense, useEffect } from 'react';
 import { usePendingNavigation } from '../../lib/navigation';
 import { NEW, newSpellElsewhere } from './add-href';
 
-// `?new=spell-<slug>` on a page that is not that coven's grimoire (M10.12, the owner's call,
-// 2026-10-28). New Spell is a dialog over the grimoire, so the address moves there with the
-// same value, replaced so Back does not return to a page that only sent the viewer on. Drawn
-// once in the shell, beside Add Ingredient, which reads the same parameter. A grimoire
-// page's own `?new=spell-<slug>` is read there (grimoire-tab.tsx, SpellDialog).
+// `?new=spell-<slug>` on a page that is not that coven's grimoire: the address moves to the grimoire
+// with the same value, replaced so Back does not return to the page that only sent the viewer on.
+// Drawn once in the shell; the grimoire page reads its own value (grimoire-tab.tsx, SpellDialog).
 
 function Redirect(): null {
   const pathname = usePathname();

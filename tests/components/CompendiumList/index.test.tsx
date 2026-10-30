@@ -28,10 +28,8 @@ import { DETAILS_PLACE } from '@/components/IngredientEntry/details';
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// `/admin/compendium`'s filter, table and pager (M5.5): each entry with its
-// formal name and live forms, an Edit link opening it in the page's modal, the
-// filter that narrows them to the admin's to-do lists, and the pager
-// (claude-docs/components/compendium-list.md).
+// `/admin/compendium`'s filter, table and pager: each entry with its formal name and live forms, an Edit link opening it in the page's modal,
+// the filter that narrows them to the admin's to-do lists, and the pager (claude-docs/components/compendium-list.md).
 
 // The fixtures and the filter row's controls are shared with filter.test.tsx, which renders the
 // row and its search sentence without the table.
@@ -80,7 +78,7 @@ describe('CompendiumList', () => {
     expect(cells[heads.indexOf('Categories')]).toHaveTextContent('—');
   });
 
-  // M12.7: each form wears its group's icon; a form with none wears the spoon.
+  // Each form wears its group's icon; a form with none wears the spoon.
   it('draws each form with its group icon in the Form column', () => {
     const { container: botanical } = render(<FormIcon name="botanical" />);
     const { container: spoon } = render(<FormIcon name={null} />);
@@ -95,7 +93,7 @@ describe('CompendiumList', () => {
     ]);
   });
 
-  // MB.260: who last edited each row, and when, as the coven's member list has it.
+  // Who last edited each row, and when, as the coven's member list has it.
   it('shows who last edited each row and when in an Updated column', () => {
     render(<CompendiumList {...props()} />);
 

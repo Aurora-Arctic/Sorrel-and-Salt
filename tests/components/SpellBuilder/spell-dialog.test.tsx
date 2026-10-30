@@ -27,12 +27,8 @@ vi.mock('next/navigation', () => ({
 
 const { default: SpellDialog } = await import('@/components/SpellBuilder/spell-dialog');
 
-// The spell builder as a modal over the grimoire (M10.12; the owner's call,
-// claude-docs/design-decisions/m10.12-spell-builder-modal.md): `?new=spell` opens it
-// empty, its first save swaps the address for `?edit=<id>` so a reload or Back
-// opens the saved draft, and Close saves what is unsaved before it closes,
-// with no question. A saved spell's steps are read once it opens, and nothing is
-// sent before they land. The reads and saves are answered by MSW in /api/graphql's shape.
+// The spell builder as a modal over the grimoire (claude-docs/design-decisions/m10.12-spell-builder-modal.md): `?new=spell` opens it empty, its first save swaps the address for `?edit=<id>`, and Close saves what is unsaved with no question.
+// A saved spell's steps are read once it opens and nothing is sent before they land. MSW answers the reads and saves in /api/graphql's shape.
 
 const CLOSE = '/coven/fixture-coven/grimoire' as Route;
 const editHref = (id: string) => `/coven/fixture-coven/grimoire?edit=${id}` as Route;
@@ -184,7 +180,7 @@ describe('SpellDialog', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  // Headed as Add Ingredient is (M8.16): the coven it lands in over the title, the dialog named
+  // Headed as Add Ingredient is: the coven it lands in over the title, the dialog named
   // by the phrase.
   it('opens New Spell to its coven, with the builder empty', () => {
     renderDialog({});

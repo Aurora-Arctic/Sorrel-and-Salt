@@ -2,15 +2,9 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The compact look of the card, as a mixin so a page can switch to it from its own
-// selector. The card takes no density prop: the look must be switchable before React
-// runs (M9.6 stores the choice and a pre-paint script sets `data-card-density="regular"` on <html>, which the `:not()` on the selectors honours), and a prop
-// would fix it at render and mismatch on hydration. index.scss applies it under
-// `[data-density='compact']`, which `IngredientCardList` sets; every rule is one class
-// deeper than the one it overrides, so it wins wherever it is included.
-// What stays: the content, the body order, the hover lift, and every target at 24px or
-// more (the tip badges keep their height; only their sides tighten). Text goes one step
-// down the type scale, to overline at the smallest. claude-docs/components/ingredient-card.md.
+// The compact look of the card, a mixin so a page can switch to it from its own selector. No density
+// prop: it must switch before React runs (a pre-paint script sets `data-card-density="regular"` on
+// <html>), and a prop would mismatch on hydration. Every rule is one class deeper than what it overrides.
 @mixin ingredient-card-compact {
   .ingredient-card {
     padding: space(3) space(4);

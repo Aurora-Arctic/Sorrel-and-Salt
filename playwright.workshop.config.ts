@@ -2,13 +2,8 @@ import { defineConfig, devices } from '@playwright/test';
 import { HTML_REPORT, baseConfig } from './tests/e2e/base-config';
 import { WORKSHOP_PORT, browserUrl, serverUrl } from './tests/e2e/slots';
 
-// The workshop specs, tests/e2e/workshop/: a component measured in its Storybook
-// story, for a layout fact no page shows yet because no page uses the
-// component (M12.31's click feedback, before its adoption). `npm run
-// e2e:workshop`. One server, Storybook's dev server, and no database, so none of
-// the e2e suite's slot servers, setup or teardown; the browser options are the
-// suite's, reduced motion included, which a spec turns off where it measures
-// a fade. Storybook binds 0.0.0.0, as `next start` does, for the remote browser.
+// The workshop specs, tests/e2e/workshop/ (`npm run e2e:workshop`): a component measured in its Storybook story. One server, Storybook's dev server, and no database,
+// slot servers, setup or teardown; it binds 0.0.0.0, as `next start` does, for the remote browser.
 export default defineConfig({
   outputDir: baseConfig.outputDir,
   testDir: './tests/e2e/workshop',

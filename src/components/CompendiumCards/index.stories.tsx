@@ -15,7 +15,6 @@ const meta = {
   title: 'Ingredients / Compendium Cards',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 const entry = (
@@ -34,7 +33,7 @@ const entry = (
   toxic: false,
   safetyNotes: null,
   recency: null,
-  // The Quick Look eye every card carries on the site (M12.5).
+  // The Quick Look eye every card carries on the site.
   details: {
     href: compendiumHref({ entry: slug }),
     heading: detailsHeading({
@@ -45,7 +44,7 @@ const entry = (
   },
 });
 
-// An entry as a curator sees it: Edit opens the compendium's edit dialog (M8.17).
+// An entry as a curator sees it: Edit opens the compendium's edit dialog.
 const withEdit = (entry: CompendiumCardEntry): CompendiumCardEntry => ({
   ...entry,
   editHref: `/compendium?edit=${entry.slug}` as Route,
@@ -77,7 +76,7 @@ const BASE: CompendiumCardsProps = {
 };
 
 // Someone who can add to one coven: the plus at each card's bottom right adds the entry to it
-// directly, until M9.12's dialog asks for a quantity. The workshop serves no /api/graphql,
+// directly, with no quantity asked. The workshop serves no /api/graphql,
 // so a press shows its refusal.
 const canAddNode = <CompendiumCards {...BASE} action="add" workspaceId={WORKSPACE_ID} />;
 
@@ -111,7 +110,7 @@ const inSeveralCovensNode = (
 
 // A curator who is also a member of a coven that holds the entries: the foot's three icons, the
 // plus (a check where every coven holds it), Edit in Compendium, and the three dots, which hold
-// Annotate, Make It Ours and Remove (the owner's call, 2026-10-20).
+// Annotate, Make It Ours and Remove.
 const canAddEditAndMoreNode = (
   <CompendiumCards
     {...BASE}
@@ -174,8 +173,6 @@ const lastPageNode = (
 
 const emptyNode = <CompendiumCards {...BASE} entries={[]} total={0} />;
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   'Can Add': canAddNode,

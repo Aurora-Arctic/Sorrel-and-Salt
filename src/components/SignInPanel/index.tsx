@@ -15,13 +15,9 @@ import './index.scss';
 // writes this one: there is nothing to subscribe to.
 const noSubscription = () => () => {};
 
-// The raw read is not passed to `useSyncExternalStore` as it is: it returns
-// `''` for a cookie that is present but empty (or mid-expiry) and `null` for
-// none, and React, which reads a snapshot twice per render and warns when the
-// two differ, would see two answers to one question. The snapshot is the roster
-// id the cookie names, or `null`: anything else is the same "none", and
-// strings compare by value, so a provider id is stable too
-// (claude-docs/components/sign-in-panel.md, "Last used").
+// The cookie read returns `''` for present-but-empty and `null` for none, and React warns when a
+// snapshot differs between its two reads. So the snapshot is the roster id the cookie names, or
+// `null` for anything else (claude-docs/components/sign-in-panel.md, "Last used").
 const getLastUsedProvider = (): ProviderId | null => {
   const value = getLastUsedLoginMethod();
   return SOCIAL_PROVIDERS.find((provider) => provider.id === value)?.id ?? null;
@@ -37,9 +33,9 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
   // (claude-docs/components/sign-in-panel.md, "Last used").
   const lastUsed = useSyncExternalStore(noSubscription, getLastUsedProvider, () => null);
 
-  // The provider whose hop is under way. The page is left for the provider's
-  // own, so on success it stays set until the browser goes; a return from the
-  // back-forward cache (the page restored as it was left) clears it.
+  // The provider whose hop is under way. The page is left for the provider's own, so on
+  // success it stays set until the browser goes; a return from the back-forward cache (the
+  // page restored as it was left) clears it.
   const [signingIn, setSigningIn] = useState<ProviderId | null>(null);
   useEffect(() => {
     const restored = (event: PageTransitionEvent) => {

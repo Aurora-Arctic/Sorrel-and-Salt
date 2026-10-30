@@ -23,11 +23,8 @@ export function readableCursor(value: string | undefined): string | undefined {
 }
 
 /**
- * `raw` when it is one of `values`, else none: the reading of a parameter that
- * takes a fixed set — a role, a privilege, a classification — narrowed to
- * that set. A hand-edited value is no filter rather than an error, as a
- * hand-edited cursor gets the first page. A guard rather than a cast, so a
- * value the set lost since a link was written is never passed on as if valid.
+ * `raw` when it is one of `values`, else none: a parameter taking a fixed set, narrowed to it. A hand-edited value is no filter, not an error. A guard, not
+ * a cast, so a value the set lost since a link was written is never passed on as valid.
  */
 export function oneOf<T extends string>(
   values: readonly T[],

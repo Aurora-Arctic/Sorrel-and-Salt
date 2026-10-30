@@ -2,10 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { renderShortCitation, shortCitationText } from '@/lib/short-citation';
 import type { CitationPart, ShortCitationFields } from '@/lib/types';
 
-// A source's Chicago short form (claude-docs/db/references.md, "The short
-// form"): the authors' surnames and a short title. Every name and title is
-// invented (M1.25). The parts are joined back with `_` around the italic
-// ones, as citation.test.ts joins the full form's.
+// A source's Chicago short form (claude-docs/db/references.md, "The short form"): the authors'
+// surnames and a short title. Every name and title is invented. The parts are joined back with
+// `_` around the italic ones, as citation.test.ts joins the full form's.
 
 const marked = (parts: CitationPart[]) =>
   parts.map(({ text, italic }) => (italic ? `_${text}_` : text)).join('');

@@ -15,11 +15,7 @@ import type { PageEntry, PageRequest } from '../../../lib/types';
 
 export type { Claimant, DeitySuggestion, FormSuggestion, VocabularySuggestion };
 
-/**
- * What a lookup asks of a named coven: only `ingredient: ['read']`, since the
- * curated rows are global, and every in-use value is one a reader of this
- * workspace could already list.
- */
+/** What a lookup asks of a named coven: only `ingredient: ['read']`, since the curated rows are global and every in-use value is one a reader could already list. */
 const READ = { ingredient: ['read'] } as const;
 
 async function suggest(

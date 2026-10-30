@@ -2,13 +2,8 @@ import type { ReactElement } from 'react';
 import type { ErrorPageProps } from './types';
 import './index.scss';
 
-// What the 404 and 500 screens share: a heading, a reason, and the way
-// onward. It never takes an `Error`, only a reason written for the reader, so
-// a message or stack trace cannot reach the page through it
-// (claude-docs/components/error-page.md). It also names the document: a 404
-// does not inherit the layout's title, and global-error has no layout, so
-// without its own `<title>` the page fails axe's document-title rule. React
-// hoists the element into the head.
+// The 404 and 500 screens' shared body: a heading, a reason and the way onward. It takes a reason, never an `Error`
+// (claude-docs/components/error-page.md), and sets its own `<title>` (React hoists it), which a 404 and global-error lack.
 
 const ErrorPage = ({ title, reason, reference, children }: ErrorPageProps): ReactElement => (
   <main className="page-frame">

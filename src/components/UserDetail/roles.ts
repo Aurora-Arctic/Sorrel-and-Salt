@@ -1,7 +1,6 @@
 import type { WorkspaceRole } from '@/modules/coven';
 
-// A coven role as an admin reads it, written like UserList/roles.ts. M6.13's
-// members page names the same three; it may move this somewhere shared.
+// A coven role as an admin reads it, written like UserList/roles.ts.
 
 /** Each role and its label, most to least powerful: the order a table lists them in. */
 export const WORKSPACE_ROLE_LABELS: readonly { value: WorkspaceRole; label: string }[] = [

@@ -16,10 +16,8 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// A coven card's More (M8.17): Delete on the coven's own entry, Make It Ours and
-// Remove on a compendium entry, a lone Delete or Remove its own bin and two choices a menu;
-// Delete, Make It Ours and Remove ask in place (option A), and a write that takes the card away leaves the focus on the page's
-// heading, a refusal on More (claude-docs/components/coven-cards.md).
+// A coven card's More: Delete on the coven's own entry, Make It Ours and Remove on a compendium entry, a lone Delete or Remove as its own bin and two choices as a menu.
+// Delete, Make It Ours and Remove ask in place (option A); a write that takes the card away leaves the focus on the page's heading, a refusal on More (claude-docs/components/coven-cards.md).
 
 const WORKSPACE_ID = '00000000-0000-4000-8000-000000000001';
 const ID = '00000000-0000-4000-8000-000000000002';
@@ -107,8 +105,7 @@ describe('CardMore', () => {
   it('offers Make It Ours and Remove on a compendium entry the cupboard holds', () => {
     renderOnPage(HELD);
     expect(choices('House Salt')).toEqual(['Make It Ours', 'Remove']);
-    // The dots draw their labelled section though every choice is the coven's (the owner's call,
-    // 2026-10-20).
+    // The dots draw their labelled section though every choice is the coven's.
     const menu = screen.getByRole('menu', { name: 'More for House Salt' });
     expect(within(menu).getByRole('group', { name: 'Coven' })).toContainElement(
       within(menu).getByRole('menuitem', { name: 'Remove' }),

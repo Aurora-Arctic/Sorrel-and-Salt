@@ -32,10 +32,8 @@ function position({ key, id }: Cursor): SQL {
 }
 
 /**
- * One page of `source`, a parenthesised, aliased statement whose rows carry
- * `tier`, `id`, `value`, `description`, `group_name`, `group_icon`, `matched_name`, `fold` and `tiebreak` — and
- * `claimants` when `claimed` — sorted by `(tier, fold, tiebreak)` and cut by
- * cursor as a whole.
+ * One page of `source`, a parenthesised aliased statement whose rows carry `tier`, `id`, `value`, `description`, `group_name`, `group_icon`,
+ * `matched_name`, `fold` and `tiebreak` (and `claimants` when `claimed`), sorted by `(tier, fold, tiebreak)` and cut by cursor as a whole.
  */
 export async function readSuggestionPage(
   source: SQL,

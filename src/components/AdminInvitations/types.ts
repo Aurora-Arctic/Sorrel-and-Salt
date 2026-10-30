@@ -4,18 +4,18 @@ import type { PagePosition, PagerHrefs } from '../../lib/types';
 /** A site role an invitation may grant: never `user`, which every account holds. */
 export type InvitableSiteRole = 'curator' | 'admin';
 
-/** One pending admin invitation, as `/admin/invitations` lists it (MB.70). */
+/** One pending admin invitation, as `/admin/invitations` lists it. */
 export interface AdminInvitationEntry {
   id: string;
   email: string;
-  /** The site role it grants once accepted (M11.20). */
+  /** The site role it grants once accepted. */
   siteRole: InvitableSiteRole;
   /** Why the person is invited, where the inviting admin gave a reason. */
   note: string | null;
   expiresAt: Date;
 }
 
-/** What the tab is narrowed by, as its address carries it (MB.115). */
+/** What the tab is narrowed by, as its address carries it. */
 export interface AdminInvitationsFilter {
   /** A fragment of the invited address, trimmed; blank is no filter. */
   email: string;
@@ -40,8 +40,8 @@ export interface AdminInvitationsProps extends Partial<PagerHrefs<Route>> {
   /** Where this page stands, the pager's "Page X of Y". */
   position?: PagePosition;
   /**
-   * Why this admin may neither invite nor withdraw, while admin changes are
-   * paused and they are not the primary admin (MB.63); absent when they may.
+   * Why this admin may neither invite nor withdraw, while admin changes are paused
+   * and they are not the primary admin; absent when they may.
    */
   locked?: string;
   /** Whether the address opens the invite form, `?invite`; never while locked. */
@@ -63,7 +63,7 @@ export interface AdminInvitationsFilterProps {
 }
 
 export interface InviteFormProps {
-  /** `?invite` is open and invitations are not locked: the form shows (M9.18). */
+  /** `?invite` is open and invitations are not locked: the form shows. */
   open: boolean;
   /** The tab under the filter it shows, which the form closes back to. */
   closeHref: Route;

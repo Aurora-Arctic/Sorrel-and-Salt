@@ -1,13 +1,8 @@
 import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-// The `/admin` layout and its index page each run the guard themselves: a
-// layout does not re-run on client-side navigation, so a page that trusted it
-// would render for whoever reached it that way (claude-docs/auth/admin-guard.md, "The
-// admin guard"). What the guard decides is tests/lib/request-session.test.ts's;
-// here it is mocked, to prove each route awaits it before rendering anything.
-// It is the curation guard, which a curator passes too (M11.20); the people
-// pages beneath call the admin one.
+// The `/admin` layout and its index page each run the guard themselves: a layout does not re-run on client-side navigation, so a page that trusted it would render for whoever reached it that way (claude-docs/auth/admin-guard.md, "The admin guard").
+// The guard is mocked (tests/lib/request-session.test.ts's), to prove each route awaits it before rendering. It is the curation guard, which a curator passes too; the people pages beneath call the admin one.
 
 const requireCuratorSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireCuratorSession }));
@@ -73,7 +68,7 @@ describe('the /admin page', () => {
     expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
   });
 
-  // MB.115: the index is a table of contents read from the nav's own list,
+  // The index is a table of contents read from the nav's own list,
   // so the two name the same pages in the same order.
   it('links every page the admin nav does, in its order', async () => {
     requireCuratorSession.mockResolvedValue(ADMIN);

@@ -93,3 +93,11 @@ row is `ContextRow`'s Coven cell and the workshop's shell frame.
 `tests/components/CovenNav/index.test.tsx`: the nav, named "Coven", links the
 index at the slug's address, marks it current there and not on a page beneath
 it, and links the ingredients page for every caller, and the members page only for one who may read members.
+
+## The sections list
+
+`sections.ts` is the one list the nav reads, in order. Three rules shape it.
+
+- A row is added together with the page it links to, because `typedRoutes` refuses a link to a route the build does not contain.
+- Grimoire counts as current on its Drafts tab too, which lies beneath it.
+- Members is shown by what the caller's role may do (`member: read`), never by a rank, so a viewer is not offered a page that answers 404. The layout passes that in as a boolean because the file loads in the workshop's browser build, where the server-only access-control module cannot.

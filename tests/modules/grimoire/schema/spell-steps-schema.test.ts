@@ -7,7 +7,7 @@ import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 import type { StepRow } from './types';
 
 // §5's columns; `name` and `form` are a custom one-off layer's, in place of an
-// `ingredient_id` (MB.40), and `body` is a step's instruction (M13.1).
+// `ingredient_id`, and `body` is a step's instruction.
 const OWN_COLUMNS = [
   'id',
   'spell_id',
@@ -40,7 +40,7 @@ const CHECK_BODY_NOT_BLANK = 'spell_steps_body_not_blank';
 describe('spell_steps schema', () => {
   const { byName } = tableFacts(spellSteps);
 
-  // The full six (MB.110): a spell is a record of a working, so a step
+  // The full six: a spell is a record of a working, so a step
   // pulled out of it is a tombstone rather than gone.
   it('has DESIGN.md §5 columns and nothing else', () => {
     expect(Object.keys(byName).sort()).toEqual([...OWN_COLUMNS, ...AUDIT_COLUMNS].sort());
@@ -171,7 +171,7 @@ describe('spell_steps table', () => {
     expect(error.code).toBe('23502');
   });
 
-  // Story 80: a step is an instruction, an ingredient, or both.
+  // A step is an instruction, an ingredient, or both.
   describe('a step is an instruction, an ingredient, or both', () => {
     it('stores an instruction alone, an ingredient alone, and both in one step', async () => {
       await instruction('Sweep the threshold.', { position: 1 });
@@ -240,7 +240,7 @@ describe('spell_steps table', () => {
     expect(row.unit).toBeNull();
   });
 
-  // Story 57: a layer is an ingredient or a custom name, never both — §14's
+  // A layer is an ingredient or a custom name, never both — §14's
   // "nullable FKs plus num_nonnulls" idiom. Neither is an instruction alone.
   describe('a layer names an ingredient or a custom name, never both', () => {
     it('stores a custom ingredient by name and form, with no ingredient row', async () => {
@@ -328,10 +328,8 @@ describe('spell_steps table', () => {
       expect(await positions(otherSpell)).toEqual([1]);
     });
 
-    // A unique index is checked per row, not at end of statement, so a reorder
-    // cannot be one `position + 1` sweep even though the final state is
-    // conflict-free. Nor can it remove and re-add the recipe, which would leave
-    // a tombstone per step: it moves the live rows through a scratch offset.
+    // A unique index is checked per row, not at end of statement, so a reorder cannot be one `position + 1` sweep even though the final state has no conflict.
+    // Removing and re-adding the recipe would leave a tombstone per step, so it moves the live rows through a scratch offset.
     it('refuses a shift that collides mid-statement, so a reorder moves rows in place', async () => {
       await layer({ position: 1 });
       await layer({ ingredientId: ROSEMARY, position: 2 });
@@ -360,7 +358,7 @@ describe('spell_steps table', () => {
     });
   });
 
-  // MB.217: a linked layer names the form it lays, a custom layer none.
+  // A linked layer names the form it lays, a custom layer none.
   describe('a linked layer names a variant of its ingredient', () => {
     it('refuses a linked layer without a variant, and a custom one with a variant', async () => {
       const [mugwortHerb] = await liveVariantOf(MUGWORT);
@@ -390,7 +388,7 @@ describe('spell_steps table', () => {
   });
 
   // A custom row is matched against nothing, so inside one jar its name is its
-  // identity; a linked form is not (the owner, 2026-10-28).
+  // identity; a linked form is not.
   describe('one custom name per jar, any form any number of times', () => {
     it('admits the same variant twice in one spell, as well as another form of it', async () => {
       const [oil] = await sql`
@@ -425,7 +423,7 @@ describe('spell_steps table', () => {
     });
   });
 
-  describe('the unit vocabulary is M9.2’s', () => {
+  describe('the unit vocabulary', () => {
     it('stores the column as the inventory_unit type, not a second enum', async () => {
       const [row] = await sql`
         select udt_name from information_schema.columns
@@ -452,7 +450,7 @@ describe('spell_steps table', () => {
     });
   });
 
-  // MB.110: pulled out is a tombstone; that it frees the depth, the
+  // Pulled out is a tombstone; that it frees the depth, the
   // ingredient and the custom name is the partial-unique sweep's.
   describe('removal is a soft delete', () => {
     it('keeps the removed step, stamped by whoever removed it', async () => {

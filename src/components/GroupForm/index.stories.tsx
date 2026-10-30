@@ -5,17 +5,13 @@ import { InModal } from '../../../.storybook/in-modal';
 import { submitForm, usePressOnMount, useSteps } from '../../../.storybook/press';
 import GroupForm from '.';
 
-// Render-only; behaviour is asserted in tests/components/GroupForm. The
-// workshop has no API, so a save answers with the form's generic error. Shown
-// in the modal the admin pages open it in, each story in its own iframe, so
-// the modal's top layer covers the story's frame rather than Storybook's sidebar.
-// One Adding and one Editing per kind the form draws differently: a category
-// group has colours, a form group an icon, a tradition neither.
+// Render-only; behaviour is asserted in tests/components/GroupForm. The workshop
+// has no API, so a save answers with the generic error. Shown in the admin modal.
+// One Adding and one Editing per kind: colours, an icon, or neither.
 const meta = {
   title: 'Admin / Group Form',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // Two of the shared groups, and the one edited here. The first two carry an
@@ -87,8 +83,7 @@ const editingATraditionNode = (
 );
 
 // Delete Group pressed once drawn, as a person would: the first step, where
-// its categories go, asked over the form, which is dimmed and held beneath it
-// (MB.115).
+// its categories go, asked over the form, which is dimmed and held beneath it.
 export const AskingWhereToMove: Story = {
   render: () => {
     usePressOnMount('Delete Group');
@@ -110,8 +105,6 @@ const SavingEmptyFormView = () => {
 };
 const savingEmptyFormGroupNode = <SavingEmptyFormView />;
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES: Record<string, ReactNode> = {
   'Adding A Category Group': addingACategoryGroupNode,
   'Editing A Category Group': editingACategoryGroupNode,

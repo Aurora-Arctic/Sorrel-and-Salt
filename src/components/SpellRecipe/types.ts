@@ -19,7 +19,7 @@ export interface InstructionRecipeStep {
 
 /**
  * A step that lays an ingredient: a coven or compendium ingredient the cupboard names, or a
- * one-off the author typed (MB.40). Worked out by the page from the service's step views.
+ * one-off the author typed. Worked out by the page from the service's step views.
  */
 export interface IngredientRecipeStep {
   kind: 'ingredient';
@@ -38,15 +38,15 @@ export interface IngredientRecipeStep {
   unit: string | null;
   /**
    * What the step's Quick Look eye opens: the ingredient's details modal over the coven's
-   * ingredients (M8.19), with what the modal's head needs. The name itself is no link (the owner,
-   * 2026-10-28). Null for a one-off, or an ingredient since deleted.
+   * ingredients, with what the modal's head needs. The name itself is no link. Null for a one-off,
+   * or an ingredient since deleted.
    */
   look: IngredientLook | null;
   /** The ingredient's and the laid form's safety, for the Toxic and Caution marks; null for a one-off. */
   safety: Pick<SafetyMarkProps, 'toxic' | 'safetyNotes' | 'variants'> | null;
   /**
    * The coven’s stock verdict on the step, as In Coven Inventory gives it: drawn in the row only
-   * where the recipe has no side column (the Quick Look modal, M13.21). Left out on the page.
+   * where the recipe has no side column (the Quick Look modal). Left out on the page.
    */
   supply?: VerdictKind | null;
   oneOff: boolean;
@@ -83,14 +83,14 @@ export interface SpellRecipeProps {
   dayOfWeek?: string | null;
   /** The way back to the grimoire. */
   back: { href: Route; label: string };
-  /** The Edit control, for a role that may update the spell (M13.10). */
+  /** The Edit control, for a role that may update the spell. */
   action?: ReactNode;
   /** The page's side column (`SpellRecipeAside`), beside the body; the Quick Look modal gives none. */
   aside?: ReactNode;
 }
 
 /**
- * An In Coven Inventory line's doors on the recipe page (M13.21; the owner, 2026-10-29): the
+ * An In Coven Inventory line's doors on the recipe page: the
  * Quick Look eye beside the name, and Edit Stock behind the jar and the name, each null where
  * there is nothing to open (the ingredient deleted since; a role that may not update stock).
  */
@@ -101,7 +101,7 @@ export interface InventoryDoor {
 }
 
 /**
- * What the recipe page's side column draws (M13.21): the spell's steps as the builder's Jar
+ * What the recipe page's side column draws: the spell's steps as the builder's Jar
  * aside holds them, the categories the spell is assigned, and each category's group colours
  * as entries, since a Map cannot cross from the server page to the client component.
  */
@@ -127,15 +127,17 @@ export type SpellRecipeBodyProps = Pick<
   | 'dayOfWeek'
 >;
 
-/** The spell a Quick Look modal is open on (M13.21); the body arrives as the page's rendered children. */
+/** The spell a Quick Look modal is open on; the body arrives as the page's rendered children. */
 export interface SpellLookOpened {
   /** The spell's title; a draft may have none. */
   title: string | null;
   lastEdit: LastEditProps | null;
-  /** The spell's recipe page (MB.6), which the foot links to. */
+  /** The spell's recipe page, which the foot links to. */
   recipeHref: Route;
   /** Where Edit Spell opens the spell in the builder, for a role that may update it; none draws no Edit Spell. */
   editHref?: Route;
+  /** What Delete Spell needs, for a role that may delete the spell; none draws no bin. */
+  deleteSpell?: Omit<DeleteSpellActionProps, 'name'>;
   children: ReactNode;
 }
 
@@ -146,4 +148,14 @@ export interface SpellLookDialogProps {
   opened?: SpellLookOpened;
   /** The read failed for a reason other than the spell being unavailable: a Notice says so. */
   failed?: boolean;
+}
+
+/** Delete Spell's bin and dialog on the recipe page. */
+export interface DeleteSpellActionProps {
+  workspaceId: string;
+  spellId: string;
+  /** The spell's name as the page shows it, Untitled Spell for a draft with none. */
+  name: string;
+  /** The grimoire tab the page leaves for, with what was deleted in its address. */
+  deletedHref: Route;
 }

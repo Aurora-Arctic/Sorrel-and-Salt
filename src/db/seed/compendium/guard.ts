@@ -21,20 +21,14 @@ import type {
   SeedSubstitute,
 } from '../types';
 
-// The compendium seed's guard (MB.242): every rule the entry files under
-// `compendium/` are written to that a function can check, run by a
-// database-free test and again by `seedCompendium` before its transaction
-// opens, so a file that breaks one never reaches staging or production. The
-// entries' own rules (`checkCompendium`) take a list of shards, a name and
-// its entries, because they were first written for the TypeScript lists M14.10
-// replaced; the loader hands them the files as one shard. It returns every issue rather than
-// throwing at the first, so a lane sees its whole list at once. The rules are
-// claude-docs/db/compendium-seed/README.md's.
+// The compendium seed's guard: every rule the entry files are written to that a function can check, run by a database-free
+// test and by `seedCompendium` before its transaction opens. `checkCompendium` takes a list of shards (the loader hands it
+// the files as one) and returns every issue, not the first (claude-docs/db/compendium-seed/README.md).
 
 /**
  * The curated vocabularies an entry may name, each by the slug of a name its
- * seed literal holds. A deity may be named by one of its other names too
- * (M14.23), so `deities` answers the curated deities a name can mean.
+ * seed literal holds. A deity may be named by one of its other names too,
+ * so `deities` answers the curated deities a name can mean.
  */
 export interface CuratedNames {
   forms: ReadonlySet<string>;
@@ -56,15 +50,12 @@ export const CURATED: CuratedNames = {
   zodiacSigns: slugsOf(ZODIAC_SIGNS),
 };
 
-/** An entry's word count bounds, and a form's ceiling: the owner's defaults (README, rule 5). */
+/** An entry's word count bounds, and a form's ceiling: the curator's defaults (README, rule 5). */
 export const ENTRY_WORDS = { min: 100, max: 250 } as const;
 export const VARIANT_WORDS_MAX = 120;
 
-// A binomial (`Genus species`), a trinomial with or without its rank
-// (`subsp.`, `var.`, `f.`), a hybrid's `×`, a quoted cultivar, or the genus
-// or higher taxon alone where practice does not split it (`Usnea`), or a
-// group within a genus the candidate list names by its rank (`Rubus subg.
-// Rubus`, `Vaccinium sect. Cyanococcus`; MB.243).
+// A binomial, a trinomial with or without its rank (`subsp.`, `var.`, `f.`), a hybrid's `×`, a quoted cultivar, a genus or
+// higher taxon alone (`Usnea`), or a group within a genus named by rank (`Rubus subg. Rubus`).
 const EPITHET = String.raw`(?:× )?[a-z][a-z-]*`;
 const TAXON = new RegExp(
   String.raw`^[A-Z][a-z]+(?: (?:subg\.|sect\.) [A-Z][a-z]+|(?: ${EPITHET}(?: (?:(?:subsp\.|var\.|f\.) )?[a-z][a-z-]*)?)?(?: '[^']+')?)$`,
@@ -77,7 +68,7 @@ function populatedEntryFields(entry: SeedCompendiumEntry): CompendiumEntryField[
   if (entry.canonicalName) fields.push('canonicalName');
   if (entry.description) fields.push('description');
   if (entry.safetyNotes) fields.push('safetyNotes');
-  // A flag on is a claim the plant is poisonous, so a citation must back it (M14.1).
+  // A flag on is a claim the plant is poisonous, so a citation must back it.
   if (entry.toxic) fields.push('toxic');
   for (const field of [
     'elements',
@@ -140,10 +131,8 @@ export interface GuardOptions {
    */
   whereOf?: (shard: SeedCompendiumShard, entry: SeedCompendiumEntry) => string;
   /**
-   * Which entries the content rules are reported for: every one by default.
-   * The files' guard passes the `approved` ones (M14.6): a `needs-review`
-   * file is the owner's queue and may be unfinished, while its identity, slug
-   * and path still have to be sound, so those rules run on every entry.
+   * Which entries the content rules are reported for: every one by default; the files' guard passes the `approved` ones, as a
+   * `needs-review` file may be unfinished but its identity, slug and path rules still run on every entry.
    */
   reportContent?: (entry: SeedCompendiumEntry) => boolean;
 }
@@ -199,8 +188,8 @@ export function checkCompendium(
   }
 
   // A substitute links an identity some entry carries, whatever the order:
-  // the seed inserts every entry before it resolves a link (M14.6 dropped the
-  // earlier-shard rule MB.242 had, which a folder of files has no use for).
+  // the seed inserts every entry before it resolves a link (a folder of files has no
+  // earlier-shard rule to lean on).
   const seeded = new Set(identities.keys());
   for (const shard of shards) {
     const sources = { ...works, ...shard.sources };
@@ -347,7 +336,7 @@ function checkSubstitutes(
     if (!('identity' in substitute)) {
       if (substitute.name.trim() === '') issues.push(`${where} names a blank substitute.`);
       // A typed name stands in only for what the seed does not write: an
-      // entry's identity is linked, so a reader reaches it (M14.6).
+      // entry's identity is linked, so a reader reaches it.
       else if (seeded.has(substitute.name.toLowerCase())) {
         issues.push(
           `${where}: substitute "${substitute.name}" is typed as a name, but an entry has that identity: link it.`,
@@ -356,8 +345,8 @@ function checkSubstitutes(
       continue;
     }
     const form = substitute.form === undefined ? null : slugify(substitute.form);
-    // A form's linked substitute names a form, as the service holds it
-    // (MB.115); the ingredient's own list may link an ingredient whole.
+    // A form's linked substitute names a form, as the service holds it;
+    // the ingredient's own list may link an ingredient whole.
     if (ownForm !== null && form === null) {
       issues.push(
         `${where}: substitute "${substitute.identity}" links no form; a form's link names one.`,
@@ -415,19 +404,17 @@ function checkCitations<Field extends string>(
   }
 }
 
-// The files' rules (M14.6): what a folder of entry files must satisfy over and
+// The files' rules: what a folder of entry files must satisfy over and
 // above what the entries themselves must, which `checkCompendium` keeps
-// checking (claude-docs/db/compendium-seed/README.md, "The file format" and
-// "The status gate"). Each is a rule a shard literal had no room to break.
+// checking (claude-docs/db/compendium-seed/README.md, "An entry, field by field" and
+// "Write-once, and how a correction lands"). Each is a rule a shard literal had no room to break.
 
 /** The branches the seed deploys from (DESIGN.md §12): a `draft` file is refused on each. */
 export const RELEASE_BRANCHES: readonly string[] = ['staging', 'main'];
 
 /**
- * The branch a CI run is for: on a pull request, the branch it merges into
- * (`GITHUB_BASE_REF`); on a push, the branch pushed (`GITHUB_REF`,
- * `refs/heads/<name>`). Nothing outside Actions, so a local run is on no
- * release branch and a `draft` passes.
+ * The branch a CI run is for: a pull request's base (`GITHUB_BASE_REF`) or a push's ref (`GITHUB_REF`). Nothing outside
+ * Actions, so a local run is on no release branch and a `draft` passes.
  */
 export function releaseBranch(
   env: Record<string, string | undefined> = process.env,
@@ -445,10 +432,8 @@ export interface FilesGuardOptions extends Pick<GuardOptions, 'works' | 'curated
 }
 
 /**
- * Every issue the files raise: the loader's, then each file's own rules —
- * path, sections, `seedUpdate`, `nameBasis`, the legacy list, the status gate
- * — then `checkCompendium` over the one shard, its content rules reported
- * for `approved` files only. Empty means the folder is sound on `branch`.
+ * Every issue the files raise: the loader's, then each file's own rules (path, sections, `seedUpdate`, `nameBasis`, legacy
+ * list, status gate), then `checkCompendium` over the one shard for `approved` files only. Empty means sound on `branch`.
  */
 export function checkCompendiumFiles(
   loaded: LoadedCompendium,
@@ -525,11 +510,9 @@ function citationsOf(file: SeedCompendiumFile): SeedCitation<string>[] {
 }
 
 /**
- * The formal-name rule, per citation (CLAUDE.md, "What the compendium says,
- * it sources"): on an entry with a formal name every citation says how the
- * source's name was matched to it, `resolved` names its heading and an
- * authority other than itself, doubt keeps the file out of `approved`, and
- * `unaudited` is accepted only on the files the legacy list names.
+ * The formal-name rule, per citation (CLAUDE.md, "What the compendium says, it sources"): each says how the source's name was
+ * matched; `resolved` names its heading and an authority other than itself, doubt keeps the file out of `approved`, and
+ * `unaudited` is accepted only on the legacy list.
  */
 function checkNameBases(
   file: SeedCompendiumFile,
@@ -586,12 +569,8 @@ function checkNameBases(
 }
 
 /**
- * The ratchet on the legacy list (M14.11): `unaudited.txt` may only shrink.
- * `baseline` is the list as last committed beside the test that holds it, so
- * a path the list gains is refused, and a path it has dropped asks for the
- * baseline to drop it too, or the path could come back unnoticed. The guard
- * already keeps the list equal to the files carrying the flag, so this is
- * what stops a new file joining both.
+ * The ratchet on the legacy list: `unaudited.txt` may only shrink. `baseline` is the list as last committed, so a path the
+ * list gains is refused, and a dropped path asks for the baseline to drop it, or it could come back unnoticed.
  */
 export function unauditedGrowth(listed: readonly string[], baseline: readonly string[]): string[] {
   const was = new Set(baseline);

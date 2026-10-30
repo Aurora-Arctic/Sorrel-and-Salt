@@ -6,12 +6,9 @@ import type { ADMIN_PAGES } from '../src/components/AdminNav/sections';
 export interface AdminFrameProps {
   /** The address the workshop pretends to be on, which decides the nav's current page. */
   open?: string;
-  /** False for a curator's nav, without People (M11.20); true by default. */
+  /** False for a curator's nav, without People; true by default. */
   managesPeople?: boolean;
-  /**
-   * Draw the app shell's bar above the admin row, as the site does, with the phone's bottom
-   * bar pinned (the frame goes bare by itself while the shell is on the page, story-frame.scss).
-   */
+  /** Draw the app shell's bar above the admin row, with the phone's bottom bar pinned (the frame goes bare itself, story-frame.scss). */
   shell?: boolean;
   children?: ReactNode;
 }
@@ -31,7 +28,7 @@ export interface AdminTabbedFrameProps {
 
 /** What `ShellFrame` draws a story inside (./shell-frame.tsx). */
 export interface ShellFrameProps {
-  /** Which area's context row to draw: a coven's (switcher and nav), the admin area's, the create page's (the switcher alone), or none (the account pages). */
+  /** Which area's context row to draw: a coven's, the admin area's, the create page's, or none. */
   area?: 'coven' | 'admin' | 'new' | 'none';
   /** In the admin area: an `admin` sees People in the nav, a `curator` does not. Default `admin`. */
   role?: 'curator' | 'admin';
@@ -41,7 +38,7 @@ export interface ShellFrameProps {
   workspaces?: readonly ShellWorkspace[];
   /** The address the workshop pretends to be on. */
   open?: string;
-  /** Draw the header a visitor with no session gets (`PublicFrame`) in place of the shell; `area`, `viewer` and `workspaces` are then unused. */
+  /** Draw the signed-out header (`PublicFrame`) in place of the shell; `area`, `viewer` and `workspaces` are then unused. */
   signedOut?: boolean;
   children?: ReactNode;
 }

@@ -2,12 +2,9 @@ import { z } from 'zod';
 import { optionalText } from '../../../lib/validation';
 import { INGREDIENT_ELEMENTS } from '../schema/ingredient-enums';
 
-// What a member says over a compendium entry in their cupboard (M12.15): the
-// seven overrides of `workspace_compendium_entries`, each optional. The same
-// shape serves the add (a missing key is no override) and the annotate (a
-// missing key leaves the column, `null` hands it back to the compendium).
-// Unlike the ingredient form's lists, an empty list stays an empty list: it
-// is an answer, the coven clearing what the compendium says on purpose.
+// What a member says over a compendium entry in their cupboard: the seven overrides of `workspace_compendium_entries`, each optional.
+// The same shape serves the add (a missing key is no override) and the annotate (a missing key leaves the column, `null` hands it back).
+// An empty list stays an empty list: it is an answer, the coven clearing what the compendium says on purpose.
 
 /** Free text entries, trimmed, blank ones dropped; `[]` survives. */
 const textList = z

@@ -5,10 +5,9 @@ import { warmImport } from '../support/warm-import';
 
 warmImport(() => import('@/lib/auth'));
 
-// MB.53: Better Auth's `admin` plugin is registered for impersonation alone,
-// and only where both conditions hold — the flag set, and a deploy target that
-// is not production. Elsewhere it is never constructed, so its endpoints are
-// absent rather than refusing (claude-docs/auth/impersonation.md).
+// Better Auth's `admin` plugin is registered for impersonation alone, and only where both hold:
+// the flag is set and the deploy target is not production. Elsewhere it is never constructed, so
+// its endpoints are absent rather than refusing (claude-docs/auth/impersonation.md).
 
 const ORIGIN = 'http://localhost:8000';
 
@@ -82,7 +81,7 @@ describe('registration', () => {
   it('leaves set-role, remove-user and the ban endpoints unmounted where impersonation is on', async () => {
     const auth = await authUnder('true', 'preview');
 
-    // set-role would grant admin outside withAudit and M2.9's ledger.
+    // set-role would grant admin outside withAudit and the privilege ledger.
     for (const path of [
       '/admin/set-role',
       '/admin/remove-user',

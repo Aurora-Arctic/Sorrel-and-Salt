@@ -4,10 +4,9 @@ import { warmImport } from '../support/warm-import';
 
 warmImport(() => import('@/lib/auth'));
 
-// MB.255: the audit's e2e servers name Better Auth's cookies without the `__Secure-`
-// prefix, so a WebKit page on the plain-http origin of a remote browser sends
-// the session cookie it was given. A deploy never does: the flag is ignored
-// wherever Vercel has set a deploy target.
+// The audit's e2e servers name Better Auth's cookies without the `__Secure-` prefix, so a WebKit
+// page on the plain-http origin of a remote browser sends the session cookie it was given. A
+// deploy never does: the flag is ignored wherever Vercel has set a deploy target.
 
 afterEach(() => {
   vi.unstubAllEnvs();

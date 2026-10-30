@@ -4,12 +4,9 @@ import { StockIcon } from '../StockBadge';
 import { UnitsDifferIcon, NotEnoughIcon } from './supply-icon';
 import type { StepSupply } from './steps/supply';
 
-// The cupboard's verdict on an ingredient, drawn as a symbol alone (the owner's call,
-// 2026-10-28): StockBadge's for Out and Low, supply-icon.tsx's for Not Enough and Units Differ,
-// in a button named by the verdict's words, whose IconTip says why. In Coven Inventory draws it
-// at a line's end, and the spell's Quick Look at an ingredient step's end (M13.21), so the two
-// say the same. The button only carries the tip to focus; it does nothing.
-// claude-docs/components/spell-recipe.md, "The side column".
+// The cupboard's verdict as a symbol alone in a button named by its words, whose IconTip says why;
+// it only carries the tip to focus. Used in In Coven Inventory and the Quick Look
+// (claude-docs/components/spell-recipe.md, "The side column").
 
 /** The kinds that draw a mark: One-Off and No Jar are told in words, and nothing has none. */
 export type VerdictKind = 'out' | 'short' | 'units-differ' | 'low';

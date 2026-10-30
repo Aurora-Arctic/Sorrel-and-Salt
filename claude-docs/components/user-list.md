@@ -478,3 +478,50 @@ modal; and, tagged `@story-19`, opens a user's modal from their name, finds
 their coven and role in it, no link to the coven and no Impersonate (the run
 registers none), axe over it, and Close back to the filtered list, then
 `?user=not-an-id` showing the notice and no dialog.
+
+## Actions that ask first
+
+The creation control, the role control, Impersonate, the pause switch and the invitations' Revoke share one kind of action: it asks in a modal first. The modal's confirm sends the write and stays busy until the page is read again, or left. A success says its `announcement` in the page's status region, for a screen reader, beside the result the page shows. The service is the guard. This only puts the question where an admin looks.
+
+A refusal closes the modal, gives the focus back to the button that opened it, and says why in a callout under that button (`useClickFeedback`). The callout floats rather than taking room in a row.
+
+### Inside a modal
+
+Drawn inside a modal already, the user's, an action asks over that modal's body through `ConfirmOverlay`, as the forms' questions do, rather than open a second modal on top. A refusal stays in that dialog, in one of two forms:
+
+- A plain notice, the default, which a button row lifts above its buttons.
+- The same callout as outside a modal, under the control. This is for a control that stands beside a fact rather than in a button row: the user modal's Change Role, and Approve or Revoke. `refusalInModal` chooses it.
+
+Outside a modal a refusal is always the callout.
+
+### The vouching warning
+
+Before vouching for an unverified address the action shows a warning. An admin's approval or grant vouches for whoever holds the address, and the ledger row it writes keeps the account from the sweep of lapsed unverified accounts. It is a warning rather than a refusal, since confirming who someone is is left to the admin. `verb` is the act's own, "Approving" or "Promoting".
+
+## Locked controls
+
+A control that cannot be used says why. This covers the primary admin's Change Role, every Change Role while admin changes are paused to an admin the pause binds, and the pause switch itself to any admin but the primary one.
+
+- It is `aria-disabled` rather than `disabled`, so it keeps its place in the tab order and a click still lands, which says why rather than doing nothing.
+- The reason is the button's description, in a tip that opens on hover, focus and a tap, stays open while the pointer is on it and closes on Escape (WCAG 1.4.13), through InfoTip's `useTip`. Each attempt also mounts the tip afresh as an alert, so a screen reader hears the reason again.
+- The tip is placed against the viewport rather than its cell. The table's frame scrolls, so it would clip whatever reaches past it, and the reason is taller than the heading row above the top row. `useTip` places it fixed, and it follows the button through a scroll.
+
+## Marks, logos and links with tips
+
+Three kinds of mark carry a tip that behaves as InfoTip's does, through the same `useTip`: opened by hover, focus or a tap, kept open while the pointer is on it, and closed on Escape (WCAG 1.4.13).
+
+- **The primary admin's mark** beside its role is a crown named "Primary Admin". It is a button, as InfoTip's ⓘ is, so the keyboard reaches the tip too. The tip says no more than the button's name, so it is hidden from assistive technology while closed.
+- **The history link** is a row's way into the privilege ledger narrowed to its user: the ledger's search opened with their address, lower-cased as every address is held. It is an icon before the name, named "Privilege changes for <name>", with a tip reading Privilege Changes, the ledger's one name. The tip says less than the link's name, so it describes nothing, and is hidden from assistive technology while closed.
+- **A hint** is a mark or a logo that says what it is in a tip bubble on hover: the provider logos, and the yes-or-no marks whose column heading does not say it. The bubble is the eye's copy, hidden from assistive technology, since the mark carries its word as hidden text. It opens on hover only, as before it was CSS's. `useTip` places it so it stays on the screen, centred over the mark where there is room. It takes no pointer, so it never blocks the row it overlaps.
+
+## The user link and the filter
+
+A row's name opens the user's modal over the list, at `?user=<id>`. A press opens it at once under `heading`, with the user's covens arriving with the navigation. It is still a link, so a new tab, or a press before the script loads, opens the address. It is a client file of its own so the list stays a server component.
+
+The filter sits in the shared `FilterForm`. Only the search text is held in the form, until the magnifier or Enter sends it. The Role dropdown, a select-only box once hydrated (`FilterSelectField`), and the Needs Approval switch start from the filter shown and apply the moment they change, softly and from the first page, carrying the search text along. There is no Filter button to press. Before hydration the form submits natively: the switch, a native checkbox, as `awaiting=`, which the page reads the same as the bare flag, and the server's native role select, whose "All Roles" is `role=`, which the page reads as no role.
+
+## The list's stylesheet
+
+The user list's own rules cover its cells' alignment, the marks and logos with their tips, the history link, the role and creation cells, the sticky Impersonate column and how it gives way when the table stacks into cards, and the pause beside the page's heading. The column, filter, table and pager are primitives (`.list-frame`, `.filter-row`, `.data-table` with `--stack`, `.pager`). Above the stacking width the seven columns keep their order, restyled: rows a step taller, the read-only facts muted at the caption size, every control at the end of its cell.
+
+No cell wraps, heading or body, since the table scrolls inside its frame. A row stays one line however narrow the screen, and its rows are a step taller (`.data-table--nowrap` and `--roomy`, through DataTable). Borders are separate, not the primitive's collapsed ones, so each rule belongs to its own cell. A collapsed rule belongs to the table's grid, and the headings' muted hairline was drawn across the sticky Impersonate heading's red one as the columns scrolled beneath it.

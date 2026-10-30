@@ -1,16 +1,6 @@
 /**
- * Open the connection ourselves, so a failure has a cause. `drizzle-kit
- * migrate` catches whatever postgres.js throws and exits 1 without printing
- * it, so an unreachable host, a wrong password, an `sslmode` mismatch and a
- * `channel_binding` parameter are byte-identical in its output. This runs
- * first, connects, runs `select 1`, and on failure prints the driver's own
- * error code and message (claude-docs/ci/deploy.md, "Deploy").
- *
- * Two disciplines shared with scripts/assert-pulled-env.ts: the URL arrives
- * as a FILE PATH, never on argv (visible to `ps`, echoed by `set -x`); and
- * nothing printed carries the credentials — the driver's message may quote
- * the connection string, so it is scrubbed rather than trusted. The hostname
- * is kept: `ENOTFOUND` without the name it failed to resolve says nothing.
+ * Opens the connection itself, so a failure has a cause: `drizzle-kit migrate` swallows what postgres.js throws and exits 1 (claude-docs/ci/deploy.md, "Deploy").
+ * The URL arrives as a FILE PATH, never on argv, and nothing printed carries the credentials, as with scripts/assert-pulled-env.ts; the hostname stays, since `ENOTFOUND` without it says nothing.
  */
 
 import { readFileSync } from 'node:fs';
@@ -58,10 +48,8 @@ export const probeHints: Record<string, string> = {
 };
 
 /**
- * Every spelling of the credentials that could appear in a driver's message,
- * longest first so the full URL goes before its own substrings. `split`/`join`
- * rather than a regex: a password may contain metacharacters, and escaping
- * them is a second bug in the one function whose failure is a leaked secret.
+ * Every spelling of the credentials a driver's message could carry, longest first. `split`/`join` rather than a regex, as a password may hold metacharacters
+ * and escaping them is a second bug in the function whose failure is a leaked secret.
  */
 export function scrub(text: string, url: string | undefined): string {
   if (!url) return text;
@@ -117,10 +105,7 @@ export function describeConnectionError(error: unknown, url: string | undefined)
 }
 
 /**
- * `select 1`, then who answered it. Two workflows each choose the long-lived
- * database by a `$ENVIRONMENT` / `$GIT_BRANCH` branch, and a mis-picked secret
- * migrates the wrong one silently; printing the role and server reached is
- * the cheapest check that the branch chose what it meant to.
+ * `select 1`, then who answered it: a mis-picked secret migrates the wrong long-lived database silently, so printing the role and server reached is the cheapest check.
  */
 export async function probe(url: string): Promise<ProbeResult> {
   let sql: ReturnType<typeof postgres> | undefined;

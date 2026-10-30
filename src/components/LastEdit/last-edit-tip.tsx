@@ -6,19 +6,9 @@ import { useHydrated } from '@/lib/hydrated';
 import { relativePhrase } from './relative';
 import './index.scss';
 
-// The compact line and its tooltip (M6.18). The line is "Edited 3 days ago" once the
-// page has hydrated and "Edited 1 Sep 2026" before, inside the `<time>`; the full sentence
-// is the tip. The phrase depends on the reader's clock, which the server cannot know, so it
-// is drawn only after hydration (`useHydrated`): the HTML the server sent and the first
-// client render never disagree.
-//
-// A tip on bare text could not be reached by keyboard, so the text is a button (it does
-// nothing when pressed but open the tip, as InfoTip's ⓘ). That is InfoTip's pattern rather
-// than IconTip's: IconTip is `aria-hidden` and describes nothing, because its control's own
-// name already says what the tip says, while here the tip holds what the line leaves out,
-// the editor's name and the full date. So the button lists the tip in `aria-describedby`,
-// and the sentence is in the page while closed, hidden from sight and from the tree, which
-// a description may still point at.
+// The compact line is "Edited 3 days ago" once hydrated (it depends on the reader's clock), a date
+// before. The text is a button so a keyboard reaches the tip, InfoTip's pattern rather than
+// IconTip's: the sentence stays in the page, listed in `aria-describedby`.
 
 export default function LastEditTip({
   moment,

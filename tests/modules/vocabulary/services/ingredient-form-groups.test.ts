@@ -22,13 +22,9 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 
-// Story 18's form-group half (M5.6b): the groups' writes, the site admin's
-// alone. A form's slug is its name and its group (M5.6a), so a rename moves
-// the slug of every form under the group, and a delete moves its live forms
-// to the group the admin names, each re-slugged there — the forms stay
-// curated, so neither a compendium entry's pick nor a coven's is orphaned
-// (claude-docs/design-decisions/m5.6b-admin-groups.md). The seeded groups
-// stay, so every group and form a test writes is `Fixture …`.
+// The form-group writes, the site admin's alone. A form's slug is its name and its group, so a rename moves the slug of every form under the group.
+// A delete moves its live forms to the group the admin names, each re-slugged there, so no pick is orphaned (claude-docs/design-decisions/m5.6b-admin-groups.md).
+// The seeded groups stay, so every group and form a test writes is `Fixture …`.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -74,7 +70,7 @@ async function seedGroup(name: string): Promise<string> {
   return row.id;
 }
 
-/** Seeds a form under the group, slugged as M5.6a slugs one, stamped by A. */
+/** Seeds a form under the group, slugged as the forms' slugs are made, stamped by A. */
 async function seedForm(name: string, groupId: string, groupName: string): Promise<string> {
   const [row] = await sql<{ id: string }[]>`
     insert into ingredient_forms (name, slug, description, group_id, created_by, updated_by)
@@ -112,7 +108,7 @@ const picking = (formId: string, workspaceId: string | null = null) =>
     A.id,
   );
 
-/** An entry's row and its variants, where its form and its pick live (MB.222). */
+/** An entry's row and its variants, where its form and its pick live. */
 async function ingredientOf(id: string) {
   const [row] = await sql`select * from ingredients where id = ${id}`;
   const variants = await sql`
@@ -254,7 +250,7 @@ describe('updateIngredientFormGroup', () => {
     },
   );
 
-  // A form's slug names its group (M5.6a), so it follows the group's rename.
+  // A form's slug names its group, so it follows the group's rename.
   it('moves the slug of every live form under it, in the same write, and touches no ingredient', async () => {
     const id = await seedGroup('Fixture Matter');
     const shard = await seedForm('Fixture Shard', id, 'Fixture Matter');
@@ -326,7 +322,7 @@ describe('updateIngredientFormGroup', () => {
   });
 });
 
-// The icon standing for the group (M12.6): one of the six, or NULL for the
+// The icon standing for the group: one of the six, or NULL for the
 // generic. An update rewrites the group whole, so an input without one clears
 // it — the only way GraphQL's `icon: null` reaches the service, as absent.
 describe('the icon', () => {

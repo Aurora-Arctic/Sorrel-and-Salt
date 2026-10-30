@@ -1,18 +1,12 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The stock badge is no box (the owner's call, 2026-10-21): no border, tint or padding,
-// only its drawing in the colour of the matching jar on the entry's shelf (JarShelf),
-// the warning amber for Low and the Out of Stock badge's red ink for Out. It is not a
-// `.badge`, so the badge palettes and the card's badge sizes do not reach it. The two
-// states are told apart by the drawing (a double chevron, a slashed ring) as well as the
-// colour, and the difference survives without colour. Both inks reach 4.5:1 on the card
-// and the page in both themes (claude-docs/components/stock-badge.md).
+// The badge is a bare drawing in the matching jar's colour, not a `.badge`, so the badge palettes
+// and sizes do not reach it (claude-docs/components/stock-badge.md, "Where the badge sits and what it draws").
 .stock-badge {
   @include button-reset(help);
 
-  // A square the height of a medium badge (24px), the drawing centred in it, so the jar
-  // lines keep the inset that centres it on the actions' icon below.
+  // A square the height of a medium badge, the drawing centred in it.
   box-sizing: border-box;
   display: inline-flex;
   align-items: center;
@@ -21,8 +15,7 @@
   block-size: $stock-badge-size;
   font-weight: 500;
 
-  // Only its icon tip opens from it (IconTip's own wrapper and bubble), so it shows the
-  // help cursor and a focus ring.
+  // Only its icon tip opens from it, so it shows the help cursor and a focus ring.
   &:focus-visible {
     @include focus-ring;
   }

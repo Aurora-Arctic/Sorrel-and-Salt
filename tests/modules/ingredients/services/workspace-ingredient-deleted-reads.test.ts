@@ -34,7 +34,7 @@ import { insertSpell } from '../../../support/db/insert-spell';
 import { type IngredientFixture, makeSpell, makeVariant } from '../../../support/fixtures';
 import { inputOf, local } from '../../../support/workspace-ingredient-input';
 
-// Story 25 in the coven, split from workspace-ingredients.test.ts: what a
+// Deleting in the coven, split from workspace-ingredients.test.ts: what a
 // deleted coven ingredient leaves in each read. The table is emptied per test,
 // so every row a result could come from is one this file wrote.
 
@@ -55,7 +55,7 @@ async function rowOf(id: string) {
   return row;
 }
 
-// Story 25 in the coven: a deleted ingredient is gone from every read its
+// Deleting in the coven: a deleted ingredient is gone from every read its
 // members make, and what it held is free again (claude-docs/db/workspace-ingredients.md,
 // "Workspace ingredients").
 describe('a deleted coven ingredient', () => {
@@ -118,7 +118,7 @@ describe('a deleted coven ingredient', () => {
         return Array.isArray(cited) && cited.length > 0;
       },
     ],
-    // The fixture's own form, a variant since MB.216 (MB.218).
+    // The fixture's own form, a variant.
     [
       'its variants',
       async (id) => {
@@ -126,7 +126,7 @@ describe('a deleted coven ingredient', () => {
         return Array.isArray(forms) && forms.length > 0;
       },
     ],
-    // A new link cannot reach a deleted ingredient, as a new spell layer cannot (M5.3).
+    // A new link cannot reach a deleted ingredient, as a new spell layer cannot.
     [
       'the substitute picker',
       async (id) =>
@@ -214,7 +214,7 @@ describe('a deleted coven ingredient', () => {
     ]);
   });
 
-  // A layer is the spell's, and leaves it only when a member takes it out (MB.110).
+  // A layer is the spell's, and leaves it only when a member takes it out.
   it('leaves every layer holding it as it was', async () => {
     const id = await seed(local());
     const spellId = await insertSpell(sql, makeSpell({ steps: [{ ingredientId: id }] }), A.id);

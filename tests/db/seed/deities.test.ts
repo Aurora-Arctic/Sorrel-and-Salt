@@ -8,10 +8,8 @@ import { DEITY_TRADITIONS, seedDeities } from '@/db/seed/deities';
 import { deitySlug } from '@/lib/slugify';
 import type { DeityRow, DeityTraditionRow } from './types';
 
-// What a re-run of the deity seed leaves of an admin's edits, and how it finds
-// its own rows by key once an admin has renamed them (MB.172). The shape every
-// seed shares is index.test.ts's (MB.183), and the vocabulary's content is the
-// seed doc's to review — claude-docs/db/deity-vocabulary-seed.md, "The deity vocabulary seed".
+// What a re-run of the deity seed leaves of an admin's edits, and how it finds its own rows by key once an admin has renamed them.
+// The shape every seed shares is index.test.ts's; the content is the seed doc's to review (claude-docs/db/deity-vocabulary-seed.md, "The deity vocabulary seed").
 
 let sql: ReturnType<typeof postgres>;
 let db: ReturnType<typeof drizzle>;
@@ -45,7 +43,7 @@ describe('seedDeities(db) over a database an admin has edited', () => {
     expect(await countOf('deities')).toBe(0);
   });
 
-  // The vocabulary is the admin's (MB.127), and a description is the part of
+  // The vocabulary is the admin's, and a description is the part of
   // a curated row most likely to be rewritten.
   it('does not overwrite a description an admin has since rewritten', async () => {
     await seedDeities(db);
@@ -126,10 +124,8 @@ describe('seedDeities(db) over a database an admin has edited', () => {
   });
 });
 
-// M14.23: the other names a deity answers to, loaded beside it. An admin's
-// removal is held as the deities themselves are; the stamps and a re-run are
-// index.test.ts's sweep, and which names are listed is reviewed in
-// claude-docs/db/deity-vocabulary-seed.md, not tested (M14.27).
+// The other names a deity answers to, loaded beside it. An admin's removal is held as the deities are; stamps and a re-run are index.test.ts's sweep,
+// and which names are listed is reviewed in claude-docs/db/deity-vocabulary-seed.md, not tested.
 describe('seedDeities(db) loads each deity’s other names', () => {
   beforeEach(async () => {
     await truncateAllTables(sql);

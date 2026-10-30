@@ -7,7 +7,7 @@ import { seedForms } from '@/db/seed/forms';
 import type { FormRow } from './types';
 
 // What a re-run of the form seed leaves of an admin's edits. The shape every
-// seed shares is index.test.ts's (MB.183), and the vocabulary's content is the
+// seed shares is index.test.ts's, and the vocabulary's content is the
 // seed doc's to review — claude-docs/db/form-vocabulary-seed.md, "The form vocabulary seed".
 
 let sql: ReturnType<typeof postgres>;
@@ -39,7 +39,7 @@ describe('seedForms(db) over a database an admin has edited', () => {
     expect(await allForms()).toEqual([]);
   });
 
-  // The vocabulary is the admin's (MB.35), and a description is the part of a
+  // The vocabulary is the admin's, and a description is the part of a
   // curated row most likely to be rewritten.
   it('does not overwrite a description an admin has since rewritten', async () => {
     await seedForms(db);

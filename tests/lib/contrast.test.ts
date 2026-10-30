@@ -9,8 +9,8 @@ import {
   relativeLuminance,
 } from '@/lib/contrast';
 
-// The contrast floor a category group's colours are held to on write (M5.6b),
-// each against the harder of its own theme's two surfaces (MB.36).
+// The contrast floor a category group's colours are held to on write, each against the harder of
+// its own theme's two surfaces.
 
 describe('HEX_COLOR', () => {
   it('takes a whole #rrggbb hex in either case, and nothing shorter or longer', () => {

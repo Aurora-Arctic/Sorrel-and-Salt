@@ -1,12 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-// Better Auth's client captures `fetch` once, at `createAuthClient()` time
-// (node_modules/better-auth/dist/client/config.mjs: `customFetchImpl: fetch`)
-// rather than reading `globalThis.fetch` fresh per call — so the stub has to
-// be in place, and the module re-imported, before that capture happens.
-// `@better-fetch/fetch` resolves lazily in the general case, which is why
-// this file stubs first rather than mocking the whole module, as the
-// component test does.
+// Better Auth's client captures `fetch` once, at `createAuthClient()` time (node_modules/better-auth/dist/client/config.mjs: `customFetchImpl: fetch`), not per call,
+// so the stub must be in place and the module re-imported before that capture. `@better-fetch/fetch` resolves lazily, so this file stubs first rather than mocking the whole module as the component test does.
 describe('auth-client', () => {
   afterEach(() => {
     vi.unstubAllGlobals();

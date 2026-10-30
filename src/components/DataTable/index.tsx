@@ -2,14 +2,9 @@ import type { ReactElement } from 'react';
 import { stackCell, tableRole } from '../../lib/table-roles';
 import type { StackColumn, StackTableProps } from './types';
 
-// The admin lists' table (MB.115): the `.data-table` primitive in its
-// scrolling, size-containing `.data-table-frame`, stacking into cards at
-// phone width (`.data-table--stack`). Six lists drew this scaffold by hand;
-// here it is written once, with what each part of it must carry: the
-// explicit roles WebKit needs once the parts' `display` changes, every
-// cell's `data-label` from its column's heading, and an action column's
-// unlabelled cell (claude-docs/components/data-table.md). Render-only, so a
-// server component's list stays one.
+// The admin lists' table: the `.data-table` primitive in its scrolling frame, stacking into cards at
+// phone width. It carries the explicit roles WebKit needs once `display` changes, and each cell's
+// `data-label` (claude-docs/components/data-table.md). Render-only, so a server component's list stays one.
 
 /** The cell's class: the column's own, then the card-corner placement for a corner action. */
 function cellClass<Row>({ className, action }: StackColumn<Row>): string | undefined {
@@ -58,8 +53,8 @@ function StackTable<Row>({
           {rows.map((row) => (
             <tr key={rowKey(row)} {...tableRole('row')}>
               {shown.map((column) => (
-                // An action's cell has no label: it spans the card, or stands
-                // at its top right beside the first line.
+                // An action's cell has no label: it spans the card, or stands at
+                // its top right beside the first line.
                 <td
                   key={column.heading}
                   className={cellClass(column)}

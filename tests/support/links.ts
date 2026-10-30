@@ -1,6 +1,5 @@
-// What a navigation test reads off a row of links: where each goes, and which
-// the page marks as the open one (MB.115). Written once for the admin nav's
-// and the tabbed page's tests, which had each their own copy.
+// What a navigation test reads off a row of links: where each goes, and which the page marks as the
+// open one. Shared by the admin nav's and the tabbed page's tests.
 
 /** The address each link goes to, in order. */
 export const hrefs = (links: HTMLElement[]) => links.map((link) => link.getAttribute('href'));

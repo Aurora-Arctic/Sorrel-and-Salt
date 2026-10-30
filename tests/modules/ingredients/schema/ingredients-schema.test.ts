@@ -116,7 +116,7 @@ describe('ingredients table', () => {
     expect(rows.map((r) => r.workspace_id)).toEqual([null, WORKSPACE]);
   });
 
-  // Three cases (MB.161): none takes no formal name, a named kind takes one,
+  // Three cases: none takes no formal name, a named kind takes one,
   // and unknown takes either.
   describe('the nomenclature/canonicalName CHECK', () => {
     // Both directions: a one-directional CHECK would let exactly one of these through.
@@ -167,7 +167,7 @@ describe('ingredients table', () => {
     });
   });
 
-  // MB.216, MB.220: identity is the formal name alone, falling back to the
+  // Identity is the formal name alone, falling back to the
   // label; the form is a variant's and no part of it.
   describe('identity_key', () => {
     it('is refused by Postgres on insert and on update', async () => {
@@ -198,7 +198,7 @@ describe('ingredients table', () => {
     });
 
     // Valerian root and leaf are one identity, so one entry with two forms
-    // (MB.215). Two tiers, since the index holds a formal name once per tier.
+    // . Two tiers, since the index holds a formal name once per tier.
     it('keys two rows of one formal name alike whatever their labels', async () => {
       const root = await insert({ name: 'Valerian root', canonicalName: 'Valeriana officinalis' });
       const leaf = await insert({

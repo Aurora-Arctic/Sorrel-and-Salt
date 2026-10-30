@@ -9,12 +9,9 @@
 .last-edit__button {
   @include button-reset(help);
 
-  // At least 24px tall to press (WCAG 2.5.8, MB.272): one line of the card's small text is
-  // 21.4px, and the 24px spacing exception cannot apply where the button sits on the card's
-  // stretched link and right over the foot's buttons. The padding grows the box and the equal
-  // negative margin takes it back out of the line, so nothing around it moves. Not a
-  // `min-block-size`, which would make the line taller and push the foot down. `lh` is
-  // Baseline Widely Available; `max` keeps it from going negative under a taller line.
+  // At least 24px tall to press (WCAG 2.5.8): padding grows the box and an equal negative margin
+  // takes it back out of the line, so nothing moves (a `min-block-size` would push the foot down).
+  // `lh` is Baseline Widely Available; `max` stops it going negative.
   $grow: max(0px, calc((#{$icon-size} - 1lh) / 2));
 
   padding-block: $grow;
@@ -30,11 +27,8 @@
   @include tip-above;
 }
 
-// Left-aligned, flush with the content edge, just above the row of buttons it sits over, and set well apart from what is
-// above it: `space(5)` is three steps past the `space(2)` the jar lines end on, and the gap
-// below it is the least there is (the owner's calls, 2026-10-21). The ink is `$last-edit-ink`: the
-// placeholder mix in dark, the muted ink in light, each holding 4.5:1 on the card and the page
-// (tests/scss/tokens.test.ts).
+// Left-aligned above the buttons it sits over, `space(5)` clear of what is above. The ink
+// `$last-edit-ink` holds 4.5:1 on the card and the page in both themes (tests/scss/tokens.test.ts).
 .meta.last-edit {
   margin-block-start: space(5);
   text-align: start;
@@ -51,14 +45,9 @@
   margin-top: 0;
 }
 
-// Above the names, in the entry page's head and in Quick Look's. Both heads already stand the
-// line off the bar above it by their own step (the page's stack gap of `space(3)`; Quick
-// Look's bar margin of `space(2)` plus the heading's `space(1)` gap, the same step as between
-// every other block there), so the line adds none of the card's `space(5)` (the owner's call,
-// 2026-10-21). The page's line draws the next block in by `space(2)`, to `space(1)` of the
-// formal name; Quick Look's heading already has that `space(1)` gap. Both selectors have two
-// classes: `.header > *` zeroes a child's margin, and `.meta.last-edit` above would otherwise
-// give it `space(5)`.
+// Above the names in the entry head and Quick Look's: both heads already stand the line off the
+// bar, so it adds no `space(5)`. Both selectors have two classes, since `.header > *` zeroes
+// margins and `.meta.last-edit` would otherwise give `space(5)`.
 .ingredient-entry__head > .last-edit,
 .modal-dialog__heading > .last-edit {
   margin-block-start: 0;

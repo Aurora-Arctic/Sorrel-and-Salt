@@ -3,14 +3,13 @@ import type { Middleware } from '@floating-ui/react-dom';
 import { useEffect } from 'react';
 import type { CSSProperties } from 'react';
 
-// Where the callout and the badge go, on Floating UI as InfoTip's bubble is
-// (InfoTip/use-tip.ts). The callout is fixed, so no scrolling or clipping
-// ancestor cuts it; the badge is absolute, so it scrolls and clips with the
-// control it sits on (claude-docs/components/click-feedback.md, "Placement").
+// Where the callout and badge go, on Floating UI as InfoTip's bubble is (InfoTip/use-tip.ts). The
+// callout is fixed, so no ancestor cuts it; the badge is absolute, so it scrolls and clips with its
+// control (claude-docs/components/click-feedback.md, "Placement").
 
 /**
- * The control's bottom edge to the callout's top: room for the arrow, whose
- * tip then stands about 11.5px under the control (the design's 20px).
+ * The control's bottom edge to the callout's top: room for the arrow, whose tip
+ * then stands about 11.5px under the control.
  */
 const GAP_PX = 20;
 
@@ -27,13 +26,9 @@ const ARROW_INSET_PX = 14;
 const MAX_REM = 20;
 
 /**
- * The box the callout keeps inside: the nearest ancestor marked
- * `data-tip-boundary`, as a tip's is, or the `<dialog>` the control sits in,
- * else the screen. A dialog, since a callout running past its edge reads as
- * loose from it (the owner's call, 2026-10-20); the callout is fixed, so the
- * dialog clips nothing of it, and the box is a measure only. Asked of the node
- * rather than `instanceof Element`: a story Storybook draws into an iframe runs its
- * script in the page around it, whose `Element` the frame's nodes are not.
+ * The box the callout keeps inside: the nearest `data-tip-boundary` ancestor, else the `<dialog>` the
+ * control sits in, else the screen. Asked of the node, not `instanceof Element`, since a story in
+ * Storybook's iframe runs in the page around it (claude-docs/components/click-feedback.md).
  */
 const boxOf = (reference: unknown): Element | null => {
   const node = reference as Element | null;
@@ -46,12 +41,9 @@ const edges = ({ elements }: { elements: { reference: unknown } }) => {
 };
 
 /**
- * In a box narrower than the callout at its widest (a dialog on a phone), the
- * callout narrows to the larger of the rooms either alignment leaves it, so it
- * still stands start or end under the control rather than pinned across the
- * box. A box that holds it at its widest leaves it as it is: there, room for
- * neither alignment pins it. Set on the element, as Floating UI's `size`
- * does, so the rects can be measured again at the new width.
+ * In a box narrower than the callout at its widest (a dialog on a phone), the callout narrows to the
+ * larger room either alignment leaves, so it still stands start or end under the control. Set on the
+ * element, as Floating UI's `size` does, so the rects are measured again at the new width.
  */
 const narrow: Middleware = {
   name: 'narrow',
@@ -114,10 +106,8 @@ function useFollow(
 }
 
 /**
- * The callout's place: below the control, its start edge under the control's
- * (bottom-start); else its end edge under the control's (bottom-end); else,
- * with room for neither, pinned inside its box. Never above: the arrow points
- * up, and a callout over the control would cover what it is about.
+ * The callout's place: bottom-start, else bottom-end, else pinned inside its box. Never above: the
+ * arrow points up, and a callout over the control would cover what it is about.
  */
 export function useCalloutPlace(anchor: HTMLElement | null, drawn: boolean): Placed {
   const { refs, elements, floatingStyles, update, isPositioned, middlewareData } = useFloating({
@@ -157,12 +147,9 @@ export function useCalloutPlace(anchor: HTMLElement | null, drawn: boolean): Pla
 }
 
 /**
- * The badge's place. On a bordered control, over its top right corner, its
- * centre 0.375 of its size in from each edge (the design's 0.45rem on 1.2rem).
- * `beside`, for a borderless control, which has no corner: to its right,
- * centred on the control's height, and touching it here; its stylesheet's
- * margin holds it clear (index.scss, `.click-feedback__badge--beside`), so the
- * gap is a spacing token rather than a number in script.
+ * The badge's place: over a bordered control's top right corner, its centre 0.375 of its size in from
+ * each edge. `beside`, for a borderless control, sits to its right, touching; the stylesheet's margin
+ * (`.click-feedback__badge--beside`) holds it clear.
  */
 export function useBadgePlace(anchor: HTMLElement | null, drawn: boolean, beside: boolean): Placed {
   const { refs, elements, floatingStyles, update, isPositioned } = useFloating({

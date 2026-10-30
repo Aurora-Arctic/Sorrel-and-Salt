@@ -16,11 +16,8 @@ import { type IngredientFixture, makeIngredient, makeVariant } from '../../../su
 import type { Overrides } from '../../../support/fixtures';
 import { JAR_STATES } from '../../../support/jar-states';
 
-// Story 14's list (M9.4, M12.18): a coven's ingredients are its own entries and
-// the compendium entries its cupboard names, one live
-// `workspace_compendium_entries` row each, filtered as the compendium is but
-// under the coven's proof and over the coven's overrides. The ingredient tables are emptied per test, so every row
-// a result could come from is one this file wrote.
+// The list: a coven's ingredients are its own entries and the compendium entries its cupboard names (one live `workspace_compendium_entries` row each), filtered as the compendium is but under the coven's proof and over the coven's overrides.
+// The ingredient tables are emptied per test, so every row a result could come from is one this file wrote.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -93,7 +90,7 @@ async function idsListed(
   return page.edges.map(({ node }) => node.id);
 }
 
-describe('listWorkspaceIngredients under source and inStock (M9.7)', () => {
+describe('listWorkspaceIngredients under source and inStock', () => {
   /** A local entry, a held compendium entry and a local one with no jar. */
   async function seedSources(): Promise<void> {
     await stock(await add('Covenwort', { workspaceId: WORKSPACE_W_ID }));
@@ -184,7 +181,7 @@ describe('listWorkspaceIngredients under source and inStock (M9.7)', () => {
   });
 });
 
-describe('listWorkspaceIngredients under lowStockOnly (M9.8)', () => {
+describe('listWorkspaceIngredients under lowStockOnly', () => {
   /** A held entry with one jar of `quantity` against `threshold`. */
   async function jarred(
     name: string,
@@ -304,7 +301,7 @@ describe('listWorkspaceIngredients', () => {
     expect(await listed(asUser(B))).toEqual(['Heldwort', 'Ownwort']);
   });
 
-  // A deleted compendium entry the coven still holds stays listed (M12.32):
+  // A deleted compendium entry the coven still holds stays listed:
   // retired-entry-list.test.ts owns that case.
   it("leaves out the coven's deleted entry", async () => {
     await add('Covenwort', { workspaceId: WORKSPACE_W_ID });
@@ -316,8 +313,8 @@ describe('listWorkspaceIngredients', () => {
     expect(await listed(asUser(B))).toEqual(['Covenwort']);
   });
 
-  // M12.18 decision 2: the coven chose both entries, so both are listed; a
-  // name match hides neither (M12.28).
+  // The coven chose both entries, so both are listed; a
+  // name match hides neither.
   it('lists a local entry beside the held compendium entry it matches', async () => {
     const entry = await held('Fixturewort', {
       canonicalName: 'Fixtura vulgaris',
@@ -423,7 +420,7 @@ describe('listWorkspaceIngredients', () => {
     ]);
     expect(await listed(asUser(B), WORKSPACE_W_ID, { forms: ['oil'] })).toEqual(['Oilfixture']);
 
-    // M8.12: Mugfixture and Oilfixture hold Protection and neither holds
+    // Mugfixture and Oilfixture hold Protection and neither holds
     // Cleansing, so only the mode decides whether the pair lists them.
     const [cleansing] = await sql`
       select id from categories where name = 'Cleansing' and deleted_at is null`;
@@ -458,10 +455,8 @@ describe('listWorkspaceIngredients', () => {
     await expect(listed(asUser(E))).rejects.toThrow(Forbidden);
   });
 
-  // A curator cannot delete a deity or category a compendium entry holds, but
-  // a coven's own entry keeps its link through the delete. The filter reads
-  // the row a link points to as the facets do, so the list and the count
-  // agree that the deleted value matches nothing.
+  // A curator cannot delete a deity or category a compendium entry holds, but a coven's own entry keeps its link through the delete.
+  // The filter reads the row a link points to as the facets do, so the list and the count agree that the deleted value matches nothing.
   it('lists nothing under a deleted deity or category, as the facets count it', async () => {
     const entry = await add('Linkfixture', { workspaceId: WORKSPACE_W_ID, categories: ['Love'] });
     const [selene] = await sql`
@@ -494,13 +489,8 @@ describe('listWorkspaceIngredients', () => {
     expect(await countOf('categories', byCategory, love.id)).toBe(0);
   });
 
-  // M11.22's facets all read through the one coven scope
-  // (`workspaceListScopeIncludingSoftDeleted`), and their arms are the
-  // compendium list's, which tests/db/repository/ingredients.test.ts proves.
-  // So one facet stands for all five: the deity facet, the one that reaches
-  // through a link table. W's row matches it and so does X's, so a facet read
-  // past the proof would list W's row to D. Each coven also holds a row
-  // matching none, so a facet the read ignored would list it.
+  // The facets all read through one coven scope (`workspaceListScopeIncludingSoftDeleted`), and their arms are the compendium list's, which tests/db/repository/ingredients.test.ts proves, so one facet stands for all five: the deity facet, which reaches through a link table.
+  // W's row matches it and so does X's, so a facet read past the proof would list W's row to D. Each coven also holds a row matching none, so a facet the read ignored would list it.
   describe('under a facet', () => {
     let covenRow: string;
     let elseRow: string;

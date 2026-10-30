@@ -22,11 +22,9 @@ import { SpellIngredientSuggestionsDocument } from './documents';
 import type { IngredientPickOption, SpellStepValue } from './types';
 import { jarOf, jarUnitOf, newStep } from './values';
 
-// Add to Jar (M10.15, story 49): one box, the type-ahead over the coven's ingredients
-// and the compendium's, one row per form, since a step lays a form. Its first row
-// offers what was typed as a one-off ingredient, written for this jar alone, which
-// makes no ingredient; the form and amount are typed in the opened row.
-// See claude-docs/components/spell-builder.md, "Steps".
+// Add to Jar: one type-ahead over the coven's ingredients and the compendium's, a row per form. Its
+// first row offers the typed text as a one-off ingredient for this jar alone
+// (claude-docs/components/spell-builder.md, "Steps").
 
 export interface StepPickerProps {
   workspaceId: string;

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { sectionsRestored } from '@/components/IngredientForm/values';
 
-// The sections a restore writes into (M12.10), read from the field paths a
+// The sections a restore writes into, read from the field paths a
 // history step names, so undo can open what it changed.
 
 describe('sectionsRestored', () => {

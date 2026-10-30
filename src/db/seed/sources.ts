@@ -16,18 +16,13 @@ import type {
   SourceTargetTable,
 } from './types';
 
-// MB.156: the sources the vocabulary seed docs record, as compendium-tier
-// `references` rows linked to the curated rows each supports. Reference data,
-// not a scenario — migrate.yml seeds it after the vocabularies it links.
-// Transcribed from the deity and astrology seed docs, which review holds in
-// step with it since MB.225 retired the test that compared them; the docs,
-// not this file, are where a source is argued (claude-docs/db/references.md,
-// "How the seed reads the docs"). Its references are written through
-// reference-rows.ts, which the compendium seed shares.
+// The sources the vocabulary seed docs record, as compendium-tier `references` rows linked to the curated rows each supports.
+// Reference data, seeded after the vocabularies it links. Transcribed by hand from the seed docs, where a source is argued
+// (claude-docs/db/references.md, "How the seed reads the docs"); written through reference-rows.ts, shared with the compendium seed.
 
 /**
  * Every source, in the docs' order: the five that chose which deities to
- * list (linked to nothing, the owner's call), each tradition's, each deity's,
+ * list (linked to nothing, deliberately), each tradition's, each deity's,
  * then the astrology doc's.
  */
 export const SOURCES: SeedSource[] = [
@@ -5943,13 +5938,9 @@ export async function seedSources(db: SeedDatabase, options: SeedRunOptions = {}
 }
 
 /**
- * The same seed inside a transaction the caller opened, after the
- * vocabularies it links. A reference is known by its `seed_key`, the citation
- * rendered when the seed wrote it, so one an admin has since edited is still
- * its own and never twinned (MB.171); a target row by the `seed_key` its own
- * seed gave it, so a renamed deity keeps its sources. Nothing present is
- * updated, and nothing soft-deleted is re-inserted or linked anew. Assumes the
- * GUC is published and the bootstrap user exists.
+ * The same seed inside the caller's transaction, after the vocabularies it links. A reference is known by its `seed_key` (the citation
+ * as rendered when seeded), so an edited one is never twinned; a target row by its own `seed_key`, so a renamed deity keeps its sources.
+ * Nothing present is updated, nothing soft-deleted is re-inserted. Assumes the GUC is published and the bootstrap user exists.
  */
 export async function seedVocabularySources(tx: SeedTransaction): Promise<void> {
   const referenceIds = await insertMissingReferences(
@@ -5989,11 +5980,8 @@ async function idsBySeedKey(
 }
 
 /**
- * A source's links: each tradition it names and every deity filed under it,
- * then each deity it names alone, whose locator replaces the tradition's
- * none — `(deity, reference)` is one live link — and each body and sign. A
- * soft-deleted target is skipped; one no seed wrote is a literal naming a row
- * that does not exist, and throws.
+ * A source's links: each tradition it names and every deity under it, then each deity named alone (whose locator replaces the
+ * tradition's), and each body and sign. A soft-deleted target is skipped; one no seed wrote names a row that does not exist, and throws.
  */
 function linksOf(
   {

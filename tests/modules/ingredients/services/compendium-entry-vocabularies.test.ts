@@ -23,10 +23,8 @@ import {
 } from '../../../support/fixtures';
 import { useCompendiumEntryInput } from '../../../support/db/compendium-entry-input';
 
-// Story 17's service, its vocabulary half: what a compendium entry's curated
-// lists and forms are held to (claude-docs/db/compendium-writes.md). Split from
-// compendium-entries.test.ts, which holds the writes. The table is emptied per
-// test, so every row a result could come from is one this file wrote.
+// The compendium service, its vocabulary half: what a compendium entry's curated lists and forms are held to (claude-docs/db/compendium-writes.md). Split from compendium-entries.test.ts, which holds the writes.
+// The table is emptied per test, so every row a result could come from is one this file wrote.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -55,11 +53,8 @@ const countIngredients = async () => {
 
 const admin = asUser(E);
 
-// MB.162, moved onto the links by MB.167: a compendium entry's form and
-// deities each pick a curated row, and its celestial bodies and signs name one, where a
-// coven's ingredients keep free text (claude-docs/db/compendium-writes.md).
-// Retired vocabulary rows are put back after each test, since the clone is
-// shared by the file and the seed retires nothing.
+// A compendium entry's form and deities each pick a curated row, and its celestial bodies and signs name one, where a coven's ingredients keep free text (claude-docs/db/compendium-writes.md).
+// Retired vocabulary rows are put back after each test, since the clone is shared by the file and the seed retires nothing.
 describe('the curated vocabularies a compendium entry is held to', () => {
   afterEach(async () => {
     for (const table of [
@@ -134,7 +129,7 @@ describe('the curated vocabularies a compendium entry is held to', () => {
     },
   );
 
-  // MB.167: a form and a deity are held to a pick, not a spelling — a curated
+  // A form and a deity are held to a pick, not a spelling — a curated
   // name typed rather than picked is refused, as an uncurated one is.
   const UNPICKED: [string, Overrides<IngredientFixture>, (string | number)[]][] = [
     [
@@ -201,7 +196,7 @@ describe('the curated vocabularies a compendium entry is held to', () => {
     },
   );
 
-  // A pick of a retired row is refused on either tier (MB.167); what the
+  // A pick of a retired row is refused on either tier; what the
   // compendium adds is that a pick it already holds is refused too, where a
   // coven's is kept, so no compendium entry goes on holding an uncurated one.
   const RETIRED_PICKS: [string, string, string, (string | number)[]][] = [
@@ -310,10 +305,8 @@ describe('the curated vocabularies a compendium entry is held to', () => {
   });
 });
 
-// MB.219: a compendium entry's forms are written inside its own save, each a
-// curated pick with its own curated celestial bodies and signs (DESIGN.md §5, "The
-// compendium is held to the vocabularies"). The write's mechanics — matching
-// and unchanged rows — are the coven's file's, on the one shared path.
+// A compendium entry's forms are written inside its own save, each a curated pick with its own curated celestial bodies and signs (DESIGN.md §5, "The compendium is held to the vocabularies").
+// The write's mechanics (matching, unchanged rows) are the coven's file's, on the one shared path.
 describe('its forms', () => {
   let herb: string;
   let oil: string;
@@ -371,7 +364,7 @@ describe('its forms', () => {
     });
   });
 
-  // MB.115, the owner's call: a form stands in for a form, so a form's link
+  // A form stands in for a form, so a form's link
   // names one of what it links.
   it("refuses a form's link naming no form of what it links, at create and update, on that form, writing nothing", async () => {
     const testroot = await seed({ name: 'Testroot', canonicalName: null, nomenclature: 'none' });

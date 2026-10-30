@@ -19,14 +19,9 @@ import { liveRow, parseUnderLiveParent, refuseSlugCollision } from './curated-wr
 import { refuseWhileHeld } from './held-entries';
 import type { CategoryFilter, CategoryRow, CuratedVocabulary } from '../types';
 
-// The category vocabulary: its reads, public reference data like every
-// curated vocabulary (MB.80), and its writes, a curator's or an admin's alone (M5.6).
-// A delete leaves every link in place and every read drops a deleted
-// category; it is refused only while a live compendium entry is filed under
-// it (claude-docs/db/categories.md, "Category writes").
-
-// The list and its count, held in the data cache under the `compendium` tag
-// (claude-docs/db/compendium-cache.md).
+// The category vocabulary: public reads, and writes for a curator or an admin alone. A delete leaves every link in place and
+// every read drops a deleted category (claude-docs/db/categories.md, "Category writes"). The list and its count are held in the
+// data cache under the `compendium` tag (claude-docs/db/compendium-cache.md).
 const cachedPage = cachedCompendiumRead('category-page', findCategoryPage);
 const cachedCount = cachedCompendiumRead('category-count', findCategoryCount);
 const list = cachedFilteredList(cachedPage, cachedCount, 'groupId');
@@ -38,11 +33,7 @@ const CATEGORIES: CuratedVocabulary<typeof categories> = {
   noun: 'category',
 };
 
-/**
- * One page of the live categories under `filter`, by group then name, each under a live
- * group: the `categories` query, and the admin page's list. A blank query is
- * no query, and a group id that is not a uuid names no group, so lists nothing.
- */
+/** One page of the live categories under `filter`, by group then name, each under a live group. A blank query is no query. */
 export function listCategories(
   filter: CategoryFilter,
   page: PageRequest,
@@ -50,11 +41,7 @@ export function listCategories(
   return list.list(filter, page);
 }
 
-/**
- * How many categories `listCategories` pages under `filter`, and how many
- * come before `start` — a page's first row, none on an empty page: "Page X
- * of Y".
- */
+/** How many categories `listCategories` pages under `filter`, and how many come before `start`: "Page X of Y". */
 export function countCategories(
   filter: CategoryFilter,
   start: Cursor | undefined,
@@ -63,7 +50,7 @@ export function countCategories(
 }
 
 /**
- * The live category at this address — how the admin page opens one to edit.
+ * The live category at this address, for the admin page to edit.
  *
  * @throws {NotFound} no live category holds the slug.
  */
@@ -76,10 +63,8 @@ export async function getCategoryBySlug(slug: string): Promise<CategoryRow> {
 /**
  * Adds a category, its slug derived from the name.
  *
- * @throws {Forbidden} the caller is neither a curator nor an admin — checked before the
- * input is read.
- * @throws {ValidationError} the input breaks `CategoryInput`, names no live
- * group, or its slug is a live category's.
+ * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {ValidationError} the input breaks `CategoryInput`, names no live group, or its slug is a live category's.
  */
 export async function createCategory(session: Session, input: CategoryInput): Promise<CategoryRow> {
   assertCurator(session);
@@ -95,12 +80,10 @@ export async function createCategory(session: Session, input: CategoryInput): Pr
 }
 
 /**
- * Rewrites a category whole, its slug following the name. Its `seedKey` is
- * left as it was, so a renamed seeded row is still the seed's (MB.171).
+ * Rewrites a category whole, its slug following the name. Its `seedKey` is left as it was.
  *
  * @throws {Forbidden} the caller is neither a curator nor an admin.
- * @throws {ValidationError} as `createCategory` throws it, the row's own slug
- * excepted.
+ * @throws {ValidationError} as `createCategory` throws it, the row's own slug excepted.
  * @throws {NotFound} no live category has this id.
  */
 export async function updateCategory(
@@ -123,16 +106,10 @@ export async function updateCategory(
 }
 
 /**
- * Soft-deletes a category nothing in the compendium is filed under. A coven's
- * ingredient or spell keeps its link, and stops reading the category — the
- * links are the coven's, and an admin writes nothing of a coven's (M6.6).
+ * Soft-deletes a category nothing in the compendium is filed under. A coven's links stay and read as nothing; an admin writes
+ * nothing of a coven's. The entries are read before the transaction, so one filed in the instant between is left holding a deleted category.
  *
- * The entries are read before the transaction, so an entry filed under the
- * category in the instant between is left holding a deleted one, which every
- * read drops.
- *
- * @throws {Forbidden} the caller is neither a curator nor an admin, or a live compendium
- * entry is filed under the category — the message names the entries.
+ * @throws {Forbidden} the caller is neither a curator nor an admin, or a live compendium entry is filed under the category.
  * @throws {NotFound} no live category has this id.
  */
 export async function deleteCategory(session: Session, id: string): Promise<void> {

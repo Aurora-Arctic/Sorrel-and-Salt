@@ -25,38 +25,20 @@ import { variantsOf } from './ingredient-children';
 import type { IngredientVariantRow, SaveStockValues, StockKey, StockValues } from '../types';
 import { type Membership, assertMembership } from '@/modules/coven';
 
-// Story 12's stock half: what a coven holds of each form, written by its
-// members and owners and read by everyone in it (claude-docs/db/stock.md, "The
-// stock service"). Every write checks `inventory: update` — the statement has
-// no `create` or `delete` — and every read `inventory: read`. The dimension is
-// never input: it is the unit's, so the two cannot disagree.
+// What a coven holds of each form, written by members and owners and read by everyone in it (claude-docs/db/stock.md, "The stock service").
+// Writes check `inventory: update` (the statement has no `create` or `delete`), reads `inventory: read`; the dimension is the unit's, never input.
 
 const NO_FORM = 'No such form for this coven to stock';
 const NO_JAR = 'No such stock in this coven';
 const HELD = 'Your coven already holds this form';
 
 /**
- * Starts the coven's jar of a form — a compendium entry's or the coven's own —
- * with `input`'s amounts. A form the coven already holds is refused rather
- * than topped up or returned, so the caller knows nothing was written: changing
- * a jar is `updateStock`'s. A form whose jar was deleted gets a fresh one. A new jar with a
- * unit and no threshold gets §5's default: 3 of a count unit, 10 g or 15 ml in
- * its own unit.
- *
- * The jar is stored on the form asked for, whatever the coven calls its own
- * entries: an own entry sharing a compendium entry's name takes nothing from
- * it (M12.28). A jar of a compendium form puts that entry in the coven's
- * cupboard, in the same transaction, when it is not there already (M12.15).
- * A form of a retired compendium entry takes a jar while this coven's
- * cupboard row names the entry, and never puts it back in the cupboard
- * (M12.24, as changed 2026-10-19).
+ * Starts the coven's jar of a form with `input`'s amounts; a form already held is refused, not topped up
+ * (claude-docs/db/stock.md, "Stock service details").
  *
  * @throws {Forbidden} the caller may not write this coven's stock.
- * @throws {ValidationError} the input breaks `StockInput`, or the coven
- * already holds the form, beside `variantId`.
- * @throws {NotFound} no live form with this id the coven may read — another
- * coven's included, a retired entry's this coven's cupboard does not name,
- * and an id that is not one.
+ * @throws {ValidationError} the input breaks `StockInput`, or the coven already holds the form.
+ * @throws {NotFound} no live form with this id the coven may read.
  */
 export async function createStock(
   session: Session,
@@ -66,10 +48,9 @@ export async function createStock(
 ): Promise<StockRow> {
   const membership = await assertMembership(session, workspaceId, { inventory: ['update'] });
   const parsed = parseInput(StockInput, input);
-  // An id that is not a uuid names nothing, and would be a driver error at the comparison.
+  // An id that is not a uuid names nothing and would be a driver error at the comparison.
   if (!RowId.safeParse(variantId).success) throw new NotFound(NO_FORM);
-  // With `membership` as `heldBy`: a retired compendium entry this coven's
-  // cupboard still names takes a new jar too (M12.24, as changed 2026-10-19).
+  // With `membership` as `heldBy`, a retired compendium entry this coven's cupboard names takes a jar too.
   const variant = await findReadableVariant([membership], variantId, membership);
   if (!variant) throw new NotFound(NO_FORM);
 
@@ -77,12 +58,8 @@ export async function createStock(
   try {
     const [row] = await withAudit(session, async (write) => {
       await write.lockCovenStock(membership);
-      // A jar of a compendium form puts the entry in the cupboard, once
-      // (M12.15). The lock above makes the read below see a concurrent
-      // create's row; the unique index backs it. A retired entry, which the
-      // live read of `entry` does not return, is never put back: its jar
-      // stands only on the cupboard row that admitted the form, read again
-      // here so a remove that tombstoned the row before the lock refuses it.
+      // A jar of a compendium form puts the entry in the cupboard once; a retired entry is never put back
+      // (claude-docs/db/stock.md, "Stock service details").
       if (!entry) {
         if (!(await heldCompendiumEntry(membership, variant.ingredientId)))
           throw new NotFound(NO_FORM);
@@ -99,8 +76,7 @@ export async function createStock(
     });
     return row;
   } catch (error) {
-    // The partial unique index is the check, with no read before it, so two
-    // creates racing for one form are refused alike.
+    // The partial unique index is the check, so two creates racing for one form are refused alike.
     if (violatedUniqueIndex(error) === 'inventory_items_workspace_id_variant_id_unique')
       throw new ValidationError([{ path: ['variantId'], message: HELD }]);
     throw error;
@@ -108,16 +84,12 @@ export async function createStock(
 }
 
 /**
- * Changes a jar of this coven. A field `input` leaves out keeps its value and
- * one it sets to null is cleared; a new unit brings its own dimension. A jar
- * that had no unit and gets one while its threshold is empty takes the unit's
- * default, as a new jar does (M9.9); a threshold already set, or stated by the
- * input, is never replaced, and a jar that already had a unit gets none.
+ * Changes a jar of this coven: an omitted field keeps its value, null clears it, and a first unit takes the default threshold
+ * (claude-docs/db/stock.md, "Stock service details").
  *
  * @throws {Forbidden} the caller may not write this coven's stock.
  * @throws {ValidationError} the input breaks `StockInput`.
- * @throws {NotFound} no live jar in this coven has this id — one of a deleted
- * form or ingredient, other covens' included, and an id that is not one.
+ * @throws {NotFound} no live jar in this coven has this id.
  */
 export async function updateStock(
   session: Session,
@@ -139,27 +111,12 @@ export async function updateStock(
 }
 
 /**
- * M9.9's Save: one ingredient's jars created, changed and deleted together,
- * the dialog's whole Save in one transaction, and answers the ingredient's live
- * jars after it. Each row is what its single-jar write takes (`StockInput`,
- * the first-unit default threshold, the cupboard row a first compendium jar
- * adds), so the two paths cannot drift.
- *
- * `ingredientId` scopes the batch: every jar and form named must be of that
- * ingredient and this coven, or the whole batch is refused. Nothing is
- * written until every row has been checked, and a refusal inside the
- * transaction rolls all of it back. Every bad row's issues come back in one
- * `ValidationError`, their paths prefixed by list and position —
- * `create.0.input.quantityOnHand`, `update.1.input.lowStockThreshold`, and
- * `create.2.variantId` for a form the coven already holds — so a form can
- * place each on its row. An empty batch writes nothing and opens no
- * transaction. No unit is ever converted.
+ * The stock dialog's whole Save for one ingredient: jars created, changed and deleted in one transaction, answering its live jars
+ * (claude-docs/db/stock.md, "Stock service details").
  *
  * @throws {Forbidden} the caller may not write this coven's stock.
- * @throws {ValidationError} a row breaks `StockInput`, the coven already holds
- * a form in `create`, or one jar is named twice.
- * @throws {NotFound} a jar or form is not a live one of this coven and
- * ingredient, as the single-jar writes refuse it.
+ * @throws {ValidationError} a row breaks `StockInput`, the coven already holds a form in `create`, or one jar is named twice.
+ * @throws {NotFound} a jar or form is not a live one of this coven and ingredient.
  */
 export async function saveStock(
   session: Session,
@@ -203,9 +160,7 @@ export async function saveStock(
   again('delete', batch.delete);
   if (issues.length > 0) throw new ValidationError(issues);
 
-  // Every id is read before anything is written: a jar of another coven or
-  // ingredient, a deleted one, and an id that is not one are all the same
-  // refusal, and refuse the whole batch.
+  // Every id is read before anything is written, and every unreadable id is the same refusal of the whole batch.
   const ids = [...batch.update.map((row) => row.id), ...batch.delete];
   if (!ids.every((id) => RowId.safeParse(id).success)) throw new NotFound(NO_JAR);
   const held = new Map((await findStockByIds(membership, ids)).map((jar) => [jar.id, jar]));
@@ -227,8 +182,7 @@ export async function saveStock(
     await withAudit(session, async (write) => {
       await write.lockCovenStock(membership);
       if (batch.create.length > 0) {
-        // As `createStock`: a first jar of a compendium form puts the entry in
-        // the cupboard, once; a retired entry is never put back.
+        // As `createStock`: a first compendium jar puts the entry in the cupboard once.
         if (!entry) {
           if (!(await heldCompendiumEntry(membership, ingredientId))) throw new NotFound(NO_FORM);
         } else if (entry.workspaceId === null && !(await findCupboardEntry(membership, entry.id))) {
@@ -260,8 +214,7 @@ export async function saveStock(
       }
     });
   } catch (error) {
-    // The partial unique index is the check, as in `createStock`; the row
-    // being inserted when it fires is the one that holds the form.
+    // The partial unique index is the check, as in `createStock`.
     if (violatedUniqueIndex(error) === 'inventory_items_workspace_id_variant_id_unique')
       throw new ValidationError([{ path: ['create', index, 'variantId'], message: HELD }]);
     throw error;
@@ -270,8 +223,7 @@ export async function saveStock(
 }
 
 /**
- * Soft-deletes a jar of this coven, stamping who deleted it. Creating the
- * form's jar again starts a fresh one.
+ * Soft-deletes a jar of this coven, stamping who deleted it.
  *
  * @throws {Forbidden} the caller may not write this coven's stock.
  * @throws {NotFound} no live jar in this coven has this id, as `updateStock`.
@@ -305,13 +257,7 @@ export async function getStock(
   return readableJar(membership, id);
 }
 
-/**
- * Each ingredient's live jars in the coven its ref names, one per form held,
- * one answer per ref in the order given: `Ingredient.stock`'s batch (M9.4).
- * One read per coven named, whatever the batch size, plus a role lookup each.
- * A ref naming a coven the caller may not read the stock of gets a
- * `Forbidden` in its slot while the rest of the batch stands.
- */
+/** Each ingredient's live jars in the coven its ref names, one answer per ref in order: `Ingredient.stock`'s batch; a refused coven gets a `Forbidden` in its slot. */
 export async function stockOf(
   session: Session,
   refs: readonly StockKey[],
@@ -337,16 +283,7 @@ export async function stockOf(
   });
 }
 
-/**
- * The live forms of each compendium entry a coven holds, one answer per ref in the order given:
- * what Edit Stock lists beside `stockOf`'s jars. Stock is per coven, so an entry the curators
- * have retired but the coven's cupboard still names is read like a live one (M12.24, the
- * owner's call of 2026-10-21): the forms come through that coven's own proof as `heldBy`, which
- * the SQL checks against the cupboard row itself. A retired entry the coven's cupboard does not
- * name, or an id that names nothing, gets a `NotFound` in its slot; a coven the
- * caller may not read the ingredients of, a `Forbidden`. One forms read per coven named,
- * whatever the batch size, and one cupboard read for each entry that comes back with no forms.
- */
+/** The live forms of each compendium entry a coven holds, one answer per ref in order, retired entries read through the coven's cupboard (claude-docs/db/stock.md, "Stock service details"). */
 export async function heldFormsOf(
   session: Session,
   refs: readonly StockKey[],
@@ -396,12 +333,9 @@ async function formsHeldBy(
   await Promise.all(
     ingredientIds.map(async (id, i) => {
       const read = rows[i];
-      // A compendium ref needs no coven's proof, so none of these is a refusal.
       if (read instanceof Forbidden) return;
-      // The SQL already answers only what the coven may read: a live entry's forms, or a retired
-      // entry's while the cupboard names it. An empty answer is told apart here, so an entry the
-      // cupboard does not name is a refusal and an entry that has no forms is not. Few asks
-      // come back empty, so these reads are not a read per entry.
+      // A compendium ref needs no coven's proof. The SQL answers only what the coven may read, so an empty answer
+      // is told apart here: an entry the cupboard does not name is a refusal, an entry with no forms is not.
       forms.set(
         id,
         read.length > 0 || (await heldCompendiumEntry(membership, id))
@@ -413,12 +347,7 @@ async function formsHeldBy(
   return forms;
 }
 
-/**
- * The live jars `membership`'s coven holds of these forms, one read for the
- * lot: what the grimoire's save measures a step's unit against (M13.2). The
- * caller has checked the proof's permission; every role that writes a spell
- * also reads stock (src/modules/coven/services/access-control.ts).
- */
+/** The live jars `membership`'s coven holds of these forms, in one read (claude-docs/db/stock.md, "Stock service details"). */
 export function jarsOfForms(
   membership: Membership,
   variantIds: readonly string[],
@@ -442,11 +371,7 @@ async function jarsOf(
   return findStockOfIngredients(membership, ingredientIds);
 }
 
-/**
- * The live jar, read through its live form and ingredient. A write reads it
- * first because the writer's by-id methods know the jar's own tombstone and
- * not its ingredient's, which M5.3's delete leaves the jar beside.
- */
+/** The live jar, read through its live form and ingredient (claude-docs/db/stock.md, "Stock service details"). */
 async function readableJar(membership: Membership, id: string): Promise<StockRow> {
   if (!RowId.safeParse(id).success) throw new NotFound(NO_JAR);
   const row = await findStockById(membership, id);
@@ -479,11 +404,7 @@ function changedJarColumns(current: StockRow, input: StockInput) {
   );
 }
 
-/**
- * The columns `input` sets: each field it states, null included, and none it
- * leaves out, with the unit's dimension wherever the unit is set. Amounts are
- * `numeric` text, as Drizzle writes the column.
- */
+/** The columns `input` sets: each field it states, null included, with the unit's dimension wherever the unit is set. Amounts are `numeric` text. */
 function stockColumns(input: StockInput) {
   const amount = (value: number | null | undefined) =>
     value === undefined ? undefined : value === null ? null : String(value);

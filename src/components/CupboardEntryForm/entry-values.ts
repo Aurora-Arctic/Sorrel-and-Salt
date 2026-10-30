@@ -1,10 +1,8 @@
 import type { CompendiumValues, CupboardOverrides } from './types';
 import type { CupboardEntryRow, IngredientRow } from '@/modules/ingredients';
 
-// The form's two sides from the rows the pages read: the compendium entry's own values, and
-// the coven's cupboard row over them. Shared by the entry page's Annotate and the coven list's
-// (M8.17), so the two dialogs open on the same values. A list the compendium leaves unset is
-// empty; an override the row leaves unset is null, the compendium's.
+// The form's two sides from the rows the pages read: the compendium entry's values, and the coven's row
+// over them, shared by both Annotate dialogs. An unset list is empty; an unset override is null.
 
 type EntrySide = Pick<
   IngredientRow,

@@ -18,7 +18,7 @@ export interface GroupListEntry extends Partial<GroupColors>, UpdatedStamp {
   /** A form group's icon name, `null` for one with none; absent for the other kinds, which have no icon. */
   icon?: FormGroupIcon | null;
   editHref: Route;
-  /** The head of its edit modal, which a press shows at once while the form loads (M9.18). */
+  /** The head of its edit modal, which a press shows at once while the form loads. */
   editHeading: ModalHeading;
 }
 
@@ -57,8 +57,8 @@ export interface GroupListKind {
   /** Its page's address. */
   path: Route;
   /**
-   * The table's name, what a screen reader lists it as: the full name its
-   * tab's short label, "Groups" or "Traditions", stands for (MB.115).
+   * The table's name, what a screen reader lists it as: the full name its tab's short
+   * label, "Groups" or "Traditions", stands for.
    */
   title: string;
   /** One group in title case, as a modal's title says it: "Category Group", "Tradition". */

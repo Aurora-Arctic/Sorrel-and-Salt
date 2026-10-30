@@ -21,6 +21,8 @@ import {
 import type {
   DeleteCompendiumIngredientMutation,
   DeleteCompendiumIngredientMutationVariables,
+  SetCompendiumEntryReviewedMutation,
+  SetCompendiumEntryReviewedMutationVariables,
 } from '@/gql/graphql';
 import { DEBOUNCE_MS } from '@/lib/debounce';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
@@ -55,13 +57,9 @@ import {
   offerReferences,
 } from '../../support/msw/ingredient-lookups';
 
-// The form on the compendium (M5.5), and only what the mode changes: written
-// with no coven, so every lookup asks with a null `workspaceId`, the
-// vocabulary boxes are picked from the curated rows, a substitute is picked
-// from the compendium, the classification is required, and an entry given to
-// it is edited, saved over and deleted. A pick-only list box on its own is
-// list-field.test.tsx's, and what the form does in either mode is
-// index.test.tsx's (claude-docs/components/ingredient-form.md, "Testing").
+// The form on the compendium, and only what the mode changes: written with no coven, so every lookup asks with a null `workspaceId`, the vocabulary boxes are picked from the curated rows,
+// a substitute is picked from the compendium, the classification is required, and an entry given to it is edited, saved over and deleted.
+// A pick-only list box on its own is list-field.test.tsx's, and what the form does in either mode is index.test.tsx's (claude-docs/components/ingredient-form.md, "Testing").
 
 const OTHER_ID = '9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d';
 const CATEGORY_ID = 'c4a8e2f1-7b3d-4c9e-a6f5-1d2e3f4a5b6c';
@@ -92,11 +90,7 @@ function renderForm(props: Partial<Extract<IngredientFormProps, { workspaceId: n
   return { onSaved, onDeleted, asks };
 }
 
-/**
- * A variant's Form box and a pick-only list's box on their own, as the
- * compendium's form wires them, in a form of its own on the compendium's
- * resolver.
- */
+/** A variant's Form box and a pick-only list's box on their own, as the compendium's form wires them, in a form of its own on the compendium's resolver. */
 function renderPickOnly() {
   const onSubmit = vi.fn();
   const Harness = () => {
@@ -213,10 +207,8 @@ describe('IngredientForm on the compendium', () => {
       );
     });
 
-    // A regression (MB.115): an entry whose substitute links an ingredient
-    // in forms, with none chosen, opened as the readback gives it, its
-    // Form of X box registering a key the values lacked. React's development
-    // double mount then counted the untouched entry changed, and Cancel asked.
+    // Regression: an entry whose substitute links an ingredient in forms, with none chosen, opened as the readback gives it, its Form of X box registering a key the values lacked.
+    // React's development double mount then counted the untouched entry changed, and Cancel asked.
     it('closes an untouched entry at once whose substitute links an ingredient with no form chosen', () => {
       offerNothing();
       const values: IngredientFormValues = {
@@ -256,7 +248,7 @@ describe('IngredientForm on the compendium', () => {
       expect(onClose).toHaveBeenCalledOnce();
     });
 
-    // Every way out asks first while the form has changes (MB.115): the
+    // Every way out asks first while the form has changes: the
     // guard's shape is tests/components/Modal's, and this its wiring.
     it('asks before Cancel or Escape discards a change, and closes on Discard Changes', async () => {
       offerNothing();
@@ -424,7 +416,7 @@ describe('IngredientForm on the compendium', () => {
   });
 
   describe('an entry given to it', () => {
-    // M8.17: an edit of the compendium says so at its head, as an add, which
+    // An edit of the compendium says so at its head, as an add, which
     // writes nothing yet anyone reads, does not.
     it('says that it edits the compendium, as a new entry does not', () => {
       renderForm();
@@ -433,6 +425,151 @@ describe('IngredientForm on the compendium', () => {
 
       renderEntry();
       expect(screen.getByText(COMPENDIUM_EDIT_NOTICE)).toBeInTheDocument();
+    });
+
+    // The Reviewed switch is a field of the form, offered by the page to a
+    // curator or admin: Save carries it, Cancel drops it, and it never saves on its own.
+    describe('the Reviewed switch', () => {
+      const reviewSwitch = () => screen.getByRole('switch', { name: 'Reviewed' });
+      const noSwitch = () => expect(screen.queryByRole('switch', { name: 'Reviewed' })).toBeNull();
+      const REVIEW_ID = ENTRY_ID;
+
+      function acceptReview() {
+        const calls: SetCompendiumEntryReviewedMutationVariables[] = [];
+        mockGraphQLMutation<
+          SetCompendiumEntryReviewedMutation,
+          SetCompendiumEntryReviewedMutationVariables
+        >('SetCompendiumEntryReviewed', (variables) => {
+          calls.push(variables);
+          return { setCompendiumEntryReviewed: { id: String(variables.id) } };
+        });
+        return calls;
+      }
+
+      it('is offered on an add and on an edit when the page gives it, and on neither when it does not', () => {
+        renderForm();
+        noSwitch();
+        cleanup();
+
+        renderEntry();
+        noSwitch();
+        cleanup();
+
+        renderForm({ review: { reviewed: false } });
+        expect(reviewSwitch()).not.toBeChecked();
+        cleanup();
+
+        renderForm({
+          entry: { id: ENTRY_ID, values: TESTWORT },
+          review: { reviewed: true },
+        });
+        expect(reviewSwitch()).toBeChecked();
+      });
+
+      // Regression: with every section closed on an edit, the switch was the first shown field, so
+      // the modal opened with the focus on it at the form's foot rather than on the dialog.
+      it('leaves the focus off the switch as the modal opens on an edit', async () => {
+        offerNothing();
+        renderInModal(() => (
+          <IngredientForm
+            duplicateHref={duplicateHref}
+            workspaceId={null}
+            entry={{ id: ENTRY_ID, values: TESTWORT }}
+            review={{ reviewed: false }}
+          />
+        ));
+        await act(async () => {});
+
+        expect(reviewSwitch()).not.toHaveFocus();
+        expect(screen.getByRole('dialog')).toHaveFocus();
+      });
+
+      it('makes the form changed when flipped, without saving anything', async () => {
+        const review = acceptReview();
+        const saves = acceptUpdate();
+        renderForm({ entry: { id: ENTRY_ID, values: TESTWORT }, review: { reviewed: false } });
+        expect(button('Save Ingredient')).toBeDisabled();
+
+        fireEvent.click(reviewSwitch());
+
+        expect(reviewSwitch()).toBeChecked();
+        expect(button('Save Ingredient')).toBeEnabled();
+        await act(async () => {});
+        expect(review).toHaveLength(0);
+        expect(saves).toHaveLength(0);
+      });
+
+      it('is sent with Save after the edit, for the entry it edited', async () => {
+        const review = acceptReview();
+        const saves = acceptUpdate();
+        renderForm({ entry: { id: ENTRY_ID, values: TESTWORT }, review: { reviewed: false } });
+
+        fireEvent.click(reviewSwitch());
+        press('Save Ingredient');
+
+        await waitFor(() => expect(review).toHaveLength(1));
+        expect(saves).toHaveLength(1);
+        expect(review[0]).toEqual({ id: REVIEW_ID, reviewed: true });
+        // Saved, so nothing is left to save until it changes again.
+        await waitFor(() => expect(button('Save Ingredient')).toBeDisabled());
+      });
+
+      it('is sent with the create of a new entry, for the id the create answered with', async () => {
+        const review = acceptReview();
+        const creates = acceptCompendiumCreate();
+        renderForm({ review: { reviewed: false } });
+
+        type('Name', 'Testwort');
+        choose('Classification', 'None');
+        fireEvent.click(reviewSwitch());
+        press('Save Ingredient');
+
+        await waitFor(() => expect(review).toHaveLength(1));
+        expect(creates).toHaveLength(1);
+        expect(review[0]).toEqual({ id: REVIEW_ID, reviewed: true });
+      });
+
+      it('is not sent when it was left as the page had it', async () => {
+        const review = acceptReview();
+        const saves = acceptUpdate();
+        const { onSaved } = renderForm({
+          entry: { id: ENTRY_ID, values: TESTWORT },
+          review: { reviewed: true },
+        });
+
+        type('Name', 'Mockwort');
+        press('Save Ingredient');
+
+        await waitFor(() => expect(onSaved).toHaveBeenCalled());
+        expect(saves).toHaveLength(1);
+        expect(review).toHaveLength(0);
+      });
+
+      it('is dropped by Cancel, which asks first because the switch changed the form', async () => {
+        const review = acceptReview();
+        offerNothing();
+        const onClose = renderInModal((done) => (
+          <IngredientForm
+            duplicateHref={duplicateHref}
+            workspaceId={null}
+            entry={{ id: ENTRY_ID, values: TESTWORT }}
+            review={{ reviewed: false }}
+            onSaved={vi.fn()}
+            onDeleted={done}
+            onCancel={done}
+          />
+        ));
+
+        fireEvent.click(reviewSwitch());
+        fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+        expect(screen.getByRole('button', { name: 'Discard Changes' })).toBeInTheDocument();
+        expect(onClose).not.toHaveBeenCalled();
+
+        fireEvent.click(screen.getByRole('button', { name: 'Discard Changes' }));
+        expect(onClose).toHaveBeenCalledOnce();
+        await act(async () => {});
+        expect(review).toHaveLength(0);
+      });
     });
 
     it('shows its values, offers one save, off until something changes, and saves over it, carrying its categories through untouched', async () => {
@@ -468,7 +605,7 @@ describe('IngredientForm on the compendium', () => {
     });
 
     // An edit renames what exists rather than making another, so a near
-    // match warns and holds nothing (MB.115, the owner's call), and the entry
+    // match warns and holds nothing, and the entry
     // is never its own near match.
     it('saves a rename near another entry at once, the match named but not itself, and nothing to set aside', async () => {
       const calls = acceptUpdate();
@@ -565,7 +702,7 @@ describe('IngredientForm on the compendium', () => {
   });
 
   // Its questions are asked over the form, as the unsaved changes' is
-  // (MB.115, the owner's call): the long form inert behind each, and the
+  // : the long form inert behind each, and the
   // focus on its safe answer, Keep It.
   describe('an entry given to it, in a modal', () => {
     const renderInDialog = () =>

@@ -9,21 +9,9 @@ import { ingredientVariants } from './ingredient-variants';
 import { references } from './references';
 import { idColumn } from '../../../db/schema-parts';
 
-// Which row a reference supports, one per citation (MB.151): a nullable key
-// per sourced table under one `num_nonnulls` CHECK, MB.40's shape, rather
-// than a join table per table, which would cost a table, a trigger, a finder
-// and a loader each. Full `auditColumns`, as substitutes: a link is content,
-// and unlinking leaves a tombstone (DESIGN.md §5, "References";
-// claude-docs/db/references.md).
-//
-// A sixth sourced table is one entry in `SOURCED`: its column, its partial
-// unique and the widened CHECK are built from the list. The migration
-// `db:generate` then writes drops and re-adds `reference_links_one_row`, and
-// that DROP CONSTRAINT takes an `.ack.md` sidecar (rule 10). The repository's
-// `findReferencesOf` and `citesNothing` take a key of the registry and read
-// its table, so reading the new links costs nothing more; writing them is
-// still code of its own, as the ingredient services and the sources seed
-// each write the links they own.
+// Which row a reference supports, one per citation: a nullable key per sourced table under one `num_nonnulls` CHECK. Full `auditColumns`:
+// a link is content, and unlinking leaves a tombstone (DESIGN.md §5, "References"). Adding a sourced table:
+// claude-docs/db/references.md, "Reference links schema details".
 
 /**
  * The tables a reference can support, each by the property and column that
@@ -35,7 +23,7 @@ export const SOURCED = {
   deityTraditionId: { column: 'deity_tradition_id', table: deityTraditions },
   celestialBodyId: { column: 'celestial_body_id', table: celestialBodies },
   zodiacSignId: { column: 'zodiac_sign_id', table: zodiacSigns },
-  // One form's own sources, beside its ingredient's (MB.217).
+  // One form's own sources, beside its ingredient's.
   ingredientVariantId: { column: 'ingredient_variant_id', table: ingredientVariants },
 } as const;
 
@@ -69,11 +57,8 @@ export const referenceLinks = pgTable(
     ...auditColumns,
   },
   (table) => [
-    // One live link per reference per row, partial per rule 4. Each leads on
-    // its sourced id, so a read of one row's links implies its predicate and
-    // uses it: no plain parent index is built beside them. None leads on
-    // `reference_id`: nothing reads from a reference back to its links, and a
-    // reference is never hard-deleted.
+    // One live link per reference per row, partial per rule 4. Each leads on its sourced id and none on `reference_id`, which nothing reads back
+    // (claude-docs/db/references.md, "Reference links schema details").
     ...SOURCED_KEYS.map((key) =>
       uniqueIndex(`reference_links_${SOURCED[key].column.replace(/_id$/, '')}_unique`)
         .on(table[key], table.referenceId)

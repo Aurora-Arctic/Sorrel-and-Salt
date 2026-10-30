@@ -25,9 +25,8 @@ export function relativePhrase(at: Date, now: Date = new Date()): string {
 }
 
 /**
- * The time of day `at` happened, on the reader's 12-hour clock: "2:02 pm".
- * For a moment from this sitting (SaveStatus's "Saved 2:02 pm", M13.16), where a date would
- * be noise; it runs in the browser only, as `relativePhrase` does.
+ * The time of day `at` happened, on the reader's 12-hour clock: "2:02 pm". For a moment from
+ * this sitting (SaveStatus's "Saved 2:02 pm"), where a date would be noise; browser only.
  */
 export function clockTime(at: Date): string {
   return at.toLocaleTimeString('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true });

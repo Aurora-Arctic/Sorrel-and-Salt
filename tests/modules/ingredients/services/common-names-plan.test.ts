@@ -5,11 +5,8 @@ import { suggestCommonNames } from '@/modules/ingredients';
 import { A, B, asUser } from '../../../support/as-user';
 import type { Logged } from '../../../support/db/types';
 
-// The statement suggestCommonNames actually sends, planned, as
-// duplicates-plan.test.ts plans findPossibleDuplicates': its results look the
-// same whether or not the trigram indexes are reachable, so the plan is the
-// only evidence. Unlike the vocabularies, both tables here grow with use, so
-// the plan is asserted (claude-docs/db/member-autofill.md, "The member's autofill").
+// The statement suggestCommonNames actually sends, planned, as duplicates-plan.test.ts plans findPossibleDuplicates': its results look the same whether or not the trigram indexes are reachable, so the plan is the only evidence.
+// Unlike the vocabularies, both tables here grow with use, so the plan is asserted (claude-docs/db/member-autofill.md, "The member's autofill").
 
 const logged = vi.hoisted(() => [] as Logged[]);
 
@@ -48,15 +45,9 @@ function match(statements: Logged[]): Logged {
 
 describe('the common-name suggestion query', () => {
   describe('EXPLAIN', () => {
-    // Seeded once per file (MB.184), inside the describe that plans. As in
-    // duplicates-plan.test.ts: sequential scans off, distinct (md5) trigrams,
-    // and enough rows that the planner's choice is between the GIN probe and
-    // a walk of a partial unique index, not a foregone one. The display-name
-    // arm needs more than the folk-name arm: its scope is the compendium's
-    // own partial index, which the planner walks in preference to the probe
-    // at thirty thousand entries and not at fifty. Eighty thousand rows
-    // through six trigram indexes outrun the 10s default hook timeout on CI's
-    // shared runner, so the seed carries its own.
+    // Seeded once per file, inside the describe that plans. As in duplicates-plan.test.ts: sequential scans off, distinct (md5) trigrams, and enough rows that the planner chooses between the GIN probe and a partial-unique-index walk.
+    // The display-name arm needs more than the folk-name arm: the planner walks the compendium's own partial index in preference to the probe at thirty thousand entries and not at fifty.
+    // Eighty thousand rows through six trigram indexes outrun the 10s default hook timeout on CI's shared runner, so the seed carries its own.
     beforeAll(async () => {
       await sql`truncate ingredients cascade`;
       await sql`

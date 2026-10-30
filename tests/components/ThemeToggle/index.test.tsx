@@ -2,10 +2,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import ThemeToggle from '@/components/ThemeToggle';
 
-// Ported from resume-2026; the aria-label and the Tooltip wrapper changed, the
-// rest carries over.
-// The setup's `matchMedia` answers `false` to a colour scheme — the "system asks for neither"
-// case — so a light system needs a stub.
+// The setup's `matchMedia` answers `false` to a colour scheme, the "system asks for neither" case, so a light system needs a stub.
 const stubLightSystemPreference = (): void => {
   vi.stubGlobal('matchMedia', (query: string) => ({
     matches: query === '(prefers-color-scheme: light)',
@@ -67,10 +64,8 @@ describe('ThemeToggle', () => {
     expect(button).toHaveAttribute('aria-pressed', 'false');
   });
 
-  // Three theme states, not two: dark by default, a light *system* preference
-  // that never stamps `data-theme`, and a stored choice. The current theme is
-  // resolved as the stylesheet resolves it: attribute, then media query, then
-  // dark.
+  // Three theme states, not two: dark by default, a light system preference that never stamps `data-theme`, and a stored choice.
+  // The current theme is resolved as the stylesheet resolves it: attribute, then media query, then dark.
   describe('on a light system with no stored choice', () => {
     beforeEach(() => {
       document.documentElement.removeAttribute('data-theme');

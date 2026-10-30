@@ -6,11 +6,8 @@ import { useTestDatabase } from '../support/db/database';
 import { insertSpell } from '../support/db/insert-spell';
 import { makeSpell } from '../support/fixtures';
 
-// M13.15: `revision` is a counter the database adds one to on every UPDATE,
-// so a save can name the revision it read and be refused if the row has moved
-// since (claude-docs/db/grimoire.md, "Revision (M13.15)"). One function,
-// `bump_revision()`, and each table carrying the column adds its own trigger
-// line in its own migration, as `set_updated_at` does.
+// `revision` is a counter the database adds one to on every UPDATE, so a save can name the revision it read and be refused if the row moved
+// (claude-docs/db/grimoire.md, "Revision"). Each table carrying the column adds its own trigger line to `bump_revision()`, as `set_updated_at` does.
 
 const FUNCTION = 'bump_revision';
 const TRIGGER = 'bump_revision';
@@ -61,7 +58,7 @@ describe('a spell’s revision', () => {
     expect(await revisionOf(await spell())).toBe(1);
   });
 
-  // The trigger reads no column, so one is enough (M14.27): the soft delete,
+  // The trigger reads no column, so one is enough: the soft delete,
   // the update a reader might doubt is an UPDATE at all.
   it('rises by exactly one when the spell is soft-deleted', async () => {
     const id = await spell();
@@ -100,7 +97,7 @@ describe('a spell’s revision', () => {
   });
 
   it('moves alone on an update that changes nothing, leaving updated_at and updated_by where they were', async () => {
-    // Stamped in 2000 at insert: an UPDATE of the stamp alone is itself a no-op (MB.106).
+    // Stamped in 2000 at insert: an UPDATE of the stamp alone is itself a no-op.
     const [{ id }] = await sql`
       insert into spells (workspace_id, title, created_by, updated_by, created_at, updated_at)
       values (${WORKSPACE_W_ID}, 'Testwort Ward', ${A.id}, ${A.id}, '2000-01-01', '2000-01-01')

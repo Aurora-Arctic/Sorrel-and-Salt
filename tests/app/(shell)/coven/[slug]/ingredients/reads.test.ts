@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { CARD_PAGE_SIZE } from '@/lib/pagination';
 
-// The coven's Ingredients reads (M9.6). The services are mocked, since what they decide is
+// The coven's Ingredients reads. The services are mocked, since what they decide is
 // their own tests'. Here: the page size, the one batch per page for forms, categories and
 // jars, and what each edge keeps for the card.
 

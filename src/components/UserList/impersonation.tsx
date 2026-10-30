@@ -1,8 +1,8 @@
 import type { ReactElement } from 'react';
 import { impersonateUser } from '../../lib/auth-client';
 
-// What Impersonate (MB.53) says and sends, once, for the two places that offer
-// it: the users list's row button and the user modal's action (M9.19). One
+// What Impersonate says and sends, once, for the two places that offer
+// it: the users list's row button and the user modal's action. One
 // wording and one send, so the two cannot drift apart.
 
 /** Where an admin lands as the user: a full load of the home page. */

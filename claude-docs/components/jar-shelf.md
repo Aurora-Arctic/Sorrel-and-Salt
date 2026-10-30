@@ -82,3 +82,57 @@ The owner's call (2026-10-21): when the pointer is over a jar the coven can edit
 - `tests/components/StockDialog/`: `openOn` and `StockJarButton`.
 - `tests/e2e/entry-stock.spec.ts` presses a jar by keyboard.
 - Storybook (`Ingredients / Jar Shelf`): a viewer's shelf of six forms (full, low, out, unmeasured, no threshold and empty), the editable shelf, and a single form.
+
+## What the shelf shows
+
+The shelf shows what the coven holds of each form at a glance. A form with a jar draws it with its level, a dashed mark at the low-stock threshold and a wave on the level. A form with none draws a dashed empty jar (the same vessel in dashes, its corks and cloths left off). Under each jar is the form, then its amount.
+
+A Low or Out jar is told by the jar itself and by its amount in the same colour. Low has amber glass, level and mark. Out has a solid red empty outline. The amount is a button opening the same tip the badge has. `AmountTip` is the badge's `StockTip` on text and not a box. Its name is the amount and the state ("40 g, Low Stock"), so a screen reader has both without opening the tip, and Low's statement is its description, as on the badge. The badge's drawing sits before the amount, so Low and Out are told by a symbol as well as by colour (WCAG 1.4.1).
+
+For a role that may edit, a jar is a button opening the Edit Stock dialog on that form, and an empty one adds the form. The drawing is the approved mock's Fillets bracket only, with no idle motion: the level's rise is the one transition. The edit button is the form's name, stretched over the whole jar by its `::after`, so a press anywhere on the jar lands on it. A Low or Out amount is its own button (its tip), so it sits beside this one rather than inside, raised above the stretch.
+
+## Choosing and drawing the vessel
+
+`pick` trims and lower-cases both seed and form first, so a change of case does not re-roll the vessel. Nothing is stored. A formal name is shared by every coven that holds the entry, so the compendium entry draws the same shelf in each. The seed is the ingredient's formal name, or its id when it has none.
+
+`shapes.ts` ports the vessels from the approved mock. The wave is drawn one period past each side of the glass (the box is 48 wide) so it could slide by a period and still cover the body. The shelf does not slide it, and the width is kept so the drawing is the mock's. `level.ts` holds the level rule, which was chosen in this component because the mock gave only example fractions (see "The level").
+
+`JarDrawing` is `aria-hidden`. The clip is the body's outline, applied to an untransformed group around the group that moves, since a clip on a transformed element moves with it. Each jar's clip has an id of its own, as two on a page cannot share one. `bandInk` types the two custom properties because React types no custom property.
+
+## Bands and waves in the spell's jar
+
+`BANDS_FULL` bands fill the spell's jar, and past that they shrink to keep fitting. `HALF` is half a period of the wave: four full periods across the 48-unit jar. `MAX_RISE` is the most a wave rises above its boundary (amplitudes run 0.65 to 0.8), plus the 0.6 the top band's level line sits above its fill so none of the line is over the layer. The top band's level line is 1.2 wide and centred on its path, so the path is lifted by half of that.
+
+Boundary `k` (k = 0 is the base, which is flat and never drawn) has a phase of `k` units and an amplitude that alternates 0.8 and 0.65. Neighbouring edges therefore run nearly parallel with a slight drift, and the shape is the same every render, with no randomness. The wave lies wholly above its baseline, between 0 and 2 x amplitude, so it adds to the layer above rather than cutting into the top layer's own height. Each half period is one quadratic curve whose control point is on the far side of the middle line, and each joins the next on the same slope, so there is no corner. It runs from beyond the jar's left edge to beyond its right (the clip trims it), so a band's closing sides are never seen.
+
+A band's top is boundary `top`'s wave and its bottom is boundary `top - 1`'s, which is the wave the band below draws as its own top, so stacked bands tile with no gap. The lowest band is flat along the base.
+
+## Shelf geometry
+
+The drawing is 35.52 by 29.97px (32 by 27 made 11% bigger). The plank sits at the foot of its box, so its y is the cell's top padding plus 29.97px, and the brackets are placed at the same y. The first four of the size variables are tokens shared with the entry's loading skeleton. The plank is a background and not a box, so the cell is one element. A jar's name is centred, and the button, where there is one, is the name's own box. The side padding leaves room for the name to grow on hover (1.15, about 6px a side on a full-width name) without crossing the cell's edge, where the shelf's clip would cut it.
+
+The fillets are a square at the plank's top with a quarter circle cut out of its outer corner, so the plank seems to curve down into a bracket between two jars. Each cell draws its brackets' halves just outside its own edges (the left half of the bracket on its right, the right half of the one on its left). The half at a row's end falls outside the shelf and is clipped, with no row-counting. The fillets replace `typography-base`'s diamond bullet. Its shape is cleared first in the same rule, so the sizes below win over the clearing (the `::after` has none to clear).
+
+The shelf's outer ends carry no fillet. The columns have no gap and fill the width, so the first and last column of every row sit on the edge, and the half a row's end would draw is cut off while the brackets between jars, drawn by both neighbours, stay whole. The shelf's last cell, when it ends a short row, is not on the clipped edge, so its outside half is left off. `overflow: clip` makes no scroll box. The clip is sideways only, so nothing above or below is cut, and the Out and Low tips are `position: fixed` and escape it. Where `overflow: clip` is not understood the outer halves simply show. The focus ring is inset, so the outset one is not cut by the clip on the first and last column.
+
+With `$items: false`, the mixin's `> li::before { content: none }` (bullets off) is more specific than `.jar-shelf__jar::before` and so blanked each cell's left fillet, leaving only the right one. The cell sets its own `margin: 0`.
+
+## Hover, focus and motion
+
+On an editable jar the hover shakes the drawing once, gently, and the name grows a little. It applies only where there is a button, so a viewer's shelf is still, and only on a device that really hovers, so a touch screen is not left with a jar stuck mid-shake. Keyboard focus does both too, as `:focus-visible` so a mouse click does not repeat it. Those rules sit outside the hover query, since a keyboard on a touch device has no hover to wait for.
+
+The hover amounts (how far the name grows, how long the shake lasts) are shared with the recipe page's inventory lines (`SpellBuilder/index.scss`), whose press shakes the same jar. The values live in `_variables.scss` so both say the same.
+
+The shake moves the jar's whole `svg` (the cell's own child, never the amount's Low or Out symbol), not the level inside it, which has its own transform transition (`__rise`). The drawing pivots on its base, the plank. The name is `inline-block`, since a transform has no effect on an inline box, and the scale grows from the middle of the name and moves nothing around it. The wobble is a few degrees to one side and the other, each swing smaller than the last, then still. It is in degrees, not a token, because no token holds an angle.
+
+Under reduced motion there is no shake and no transition on the name, which still changes size. The level rises on a change (a save re-reads the page), but not under reduced motion.
+
+## Paint
+
+Ink is the text colour, and the level and wave are the accent. A faceted jar's two bands are one a step darker than the glass and one lighter, as the mock drew them, taken from the text and card colours since no token of their own exists. Open question: in the dark theme the two swap (the text colour is the light one there), so the bands read as facets there and not as light and shade. Whether they should be tokens of their own, one pair per theme, is undecided.
+
+The spell jar's ingredient bands are two tints of the one ink, alternating, with a thin line along each boundary. Only the top band draws a line, the level line, with none between layers, and its upper edge is drawn as the level line of a held jar. A layer drawn in its category group's colours reads them from custom properties, as a chip does (they are data on the row): 55% in the light theme and 65% in the dark, so the top line stays legible over it.
+
+Low and Out are drawn after the base paint so they win by order as well as by the extra class. Low draws the glass, the level and the wave in the warning amber, with the threshold mark solid and a little heavier, as the line the level has fallen to. Out draws the glass, lid and facets in solid red, never dashed, so it cannot be read as the dashed outline of a form with no jar, and the glass is faintly tinted. The jar is already empty, so the wave, mark, cork and cloth are left off, since an empty jar has no surface to ripple. The red is the Out of Stock badge's ink.
+
+The Low or Out amount button looks like the text it is, with no box and no tint, and shows the help cursor. The badge's drawing before it is one line of the caption tall, in the amount's own ink.

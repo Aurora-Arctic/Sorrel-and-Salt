@@ -203,11 +203,7 @@ describe('a paged connection', () => {
   });
 });
 
-/**
- * A connection given a `count`, which records each start it is asked from and
- * answers as a counting finder would: the whole array, and the rows before
- * the start — null with none.
- */
+/** A connection given a `count`: it records each start it is asked from and answers as a counting finder would. */
 function countedSchema(starts: (Cursor | undefined)[] = []): GraphQLSchema {
   const scratch = createBuilder();
   const LeafRef = scratch.objectRef<Leaf>('Leaf');

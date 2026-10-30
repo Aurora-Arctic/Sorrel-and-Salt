@@ -7,15 +7,9 @@ import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 import type { GroupKind } from '@/components/GroupForm/types';
 
-// The page every group vocabulary shares (src/app/(shell)/admin/group-page.tsx,
-// MB.115): the guard, one page of the groups, and the modal its address opens
-// — `?new` empty, `?edit=` a group by slug, told how many rows its delete
-// must move. The shape runs on the category groups, as
-// `/admin/category-groups` (M5.6b); the form groups and the deity traditions
-// get only what they change, their path and their services
-// (claude-docs/testing/layer-ownership.md, rule 5). The guard and the services
-// are mocked: what they decide is tests/lib/request-session.test.ts's and
-// tests/modules/vocabulary's.
+// The page every group vocabulary shares (src/app/(shell)/admin/group-page.tsx): the guard, one page of groups, and the modal its address opens (`?new` empty, `?edit=` a group by slug, told how many rows its delete must move).
+// The shape runs on the category groups; the form groups and deity traditions get only what they change, their path and services (claude-docs/testing/layer-ownership.md, rule 5).
+// The guard and services are mocked: what they decide is tests/lib/request-session.test.ts's and tests/modules/vocabulary's.
 
 const requireCuratorSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireCuratorSession }));
@@ -259,10 +253,8 @@ describe('a group page, for each other kind', () => {
   );
 });
 
-// The traditions' name search (MB.115): the address's query reaches the
-// service's page and count, and every link on the page keeps it; a kind
-// without a search reads none. What the search matches is the finder's,
-// tests/db/repository/vocabularies.test.ts's.
+// The traditions' name search: the address's query reaches the service's page and count, and every link on the page keeps it; a kind without a search reads none.
+// What the search matches is the finder's (tests/db/repository/vocabularies.test.ts).
 describe('a group page, searched by name', () => {
   beforeEach(() => {
     listDeityTraditions.mockReset();

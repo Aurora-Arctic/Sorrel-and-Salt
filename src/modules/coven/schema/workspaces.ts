@@ -6,7 +6,7 @@ import { idColumn, liveUnique } from '../../../db/schema-parts';
 // Declared viewer, member, owner. Nothing compares two roles: each carries its
 // own permission statements (../services/access-control.ts), so the order here
 // is documentation. `owner` is not invitable — `invitations` carries the
-// CHECK (MB.201).
+// CHECK.
 export const workspaceRole = pgEnum('workspace_role', ['viewer', 'member', 'owner']);
 
 // No `kind` column and no automatic workspace: every workspace takes members

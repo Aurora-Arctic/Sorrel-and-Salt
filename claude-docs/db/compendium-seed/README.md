@@ -238,7 +238,9 @@ These are the lane brief's hard rules, repeated in every content task:
 
 **A per-entry source is a file of its own**, `compendium/sources/<handle>.yaml`, holding the citation's fields (`kind`, `container`, `title`, `url`, `accessed`). The nine works several entries share (Cunningham, Kynes, Hall, Grieve and the rest) stay in `src/db/seed/compendium/works.ts`. A file's citation names a source by handle and, if it needs one, a locator. The entry's hash covers the handle and the locator only, so editing a source file changes no entry's hash.
 
-**What a source is recorded in.** An entry file's citations say which source supports which fields (`supports`), and each source is a work in `works.ts` or a file under `compendium/sources/`. Until M14.10 each shard also had a doc recording its sources; M14.10 moved those docs to `claude-docs/archive/compendium-seed-shards/`. From M14.10 a content task's pull request body carries its "What is left out, and why": each candidate row it did not write, and each value a source gave that is off a closed list, with the reason.
+#### What a source is recorded in
+
+An entry file's citations say which source supports which fields (`supports`), and each source is a work in `works.ts` or a file under `compendium/sources/`. Until M14.10 each shard also had a doc recording its sources; M14.10 moved those docs to `claude-docs/archive/compendium-seed-shards/`. From M14.10 a content task's pull request body carries its "What is left out, and why": each candidate row it did not write, and each value a source gave that is off a closed list, with the reason.
 
 ### No endangered species
 
@@ -294,7 +296,9 @@ The seed has two ways to meet an entry. Both apply to `approved` files only; a `
 
 **Update.** A present entry is changed only by a file that the owner has marked. Editing a file does nothing on its own. The owner reads the change, runs `npm run seed:mark <file>` (M14.7), and that writes `seedUpdate: <hash>` into the file's frontmatter, the hash of the file as it stands. On the next seed run the entry is updated when `seedUpdate` equals the file's hash and the row is not what the file says: either the file's hash differs from the row's stored hash, or the hashes match but a field on the row differs from the file and no person worked on the row. The second case is drift: a row written before its file changed that still holds the new hash, as the rows did that adopted the conversion manifest's hash although the old shards had seeded them without `toxic: true` (M14.1). Under a matching hash, a row that differs because a person worked on it (it is curator-reviewed, a person last updated it, or a person touched or deleted one of its children) is skipped quietly: the file has not changed since that work, so the work stays, no line is printed and the run does not fail on it. Only `--force` (M14.26) overwrites it. A matching hash with nothing differing is skipped too. If the file changed again after the mark, the two differ. That is a stale `seedUpdate`, and the guard fails it: `seedCompendium` refuses to run, and CI fails, until `seed:mark` is run again or the line is removed. An edited file with no `seedUpdate` at all stays `PENDING`, and so does an unmarked file whose row has drifted from it under a matching hash. `PENDING` is counted in the run's summary and is not an error. `seedCompendiumContent`, the layer below the guard, also reports a stale mark as `PENDING`; a real run never reaches it.
 
-**The hash** is a SHA-256 over the fields that reach the database: scalars, lists, substitutes, the title, the description, the forms, and each citation's source handle and locator. It leaves out `status`, `seedUpdate`, `overwriteEditor`, `supports`, the provenance keys, Edit Notes and Questions, so a note or a reordered key never reads as a change (the rules are in the decision record).
+#### The hash
+
+The hash is a SHA-256 over the fields that reach the database: scalars, lists, substitutes, the title, the description, the forms, and each citation's source handle and locator. It leaves out `status`, `seedUpdate`, `overwriteEditor`, `supports`, the provenance keys, Edit Notes and Questions, so a note or a reordered key never reads as a change (the rules are in the decision record).
 
 **Refusals.** An update is refused, and the entry changes in no way, when:
 
@@ -315,9 +319,11 @@ Refusals 1 to 3 are overridden for one file by `overwriteEditor: true` beside `s
 
 **`nameBasis` and the `unaudited` ratchet.** The conversion (M14.9) marked every citation `nameBasis: unaudited`, because it copied each from the shards without checking it against the formal-name rule. The exception is a file that was already in `compendium/` with a review on it, the two `needs-review` samples (Aspen and Agate): the conversion kept their status, their sections and each citation's `nameBasis`, so they are not on the list, and took every other field from the shard. `unaudited` is accepted only in the files listed in `compendium/unaudited.txt`; a listed file with no `unaudited` citation fails as stale, and the list may only shrink. The ratchet (M14.11) is a test in `tests/db/seed/compendium-files.test.ts`: it holds the list against `tests/db/seed/compendium/unaudited-baseline.txt`, fails on a path the baseline lacks, and asks for the baseline to drop a path the list has dropped, so the two shrink together. New files cannot use `unaudited` at all.
 
-**The attribution audit** (M14.11), `npm run compendium:audit`, looks for a citation that may describe another species under the same common name, as Aspen's did. It reads the entry files, the sources and works, and the Wikipedia pages the seed lanes fetched (by default every `~/.claude/projects/-app/seed-scratch/shards/*/wiki/<Title>.wikitext`; `--wiki <dir>` names others). It reads each citation not yet `stated` or `resolved` under its heading: each `under "X"` in the locator, or the source's title. Three heuristics score it. **Collision** (3 for each other formal name): another file has the heading as its name or a folk name. **Hatnote** (2 for each taxon, with two or more needed): the heading's page names other taxa in an `{{about}}`, `{{for}}`, `{{other uses}}`, `{{redirect}}`, `{{distinguish}}` or `{{see also}}` hatnote, or is a disambiguation page, read by its `*` lines. **No binomial** (1): the heading prints no taxon name, or for a non-taxonomic entry does not contain its formal name. A fourth, the **own-taxon check**, reports as `stated` a Wikipedia citation whose taxobox names the entry's formal name, and drops it from the candidates (a mineral or chemical has no taxobox, so `pageNamesEntry` reads the page's title or infobox name instead: a plain name needs a mineral infobox, a chembox or a "chemical element" lead, and refuses a rock or a group; a variety, "Quartz var. amethyst", needs the variety's own article saying it is a variety of that mineral, in its infobox `IMAstatus` or its first sentence); the audit never writes `stated`, which a lane or the owner sets from the page. `--report`, the default, prints the ranked table and writes nothing. `--apply` writes only the candidates that name another formal name (`--all` writes every candidate): the file goes to `needs-review` (a `draft` stays a draft), and its `#### Questions for the Curator` gains one block per citation, made above the Edit Notes when absent, opening with `<!-- audit:<source>:<heading> -->`, so a second run adds nothing. Neither the status nor the sections are hashed, so a `seedUpdate` mark stays good. The code is `src/db/seed/compendium/audit.ts`, `audit-apply.ts` and `audit-run.ts`.
+#### The attribution audit
 
-**A correction of an entry on the site is the other route.** A curator or admin who has checked an entry switches its "Reviewed By Curator" switch on (M14.8), and the seed then leaves it alone. Only that switch sets or clears the mark (the owner's call, 2026-10-23): creating, editing or promoting a folk name does not, and switching an already-reviewed entry to reviewed again keeps the first date and reviewer. The mark is `curator_reviewed_at` and `curator_reviewed_by` on the row. Everyone sees the badge, "Reviewed By Curator" with the day or "Needs Review", on the entry's page, the lists' details and Quick Look; nobody sees who reviewed it (that is v2, DESIGN.md §13). The switch stands in the foot of the details on the admin list, and the list's Reviewed filter (`?reviewed=1` or `?reviewed=0`) finds the entries still to check. Clearing the mark lets the next marked file update the entry again. Correcting a file to match is still done, so a fresh local database agrees with production.
+The attribution audit (M14.11), `npm run compendium:audit`, looks for a citation that may describe another species under the same common name, as Aspen's did. It reads the entry files, the sources and works, and the Wikipedia pages the seed lanes fetched (by default every `~/.claude/projects/-app/seed-scratch/shards/*/wiki/<Title>.wikitext`; `--wiki <dir>` names others). It reads each citation not yet `stated` or `resolved` under its heading: each `under "X"` in the locator, or the source's title. Three heuristics score it. **Collision** (3 for each other formal name): another file has the heading as its name or a folk name. **Hatnote** (2 for each taxon, with two or more needed): the heading's page names other taxa in an `{{about}}`, `{{for}}`, `{{other uses}}`, `{{redirect}}`, `{{distinguish}}` or `{{see also}}` hatnote, or is a disambiguation page, read by its `*` lines. **No binomial** (1): the heading prints no taxon name, or for a non-taxonomic entry does not contain its formal name. A fourth, the **own-taxon check**, reports as `stated` a Wikipedia citation whose taxobox names the entry's formal name, and drops it from the candidates (a mineral or chemical has no taxobox, so `pageNamesEntry` reads the page's title or infobox name instead: a plain name needs a mineral infobox, a chembox or a "chemical element" lead, and refuses a rock or a group; a variety, "Quartz var. amethyst", needs the variety's own article saying it is a variety of that mineral, in its infobox `IMAstatus` or its first sentence); the audit never writes `stated`, which a lane or the owner sets from the page. `--report`, the default, prints the ranked table and writes nothing. `--apply` writes only the candidates that name another formal name (`--all` writes every candidate): the file goes to `needs-review` (a `draft` stays a draft), and its `#### Questions for the Curator` gains one block per citation, made above the Edit Notes when absent, opening with `<!-- audit:<source>:<heading> -->`, so a second run adds nothing. Neither the status nor the sections are hashed, so a `seedUpdate` mark stays good. The code is `src/db/seed/compendium/audit.ts`, `audit-apply.ts` and `audit-run.ts`.
+
+**A correction of an entry on the site is the other route.** A curator or admin who has checked an entry switches its "Reviewed" switch on (M14.8), and the seed then leaves it alone. Only that switch sets or clears the mark (the owner's call, 2026-10-23): creating, editing or promoting a folk name does not, and switching an already-reviewed entry to reviewed again keeps the first date and reviewer. The mark is `curator_reviewed_at` and `curator_reviewed_by` on the row. Everyone sees the badge, "Reviewed By Curator" with the day or "Needs Review", on the entry's page, the lists' details and Quick Look; nobody sees who reviewed it (that is v2, DESIGN.md §13). The switch stands in the foot of the details on the admin list, and the list's Reviewed filter (`?reviewed=1` or `?reviewed=0`) finds the entries still to check. Clearing the mark lets the next marked file update the entry again. Correcting a file to match is still done, so a fresh local database agrees with production.
 
 ### The library
 
@@ -413,3 +419,69 @@ Carried from the candidate list for the owner, the pilot and the lanes. None is 
 - **Wikipedia's current names over older usage**: the list follows Wikipedia, so _Betonica officinalis_ (often _Stachys officinalis_), _Senega officinalis_ (often _Polygala senega_) and _Atropa bella-donna_, among others the list names. POWO decides each when the lane checks it.
 - **Kynes's _Complete Book of Correspondences_** is an excerpt in the library (above); the full book would be a second source for the minerals, animals and waters.
 - **The variant description ceiling** of 120 words, and whether MB.249 folds into MB.248, are the plan's open items for the owner.
+
+## Seed behaviour the source cites
+
+### Reconciling an entry that is already present
+
+`src/db/seed/compendium/update.ts` is the seed's update path. The decision is the
+state table in "Write-once, and how a correction lands"; the file reads what the
+decision needs in bulk (`readStates`), decides one entry (`decide`) and applies an
+update (`applyUpdate`). The rows it writes are `rows.ts`'s, the same the insert
+writes, so the two cannot disagree on what a column holds.
+
+Children are reconciled by key, never dropped and re-created. A stock row and a
+spell layer hold a variant id, so a form is matched to its live row (by curated
+form, then by folded name) and updated in place, as `writeChildren` keeps a
+variant's id across an edit.
+
+- A removed form is soft-deleted only when nothing holds it; otherwise the entry
+  is refused whole.
+- Folk names, deities, substitutes and reference links are soft-deleted.
+- Category links are hard-deleted, as the table is.
+
+### The form vocabulary seed's groups
+
+`src/db/seed/forms.ts` seeds DESIGN.md §5's form vocabulary: six groups and every
+form, a starting set an admin may edit. It is reference data, not a scenario.
+`migrate.yml` seeds it alone, so it inserts the bootstrap user itself.
+
+- The groups answer "what are you holding", not "how was it made": three by
+  source (Botanical, Animal, Mineral), three by state (Fluid, Curio, Substance).
+  There is no `Other`; an unfitting value stays free text and surfaces for
+  curation.
+- No slug is written down. A group's is `slugify(name)`, and a form's is
+  `formSlug` of its name and its group's, since two live forms may share a name
+  under two groups. A form's seed key stays `slugify(name)`, as every database
+  seeded before holds it.
+- Where a value fits two groups the seed takes one sense and leaves the other row
+  for an admin (claude-docs/db/form-vocabulary-seed.md, "The form vocabulary
+  seed").
+
+### Matching a mineral or chemical page
+
+`pageNamesEntry` in `src/db/seed/compendium/audit.ts` decides whether a Wikipedia
+page is the article on exactly the formal name given, for a mineral or a chemical,
+which have no taxobox to say so.
+
+- A plain name ("Iron", "Beryl") needs the page title, or its infobox's name, to
+  equal it, and the page to be a mineral, a chemical element or a chembox
+  compound. A rock ("Marble"), a group ("Garnet", "Tourmaline") and a page with no
+  infobox to say what it is do not count.
+- A variety ("Quartz var. amethyst") needs the page to be the variety's own
+  article, and its infobox, or failing that its first sentence, to say it is a
+  variety of the named mineral.
+- Anything less stays a doubt for a person to settle.
+
+### Re-slugging a two-tier vocabulary
+
+`reslugItems` in `src/db/seed/two-tier-vocabulary.ts` is the backfill a slug that
+carries its group needs. `seedTwoTierVocabulary` runs it on every seed of a
+vocabulary whose slug does (the forms and the deities, each given a `slugOf`). Each
+live item's slug is re-derived by `slugOf` from its name and its group's name, and
+written where it differs, so a reseed with nothing to change writes nothing.
+
+A database seeded before holds `slugify(name)`. A rewrite in SQL would be a second
+slug rule, so the seed is the backfill, as it was for ingredient slugs
+(claude-docs/db/ingredient-slugs.md). A soft-deleted item keeps its slug, as the
+index reserves none.

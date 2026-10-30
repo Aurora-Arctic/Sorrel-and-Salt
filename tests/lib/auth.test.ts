@@ -33,11 +33,9 @@ describe('auth secret', () => {
   });
 });
 
-// Both id and secret, never an empty string, which Better Auth reads as a
-// configured provider. The roster is Google, Discord, Facebook and Microsoft
-// (M2.6) — GitHub (M2.5) was removed when the roster was re-scoped, and
-// Apple was considered and dropped for a client secret that expires every
-// six months (claude-docs/auth/social-providers.md, "Social providers").
+// Both id and secret, never an empty string, which Better Auth reads as a configured provider.
+// The roster is Google, Discord, Facebook and Microsoft; Apple is not offered, for a client
+// secret that expires every six months (claude-docs/auth/social-providers.md, "Social providers").
 describe('social providers', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -63,9 +61,8 @@ describe('social providers', () => {
     });
   });
 
-  // A provider that shares no address would end the callback at
-  // `email_not_found`; the placeholder lets the row and session exist so the
-  // email page can ask (MB.54). Every provider, since each can withhold one.
+  // A provider that shares no address would end the callback at `email_not_found`; the placeholder
+  // lets the row and session exist so the email page can ask. Every provider, since each can withhold one.
   it('maps a profile with no email to the placeholder, and leaves one with an email alone', async () => {
     vi.stubEnv('GOOGLE_CLIENT_ID', 'g-id');
     vi.stubEnv('GOOGLE_CLIENT_SECRET', 'g-secret');
@@ -213,10 +210,9 @@ describe('user field mapping', () => {
   });
 });
 
-// The one write to `users` outside withAudit: there is no session yet, so the
-// new user is its own creator (`createdBy` is NOT NULL with no default). It
-// never sets `role`: the primary admin is promoted at sign-in, through
-// withAudit (tests/modules/identity/services/admin-role.test.ts).
+// The one write to `users` outside withAudit: there is no session yet, so the new user is its
+// own creator (`createdBy` is NOT NULL with no default). It never sets `role`: the primary admin
+// is promoted at sign-in, through withAudit (tests/modules/identity/services/admin-role.test.ts).
 describe('sign-up hook', () => {
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -394,10 +390,9 @@ describe('session cookie cache', () => {
     vi.unstubAllEnvs();
   });
 
-  // MB.59: a revoked admin's next request reads `role` off the users row, so
-  // `/admin` and every admin mutation close to them at once. A cookie cache
-  // would answer from the cookie until its TTL ran out, keeping a revoked
-  // admin an admin for that long (claude-docs/auth/admin-users.md).
+  // A revoked admin's next request reads `role` off the users row, so `/admin` and every admin
+  // mutation close to them at once. A cookie cache would answer from the cookie until its TTL ran
+  // out (claude-docs/auth/admin-users.md).
   it('keeps the session cookie cache off, so every request reads the role afresh', async () => {
     vi.resetModules();
     const { auth } = await import('@/lib/auth');

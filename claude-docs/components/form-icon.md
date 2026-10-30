@@ -100,3 +100,15 @@ follows the toolbar's theme control, so the marks are checked in each theme ther
 different SVG, hidden from assistive technology; `null` and an unknown name
 draw the same SVG, the spoon, and no named icon draws it. The nav's test
 asserts that its Forms tab draws that same SVG.
+
+## Drawing conventions
+
+The form icons follow the section nav's conventions: a 24-unit square, a 1.6 stroke with round ends and no fill, so they take the text's colour (`currentColor`). There is one per form-group icon name: a sprig, a paw, a cut gem, a mortar and stone pestle, a drop and a skeleton key.
+
+A helper scales a drawing about its own centre to sit at (12, 12), with the stroke scaled back so every line still renders at 1.6. The sprig and the drop were drawn smaller than the gem and the mortar, which span about 17 by 15.5 by `getBBox`. Each scale brings a drawing's area to theirs.
+
+## The generic icon
+
+The generic form icon is a salt spoon, drawn on the Backdrop's `salt-spoon.webp` (`claude-docs/design-decisions/m12.6-form-icons.md`). It is seen top-down: an oval bowl upper left holding five grains, a handle pinched to one line before widening to a soft square end, and three grains spilled below the bowl. It is also the admin nav's Forms mark, and it is the one mark meaning "a form" everywhere.
+
+It has its own stroke widths: 1.3, with each grain a zero-length stroke the round caps swell into a 2-unit dot. It is drawn 18.8 square, centred on (12.23, 12.23), and scaled up a twentieth to match the six, so its strokes thicken to 1.37 and the dots to 2.1.

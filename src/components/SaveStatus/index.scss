@@ -18,9 +18,9 @@
   color: $text-muted;
 }
 
-// The failure and the conflict are both the site's warning notice (ochre bar, tint and triangle;
-// the owner's calls, 2026-10-29), and Retry sits in the notice's button ink. Doubled class to
-// outrank the notice's own bottom margin, which would lift it off the Save button's line.
+// The failure and the conflict are both the site's warning notice (ochre bar, tint and
+// triangle), and Retry sits in the notice's button ink. Doubled class to outrank the notice's
+// own bottom margin, which would lift it off the Save button's line.
 .save-status .save-status__failed {
   display: flex;
   flex-wrap: wrap;
@@ -39,8 +39,8 @@
 
 // Doubled to outrank the notice's margin here too; its own class rather than the
 // parent's, since in a dialog it is portalled under the title (`conflictInto`).
-// Roomier than a notice of text alone: its buttons need air inside the bar, and a step
-// more between the sentence and them (the owner's call, 2026-10-29).
+// Roomier than a notice of text alone: its buttons need air inside the bar, and a step more
+// between the sentence and them.
 .save-status__conflict.save-status__conflict {
   display: flex;
   flex-wrap: wrap;

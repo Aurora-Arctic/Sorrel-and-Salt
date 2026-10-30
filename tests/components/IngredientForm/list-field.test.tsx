@@ -14,16 +14,9 @@ import { press, type } from '../../support/interact';
 import { layOutChips, moveByKeyboard } from '../../support/sortable';
 import type { Variant } from './types';
 
-// The form's list field on its own (MB.181): one box to type in, its entries
-// inside it, on react-hook-form with the form's resolver, and no lookup — the
-// suggestions are given, as `LookupListField` gives them. The behaviour every
-// list shares runs on a plain list and a pick-only one, the two ways an entry
-// gets in; `ordered` and the folk names' own-name rule have their own
-// describes, and the six lists differ otherwise only in the shape a typed
-// entry is sent in, of which there are two. What the box, its chips and the sortable list do on their own is
-// Combobox's (tests/components/Combobox/index.test.tsx), and what needs the
-// whole form — the lookups wired, the payload — stays in index.test.tsx
-// (claude-docs/components/ingredient-form.md, "Testing").
+// The form's list field on its own: one box to type in, its entries inside it, on react-hook-form with the form's resolver, and no lookup (the suggestions are given, as `LookupListField` gives them).
+// The shared behaviour runs on a plain list and a pick-only one, the two ways an entry gets in; `ordered` and the folk names' own-name rule have their own describes, and the six lists otherwise differ only in the shape a typed entry is sent in, of which there are two.
+// What the box, chips and sortable list do on their own is Combobox's (tests/components/Combobox/index.test.tsx), and what needs the whole form (lookups wired, the payload) stays in index.test.tsx (claude-docs/components/ingredient-form.md, "Testing").
 
 /** The shapes the field takes; the form's six lists are these under their own names. */
 const PLAIN: Variant = {
@@ -62,11 +55,7 @@ const DEITIES: Variant = {
   ordered: true,
 };
 
-/**
- * The two shapes a list sends a typed entry in: the folk names, celestial bodies,
- * signs and colours as text, a deity or substitute as a name (DESIGN.md §5,
- * `ingredient_deities` and `ingredient_substitutes`).
- */
+/** The two shapes a list sends a typed entry in: the folk names, celestial bodies, signs and colours as text, a deity or substitute as a name (DESIGN.md §5, `ingredient_deities` and `ingredient_substitutes`). */
 const LISTS: (Omit<Variant, 'variant'> & { sent: (values: string[]) => unknown })[] = [
   { ...FOLK_NAME, sent: (values) => values },
   { ...PLAIN, sent: (values) => values.map((name) => ({ name })) },
@@ -79,11 +68,7 @@ const offer = (values: string[]): Suggestions<ListOption> => ({
   pending: false,
 });
 
-/**
- * One list field in a form of its own, given its entries as an edit would be.
- * A pick-only list is given a source, since a pick is its only way in; the
- * Name box is there for what a folk name is judged against.
- */
+/** One list field in a form of its own, given its entries as an edit would be. A pick-only list is given a source, since a pick is its only way in; the Name box is there for what a folk name is judged against. */
 function renderList(
   { name, legend, entry, ordered, pickOnly }: Omit<Variant, 'variant'>,
   {
@@ -229,7 +214,7 @@ describe('ListField', () => {
     });
 
     // Given the repeat, since the box refuses one at Add and the source
-    // never offers one (MB.174): an error names an entry by its index, and
+    // never offers one: an error names an entry by its index, and
     // reads on the box through the list's one error element.
     it('marks an error on the entry it names alone, and clears it once that entry is removed', async () => {
       const onSubmit = renderList(variant, {
@@ -305,7 +290,7 @@ describe('ListField', () => {
     });
   });
 
-  // MB.174: a list refuses a repeat at the box, as the schema would at save,
+  // A list refuses a repeat at the box, as the schema would at save,
   // and says why in its one error element; the source leaves out what the
   // list holds, and the typed row is withheld for a repeat.
   describe('a repeat at a box with a source', () => {
@@ -344,7 +329,7 @@ describe('ListField', () => {
     });
   });
 
-  // MB.162: a pick-only list's entries are curated rows picked, so the box
+  // A pick-only list's entries are curated rows picked, so the box
   // offers those alone and refuses what is typed and not picked.
   describe('a repeat at a pick-only box', () => {
     const { entry, legend } = PICK_ONLY;
@@ -400,7 +385,7 @@ describe('ListField', () => {
     });
   });
 
-  // M12.54: a list takes several picks in one visit to its list, as the
+  // A list takes several picks in one visit to its list, as the
   // multi-select does; Escape still closes it.
   it('keeps the list open after a pick, with the focus in the box, for the next', () => {
     const { entry, legend } = PICK_ONLY;
@@ -443,7 +428,7 @@ describe('ListField', () => {
     expectErrorOn(box(entry));
   });
 
-  // MB.174: the source leaves out what the list holds, by the schema's key —
+  // The source leaves out what the list holds, by the schema's key —
   // a link by its id, text folded among the typed entries — and the typed
   // row is withheld for text the list would refuse.
   describe('a source beside the listed entries', () => {
@@ -529,7 +514,7 @@ describe('ListField', () => {
       expect(
         screen.queryByRole('option', { name: 'Mockwort This coven’s entry' }),
       ).not.toBeInTheDocument();
-      // The suggestion reads as what was typed, so no typed row repeats it (M10.12):
+      // The suggestion reads as what was typed, so no typed row repeats it:
       // Enter with nothing highlighted still adds the name as typed text.
       expect(typedRow('mockwort')).not.toBeInTheDocument();
       fireEvent.keyDown(box(entry), { key: 'Enter' });
@@ -544,7 +529,7 @@ describe('ListField', () => {
     });
   });
 
-  // MB.170: an ordered list's entries move, each by its handle; an unordered
+  // An ordered list's entries move, each by its handle; an unordered
   // one's have none to move by.
   describe('moving an entry', () => {
     const { entry, legend } = ORDERED;
@@ -641,8 +626,8 @@ describe('ListField', () => {
     });
   });
 
-  // Given the repeat, since the lookup never offers a listed deity (MB.174):
-  // the error names the pick as its pill reads, with its tradition (MB.169).
+  // Given the repeat, since the lookup never offers a listed deity:
+  // the error names the pick as its pill reads, with its tradition.
   it('refuses the same deity picked twice, beside the repeat, named with its tradition', async () => {
     const greek = {
       value: 'Hecate',
@@ -660,7 +645,7 @@ describe('ListField', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  // MB.140: a substitute links an ingredient or names one, and a refused
+  // A substitute links an ingredient or names one, and a refused
   // link is named as its pill reads, by its formal name too.
   it('marks a refused link beside its pill, named by its formal name too', async () => {
     const linked = {

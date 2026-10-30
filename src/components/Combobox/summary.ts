@@ -11,12 +11,7 @@ import {
 } from 'react';
 import { useListPosition } from './position';
 
-// A linked entry's summary panel (MB.115): opened and shut by a press on the
-// entry's text, placed beneath the chip as an open list is, and shut by
-// Escape, a press anywhere else, or the focus leaving both the chip's button
-// and the panel. Escape hands the focus back to the button, and is kept from
-// the modal the form may sit in: a `<dialog>` turns an Escape nobody
-// cancelled into its own cancel, which would ask to close the whole form
+// A linked entry's summary panel: opened and shut by a press on the entry's text, placed beneath the chip, shut by Escape, a press elsewhere or the focus leaving
 // (claude-docs/components/combobox.md, "A linked entry's summary").
 
 /** The summary's open state, and the props its button and its panel spread. */
@@ -41,9 +36,7 @@ export function useEntrySummary() {
     [opener],
   );
 
-  // A press anywhere but the button or the panel shuts it, leaving the focus
-  // where the press put it. On the capture phase, so a press the target
-  // stops still counts.
+  // A press anywhere but the button or the panel shuts it; on the capture phase, so a press the target stops still counts.
   useEffect(() => {
     if (!open) return;
     const onPointerDown = (event: PointerEvent) => {
@@ -60,8 +53,7 @@ export function useEntrySummary() {
     event.stopPropagation();
     close(true);
   };
-  // Tabbing on past the panel, or back before the button, shuts it. A blur
-  // to nowhere — a press on the panel's own text — does not.
+  // Tabbing on past the panel, or back before the button, shuts it; a blur to nowhere does not.
   const onBlur = (event: FocusEvent) => {
     if (open && event.relatedTarget !== null && !holds(event.relatedTarget)) close(false);
   };

@@ -5,10 +5,8 @@ import type { GraphQLFormattedError } from 'graphql';
 // replaces `@/lib/graphql-client` with a stub must not take the class with it.
 
 /**
- * A request that got an answer but not a whole one: a non-2xx status, GraphQL
- * `errors`, or no `data`. `status` is the HTTP status, which `shouldRetry`
- * reads; `errors` is the response's own list, which the form readers in
- * graphql-failure.ts open. claude-docs/graphql/client.md, "A GraphQL error rejects".
+ * A request that got an answer but not a whole one: a non-2xx status, GraphQL `errors`, or no `data`. `status` is read by `shouldRetry`, `errors` by
+ * the form readers in graphql-failure.ts (claude-docs/graphql/client.md, "A GraphQL error rejects").
  */
 export class GraphQLClientError extends Error {
   readonly status: number;
@@ -29,11 +27,8 @@ export class GraphQLClientError extends Error {
 }
 
 /**
- * A STALE_WRITE answer: the save named a revision the row has moved past,
- * and `currentRevision` is the one it holds now (M13.16). A
- * `GraphQLClientError` still, so everything reading one reads this; the
- * autosave hook tells it apart to pause and offer a choice instead of
- * retrying. claude-docs/components/autosave.md, "The server's half".
+ * A STALE_WRITE answer: the save named a revision the row has moved past; `currentRevision` is the one it holds now. Still a `GraphQLClientError`, which
+ * the autosave hook tells apart to pause and offer a choice (claude-docs/components/autosave.md, "The server's half").
  */
 export class StaleWriteError extends GraphQLClientError {
   readonly currentRevision: number;

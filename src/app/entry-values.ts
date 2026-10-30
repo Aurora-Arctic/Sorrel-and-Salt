@@ -25,17 +25,11 @@ import {
 import { deityTraditionsOf, formChoicesOf, formGroupsOf } from '@/modules/vocabulary';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 
-// An entry as the form edits it: every value and link the form shows, read on
-// the navigation through the services the GraphQL `Ingredient` resolves
-// through, so the page needs no browser read to open the modal (CLAUDE.md
-// rule 1). Each read is a loader's batch of one. A compendium entry answers
-// anyone, so its pages pass no session (MB.80); a coven's own entry answers
-// only its members, each service checking the coven's proof (M8.17).
+// An entry as the form edits it, read on navigation through the services GraphQL's `Ingredient` uses,
+// so opening the modal needs no browser read (rule 1). A compendium entry answers anyone; a coven's own
+// answers only its members, each service checking the coven's proof.
 
-/**
- * A batch answer for one ref. A compendium ref is never refused; a coven's is
- * refused to anyone but its members, and the refusal is thrown.
- */
+/** A batch answer for one ref. A compendium ref is never refused; a coven's is refused, by throwing, to anyone but its members. */
 function only<T>([answer]: readonly (T | Error)[]): T {
   if (answer === undefined || answer instanceof Error) throw answer ?? new Error('No answer');
   return answer;
@@ -49,11 +43,7 @@ const iconOf = (group: { icon: FormGroupIcon | null } | Error | undefined): Form
 const nameOf = (group: { name: string } | Error | undefined): string | null =>
   group === undefined || group instanceof Error ? null : group.name;
 
-/**
- * A substitute as a list entry: its label, and the ingredient and the form of
- * it a link names, with the forms that ingredient comes in, which its second
- * picker offers (MB.215).
- */
+/** A substitute as a list entry: its label, the ingredient and form a link names, and the forms it offers. */
 const substituteEntry =
   (formsOf: ReadonlyMap<string, SubstituteForm[]>) =>
   ({ name, ingredient, variantId }: SubstituteRow): SubstituteListEntry =>
@@ -72,10 +62,7 @@ const substituteEntry =
         }
       : { value: name };
 
-/**
- * A reference as its row: the citation, the source it links with the fields
- * its short form is made of, and its locator.
- */
+/** A reference as its row: the citation, the source it links with the fields its short form is made of, and its locator. */
 const referenceEntry = ({ reference, locator }: CitedReference): ReferenceListEntry => ({
   value: citationText(reference),
   link: {
@@ -104,7 +91,7 @@ export async function entryValues(
     referencesOf(session, refs).then(only),
     variantsOf(session, refs).then(only),
   ]);
-  // Each form's own children, a batch over the forms (MB.218).
+  // Each form's own children, a batch over the forms.
   const variantRefs = variants.map(({ id, ingredientId }) => ({
     id,
     ingredientId,

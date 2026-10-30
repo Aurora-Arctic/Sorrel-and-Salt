@@ -9,11 +9,8 @@ import { run } from '../../../support/graphql/run';
 
 useRawClient();
 
-// The transport's half of `Workspace.members` and `WorkspaceMember.user`
-// (M6.11): a member's name comes through MB.10's `usersById`, one read per
-// coven listed however many members it holds, and the refusal
-// reaches the wire as `FORBIDDEN`. Who may list a coven's members is the
-// service's, in tests/modules/coven/services/members.test.ts.
+// The transport's half of `Workspace.members` and `WorkspaceMember.user`: a member's name comes through `usersById`, one read per coven listed however many members it holds, and the refusal reaches the wire as `FORBIDDEN`.
+// Who may list a coven's members is the service's, in tests/modules/coven/services/members.test.ts.
 
 const repository = vi.hoisted(() => ({
   findCoMemberNamesIncludingSoftDeleted: vi.fn(),
@@ -214,10 +211,8 @@ describe('WorkspaceMember.user', () => {
   });
 });
 
-// The owner-only address (M11.19): its own field rather than a widened
-// `CoMember`, which every member reads. Who may read it is the service's, in
-// tests/modules/coven/services/members.test.ts; here, that a refusal reaches
-// the wire as FORBIDDEN, and one read per page of members.
+// The owner-only address is its own field rather than a widened `CoMember`, which every member reads. Who may read it is the service's (tests/modules/coven/services/members.test.ts);
+// here, a refusal reaches the wire as FORBIDDEN, and there is one read per page of members.
 describe('WorkspaceMember.email', () => {
   const EMAILS = /* GraphQL */ `
     query {
@@ -330,7 +325,7 @@ describe('WorkspaceMember.email', () => {
       }
     `;
     // Why this could have reached the roll: an admin reads anyone's covens
-    // (M9.19), so E is handed A's W.
+    // , so E is handed A's W.
     const covens = await run<{
       users: { edges: { node: { memberships: { workspace: { id: string } }[] } }[] };
     }>(

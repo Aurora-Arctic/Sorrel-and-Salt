@@ -1,15 +1,18 @@
+import { QueryClientProvider } from '@tanstack/react-query';
 import type { Route } from 'next';
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import { makeQueryClient } from '@/lib/graphql-client';
+import { press } from '../../support/interact';
 import SpellCard, { SpellCardFilters, spellTitleId } from '@/components/SpellCard';
 
-// The title link navigates through the shared hook (M12.33), so the App Router is mocked.
+// The title link navigates through the shared hook, so the App Router is mocked.
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
   usePathname: () => '/here',
 }));
 
-// M10.11 (claude-docs/components/spell-card.md): the card is presentational, so each
+// (claude-docs/components/spell-card.md): the card is presentational, so each
 // case is its props in and what rendered out. The spells are the test's own data.
 
 const GROUP = { colorDark: '#7a5c99', colorLight: '#5b3f7a' };
@@ -23,6 +26,26 @@ const BASE = {
 };
 
 describe('SpellCard', () => {
+  it('draws a Delete Spell bin named for the spell only when given what deleting needs, and it asks in a dialog naming the spell', async () => {
+    const deleteSpell = {
+      workspaceId: 'workspace-1',
+      deletedHref: '/here?deleted=Fixture+Working' as Route,
+    };
+    const { rerender } = render(<SpellCard {...BASE} />);
+    expect(screen.queryByRole('button', { name: /^Delete Spell/ })).not.toBeInTheDocument();
+    rerender(
+      <QueryClientProvider client={makeQueryClient()}>
+        <SpellCard {...BASE} editHref={'/here?edit=spell-1' as Route} deleteSpell={deleteSpell} />
+      </QueryClientProvider>,
+    );
+    press(screen.getByRole('button', { name: 'Delete Spell Fixture Working' }));
+    expect(
+      within(await screen.findByRole('dialog', { name: 'Delete Spell' })).getByText(
+        'Fixture Working',
+      ),
+    ).toBeInTheDocument();
+  });
+
   it('draws an Edit link named for the spell only when given the address', () => {
     const { rerender } = render(<SpellCard {...BASE} />);
     expect(screen.queryByRole('link', { name: /^Edit / })).not.toBeInTheDocument();
@@ -90,7 +113,7 @@ describe('SpellCard', () => {
     expect(screen.queryByText('To keep the testwort fresh.')).not.toBeInTheDocument();
   });
 
-  // Complete is the default, so only a draft is marked (the owner, 2026-10-27).
+  // Complete is the default, so only a draft is marked.
   it('marks a draft with a Draft badge, and a complete spell with no status badge', () => {
     const { rerender } = render(<SpellCard {...BASE} status="draft" />);
     expect(within(screen.getByRole('article')).getByText('Draft')).toBeInTheDocument();
@@ -100,8 +123,8 @@ describe('SpellCard', () => {
     expect(within(card).queryByText('Complete')).not.toBeInTheDocument();
   });
 
-  // Only its author lists a private spell (M10.6), so the badge tells them it
-  // is theirs alone (M10.13). A word, not a colour, so it reads without one.
+  // Only its author lists a private spell, so the badge tells them it
+  // is theirs alone. A word, not a colour, so it reads without one.
   it('marks a private spell Private, and a spell shared with the coven with nothing', () => {
     const { rerender } = render(<SpellCard {...BASE} visibility="private" />);
     expect(within(screen.getByRole('article')).getByText('Private')).toBeInTheDocument();
@@ -141,7 +164,7 @@ describe('SpellCard', () => {
     expect(within(chips).getByText('Testward')).toBeInTheDocument();
   });
 
-  it('is not a link until the spell page exists (MB.6)', () => {
+  it('is not a link until the spell page exists', () => {
     render(<SpellCard {...BASE} />);
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
@@ -163,7 +186,7 @@ describe('SpellCard', () => {
   });
 });
 
-// MB.6: the title links to the spell's recipe page, through the shared navigation hook.
+// The title links to the spell's recipe page, through the shared navigation hook.
 describe('SpellCard link', () => {
   it('makes the title a link to the recipe page when given an address', () => {
     render(<SpellCard {...BASE} href={'/coven/fixture-coven/grimoire/spell-1' as Route} />);

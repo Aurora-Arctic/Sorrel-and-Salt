@@ -35,21 +35,9 @@ import { spellSteps } from '../../../modules/grimoire/schema/spell-steps';
 import type { CitationFields } from '../../../lib/types';
 import type { SeedCompendiumEntry, SeedCompendiumVariant, SeedTransaction } from '../types';
 
-// The compendium seed's update path (M14.7): what happens to an entry that is
-// already present. The decision is the state table in
-// claude-docs/db/compendium-seed/README.md, "Write-once, and how a correction
-// lands"; this file reads what the decision needs in bulk (`readStates`),
-// decides one entry (`decide`) and applies an update (`applyUpdate`). The
-// rows it writes are rows.ts's, the same the insert writes, so the two cannot
-// disagree on what a column holds.
-//
-// Children are reconciled by key, never dropped and re-created: a stock row
-// and a spell layer hold a variant id, so a form is matched to its live row
-// (by curated form, then by folded name) and updated in place, as
-// `writeChildren` keeps a variant's id across an edit. A removed form is
-// soft-deleted only when nothing holds it, and the entry is refused whole
-// otherwise. Folk names, deities, substitutes and reference links are
-// soft-deleted; category links are hard-deleted, as the table is (MB.34).
+// The seed's update path for an entry already present (state table: "Write-once,
+// and how a correction lands"). Children are reconciled by key, never dropped and
+// re-created, because stock rows and spell layers hold a variant id. (claude-docs/db/compendium-seed/README.md, "Reconciling an entry that is already present")
 
 /** One approved entry file as the seed takes it. */
 export interface SeedItem {
@@ -60,7 +48,7 @@ export interface SeedItem {
   where: string;
   /** `contentHash(entry)`, computed when the file was read. */
   hash: string;
-  /** The hash the owner marked for update, when the file carries one. */
+  /** The hash the curator marked for update, when the file carries one. */
   seedUpdate?: string;
   /** Only beside `seedUpdate`: the update may overwrite a curator's or an editor's work. */
   overwriteEditor?: true;
@@ -97,7 +85,7 @@ export interface UpdateContext {
   /** The conversion manifest, identity to hash, or `null` when it is gone (load.ts). */
   manifest: Record<string, string> | null;
   /**
-   * The run's `--force` (M14.26): lifts refusals 1 to 4 for every marked
+   * The run's `--force`: lifts refusals 1 to 4 for every marked
    * entry, as `overwriteEditor` lifts 1 to 3 for one file.
    */
   force: boolean;
@@ -529,13 +517,8 @@ export function decide(item: SeedItem, state: PresentState, ctx: UpdateContext):
     // Forced with no baseline: `stored` stays null, so the entry goes on to
     // the mark check below as an edit, never a skip.
   }
-  // A matching hash (M14.1): a row that matches its file is skipped; one that
-  // differs because a person worked on it is skipped quietly, keeping the work,
-  // since the file has not changed since that work. Only the run's --force
-  // (M14.26) goes past that skip, to the mark check and the refusals it lifts:
-  // the file's overwriteEditor does not, since it was already on the file when
-  // the work was done. One that differs with nobody's work on it is drift, as
-  // a row seeded before its file changed is, and goes on as a changed file does.
+  // A matching hash: a row matching its file is skipped; one differing because a person worked on it is skipped quietly, as the file has not changed since.
+  // Only the run's --force goes past that skip; the file's overwriteEditor does not. One differing with nobody's work on it is drift and goes on as a changed file does.
   if (stored === item.hash) {
     if (plan.differs.length === 0) return { adopt, outcome: { kind: 'skip' } };
     const worked = row.curatorReviewedAt !== null || touched(row) || touchedChild(state) !== null;
@@ -569,10 +552,8 @@ export async function adoptHash(tx: SeedTransaction, id: string, hash: string): 
 const tombstone = () => applyAudit('delete', {}, BOOTSTRAP_SESSION);
 
 /**
- * Applies a planned update inside the seed's transaction, stamped by the
- * bootstrap user: the scalars and the hash on the row, then each child list
- * reconciled in place. `overwriteEditor` or `--force` clears the curator mark in the same
- * statement, since the content is no longer what was reviewed.
+ * Applies a planned update inside the seed's transaction as the bootstrap user: the scalars and hash, then each child list reconciled in place.
+ * `overwriteEditor` or `--force` clears the curator mark in the same statement, as the content is no longer what was reviewed.
  */
 export async function applyUpdate(
   tx: SeedTransaction,

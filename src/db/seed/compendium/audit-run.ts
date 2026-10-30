@@ -12,15 +12,13 @@ import {
 } from './audit-resolve';
 import { loadCompendium } from './load';
 
-// The attribution audit's reading and writing (M14.11): the fetched Wikipedia
+// The attribution audit's reading and writing: the fetched Wikipedia
 // pages from disk, the compendium through the seed's own loader, and, on
 // `apply` alone, each flagged file written back. `report` writes nothing.
 
 /**
- * The fetched Wikipedia pages under `dirs`, by `wikiKey(title)`: each
- * `<Title>.wikitext` file opens with `TITLE:`, `REVID:`, `PERMALINK:` and
- * `FETCHED:` lines and a `----` line, and the wikitext follows. A page is
- * found by its `TITLE:` and by its file name both.
+ * The fetched Wikipedia pages under `dirs`, by `wikiKey(title)`: each `<Title>.wikitext` opens with `TITLE:`, `REVID:`, `PERMALINK:` and
+ * `FETCHED:` lines and a `----` line. A page is found by its `TITLE:` and by its file name both.
  */
 export function readWikiPages(dirs: readonly string[]): Map<string, string> {
   const pages = new Map<string, string>();

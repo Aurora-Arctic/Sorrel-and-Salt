@@ -19,6 +19,10 @@ it opens at its full size at once, with no skeleton before it
 ([`modal.md`](modal.md), "A form the browser can draw skips the skeleton"). Its head names the coven the spell lands in, as Add Ingredient's does: the coven's name over the title, and the dialog named "New Spell to Whitethorn Coven" (`ModalHeading.destination`, [`modal.md`](modal.md)); a saved spell's stays "Edit Spell" over its title. Reordering the steps (M10.16) is built; instruction steps (M13.3) and Mark Complete (M10.20) are later tasks that extend it. The comparison panel (M10.17) sits in the Jar section, beneath the steps. There is
 no `instructions` field: the ritual is the spell's steps (M13.1).
 
+## Delete
+
+On a saved spell, `SpellDialog` given `canDelete` (a role that may delete) passes the builder a `deletedHrefOf(title)`; the builder then draws Delete Spell in `FormActions` (M13.11, owner's call 2026-10-29, as the ingredient Edit dialog has Delete Ingredient). It opens a `ConfirmQuestion` naming the spell, "It leaves the grimoire for every member of the coven". Confirmed, it sends `deleteSpell` and replaces the address with the list plus `?deleted=<name>` (`deletedHrefOf` in `SpellRecipe/deleted-href.ts`, shared with the card and Quick Look). A refusal shows in the `Notice`. A `removed` flag, set before the request, turns off the autosave (its timers, focus-out and page-hide flushes) and the save on close, so nothing writes to the deleted spell; a refusal lifts it.
+
 ## Props
 
 `SpellBuilderProps` (`types.ts`):
@@ -609,3 +613,61 @@ keyboard and reads the saved order from the database. No story walks the visibil
 story, so `tests/e2e/spell-visibility.spec.ts` is its gate spec: a spell written private,
 then shared in one confirmed action and the control shut, each step read from the
 database. Story 56 checks the Private badge on the author's card.
+
+## The spell dialog and its address
+
+The spell builder is a modal over the grimoire, in step with Add Ingredient. New Spell opens it under `?new=spell-<slug>` (or `?new=spell`, the current grimoire's), and a spell's Edit under `?edit=<id>` (claude-docs/design-decisions/m10.12-spell-builder-modal.md). A draft's first save replaces `?new` with its own `?edit=<id>`, so a reload or Back opens the saved draft, never an empty form. The builder reports that save through `onCreated`, whichever way it was made, so the autosave moves the address the same way. The dialog is a client part because the builder's handlers are functions, which a server page cannot hand down.
+
+New Spell's press writes `?new=spell-<slug>` with the browser's pushState (AddAction's `drawnHere`), so the dialog reads the address itself and draws the empty builder at once, at its full size, as Add Ingredient does. A skeleton the server's form replaced grew the centred dialog and moved it under the pointer. Any other `?new` is Add Ingredient's, and holds a saved spell's dialog back until it closes.
+
+A saved spell's steps are read in the dialog, through `/api/graphql`, once it opens. The page's server read gives the fields alone, and an update's steps are the whole recipe, so the builder sends nothing until the steps land.
+
+## The builder's sections and autosave
+
+A spell's title, intent, jar and note sit in four folding sections, as Add Ingredient's do: open on a new spell, shut on a saved one, each shut line naming what it holds, and Open All / Close All in the dialog's head. Moon phase and day of the week suggest a fixed list and still take what is typed (`./constants`).
+
+No field is required. A draft may be saved with any of them, and a title is asked for only when the spell is marked complete.
+
+The builder autosaves (`./autosave.ts`): a change saves 3 s after the last, Save saves at once, and the first save creates the spell. After that the builder holds its id and revision and `onCreated` moves the dialog's address to it. There is no Cancel. Close saves what is unsaved, then closes.
+
+## Status and visibility controls
+
+**Status.** A spell is a draft until it is marked complete. A draft shows one button, Mark Complete. A click saves everything the form holds as complete, as Share With the Coven does, so the status is never a pick left pending. A complete spell needs a title (a database CHECK), so its absence is said on the title field before anything is sent. Marking complete flushes the autosave with the other status, which carries every unsaved change in the same save.
+
+A complete spell shows its statement and no button: there is no Reopen as Draft. Once complete, a spell's workings are recorded against it and its visibility lock has started, so reopening would undo both. To vary a complete spell, the copy (Duplicate a Spell) is the way. This is the control only: the service still accepts complete to draft.
+
+**Visibility.** A spell is seen by its author alone, or by every member of the coven. The control is a switch, Share With the Coven, on for the coven and off for private, with a line under it saying what its state means. A new spell starts private, because the autosave would otherwise share it 3 s after the first keystroke. It takes either, and the choice goes out with its first save.
+
+A draft moves either way, as often as wanted, with no question, since sharing it is reversible. A complete spell obeys DESIGN.md §5's one-way rule, held by the service. A private one is shared by switching it on, which asks first and then saves at once, so that one action with its confirmation shares it. A shared one never goes back, so the control then reads only and says so, rather than leave a person to find out from a refusal.
+
+## Step values, documents and totals
+
+**Stored values.** Steps written back from stored values (an Undo or Redo, a recovered draft) are made safe to save. A saved id the server no longer holds becomes none, so the save adds the step as a new one instead of being refused for naming a row the spell has not got. A step with no row key (a draft kept before keys existed) is given one. `live` is the ids of the spell's steps as last saved.
+
+**GraphQL documents.** The builder's GraphQL for its steps is the picker's lookup and the saved steps' read. A saved step's selection is written out in full there and in both save mutations (`../index.tsx`) rather than shared as a fragment. graphql-armor counts a fragment spread as a level (`flattenFragments` is off), and through a spread the jar's `stock { variant { id } }` and the form's `formChoice { group { icon } }` are 8 deep, past DESIGN.md §7's 7. Written out, they are 6. The three copies cannot drift apart unseen: each answer is typed as `SpellBuilderStep` (`../types.ts`) where the builder reads it, and `tests/guards/document-depth.test.ts` holds every document to the limit.
+
+**The saved steps read.** It returns each step as the builder opens it: what it lays and how much, the form's icon, the categories it adds to the spell's derived ones, and the coven's jar units. A step's unit is checked against those, the jar list being the ingredient's for the coven `$workspaceId` names.
+
+**The supply total.** It is what a form's steps need together, for its one line in In Coven Inventory: "3 tsp".
+
+- One amount stays as it was typed.
+- Amounts in one unit add as they are (a count too, since nothing is converted).
+- Amounts in two units of one dimension add in the jar's unit through `unitConvert`.
+- Anything else is listed, "1 tsp + 2 pinch", rather than guessed.
+- A blank amount adds nothing, and no amount at all is null.
+
+## Closing the modal
+
+Close, Escape and a click outside save what is unsaved, then close, and ask nothing. Unlike other forms there is no Discard question, since a spell's draft is kept rather than thrown away (claude-docs/design-decisions/m10.12-spell-builder-modal.md). The close is held while the save runs. A refused save keeps the modal open with the refusal shown, so nothing typed is lost. Closing the tab or reloading is the autosave's to guard: `useAutosave` asks the browser, and saves as the tab hides, which no page can answer by saving.
+
+## The save module and its conflicts
+
+Every way of saving goes through one call: the autosave's, Save's, Close's and Mark Complete's. It takes a target rather than assuming "the row", so that a later edit to a complete spell can go into a draft revision (spell history, v2) by naming another target. Today both targets are the spell's one row, draft or complete.
+
+The call saves `input` to `target`: `createSpell` for a new spell, otherwise `updateSpell` against the revision the target names. A `null` revision writes over whatever the row is at. The builder never sends one, since Keep My Version names the revision the refusal reported, so a third save in between is met as a conflict too rather than written over.
+
+Reload Latest is the read made after someone else's save got in first. The spell as the server has it now (fields, categories and steps) replaces the form, what was typed into it included, and the form starts clean from it. The engine takes the revision the refusal reported, and a save made since is met as the next conflict. A read that fails leaves the conflict and the typing as they are, and says so. See "Saving" and "Two people, one spell".
+
+## The suggest field
+
+A spell field whose box suggests from a fixed list (`./constants`) as it is typed in. A pick fills the field with the name, and anything else typed is kept as typed, so a value saved before the list existed ("Full") opens unchanged. The ingredient form's SuggestField is bound to that form's values and asks a server lookup, so this is the builder's own.

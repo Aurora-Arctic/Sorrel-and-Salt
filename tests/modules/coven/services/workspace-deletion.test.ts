@@ -8,7 +8,7 @@ import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 
 useRawClient();
 
-// Deleting a workspace (M6.14): owners only, a soft delete of the workspace
+// Deleting a workspace: owners only, a soft delete of the workspace
 // row alone. Members lose access because the lookups that admit them stop
 // finding a deleted workspace; their rows are left as they were.
 

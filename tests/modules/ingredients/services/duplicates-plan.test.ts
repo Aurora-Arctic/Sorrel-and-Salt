@@ -5,12 +5,8 @@ import { findPossibleDuplicates } from '@/modules/ingredients';
 import { A, B, asUser } from '../../../support/as-user';
 import type { Logged } from '../../../support/db/types';
 
-// The query findPossibleDuplicates actually sends, planned. Its results look
-// the same whether or not the trigram indexes are reachable, so the plan is
-// the only evidence (claude-docs/db/fuzzy-matching.md, "Fuzzy matching").
-//
-// The connection is rebuilt with a logger rather than the query copied here:
-// a hand-written copy would prove a plan for SQL the service may not send.
+// The query findPossibleDuplicates actually sends, planned. Its results look the same whether or not the trigram indexes are reachable, so the plan is the only evidence (claude-docs/db/fuzzy-matching.md, "Fuzzy matching").
+// The connection is rebuilt with a logger rather than the query copied here: a hand-written copy would prove a plan for SQL the service may not send.
 
 const logged = vi.hoisted(() => [] as Logged[]);
 
@@ -49,17 +45,9 @@ function match(statements: Logged[]): Logged {
 
 describe('the fuzzy duplicate query', () => {
   describe('EXPLAIN', () => {
-    // Seeded once per file (MB.184), inside the describe that plans.
-    // Sequential scans are disabled, as ingredients-trigram.test.ts does for
-    // its negative control: a seq scan that survives `enable_seqscan = off`
-    // is one with no alternative. That alone is not enough here. The
-    // folk-name arm filters `deleted_at IS NULL`, which is
-    // `ingredient_folk_names_unique`'s partial predicate, so that index
-    // offers a whole-table walk that is cheaper than a GIN probe on a small
-    // table and reads like "an index was used". So the folk names are
-    // numerous and their trigrams distinct — md5, not a shared prefix —
-    // enough that the planner's choice is between the probe and the walk
-    // rather than a foregone one.
+    // Seeded once per file, inside the describe that plans. Sequential scans are disabled, as ingredients-trigram.test.ts does for its negative control: a seq scan that survives `enable_seqscan = off` is one with no alternative.
+    // That alone is not enough. The folk-name arm filters `deleted_at IS NULL`, which is `ingredient_folk_names_unique`'s partial predicate, so that index offers a whole-table walk cheaper than a GIN probe on a small table and reads like "an index was used".
+    // So the folk names are numerous and their trigrams distinct (md5, not a shared prefix), enough that the planner chooses between the probe and the walk rather than having no choice.
     beforeAll(async () => {
       await sql`truncate ingredients cascade`;
       await sql`

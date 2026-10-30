@@ -17,18 +17,15 @@ import { insertIngredient } from '../support/db/insert-ingredient';
 import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
 import { ingredientSlug } from '@/lib/slugify';
 
-// MB.272: a click anywhere on an ingredient card opens its entry, as a click on its name does,
-// on the public compendium (CompendiumCards) and on a coven's Ingredients page (CovenCards),
-// while each control on the card keeps its own action and navigates nowhere. The card is one
-// stretched link (claude-docs/components/ingredient-card.md, "The whole card is the link"),
-// which only a browser can prove: jsdom does no hit-testing, so a component test cannot tell
-// whether a click on the card's empty space reaches the name's overlay.
+// A click anywhere on an ingredient card opens its entry while each control keeps its own action. The card is
+// one stretched link (claude-docs/components/ingredient-card.md, "The whole card is the link"); jsdom does no
+// hit-testing, so only a browser shows whether a click on empty space reaches it.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-// The card's face slides down under the pointer (the drawer, M12.44). Without motion it stays
+// The card's face slides down under the pointer (the drawer). Without motion it stays
 // put, so a point measured on the card at rest is the same point on the card when it is pressed.
 test.use({ reducedMotion: 'reduce' });
 
@@ -43,10 +40,8 @@ const nameLink = (card: Locator, name: string) => card.getByRole('link', { name,
 type Point = { x: number; y: number };
 
 /**
- * Presses the card at `point`, given relative to its face, after checking the point is on the
- * face and off every link and button on it: a press on the name would open the entry whatever
- * the rest of the card does, and a press on a control would test that control, so either would
- * prove nothing.
+ * Presses the card at `point`, relative to its face, after checking the point is off every link and button: a
+ * press on the name would open the entry whatever the rest does, and one on a control would test that control.
  */
 async function pressCardAt(card: Locator, point: Point): Promise<void> {
   const face = await faceOf(card).boundingBox();

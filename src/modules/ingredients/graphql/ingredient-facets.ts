@@ -9,13 +9,8 @@ import type {
 } from '../types';
 import { IngredientElementEnum, IngredientSourceEnum, ToxicFilterEnum } from './ingredient';
 
-// M12.3's answer: how many entries each search filter value would list, for
-// the compendium (`compendiumFacets`, in compendium.ts, which adds the No Refs
-// count) and a coven's list (`workspaceIngredientFacets`, in
-// workspace-ingredient-list.ts). One small
-// object type per value type, so each `value` is typed as the argument it
-// would be sent back as (claude-docs/graphql/schema.md, "compendiumFacets and
-// workspaceIngredientFacets").
+// How many entries each search filter value would list, for the compendium (`compendiumFacets`) and a coven's list (`workspaceIngredientFacets`).
+// One small object type per value type, so each `value` is typed as the argument it is sent back as (claude-docs/graphql/schema.md, "compendiumFacets and workspaceIngredientFacets").
 
 const COUNT_DESCRIPTION =
   'How many entries the list would hold with this value as the only one chosen of its kind, the rest of the filter unchanged.';

@@ -6,10 +6,8 @@ import { setName } from '@/modules/identity';
 import { A, B, E, asUser } from '../../../support/as-user';
 import type { NamedUserRow } from './types';
 
-// MB.88: the name the site shows, changed by its owner alone through the
-// audited write path. `setName` takes no id, so the only row a caller can
-// name is the session's own (claude-docs/auth/admin-bootstrap.md, "The
-// account page").
+// The name the site shows, changed by its owner alone through the audited write path.
+// `setName` takes no id, so the only row a caller can name is the session's own (claude-docs/auth/admin-bootstrap.md, "The account page").
 
 let sql: ReturnType<typeof postgres>;
 
@@ -32,10 +30,8 @@ async function setVerified(id: string, verified: boolean): Promise<void> {
 }
 
 beforeEach(async () => {
-  // Both verified, back to their seeded names, and stamped by E, so a stamp
-  // of their own id is visible as this call's write. Unverified first: the
-  // trigger on `users` keeps `updated_by` on a write that changes nothing,
-  // and the seed already verified them.
+  // Both are verified, back to their seeded names, and stamped by E, so a stamp of their own id shows as this call's write.
+  // Unverified first: the trigger on `users` keeps `updated_by` on a write that changes nothing, and the seed already verified them.
   for (const user of [A, B]) {
     await setVerified(user.id, false);
     await sql`update users set email_verified = true, name = ${user.name}, updated_by = ${E.id} where id = ${user.id}`;

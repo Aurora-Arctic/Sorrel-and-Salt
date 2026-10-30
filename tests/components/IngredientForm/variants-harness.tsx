@@ -16,15 +16,9 @@ import { renderWithClient, waitFor } from '../../support/ingredient-form';
 import { offerForms, offerIngredients, offerNothing } from '../../support/msw/ingredient-lookups';
 import type { FormNode, IngredientNode } from './types';
 
-// The Variants section's fixtures, locators and harness (MB.221), shared by
-// variants.test.tsx, which renders the whole form, and variants-field,
-// copy and substitutes, which render `VariantsField` alone. The harness is
-// the field on react-hook-form with the form's own resolver, as
-// list-field.test.tsx renders `ListField`: what a save sends is what the
-// resolver gives `handleSubmit`, the input the form's save mutation
-// carries. What the form adds around the field — a save opening the variant
-// and section an error is in, Close All, undo, the unsaved-changes question
-// — is not here, and stays in variants.test.tsx.
+// The Variants section's fixtures, locators and harness, shared by variants.test.tsx (which renders the whole form) and variants-field, copy and substitutes (which render `VariantsField` alone).
+// The harness is the field on react-hook-form with the form's own resolver, as list-field.test.tsx renders `ListField`: what a save sends is what the resolver gives `handleSubmit`, the input the form's save mutation carries.
+// What the form adds around the field (a save opening the variant and section an error is in, Close All, undo, the unsaved-changes question) is not here and stays in variants.test.tsx.
 
 export const OIL_ID = '8d2c4e6f-1a3b-4c5d-9e7f-0a1b2c3d4e5f';
 export const HERB_VARIANT_ID = '1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f';
@@ -41,7 +35,7 @@ export const OIL: FormNode = {
   claimants: [],
 };
 
-/** Invented substitutes (M1.25): one in no form, one in a form of Oil's group, one in oil itself. */
+/** Invented substitutes: one in no form, one in a form of Oil's group, one in oil itself. */
 export const PLAINWORT_ID = '2a3b4c5d-6e7f-4a8b-9c0d-1e2f3a4b5c6d';
 export const TINCTWORT_ID = '3b4c5d6e-7f8a-4b9c-8d0e-2f3a4b5c6d7e';
 export const OILWORT_ID = '4c5d6e7f-8a9b-4c0d-9e1f-3a4b5c6d7e8f';
@@ -85,10 +79,8 @@ export const FORMLESS_PLAINWORT = {
   },
 };
 
-// Found by label, as tests/support/interact.tsx finds them (MB.181), but
-// within a variant's card: its fields share their labels with the
-// ingredient's and with each other variant's. The required marker, hidden
-// from the name, is dropped from the label's text.
+// Found by label, as tests/support/interact.tsx finds them, but within a variant's card, because its fields share their labels with the ingredient's and with each other variant's.
+// The required marker, hidden from the name, is dropped from the label's text.
 const byLabel = (scope: HTMLElement, name: string, selector: string) =>
   within(scope).getByLabelText(name, {
     selector,
@@ -105,7 +97,7 @@ export const variant = (form: string) => screen.getByRole('group', { name: form 
 export const noVariant = (form: string) =>
   expect(screen.queryByRole('group', { name: form })).not.toBeInTheDocument();
 
-/** A variant's Edit, which opens and closes it (MB.115). */
+/** A variant's Edit, which opens and closes it. */
 export const editOf = (form: string) =>
   within(variant(form)).getByRole('button', { name: `Edit ${form}` });
 /** Opens a closed variant by its Edit, as a person would before typing in it. */
@@ -114,7 +106,7 @@ export const openVariant = (form: string) => {
   if (edit.getAttribute('aria-expanded') !== 'true') fireEvent.click(edit);
   return variant(form);
 };
-/** Opens a closed variant and every one of its own sections, closed as an edit's are (MB.115). */
+/** Opens a closed variant and every one of its own sections, closed as an edit's are. */
 export const openWhole = (form: string) => {
   const card = openVariant(form);
   openSectionsIn(card, ...VARIANT_SECTIONS);
@@ -157,7 +149,7 @@ export const twoForms = (
   ],
 });
 
-// What a variant copies from the ingredient (MB.115), and an entry holding
+// What a variant copies from the ingredient, and an entry holding
 // something in each.
 export const CATEGORY_A = '8a9b0c1d-2e3f-4b4c-8d5e-6f7a8b9c0d1e';
 export const CATEGORY_B = '9b0c1d2e-3f4a-4c5d-9e6f-7a8b9c0d1e2f';
@@ -277,13 +269,8 @@ export async function openSubstitutes(oil: HTMLElement) {
 }
 
 /**
- * `VariantsField` on its own, its section open, under the resolver the form
- * uses for `workspaceId` (null, the compendium's). `values` are an entry's,
- * opened as the form opens an edit's; without them the field starts on a new
- * coven ingredient named Testwort. Beside it, the ingredient's own
- * Description, which a variant copies from, and Save Ingredient, which
- * submits: `onSubmit` is called with what the resolver passes, the input a
- * save sends.
+ * `VariantsField` on its own, its section open, under the resolver the form uses for `workspaceId` (null, the compendium's). `values` are an entry's; without them the field starts on a new coven ingredient named Testwort.
+ * Beside it are the ingredient's own Description, which a variant copies from, and Save Ingredient, which calls `onSubmit` with the input a save sends.
  */
 export function renderVariants({
   workspaceId,

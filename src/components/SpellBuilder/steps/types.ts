@@ -34,17 +34,17 @@ export interface SpellStepValue {
   unit: string;
   /** The unit last saved, which the unit rule leaves alone, as the service does. */
   savedUnit: string | null;
-  /** An instruction step's text, kept and sent back untouched (M13.3). */
+  /** An instruction step's text, kept and sent back untouched. */
   body: string | null;
   /** The form's group icon; null draws the generic spoon. */
   icon: FormGroupIcon | null;
   /** The ingredient's categories and the form's own. */
   categories: StepCategory[];
-  /** The care this step's ingredient needs (M10.18); null where there is no entry to say. */
+  /** The care this step's ingredient needs; null where there is no entry to say. */
   safety: StepSafety | null;
   /** The unit of the coven's jar of this form; null where it holds none, or one with no unit. */
   jarUnit: Unit | null;
-  /** The coven's jar of this form, with what is in it; null where it holds none (M10.19). */
+  /** The coven's jar of this form, with what is in it; null where it holds none. */
   jar: StepJar | null;
 }
 
@@ -93,7 +93,7 @@ export interface SortableStepsProps {
   children: ReactNode;
 }
 
-/** What the coven's jar of a form holds, as far as a step compares itself against it (M10.19). */
+/** What the coven's jar of a form holds, as far as a step compares itself against it. */
 export interface StepJar {
   /** Null where the jar has no unit. */
   unit: Unit | null;

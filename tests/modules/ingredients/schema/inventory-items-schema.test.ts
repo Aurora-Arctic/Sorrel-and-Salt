@@ -110,7 +110,7 @@ beforeEach(async () => {
 });
 
 describe('inventory_items table', () => {
-  // MB.217: stock names the form a jar holds, so Mugwort herb and Mugwort
+  // Stock names the form a jar holds, so Mugwort herb and Mugwort
   // oil are two rows of one coven.
   describe('one live row per variant per workspace', () => {
     // The pair is unique, not either half: drop a column from the index and

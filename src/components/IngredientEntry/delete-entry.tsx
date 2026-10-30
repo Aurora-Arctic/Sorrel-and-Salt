@@ -11,12 +11,8 @@ import { useAnnounce } from '../ClickFeedback/status-region';
 import Modal from '../Modal';
 import type { CupboardQuestionProps, CupboardWrite, DeleteEntryOptions } from './types';
 
-// Delete Ingredient asked in a dialog (M8.17), for a coven's own entry: from
-// the entry page's bin and from a list card's More, so the two ask the
-// same confirmation and land the same way, as Make It Ours and Remove share
-// `cupboard-writes.tsx`. The edit dialog asks in its form's own confirmation
-// card instead, rather than a dialog inside a dialog. The wording is the
-// form's: the entry leaves the coven, and a spell holding it keeps it (M5.3).
+// Delete Ingredient asked in a dialog, for a coven's own entry: the entry page's bin and a list
+// card's More share it (claude-docs/components/ingredient-entry.md, "Structure").
 
 const DeleteOwnIngredientDocument = graphql(`
   mutation DeleteOwnIngredient($id: ID!, $workspaceId: ID!) {
@@ -64,14 +60,7 @@ export function DeleteDialog({
   );
 }
 
-/**
- * The delete, with what follows it, as `useCupboardWrites`'s remove: it leads
- * to `deletedHref`, replacing the history entry, or where there is none reads
- * the page again; busy past the write until that page arrives, so its
- * confirmation closes with what the delete changed and the focus goes to the
- * heading then showing. A refusal closes the confirmation and goes to
- * `onRefused`.
- */
+/** The delete and what follows it, as `useCupboardWrites`'s remove; a refusal closes the confirmation and goes to `onRefused`. */
 export function useDeleteEntry({
   workspaceId,
   id,
@@ -85,8 +74,8 @@ export function useDeleteEntry({
   const remove = useMutation({
     mutationFn: () => graphqlRequest(DeleteOwnIngredientDocument, { id, workspaceId }),
     onSuccess: () => {
-      // The page's status region outlives the card, so a screen reader hears the removal
-      // the list then shows (M9.10).
+      // The page's status region outlives the card, so a screen reader hears the removal the list
+      // then shows.
       if (announcement) announce(announcement);
       if (deletedHref) navigate(deletedHref, { replace: true });
       else refresh();

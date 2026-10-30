@@ -4,11 +4,9 @@ import LinkHint from '../src/components/LinkHint';
 import { PendingLink } from '../src/lib/navigation';
 import { Navigating } from './navigating';
 
-// The site's one link (src/lib/navigation/pending-link.tsx). Pressed, it sets
-// `aria-busy` and tells the `LinkHint` inside it to show its dot. The target
-// is a `coven` region with no body in this frame to answer it, so the page
-// stays and only the link shows the wait. A navigation here never arrives
-// (./navigating.tsx); "Start Over" ends it.
+// The site's one link (src/lib/navigation/pending-link.tsx). Pressed, it sets `aria-busy` and tells
+// its `LinkHint` to show its dot. The target `coven` region has no body in this frame, so only the
+// link shows the wait; the navigation never arrives (./navigating.tsx).
 const meta = {
   title: 'Feedback / Pending Link',
 } satisfies Meta;

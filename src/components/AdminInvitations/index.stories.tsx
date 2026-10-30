@@ -13,14 +13,12 @@ import { invitationsHref } from './href';
 import type { AdminInvitationEntry, AdminInvitationsFilter, AdminInvitationsProps } from './types';
 
 // Render-only; behaviour is asserted in tests/components/AdminInvitations.
-// Invite and Revoke talk to the network only when sent. The workshop's fake API
-// (.storybook/mock-api.ts) answers them: accepted, or refused where a state
-// shows the refusal.
+// Invite and Revoke reach the network only when sent; the workshop's fake API
+// (.storybook/mock-api.ts) answers them, refusing where a state shows that.
 const meta = {
   title: 'Admin / Invitations',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // The filter a page shows: part of an address and Expires in 24 Hrs, which
@@ -88,9 +86,7 @@ const middlePageNode = <PageTwo />;
 
 // New Invitation pressed: the form `?invite` opens over the list. Closing it
 // navigates to the list's address without `?invite`, which the workshop's
-// router reports (.storybook/navigation.ts) and this holds as the page's state,
-// so the list beneath is usable once the form is gone, and Open Again
-// brings the form back.
+// router reports (.storybook/navigation.ts). Open Again brings the form back.
 export const Inviting: Story = {
   render: () => {
     const [inviting, setInviting] = useState(true);
@@ -187,8 +183,6 @@ const sendAddressRefusedNode = (
 );
 const sendAcceptedNode = <SendView answers={SEND_ACCEPTED} address="fern@fixture.test" />;
 
-// One story with a control to choose the state: each is a whole page or list,
-// too big to sit beside the others (claude-docs/workshop.md, rule 5).
 const STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   Empty: emptyNode,

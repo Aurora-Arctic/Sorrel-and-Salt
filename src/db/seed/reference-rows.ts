@@ -6,17 +6,13 @@ import type { CitationFields } from '../../lib/types';
 import type { SeedTransaction } from './types';
 
 // The compendium-tier `references` rows a reference-data seed wants, shared by
-// the sources seed (MB.156) and the compendium seed (MB.242) so both key a
+// the sources seed and the compendium seed so both key a
 // work on one citation and a work the one wrote is linked, not twinned, by
 // the other (claude-docs/db/references.md, "How the seed reads the docs").
 
 /**
- * Every wanted source's id by its citation, inserting the missing ones. A
- * row a seed wrote answers by its key, live or not — `null` when
- * soft-deleted, so it is neither re-inserted nor linked anew. A live
- * compendium row nobody seeded, whose citation is the source's to the
- * letter, is linked rather than duplicated, and never written to. A source
- * wanted twice is one row.
+ * Every wanted source's id by its citation, inserting the missing ones. A row a seed wrote answers by its key, `null` when soft-deleted (neither re-inserted
+ * nor linked). A live compendium row nobody seeded whose citation matches to the letter is linked, never written to. A source wanted twice is one row.
  */
 export async function insertMissingReferences(
   tx: SeedTransaction,

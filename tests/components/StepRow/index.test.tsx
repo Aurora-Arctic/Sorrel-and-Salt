@@ -2,7 +2,7 @@ import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import StepRow from '@/components/StepRow';
 
-// What a step row draws from what it is given (M13.3). The editing controls
+// What a step row draws from what it is given. The editing controls
 // the spell builder passes in are tests/components/SpellBuilder's.
 
 const row = () => within(screen.getByRole('list')).getByRole('listitem');

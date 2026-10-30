@@ -10,13 +10,9 @@ import { FieldShell, FormActions, fieldDescription } from '../Field';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 
-// The create-workspace page's form (M9.16): one name, sent to M6.7's
-// `createWorkspace`, and on success the new coven's index page. A plain
-// controlled input rather than react-hook-form, as NameForm is: one field,
-// and every refusal, the creation gate's included, is the server's.
-// No wrapper and no stylesheet: the page's `.page-frame__section` is the
-// column, so the notice and the form are its children.
-// See claude-docs/components/create-workspace-form.md.
+// The create-workspace page's form: one name, sent to `createWorkspace`, then the new coven's index. A
+// plain controlled input, not react-hook-form, as every refusal is the server's, the creation gate's
+// included (claude-docs/components/create-workspace-form.md).
 
 const CreateWorkspaceDocument = graphql(`
   mutation CreateWorkspace($name: String!) {
@@ -33,16 +29,16 @@ const CreateWorkspaceForm = (): ReactElement => {
   const [value, setValue] = useState('');
   const [alert, setAlert] = useState<string>();
   const [fieldError, setFieldError] = useState<string>();
-  // Set once the coven exists and the page is on its way: the button stays
-  // busy until the next page replaces this one, so a second press cannot
-  // make a second coven.
+  // Set once the coven exists and the page is on its way: the button stays busy until
+  // the next page replaces this one, so a second press cannot make a second coven.
   const [leaving, setLeaving] = useState(false);
 
   const mutation = useMutation({
     mutationFn: (name: string) => graphqlRequest(CreateWorkspaceDocument, { name }),
     onSuccess: ({ createWorkspace: { slug } }) => {
       setLeaving(true);
-      // The new coven's home replaces the whole of this page, not only a coven body; it has its contents menu.
+      // The new coven's home replaces the whole of this page, not only a coven body; it has its
+      // contents menu.
       navigate(`/coven/${slug}`, {
         target: { region: 'main', shape: 'page', frame: 'with-nav', head: 'eyebrow' },
       });
@@ -65,9 +61,9 @@ const CreateWorkspaceForm = (): ReactElement => {
   const busy = mutation.isPending || leaving;
   // A blank name has nothing to create: the service would refuse it.
   const empty = value.trim() === '';
-  // A typed name, kept from a link, a tab close or a reload (M13.14). Not
-  // while busy: the navigation to the new coven is this form's own, and the
-  // render it reads is the one the request left busy.
+  // A typed name, kept from a link, a tab close or a reload. Not while busy: the
+  // navigation to the new coven is this form's own, and the render it reads is the
+  // one the request left busy.
   const discard = useDiscardGuard(!empty && !busy);
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
@@ -85,7 +81,7 @@ const CreateWorkspaceForm = (): ReactElement => {
       {/* `noValidate`: every refusal is the server's, worded and placed like
           the rest, rather than the browser's own bubble. */}
       <form className="form" onSubmit={handleSubmit} noValidate>
-        {/* No tip: the label says it (the owner's call, 2026-10-20). */}
+        {/* No tip: the label says it. */}
         <FieldShell label="Name" required {...field}>
           <input
             id={field.controlId}
@@ -100,8 +96,8 @@ const CreateWorkspaceForm = (): ReactElement => {
             {...aria}
           />
         </FieldShell>
-        {/* Offered only when there is something to create, and busy, saying
-            so, from the press to the next page: the owner's rule for every form. */}
+        {/* Offered only when there is something to create, and busy, saying so, from
+                    the press to the next page. */}
         <FormActions
           noun="Coven"
           label="Create Coven"

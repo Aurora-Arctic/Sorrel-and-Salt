@@ -20,8 +20,7 @@ const DIRECTIVE = /^(?:oxlint-|eslint-|@ts-|prettier-ignore|istanbul |c8 |v8 )/;
 /**
  * @param {string} text a citing file
  * @param {string} doc the split summary, `claude-docs/db.md`
- * @param {{ text: string, file: string }[]} headings every heading under the
- *   summary's directory, inline-code marks dropped, with the file it is in
+ * @param {{ text: string, file: string }[]} headings every heading under it, with its file
  */
 export function repointCitations(text, doc, headings) {
   let count = 0;

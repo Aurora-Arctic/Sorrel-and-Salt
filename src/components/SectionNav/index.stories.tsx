@@ -5,15 +5,13 @@ import { WorkshopPathname } from '../../../.storybook/navigation';
 import AdminNav from '../AdminNav';
 import CovenNav from '../CovenNav';
 
-// Render-only; behaviour is asserted in tests/components/SectionNav. The
-// workshop's `usePathname` stub answers whatever the wrapping provider says.
-// The shape is chosen by the window's width, so the narrow stories set the
-// workshop's own width (`meta.width`) rather than a frame's.
+// Render-only; behaviour is asserted in tests/components/SectionNav. The workshop's
+// `usePathname` stub answers whatever the wrapping provider says. The window's
+// width chooses the shape, so narrow stories set `meta.width`, not a frame's.
 const meta = {
   title: 'Navigation / Section Nav',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
 // A stand-in for the context row the layouts put the nav in: a hairline-edged

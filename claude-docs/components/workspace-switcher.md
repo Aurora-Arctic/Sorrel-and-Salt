@@ -155,3 +155,17 @@ clearing; `tests/modules/ingredients/services/covens-opening-entry.test.ts` whic
 covens an entry opens in (live, retired, own, by direct id, an admin);
 `tests/e2e/coven-switcher.spec.ts` the walk through the real layout. Axe is asserted
 in Playwright once a `/coven` page renders the switcher (M6.10, MB.7).
+
+## What the switcher is
+
+The switcher is a select over the viewer's workspaces, called covens on screen. Which one is current is read off the address and never kept in state, so two tabs in two workspaces do not interfere. Choosing another goes to the same page there when the page said it opens there, otherwise to the same section. The list is the caller's, since the layout already holds the memberships. A viewer holding creation rights gets one more choice, after the workspaces, that goes to the create page. Its value is that page's path, which no slug can equal since a slug holds no slash. While the switch is on its way the box shows the pick, the one thing held in state, and is busy, and the coven's body draws the destination's skeleton.
+
+## Keeping the focus across the switch
+
+The `[slug]` layout, and with it the switcher, remounts when the coven changes, and the focus that was on the box would drop to the page. A module variable is set when a switch to another coven starts and read once by the next switcher to mount. A module variable survives the remount as component state cannot, and unlike `sessionStorage` it dies with the page, so a reload never refocuses. A switch that ends without a remount (a refusal) clears it.
+
+The variable holds the slug of the coven picked, not a bare yes. A superseded switch (Compendium clicked mid-switch) leaves its slug behind, and a switcher that mounts anywhere but that coven reads it as stale, clears it and takes no focus.
+
+## The name as the context row's lead
+
+The chosen name is set as the context row's lead: the display face with a chevron inside a hairline border, so the row reads "Whitethorn Coven" and the name is also the control. The Combobox's select is restyled from `index.scss` rather than given a variant, since every part of it is reached by its own class, and the compound `.input.combobox__control` is outweighed by one more class. It looks the same on a phone as on a desktop. A long name wraps to two lines rather than being cut.

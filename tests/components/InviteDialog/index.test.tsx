@@ -4,10 +4,8 @@ import InviteDialog from '@/components/InviteDialog';
 import type { CreateInvitationMutation, CreateInvitationMutationVariables } from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
-// The owner's invite dialog (M7.4): an address, a role of viewer or member,
-// and a confirmation naming where the mail went. Render-and-send only: the
-// service behind the mutation is M7.3's and is tested there
-// (claude-docs/components/invite-dialog.md).
+// The invite dialog: an address, a role of viewer or member, and a confirmation naming where the mail went (claude-docs/components/invite-dialog.md).
+// It is render-and-send only; the service behind the mutation is tested in its own module.
 
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
@@ -52,10 +50,7 @@ function mockSending() {
   return calls;
 }
 
-/**
- * Nothing in the page to copy or follow: no link, no URL or token in the text
- * or in any field's value. The mail carries the only link there is.
- */
+/** Nothing in the page to copy or follow: no link, no URL or token in the text or in any field's value. The mail carries the only link there is. */
 function expectNothingToCopy() {
   expect(screen.queryAllByRole('link')).toEqual([]);
   expect(document.body.innerHTML).not.toMatch(/https?:|\/invite\/|token/i);
@@ -180,7 +175,7 @@ describe('InviteDialog', () => {
 
   // The guard's own shape is tests/components/Modal's; this is its wiring here.
   // A navigation from inside a modal goes unheld (tests/components/Modal/discard.test.tsx),
-  // so the leave guard here is the tab close and reload (M13.14).
+  // so the leave guard here is the tab close and reload.
   it('asks before Cancel, Escape or a tab close discards what was typed, and closes on Discard Changes', async () => {
     open();
     expect(unload()).toBe(false);

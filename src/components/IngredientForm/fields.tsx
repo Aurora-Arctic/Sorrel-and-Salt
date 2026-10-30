@@ -33,21 +33,14 @@ import {
   repeatOf,
 } from './values';
 
-// IngredientForm's own fields, on the shared field shell (../Field,
-// claude-docs/components/field.md). Each reads its own error out of the form
-// state, so a field re-renders for its own error and not for every other
-// field's. The text and select fields every form shares moved to ../Field in
-// MB.115. These four stayed here, where the ingredient form grew them, though
-// not all are its alone: CupboardEntryForm imports ListField and
-// MultiSelectField, and SuggestField and ToggleField are the ingredient form's
-// only. MB.120 kept them here (the owner, 2026-10-20) rather than move them to
-// ../Field as generic fields.
+// IngredientForm's own fields, on the shared field shell (../Field, claude-docs/components/
+// field.md). Each reads its own error out of the form state, so a field re-renders for its own
+// error alone. CupboardEntryForm also imports ListField and MultiSelectField.
 
 /**
- * A text field whose box suggests as it is typed in (DESIGN.md §14): a pick
- * fills the field with the suggestion's value, and free text stays as typed,
- * with no warning. What a pick links is the caller's, told of each pick
- * and each edit, and what it adds to the box is its qualifier.
+ * A text field whose box suggests as it is typed in (DESIGN.md §14): a pick fills the field with
+ * the suggestion's value, and free text stays as typed. What a pick links is the caller's, told of
+ * each pick and each edit; what it adds to the box is its qualifier.
  */
 export function SuggestField<O extends ComboboxOption = ComboboxOption>({
   name,
@@ -100,10 +93,9 @@ export function SuggestField<O extends ComboboxOption = ComboboxOption>({
 }
 
 /**
- * A closed set holding several values, on the combobox's multi-select box:
- * the select-only box, its choices as chips inside the control, as a list's
- * entries are. Nothing is typed and nothing is added by a button, so it is a
- * field, labelled and erring as one, rather than a list's fieldset.
+ * A closed set holding several values, on the combobox's multi-select box, its choices as chips
+ * inside the control. Nothing is typed or added by a button, so it is a field, labelled and erring
+ * as one, rather than a list's fieldset.
  */
 export function MultiSelectField({
   name,
@@ -139,7 +131,7 @@ export function MultiSelectField({
 /**
  * An on-or-off flag held in the form: the shared slide toggle, bound to the
  * form state rather than submitting by itself, since the form sends its
- * values as one input (M11.21). It cannot be wrong, so it has no error.
+ * values as one input. It cannot be wrong, so it has no error.
  */
 export function ToggleField({ name, label, hint }: ToggleFieldProps): ReactElement {
   const { control } = useFormContext<IngredientFormValues>();
@@ -158,14 +150,9 @@ export function ToggleField({ name, label, hint }: ToggleFieldProps): ReactEleme
 }
 
 /**
- * A list of free-text entries: one combobox to type in, with each entry added
- * shown inside it ahead of the text. A box with a source suggests, and a pick
- * adds as Add does. An error naming an entry marks that entry and reads out
- * on the box, through the list's one error element. An ordered list's entries
- * move, each by its handle. A repeat is refused at the box, as the save
- * would refuse it, and never suggested (MB.174). A substitute list's linked
- * entry opens a summary of its ingredient, and a typed one is read as a name
- * only (MB.115).
+ * A list of free-text entries: one combobox to type in, each entry shown inside it. A pick adds as
+ * Add does. An error naming an entry marks it and reads out on the list's one error element. An
+ * ordered list's entries move by their handles. A repeat is refused at the box and never suggested.
  */
 export function ListField({
   name,
@@ -193,7 +180,7 @@ export function ListField({
   // Its own ref rather than setFocus, which waits a tick: the box never
   // unmounts, so it can take the focus at once.
   const boxElement = useRef<HTMLInputElement | null>(null);
-  // The box and its button together, which an open list spans (MB.154).
+  // The box and its button together, which an open list spans.
   // Held as state, through its callback ref, so the box is told once it exists.
   const [boxRow, setBoxRow] = useState<HTMLDivElement | null>(null);
   // What the last add or removal did, for a screen reader: the box empties
@@ -220,7 +207,7 @@ export function ListField({
           .filter(
             (option) =>
               // A pick-only list offers the curated rows alone: a value only in
-              // use is one the compendium refuses (MB.162).
+              // use is one the compendium refuses.
               !(pickOnly && option.curated === false) &&
               !repeatOf(listed, option.value, option.link, nameToRefuse),
           )
@@ -282,10 +269,9 @@ export function ListField({
     }
     focusBox();
   };
-  // Add, and Enter with no suggestion picked, add what the box holds; a pick
-  // adds the suggestion's value, linked when the suggestion is an ingredient.
-  // Add refuses a repeat; a pick never is one, since the lookup leaves out
-  // what the list holds and withholds the typed row for a repeat.
+  // Add, and Enter with no suggestion picked, add what the box holds; a pick adds the suggestion's
+  // value, linked when it is an ingredient. Add refuses a repeat; a pick never is one, since the
+  // lookup leaves out what the list holds and withholds the typed row for a repeat.
   const add = () => {
     if (!refused(getValues(box) as string)) added(commitDraft(form, name));
   };
@@ -306,10 +292,9 @@ export function ListField({
     revalidate();
   };
 
-  // Keyed by the field array's id, which follows an entry through a move.
-  // The text and detail are read from the values watched: the field array's
-  // rows are a snapshot that an entry's own field — a substitute's form,
-  // picked beside the list (MB.221) — does not refresh.
+  // Keyed by the field array's id, which follows an entry through a move. Text and detail are read
+  // from the watched values: the field array's rows are a snapshot that an entry's own field (a
+  // substitute's form, picked beside the list) does not refresh.
   const substitutes = holdsSubstitutes(name);
   const chips = fields.map((row, index) => {
     const entry = listed[index] ?? row;
@@ -383,7 +368,7 @@ export function ListField({
           onFocus={onActivate}
           onBlur={field.onBlur}
           onPick={pick}
-          // Each pick adds an entry, so the list stays open for the next (M12.54).
+          // Each pick adds an entry, so the list stays open for the next.
           keepOpen
           onCommit={pickOnly ? () => unpicked(getValues(box) as string) : add}
           onRemoveLast={removeLast}

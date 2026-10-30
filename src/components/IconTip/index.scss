@@ -2,23 +2,15 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The control and its tip together: the tip's anchor, and the box the
-// pointer may cross onto the tip within. Middle-aligned, so a mark taller
-// than its row's text sits level with it rather than on its baseline.
+// The control and its tip together: the tip's anchor and the box the pointer may cross onto the tip within, middle-aligned.
 .icon-tip {
   @include tip-anchor;
 
   vertical-align: middle;
 }
 
-// The side a tip prefers, read by `useTip` as it opens (`--tip-placement`):
-// `side`, to the left of its control and level with it, as every Edit stands
-// at the end of its line, a list row's, a phone card's top right, a form
-// row's, so to its left is room the line already has. In a table row, centred
-// above the control, the owner's call at MB.115's review: level with it, the
-// tip covered the row's own text. Not on a phone card, which keeps the left.
-// A flat property on the wrapper rather than JavaScript's guess, since only
-// the container query knows which the table is showing.
+// The side a tip prefers, read by `useTip` as it opens (`--tip-placement`); `side` by default, centred above in a table row
+// (claude-docs/components/icon-tip.md, "Placement").
 .icon-tip--side {
   --tip-placement: left;
 }
@@ -33,14 +25,8 @@
   }
 }
 
-// A short word, placed by `useTip` on that side and flipped where there is no
-// room, so a table frame's sideways scroll clips nothing: the bubble is fixed.
-// One layer up, over the text it covers. Mounted only while open, so it fades
-// in from its starting style, over `$icon-tip-fade` rather than every other
-// tip's `$tip-fade`. It takes no pointer: the tip is heard on its control
-// alone and closes the moment the pointer leaves, so a bubble that caught the
-// pointer would only cover what is beneath it (the owner's call, 2026-10-20).
-// claude-docs/components/icon-tip.md, "Placement".
+// The tip: placed by `useTip`, one layer up, mounted only while open so it fades in over `$icon-tip-fade`, and it takes no pointer
+// (claude-docs/components/icon-tip.md, "Placement").
 .icon-tip__bubble {
   @include tip-above;
   @include tip-bubble-open($icon-tip-fade);
@@ -53,18 +39,14 @@
     transform: translateX($icon-tip-travel);
   }
 
-  // Closed: faded back out the way it came, over `$icon-tip-fade`, before the
-  // component takes it out of the page.
+  // Closed: faded back out over `$icon-tip-fade` before the component removes it.
   &--closing {
     opacity: 0;
     transform: translateX($icon-tip-travel);
   }
 }
 
-// Centred above, as a table row has it, and as `placement="above"` asks: for a
-// control in a row of its kind, a segment of the radio strip (M12.7), where a
-// tip to the side would cover the next segment and one below would cover the
-// chosen name printed under the bar.
+// Centred above, as a table row has it and as `placement="above"` asks (claude-docs/components/icon-tip.md, "Placement").
 .data-table .icon-tip__bubble,
 .icon-tip--above .icon-tip__bubble {
   // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without fading in, widely available 2027-02-06
@@ -79,10 +61,7 @@
   }
 }
 
-// Below the control, its right edge on the control's: for a mark at a row's
-// right end with rows beneath it, where a tip to its left would cover the
-// row's own words and one centred under it would run past the edge a menu
-// panel clips at (the account menu's count, M10.32, the owner's call).
+// Below the control, its right edge on the control's (claude-docs/components/icon-tip.md, "Placement").
 .icon-tip--below .icon-tip__bubble {
   // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without fading in, widely available 2027-02-06
   @starting-style {
@@ -96,19 +75,13 @@
   }
 }
 
-// A list row's Edit link, outside a form: the larger pencil (`$icon-size-large`
-// around `$glyph-size-large`), in the green every Edit control wears. The
-// link's own focus ring, the accent's, from the typography.
+// A list row's Edit link outside a form: the larger pencil in the green every Edit control wears, with the accent's own focus ring.
 .icon-tip__edit {
   @include icon-button($icon-size-large, $glyph-size-large);
   @include icon-button-edit;
 }
 
-// A coven card foot's Edit and Annotate icons in the theme's main text colour, the owner's call
-// (M9.9, 2026-10-20), in place of the accent green, which its Edit Stock pencil keeps:
-// `$text-primary` is chalk on the dark page and the body text on the light one, where a
-// pure white would vanish on a card.
-// The hover and focus tint stays the edit pencil's.
+// A coven card foot's Edit and Annotate icons in `$text-primary`, not the accent green (claude-docs/components/icon-tip.md, "Ink and size").
 .icon-tip__edit--plain {
   &,
   &:hover,
@@ -118,13 +91,7 @@
   }
 }
 
-// The three dots (a More menu, M8.17) in the ink of the page rather than Edit's green, at rest and
-// pressed alike: white in dark and the body text in light, `$card-more-ink`, wherever it stands
-// (a card's foot, the entry page, the Quick Look window; the owner's call, 2026-10-20), where the
-// pencil and bin beside it keep their green and wax. White vanishes on a light surface.
-// The compendium card's Edit in Compendium wears the same ink (`icon-tip__edit--ink`, the owner's
-// call, 2026-10-21); its hover and focus tint stays the edit pencil's green, as the plain Edit
-// has it, and the focus ring is the link's own.
+// The three dots in the page's ink, `$card-more-ink`, at rest and pressed; the compendium card's Edit in Compendium wears it too (claude-docs/components/icon-tip.md, "Ink and size").
 .icon-tip__more,
 .icon-tip__edit--ink {
   &,
@@ -140,25 +107,18 @@
   height: $glyph-size-large;
 }
 
-// A list row's lone bin (a coven card's Delete or Remove, M8.17): the same
-// size as the pencil beside it, in the wax a remove control wears.
+// A list row's lone bin, the pencil's size, in the wax a remove control wears.
 .icon-tip__remove {
   @include icon-button($icon-size-large, $glyph-size-large);
   @include icon-button-remove;
 }
 
-// An entry's Quick Look beside its name in a list (M12.5): Edit's pencil's
-// box and green, round the eye, sitting in the name's line. The eye itself is
-// a third as big again as the pencil, `$glyph-size-large` * 4 / 3, in the same
-// 2rem box, so the foot's height and the eye's line with the pencil stay put
-// (the owner's call, 2026-10-20). `math.div` is that sum, since Sass has
-// dropped `/` for division.
+// An entry's Quick Look beside its name: the pencil's box and green round an eye a third bigger, `$glyph-size-large` * 4 / 3, via `math.div` (claude-docs/components/icon-tip.md, "Ink and size").
 .icon-tip__look {
   @include icon-button($icon-size-large, math.div($glyph-size-large * 4, 3));
   @include icon-button-edit;
 
-  // The eye in the same white-in-dark ink as the three dots (`$card-more-ink`, the owner's call,
-  // 2026-10-21), set after the green above so it wins; the green tint under it stays.
+  // The eye in the dots' ink (`$card-more-ink`), set after the green so it wins.
   &,
   &:hover,
   &:focus-visible,
@@ -167,8 +127,7 @@
   }
 }
 
-// The small eye (the spell builder's step rows and inventory lines, the owner's call,
-// 2026-10-29): the mark at `$glyph-size` in a `$icon-size` box, 24px, the smallest hit area.
+// The small eye (the spell builder's step rows and inventory lines): the mark at `$glyph-size` in a 24px `$icon-size` box, the smallest hit area.
 .icon-tip__look--small {
   width: $icon-size;
   height: $icon-size;
@@ -179,14 +138,8 @@
   }
 }
 
-// The action icons of a card's foot, an entry page's head and the Quick Look window's head, 13%
-// larger than the large size (`$action-icon-size`, the owner's call, 2026-10-21): the pencils
-// (Edit, Annotate, Edit Stock), the plus and its held check, the bin, the three dots, and the
-// eye, whose mark is 11% past the pencil's here, not the third bigger it is elsewhere (the owner's
-// calls, 2026-10-21; it stands in a card's foot alone). Scoped to those three places: the same
-// classes in a list row, a table or a form stay at `$icon-size-large`. Each place that works a
-// gap out from the box (the stock lines' badge inset, the entry's title room, the window's
-// controls row) reads `$action-icon-size` too.
+// The action icons of a card's foot, an entry page's head and the Quick Look window's head, 13% past the large size (`$action-icon-size`)
+// (claude-docs/components/icon-tip.md, "Tip behaviour").
 .ingredient-card .specimen__actions,
 .spell-card .specimen__actions,
 .ingredient-entry__cupboard--icons,
@@ -202,13 +155,13 @@
     }
   }
 
-  // The eye, 11% past the pencil (the owner's call, 2026-10-21), in the same box.
+  // The eye, 11% past the pencil, in the same box.
   .icon-tip__look svg {
     width: $action-look-glyph-size;
     height: $action-look-glyph-size;
   }
 
-  // The jar of Edit Stock, 11% past the others (the owner's call, 2026-10-21), in the same box.
+  // The jar of Edit Stock, 11% past the others, in the same box.
   svg.stock-icon {
     width: $action-jar-glyph-size;
     height: $action-jar-glyph-size;

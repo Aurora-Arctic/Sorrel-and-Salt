@@ -2,15 +2,9 @@
 @use '../../scss/mixins' as *;
 @use './sorrel' as *;
 
-// Each photograph is tone and shape, not a picture: a grey image whose alpha
-// is the subject, with the ground it was shot on transparent. The theme
-// decides how the grey meets the page — `screen` lifts it out of soot,
-// `multiply` sinks it into parchment — so the salt is the bright thing and
-// the wood the dark thing on both, and nothing reads inverted. Each corner
-// is two of these, one per blend, and the theme tokens fade one out as the
-// other comes in. `z-index: -1` on a body child paints it above the page
-// colour and beneath every in-flow element
-// (claude-docs/components/backdrop.md, "Stacking").
+// Each photograph is a grey image whose alpha is the subject; the theme's blend (`screen` or `multiply`) and token fades pick the layer shown.
+// `z-index: -1` on a body child paints above the page colour and beneath every in-flow element
+// (claude-docs/components/backdrop.md, "The image is tone and shape, not a picture" and "Stacking").
 .backdrop {
   position: fixed;
   z-index: -1;
@@ -41,13 +35,9 @@
   opacity: $ornament-multiply;
 }
 
-// The images sit beside this file and are imported through it, so Next serves
-// them from /_next/static/media under a content hash: a rebuilt image is a
-// new URL, and no cache can keep showing the old one. Each keeps its
-// photograph's own proportions; `background-size: 100% 100%` relies on the
-// box matching them. The sorrel runs at three quarters of the
-// shared width: its subject fills more of its frame than the salt does. Its
-// shape and place are in _sorrel.scss, shared with the copy the search row draws.
+// The images are imported through this file so Next serves them under a content hash; each keeps its own proportions, which `background-size: 100% 100%` relies on.
+// The sorrel runs at three quarters of the salt's width; its shape and place are in _sorrel.scss
+// (claude-docs/components/backdrop.md, "Served under a content hash" and "Size and placement").
 .backdrop--sorrel {
   @include sorrel-shape;
 }

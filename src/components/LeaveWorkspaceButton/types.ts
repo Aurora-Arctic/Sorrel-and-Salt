@@ -15,10 +15,9 @@ export interface LeaveWorkspaceButtonProps {
   /** The workspace's name, which the confirmation repeats back. */
   name: string;
   /**
-   * Given only to the coven's sole owner (M6.16), whom the last-owner guard
-   * would stop: the members they could make an owner, empty when they are the
-   * only member. Its presence, even empty, turns the confirmation into the
-   * guided exit; absent, Leave is the plain confirmation.
+   * Given only to the coven's sole owner, whom the last-owner guard would stop: the members
+   * they could make an owner, empty when they are the only member. Its presence, even empty,
+   * turns the confirmation into the guided exit; absent, Leave is the plain confirmation.
    */
   successors?: readonly Successor[];
 }
@@ -27,5 +26,5 @@ export interface OwnerExitProps extends Pick<LeaveWorkspaceButtonProps, 'workspa
   successors: readonly Successor[];
 }
 
-/** What the only owner chooses happens to the coven as they leave (M6.16). */
+/** What the only owner chooses happens to the coven as they leave. */
 export type WayOut = 'hand' | 'delete';

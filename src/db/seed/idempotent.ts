@@ -18,13 +18,9 @@ class DryRunRollback<T> extends Error {
 }
 
 /**
- * The seed's transaction: the bootstrap user published as the actor by
- * `publishActor`, as `withAudit` publishes its session — all four settings,
- * transaction-local — and present before `body` writes a row that names it as
- * creator. On a dry run (M14.26) `body` runs in full and the transaction is
- * then rolled back, so every read and constraint is the real one and nothing
- * is left behind; `body`'s result is still returned. A rollback rather than a
- * separate planning pass, so a dry run cannot drift from the run it previews.
+ * The seed's transaction: the bootstrap user published as the actor, as `withAudit` publishes its session, before `body`
+ * writes a row naming it as creator. On a dry run `body` runs in full and the transaction is rolled back, so every read and
+ * constraint is real and nothing remains; a separate planning pass could drift from the run it previews.
  */
 export async function beginSeedTransaction<T>(
   db: SeedDatabase,
@@ -46,13 +42,9 @@ export async function beginSeedTransaction<T>(
 }
 
 /**
- * Runs `body` with the privilege route `bootstrap` declared and `actor`
- * published as the acting user, then hands the transaction back to the
- * bootstrap user with no route. The seed writes no ledger row itself: the
- * trigger on `users` records each privilege a seeded user is inserted holding,
- * and refuses one inserted undeclared, stamping the row as the published
- * actor (MB.195). Not a `finally`: a failed body has aborted the
- * transaction, and a further statement would only bury its error.
+ * Runs `body` with the `bootstrap` privilege route declared and `actor` published, then hands the transaction back with no
+ * route. The seed writes no ledger row: the `users` trigger records each privilege a seeded user is inserted holding and
+ * refuses an undeclared one. Not a `finally`: a failed body aborted the transaction and would only bury its error.
  */
 export async function declaringBootstrapPrivileges<T>(
   tx: SeedTransaction,
@@ -66,11 +58,8 @@ export async function declaringBootstrapPrivileges<T>(
 }
 
 /**
- * Inserts every `wanted` whose key `existing` did not return, stamped by the
- * bootstrap user, and touches nothing already present. `existing` is the
- * caller's own read, for a present that is not one key on both sides: a
- * vocabulary's `presentKeys`, a seed key or a live slug. A key built from
- * columns is `insertMissingBy`'s.
+ * Inserts every `wanted` whose key `existing` did not return, stamped by the bootstrap user, touching nothing present.
+ * `existing` is the caller's own read, for a present that is not one key on both sides; a column key is `insertMissingBy`'s.
  */
 export async function insertMissing<TTable extends PgTable, W, K>(
   tx: SeedTransaction,
@@ -99,10 +88,8 @@ export async function insertMissing<TTable extends PgTable, W, K>(
 export const INSERT_CHUNK = 1000;
 
 /**
- * Inserts `rows`, each stamped by the bootstrap user or by `session`, `INSERT_CHUNK` to a
- * statement so a seed of any size stays under Postgres's parameter limit, and
- * returns every inserted row in order. Nothing is checked for presence: that
- * is the caller's.
+ * Inserts `rows`, stamped by the bootstrap user or `session`, `INSERT_CHUNK` to a statement to stay under Postgres's
+ * parameter limit, and returns them in order. Presence is the caller's to check.
  */
 export async function insertStamped<TTable extends PgTable>(
   tx: SeedTransaction,
@@ -125,14 +112,9 @@ export async function insertStamped<TTable extends PgTable>(
 }
 
 /**
- * `insertMissing` keyed on `columns`, the key built once and read off both
- * sides: the table's rows and each `wanted`, which names its values under
- * the same properties. A part is compared as written, or through `fold`
- * where the unique index folds it — a name's `lower()` — and null and absent
- * are one empty part, as a link's unset keys are. A one-column key reads only
- * the wanted values; a wider one reads the table, narrowed by `where` if the
- * site scopes it. `deleted_at` is ignored unless `where` reads it, so a
- * retired row is not resurrected on the next run.
+ * `insertMissing` keyed on `columns`, built once from the table's rows and each `wanted`. A part compares as written, or
+ * through `fold` where the unique index folds it; null and absent are one empty part. A one-column key reads only the
+ * wanted values, a wider one the table (narrowed by `where`). `deleted_at` is ignored unless `where` reads it, so a retired row stays.
  */
 export async function insertMissingBy<
   TTable extends PgTable,
@@ -191,12 +173,9 @@ export async function insertMissingBy<
 }
 
 /**
- * Inserts each `wanted` whose key `present` lacks, and returns `present` with
- * each inserted row's id under its key: `insertMissing` for the two callers
- * that link the rows they insert. `present` is the caller's own read, as
- * `existing` is `insertMissing`'s, since each decides what present means — a
- * compendium identity, or a seed key whose soft-deleted row answers null —
- * and `keyOfRow` reads the key back off an inserted row.
+ * Inserts each `wanted` whose key `present` lacks and returns `present` with each inserted id under its key: `insertMissing`
+ * for callers that link the rows they insert. `present` is the caller's read, since each decides what present means;
+ * `keyOfRow` reads the key back off an inserted row.
  */
 export async function insertMissingReturningIds<
   TTable extends PgTable,
@@ -246,12 +225,9 @@ export function requireFrom<K, V>(map: Map<K, V>, key: K, describe: () => string
 }
 
 /**
- * What a vocabulary seed takes as present (MB.172): every row's `seed_key`,
- * live or soft-deleted, so a row the seed wrote is its own whatever an admin
- * has since renamed it or whether they retired it; and every live row's slug,
- * so a row an admin wrote under a seed name is not met by a second one the
- * slug index would refuse. Typed on the union, which Drizzle's `from()`
- * accepts where it cannot narrow a generic.
+ * What a vocabulary seed takes as present: every row's `seed_key`, live or soft-deleted (a renamed or retired seed row stays
+ * its own), and every live row's slug (an admin's row under a seed name is not met by a second the slug index refuses).
+ * Typed on the union, which Drizzle's `from()` accepts where it cannot narrow a generic.
  */
 export async function presentKeys(
   tx: SeedTransaction,

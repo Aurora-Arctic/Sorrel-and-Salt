@@ -17,12 +17,10 @@ if (typeof document !== 'undefined') document.body.classList.add('workshop-app')
 
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 
-// Storybook's load-once preview and the workshop decorator: frames every story
-// in the app surface, drives html[data-theme] from the toolbar through
-// ThemeToggle's own `applyTheme`, and remounts the story on each switch since
-// ThemeToggle reads data-theme only on mount. The `*-base` sheets are scoped
-// to the frame so bare element rules stay off Storybook's own chrome.
-// See claude-docs/workshop.md, ".storybook/".
+// Storybook's load-once preview and the workshop decorator: frames every story in the app surface
+// and drives html[data-theme] from the toolbar through ThemeToggle's `applyTheme`, remounting the
+// story on each switch since ThemeToggle reads data-theme only on mount. The `*-base` sheets are
+// scoped to the frame (claude-docs/workshop.md, ".storybook/").
 
 type Theme = 'dark' | 'light' | 'auto';
 
@@ -82,12 +80,9 @@ const Frame = ({
   }, [theme]);
   useSimulatedReducedMotion(reducedMotion);
   const frameRef = useRef<HTMLDivElement>(null);
-  // A page story draws its own <main>, as its route does, and a page holds one.
-  // So the frame is the page's main only when the story has none inside it:
-  // a <div> given role="main" after render, rather than a <main> that would
-  // nest with the story's. Set on the element, not as a prop, because the
-  // answer comes from the rendered story. Every render, since a story can
-  // swap its content.
+  // A page story draws its own <main> and a page holds one, so the frame becomes the page's main
+  // (role="main" on a <div>, not a nested <main>) only when the story has none. It is set on the
+  // element after every render, since the answer comes from the rendered story.
   useLayoutEffect(() => {
     const frame = frameRef.current;
     if (!frame) return;
@@ -102,10 +97,8 @@ const Frame = ({
     .filter(Boolean)
     .join(' ');
 
-  // `key` remounts the story on every theme change (see the header).
-  // A component that uses TanStack Query needs the app's client, and one that
-  // says what a click did needs the status region, each mounted once here as
-  // the root layout mounts it.
+  // `key` remounts the story on every theme change. The TanStack Query client and the status
+  // region are mounted once here, as the root layout mounts them.
   return (
     <StatusRegionProvider>
       <Providers>
@@ -127,11 +120,9 @@ const withWorkshopFrame: Decorator = (Story, context) => (
   </Frame>
 );
 
-// The widths the stories pin with `globals: { viewport: { value: 'w375' } }`.
-// Storybook's built-in viewport control (not a decorator) resizes the preview
-// pane, so a story is drawn at a real window width and its media queries answer
-// to it, as the app's do. Opened alone at /iframe.html the window's own width
-// stands, as it did for Storybook's `mode=preview`.
+// The widths stories pin with `globals: { viewport: { value: 'w375' } }`. The viewport control
+// resizes the preview pane, so media queries answer as in the app; opened alone at /iframe.html
+// the window's own width stands.
 const VIEWPORT_WIDTHS = [375, 382, 600, 700];
 
 const preview: Preview = {

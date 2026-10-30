@@ -19,18 +19,9 @@ import { CategoryGroupInput } from '../validation/category-group';
 import { deleteGroup, refuseSlugCollision, updateGroup } from './curated-writes';
 import type { CategoryGroupRow, CuratedGroup } from '../types';
 
-// The category groups: their reads, public reference data like every curated
-// vocabulary (MB.80), and their writes, a curator's or an admin's alone (M5.6b). Each
-// colour is held to 4.5:1 against its own theme's harder surface by the input
-// schema (MB.36). A group is deleted only once its live categories have
-// somewhere to go — the admin names a group and they move there in the same
-// write — since a category under a deleted group is read by nothing yet still
-// holds its address (claude-docs/design-decisions/m5.6b-admin-groups.md).
+// The category groups: public reads, and writes for a curator or an admin alone (claude-docs/db/categories.md, "Category group service details").
 
-/**
- * The groups, and the categories filed under them, which a delete moves and a
- * rename leaves alone: a category's slug is its own name alone.
- */
+/** The groups, and the categories filed under them, which a delete moves and a rename leaves alone: a category's slug is its own name alone. */
 const GROUPS: CuratedGroup<typeof categoryGroups> = {
   table: categoryGroups,
   slugIndex: 'category_groups_slug_unique',
@@ -45,21 +36,18 @@ const GROUPS: CuratedGroup<typeof categoryGroups> = {
   },
 };
 
-/** One page of the live category groups, alphabetical by name (MB.35): the group a category is filed under is picked from these. */
+/** One page of the live category groups, alphabetical by name: the group a category is filed under is picked from these. */
 export function listCategoryGroups(page: PageRequest): Promise<PageEntry<CategoryGroupRow>[]> {
   return findPage(categoryGroups, [categoryGroups.name], page);
 }
 
-/**
- * How many live category groups `listCategoryGroups` pages, and how many come before `start`
- * — a page's first row, none on an empty page: "Page X of Y" on the admin page.
- */
+/** How many live category groups `listCategoryGroups` pages, and how many come before `start`: "Page X of Y". */
 export function countCategoryGroups(start: Cursor | undefined): Promise<PageCount> {
   return findPageCount(categoryGroups, [categoryGroups.name], start);
 }
 
 /**
- * The live group at this address — how the admin page opens one to edit.
+ * The live group at this address, for the admin page to edit.
  *
  * @throws {NotFound} no live group holds the slug.
  */
@@ -72,10 +60,8 @@ export async function getCategoryGroupBySlug(slug: string): Promise<CategoryGrou
 /**
  * Adds a category group, its slug derived from the name.
  *
- * @throws {Forbidden} the caller is neither a curator nor an admin — checked before the
- * input is read.
- * @throws {ValidationError} the input breaks `CategoryGroupInput` — a colour
- * under the floor on its own column — or its slug is a live group's.
+ * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {ValidationError} the input breaks `CategoryGroupInput` (a colour under the floor on its own column), or its slug is a live group's.
  */
 export async function createCategoryGroup(
   session: Session,
@@ -94,13 +80,10 @@ export async function createCategoryGroup(
 }
 
 /**
- * Rewrites a category group whole, its slug following the name. Touches no
- * category: a category's slug is its own name alone. Its `seedKey` is left as
- * it was, so a renamed seeded row is still the seed's (MB.171).
+ * Rewrites a category group whole, its slug following the name; no category is touched. Its `seedKey` is left as it was.
  *
  * @throws {Forbidden} the caller is neither a curator nor an admin.
- * @throws {ValidationError} as `createCategoryGroup` throws it, the row's own
- * slug excepted.
+ * @throws {ValidationError} as `createCategoryGroup` throws it, the row's own slug excepted.
  * @throws {NotFound} no live group has this id.
  */
 export async function updateCategoryGroup(
@@ -116,18 +99,11 @@ export async function updateCategoryGroup(
 }
 
 /**
- * Soft-deletes a category group, first moving its live categories to the
- * group `moveTo` names, in the same transaction; their slugs and every link
- * to them, a compendium entry's or a coven's, stay as they were. A group with
- * no live category needs no `moveTo`.
- *
- * The categories are read before the transaction, so one filed under the
- * group in the instant between is left under a deleted one, which every read
- * drops, as a category's own delete leaves an entry filed under it.
+ * Soft-deletes a category group, first moving its live categories to the group `moveTo` names (claude-docs/db/categories.md,
+ * "Category group service details").
  *
  * @throws {Forbidden} the caller is neither a curator nor an admin.
- * @throws {ValidationError} on `moveTo`, the group has live categories and
- * `moveTo` names no other live group.
+ * @throws {ValidationError} on `moveTo`, the group has live categories and `moveTo` names no other live group.
  * @throws {NotFound} no live group has this id.
  */
 export async function deleteCategoryGroup(

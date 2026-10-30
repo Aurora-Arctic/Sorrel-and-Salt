@@ -9,15 +9,9 @@ import { makeIngredient } from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
 import type { ReferenceNode } from './types';
 
-// MB.153 over the wire: a reference's two writes, its read by id (MB.115), the picker's search,
-// `Ingredient.references` and the compendium's to-do filter. This file holds
-// the transport's half (claude-docs/testing/layer-ownership.md): the tier the
-// `workspaceId` argument names, the loader cleared by a write, the filter
-// reaching the read, and one refusal per error code per field, read as the
-// browser reads it. The services' own rules — who is refused, the tier rule,
-// the order — are references.test.ts's and ingredient-references.test.ts's; a
-// signed-out caller at every field, and a non-admin at the compendium tier's
-// `admin` scope, are tests/db/graphql-query-scopes.test.ts's.
+// Over the wire: a reference's two writes, its read by id, the picker's search, `Ingredient.references` and the compendium's to-do filter (the transport's half, claude-docs/testing/layer-ownership.md).
+// That is the tier the `workspaceId` argument names, the loader cleared by a write, the filter reaching the read, and one refusal per error code per field.
+// Roles, the tier rule and the order are references.test.ts's and ingredient-references.test.ts's; signed-out and non-admin scope refusals are tests/db/graphql-query-scopes.test.ts's.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -269,7 +263,7 @@ describe('referenceSuggestions', () => {
 
   type Suggestions = { referenceSuggestions: { edges: { node: { title: string } }[] } };
 
-  // M5.5: the admin's compendium form has no coven to name, and a compendium
+  // The admin's compendium form has no coven to name, and a compendium
   // entry cites the compendium's alone, so a null workspaceId reads that tier.
   describe('without a coven', () => {
     const IN_COMPENDIUM = `query ($workspaceId: ID, $query: String) {

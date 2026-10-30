@@ -11,10 +11,8 @@ import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 import { deitySlug, ingredientSlug } from '@/lib/slugify';
 
-// M5.5: the admin's compendium form's presentation — IngredientForm on
-// the compendium, which carries the form's first axe scans in a browser,
-// the Combobox's among them (claude-docs/components/ingredient-form.md,
-// "Testing").
+// The admin compendium form in a browser: the first axe scans of IngredientForm and its Combobox
+// (claude-docs/components/ingredient-form.md, "Testing").
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
@@ -34,8 +32,8 @@ async function applyFilters(page: Page) {
 }
 
 /**
- * Opens the Filters panel and returns it. The button only exists once the page has hydrated
- * (before it, Filters is a link to the open panel), so waiting for it waits for the script.
+ * Opens the Filters panel and returns it. The button exists only once the page has hydrated (before that
+ * Filters is a link), so waiting for it waits for the script.
  */
 async function openFilters(page: Page): Promise<Locator> {
   const button = page.getByRole('button', { name: /^Filters/ });
@@ -83,7 +81,7 @@ test('the page behind an open modal does not scroll', async ({ page, isMobile })
   await page.mouse.wheel(0, 300);
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
 
-  // A click on the backdrop closes it too, as Escape does, the owner's call.
+  // A click on the backdrop closes it too, as Escape does.
   await page.getByRole('link', { name: 'Add Ingredient' }).click();
   await page.getByRole('dialog', { name: 'Add Ingredient' }).waitFor();
   await page.mouse.click(8, 300);
@@ -101,8 +99,8 @@ test('the compendium form stands inside the viewport on a phone', async ({ page 
   await assertNoAccessibilityViolations(page);
 });
 
-// The compendium form's pickers in the app, which no story checks: the add,
-// edit and delete themselves are story 18's (tests/e2e/stories/07-admin.spec.ts).
+// The compendium form's pickers in the app, which no story checks: the add, edit and delete are in
+// stories/07-admin.spec.ts.
 test('the compendium form stands inside the viewport and keeps its pickers inside the dialog', async ({
   page,
 }) => {
@@ -117,7 +115,7 @@ test('the compendium form stands inside the viewport and keeps its pickers insid
   await expectInsideViewport(page, adding);
 
   // Escape on a picker's open list closes the list alone, not the dialog
-  // (MB.115). Before anything is typed, so a leaked Escape would close it
+  // Before anything is typed, so a leaked Escape would close it
   // rather than ask to discard.
   const classification = adding.getByRole('combobox', { name: 'Classification' });
   const choices = adding.getByRole('listbox', { name: 'Classification choices' });
@@ -135,7 +133,7 @@ test('the compendium form stands inside the viewport and keeps its pickers insid
   await assertNoAccessibilityViolations(page);
 });
 
-// MB.261: a keyboard user turns the No Refs switch with Enter, as a click
+// A keyboard user turns the No Refs switch with Enter, as a click
 // does, and Space still does. No story walks it, so this is the gate.
 test('Enter turns the No Refs switch, as Space does, and Apply Filters applies it', async ({
   page,
@@ -163,7 +161,7 @@ test('Enter turns the No Refs switch, as Space does, and Apply Filters applies i
   await assertNoAccessibilityViolations(page);
 });
 
-// M11.22: the read takes a list of forms, and the Form box sends its one
+// The read takes a list of forms, and the Form box sends its one
 // choice as a list of one, so the box still narrows the list by its form.
 test('the Form box keeps only the entries holding the form chosen', async ({ page }) => {
   await signInAs(page, 'form-admin@admin-compendium.test', ['discord'], 'admin');
@@ -185,7 +183,7 @@ test('the Form box keeps only the entries holding the form chosen', async ({ pag
   await expect(editOf('Senegalia greggii')).toHaveCount(0);
 });
 
-// MB.258: opening Edit Source scrolled the dialog itself, which `overflow:
+// Opening Edit Source scrolled the dialog itself, which `overflow:
 // hidden` let a script do, so its header left the top and blank space showed
 // beneath the body; and the panel had no close at its top.
 test('the edit source panel leaves the dialog in place and closes from its top by keyboard', async ({
@@ -241,9 +239,8 @@ test('the edit source panel leaves the dialog in place and closes from its top b
   await expect(adding.getByRole('button', { name: 'Edit Source Mockleaf Herbal' })).toBeFocused();
 });
 
-// M11.21: the ingredient's toxic toggle, which no story walks: it starts off,
-// is reached by Tab and turned by Space, and reopening reads it back from the
-// server. The forms' toggles and the two kept apart are the service's to prove
+// The ingredient's toxic toggle, which no story walks: it starts off, is reached by Tab and turned by
+// Space, and reopening reads it back from the server. The forms' toggles are the service's to prove
 // (tests/modules/ingredients/services/toxic-flags.test.ts).
 test('the toxic toggle starts off, saves, and reads back on reopening', async ({ page }) => {
   await signInAs(page, 'toxic-admin@admin-compendium.test', ['discord'], 'admin');
@@ -258,8 +255,7 @@ test('the toxic toggle starts off, saves, and reads back on reopening', async ({
 
   const toggle = adding.getByRole('switch', { name: 'Toxic', exact: true });
   await expect(toggle).not.toBeChecked();
-  // The next stop after Safety Notes by Tab (neither carries an info tip since
-  // 2026-10-20), and turned by Space.
+  // The next stop after Safety Notes by Tab (neither carries an info tip), and turned by Space.
   await adding.getByRole('textbox', { name: 'Safety Notes' }).first().focus();
   await page.keyboard.press('Tab');
   await expect(toggle).toBeFocused();
@@ -276,10 +272,9 @@ test('the toxic toggle starts off, saves, and reads back on reopening', async ({
   await expect(editing.getByRole('switch', { name: 'Toxic', exact: true })).toBeChecked();
 });
 
-// M8.10: the Name box is IngredientSearch's type-ahead. Its matching is the
-// repository's and its states are the component test's; these walk it in a
-// browser, where the dropdown, the modal it opens and the form before
-// JavaScript are real (claude-docs/components/ingredient-search.md).
+// The Name box is IngredientSearch's type-ahead. Matching is the repository's and its states the
+// component test's; these walk the dropdown, the modal it opens and the form before JavaScript
+// (claude-docs/components/ingredient-search.md).
 const CATS_CLAW = /^Cat's Claw \(Uncaria/;
 
 test('a name typed shows matching rows, and a pick opens its Quick Look over the list as it was shown', async ({
@@ -301,7 +296,7 @@ test('a name typed shows matching rows, and a pick opens its Quick Look over the
 
   await rows.first().click();
 
-  // The owner's rule of 2026-10-27: a pick opens the entry's Quick Look, not its edit modal.
+  // A pick opens the entry's Quick Look, not its edit modal.
   const dialog = page.getByRole('dialog', { name: "Cat's Claw", exact: true });
   await expect(dialog).toBeVisible();
   await expect(page).toHaveURL(/[?&]withoutReferences=1(&|$)/);
@@ -418,11 +413,9 @@ test('the filter form works with JavaScript off: a name and the Search button se
   }
 });
 
-// M8.13: the elements filter is in the address, as repeated parameters, and
-// the address is the whole state: loaded directly (no control draws it yet,
-// M12.4), it lists the entries holding any element named, the pager keeps it,
-// another control's change keeps it and opens the first page, and a reload
-// and Back show the same list.
+// The elements filter is in the address as repeated parameters, and the address is the whole state: loaded
+// directly, it lists the entries holding any element named, the pager keeps it, another control's change
+// keeps it and opens the first page, and a reload and Back show the same list.
 test('?elements= in the address filters the list, survives the pager and another filter, and drops the page', async ({
   page,
 }) => {
@@ -496,7 +489,7 @@ test('?elements= in the address filters the list, survives the pager and another
   await expect(row(28)).toBeVisible();
 });
 
-// M8.11: the Categories picker (MB.126's CategoryPicker) in the filter row.
+// The Categories picker (CategoryPicker) in the filter row.
 // The address holds the slugs, repeated; two picks combine with AND; a reload
 // restores the chips; a pick is announced by the picker's own region.
 test('the Categories picker filters by AND, writes repeated slugs, restores on reload and focuses back', async ({
@@ -591,7 +584,7 @@ test('the Categories picker is usable at 375px and has no accessibility violatio
   await assertNoAccessibilityViolations(page);
 });
 
-// M8.12: the match mode. Two categories show an All and Any choice; Any widens
+// The match mode. Two categories show an All and Any choice; Any widens
 // the list to an entry filed under either, writes `categoryMode=any`, and a
 // reload keeps it. Dropping to one category drops the mode from the address.
 test('the match mode widens two categories to Any, is kept in the address, and goes with the second category', async ({
@@ -661,11 +654,9 @@ test('the match mode widens two categories to Any, is kept in the address, and g
   await expect(edit('Modewort One')).toHaveCount(0);
 });
 
-// M12.1: a curator makes a folk name the display name. The question always
-// asks; once answered the list shows the folk name as the entry's name, and
-// the question holds at 375px without an accessibility violation. The entry
-// is held by two covens first, so the delete confirm's coven count (M12.25)
-// is walked here too: nothing else opens it in a browser.
+// A curator makes a folk name the display name. The question always asks; once answered the list shows
+// the folk name, and the question holds at 375px without an axe violation. Two covens hold the entry first,
+// so the delete confirm's coven count is walked here too: nothing else opens it in a browser.
 test('a curator sees the covens holding an entry, then promotes a folk name and the list shows it as the name', async ({
   page,
 }) => {
@@ -737,10 +728,9 @@ test('a curator sees the covens holding an entry, then promotes a folk name and 
   await expect(page.getByRole('link', { name: /^Edit Fixture Promotewort/ })).toHaveCount(0);
 });
 
-// M12.4: the Filters panel and the sentence above the results, walked in a browser. Five
-// entries named Facetwort A to E: A holds the form Alpha, B the form Beta, C the form Gamma
-// and the Greek deity, D Alpha and the Greek deity and is toxic, E Alpha and the Roman deity.
-// The deity is one name under two traditions, so the address has to tell them apart.
+// The Filters panel and the sentence above the results. Five entries, Facetwort A to E, hold forms
+// Alpha, Beta and Gamma and a Greek or Roman deity (one name under two traditions, so the address
+// tells them apart); D is toxic.
 const FACET_DEITY = 'Facetdeity';
 const GREEK_SLUG = deitySlug(FACET_DEITY, 'Greek');
 const ROMAN_SLUG = deitySlug(FACET_DEITY, 'Roman');
@@ -787,10 +777,8 @@ async function seedFacetworts(userId: string) {
 }
 
 /**
- * Picks a choice in a choice chip: opens its menu, then clicks the option's label, since the
- * native radio under it is drawn invisible and a click on the input finds the label in the way.
- * Shut, the menu's radios are out of the accessibility tree, so the option is found only once
- * the summary has opened it.
+ * Picks a choice in a choice chip: opens its menu, then clicks the option's label, since the native radio
+ * is drawn invisible and, while the menu is shut, out of the accessibility tree.
  */
 async function choose(group: Locator, name: string | RegExp): Promise<void> {
   await group.locator('summary').click();
@@ -833,7 +821,7 @@ async function pick(page: Page, box: string, typed: string, option: string | Reg
   await field.click();
   await field.fill(typed);
   await page.getByRole('option', { name: option }).first().click();
-  // A pick leaves the list open for the next (M12.54); Tab away closes it, as a person would before
+  // A pick leaves the list open for the next; Tab away closes it, as a person would before
   // reaching for what it covers. Not Escape: a list left with nothing to offer closes itself as the
   // counts reload, and an Escape landing after that closes the Filters panel instead.
   await field.press('Tab');
@@ -854,7 +842,7 @@ test('two forms list the entries holding either, and a form with a deity lists t
   // Why a filter could drop rows: all five are listed unfiltered.
   await expect.poll(() => listed(page)).toBe('ABCDE');
 
-  // M12.54: after a pick the list stays open for the next, the focus in the box; Escape closes it.
+  // After a pick the list stays open for the next, the focus in the box; Escape closes it.
   const forms = page.getByRole('combobox', { name: 'Forms', exact: true });
   await forms.click();
   await forms.fill('Facetform Alpha');
@@ -1089,11 +1077,9 @@ for (const [label, width, height] of [
   });
 }
 
-// The Categories column draws the card's chips: the first two and a +N button, whose panel
-// floats over the rows beneath. A component test cannot measure where it opens, or that the
-// table frame does not clip it or the row grow. No seeded entry has more than three
-// categories, so the test seeds its own with four, named to sort first, and leaves the
-// seeded entries as every other test on the worker reads them.
+// The Categories column draws the first two chips and a +N button whose panel floats over the rows below;
+// only a browser shows where it opens and that the table frame does not clip it. No seeded entry has more
+// than three categories, so the test seeds its own with four, named to sort first.
 const CHIPWORT = 'Aaa Chipwort';
 
 async function seedChipwort(userId: string) {
@@ -1195,7 +1181,7 @@ test('the Edit column stays pinned at the frame edge while the table scrolls sid
   await expect(page).toHaveURL(/[?&]edit=/);
 });
 
-// M12.30: the No Form to-do filter lists the entries with no live form. Formlesswort A and B
+// The No Form to-do filter lists the entries with no live form. Formlesswort A and B
 // hold none; Formlesswort C holds one, so the filter must leave it out.
 async function seedFormlessworts(userId: string) {
   const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });

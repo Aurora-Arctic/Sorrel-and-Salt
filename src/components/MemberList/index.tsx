@@ -5,19 +5,14 @@ import { workspaceRoleLabel } from '../UserDetail/roles';
 import type { MemberListEntry, MemberListProps } from './types';
 import './index.scss';
 
-// A coven's members, one row each (M6.12), drawn as the admin user list is:
-// the stacking `DataTable`, a card per member at phone width. Render-only. The
-// page reads the members through `Workspace.members` and decides what
-// controls each row gets, passing them in as `actions`, so this component
-// holds no permission check (claude-docs/components/member-list.md).
+// A coven's members, one row each, drawn as the admin user list is: the stacking
+// `DataTable`, a card per member at phone width. Render-only. The page reads the members
+// through `Workspace.members` and passes each row's controls in as `actions`, so this holds
+// no permission check (claude-docs/components/member-list.md).
 
 /**
- * The columns: the name, then where the page asks, the address (M11.19);
- * then the role with its change beside it (as the
- * admin list holds Promote and Revoke), then the facts no control changes: when they joined, who invited them, and who last changed the
- * membership and when, in one Updated column.
- * Remove is last, in a column ruled in red as Impersonate is, since it is the
- * table's one destructive row action, and only when the page passes it.
+ * The columns: name, address where asked, role with its change, then joined, invited by and Updated; Remove is last, ruled in red, and only when the page passes it.
+ * (claude-docs/components/member-list.md, "Columns").
  */
 const columns = (
   currentUserId: string,
@@ -36,9 +31,8 @@ const columns = (
       </span>
     ),
   },
-  // The address alone, with no verified mark as the admin list draws: a seat
-  // is only ever taken by a verified address, and an address changes only at
-  // verification, so a member's always is (M11.19).
+  // The address alone, with no verified mark: a seat is only ever taken by a verified
+  // address, and an address changes only at verification, so a member's always is.
   Boolean(showEmail) && {
     heading: 'Email',
     cell: (member) => member.email,

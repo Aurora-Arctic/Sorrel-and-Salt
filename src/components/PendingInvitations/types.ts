@@ -1,7 +1,7 @@
 import type { PagePosition } from '../../lib/types';
 import type { WorkspaceRole } from '@/modules/coven';
 
-/** One open invitation of a coven, as the members page lists it (M7.6): pending, or declined and not yet removed (M10.34). */
+/** One open invitation of a coven, as the members page lists it: pending, or declined and not yet removed. */
 export interface PendingInvitationEntry {
   id: string;
   email: string;

@@ -4,10 +4,8 @@ import { createLoaders } from '@/graphql/loaders';
 import { A, asUser } from '../../../support/as-user';
 import { run } from '../../../support/graphql/run';
 
-// `me` over the real schema, through the shared harness: the signed-in user's
-// own row and its memberships through the request's loader. A signed-out
-// caller is tests/db/graphql-query-scopes.test.ts's, and the route carrying
-// that refusal tests/app/api/graphql/route.test.ts's.
+// `me` over the real schema, through the shared harness: the signed-in user's own row and its memberships through the request's loader.
+// A signed-out caller is tests/db/graphql-query-scopes.test.ts's, and the route carrying that refusal is tests/app/api/graphql/route.test.ts's.
 
 const ME = /* GraphQL */ `
   query {

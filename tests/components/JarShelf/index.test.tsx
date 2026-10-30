@@ -6,7 +6,7 @@ import { LIQUID, pick } from '@/components/JarShelf/pick';
 import { BOTTLES, JARS } from '@/components/JarShelf/shapes';
 import type { ShelfForm } from '@/components/JarShelf/types';
 
-// The shelf of drawn jars on the entry page (M12.29): which vessel a form gets, how full it
+// The shelf of drawn jars on the entry page: which vessel a form gets, how full it
 // stands, and what the shelf says for a form with a jar and one without. The press that opens
 // Edit Stock is proved with the entry, in tests/components/IngredientEntry.
 

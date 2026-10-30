@@ -8,18 +8,9 @@ import FirstAdd from './first-add';
 import type { EmptyCupboardProps } from './types';
 import './index.scss';
 
-// What a coven's Ingredients list draws with no card to show (M9.11), as one of two status
-// regions, named so a test or a screen reader tells them apart by which is there:
-//   - No Ingredients: the cupboard holds nothing, and a member who may add is offered the
-//     first add, the shell's own dialog. A viewer, who cannot add, is told which roles can,
-//     so the empty cupboard reads as nobody having filled it yet, not as a fault (MB.121).
-//   - No Matches: a filter is in force and matched nothing. The search sentence above the list
-//     already names each filter and says nothing matched ("No ingredients, matching
-//     Knitbone"), so this says only what to do: change or clear the filter, with the filter
-//     row's own clears (Clear Name, Clear All) rather than another. A search that found nothing
-//     in the cupboard is handed on to the Compendium, which may hold it.
-// Which state is the search sentence's own test, `hasFilter`, so the two never disagree.
-// claude-docs/components/coven-cards.md, "The empty and no-match states".
+// What a coven's Ingredients list draws with no card, as a status region: No Ingredients (an empty
+// cupboard) or No Matches (a filter matched nothing; `hasFilter` is the search sentence's own test)
+// (claude-docs/components/coven-cards.md, "The empty and no-match states").
 
 const EmptyCupboard = ({ covenSlug, filter, canAdd }: EmptyCupboardProps): ReactElement => {
   // Normalised as the filter row normalises it for the sentence (CompendiumList/filter.tsx).
@@ -27,7 +18,7 @@ const EmptyCupboard = ({ covenSlug, filter, canAdd }: EmptyCupboardProps): React
     filter: {
       ...filter,
       toxic: filter.toxic || null,
-      // A coven's list has no review filter (M14.8).
+      // A coven's list has no review filter.
       reviewed: null,
       source: filter.source || null,
       inStock: filter.inStock ?? false,

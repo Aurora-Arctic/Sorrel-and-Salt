@@ -7,16 +7,13 @@ import { Reopenable } from '../../../.storybook/reopenable';
 import SpellDialog from './spell-dialog';
 import type { SpellBuilderSpell } from './types';
 
-// Render-only; behaviour is asserted in tests/components/SpellBuilder. The
-// builder talks to the network only when it saves (the autosave, three seconds
-// after a change, or Save), so nothing is mocked: a save in the workshop fails,
-// and the status beside Save reads "Couldn't save" with Retry (M13.17). The TanStack Query client comes from the
-// workshop's global provider (.storybook/components.tsx).
+// Render-only; behaviour is asserted in tests/components/SpellBuilder. Nothing is
+// mocked: a save (autosave after three seconds, or Save) fails, and the status
+// reads "Couldn't save" with Retry. The query client comes from .storybook/components.tsx.
 const meta = {
   title: 'Grimoire / Spell Builder',
 } satisfies Meta;
 export default meta;
-// The dropdown story's `state` arg is the node it draws (see its argTypes mapping).
 type Story = StoryObj<{ state?: ReactNode }>;
 
 const SAVED: SpellBuilderSpell = {
@@ -79,7 +76,7 @@ const BUILDER_STATES: Record<string, ReactNode> = {
   // A saved spell, as its Edit opens it: its values, nothing to
   // save yet. Its moon phase is one of the eight, so the box draws its icon.
   'Saved Spell': <Page spell={SAVED} />,
-  // Its author alone sees it, so the visibility control is still open (M10.13);
+  // Its author alone sees it, so the visibility control is still open;
   // the saved spell above is the coven's, its control shut with the reason.
   'Private Spell': <Page spell={{ ...SAVED, visibility: 'private' }} />,
   'Share Question': <Page spell={{ ...SAVED, visibility: 'private' }} steps={[pickCoven]} />,

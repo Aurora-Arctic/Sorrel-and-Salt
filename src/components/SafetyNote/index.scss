@@ -1,23 +1,18 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The caution as ordinary text on the page, set apart by a bar of the safety
-// fill down its edge and a heading in the same fill: a whole block of it was
-// far too loud (the owner, 2026-10-17). One red with the Toxic badge, not
-// `$secondary`, which reads lighter on dark. The bar is `$safety-bar-width`, the
-// heavy rule, so it is one of the site's rule weights (MB.120).
+// The caution as ordinary text on the page, set apart by a bar of the safety fill down its
+// edge and a heading in the same fill; a whole block of it would be far too loud. One red
+// with the Toxic badge, not `$secondary`, which reads lighter on dark. The bar is
+// `$safety-bar-width`, the heavy rule, so it is one of the site's rule weights.
 .safety-note {
   padding: space(1) 0 space(1) space(4);
   border-inline-start: $safety-bar-width solid badge-token('safety', 'fill');
 }
 
-// The h4 size whatever its level, and a hairline stroke in its own colour: the
-// heading face stops at 700, which still read too light here, so the stroke
-// fakes a heavier weight (the owner's call, 2026-10-17, kept at MB.120's review,
-// 2026-10-20: the stroke is the design, not a workaround, so its width is the
-// `$text-stroke-hairline` token). As text the fill is 4.28:1 at worst (the dark
-// card), which clears 3:1 only because this is large
-// text: 24px at 700. Keep it that size and weight, or it fails WCAG.
+// The h4 size at any level, with a hairline stroke (`$text-stroke-hairline`) faking a weight above
+// the face's 700. The fill is 4.28:1 at worst, clearing 3:1 only as large text (24px at 700), so
+// keep that size and weight.
 .safety-note__heading {
   margin: 0 0 space(2);
   font-size: heading-size(4);
@@ -48,11 +43,9 @@
   }
 }
 
-// The compact note (the spell builder's open step): the Caution heading is body-sized ink,
-// not the large fill that clears contrast only as 24px text, and runs on in line with the
-// notes, so a note is a line or two instead of a block. The bar in the fill and the word
-// Caution still say it, so the colour is not alone.
-// Block, not the page's stack of sections, so the heading can run on in the line.
+// The compact note (the spell builder's open step): the Caution heading is body-sized ink running
+// on with the notes, so a note is a line or two. The bar and the word Caution still say it. Block,
+// so the heading can run on in the line.
 .safety-note--compact {
   display: block;
   padding-block: 0;

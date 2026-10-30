@@ -221,3 +221,143 @@ which is how the M1.19 tests observe a setting the narrow `AuditWriter`
 gives them no other way to read — without widening the write API for the
 benefit of a test. The `missing_ok` second argument is what makes it null,
 rather than an error, when the setting was never set.
+
+### Writer contracts and filter fields
+
+`src/db/repository/types.ts` states each writer method's contract in a line or
+two. What a caller also needs to know is here.
+
+- **`delete`** is for the join tables that carry no `deleted_at`. The type
+  rejects a table carrying one, and one carrying `workspace_id`. No table is
+  both today; the first that is adds its proof-scoped counterpart rather than
+  being hard-deleted unscoped. A `match` naming no column is refused, since it
+  would empty the table. `ColumnMatch` takes values rather than an `SQL`
+  predicate because a service may not import `drizzle-orm` at runtime, and a
+  join table keyed on its pair needs no other comparison.
+- **`updateById` and `updateByIdInWorkspace`** exist for the same reason: a
+  service cannot build the `where` the unkeyed methods want, so the writer
+  builds the predicate every entity update needs.
+- **`updateRevisioned`** throws `StaleWrite` (carrying the row's revision now)
+  only for a live row of the proof's workspace. A row that is absent, deleted
+  or another coven's answers `[]`, because `StaleWrite` would tell another
+  coven's reader the row exists. `expectedRevision: null` writes whatever the
+  row holds, the client's choice to keep its own version.
+- **`pauseAdminRoleChanges`** relies on the one-open unique index: a second
+  open pause is refused by the index, and the call returns no row rather than
+  failing the transaction. **`lockLiveAdmins`** and **`lockLiveMembers`** are
+  reads that live in the writer only so the `for update` lock is taken in the
+  transaction that writes; the last-admin and last-owner counts depend on it.
+- **`reviveMembership`** is the one writer that touches a deleted row, so it
+  reaches only a deleted one. It always sets `invited_by`, to null when no
+  sender is given, so an earlier inviter never lingers.
+- **The invitation accepts and declines** run under no proof because the
+  invitee holds neither a membership nor the site role yet. A link's token
+  admits `acceptInvitation`; the by-id calls (`acceptReceivedInvitation`,
+  `declineReceivedInvitation`) match the session user's verified address in SQL
+  and refuse a site-tier id, whose grant a link alone accepts.
+- **`revokeInvitation`** treats an invitation as open when it is pending, or
+  declined and not yet removed, whatever its expiry: Revoke acts on the first,
+  Remove on the second.
+- **`lockCovenStock`** is taken first in any write that adds a jar, counts
+  them on a cupboard remove, or converts them, and is per coven.
+- **Filter fields** on `IngredientFilter`: a list field (`forms`, `deityIds`,
+  `celestialBodies`, `elements`) matches any of its values, ignores blank
+  entries and is no filter when empty; `toxic`, `elements` and `forms` look at
+  live variants only. `source`, `inStock` and `lowStockOnly` are a coven's list
+  only, and the compendium read ignores them. `heldIn` and `notHeldIn` take a
+  `Membership` each so a coven the caller is not in cannot be named.
+
+## Reads that take no proof
+
+Every workspace-scoped finder takes a `Membership` and ANDs its `workspace_id`
+(CLAUDE.md rule 5). A few reads cannot, because the rows they answer span
+workspaces. Each is a named, pinned exception: the repository index's export
+list is tested, so adding another is a decision, not an edit.
+
+- **A user's memberships** (`findMembershipsOfUsers`) are every live seat the
+  users hold, in a workspace that is itself live. A user's own seats span
+  workspaces, so no single workspace exists to hold a proof for. The calling
+  service decides whose ids may be asked about. The workspace's `deleted_at` is
+  read through `existsIn`, a correlated `EXISTS`, so the rows keep the
+  membership's own shape.
+- **Co-member names** (`findCoMemberNamesIncludingSoftDeleted`) return only the
+  display name of each user who holds or has held a seat in a coven the viewer
+  sits in now. The viewer's covens are several, so the scope is the viewer's own
+  live seat in a live coven; the service passes the session's id as `viewerId`.
+  This is rule 4's third named exception. It skips the filter on the user's row,
+  so a deleted user reads under the name the row last held, and on that user's
+  seat, so a removed member still counts. The viewer's seat and the coven keep
+  their filters through `existsIn`. The seats come from a left join, so one
+  statement answers a whole batch however many covens a pair shares.
+- **A retired compendium entry a coven still uses**
+  (`findCupboardEntryIncludingSoftDeleted`) returns the entry, deleted or not,
+  beside the proof's live cupboard entry naming it, or nothing when the coven
+  has no such row. It is the sixth soft-delete escape hatch: a retired entry
+  stays readable to exactly the covens whose cupboard names it and reads as
+  gone to everyone else (claude-docs/db/workspace-compendium-entries.md, "When
+  the compendium retires the entry"). It skips the entry's own filter and no
+  other: the cupboard row's tombstone filters, the proof scopes it, and the
+  entry must be the compendium's, so a row naming a coven's own ingredient reads
+  as none. The cupboard row is a left join read as an inner one, which is what
+  lets the entry's tombstone go unread.
+- **The in-use ingredient parent** (`inUseIngredientParent`) extends
+  `readableIngredientParent` with a compendium entry that curators retired
+  while `heldBy`'s coven has a live cupboard entry naming it. The tier is
+  checked whatever the tombstone, so a cupboard row naming a coven's own
+  ingredient, which the table does not refuse, admits nothing. It is one
+  `EXISTS` over the parent, which is why it skips `existsIn`'s tombstone
+  filter and restores it on the first arm; its `where` reads the parent as
+  `ingredients`, as `readableIngredientParent`'s does. With no `heldBy` it is
+  `readableIngredientParent` itself, so a finder takes the proof as an optional
+  last argument.
+
+## Sweeping provisional accounts
+
+`deleteProvisionalUsers` hard-deletes every provisional account: unverified,
+holding a provider `accounts` row, and either untouched for `lifetimeSeconds` or
+created more than `capSeconds` ago. Both ages use the database's own clock, so a
+seeded row nobody can sign in to is never one. Its `accounts` and `sessions` rows
+go with it by `ON DELETE CASCADE`.
+
+An account holding a `user_privilege_changes` row is kept, because an admin has
+vouched for it, and it is not deleted with its rows: the ledger refuses the
+delete, and its plain foreign key would fail the whole statement and so every
+later sweep.
+
+The delete is hard and outside `withAudit` because Better Auth finds a user by
+address without our `deleted_at` filter, so a tombstone would keep blocking the
+owner's sign-in, and there is no session to stamp one with. It is the one users
+delete, pinned by the export list in `soft-delete-finder-guard.test.ts`. See
+claude-docs/db/provisional-account-delete.md and claude-docs/auth/admin-bootstrap.md,
+"Provisional accounts".
+
+## Publishing the actor
+
+`publishActor` in `src/db/audit.ts` sets four transaction-local settings on every
+write: `app.current_user_id`, `app.impersonated_by`, `app.privilege_route` and
+`app.privilege_note`. Each is always set, an absent one as the empty string, so no
+reader sees a value an earlier transaction left on a pooled connection.
+`set_config(…, true)` is `SET LOCAL` with a bind parameter, and one statement costs
+one round trip. The executor is the caller's transaction, so the module stays
+free of any client and serves `withAudit` and the seed alike. The first setting is
+described under "app.current_user_id, published per transaction".
+
+## Reading the links that cite references
+
+`findReferencesOf` returns the live links of the given rows of the sourced table
+`key` names (the `SOURCED` list), each beside the live reference it cites. It reads
+them in one statement for the whole batch.
+
+- An ingredient's links read exactly when the ingredient does, as
+  `findManyOfIngredients` reads it: live, and in the compendium or a coven one of
+  `memberships` proves. They read only where the reference is one its readers may
+  read, the compendium's or its own coven's.
+- A variant's links are the same, through the variant to its ingredient
+  (`readableVariantParent`), since a variant is a coven's where its ingredient is
+  though it carries no `workspace_id`.
+- Every other sourced table is global reference data. Its links read while the row
+  is live, and only to a compendium reference, the one tier every reader shares.
+- A link to a soft-deleted reference reads as nothing and is left in place, so a
+  restore returns it (DESIGN.md §5, "Nothing deletes a reference in v1").
+- The reference is a left join read as an inner one, because the parent's
+  correlated subquery compares its tier with the reference's.

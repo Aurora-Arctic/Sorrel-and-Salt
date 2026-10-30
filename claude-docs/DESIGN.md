@@ -892,6 +892,7 @@ type Mutation {
   createSpell(workspaceId: ID!, input: SpellInput!): Spell! # every field nullable: a draft needs nothing, a complete spell a title; steps is the recipe in order (M10.10); categoryIds the assigned categories (M10.14)
   updateSpell(workspaceId: ID!, id: ID!, input: UpdateSpellInput!): Spell! # a field left out keeps its value, null clears it; steps, when given, is the whole recipe, and categoryIds the whole set of assigned categories (M10.14); expectedRevision must be sent, null writes regardless, a stale one is STALE_WRITE; visibility only widens once the spell is complete (M10.10, relaxed for drafts 2026-10-28)
   setSpellVisibility(id: ID!, visibility: SpellVisibility!): Spell! # private -> workspace; workspace -> private only while the spell is a draft
+  deleteSpell(workspaceId: ID!, id: ID!): ID! # a soft delete of the spell and its steps in one transaction, for owners and members, of a spell the caller can read; a shared or complete spell goes too, since visibility governs widening, not existence; stock is untouched (M13.11)
   createInvitation(workspaceId: ID!, email: String!, role: InvitableRole!): Invitation! # the link is mailed; no response carries it
   acceptInvitation(token: String!): Invitation! # either tier (MB.202); the session's verified email must match the invitation's, and the page lands by tier
   acceptInvitationById(id: ID!): Invitation! # the workspace tier alone (M10.32); the account page lists the pending ones to the verified holder of the address, and the same match admits

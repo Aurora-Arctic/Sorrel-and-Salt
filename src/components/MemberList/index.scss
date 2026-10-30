@@ -1,10 +1,9 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The member list's own rules: its cells centred on the row, the "You" mark
-// and the muted Joined date. The table, its frame and its card layout are the
-// `.data-table` primitives (claude-docs/styling.md); nothing here styles past
-// the tokens until the section's design review.
+// The member list's own rules: its cells centred on the row, the "You" mark and the muted
+// Joined date. The table, its frame and its card layout are the `.data-table` primitives
+// (claude-docs/styling.md).
 
 // The name, then "You" beside it on the member's own row.
 .member-list__name {

@@ -12,7 +12,7 @@ const CONFIGURED_PROVIDERS_SPEC = /sign-in-configured-providers\.spec\.ts/;
 
 const COMPENDIUM_CACHE_SPEC = /compendium-cache\.spec\.ts/;
 
-// The story suite (M9.1) has its own config, playwright.stories.config.ts, and
+// The story suite has its own config, playwright.stories.config.ts, and
 // its own job in pr-gate.yml. A project's own `testIgnore` replaces a top-level one
 // rather than adding to it, so each project that matches everything under
 // `testDir` lists this itself; `npm run e2e` never runs a story.
@@ -23,19 +23,9 @@ const STORIES_SPECS = /[\\/]stories[\\/]/;
 // e2e` never does.
 const WORKSHOP_SPECS = /[\\/]workshop[\\/]/;
 
-// The audit (M10.25): the suite in WebKit, Firefox and as a phone, on demand
-// and never on CI, which stays Chromium alone. The three projects exist only
-// under `E2E_AUDIT=1` (`npm run e2e:audit`), so `npm run e2e` is unchanged
-// whatever the environment holds. They dial the `playwright-audit` compose
-// service, Microsoft's image, through an endpoint of its own, since the
-// shared `use` already names the Chromium server; each ignores the two specs
-// that run on their own ports, as `chromium` does, and names no base URL, so
-// tests/e2e/fixtures.ts gives each worker its own slot's server as it does
-// there (claude-docs/testing/e2e.md, "The audit"). The phone is a real iPhone
-// profile, touch and mobile viewport included, rather than the 375px window
-// the Chromium scans use: `iPhone 15`, the oldest in Playwright's list whose
-// iOS is on or above the browser floor's iOS Safari 17.4 (M10.24;
-// `iPhone 14` reports 16.0). The axe scans still run under it.
+// The audit: the suite in WebKit, Firefox and as a phone, on demand and never on CI. The three projects exist only under `E2E_AUDIT=1` (`npm run e2e:audit`),
+// dial the `playwright-audit` compose service through an endpoint of their own, and name no base URL, so each worker gets its own slot's server
+// (claude-docs/testing/e2e.md, "The audit"). The phone is `iPhone 15`, the oldest profile whose iOS meets the browser floor's iOS Safari 17.4.
 const AUDIT = process.env.E2E_AUDIT === '1';
 if (AUDIT && !auditWsEndpoint)
   throw new Error(
@@ -66,7 +56,7 @@ export default defineConfig({
   testDir: './tests/e2e',
   retries: process.env.CI ? 2 : 0,
   // Under Claude Code the html report alone prints no failure text, so a dot
-  // line is added and html stays (MB.142, M12.37). CI and the host are unchanged.
+  // line is added and html stays. CI and the host are unchanged.
   reporter: process.env.CI
     ? [['list'], ['json'], ['html', HTML_REPORT]]
     : process.env.CLAUDECODE

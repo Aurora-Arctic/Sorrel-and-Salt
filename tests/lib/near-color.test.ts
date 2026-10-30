@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { CATEGORY_GROUPS } from '@/db/seed/category-groups';
 import { NEAR_COLOR_DELTA, colorDistance, nearColor } from '@/lib/near-color';
 
-// How close two groups' colours in one theme may stand before the picker warns (M5.6b).
+// How close two groups' colours in one theme may stand before the picker warns.
 
 describe('colorDistance', () => {
   it('is 0 for a colour on itself and 1 from black to white', () => {

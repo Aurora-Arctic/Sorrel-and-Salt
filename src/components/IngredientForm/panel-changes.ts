@@ -3,12 +3,9 @@
 import { createContext, useCallback, useContext, useEffect, useId, useMemo, useState } from 'react';
 import type { PanelChanges } from './types';
 
-// The reference panels' unsaved edits, told to the ingredient form (MB.115):
-// a panel runs a react-hook-form of its own, so what is typed there never
-// reaches the form's `isDirty`, and the unsaved-changes guard would let the
-// modal close over it. Each panel says whether it holds edits; the form
-// counts itself changed while any does (claude-docs/components/ingredient-form.md,
-// "Editing a source").
+// The reference panels' unsaved edits, told to the ingredient form: a panel's own react-hook-form
+// never reaches the form's `isDirty`, so each panel says whether it holds edits and the form counts
+// itself changed while any does (claude-docs/components/ingredient-form.md, "Editing a source").
 
 /** Null outside an ingredient form, where a panel has no guard to tell. */
 export const PanelChangesContext = createContext<PanelChanges | null>(null);

@@ -16,12 +16,8 @@ import {
 } from '../../../support/fixtures';
 import type { ConnectionArgs, Page } from '@/lib/types';
 
-// DESIGN.md §5 and §9: the `form` field's autofill offers the curated
-// vocabulary first, each row with its group, then the uncurated values in use
-// in the compendium and the caller's own workspace — each suggestion naming
-// the in-scope ingredients that already claim it. The vocabulary is the
-// seed's, revived per test since some tests retire a row; `ingredients` is
-// emptied per test, so every in-use value and claimant is one this file wrote.
+// DESIGN.md §5 and §9: the `form` autofill offers the curated vocabulary first, each row with its group, then uncurated values in use in the compendium and the caller's workspace, each suggestion naming the in-scope ingredients that claim it.
+// The vocabulary is the seed's, revived per test since some tests retire a row; `ingredients` is emptied per test, so every in-use value and claimant is one this file wrote.
 
 let sql: ReturnType<typeof postgres>;
 
@@ -37,11 +33,7 @@ beforeEach(async () => {
   await sql`update ingredient_form_groups set deleted_at = null, deleted_by = null where deleted_at is not null`;
 });
 
-/**
- * A row of this file's: its one form stated, as its one variant, since that
- * is what the file is about, and no formal name, and so `none`, unless one is
- * stated.
- */
+/** A row of this file's: its one form stated, as its one variant, and no formal name (so `none`) unless one is stated. */
 function addIngredient({
   form,
   ...entry
@@ -235,7 +227,7 @@ describe('suggestForms', () => {
     });
   });
 
-  // MB.220: an entry's forms are its variants, so a form is in use, and
+  // An entry's forms are its variants, so a form is in use, and
   // claimed, while any live variant holds it, and not once it is dropped.
   describe('an entry with several forms', () => {
     it('offers and attributes each live form, and not a dropped one', async () => {

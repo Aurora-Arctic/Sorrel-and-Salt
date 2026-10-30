@@ -8,14 +8,9 @@ import { CARD_PAGE_SIZE } from '@/lib/pagination';
 import { offerCategories } from '../../../../../../support/msw/ingredient-lookups';
 import { mockGraphQLQuery } from '../../../../../../support/msw/graphql';
 
-// The Grimoire's two tabs (M10.11): Spells and Drafts. The guard and the services are mocked,
-// since what they decide is their own tests' (which spells a reader may list is
-// tests/db/repository/readable-spell-page.test.ts's and
-// tests/modules/grimoire/services/spell-reads.test.ts's); the tabs' own read runs for real over
-// them. Here: the guard on the slug from the address, one page of 24 of the tab's status, the
-// address becoming the query, each card's assigned categories, and the pager's addresses; and
-// the spell builder's dialog over the tab (M10.12), `?new=spell-<slug>` and `?edit=<id>`, beside the
-// shell's Add Ingredient, `?new=ingredient-coven-<slug>`.
+// The Grimoire's two tabs, Spells and Drafts, with the guard and services mocked (which spells a reader may list is tests/db/repository/readable-spell-page.test.ts's and tests/modules/grimoire/services/spell-reads.test.ts's) and the tabs' own read run for real.
+// It proves the guard on the slug from the address, one page of 24 of the tab's status, the address becoming the query, each card's assigned categories, and the pager's addresses;
+// also the spell builder's dialog over the tab (`?new=spell-<slug>`, `?edit=<id>`) beside the shell's Add Ingredient (`?new=ingredient-coven-<slug>`).
 
 const COVEN = {
   id: '5b8f4a10-2d6e-4c19-8a37-0e9d1c2b3a44',
@@ -75,7 +70,7 @@ vi.mock('@/modules/identity', async (importOriginal) => ({
   displayNamesOf,
 }));
 
-// The coven’s jars, which the Quick Look’s stock marks read (M13.21).
+// The coven’s jars, which the Quick Look’s stock marks read.
 const stockOf = vi.fn();
 vi.mock('@/modules/ingredients', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/modules/ingredients')>()),
@@ -266,8 +261,8 @@ describe('the Grimoire tabs', () => {
     expect(within(list).getByRole('listitem', { name: 'Testwort Charm' })).toBeInTheDocument();
   });
 
-  // The service lists a private spell to its author alone (M10.6), so the card
-  // badges what it is handed (M10.13).
+  // The service lists a private spell to its author alone, so the card
+  // badges what it is handed.
   it('badges a private spell Private, and a spell shared with the coven with nothing', async () => {
     listGrimoire.mockResolvedValue([
       spell('s1', 'Fixture Working', 'complete', 'private'),
@@ -301,6 +296,25 @@ describe('the Grimoire tabs', () => {
   it('throws a refused category batch rather than drawing a card without its categories', async () => {
     assignedCategoriesOf.mockResolvedValue([new Error('Forbidden'), []]);
     await expect(renderTab(SpellsPage)).rejects.toThrow('Forbidden');
+  });
+
+  it('says what a delete removed, from ?deleted, above the list, as a status', async () => {
+    await renderTab(SpellsPage, { deleted: 'Fixture Working' });
+    // Among the page's other status regions, the one carrying the deleted spell's name.
+    const notice = screen
+      .getAllByRole('status')
+      .find((region) => within(region).queryByText('Fixture Working') !== null);
+    expect(notice).toBeDefined();
+    expect(notice!.compareDocumentPosition(screen.getByRole('list', { name: 'Grimoire' }))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+  });
+
+  it('says nothing of a delete without ?deleted', async () => {
+    await renderTab(SpellsPage);
+    for (const region of screen.queryAllByRole('status')) {
+      expect(region).not.toHaveTextContent('was deleted');
+    }
   });
 
   it('links the next page beneath the tab’s own address, the filter kept', async () => {
@@ -385,6 +399,19 @@ describe('the spell builder over a Grimoire tab', () => {
     expect(screen.getAllByRole('link', { name: /^Edit / })).toHaveLength(2);
   });
 
+  it.each([
+    ['owner', 1],
+    ['member', 1],
+    ['viewer', 0],
+  ] as const)('draws a Delete Spell bin on each card for a coven %s: %i', async (role, count) => {
+    as(role);
+    await renderTab(DraftsPage, { query: 'fixture' });
+    expect(screen.getAllByRole('link', { name: /^Quick Look / }).length).toBeGreaterThan(0);
+    expect(screen.queryAllByRole('button', { name: 'Delete Spell Fixture Working' })).toHaveLength(
+      count,
+    );
+  });
+
   it('draws no Edit pencil for a viewer, who could read the same cards', async () => {
     as('viewer');
     await renderTab(DraftsPage);
@@ -403,6 +430,15 @@ describe('the spell builder over a Grimoire tab', () => {
     fireEvent.click(within(dialog).getByRole('button', { name: 'Open All' }));
     expect(within(dialog).getByRole('textbox', { name: 'Intent' })).toHaveValue('Calm');
     expect(within(dialog).getByRole('textbox', { name: 'Jar Description' })).toHaveValue('4 oz');
+  });
+
+  it('offers Delete in the Edit dialog to a member, who may delete a spell', async () => {
+    as('member');
+    readSpell.mockResolvedValue(SPELL);
+    await renderTab(DraftsPage, { edit: SPELL_ID });
+
+    const dialog = screen.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
+    expect(within(dialog).getByRole('button', { name: 'Delete Spell' })).toBeInTheDocument();
   });
 
   it('opens a saved spell under ?edit=<id> with the categories its author assigned it picked', async () => {
@@ -581,7 +617,7 @@ describe('Quick Look over a Grimoire tab', () => {
       'href',
       `/coven/fixture-coven/grimoire?query=fixture&spell=${SPELL_ID}&entry=ing-1`,
     );
-    // The page's side column (In Coven Inventory, Category Match) is the page's alone (the owner, 2026-10-29).
+    // The page's side column (In Coven Inventory, Category Match) is the page's alone.
     expect(within(dialog).queryByRole('region', { name: /Inventory|Category Match/ })).toBeNull();
   });
 
@@ -671,7 +707,7 @@ describe('Quick Look over a Grimoire tab', () => {
     await renderTab(SpellsPage, { query: 'fixture', spell: SPELL_ID });
 
     const dialog = screen.getByRole('dialog', { name: 'Fixture Working' });
-    const edit = within(dialog).queryByRole('link', { name: 'Edit Spell' });
+    const edit = within(dialog).queryByRole('link', { name: 'Edit Fixture Working' });
     if (shown) {
       expect(edit).toHaveAttribute(
         'href',
@@ -681,6 +717,25 @@ describe('Quick Look over a Grimoire tab', () => {
       expect(edit).not.toBeInTheDocument();
     }
   });
+
+  it.each([
+    ['member', 2],
+    ['viewer', 0],
+  ] as const)(
+    'offers Delete Spell on a card and in the open Quick Look to a coven %s: %i',
+    async (role, count) => {
+      as(role);
+      await renderTab(SpellsPage, { query: 'fixture', spell: SPELL_ID });
+
+      const dialog = screen.getByRole('dialog', { name: 'Fixture Working' });
+      expect(
+        within(dialog).queryAllByRole('button', { name: 'Delete Spell Fixture Working' }),
+      ).toHaveLength(count / 2);
+      expect(
+        screen.queryAllByRole('button', { name: 'Delete Spell Fixture Working' }),
+      ).toHaveLength(count);
+    },
+  );
 
   it('names the editor in one displayNamesOf call for the modal', async () => {
     as('member');

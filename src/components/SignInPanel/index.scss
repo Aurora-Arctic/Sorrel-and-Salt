@@ -1,33 +1,23 @@
 @use 'sass:map';
 @use '../../scss/variables' as *;
 
-// The page around it is `.page-frame--narrow` (src/app/sign-in/page.tsx),
-// which centres it and holds it clear of the top inset. The panel fills the
-// frame's narrow column, on its own `.panel` ground with a step more padding
-// than the default (the owner, at the sign-off). `border-box`, so the padding
-// stays inside the column.
-// Children stretch to the column, and the button grid centres its own.
-//
-// Compounded with `.panel`: in the app the primitives compile as `body .panel`,
-// which outranks a lone component class, so a bare `.sign-in-panel` would
-// keep the panel's default padding there while the workshop, whose
-// primitives are scoped with `:where()`, showed this one (the owner caught
-// the difference in the running app, 2026-10-11).
+// The page around it is `.page-frame--narrow` (src/app/sign-in/page.tsx); the panel fills its
+// column on `.panel` with a step more padding, `border-box`. Compounded with `.panel` because in
+// the app the primitives compile as `body .panel`, which outranks a lone class, while the workshop
+// scopes them with `:where()`.
 .sign-in-panel.panel {
   box-sizing: border-box;
-  // One `max-content` column, centred, as the button list below is: the
-  // column is as wide as the widest button, and the head and the error
-  // take that width rather than the card's (the owner, at the sign-off).
+  // One `max-content` column, centred, as the button list below is: the column is as wide as
+  // the widest button, and the head and the error take that width rather than the card's.
   display: grid;
   grid-template-columns: max-content;
   justify-content: center;
   gap: space(4);
   width: 100%;
 
-  // The narrow frame's whole column, and a step more room than the `.panel`
-  // default at the sides and below, 2rem, with the default 1.5rem above: the
-  // card is the one thing on the page, and the owner asked for it bigger
-  // below and beside, not above (MB.116, 2026-10-11).
+  // The narrow frame's whole column, and a step more room than the `.panel` default at the
+  // sides and below, 2rem, with the default 1.5rem above: the card is the one thing on the
+  // page.
   padding: space(5) space(6) space(6);
 
   // The lede and the error wrap at the buttons' width instead of widening
@@ -56,8 +46,7 @@
   display: grid;
   grid-template-columns: max-content;
   justify-content: center;
-  // Room for the last-used badge, which hangs over its button's top edge,
-  // and no more: the owner asked for the buttons closer (2026-10-11).
+  // Room for the last-used badge, which hangs over its button's top edge, and no more.
   gap: space(4);
   margin-top: space(4);
 }
@@ -68,18 +57,10 @@
   gap: space(1);
 }
 
-// Every roster button carries `.btn` (_primitives.scss) for its shape —
-// padding, radius, shadow, focus ring, transition — the same primitive any
-// other button in the app uses. This rule is only the ways a provider's
-// brand button differs from `.btn`'s own defaults: the icon sits at the
-// left edge rather than centered, the button fills its grid column rather
-// than sizing to its own content, and the edge is the 1px stroke Google's
-// and Microsoft's guidelines draw rather than `.btn`'s 1.6px — on all four,
-// so the roster stays one height. Compounded with
-// `.btn` (`.sign-in-panel__button.btn`) so these overrides apply
-// regardless of the two stylesheets' load order. Colour is never here —
-// every provider's own colour and mark replaces `.btn`'s
-// (claude-docs/components/sign-in-panel.md, "Provider branding").
+// Each roster button carries `.btn` for its shape; this rule is only where a brand button differs:
+// icon at the left edge, button filling its grid column, a 1px edge as Google's and Microsoft's
+// guidelines draw. Compounded with `.btn` so load order does not matter; colour is each provider's
+// own (claude-docs/components/sign-in-panel.md, "Provider branding").
 .sign-in-panel__button.btn {
   // The containing block for the last-used badge.
   position: relative;
@@ -89,18 +70,10 @@
   border-color: transparent;
 }
 
-// One brand's button colours, from `$brand-palettes` (_variables.scss) —
-// the provider's published colours rather than our $accent/$secondary
-// tokens, since they are the provider's; icons.tsx names each mark's source.
-// A white button takes its brand's `edge`; one with none keeps the
-// transparent edge above.
-//
-// `.btn` itself changes text colour on hover/focus (to `$text-on-color`,
-// for a plain outlined button); a brand button's text colour is part of the
-// brand and stays fixed, so the hover/focus block restates its own `color`
-// rather than leaving `.btn`'s free to compete — an omitted `color` here
-// would tie with `.btn`'s in specificity and so depend on the same
-// cross-stylesheet load order the compounding below exists to avoid.
+// One brand's button colours from `$brand-palettes` (_variables.scss), not our tokens; a white
+// button takes its brand's `edge`, one with none keeps the transparent edge above. The hover/focus
+// block restates `color`, since `.btn` changes text colour there and an omitted `color` would tie
+// with it in specificity.
 @mixin brand-button($brand) {
   background-color: brand-color($brand, 'fill');
   color: brand-color($brand, 'ink');
@@ -116,35 +89,26 @@
   }
 }
 
-// Compounded with `.btn` — same reason as the rule above: `.btn`'s `border`
-// shorthand sets a border-color too, and without the extra specificity,
-// whichever of `.btn` or this rule's own stylesheet happens to load second
-// would win, rather than always this one.
+// Compounded with `.btn`, for the rule above's reason: `.btn`'s `border` shorthand sets a
+// border-color too, and without the extra specificity whichever stylesheet loads second would
+// win.
 @each $brand in map.keys($brand-palettes) {
   .sign-in-panel__button--#{$brand}.btn {
     @include brand-button($brand);
   }
 }
 
-// The disabled look itself is `.btn[aria-disabled='true']` — a universal
-// primitive (_primitives.scss), not a sign-in-only style. All that is left
-// here is Facebook's own wrinkle: its mark is a white shape with the "f" as
-// a hole in it (icons.tsx), so the hole shows whatever sits behind the
-// chip. Dropping the chip's own blue while disabled lets the hole show
-// this button's own (greyed) background instead of staying blue against a
-// greyed button. Scoped off the button's own `aria-disabled`, not a brand
-// class — a disabled button carries no `--facebook` class (see the
-// `className` comment in index.tsx), but `FacebookIcon` still renders its
-// chip regardless of availability.
+// Facebook's mark is a white shape with the "f" as a hole (icons.tsx), so the chip's blue is
+// dropped while disabled and the hole shows the greyed button. Scoped off `aria-disabled`, since a
+// disabled button carries no `--facebook` class but `FacebookIcon` still renders its chip.
 .sign-in-panel__button[aria-disabled='true'] .sign-in-panel__icon-chip--facebook {
   background-color: transparent;
 }
 
-// Hangs off the button's top-left corner, out of the flow, so the marked
-// button is the same size as the rest. Colour is `.badge--last-used`'s; the
-// shadow is the one `.btn` casts, lifting it off the brand fill it overlaps.
-// The corner's offsets are the badge's own geometry against the button's
-// edge, not spacing, so they stay off the scale.
+// Hangs off the button's top-left corner, out of the flow, so the marked button is the same
+// size as the rest. Colour is `.badge--last-used`'s; the shadow is the one `.btn` casts,
+// lifting it off the brand fill it overlaps. The corner's offsets are the badge's own
+// geometry against the button's edge, not spacing, so they stay off the scale.
 .sign-in-panel__last-used {
   position: absolute;
   top: -1.125rem;

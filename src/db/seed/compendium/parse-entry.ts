@@ -4,13 +4,8 @@ import { frontmatterSchema, toEntry, withoutBlanks } from './file-schema';
 import { ingredientSlug } from '../../../lib/slugify';
 import type { CompendiumFileSections, SeedCompendiumEntry, SeedCompendiumFile } from '../types';
 
-// One compendium entry file to the entry the seed writes (M14.6): the
-// frontmatter between the `---` lines, read by `yaml` (a duplicate key is
-// refused), then the body — one `# Name` heading, the description up to the
-// first `####` heading, and the two optional trailing sections
-// (claude-docs/db/compendium-seed/README.md, "The file format"). Every
-// problem is an issue naming the file, and a file with an issue yields no
-// entry: the loader never hands the seed half a file.
+// One entry file to the entry the seed writes: frontmatter between the `---` lines (a duplicate key is refused), then one `# Name` heading, the description
+// up to the first `####`, and two optional trailing sections (claude-docs/db/compendium-seed/README.md, "An entry, field by field"). A file with an issue yields no entry.
 
 /** The two trailing sections, in the one order they may appear. */
 export const SECTION_HEADINGS = {

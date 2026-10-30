@@ -2,12 +2,9 @@
 @use '../../scss/mixins' as *;
 @use 'layers' as *;
 
-// The forms in the Form column, one row (wrapping only as a card) with a dot between forms (the card's
-// `dotted-row` mixin). A gap rather than a margin on each form, so a form that wraps starts
-// its line at the cell's edge. `vertical-align: top` because an inline-flex box sits on its
-// first item's baseline, and the icon's svg has none, so its bottom edge would sit on the line
-// and lift every name 4px; top puts the first line level with the row's other text, and a form
-// that wraps hangs below it.
+// The forms in one row, with a gap rather than a margin so a wrapped form starts at the cell's
+// edge. `vertical-align: top` because the icon's svg has no baseline, so an inline-flex box would
+// lift each name 4px.
 .compendium-list__forms {
   @include dotted-row('.compendium-list__item', $gap: space(4));
 
@@ -50,22 +47,15 @@
   @include icon-link;
 }
 
-// The Edit column, pinned to the right edge while the others scroll beneath it (the shared
-// `sticky-action-column`, neutral where the People table's Impersonate is red). The +N panel
-// in the Categories cell is `layer('floating')`, above it, so it passes over the pinned
-// pencils of the rows beneath. The pencil's own tip lives inside this cell's stacking context
-// and opens to its left, over the scrolling columns, so no later pinned cell reaches it.
+// The Edit column is pinned right (the shared `sticky-action-column`). The Categories +N panel is
+// `layer('floating')` above it, and the pencil's tip opens leftwards inside this cell's stacking
+// context, so no later pinned cell covers it.
 .compendium-list__edit {
   @include sticky-action-column($sticky-column-layer);
 }
 
-// The Categories column's floor: the widest row of chips any seeded entry shows, measured in
-// Chromium at a 16px root with the final compact, dot-less chips: Aspen's Ancestor Work and
-// Communication with its +8 button and the row's 4px gaps, 266px (16.625rem), rounded up to
-// the next 0.25rem. The cell's own inset is added each side. Only where the table is wide:
-// below that the table scrolls rather than wraps its chips, so the floor keeps the column from
-// being squeezed under them; as a card (under `$table-stack-width`) it never applies and the
-// chips wrap.
+// The Categories column's minimum width, 16.625rem plus the cell inset, so a wide table scrolls rather than squeezes the chips; unused when stacked as cards
+// (claude-docs/components/compendium-list.md, "The Categories column floor").
 $categories-floor: 16.75rem;
 $categories-wide: 75rem;
 

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { buildSearchSentence } from '@/components/IngredientSearch/sentence';
 import type { SearchSentenceFilter } from '@/components/IngredientSearch/types';
 
-// The one named exception to the copy rule (M12.4): this file asserts the
+// The one named exception to the copy rule: this file asserts the
 // sentence's strings, because the strings are what the function makes.
 
 const empty: SearchSentenceFilter = {};
@@ -75,7 +75,7 @@ describe('buildSearchSentence', () => {
     );
   });
 
-  it("says the grimoire's four facets after the categories, each as an or list (M13.22)", () => {
+  it("says the grimoire's four facets after the categories, each as an or list", () => {
     const labels = {
       visibilities: { private: 'Private', workspace: 'Shared' },
       makers: { u1: 'Testwort', u2: 'Testmoor' },
@@ -218,7 +218,7 @@ describe('buildSearchSentence', () => {
     });
   });
 
-  it('names the review mark only for an admin list, either way, and carries the facet that removes it (M14.8)', () => {
+  it('names the review mark only for an admin list, either way, and carries the facet that removes it', () => {
     expect(text({ reviewed: 'reviewed' }, 2)).toBe('2 ingredients');
     expect(text({ reviewed: 'reviewed' }, 2, { admin: true })).toBe(
       '2 ingredients, reviewed by a curator',
@@ -346,7 +346,7 @@ describe('buildSearchSentence', () => {
   });
 });
 
-describe('the In My Covens clause (M12.55)', () => {
+describe('the In My Covens clause', () => {
   const labels = { covens: { 'w-id': 'Testhollow', 'v-id': 'Testwren' } };
 
   it('says held in, naming the covens by their own capitals, joined by or', () => {

@@ -12,15 +12,9 @@ import { initialsOf } from './initials';
 import type { AccountMenuProps } from './types';
 import './index.scss';
 
-// The account button in the shell's bar and the panel it opens: Your Account,
-// with a link to the pending invitations beside it when there are any, and
-// Sign Out. The theme switch stays in the bar at every width (the owner's
-// call, M10.32). A disclosure, not an ARIA menu: `role="menu"` promises
-// arrow-key roving and a typeahead this does not have, and the panel holds
-// links and a button, which a menu's three item roles do not cover. The APG disclosure pattern is a button
-// with `aria-expanded` and `aria-controls` that shows a region, which is what
-// this is. The name is on the button alone; the panel does not repeat it.
-// See claude-docs/components/account-menu.md.
+// The account button in the shell's bar and its panel: Your Account, a link to pending invitations
+// when there are any, and Sign Out. A disclosure, not an ARIA menu: `role="menu"` promises arrow-key
+// roving and a typeahead this lacks (claude-docs/components/account-menu.md).
 
 const Chevron = (): ReactElement => (
   <svg className="account-menu__chevron" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
@@ -48,10 +42,9 @@ const AccountMenu = ({
   // An unverified account cannot reach the account page the count leads to.
   const pending = verified && pendingInvitations > 0;
   const invitations = `${pendingInvitations} Coven ${pendingInvitations === 1 ? 'Invitation' : 'Invitations'}`;
-  // The dot is seen and the tip drawn only; the button's name says it instead,
-  // set whole as a label since a flex button's children are blocks, which a
-  // browser joins with a space ("Name , 2 …"). It starts with the visible
-  // name, as WCAG 2.5.3 asks. The count's link is named by the same words.
+  // The dot is drawn only; the button's name says the count instead, set whole as
+  // a label (a flex button's children are blocks, which a browser joins with a
+  // space). It starts with the visible name, as WCAG 2.5.3 asks.
   const buttonLabel = pending ? `${name}, ${invitations.toLowerCase()}` : undefined;
   const pathname = usePathname();
   const panelId = useId();
@@ -61,12 +54,9 @@ const AccountMenu = ({
   // A link press leaves the page; the panel should not outlive it.
   const close = (): void => setOpen(false);
 
-  // Open only: a closed menu listens for nothing. Escape is heard on the
-  // window, not the panel, so it works wherever the focus is, and it hands
-  // the focus back to the button the panel came from. The window rather than
-  // the document, so it hears an Escape after a failed Sign Out's callout,
-  // which listens on the document and takes the one it closes on
-  // (`defaultPrevented`): that Escape leaves the menu open.
+  // Open only: a closed menu listens for nothing. Escape is heard on the window so
+  // it works wherever the focus is and hears one after a failed Sign Out's callout,
+  // which takes its own Escape (`defaultPrevented`) and leaves the menu open.
   useEffect(() => {
     if (!open) return;
     const closeOnOutsidePress = (event: PointerEvent): void => {
@@ -118,9 +108,8 @@ const AccountMenu = ({
             >
               Your Account
             </PendingLink>
-            {/* A link of its own beside Your Account, not inside it: a press on
-                the count opens the invitations, a press on the rest of the row
-                the account page (the owner's call, M10.32). */}
+            {/* A link of its own beside Your Account, not inside it: a press on the count
+                opens the invitations, a press on the rest of the row the account page. */}
             {pending && (
               <span className="account-menu__count">
                 <IconTip tip={`You Have ${invitations}`} placement="below">

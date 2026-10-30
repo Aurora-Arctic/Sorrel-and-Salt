@@ -295,3 +295,55 @@ the layout keeps the heading in place and swaps the slot is Next's, and is
 the e2e suite's to see.
 
 With a single route the pill navigation is left out (MB.106's extra item): one pill to "navigate" between is noise. The heading and the tab's content still render.
+
+## What a tabbed page is
+
+A page in tabs is its heading with a row of links, one per tab, beside it on the same line, the open tab's action at the line's end, and the open tab's content beneath. Each tab is at its own address, so it can be bookmarked and its `?edit=` and cursor links keep working. A route group's shared layout renders this, so pressing a tab swaps only the action and the content. The action is the group's `@action` slot, so it changes with the tab (Add Category, New Invitation, Pause Admin Changes). A tab with none leaves the wrapper empty, and the stylesheet takes an empty item out of the line.
+
+The row is a `nav` named for the page, not a `role="tablist"`. Each tab is a navigation to another address, not a panel shown in place, and a tablist promises arrow keys it would not have. A page with a single tab (a member who cannot invite sees only Members) draws no row. The row rides in `PageHeader`'s trailing children with the action, a fragment spreading into the header's flex row in the order heading, tabs, action, so the header needs no slot of its own for it.
+
+There is no client directive on the page. The links, which must know which tab is open, and the switch they share with the action and the panel are the client parts, and the action and the content pass through them from the server. The open tab is the longest matching address: the grimoire's Drafts lies beneath Spells, so on Drafts both match, and the first would mark Spells.
+
+`filtered` on a tab says its list opens with a filter, so its loading skeleton draws a filter row above the table. `cards` is for the grimoire's tabs.
+
+## Pressing a tab
+
+Pressing another tab runs its navigation through the tab switch, which greys the row and shows the panel's loading state until the tab has rendered, as the pager's soft ends do. A Ctrl, Cmd or Shift click and a middle click keep the browser's own behaviour, and without JavaScript each tab is a plain link. The open tab is left to Link, so pressing it again shows no loading state.
+
+The switch holds the pressed tab by a transition rather than a route group's `loading.tsx`, so a direct request renders the whole page on the server with nothing streamed ahead of it. The navigation runs inside the transition, so `pending` stays true until Next has rendered the new tab. A provider already above, the workshop's, is kept rather than shadowed, and the context is exported so the workshop, whose stub router goes nowhere, can draw a tab on its way.
+
+While a tab is on its way every tab is `aria-disabled` and a press does nothing. The row is `aria-busy` rather than the panel, whose status a screen reader should hear as it arrives and not hold back, and so is the pressed tab. `aria-current` stays on the tab that is open until the new tab renders, since it names the page shown, not the press. The open tab's action is greyed out and `inert`, so it can be neither pressed nor focused until the new tab's action replaces it. It is faded with the tabs and its colour taken out, so a solid button greys as they do.
+
+The panel while a tab is on its way shows the shared `Skeleton` of the list it stands in for, in place of the old tab's content, beneath the heading and tabs, which stay where they are. That is the filter row where the tab has one, a table's heading and six rows, and the pager, or the grid of cards. A list's body draws it too, without the tabs (ListFrame). The new tab's content fades in as it replaces the skeleton rather than snapping in. Content the server drew, before any tab was pressed, has no `data-arrived` and shows at once. The panel shows any notice, then the list, a `space(5)` apart, as `.list-frame` spaces a list's.
+
+## The sliding pill
+
+The pill that marks a tab is one element sliding beneath the links: on the open tab, and from a press on the pressed one, in its pending look, so it reads as on its way rather than arrived. Should the navigation fail it slides back. The server draws the pill on the open link itself (the stylesheet), so it is there before the script runs and without it. Once the sliding pill is placed, the row's `data-sliding` hands the drawing over to it.
+
+It is placed before the slide is switched on, so the first placing does not slide in from the row's start; reading a size settles it first. It is placed again whenever its tab or the track changes size: the web font arriving after the first paint widens every label, and a phone turned on its side widens the track. It slides from tab to tab with its width easing to the new one's, and under reduced motion it jumps. It is shown by `inherit`, not `visible`: a page held hidden under a navigation's skeleton (SkeletonFade, `.skeleton-held`) hides it by inheritance, and `visible` showed the pill through the skeleton.
+
+A row too wide for its column scrolls sideways inside its track. When the page loads and when the pill moves, its tab is centred in the track, so it is in view with a neighbour either side. The track's own `scrollLeft` is set rather than `scrollIntoView()` called, which would scroll the page too. A focus moving along the row is the browser's to scroll into view.
+
+## The track and the pills
+
+The track is a faint grey wash edged by a hairline, fainter than `$fill-quiet` so the green pill stands apart from it (a green track sat too close to the pill). The open tab is a pill inside it: the accent thinned into the card and edged in the accent itself, since the fill alone sits under WCAG 1.4.11's 3:1 against the track. The others are plain muted text. The pill's and the track's mixes are this row's alone, so local rather than tokens. The track spends a 1px edge and 0.125rem of air on each side, as its own padding, so the row inside carries none.
+
+The row is a list, not bulleted: `typography-base`'s ◆ marker, indent and item margins are cleared, and since that mixin positions every list item for its marker, the items are set to stand clear of the track the links measure from. The pills keep to one line at their own widths at every width. A row wider than its line scrolls inside the track rather than wrapping or squeezing, with no scrollbar, which would cross the open pill's foot inside a track this thin. The label cut off at the track's edge says there is more. The row is positioned so the pill and the links measure their place from it, and its scroll padding clears the edge when a keyboard focus or the open tab scrolls into view.
+
+A pill is 2.25rem less the track's edge and air, in the caption size, its label on one line. The row is smaller than a control, so each pill's hit area is padded back to `$control-height` by a transparent box above and below it. The row is a control tall, centred on the track and overflowing it by the same amount above and below, and its scrollport is what the hit area fills. A scrolling box clips whatever sticks out of it, so the hit area has to be inside the row, not outside it.
+
+Pressed, for as long as the pointer is down (`src/lib/press-feedback.ts` marks a tap, which `:active` alone misses on a phone), the pill's fill shows under the label at once and the segment sinks a pixel, flat, so a press answers before the pill slides over. A tab that is on its way or waiting for one takes no press. The focus ring is inside the pill rather than round it, where the track would clip it, at the accent's own strength per theme: the shared fade in dark, full in light, where even 75% falls to 2.75:1 on the track.
+
+While a tab is on its way every tab takes the muted, faded look a disabled control has, without a button's edge to dash, and hover changes nothing. The pill, on the pressed tab by then, fades with them with its colour taken out. `tab-links.tsx` ignores a press meanwhile.
+
+## The header at narrow widths
+
+The primitives' `.page-header` spreads its children to the two ends and nudges every non-heading item down to the heading's baseline. Here the heading is followed by its tabs, only the action is pushed to the end, and the tabs are centred on the line. The selector is doubled to outweigh the primitives' narrow-width rules, which would stretch the row across its line as they do an action. A row at a phone's width drops under the heading at its own size instead. The track sits 0.125rem lower than the nudge's cancelling, where it was found level with the heading's text, and it shrinks below its pills' width rather than overflow the line, so the row inside scrolls.
+
+Under the forms' column `.page-header` puts an action on a line of its own beneath the heading, at its natural width and the line's start, as any action is (reversing the earlier spanning one). The wrapper's `margin-inline-start: auto` is for the wide line only. The Add is the exception, a plus beside the heading: the heading's line is then the heading and the action, so the pills, which come first in the markup, are ordered after them and drop beneath. In the plus band the heading yields first: a zero basis keeps the pills and the plus on its line, and a long heading wraps its own words rather than sending the plus to a line of its own.
+
+From `$tabbed-reflow-width-labelled` down the wide line is too short for the heading, the pills and an action, so an action that is not the Add takes a line of its own at the line's start rather than wrapping to the line's end (it was found pushed right at 500px). The Add keeps its place at the heading's end.
+
+A header whose action keeps its label (People's Pause Admin Changes) works differently from the same width down: the heading and the action keep the line and the pills drop beneath at their own size. A flex box cannot put an item on a line of its own at its own width, so a line break is forced by a pseudo-element the width of the line and no height, ordered between the action and the pills. The line it makes would take a row gap above and below (a flex line is never shorter than nothing), so the pills give one back. Under the forms' column the primitive gives the heading the line to itself; a tabbed page with a labelled action keeps the two on one line down to `$tabbed-action-below-width`, where the action goes beneath the heading at the line's start, the auto margin cancelled.
+
+From `$tabbed-reflow-width` down the pills drop beneath the heading and its plus: the heading takes the line less the plus, and the pills, first in the markup, are ordered after the action. This is apart from the plus's own switch at `$tabbed-plus-width`, on purpose. At `$add-below-width` and under, the Add is the labelled button again and goes beneath the heading, which has the line to itself (the reflow rule gave it the line less the plus), and the pills follow. The labelled Add and the pills would share a line, so the same forced break as under a labelled action keeps the pills on their own, and the pills give back the row gap it takes twice.

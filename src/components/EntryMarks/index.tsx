@@ -1,5 +1,6 @@
 import { Fragment, type ReactElement, type ReactNode } from 'react';
 import { SafetyMark } from '../SafetyNote';
+import { reviewDay } from '../IngredientEntry/review-date';
 import type { EntryMarksProps } from './types';
 import RecencyMark from './recency-mark';
 import TipMark from './tip-mark';
@@ -14,29 +15,17 @@ interface Mark {
   node: ReactNode;
 }
 
-/** The day, as LastEdit prints one, in UTC so the server's zone cannot move it. */
-const reviewDay = (at: string) =>
-  new Date(at).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    timeZone: 'UTC',
-  });
-
 const TONES: readonly Tone[] = ['green', 'neutral', 'red'];
 
-// Green first and red last, each group in the order it was built (the owner's
-// call, 2026-10-20). Sorted here, the one place every badge row is drawn, rather
-// than by each caller's JSX order, as MenuButton's `greenFirst` does for menu items.
+// Green first and red last, each group in the order it was built. Sorted here, the one
+// place every badge row is drawn, rather than by each caller's JSX order, as
+// MenuButton's `greenFirst` does for menu items.
 const byTone = (marks: readonly Mark[]): Mark[] =>
   TONES.flatMap((tone) => marks.filter((mark) => mark.tone === tone));
 
-// An ingredient entry's badge row: whose it is (Local, Compendium, Annotated,
-// Retired) and its one warning (Toxic, or else Caution). New and Updated are RecencyMark,
-// which sits elsewhere. One component so the entry page's head and the
-// ingredient card cannot drift (M8.14). It takes the kind and the flags as props
-// and works none of them out from the data. It renders the badges bare, with no
-// wrapper, inside the caller's own row. claude-docs/components/entry-marks.md.
+// An ingredient entry's badge row: whose it is (Local, Compendium, Annotated, Retired) and its one
+// warning (Toxic, else Caution); New and Updated are RecencyMark. Props only, no data work, so the
+// entry page and the card cannot drift (claude-docs/components/entry-marks.md).
 const EntryMarks = ({
   kind,
   annotated = false,
@@ -52,6 +41,7 @@ const EntryMarks = ({
 }: EntryMarksProps): ReactElement => {
   const held = kind === 'cupboard';
   const marks: Mark[] = [];
+  let reviewed: ReactNode = null;
   if (kind === 'own') {
     marks.push({
       key: 'local',
@@ -60,11 +50,9 @@ const EntryMarks = ({
     });
   }
   const shownAnnotated = provenance && held && annotated;
-  // Where the row lives, as Local is, and in a neutral tint: neither is a warning.
-  // Every compendium entry in a coven wears it, held or not (the owner's call,
-  // 2026-10-19); the page's shelf mark says which the cupboard holds. On the
-  // public compendium every entry is one, so none does. Annotated, which already
-  // says the entry is the Compendium's, wins over it (the owner's call, 2026-10-20).
+  // Where the row lives, as Local is, in a neutral tint, not a warning. Every compendium entry in a coven
+  // wears it, held or not; on the public compendium none does. Annotated, which already says the entry is
+  // the Compendium's, wins over it.
   if (provenance && (held || (kind === 'compendium' && inCoven)) && !retired && !shownAnnotated) {
     marks.push({
       key: 'compendium',
@@ -72,8 +60,8 @@ const EntryMarks = ({
       node: <output className="badge badge--low-stock">Compendium</output>,
     });
   }
-  // A compendium entry the curators retired, read because this coven's
-  // cupboard names it (M12.24): a button opening its own tip.
+  // A compendium entry the curators retired, read because this coven's cupboard names
+  // it: a button opening its own tip.
   if (retired) {
     marks.push({
       key: 'retired',
@@ -100,26 +88,25 @@ const EntryMarks = ({
       ),
     });
   }
-  // The curators' review mark (M14.8): green with its day once reviewed, in the attention
+  // The curators' review mark: green with its day once reviewed, in the attention
   // colour while not. A coven's own entry is never reviewed, so it has neither.
   if (kind !== 'own' && reviewedAt !== undefined) {
-    marks.push(
-      reviewedAt === null
-        ? {
-            key: 'review',
-            tone: 'red',
-            node: <output className="badge badge--attention">Needs Review</output>,
-          }
-        : {
-            key: 'review',
-            tone: 'green',
-            node: (
-              <output className="badge badge--local">
-                Reviewed By Curator <time dateTime={reviewedAt}>{reviewDay(reviewedAt)}</time>
-              </output>
-            ),
-          },
-    );
+    if (reviewedAt === null) {
+      marks.push({
+        key: 'review',
+        tone: 'red',
+        node: <output className="badge badge--attention">Needs Review</output>,
+      });
+    } else {
+      // Reviewed By Curator stands last in the row, with its day in the badge's tip, not beside it.
+      reviewed = (
+        <TipMark
+          label="Reviewed By Curator"
+          palette="local"
+          tip={`Reviewed ${reviewDay(reviewedAt)}`}
+        />
+      );
+    }
   }
   // One safety badge, Toxic over Caution, drawing nothing when neither holds. The
   // card draws its own beside the name (`safety={false}`).
@@ -132,12 +119,13 @@ const EntryMarks = ({
   }
   return (
     <>
-      {/* New or Updated before every badge, in reading order and on screen (the
-          owner's call, 2026-10-20): here once, so no row that shares it can differ. */}
+      {/* New or Updated before every badge, in reading order and on screen: here once,
+                so no row that shares it can differ. */}
       <RecencyMark recency={recency} />
       {byTone(marks).map((mark) => (
         <Fragment key={mark.key}>{mark.node}</Fragment>
       ))}
+      {reviewed}
     </>
   );
 };

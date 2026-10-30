@@ -7,17 +7,14 @@ type TipMarkProps = {
   /** The badge's word. */
   label: string;
   /** The badge palette, as `badge--<palette>`. */
-  palette: 'retired' | 'annotated';
+  palette: 'retired' | 'annotated' | 'local';
   /** The sentence the tip says. */
   tip: string;
 };
 
-// A badge that opens a tip: Retired (M12.24) and Annotated (M8.14). A button
-// whose only job is to open its tip, built on the same `useTip` and classes as
-// StockBadge's Low badge rather than a shared piece: they differ in their text
-// and palette and in nothing else worth a seam. The tip's text stays in the
-// page while closed and the button lists it in `aria-describedby`, so a screen
-// reader hears the reason without opening it. claude-docs/components/entry-marks.md.
+// A badge that opens a tip (Retired, Annotated), on the same `useTip` and classes as StockBadge's Low
+// badge. The tip's text stays in the page while closed and is listed in `aria-describedby`
+// (claude-docs/components/entry-marks.md).
 const TipMark = ({ label, palette, tip }: TipMarkProps): ReactElement => {
   const tipId = useId();
   const { open, show, showSoon, hide, hideSoon, anchor, bubble, bubbleStyle } = useTip();

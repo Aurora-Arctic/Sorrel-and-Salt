@@ -28,3 +28,11 @@ During a wait the old page stays mounted, hidden, at its full height, and the sk
 - **No skeleton, no fade.** A navigation with no skeleton target (a refresh) leaves the page standing and nothing fades: the page was never replaced.
 - **The page is not wrapped to fade in.** Its fade-in is the overlay fading out over it, on the page's ground: wrapping the arriving page in a box to run `arrived` on it would put a box round it that the section layouts' flex columns would feel. The same keyframe (`list-frame-fade-in`) runs backwards.
 - **Reduced motion** follows `arrived`: it shows the new content at once, so the overlay is `display: none` and nothing fades.
+
+## Holding the page during a wait
+
+While a wait is on, the page stays mounted at its full height but unseen (`visibility`) and out of reach (`inert`, `aria-hidden`), while `SkeletonCover` stands over it. `visibility` is used because it keeps the page's box, where `display: none` or React's `<Activity>` would collapse it. The page is not taken away because the browser saves the scroll position into the history entry when the navigation writes it, after the skeleton is up. A page swapped for a shorter skeleton would clamp the scroll first, and Back would return to the clamped position. The element is the same whether waiting or not, so React keeps the page mounted.
+
+## The fade out
+
+When a wait ends, the bodies (`MainBody`, `SectionBody`) do not drop the skeleton at once. They keep the last one over the page that has arrived, and it fades away while the page shows through. This is a client part, since the timer is the browser's. The skeleton fades rather than the page fading in, because wrapping the arriving page would put a box round it that the section layouts' flex columns would feel. The overlay is out of layout and unmounts when it has gone.

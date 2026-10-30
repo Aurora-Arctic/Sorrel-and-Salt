@@ -6,10 +6,8 @@ import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
 
-// M11.21's transport half: the `Ingredient` and `IngredientVariant` types
-// carry each row's own toxic flag, so both searches return both — the
-// compendium's to a reader with no session at all, as the public page reads
-// it. Who may set a flag is services/toxic-flags.test.ts's.
+// The transport half: the `Ingredient` and `IngredientVariant` types carry each row's own toxic flag, so both searches return both,
+// the compendium's to a reader with no session, as the public page reads it. Who may set a flag is services/toxic-flags.test.ts's.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {

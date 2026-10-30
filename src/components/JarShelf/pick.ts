@@ -13,12 +13,9 @@ export function hash(text: string): number {
 }
 
 /**
- * The vessel for a form of an ingredient: the same pair always gets the same one,
- * a liquid form from the bottles and anything else from the jars. `seed` is the
- * ingredient's formal name, or its id when it has none; both seed and form are
- * trimmed and lower-cased first, so a change of case does not re-roll the vessel.
- * Nothing is stored. A formal name is shared by every coven that holds the
- * entry, so the compendium entry draws the same shelf in each.
+ * The vessel for a form of an ingredient: the same pair always gets the same one, a liquid form
+ * from the bottles and anything else from the jars (claude-docs/components/jar-shelf.md,
+ * "Choosing and drawing the vessel").
  */
 export function pick(seed: string, form: string): JarShapeName {
   const pool = LIQUID.test(form) ? BOTTLES : JARS;

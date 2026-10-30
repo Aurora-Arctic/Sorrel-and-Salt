@@ -7,6 +7,7 @@ import {
   applyFilters,
   chooseChip,
   compendiumVariant,
+  graphqlFromPage,
   insertSpell,
   insertStep,
   insertStock,
@@ -18,22 +19,17 @@ import {
 import { categoryChip, pickCategoryIn } from './ingredient-dialogs';
 import { makeVariant } from '../../support/fixtures/ingredient';
 
-// Stories 47 to 57, 76 to 80, 83 and 84: the grimoire, from naming a spell to the
-// workings recorded against it. Every story here is a scaffold: the page it
-// walks is not built yet, and the task named in its annotation turns its
-// `fixme` into `test` and makes it pass. Each body is the flow as the finished
-// page will allow it, so the page task edits locators rather than inventing a
-// flow. Stories 76 to 80 are not in DESIGN.md §10 until M13.1, M13.2 and
-// M13.4 add them, so the reporter prints "Not a v1 story" for them meanwhile.
+// The grimoire in the browser, from naming a spell to the workings recorded against it. A `test.fixme` is a
+// flow whose annotation names its task; stories 76 to 80 are not in DESIGN.md §10, so the reporter prints
+// "Not a v1 story" for them.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
 /**
- * The spell builder (M10.12), reached as a member reaches it: from the Grimoire, through the
- * New Spell at its heading, which only a role that may create a spell is shown. It opens as a
- * dialog over the grimoire under `?new=spell-<slug>`, and the dialog is what it returns.
+ * The spell builder, reached from the Grimoire through the New Spell at its heading, shown only to a role that
+ * may create a spell. It opens as a dialog over the grimoire under `?new=spell-<slug>` and returns the dialog.
  */
 async function openBuilder(page: Page, slug: string): Promise<Locator> {
   await page.goto(`/coven/${slug}/grimoire`);
@@ -44,19 +40,19 @@ async function openBuilder(page: Page, slug: string): Promise<Locator> {
   return dialog;
 }
 
-/** The builder's one ordered list of steps (M10.15, M10.16, M13.3). */
+/** The builder's one ordered list of steps. */
 function stepList(page: Page): Locator {
   return page.getByRole('list', { name: 'Steps' });
 }
 
-/** The grimoire's list of spells (M10.11), named after its page. */
+/** The grimoire's list of spells, named after its page. */
 function grimoireList(page: Page): Locator {
   return page.getByRole('list', { name: 'Grimoire' });
 }
 
 /**
- * Adds a step through the type-ahead picker, which offers one row per form,
- * "Rosemary (Herb)", and returns the step's row in the list.
+ * Adds a step through the type-ahead picker, which offers one row per form, "Rosemary (Herb)", and returns
+ * the step's row in the list.
  */
 async function addIngredientStep(page: Page, name: string): Promise<Locator> {
   await page.getByRole('combobox', { name: 'Add to Jar' }).fill(name);
@@ -107,7 +103,7 @@ test('a member names a spell and states its intent', { tag: '@story-47' }, async
   await expect(edit.getByRole('textbox', { name: 'Intent' })).toHaveValue('To see clearly');
   await edit.getByRole('button', { name: 'Close', exact: true }).click();
   await expect(page).toHaveURL(`/coven/${coven.slug}/grimoire`);
-  // A new spell is a draft, listed under the grimoire's Drafts tab (M10.11).
+  // A new spell is a draft, listed under the grimoire's Drafts tab.
   await page.getByRole('link', { name: 'Drafts' }).click();
   await expect(page).toHaveURL(`/coven/${coven.slug}/grimoire/drafts`);
   await expect(grimoireList(page).getByText('Fixture Working', { exact: true })).toBeVisible();
@@ -199,11 +195,10 @@ test(
     await pickUnit(step, 'g');
     const save = page.getByRole('button', { name: 'Save' });
     await save.click();
-    // Saved: nothing left to save.
+    // After the save the Save button is disabled and no longer busy.
     await expect(save).toBeDisabled();
     await expect(save).not.toHaveAttribute('aria-busy', 'true');
-    // The builder has no page to reopen a saved spell on until M13.10, so the
-    // step is read where the save left it.
+    // The saved step's quantity, unit and name, read back from the database.
     const rows = await withSql(
       (sql) => sql<{ quantity: string; unit: string; name: string | null }[]>`
         select st.quantity, st.unit, st.name from spell_steps st
@@ -254,8 +249,7 @@ test(
     await save.click();
     await expect(save).toBeDisabled();
     await expect(save).not.toHaveAttribute('aria-busy', 'true');
-    // The builder has no page to reopen a saved spell on until M13.10, so the
-    // order is read where the save left it: the position.
+    // The saved steps' names in position order, read back from the database.
     const rows = await withSql(
       (sql) => sql<{ name: string; position: number }[]>`
         select i.name, st.position from spell_steps st
@@ -430,7 +424,7 @@ test(
     await signInAgainAs(page, A);
     await page.goto(path);
     await expect(grimoireList(page).getByRole('listitem')).toHaveCount(2);
-    // Its author is told it is theirs alone, in a word, not a colour (M10.13).
+    // Its author is told it is theirs alone, in a word, not a colour.
     const item = (name: string) => grimoireList(page).getByRole('listitem', { name });
     await expect(item('Private Working').getByText('Private', { exact: true })).toBeVisible();
     await expect(item('Shared Working').getByText('Private', { exact: true })).toHaveCount(0);
@@ -441,6 +435,173 @@ test(
       await expect(grimoireList(page).getByText('Shared Working', { exact: true })).toBeVisible();
       await expect(grimoireList(page).getByText('Private Working')).toHaveCount(0);
     }
+  },
+);
+
+test(
+  'a member deletes a shared spell from its page after being asked, naming it; the grimoire says so, and a viewer is offered no Delete',
+  { tag: '@story-56' },
+  async ({ page }) => {
+    // The visibility lock governs widening, not existence: a complete, shared spell can be
+    // deleted, which the confirmation says the coven loses.
+    const coven = await seedCoven(page, 'Fixture Coven Fifty-Six Deletes', 'story-56-delete.test', {
+      A: 'owner',
+      B: 'member',
+      C: 'viewer',
+    });
+    const { A, B, C } = coven.users;
+    const { gone, kept, step } = await withSql(async (sql) => {
+      const gone = await insertSpell(sql, coven.id, 'Doomed Working', 'workspace', A, 'complete');
+      const kept = await insertSpell(sql, coven.id, 'Kept Working', 'workspace', A, 'complete');
+      const held = await localIngredient(sql, coven.id, A);
+      const step = await insertStep(sql, gone, held, { quantity: 1, unit: 'g', position: 1 }, A);
+      return { gone, kept, step };
+    });
+    const deletedAt = async (table: 'spells' | 'spell_steps', id: string) => {
+      const [row] = await withSql(
+        (sql) => sql<{ deleted_at: Date | null }[]>`
+          select deleted_at from ${sql(table)} where id = ${id}`,
+      );
+      return row.deleted_at;
+    };
+    const listPath = `/coven/${coven.slug}/grimoire`;
+    const recipePath = `${listPath}/${gone}`;
+    const bin = page.getByRole('button', { name: 'Delete Spell Doomed Working', exact: true });
+    const question = page.getByRole('dialog', { name: 'Delete Spell', exact: true });
+
+    // Why the delete could be refused: B is not the author, and the spell is complete and
+    // shared. B is a member of the coven, which is what the delete asks.
+    await signInAgainAs(page, B);
+    await page.goto(recipePath);
+    await expect(page.getByRole('heading', { level: 1, name: 'Doomed Working' })).toBeVisible();
+
+    await test.step('the Delete asks first, naming the spell, and Cancel changes nothing', async () => {
+      await bin.click();
+      await expect(question).toContainText('Doomed Working');
+      await assertNoAccessibilityViolations(page);
+      await question.getByRole('button', { name: 'Cancel', exact: true }).click();
+
+      await expect(question).toHaveCount(0);
+      await expect(bin).toBeFocused();
+      expect(await deletedAt('spells', gone)).toBeNull();
+    });
+
+    await test.step('confirmed, the page leaves for the grimoire, which says so, with the focus on its heading', async () => {
+      await bin.click();
+      await question.getByRole('button', { name: 'Delete', exact: true }).click();
+
+      await expect(page).toHaveURL(/\/grimoire\?deleted=/);
+      await expect(page.getByRole('status').filter({ hasText: 'Doomed Working' })).toHaveCount(1);
+      await expect(page.getByRole('heading', { level: 1, name: 'Grimoire' })).toBeFocused();
+      await expect(grimoireList(page).getByRole('listitem')).toHaveCount(1);
+      await expect(grimoireList(page).getByText('Kept Working', { exact: true })).toBeVisible();
+      await assertNoAccessibilityViolations(page);
+      // Soft, and together: the spell and its step are marked deleted, the other spell untouched.
+      expect(await deletedAt('spells', gone)).not.toBeNull();
+      expect(await deletedAt('spell_steps', step)).not.toBeNull();
+      expect(await deletedAt('spells', kept)).toBeNull();
+    });
+
+    await test.step('the deleted spell has no page and opens no Edit dialog', async () => {
+      const response = await page.goto(recipePath);
+      expect(response?.status()).toBe(404);
+      await page.goto(`${listPath}?edit=${gone}`);
+      await expect(page.getByRole('heading', { level: 1, name: 'Grimoire' })).toBeVisible();
+      await expect(page.getByRole('dialog')).toHaveCount(0);
+    });
+
+    await test.step('a viewer is offered no Delete, and one sent by direct id is refused', async () => {
+      await signInAgainAs(page, C);
+      await page.goto(`${listPath}/${kept}`);
+      // Why it could be offered: the viewer reads the page the member could delete from.
+      await expect(page.getByRole('heading', { level: 1, name: 'Kept Working' })).toBeVisible();
+      await expect(page.getByRole('main').getByRole('button', { name: /^Delete/ })).toHaveCount(0);
+
+      const answer = await graphqlFromPage(
+        page,
+        'mutation ($w: ID!, $id: ID!) { deleteSpell(workspaceId: $w, id: $id) }',
+        { w: coven.id, id: kept },
+      );
+      expect(answer.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+      expect(await deletedAt('spells', kept)).toBeNull();
+    });
+  },
+);
+
+test(
+  'a member deletes a spell from its card in the grimoire list and lands back on the list, filter kept, with the spell gone',
+  { tag: '@story-56' },
+  async ({ page }) => {
+    const coven = await seedCoven(page, 'Fixture Coven Fifty-Six Card', 'story-56-card.test', {
+      A: 'owner',
+      B: 'member',
+    });
+    const { A, B } = coven.users;
+    await withSql(async (sql) => {
+      await insertSpell(sql, coven.id, 'Card Doomed Working', 'workspace', A, 'complete');
+      await insertSpell(sql, coven.id, 'Card Kept Working', 'workspace', A, 'complete');
+    });
+    const listPath = `/coven/${coven.slug}/grimoire`;
+    // Why the delete could be refused: B is not the author and the spell is shared and complete.
+    await signInAgainAs(page, B);
+    await page.goto(`${listPath}?query=Card`);
+    await expect(grimoireList(page).getByRole('listitem')).toHaveCount(2);
+
+    await grimoireList(page)
+      .getByRole('button', { name: 'Delete Spell Card Doomed Working', exact: true })
+      .click();
+    const question = page.getByRole('dialog', { name: 'Delete Spell', exact: true });
+    await expect(question).toContainText('Card Doomed Working');
+    await assertNoAccessibilityViolations(page);
+    await question.getByRole('button', { name: 'Delete', exact: true }).click();
+
+    await expect(page).toHaveURL(/\/grimoire\?query=Card&deleted=/);
+    await expect(page.getByRole('status').filter({ hasText: 'Card Doomed Working' })).toHaveCount(
+      1,
+    );
+    await expect(grimoireList(page).getByRole('listitem')).toHaveCount(1);
+    await expect(grimoireList(page).getByText('Card Kept Working', { exact: true })).toBeVisible();
+    await assertNoAccessibilityViolations(page);
+  },
+);
+
+test(
+  'a member deletes a spell from its Edit dialog after being asked, and lands back on the list with the spell gone',
+  { tag: '@story-56' },
+  async ({ page }) => {
+    const coven = await seedCoven(
+      page,
+      'Fixture Coven Fifty-Six Builder',
+      'story-56-builder.test',
+      {
+        A: 'owner',
+        B: 'member',
+      },
+    );
+    const { A, B } = coven.users;
+    const gone = await withSql(async (sql) => {
+      await insertSpell(sql, coven.id, 'Builder Kept Working', 'workspace', A, 'complete');
+      return insertSpell(sql, coven.id, 'Builder Doomed Working', 'workspace', A, 'complete');
+    });
+    const listPath = `/coven/${coven.slug}/grimoire`;
+    // Why the delete could be refused: B is not the author and the spell is shared and complete.
+    await signInAgainAs(page, B);
+    await page.goto(`${listPath}?edit=${gone}`);
+    const edit = page.getByRole('dialog', { name: 'Edit Spell, Builder Doomed Working' });
+    await edit.getByRole('button', { name: 'Delete Spell', exact: true }).click();
+    await expect(page.getByText('Delete Builder Doomed Working?')).toBeVisible();
+    await assertNoAccessibilityViolations(page);
+    await page.getByRole('button', { name: 'Delete', exact: true }).click();
+
+    await expect(page).toHaveURL(/\/grimoire\?deleted=/);
+    await expect(
+      page.getByRole('status').filter({ hasText: 'Builder Doomed Working' }),
+    ).toHaveCount(1);
+    await expect(grimoireList(page).getByText('Builder Doomed Working')).toHaveCount(0);
+    await expect(
+      grimoireList(page).getByText('Builder Kept Working', { exact: true }),
+    ).toBeVisible();
+    await assertNoAccessibilityViolations(page);
   },
 );
 
@@ -621,7 +782,7 @@ test(
     await expect(page).toHaveURL(/\?edit=[0-9a-f-]{36}$/);
     await expect(save).toBeDisabled();
     await page.reload();
-    // A saved spell opens with its sections shut (M10.12).
+    // A saved spell opens with its sections shut.
     await page.getByRole('button', { name: 'Open All' }).click();
     await expect(steps).toHaveCount(2);
     // A saved instruction step is shut too, and reads as its text; its pencil opens the field.
@@ -789,7 +950,7 @@ test(
 
     // A member who may change the spell is offered Edit, which opens the builder on it.
     await eye.click();
-    await look.getByRole('link', { name: 'Edit Spell', exact: true }).click();
+    await look.getByRole('link', { name: 'Edit Fixture Working', exact: true }).click();
     await expect(page.getByRole('dialog', { name: 'Edit Spell, Fixture Working' })).toBeVisible();
 
     // A viewer sees the same details and is offered no Edit.

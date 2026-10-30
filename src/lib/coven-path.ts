@@ -1,32 +1,30 @@
 import type { NavigationTarget } from './navigation';
 
 // A workspace is named by the address alone, never by session state, so two
-// tabs can sit in two workspaces without disagreeing (M6.9). These read and
+// tabs can sit in two workspaces without disagreeing. These read and
 // rewrite that address: the segment after `/coven/` is the slug.
 const COVEN = 'coven';
 
 /**
- * The segment the create-workspace page sits at (M9.16). Beneath `/coven/`
- * like the workspaces, so a static segment beside `[slug]`; the slug rule
- * below keeps it from ever being a workspace's, or a coven named "New" could
- * never be reached.
+ * The segment the create-workspace page sits at: a static segment beside `[slug]`, which the slug rule keeps from ever being a
+ * workspace's, or a coven named "New" could never be reached.
  */
 const NEW = 'new';
 
 /**
  * The landing everyone who leaves a coven is sent to: where someone in no
  * coven lands, and which opens the first coven of someone who has another
- * (M2.8).
+ *.
  */
 export const COVEN_LANDING_PATH = `/${COVEN}`;
 
 /** The create-workspace page's address. */
 export const NEW_COVEN_PATH = `/${COVEN}/${NEW}`;
 
-/** The value of `?new` that opens the current grimoire's New Spell (M10.12). */
+/** The value of `?new` that opens the current grimoire's New Spell. */
 export const NEW_SPELL = 'spell';
 
-/** The value of `?new` that opens the default coven's Add Ingredient (M10.12). */
+/** The value of `?new` that opens the default coven's Add Ingredient. */
 export const NEW_INGREDIENT = 'ingredient';
 
 /**
@@ -42,11 +40,8 @@ export const NEW_COVEN_INGREDIENT_PREFIX = 'ingredient-coven-';
 export const NEW_SPELL_PREFIX = 'spell-';
 
 /**
- * The values of `?new` that are a word alone, reserved as slugs. Each value naming a coven
- * starts with a fixed prefix and ends with the whole slug, so the prefixes need no
- * reservation: `spell-` or `ingredient-coven-` followed by any slug reads one way. The two
- * words stay reserved so that no coven's address reads as a dialog's word
- * (claude-docs/design-decisions/m10.12-spell-builder-modal.md).
+ * The `?new` values that are a word alone, reserved as slugs. The others start with a fixed prefix (`spell-`,
+ * `ingredient-coven-`) and end with the whole slug, so need no reservation (claude-docs/design-decisions/m10.12-spell-builder-modal.md).
  */
 const DIALOG_VALUES = new Set([NEW_SPELL, NEW_INGREDIENT]);
 
@@ -77,21 +72,15 @@ export interface PathInCovenOptions {
   /**
    * The slugs of the covens the page being left also opens in, when it is one
    * the address cannot vouch for: an ingredient's page, whose row the page has
-   * read (M9.12). Absent, nothing beneath a section carries over.
+   * read. Absent, nothing beneath a section carries over.
    */
   opens?: readonly string[];
 }
 
 /**
- * Where the same page is in another workspace: `/coven/a/ingredients/x`
- * becomes `/coven/b/ingredients/x` when the page said it opens there (`opens`),
- * and `/coven/b/ingredients` when it did not. What lies beneath a section (an
- * ingredient, a spell) belongs to the workspace it was opened in, unless the
- * page vouched for the next, and would otherwise be a 404 there. Outside a
- * workspace, or at its index, the answer is the new workspace's index. A people
- * page the viewer's role cannot open there steps back: invitations to the
- * members page beside it when members are readable (a member reads them and
- * cannot invite), anything else to the index.
+ * Where the same page is in another workspace: a section's index, or a page beneath
+ * it only when the page said it opens there. A people page the viewer's role cannot
+ * open steps back to the members page or the index. (claude-docs/modules.md, "Moving a page to another coven")
  */
 export function pathInCoven(
   pathname: string,
@@ -109,13 +98,9 @@ export function pathInCoven(
 }
 
 /**
- * What each section's page draws while it is on its way (M12.33): the page
- * that arrives, its heading and then what it holds. Ingredients is its cards
- * under a filter, and the grimoire its cards under the tab row (Spells and
- * Drafts) and a filter; the people pages are a table under the tab row (Members and,
- * for an owner, Invitations; the row draws for a lone tab too). The Invite
- * action is an owner's alone and the address does not say who is asking, so
- * it is left out.
+ * What each section's page draws while it is on its way: the heading and its cards under a filter (Ingredients), the tab row
+ * and a filter (grimoire), or a table under the tab row (people; Invitations for an owner). The Invite action is left out,
+ * as it is an owner's alone and the address does not say who is asking.
  */
 const PARTS_OF_SECTION: Record<string, Omit<NavigationTarget, 'region'>> = {
   ingredients: { shape: 'cards', title: true, filter: true },
@@ -125,11 +110,8 @@ const PARTS_OF_SECTION: Record<string, Omit<NavigationTarget, 'region'>> = {
 };
 
 /**
- * What a coven page draws while it is on its way: the parts of the section the
- * address names. The coven's home is a page with its contents menu beside it,
- * and so is one ingredient's page (the address has an id beneath
- * `ingredients`: its jump menu stands beside it, not the list's cards); a
- * section not named is a plain page. One mapping for the switcher, the
+ * What a coven page draws while it is on its way, from the section the address names: the home and one ingredient's page
+ * (an id beneath `ingredients`) have a menu beside them, any other section is a plain page. One mapping for the switcher,
  * section nav, the home's Contents and the links into an ingredient.
  */
 export function covenTarget(pathname: string): NavigationTarget {
@@ -140,7 +122,7 @@ export function covenTarget(pathname: string): NavigationTarget {
     return { region: 'coven', shape: 'page', frame: 'with-nav', head: 'eyebrow' };
   if (slug && section === 'ingredients' && beneath)
     return { region: 'coven', shape: 'page', frame: 'entry', head: 'eyebrow' };
-  // The new-spell page is the spell builder, a form (M10.12).
+  // The new-spell page is the spell builder, a form.
   if (slug && section === 'grimoire' && beneath === 'new')
     return { region: 'coven', shape: 'form' };
   // Drafts is the grimoire's second tab, its list too; anything else beneath it is a spell's own page.

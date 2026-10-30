@@ -7,11 +7,8 @@ export const UNIT_DIMENSIONS = ['weight', 'volume', 'count'] as const;
 
 export type UnitDimension = (typeof UNIT_DIMENSIONS)[number];
 
-// §5's order — ascending within each system, the way a dropdown should read.
-// `fl oz` is two units, `fl_oz_uk` and `fl_oz_us` (28.413 ml and 29.574 ml), because
-// converting needs to know which; a GraphQL enum value cannot contain a space.
-// `satisfies` keeps the literal types `Unit` is derived from; an annotation
-// would widen them to `string`.
+// §5's order, ascending within each system. `fl oz` is two units, `fl_oz_uk` and `fl_oz_us` (28.413 ml and 29.574 ml), because converting
+// needs to know which; a GraphQL enum value cannot contain a space. `satisfies` keeps the literal types `Unit` is derived from.
 export const UNITS_BY_DIMENSION = {
   weight: ['mg', 'g', 'kg', 'oz', 'lb'],
   volume: ['ml', 'l', 'tsp', 'tbsp', 'fl_oz_uk', 'fl_oz_us', 'cup'],

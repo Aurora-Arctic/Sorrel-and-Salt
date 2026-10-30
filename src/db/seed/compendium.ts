@@ -43,15 +43,9 @@ import type {
   SeedTransaction,
 } from './types';
 
-// MB.242: the production compendium, seeded as reference data the way the
-// curated vocabularies are — `migrate.yml` runs it after them and after the
-// sources seed. An absent entry is inserted whole, with its content hash
-// stored; a present one is left alone unless its file is marked for update
-// (M14.7), when it is reconciled in place or refused, by the state table in
-// claude-docs/db/compendium-seed/README.md, "Write-once, and how a correction
-// lands". Writes go through the handle the caller gives, not `withAudit` —
-// see minimal.ts. The rows an entry becomes are ./compendium/rows.ts's; the
-// decision and the update are ./compendium/update.ts's.
+// The production compendium, seeded as reference data after the curated vocabularies and the sources. An absent entry is
+// inserted whole with its content hash; a present one is left alone unless its file is marked for update (claude-docs/db/
+// compendium-seed/README.md, "Write-once, and how a correction lands"). Rows are ./compendium/rows.ts's, decisions ./compendium/update.ts's.
 
 export interface SeedCompendiumOptions {
   /**
@@ -62,12 +56,7 @@ export interface SeedCompendiumOptions {
   manifest?: Record<string, string> | null;
   /** Decide and report, then roll the transaction back. */
   dryRun?: boolean;
-  /**
-   * Update every marked entry that refusals 1 to 4 would refuse — curator
-   * reviewed, edited on the site, a child edited on the site, no baseline —
-   * as if each file said `overwriteEditor: true` (M14.26). It never lifts an
-   * identity change or a form in use, and never updates an unmarked file.
-   */
+  /** Updates every marked entry the guard would refuse (curator reviewed, edited on the site, a child edited, no baseline) as if it said `overwriteEditor: true`. */
   force?: boolean;
 }
 
@@ -99,11 +88,8 @@ export function seedItems(input: LoadedCompendium): SeedItem[] {
 }
 
 /**
- * Checks `input`, by default the files under `compendium/`, against the
- * guard, then seeds it in a transaction of its
- * own and returns what the run did. An issue throws before the transaction
- * opens, so an invalid corpus writes nothing; a dry run rolls back after
- * deciding, so it writes nothing either.
+ * Checks `input` (by default the files under `compendium/`) against the guard, then seeds it in a transaction of its own and
+ * returns what the run did. An issue throws before the transaction opens; a dry run rolls back after deciding.
  */
 export async function seedCompendium(
   db: SeedDatabase,
@@ -121,13 +107,9 @@ export async function seedCompendium(
 }
 
 /**
- * The same seed inside a transaction the caller opened, after the curated
- * vocabularies it picks from. Present is any of: a row holding the entry's
- * seed key, live or deleted; a live compendium row of its identity; a live
- * compendium row at its slug. A missing entry is inserted whole, keyed and
- * hashed; a present one is decided by `decide` and updated only when its
- * file is marked and nobody's work stands in the way. Assumes the GUC is
- * published and the bootstrap user exists.
+ * The same seed inside the caller's transaction, after the vocabularies it picks from. Present is a row holding the entry's seed
+ * key (live or deleted), a live compendium row of its identity, or one at its slug. A missing entry is inserted whole; a present
+ * one is decided by `decide`. Assumes the GUC is published and the bootstrap user exists.
  */
 export async function seedCompendiumContent(
   tx: SeedTransaction,

@@ -23,10 +23,8 @@ import {
   variantInput,
 } from '../../../support/fixtures';
 
-// M12.15: the three writes of a coven's cupboard entry, and the two places
-// that keep the label rule (add/annotate here, own-row names in
-// workspace-ingredients.ts). Which role may do what is asserted beside the
-// precondition that would let the write through.
+// The three writes of a coven's cupboard entry, and the two places that keep the label rule (add/annotate here, own-row names in workspace-ingredients.ts).
+// Which role may do what is asserted beside the precondition that would let the write through.
 
 let sql: postgres.Sql;
 useTestDatabase((client) => {
@@ -427,7 +425,7 @@ describe('createStock on a compendium form', () => {
     expect(stored[0]).toMatchObject({ id: row, label: 'Hedgewort' });
   });
 
-  // M12.28: a name match takes nothing from the compendium entry. The jar is
+  // A name match takes nothing from the compendium entry. The jar is
   // stored where the member put it, not on the coven's same-named entry.
   it("stores the jar on the compendium form, though the coven's own entry shares its identity and form", async () => {
     const own = await insertIngredient(

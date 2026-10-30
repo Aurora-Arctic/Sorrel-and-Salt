@@ -4,12 +4,9 @@ import type { FullResult, Reporter, TestCase } from '@playwright/test/reporter';
 import { buildChecklist, formatChecklist } from './story-checklist';
 import type { StoryObservation, StoryReporterOptions } from './types';
 
-// The Playwright reporter behind `npm run test:stories`: reads the `@story-N`
-// tag of every test in tests/e2e/stories/ and prints the checklist of v1
-// stories at the end of the run. When an output file is configured it writes
-// the checklist as JSON for .github/scripts/summarize-stories.mjs. It runs
-// beside the `list` reporter, so a failing story still shows its assertion.
-// Docs: claude-docs/testing/acceptance.md.
+// The Playwright reporter behind `npm run test:stories`: reads the `@story-N` tag of every test in
+// tests/e2e/stories/ and prints the checklist of v1 stories, as JSON too when an output file is set
+// (claude-docs/testing/acceptance.md). It runs beside the `list` reporter, so a failing story shows its assertion.
 
 const STORY_TAG = /^@story-(\d+)$/;
 

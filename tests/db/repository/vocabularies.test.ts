@@ -132,7 +132,7 @@ describe('findIngredientFormValueCount', () => {
   });
 });
 
-// The celestial bodies and the signs as `celestialBodies` and `zodiacSigns` page them (MB.95):
+// The celestial bodies and the signs as `celestialBodies` and `zodiacSigns` page them:
 // every live row, in (name, id) order — one tier, so nothing else decides
 // what is curated — narrowed by a name fragment read literally.
 describe('findAstrologyValues', () => {
@@ -182,7 +182,7 @@ describe('findAstrologyValues', () => {
   });
 
   // The literal reading of % and _ is proved once, on the traditions' read below:
-  // all three reads share one helper, `containsText` (M14.27).
+  // all three reads share one helper, `containsText`.
   it('narrows by a name fragment, case-insensitively', async () => {
     const names = async (query: string) => {
       const page = await resolvePage({ first: 100 }, (request) =>
@@ -223,10 +223,8 @@ describe('findAstrologyValueCount', () => {
   });
 });
 
-// The deity vocabulary as the admin's deities page lists it (MB.132): every
-// live deity under a live tradition — the same "curated" the autofill means —
-// by its tradition's name, then its own, so a page reads each deity under its
-// tradition, narrowed by a name fragment and a tradition.
+// The deity vocabulary as the admin's deities page lists it: every live deity under a live tradition (the same "curated" the autofill means), by tradition name then its own,
+// narrowed by a name fragment and a tradition.
 describe('findDeityPage and findDeityCount', () => {
   afterEach(async () => {
     await sql`
@@ -237,7 +235,7 @@ describe('findDeityPage and findDeityCount', () => {
     await sql`update deity_traditions set deleted_at = null, deleted_by = null`;
   });
 
-  /** The curated deities in the finder's order, under its natural collation (M12.52). */
+  /** The curated deities in the finder's order, under its natural collation. */
   async function expectedDeities(): Promise<string[]> {
     const rows = await sql<{ id: string }[]>`
       select d.id from deities d join deity_traditions t on t.id = d.tradition_id
@@ -367,7 +365,7 @@ describe('findDeityPage and findDeityCount', () => {
   });
 });
 
-// A group vocabulary as its admin page lists it (MB.115), run on the deity
+// A group vocabulary as its admin page lists it, run on the deity
 // traditions, the one page that searches: every live group by name, narrowed
 // by a name fragment the way the values' lists are.
 describe('findGroupPage and findGroupCount', () => {

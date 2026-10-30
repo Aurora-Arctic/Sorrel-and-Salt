@@ -2,14 +2,9 @@ import type { ReactElement } from 'react';
 import { SPOON } from '../FormIcon';
 import type { SectionIconName } from './types';
 
-// The section navs' icons, drawn on a 24-unit square in a 1.6 stroke with
-// round ends and no fill, so they take the link's colour (`currentColor`) and
-// read alike at the row's size and the bottom bar's. Inline rather than an
-// icon package: nine shapes, each used here and nowhere else, and the forms
-// mark, which is FormIcon's generic salt spoon rather than a shape of its own,
-// so one mark means "a form" everywhere (M12.7). Hidden from assistive
-// technology, since the label beside each names the section
-// (claude-docs/components/section-nav.md, "Icons").
+// The section navs' icons on a 24-unit square, 1.6 stroke, round ends, no fill, so they take the
+// link's colour. Inline: nine shapes used nowhere else. Hidden from assistive technology
+// (claude-docs/components/section-nav.md, "Contracts").
 const SHAPES: Record<SectionIconName | 'more', ReactElement> = {
   overview: (
     <>

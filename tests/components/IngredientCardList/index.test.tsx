@@ -7,7 +7,7 @@ import IngredientCardList from '@/components/IngredientCardList';
 // The card's name link reads the App Router; Vitest hoists the mock above the imports.
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
 
-// M8.14: the grid of cards the compendium and the Ingredients page share. Layout
+// The grid of cards the compendium and the Ingredients page share. Layout
 // is the stylesheet's; this holds what a reader gets: a named list, a card per item.
 
 const card = (label: string, slug: string) => (

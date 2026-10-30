@@ -83,3 +83,9 @@ hidden, what was typed kept across a toggle, and the flag in the button's
 description. The forms' own tests cover which sections open when:
 `tests/components/IngredientForm/sections.test.tsx` and
 `tests/components/SpellBuilder/index.test.tsx`.
+
+## How a section is built
+
+A section of a form is a disclosure under an `h3` (an `h4` for a section inside one). Each run of sections is wrapped in `.collapsible-sections` with a `FoldAll` (`fold-all.tsx`). The heading's text is a button that opens and shuts the section, with a chevron at the end of the line. Beneath the heading, while the section is closed, one muted line says what has been entered, and while it holds an error, a flag shows.
+
+The button sits inside the heading rather than in a `<details>`'s `<summary>`. A summary is a button itself, so it would stop the heading being one a screen reader moves by, and its own toggle would fight the form opening a section on Save. The fields stay in the page while closed, hidden, so nothing typed is lost and an error can still be set on them.

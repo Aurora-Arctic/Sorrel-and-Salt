@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-// The covens the compendium cards' three dots offer (M9.12): what each role permits, read as the
+// The covens the compendium cards' three dots offer: what each role permits, read as the
 // entry page reads it, and which covens hold the entry. The viewer is mocked; the roles go
 // through the real `rolePermits`, so a role is refused here exactly as the service refuses it.
 

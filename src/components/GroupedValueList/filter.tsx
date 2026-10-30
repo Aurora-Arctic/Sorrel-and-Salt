@@ -7,18 +7,9 @@ import { groupedValuesHref } from './href';
 import { KINDS } from './kinds';
 import type { GroupedValueListFilterProps } from './types';
 
-// A curated vocabulary's filter (MB.178, MB.115): a name search, and for a
-// grouped kind its group, each applying as it changes rather than on a
-// Filter button pressed after them, the owner's call at MB.115's review.
-// The group applies once a choice settles, a pick, its clear or leaving the
-// box, never while it is typed, carrying the name typed but not yet searched;
-// the name on the magnifier or Enter. `FilterForm` holds the form, Clear and
-// the soft navigation; this holds what the fields say and what each applies.
-// The group is typed into once hydrated, the owner's call (MB.115), but the
-// server draws it as a native `<select>` (`FilterSelectField`), so before
-// hydration a press on the magnifier submits natively, as `query=&group=`,
-// which the page reads as the same filter. The list keys this by the filter
-// shown, so a page showing another, Back say, draws it afresh from that one.
+// A curated vocabulary's filter: a name search and, for a grouped kind, its group; the group applies
+// once a choice settles, carrying the unsearched name. The server draws a native `<select>`, so before
+// hydration the magnifier submits `query=&group=` (claude-docs/components/grouped-value-list.md, "The filter").
 
 const GroupedValueListFilter = ({
   kind,

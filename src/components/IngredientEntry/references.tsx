@@ -8,15 +8,9 @@ import type { CitedReference, IngredientDetail } from '@/modules/ingredients';
 
 type ReferenceRow = CitedReference['reference'];
 
-// The entry's sources in Chicago's notes-and-bibliography form (MB.155;
-// claude-docs/design-decisions/mb.155-notes-and-bibliography.md). A section
-// the sources support ends with note numbers; the References section at the
-// foot of the page holds the notes they answer and, beneath them, every
-// source once in full. A number marks a section, not a sentence, because a
-// source links an ingredient or one of its forms, not a claim. The parts
-// come from `renderShortCitation` and `renderCitation`, so only the italic
-// runs are marked, in `cite`. The numbering is the page's order, so it is
-// worked out once from the detail, before anything is drawn.
+// The entry's sources in Chicago's notes-and-bibliography form: note numbers at the end of each
+// section they support, the notes and the full bibliography in the References section at the foot
+// (claude-docs/components/ingredient-entry.md, "Structure").
 
 /** One note: a source cited by one section, with the locator it was cited at. */
 interface Note {
@@ -46,11 +40,7 @@ export interface ReferenceNotes {
 /** The key of the ingredient's own section; a form's is its anchor. */
 export const DETAILS = 'details';
 
-/**
- * The notes of a page: the ingredient's links first, in the loader's order,
- * then each form's in page order. `anchors` and `labels` are the forms' keys
- * and names, in the same order as `detail.variants`.
- */
+/** The notes of a page: the ingredient's links first, then each form's in page order; `anchors` and `labels` follow `detail.variants`. */
 export function referenceNotes(
   detail: Pick<IngredientDetail, 'references' | 'variants'>,
   anchors: readonly string[],
@@ -84,10 +74,7 @@ export function referenceNotes(
 const italicised = (parts: readonly CitationPart[]): ReactNode[] =>
   parts.map((part, at) => (part.italic ? <cite key={at}>{part.text}</cite> : part.text));
 
-/**
- * A short form's close: Chicago ends a note with a period, inside the
- * quotation marks of a quoted title, and none after a "?" or "!".
- */
+/** A short form's close: Chicago ends a note with a period, inside a quoted title's quotation marks, and none after "?" or "!". */
 function closed(parts: CitationPart[]): CitationPart[] {
   const last = parts[parts.length - 1];
   if (!last) return parts;
@@ -107,23 +94,13 @@ const endNote = (text: string): string => (/[?!.]$/.test(text) ? text : `${text}
 /** The id of a number's link, which its note's way back targets. */
 const markId = (number: number) => `note-ref-${number}`;
 const noteId = (number: number) => `note-${number}`;
-/**
- * The two blocks of the References section, as the jump menu's subsections
- * reach them. Bare words: every other id here carries a prefix and a number
- * (`note-3`, `ref-<uuid>`, `form-oil`), so none can equal these.
- */
+/** The two blocks of the References section, as bare words so no prefixed id can equal them (claude-docs/components/ingredient-entry.md, "Structure"). */
 export const NOTES_ID = 'notes';
 export const BIBLIOGRAPHY_ID = 'bibliography';
 
 const entryId = (reference: ReferenceRow) => `ref-${reference.id}`;
 
-/**
- * A section's note numbers, on a line of their own at the end of its text,
- * under a small "References" label: each a superscript link to its note. The
- * label is not a heading, so the page keeps its one References heading; it
- * names the group the numbers sit in. Nothing when the section cites nothing.
- * `section` keeps the label's id unique on the page.
- */
+/** A section's note numbers on a line of their own under a small "References" label (not a heading), each a superscript link; `section` keeps the label's id unique. */
 export function NoteMarks({
   section,
   numbers,

@@ -21,10 +21,8 @@ import type { ProviderId } from '../src/lib/types';
 import { route } from './route';
 import './foundations.scss';
 
-// Every shared token and primitive at shipping size, in either theme, with no
-// value re-typed: colours, lengths and their labels all come from the app's
-// own .scss. A reference for what the sections are built from, not a layout.
-// claude-docs/workshop.md, ".storybook/".
+// Every shared token and primitive at shipping size, in either theme, with no value re-typed:
+// all come from the app's own .scss (claude-docs/workshop.md, ".storybook/"). A reference, not a layout.
 
 // A seeded group by name, for the specimen's chips: its colour pair is what
 // the row carries, as a page's chip would read it.
@@ -303,11 +301,9 @@ const TABLE_ROWS: readonly (readonly [name: string, group: string, entries: numb
   ['Prosperity', 'Hearth', 3],
 ];
 
-// The `.data-table` primitive in its frame; with `stack`, the
-// `.data-table--stack` modifier with the explicit roles and per-cell
-// `data-label`s a stacking table needs (claude-docs/styling.md, "Tables at
-// phone width"). The roles are the elements' own, written out because WebKit
-// drops them once `display` changes on a table's parts.
+// The `.data-table` primitive in its frame; with `stack`, the `.data-table--stack` modifier with
+// explicit roles and `data-label`s (claude-docs/styling.md, "Tables at phone width"). The roles
+// are written out because WebKit drops them once `display` changes on a table's parts.
 function DataTable({ label, stack = false }: { label: string; stack?: boolean }): ReactElement {
   const role = (name: string): { role?: string } => (stack ? { role: name } : {});
   return (

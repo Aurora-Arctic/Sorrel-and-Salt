@@ -12,7 +12,7 @@ import type { SpellVisibility } from '../types';
  * narrowing is a retraction: once the coven has read a finished spell and built
  * on it, hiding it takes back something they were relying on, so `private` may
  * be widened to `workspace` and a complete spell may never go back. A draft is
- * not yet relied on, and moves either way (M10.20).
+ * not yet relied on, and moves either way.
  *
  * **There is no author clause here, and none is missing.** A private spell is
  * readable by its author alone, so `findOneSpell` has already answered

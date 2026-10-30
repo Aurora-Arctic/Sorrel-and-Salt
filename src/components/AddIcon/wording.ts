@@ -1,7 +1,6 @@
-// The words for "add this entry" and "a coven holds it", written once. The compendium's one
-// noun for "you hold this" is the cupboard (MB.120, the owner's call, 2026-10-20). Each constant
-// is imported by the component that shows it; the e2e specs state the same words again on
-// purpose, in tests/support/cupboard-wording.ts, so a change of wording fails them.
+// The words for "add this entry" and "a coven holds it", written once; the compendium's one noun for
+// "you hold this" is the cupboard. The e2e specs repeat them on purpose, in
+// tests/support/cupboard-wording.ts, so a change fails them.
 
 /** The plus's tip and accessible name, before the entry's name: "Add to My Ingredients: Testwort". */
 export const ADD = 'Add to My Ingredients';

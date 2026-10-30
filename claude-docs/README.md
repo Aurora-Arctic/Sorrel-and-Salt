@@ -92,37 +92,49 @@ by pair from the largest and stopping where a pair shares under about 60.
 
 ## Comments in code
 
-The rule `CLAUDE.md` states in a line (MB.50): a comment says what this is and
-why it is not the obvious alternative, and the argument lives here. A reader
-should get through a file without a board or a decision-record index open, so:
-no task-reference narrative (`The table is inert at Wave 3. Nothing queries it
-until M10.5's service…`), no re-argument of a decision that has a doc, no
-restating the code or the type signature below it, no caller lists that grep
-already answers, and no postmortems of bugs since fixed. Cite a task ID only as
-provenance for a constraint that would otherwise look arbitrary —
-`enforced by lint as of M1.17` earns its four characters;
-`in the shape M4.4 set and M10.2 followed` does not.
+A comment describes the code as it is. It says what this is and, where the
+obvious alternative would be wrong, why it is built this way instead, in one
+present-tense clause. Everything else about the code lives here, under
+`claude-docs/`: when it was built, which task built it, who decided, what was
+tried first, and what will replace it. A reader should get through a file with
+nothing but the code open (`CLAUDE.md`, Conventions; the record is
+`design-decisions/m14.32-comment-guidelines.md`).
 
-- **This constrains code, not docs.** A summary still gives the reason for a
-  constraint in a clause rather than a link out, and must still stand on its
-  own. The doc carries the argument at length and the comment carries the
-  conclusion, because the comment is the copy that gets duplicated across
-  sixteen files and the doc is the copy that can be corrected in one place.
-- **Brevity never costs a fact the reader cannot recover.** Behaviour not
-  visible from the code (`slugify` returns `''` for `'...'`), hard-won tool and
-  runtime facts (`VITEST_POOL_ID` counts workers where `VITEST_WORKER_ID`
-  counts files), the reasoning the Testing rules mandate about why an
-  authorization test could have passed, and every comment a tool actually
-  reads — `oxlint-disable`, `@ts-expect-error` and its message, the
-  `makefile`'s awk-parsed `## ` lines — are kept whatever their length.
-- **There is no mechanical guard on density**, deliberately: it cannot be
-  measured without penalising exactly the comments above. Citation is held by
-  review too, since MB.224 retired its guard with the rest of the agent-only
-  tooling's tests: a `claude-docs/` path resolves and never points into
-  `archive/`, in code, in `CLAUDE.md` and in the markdown under `.claude/`, and
-  a section is cited in the file it lives in, not through a split summary's
-  index — `claude-docs/db/keyset-pages.md, "Keyset pages"`, never
-  `db.md`'s heading for it.
+- **History never appears in a comment.** No task id (`M10.5`, `MB.115`,
+  `MW.15`), no `Story 14` or `Wave 11`, no "the owner's call", no date, no
+  "added by", "until X lands" or "not built yet". A constraint that would look
+  arbitrary without its history gets a doc pointer in citation form,
+  `(claude-docs/db/keyset-pages.md, "Keyset pages")`, and the doc carries the
+  provenance and the argument. The doc is the copy that can be corrected in
+  one place; the comment is the copy that would be duplicated across files.
+- **One to three lines.** A field or prop doc is one line. A file header is one
+  or two sentences saying what the file holds. More than three lines is a
+  defect in the docs, not a reason for a longer comment: write the section
+  here and cite it. The rule bounds explanation, not facts: a comment is never
+  cut below the facts the reader cannot recover from the code.
+- **These stay whatever their length.** Behaviour not visible from the code
+  (`slugify` returns `''` for `'...'`); hard-won tool and runtime facts
+  (`VITEST_POOL_ID` counts workers where `VITEST_WORKER_ID` counts files); the
+  reasoning the Testing rules mandate about why an authorization test could
+  have passed; and every comment a tool reads, such as `oxlint-disable`,
+  `@ts-expect-error` and its message, `eslint-disable` in a generated file,
+  and the `@supports` and Baseline notes the browser-floor rule asks for.
+- **Say a thing once.** A sentence that would be pasted into a second file
+  belongs on the shared helper, the type, or the doc it describes, and the
+  copies become a pointer or nothing. A `@throws` line, a stories-file note or
+  a framework fact repeated across files is the sign.
+- **Plain writing applies**: everyday words, the thing described before it is
+  named, one idea per sentence (`.claude/rules/writing.md`, "Code comments").
+- **Review holds this rule**, with no mechanical guard on density or on history
+  markers, by the owner's decision of 2026-10-29: a density guard cannot be
+  written without penalising the comments the third bullet protects, and a
+  marker guard was declined. Citation is held by review too, since MB.224
+  retired its guard with the rest of the agent-only tooling's tests: a
+  `claude-docs/` path resolves and never points into `archive/`, in code, in
+  `CLAUDE.md` and in the markdown under `.claude/`, and a section is cited in
+  the file it lives in, not through a split summary's index —
+  `claude-docs/db/keyset-pages.md, "Keyset pages"`, never `db.md`'s heading
+  for it.
 
 ## Correcting a doc
 

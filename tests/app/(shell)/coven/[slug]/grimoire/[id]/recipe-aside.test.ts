@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { Forbidden } from '@/lib/errors';
 
-// M13.21: what the recipe page's side column reads, as the builder's own steps hold it:
+// What the recipe page's side column reads, as the builder's own steps hold it:
 // each step's categories (its ingredient's and its form's) and the coven's jar of its form.
 // The services are mocked; what they refuse is their own tests'.
 
@@ -129,7 +129,7 @@ describe('readRecipeAsideOf', () => {
       expect.objectContaining({ stepId: 's-3', name: null, body: 'Stir.', categories: [] }),
     ]);
     expect(aside.intended).toEqual([{ id: 'cat-1', name: 'Testwarding' }]);
-    // Each linked step's doors (the owner, 2026-10-29): the Quick Look eye to this page's
+    // Each linked step's doors: the Quick Look eye to this page's
     // `?entry=`, and Edit Stock on the ingredient's forms and the coven's jars, opening on its form.
     expect(variantsOf).toHaveBeenCalledWith(session, [{ id: 'ing-1', workspaceId: null }]);
     expect(aside.doors).toEqual([

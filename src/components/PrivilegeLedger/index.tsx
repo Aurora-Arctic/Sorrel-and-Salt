@@ -15,10 +15,10 @@ import type {
 } from './types';
 import './index.scss';
 
-// `/admin/privilege-changes`' filter, table and pager (MB.200). Render-only:
-// the page reads one page of the ledger through the identity service and
-// hands it over (claude-docs/components/privilege-ledger.md). The filter is
-// `filter.tsx`, its one client file.
+// `/admin/privilege-changes`' filter, table and pager. Render-only: the page reads one page
+// of the ledger through the identity service and hands it over
+// (claude-docs/components/privilege-ledger.md). The filter is `filter.tsx`, its one client
+// file.
 
 const CHANGE_LABELS = { grant: 'Granted', revoke: 'Revoked' } as const;
 
@@ -30,9 +30,8 @@ const ROUTE_LABELS: Record<LedgerRoute, string> = {
 };
 
 /**
- * The empty ledger, naming the filters in use as every admin list does
- * (MB.115): "No privilege changes match “ada” and the privilege Admin. Change
- * or clear the filter to see more."
+ * The empty ledger, naming the filters in use as every admin list does: "No privilege changes
+ * match “ada” and the privilege Admin. Change or clear the filter to see more."
  */
 function nothingToShow({ privilege, query }: PrivilegeLedgerFilter): string {
   const filters = [

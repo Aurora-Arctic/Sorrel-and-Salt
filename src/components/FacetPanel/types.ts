@@ -3,18 +3,11 @@ import type { CategoryMode, IngredientSource } from '@/modules/ingredients/schem
 import type { CompendiumFacetCounts, ReviewSetting } from '../CompendiumList/types';
 import type { PickerCategory } from '../CategoryPicker/types';
 
-/**
- * What the panel shows as chosen. Every facet but the last three is a list of
- * values (slugs for categories and deities, the vocabulary's own value for the
- * rest), in the order chosen.
- */
+/** What the panel shows as chosen: each facet but the last three is a list of values (slugs for categories and deities, the vocabulary's own value otherwise), in the order chosen. */
 export interface FacetPanelFilter {
-  /** The public compendium only (M12.55): the ids of the viewer's covens an entry must be held in, any one of them. */
+  /** The public compendium only: ids of the viewer's covens an entry must be held in, any one of them. */
   covens?: readonly string[];
-  /**
-   * The public compendium only (M12.55): Not In, so the entries none of the picked covens hold, or
-   * with none picked none of the viewer's covens. Left out or false, In.
-   */
+  /** The public compendium only: Not In, so entries none of the picked covens hold, or with none picked none of the viewer's. Left out or false, In. */
   covensNot?: boolean;
   categories: readonly string[];
   /** Whether an entry needs every chosen category (`all`) or any of them (`any`). */
@@ -28,21 +21,15 @@ export interface FacetPanelFilter {
   toxic: '' | 'toxic' | 'not_toxic';
   /** Show only the entries that cite no reference (admin). */
   withoutReferences: boolean;
-  /** Show only the entries that have no live form (admin; M12.30). */
+  /** Show only the entries that have no live form (admin). */
   withoutForms: boolean;
-  /**
-   * The admin's Reviewed strip (M14.8), shown only when this is set: `''` for either, as the
-   * address leaves it blank. The public and coven panels leave it out.
-   */
+  /** The admin's Reviewed strip, shown only when set: `''` for either. The public and coven panels leave it out. */
   reviewed?: '' | ReviewSetting;
-  /**
-   * The coven's Source control (M9.7), shown only when this is set: `''` for both,
-   * as the address leaves it blank. The compendium's panel leaves it out.
-   */
+  /** The coven's Source control, shown only when set: `''` for both. The compendium's panel leaves it out. */
   source?: '' | IngredientSource;
   /** The coven's In Stock switch, shown only when this is set. */
   inStock?: boolean;
-  /** The coven's Low Stock Only switch, shown only when this is set (M9.8). */
+  /** The coven's Low Stock Only switch, shown only when this is set. */
   lowStockOnly?: boolean;
 }
 
@@ -65,14 +52,11 @@ export interface FacetPanelProps {
   onClear?: () => void;
   /** Joins the dialog's class. */
   className?: string;
-  /**
-   * The viewer's covens, which In My Covens offers by name (M12.55). Left out or empty, the field
-   * is not drawn: a visitor signed out, a viewer in no coven, and the admin and coven lists.
-   */
+  /** The viewer's covens, which In My Covens offers by name; left out or empty (signed out, in no coven, the admin and coven lists), the field is not drawn. */
   covens?: readonly { id: string; name: string }[];
 }
 
-/** The Filters shell (M10.11): the button, Clear All and the panel, around a list's own filters. */
+/** The Filters shell: the button, Clear All and the panel, around a list's own filters. */
 export interface FacetShellProps {
   /** How many filters are chosen, shown on the button; above nought, the bar's Clear All shows too. */
   count: number;
@@ -88,11 +72,7 @@ export interface FacetShellProps {
   children: ReactNode;
 }
 
-/**
- * One category the Categories line offers: its slug as `value`, its name as `label`, and its
- * group's colours. `count` is how many rows picking it would leave, where the list reads one;
- * without it the line shows every category and no number (the grimoire, M10.11).
- */
+/** One category the Categories line offers: slug as `value`, name as `label`, and its group's colours; `count` is how many rows picking it leaves, and without it the line shows no number. */
 export interface CategoryLineChoice {
   value: string;
   label: string;

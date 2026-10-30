@@ -7,13 +7,9 @@ import './index.scss';
 
 export { IngredientSearchForm, useSearchText } from './form';
 
-// The shell every ingredient list composes (M8.10): the search row the
-// consumer draws, its action, and the results inside `ListFrame` with the
-// pager beneath. Not a client component, so a server page renders it; the
-// consumer's href builders are functions, which cannot cross from a server
-// component into a client one, so the search row is passed in as `search`,
-// a client component of the consumer's own, not built here
-// (claude-docs/components/ingredient-search.md).
+// The shell every ingredient list composes: search row, action and results in `ListFrame`, the pager
+// beneath. A server component, so the search row comes in as the `search` prop, as href builders are
+// functions (claude-docs/components/ingredient-search.md).
 
 const IngredientSearch = ({
   search,

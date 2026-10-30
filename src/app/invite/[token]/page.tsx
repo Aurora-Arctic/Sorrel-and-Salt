@@ -19,13 +19,9 @@ const standingOf = cache(invitationStanding);
 // inferred from it (see src/components/CovenNav/sections.ts).
 const route = <T extends string>(href: Route<T>): Route => href as Route;
 
-// The one accept route, for both tiers of `invitations` (MB.202), built by
-// MB.70 with the site tier; M7.5 added the workspace's landing. Public in
-// src/proxy.ts, so a signed-out visitor is asked to sign in and brought back.
-// `getSession()` rather than `requireSession()`: an unverified account is
-// told why it cannot accept yet and sent to confirm its address with the way
-// back, where the redirect would drop the reason
-// (claude-docs/auth/admin-users.md, "Inviting an admin").
+// The one accept route for both invitation tiers, public in src/proxy.ts. `getSession()`, not
+// `requireSession()`: an unverified account is told why it cannot accept yet, where a redirect would
+// drop the reason (claude-docs/auth/admin-users.md, "Inviting an admin").
 export default async function InvitePage({ params }: InvitePageProps) {
   const [{ token }, session] = await Promise.all([params, getSession()]);
   const here = `/invite/${encodeURIComponent(token)}`;

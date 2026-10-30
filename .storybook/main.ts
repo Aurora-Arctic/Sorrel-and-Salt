@@ -22,10 +22,9 @@ const config: StorybookConfig = {
     // This repo is public and the workshop runs in a container: no calls home.
     disableTelemetry: true,
     disableWhatsNewNotifications: true,
-    // The container listens on every interface (`--host 0.0.0.0`) so the host can
-    // reach it, and Storybook then stops at a prompt unless it is told which Host
-    // headers to accept. `localhost` is the owner's browser, `devcontainer` the
-    // e2e remote browser, as the Vite `server.allowedHosts` below says.
+    // The container listens on every interface (`--host 0.0.0.0`), so Storybook needs the Host
+    // headers to accept: `localhost` for a browser on the host, `devcontainer` for the e2e remote
+    // browser, as the Vite `server.allowedHosts` below says.
     allowedHosts: ['localhost', 'devcontainer'],
   },
   // Pages are not documented here (no autodocs). The props reader slows the first
@@ -33,10 +32,9 @@ const config: StorybookConfig = {
   typescript: { reactDocgen: false },
   viteFinal: (viteConfig) =>
     mergeConfig(viteConfig, {
-      // The app's two clients put this in front of /api/graphql and /api/auth, so
-      // a story's requests go to /workshop/api/..., the only addresses staging's
-      // Content Security Policy lets a workshop page reach. The name has no
-      // NEXT_PUBLIC_ because Next would build such a variable into the live site.
+      // The app's two clients put this before /api/graphql and /api/auth, so a story's requests go to
+      // /workshop/api/..., the only addresses staging's Content Security Policy allows. It has no
+      // NEXT_PUBLIC_ prefix because Next would build such a variable into the live site.
       define: { 'process.env.WORKSHOP_API_PREFIX': JSON.stringify('/workshop') },
       // The remote browser of tests/e2e (playwright.workshop.config.ts) reaches the
       // workshop as `devcontainer`, the compose service name, which Vite refuses

@@ -5,8 +5,8 @@ import { categories } from '../../vocabulary/schema/categories';
 import { ingredients } from './ingredients';
 import { ingredientVariants } from './ingredient-variants';
 
-// An ingredient is protective *and* cleansing (story 22). Hard-deleted
-// (MB.34): `auditStampColumns`, no `deleted_at`, no partial index
+// An ingredient is protective *and* cleansing. Hard-deleted:
+// `auditStampColumns`, no `deleted_at`, no partial index
 // (claude-docs/db/hard-delete-join-tables.md, "Hard delete on two join tables").
 export const ingredientCategories = pgTable(
   'ingredient_categories',
@@ -15,7 +15,7 @@ export const ingredientCategories = pgTable(
       .notNull()
       .references(() => ingredients.id),
     // Set when the pair files one form of the ingredient rather than the
-    // ingredient itself (MB.217); the ingredient rides along either way, so a
+    // ingredient itself; the ingredient rides along either way, so a
     // category filter on `ingredient_id` reads the union.
     variantId: uuid('variant_id'),
     categoryId: uuid('category_id')
@@ -27,7 +27,7 @@ export const ingredientCategories = pgTable(
     // The pair is the identity, on the parent or on one form; a surrogate id
     // would allow duplicates. Two unique indexes rather than a primary key,
     // since a key's columns cannot be null. Partial on the variant, not on a
-    // tombstone: the table is hard-deleted (MB.34).
+    // tombstone: the table is hard-deleted.
     uniqueIndex('ingredient_categories_ingredient_category_unique')
       .on(table.ingredientId, table.categoryId)
       .where(sql`${table.variantId} is null`),

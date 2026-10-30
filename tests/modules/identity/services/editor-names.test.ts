@@ -4,7 +4,7 @@ import { editorNamesForCurator } from '@/modules/identity';
 import { A, B, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 
-// M11.20: the names behind an admin list's Updated column, read by a curator
+// The names behind an admin list's Updated column, read by a curator
 // as well as an admin, and by no one else. Called by direct id, as a forged
 // request would, so the page hiding it is not what refuses.
 

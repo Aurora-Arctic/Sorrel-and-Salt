@@ -17,26 +17,16 @@ import { compendiumFacets } from './ingredient-facets';
 import type { CovenPick, IngredientRow } from '../types';
 import { assertMembership, type Membership, membershipsOf } from '@/modules/coven';
 
-// M12.55: the compendium narrowed to the entries the viewer's covens hold, its
-// In My Covens filter. Each picked coven earns a proof or is dropped, so an
-// id for a coven the viewer is not in filters nothing rather than refusing
-// the page; with no proof left the read is the cached public one, unchanged.
-// With one, the read is the viewer's and never cached (CLAUDE.md rule 6),
-// and the coven filter is an arm of the list's own SQL (rule 7).
-//
-// Not In (the owner's extension) keeps the entries the proved covens do not
-// hold. With no coven in the address it proves every coven the viewer is in;
-// with ids in the address that were all dropped it applies nothing, so a
-// foreign id never changes the result.
+// The compendium narrowed to the entries the viewer's covens hold (In My Covens). Each picked coven earns a proof or is dropped, so a foreign id
+// filters nothing; with no proof left the read is the cached public one, else the viewer's and never cached (rule 6), filtered in SQL (rule 7).
+// Not In keeps the entries the proved covens do not hold. With no coven in the address it proves every coven the viewer is in; with only dropped ids it applies nothing.
 
 /** The most covens one read takes; past it the rest are dropped, as a foreign one is. */
 const MAX_PICKED_COVENS = 20;
 
 /**
- * A proof for each coven the viewer may read the ingredients of, viewers
- * included. A coven they are not in, or an id that is not one, is dropped:
- * the address is the viewer's own to edit, and a refusal would say which ids
- * name a coven.
+ * A proof for each coven the viewer may read the ingredients of, viewers included. A coven they are not in, or an id that is not one,
+ * is dropped: a refusal would say which ids name a coven.
  */
 async function proofsOf(session: Session, covenIds: readonly string[]): Promise<Membership[]> {
   const proofs = await Promise.all(
@@ -90,7 +80,7 @@ async function covenScope(
  * cupboard row of any picked coven names, or, under Not In, to the entries
  * none names. With no coven filter in effect, the cached `listCompendium`.
  *
- * @throws {Forbidden} Reviewed is set and `session` does not curate (M14.8).
+ * @throws {Forbidden} Reviewed is set and `session` does not curate.
  * @throws {ValidationError} as `listCompendium` does.
  */
 export async function listCompendiumHeldIn(
@@ -134,7 +124,7 @@ export async function compendiumFacetsHeldIn(
 ): Promise<CompendiumFacets> {
   const scope = await covenScope(session, covens);
   if (!scope) return compendiumFacets(filter, session);
-  // The Reviewed filter and counts stay a curator's (M14.8) on this read as on the cached one.
+  // The Reviewed filter and counts stay a curator's on this read as on the cached one.
   return findCompendiumFacets(
     { ...compendiumFilterFor(filter, session), ...scope },
     seesReview(session),
