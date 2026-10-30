@@ -4,7 +4,7 @@
 belongs to (Story 8, M6.9). It is `ComboboxSelect` ([`combobox.md`](combobox.md),
 "The select-only box"), so the keyboard (arrows, Enter, Escape, type-ahead) and
 the ARIA come from Downshift. It is a client component. On screen the word is
-_coven_: the box is named "Coven", its placeholder is "Select Coven", and its
+_coven_: the box is named "Coven", its placeholder is "Choose a coven", and its
 create choice "Create Coven"; code and these docs say workspace.
 
 ## Props
@@ -26,7 +26,7 @@ with a Create Coven choice (M9.16). It defaults to false.
 - **The current workspace is read from the address, never kept.** The value is
   `covenSlugOf(usePathname())` (`src/lib/coven-path.ts`). Nothing is stored in
   session, cookie or local state, so two tabs in two workspaces cannot disagree
-  through it. Outside `/coven/…` the box shows "Select Coven".
+  through it. Outside `/coven/…` the box shows "Choose a coven".
 - **A choice keeps the page when the page exists in the other workspace**
   (M9.12, the owner's call, 2026-10-21). `pathInCoven(pathname, slug, options)`
   decides, in this order:
@@ -60,7 +60,7 @@ with a Create Coven choice (M9.16). It defaults to false.
 - **Create Coven goes to the create page.** Its value is
   `NEW_COVEN_PATH`, `/coven/new`, which no slug can equal because a slug
   holds no slash. Choosing it goes there rather than to a section. On that
-  page the box shows "Select Coven", since `covenSlugOf` reads `new` as
+  page the box shows "Choose a coven", since `covenSlugOf` reads `new` as
   no workspace. Hiding the choice from a viewer without the right is
   presentation: the creation service is the gate
   ([`create-workspace-form.md`](create-workspace-form.md)).

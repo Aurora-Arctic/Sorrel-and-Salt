@@ -517,7 +517,7 @@ const GroupForm = ({
                         id={shell.controlId}
                         label={label}
                         column={column}
-                        placeholder="Add hex"
+                        placeholder="Add a hex"
                         value={field.value}
                         onChange={(value) => {
                           field.onChange(value);

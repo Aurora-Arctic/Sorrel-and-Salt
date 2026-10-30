@@ -89,7 +89,7 @@ a level beneath the Variants `h3`, and each folds as the ingredient's do
 
 **Every field shows a short action while it is empty**, and what it is for,
 where its label does not say it, sits in its hint (the owner's call at MB.115's review; [`field.md`](field.md),
-"Contracts"): "Add a name", "Add formal name", "Add a folk name", "What it is, where it comes from and how it is used" on the Description, "Add an element", "Add a body", "Add a sign", "Add a colour", "Add a deity", "Add a category", "Add a substitute", "Add safety notes", "Search references" and
+"Contracts"): "Add a name", "Add a formal name", "Add a folk name", "What it is, where it comes from and how it is used" on the Description, "Add an element", "Add a body", "Add a sign", "Add a colour", "Add a deity", "Add a category", "Add a substitute", "Add safety notes", "Search references" and
 "Add a locator", a variant's Form "Add a form" and Description "What sets this form apart", and the new reference
 panel's fields "Add a title", "Name the book" and so on, or an example
 where the format matters ("2nd ed."; ["The new reference panel"](#the-new-reference-panel)). `SuggestField`,

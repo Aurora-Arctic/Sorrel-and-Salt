@@ -47,7 +47,7 @@ The layout is option E of the stock-editing mocks, the owner's pick of 2026-10-2
 
 ## Add Form
 
-Under the list: a `ComboboxSelect` in a compact field (`.field--compact`), labelled "Add Form" (placeholder "Choose form") offering the forms the list does not hold, and an Add button, off until a form is picked. Add puts the form in the list with empty amounts, chooses it, focuses its Quantity (`setFocus` once its fields are drawn) and empties the box. A form waiting to be removed still holds its place in the list, so it is not offered again; Undo brings it back instead. With every form in the list the Add row is gone, since there is nothing left to add. The open list's options take the caption size the compact box's own text has (`Combobox/index.scss`, under `.field--compact`), so the choices read as the box does.
+Under the list: a `ComboboxSelect` in a compact field (`.field--compact`), labelled "Add Form" (placeholder "Choose a form") offering the forms the list does not hold, and an Add button, off until a form is picked. Add puts the form in the list with empty amounts, chooses it, focuses its Quantity (`setFocus` once its fields are drawn) and empties the box. A form waiting to be removed still holds its place in the list, so it is not offered again; Undo brings it back instead. With every form in the list the Add row is gone, since there is nothing left to add. The open list's options take the caption size the compact box's own text has (`Combobox/index.scss`, under `.field--compact`), so the choices read as the box does.
 
 ## Saving
 

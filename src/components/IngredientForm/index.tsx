@@ -954,7 +954,7 @@ const IngredientForm = ({
                     <TextField<IngredientFormValues>
                       name="canonicalName"
                       label="Formal Name"
-                      placeholder="Add formal name"
+                      placeholder="Add a formal name"
                       note={
                         kind === NAMELESS_KIND
                           ? 'A "none" entry records no formal name.'

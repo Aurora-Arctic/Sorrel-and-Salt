@@ -334,7 +334,7 @@ const StockDialogForm = ({
                       label="Add Form"
                       labelId={`${addId}-label`}
                       value={adding}
-                      placeholder="Choose form"
+                      placeholder="Choose a form"
                       choices={addable.map((form) => ({
                         value: form.variantId,
                         label: form.label,
