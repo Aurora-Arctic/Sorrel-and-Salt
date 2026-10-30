@@ -213,6 +213,27 @@ describe('SpellPreview', () => {
       expect(sign()?.getAttribute('aria-pressed')).toBe('true');
     });
 
+    it('tips the sign with what a press will do, and changes it when pressed', async () => {
+      fakeWakeLock();
+      render(onPage());
+      press(opener());
+      await settle();
+      // The tip opens on focus; its bubble is hidden from assistive technology, so it is asked for as hidden.
+      const tip = () =>
+        within((sign() as HTMLElement).parentElement as HTMLElement).getByRole('tooltip', {
+          hidden: true,
+        }).textContent;
+      fireEvent.focus(sign() as HTMLElement);
+      expect(sign()?.getAttribute('aria-pressed')).toBe('true');
+      expect(tip()).toBe('Let the Screen Sleep');
+      press(sign() as HTMLElement);
+      await settle();
+      expect(sign()?.getAttribute('aria-pressed')).toBe('false');
+      expect(tip()).toBe('Keep the Screen from Sleeping');
+      // The name stays, so the toggle is one control with a state, not two.
+      expect(sign()).not.toBeNull();
+    });
+
     it('takes the lock again when the tab comes back, unless it was turned off', async () => {
       const { asked, locks } = fakeWakeLock();
       render(onPage());

@@ -50,7 +50,7 @@ full screen, with nothing else on screen. `src/components/SpellPreview/`.
   the browser lacks it, or refuses the request, the pane works and no sign shows.
 - The browser drops the lock when the tab is hidden, so it is asked for again when the tab is visible,
   unless the person turned it off.
-- The Screen Awake icon button beside Close (`MysticEyeIcon`, tipped "Screen Awake") is the sign. It is pressed while the lock is held, and pressing it
+- The Screen Awake icon button beside Close (`MysticEyeIcon`) is the sign. Its tip says what a press does: "Let the Screen Sleep" while the lock is held, "Keep the Screen from Sleeping" when not; the name stays "Screen Awake" and `aria-pressed` carries the state (the owner, 2026-10-30). It is pressed while the lock is held, and pressing it
   releases the lock or asks again. While pressed the eye is in the accent colour and blinks now and then (an 8s cycle, the lid closing once); it stays still under reduced motion. A pane that is closed and opened again asks afresh.
 
 ## The background

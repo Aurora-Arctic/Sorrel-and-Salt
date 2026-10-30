@@ -136,8 +136,9 @@ export default function SpellPreview(props: SpellPreviewProps): ReactElement {
         {/* Mounted with the content, so the burn comes in afresh on every open. */}
         {open && <Scene />}
         <div className="spell-preview__bar">
+          {/* The tip says what a press does; the name stays Screen Awake, and `aria-pressed` holds the state. */}
           {wake.shown && (
-            <IconTip tip="Screen Awake">
+            <IconTip tip={wake.held ? 'Let the Screen Sleep' : 'Keep the Screen from Sleeping'}>
               <button
                 type="button"
                 className="icon-tip__edit icon-tip__edit--plain spell-preview__awake"
