@@ -91,11 +91,11 @@
 }
 
 $preview-ember-opacity: 0.4;
-// The pane's burn is bigger than a card's: it eats twice as deep and runs half as far again along
-// the bottom. The corner's curve, the spill under it and the edge embers' places are scaled by the
+// The pane's burn is bigger than a card's: it runs twice as far along the bottom and eats half as
+// deep again. The corner's curve, the spill under it and the edge embers' places are scaled by the
 // same two factors, so the curve keeps its proportions and the embers still leave the charred edge.
-$preview-burn-scale-x: 1.5;
-$preview-burn-scale-y: 2;
+$preview-burn-scale-x: 2;
+$preview-burn-scale-y: 1.5;
 $preview-burn-length: card.$burn-length * $preview-burn-scale-x;
 $preview-burn-depth: card.$burn-depth * $preview-burn-scale-y;
 $preview-burn-corner-radius: (list.nth(card.$burn-corner-radius, 1) * $preview-burn-scale-x)
@@ -390,8 +390,11 @@ $preview-hearth-duration: 11s;
   animation: spell-preview-burn-hole card.$burn-duration card.$burn-easing both;
 }
 
+// The paper is the hole's shadow, so the hole's rounding carves it. A spread shadow rounds its far
+// corner too, by the spread: at 100vmax that rounding showed as a dark cut at the top left of a
+// window not much taller than wide, so the spread covers the diagonal of any window instead.
 .spell-preview__face-hole {
-  box-shadow: 0 0 0 100vmax $surface-page;
+  box-shadow: 0 0 0 150vmax $surface-page;
 }
 
 // The hearth: the chosen glow, under the burnt corner, over the page.

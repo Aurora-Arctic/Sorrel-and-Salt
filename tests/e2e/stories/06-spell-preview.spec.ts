@@ -340,5 +340,16 @@ test(
     // A phone: Ingredients above the steps.
     await page.setViewportSize({ width: 390, height: 844 });
     expect((await box(ingredients)).bottom).toBeLessThanOrEqual((await box(steps)).top);
+
+    // The paper behind the pane is the burn hole's spread shadow, whose far corner is rounded by the
+    // spread: it must reach past the pane's top-left corner, or a dark cut shows there. A window not
+    // much taller than wide is where a short spread fell short.
+    await page.setViewportSize({ width: 862, height: 755 });
+    const paper = await pane.locator('.spell-preview__face-hole').evaluate((hole) => {
+      const rect = hole.getBoundingClientRect();
+      const spread = parseFloat(getComputedStyle(hole).boxShadow.split(' ').pop() ?? '0');
+      return { spread, reach: Math.hypot(rect.left, rect.top) };
+    });
+    expect(paper.spread).toBeGreaterThan(paper.reach);
   },
 );
