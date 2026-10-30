@@ -93,7 +93,7 @@ variables, so a search and its categories live in the address and combine.
     picks nothing. Addresses: `moonPhase` and `dayOfWeek`, repeated.
   - **Coven Member** is the spell's maker (`created_by`), address `maker=<user id>`, an id
     that is not a uuid is dropped. Makers are named in one `displayNamesOf` batch, a former
-    member included. A picked maker the viewer cannot name reads Unknown Member.
+    member included. A maker the viewer cannot name (a seed author, say) is still offered, reading A former member.
   - **Visibility** is a `ChoiceChip` ([`FacetPanel/choice-chip.tsx`](../../src/components/FacetPanel/choice-chip.tsx)),
     the control the compendium filter draws Toxic with and placed the same way, in a
     `facet-panel__quick` wrapper after Coven Member on the panel's last line (the owner's call of
@@ -139,7 +139,7 @@ assigned categories and editor come from `readRecipeOf` (`grimoire/recipe-read.t
 function the recipe page calls, with the editor named in one `displayNamesOf` call. Each ingredient step then carries its stock mark (`supply`), from one `readStepSuppliesOf` call (`grimoire/[id]/recipe-supply.ts`), since the modal has no In Coven Inventory column to show it (story 54; [spell-recipe.md](spell-recipe.md), "Quick Look"). A malformed
 id reads nothing, and `?new` or `?edit` hold the modal back so one dialog shows at a time. The
 modal's Edit shows for the same `rolePermits(role, { spell: ['update'] })` check as the card's
-pencil and links to `?edit=<id>` in place of `?spell=<id>`. Delete Spell's bin, with the same confirmation dialog, sits beside it in the Quick Look's heading and on each card, for the roles that may delete (`rolePermits(role, { spell: ['delete'] })`: owner and member, not viewer). A confirmed delete from either lands on this tab's address, filter and page kept and `?spell` dropped, with `deleted=<name>` added for the Notice (M13.11). The confirmation dialog stacks over the Quick Look. An ingredient step's Quick Look eye
+pencil and links to `?edit=<id>` in place of `?spell=<id>`. Delete Spell's bin, with the same confirmation dialog, sits beside it in the Quick Look's heading, and on each card as an item of its More menu, for the roles that may delete (`rolePermits(role, { spell: ['delete'] })`: owner and member, not viewer). A confirmed delete from either lands on this tab's address, filter and page kept and `?spell` dropped, with `deleted=<name>` added for the Notice (M13.11). The confirmation dialog stacks over the Quick Look. An ingredient step's Quick Look eye
 opens the ingredient's details (`DetailsDialog`, M12.5) over the spell's modal, at the same
 address plus `&entry=<id>`, read with the Ingredients page's `readViewedEntry` and drawn with
 its `viewedDetailsOf` (`ingredients/viewed-details.tsx`), without the card's actions; closing

@@ -164,6 +164,26 @@ ignoring `deleted_at`: a jar the coven threw out stays out, one it edited is
 left as edited, and one it added itself for the same form is met rather than
 collided with. A developer scenario, so no test holds it (MB.225).
 
+### W's workings
+
+The demo writes eleven workings (`DEMO_WORKINGS` in `src/db/seed/demo-workings.ts`), so the Workings section on a spell page has rows to show. A working is one time a spell was made. Their ids are fixed and take a block of their own, `…0004-…`, after the stock. They sit on five complete spells and on none of the drafts.
+
+| Spell                 | Workings | Notes                                                                                                                                                                        |
+| --------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Cold Hearth Cleansing | 4        | Three complete (one private, one with a typed-name participant), one draft.                                                                                                  |
+| Threshold Salt Line   | 2        | One complete, one private draft.                                                                                                                                             |
+| Mugwort Seeing Wash   | 2        | Both complete. The mugwort jar holds 4 g and the wash takes 3 g, so the second takes 1 g and is 2 g short.                                                                   |
+| Hearth Fire Blessing  | 1        | Complete, with all three members as participants.                                                                                                                            |
+| Hearth Warding Jar    | 2        | One complete, one draft. Completing the draft skips Black Salt (no stock), the dust (a custom layer), the ash (pinches against a jar in grams) and the rosemary (no amount). |
+
+They mix complete and draft, workspace and private (never wider than the spell), recorders A and B (a viewer cannot record), workings with and without participants and notes, and dates from July to October 2026, none in the future.
+
+Completing a working changes stock: the service takes each deducted amount from its jar. The seed does the same, once, when it first writes a working, so a re-run adds nothing and decrements nothing. The jars end at Sea Salt 395 g, Hearth Ash 245 g and Mugwort 0 g. A complete working's deductions are written out in the data, not computed by `planDeductions` at seed time; a test replays them against the spell steps and `DEMO_STOCK` in date order to prove they match what the service would take.
+
+Five spells' steps use grams so a deduction exists at all: Sea Salt 15 g in Cold Hearth Cleansing and 30 g in Threshold Salt Line and Hearth Warding Jar, Hearth Ash 5 g in Hearth Fire Blessing and Mugwort 3 g in Mugwort Seeing Wash. A step and a jar convert only within one dimension, so a step in tablespoons against a jar in grams would be skipped. A database seeded before this keeps its old step units (a jar's stack is seeded whole or not at all, below) and needs `npm run db:reset`.
+
+Idempotency is the working's fixed id: a working present, deleted or not, is left alone with its participants and deductions.
+
 ### A jar's stack is seeded whole or not at all
 
 Idempotency is `standard`'s — insert what is missing, keyed on identity,

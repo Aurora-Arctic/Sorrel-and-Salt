@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import CategoryChips from '../CategoryChips';
 import { QuickLookLink } from '../IconTip';
 import { DETAILS_PLACE, detailsHeading } from '../IngredientEntry/details';
@@ -9,6 +9,7 @@ import { SafetyMark } from '../SafetyNote';
 import { formLabel } from '../../modules/ingredients/validation/form-label';
 import { UNTITLED_SPELL } from '../SpellCard';
 import { VerdictMark } from '../SpellBuilder/verdict-mark';
+import { STEPS_ID } from './sections';
 import type { IngredientRecipeStep, RecipeStep, SpellRecipeBodyProps } from './types';
 import './index.scss';
 
@@ -18,7 +19,7 @@ import './index.scss';
 // (or the modal's) lays its sections out. claude-docs/components/spell-recipe.md.
 
 /** The ingredient's label as a step says it: "Testwort (Dried Leaf)". */
-const labelOf = ({ name, form }: IngredientRecipeStep): string =>
+export const labelOf = ({ name, form }: IngredientRecipeStep): string =>
   form ? `${name} (${formLabel(form)})` : name;
 
 /**
@@ -68,7 +69,11 @@ const SpellRecipeBody = ({
   sealWaxColor,
   moonPhase,
   dayOfWeek,
-}: SpellRecipeBodyProps): ReactElement => {
+  beforeSteps,
+}: SpellRecipeBodyProps & {
+  /** A section between the facts and the steps; the Preview pane puts the Ingredients summary here. */
+  beforeSteps?: ReactNode;
+}): ReactElement => {
   const name = (title ?? '').trim() || UNTITLED_SPELL;
   const purpose = (intent ?? '').trim();
   const facts = (
@@ -102,7 +107,7 @@ const SpellRecipeBody = ({
               {facts.map(({ label, text }) => (
                 <div key={label}>
                   <dt>{label}</dt>
-                  <dd>
+                  <dd className={label === 'Moon Phase' ? 'spell-recipe__moon' : undefined}>
                     {/* The builder's drawing beside the phase; a phase outside its list draws nothing. */}
                     {label === 'Moon Phase' && <MoonPhaseIcon phase={text} />}
                     {text}
@@ -113,35 +118,42 @@ const SpellRecipeBody = ({
           </div>
         )}
 
-        {steps.length === 0 ? (
-          <p className="meta">This spell has no steps yet.</p>
-        ) : (
-          <ol className="spell-recipe__steps" aria-label="Steps">
-            {steps.map((step: RecipeStep, i) =>
-              step.kind === 'instruction' ? (
-                <StepRow
-                  key={step.id}
-                  className="spell-recipe__instruction"
-                  position={i + 1}
-                  name={null}
-                  body={step.body}
-                />
-              ) : (
-                <StepRow
-                  key={step.id}
-                  position={i + 1}
-                  name={<Name step={step} />}
-                  marks={<Marks step={step} />}
-                  quantity={step.quantity}
-                  unit={step.unit}
-                  // An ingredient step's line is its body, drawn muted under the name. An
-                  // instruction step is its text.
-                  note={step.body && <p className="meta">{step.body}</p>}
-                />
-              ),
-            )}
-          </ol>
-        )}
+        {beforeSteps}
+
+        {/* The steps under an Instructions heading, the Ingredients summary's twin: shown where the
+            summary is, on paper and in the Preview pane, and hidden on screen as the summary is. */}
+        <section className="spell-recipe__instructions">
+          <h2>Instructions</h2>
+          {steps.length === 0 ? (
+            <p className="meta">This spell has no steps yet.</p>
+          ) : (
+            <ol id={STEPS_ID} className="spell-recipe__steps" aria-label="Steps">
+              {steps.map((step: RecipeStep, i) =>
+                step.kind === 'instruction' ? (
+                  <StepRow
+                    key={step.id}
+                    className="spell-recipe__instruction"
+                    position={i + 1}
+                    name={null}
+                    body={step.body}
+                  />
+                ) : (
+                  <StepRow
+                    key={step.id}
+                    position={i + 1}
+                    name={<Name step={step} />}
+                    marks={<Marks step={step} />}
+                    quantity={step.quantity}
+                    unit={step.unit}
+                    // An ingredient step's line is its body, drawn muted under the name. An
+                    // instruction step is its text.
+                    note={step.body && <p className="meta">{step.body}</p>}
+                  />
+                ),
+              )}
+            </ol>
+          )}
+        </section>
 
         {text !== '' && <p className="spell-recipe__note">{text}</p>}
       </div>

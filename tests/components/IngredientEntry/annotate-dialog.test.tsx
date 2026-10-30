@@ -6,7 +6,11 @@ import AnnotateDialog from '@/components/IngredientEntry/annotate-dialog';
 import { CUPBOARD_MENU_LABEL } from '@/components/IngredientEntry/cupboard-writes';
 import { UNSAVED_CHANGES_LOST } from '@/components/Modal';
 import type { AnnotateDialogProps } from '@/components/IngredientEntry/types';
-import type { MakeItOursMutation, RemoveCupboardEntryMutation } from '@/gql/graphql';
+import type {
+  AnnotateCupboardEntryMutation,
+  MakeItOursMutation,
+  RemoveCupboardEntryMutation,
+} from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { press } from '../../support/interact';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
@@ -23,6 +27,7 @@ const CLOSE = '/coven/fixture-coven/ingredients?q=test' as Route;
 const OPENED: NonNullable<AnnotateDialogProps['opened']> = {
   workspaceId: '00000000-0000-4000-8000-000000000001',
   ingredientId: '00000000-0000-4000-8000-000000000002',
+  revision: 3,
   compendium: {
     name: 'Testwort',
     description: null,
@@ -214,6 +219,9 @@ describe('AnnotateDialog: Make It Ours and Remove', () => {
   // Make It Ours copies the saved annotations, so the form's unsaved ones are
   // lost with the dialog: the question says so.
   it('warns that unsaved changes are lost only while the form holds some', () => {
+    mockGraphQLMutation<AnnotateCupboardEntryMutation>('AnnotateCupboardEntry', () => ({
+      annotateCupboardEntry: { id: 'fixture', revision: 4 },
+    }));
     renderDialog();
 
     choose('Make It Ours');
@@ -227,24 +235,35 @@ describe('AnnotateDialog: Make It Ours and Remove', () => {
     expect(within(asked(OURS)).getByRole('alert')).toHaveTextContent(UNSAVED_CHANGES_LOST);
   });
 
-  // The form's unsaved-changes question is drawn in the same place: while it
-  // asks, Make It Ours's steps aside, and Keep Editing brings it back, as the
-  // admin forms' Delete does.
-  it("steps aside for the form's unsaved-changes question and comes back after it", async () => {
+  it("has no Cancel button of its own, only the dialog's Close", () => {
+    renderDialog();
+
+    expect(within(dialog()).queryByRole('button', { name: 'Cancel' })).toBeNull();
+    expect(within(dialog()).getByRole('button', { name: 'Close' })).toBeInTheDocument();
+  });
+
+  // The form autosaves, so Close saves what is unsaved instead of asking.
+  it("saves the form's unsaved changes on Close and closes", async () => {
+    const calls: unknown[] = [];
+    mockGraphQLMutation<AnnotateCupboardEntryMutation, Record<string, unknown>>(
+      'AnnotateCupboardEntry',
+      (variables) => {
+        calls.push(variables);
+        return { annotateCupboardEntry: { id: 'fixture', revision: 4 } };
+      },
+    );
     renderDialog();
     fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Description' }), {
       target: { value: 'Fixture unsaved note' },
     });
-    choose('Make It Ours');
-    expect(asked(OURS)).toBeInTheDocument();
 
     press(within(dialog()).getByRole('button', { name: 'Close' }));
-    expect(
-      await within(dialog()).findByRole('group', { name: /You have unsaved changes/ }),
-    ).toBeInTheDocument();
-    expect(gone(OURS)).toBeNull();
-
-    press(within(dialog()).getByRole('button', { name: 'Keep Editing' }));
-    expect(await within(dialog()).findByRole('group', { name: OURS })).toBeInTheDocument();
+    await waitFor(() => expect(router.replace).toHaveBeenCalledWith(CLOSE));
+    expect(calls).toEqual([
+      expect.objectContaining({
+        input: { description: 'Fixture unsaved note' },
+        expectedRevision: 3,
+      }),
+    ]);
   });
 });

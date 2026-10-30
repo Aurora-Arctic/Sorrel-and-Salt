@@ -1,4 +1,6 @@
 import type { Route } from 'next';
+import type { WorkingStep } from '@/components/RecordWorking/types';
+import type { StockDialogProps } from '@/components/StockDialog/types';
 import type { RecipeStep } from '@/components/SpellRecipe/types';
 import type { SpellStepView } from '@/modules/grimoire';
 
@@ -29,6 +31,7 @@ export function recipeStepsOf(views: readonly SpellStepView[], hereHref: Route):
       name,
       form,
       formal: null,
+      variantId: linked ? view.variantId : null,
       quantity: view.quantity === null ? null : String(view.quantity),
       unit: view.unit,
       look:
@@ -69,5 +72,30 @@ export function recipeStepsOf(views: readonly SpellStepView[], hereHref: Route):
     if (step.kind !== 'ingredient') return step;
     if ((owners.get(step.name.trim().toLowerCase())?.size ?? 0) < 2) return step;
     return { ...step, formal: views[i]?.ingredient?.canonicalName ?? null };
+  });
+}
+
+/**
+ * The ingredient steps of `views` as Record a Working's preview lines read them: the form and the jar's look, and `stock` where `stocks` holds that
+ * step's Edit Stock (none for a role that may not edit stock, so its jar stays a drawing).
+ */
+export function workingStepsOf(
+  views: readonly SpellStepView[],
+  hereHref: Route,
+  stocks: ReadonlyMap<string, StockDialogProps | null> = new Map(),
+): WorkingStep[] {
+  return recipeStepsOf(views, hereHref).flatMap((step, index): WorkingStep[] => {
+    if (step.kind !== 'ingredient') return [];
+    const view = views[index];
+    return [
+      {
+        id: step.id,
+        name: step.name,
+        form: step.form,
+        seed: view?.ingredientId ?? step.name,
+        oneOff: step.oneOff,
+        stock: stocks.get(step.id) ?? null,
+      },
+    ];
   });
 }

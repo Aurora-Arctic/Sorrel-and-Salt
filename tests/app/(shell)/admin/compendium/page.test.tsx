@@ -152,6 +152,8 @@ const TESTWORT = {
   slug: 'testwort-fixtura-testalis',
   canonicalName: 'Fixtura testalis',
   nomenclature: 'botanical',
+  revision: 1,
+  updatedAt: new Date('2026-03-04T05:06:07.000Z'),
 };
 
 /** Testwort as the form edits it. */
@@ -490,7 +492,12 @@ describe('the /admin/compendium modal', () => {
     expect(entryValues).toHaveBeenCalledWith(TESTWORT, null);
     const dialog = screen.getByRole('dialog', { name: EDITING_TESTWORT });
     expect(within(dialog).getByRole('form', { name: 'Fixture Form' })).toBeInTheDocument();
-    expect(formEntry()).toEqual({ id: TESTWORT.id, values: TESTWORT_VALUES });
+    expect(formEntry()).toEqual({
+      id: TESTWORT.id,
+      values: TESTWORT_VALUES,
+      revision: TESTWORT.revision,
+      updatedAt: TESTWORT.updatedAt.toISOString(),
+    });
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 

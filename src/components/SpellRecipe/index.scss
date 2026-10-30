@@ -1,9 +1,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The reading column: the body's width on its own, on the page and in the Quick Look modal.
-$recipe-column: 48rem;
-
 // A saved spell's page. Tokens only; the layout is a single readable column. Print
 // styles are not set here.
 .spell-recipe {
@@ -12,9 +9,12 @@ $recipe-column: 48rem;
   // The Edited line close over the title, and the title close over the body: the title's line
   // box carries its own air, so a wider gap read as a gulf.
   gap: space(2);
-  max-width: $recipe-column;
-  margin-inline: auto;
-  padding: space(4);
+
+  // The article fills the coven column and starts at its left edge, as the ingredient page does;
+  // the text is capped instead, and the jump menu is not.
+  > :where(:not(.page-nav)) {
+    max-width: $recipe-column;
+  }
 }
 
 // The way back stands a clear step off the Edited line and the title. Its look is the back
@@ -51,11 +51,29 @@ $recipe-column: 48rem;
 // empty before the gutter. The head stays over the body, so the Edit
 // pencil ends where the text does, as the entry page's does.
 .spell-recipe--with-aside {
-  max-width: calc(#{$measure} + #{space(8)} + #{$side-column});
+  > :where(:not(.page-nav)) {
+    max-width: calc(#{$measure} + #{space(8)} + #{$side-column});
+  }
+
+  // Under a tablet's width the jar stands over Workings, as the menu lists it: the body's boxes
+  // and Workings become the stack's items, and Workings goes last.
+  @media (max-width: $shell-tablet-width) {
+    .spell-recipe__main {
+      display: contents;
+    }
+
+    .spell-recipe__aside {
+      order: 1;
+    }
+
+    .spell-workings {
+      order: 2;
+    }
+  }
 
   @media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
     > .spell-recipe__head {
-      max-width: calc(100% - #{space(8)} - #{$side-column});
+      max-width: $measure;
     }
 
     // The side column starts level with the facts strip: the body's two boxes become grid items in
@@ -68,6 +86,33 @@ $recipe-column: 48rem;
     .spell-recipe__lead,
     .spell-recipe__rest {
       grid-column: 1;
+    }
+
+    // Rows are pinned so Workings closes the text column under the body and the side column
+    // spans the facts' row and Workings' (the last row takes the slack, so a tall column never
+    // pushes Workings down). The rows carry no gap: the lead's own margin stands in, so a missing
+    // lead leaves an empty row that takes no room.
+    .spell-recipe__columns {
+      grid-template-rows: auto auto 1fr;
+      row-gap: 0;
+    }
+
+    .spell-recipe__lead {
+      grid-row: 1;
+      margin-block-end: space(4);
+    }
+
+    .spell-recipe__rest {
+      grid-row: 2;
+    }
+
+    .spell-workings {
+      grid-column: 1;
+      grid-row: 3;
+    }
+
+    .spell-recipe__aside {
+      grid-row: 2 / span 2;
     }
   }
 }
@@ -100,7 +145,15 @@ $recipe-column: 48rem;
   display: flex;
   flex-wrap: wrap;
   gap: space(3);
-  align-items: center;
+  // The title can wrap, so the icon row hangs from its first line rather than its middle.
+  align-items: flex-start;
+
+  // The way back and the Edited line each take a row above the title.
+  > .spell-recipe__back,
+  > .last-edit {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
 
   h1 {
     flex: 1 1 0;
@@ -123,6 +176,17 @@ $recipe-column: 48rem;
   margin: 0;
   color: $text-muted;
   white-space: pre-line;
+}
+
+// The Instructions heading is for paper and the Preview pane (recipe-columns); the screen's
+// page and Quick Look head the steps with the jump menu and the list's own name, and the section
+// around them is no box at all, so the steps stay the stack's own item.
+.spell-recipe__instructions {
+  display: contents;
+
+  > h2 {
+    display: none;
+  }
 }
 
 .spell-recipe__steps {
@@ -269,8 +333,11 @@ $recipe-column: 48rem;
 
 .spell-recipe__facts {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: space(3);
+  // Tracks size from their cells, not equally: each is as wide as its content, shrinking no further than its
+  // widest unbreakable cell (the moon phase), and the wide column gap leaves the moon phase room on its right.
+  grid-template-columns: repeat(4, minmax(min-content, max-content));
+  justify-content: start;
+  gap: space(3) space(6);
   margin: 0;
 
   @container (max-width: #{$narrow-column}) {
@@ -292,6 +359,11 @@ $recipe-column: 48rem;
     align-items: center;
     margin: 0;
     overflow-wrap: anywhere;
+  }
+
+  // The phase name and its drawing stay on one line, and the track grows to hold them.
+  .spell-recipe__moon {
+    white-space: nowrap;
   }
 
   // The moon a third larger than its 1.25em line size, so the phase reads
@@ -340,4 +412,29 @@ $recipe-column: 48rem;
 // Quick Look is as it was.
 .modal-dialog__heading:has(.spell-look-actions) {
   padding-block-start: space(3);
+}
+
+// The jump menu (PageNav) is the ingredient entry page's grid (`entry-nav-grid`): a sticky column left of
+// the page from a phone's width up, stacked above the sections below it. The menu spans the summary and
+// the columns, so it keeps its place as they scroll. Screen only: print hides the menu and keeps its
+// single column.
+@media screen {
+  .spell-recipe--with-nav {
+    @include entry-nav-grid;
+
+    // The ingredient page's menu gap, which it gets from its flex `gap`; this page's `gap` is smaller.
+    column-gap: space(6);
+
+    > .page-nav {
+      grid-row: 2 / span 2;
+    }
+  }
+}
+
+// A jump from the menu lands clear of the shell's sticky bar, as the entry page's sections do.
+.spell-recipe .spell-recipe__steps,
+.spell-recipe .spell-workings,
+.spell-recipe .comparison-panel,
+.spell-recipe .spell-inventory {
+  scroll-margin-top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
 }

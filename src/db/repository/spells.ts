@@ -1,6 +1,8 @@
 import { and, eq, inArray, or, type SQL, sql } from 'drizzle-orm';
 import type { PgTable } from 'drizzle-orm/pg-core';
 import { spellSteps } from '../../modules/grimoire/schema/spell-steps';
+import { spellWorkingParticipants } from '../../modules/grimoire/schema/spell-working-participants';
+import { spellWorkings } from '../../modules/grimoire/schema/spell-workings';
 import { spells } from '../../modules/grimoire/schema/spells';
 import { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
@@ -12,6 +14,7 @@ import type {
   IngredientRow,
   IngredientScoped,
   NotSpellScoped,
+  NotVisibilityScoped,
   SpellScoped,
   Unscoped,
   WriterContext,
@@ -27,6 +30,30 @@ export function readableSpells(membership: Membership): SQL | undefined {
     scopedTo(membership, spells),
     notSoftDeleted(spells),
     or(eq(spells.visibility, 'workspace'), eq(spells.createdBy, membership.userId)),
+  );
+}
+
+/**
+ * The reader rule for a working: its spell must be readable, and the working itself is the coven's if shared, else its
+ * recorder's or a named participant's. A working is never wider than its spell, but it keeps its own visibility when
+ * the spell widens, so the working's column is read here beside the spell's. Live only: the participant and deduction rows have no
+ * `deleted_at` and are reached through this.
+ */
+export function readableWorkings(membership: Membership): SQL | undefined {
+  return and(
+    notSoftDeleted(spellWorkings),
+    existsIn(spells, and(eq(spells.id, spellWorkings.spellId), readableSpells(membership))),
+    or(
+      eq(spellWorkings.visibility, 'workspace'),
+      eq(spellWorkings.createdBy, membership.userId),
+      existsIn(
+        spellWorkingParticipants,
+        and(
+          eq(spellWorkingParticipants.workingId, spellWorkings.id),
+          eq(spellWorkingParticipants.userId, membership.userId),
+        ),
+      ),
+    ),
   );
 }
 
@@ -55,11 +82,9 @@ export function findOneSpell(
  * A spell's rows in `spell_steps` or `spell_categories`, readable exactly when the spell is. Neither table has a `workspace_id`,
  * so the correlated `EXISTS` over the parent supplies coven and visibility; filtering after the fetch would leak a jar (rule 7).
  */
-export function findManyInSpell<TTable extends PgTable & SpellScoped & Unscoped>(
-  membership: Membership,
-  table: TTable,
-  spellId: string,
-): Promise<TTable['$inferSelect'][]> {
+export function findManyInSpell<
+  TTable extends PgTable & SpellScoped & Unscoped & NotVisibilityScoped,
+>(membership: Membership, table: TTable, spellId: string): Promise<TTable['$inferSelect'][]> {
   return findManyInSpells(membership, table, [spellId]);
 }
 
@@ -68,7 +93,9 @@ export function findManyInSpell<TTable extends PgTable & SpellScoped & Unscoped>
  * A spell among `spellIds` the reader may not read contributes no rows, so a
  * batch that names one learns nothing of it.
  */
-export function findManyInSpells<TTable extends PgTable & SpellScoped & Unscoped>(
+export function findManyInSpells<
+  TTable extends PgTable & SpellScoped & Unscoped & NotVisibilityScoped,
+>(
   membership: Membership,
   table: TTable,
   spellIds: readonly string[],
@@ -86,7 +113,7 @@ export function findManyInSpells<TTable extends PgTable & SpellScoped & Unscoped
 
 /**
  * The ingredients among `ingredientIds` that a readable spell holds, soft-deleted ones included: the second escape hatch and the
- * only read returning a deleted ingredient, since a spell records a working (claude-docs/db/spell-visibility.md, "What a spell holds").
+ * only read returning a deleted ingredient, since a spell keeps what went into its jar (claude-docs/db/spell-visibility.md, "What a spell holds").
  * The spell and layer must be live and the ingredient the compendium's or the proof's coven's (a foreign key checks the id alone).
  */
 export function findIngredientsInSpellsIncludingSoftDeleted(

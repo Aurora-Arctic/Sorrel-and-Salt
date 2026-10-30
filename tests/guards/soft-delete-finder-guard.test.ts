@@ -82,9 +82,9 @@ describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', (
       )
         continue;
       // Either it filters itself or it delegates to something that does: a sibling finder (`findPage` and its kin included, never a hatch),
-      // `readableSpells` (with the visibility rule), `readableInTiers` (with the tier) or `curated` (with the group's).
+      // `readableSpells` or `readableWorkings` (with the visibility rule), `readableInTiers` (with the tier) or `curated` (with the group's).
       expect(
-        /notSoftDeleted\(|find(?:Many|One|Page)\w*(?<!IncludingSoftDeleted)\(|readableSpells\(|readableInTiers\(|\bcurated\(/.test(
+        /notSoftDeleted\(|find(?:Many|One|Page)\w*(?<!IncludingSoftDeleted)\(|readableSpells\(|readableWorkings\(|readableInTiers\(|\bcurated\(/.test(
           body,
         ),
         `${finder} reaches the database without notSoftDeleted(...)`,

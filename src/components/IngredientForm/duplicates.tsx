@@ -99,14 +99,13 @@ export function useDuplicateWarning(
 ): DuplicateWarning {
   const client = useQueryClient();
   const typed = text.trim();
-  // Typed in since the form opened, or since a save moved `opened` on: set
-  // during render, as React allows for a component's own state, so the first
-  // keystroke already asks.
+  // Typed in since the form opened: set during render, as React allows for a
+  // component's own state, so the first keystroke already asks. A save moving
+  // `opened` on to the name typed keeps it, so a list showing stays showing.
   const [baseline, setBaseline] = useState(opened);
   const [edited, setEdited] = useState(false);
   if (baseline !== opened) {
     setBaseline(opened);
-    setEdited(false);
   } else if (!edited && typed !== opened.trim()) {
     setEdited(true);
   }

@@ -13,7 +13,7 @@ checklist of the v1 user stories, one line each:
 [-] Story 12: View my stock … — skipped
 [ ] Story 28: … — no test yet
 
-1 of 57 stories passing · 2 failing · 1 skipped · 53 without a test
+1 of 63 stories passing · 2 failing · 1 skipped · 59 without a test
 ```
 
 That is DESIGN.md §11's "live progress report against §10 rather than a
@@ -26,7 +26,7 @@ decisions make it hold:
   meaning to the checklist. `tests/e2e/stories/README.md` has the file table.
 - **The story list is read out of DESIGN.md §10, not copied.**
   `tests/support/stories.ts` parses the numbered list between
-  "## 10. User stories" and the next section (57 today, 1–34, 47–64, 77, 80, 81, 83 and 84), so a
+  "## 10. User stories" and the next section (63 today, 1–34, 47–64 and 76–86), so a
   story added to §10 joins the checklist without a harness edit. The harness
   has no tests of its own (MB.224): a broken checklist is seen by whoever runs
   it.

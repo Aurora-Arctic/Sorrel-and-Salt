@@ -312,6 +312,7 @@ export function acceptCreate() {
         id: 'saved-1',
         name: variables.input.name,
         slug: 'saved',
+        revision: 1,
         stock: [],
       },
     };
@@ -332,6 +333,7 @@ export function acceptCompendiumCreate() {
         id: ENTRY_ID,
         name: variables.input.name,
         slug: 'testwort-fixtura-testalis',
+        revision: 1,
       },
     };
   });
@@ -354,6 +356,7 @@ export function acceptUpdate() {
         id: String(variables.id),
         name: variables.input.name,
         slug: 'mockwort-fixtura-testalis',
+        revision: (variables.expectedRevision ?? 0) + 1,
       },
     };
   });
@@ -376,6 +379,7 @@ export function acceptCovenUpdate() {
         id: String(variables.id),
         name: variables.input.name,
         slug: 'mockwort-fixtura-testalis',
+        revision: (variables.expectedRevision ?? 0) + 1,
       },
     };
   });

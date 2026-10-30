@@ -4,8 +4,10 @@
 export * from './services/spell-visibility';
 export * from './services/spells';
 export * from './services/spell-reads';
+export * from './services/workings';
 export * from './loaders/spell-children';
 export * from './graphql/spell';
+export * from './graphql/working';
 export type {
   GrimoireOrder,
   SpellInput,

@@ -374,6 +374,7 @@ describe('CupboardActions on the public page', () => {
           closeHref: PAGE,
           opened: {
             workspaceId: place(2).workspaceId,
+            revision: 3,
             overrides: {
               label: 'Their Testwort',
               description: null,

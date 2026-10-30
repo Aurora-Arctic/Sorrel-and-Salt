@@ -104,7 +104,7 @@ branch every consumer has always had.
   reach `ingredient_categories`. A custom row carries content, but content
   addressable only through its spell — unlike a folk name, which is addressed
   on its own and so keeps the six columns. **Superseded by MB.110:** M5.3 made
-  a spell a record of a working, so a removed layer is a tombstone, and what
+  a spell a recipe that keeps what went into its jar, so a removed layer is a tombstone, and what
   reads through the table does so by `existsIn`, which ANDs the layer's filter
   by construction.
 - **The migration is expand-then-contract in one file, reordered by hand.**

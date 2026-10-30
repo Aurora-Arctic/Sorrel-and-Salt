@@ -1,0 +1,544 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+@use '../../scss/recipe-columns' as *;
+@use 'sass:list';
+@use '../SpellCard/smoulder' as card;
+
+// The pane covers the window: the native dialog's top layer, sized to the viewport and no longer a
+// box in the middle. Tokens only; the look is the grimoire's design review's (MB.123).
+// The pane's edge space, and the foot's: 2.5rem at every width, which no `space()` step equals.
+$preview-edge: space(5);
+$preview-edge-phone: space(4);
+$preview-foot: 2.5rem;
+
+.spell-preview {
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: $preview-edge;
+  padding-bottom: $preview-foot;
+  border: 0;
+  overflow-y: auto;
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: a browser without it lets a scroll past the pane's end reach the page behind, which is held still anyway, not yet Baseline
+  overscroll-behavior: contain;
+
+  &:focus {
+    outline: none;
+  }
+
+  // The page's side gutter on a phone.
+  @media (max-width: $shell-phone-width) {
+    padding: $preview-edge-phone;
+    padding-bottom: $preview-foot;
+  }
+}
+
+// While the pane is open only it scrolls: the page behind holds still, as it does under a modal, and the
+// room the page's scrollbar took is given back as padding, `--scrollbar-width`, which `holdPage` sets
+// (claude-docs/components/modal.md, "Styling").
+:root:has(.spell-preview:modal) {
+  overflow: hidden;
+  padding-inline-end: var(--scrollbar-width, 0);
+}
+
+// The controls sit in a row above the title, at the end, and scroll away with the content. A row and
+// not a float, so a long title never wraps around them.
+.spell-preview__bar {
+  display: flex;
+  justify-content: flex-end;
+  gap: space(2);
+  // No wider than the content, so the close X ends where the text does.
+  max-width: $recipe-sheet-width;
+  margin-inline: auto;
+}
+
+// The eye, held on, wears the accent and blinks now and then: still for most of the cycle, the lid
+// closing and opening once; still under reduced motion.
+.spell-preview__awake {
+  svg {
+    transform-origin: center;
+  }
+
+  &[aria-pressed='true'],
+  &[aria-pressed='true']:hover,
+  &[aria-pressed='true']:focus-visible {
+    color: $accent;
+  }
+
+  &[aria-pressed='true'] svg {
+    animation: spell-preview-blink 8s ease-in-out infinite;
+
+    @include reduced-motion {
+      animation: none;
+    }
+  }
+}
+
+@keyframes spell-preview-blink {
+  0%,
+  94%,
+  100% {
+    transform: scaleY(1);
+  }
+
+  97% {
+    transform: scaleY(0.1);
+  }
+}
+
+// The background: the page smouldering from its bottom-right corner as a spell card does under the
+// pointer, a hearth glow under the burn, and embers rising from the glow and from the charred edge
+// (claude-docs/components/spell-preview.md, "The background"). The burn is the card's, layer for
+// layer, from its smoulder partial; the ember rim and glow breathe by `opacity` here rather than
+// the card's `box-shadow` and `filter` frames, which repaint every frame on a phone kept awake.
+// The dialog itself paints nothing: the face layer is the page colour everywhere but the burn,
+// where the backdrop, the table under the page, shows through.
+.spell-preview {
+  background: transparent;
+
+  &::backdrop {
+    background: $drawer-slot;
+  }
+}
+
+$preview-ember-opacity: 0.4;
+// The pane's burn is bigger than a card's: it runs twice as far along the bottom and eats half as
+// deep again. The corner's curve, the spill under it and the edge embers' places are scaled by the
+// same two factors, so the curve keeps its proportions and the embers still leave the charred edge.
+$preview-burn-scale-x: 2;
+$preview-burn-scale-y: 1.5;
+$preview-burn-length: card.$burn-length * $preview-burn-scale-x;
+$preview-burn-depth: card.$burn-depth * $preview-burn-scale-y;
+$preview-burn-corner-radius: (list.nth(card.$burn-corner-radius, 1) * $preview-burn-scale-x)
+  (list.nth(card.$burn-corner-radius, 2) * $preview-burn-scale-y);
+// The burn's own breathing, cut to opacity frames: the rim at the card's 5.3s, the embers in the
+// burnt part at 3.7s, the spill on the table at 4.7s, and the hearth at 11s; none line up.
+$preview-rim-duration: card.$burn-ember-duration;
+$preview-embers-duration: $pulse-duration * 1.85;
+$preview-warmth-duration: card.$burn-warmth-duration;
+$preview-hearth-duration: 11s;
+
+// The burn-in: each layer starts as the card's resting state and ends at its lit one, at the
+// card's pace; `both` holds the start through the delay and the end after.
+@keyframes spell-preview-burn-hole {
+  from {
+    width: 0;
+    height: 0;
+  }
+}
+
+@keyframes spell-preview-burn-corner {
+  from {
+    border-bottom-right-radius: 0 0;
+  }
+}
+
+@keyframes spell-preview-burn-curve {
+  from {
+    border-bottom-right-radius: 0 0;
+    clip-path: inset(0 0 0.6rem 0);
+  }
+}
+
+@keyframes spell-preview-burn-glow {
+  from {
+    width: 0;
+    opacity: 0;
+  }
+}
+
+@keyframes spell-preview-burn-show {
+  from {
+    opacity: 0;
+  }
+}
+
+// The ember rim, uneven: the card's frames' brightness, as opacity.
+@keyframes spell-preview-rim {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  27% {
+    opacity: 0.72;
+  }
+
+  46% {
+    opacity: 1;
+  }
+
+  71% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes spell-preview-embers {
+  0%,
+  100% {
+    opacity: 0.9;
+  }
+
+  41% {
+    opacity: 0.6;
+  }
+
+  67% {
+    opacity: 1;
+  }
+}
+
+// The card's warmth frames (0.82, 0.5, 1 of its 0.4) as the glow's own opacity.
+@keyframes spell-preview-warmth {
+  0%,
+  100% {
+    opacity: $preview-ember-opacity * 0.82;
+  }
+
+  38% {
+    opacity: $preview-ember-opacity * 0.5;
+  }
+
+  64% {
+    opacity: $preview-ember-opacity;
+  }
+}
+
+@keyframes spell-preview-hearth {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+}
+
+// A hearth ember rising: turning as it goes, brightest early, out by the top of the pane.
+@keyframes spell-preview-float {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: var(--peak);
+  }
+
+  50% {
+    transform: translate(var(--sway), -45vh) rotate(140deg);
+  }
+
+  85% {
+    opacity: calc(var(--peak) * 0.25);
+  }
+
+  100% {
+    transform: translate(calc(var(--sway) * -0.7), -92vh) rotate(300deg);
+    opacity: 0;
+  }
+}
+
+// Ash tumbling: a flake turns over, so it thins to an edge and widens again.
+@keyframes spell-preview-tumble {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: var(--peak);
+  }
+
+  35% {
+    transform: translate(var(--sway), -30vh) rotate(160deg) scaleX(0.4);
+  }
+
+  65% {
+    transform: translate(calc(var(--sway) * -0.5), -62vh) rotate(290deg) scaleX(1);
+  }
+
+  85% {
+    opacity: calc(var(--peak) * 0.4);
+  }
+
+  100% {
+    transform: translate(var(--sway), -94vh) rotate(420deg) scaleX(0.5);
+    opacity: 0;
+  }
+}
+
+// An ember leaving the charred edge: brightest as it leaves, cooling and slowing to nothing by
+// half the pane's height.
+@keyframes spell-preview-float-edge {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 0;
+  }
+
+  5% {
+    opacity: var(--peak);
+  }
+
+  30% {
+    transform: translate(calc(var(--sway) * -0.6), -14vh) rotate(60deg);
+    opacity: calc(var(--peak) * 0.9);
+  }
+
+  65% {
+    transform: translate(var(--sway), -32vh) rotate(150deg);
+    opacity: calc(var(--peak) * 0.45);
+  }
+
+  100% {
+    transform: translate(calc(var(--sway) * -0.3), -50vh) rotate(230deg);
+    opacity: 0;
+  }
+}
+
+// The heat on an ember, fading over its rise.
+@keyframes spell-preview-cool {
+  0%,
+  18% {
+    opacity: 1;
+  }
+
+  60% {
+    opacity: 0.35;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes spell-preview-cool-edge {
+  0%,
+  12% {
+    opacity: 1;
+  }
+
+  45% {
+    opacity: 0.4;
+  }
+
+  80%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.spell-preview__scene {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.spell-preview__scene > * {
+  position: absolute;
+  display: block;
+}
+
+// The spill on the table under the burn: the card's glow, grown in with the hole.
+.spell-preview__glow {
+  inset: auto -0.5rem (-1.75rem * $preview-burn-scale-y) auto;
+  width: calc(#{$preview-burn-length} + 1.5rem);
+  height: 3.5rem * $preview-burn-scale-y;
+  border-radius: 50%;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(card.$candle, 0.75) 0.75rem,
+    rgba(card.$ember, 0.4) 4.5rem,
+    rgba(card.$ember, 0.16)
+  );
+  filter: blur(card.$burn-glow-blur);
+  opacity: $preview-ember-opacity;
+  animation:
+    spell-preview-burn-glow card.$burn-duration card.$burn-easing both,
+    spell-preview-warmth $preview-warmth-duration ease-in-out card.$burn-duration infinite;
+}
+
+// The page: the hole's spread shadow, torn by the card's filter, with the page's shadow on the table.
+.spell-preview__face {
+  inset: 0;
+  overflow: hidden;
+  filter: drop-shadow(#{$shadow-floating});
+}
+
+.spell-preview__face-paper,
+.spell-preview__burn-paper {
+  position: absolute;
+  inset: 0;
+  filter: url('#spell-card-burn');
+}
+
+.spell-preview__face-corner,
+.spell-preview__burn-corner,
+.spell-preview__burn-curve {
+  position: absolute;
+  inset: -1rem;
+  border-bottom-right-radius: $preview-burn-corner-radius;
+  animation: spell-preview-burn-corner card.$burn-duration card.$burn-easing both;
+}
+
+.spell-preview__face-corner,
+.spell-preview__burn-corner {
+  overflow: hidden;
+}
+
+.spell-preview__face-hole,
+.spell-preview__burn-hole {
+  position: absolute;
+  right: 0.5rem;
+  bottom: 0.5rem;
+  width: $preview-burn-length;
+  height: $preview-burn-depth;
+  border-top-left-radius: 45% 100%;
+  animation: spell-preview-burn-hole card.$burn-duration card.$burn-easing both;
+}
+
+// The paper is the hole's shadow, so the hole's rounding carves it. A spread shadow rounds its far
+// corner too, by the spread: at 100vmax that rounding showed as a dark cut at the top left of a
+// window not much taller than wide, so the spread covers the diagonal of any window instead.
+.spell-preview__face-hole {
+  box-shadow: 0 0 0 150vmax $surface-page;
+}
+
+// The hearth: the chosen glow, under the burnt corner, over the page.
+.spell-preview__hearth {
+  inset: 0;
+  background: radial-gradient(ellipse 58% 46% at 78% 104%, $preview-glow, transparent 70%);
+  animation: spell-preview-hearth $preview-hearth-duration ease-in-out infinite;
+}
+
+.spell-preview__embers {
+  inset: 0;
+}
+
+// Over the hearth: the ember rim and the embers in the burnt part, faded in as the card's.
+.spell-preview__burn {
+  inset: 0;
+  overflow: hidden;
+  animation: spell-preview-burn-show $motion-medium ease both;
+}
+
+.spell-preview__burn-hole {
+  box-shadow: card.ember-rim(false, 0, 1.5px, 0.95, 3px, 0.85, 3.5px);
+  animation:
+    spell-preview-burn-hole card.$burn-duration card.$burn-easing both,
+    spell-preview-rim $preview-rim-duration ease-in-out card.$burn-duration infinite;
+}
+
+.spell-preview__burn-curve {
+  box-shadow: card.ember-rim(true, 0, 1.5px, 0.95, 3px, 0.85, 3.5px);
+  clip-path: inset(0 0 calc(0.6rem + #{$preview-burn-depth}) 0);
+  animation:
+    spell-preview-burn-curve card.$burn-duration card.$burn-easing both,
+    spell-preview-rim $preview-rim-duration ease-in-out card.$burn-duration infinite;
+}
+
+.spell-preview__burn-hole::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    to right,
+    rgba(card.$candle, 0.4),
+    rgba(card.$ember, 0.25) 1.5rem,
+    rgba(card.$ember, 0.1) 55%,
+    transparent 85%
+  );
+  // Only the mask's alpha counts, so any opaque token does.
+  mask-image: linear-gradient(to bottom, $text-primary, transparent 0.25rem);
+  animation: spell-preview-embers $preview-embers-duration ease-in-out card.$burn-duration infinite;
+}
+
+// An ember: an irregular fragment placed and timed by the custom properties `embers.ts` sets. The
+// body is the cooled fragment; `::before` is its heat, fading over the rise.
+// The path runs `linear`: an easing applies between each pair of keyframes, so `ease-in` would
+// bring the ember to a stop at every stop on its path and set it off again, as if it had caught.
+.spell-preview__ember {
+  position: absolute;
+  inset: auto auto -2% var(--x);
+  width: var(--w);
+  height: var(--h);
+  border-radius: var(--br);
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: spell-preview-float var(--d) linear var(--delay) infinite;
+}
+
+.spell-preview__ember--hot {
+  --peak: 0.85;
+
+  background: radial-gradient(circle at 40% 40%, $preview-ember 0%, $preview-ember-char 75%);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: radial-gradient(
+      circle at 40% 40%,
+      $preview-ember-core 0%,
+      $preview-ember 45%,
+      transparent 80%
+    );
+    animation: spell-preview-cool var(--d) linear var(--delay) infinite;
+  }
+}
+
+.spell-preview__ember--ash {
+  --peak: 0.8;
+
+  background: $preview-ash;
+  animation-name: spell-preview-tumble;
+}
+
+// Starting on the charred edge, measured in from the corner on a card's burn and scaled to this
+// one, and brightest as it leaves it.
+.spell-preview__ember--edge {
+  inset: auto calc(var(--r) * #{$preview-burn-scale-x}) calc(var(--b) * #{$preview-burn-scale-y})
+    auto;
+  animation-name: spell-preview-float-edge;
+
+  &.spell-preview__ember--hot {
+    --peak: 1;
+
+    &::before {
+      animation-name: spell-preview-cool-edge;
+    }
+  }
+}
+
+// Reduced motion: the finished burn at once, the glow steady, and no embers, since an ember that
+// does not rise is a speck on the page.
+@include reduced-motion {
+  .spell-preview__scene *,
+  .spell-preview__scene *::before {
+    animation: none;
+  }
+}
+
+// The content is one centred column, laid out as the printed page is (_recipe-columns.scss): the
+// title and lead across the top, then Ingredients in a narrow column beside the steps. Its width is
+// the printed sheet's (`$recipe-sheet-width`), so on a wide window its lines break where the paper's
+// do; under the tablet width the pane stacks, Ingredients above the steps.
+.spell-preview__content {
+  @include recipe-columns('.spell-preview__title');
+
+  max-width: $recipe-sheet-width;
+  margin-inline: auto;
+
+  @media (max-width: $shell-tablet-width) {
+    @include recipe-columns('.spell-preview__title', $columns: false);
+  }
+}

@@ -1,6 +1,7 @@
 import 'server-only';
 import type { Route } from 'next';
 import { cupboardFormValues } from '../../../../../components/CupboardEntryForm/entry-values';
+import type { CupboardOverrides } from '../../../../../components/CupboardEntryForm/types';
 import type {
   CupboardPlace,
   PublicCupboardProps,
@@ -87,18 +88,15 @@ export async function publicCupboardOf(
       ? await getCupboardEntry(session, annotating.workspaceId, entry.id)
       : null;
 
+  let opened:
+    { workspaceId: string; overrides: CupboardOverrides; revision: number | null } | undefined;
+  if (annotating && row) {
+    const { overrides, revision } = cupboardFormValues(entry, row);
+    opened = { workspaceId: annotating.workspaceId, overrides, revision };
+  }
   return {
     covens,
     defaultWorkspaceId: writable[0].id,
-    annotate: {
-      closeHref: own,
-      opened:
-        annotating && row
-          ? {
-              workspaceId: annotating.workspaceId,
-              overrides: cupboardFormValues(entry, row).overrides,
-            }
-          : undefined,
-    },
+    annotate: { closeHref: own, opened },
   };
 }

@@ -70,7 +70,7 @@ one's own id) throws.
   under `$shell-brand-width` (a narrow phone; wider than that the bar has room
   for the name once the site links have gone) the brand reads "S&S"; the full
   name stays in the page, visually hidden, for a screen reader.
-- **The site nav** (`nav` named "Site") lists the Compendium for every viewer, verified or not, and Your Coven ("Your Covens" when the viewer is in more than one coven) and Admin as well **for a verified curator or admin** (`canCurate`), on every shell page. At or
+- **The site nav** (`nav` named "Site") lists the Compendium for every viewer, verified or not, and, on every shell page, Your Coven ("Your Covens" when the viewer is in more than one coven) **for a verified account that is in at least one coven, and for a verified curator or admin in none** (that link goes to `/coven`), and Admin **for a verified curator or admin** (`canCurate`) alone. At or
   under `$shell-tablet-width` the bar has no room for them beside the brand,
   Add Ingredient, the account button and the disc, so the same links are
   offered in the account panel.
@@ -129,7 +129,7 @@ link.
 ## Testing
 
 `tests/components/AppShell/index.test.tsx` covers who sees the Admin and Your
-Coven links (a curator or an admin does; a verified member sees the rest of the bar and not these), the brand's target (`/`), the Your Coven label for one coven or several, Add Ingredient’s target, the unverified
+Coven links (a verified member or viewer of a coven sees Your Coven and not Admin; a verified account in no coven sees neither unless it curates; an unverified one sees neither), the brand's target (`/`), the Your Coven label for one coven or several, Add Ingredient’s target, the unverified
 viewer's bar, the skip link's target, and the viewer's invitation count reaching
 the account menu's link. `tests/lib/shell-home.test.ts` and
 `tests/lib/viewer.test.ts` cover the two helpers, the latter including the count

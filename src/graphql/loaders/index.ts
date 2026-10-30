@@ -3,6 +3,7 @@ import {
   assignedCategoriesBySpell,
   derivedCategoriesBySpell,
   stepsBySpell,
+  workingCountBySpell,
 } from '@/modules/grimoire';
 import { providersByUser, usersById, usersByIdForAdmin } from '@/modules/identity';
 import {
@@ -56,6 +57,7 @@ const LOADERS = {
   deityTraditionsById,
   otherNamesByDeity,
   stepsBySpell,
+  workingCountBySpell,
   assignedCategoriesBySpell,
   derivedCategoriesBySpell,
 } satisfies Record<string, LoaderFactory<never, unknown>>;

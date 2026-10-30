@@ -63,3 +63,28 @@ test("strips Facebook's #_=_ fragment and no other", async ({ page }) => {
   await page.goto('/#top');
   expect(new URL(page.url()).hash).toBe('#top');
 });
+
+// Highlighted text swaps the page's two colours, so it keeps the page's own contrast in both themes
+// and is never the accent green.
+test('selected text swaps the page ink and ground in each theme', async ({ page }) => {
+  await page.goto('/');
+  for (const colorScheme of ['dark', 'light'] as const) {
+    await page.emulateMedia({ colorScheme });
+    const colours = await page.evaluate(() => {
+      const page = getComputedStyle(document.body);
+      const picked = getComputedStyle(document.body, '::selection');
+      const root = getComputedStyle(document.documentElement);
+      return {
+        ink: root.getPropertyValue('--text-primary').trim(),
+        ground: root.getPropertyValue('--surface-page').trim(),
+        selectionBackground: picked.backgroundColor,
+        selectionInk: picked.color,
+        pageInk: page.color,
+        pageGround: page.backgroundColor,
+      };
+    });
+    expect(colours.selectionBackground).toBe(colours.pageInk);
+    expect(colours.selectionInk).not.toBe(colours.selectionBackground);
+    expect(colours.selectionInk).toBe(colours.pageGround);
+  }
+});

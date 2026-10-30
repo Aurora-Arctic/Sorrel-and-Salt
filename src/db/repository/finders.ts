@@ -178,7 +178,9 @@ export function findPageCountInTiers<
  * `workspace_id`, so its coven and visibility come from the parent through a correlated `EXISTS`.
  */
 export function findPageInReadableSpells<
-  TTable extends PgTable & Identified & (typeof spells | (SpellScoped & Unscoped)),
+  TTable extends PgTable &
+    Identified &
+    (typeof spells | (SpellScoped & Unscoped & NotVisibilityScoped)),
   Carried extends object,
 >(
   membership: Membership,
@@ -201,7 +203,9 @@ export function findPageInReadableSpells<
  * under the same `readableSpells` rule, so a private spell never reaches another member's count.
  */
 export function findPageCountInReadableSpells<
-  TTable extends PgTable & Identified & (typeof spells | (SpellScoped & Unscoped)),
+  TTable extends PgTable &
+    Identified &
+    (typeof spells | (SpellScoped & Unscoped & NotVisibilityScoped)),
 >(
   membership: Membership,
   table: TTable,

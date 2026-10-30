@@ -70,14 +70,22 @@ vi.mock('@/modules/ingredients', async (importActual) => ({
 
 // The form is its own tests'; here only which ways out of it lead where.
 vi.mock('@/components/IngredientForm', () => ({
-  default: ({ onSaved, onCancel }: { onSaved: (saved: unknown) => void; onCancel: () => void }) => (
+  default: ({
+    onSaved,
+    onCancel,
+  }: {
+    onSaved: (saved: unknown) => void;
+    onCancel?: () => void;
+  }) => (
     <form aria-label="Fixture Form">
       <button type="button" onClick={() => onSaved({ slug: 'testwort' })}>
         Save
       </button>
-      <button type="button" onClick={onCancel}>
-        Cancel
-      </button>
+      {onCancel && (
+        <button type="button" onClick={onCancel}>
+          Cancel
+        </button>
+      )}
     </form>
   ),
 }));
@@ -101,7 +109,7 @@ vi.mock('@/components/CupboardEntryForm', () => ({
   }) => (
     <form aria-label={`Annotate ${ingredientId}, ${compendium.name}, ${overrides.label}`}>
       <button type="button" onClick={onDone}>
-        Cancel
+        Save
       </button>
     </form>
   ),
@@ -121,6 +129,8 @@ const row = (id: string, name: string, workspaceId: string | null) => ({
   toxic: false,
   safetyNotes: null,
   deletedAt: null,
+  revision: 1,
+  updatedAt: new Date('2026-03-04T05:06:07.000Z'),
 });
 
 const NO_FACETS = {
@@ -333,14 +343,16 @@ describe("the coven Ingredients page's edit dialog", () => {
     await expect(renderPage({ edit: 'a1' })).rejects.toThrow('connection lost');
   });
 
-  it('goes back to the filtered list on a save, fetched again, and on Cancel', async () => {
+  it('goes back to the filtered list on a save, fetched again, and on Close, with no Cancel button', async () => {
     await renderPage({ source: 'local', edit: 'a1' });
     fireEvent.click(within(editDialog()!).getByRole('button', { name: 'Save' }));
     expect(router.replace.mock.lastCall?.[0]).toBe(FILTERED_HREF);
     expect(router.refresh).toHaveBeenCalled();
 
-    fireEvent.click(within(editDialog()!).getByRole('button', { name: 'Cancel' }));
-    expect(router.replace.mock.lastCall?.[0]).toBe(FILTERED_HREF);
+    expect(within(editDialog()!).queryByRole('button', { name: 'Cancel' })).toBeNull();
+    router.replace.mockClear();
+    fireEvent.click(within(editDialog()!).getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(router.replace.mock.lastCall?.[0]).toBe(FILTERED_HREF));
   });
 });
 
@@ -559,7 +571,7 @@ describe("the coven Ingredients page's details modal", () => {
     expect(router.replace.mock.lastCall?.[0]).toBe(FILTERED_HREF);
   });
 
-  it('opens the edit modal over the details, and a save or Cancel goes back to the details, fetched again', async () => {
+  it('opens the edit modal over the details, and a save or Close goes back to the details, fetched again', async () => {
     await renderPage({ source: 'local', entry: 'a1', edit: 'a1' });
     expect(details('Testwort')).toBeInTheDocument();
     fireEvent.click(within(editDialog()!).getByRole('button', { name: 'Save' }));
@@ -567,8 +579,12 @@ describe("the coven Ingredients page's details modal", () => {
     // Fetched again, so the list and the details beneath both show the save.
     expect(router.refresh).toHaveBeenCalled();
 
-    fireEvent.click(within(editDialog()!).getByRole('button', { name: 'Cancel' }));
-    expect(router.replace.mock.lastCall?.[0]).toBe(`${FILTERED_HREF}&entry=a1`);
+    expect(within(editDialog()!).queryByRole('button', { name: 'Cancel' })).toBeNull();
+    router.replace.mockClear();
+    fireEvent.click(within(editDialog()!).getByRole('button', { name: 'Close' }));
+    await waitFor(() =>
+      expect(router.replace.mock.lastCall?.[0]).toBe(`${FILTERED_HREF}&entry=a1`),
+    );
   });
 });
 
@@ -660,9 +676,9 @@ describe("the coven Ingredients page's Annotate dialog", () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('goes back to the filtered list on Cancel', async () => {
+  it('goes back to the filtered list on Close', async () => {
     await renderPage({ source: 'local', annotate: 'b2' });
-    fireEvent.click(within(annotateDialog()!).getByRole('button', { name: 'Cancel' }));
+    fireEvent.click(within(annotateDialog()!).getByRole('button', { name: 'Close' }));
     // The form closes the modal through its own close, which fades out first.
     await waitFor(() => expect(router.replace.mock.lastCall?.[0]).toBe(FILTERED_HREF));
   });

@@ -638,6 +638,27 @@
       "when": 1793296938677,
       "tag": "0090_retire-endangered-entries",
       "breakpoints": true
+    },
+    {
+      "idx": 91,
+      "version": "7",
+      "when": 1793317070543,
+      "tag": "0091_spell-workings",
+      "breakpoints": true
+    },
+    {
+      "idx": 92,
+      "version": "7",
+      "when": 1793317071544,
+      "tag": "0092_ingredients-revision",
+      "breakpoints": true
+    },
+    {
+      "idx": 93,
+      "version": "7",
+      "when": 1793339120442,
+      "tag": "0093_cupboard-entries-revision",
+      "breakpoints": true
     }
   ]
 }

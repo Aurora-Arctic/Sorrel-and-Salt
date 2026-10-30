@@ -1,5 +1,5 @@
 import 'server-only';
-import { findManyInSpell, findOneSpell, withAudit } from '../../../db/repository';
+import { findManyByIds, findManyInSpell, findOneSpell, withAudit } from '../../../db/repository';
 import { spells } from '../schema/spells';
 import { spellSteps } from '../schema/spell-steps';
 import { checkRecipe, writeRecipe } from './recipe';
@@ -9,10 +9,11 @@ import {
   SpellInput as SpellInputSchema,
   UpdateSpellInput as UpdateSpellInputSchema,
 } from '../validation/spell';
-import { NotFound } from '../../../lib/errors';
+import { Forbidden, NotFound } from '../../../lib/errors';
 import { parseInput, RowId } from '../../../lib/validation';
 import type { Session } from '../../../lib/session';
 import { assertMembership, type Membership } from '@/modules/coven';
+import { categories } from '@/modules/vocabulary/schema/categories';
 import type {
   SpellInput,
   SpellRow,
@@ -102,9 +103,10 @@ export async function createSpell(
  * Saves a spell: the fields it names, each left out unchanged, the whole recipe in order when it names its steps, and the whole
  * assigned set when it names its categories. A save against a revision the spell has moved past is refused, and null overwrites.
  * A complete spell's visibility only widens, as `setSpellVisibility` holds it; a draft's moves either way.
+ * A complete spell never goes back to a draft: a change to it goes through a copy (`duplicateSpell`).
  *
  * @throws {Forbidden} the caller may not write this coven's grimoire, or the
- * save narrows a shared complete spell.
+ * save narrows a shared complete spell or names a complete spell a draft.
  * @throws {NotFound} no such spell here, or none this caller may read.
  * @throws {ValidationError} the input breaks a rule, names a step this spell
  * has no live row for, links an ingredient this coven may not lay, or names
@@ -121,6 +123,11 @@ export async function updateSpell(
   const parsed = parseInput(UpdateSpellInputSchema, input);
   const current = await readableSpell(membership, spellId);
   if (parsed.visibility) assertWidens(current, parsed.visibility);
+  if (current.status === 'complete' && parsed.status === 'draft') {
+    throw new Forbidden(
+      'A complete spell cannot go back to a draft. Duplicate it to get a draft copy.',
+    );
+  }
 
   const existing = parsed.steps ? await findManyInSpell(membership, spellSteps, spellId) : [];
   if (parsed.steps) await checkRecipe(membership, parsed.steps, existing);
@@ -211,7 +218,78 @@ export async function deleteSpell(
     // next write takes away. One transaction, so a spell that is gone by then
     // (deleted in between) takes the steps' tombstones back with it.
     await write.softDeleteStepsOfSpell(membership, spellId);
+    // The workings the same way; their participant and deduction rows have no tombstone and go hidden with them.
+    await write.softDeleteWorkingsOfSpell(membership, spellId);
     const [spell] = await write.softDeleteSpell(membership, spellId);
     if (!spell) throw new NotFound('No such spell in this coven');
+  });
+}
+
+/** The suffix a copy's title carries, so the two read apart in the grimoire. */
+const COPY_SUFFIX = ' (Copy)';
+
+/**
+ * Copies a spell into a new one in the same coven, for a variation that leaves the original as it
+ * is. The copy is a private draft the caller wrote, titled for the original's, holding its fields,
+ * the categories it is assigned and its live steps in order. Workings, the revision count and
+ * history stay behind. The spell, its categories and its steps are written in one transaction.
+ *
+ * The recipe is copied as it stands and not checked again: an ingredient deleted since is still
+ * what the original lays, as it is on the original (claude-docs/db/spell-visibility.md, "What a
+ * spell holds"). A category deleted since is not carried over.
+ *
+ * @throws {Forbidden} the caller may not create in this coven's grimoire.
+ * @throws {NotFound} no such spell here, or none this caller may read.
+ */
+export async function duplicateSpell(
+  session: Session,
+  workspaceId: string,
+  spellId: string,
+): Promise<SpellRow> {
+  const membership = await assertMembership(session, workspaceId, { spell: ['create'] });
+  if (!RowId.safeParse(spellId).success) throw new NotFound('No such spell in this coven');
+  const source = await readableSpell(membership, spellId);
+  const steps = await findManyInSpell(membership, spellSteps, spellId);
+  const liveCategories = await findManyByIds(categories, await heldCategories(membership, spellId));
+
+  return withAudit(session, async (write) => {
+    const [spell] = await write.insertInWorkspace(
+      membership,
+      spells,
+      spellColumns({
+        title: source.title === null ? null : `${source.title}${COPY_SUFFIX}`,
+        intent: source.intent,
+        jarDescription: source.jarDescription,
+        sealWaxColor: source.sealWaxColor,
+        moonPhase: source.moonPhase,
+        dayOfWeek: source.dayOfWeek,
+        note: source.note,
+        status: 'draft',
+        visibility: 'private',
+      }),
+    );
+    await writeRecipe(
+      write,
+      spell.id,
+      [...steps]
+        .sort((a, b) => a.position - b.position)
+        .map((step) => ({
+          body: step.body,
+          ingredientId: step.ingredientId,
+          variantId: step.variantId,
+          name: step.name,
+          form: step.form,
+          quantity: step.quantity === null ? null : Number(step.quantity),
+          unit: step.unit,
+        })),
+      [],
+    );
+    await writeCategories(
+      write,
+      spell.id,
+      liveCategories.map((category) => category.id),
+      [],
+    );
+    return spell;
   });
 }

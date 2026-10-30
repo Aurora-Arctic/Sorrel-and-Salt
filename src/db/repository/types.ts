@@ -20,6 +20,9 @@ import type { references } from '../../modules/ingredients/schema/references';
 import type { workspaceCompendiumEntries } from '../../modules/ingredients/schema/workspace-compendium-entries';
 import type { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
 import type { spellSteps } from '../../modules/grimoire/schema/spell-steps';
+import type { spellWorkingDeductions } from '../../modules/grimoire/schema/spell-working-deductions';
+import type { spellWorkingParticipants } from '../../modules/grimoire/schema/spell-working-participants';
+import type { spellWorkings } from '../../modules/grimoire/schema/spell-workings';
 import type { GRIMOIRE_ORDERS, spells } from '../../modules/grimoire/schema/spells';
 import type { Membership, WorkspaceRole } from '@/modules/coven';
 import type { Curator, SiteAdmin } from '@/modules/identity';
@@ -395,6 +398,19 @@ export interface AuditWriter {
     values: Partial<WritableInWorkspace<TTable>>,
   ): Promise<TTable['$inferSelect'][]>;
   /**
+   * `updateByIdInCompendium` for a table carrying `revision`, with `updateRevisioned`'s contract: a live compendium row that has moved
+   * past `expectedRevision` throws `StaleWrite`, `null` writes whatever the row holds, and no live compendium row answers `[]`.
+   */
+  updateRevisionedInCompendium<
+    TTable extends PgTable & TwoTier & Generic & Identified & Revisioned,
+  >(
+    curator: Curator,
+    table: TTable,
+    id: string,
+    expectedRevision: number | null,
+    values: Partial<WritableInWorkspace<TTable>>,
+  ): Promise<TTable['$inferSelect'][]>;
+  /**
    * Sets the review mark of the one live compendium entry: with `reviewed`, by `curator`, now, in one statement that keeps a mark the entry
    * already has (the original date and reviewer stand); without it, clears the mark. The only writer of those two columns.
    */
@@ -539,6 +555,16 @@ export interface AuditWriter {
   /** The proof's coven's live jars of its ingredient `ingredientId`, locked in jar-id order. */
   lockJarsOfIngredient(membership: Membership, ingredientId: string): Promise<StockRow[]>;
   /**
+   * Takes up to `amount` (in the jar's own unit) out of the proof's coven's live jar, never below zero, and returns what it took: the one path that
+   * decrements stock, so a completed working's deduction joins the working's transaction and cannot race another (M13.5). The jar is locked first,
+   * so the amount read is the amount written. A jar kept without an amount, or not the coven's, gives `taken: 0`.
+   */
+  decrementStock(
+    membership: Membership,
+    inventoryItemId: string,
+    amount: number,
+  ): Promise<{ taken: number }>;
+  /**
    * The live steps, in live spells of the proof's coven, that lay any of these forms, locked in step-id order until the transaction ends:
    * what a convert moves and checks for a spell that would hold one form twice. Private spells included; another coven's steps never.
    */
@@ -562,6 +588,25 @@ export interface AuditWriter {
    * already deleted. The reader's rule is in the WHERE; its steps are `softDeleteStepsOfSpell`'s.
    */
   softDeleteSpell(membership: Membership, spellId: string): Promise<SpellRow[]>;
+  /**
+   * Marks a working complete, stamped from the session, and answers the row, or `[]` for a working the proof cannot reach or one
+   * already complete (the draft check is in the UPDATE, so two completions cannot both land).
+   */
+  completeWorking(membership: Membership, workingId: string): Promise<WorkingRow[]>;
+  /**
+   * Replaces a working's participants with these, in this order, and answers the rows written, or `[]` for a working the proof
+   * cannot reach. The table keeps no tombstone, so the old rows are removed.
+   */
+  replaceWorkingParticipants(
+    membership: Membership,
+    workingId: string,
+    participants: readonly WorkingParticipantValue[],
+  ): Promise<WorkingParticipantRow[]>;
+  /**
+   * Marks every live working of one of the proof's coven's spells deleted, whoever recorded it and whatever its visibility, stamped
+   * from the session; called beside `softDeleteSpell` in its transaction.
+   */
+  softDeleteWorkingsOfSpell(membership: Membership, spellId: string): Promise<WorkingRow[]>;
   /**
    * Marks a spell's live steps deleted, stamped from the session, and answers them. Scoped through
    * the spell to the proof's coven; called beside `softDeleteSpell` in its transaction, never alone.
@@ -939,6 +984,19 @@ export type VariantRow = typeof ingredientVariants.$inferSelect;
 /** One `spell_steps` row, a step of a spell, as the writer reads it. */
 export type SpellStepRow = typeof spellSteps.$inferSelect;
 export type SpellRow = typeof spells.$inferSelect;
+export type WorkingRow = typeof spellWorkings.$inferSelect;
+export type WorkingParticipantRow = typeof spellWorkingParticipants.$inferSelect;
+export type WorkingDeductionRow = typeof spellWorkingDeductions.$inferSelect;
+/** How many workings a spell has. */
+export interface WorkingCount {
+  spellId: string;
+  count: number;
+}
+/** One participant as a write names them: a coven member, or a typed name. */
+export interface WorkingParticipantValue {
+  userId?: string;
+  name?: string;
+}
 
 /** A redirect from a slug an entry moved off: the entry, at its current slug, and when it ends. */
 export interface SlugRedirect {

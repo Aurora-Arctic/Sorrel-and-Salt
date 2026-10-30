@@ -121,3 +121,11 @@
     }
   }
 }
+
+// An entry for a section that stands under the text on a narrow window and beside it on a wide one
+// has no place in the menu once it is beside it.
+@media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+  .page-nav .page-nav__narrow {
+    display: none;
+  }
+}

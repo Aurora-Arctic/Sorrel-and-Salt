@@ -15,6 +15,7 @@ import { invitationWrites } from './invitations';
 import { membershipWrites, workspaceWrites } from './memberships';
 import { spellStepWrites } from './spells';
 import { stockWrites } from './stock';
+import { workingWrites } from './workings';
 import { existsIn, selectFrom } from './select';
 import { StaleWrite } from '@/lib/errors';
 import type { Membership } from '@/modules/coven';
@@ -134,6 +135,8 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
       insert(table, { ...values, workspaceId: null }),
     updateByIdInCompendium: (_curator, table, id, values) =>
       update(table, values, inCompendiumById(table, id)),
+    updateRevisionedInCompendium: (_curator, table, id, expectedRevision, values) =>
+      updateAtRevision(table, inCompendiumById(table, id), expectedRevision, values),
     // coalesce keeps a mark the entry already has, in the one statement, so two
     // curators switching it on together leave the first's date and name.
     setReviewInCompendium: (curator, id, reviewed) =>
@@ -214,6 +217,7 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
     ...membershipWrites(context),
     ...spellStepWrites(context),
     ...stockWrites(context),
+    ...workingWrites(context),
     ...workspaceWrites(context),
     delete: (table, match) => {
       const where = matching(table, match);

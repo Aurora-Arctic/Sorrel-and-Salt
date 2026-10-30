@@ -1,9 +1,8 @@
 'use client';
 
 import type { ReactElement, ReactNode } from 'react';
-import { JarDrawing, pickJarShape } from '../JarShelf';
+import JarLine from '../JarLine';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
-import { StockJarButton } from '../StockDialog';
 import type { StockDialogProps } from '../StockDialog/types';
 import { stockState } from '../StockBadge/stock-state';
 import { amountText } from '../StockBadge/stock-words';
@@ -14,11 +13,6 @@ import { isInstruction, stepNameOf } from './steps/values';
 
 // In Coven Inventory: one line per form, at its first step's place, setting `needOf` against the jar's `supplyOf`, with a `VerdictMark` and `doorsOf` doors; used by the recipe page alone
 // (claude-docs/components/spell-recipe.md, "The side column" and "The inventory panel").
-
-// A one-off holds no stock, but its jar is drawn with something in it, as a stocked jar is: an
-// unmeasured jar stands at the middling level, in muted ink (index.scss). The One-Off badge says
-// why.
-const ONE_OFF_HELD = { quantity: null, threshold: null };
 
 /** What a line opens, where the page offers it: the Quick Look eye, and the Edit Stock dialog. */
 export interface LineDoors {
@@ -63,53 +57,48 @@ function HoldLine({
   doors?: LineDoors;
 }): ReactElement {
   const { parts, verdict } = holdWords(step, steps);
-  const name = stepNameOf(step);
   const oneOff = step.ingredientId === null;
   const jar = step.jar;
+  const edit = doors?.edit;
   // The form only picks the vessel's shape here; it is not shown.
   const { form: formKey } = step;
-  // A form with no jar is drawn as the shelf draws one, dashed.
-  const state = jar ? stockState(jar.quantity, jar.threshold) : 'empty';
-  const modifier = oneOff || state === 'ok' ? '' : `jar-shelf__jar--${state}`;
   return (
-    <li className={`spell-inventory__line${oneOff ? ' is-one-off' : ''}`}>
-      <span className={`spell-inventory__jar ${modifier}`}>
-        <JarDrawing shape={pickJarShape(seed, formKey ?? '')} held={oneOff ? ONE_OFF_HELD : jar} />
-      </span>
-      <span className="spell-inventory__title">
-        {doors?.edit ? (
-          // The button is the name, stretched over the jar by its `::after`; the eye and the
-          // verdict are raised above the stretch to keep their own press.
-          <StockJarButton
-            {...doors.edit}
-            ariaLabel={['Edit Stock', doors.edit.ingredientName, step.form && formLabel(step.form)]
-              .filter(Boolean)
-              .join(', ')}
-            className="spell-inventory__press"
-          >
-            <span className="spell-inventory__name">{name}</span>
-          </StockJarButton>
-        ) : (
-          <span className="spell-inventory__name">{name}</span>
-        )}
-      </span>
-      {/* The eye in a column of its own at the line's right, so it stands in one place down the
-          list whatever the name's length. */}
-      {doors?.look && <span className="spell-inventory__look">{doors.look}</span>}
-      <span className="spell-inventory__words">
-        {/* The verdict's mark opens the words it is about: the need and the have. */}
-        {verdict && <VerdictMark kind={verdict} />}
-        <span>{parts.join(' · ')}</span>
-      </span>
-    </li>
+    <JarLine
+      seed={seed}
+      kind={formKey ?? ''}
+      held={jar}
+      // A form with no jar is drawn as the shelf draws one, dashed.
+      tone={jar ? stockState(jar.quantity, jar.threshold) : 'empty'}
+      oneOff={oneOff}
+      name={stepNameOf(step)}
+      press={
+        edit && {
+          ...edit,
+          ariaLabel: ['Edit Stock', edit.ingredientName, step.form && formLabel(step.form)]
+            .filter(Boolean)
+            .join(', '),
+        }
+      }
+      look={doors?.look}
+      words={
+        <>
+          {/* The verdict's mark opens the words it is about: the need and the have. */}
+          {verdict && <VerdictMark kind={verdict} />}
+          <span>{parts.join(' · ')}</span>
+        </>
+      }
+    />
   );
 }
 
 export function InCovenInventory({
   steps,
   doorsOf,
+  id,
 }: {
   steps: readonly SpellStepValue[];
+  /** The section's id, for a jump link; the recipe page gives one. */
+  id?: string;
   /** A line's doors, where the page offers them. */
   doorsOf?: (step: SpellStepValue) => LineDoors | undefined;
 }): ReactElement {
@@ -122,7 +111,7 @@ export function InCovenInventory({
       ingredients.findIndex((other) => other.variantId === step.variantId) === index,
   );
   return (
-    <section className="spell-inventory" aria-labelledby="spell-inventory-heading">
+    <section id={id} className="spell-inventory" aria-labelledby="spell-inventory-heading">
       <h2 id="spell-inventory-heading">In Coven Inventory</h2>
       {lines.length === 0 ? (
         <p className="spell-aside__empty">Nothing in the jar yet.</p>

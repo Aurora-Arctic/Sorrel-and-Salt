@@ -45,6 +45,7 @@ describe('viewerOf', () => {
     const { viewer } = await viewerOf();
 
     expect(viewer).toEqual({
+      id: 'u1',
       name: 'Fixture Member',
       canCurate: true,
       canCreate: false,

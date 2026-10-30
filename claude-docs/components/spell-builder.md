@@ -21,7 +21,7 @@ no `instructions` field: the ritual is the spell's steps (M13.1).
 
 ## Delete
 
-On a saved spell, `SpellDialog` given `canDelete` (a role that may delete) passes the builder a `deletedHrefOf(title)`; the builder then draws Delete Spell in `FormActions` (M13.11, owner's call 2026-10-29, as the ingredient Edit dialog has Delete Ingredient). It opens a `ConfirmQuestion` naming the spell, "It leaves the grimoire for every member of the coven". Confirmed, it sends `deleteSpell` and replaces the address with the list plus `?deleted=<name>` (`deletedHrefOf` in `SpellRecipe/deleted-href.ts`, shared with the card and Quick Look). A refusal shows in the `Notice`. A `removed` flag, set before the request, turns off the autosave (its timers, focus-out and page-hide flushes) and the save on close, so nothing writes to the deleted spell; a refusal lifts it.
+On a saved spell, `SpellDialog` given `canDelete` (a role that may delete; the grimoire list and the recipe page's edit dialog both give it) passes the builder a `deletedHrefOf(title)`; the builder then draws Delete Spell as the shared bin icon (`BinButton`, accessible name "Delete Spell <name>") in `FormActions`' `aside` slot, at the row's far end (M13.11, owner's call 2026-10-29, as the ingredient Edit dialog has Delete Ingredient). It opens a `ConfirmQuestion` naming the spell, "It leaves the grimoire for every member of the coven". Confirmed, `useDeleteSpell` (`SpellRecipe/delete-spell.tsx`, the same write the recipe page runs) sends `deleteSpell` and replaces the address with the list plus `?deleted=<name>` (from `deletedFromHref` when given, as the recipe page does with its list, else `closeHref`; `deletedHrefOf` in `SpellRecipe/deleted-href.ts`, shared with the card and Quick Look). A refusal shows in the `Notice`. The hook's `pending` (true from the request to the arrival of the list) is `removed`, and turns off the autosave (its timers, focus-out and page-hide flushes) and the save on close, so nothing writes to the deleted spell; a refusal lifts it. The question stays `ConfirmQuestion` over the form: a second `Modal` (the recipe page's `DeleteSpellDialog`) cannot stack over this one.
 
 ## Props
 
@@ -176,8 +176,8 @@ A draft and a complete spell meet it alike, since both save to the one row.
 
 Who can see the spell (M10.13): `SpellVisibilityField`, in
 `visibility-field.tsx`, drawn after Note in the Notes section, whose shut line
-reads Shared or Private for it. It is a `SwitchField`
-([`field.md`](field.md)) labelled Share With the Coven (the owner's call,
+reads Shared or Private for it. It wraps `VisibilitySwitch`
+(`Field`, shared with the Record a Working dialog, [`field.md`](field.md)) labelled Share With the Coven (the owner's call,
 2026-10-27): on is the coven (`workspace`), which every member can see, and
 off is private (`private`), which only its author can. A line under the
 switch, its `note`, says what the state it is in means. The switch stands at the start of its column, its label and note too, as the
@@ -227,9 +227,8 @@ With the Coven, a click saves the whole form with the status `complete` at once,
 the status is never a pick left pending. A complete spell shows no button and
 no sentence (the owner, 2026-10-29); the missing button and the locked Visibility switch carry the state. Once
 complete, its workings are recorded against it and its visibility lock has
-started, so reopening would undo both. M13.20's copy (Duplicate a Spell) will
-add a Copy as Draft button here; it is the way to vary a complete spell. The
-service still accepts complete to draft for now; only this control dropped it.
+started, so reopening would undo both. The Duplicate button below is the way
+to vary a complete spell, and the service refuses complete to draft too.
 
 - **A new spell** is a draft (`valuesOf` reads a missing status as one).
 - **A blank title** is refused before anything is sent: the form holds the asked-for status while it validates, so the schema's rule shows it on the title field,
@@ -465,7 +464,7 @@ once each and sorted by name.
 - **Carried** is each intended category the jar carries; **Missing** each assigned category nothing
   in the jar carries; **Extra** each category the jar carries that was not assigned. The row is its chips and nothing
   else: no line, tip or other place names the ingredients that bring an extra category (the owner's
-  call, 2026-10-28).
+  call, 2026-10-28). The Extra row has no bound, so it draws its first eight chips and folds the rest into one +N chip, `CategoryChips`' own (`limit={EXTRA_CHIP_LIMIT}`, 8; the owner, 2026-10-30): the +N opens the panel of the remaining chips on hover, focus or tap, as it does on the ingredient card. Carried and Missing keep every chip, since each is bounded by the spell's assigned categories. The panel is one component, so the builder, the spell page's side column and the Quick Look all fold alike. `tests/components/SpellBuilder/comparison-panel.test.tsx` proves eight chips and a +N at nine, and no +N at eight.
   The words carry the difference; the chips are coloured by group, as they are everywhere. On 2026-10-29 the owner chose the group colours over the second design review's finding 6a (neutral chips), so the review is not current on this point. The review's spacing stays: the chips are the compact size (`CategoryChips` with `compact`, which applies `chip($size: compact)`: overline text, 0.4375rem side padding), the row labels are the 5.5rem caption column, and rows are `space(2)` apart.
 - With none of the three, it reads "Intent and ingredients match." With no category assigned the
   panel does not list every ingredient as an extra: it asks for categories first. With nothing
@@ -634,7 +633,7 @@ The builder autosaves (`./autosave.ts`): a change saves 3 s after the last, Save
 
 **Status.** A spell is a draft until it is marked complete. A draft shows one button, Mark Complete. A click saves everything the form holds as complete, as Share With the Coven does, so the status is never a pick left pending. A complete spell needs a title (a database CHECK), so its absence is said on the title field before anything is sent. Marking complete flushes the autosave with the other status, which carries every unsaved change in the same save.
 
-A complete spell shows its statement and no button: there is no Reopen as Draft. Once complete, a spell's workings are recorded against it and its visibility lock has started, so reopening would undo both. To vary a complete spell, the copy (Duplicate a Spell) is the way. This is the control only: the service still accepts complete to draft.
+A complete spell shows its statement and no button: there is no Reopen as Draft. Once complete, a spell's workings are recorded against it and its visibility lock has started, so reopening would undo both. To vary a complete spell, the copy (Duplicate a Spell) is the way. A complete spell has a **Duplicate** button here instead, for a member who may create a spell: it saves the form, calls `duplicateSpell` and opens the copy in the Drafts tab's builder (`?edit=<id>`). The service refuses complete to draft as well (M13.20, amended 2026-10-29 by the owner).
 
 **Visibility.** A spell is seen by its author alone, or by every member of the coven. The control is a switch, Share With the Coven, on for the coven and off for private, with a line under it saying what its state means. A new spell starts private, because the autosave would otherwise share it 3 s after the first keystroke. It takes either, and the choice goes out with its first save.
 

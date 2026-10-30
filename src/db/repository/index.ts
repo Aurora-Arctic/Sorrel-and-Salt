@@ -28,6 +28,15 @@ export {
   findOneSpell,
 } from './spells';
 export {
+  findCompleteWorkingCounts,
+  findDeductionsOfWorkings,
+  findOneWorking,
+  findParticipantsOfWorkings,
+  findWorkingsInSpell,
+  findWorkingsPage,
+  isParticipantOfWorking,
+} from './workings';
+export {
   findGrimoireCategoryCounts,
   findGrimoireCount,
   findGrimoireFacetCounts,
@@ -129,6 +138,11 @@ export { findOpenAdminRoleChangePause } from './admin-roles';
 export { deleteProvisionalUsers } from './provisional-users';
 export type { PrivilegeDeclaration, PrivilegeRoute } from '../types';
 export type {
+  WorkingCount,
+  WorkingDeductionRow,
+  WorkingParticipantRow,
+  WorkingParticipantValue,
+  WorkingRow,
   AstrologyList,
   AstrologyValueFilter,
   AstrologyVocabulary,

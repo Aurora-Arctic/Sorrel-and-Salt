@@ -128,7 +128,7 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
   await assertNoAccessibilityViolations(page);
   await choose('Annotate');
   await assertNoAccessibilityViolations(page);
-  await dialog.getByRole('button', { name: 'Cancel' }).click();
+  await dialog.getByRole('button', { name: 'Close' }).click();
   await expect(dialog).toBeHidden();
   // Closed with nothing changed, the dialog gives the focus back to the Annotate icon where
   // the press began.

@@ -24,9 +24,11 @@ vi.mock('@/components/IngredientForm', () => ({
   default: ({
     workspaceId,
     onSaved,
+    onCancel,
     duplicateHref,
     entryHref,
   }: {
+    onCancel?: () => void;
     workspaceId: string | null;
     duplicateHref: (match: { id: string }) => string;
     entryHref: (entry: { slug: string; isGlobal: boolean }) => string | undefined;
@@ -36,6 +38,11 @@ vi.mock('@/components/IngredientForm', () => ({
     ) => void;
   }) => (
     <form aria-label="Ingredient Form" data-workspace={workspaceId}>
+      {onCancel && (
+        <button type="button" onClick={onCancel}>
+          Cancel
+        </button>
+      )}
       <a href={duplicateHref({ id: 'near-id' })}>Near Match</a>
       <a href={entryHref({ slug: 'testwort', isGlobal: true })}>Compendium Substitute</a>
       <a href={entryHref({ slug: 'mine', isGlobal: false })}>Own Substitute</a>
@@ -391,6 +398,15 @@ describe('AddIngredientButton', () => {
       expect(window.location.search).toBe('?query=rose');
       expect(screen.getByRole('button', { name: 'Add Ingredient' })).toHaveFocus();
     });
+  });
+
+  it('has no Cancel button, and closes from its close button', async () => {
+    draw(MEMBER, [FIXTURE]);
+    open();
+
+    expect(within(screen.getByRole('dialog')).queryByRole('button', { name: 'Cancel' })).toBeNull();
+    press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Close' }));
+    await closed();
   });
 
   it('renders nothing when no coven can be written to', () => {

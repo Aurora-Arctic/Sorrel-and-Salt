@@ -79,9 +79,10 @@ export const COVEN_STOCK_LOCK_NAMESPACE = 0x53544b31;
  */
 export function stockWrites({
   tx,
+  update,
 }: WriterContext): Pick<
   AuditWriter,
-  'lockCovenStock' | 'lockJarsOfIngredient' | 'lockLiveVariants'
+  'lockCovenStock' | 'lockJarsOfIngredient' | 'lockLiveVariants' | 'decrementStock'
 > {
   return {
     // An advisory lock, not a row lock: a write moving or counting jars and a create adding one share no row to lock. Taken
@@ -108,6 +109,29 @@ export function stockWrites({
         ),
         { lockIn: tx, lockOrder: ingredientVariants.id },
       ),
+    decrementStock: async (membership, inventoryItemId, amount) => {
+      const [jar] = await selectFrom(
+        inventoryItems,
+        and(
+          scopedTo(membership, inventoryItems),
+          notSoftDeleted(inventoryItems),
+          eq(inventoryItems.id, inventoryItemId),
+        ),
+        { lockIn: tx, lockOrder: inventoryItems.id },
+      );
+      if (!jar || jar.quantityOnHand == null) return { taken: 0 };
+      // Thousandths, the column's scale, so the subtraction is exact.
+      const held = Math.round(Number(jar.quantityOnHand) * 1000);
+      const taken = Math.min(Math.max(Math.round(amount * 1000), 0), held);
+      if (taken > 0) {
+        await update(
+          inventoryItems,
+          { quantityOnHand: ((held - taken) / 1000).toFixed(3) },
+          eq(inventoryItems.id, jar.id),
+        );
+      }
+      return { taken: taken / 1000 };
+    },
     lockJarsOfIngredient: (membership, ingredientId) =>
       selectFrom(
         inventoryItems,

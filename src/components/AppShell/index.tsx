@@ -3,6 +3,7 @@ import type { ReactElement } from 'react';
 import { covenHome } from '../../lib/shell-home';
 import AccountMenu from '../AccountMenu';
 import ThemeToggle from '../ThemeToggle';
+import { ViewerIdProvider } from '../../lib/viewer-id';
 import AddIngredientButton from './add-ingredient-button';
 import BrandName from './brand-name';
 import MainBody from './main-body';
@@ -17,21 +18,20 @@ import './index.scss';
 
 const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement => {
   // The Compendium is public, so its link is everyone's, an unverified account's
-  // included: it leads to a page that never sends them to the email page. The other
-  // two are for a verified curator or admin.
+  // included: it leads to a page that never sends them to the email page. Your Coven is a
+  // verified account's who belongs to a coven, or who curates (a curator or admin in none
+  // is sent to /coven). Admin is a verified curator's or admin's alone.
   const compendium: SiteLink = { label: 'Compendium', href: '/compendium', base: '/compendium' };
-  const links: SiteLink[] =
-    viewer.verified && viewer.canCurate
-      ? [
-          compendium,
-          {
-            label: workspaces.length > 1 ? 'Your Covens' : 'Your Coven',
-            href: covenHome(workspaces),
-            base: '/coven',
-          },
-          { label: 'Admin', href: '/admin', base: '/admin' },
-        ]
-      : [compendium];
+  const curates = viewer.verified && viewer.canCurate;
+  const links: SiteLink[] = [compendium];
+  if (viewer.verified && (workspaces.length > 0 || viewer.canCurate)) {
+    links.push({
+      label: workspaces.length > 1 ? 'Your Covens' : 'Your Coven',
+      href: covenHome(workspaces),
+      base: '/coven',
+    });
+  }
+  if (curates) links.push({ label: 'Admin', href: '/admin', base: '/admin' });
   const brand = <BrandName block="app-shell" />;
 
   return (
@@ -77,7 +77,9 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
           click, and the next Tab would restart at the top of the page. */}
       <span id="main" className="skip-target" tabIndex={-1} />
       <div className="app-shell__main">
-        <MainBody>{children}</MainBody>
+        <ViewerIdProvider id={viewer.id}>
+          <MainBody>{children}</MainBody>
+        </ViewerIdProvider>
       </div>
     </div>
   );

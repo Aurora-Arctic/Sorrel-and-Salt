@@ -189,6 +189,13 @@ const PROBES: Record<string, ScopeProbe> = {
     variables: { id: NOWHERE, workspaceId: WORKSPACE_W_ID },
     outcome: 'refuses',
   },
+  workingDeductionPreview: {
+    source: `query ($workspaceId: ID!, $spellId: ID!) {
+      workingDeductionPreview(workspaceId: $workspaceId, spellId: $spellId) { deductions { stepId } }
+    }`,
+    variables: { workspaceId: WORKSPACE_W_ID, spellId: NOWHERE },
+    outcome: 'refuses',
+  },
   deitySuggestions: suggestion('deitySuggestions'),
   formSuggestions: suggestion('formSuggestions'),
   celestialBodySuggestions: suggestion('celestialBodySuggestions'),
@@ -292,6 +299,14 @@ const NULL_WORKSPACE_PROBES: Record<string, ScopeProbe> = {
     source:
       'query ($id: ID!, $workspaceId: ID!) { spell(id: $id, workspaceId: $workspaceId) { id } }',
     variables: { id: NOWHERE, workspaceId: null },
+    outcome: 'invalid',
+  },
+  // A working is always some coven's spell's.
+  workingDeductionPreview: {
+    source: `query ($workspaceId: ID!, $spellId: ID!) {
+      workingDeductionPreview(workspaceId: $workspaceId, spellId: $spellId) { deductions { stepId } }
+    }`,
+    variables: { workspaceId: null, spellId: NOWHERE },
     outcome: 'invalid',
   },
 };
@@ -452,6 +467,21 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   ),
   deleteSpell: write(
     `mutation { deleteSpell(workspaceId: "${WORKSPACE_W_ID}", id: "${NOWHERE}") }`,
+  ),
+  duplicateSpell: write(
+    `mutation { duplicateSpell(workspaceId: "${WORKSPACE_W_ID}", id: "${NOWHERE}") { id } }`,
+  ),
+  recordWorking: write(
+    `mutation { recordWorking(workspaceId: "${WORKSPACE_W_ID}", spellId: "${NOWHERE}", input: { workedOn: "2026-10-01" }) { id } }`,
+  ),
+  updateWorking: write(
+    `mutation { updateWorking(workspaceId: "${WORKSPACE_W_ID}", id: "${NOWHERE}", input: { workedOn: "2026-10-01" }) { id } }`,
+  ),
+  completeWorking: write(
+    `mutation { completeWorking(workspaceId: "${WORKSPACE_W_ID}", id: "${NOWHERE}") { working { id } } }`,
+  ),
+  deleteWorking: write(
+    `mutation { deleteWorking(workspaceId: "${WORKSPACE_W_ID}", id: "${NOWHERE}") }`,
   ),
   updateReference: write(
     `mutation { updateReference(workspaceId: "${WORKSPACE_W_ID}", id: "${NOWHERE}", input: ${REFERENCE}) { id } }`,
@@ -618,6 +648,14 @@ const OPEN_WRITES = [
   'updateSpell',
   // The coven's `spell: delete` decides, which the spell service checks.
   'deleteSpell',
+  // The coven's `spell: create` decides, which the spell service checks.
+  'duplicateSpell',
+  // The coven's `working: create`, `update` and `delete` decide, which the working service checks; a change or a delete
+  // also needs the recorder, or for a change someone named on the working.
+  'recordWorking',
+  'updateWorking',
+  'completeWorking',
+  'deleteWorking',
 ];
 
 const adminProbe = (field: string): ScopeProbe =>

@@ -32,8 +32,10 @@ function previousListHref(listPaths: readonly string[]): string | undefined {
 function subscribe(onChange: () => void): () => void {
   // An enhancement past the floor, behind the `in` check: without it nothing changes.
   const navigation = 'navigation' in window ? window.navigation : undefined;
-  navigation?.addEventListener('currententrychange', onChange);
-  return () => navigation?.removeEventListener('currententrychange', onChange);
+  // Next writes the history inside an insertion effect, and the event fires from that write; React refuses an update scheduled there, so the notice waits a microtask.
+  const notify = () => queueMicrotask(onChange);
+  navigation?.addEventListener('currententrychange', notify);
+  return () => navigation?.removeEventListener('currententrychange', notify);
 }
 
 /**

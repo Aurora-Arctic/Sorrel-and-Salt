@@ -118,7 +118,10 @@ export interface PublicCupboardProps {
   /** The coven Add Ingredient would choose: the confirmations start on it where it may. */
   defaultWorkspaceId: string;
   /** Where Annotate closes to, plus the coven and annotations the address names when the viewer may annotate there; any other `?annotate` is ignored. */
-  annotate: { closeHref: Route; opened?: { workspaceId: string; overrides: CupboardOverrides } };
+  annotate: {
+    closeHref: Route;
+    opened?: { workspaceId: string; overrides: CupboardOverrides; revision: number | null };
+  };
 }
 
 /** What the client buttons need on the public page: the covens, and the compendium's side of the form. */

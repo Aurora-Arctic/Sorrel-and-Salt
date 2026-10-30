@@ -8,9 +8,11 @@ import {
   chooseChip,
   compendiumVariant,
   graphqlFromPage,
+  insertDeduction,
   insertSpell,
   insertStep,
   insertStock,
+  insertWorking,
   localIngredient,
   openFilters,
   seedCoven,
@@ -466,7 +468,12 @@ test(
     };
     const listPath = `/coven/${coven.slug}/grimoire`;
     const recipePath = `${listPath}/${gone}`;
-    const bin = page.getByRole('button', { name: 'Delete Spell Doomed Working', exact: true });
+    // The three dots in the page's header hold Delete Spell (claude-docs/components/spell-recipe.md).
+    const more = page.getByRole('button', { name: 'More for Doomed Working', exact: true });
+    const openDelete = async () => {
+      await more.click();
+      await page.getByRole('menuitem', { name: /^Delete Spell/ }).click();
+    };
     const question = page.getByRole('dialog', { name: 'Delete Spell', exact: true });
 
     // Why the delete could be refused: B is not the author, and the spell is complete and
@@ -476,18 +483,18 @@ test(
     await expect(page.getByRole('heading', { level: 1, name: 'Doomed Working' })).toBeVisible();
 
     await test.step('the Delete asks first, naming the spell, and Cancel changes nothing', async () => {
-      await bin.click();
+      await openDelete();
       await expect(question).toContainText('Doomed Working');
       await assertNoAccessibilityViolations(page);
       await question.getByRole('button', { name: 'Cancel', exact: true }).click();
 
       await expect(question).toHaveCount(0);
-      await expect(bin).toBeFocused();
+      await expect(more).toBeFocused();
       expect(await deletedAt('spells', gone)).toBeNull();
     });
 
     await test.step('confirmed, the page leaves for the grimoire, which says so, with the focus on its heading', async () => {
-      await bin.click();
+      await openDelete();
       await question.getByRole('button', { name: 'Delete', exact: true }).click();
 
       await expect(page).toHaveURL(/\/grimoire\?deleted=/);
@@ -548,8 +555,9 @@ test(
     await expect(grimoireList(page).getByRole('listitem')).toHaveCount(2);
 
     await grimoireList(page)
-      .getByRole('button', { name: 'Delete Spell Card Doomed Working', exact: true })
+      .getByRole('button', { name: 'More for Card Doomed Working', exact: true })
       .click();
+    await page.getByRole('menuitem', { name: /^Delete Spell/ }).click();
     const question = page.getByRole('dialog', { name: 'Delete Spell', exact: true });
     await expect(question).toContainText('Card Doomed Working');
     await assertNoAccessibilityViolations(page);
@@ -588,7 +596,9 @@ test(
     await signInAgainAs(page, B);
     await page.goto(`${listPath}?edit=${gone}`);
     const edit = page.getByRole('dialog', { name: 'Edit Spell, Builder Doomed Working' });
-    await edit.getByRole('button', { name: 'Delete Spell', exact: true }).click();
+    await edit
+      .getByRole('button', { name: 'Delete Spell Builder Doomed Working', exact: true })
+      .click();
     await expect(page.getByText('Delete Builder Doomed Working?')).toBeVisible();
     await assertNoAccessibilityViolations(page);
     await page.getByRole('button', { name: 'Delete', exact: true }).click();
@@ -636,34 +646,40 @@ test(
   },
 );
 
-test.fixme(
+test(
   'a member records that the coven made a spell, when and with whom',
-  {
-    tag: '@story-76',
-    annotation: {
-      type: 'fixme',
-      description: 'M13.7 builds Record a Working on /coven/[slug]/grimoire/[id]',
-    },
-  },
+  { tag: '@story-76' },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Seventy-Six', 'story-76.test', {
       A: 'owner',
       B: 'member',
     });
     const spellId = await withSql((sql) =>
-      insertSpell(sql, coven.id, 'Fixture Working', 'workspace', coven.users.B),
+      insertSpell(sql, coven.id, 'Fixture Working', 'workspace', coven.users.B, 'complete'),
     );
     await signInAgainAs(page, coven.users.B);
     await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
-    const record = page.getByRole('button', { name: 'Record a Working' });
-    await record.click();
+    const recordButton = page
+      .locator('.spell-recipe__actions')
+      .getByRole('button', { name: 'Record a Working' });
+    await recordButton.click();
     const dialog = page.getByRole('dialog', { name: 'Record a Working' });
     await dialog.getByRole('combobox', { name: 'Participants' }).fill('Fixture A');
     await page.getByRole('option', { name: 'Fixture A' }).click();
-    await dialog.getByRole('button', { name: 'Save' }).click();
-    const workings = page.getByRole('list', { name: 'Workings' });
-    await expect(workings.getByRole('listitem')).toHaveCount(1);
-    await expect(workings.getByRole('listitem').first()).toContainText('Fixture A');
+    await dialog.getByRole('button', { name: 'Save as Draft' }).click();
+    // Save keeps the draft and closes the dialog. The Workings list is M13.8's, so the row is read from the database.
+    await expect(dialog).toBeHidden();
+    await expect(recordButton).toBeFocused();
+    await assertNoAccessibilityViolations(page);
+    const kept = await withSql(
+      (sql) => sql`
+        select w.status, count(p.id)::int as people
+        from spell_workings w
+        left join spell_working_participants p on p.working_id = w.id
+        where w.spell_id = ${spellId}
+        group by w.status`,
+    );
+    expect(kept).toEqual([{ status: 'draft', people: 2 }]);
   },
 );
 
@@ -704,59 +720,169 @@ test(
   },
 );
 
-test.fixme(
+test(
   'completing a working takes what it used out of the coven stock',
-  {
-    tag: '@story-78',
-    annotation: {
-      type: 'fixme',
-      description: 'M13.7 builds the completion preview and Complete on the recipe page',
-    },
-  },
+  { tag: '@story-78' },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Seventy-Eight', 'story-78.test', {
       A: 'owner',
       B: 'member',
     });
-    const spellId = await withSql((sql) =>
-      insertSpell(sql, coven.id, 'Fixture Working', 'workspace', coven.users.B),
-    );
+    const spellId = await withSql(async (sql) => {
+      const held = await compendiumVariant(sql, 'Rosemary', 'Herb');
+      await insertStock(
+        sql,
+        coven.id,
+        held,
+        { quantity: 20, unit: 'g', threshold: 0 },
+        coven.users.A,
+      );
+      const id = await insertSpell(
+        sql,
+        coven.id,
+        'Fixture Working',
+        'workspace',
+        coven.users.B,
+        'complete',
+      );
+      await insertStep(sql, id, held, { quantity: 2, unit: 'g', position: 0 }, coven.users.B);
+      return id;
+    });
     await signInAgainAs(page, coven.users.B);
     await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
-    await page.getByRole('button', { name: 'Record a Working' }).click();
+    await page
+      .locator('.spell-recipe__actions')
+      .getByRole('button', { name: 'Record a Working' })
+      .click();
     const dialog = page.getByRole('dialog', { name: 'Record a Working' });
     await dialog.getByRole('button', { name: 'Complete' }).click();
     // The preview says what will be taken before anything is.
-    await expect(dialog.getByRole('list', { name: 'Deductions' })).toBeVisible();
+    await expect(dialog.getByRole('list', { name: 'Deductions' })).toContainText('2 g');
+    await assertNoAccessibilityViolations(page);
     await dialog.getByRole('button', { name: 'Confirm' }).click();
+    await expect(dialog.getByText('Done')).toBeVisible();
     await page.goto(`/coven/${coven.slug}/ingredients`);
-    await expect(page.getByRole('spinbutton', { name: 'Quantity' }).first()).toHaveValue('18');
+    await expect(page.getByRole('listitem').filter({ hasText: 'Herb' }).first()).toContainText(
+      '18 g',
+    );
   },
 );
 
-test.fixme(
+test(
   "a member sees a spell's workings on its recipe page and how many times it has been made on its card",
-  {
-    tag: '@story-79',
-    annotation: {
-      type: 'fixme',
-      description: 'M13.8 builds the Workings section and the count on the grimoire card',
-    },
-  },
+  { tag: '@story-79' },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Seventy-Nine', 'story-79.test', {
       A: 'owner',
       B: 'member',
     });
-    const spellId = await withSql((sql) =>
-      insertSpell(sql, coven.id, 'Fixture Working', 'workspace', coven.users.B),
-    );
-    await signInAgainAs(page, coven.users.B);
+    const { A, B } = coven.users;
+    const spellId = await withSql(async (sql) => {
+      const rosemary = await compendiumVariant(sql, 'Rosemary', 'Herb');
+      const jar = await insertStock(
+        sql,
+        coven.id,
+        rosemary,
+        { quantity: 20, unit: 'g', threshold: 0 },
+        A,
+      );
+      const id = await insertSpell(sql, coven.id, 'Fixture Working', 'workspace', B, 'complete');
+      const step = await insertStep(sql, id, rosemary, { quantity: 2, unit: 'g', position: 1 }, B);
+      // A step the coven holds no jar of, which a draft says it would skip.
+      const oil = await compendiumVariant(sql, 'Rosemary', 'Oil');
+      await insertStep(sql, id, oil, { quantity: 1, unit: 'g', position: 2 }, B);
+      // B's own, with A named beside them, and the jar's deduction.
+      const mine = await insertWorking(sql, id, B, {
+        workedOn: '2026-03-04',
+        note: 'First brewing',
+        participants: [B, A],
+      });
+      await insertDeduction(sql, mine, step, jar, { quantity: 2, unit: 'g' }, B);
+      await insertWorking(sql, id, A, { workedOn: '2026-02-01' });
+      // A's private one, with B not on it: B must not see it or count it.
+      await insertWorking(sql, id, A, {
+        workedOn: '2026-01-01',
+        visibility: 'private',
+        note: 'Secret rite',
+      });
+      // A's private draft naming B: B sees it, and it is not yet made.
+      await insertWorking(sql, id, A, {
+        workedOn: '2025-12-01',
+        status: 'draft',
+        visibility: 'private',
+        note: 'Named rite',
+        participants: [A, B],
+      });
+      // B's own draft: it says what completing it would skip.
+      await insertWorking(sql, id, B, {
+        workedOn: '2025-11-01',
+        status: 'draft',
+        note: 'Waiting rite',
+      });
+      return id;
+    });
+    await signInAgainAs(page, B);
     await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
-    await expect(page.getByRole('list', { name: 'Workings' }).getByRole('listitem')).toHaveCount(2);
+    const workings = page.getByRole('list', { name: 'Workings' });
+    await expect(workings.getByText('First brewing')).toBeVisible();
+    await expect(workings.getByText('Named rite')).toBeVisible();
+    await expect(workings.getByText('Secret rite')).toHaveCount(0);
+    // Complete shows on each draft B may change: their own, and A's that names them.
+    for (const note of ['Waiting rite', 'Named rite']) {
+      await expect(
+        workings
+          .getByRole('listitem')
+          .filter({ hasText: note })
+          .getByRole('button', { name: 'Complete' }),
+      ).toHaveCount(1);
+    }
+    await expect(workings.getByRole('button', { name: 'Complete' })).toHaveCount(2);
+    await expect(workings.getByRole('listitem').filter({ hasText: 'Waiting rite' })).toContainText(
+      /Completing does not affect inventory for \d+ items?/,
+    );
+    const first = workings.getByRole('listitem').filter({ hasText: 'First brewing' });
+    // The recorder is not listed again among the people who took part.
+    await expect(first).toContainText('Recorded by Fixture B');
+    await expect(first).toContainText('With Fixture A');
+    await expect(first).not.toContainText('With Fixture B');
+    const alone = workings.getByRole('listitem').filter({ hasText: '1 February 2026' });
+    await expect(alone).toContainText('Recorded by Fixture A');
+    await expect(alone).not.toContainText('With');
+    await expect(
+      first.getByRole('list', { name: 'Deductions' }).getByRole('listitem'),
+    ).toContainText('Rosemary');
+    await assertNoAccessibilityViolations(page);
     await page.goto(`/coven/${coven.slug}/grimoire`);
     const card = grimoireList(page).getByRole('listitem', { name: /Fixture Working/ });
     await expect(card.getByText('Made 2 Times')).toBeVisible();
+    // The pencil is on the workings B may change, their own two and the draft that names them, and not on A's others; it saves a changed note in place.
+    await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+    await expect(workings.getByRole('button', { name: /^Edit Working / })).toHaveCount(3);
+    await first.getByRole('button', { name: /^Edit Working / }).click();
+    const edit = page.getByRole('dialog', { name: /^Edit (a )?Working$/ });
+    await edit.getByRole('textbox', { name: 'Note' }).fill('First brewing, revised');
+    await edit.getByRole('button', { name: 'Save Working' }).click();
+    await expect(workings.getByText('First brewing, revised')).toBeVisible();
+    // The Edit dialog carries its own Delete Working, which asks first and then closes.
+    await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+    const waiting = workings.getByRole('listitem').filter({ hasText: 'Waiting rite' });
+    await waiting.getByRole('button', { name: /^Edit Working / }).click();
+    const waitingEdit = page.getByRole('dialog', { name: /^Edit (a )?Working$/ });
+    await waitingEdit.getByRole('button', { name: /^Delete Working/ }).click();
+    await waitingEdit.getByRole('button', { name: 'Delete', exact: true }).click();
+    await expect(waitingEdit).toHaveCount(0);
+    await expect(workings.getByText('Waiting rite')).toHaveCount(0);
+    // Deleting B's own working takes it out of the list and the count.
+    await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+    await first.getByRole('button', { name: /^Delete Working/ }).click();
+    await page
+      .getByRole('dialog', { name: 'Delete Working' })
+      .getByRole('button', { name: 'Delete' })
+      .click();
+    await expect(workings.getByText('First brewing')).toHaveCount(0);
+    await expect(workings.getByRole('listitem')).toHaveCount(2);
+    await page.goto(`/coven/${coven.slug}/grimoire`);
+    await expect(card.getByText('Made 1 Time')).toBeVisible();
   },
 );
 
@@ -1030,5 +1156,50 @@ test(
     await expect(items).toHaveCount(2);
     await expect(item('Private Full Moon Working')).toBeVisible();
     await expect(item('Shared Waning Working')).toBeVisible();
+  },
+);
+
+test(
+  'a member duplicates a spell and lands in the builder on a private draft copy',
+  { tag: '@story-82' },
+  async ({ page }) => {
+    const coven = await seedCoven(page, 'Fixture Coven Eighty-Two', 'story-82.test', {
+      A: 'owner',
+      B: 'member',
+      C: 'viewer',
+    });
+    const spell = await withSql((sql) =>
+      insertSpell(sql, coven.id, 'Fixture Working', 'workspace', coven.users.A, 'complete'),
+    );
+    const recipe = `/coven/${coven.slug}/grimoire/${spell}`;
+
+    // A viewer may not create a spell, so the recipe page offers no Duplicate.
+    await signInAgainAs(page, coven.users.C);
+    await page.goto(recipe);
+    await page.getByRole('button', { name: 'More for Fixture Working', exact: true }).click();
+    await expect(page.getByRole('menuitem', { name: 'Duplicate', exact: true })).toHaveCount(0);
+    await page.keyboard.press('Escape');
+
+    // A member duplicates it and lands in the copy's builder.
+    await signInAgainAs(page, coven.users.B);
+    await page.goto(recipe);
+    await page.getByRole('button', { name: 'More for Fixture Working', exact: true }).click();
+    await page.getByRole('menuitem', { name: 'Duplicate', exact: true }).click();
+    const builder = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working (Copy)' });
+    await expect(builder).toBeVisible();
+    await expect(page).toHaveURL(/\/grimoire\/drafts\?edit=[0-9a-f-]{36}$/);
+
+    // Closed, the copy is in the grimoire, a draft badged private; the original is untouched.
+    await page.keyboard.press('Escape');
+    await expect(builder).toHaveCount(0);
+    const copy = grimoireList(page)
+      .getByRole('listitem')
+      .filter({ hasText: 'Fixture Working (Copy)' });
+    await expect(copy).toContainText('Private');
+    await expect(copy).toContainText('Draft');
+    await page.goto(`/coven/${coven.slug}/grimoire`);
+    await expect(
+      grimoireList(page).getByRole('listitem').filter({ hasText: 'Fixture Working' }),
+    ).toHaveCount(1);
   },
 );

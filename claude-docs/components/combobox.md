@@ -319,7 +319,8 @@ which `useSelect`, unlike `useCombobox`'s typed box, does not, so a modal
 around it does not take the key as a close request and shut, or ask a
 changed form to discard (MB.115). With the list shut, Escape reaches the
 modal as ever. The Modal workshop's `WithPickers` story holds both pickers
-in a modal to try it.
+in a modal to try it. The DateField's month and year pickers are two of these
+boxes ([`date-field.md`](date-field.md)).
 
 | Prop                 | Meaning                                                                                                                                                                                                                                                                                                                                |
 | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

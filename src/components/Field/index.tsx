@@ -8,6 +8,7 @@ export { TextField } from './text-field';
 export { SelectField } from './select-field';
 export { RadioGroupField } from './radio-group-field';
 export { SwitchField } from './switch-field';
+export { VisibilitySwitch } from './visibility-switch';
 export { SearchField } from './search-field';
 export { FilterSelectField } from './filter-select-field';
 export { errorShown, useField } from './use-field';

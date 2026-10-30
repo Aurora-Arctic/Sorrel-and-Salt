@@ -151,9 +151,9 @@ test(
         }
 
         // Untouched, so Escape closes at once, and the focus goes back to the button.
-        // From Cancel, which has no tip: the walk above can end on an ⓘ, whose tip
+        // From Close, which has no tip: the walk above can end on an ⓘ, whose tip
         // opens on focus and takes the first Escape for itself (info-tip.md).
-        await dialog.getByRole('button', { name: 'Cancel' }).focus();
+        await dialog.getByRole('button', { name: 'Close', exact: true }).focus();
         await page.keyboard.press('Escape');
         await expect(dialog).toHaveCount(0);
         await expect(page).not.toHaveURL(/[?&]new/);
@@ -430,12 +430,13 @@ test(
       await page.keyboard.press('Tab');
       await expectFieldError(name, valid);
 
-      await name.fill('Dorvenmoss');
+      // A different name from the submit step's, since Close saves what is valid and a Dorvenmoss kept here would
+      // hold that step's save behind a similar-name question.
+      await name.fill('Thornvale');
       await page.keyboard.press('Tab');
       await expect(name).not.toHaveAttribute('aria-invalid', 'true');
 
       await dialog.getByRole('button', { name: 'Close', exact: true }).click();
-      await discardQuestion(dialog).discard.click();
       await expect(dialog).toHaveCount(0);
     });
 
@@ -455,7 +456,6 @@ test(
 
       await page.keyboard.press('Escape');
       await dialog.getByRole('button', { name: 'Close', exact: true }).click();
-      await discardQuestion(dialog).discard.click();
       await expect(dialog).toHaveCount(0);
     });
 
@@ -511,10 +511,21 @@ test(
       B: 'member',
     });
     await page.goto(`/coven/${coven.slug}`);
-    const dialog = await openAddIngredient(page);
-    const name = nameField(dialog);
+    // The ingredient dialogs save on Close instead of asking (M13.24), so the question is walked on an admin
+    // form, which still asks (claude-docs/components/modal.md, "Unsaved changes").
+    await signInAs(page, 'groups@story-32.test', ['discord'], 'admin');
+    await page.goto('/admin/category-groups');
+    await page.getByRole('link', { name: 'Add Group' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Add Category Group' });
+    await expect(dialog).toBeVisible();
+    const name = dialog.getByRole('textbox', { name: 'Name' });
     const question = discardQuestion(dialog);
     const close = dialog.getByRole('button', { name: 'Close', exact: true });
+    const savedGroups = () =>
+      withSql(
+        (sql) =>
+          sql`select id from category_groups where name = 'Halvenseed' and deleted_at is null`,
+      );
     await name.fill('Halvenseed');
 
     await test.step('Escape asks, and Keep Editing goes back to the field with its input', async () => {
@@ -544,22 +555,22 @@ test(
       await expect(question.discard).toBeVisible();
       await question.discard.click();
       await expect(dialog).toHaveCount(0);
-      await expect(shellAddIngredient(page)).toBeFocused();
-      expect(await savedRows(coven.id, 'Halvenseed')).toHaveLength(0);
+      expect(await savedGroups()).toHaveLength(0);
     });
 
     await test.step('the discarded input is gone, so the next close asks nothing', async () => {
-      const reopened = await openAddIngredient(page);
-      await expect(nameField(reopened)).toHaveValue('');
+      await page.getByRole('link', { name: 'Add Group' }).click();
+      await expect(dialog).toBeVisible();
+      await expect(name).toHaveValue('');
       await page.keyboard.press('Escape');
-      await expect(reopened).toHaveCount(0);
+      await expect(dialog).toHaveCount(0);
     });
 
     // Leaving the page: a reload raises the browser's own question,
     // whose wording is the browser's, and a link in the site asks the form's.
     await test.step('a reload with unsaved input raises the browser’s question', async () => {
-      const reopened = await openAddIngredient(page);
-      await nameField(reopened).fill('Halvenseed');
+      await page.getByRole('link', { name: 'Add Group' }).click();
+      await name.fill('Halvenseed');
       const asked = page.waitForEvent('dialog').then(async (raised) => {
         const kind = raised.type();
         await raised.accept();
@@ -567,10 +578,11 @@ test(
       });
       await page.reload();
       expect(await asked).toBe('beforeunload');
-      expect(await savedRows(coven.id, 'Halvenseed')).toHaveLength(0);
+      expect(await savedGroups()).toHaveLength(0);
     });
 
     await test.step('a link away from a page form with a typed name asks Discard or Keep Editing', async () => {
+      await signInAgainAs(page, coven.users.B);
       await withSql((sql) =>
         sql.begin(async (tx) => {
           // A grant made by hand declares its route, as accounts-setup.ts's does:
@@ -699,19 +711,18 @@ test(
       await expect(editIngredientControl(row, 'Testwort', 'Fixtura testalis')).toBeFocused();
     });
 
-    await test.step('a change asks before it is discarded, and discarding saves nothing', async () => {
+    await test.step('a change is saved on Escape, which closes with no question', async () => {
       const row = rowOf(ingredientList(page), 'Testwort', 'Fixtura testalis');
       const dialog = await openEditIngredient(page, row, 'Testwort', 'Fixtura testalis');
       await dialog
         .getByRole('textbox', { name: 'Description', exact: true })
-        .fill('Changed, then dropped.');
+        .fill('Changed, then kept.');
       await page.keyboard.press('Escape');
-      await expect(discardQuestion(dialog).keep).toBeFocused();
-      await discardQuestion(dialog).discard.click();
       await expect(dialog).toHaveCount(0);
+      await expect(page.getByRole('button', { name: 'Discard Changes' })).toHaveCount(0);
       expect(await ingredientRow(ingredientId)).toEqual({
         name: 'Testwort',
-        description: TESTWORT.description,
+        description: 'Changed, then kept.',
       });
     });
 

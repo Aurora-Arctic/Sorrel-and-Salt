@@ -1,6 +1,8 @@
 import type { Route } from 'next';
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import SpellRecipeAside from '@/components/SpellRecipe/aside';
+import SpellWorkings from '@/components/SpellWorkings';
 import SpellRecipe from '@/components/SpellRecipe';
 import type { RecipeStep, SpellRecipeProps } from '@/components/SpellRecipe';
 
@@ -22,6 +24,7 @@ const ingredient = (
   name: 'Testwort',
   form: null,
   formal: null,
+  variantId: null,
   quantity: null,
   unit: null,
   look: null,
@@ -79,16 +82,70 @@ describe('SpellRecipe', () => {
     expect(items[1]).toHaveTextContent('Testwort');
   });
 
-  it('draws no Ingredients section, the steps carrying the amounts', () => {
+  it('lists each form once, in the order of its first step, with the total it needs, above the steps', () => {
     render(
       <SpellRecipe
-        {...props({ steps: [instruction('a', 'Stir.'), ingredient('b', { quantity: '1' })] })}
+        {...props({
+          steps: [
+            instruction('a', 'Stir.'),
+            ingredient('b', {
+              name: 'Fixture Moss',
+              variantId: 'v1',
+              form: 'dried_leaf',
+              quantity: '1.5',
+              unit: 'tsp',
+            }),
+            ingredient('c', {
+              name: 'Testwort',
+              formal: 'Testus wortus',
+              variantId: 'v2',
+              quantity: '1',
+            }),
+            ingredient('d', {
+              name: 'Fixture Moss',
+              variantId: 'v1',
+              form: 'dried_leaf',
+              quantity: '1',
+              unit: 'tsp',
+            }),
+          ],
+        })}
       />,
     );
-    expect(screen.queryByRole('heading', { name: 'Ingredients' })).toBeNull();
+    const summary = screen.getByRole('list', { name: 'Ingredients' });
+    const items = within(summary).getAllByRole('listitem');
+    expect(items).toHaveLength(2);
+    expect(items[0]).toHaveTextContent('2.5 tsp');
+    expect(items[0]).toHaveTextContent('Fixture Moss');
+    expect(items[1]).toHaveTextContent('Testwort');
+    expect(items[1]).toHaveTextContent('Testus wortus');
+    const steps = screen.getByRole('list', { name: 'Steps' });
+    expect(summary.compareDocumentPosition(steps) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("adds a form's amounts in one dimension in its first step's unit, and lists amounts that cross dimensions", () => {
+    render(
+      <SpellRecipe
+        {...props({
+          steps: [
+            ingredient('a', { name: 'Fixture Moss', variantId: 'v1', quantity: '1', unit: 'tbsp' }),
+            ingredient('b', { name: 'Fixture Moss', variantId: 'v1', quantity: '3', unit: 'tsp' }),
+            ingredient('c', { name: 'Testwort', variantId: 'v2', quantity: '1', unit: 'g' }),
+            ingredient('d', { name: 'Testwort', variantId: 'v2', quantity: '1', unit: 'tsp' }),
+          ],
+        })}
+      />,
+    );
+    const items = within(screen.getByRole('list', { name: 'Ingredients' })).getAllByRole(
+      'listitem',
+    );
+    expect(items[0]).toHaveTextContent('2 tbsp');
+    expect(items[1]).toHaveTextContent('1 g + 1 tsp');
+  });
+
+  it('draws no Ingredients list for a spell with no ingredient step', () => {
+    render(<SpellRecipe {...props({ steps: [instruction('a', 'Stir.')] })} />);
     expect(screen.queryByRole('list', { name: 'Ingredients' })).toBeNull();
-    expect(screen.queryByRole('heading', { name: 'Steps' })).toBeNull();
-    expect(screen.getAllByRole('list')).toHaveLength(1);
   });
 
   it('draws the facts that are set as a strip, and leaves out blank ones', () => {
@@ -259,5 +316,50 @@ describe('SpellRecipe', () => {
     expect(within(aside).getByRole('region', { name: 'Fixture Aside' })).toBeInTheDocument();
     const note = screen.getByText('Best at dusk.');
     expect(note.compareDocumentPosition(aside) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  describe('jump menu', () => {
+    const linksOf = () =>
+      within(screen.getByRole('navigation', { name: 'On This Page' })).getAllByRole('link');
+    const aside = <SpellRecipeAside steps={[]} doors={[]} intended={[]} groups={[]} />;
+    const workings = (
+      <SpellWorkings
+        workspaceId="w"
+        workings={[]}
+        completeAction={() => null}
+        editAction={() => null}
+      />
+    );
+
+    it('lists the sections the page draws, each link pointing at one that exists', () => {
+      render(<SpellRecipe {...props({ steps: [instruction('s1', 'Stir.')], aside, workings })} />);
+      expect(linksOf().map((link) => link.textContent)).toEqual([
+        'Steps',
+        'Category Match',
+        'In Coven Inventory',
+        'Workings',
+      ]);
+      // The two jar links are nested under one group label, and the group is narrow-only whole.
+      const group = within(screen.getByRole('navigation', { name: 'On This Page' })).getByRole(
+        'list',
+        { name: 'The Jar' },
+      );
+      expect(within(group).getAllByRole('link')).toHaveLength(2);
+      expect(group.parentElement).toHaveClass('page-nav__narrow');
+      for (const link of linksOf()) {
+        const target = document.getElementById(link.getAttribute('href')!.slice(1));
+        expect(target, link.textContent ?? '').not.toBeNull();
+      }
+    });
+
+    it('leaves out an entry whose section is not drawn', () => {
+      render(<SpellRecipe {...props({ steps: [] })} />);
+      expect(screen.queryByRole('navigation', { name: 'On This Page' })).toBeNull();
+    });
+
+    it('keeps Steps and Workings when there is no side column', () => {
+      render(<SpellRecipe {...props({ steps: [instruction('s1', 'Stir.')], workings })} />);
+      expect(linksOf().map((link) => link.textContent)).toEqual(['Steps', 'Workings']);
+    });
   });
 });

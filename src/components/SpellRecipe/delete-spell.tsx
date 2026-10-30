@@ -24,6 +24,77 @@ export const DeleteSpellDocument = graphql(`
   }
 `);
 
+/**
+ * The delete write and where it leaves for. `pending` runs past the write until the list arrives,
+ * so the confirmation closes with the page; `onRefused` gets the service's refusal after the
+ * dialog has closed.
+ */
+export function useDeleteSpell({
+  workspaceId,
+  spellId,
+  deletedHref,
+  onRefused,
+  onClosed,
+}: Pick<DeleteSpellActionProps, 'workspaceId' | 'spellId' | 'deletedHref'> & {
+  onRefused: (message: string) => void;
+  onClosed: () => void;
+}) {
+  const { navigate } = usePendingNavigation();
+  const remove = useMutation({
+    mutationFn: () => graphqlRequest(DeleteSpellDocument, { id: spellId, workspaceId }),
+    // The target is read off the path alone: the query carries what was deleted, not where.
+    onSuccess: () =>
+      navigate(deletedHref, { replace: true, target: covenTarget(deletedHref.split('?')[0]!) }),
+    onError: (error) => {
+      onClosed();
+      onRefused(readGraphqlFailure(error).alert ?? GENERIC_FAILURE);
+    },
+  });
+  return { remove: remove.mutate, pending: remove.isPending || remove.isSuccess };
+}
+
+/** The question naming the spell, which gives the focus to `returnTo()` once it closes. */
+export function DeleteSpellDialog({
+  name,
+  pending,
+  onConfirm,
+  onClose,
+  returnTo,
+}: {
+  name: string;
+  pending: boolean;
+  onConfirm: () => void;
+  onClose: () => void;
+  returnTo: () => HTMLElement | null;
+}): ReactElement {
+  return (
+    <Modal title="Delete Spell" onClose={onClose} returnTo={returnTo}>
+      {(close) => (
+        <>
+          <p>
+            Delete <strong>{name}</strong>? It leaves the grimoire for every member of the coven.
+            Nothing in stock changes.
+          </p>
+          <div className="modal__actions">
+            <BusyButton
+              className="btn btn--destructive"
+              busy={pending}
+              busyLabel="Deleting"
+              disabled={pending}
+              onClick={onConfirm}
+            >
+              Delete
+            </BusyButton>
+            <button type="button" className="btn btn--quiet" disabled={pending} onClick={close}>
+              Cancel
+            </button>
+          </div>
+        </>
+      )}
+    </Modal>
+  );
+}
+
 export default function DeleteSpellAction({
   workspaceId,
   spellId,
@@ -43,19 +114,13 @@ export default function DeleteSpellAction({
     },
     [anchorRef],
   );
-  const { navigate } = usePendingNavigation();
-  const remove = useMutation({
-    mutationFn: () => graphqlRequest(DeleteSpellDocument, { id: spellId, workspaceId }),
-    // The target is read off the path alone: the query carries what was deleted, not where.
-    onSuccess: () =>
-      navigate(deletedHref, { replace: true, target: covenTarget(deletedHref.split('?')[0]!) }),
-    onError: (error) => {
-      setAsking(false);
-      feedback.report(readGraphqlFailure(error).alert ?? GENERIC_FAILURE);
-    },
+  const { remove, pending } = useDeleteSpell({
+    workspaceId,
+    spellId,
+    deletedHref,
+    onRefused: feedback.report,
+    onClosed: () => setAsking(false),
   });
-  // Busy past the write until the list arrives, so the confirmation closes with the page.
-  const pending = remove.isPending || remove.isSuccess;
 
   return (
     <>
@@ -70,34 +135,13 @@ export default function DeleteSpellAction({
       />
       {feedback.feedback}
       {asking && (
-        <Modal
-          title="Delete Spell"
+        <DeleteSpellDialog
+          name={name}
+          pending={pending}
+          onConfirm={() => remove()}
           onClose={() => setAsking(false)}
           returnTo={() => (trigger.current?.isConnected ? trigger.current : null)}
-        >
-          {(close) => (
-            <>
-              <p>
-                Delete <strong>{name}</strong>? It leaves the grimoire for every member of the
-                coven. Nothing in stock changes.
-              </p>
-              <div className="modal__actions">
-                <BusyButton
-                  className="btn btn--destructive"
-                  busy={pending}
-                  busyLabel="Deleting"
-                  disabled={pending}
-                  onClick={() => remove.mutate()}
-                >
-                  Delete
-                </BusyButton>
-                <button type="button" className="btn btn--quiet" disabled={pending} onClick={close}>
-                  Cancel
-                </button>
-              </div>
-            </>
-          )}
-        </Modal>
+        />
       )}
     </>
   );

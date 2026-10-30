@@ -11,7 +11,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 import { INGREDIENT_ELEMENTS, NOMENCLATURE_KINDS } from './ingredient-enums';
-import { auditColumns, users } from '../../identity/schema/users';
+import { auditColumns, revisionColumn, users } from '../../identity/schema/users';
 import { workspaces } from '../../coven/schema/workspaces';
 import { idColumn, liveUnique, seedKeyColumn, seedKeyUnique } from '../../../db/schema-parts';
 
@@ -70,6 +70,8 @@ export const ingredients = pgTable(
 
     // The key the compendium seed gives the entry, so a renamed entry is not seeded again beside itself.
     seedKey: seedKeyColumn(),
+    // Counts saves so an autosave naming the revision it read is refused once the row has moved on (bump_revision trigger).
+    revision: revisionColumn(),
     ...auditColumns,
   },
   (table) => [

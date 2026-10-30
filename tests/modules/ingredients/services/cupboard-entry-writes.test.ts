@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
-import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
+import { Forbidden, NotFound, StaleWrite, ValidationError } from '@/lib/errors';
 import {
   addCupboardEntry,
   annotateCupboardEntry,
@@ -221,6 +221,44 @@ describe('annotateCupboardEntry', () => {
       label: 'Hedgewort',
       updated_by: B.id,
     });
+  });
+
+  it('refuses a save over a newer revision with StaleWrite and writes nothing', async () => {
+    const [opened] = await rowsOf(entry);
+    await annotateCupboardEntry(asUser(B), WORKSPACE_W_ID, entry, { description: 'theirs' });
+    const [moved] = await rowsOf(entry);
+    // The precondition: the row has moved past the revision A read.
+    expect(moved.revision).toBeGreaterThan(opened.revision);
+
+    const refused = await annotateCupboardEntry(
+      asUser(A),
+      WORKSPACE_W_ID,
+      entry,
+      { description: 'mine' },
+      opened.revision as number,
+    ).catch((error: unknown) => error);
+    expect(refused).toBeInstanceOf(StaleWrite);
+    expect((refused as StaleWrite).currentRevision).toBe(moved.revision);
+    const [stored] = await rowsOf(entry);
+    expect(stored).toMatchObject({ description: 'theirs', revision: moved.revision });
+
+    // The same save at the revision now current goes through, so the refusal was the revision.
+    await annotateCupboardEntry(
+      asUser(A),
+      WORKSPACE_W_ID,
+      entry,
+      { description: 'mine' },
+      moved.revision as number,
+    );
+    expect((await rowsOf(entry))[0].description).toBe('mine');
+  });
+
+  it('writes over a newer revision when none is named', async () => {
+    const [opened] = await rowsOf(entry);
+    await annotateCupboardEntry(asUser(B), WORKSPACE_W_ID, entry, { description: 'theirs' });
+    expect((await rowsOf(entry))[0].revision).toBeGreaterThan(opened.revision);
+    await annotateCupboardEntry(asUser(A), WORKSPACE_W_ID, entry, { description: 'mine' });
+    expect((await rowsOf(entry))[0].description).toBe('mine');
   });
 
   it('refuses a viewer by direct id, with the row live and the viewer a member', async () => {

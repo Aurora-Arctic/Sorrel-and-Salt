@@ -25,17 +25,25 @@ export interface ComparisonPanelProps {
   groups: ReadonlyMap<string, GroupColors>;
   /** The heading's level: h5 under the builder's Jar heading, h2 on the recipe page. */
   heading?: 'h2' | 'h5';
+  /** The section's id, for a jump link; the recipe page gives one. */
+  id?: string;
 }
 
-// The chips are the compact size, the one the admin Compendium table's Categories column uses,
-// and every one is drawn: the panel is a comparison, so none is folded behind a +N.
+// The chips are the compact size, the one the admin Compendium table's Categories column uses.
+// Carried and Missing draw every chip, as the panel is a comparison; Extra, which has no bound,
+// draws its first `EXTRA_CHIP_LIMIT` and folds the rest behind CategoryChips' own +N.
+export const EXTRA_CHIP_LIMIT = 8;
+
 function Row({
   label,
   categories,
   tipOf,
   absent = false,
+  limit,
 }: {
   absent?: boolean;
+  /** Chips drawn before the rest fold behind a +N; every chip is drawn when absent. */
+  limit?: number;
   label: string;
   categories: readonly CardCategory[];
   tipOf: (category: CardCategory['category']) => string;
@@ -50,7 +58,8 @@ function Row({
           label={label}
           compact
           absent={absent}
-          showAll
+          showAll={limit === undefined}
+          limit={limit}
           tipOf={tipOf}
         />
       </dd>
@@ -77,6 +86,7 @@ export function ComparisonPanel({
   steps,
   groups,
   heading: Heading = 'h5',
+  id,
 }: ComparisonPanelProps): ReactElement {
   const headingId = useId();
   const intendedIds = intended.map(({ id }) => id);
@@ -113,13 +123,13 @@ export function ComparisonPanel({
       <dl className="comparison-panel__rows">
         <Row label="Carried" categories={chipsOf(carried)} tipOf={fromTip} />
         <Row label="Missing" categories={chipsOf(missing)} absent tipOf={missingTip} />
-        <Row label="Extra" categories={chipsOf(extras)} tipOf={fromTip} />
+        <Row label="Extra" categories={chipsOf(extras)} tipOf={fromTip} limit={EXTRA_CHIP_LIMIT} />
       </dl>
     );
   }
 
   return (
-    <section className="comparison-panel" aria-labelledby={headingId}>
+    <section id={id} className="comparison-panel" aria-labelledby={headingId}>
       <Heading id={headingId}>Category Match</Heading>
       {body}
     </section>

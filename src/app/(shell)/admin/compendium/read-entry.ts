@@ -16,5 +16,7 @@ export const readCompendiumEntry = async (slug: string) => {
     kind: 'entry' as const,
     id: address.entry.id,
     values: await entryValues(address.entry, null),
+    revision: address.entry.revision,
+    updatedAt: address.entry.updatedAt.toISOString(),
   };
 };

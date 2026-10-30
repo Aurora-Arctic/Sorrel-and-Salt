@@ -168,9 +168,16 @@ IngredientVariantRef.implement({
   }),
 });
 
+/** The description of `expectedRevision` on both update mutations. */
+export const EXPECTED_REVISION =
+  'The revision this save was written against: a newer one refuses it. Left out or null, it writes regardless.';
+
 IngredientRef.implement({
   fields: (t) => ({
     id: t.exposeID('id'),
+    revision: t.exposeInt('revision', {
+      description: 'Raised by one on every save; a save names the revision it was written against.',
+    }),
     name: t.exposeString('name'),
     slug: t.exposeString('slug'),
     canonicalName: t.exposeString('canonicalName', {

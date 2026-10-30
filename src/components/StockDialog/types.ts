@@ -35,6 +35,8 @@ export interface StockJarButtonProps extends StockDialogProps {
   /** The button's name, such as "Edit Stock, Rosemary, Dried Leaf". */
   ariaLabel: string;
   className?: string;
+  /** Called once the stock is saved, for a caller that shows figures the save changes. */
+  onSaved?: () => void;
   /** What the button shows. */
   children: ReactNode;
 }
@@ -55,6 +57,8 @@ export interface StockDialogValues {
 export interface StockDialogFormProps extends StockDialogProps {
   /** The modal's own close, so it fades out after a save. */
   close: () => void;
+  /** Called once the stock is saved, for a caller that shows figures the save changes. */
+  onSaved?: () => void;
 }
 
 /** Where each entry of the batch's lists came from among the rows, to place an issue back. */

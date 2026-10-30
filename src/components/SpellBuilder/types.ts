@@ -85,6 +85,11 @@ export interface SpellBuilderProps {
    * member may not delete and the form has no Delete. Shown only once the spell exists.
    */
   deletedHrefOf?: (title: string | null) => Route;
+  /**
+   * Where Duplicate leaves for, given the copy's id; left out when this member may not create a
+   * spell and a complete spell's form has no Duplicate. Shown only once the spell exists.
+   */
+  copiedHrefOf?: (id: string) => Route;
 }
 
 /** A saved spell as the grimoire page reads it for `?edit=<id>`: the dialog reads its steps after. */
@@ -117,6 +122,10 @@ export interface SpellDialogProps {
   canCreate: boolean;
   /** Whether this member may delete a spell (`spell: delete`); the builder then has a Delete. */
   canDelete?: boolean;
+  /** Where a delete leaves for, when not `closeHref`: the recipe page, which the deleted spell's own address cannot stay on. */
+  deletedFromHref?: Route;
+  /** Whether this member may create a spell (`spell: create`); the builder of a complete spell then has a Duplicate. */
+  canDuplicate?: boolean;
   /** The signed-in member; the builder keeps its browser copy of a draft under this id. */
   userId?: string;
 }
@@ -135,6 +144,11 @@ export interface SpellSuggestFieldProps extends Pick<FieldProps, 'label' | 'hint
 }
 
 export interface SpellStatusFieldProps {
+  workspaceId: string;
+  /** The saved spell's id; none until the first save. */
+  spellId: string | null;
+  /** Duplicate's destination (see `SpellBuilderProps`); none draws no button. */
+  copiedHrefOf?: (id: string) => Route;
   /** Saves everything the form holds now (the autosave's flush); rejects when the save is refused. */
   flush: () => Promise<void>;
 }

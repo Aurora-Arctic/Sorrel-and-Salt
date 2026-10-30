@@ -8,7 +8,7 @@ import {
   updateCompendiumEntry,
 } from '../services/compendium';
 import { clearIngredientChildren } from '../loaders/ingredient-children';
-import { IngredientRef } from './ingredient';
+import { EXPECTED_REVISION, IngredientRef } from './ingredient';
 import { ingredientInputFields } from './ingredient-input';
 
 // The compendium's writes, a curator's or an admin's: scoped here
@@ -57,13 +57,23 @@ builder.mutationField('updateCompendiumIngredient', (t) =>
       id: t.arg.id({ required: true }),
       input: t.arg({ type: CompendiumIngredientUpdateInput, required: true }),
       endRedirect: t.arg.boolean({ required: false, description: END_REDIRECT }),
+      expectedRevision: t.arg.int({
+        required: false,
+        description: EXPECTED_REVISION,
+      }),
     },
     authScopes: { curator: true },
-    resolve: async (_root, { id, input, endRedirect }, { loaders, ...context }) => {
-      const row = await updateCompendiumEntry(sessionOf(context), id, {
-        ...input,
-        endRedirect: endRedirect ?? undefined,
-      });
+    resolve: async (
+      _root,
+      { id, input, endRedirect, expectedRevision },
+      { loaders, ...context },
+    ) => {
+      const row = await updateCompendiumEntry(
+        sessionOf(context),
+        id,
+        { ...input, endRedirect: endRedirect ?? undefined },
+        expectedRevision ?? null,
+      );
       clearIngredientChildren(loaders, row);
       return row;
     },

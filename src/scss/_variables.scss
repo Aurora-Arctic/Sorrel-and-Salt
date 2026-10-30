@@ -129,6 +129,23 @@ $burn-char-light: rgba(color.mix($iron-gall, $wax-warm, 75%), 0.6);
 $burn-char-line-dark: rgba($shadow-ink-dark, 0.92);
 $burn-char-line-light: rgba($iron-gall, 0.85);
 
+// The Spell Preview background (SpellPreview): the hearth glow under the burnt corner, and the
+// embers that rise from it and from the charred edge. The glow is the theme red at a strength the
+// owner chose per theme: light the wax red at 0.12, dark the ember red at half that, 0.08, since
+// a glow on soot reads twice as strong as the same glow on parchment. Each ember is a cooled
+// fragment (`char`) under a heat that fades as it rises (`core` out to `ember`); ash is the
+// theme's muted text ink at half strength.
+$preview-glow-dark: rgba($wax-warm, 0.08);
+$preview-glow-light: rgba($wax, 0.12);
+$preview-ember-dark: $ochre-bright;
+$preview-ember-light: $wax;
+$preview-ember-core-dark: color.adjust($ochre-bright, $lightness: 22%);
+$preview-ember-core-light: color.adjust($ochre-bright, $lightness: 8%);
+$preview-ember-char-dark: rgba($wax-warm, 0.35);
+$preview-ember-char-light: color.mix($iron-gall, $wax-warm, 75%);
+$preview-ash-dark: rgba($chalk-muted, 0.5);
+$preview-ash-light: rgba($ink-muted, 0.5);
+
 // A 0.8-alpha shadow reads as a hole punched in parchment; light gets a softer one.
 $shadow-dark: rgba($shadow-ink-dark, 0.8);
 $shadow-light: rgba(35, 32, 26, 0.18);
@@ -444,6 +461,11 @@ $drawer-shade-fade: var(--drawer-shade-fade);
 $drawer-shade-edge: var(--drawer-shade-edge);
 $burn-char: var(--burn-char);
 $burn-char-line: var(--burn-char-line);
+$preview-glow: var(--preview-glow);
+$preview-ember: var(--preview-ember);
+$preview-ember-core: var(--preview-ember-core);
+$preview-ember-char: var(--preview-ember-char);
+$preview-ash: var(--preview-ash);
 $dismiss-ink: var(--dismiss-ink);
 $card-more-ink: var(--card-more-ink);
 // The Last Edit line's ink: the placeholder's mix in dark, where it holds 4.5:1; the muted ink in
@@ -626,6 +648,19 @@ $nav-link-size: 1.125rem;
 // caps. typography-base caps every paragraph at it, so a page wider than it — a
 // table, a grid — still sets its prose readably.
 $measure: 66ch;
+
+// A spell's reading column: the recipe body's width on its page, in the Quick Look modal and in the
+// Preview pane.
+$recipe-column: 48rem;
+
+// The printed sheet (_print.scss): A4 with a 15mm margin all round, at an 11pt root. The Preview
+// pane's column is the sheet's content width in the sheet's own rem, so at the pane's type size
+// the lines hold the same characters and break where the printed ones do.
+$print-page-width: 210mm;
+$print-page-margin: 15mm;
+$print-root: 11pt;
+$print-content-width: $print-page-width - 2 * $print-page-margin;
+$recipe-sheet-width: math.div($print-content-width, $print-root) * 1rem;
 
 // How far the top of the window is taken by chrome above everything else: the impersonation banner
 // on a touch screen, and 0 otherwise. What pins to the top of the window, or sizes to it, offsets by

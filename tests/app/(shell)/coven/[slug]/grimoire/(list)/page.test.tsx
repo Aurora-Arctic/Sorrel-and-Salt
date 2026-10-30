@@ -1,4 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
+import { press } from '../../../../../../support/interact';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -51,8 +52,14 @@ const countGrimoireCategories = vi.fn();
 const countGrimoireFacets = vi.fn();
 const assignedCategoriesOf = vi.fn();
 const readSpell = vi.fn();
-const stepsOfSpells = vi.fn();
+// Each spell has no ingredient steps, unless a test says otherwise.
+const stepsOfSpells = vi.fn(async (_session: unknown, refs: unknown[]): Promise<unknown[]> =>
+  refs.map((): unknown[] => []),
+);
+// How often each spell was made: none, by default.
+const workingCountsOf = vi.fn(async (_session: unknown, refs: unknown[]) => refs.map(() => 0));
 vi.mock('@/modules/grimoire', () => ({
+  workingCountsOf,
   stepsOfSpells,
   listGrimoire,
   countGrimoire,
@@ -60,6 +67,13 @@ vi.mock('@/modules/grimoire', () => ({
   countGrimoireFacets,
   assignedCategoriesOf,
   readSpell,
+}));
+
+// The coven roster a Record a Working button lists: nobody, by default.
+const memberRoster = vi.fn(async () => []);
+vi.mock('@/modules/coven', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/modules/coven')>()),
+  memberRoster,
 }));
 
 const displayNamesOf = vi.fn();
@@ -293,6 +307,26 @@ describe('the Grimoire tabs', () => {
     expect(edited('Testwort Charm')).toHaveAccessibleDescription('Last edited on 1 September 2026');
   });
 
+  it('offers a maker the viewer cannot name as A former member, so the facet is never empty of them', async () => {
+    const STRANGER = '00000000-0000-4000-8000-0000000000bb';
+    countGrimoireFacets.mockResolvedValue({
+      moonPhases: [],
+      daysOfWeek: [],
+      visibilities: [],
+      makers: [
+        { value: MAKER, count: 3 },
+        { value: STRANGER, count: 52 },
+      ],
+    });
+    const { readGrimoireFacetCounts } =
+      await import('@/app/(shell)/coven/[slug]/grimoire/(list)/reads');
+    const { makers } = await readGrimoireFacetCounts(COVEN.id, '{}', 'complete');
+    expect(makers).toEqual([
+      { value: MAKER, label: 'Fixture Maker', count: 3 },
+      { value: STRANGER, label: 'A former member', count: 52 },
+    ]);
+  });
+
   it('throws a refused category batch rather than drawing a card without its categories', async () => {
     assignedCategoriesOf.mockResolvedValue([new Error('Forbidden'), []]);
     await expect(renderTab(SpellsPage)).rejects.toThrow('Forbidden');
@@ -407,9 +441,12 @@ describe('the spell builder over a Grimoire tab', () => {
     as(role);
     await renderTab(DraftsPage, { query: 'fixture' });
     expect(screen.getAllByRole('link', { name: /^Quick Look / }).length).toBeGreaterThan(0);
-    expect(screen.queryAllByRole('button', { name: 'Delete Spell Fixture Working' })).toHaveLength(
-      count,
-    );
+    const more = screen.queryAllByRole('button', { name: 'More for Fixture Working' });
+    expect(more).toHaveLength(count);
+    if (count > 0) {
+      press(more[0]!);
+      expect(await screen.findByRole('menuitem', { name: 'Delete Spell' })).toBeInTheDocument();
+    }
   });
 
   it('draws no Edit pencil for a viewer, who could read the same cards', async () => {
@@ -438,7 +475,9 @@ describe('the spell builder over a Grimoire tab', () => {
     await renderTab(DraftsPage, { edit: SPELL_ID });
 
     const dialog = screen.getByRole('dialog', { name: 'Edit Spell, Fixture Working' });
-    expect(within(dialog).getByRole('button', { name: 'Delete Spell' })).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole('button', { name: 'Delete Spell Fixture Working' }),
+    ).toBeInTheDocument();
   });
 
   it('opens a saved spell under ?edit=<id> with the categories its author assigned it picked', async () => {
@@ -731,9 +770,18 @@ describe('Quick Look over a Grimoire tab', () => {
       expect(
         within(dialog).queryAllByRole('button', { name: 'Delete Spell Fixture Working' }),
       ).toHaveLength(count / 2);
-      expect(
-        screen.queryAllByRole('button', { name: 'Delete Spell Fixture Working' }),
-      ).toHaveLength(count);
+      // The card’s own Delete Spell sits in its More menu.
+      const more = screen.queryAllByRole('button', {
+        name: 'More for Fixture Working',
+        hidden: true,
+      });
+      expect(more).toHaveLength(count / 2);
+      if (count > 0) {
+        press(more[0]!);
+        expect(
+          (await screen.findAllByRole('menuitem', { name: 'Delete Spell', hidden: true })).length,
+        ).toBeGreaterThan(0);
+      }
     },
   );
 
