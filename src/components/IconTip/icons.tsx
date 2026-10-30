@@ -228,22 +228,6 @@ export function PreviewIcon(): ReactElement {
   );
 }
 
-/** A printer: a sheet going in above a body with a tray beneath; Print Spell wears it. */
-export function PrintIcon(): ReactElement {
-  return (
-    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-      <path
-        d="M4.5 6V2.5h7V6M4.5 11.5h-2v-5h11v5h-2M4.5 9.5h7v4h-7z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 /** A cauldron with two leaves tumbling in: Record a Working. */
 export function CauldronIcon(): ReactElement {
   return (

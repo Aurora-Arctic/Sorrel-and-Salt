@@ -7,7 +7,6 @@ export {
   EditButton,
   MoreMenu,
   PreviewButton,
-  PrintButton,
   QuickLookButton,
   RecordButton,
 } from './icon-button';
@@ -23,7 +22,6 @@ export {
   PencilIcon,
   PlusIcon,
   PreviewIcon,
-  PrintIcon,
   RedoIcon,
   StockIcon,
   UndoIcon,

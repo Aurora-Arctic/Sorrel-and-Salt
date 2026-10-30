@@ -16,8 +16,8 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The recipe page's three dots: Duplicate for a role that may create a spell and Delete Spell for
-// one that may delete, nothing at all for a role with neither (claude-docs/components/spell-recipe.md).
+// The recipe page's three dots: Duplicate for a role that may create a spell, Delete Spell for one
+// that may delete, and Print for every role (claude-docs/components/spell-recipe.md).
 
 const WORKSPACE_ID = '00000000-0000-4000-8000-000000000001';
 const ID = '00000000-0000-4000-8000-000000000002';
@@ -60,6 +60,7 @@ describe('SpellMoreMenu', () => {
     press(dots());
     expect((await screen.findAllByRole('menuitem')).map((item) => item.textContent)).toEqual([
       'Duplicate',
+      'Print',
       'Delete Spell',
     ]);
   });
@@ -69,6 +70,7 @@ describe('SpellMoreMenu', () => {
     press(dots());
     expect((await screen.findAllByRole('menuitem')).map((item) => item.textContent)).toEqual([
       'Duplicate',
+      'Print',
     ]);
   });
 
@@ -76,13 +78,28 @@ describe('SpellMoreMenu', () => {
     renderMenu({ canDuplicate: false });
     press(dots());
     expect((await screen.findAllByRole('menuitem')).map((item) => item.textContent)).toEqual([
+      'Print',
       'Delete Spell',
     ]);
   });
 
-  it('draws no menu for a role that may do neither', () => {
+  it('offers only Print to a role that may do neither', async () => {
     renderMenu({ canDuplicate: false, canDelete: false });
-    expect(screen.queryByRole('button', { name: /^More for/ })).not.toBeInTheDocument();
+    press(dots());
+    expect((await screen.findAllByRole('menuitem')).map((item) => item.textContent)).toEqual([
+      'Print',
+    ]);
+  });
+
+  it('opens the print dialog when Print is chosen', () => {
+    // jsdom has no `window.print`.
+    const print = vi.fn();
+    vi.stubGlobal('print', print);
+    renderMenu({ canDuplicate: false, canDelete: false });
+    expect(print).not.toHaveBeenCalled();
+    choose('Print');
+    expect(print).toHaveBeenCalledTimes(1);
+    vi.unstubAllGlobals();
   });
 
   it("duplicates the spell and leaves for the Drafts tab with the copy's dialog open", async () => {
