@@ -234,8 +234,8 @@ refusal's words, which explain the rule and name Delete, show in the
 Whether the spell is finished (M10.20, story 55): `SpellStatusField`, in
 `status-field.tsx`, drawn in the form's action row (`FormActions`) beside Save Spell, outside every section.
 A spell is a `draft` until it is marked `complete`. A draft shows one button,
-Mark Complete, with a line saying what the state means, visually hidden and read as the button's description. Like Share
-With the Coven, a click saves the whole form with the status `complete` at once, so
+Mark Complete, with a line saying what the state means, visually hidden and read as the button's description. Like sharing
+a complete spell, a click saves the whole form with the status `complete` at once, so
 the status is never a pick left pending. A complete spell shows no Mark Complete and
 no sentence (the owner, 2026-10-29); the locked Visibility switch carries the state. Once
 complete, its workings are recorded against it and its visibility lock has
@@ -244,6 +244,14 @@ started, so reopening would undo both. In Mark Complete's place, a member who ma
 spell; the service refuses complete to draft too.
 
 - **A new spell** is a draft (`valuesOf` reads a missing status as one).
+- **A shared draft** asks first, because completing it keeps it shared for good (the owner's
+  call in the MB.123 review, D12, in the shape of the share question). Shared means the
+  visibility the form holds, saved or not, so a new spell switched on asks too. The question is
+  "Mark **<name>** Complete? It stays shared with every member of the coven for good, and your
+  other changes are saved with it." (`ConfirmQuestion`, Mark Complete, busy "Marking Complete",
+  or Keep It a Draft, which sends nothing; the name is the title the form holds, or Untitled
+  Spell). A private draft is marked complete with no question, since its visibility can still
+  widen afterwards. If the title is blank, the question closes before the title takes the focus.
 - **A blank title** is refused before anything is sent: the form holds the asked-for status while it validates, so the schema's rule shows it on the title field,
   with `COMPLETE_NEEDS_TITLE` (validation/spell.ts), the words for the
   database's `spells_complete_has_title` check (M13.15). Focus goes to the title.
@@ -650,9 +658,9 @@ Stories 47 and 48 in
 two categories, removes one, saves, and finds the one left on the spell's
 card under Drafts. Stories 49, 50, 51, 57 and 77 walk the jar; story 51 moves a step by
 keyboard and reads the saved order from the database. No story walks the visibility control, since §5's rule governs it rather than a
-story, so `tests/e2e/spell-visibility.spec.ts` is its gate spec: a spell written private,
-then shared in one confirmed action and the control shut, each step read from the
-database. Story 56 checks the Private badge on the author's card.
+story, so `tests/e2e/spell-visibility.spec.ts` is its gate spec: a new spell saved private, its draft shared and made private again with no
+question, then shared and marked complete through Mark Complete's question, and the
+control shut, each step read from the database. Story 56 checks the Private badge on the author's card.
 
 ## The spell dialog and its address
 
@@ -672,7 +680,7 @@ The builder autosaves (`./autosave.ts`): a change saves 3 s after the last, Save
 
 ## Status and visibility controls
 
-**Status.** A spell is a draft until it is marked complete. A draft shows one button, Mark Complete. A click saves everything the form holds as complete, as sharing a complete spell does, so the status is never a pick left pending. A complete spell needs a title (a database CHECK), so its absence is said on the title field before anything is sent. Marking complete flushes the autosave with the other status, which carries every unsaved change in the same save.
+**Status.** A spell is a draft until it is marked complete. A draft shows one button, Mark Complete. A click saves everything the form holds as complete, as sharing a complete spell does, so the status is never a pick left pending. On a shared draft it asks first, since completing it keeps it shared for good. A complete spell needs a title (a database CHECK), so its absence is said on the title field before anything is sent. Marking complete flushes the autosave with the other status, which carries every unsaved change in the same save.
 
 A complete spell shows no statement and no Mark Complete, and there is no Reopen as Draft. Once complete, a spell's workings are recorded against it and its visibility lock has started, so reopening would undo both. To vary a complete spell, the copy (Duplicate a Spell) is the way: a complete spell has a **Duplicate** button here, for a member who may create a spell. It flushes the autosave, calls `duplicateSpell` and opens the copy in the Drafts tab's builder (`?edit=<id>`). The service refuses complete to draft as well (M13.20, amended 2026-10-29 by the owner).
 

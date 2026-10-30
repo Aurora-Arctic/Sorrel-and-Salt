@@ -777,6 +777,7 @@ const SpellBuilder = ({
             }
           >
             <SpellStatusField
+              name={name}
               flush={flush}
               workspaceId={workspaceId}
               spellId={spellId}

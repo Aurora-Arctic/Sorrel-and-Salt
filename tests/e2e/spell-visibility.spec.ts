@@ -55,9 +55,13 @@ test('a new spell starts private, a draft moves between private and shared freel
   await expect(save).toBeDisabled();
   expect(await stored()).toEqual([{ visibility: 'private' }]);
 
-  // Share it, and mark it complete: that save starts the lock.
+  // Share it, and mark it complete: that save starts the lock, so Mark Complete asks first.
   await visibility.check();
   await page.getByRole('button', { name: 'Mark Complete' }).click();
+  await page
+    .getByRole('group', { name: /^Mark Fixture Hidden Working Complete\?/ })
+    .getByRole('button', { name: 'Mark Complete' })
+    .click();
   await expect(page.getByRole('button', { name: 'Mark Complete' })).toHaveCount(0);
   await expect(visibility).toBeChecked();
   await expect(visibility).toBeDisabled();

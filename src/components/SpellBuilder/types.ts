@@ -146,6 +146,8 @@ export interface SpellSuggestFieldProps extends Pick<FieldProps, 'label' | 'hint
 }
 
 export interface SpellStatusFieldProps {
+  /** The spell's title as the form holds it, or the untitled name, for the question a shared draft asks. */
+  name: string;
   workspaceId: string;
   /** The saved spell's id; none until the first save. */
   spellId: string | null;
