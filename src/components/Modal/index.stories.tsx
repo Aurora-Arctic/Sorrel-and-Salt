@@ -308,8 +308,8 @@ const PICKS = asSlugs(GROUP_NAMES.form.slice(0, 3)).map(({ slug, name }) => ({
 }));
 
 /**
- * A form asked to confirm a delete over itself: Delete (destructive) and Keep It,
- * focused. Delete leaves it busy, "Deleting", since this one never lands; Keep It
+ * A form asked to confirm a delete over itself: Delete (destructive) and Cancel,
+ * focused. Delete leaves it busy, "Deleting", since this one never lands; Cancel
  * closes the question.
  */
 function DeletingForm() {

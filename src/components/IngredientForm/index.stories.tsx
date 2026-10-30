@@ -974,8 +974,8 @@ function WhatToTryOnTheCompendium({ editing }: { editing: boolean }) {
         </li>
         <li>
           <strong>Another entry&rsquo;s redirect:</strong> a Name with &ldquo;redirect&rdquo; in it
-          is asked about in place of the saves; End Redirect &amp; Save sends it again, Keep It
-          drops the question.
+          is asked about in place of the saves; End Redirect &amp; Save sends it again, Cancel drops
+          the question.
         </li>
         {editing && (
           <li>

@@ -148,7 +148,7 @@ const addingACelestialBodyNode = (
 );
 
 // Delete pressed once drawn, as a person would: the question over the form,
-// dimmed and held beneath it until Delete or Keep It answers.
+// dimmed and held beneath it until Delete or Cancel answers.
 export const AskingToDelete: Story = {
   render: () => {
     usePressOnMount('Delete Category');
