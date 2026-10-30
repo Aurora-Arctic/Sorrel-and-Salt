@@ -46,6 +46,12 @@ const Working = ({
           <DeleteWorkingAction workspaceId={workspaceId} workingId={working.id} name={day} />
         )}
       </div>
+      {working.status === 'draft' &&
+        working.warnings?.map((line) => (
+          <p key={line} className="meta spell-workings__warning">
+            {line}
+          </p>
+        ))}
       <p className="meta">
         {working.recordedBy ? `Recorded by ${working.recordedBy}` : 'Recorded'}
         {working.participants.length > 0 && ` · With ${working.participants.join(', ')}`}

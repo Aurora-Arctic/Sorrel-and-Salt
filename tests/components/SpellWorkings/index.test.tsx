@@ -86,6 +86,15 @@ describe('SpellWorkings', () => {
     expect(lines[0]).toHaveTextContent(/^Testwort/);
   });
 
+  it('says on a draft row what completing it would skip, and on no complete row', () => {
+    renderSection([
+      working({ id: 'w1', status: 'draft', warnings: ['Completing skips Salt: units differ'] }),
+      working({ id: 'w2', warnings: ['Completing skips Pepper: not in stock'] }),
+    ]);
+    expect(within(rows()[0]!).getByText('Completing skips Salt: units differ')).toBeVisible();
+    expect(screen.queryByText(/Pepper/)).not.toBeInTheDocument();
+  });
+
   it('offers Complete on a draft row only, in the slot the page fills', () => {
     renderSection([working({ id: 'w1', status: 'draft' }), working({ id: 'w2' })], (id) => (
       <button type="button">Complete {id}</button>
