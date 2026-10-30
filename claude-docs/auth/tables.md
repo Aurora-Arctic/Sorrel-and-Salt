@@ -48,6 +48,14 @@ convention) and split across two schema files:
   plugin's `schema` option in `src/lib/auth.ts` maps one to the other
   (["Passkeys"](plugins.md)). The plugin alone writes it, through the
   adapter, outside `withAudit`, so it carries no audit columns.
+- **`sign_in_failures`**, in the same file — one row per account counting
+  failed password sign-ins (`user_id` is its key), read and written by the
+  lockout service through `repository/sign-in-failures.ts`, outside
+  `withAudit` (["Passwords"](passwords.md)).
+- **`two_factors`**, in the same file, with `users.two_factor_enabled` —
+  the columns the `twoFactor` plugin declares. It carries no audit columns,
+  and is added to `drizzleAdapter`'s `schema` when the plugin is
+  registered.
 - **`generateId: 'uuid'`** (`src/lib/auth.ts`'s `advanced.database` option)
   makes every primary key a Postgres `uuid` via `gen_random_uuid()`, not
   Better Auth's own default text id — matching `auditColumns`' `uuid`

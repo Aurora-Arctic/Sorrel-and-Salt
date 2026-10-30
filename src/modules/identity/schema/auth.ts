@@ -128,3 +128,21 @@ export const passkeys = pgTable(
     uniqueIndex('passkeys_credentialId_idx').on(table.credentialId),
   ],
 );
+
+// The `twoFactor` plugin's model, named `two_factors` by `usePlural`; the plugin is not registered yet. `secret` and `backup_codes` hold the
+// plugin's encrypted text. The last three columns are its lockout after repeated wrong codes: the count, and until when the account is refused.
+export const twoFactors = pgTable(
+  'two_factors',
+  {
+    id: idColumn(),
+    secret: text('secret').notNull(),
+    backupCodes: text('backup_codes').notNull(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    verified: boolean('verified').default(true).notNull(),
+    failedVerificationCount: integer('failed_verification_count').default(0).notNull(),
+    lockedUntil: timestamp('locked_until'),
+  },
+  (table) => [index('two_factors_userId_idx').on(table.userId)],
+);

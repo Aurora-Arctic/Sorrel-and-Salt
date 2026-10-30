@@ -48,6 +48,8 @@ export const users = pgTable(
     // When the last verification mail went out, so the next is a minute away
     // at least; null until the first (claude-docs/auth/admin-bootstrap.md, "The email page").
     verificationSentAt: timestamp('verification_sent_at'),
+    // The `twoFactor` plugin's flag, true once an authenticator is confirmed; the plugin is not registered yet.
+    twoFactorEnabled: boolean('two_factor_enabled').notNull().default(false),
     ...auditColumns,
   },
   (table) => [
