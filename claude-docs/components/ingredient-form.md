@@ -918,8 +918,8 @@ server, so it has no arrow.
   alone, the owner's call:
   - The question, "Make this folk name the display name?", is set larger, as
     the card's heading. It names no name, since the panel beneath names both.
-  - The swap is a `dl` on a tinted panel. Each term ("New display name",
-    "Becomes a folk name") is a small uppercase overline, with its name
+  - The swap is a `dl` on a tinted panel. Each term ("New Display Name",
+    "Becomes a Folk Name") is a small uppercase overline, with its name
     larger beneath it.
   - On the compendium a muted caption says every coven sees the change at
     once. A coven's question leaves that out.
