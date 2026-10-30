@@ -263,6 +263,12 @@ const ROWS: Record<string, PartialIndexRow> = {
   spell_steps_spell_id_custom_name_unique: { row: () => spellStep(false) },
   spell_steps_spell_id_position_unique: { row: () => spellStep(true) },
   users_email_unique: { row: async () => stamped({ name: 'Fixture Person', email: address() }) },
+  workspaces_demo_unique: {
+    row: async () => {
+      const t = token();
+      return stamped({ name: `Fixture Demo ${t}`, slug: `fixture-demo-${t}`, demo: true });
+    },
+  },
   workspaces_slug_unique: {
     row: async () => {
       const t = token();
