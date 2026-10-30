@@ -38,7 +38,7 @@ test('a viewer prints a one-page recipe with the summary first and no controls',
   await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
 
   // On screen: the button is there for a viewer, reachable by keyboard, and presses to print.
-  const print = page.getByRole('button', { name: 'Print Spell' });
+  const print = page.getByRole('button', { name: /^Print Spell/ });
   await expect(print).toBeVisible();
   await print.focus();
   await expect(print).toBeFocused();

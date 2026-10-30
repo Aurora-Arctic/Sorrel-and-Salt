@@ -2,16 +2,11 @@
 
 import { useMutation } from '@tanstack/react-query';
 import type { Route } from 'next';
-import { type ReactElement } from 'react';
 import { graphql } from '../../gql';
 import { covenTarget } from '../../lib/coven-path';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
-import BusyButton from '../BusyButton';
-import { useClickFeedback } from '../ClickFeedback';
-import { copiedHrefOf } from './copied-href';
-import type { DuplicateSpellActionProps } from './types';
 
 // Duplicate: `duplicateSpell` makes a private draft copy, and the page leaves for the Drafts tab
 // with the copy open in the builder. The recipe page's button and the builder's Duplicate both
@@ -48,36 +43,4 @@ export function useDuplicateSpell(
     onError: (error) => onError(readGraphqlFailure(error).alert ?? GENERIC_FAILURE),
   });
   return { duplicate: copy.mutate, duplicating: copy.isPending || copy.isSuccess };
-}
-
-export default function DuplicateSpellAction({
-  workspaceId,
-  covenSlug,
-  spellId,
-  name,
-}: DuplicateSpellActionProps): ReactElement {
-  const feedback = useClickFeedback({ name: `Duplicate ${name}` });
-  const { duplicate, duplicating } = useDuplicateSpell(
-    workspaceId,
-    (id) => copiedHrefOf(covenSlug, id),
-    feedback.report,
-  );
-  return (
-    <>
-      <BusyButton
-        ref={feedback.anchorRef}
-        className="btn btn--quiet"
-        busy={duplicating}
-        busyLabel="Duplicating"
-        disabled={duplicating}
-        onClick={() => {
-          feedback.report(undefined);
-          duplicate(spellId);
-        }}
-      >
-        Duplicate
-      </BusyButton>
-      {feedback.feedback}
-    </>
-  );
 }

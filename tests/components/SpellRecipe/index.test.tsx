@@ -56,11 +56,6 @@ describe('SpellRecipe', () => {
     );
   });
 
-  it('offers Print Spell with no action given, so a viewer can print', () => {
-    render(<SpellRecipe {...props()} />);
-    expect(screen.getByRole('button', { name: 'Print Spell' })).toBeInTheDocument();
-  });
-
   it('calls a spell with no title Untitled Spell', () => {
     render(<SpellRecipe {...props({ title: null, status: 'draft' })} />);
     expect(screen.getByRole('heading', { level: 1, name: 'Untitled Spell' })).toBeInTheDocument();

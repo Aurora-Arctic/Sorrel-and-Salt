@@ -1,6 +1,7 @@
 'use client';
 
 import { type ReactElement, useEffect, useRef, useState } from 'react';
+import { PreviewButton } from '../IconTip';
 import StepRow from '../StepRow';
 import type { SpellPreviewProps } from './types';
 import { useWakeLock } from './use-wake-lock';
@@ -58,9 +59,7 @@ export default function SpellPreview({ title, steps }: SpellPreviewProps): React
 
   return (
     <>
-      <button type="button" className="btn btn--quiet" onClick={() => setOpen(true)}>
-        Preview
-      </button>
+      <PreviewButton name={title} onClick={() => setOpen(true)} />
       <dialog
         ref={pane}
         className="spell-preview"
