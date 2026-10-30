@@ -680,6 +680,13 @@
       "when": 1793393108604,
       "tag": "0096_card-privilege-route",
       "breakpoints": true
+    },
+    {
+      "idx": 97,
+      "version": "7",
+      "when": 1793402476471,
+      "tag": "0099_card-invitation-attempts",
+      "breakpoints": true
     }
   ]
 }

@@ -463,6 +463,15 @@ column is nullable and nothing would read it until the behaviour landed with it.
   the owner to invite them again, which writes a new row with its own token.
   Nothing un-declines one.
 
+### Card attempts
+
+`card_invitation_attempts` (`src/modules/coven/schema/card-invitation-attempts.ts`) holds the refused opens of a card link by signed-in accounts: one live row per card, account and reason, with an `attempts` count and `last_attempted_at`, so a repeat open adds to the count and never to the row list. It sits beside `invitations` in the coven module because its only subject is a card.
+
+- **Columns.** `invitation_id` and `user_id` are foreign keys, `reason` is `revoked`, `expired` or `accepted`, `attempts` is at least 1, and the table carries the full audit spread and the `updated_at` trigger.
+- **Why the reason is a CHECK.** A CHECK, like `invitations.kind`, rather than a Postgres enum: adding a reason is a one-line constraint change in an ordinary migration and needs no enum migration.
+- **Indexes.** Both are partial on `deleted_at IS NULL`: the unique index on `(invitation_id, user_id, reason)` is what makes a repeat one row, and the index on `invitation_id` serves the per-card count and list.
+- **Writes.** The table is marked `namedWrites`, so only a named repository writer may write it. The refused-open service that does so is a later task.
+
 ## Invitation acceptance details
 
 `src/modules/identity/services/invitation-acceptance.ts` is the one accept service for both tiers of `invitations`. Holding the token names the invitation, and the session's verified address is what admits. No message names a workspace, since the reader is not yet a member of it (claude-docs/auth/admin-users.md, "Inviting an admin").
