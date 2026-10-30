@@ -44,7 +44,7 @@ architecture rules:
 
 ## Where things stand
 
-Everything below was read from the installed Better Auth, `1.7.5`, in
+Everything below was read from the installed Better Auth, in
 `node_modules/better-auth/dist` and `node_modules/@better-auth/core/dist`,
 not from its documentation.
 
@@ -107,9 +107,9 @@ not from its documentation.
   on a hotfix preview, since an admin has to sign in before they can
   impersonate anyone.
 - **Passkeys, SSO, API keys and the OIDC provider are separate packages.**
-  None ships in `better-auth` 1.7.5 and none is installed.
-  `@better-auth/passkey` is at 1.7.6 and declares `better-auth ^1.7.6` as a
-  peer, so adopting it means a core bump.
+  None ships in `better-auth` itself and none is installed.
+  `@better-auth/passkey` declared a newer `better-auth` than the installed one
+  as its peer, so adopting it meant a core bump.
 - **Better Auth's own account deletion is a hard delete.** `/delete-user` in
   `api/routes/update-user.mjs` calls `internalAdapter.deleteUser`, then
   deletes the user's sessions.

@@ -158,7 +158,7 @@ Vitest's import breakdown for a bare `import '@/lib/auth'` in the node project, 
 | -------------------------------------------------- | ----- | ----- | --------------------------------------------------------------------------------------------------------------------------- |
 | `@react-email/components` barrel                   | 154ms | 25%   | Pulls `tailwind` (138ms alone), `code-block`/prismjs (121ms), `markdown`, `render` — the emails use none of the first three |
 | `better-auth` core + drizzle adapter               | 170ms | 28%   | The price of `betterAuth()` itself                                                                                          |
-| `better-auth/plugins` barrel                       | 30ms  | 5%    | Lazy; and 1.7.6 exports no `plugins/last-login-method` subpath, so there is no alternative import                           |
+| `better-auth/plugins` barrel                       | 30ms  | 5%    | Lazy; and the installed version exports no `plugins/last-login-method` subpath, so there is no alternative import           |
 | `drizzle-orm/postgres-js`                          | 64ms  | 11%   |                                                                                                                             |
 | `@/modules/identity` (Pothos, scalars, repository) | 122ms | 20%   | The module barrel registers GraphQL types on import                                                                         |
 
