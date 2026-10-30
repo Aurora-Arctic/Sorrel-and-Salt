@@ -25,6 +25,14 @@ const BASE = {
   categories: [],
 };
 
+const MORE = {
+  workspaceId: 'workspace-1',
+  covenSlug: 'fixture-coven',
+  deletedHref: '/here?deleted=Fixture+Working' as Route,
+  canDuplicate: true,
+  canDelete: true,
+};
+
 describe('SpellCard', () => {
   it('says how many times a spell has been made, in the singular for one and nothing for none', () => {
     const { rerender } = render(<SpellCard {...BASE} workingCount={2} />);
@@ -37,24 +45,98 @@ describe('SpellCard', () => {
     expect(screen.queryByText(/^Made /)).not.toBeInTheDocument();
   });
 
-  it('draws a Delete Spell bin named for the spell only when given what deleting needs, and it asks in a dialog naming the spell', async () => {
-    const deleteSpell = {
+  it('draws a Record a Working button only when given what recording needs, and it opens the dialog that records one', async () => {
+    const recordWorking = {
       workspaceId: 'workspace-1',
-      deletedHref: '/here?deleted=Fixture+Working' as Route,
+      members: [{ userId: 'u1', name: 'Testa Owner' }],
+      recorderId: 'u1',
+      steps: [{ id: 's1', name: 'Testwort' }],
     };
     const { rerender } = render(<SpellCard {...BASE} />);
-    expect(screen.queryByRole('button', { name: /^Delete Spell/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Record a Working' })).not.toBeInTheDocument();
     rerender(
       <QueryClientProvider client={makeQueryClient()}>
-        <SpellCard {...BASE} editHref={'/here?edit=spell-1' as Route} deleteSpell={deleteSpell} />
+        <SpellCard {...BASE} recordWorking={recordWorking} />
       </QueryClientProvider>,
     );
-    press(screen.getByRole('button', { name: 'Delete Spell Fixture Working' }));
+    press(screen.getByRole('button', { name: 'Record a Working' }));
+    expect(await screen.findByRole('dialog', { name: 'Record a Working' })).toBeInTheDocument();
+  });
+
+  it('draws the foot in the order Record a Working, Edit, then the More menu', () => {
+    render(
+      <QueryClientProvider client={makeQueryClient()}>
+        <SpellCard
+          {...BASE}
+          editHref={'/here?edit=spell-1' as Route}
+          recordWorking={{ workspaceId: 'workspace-1', members: [], recorderId: 'u1', steps: [] }}
+          more={MORE}
+        />
+      </QueryClientProvider>,
+    );
+    const names = within(screen.getByRole('article'))
+      .getAllByRole('button')
+      .concat(screen.getAllByRole('link', { name: /^Edit / }))
+      .sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1))
+      .map((el) => el.textContent);
+    expect(names.join('|')).toMatch(
+      /Record a Working.*Edit Fixture Working.*More for Fixture Working/,
+    );
+  });
+
+  it('draws a More menu holding Duplicate and Delete Spell, and no Print, and Delete asks in a dialog naming the spell', async () => {
+    const { rerender } = render(<SpellCard {...BASE} />);
+    expect(screen.queryByRole('button', { name: /^More for / })).not.toBeInTheDocument();
+    rerender(
+      <QueryClientProvider client={makeQueryClient()}>
+        <SpellCard {...BASE} more={MORE} />
+      </QueryClientProvider>,
+    );
+    press(screen.getByRole('button', { name: 'More for Fixture Working' }));
+    expect((await screen.findAllByRole('menuitem')).map((item) => item.textContent)).toEqual([
+      'Duplicate',
+      'Delete Spell',
+    ]);
+    press(screen.getByRole('menuitem', { name: 'Delete Spell' }));
     expect(
       within(await screen.findByRole('dialog', { name: 'Delete Spell' })).getByText(
         'Fixture Working',
       ),
     ).toBeInTheDocument();
+  });
+
+  it('offers only what the role may do in the menu, and draws no menu when it may do neither', async () => {
+    const { rerender } = render(
+      <QueryClientProvider client={makeQueryClient()}>
+        <SpellCard {...BASE} more={{ ...MORE, canDelete: false }} />
+      </QueryClientProvider>,
+    );
+    press(screen.getByRole('button', { name: 'More for Fixture Working' }));
+    expect((await screen.findAllByRole('menuitem')).map((item) => item.textContent)).toEqual([
+      'Duplicate',
+    ]);
+    rerender(
+      <QueryClientProvider client={makeQueryClient()}>
+        <SpellCard {...BASE} more={{ ...MORE, canDuplicate: false, canDelete: false }} />
+      </QueryClientProvider>,
+    );
+    expect(screen.queryByRole('button', { name: /^More for / })).not.toBeInTheDocument();
+  });
+
+  it('keeps the buttons out of the title link', () => {
+    render(
+      <QueryClientProvider client={makeQueryClient()}>
+        <SpellCard
+          {...BASE}
+          href={'/coven/x/grimoire/spell-1' as Route}
+          recordWorking={{ workspaceId: 'workspace-1', members: [], recorderId: 'u1', steps: [] }}
+          more={MORE}
+        />
+      </QueryClientProvider>,
+    );
+    const title = screen.getByRole('link', { name: /^Fixture Working/ });
+    expect(title.contains(screen.getByRole('button', { name: 'Record a Working' }))).toBe(false);
+    expect(title.contains(screen.getByRole('button', { name: /^More for / }))).toBe(false);
   });
 
   it('draws an Edit link named for the spell only when given the address', () => {

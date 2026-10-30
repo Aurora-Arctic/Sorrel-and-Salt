@@ -24,7 +24,7 @@ const ID = '00000000-0000-4000-8000-000000000002';
 const COPY_ID = '00000000-0000-4000-8000-000000000003';
 const DELETED_HREF = '/coven/fixture-coven/grimoire?deleted=Fixture+Working' as Route;
 
-function renderMenu({ canDuplicate = true, canDelete = true } = {}) {
+function renderMenu({ canDuplicate = true, canDelete = true, canPrint = true } = {}) {
   return render(
     <QueryClientProvider client={makeQueryClient()}>
       <main>
@@ -37,6 +37,7 @@ function renderMenu({ canDuplicate = true, canDelete = true } = {}) {
           deletedHref={DELETED_HREF}
           canDuplicate={canDuplicate}
           canDelete={canDelete}
+          canPrint={canPrint}
         />
       </main>
     </QueryClientProvider>,
@@ -89,6 +90,11 @@ describe('SpellMoreMenu', () => {
     expect((await screen.findAllByRole('menuitem')).map((item) => item.textContent)).toEqual([
       'Print',
     ]);
+  });
+
+  it('draws no menu when it holds nothing, as on a card, which does not print', () => {
+    renderMenu({ canDuplicate: false, canDelete: false, canPrint: false });
+    expect(screen.queryByRole('button', { name: /^More for/ })).not.toBeInTheDocument();
   });
 
   it('opens the print dialog when Print is chosen', () => {

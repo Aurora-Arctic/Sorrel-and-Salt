@@ -5,7 +5,8 @@ import CategoryChips from '../CategoryChips';
 import LastEdit from '../LastEdit';
 import { EditLink, QuickLookLink } from '../IconTip';
 import LinkHint from '../LinkHint';
-import DeleteSpellAction from '../SpellRecipe/delete-spell';
+import RecordWorkingButton from '../RecordWorking';
+import SpellMoreMenu from '../SpellRecipe/more-menu';
 import type { SpellCardProps } from './types';
 import './index.scss';
 
@@ -26,7 +27,8 @@ const SpellCard = ({
   id,
   href,
   editHref,
-  deleteSpell,
+  recordWorking,
+  more,
   lookHref,
   title,
   intent,
@@ -95,12 +97,12 @@ const SpellCard = ({
         </p>
       )}
       {/* In the foot, as IngredientCard's, so cards in one grid row end on the same line. */}
-      {(lastEdit != null || lookHref || editHref || deleteSpell) && (
+      {(lastEdit != null || lookHref || editHref || recordWorking || more) && (
         // The foot, as IngredientCard's: who last edited, then the actions on one row, the
         // Quick Look eye at the bottom left (the start group) and the Edit pencil and Delete Spell bin at the right.
         <div className="specimen__foot">
           {lastEdit != null && <LastEdit by={lastEdit.by} at={lastEdit.at} />}
-          {(lookHref || editHref || deleteSpell) && (
+          {(lookHref || editHref || recordWorking || more) && (
             <div className="specimen__actions">
               {lookHref && (
                 <span className="specimen__actions-start">
@@ -112,14 +114,18 @@ const SpellCard = ({
                   />
                 </span>
               )}
+              {recordWorking && (
+                <RecordWorkingButton {...recordWorking} spellId={id} spellVisibility={visibility} />
+              )}
               {editHref && (
                 <EditLink
                   href={editHref}
                   name={name}
                   heading={{ eyebrow: 'Edit Spell', title: name }}
+                  className="icon-tip__edit icon-tip__edit--plain"
                 />
               )}
-              {deleteSpell && <DeleteSpellAction {...deleteSpell} spellId={id} name={name} />}
+              {more && <SpellMoreMenu {...more} spellId={id} name={name} canPrint={false} />}
             </div>
           )}
         </div>

@@ -550,8 +550,9 @@ test(
     await expect(grimoireList(page).getByRole('listitem')).toHaveCount(2);
 
     await grimoireList(page)
-      .getByRole('button', { name: 'Delete Spell Card Doomed Working', exact: true })
+      .getByRole('button', { name: 'More for Card Doomed Working', exact: true })
       .click();
+    await page.getByRole('menuitem', { name: /^Delete Spell/ }).click();
     const question = page.getByRole('dialog', { name: 'Delete Spell', exact: true });
     await expect(question).toContainText('Card Doomed Working');
     await assertNoAccessibilityViolations(page);

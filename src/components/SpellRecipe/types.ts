@@ -170,4 +170,6 @@ export interface SpellMoreMenuProps extends DeleteSpellActionProps {
   covenSlug: string;
   canDuplicate: boolean;
   canDelete: boolean;
+  /** Print is the recipe page's alone: a card's menu leaves it out, and with nothing else draws no menu. */
+  canPrint: boolean;
 }

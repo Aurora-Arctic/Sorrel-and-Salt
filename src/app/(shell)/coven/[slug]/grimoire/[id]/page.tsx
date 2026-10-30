@@ -188,6 +188,7 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
                 deletedHref={deletedHref}
                 canDuplicate={canDuplicate}
                 canDelete={canDelete}
+                canPrint
               />
             </div>
           }

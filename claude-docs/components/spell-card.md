@@ -18,20 +18,21 @@ The card is presentational: it takes props and works nothing out from the data, 
 
 ## Props
 
-| Prop           | What it is                                                                                            |
-| -------------- | ----------------------------------------------------------------------------------------------------- |
-| `id`           | The spell's id. It names the title heading, `spellTitleId(id)`                                        |
-| `title`        | The title, or null. Null or blank lists as "Untitled Spell"                                           |
-| `intent`       | The intent, or null. Without one the card draws no paragraph                                          |
-| `status`       | `draft` or `complete`                                                                                 |
-| `visibility`   | `private` or `workspace`: who can see it                                                              |
-| `categories`   | The assigned categories, each with its group's colours. Never the derived ones (DESIGN.md §5)         |
-| `workingCount` | How many complete workings the viewer can see, from the count loader. Zero or none draws no line      |
-| `lastEdit`     | Who last edited it and when, `{ by, at }`, worked out by the caller. None draws no line               |
-| `editHref`     | Where the Edit pencil opens the spell, the tab's own address plus `?edit=<id>`. None draws no pencil  |
-| `deleteSpell`  | What the Delete Spell bin needs: `{ workspaceId, deletedHref }`. None draws no bin (M13.11)           |
-| `lookHref`     | Where the Quick Look eye opens the spell, the tab's own address plus `?spell=<id>`. None draws no eye |
-| `level`        | The title's heading level, 2 by default                                                               |
+| Prop            | What it is                                                                                                                            |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`            | The spell's id. It names the title heading, `spellTitleId(id)`                                                                        |
+| `title`         | The title, or null. Null or blank lists as "Untitled Spell"                                                                           |
+| `intent`        | The intent, or null. Without one the card draws no paragraph                                                                          |
+| `status`        | `draft` or `complete`                                                                                                                 |
+| `visibility`    | `private` or `workspace`: who can see it                                                                                              |
+| `categories`    | The assigned categories, each with its group's colours. Never the derived ones (DESIGN.md §5)                                         |
+| `workingCount`  | How many complete workings the viewer can see, from the count loader. Zero or none draws no line                                      |
+| `lastEdit`      | Who last edited it and when, `{ by, at }`, worked out by the caller. None draws no line                                               |
+| `editHref`      | Where the Edit pencil opens the spell, the tab's own address plus `?edit=<id>`. None draws no pencil                                  |
+| `recordWorking` | What the Record a Working button needs: `{ workspaceId, members, recorderId, steps }`. None draws no button                           |
+| `more`          | What the More menu needs: `{ workspaceId, covenSlug, deletedHref, canDuplicate, canDelete }`. None, or nothing allowed, draws no menu |
+| `lookHref`      | Where the Quick Look eye opens the spell, the tab's own address plus `?spell=<id>`. None draws no eye                                 |
+| `level`         | The title's heading level, 2 by default                                                                                               |
 
 ## Its name
 
@@ -76,9 +77,11 @@ out and passes it only for a role that may update a spell (`rolePermits(role, { 
 ['update'] })`), so a viewer's cards have none. It keeps the tab's filter, page and tab in
 the address, so closing the dialog returns to the list as it was.
 
-## The Delete Spell bin
+## Record a Working, Edit and the More menu
 
-Given `deleteSpell`, the card draws `DeleteSpellAction` (`SpellRecipe/delete-spell.tsx`, the recipe page's own component, so there is one delete and one confirmation dialog) after the Edit pencil in the `specimen__actions` row: a bin named "Delete Spell <title>" that asks in a dialog naming the spell before deleting (M13.11; the owner, 2026-10-29). The card passes its own `id` and name; the props carry the coven and `deletedHref`. Data rather than a React node is passed, as `editHref` is. The grimoire tab passes it only for a role that may delete a spell (`rolePermits(role, { spell: ['delete'] })`: owner and member, never viewer). `deletedHref` is the tab's address with its filter and page kept and `deleted=<name>` added, so a confirmed delete lands back on the same list with the success Notice. The card has no story with the bin: it needs a query client, which the workshop does not provide.
+The foot's actions, after the Quick Look eye, are the spell page's own parts, so each has one implementation: `RecordWorkingButton` (the green cauldron, opening the same Record a Working dialog), the Edit pencil (text colour) and `SpellMoreMenu` (`SpellRecipe/more-menu.tsx`) holding Duplicate and Delete Spell (destructive). The card passes its own `id`, `visibility` and name, and `canPrint={false}`: Print is the spell page's alone. The menu draws nothing when neither Duplicate nor Delete Spell is allowed. The buttons sit in the foot, outside the title link, so no interactive element nests in another. Each needs a query client, which the workshop does not provide, so the card has no story with them.
+
+The grimoire tab builds `recordWorking` for a complete spell when the role may record a working and read members (the spell page's rule) and `more` when the role may create or delete a spell (`rolePermits`: owner and member, never viewer). The list does not already hold what the dialog needs, so `readRecordingOf` (`(list)/reads.ts`) reads the coven's members once and every complete spell's ingredient steps in one `stepsOfSpells` batch per page. `deletedHref` is the tab's address with its filter and page kept and `deleted=<name>` added.
 
 ## The Quick Look eye
 
