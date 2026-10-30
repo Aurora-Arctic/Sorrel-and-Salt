@@ -47,7 +47,7 @@ export interface GrimoireListProps {
   cursor?: SearchCursor;
   /** How many spells the filter found on this tab, every page. */
   total: number;
-  /** The viewer may write a spell: an empty Spells tab then names no roles. */
+  /** The viewer may write a spell: an empty tab then names no roles. */
   canCreate: boolean;
   previousHref?: Route;
   nextHref?: Route;

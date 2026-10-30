@@ -5,8 +5,8 @@ import type { EmptyGrimoireProps } from './types';
 
 // What a grimoire tab draws with no card, as a named status region: No Spells (No Drafts on the Drafts
 // tab) or No Matches, where a filter matched nothing. `hasFilter` is the search sentence's own test.
-// There is no first add: New Spell at the heading opens the builder, and an empty Spells tab tells a
-// viewer, who has no New Spell, which roles can write one (claude-docs/components/grimoire-list.md).
+// There is no first add: New Spell at the heading opens the builder, and an empty tab tells a viewer,
+// who has no New Spell, which roles can write one (claude-docs/components/grimoire-list.md).
 
 const EmptyGrimoire = ({ status, filter, canCreate }: EmptyGrimoireProps): ReactElement => {
   const { hasFilter } = buildSearchSentence({ filter, total: 0 });
@@ -20,7 +20,7 @@ const EmptyGrimoire = ({ status, filter, canCreate }: EmptyGrimoireProps): React
         className="grimoire-list__empty"
       >
         <p>{drafts ? 'There are no drafts here yet.' : 'There are no complete spells here yet.'}</p>
-        {!drafts && !canCreate && <p>A member or owner of this coven can write them.</p>}
+        {!canCreate && <p>A member or owner of this coven can write them.</p>}
       </div>
     );
   }
