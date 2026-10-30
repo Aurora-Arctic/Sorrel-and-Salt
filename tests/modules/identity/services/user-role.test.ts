@@ -87,8 +87,10 @@ afterEach(async () => {
   await sql`drop function if exists refuse_demo_seat()`;
 });
 
-/** The standard scenario has no demo coven, so a case that needs one removes it afterwards and starts from none. */
+/** Every case starts from no demo coven, whether or not the template holds one. */
 async function removeDemoCoven(): Promise<void> {
+  // The coven's contents reference its row, so they go first; the cascade also empties the tables that hang off them.
+  await sql`truncate spell_workings, spells, inventory_items, workspace_compendium_entries, ingredients cascade`;
   await sql`delete from workspace_members where workspace_id = ${DEMO_WORKSPACE_ID}`;
   await sql`delete from workspaces where id = ${DEMO_WORKSPACE_ID}`;
 }
