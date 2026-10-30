@@ -36,7 +36,7 @@ export interface SpellWorkingsProps {
   workspaceId: string;
   /** Newest day first, as read. */
   workings: readonly WorkingView[];
-  /** The control that completes a draft working, drawn on draft rows only. */
+  /** The control that completes a draft working, drawn on the recorder's own draft rows (those carrying `editable`). */
   completeAction?: (workingId: string) => ReactNode;
   /** The pencil that opens the Edit dialog on a working, drawn on the rows that carry `editable`. */
   editAction?: (working: EditableWorking, name: string) => ReactNode;

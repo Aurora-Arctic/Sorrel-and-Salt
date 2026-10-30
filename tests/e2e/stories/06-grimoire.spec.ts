@@ -795,7 +795,7 @@ test(
     await expect(workings.getByText('First brewing')).toBeVisible();
     await expect(workings.getByText('Named rite')).toBeVisible();
     await expect(workings.getByText('Secret rite')).toHaveCount(0);
-    await expect(workings.getByRole('button', { name: 'Complete' })).toHaveCount(2);
+    await expect(workings.getByRole('button', { name: 'Complete' })).toHaveCount(1);
     await expect(workings.getByRole('listitem').filter({ hasText: 'Waiting rite' })).toContainText(
       /Completing skips Rosemary.*not in stock/,
     );
