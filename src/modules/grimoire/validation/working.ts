@@ -60,5 +60,3 @@ export const WorkingInput = z
     visibility: z.enum(VISIBILITIES, { error: 'Choose private or coven' }).optional(),
   })
   .superRefine(distinctParticipants);
-
-export type WorkingInputValue = z.output<typeof WorkingInput>;
