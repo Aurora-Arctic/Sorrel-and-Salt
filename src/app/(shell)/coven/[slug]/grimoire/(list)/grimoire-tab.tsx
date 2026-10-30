@@ -13,7 +13,7 @@ import { GRIMOIRE_PARAMS, VISIBILITIES, VISIBILITY_LABELS } from '@/components/G
 import type { GrimoireFacets, GrimoireListFilter } from '@/components/GrimoireList/types';
 import { NEW, opensNewSpell } from '@/components/AppShell/add-href';
 import { single } from '@/lib/search-params';
-import { pagerHrefs } from '@/lib/list-href';
+import { pagerHrefs, withParam } from '@/lib/list-href';
 import { readPageCursors } from '@/lib/numbered-page';
 import { requireCovenMembership } from '@/lib/request-session';
 import { RowId } from '@/lib/validation';
@@ -38,8 +38,7 @@ import { viewedDetailsOf } from '../../ingredients/viewed-details';
 // card's Record a Working button, Edit pencil and More menu, links back to this address with
 // `deleted` or `?edit=<id>` added.
 /** `closeHref` with a saved spell's dialog open over it. */
-const editHrefOf = (closeHref: Route, id: string): Route =>
-  `${closeHref}${closeHref.includes('?') ? '&' : '?'}${new URLSearchParams({ edit: id })}` as Route;
+const editHrefOf = (closeHref: Route, id: string): Route => withParam(closeHref, 'edit', id);
 
 /**
  * The four facets' choices from their counts. A picked moon phase or day no spell holds is still

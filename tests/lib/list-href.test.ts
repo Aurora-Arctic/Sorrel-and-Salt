@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dialogParams, listHref } from '@/lib/list-href';
+import { dialogParams, listHref, withParam } from '@/lib/list-href';
 import { list } from '@/lib/search-params';
 
 // The one shared path every list's address goes through (rule 5): a bare flag
@@ -57,5 +57,27 @@ describe('listHref, with a list', () => {
   it('is read back by list', () => {
     const href = new URL(listHref('/compendium', { forms: ['A b', 'Oil'] }), 'http://x');
     expect(list(href.searchParams.getAll('forms'))).toEqual(['A b', 'Oil']);
+  });
+});
+
+// One parameter added to an address that may already carry a query: a Quick Look, an edit dialog or a
+// deleted notice opened over a filtered list keeps the filter.
+describe('withParam', () => {
+  it('starts the query on an address with none', () => {
+    expect(withParam('/coven/testwort/grimoire', 'spell', 's1')).toBe(
+      '/coven/testwort/grimoire?spell=s1',
+    );
+  });
+
+  it('adds to a query already there, keeping it', () => {
+    expect(withParam('/coven/testwort/grimoire?q=moon&drafts', 'edit', 's1')).toBe(
+      '/coven/testwort/grimoire?q=moon&drafts&edit=s1',
+    );
+  });
+
+  it('encodes the value', () => {
+    expect(withParam('/coven/testwort/grimoire', 'deleted', 'Moon & Salt/Water')).toBe(
+      '/coven/testwort/grimoire?deleted=Moon+%26+Salt%2FWater',
+    );
   });
 });
