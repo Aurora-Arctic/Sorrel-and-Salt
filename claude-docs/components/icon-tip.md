@@ -266,7 +266,7 @@ The tip is `fixed`, so a table frame's sideways scroll clips nothing. It fades i
 
 ## The icons
 
-Every line icon on a 16-unit box is drawn at stroke 1.5 unless its drawing needs another, and then the icon's comment says why. The exceptions are the eye's outline at 1, the jar at 1.2, and Annotate, the cauldron and the Complete flask at 1.25. The stock badge's marks, the spell builder's supply marks, the source form's page and pencil, and the InfoTip ring are 1.5 like the rest. The icons on a 24-unit box (the section nav's and the form icons, at 1.6) and the shelf mark on a 32-unit box (1.2) keep their own strokes.
+Every line icon on a 16-unit box is drawn at stroke 1.5 unless its drawing needs another, and then the icon's comment says why. The exceptions are the eye's outline at 1, the jar at 1.2, and Annotate and the cauldron at 1.25. The stock badge's marks, the spell builder's supply marks, the source form's page and pencil, and the InfoTip ring are 1.5 like the rest. The icons on a 24-unit box (the section nav's and the form icons, at 1.6) and the shelf mark on a 32-unit box (1.2) keep their own strokes.
 
 The mystic eye (Quick Look) is an almond eye whose iris is a tilted waxing crescent with a four-point star. The copy icon is two overlapping sheets, for Restore Original and Copy From Ingredient. The undo and redo icons are mirror images on the same 16-unit box, sized by attribute since a bare `svg` in a `.btn` has no size of its own. The jar icon is a jar with a cloth tied over its mouth, the cloth's hem wavy, worn by Edit Stock in place of the pencil. Its stroke is 1.2 as the jar is drawn larger.
 
