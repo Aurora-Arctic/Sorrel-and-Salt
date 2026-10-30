@@ -45,8 +45,6 @@ export interface CovenCardEntry {
    * role that may not update.
    */
   annotateHref?: Route;
-  /** The coven's own entry, for a role that may delete it: More offers Delete Ingredient. */
-  mayDelete?: boolean;
   /** A compendium entry the cupboard holds, for a role that may make it the coven's own. */
   mayMakeOurs?: boolean;
   /** A compendium entry the cupboard holds, for a role that may remove it. */
@@ -61,7 +59,7 @@ export interface CovenCardEntry {
 /** A card's More (`card-more.tsx`): the entry, its coven, and what the role may do to it. */
 export interface CardMoreProps extends Pick<
   CovenCardEntry,
-  'id' | 'label' | 'mayDelete' | 'mayMakeOurs' | 'mayRemove'
+  'id' | 'label' | 'mayMakeOurs' | 'mayRemove'
 > {
   /** The card's name with its formal name, read after each control's verb. */
   name: string;

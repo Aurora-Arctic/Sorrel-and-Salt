@@ -438,8 +438,8 @@ test("a card's More opened near the window's foot opens above it, inside the win
   const coven = await seedCoven(page, 'Fixture Coven Gate Menu Foot', 'gate-menu-foot.test', {
     A: 'owner',
   });
-  // A held compendium entry, whose More holds two choices; a coven's own entry with
-  // Delete alone draws a bin and no More.
+  // A held compendium entry, whose More holds two choices; a coven's own entry draws Edit and
+  // no More and no Delete, which its Edit Ingredient dialog holds.
   await withSql(async (sql) => {
     const ingredientId = await insertIngredient(
       sql,
@@ -454,7 +454,8 @@ test("a card's More opened near the window's foot opens above it, inside the win
   });
   await page.goto(listPath(coven));
   const own = rowOf(ingredientList(page), 'Fixture Ownwort');
-  await expect(own.getByRole('button', { name: /^Delete Ingredient/ })).toBeVisible();
+  await expect(own.getByRole('link', { name: /^Edit Fixture Ownwort/ })).toBeVisible();
+  await expect(own.getByRole('button', { name: /^Delete/ })).toHaveCount(0);
   await expect(own.getByRole('button', { name: /^More for/ })).toHaveCount(0);
   const more = rowOf(ingredientList(page), 'Fixture Footwort').getByRole('button', {
     name: /^More for Fixture Footwort/,

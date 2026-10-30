@@ -73,8 +73,8 @@ export default async function CovenIngredientsPage({
   // retired one included; an own entry or one not held opens nothing.
   const annotated =
     mayEdit && annotateId ? await heldCompendiumEntry(membership, annotateId) : undefined;
-  // A card's More: Delete on the coven's own entry, Make It Ours and Remove on a compendium entry,
-  // on the permissions their services assert.
+  // A held compendium entry's More: Make It Ours and Remove, on the permissions their services
+  // assert. An own entry's Delete is in its Edit Ingredient dialog, not on the card.
   const mayDelete = rolePermits(membership.role, { ingredient: ['delete'] });
   const mayMakeOurs = rolePermits(membership.role, MAKE_IT_OURS_PERMISSION);
   // The foot's Edit Stock pencil, on the permission `saveStock` asserts: none for a viewer.
@@ -91,7 +91,7 @@ export default async function CovenIngredientsPage({
   ) => ({
     ...(own && mayEdit && { editHref, editHeading: editHeading(shown) }),
     ...(!own && mayEdit && { annotateHref: placed({ annotate: shown.id }) }),
-    ...(own ? { mayDelete } : { mayMakeOurs, mayRemove: mayDelete }),
+    ...(!own && { mayMakeOurs, mayRemove: mayDelete }),
   });
 
   // The address names categories and deities by slug; the service filters by id.
@@ -185,8 +185,8 @@ export default async function CovenIngredientsPage({
           opened={
             viewed && {
               ...viewedDetailsOf(viewed, workspace.slug),
-              // The card's own controls for this entry: Edit over the details or Annotate, and
-              // More or the bin, whose delete or remove goes back to the list, which closes them.
+              // The card's own controls for this entry: Edit over the details or Annotate, and More,
+              // whose remove goes back to the list, which closes them.
               actions: covenCardActions(
                 {
                   id: viewed.shown.id,

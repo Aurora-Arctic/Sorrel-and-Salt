@@ -32,6 +32,10 @@ The long form of `CLAUDE.md`'s components and styling convention. `CLAUDE.md` wi
 - **No print styles anywhere except the spell recipe view** — the page is MB.6, the print layout is M10.22. `_print.scss` is created by M10.22 and scoped to that one view.
 - **A category group's colours are data, not tokens**: `color` are hexes on the row, contrast-checked on write, as DESIGN.md §5 argues; the seeded pairs live only in `src/db/seed/category-groups.ts`, and no Sass token restates them (claude-docs/styling.md, "Category-group colours").
 
+## Destructive controls
+
+- **A thing's Delete or Remove lives in its edit dialog, where it has one**: nowhere on its row or card, and not in its Quick Look, as a bin or as a button beside Edit. A thing with no edit dialog keeps a lone bin that asks before it acts. A More menu that already holds other choices may list Delete or Remove among them, asking in place (claude-docs/components/icon-tip.md, "The controls built on it"; claude-docs/components/coven-cards.md).
+
 ## Copy
 
 - **Button labels are title case** — "Sign In", "Send Confirmation", "Send Again in 59s"; a short preposition stays lower, as title case has it ("Continue with Google"). This holds for every button, submit and `.btn` anchor (DESIGN.md §9); a component touched with a sentence-case label is fixed in that PR.
