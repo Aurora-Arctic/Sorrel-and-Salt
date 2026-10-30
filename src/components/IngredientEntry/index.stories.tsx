@@ -1059,7 +1059,7 @@ export const States: Story = {
   argTypes: {
     state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
   },
-  render: ({ state }) => <div key={String(state)}>{state}</div>,
+  render: ({ state }) => <div>{state}</div>,
 };
 
 const DETAILS_STATES: Record<string, ReactNode> = {
@@ -1087,7 +1087,7 @@ export const QuickLook: Story = {
   argTypes: {
     state: { control: 'select', options: Object.keys(DETAILS_STATES), mapping: DETAILS_STATES },
   },
-  render: ({ state }) => <div key={String(state)}>{state}</div>,
+  render: ({ state }) => <div>{state}</div>,
 };
 
 // The admin's review switch, in the foot of an entry's details on the

@@ -190,7 +190,7 @@ export const States: Story = {
     <ShellFrame area="coven" open="/coven/fixture-coven/ingredients">
       <main>
         <PageHeader title="Ingredients" />
-        <div key={String(state)}>{state}</div>
+        <div>{state}</div>
       </main>
     </ShellFrame>
   ),

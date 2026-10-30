@@ -3,7 +3,6 @@ import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { ShellFrame } from '../../../.storybook/shell-frame';
 import Backdrop from '../Backdrop';
-import NotAuthorized from '../NotAuthorized';
 import ErrorPage from '.';
 
 // Render-only; behaviour is asserted in tests/components/ErrorPage. Each story
@@ -58,28 +57,14 @@ const SomethingWentWrongView = () => (
 
 const somethingWentWrongNode = <SomethingWentWrongView />;
 
-// The 403 page `forbidden.tsx` draws for a signed-in non-admin: its real
-// `main.page-frame`, inside the app shell. It takes no props.
-const notAuthorizedNode = (
-  <>
-    <ShellFrame area="none" open="/admin" workspaces={[]} viewer={{ canCreate: false }}>
-      <main className="page-frame">
-        <NotAuthorized />
-      </main>
-    </ShellFrame>
-    <Backdrop />
-  </>
-);
-
 const STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   'Not Found Signed Out': notFoundSignedOutNode,
   'Something Went Wrong': somethingWentWrongNode,
-  'Not Authorized': notAuthorizedNode,
 };
 
 export const States: Story = {
   args: { state: 'Default' },
   argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
-  render: ({ state }) => <div key={String(state)}>{state}</div>,
+  render: ({ state }) => <div>{state}</div>,
 };

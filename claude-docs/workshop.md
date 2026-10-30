@@ -58,7 +58,7 @@ without a page routed to it.
      piece is drawn from.
   2. **A piece the app draws in one area goes under that area's group**, in the
      order a person meets them: **Pages** (a whole page with no area of its own:
-     Welcome, the invitation page; Not Authorized is a state of Error Page), **Sign In** (the panel, the
+     Welcome, the invitation page, Error Page, Not Authorized), **Sign In** (the panel, the
      sign-in methods and the provider mark), **Shell** (the bar and what sits
      in it: the account menu, the context row), **Account** (including
      `Account / Invitations Received`), **Coven** (including
@@ -565,7 +565,7 @@ The workshop's font plumbing substitutes, Vite-side, for what `next/font` +
 
 ## The `state` dropdown story
 
-A story with a `state` control (rule 5 above) draws a whole page or list, too big to sit beside the others. Its `state` arg is the node it draws: the `argTypes` mapping turns the chosen name into that node, so the story's type is `StoryObj<{ state?: ReactNode }>`. Story files do not repeat either fact.
+A story with a `state` control (rule 5 above) draws a whole page or list, too big to sit beside the others. Its `state` arg is the node it draws: the `argTypes` mapping turns the chosen name into that node, so the story's type is `StoryObj<{ state?: ReactNode }>`. Story files do not repeat either fact. A node keys nothing, so the frame's decorator keys the story by the chosen name (`context.unmappedArgs.state`): a new choice remounts it, and its state, its fake API handlers and its scripted presses start afresh, as they do when the state is opened by its address.
 
 ## Notes the `.storybook/` files cite
 

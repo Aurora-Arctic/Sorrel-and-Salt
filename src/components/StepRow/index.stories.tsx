@@ -3,7 +3,8 @@ import { fn } from 'storybook/test';
 import { type ReactNode, useState } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { StatesGrid } from '../../../.storybook/states-grid';
-import { ChevronIcon, ClearIcon, GripIcon } from '../Combobox/icons';
+import { GripIcon } from '../Combobox/icons';
+import { ChevronIcon, CrossIcon } from '../IconTip/icons';
 import { SelectField, TextField } from '../Field';
 import { EditIcon } from '../IngredientForm/icons';
 import SafetyNote, { SafetyMark, ToxicMark } from '../SafetyNote';
@@ -107,7 +108,7 @@ function Card({ initiallyOpen, editing }: { initiallyOpen: boolean; editing?: bo
                 aria-label={`Remove ${NAME}`}
                 onClick={fn()}
               >
-                <ClearIcon />
+                <CrossIcon />
               </button>
             ) : null
           }
@@ -171,7 +172,8 @@ export const States: Story = {
               name="Mockleaf (Oil)"
               icon="fluid"
               marks={<ToxicMark {...SAFETY} />}
-              note={<SafetyNote level={5} compact {...SAFETY} />}
+              // Level 4 under the grid's level-3 names; the builder's step list puts it at 5.
+              note={<SafetyNote level={4} compact {...SAFETY} />}
             />
           </List>
         ),

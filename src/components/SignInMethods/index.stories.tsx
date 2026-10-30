@@ -186,7 +186,7 @@ export const States: Story = {
   argTypes: {
     state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
   },
-  render: ({ state }) => <div key={String(state)}>{state}</div>,
+  render: ({ state }) => <div>{state}</div>,
 };
 
 const WHOLEPAGE_STATES: Record<string, ReactNode> = {
@@ -199,5 +199,5 @@ export const WholePage: Story = {
   argTypes: {
     state: { control: 'select', options: Object.keys(WHOLEPAGE_STATES), mapping: WHOLEPAGE_STATES },
   },
-  render: ({ state }) => <div key={String(state)}>{state}</div>,
+  render: ({ state }) => <div>{state}</div>,
 };

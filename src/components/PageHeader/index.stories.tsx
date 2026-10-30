@@ -89,7 +89,7 @@ export const States: Story = {
   argTypes: {
     state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
   },
-  render: ({ state }) => <div key={String(state)}>{state}</div>,
+  render: ({ state }) => <div>{state}</div>,
 };
 
 // Pinned to a phone's width, since the wrap is what it shows.

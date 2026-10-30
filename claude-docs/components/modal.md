@@ -903,12 +903,12 @@ Stock dialog takes it (M9.9, the owner's call of 2026-10-20; [`stock-dialog.md`]
 ## Stories
 
 [`index.stories.tsx`](../../src/components/Modal/index.stories.tsx), under
-`Surfaces / Modal`. One story, `States`, with a control that chooses the state. It sets `meta = { iframed: true }`, since the dialog
-sits in the top layer ([`workshop.md`](../workshop.md)); each owner keeps an
-Open button to bring it back after Close or Escape.
+`Surfaces / Modal`. One story, `States`, with a control that chooses the state. It needs no
+setting for the top layer, since Storybook draws each story in a frame of its own
+([`workshop.md`](../workshop.md)); each owner keeps an Open button to bring it
+back after Close or Escape.
 
-- Plain, the default column around a small form, and Wide, the wide
-  size around a longer one.
+- Plain, the default column around a small form.
 - Editing, an edit dialog's head: the eyebrow, a long title and a binomial
   as the qualifier. With Every Head Part and With A Destination are other heads.
 - Opened By Its Address, a `RouteModal` with `content`, as an address opens it.

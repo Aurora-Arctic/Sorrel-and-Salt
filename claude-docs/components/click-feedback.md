@@ -102,9 +102,9 @@ in one does not run past its edge (the owner's call, 2026-10-20): in the
 admin's user modal at a desktop's width, its start under Change Role's would
 leave the dialog, so its end stands under the button's end. The dialog is a
 measure only, and clips nothing of the fixed callout. The box is found and
-measured in the control's own document and window, since a story Storybook draws
-into an iframe (`meta.iframed`) runs its script in the page around the frame,
-where `instanceof Element` is false for the frame's nodes.
+measured in the control's own document and window, so a control drawn in
+another frame than the script's is measured where it sits: from outside the
+frame, `instanceof Element` is false for the frame's nodes.
 
 In a box narrower than the callout at its widest (20rem, or the screen less
 2rem), as that modal is on a phone, the callout narrows to the larger of the

@@ -55,13 +55,13 @@ const withActionsNode = (
     currentUserId="u-ada"
     showEmail
     roleAction={() => (
-      <button type="button" className="btn btn--small btn--quiet">
+      <button type="button" className="btn btn--quiet btn--small">
         Change Role
       </button>
     )}
     removeAction={(member) =>
       member.role === 'owner' ? null : (
-        <button type="button" className="btn btn--small btn--destructive">
+        <button type="button" className="btn btn--destructive btn--small">
           Remove
         </button>
       )
@@ -84,13 +84,13 @@ const SoleOwnerPage = () => (
         currentUserId="u-ada"
         showEmail
         roleAction={() => (
-          <button type="button" className="btn btn--small btn--quiet">
+          <button type="button" className="btn btn--quiet btn--small">
             Change Role
           </button>
         )}
         removeAction={(member) =>
           member.role === 'owner' ? null : (
-            <button type="button" className="btn btn--small btn--destructive">
+            <button type="button" className="btn btn--destructive btn--small">
               Remove
             </button>
           )
@@ -131,5 +131,5 @@ export const States: Story = {
   argTypes: {
     state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
   },
-  render: ({ state }) => <div key={String(state)}>{state}</div>,
+  render: ({ state }) => <div>{state}</div>,
 };

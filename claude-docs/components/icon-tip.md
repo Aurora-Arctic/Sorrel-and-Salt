@@ -220,7 +220,7 @@ Tokens and three mixins in `_mixins.scss`, so every Edit matches:
 
 [`index.stories.tsx`](../../src/components/IconTip/index.stories.tsx),
 `Forms / Icon Tip`, filed by kind rather than place, as the pencil is used in
-the admin lists and the ingredient form alike. `States` is a grid of the tip on each control (Edit Link, Compendium Edit Link, Annotate Link, Quick Look Link, Bin Button, Annotate Button, Quick Look Button, More Menu). `InAListRow` is three banded rows
+the admin lists and the ingredient form alike. `States` is a grid of every glyph the icons file draws (Annotate, Bin, Cauldron, Check, Chevron, Close, Complete, Copy, Cross, Dots, Link, Mystic Eye, Pencil, Plus, Preview, Print, Redo, Stock and Undo), then the tip on each control (Edit Link, Compendium Edit Link, Annotate Link, Quick Look Link, Bin Button, Annotate Button, Quick Look Button, More Menu). `InAListRow` is three banded rows
 of a list's own table, with the pencil in an unlabelled last column at the
 row's end, so it shows on the page and on the card. At 375px, from the toolbar viewport menu, the rows are cards with the pencil at each card's top
 right. Hover or focus a pencil to see its tip. The form's pencils are in the

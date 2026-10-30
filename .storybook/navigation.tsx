@@ -1,4 +1,10 @@
-import { type ReactElement, type ReactNode, useLayoutEffect, useMemo, useState } from 'react';
+import {
+  type ReactElement,
+  type ReactNode,
+  useLayoutEffect,
+  useMemo,
+  useSyncExternalStore,
+} from 'react';
 import { AppRouterContext } from 'next/dist/shared/lib/app-router-context.shared-runtime.js';
 import {
   PathnameContext,
@@ -65,35 +71,42 @@ export function WorkshopSearch({
   initial?: string;
   children?: ReactNode;
 }): ReactElement {
-  const [search, setSearch] = useState(() => withParams(window.location.href, initial).search);
   useLayoutEffect(() => {
-    const { pushState, replaceState } = HISTORY;
     const before = window.location.href;
-    // Written here rather than while rendering, after the state it replaces put its address back.
-    replaceState.call(window.history, window.history.state, '', withParams(before, initial));
-    const follow = (): void => setSearch(window.location.search);
-    window.history.pushState = (...args) => {
-      pushState.apply(window.history, args);
-      follow();
-    };
-    window.history.replaceState = (...args) => {
-      replaceState.apply(window.history, args);
-      follow();
-    };
-    window.addEventListener('popstate', follow);
-    return () => {
-      window.history.pushState = pushState;
-      window.history.replaceState = replaceState;
-      window.removeEventListener('popstate', follow);
-      replaceState.call(window.history, window.history.state, '', before);
-    };
+    HISTORY.replaceState.call(
+      window.history,
+      window.history.state,
+      '',
+      withParams(before, initial),
+    );
+    return () => HISTORY.replaceState.call(window.history, window.history.state, '', before);
   }, [initial]);
+  const search = useSyncExternalStore(followHistory, () => window.location.search);
   const params = useMemo(() => new URLSearchParams(search), [search]);
   return <SearchParamsContext.Provider value={params}>{children}</SearchParamsContext.Provider>;
 }
 
 // The frame's own methods, kept before any story patches them.
 const HISTORY = { pushState: window.history.pushState, replaceState: window.history.replaceState };
+
+/** Calls `changed` after every push, replace and Back until unsubscribed, as the router hears them. */
+function followHistory(changed: () => void): () => void {
+  const { pushState, replaceState } = HISTORY;
+  window.history.pushState = (...args) => {
+    pushState.apply(window.history, args);
+    changed();
+  };
+  window.history.replaceState = (...args) => {
+    replaceState.apply(window.history, args);
+    changed();
+  };
+  window.addEventListener('popstate', changed);
+  return () => {
+    window.history.pushState = pushState;
+    window.history.replaceState = replaceState;
+    window.removeEventListener('popstate', changed);
+  };
+}
 
 function withParams(href: string, initial: string): URL {
   const url = new URL(href);

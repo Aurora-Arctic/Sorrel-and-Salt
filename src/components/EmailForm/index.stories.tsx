@@ -87,5 +87,5 @@ const STATES: Record<string, ReactNode> = {
 export const States: Story = {
   args: { state: 'Ready To Resend' },
   argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
-  render: ({ state }) => <div key={String(state)}>{state}</div>,
+  render: ({ state }) => <div>{state}</div>,
 };

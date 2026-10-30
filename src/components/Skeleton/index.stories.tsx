@@ -25,6 +25,9 @@ const pageNode = <Skeleton shape="page" />;
 
 const lineNode = <Skeleton shape="line" />;
 
+// Three bars, as Record a Working's completion draws one per ingredient step while it loads.
+const linesWithCountNode = <Skeleton shape="line" count={3} />;
+
 const tableWithTitleAndFilterNode = <Skeleton shape="table" title action filter />;
 
 const cardsWithTitleAndFilterNode = <Skeleton shape="cards" title action filter />;
@@ -69,6 +72,7 @@ const SKELETON_STATES: Record<string, ReactNode> = {
   Form: formNode,
   Page: pageNode,
   Line: lineNode,
+  'Lines With Count': linesWithCountNode,
   'Table With Title And Filter': tableWithTitleAndFilterNode,
   'Cards With Title And Filter': cardsWithTitleAndFilterNode,
   Contents: contentsNode,
@@ -89,5 +93,5 @@ export const States: Story = {
   argTypes: {
     state: { control: 'select', options: Object.keys(SKELETON_STATES), mapping: SKELETON_STATES },
   },
-  render: ({ state }) => <div key={String(state)}>{state}</div>,
+  render: ({ state }) => <div>{state}</div>,
 };
