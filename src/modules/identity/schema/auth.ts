@@ -1,4 +1,13 @@
-import { bigint, index, integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import {
+  bigint,
+  boolean,
+  index,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { users } from './users';
 import { idColumn } from '../../../db/schema-parts';
 
@@ -77,4 +86,19 @@ export const rateLimits = pgTable('rate_limits', {
   key: text('key').notNull().unique(),
   count: integer('count').notNull(),
   lastRequest: bigint('last_request', { mode: 'number' }).notNull(),
+});
+
+// One row per account with a failed password sign-in, and none otherwise. No
+// audit columns: nobody writes it by hand and a failed sign-in has no session.
+// `locked_until` is the end of a timed lock and `password_disabled` the stop
+// that only a reset lifts; the schedule that sets them is the lockout's, not
+// the table's.
+export const signInFailures = pgTable('sign_in_failures', {
+  userId: uuid('user_id')
+    .primaryKey()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  count: integer('count').notNull().default(0),
+  firstFailedAt: timestamp('first_failed_at').defaultNow().notNull(),
+  lockedUntil: timestamp('locked_until'),
+  passwordDisabled: boolean('password_disabled').default(false).notNull(),
 });
