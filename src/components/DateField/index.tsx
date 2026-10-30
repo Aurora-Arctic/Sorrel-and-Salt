@@ -87,7 +87,13 @@ function Sizer(): ReactElement {
 function CaptionDropdown({ options, value, onChange, 'aria-label': label }: DropdownProps) {
   const id = useId();
   return (
-    <span className="day-picker__dropdown-root">
+    <span className="day-picker__dropdown-root field--compact">
+      {/* Every option stacked in the box's cell, hidden, so the box is as wide as its longest and does not change with the pick. */}
+      <span className="day-picker__dropdown-sizer" aria-hidden="true">
+        {(options ?? []).map((option) => (
+          <span key={option.value}>{option.label}</span>
+        ))}
+      </span>
       <ComboboxSelect
         id={id}
         label={label ?? ''}
