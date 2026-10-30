@@ -108,7 +108,8 @@
 }
 
 // The foot passes a click through as well, so a press beside the actions opens the recipe; the
-// actions row takes the pointer back for its controls alone (_primitives.scss).
+// actions row takes the pointer back for its controls alone (_primitives.scss), and the last-edit
+// line for itself (below).
 .spell-card > .specimen__foot {
   pointer-events: none;
 }
@@ -124,9 +125,12 @@
   color: $last-edit-ink;
   font-size: type-size('caption');
 
-  // Three classes, over `.meta.last-edit`'s own `space(5)`, which the line already gives.
+  // Three classes, over `.meta.last-edit`'s own `space(5)`, which the line already gives. The
+  // line takes the pointer back from the foot, which passes it to the title's overlay, so its
+  // hover opens its tip; it is only as wide as its text, so the rest of the row still follows the link.
   .spell-card & > .last-edit {
     margin-block-start: 0;
+    pointer-events: auto;
   }
 
   > .spell-card__made {

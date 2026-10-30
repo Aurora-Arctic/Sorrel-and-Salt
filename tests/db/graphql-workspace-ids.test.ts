@@ -63,6 +63,14 @@ let ownableEntryId: string;
 let spellId: string;
 // A spell of W of its own, which the update probe saves.
 let updatableSpellId: string;
+// A complete spell of W, which the working probes record against and preview.
+let completeSpellId: string;
+// Three of B's draft workings of it: the update probe changes the first, the
+// complete probe completes the second and the delete probe deletes the third,
+// so no admitted call depends on another having run.
+let updatableWorkingId: string;
+let completableWorkingId: string;
+let deletableWorkingId: string;
 
 beforeAll(async () => {
   const sql = postgres(process.env.DATABASE_URL as string);
@@ -158,6 +166,28 @@ beforeAll(async () => {
     makeSpell({ workspaceId: WORKSPACE_W_ID, visibility: 'workspace' }),
     A.id,
   );
+  completeSpellId = await insertSpell(
+    sql,
+    makeSpell({
+      workspaceId: WORKSPACE_W_ID,
+      status: 'complete',
+      visibility: 'workspace',
+      steps: [{ body: 'Stir.' }],
+    }),
+    A.id,
+  );
+  const draftWorking = async () =>
+    sql.begin(async (tx) => {
+      await tx`select set_config('app.current_user_id', ${B.id}, true)`;
+      const [working] = await tx`
+        insert into spell_workings (spell_id, worked_on, created_by, updated_by)
+        values (${completeSpellId}, ${DAY}, ${B.id}, ${B.id})
+        returning id`;
+      return working.id as string;
+    });
+  updatableWorkingId = await draftWorking();
+  completableWorkingId = await draftWorking();
+  deletableWorkingId = await draftWorking();
   await sql.end();
 });
 
@@ -185,6 +215,9 @@ const WHOLE_INGREDIENT = {
   references: [],
   categoryIds: [],
 };
+
+/** A day already past, so a working on it can be completed. */
+const DAY = '2026-10-01';
 
 const REFERENCE = { kind: 'book', title: 'A Herbal of Fixture Covens', published: '1988' };
 
@@ -240,6 +273,42 @@ const PROBES: Record<string, WorkspaceIdProbe> = {
       deleteSpell(workspaceId: $workspaceId, id: $id)
     }`,
     variables: () => ({ id: updatableSpellId }),
+  },
+  duplicateSpell: {
+    source: `mutation ($workspaceId: ID!, $id: ID!) {
+      duplicateSpell(workspaceId: $workspaceId, id: $id) { id }
+    }`,
+    variables: () => ({ id: spellId }),
+  },
+  workingDeductionPreview: {
+    source: `query ($workspaceId: ID!, $spellId: ID!) {
+      workingDeductionPreview(workspaceId: $workspaceId, spellId: $spellId) { warnings { stepId } }
+    }`,
+    variables: () => ({ spellId: completeSpellId }),
+  },
+  recordWorking: {
+    source: `mutation ($workspaceId: ID!, $spellId: ID!, $input: WorkingInput!) {
+      recordWorking(workspaceId: $workspaceId, spellId: $spellId, input: $input) { id }
+    }`,
+    variables: () => ({ spellId: completeSpellId, input: { workedOn: DAY } }),
+  },
+  updateWorking: {
+    source: `mutation ($workspaceId: ID!, $id: ID!, $input: WorkingInput!) {
+      updateWorking(workspaceId: $workspaceId, id: $id, input: $input) { id }
+    }`,
+    variables: () => ({ id: updatableWorkingId, input: { workedOn: DAY, note: 'Saved' } }),
+  },
+  completeWorking: {
+    source: `mutation ($workspaceId: ID!, $id: ID!) {
+      completeWorking(workspaceId: $workspaceId, id: $id) { working { id } }
+    }`,
+    variables: () => ({ id: completableWorkingId }),
+  },
+  deleteWorking: {
+    source: `mutation ($workspaceId: ID!, $id: ID!) {
+      deleteWorking(workspaceId: $workspaceId, id: $id)
+    }`,
+    variables: () => ({ id: deletableWorkingId }),
   },
   createWorkspaceIngredient: {
     source: `mutation ($workspaceId: ID!, $input: IngredientInput!) {
