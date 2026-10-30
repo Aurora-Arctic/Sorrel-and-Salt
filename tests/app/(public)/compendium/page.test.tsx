@@ -92,6 +92,8 @@ const NODE = {
   slug: 'testwort-fixtura-testalis',
   canonicalName: 'Fixtura testalis',
   nomenclature: 'botanical',
+  revision: 1,
+  updatedAt: new Date('2026-03-04T05:06:07.000Z'),
   toxic: false,
   safetyNotes: null,
 };
