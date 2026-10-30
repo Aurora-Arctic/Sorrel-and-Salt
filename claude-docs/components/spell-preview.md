@@ -16,9 +16,16 @@ full screen, with nothing else on screen. `src/components/SpellPreview/`.
   the page's actions. The page cuts the recipe's steps down with `previewStepsOf`
   (`preview-steps.ts`, on the server), so the pane's props carry no Quick Look links, safety marks
   or stock verdicts.
-- The content is one column centred in the pane, at most `$recipe-column` (48rem) wide: the width of
-  the recipe page's own reading column, so a wide window leaves margins and lines stay readable.
-- Two controls at the end of the bar, both plain icon buttons (`icon-tip__edit icon-tip__edit--plain`, a visually hidden name, no border, background or visible label): Screen Awake and Close (`CloseIcon`, an X, named "Close"). There is no site header, navigation, link or editing control.
+- The content is laid out as the printed page is, through the `recipe-columns` mixin
+  (`src/scss/_recipe-columns.scss`) that `_print.scss` and the pane both use, so the two cannot drift:
+  the title and the lead across the top, the facts strip over both columns, Ingredients in a 17em
+  column beside the steps, the note under them, and print's spacing throughout (the grid's
+  `space(2)` gap, the head's `space(4)` under it, the facts strip's `space(2) space(3)` margins).
+  The column is centred and at most `$shell-tablet-width` (56rem) wide, the width past which the
+  app sets things side by side; under that width the pane stacks, Ingredients above the steps, with
+  the same rows and spacing (`$columns: false`). The bar holding the controls is the same width and
+  centred the same way, so the close X ends where the content does.
+- Two controls at the end of the bar (sticky at the top, no wider than the content), both plain icon buttons (`icon-tip__edit icon-tip__edit--plain`, a visually hidden name, no border, background or visible label): Screen Awake and Close (`CloseIcon`, an X, named "Close"). There is no site header, navigation, link or editing control.
 
 ## How it opens and closes
 
@@ -43,7 +50,7 @@ full screen, with nothing else on screen. `src/components/SpellPreview/`.
   the browser lacks it, or refuses the request, the pane works and no sign shows.
 - The browser drops the lock when the tab is hidden, so it is asked for again when the tab is visible,
   unless the person turned it off.
-- The Screen Awake icon button beside Close (`MysticEyeIcon`, tipped "Screen Awake") is the sign. It is pressed while the lock is held, and pressing it
+- The Screen Awake icon button beside Close (`MysticEyeIcon`) is the sign. Its tip says what a press does: "Let the Screen Sleep" while the lock is held, "Keep the Screen from Sleeping" when not; the name stays "Screen Awake" and `aria-pressed` carries the state (the owner, 2026-10-30). It is pressed while the lock is held, and pressing it
   releases the lock or asks again. While pressed the eye is in the accent colour and blinks now and then (an 8s cycle, the lid closing once); it stays still under reduced motion. A pane that is closed and opened again asks afresh.
 
 ## The background
@@ -54,7 +61,9 @@ and embers rising from the glow and from the charred edge. The owner chose it fr
 C6 for the light theme and C6b for the dark.
 
 - The burn is the card's, layer for layer: `index.scss` uses the card's smoulder partial for its
-  lengths, timings and `ember-rim`, and `SpellCardFilters` is drawn inside the pane while it is open,
+  timings and `ember-rim`, and sizes it from the card's lengths: twice as deep (`$burn-depth * 2`, 2rem)
+  and half as long again along the bottom (`$burn-length * 1.5`, 16.35rem), with the corner's curve, the
+  spill and the edge embers' places scaled by the same two factors, and `SpellCardFilters` is drawn inside the pane while it is open,
   since the spell page has no other copy of the burn filter. The scene is mounted with the content, so
   the burn comes in afresh on every open (the card's burn-in, as keyframes that start from the card's
   resting state) with no class flip.
@@ -62,7 +71,8 @@ C6 for the light theme and C6b for the dark.
   card's `box-shadow` and `filter` frames: a pane kept awake runs for minutes, and opacity frames do not
   repaint.
 - Each ember is an `<i>` placed and timed by custom properties from `embers.ts`: ten from the hearth
-  glow, ten from the charred edge (measured in from the corner), a quarter of them ash.
+  glow, ten from the charred edge (measured in from the corner of a card's burn, and scaled by the
+  stylesheet to this one), a quarter of them ash.
 - The glow's strength and the ember colours are theme custom properties (`--preview-glow`,
   `--preview-ember`, `--preview-ember-core`, `--preview-ember-char`, `--preview-ash`), set in the
   two theme blocks of `_mixins.scss` and aliased in `_variables.scss`: light is the wax red at 0.12,

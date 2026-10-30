@@ -1,5 +1,6 @@
 @use './variables' as *;
 @use './mixins' as *;
+@use './recipe-columns' as *;
 
 // The one print stylesheet: the spell recipe page (M10.22), the only view with print rules.
 // Every rule sits behind `:has(.spell-recipe)`, the page's own article, so no other page prints
@@ -49,7 +50,6 @@
       max-width: none;
       margin: 0;
       padding: 0;
-      gap: space(2);
     }
 
     .spell-recipe > * {
@@ -85,104 +85,10 @@
       }
     }
 
-    // Two columns under a head that runs across: the facts strip over both, then the Ingredients
-    // in a narrow column beside the steps. The wrappers around the body dissolve, so the article
-    // is the one grid and each part is placed on it by row and column.
+    // Two columns under a head that runs across, the layout the Spell Preview pane shares
+    // (_recipe-columns.scss).
     .spell-recipe {
-      display: grid;
-      grid-template-columns: 17em minmax(0, 1fr);
-      column-gap: space(6);
-      align-items: start;
-    }
-
-    .spell-recipe__columns,
-    .spell-recipe__main,
-    .spell-recipe__rest {
-      display: contents;
-    }
-
-    .last-edit {
-      grid-row: 1;
-      grid-column: 1 / -1;
-    }
-
-    .spell-recipe__head {
-      grid-row: 2;
-    }
-
-    .spell-recipe__head,
-    .spell-recipe__lead,
-    .spell-recipe__facts-box,
-    .spell-recipe__note {
-      grid-column: 1 / -1;
-    }
-
-    .spell-recipe__lead {
-      grid-row: 3;
-      display: flex;
-      flex-direction: column;
-      gap: space(2);
-      margin: 0;
-    }
-
-    .spell-recipe__facts-box {
-      grid-row: 4;
-      max-width: none;
-      margin-block: space(2) space(3);
-    }
-
-    .spell-recipe__summary {
-      grid-row: 5;
-      grid-column: 1;
-    }
-
-    .spell-recipe__steps {
-      grid-row: 5;
-      grid-column: 2;
-      max-width: none;
-    }
-
-    .spell-recipe__note {
-      grid-row: 6;
-    }
-
-    .spell-recipe__summary {
-      display: block;
-      // The global section margin would drop the heading below the first step.
-      margin: 0;
-
-      h2 {
-        margin: 0;
-        font-size: 1.1em;
-      }
-
-      // Amounts in one right-aligned column, names in a left-aligned one beside it, so the numbers
-      // line up; each line shares the list's two columns (subgrid), and a line with no amount leaves
-      // its first cell empty.
-      ul {
-        display: grid;
-        grid-template-columns: max-content minmax(0, 1fr);
-        column-gap: space(2);
-        margin: space(1) 0 0;
-        padding-inline-start: 0;
-      }
-
-      li {
-        display: grid;
-        grid-column: 1 / -1;
-        grid-template-columns: subgrid;
-      }
-
-      .spell-recipe__need {
-        text-align: end;
-        font-weight: 500;
-        font-variant-numeric: tabular-nums;
-      }
-
-      // The ◆ hangs in the gutter the padding gave up, so with no gutter it goes too.
-      li::before {
-        content: none;
-      }
+      @include recipe-columns;
     }
 
     // A step or a heading is not split across pages.

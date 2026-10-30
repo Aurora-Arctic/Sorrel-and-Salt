@@ -121,7 +121,7 @@ const SpellRecipeBody = ({
         {beforeSteps}
 
         {steps.length === 0 ? (
-          <p className="meta">This spell has no steps yet.</p>
+          <p className="meta spell-recipe__empty">This spell has no steps yet.</p>
         ) : (
           <ol id={STEPS_ID} className="spell-recipe__steps" aria-label="Steps">
             {steps.map((step: RecipeStep, i) =>

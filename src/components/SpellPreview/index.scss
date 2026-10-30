@@ -1,5 +1,7 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
+@use '../../scss/recipe-columns' as *;
+@use 'sass:list';
 @use '../SpellCard/smoulder' as card;
 
 // The pane covers the window: the native dialog's top layer, sized to the viewport and no longer a
@@ -34,6 +36,9 @@
   display: flex;
   justify-content: flex-end;
   gap: space(2);
+  // No wider than the content, so the close X ends where the text does.
+  max-width: $shell-tablet-width;
+  margin-inline: auto;
 }
 
 // The eye, held on, wears the accent and blinks now and then: still for most of the cycle, the lid
@@ -86,6 +91,15 @@
 }
 
 $preview-ember-opacity: 0.4;
+// The pane's burn is bigger than a card's: it eats twice as deep and runs half as far again along
+// the bottom. The corner's curve, the spill under it and the edge embers' places are scaled by the
+// same two factors, so the curve keeps its proportions and the embers still leave the charred edge.
+$preview-burn-scale-x: 1.5;
+$preview-burn-scale-y: 2;
+$preview-burn-length: card.$burn-length * $preview-burn-scale-x;
+$preview-burn-depth: card.$burn-depth * $preview-burn-scale-y;
+$preview-burn-corner-radius: (list.nth(card.$burn-corner-radius, 1) * $preview-burn-scale-x)
+  (list.nth(card.$burn-corner-radius, 2) * $preview-burn-scale-y);
 // The burn's own breathing, cut to opacity frames: the rim at the card's 5.3s, the embers in the
 // burnt part at 3.7s, the spill on the table at 4.7s, and the hearth at 11s; none line up.
 $preview-rim-duration: card.$burn-ember-duration;
@@ -319,9 +333,9 @@ $preview-hearth-duration: 11s;
 
 // The spill on the table under the burn: the card's glow, grown in with the hole.
 .spell-preview__glow {
-  inset: auto -0.5rem -1.75rem auto;
-  width: calc(#{card.$burn-length} + 1.5rem);
-  height: 3.5rem;
+  inset: auto -0.5rem (-1.75rem * $preview-burn-scale-y) auto;
+  width: calc(#{$preview-burn-length} + 1.5rem);
+  height: 3.5rem * $preview-burn-scale-y;
   border-radius: 50%;
   background: linear-gradient(
     to right,
@@ -356,7 +370,7 @@ $preview-hearth-duration: 11s;
 .spell-preview__burn-curve {
   position: absolute;
   inset: -1rem;
-  border-bottom-right-radius: card.$burn-corner-radius;
+  border-bottom-right-radius: $preview-burn-corner-radius;
   animation: spell-preview-burn-corner card.$burn-duration card.$burn-easing both;
 }
 
@@ -370,8 +384,8 @@ $preview-hearth-duration: 11s;
   position: absolute;
   right: 0.5rem;
   bottom: 0.5rem;
-  width: card.$burn-length;
-  height: card.$burn-depth;
+  width: $preview-burn-length;
+  height: $preview-burn-depth;
   border-top-left-radius: 45% 100%;
   animation: spell-preview-burn-hole card.$burn-duration card.$burn-easing both;
 }
@@ -407,7 +421,7 @@ $preview-hearth-duration: 11s;
 
 .spell-preview__burn-curve {
   box-shadow: card.ember-rim(true, 0, 1.5px, 0.95, 3px, 0.85, 3.5px);
-  clip-path: inset(0 0 calc(0.6rem + #{card.$burn-depth}) 0);
+  clip-path: inset(0 0 calc(0.6rem + #{$preview-burn-depth}) 0);
   animation:
     spell-preview-burn-curve card.$burn-duration card.$burn-easing both,
     spell-preview-rim $preview-rim-duration ease-in-out card.$burn-duration infinite;
@@ -432,6 +446,8 @@ $preview-hearth-duration: 11s;
 
 // An ember: an irregular fragment placed and timed by the custom properties `embers.ts` sets. The
 // body is the cooled fragment; `::before` is its heat, fading over the rise.
+// The path runs `linear`: an easing applies between each pair of keyframes, so `ease-in` would
+// bring the ember to a stop at every stop on its path and set it off again, as if it had caught.
 .spell-preview__ember {
   position: absolute;
   inset: auto auto -2% var(--x);
@@ -440,7 +456,7 @@ $preview-hearth-duration: 11s;
   border-radius: var(--br);
   opacity: 0;
   will-change: transform, opacity;
-  animation: spell-preview-float var(--d) ease-in var(--delay) infinite;
+  animation: spell-preview-float var(--d) linear var(--delay) infinite;
 }
 
 .spell-preview__ember--hot {
@@ -470,9 +486,11 @@ $preview-hearth-duration: 11s;
   animation-name: spell-preview-tumble;
 }
 
-// Starting on the charred edge, measured in from the corner, and brightest as it leaves it.
+// Starting on the charred edge, measured in from the corner on a card's burn and scaled to this
+// one, and brightest as it leaves it.
 .spell-preview__ember--edge {
-  inset: auto var(--r) var(--b) auto;
+  inset: auto calc(var(--r) * #{$preview-burn-scale-x}) calc(var(--b) * #{$preview-burn-scale-y})
+    auto;
   animation-name: spell-preview-float-edge;
 
   &.spell-preview__ember--hot {
@@ -493,53 +511,17 @@ $preview-hearth-duration: 11s;
   }
 }
 
-.spell-preview__title {
-  margin-block-end: space(4);
-}
-
-// The content is one centred column at the recipe page's reading width, so a wide window leaves
-// margins and the lines stay a comfortable length.
+// The content is one centred column, laid out as the printed page is (_recipe-columns.scss): the
+// title and lead across the top, then Ingredients in a narrow column beside the steps. Its width is
+// the tablet breakpoint's, the width past which the app sets things side by side, so a wide window
+// leaves margins; under that width the pane stacks, Ingredients above the steps.
 .spell-preview__content {
-  display: flex;
-  flex-direction: column;
-  gap: space(4);
-  max-width: $recipe-column;
+  @include recipe-columns('.spell-preview__title');
+
+  max-width: $shell-tablet-width;
   margin-inline: auto;
-}
 
-// The Ingredients section the page keeps for print: the amounts in one right-aligned column beside
-// the names, as the printed page sets them.
-.spell-preview .spell-recipe__summary {
-  display: block;
-  margin: 0;
-
-  h2 {
-    margin: 0;
-    font-size: 1.1em;
-  }
-
-  ul {
-    display: grid;
-    grid-template-columns: max-content minmax(0, 1fr);
-    column-gap: space(2);
-    margin: space(1) 0 0;
-    padding-inline-start: 0;
-  }
-
-  li {
-    display: grid;
-    grid-column: 1 / -1;
-    grid-template-columns: subgrid;
-
-    // The ◆ the global list marks hang in a gutter this list does not have.
-    &::before {
-      content: none;
-    }
-  }
-
-  .spell-recipe__need {
-    text-align: end;
-    font-weight: 500;
-    font-variant-numeric: tabular-nums;
+  @media (max-width: $shell-tablet-width) {
+    @include recipe-columns('.spell-preview__title', $columns: false);
   }
 }
