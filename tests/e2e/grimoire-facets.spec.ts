@@ -1,6 +1,6 @@
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
-import { assertNoAccessibilityViolations } from './axe';
+import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { signInAgainAs } from './session';
 import { insertSpell, openFilters, seedCoven, withSql } from './stories/coven-ingredients';
 
@@ -59,7 +59,7 @@ test('the grimoire address filters by moon phase, visibility and maker, and a hi
   });
   await signInAgainAs(page, coven.users.B);
   const path = `/coven/${coven.slug}/grimoire`;
-  const items = () => page.getByRole('list', { name: 'Grimoire' }).getByRole('listitem');
+  const items = () => page.getByRole('list', { name: 'Spells' }).getByRole('listitem');
 
   await page.goto(path);
   await expect(items()).toHaveCount(3);
@@ -101,7 +101,7 @@ test('the Compact switch sets the grimoire list density and the filter is access
     insertSpell(sql, coven.id, 'Fixture Density Working', 'workspace', coven.users.A, 'complete'),
   );
   await page.goto(`/coven/${coven.slug}/grimoire`);
-  const list = page.getByRole('list', { name: 'Grimoire' });
+  const list = page.getByRole('list', { name: 'Spells' });
   const compact = page.getByRole('search').getByRole('switch', { name: 'Compact' });
   await expect(compact).toBeChecked();
   await expect(list).toHaveAttribute('data-density', 'compact');
@@ -134,8 +134,5 @@ test('at 375px the grimoire filter panel opens, a facet can be picked, and the p
   await panel.getByRole('combobox', { name: 'Moon Phase' }).fill('full');
   await page.getByRole('option', { name: /Full Moon/ }).click();
   await expect(panel.getByRole('button', { name: 'Remove Moon Phase: Full Moon' })).toBeVisible();
-  const overflow = await page.evaluate(
-    () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
-  );
-  expect(overflow).toBe(false);
+  await assertNoSidewaysScroll(page);
 });

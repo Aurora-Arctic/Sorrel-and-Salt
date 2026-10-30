@@ -269,10 +269,10 @@ describe('the Grimoire tabs', () => {
       { id: 's1', workspaceId: COVEN.id },
       { id: 's2', workspaceId: COVEN.id },
     ]);
-    const list = screen.getByRole('list', { name: 'Grimoire' });
-    const first = within(list).getByRole('listitem', { name: 'Fixture Working' });
+    const list = screen.getByRole('list', { name: 'Spells' });
+    const first = within(list).getByRole('article', { name: 'Fixture Working' });
     expect(within(first).getByText('Testwarding')).toBeInTheDocument();
-    expect(within(list).getByRole('listitem', { name: 'Testwort Charm' })).toBeInTheDocument();
+    expect(within(list).getByRole('article', { name: 'Testwort Charm' })).toBeInTheDocument();
   });
 
   // The service lists a private spell to its author alone, so the card
@@ -283,8 +283,8 @@ describe('the Grimoire tabs', () => {
       spell('s2', 'Testwort Charm'),
     ]);
     await renderTab(SpellsPage);
-    const list = screen.getByRole('list', { name: 'Grimoire' });
-    const card = (name: string) => within(within(list).getByRole('listitem', { name }));
+    const list = screen.getByRole('list', { name: 'Spells' });
+    const card = (name: string) => within(within(list).getByRole('article', { name }));
     expect(card('Fixture Working').getByText('Private')).toBeInTheDocument();
     expect(card('Testwort Charm').queryByText('Private')).not.toBeInTheDocument();
   });
@@ -295,9 +295,9 @@ describe('the Grimoire tabs', () => {
     expect(displayNamesOf).toHaveBeenCalledTimes(2);
     expect(displayNamesOf).toHaveBeenCalledWith(session, ['editor-s1', 'editor-s2']);
     expect(displayNamesOf).toHaveBeenCalledWith(session, [MAKER]);
-    const list = screen.getByRole('list', { name: 'Grimoire' });
+    const list = screen.getByRole('list', { name: 'Spells' });
     const edited = (name: string) =>
-      within(within(list).getByRole('listitem', { name })).getByRole('button', {
+      within(within(list).getByRole('article', { name })).getByRole('button', {
         name: /^Edited/,
       });
     expect(edited('Fixture Working')).toHaveAccessibleDescription(
@@ -339,7 +339,7 @@ describe('the Grimoire tabs', () => {
       .getAllByRole('status')
       .find((region) => within(region).queryByText('Fixture Working') !== null);
     expect(notice).toBeDefined();
-    expect(notice!.compareDocumentPosition(screen.getByRole('list', { name: 'Grimoire' }))).toBe(
+    expect(notice!.compareDocumentPosition(screen.getByRole('list', { name: 'Spells' }))).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
   });

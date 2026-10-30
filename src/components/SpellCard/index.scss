@@ -14,7 +14,6 @@
   // The containing block for the title link's stretched `::after` below.
   position: relative;
   padding: space(4);
-  cursor: pointer;
   color: $text-primary;
   border-radius: radius('surface');
 
@@ -29,6 +28,11 @@
   > * {
     position: relative;
   }
+}
+
+// The pointer promises a press only on a card whose title links somewhere.
+.spell-card:has(.spell-card__title a) {
+  cursor: pointer;
 }
 
 // The hover, on pointers that can hover only, so a tap on a phone does not leave a card
@@ -71,14 +75,22 @@
     border-radius: radius('surface');
   }
 
-  // The ring goes round the card, drawn on the overlay.
+  // The ring goes round the card, drawn on the article below.
   &:focus-visible {
     outline: none;
-
-    &::after {
-      @include focus-ring;
-    }
   }
+}
+
+// The focus ring, on the article's own `::after`: it comes after the burn layers in the markup,
+// so it paints over the burnt corner, which the title link's overlay, earlier, does not.
+.spell-card:has(.spell-card__title a:focus-visible)::after {
+  @include focus-ring;
+
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: radius('surface');
+  pointer-events: none;
 }
 
 // The words and the badges are positioned so they paint over the face and the glow, as the
@@ -93,8 +105,7 @@
   pointer-events: none;
 }
 
-// The title block and the Edit pencil share the top row; the title's first word decides
-// when the pencil wraps below, as an ingredient card's name does.
+// The title block fills the top row; a long word breaks anywhere rather than widen the card.
 .spell-card__heading {
   flex: 1 1 0;
   max-width: 100%;
@@ -138,7 +149,10 @@
   pointer-events: none;
 }
 
-.spell-card .last-edit {
+// The made count and the foot pass a click through as well, so a press beside the actions opens the
+// recipe; the actions row takes the pointer back for its controls alone (_primitives.scss).
+.spell-card > .meta,
+.spell-card > .specimen__foot {
   pointer-events: none;
 }
 

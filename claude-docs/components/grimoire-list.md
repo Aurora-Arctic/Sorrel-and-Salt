@@ -1,10 +1,12 @@
 # GrimoireList
 
 `src/components/GrimoireList/` draws one tab of a coven's Grimoire (M10.11, story 56): a
-title search and a Categories filter above the coven's spells, one `SpellCard` each
-([`spell-card.md`](spell-card.md)), with the search sentence and the pager. It is built on
-the ingredients page's search stack ([`ingredient-search.md`](ingredient-search.md)), not on
-a new one. A client component; the page reads the spells on the server and hands them in.
+title search and five facets (Categories, Moon Phase, Day of Week, Coven Member and Visibility)
+above the coven's spells, one `SpellCard` each ([`spell-card.md`](spell-card.md)), with the
+search sentence and the pager. It is built on the ingredients page's search stack
+([`ingredient-search.md`](ingredient-search.md)), not on a new one. `index.tsx` has no
+`'use client'`: the page reads the spells on the server and renders the list there, and only the
+filter row (`filter.tsx`) is a client component.
 
 ## The two tabs
 
@@ -51,17 +53,22 @@ address is the only way to see it again.
 | -------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | `path`                     | The tab's own address: the filter's GET target and what Clear All opens                                           |
 | `workspaceId`              | The coven the title search suggests from                                                                          |
+| `covenSlug`                | The coven's slug, which each card's recipe page address is built from                                             |
 | `status`                   | The tab's status, which the title search keeps to and the empty state names                                       |
 | `spells`                   | The page's spells, each as its card draws it, with its `lookHref` and, for a role that may update, its `editHref` |
 | `filter`                   | The address's filter: the search text, the categories and their Match mode                                        |
 | `categories`               | Every category the filter offers, by slug, each with its count on this tab                                        |
+| `facets`                   | Moon Phase, Day of Week, Visibility and Coven Member: every value each offers, with its count                     |
 | `position`                 | The page number and the page count, for the pager                                                                 |
+| `cursor`                   | The cursor of the page shown, which a picked title's Quick Look opens over and closes back to                     |
 | `total`                    | How many spells the filter found on this tab, every page                                                          |
 | `previousHref`, `nextHref` | The pager's links, which keep the tab's path and the filter                                                       |
 
 `GRIMOIRE_PARAMS` (`params.ts`) is the grimoire's parameter set in `defineSearchParams`:
-`query`, `categories` and `categoryMode`. It reads the address and writes the GraphQL
-variables, so a search and its categories live in the address and combine.
+`query`, `categories`, `categoryMode`, `moonPhases`, `daysOfWeek`, `visibility` and `makers`.
+It reads the address and writes the GraphQL variables, so a search and its facets live in the
+address and combine. `params.ts` also exports `VISIBILITIES`, the two visibilities as the address
+spells them, and `VISIBILITY_LABELS`, what each is called on screen (Private and Shared).
 
 ## Contracts
 
@@ -75,8 +82,8 @@ variables, so a search and its categories live in the address and combine.
   holding the spell id, as a pick on the coven's Ingredients page opens the entry's Quick
   Look (the owner's rule of 2026-10-27).
 - **The Categories panel.** The panel is `FacetShell` holding the shared `CategoryLine`
-  ([`facet-panel.md`](facet-panel.md)): the category picker and its Match chip, nothing
-  else. Each category shows how many spells on this tab, under the search, the viewer can
+  ([`facet-panel.md`](facet-panel.md)): the category picker and its Match chip, on the
+  panel's first line, with the four facets below it. Each category shows how many spells on this tab, under the search, the viewer can
   read in it, and one that holds none is not offered (`hideZeros`). The counts are
   `countGrimoireCategories`'s, read with the page under the filter the address holds, not
   the one held in the open panel: unlike the compendium's, they do not follow a pick until
@@ -85,8 +92,8 @@ variables, so a search and its categories live in the address and combine.
   "The Categories filter's counts"). A pick is held while the panel is open and applied to
   the tab's address, as a slug, when it shuts.
 - **The four more facets (M13.22).** Beside Categories, `FacetShell` holds Moon Phase, Day of
-  Week and Coven Member are each a `FacetCombobox` taking several picks
-  ([facet-combobox.md](facet-combobox.md)); Visibility, last, is a `ChoiceChip` with three states. Within a facet the picks are alternatives, and the
+  Week and Coven Member, each a `FacetCombobox` taking several picks
+  ([facet-combobox.md](facet-combobox.md)), and last Visibility, a `ChoiceChip` with three states. Within a facet the picks are alternatives, and the
   facets are ANDed with each other, with Categories and with the search.
   - **Moon Phase** and **Day of Week** are typeaheads over the values written on spells the
     viewer can read, compared trimmed and ignoring case. Typed text that matches no suggestion
@@ -107,11 +114,12 @@ variables, so a search and its categories live in the address and combine.
     value with no count is shown at 0.
   - The search sentence names each pick: "in the moon phase X or Y", "for the day X",
     "that are private" (one pick), "made by X".
-- **The list** is named Grimoire, and each item is named by its spell's title, through the
-  card's title id, so a test or a screen reader finds a spell by
-  `getByRole('listitem', { name: 'Hearth Warding Jar' })`.
-- **Two empty states**, each a named status region, as the coven cards' are
-  ([`coven-cards.md`](coven-cards.md)):
+- **The list** is the shared `IngredientCardList` at compact density, named after its tab: Spells or
+  Drafts. Its items are unnamed and each card (`article`) is named by its spell's title, so a screen
+  reader hears the title once and a test finds a spell by
+  `getByRole('article', { name: 'Hearth Warding Jar' })`.
+- **Two empty states**, each a status region named so a test or a screen reader can tell them
+  apart, as the coven cards' are ([`coven-cards.md`](coven-cards.md)):
   - **No Spells**, "There are no complete spells here yet.", or **No Drafts**, "There are
     no drafts here yet.", when the tab holds nothing and no filter is in force;
   - **No Matches** when a filter is in force and matched nothing. The search sentence above
@@ -150,21 +158,28 @@ modal: `?entry` with no spell open opens nothing.
 
 The filter row ends with `CardDensitySwitch` ([card-density-switch.md](card-density-switch.md)),
 where the coven Ingredients filter draws it. It is a view setting: it sits inside the search
-landmark and submits nothing. The list carries `data-density="compact"`, and the stored choice
+landmark and submits nothing. The list carries `data-density="compact"` (`IngredientCardList`'s `density`), as does the
+wrapper the loading skeleton draws inside ([skeleton.md](skeleton.md)), and the stored choice
 (`data-card-density="regular"` on `<html>`) turns the compact look off in CSS, so one choice
 serves this list and the Ingredients list and works before hydration. `SpellCard`'s compact
 look is [spell-card.md](spell-card.md), "Compact".
 
 ## Styling
 
-Tokens only, before the section's design review. `index.scss` sets the two empty regions as the coven's empty cupboard is (`CovenCards/index.scss`): the empty tab's sentence centred and larger than body copy, the no-match hint in muted body copy. The cards are `SpellCard`'s own.
+Tokens only, before the section's design review. `index.scss` makes the filter row
+(`.grimoire-list__row`) the positioned ancestor the facet panel opens under, and sets the two empty regions as the coven's empty cupboard is (`CovenCards/index.scss`): the empty tab's sentence centred and larger than body copy, the no-match hint in muted body copy. The cards are `SpellCard`'s own.
 
 One thing in the list exists for the cards' smouldering edge ([spell-card.md](spell-card.md), "The smouldering edge"): **one `SpellCardFilters` before the list.** It holds the SVG filter the burn front uses, by id. An id must be unique on the page, so the list renders it once rather than each card. The list needs no stacking context of its own: the card's layers stack by the order of the markup, with no `z-index`.
 
+## Stories
+
+GrimoireList has no story of its own. Its cards are drawn in SpellCard's `Grimoire / Spell Card`
+stories (`States`, `Hover` and `Compact`; [spell-card.md](spell-card.md), "Stories").
+
 ## Testing
 
-- `tests/components/GrimoireList/index.test.tsx`: the named list and items, the three empty
-  regions, the title search's address, the category pick applied as a slug, and each category
+- `tests/components/GrimoireList/index.test.tsx`: the list named after its tab, its unnamed items and named cards, the empty
+  regions (No Spells, No Drafts and No Matches), the title search's address, the category pick applied as a slug, and each category
   offered with its count, a category at zero not offered.
   The Compact switch: on by default, the list's `data-density`, and the stored choice it writes.
 - `tests/app/(shell)/coven/[slug]/grimoire/(list)/page.test.tsx`: the membership guard on
@@ -180,15 +195,6 @@ One thing in the list exists for the cards' smouldering edge ([spell-card.md](sp
 - Visibility, search, categories and counts are proved below the page, in
   `tests/db/repository/readable-spell-page.test.ts` and
   `tests/modules/grimoire/services/spell-reads.test.ts`.
-
-## The empty states
-
-A grimoire tab with no card to show draws one of two status regions, named so a test or a screen reader can tell them apart, as the coven's cards do.
-
-- No Spells (No Drafts on the Drafts tab): the tab holds nothing yet.
-- No Matches: a filter is in force and matched nothing. The search sentence above already names the filter, so this only says what to do. `hasFilter` is the search sentence's own test, so the two never disagree.
-
-There is no first add here: New Spell at the Grimoire's heading opens the builder.
 
 ## Search parameters
 
