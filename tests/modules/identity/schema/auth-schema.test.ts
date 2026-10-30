@@ -4,7 +4,7 @@ import type { BetterAuthOptions } from 'better-auth';
 import type { DBAdapter } from '@better-auth/core/db/adapter';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { tableFacts } from '../../../support/db/table-metadata';
-import { rateLimits } from '@/modules/identity/schema/auth';
+import { rateLimits, signInFailures } from '@/modules/identity/schema/auth';
 import { warmImport } from '../../../support/warm-import';
 
 warmImport(() => import('@/lib/auth'));
@@ -89,5 +89,49 @@ describe("rate_limits through Better Auth's adapter", () => {
       where: [{ field: 'key', value: key }],
     });
     expect(found).toMatchObject({ key, count: 1, lastRequest });
+  });
+});
+
+// The per-account counter behind the password lockout: one row an account, gone with the account.
+describe('sign_in_failures schema', () => {
+  const { columns, byName, foreignKeyByColumn } = tableFacts(signInFailures);
+
+  // No audit column: a failed sign-in has no session to take one from.
+  it('has the counter columns and nothing else', () => {
+    expect(columns.map((column) => column.name).sort()).toEqual([
+      'count',
+      'first_failed_at',
+      'locked_until',
+      'password_disabled',
+      'user_id',
+    ]);
+  });
+
+  it('keys on the account, deleting with it', () => {
+    expect(byName.user_id.primary).toBe(true);
+    expect(foreignKeyByColumn.user_id).toMatchObject({ foreignTable: expect.anything() });
+    expect(foreignKeyByColumn.user_id.foreignColumnNames).toEqual(['id']);
+    expect(signInFailures.userId.notNull).toBe(true);
+  });
+
+  it('starts at zero and enabled, with no lock', () => {
+    expect(byName.count.default).toBe(0);
+    expect(byName.password_disabled.default).toBe(false);
+    expect(byName.locked_until.notNull).toBe(false);
+  });
+});
+
+describe('sign_in_failures in the migrated database', () => {
+  let sql: postgres.Sql;
+  useTestDatabase((client) => {
+    sql = client;
+  });
+
+  it('cascades from users on delete', async () => {
+    const [{ delete_rule: rule }] = await sql<{ delete_rule: string }[]>`
+      select delete_rule from information_schema.referential_constraints
+      where constraint_name = 'sign_in_failures_user_id_users_id_fk'
+    `;
+    expect(rule).toBe('CASCADE');
   });
 });

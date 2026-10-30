@@ -137,6 +137,13 @@ export {
 } from './invitations';
 export { findOpenAdminRoleChangePause } from './admin-roles';
 export { deleteProvisionalUsers } from './provisional-users';
+export {
+  clearSignInFailures,
+  lockPasswordSignIn,
+  readSignInFailure,
+  recordSignInFailure,
+} from './sign-in-failures';
+export type { SignInFailureRow } from './sign-in-failures';
 export type { PrivilegeDeclaration, PrivilegeRoute } from '../types';
 export type {
   WorkingCount,
