@@ -200,6 +200,26 @@ export function findPendingSiteInvitationCount(
 }
 
 /**
+ * When the session's account created each coven invitation it has made in the last `windowSeconds`, revoked or not: the rows
+ * a sender's mail limit counts. No proof, as the limit is on the sender across every coven they own.
+ */
+export async function findRecentCovenInvitationTimes(
+  session: AuditSession,
+  windowSeconds: number,
+): Promise<Date[]> {
+  const rows = await selectFrom(
+    invitations,
+    and(
+      notSoftDeleted(invitations),
+      onWorkspaceTier(),
+      eq(invitations.createdBy, session.userId),
+      gt(invitations.createdAt, sql`now() - make_interval(secs => ${windowSeconds})`),
+    ),
+  );
+  return rows.map((row) => row.createdAt);
+}
+
+/**
  * One page of the proof's workspace's open invitations, newest first, for
  * the members page: the site tier's pager under the `Membership` proof.
  * Open: pending, or declined and not yet removed.
