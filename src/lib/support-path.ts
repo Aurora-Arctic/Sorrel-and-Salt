@@ -32,7 +32,7 @@ export const ISSUE_LINK_HINT = 'An issue link, or a link opened from the project
 
 /**
  * The plain issue link, `https://github.com/<repository>/issues/<number>`, for a pasted issue link or a project-board link
- * whose `issue` parameter reads `owner|repo|number`; null for anything else, or an issue of another repository.
+ * under any project of the repository's organisation, whose `issue` parameter reads `owner|repo|number`; null for anything else, or an issue of another repository.
  */
 export function normaliseIssueLink(value: string, repository: string): string | null {
   const text = value.trim();
@@ -47,7 +47,8 @@ export function normaliseIssueLink(value: string, repository: string): string | 
     return null;
   }
   if (url.protocol !== 'https:' || url.hostname !== 'github.com') return null;
-  if (!/^\/orgs\/[^/]+\/projects\/[0-9]+\/views\/[0-9]+\/?$/.test(url.pathname)) return null;
+  const owner = repository.split('/')[0];
+  if (!new RegExp(`^/orgs/${owner}/projects/[0-9]+(/|$)`).test(url.pathname)) return null;
   const parts = (url.searchParams.get('issue') ?? '').split('|');
   if (parts.length !== 3 || `${parts[0]}/${parts[1]}` !== repository) return null;
   return /^[1-9][0-9]*$/.test(parts[2]) ? `${plain}${parts[2]}` : null;

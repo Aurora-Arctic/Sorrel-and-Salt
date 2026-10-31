@@ -91,6 +91,18 @@ describe('normaliseIssueLink', () => {
     expect(normaliseIssueLink(board, ISSUE_REPOSITORY)).toBe(plain);
   });
 
+  it('takes a board link of any project of the organisation, in any view', () => {
+    for (const path of ['projects/2/views/5', 'projects/1', 'projects/3/insights']) {
+      expect(
+        normaliseIssueLink(
+          `https://github.com/orgs/Aurora-Arctic/${path}?issue=Aurora-Arctic%7CSorrel-and-Salt%7C1409`,
+          ISSUE_REPOSITORY,
+        ),
+        path,
+      ).toBe(plain);
+    }
+  });
+
   it('refuses anything else', () => {
     for (const bad of [
       '',
@@ -101,6 +113,9 @@ describe('normaliseIssueLink', () => {
       'https://github.com/orgs/Aurora-Arctic/projects/1/views/1?issue=Aurora-Arctic%7COther%7C1',
       'https://github.com/orgs/Aurora-Arctic/projects/1/views/1?issue=Aurora-Arctic%7CSorrel-and-Salt%7Cx',
       'https://github.com/orgs/Aurora-Arctic/projects/1/views/1',
+      'https://github.com/orgs/Other/projects/1/views/1?issue=Aurora-Arctic%7CSorrel-and-Salt%7C1',
+      'https://github.com/orgs/Aurora-Arctic/projects/x/views/1?issue=Aurora-Arctic%7CSorrel-and-Salt%7C1',
+      'https://github.com/orgs/Aurora-Arctic/projectsX/1?issue=Aurora-Arctic%7CSorrel-and-Salt%7C1',
       'https://example.com/orgs/Aurora-Arctic/projects/1/views/1?issue=Aurora-Arctic%7CSorrel-and-Salt%7C1',
     ]) {
       expect(normaliseIssueLink(bad, ISSUE_REPOSITORY), bad).toBeNull();
