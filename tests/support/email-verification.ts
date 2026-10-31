@@ -1,4 +1,5 @@
 import type { EmailVerificationSender, InvitationSender } from '@/modules/identity';
+import type { SupportNotifier } from '@/modules/support';
 
 // The sender for a hand-built GraphQL context in a test that sends nothing:
 // a call is the test's mistake, so it throws rather than passing silently.
@@ -17,4 +18,8 @@ export const noSender: EmailVerificationSender = {
 export const noInvitationSender: InvitationSender = {
   siteInvitation: async () => unexpected('mail an invitation'),
   workspaceInvitation: async () => unexpected('mail a coven invitation'),
+};
+
+export const noSupportNotifier: SupportNotifier = {
+  replyWaiting: async () => unexpected('mail a support reply notice'),
 };

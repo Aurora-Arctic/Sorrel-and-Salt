@@ -1,0 +1,66 @@
+import 'server-only';
+import {
+  countSupportRequestsInWindow,
+  findActiveSupportTimeoutEnd,
+  withAudit,
+} from '../../../db/repository';
+import { Forbidden } from '../../../lib/errors';
+import type { Session } from '../../../lib/session';
+import { parseInput } from '../../../lib/validation';
+import { supportRequests } from '../schema/support-requests';
+import type { SupportRequestRow } from '../types';
+import { SupportRequestInput } from '../validation/support';
+import { requireVerified } from './access';
+import { redactPath } from './redact-path';
+
+/** Requests one sender may make in a window; the next is refused until the oldest leaves it. */
+export const SEND_LIMIT = 10;
+/** The window the limit counts over, in seconds: 24 hours. */
+export const SEND_WINDOW_SECONDS = 24 * 60 * 60;
+
+/** A time-out's end as a refusal names it: the instant in UTC, so the same words read the same everywhere. */
+function utcMinute(date: Date): string {
+  return `${date.toISOString().slice(0, 16).replace('T', ' ')} UTC`;
+}
+
+/**
+ * Files a support request from the signed-in, verified account. Any such account may send, a viewer or one in no coven
+ * included: the form is the site's, not a coven's. The page address is stored with the coven's slug replaced.
+ *
+ * The limit and the time-out are read just before the insert and not in its transaction, so two sends racing at the limit can
+ * both land; one extra request costs nothing a lock would be worth.
+ *
+ * @throws {Forbidden} the address is unverified, the sender is timed out, or they have sent ten requests in 24 hours.
+ * @throws {ValidationError} the subject, message, path or error code is not acceptable.
+ */
+export async function sendSupportRequest(
+  session: Session,
+  input: SupportRequestInput,
+): Promise<SupportRequestRow> {
+  requireVerified(session);
+  const values = parseInput(SupportRequestInput, input);
+
+  const timedOutUntil = await findActiveSupportTimeoutEnd(session.userId);
+  if (timedOutUntil) {
+    throw new Forbidden(
+      `You cannot send support requests until ${utcMinute(timedOutUntil)}. Your earlier requests are still on your support page.`,
+    );
+  }
+  const recent = await countSupportRequestsInWindow(session.userId, SEND_WINDOW_SECONDS);
+  if (recent >= SEND_LIMIT) {
+    throw new Forbidden(
+      `You have sent ${SEND_LIMIT} support requests in the last 24 hours, which is the most allowed. Try again later.`,
+    );
+  }
+
+  return withAudit(session, async (write) => {
+    const [row] = await write.insert(supportRequests, {
+      kind: values.kind,
+      subject: values.subject,
+      message: values.message,
+      path: redactPath(values.path),
+      errorCode: values.errorCode ?? null,
+    });
+    return row as SupportRequestRow;
+  });
+}

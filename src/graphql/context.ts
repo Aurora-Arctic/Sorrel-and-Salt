@@ -1,5 +1,6 @@
 import { emailVerificationSender } from '../lib/email-verification';
 import { invitationSender } from '../lib/invitation-mail';
+import { supportNotifier } from '../lib/support-mail';
 import { sessionFromHeaders } from '../lib/request-session';
 import { createLoaders } from './loaders';
 import type { Context } from './types';
@@ -12,5 +13,6 @@ export async function createContext({ request }: { request: Request }): Promise<
     loaders: createLoaders(session),
     emailVerification: emailVerificationSender(request),
     invitations: invitationSender(request),
+    support: supportNotifier(request),
   };
 }

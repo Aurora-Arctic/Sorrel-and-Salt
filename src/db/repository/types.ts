@@ -1294,3 +1294,23 @@ export interface CompendiumSlugEntry {
   /** When the entry last really changed: its `updated_at`. */
   lastModified: Date;
 }
+
+/**
+ * Who reads the support list, as the finder narrows it: an admin reads every request, a curator only those marked for curators or
+ * assigned to them. The proof is the service's `assertSiteAdmin` or `assertCurator`.
+ */
+export type SupportReader =
+  { role: 'admin'; proof: SiteAdmin } | { role: 'curator'; proof: Curator };
+
+/** Whoever is reading a request's replies: a sender reads their own requests', a curator or admin those they may see. */
+export interface SupportViewer {
+  userId: string;
+  role: 'user' | 'curator' | 'admin';
+}
+
+/** The admin list's narrowing; an absent part is no narrowing. */
+export interface SupportRequestFilter {
+  kind?: 'accessibility' | 'bug' | 'question';
+  status?: 'open' | 'resolved';
+  errorCode?: number;
+}
