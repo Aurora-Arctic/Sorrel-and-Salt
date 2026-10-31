@@ -1,6 +1,8 @@
 export interface CardSheetsInput {
   /** The card links, one per card, in the order the cards are printed. */
   links: string[];
+  /** The batch's short name, printed in each sheet's margin and on each back. */
+  batch: string;
   /** The date printed as "Valid until" on every front. */
   expiresAt: Date;
 }

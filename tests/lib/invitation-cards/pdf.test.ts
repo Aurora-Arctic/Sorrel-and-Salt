@@ -200,7 +200,10 @@ const overlaps = (a: Box, b: Box) =>
   a.left < b.right && b.left < a.right && a.bottom < b.top && b.bottom < a.top;
 
 async function build(n: number) {
-  const bytes = await renderCardSheets({ links: links(n), expiresAt: EXPIRES }, assets);
+  const bytes = await renderCardSheets(
+    { links: links(n), batch: 'b4444444', expiresAt: EXPIRES },
+    assets,
+  );
   return { bytes, doc: await PDFDocument.load(bytes) };
 }
 
@@ -348,6 +351,10 @@ describe('the card sheets PDF', () => {
       .map((item) => ('str' in item ? item.str : ''))
       .join('\n');
     expect(backs.replace(/ /g, '').match(/BYINVITATIONONLY\./g)).toHaveLength(9);
+    // The batch name sits on every back, and in each page's margin with the sheet number.
+    expect(backs.replace(/ /g, '').match(/BATCHB4444444/g)).toHaveLength(9);
+    expect(page).toContain('Batch b4444444, sheet 1 of 1, fronts');
+    expect(backs).toContain('Batch b4444444, sheet 1 of 1, backs');
   });
 
   it('builds 500 cards on 112 pages, with each font and picture embedded once', async () => {

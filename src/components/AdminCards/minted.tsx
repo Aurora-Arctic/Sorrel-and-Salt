@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ReactElement } from 'react';
+import { useEffect, useRef, useState, type ReactElement } from 'react';
 import { buildCardSheetsPdf } from '@/lib/invitation-cards';
 import type { DiscardGuard } from '../Modal/types';
 import { ConfirmQuestion } from '../Modal';
@@ -38,6 +38,12 @@ const MintedCards = ({
   const [saved, setSaved] = useState(false);
   const name = batchName(batch.batchId);
   const sheets = Math.ceil(batch.tokens.length / CARDS_PER_SHEET);
+  const sentence = useRef<HTMLParagraphElement>(null);
+
+  // The form that minted is gone, so focus would fall to the page; it moves to the result instead.
+  useEffect(() => {
+    sentence.current?.focus();
+  }, []);
 
   const downloadPdf = async (): Promise<void> => {
     setBuilding(true);
@@ -45,6 +51,7 @@ const MintedCards = ({
     try {
       const bytes = await buildCardSheetsPdf({
         links: batch.tokens.map(linkOf),
+        batch: name,
         expiresAt: new Date(batch.expiresAt),
       });
       saveFile(new Blob([bytes as BlobPart], { type: 'application/pdf' }), `cards-${name}.pdf`);
@@ -70,9 +77,12 @@ const MintedCards = ({
           </Notice>
         )}
       </div>
+      <p ref={sentence} tabIndex={-1}>
+        Batch {name}: {batch.tokens.length} cards minted.
+      </p>
       <p>
-        {batch.tokens.length} cards on {sheets} {sheets === 1 ? 'sheet' : 'sheets'}, batch {name},
-        expiring {dayInUtc(new Date(batch.expiresAt))}.
+        {sheets} {sheets === 1 ? 'sheet' : 'sheets'}, expiring {dayInUtc(new Date(batch.expiresAt))}
+        .
       </p>
       {failed ? <Notice kind="error">The PDF could not be built. Try again.</Notice> : null}
       <div className="modal__actions">

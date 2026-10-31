@@ -226,9 +226,9 @@ export function frontText(fonts: CardFonts, copy: FrontCopy, validUntil: string)
 }
 
 /** The back's words, the canvas's `Back` artboard. */
-export function backText(fonts: CardFonts): TextItem[] {
+export function backText(fonts: CardFonts, batch: string): TextItem[] {
   const lede = lexend(fonts, 'lexend300', 18);
-  return stack(
+  const words = stack(
     fonts,
     [
       {
@@ -263,4 +263,41 @@ export function backText(fonts: CardFonts): TextItem[] {
     72,
     12,
   ).items;
+  return [...words, backBatchText(batch)];
+}
+
+/** The batch's short name, small at the foot of the text column on a back, so a card handed back names the batch to revoke. */
+function backBatchText(batch: string): TextItem {
+  return {
+    font: 'lexend500',
+    size: 13,
+    letterSpacing: 13 * 0.12,
+    colour: MUTED,
+    x: COLUMN.left,
+    baseline: COLUMN.top + COLUMN.height - 3,
+    text: `BATCH ${batch.toUpperCase()}`,
+  };
+}
+
+/**
+ * The sheet's label for the page margin below the block, between its first two crop marks, in the page frame's points.
+ * It names the batch and the sheet, so a printed sheet can be matched to the batch to revoke.
+ */
+export function marginText(
+  batch: string,
+  sheet: number,
+  sheets: number,
+  face: 'front' | 'back',
+  block: { x: number; y: number; height: number },
+  bleed: number,
+): TextItem {
+  return {
+    font: 'lexend400',
+    size: 6,
+    letterSpacing: 0,
+    colour: '#555555',
+    x: block.x + bleed + 8,
+    baseline: block.y + block.height + 10,
+    text: `Batch ${batch}, sheet ${sheet} of ${sheets}, ${face === 'front' ? 'fronts' : 'backs'}`,
+  };
 }
