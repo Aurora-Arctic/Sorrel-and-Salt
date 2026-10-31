@@ -256,7 +256,7 @@ Its children stretch to the column. The head is a `.header`, centred: the
 `h1` and a `.lede` saying what the buttons are for, "Sign in, or create your
 account, with one of these.", since the first sign-in is also how an account
 is made. The buttons are one `max-content` grid column, centred, so every
-button is as wide as the widest label. Gaps are `space(4)` between the head,
+button is as wide as the widest label. The panel itself is one column the width of the card's content, so the email and password form below fills it and is wider than the buttons. Gaps are `space(4)` between the head,
 the notice and the buttons, and `space(1)` between a button and its
 unavailable note.
 
