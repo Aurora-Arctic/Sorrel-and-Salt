@@ -12,13 +12,13 @@ yields one. The rules are [`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md
   first block of the batch id, `batchName`), minted on (date and time, UTC), expires (the date alone: it is
   midnight UTC), cards, **status**, accepted, and **Revoke Batch** while a card of the batch is pending
   (`ConfirmedAction` asks first, naming the batch and its mint date, and says accounts that already accepted
-  keep their access). The row button is plain (`btn btn--quiet btn--small`); only the confirm is red.
+  keep their access). The Revoke column is red like the People table's Impersonate column (`row-action-column`, `.admin-cards__revoke`), with a red row button and a red confirm; the question always comes first.
   Revoking is by batch only. Counts come from SQL. Status is `batchStatus()` in `batches.ts`, read from the
   counts, not from one card's `revokedAt` (the head card may have been accepted): any card pending is Live;
   else every card accepted is Used up; else a passed expiry is Expired; else Revoked. Table cell values are
   sentence case.
 - **Refused Opens** (`attempts.tsx`): each batch shows its count of refused opens across all its cards;
-  where the count is above zero a **View** button opens a "Refused Opens, Batch 7c2d0000" dialog that reads
+  where the count is above zero an eye icon button (tip **View Refused Opens**, right-aligned in the cell) opens a "Refused Opens, Batch 7c2d0000" dialog that reads
   `invitationCardAttempts` for that batch and lists the account (its name links to that account's modal on the People page, and its email sits under it; a removed account is "Removed account" with neither), the **Card** ("Sheet 2, Card 5", from the card's `position`; "Unknown" for a card minted before positions were kept), the reason, how many times, and the **First** and **Latest** times (the row's creation and its last refusal),
   twenty at a time with **Show More**.
 - **Mint Cards** (`mint-form.tsx`) is a link to `?mint`, which opens a modal: **Number of Sheets** (1 to
@@ -37,7 +37,7 @@ yields one. The rules are [`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md
   be revoked from the list (Close Anyway, Keep Open); after it, Close is quiet.
 - **Card Sign-Ups** (`arrivals.tsx`): every account that accepted a card, with its email under its name, the
   date (**Accepted On**), the batch and the covens it owns (**Covens Owned**; "None yet" when none). An account
-  that can no longer be read keeps its row as "Removed account". **Download CSV** reads `cardArrivalsCsv` through
+  that can no longer be read keeps its row as plain "Removed account" text. The name opens that account's user modal over the page, through the Users list's own `UserLink`. **Download CSV** reads `cardArrivalsCsv` through
   GraphQL and hands the string to the browser as `card-sign-ups.csv`; a failure shows as the button's click feedback; the service refuses anyone but an admin.
 - `src/lib/invitation-cards/limits.ts` holds `CARDS_PER_SHEET`, `MAX_SHEETS_PER_BATCH` and
   `DEFAULT_EXPIRY_DAYS`, a file with no imports so a client file can read it; the service rejects anything
