@@ -1,59 +1,97 @@
+'use client';
+
+import Link from 'next/link';
 import type { ReactElement } from 'react';
-import LocalTime from '../LocalTime';
-import Pager from '../Pager';
-import { SUPPORT_ABOUTS } from '../../lib/support-path';
+import { listHref } from '../../lib/list-href';
+import { SUPPORT_LIST_PATH } from '../../lib/support-path';
 import { emptyList } from '../../lib/text';
-import type { SupportListProps } from './types';
+import LocalTime from '../LocalTime';
+import { RouteModal, useOpenModalClick } from '../Modal';
+import Pager from '../Pager';
+import { ABOUT_OPTIONS, STATUS_LABELS } from '../SupportRequests/filter';
+import { statusBadgeClass } from '../SupportRequests/status-badge';
+import SupportSenderRequest from '../SupportSenderRequest';
+import type { SupportListEntry, SupportListProps } from './types';
 import './index.scss';
 
-// The sender's own support requests, newest first, each with its replies and, for a bug, its issue
+// The sender's own support requests, newest first, one compact row each: what it is about, the page, when it was
+// sent and where it stands. A row opens the request in a dialog at `?request=<id>`
 // (claude-docs/components/support-list.md). The service has already limited the rows to the sender's.
 
 const labelOfAbout = (value: string): string =>
-  SUPPORT_ABOUTS.find((about) => about.value === value)?.label ?? value;
-const STATUS = {
-  open: 'Open',
-  waiting_on_sender: 'Waiting on Sender',
-  resolved: 'Resolved',
-  closed: 'Closed',
-} as const;
+  ABOUT_OPTIONS.find((about) => about.value === value)?.label ?? value;
+
+const RowLink = ({
+  request,
+  href,
+}: {
+  request: SupportListEntry;
+  href: ReturnType<typeof listHref>;
+}): ReactElement => {
+  const onClick = useOpenModalClick(href, { title: request.subject, focusTitle: true });
+  return (
+    <Link href={href} onClick={onClick} className="support-list__link">
+      {labelOfAbout(request.about)}
+      {/* Names the subject too, so two requests of one kind are told apart. */}{' '}
+      <span className="visually-hidden">: {request.subject}</span>
+    </Link>
+  );
+};
 
 const SupportList = ({
   requests,
+  opened,
+  cursor,
   previousHref,
   nextHref,
   position,
-}: SupportListProps): ReactElement => (
-  <div className="support-list">
-    {requests.length === 0 ? (
-      <p className="support-list__empty">{emptyList('support requests')}</p>
-    ) : (
-      <ul className="support-list__items">
-        {requests.map((request) => (
-          <li key={request.id} className="support-list__item panel">
-            <div className="support-list__head">
-              <h2 className="support-list__subject">{request.subject}</h2>
-              <span className="support-list__marks">
-                <span>{labelOfAbout(request.about)}</span>
-                <span>{STATUS[request.status]}</span>
-                <LocalTime at={request.createdAt} long />
+}: SupportListProps): ReactElement => {
+  const hrefOf = (request?: string) => listHref(SUPPORT_LIST_PATH, { ...cursor, request });
+  return (
+    <div className="support-list">
+      {requests.length === 0 ? (
+        <p className="support-list__empty">{emptyList('support requests')}</p>
+      ) : (
+        <ul className="support-list__items">
+          {requests.map((request) => (
+            <li key={request.id} className="support-list__item">
+              <RowLink request={request} href={hrefOf(request.id)} />
+              <span className="support-list__page">
+                {request.path || <span className="support-list__none">No page</span>}
               </span>
-            </div>
-            <p className="support-list__message">{request.message}</p>
-            {request.replies.map((reply) => (
-              <blockquote key={reply.id} className="support-list__reply">
-                <p>{reply.body}</p>
-                <footer>
-                  <LocalTime at={reply.createdAt} long />
-                </footer>
-              </blockquote>
-            ))}
-          </li>
-        ))}
-      </ul>
-    )}
-    <Pager previousHref={previousHref} nextHref={nextHref} position={position} soft />
-  </div>
-);
+              <LocalTime at={request.createdAt} long />
+              <span className={statusBadgeClass(request.status)}>
+                {STATUS_LABELS[request.status]}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <Pager previousHref={previousHref} nextHref={nextHref} position={position} soft />
+      {/* Rendered whatever the address opens, so a press shows the dialog at once. */}
+      <RouteModal
+        closeHref={hrefOf()}
+        size="listed"
+        content={
+          opened && {
+            heading: {
+              eyebrow: `Support · ${labelOfAbout(opened.about)}`,
+              title: opened.subject,
+              under: (
+                <div className="badges">
+                  <span className={statusBadgeClass(opened.status)}>
+                    {STATUS_LABELS[opened.status]}
+                  </span>
+                </div>
+              ),
+              focusTitle: true,
+            },
+            body: () => <SupportSenderRequest key={opened.id} request={opened} />,
+          }
+        }
+      />
+    </div>
+  );
+};
 
 export default SupportList;

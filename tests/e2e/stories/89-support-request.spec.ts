@@ -64,8 +64,20 @@ test.describe('Story 89: Ask for Help and Read the Reply', { tag: '@story-89' },
     await test.step('the asker reads the reply on their own list', async () => {
       await page.goto('/account/support');
       const entry = page.getByRole('listitem').filter({ hasText: 'Where is the moon table?' });
-      await expect(entry).toContainText('It lives under Ingredients, then Tables.');
+      await expect(entry.getByText('Open')).toBeVisible();
+      await entry.getByRole('link', { name: /Question/ }).click();
+      const request = page.getByRole('dialog', { name: 'Where is the moon table?' });
+      await expect(page).toHaveURL(/\/account\/support\?request=/);
+      const thread = request.getByRole('region', { name: 'Thread' });
+      await expect(thread).toContainText('It lives under Ingredients, then Tables.');
+      await expect(thread).toContainText('You');
+      await expect(thread).toContainText('Staff');
+      await expect(request.getByLabel('Your Reply')).toBeDisabled();
+      await expect(request.getByText('Replies are coming.')).toBeVisible();
       await assertNoAccessibilityViolations(page);
+      await request.getByRole('button', { name: 'Close', exact: true }).click();
+      await expect(request).toBeHidden();
+      await expect(page).not.toHaveURL(/request=/);
     });
   });
 });

@@ -6,7 +6,6 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import BusyButton from '../BusyButton';
 import { FieldShell, SwitchField, fieldDescription } from '../Field';
 import Spinner from '../Spinner';
-import IconTip, { CopyIcon } from '../IconTip';
 import LocalTime from '../LocalTime';
 import Notice from '../Notice';
 import IssuePanel from './issue-panel';
@@ -15,6 +14,8 @@ import TimeoutPanel from './timeout-panel';
 import type { SupportDetailProps } from './types';
 import { AnnounceContext, useSupportAction } from './use-support-action';
 import SenderName from './sender-name';
+import SupportFacts from './facts';
+import SupportThread from './thread';
 
 // A request opened: the facts and the thread for anyone who may read it, Reply and Resolve for an admin or
 // the curator it is assigned to, and for an admin alone a side column of settings: Assign, Shared With
@@ -53,100 +54,64 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
   const visible = useSupportAction();
   const resolve = useSupportAction();
   const { aria, ...assignField } = fieldDescription({ id: useId() });
-  const threadId = useId();
   const failure = assign.failure.alert ?? visible.failure.alert ?? resolve.failure.alert;
 
   return (
     <div className={isAdmin ? 'support-detail' : 'support-detail support-detail--single'}>
       <div className="support-detail__main">
-        <dl className="support-detail__facts">
-          <div>
-            <dt>From</dt>
-            <dd>
-              {request.sender ? (
-                <>
-                  <SenderName sender={request.sender} userHref={userHref} />{' '}
-                  <span className="support-detail__muted">{request.sender.email}</span>
-                </>
-              ) : (
-                'Deleted account'
-              )}
-            </dd>
-          </div>
-          <div>
-            <dt>Sent</dt>
-            <dd>
-              <LocalTime at={request.createdAt} long />
-            </dd>
-          </div>
-          {request.path && (
+        <SupportFacts
+          createdAt={request.createdAt}
+          path={request.path}
+          errorCode={request.errorCode}
+          errorReference={request.errorReference}
+          lead={
             <div>
-              <dt>Page</dt>
-              <dd className="support-detail__mono">{request.path}</dd>
-            </div>
-          )}
-          {request.errorCode !== null && (
-            <div>
-              <dt>Error</dt>
+              <dt>From</dt>
               <dd>
-                {request.errorCode}
-                {request.errorReference && (
+                {request.sender ? (
                   <>
-                    {' '}
-                    <span aria-hidden="true">·</span>{' '}
-                    <span className="support-detail__mono">{request.errorReference}</span>
-                    <IconTip tip="Copy" placement="above">
-                      <button
-                        type="button"
-                        className="support-detail__copy"
-                        onClick={() =>
-                          void navigator.clipboard?.writeText(request.errorReference ?? '')
-                        }
-                      >
-                        <CopyIcon />
-                        <span className="visually-hidden">Copy Error Reference</span>
-                      </button>
-                    </IconTip>
+                    <SenderName sender={request.sender} userHref={userHref} />{' '}
+                    <span className="support-detail__muted">{request.sender.email}</span>
                   </>
+                ) : (
+                  'Deleted account'
                 )}
               </dd>
             </div>
-          )}
-          {request.resolvedBy && request.resolvedAt && (
-            <div>
-              <dt>Resolved</dt>
-              <dd>
-                by {request.resolvedBy.name} at <LocalTime at={request.resolvedAt} long />
-              </dd>
-            </div>
-          )}
-        </dl>
+          }
+          trail={
+            request.resolvedBy &&
+            request.resolvedAt && (
+              <div>
+                <dt>Resolved</dt>
+                <dd>
+                  by {request.resolvedBy.name} at <LocalTime at={request.resolvedAt} long />
+                </dd>
+              </div>
+            )
+          }
+        />
 
         {failure && <Notice kind="error">{failure}</Notice>}
 
-        <section aria-labelledby={threadId}>
-          <h3 id={threadId}>Thread</h3>
-          <ol className="support-detail__thread">
-            <li className="support-detail__entry">
-              <div className="support-detail__meta">
-                <strong>{request.sender?.name ?? 'Deleted account'}</strong>
-                <span className="support-detail__tag">Sender</span>
-                <LocalTime at={request.createdAt} long />
-              </div>
-              <p>{request.message}</p>
-            </li>
-            {request.replies.map((reply) => (
-              <li key={reply.id} className="support-detail__entry">
-                <div className="support-detail__meta">
-                  <strong>{reply.author?.name ?? 'Deleted account'}</strong>
-                  <span className="support-detail__tag">Staff</span>
-                  <LocalTime at={reply.createdAt} long />
-                </div>
-                <p>{reply.body}</p>
-              </li>
-            ))}
-          </ol>
-        </section>
+        <SupportThread
+          entries={[
+            {
+              id: request.id,
+              name: request.sender?.name ?? 'Deleted account',
+              tag: 'Sender',
+              at: request.createdAt,
+              body: request.message,
+            },
+            ...request.replies.map((reply) => ({
+              id: reply.id,
+              name: reply.author?.name ?? 'Deleted account',
+              tag: 'Staff',
+              at: reply.createdAt,
+              body: reply.body,
+            })),
+          ]}
+        />
 
         {answers && (
           <ReplyForm

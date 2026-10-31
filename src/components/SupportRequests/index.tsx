@@ -12,6 +12,7 @@ import SupportDetail from './detail';
 import SupportRequestsFilter, { ABOUT_OPTIONS, STATUS_LABELS, STATUS_OPTIONS } from './filter';
 import { supportHref } from './href';
 import SenderName from './sender-name';
+import { statusBadgeClass } from './status-badge';
 import type {
   SupportRequestEntry,
   SupportRequestsFilter as Filter,
@@ -42,9 +43,7 @@ function emptyText({ about, status, errorCode }: Filter): string {
 /** The request's state as text badges under its title: the open one in the accent's tint, the rest muted. */
 const StatusBadges = ({ status }: { status: SupportStatus }): ReactElement => (
   <div className="badges">
-    <span className={status === 'open' ? 'badge badge--local' : 'badge badge--muted'}>
-      {STATUS_LABELS[status]}
-    </span>
+    <span className={statusBadgeClass(status)}>{STATUS_LABELS[status]}</span>
   </div>
 );
 

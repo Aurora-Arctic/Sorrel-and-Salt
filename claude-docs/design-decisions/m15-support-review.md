@@ -145,3 +145,9 @@ A visitor with no account may send a request about `accessibility` or `account`,
 - **`/` keeps its footer below the fold.** The home page's frame (`.page-frame.welcome-page`) takes the whole window height, phone included, and does not subtract the footer's room, so the footer follows on scroll after the usual 4rem gap in every window size. The owner's call, 2026-10-31.
 - **The footer sits at the foot of a short page.** The layout wraps page and footer in a column at least one window tall, and the footer's top margin is `auto`. A centred page frame is shorter by the footer's height so the two together fit one window.
 - **The salt stays above the footer.** The footer declares a scroll view timeline and the salt image rises on it; the opaque fill stays as the fallback (claude-docs/components/site-footer.md).
+
+### The Sender's Page Is a Compact List with a Dialog (the owner's call of 2026-10-31)
+
+- **A compact list, and the request in a dialog.** `/account/support` lists one row per request (kind, page, sent date, status badge) and a row opens the request in a dialog at `?request=<id>`, reusing the staff dialog's facts and thread (`SupportSenderRequest`).
+- **"You" and "Staff".** The sender's own messages are tagged "You" and every reply "Staff"; the sender never sees a curator's or admin's name.
+- **A faded reply box.** Beneath the thread sits a disabled, faded reply field saying "Replies are coming." It stands in for M15.43 and sends nothing.

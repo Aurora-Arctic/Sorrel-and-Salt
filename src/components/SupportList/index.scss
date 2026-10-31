@@ -1,41 +1,56 @@
 @use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// Every space on the page, summed to a target. The page frame's header ends at its own margin; below it the
+// list's column is one gap (4) between the rows' list and the pager, and the rows are 2 apart. Zeroed, not
+// offset: the `ul` default margin, the empty message's `p` margin and the row's own margin. The dialog is
+// outside the flow, so it adds nothing. A row is 3 above and below its text and 4 either side.
+.support-list {
+  @include stack(4);
+}
 
 .support-list__items {
-  display: grid;
-  gap: space(4);
+  @include stack(2);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.support-list__head {
-  display: flex;
-  flex-wrap: wrap;
-  gap: space(2) space(4);
-  justify-content: space-between;
-}
-
-// The smallest heading size, not the h2 look; nested to outweigh typography-base's `body h2`.
-body .support-list__subject {
+.support-list__empty {
   margin: 0;
-  font-size: heading-size(4);
-  line-height: 1.25;
 }
 
-.support-list__marks {
-  display: flex;
-  flex-wrap: wrap;
-  gap: space(3);
+// The kind, the page, the date and the badge in a row: the page takes the slack and wraps long, the rest fit.
+// On a phone the four stack, two to a line.
+.support-list__item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 9rem minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: space(3) space(4);
+  margin: 0;
+  padding: space(3) space(4);
+  border: 1px solid $hairline;
+  border-radius: radius('surface');
+  background-color: $surface-page;
+
+  @media (width <= #{$shell-phone-width}) {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+// The kind is the row's one link, stretched over the whole row.
+.support-list__link {
+  @include card-link;
+}
+
+.support-list__page {
+  min-inline-size: 0;
+  font-family: $font-mono;
+  overflow-wrap: anywhere;
+}
+
+.support-list__none {
   color: $text-muted;
-}
-
-.support-list__message {
-  white-space: pre-wrap;
-}
-
-.support-list__reply {
-  margin: space(3) 0 0;
-  padding-left: space(4);
-  border-left: 2px solid $hairline;
-  white-space: pre-wrap;
+  font-family: inherit;
 }
