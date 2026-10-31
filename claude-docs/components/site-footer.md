@@ -6,7 +6,7 @@ The link is a [`SupportLink`](support-link.md): it opens the Support dialog over
 
 ## At the foot of the window
 
-The layout wraps the page and the footer in `.site-frame`, a column at least one window tall (`100dvh` less the top inset). The footer's top margin is `auto`, so on a short page the spare room opens between the page and the footer and the footer sits at the foot of the window; on a long page it follows the content. The step of air above it (`space(8)`) is the bottom margin of whatever precedes it, so the gap is never smaller. A centred page frame (`.page-frame`) is shorter by the footer's height (`$footer-space`, `$footer-space-phone`) so the page and the footer together fit one window and do not scroll for it. The row has a fixed minimum height (`$footer-height`, `$footer-height-phone`) so those numbers hold.
+The layout wraps the page and the footer in `.site-frame`, a column at least one window tall (`100dvh` less the top inset). The footer's top margin is `auto`, so on a short page the spare room opens between the page and the footer and the footer sits at the foot of the window; on a long page it follows the content. The step of air above it (`space(8)`) is the bottom margin of whatever precedes it, so the gap is never smaller. A centred page frame (`.page-frame`) is shorter by the footer's height (`$footer-space`, `$footer-space-phone`) so the page and the footer together fit one window and do not scroll for it. The one exception is the home page: its frame (`.page-frame.welcome-page`) takes the whole window height, so the footer always follows below the fold. The row has a fixed minimum height (`$footer-height`, `$footer-height-phone`) so those numbers hold.
 
 ## The salt stays above it
 

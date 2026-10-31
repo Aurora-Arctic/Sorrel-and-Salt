@@ -618,6 +618,12 @@
     }
   }
 
+  // The front door fills the whole window, so the footer always follows below the fold; the other frames
+  // leave the footer's room (`.welcome-page` is also Backdrop's hook for its larger art).
+  .page-frame.welcome-page {
+    min-height: calc(100dvh - #{$top-inset});
+  }
+
   // The shell's bar takes room above the frame, so the frame is shorter by it
   // and a centred page still fits the window without a scroll.
   :is(.app-shell, .public-frame) .page-frame {
