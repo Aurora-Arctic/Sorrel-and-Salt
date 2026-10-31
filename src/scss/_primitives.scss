@@ -1849,9 +1849,9 @@
     margin-bottom: space(4);
   }
 
-  // The topic cards are wrapped for focus, so `.form > .fieldset.radio-group` does not reach them and the
-  // group keeps its standalone margin; below it only a field's label gap is wanted.
-  .support-form__about .fieldset.radio-group {
+  // A card group in a form keeps a field's label gap below it, on top of the form's own gap; the extra
+  // class outranks `.form > .fieldset.radio-group` above.
+  .form > .fieldset.radio-group.radio-group--cards {
     margin-block: 0 space(2);
   }
 

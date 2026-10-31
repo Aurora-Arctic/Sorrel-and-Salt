@@ -13,6 +13,7 @@ import type { RadioGroupFieldProps } from './types';
  * `strip` or `segmented` draws a bar and `cards` a column of one-row cards, the hint beside the name; `error` is drawn under the choices (claude-docs/components/field.md).
  */
 export function RadioGroupField<T extends string>({
+  id: groupId,
   legend,
   name,
   options,
@@ -34,6 +35,7 @@ export function RadioGroupField<T extends string>({
   const cards = layout === 'cards';
   return (
     <fieldset
+      id={groupId}
       className={`fieldset radio-group${layout === 'list' ? '' : ` radio-group--${layout}`}`}
       disabled={disabled}
       aria-describedby={

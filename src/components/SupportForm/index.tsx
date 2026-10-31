@@ -209,22 +209,21 @@ const SupportForm = ({
   return (
     <form className="form" noValidate onSubmit={(event) => void submit(event)}>
       {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
-      <div id={aboutBoxId} className="support-form__about">
-        <RadioGroupField
-          legend={ABOUT_LABEL}
-          required
-          name={aboutId}
-          layout="cards"
-          options={SUPPORT_ABOUTS}
-          value={about}
-          disabled={sending}
-          error={shown.about}
-          onChange={(value) => {
-            setAbout(value);
-            edited('about');
-          }}
-        />
-      </div>
+      <RadioGroupField
+        id={aboutBoxId}
+        legend={ABOUT_LABEL}
+        required
+        name={aboutId}
+        layout="cards"
+        options={SUPPORT_ABOUTS}
+        value={about}
+        disabled={sending}
+        error={shown.about}
+        onChange={(value) => {
+          setAbout(value);
+          edited('about');
+        }}
+      />
       <FieldShell
         label="Page"
         note={pageNote}

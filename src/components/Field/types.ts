@@ -164,6 +164,8 @@ export interface RadioOption<T extends string> {
 }
 
 export interface RadioGroupFieldProps<T extends string> {
+  /** The group's `id`, for a caller that moves focus into it. */
+  id?: string;
   /** The group's name, in title case. */
   legend: string;
   /** The group's `name`, shared by its radios. */
