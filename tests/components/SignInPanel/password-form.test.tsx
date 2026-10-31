@@ -66,6 +66,7 @@ describe('SignInPanel, email and password', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
+    cleanup();
     setQuery('');
     signInEmail.mockReset();
     signUpEmail.mockReset();

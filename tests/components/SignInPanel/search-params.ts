@@ -34,16 +34,21 @@ export function installHistory() {
   const entries: { state: unknown; query: string }[] = [{ state: null, query }];
   let index = 0;
   const queryOf = (url: unknown) => String(url ?? '').split('?')[1] ?? '';
-  Object.defineProperty(window.history, 'state', { configurable: true, get: () => entries[index].state });
+  Object.defineProperty(window.history, 'state', {
+    configurable: true,
+    get: () => entries[index].state,
+  });
   const push = vi.spyOn(window.history, 'pushState').mockImplementation((state, _unused, url) => {
     entries.splice(index + 1, entries.length, { state, query: queryOf(url) });
     index += 1;
     setQuery(entries[index].query);
   });
-  const replace = vi.spyOn(window.history, 'replaceState').mockImplementation((state, _unused, url) => {
-    entries[index] = { state, query: queryOf(url) };
-    setQuery(entries[index].query);
-  });
+  const replace = vi
+    .spyOn(window.history, 'replaceState')
+    .mockImplementation((state, _unused, url) => {
+      entries[index] = { state, query: queryOf(url) };
+      setQuery(entries[index].query);
+    });
   const back = vi.spyOn(window.history, 'back').mockImplementation(() => {
     if (index === 0) return;
     index -= 1;

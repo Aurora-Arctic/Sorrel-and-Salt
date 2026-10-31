@@ -1,6 +1,7 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import SignInPanel from '@/components/SignInPanel';
+import { installHistory, setQuery } from './search-params';
 
 // The passkey plugin's client runs the browser's WebAuthn prompt, which happy-dom has none of, so `signIn.passkey` is
 // mocked; the rest of the module is the real one.
@@ -10,16 +11,23 @@ vi.mock('@/lib/auth-client', async (importOriginal) => ({
   signIn: { social: vi.fn(), passkey: (...args: unknown[]) => passkeyMock(...args) },
 }));
 
+vi.mock('next/navigation', async () => ({
+  useSearchParams: (await import('./search-params')).useSearchParams,
+}));
+
 const assignMock = vi.fn();
 const SIGNED_IN = { data: { session: {} }, error: null };
 const REFUSED = { data: null, error: { code: 'AUTH_CANCELLED', status: 400 } };
 const BUTTON = { name: 'Sign In with a Passkey' };
 
 beforeEach(() => {
+  installHistory();
   vi.stubGlobal('location', { ...window.location, assign: assignMock });
 });
 
 afterEach(() => {
+  cleanup();
+  setQuery('');
   passkeyMock.mockReset();
   assignMock.mockReset();
   vi.unstubAllGlobals();

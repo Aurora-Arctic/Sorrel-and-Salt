@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import SignInPanel from '@/components/SignInPanel';
 import {
@@ -59,6 +59,7 @@ describe('SignInPanel, the two-factor step', () => {
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    cleanup();
     setQuery('');
     signInEmail.mockReset();
     verifyTotp.mockReset();
@@ -160,16 +161,16 @@ describe('SignInPanel, the two-factor step', () => {
     expect(screen.queryByRole('heading', { name: 'Enter Your Code' })).not.toBeInTheDocument();
   });
 
-  it('shows the code step alone, without the sign-in buttons, and brings them back on Start Again', async () => {
+  it('shows the code step alone, without the sign-in buttons or the Back button, and brings the Back button back on Start Again', async () => {
     await passPassword();
 
     expect(screen.queryByRole('button', { name: 'Continue with Google' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Passkey/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Back' })).not.toBeInTheDocument();
 
     await press(screen.getByRole('button', { name: 'Start Again' }));
 
-    expect(screen.getByRole('button', { name: 'Continue with Google' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /Passkey/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Back' })).toBeInTheDocument();
   });
 
   it('offers the code field an action placeholder', async () => {
