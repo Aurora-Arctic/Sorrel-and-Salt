@@ -253,8 +253,8 @@ shows `two-factor-step.tsx` in its place ([`auth/two-factor.md`](../auth/two-fac
   Device for 30 Days" switch, and Verify (`twoFactor.verifyTotp`). "Use a
   Backup Code" swaps the field for "Backup Code" (`twoFactor.verifyBackupCode`)
   and back. "Start Again" returns to the password; it and the method switch
-  share one row. While the step shows, the provider buttons, the passkey button
-  and the "or" divider are hidden, so the card holds the step alone. The field
+  share one row. The step replaces the email view's form, which is the only place it shows;
+  the card holds the step alone, and the Back button is hidden with the form. The field
   carries the placeholder "Add a code".
 - **Refusals.** A wrong code is `WRONG_CODE` under the field. The plugin's
   lock is `CODE_LOCKED` in the alert region. An expired challenge, or one
