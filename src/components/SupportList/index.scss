@@ -11,8 +11,7 @@
 }
 
 // The count line at the left and New Request at the right, centred on one line; the count wraps beneath the
-// button only when they cannot share it. The icon's cut-out takes the button's own ground: the page at rest, the
-// accent fill on hover and focus.
+// button only when they cannot share it.
 .support-list__head {
   display: flex;
   flex-wrap: wrap;
