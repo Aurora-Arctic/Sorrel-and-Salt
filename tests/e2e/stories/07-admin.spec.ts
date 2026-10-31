@@ -1154,4 +1154,48 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await expect(page.getByRole('row', { name: /Aaa Testri/ })).toHaveCount(0);
     },
   );
+
+  test(
+    'a curator hides a compendium entry from the public and shows it again',
+    { tag: '@story-18' },
+    async ({ page, browser, baseURL }) => {
+      const { userId } = await signInAs(page, 'shown@story-18.test', ['discord'], 'curator');
+      const name = 'Fixture Hidewort';
+      const slug = slugify(name);
+      await withSql((sql) =>
+        insertIngredient(
+          sql,
+          makeIngredient({ name, nomenclature: 'none', variants: [makeVariant()] }),
+          userId,
+        ),
+      );
+      const entryPage = `/compendium/ingredients/${slug}`;
+      expect((await page.goto(entryPage))?.status()).toBe(200);
+
+      await page.goto('/admin/compendium');
+      const row = page.getByRole('row').filter({ hasText: name });
+      const shown = row.getByRole('switch', { name: `Shown in Compendium: ${name}`, exact: true });
+      await expect(shown).toBeChecked();
+      await shown.click();
+      await expect(shown).not.toBeChecked();
+
+      // A visitor with no account no longer finds it, in the list or at its address.
+      const visitor = await browser.newContext({ baseURL });
+      const visitorPage = await visitor.newPage();
+      expect((await visitorPage.goto(entryPage))?.status()).toBe(404);
+      await visitorPage.goto('/compendium');
+      await expect(visitorPage.getByRole('link', { name })).toHaveCount(0);
+      await visitor.close();
+
+      // The curator still reaches the page, told that it is hidden.
+      expect((await page.goto(entryPage))?.status()).toBe(200);
+      await expect(page.getByText(/^Hidden in the Compendium\./)).toBeVisible();
+
+      await page.goto('/admin/compendium');
+      await shown.click();
+      await expect(shown).toBeChecked();
+      expect((await page.goto(entryPage))?.status()).toBe(200);
+      await expect(page.getByText(/^Hidden in the Compendium\./)).toHaveCount(0);
+    },
+  );
 });

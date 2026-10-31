@@ -19,6 +19,8 @@ export interface CompendiumSearchParams extends ListSearchParams {
   forms?: string | string[];
   withoutReferences?: string | string[];
   withoutForms?: string | string[];
+  /** Only the hidden entries, `1`; the public page drops it. */
+  hidden?: string | string[];
   elements?: string | string[];
   categories?: string | string[];
   categoryMode?: string | string[];

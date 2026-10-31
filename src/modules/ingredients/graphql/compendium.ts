@@ -4,6 +4,7 @@ import { compendiumFacetsHeldIn } from '../services/compendium-held-in';
 import type { CompendiumFilterInput } from '../validation/compendium-filter';
 import {
   CategoryModeEnum,
+  CompendiumListingEnum,
   IngredientElementEnum,
   IngredientRef,
   NomenclatureEnum,
@@ -78,7 +79,8 @@ builder.queryField('compendium', (t) =>
       withoutForms: t.arg.boolean({ required: false }),
       // The formal names still to look up are the `unknown` entries.
       nomenclature: t.arg({ type: NomenclatureEnum, required: false }),
-      // A curator's review mark: FORBIDDEN to anyone else.
+      // A curator's review mark and hidden entries: FORBIDDEN to anyone else.
+      listing: t.arg({ type: CompendiumListingEnum, required: false }),
       reviewed: t.arg.boolean({
         required: false,
         description:
@@ -114,7 +116,8 @@ builder.queryField('compendiumFacets', (t) =>
       withoutReferences: t.arg.boolean({ required: false }),
       withoutForms: t.arg.boolean({ required: false }),
       nomenclature: t.arg({ type: NomenclatureEnum, required: false }),
-      // A curator's review mark: FORBIDDEN to anyone else.
+      // A curator's review mark and hidden entries: FORBIDDEN to anyone else.
+      listing: t.arg({ type: CompendiumListingEnum, required: false }),
       reviewed: t.arg.boolean({
         required: false,
         description:
@@ -170,6 +173,7 @@ function filterOf({
   withoutForms,
   nomenclature,
   reviewed,
+  listing,
 }: CompendiumFilterInput): CompendiumFilterInput {
   return {
     query,
@@ -185,5 +189,6 @@ function filterOf({
     withoutForms,
     nomenclature,
     reviewed,
+    listing,
   };
 }

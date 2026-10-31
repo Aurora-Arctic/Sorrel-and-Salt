@@ -177,6 +177,26 @@ describe('the No Form parameter', () => {
   });
 });
 
+describe('the Hidden parameter', () => {
+  it('reads 1 as on and anything else as off, and writes only the on', () => {
+    expect(COMPENDIUM_PARAMS.read({ hidden: '1' }).hidden).toBe(true);
+    expect(COMPENDIUM_PARAMS.read({ hidden: 'true' }).hidden).toBe(false);
+    expect(COMPENDIUM_PARAMS.href('/admin/compendium', { hidden: true })).toBe(
+      '/admin/compendium?hidden=1',
+    );
+    expect(COMPENDIUM_PARAMS.href('/admin/compendium', { hidden: false })).toBe(
+      '/admin/compendium',
+    );
+  });
+
+  it('becomes the listing variable only when on', () => {
+    const on = COMPENDIUM_PARAMS.variables(COMPENDIUM_PARAMS.read({ hidden: '1' }));
+    const off = COMPENDIUM_PARAMS.variables(COMPENDIUM_PARAMS.read({}));
+    expect(on).toMatchObject({ listing: 'hidden' });
+    expect(off.listing).toBeUndefined();
+  });
+});
+
 describe('the Reviewed parameter', () => {
   const reviewed = entries.reviewed;
 
@@ -217,6 +237,7 @@ describe('the whole table', () => {
       forms: [],
       withoutReferences: false,
       withoutForms: false,
+      hidden: false,
       elements: [],
       categories: [],
       categoryMode: 'all',

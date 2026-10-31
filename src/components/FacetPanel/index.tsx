@@ -76,6 +76,7 @@ export default function FacetPanel({
     (filter.toxic === '' ? 0 : 1) +
     (admin && filter.withoutReferences ? 1 : 0) +
     (admin && filter.withoutForms ? 1 : 0) +
+    (admin && filter.hidden ? 1 : 0) +
     (admin && filter.reviewed ? 1 : 0) +
     (filter.source ? 1 : 0) +
     (filter.inStock ? 1 : 0) +
@@ -220,6 +221,14 @@ export default function FacetPanel({
                   name="withoutForms"
                   checked={filter.withoutForms}
                   onChange={(withoutForms) => onChange({ withoutForms })}
+                />
+              )}
+              {admin && filter.hidden !== undefined && (
+                <FacetSwitch
+                  label="Hidden"
+                  name="hidden"
+                  checked={filter.hidden}
+                  onChange={(hidden) => onChange({ hidden })}
                 />
               )}
               {admin && filter.reviewed !== undefined && facets.reviewed && (

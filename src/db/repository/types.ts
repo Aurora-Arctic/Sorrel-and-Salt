@@ -416,6 +416,11 @@ export interface AuditWriter {
    */
   setReviewInCompendium(curator: Curator, id: string, reviewed: boolean): Promise<IngredientRow[]>;
   /**
+   * Sets whether the one live compendium entry is shown on the public compendium. A real change to the row, so its audit stamps move.
+   * The only writer of the column.
+   */
+  setShownInCompendium(curator: Curator, id: string, shown: boolean): Promise<IngredientRow[]>;
+  /**
    * Moves the one live compendium row's `updated_at` with no column changed, for a parent whose child rows just changed.
    * The `set_updated_at()` trigger ignores an UPDATE that changed nothing, so this publishes `app.touch_row` to say the touch is meant.
    * Compendium tier only.
@@ -783,6 +788,11 @@ export interface IngredientFilter {
    * The service lets only a curator set it.
    */
   reviewed?: boolean;
+  /**
+   * The compendium's only: which entries by their shown flag. Absent or 'shown' keeps the shown ones, 'hidden' the hidden ones and 'all' both.
+   * A coven's cupboard read ignores it and keeps a hidden entry it names. The service lets only a curator set anything but shown.
+   */
+  listing?: 'shown' | 'hidden' | 'all';
   /**
    * The compendium only: keep an entry when a live cupboard row of any one of these covens names it. A proof each, so a coven the caller is not in
    * cannot be named; an empty list is no filter.

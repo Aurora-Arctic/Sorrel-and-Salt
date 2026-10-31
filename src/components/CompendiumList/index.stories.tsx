@@ -140,6 +140,7 @@ const entry = (
       href: compendiumHref({ entry: slug }),
       heading: detailsHeading({ name, canonicalName, nomenclature }),
     },
+    shown: true,
     editHref: compendiumHref({}, { edit: slug }),
     editHeading: { eyebrow: 'Edit Ingredient', title: name, qualifier: canonicalName ?? undefined },
   };
@@ -198,6 +199,7 @@ const FilteredView = () => (
         forms: ['Powder'],
         withoutReferences: true,
         withoutForms: false,
+        hidden: false,
         elements: ['fire', 'earth'],
         categories: ['testward', 'testcraft'],
         categoryMode: 'any',
@@ -242,6 +244,7 @@ const noMatchesNode = (
         forms: ['Oil'],
         withoutReferences: false,
         withoutForms: false,
+        hidden: false,
         elements: [],
         categories: ['testbane'],
         categoryMode: 'all',

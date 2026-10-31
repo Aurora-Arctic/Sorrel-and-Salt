@@ -596,6 +596,94 @@ describe('the update path', () => {
     expect(await compendiumRows()).toEqual(before);
   });
 
+  const shownByKey = async () =>
+    Object.fromEntries(
+      (
+        await sql<{ seed_key: string; shown: boolean }[]>`select seed_key, shown from ingredients`
+      ).map((row) => [row.seed_key, row.shown]),
+    );
+
+  const shownOf = async () =>
+    (
+      await sql<{ seed_key: string; shown: boolean }[]>`
+        select seed_key, shown from ingredients order by seed_key`
+    ).map((row) => row.shown);
+
+  it('lands an entry shown when it names a category and hidden when it names none', async () => {
+    expect(await shownByKey()).toEqual({
+      [identityOf(SAMPLEWORT)]: SAMPLEWORT.categories?.length ? true : false,
+      [identityOf(TESTWORT)]: TESTWORT.categories?.length ? true : false,
+    });
+    expect(first.hidden).toBe(
+      [SAMPLEWORT, TESTWORT].filter((entry) => !entry.categories?.length).length,
+    );
+  });
+
+  it('lands an entry shown when only one of its forms names a category, and hidden when nothing does', async () => {
+    await sql`truncate ingredients cascade`;
+    const formOnly = fileOf(TESTWORT, (draft) => {
+      draft.entry.categories = [];
+      draft.entry.variants.forEach((variant) => {
+        variant.categories = variant.form === 'Oil' ? ['Healing'] : [];
+      });
+    });
+    const nowhere = fileOf(SAMPLEWORT, (draft) => {
+      draft.entry.categories = [];
+      draft.entry.variants.forEach((variant) => {
+        variant.categories = [];
+      });
+    });
+
+    const report = await run([formOnly, nowhere]);
+
+    expect(report.hidden).toBe(1);
+    expect(await shownByKey()).toEqual({
+      [identityOf(TESTWORT)]: true,
+      [identityOf(SAMPLEWORT)]: false,
+    });
+  });
+
+  it('lands an entry with no categories hidden, and counts it', async () => {
+    await sql`truncate ingredients cascade`;
+    const bare = fileOf(TESTWORT, (draft) => {
+      draft.entry.categories = [];
+      draft.entry.variants.forEach((variant) => {
+        variant.categories = [];
+      });
+    });
+
+    const report = await run([bare, fileOf(SAMPLEWORT)]);
+
+    expect(report.inserted).toBe(2);
+    expect(report.hidden).toBe(1 + (SAMPLEWORT.categories?.length ? 0 : 1));
+    const rows = await sql<{ seed_key: string; shown: boolean }[]>`
+      select seed_key, shown from ingredients where seed_key = ${identityOf(TESTWORT)}`;
+    expect(rows.map((row) => row.shown)).toEqual([false]);
+  });
+
+  it('never changes the flag on a later run, a marked update included', async () => {
+    await sql`update ingredients set shown = false where seed_key = ${identityOf(TESTWORT)}`;
+    const before = await shownOf();
+    expect(before).toContain(false);
+
+    const plain = await run(baseline());
+    expect(plain.hidden).toBe(0);
+    expect(await shownOf()).toEqual(before);
+
+    const emptied = edited(TESTWORT, (entry) => {
+      entry.categories = [];
+    });
+    const report = await run([emptied, fileOf(SAMPLEWORT)]);
+    expect(report.updated).toEqual([PATH]);
+    expect(await shownOf()).toEqual(before);
+
+    await sql`update ingredients set shown = true`;
+    const flipped = await shownOf();
+    const again = await run([edited(TESTWORT, reword(125)), fileOf(SAMPLEWORT)]);
+    expect(again.updated).toEqual([PATH]);
+    expect(await shownOf()).toEqual(flipped);
+  });
+
   it('reports an edit that is not marked as pending, and writes nothing', async () => {
     const before = await compendiumRows();
 

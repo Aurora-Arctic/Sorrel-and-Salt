@@ -12,11 +12,14 @@ import { assertCurator } from '@/modules/identity';
 /** What a curator who never set it is refused with. */
 const REVIEW_REFUSAL = 'Only a curator may filter the compendium by its review mark';
 
+/** What a visitor who asked for hidden entries is refused with. */
+const LISTING_REFUSAL = 'Only a curator may read the hidden compendium entries';
+
 /**
- * `filter` parsed, refused when it sets Reviewed and `viewer` is not a
+ * `filter` parsed, refused when it sets Reviewed or reads hidden entries and `viewer` is not a
  * curator or an admin, a signed-out visitor included.
  *
- * @throws {Forbidden} Reviewed is set and `viewer` does not curate.
+ * @throws {Forbidden} Reviewed or a listing other than shown is set and `viewer` does not curate.
  * @throws {ValidationError} the filter does not parse.
  */
 export function compendiumFilterFor(
@@ -27,6 +30,10 @@ export function compendiumFilterFor(
   if (parsed.reviewed !== undefined) {
     if (!viewer) throw new Forbidden(REVIEW_REFUSAL);
     assertCurator(viewer, REVIEW_REFUSAL);
+  }
+  if (parsed.listing !== 'shown') {
+    if (!viewer) throw new Forbidden(LISTING_REFUSAL);
+    assertCurator(viewer, LISTING_REFUSAL);
   }
   return parsed;
 }

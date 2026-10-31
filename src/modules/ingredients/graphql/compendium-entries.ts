@@ -5,6 +5,7 @@ import {
   createCompendiumEntry,
   deleteCompendiumEntry,
   setCompendiumEntryReviewed,
+  setCompendiumEntryShown,
   updateCompendiumEntry,
 } from '../services/compendium';
 import { clearIngredientChildren } from '../loaders/ingredient-children';
@@ -16,9 +17,15 @@ import { ingredientInputFields } from './ingredient-input';
 // category writes are. Neither input names a tier or a stamp — the
 // compendium is the mutation, and the stamps are the session's.
 
+const SHOWN =
+  'Whether the public compendium lists the entry. Left out, a create is shown and an update leaves the flag as it is.';
+
 /** A compendium entry as the admin's form sends it: `IngredientInput`'s fields with `nomenclature` required, as the compendium declares one for every entry. */
 const CompendiumIngredientInput = builder.inputType('CompendiumIngredientInput', {
-  fields: (t) => ingredientInputFields(t, { tier: 'compendium', whole: false }),
+  fields: (t) => ({
+    ...ingredientInputFields(t, { tier: 'compendium', whole: false }),
+    shown: t.boolean({ required: false, description: SHOWN }),
+  }),
 });
 
 // An update replaces the entry, so a field left out would be cleared — the
@@ -27,7 +34,10 @@ const CompendiumIngredientInput = builder.inputType('CompendiumIngredientInput',
 // does for a coven's.
 const CompendiumIngredientUpdateInput = builder.inputType('CompendiumIngredientUpdateInput', {
   description: 'The whole entry, replacing the row. Every field is sent, and "" or [] clears one.',
-  fields: (t) => ingredientInputFields(t, { tier: 'compendium', whole: true }),
+  fields: (t) => ({
+    ...ingredientInputFields(t, { tier: 'compendium', whole: true }),
+    shown: t.boolean({ required: false, description: SHOWN }),
+  }),
 });
 
 const END_REDIRECT =
@@ -109,6 +119,22 @@ builder.mutationField('setCompendiumEntryReviewed', (t) =>
     authScopes: { curator: true },
     resolve: (_root, { id, reviewed }, context) =>
       setCompendiumEntryReviewed(sessionOf(context), id, reviewed),
+  }),
+);
+
+// Hiding an entry: curator-scoped here and refused again by the service. A hidden entry
+// leaves the public compendium and its files; admin screens and covens' cupboards still hold it.
+builder.mutationField('setCompendiumEntryShown', (t) =>
+  t.field({
+    type: IngredientRef,
+    description: 'Shows the entry on the public compendium, or hides it. Curators and admins only.',
+    args: {
+      id: t.arg.id({ required: true }),
+      shown: t.arg.boolean({ required: true }),
+    },
+    authScopes: { curator: true },
+    resolve: (_root, { id, shown }, context) =>
+      setCompendiumEntryShown(sessionOf(context), id, shown),
   }),
 );
 

@@ -66,3 +66,7 @@ export type CategoryMode = (typeof CATEGORY_MODES)[number];
 export const INGREDIENT_SOURCES = ['local', 'compendium'] as const;
 
 export type IngredientSource = (typeof INGREDIENT_SOURCES)[number];
+
+/** Which of the compendium's entries a curator's list reads: the shown ones (the public's only view), the hidden ones, or both. */
+export const COMPENDIUM_LISTINGS = ['shown', 'hidden', 'all'] as const;
+export type CompendiumListing = (typeof COMPENDIUM_LISTINGS)[number];

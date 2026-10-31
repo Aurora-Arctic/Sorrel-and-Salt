@@ -33,6 +33,7 @@ const FILTER: CovenCardsProps['filter'] = {
   forms: [],
   withoutReferences: false,
   withoutForms: false,
+  hidden: false,
   elements: [],
   categories: [],
   categoryMode: 'all',

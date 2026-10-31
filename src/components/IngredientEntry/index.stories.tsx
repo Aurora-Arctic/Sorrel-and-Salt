@@ -64,6 +64,7 @@ function entryRow(overrides: Partial<IngredientRow> = {}): IngredientRow {
     revision: 1,
     curatorReviewedAt: null,
     seedContentHash: null,
+    shown: true,
     ...STAMPS,
     ...overrides,
   };

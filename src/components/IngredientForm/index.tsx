@@ -102,6 +102,7 @@ import {
 import { VariantsField, useVariantFolds } from './variants';
 import './index.scss';
 import ReviewRow from '../IngredientEntry/review-row';
+import ShownToggle from '../IngredientEntry/shown-toggle';
 
 // Every property of an ingredient, validated by the shared schema before the mutation is sent and by
 // the service after; an error lands beside the field its path names, or above them all. A coven's
@@ -230,6 +231,7 @@ const fieldsRefused = (): GraphQLClientError =>
 interface AutosaveValue {
   fields: IngredientFormValues;
   reviewed: boolean;
+  shown: boolean;
 }
 
 const IngredientForm = ({
@@ -377,7 +379,22 @@ const IngredientForm = ({
   const [reviewed, setReviewed] = useState(review?.reviewed ?? false);
   const [reviewedSaved, setReviewedSaved] = useState(review?.reviewed ?? false);
   const reviewChanged = compendium && review !== undefined && reviewed !== reviewedSaved;
-  const changed = isDirty || reviewChanged;
+  // The Shown in Compendium switch is the same kind of field. An edit starts from the saved flag; an add
+  // follows its categories (none on the entry or its forms: hidden) until the curator flips it, and
+  // from then on their choice stands. Save sends the value with the entry itself.
+  const watchedValues = useWatch({ control }) as IngredientFormValues;
+  const [shownChoice, setShownChoice] = useState<boolean | undefined>();
+  const [shownSaved, setShownSaved] = useState(review?.shown ?? true);
+  const hasCategories = (list: { categoryIds: string[]; variants: { categoryIds: string[] }[] }) =>
+    list.categoryIds.length > 0 || list.variants.some((variant) => variant.categoryIds.length > 0);
+  const shownField = compendium && review !== undefined;
+  const shownNow =
+    shownChoice ?? (review?.shown !== undefined ? shownSaved : hasCategories(watchedValues));
+  const shownChanged =
+    shownField &&
+    (review?.shown !== undefined || shownChoice !== undefined) &&
+    shownNow !== shownSaved;
+  const changed = isDirty || reviewChanged || shownChanged;
 
   // Open All / Close All: Close All while any section is open, and it reaches every variant's
   // sections too. Off while the form asks a question over itself, as Undo and Redo are then
@@ -442,6 +459,7 @@ const IngredientForm = ({
     input,
     endRedirect,
     revision,
+    shown,
   }: IngredientSend): Promise<SavedIngredient & { revision?: number | null }> => {
     const id = savedIdRef.current;
     const expectedRevision = revision ?? revisionRef.current ?? undefined;
@@ -469,14 +487,17 @@ const IngredientForm = ({
       // The update takes the whole entry, every field present, which the form's input always is.
       const answer = await graphqlRequest(UpdateCompendiumIngredientDocument, {
         id,
-        input: input as CompendiumIngredientUpdateInput,
+        input: {
+          ...input,
+          ...(shown !== undefined && { shown }),
+        } as CompendiumIngredientUpdateInput,
         endRedirect,
         expectedRevision,
       });
       return answer.updateCompendiumIngredient;
     }
     const answer = await graphqlRequest(CreateCompendiumIngredientDocument, {
-      input: input as CompendiumIngredientInput,
+      input: { ...input, ...(shown !== undefined && { shown }) } as CompendiumIngredientInput,
       endRedirect,
     });
     return answer.createCompendiumIngredient;
@@ -508,7 +529,7 @@ const IngredientForm = ({
   const mutation = useMutation({
     mutationFn: (sending: IngredientSend): Promise<SavedIngredient> => {
       const turn = writes.current.then(async () => {
-        const input = JSON.stringify(sending.input);
+        const input = JSON.stringify([sending.input, sending.shown]);
         if (
           savedIdRef.current !== null &&
           sending.revision === undefined &&
@@ -542,7 +563,12 @@ const IngredientForm = ({
   /** Sends the input, and says what came of it: saved, asked about, or refused beside its fields. */
   const deliver = async (input: IngredientFormInput, endRedirect: boolean): Promise<boolean> => {
     try {
-      const row = await mutation.mutateAsync({ input, endRedirect });
+      const row = await mutation.mutateAsync({
+        input,
+        endRedirect,
+        ...(shownField && { shown: shownNow }),
+      });
+      if (shownField) setShownSaved(shownNow);
       // The review mark goes after the entry, which a new one has no id before. The entry is
       // saved either way: a refusal here is said above the fields and leaves the switch changed.
       let reviewRefusal: string | undefined;
@@ -569,6 +595,8 @@ const IngredientForm = ({
         setSaves((count) => count + 1);
         setReviewed(review?.reviewed ?? false);
         setReviewedSaved(review?.reviewed ?? false);
+        setShownChoice(undefined);
+        setShownSaved(review?.shown ?? true);
         // The next entry is a new one, so every section opens, as for this one.
         setOpen(new Set(SECTION_KEYS));
         variantFolds.setAll(true, 0);
@@ -715,6 +743,7 @@ const IngredientForm = ({
       row = await mutation.mutateAsync({
         input: toInput(sent.fields),
         endRedirect: false,
+        ...(shownField && { shown: sent.shown }),
         revision: context.force ? (context.revision ?? undefined) : undefined,
       });
     } catch (error) {
@@ -738,6 +767,7 @@ const IngredientForm = ({
         setRefusal('Saved, but the review mark was not: ' + readGraphqlFailure(error).alert);
       }
     }
+    if (shownField) setShownSaved(sent.shown);
     // The form now holds what was sent as saved; anything typed meanwhile stays a change.
     reset(sent.fields, { keepValues: true, keepErrors: true });
     methods.clearErrors('root');
@@ -753,7 +783,7 @@ const IngredientForm = ({
   };
 
   const autosave = useAutosave<AutosaveValue>({
-    value: { fields: values, reviewed },
+    value: { fields: values, reviewed, shown: shownNow },
     dirty: changed,
     enabled:
       !removed &&
@@ -820,6 +850,7 @@ const IngredientForm = ({
       onKeep={() => {
         reset(recovered.value.fields, { keepDefaultValues: true });
         setReviewed(recovered.value.reviewed);
+        setShownChoice(recovered.value.shown);
         setRecovered(null);
       }}
       onDiscard={() => {
@@ -1103,6 +1134,14 @@ const IngredientForm = ({
                       reviewedAt={reviewedSaved === review.reviewed ? review.reviewedAt : null}
                       checked={reviewed}
                       onChange={setReviewed}
+                      alongside={
+                        <ShownToggle
+                          shown={shownNow}
+                          onChange={setShownChoice}
+                          name={entry?.values.name ?? ''}
+                          accessibleName="Shown in Compendium"
+                        />
+                      }
                     />
                   </div>
                 )}
@@ -1165,6 +1204,7 @@ const IngredientForm = ({
                     discardFirst={() => {
                       reset();
                       setReviewed(reviewedSaved);
+                      setShownChoice(undefined);
                     }}
                     onPromoted={promoted}
                     onKeep={() => setPromoting(null)}

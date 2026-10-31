@@ -6,6 +6,8 @@ import { recreateE2eDatabase } from '../database';
 import { latestMessageTo } from '../mailpit';
 import { BREACHED_PASSWORD } from '../pwned-range.mjs';
 import { withSql } from './coven-ingredients';
+import { DEMO_COVEN_NAME } from '@/db/seed/demo-coven';
+import { slugify } from '@/lib/slugify';
 
 // Signing up and in with an email address and a password (claude-docs/auth/passwords.md). The server's
 // breached-password checks are answered by tests/e2e/pwned-range-preload.mjs, never the real service.
@@ -62,7 +64,8 @@ test(
     await page.goto(`${link.pathname}${link.search}`);
     await expect(page).toHaveURL('/account/email?verified&next=%2Fcoven');
     await page.getByRole('link', { name: 'Continue', exact: true }).click();
-    await expect(page).toHaveURL('/coven');
+    // /coven sends a member into their first coven, which for a new account is the demo coven.
+    await expect(page).toHaveURL(`/coven/${slugify(DEMO_COVEN_NAME)}`);
 
     const [proved] = await withSql(
       (sql) => sql<{ email_verified: boolean; can_create_workspace: boolean }[]>`

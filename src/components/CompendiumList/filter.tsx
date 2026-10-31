@@ -64,7 +64,7 @@ const panelOf = (filter: Held, coven: boolean, admin: boolean): FacetPanelFilter
   toxic: filter.toxic ?? '',
   withoutReferences: filter.withoutReferences,
   withoutForms: filter.withoutForms,
-  ...(admin && { reviewed: filter.reviewed ?? '' }),
+  ...(admin && { reviewed: filter.reviewed ?? '', hidden: filter.hidden ?? false }),
   ...(coven && {
     source: filter.source ?? '',
     inStock: filter.inStock ?? false,
@@ -86,7 +86,7 @@ const noFacets = (coven: boolean, admin: boolean): FacetPanelFilter => ({
   toxic: '',
   withoutReferences: false,
   withoutForms: false,
-  ...(admin && { reviewed: '' as const }),
+  ...(admin && { reviewed: '' as const, hidden: false }),
   ...(coven && { source: '', inStock: false, lowStockOnly: false }),
 });
 
@@ -127,8 +127,8 @@ const hrefFor = (filter: Held, panel: FacetPanelFilter, query: string, where: Wh
   }
   return compendiumHref(
     COMPENDIUM_PARAMS.changed(
-      { ...filter, reviewed: filter.reviewed ?? '', query },
-      { ...changeOf(panel), reviewed: panel.reviewed ?? '' },
+      { ...filter, reviewed: filter.reviewed ?? '', hidden: filter.hidden ?? false, query },
+      { ...changeOf(panel), reviewed: panel.reviewed ?? '', hidden: panel.hidden ?? false },
     ),
     undefined,
     where.path,
@@ -141,6 +141,7 @@ const heldFilter = (filter: Held, panel: FacetPanelFilter, query: string): Held 
   query,
   ...changeOf(panel),
   ...(panel.reviewed !== undefined && { reviewed: panel.reviewed }),
+  ...(panel.hidden !== undefined && { hidden: panel.hidden }),
   ...(panel.source !== undefined && {
     source: panel.source,
     inStock: panel.inStock ?? false,
@@ -181,6 +182,7 @@ const PanelFacets = ({
     categories,
     vocabulary,
     workspaceId: coven ? workspaceId : undefined,
+    admin: audience === 'admin',
   });
   return (
     <FacetPanel

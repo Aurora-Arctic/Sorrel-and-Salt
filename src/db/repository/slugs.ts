@@ -1,4 +1,4 @@
-import { and, eq, gt, ne, not } from 'drizzle-orm';
+import { and, eq, gt, ne, not, type SQL } from 'drizzle-orm';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
 import { findOneIngredient } from './ingredients';
@@ -11,11 +11,29 @@ import type { CompendiumSlugEntry, IngredientRow, SlugRedirect } from './types';
 // retirement's `expires_at`. `at` is the caller's clock rather than the
 // database's, so a window is exact wherever it is read from.
 
-/** The live compendium entry at `slug`, or `undefined`. */
-export function findCompendiumEntryBySlug(slug: string): Promise<IngredientRow | undefined> {
+/** What a slug read does with a hidden entry: left out unless the caller curates or is checking the address is free. */
+export interface SlugReach {
+  includeHidden?: boolean;
+}
+
+/** The compendium arm that leaves a hidden entry out, unless `includeHidden`. */
+function shownOnly(reach: SlugReach | undefined): SQL | undefined {
+  return reach?.includeHidden ? undefined : eq(ingredients.shown, true);
+}
+
+/** The live compendium entry at `slug`, or `undefined`. A hidden entry is `undefined` too, unless `includeHidden`. */
+export function findCompendiumEntryBySlug(
+  slug: string,
+  reach?: SlugReach,
+): Promise<IngredientRow | undefined> {
   return selectOne(
     ingredients,
-    and(inCompendium(ingredients), notSoftDeleted(ingredients), eq(ingredients.slug, slug)),
+    and(
+      inCompendium(ingredients),
+      notSoftDeleted(ingredients),
+      eq(ingredients.slug, slug),
+      shownOnly(reach),
+    ),
   );
 }
 
@@ -27,6 +45,7 @@ export async function findCompendiumSlugRedirect(
   slug: string,
   at: Date,
   excluding?: string,
+  reach?: SlugReach,
 ): Promise<SlugRedirect | undefined> {
   const retirements = await selectFrom(
     retiredIngredientSlugs,
@@ -38,7 +57,11 @@ export async function findCompendiumSlugRedirect(
       excluding === undefined ? undefined : ne(retiredIngredientSlugs.ingredientId, excluding),
       existsIn(
         ingredients,
-        and(eq(ingredients.id, retiredIngredientSlugs.ingredientId), inCompendium(ingredients)),
+        and(
+          eq(ingredients.id, retiredIngredientSlugs.ingredientId),
+          inCompendium(ingredients),
+          shownOnly(reach),
+        ),
       ),
       not(
         existsIn(
@@ -63,12 +86,12 @@ export async function findCompendiumSlugRedirect(
 
 /**
  * Every live compendium entry's address, by name, for the sitemap and `llms.txt`. `lastModified` is `updated_at`, which moves only on a real
- * change (claude-docs/db/updated-at.md). Deleted entries and every coven's rows are left out in SQL. `description` is for `llms.txt`; one cached, sessionless read.
+ * change (claude-docs/db/updated-at.md). Deleted entries, hidden entries and every coven's rows are left out in SQL. `description` is for `llms.txt`; one cached, sessionless read.
  */
 export async function findCompendiumSlugs(): Promise<CompendiumSlugEntry[]> {
   const rows = await selectFrom(
     ingredients,
-    and(inCompendium(ingredients), notSoftDeleted(ingredients)),
+    and(inCompendium(ingredients), notSoftDeleted(ingredients), eq(ingredients.shown, true)),
   );
   return rows
     .map(({ slug, name, canonicalName, description, updatedAt }) => ({

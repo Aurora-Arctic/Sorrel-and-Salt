@@ -141,6 +141,11 @@ input CompendiumIngredientInput {
   nomenclature: Nomenclature!
   references: [ReferenceLinkInput!]
   safetyNotes: String
+
+  """
+  Whether the public compendium lists the entry. Left out, a create is shown and an update leaves the flag as it is.
+  """
+  shown: Boolean
   substitutes: [SubstituteInput!]
 
   """
@@ -173,6 +178,11 @@ input CompendiumIngredientUpdateInput {
   nomenclature: Nomenclature!
   references: [ReferenceLinkInput!]!
   safetyNotes: String!
+
+  """
+  Whether the public compendium lists the entry. Left out, a create is shown and an update leaves the flag as it is.
+  """
+  shown: Boolean
   substitutes: [SubstituteInput!]!
 
   """Whether the ingredient is toxic; each form's flag is its own."""
@@ -183,6 +193,15 @@ input CompendiumIngredientUpdateInput {
   """
   variants: [IngredientVariantInput!]!
   zodiacSigns: [String!]!
+}
+
+"""
+Which compendium entries a search reads: shown (the default), hidden, or all. Hidden and all are a curator or admin's alone.
+"""
+enum CompendiumListing {
+  all
+  hidden
+  shown
 }
 
 """A completed working, and the steps it took nothing for."""
@@ -426,6 +445,11 @@ type Ingredient {
   """
   revision: Int!
   safetyNotes: String
+
+  """
+  Whether the public compendium lists the entry; a coven's own entry is always shown.
+  """
+  shown: Boolean!
   slug: String!
 
   """
@@ -1119,6 +1143,11 @@ type Mutation {
   Marks the entry reviewed by a curator, or clears the mark so it needs review. Curators and admins only.
   """
   setCompendiumEntryReviewed(id: ID!, reviewed: Boolean!): Ingredient!
+
+  """
+  Shows the entry on the public compendium, or hides it. Curators and admins only.
+  """
+  setCompendiumEntryShown(id: ID!, shown: Boolean!): Ingredient!
   setEmail(email: String!, next: String): User!
   setName(name: String!): User!
   setPassword(newPassword: String!): Boolean!
@@ -1376,6 +1405,7 @@ type Query {
     """
     forms: [String!]
     last: Int
+    listing: CompendiumListing
     nomenclature: Nomenclature
     query: String
 
@@ -1438,6 +1468,7 @@ type Query {
     Keeps entries with a live form named any one of these, ignoring case and outer spaces.
     """
     forms: [String!]
+    listing: CompendiumListing
     nomenclature: Nomenclature
     query: String
 

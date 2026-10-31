@@ -19,6 +19,8 @@ export interface RefusedEntry extends EntryOutcome {
 export interface SeedCompendiumReport {
   /** Entries absent before the run and inserted whole. */
   inserted: number;
+  /** Of those inserted, how many landed hidden for want of a category. */
+  hidden: number;
   /** Entries whose stored hash equals the file's and whose row matches it: nothing to do. */
   skipped: number;
   /** Entries whose marked update was applied. */
@@ -35,6 +37,7 @@ export interface SeedCompendiumReport {
 export function emptyReport(): SeedCompendiumReport {
   return {
     inserted: 0,
+    hidden: 0,
     skipped: 0,
     updated: [],
     pending: [],
@@ -75,7 +78,7 @@ export function formatReport(
     if (differs.length > 0) lines.push(`  differs: ${differs.join(', ')}`);
   }
   lines.push(
-    `inserted ${report.inserted}, skipped ${report.skipped}, updated ${report.updated.length}, pending ${report.pending.length}, retired ${report.retired.length}, adopted ${report.adopted.length}, refused ${report.refused.length}`,
+    `inserted ${report.inserted}, hidden ${report.hidden}, skipped ${report.skipped}, updated ${report.updated.length}, pending ${report.pending.length}, retired ${report.retired.length}, adopted ${report.adopted.length}, refused ${report.refused.length}`,
   );
   return lines.join('\n');
 }
