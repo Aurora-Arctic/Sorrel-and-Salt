@@ -14,10 +14,12 @@ import { LAST_USED_PROVIDER_COOKIE } from '@/lib/sign-in';
 // answer the server gives; tests/db/password-sign-in.test.ts proves the server gives it.
 const signInEmail = vi.fn();
 const signUpEmail = vi.fn();
+const getSession = vi.fn();
 vi.mock('@/lib/auth-client', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/auth-client')>()),
   signIn: { social: vi.fn(), email: (...args: unknown[]) => signInEmail(...args) },
   signUp: { email: (...args: unknown[]) => signUpEmail(...args) },
+  getSession: (...args: unknown[]) => getSession(...args),
 }));
 
 const assign = vi.fn();
@@ -58,6 +60,7 @@ describe('SignInPanel, email and password', () => {
     vi.unstubAllGlobals();
     signInEmail.mockReset();
     signUpEmail.mockReset();
+    getSession.mockReset();
     assign.mockReset();
     document.cookie = `${LAST_USED_PROVIDER_COOKIE}=; max-age=0; path=/`;
   });
@@ -140,8 +143,9 @@ describe('SignInPanel, email and password', () => {
     expect(submit('Create Account')).toBeEnabled();
   });
 
-  it('signs up with the destination as the link’s callback, then says to sign in and follow the mailed link', async () => {
+  it('signs up with the destination as the link’s callback, then follows the new session to the sign-in page', async () => {
     signUpEmail.mockResolvedValue({ data: { status: true }, error: null });
+    getSession.mockResolvedValue({ data: { user: { id: 'u1' } }, error: null });
     await openSignUp();
 
     await press(submit('Create Account'));
@@ -152,12 +156,54 @@ describe('SignInPanel, email and password', () => {
       password: PASSWORD,
       callbackURL: '/coven/hearth',
     });
-    expect(screen.getByRole('status')).toHaveTextContent(/someone@password-form\.test/);
+    expect(assign).toHaveBeenCalledWith('/sign-in?next=%2Fcoven%2Fhearth');
+  });
+
+  it('says where the link went when the sign-up earned no session, and moves focus to it', async () => {
+    signUpEmail.mockResolvedValue({ data: { status: true }, error: null });
+    getSession.mockResolvedValue({ data: null, error: null });
+    await openSignUp();
+
+    await press(submit('Create Account'));
+
     expect(assign).not.toHaveBeenCalled();
+    const notice = screen.getByRole('status');
+    expect(notice).toHaveTextContent(/someone@password-form\.test/);
+    expect(notice).toHaveFocus();
     // Back at sign-in, the address kept and the password cleared.
     expect(submit('Sign In')).toBeDisabled();
     expect(field('Email Address')).toHaveValue('someone@password-form.test');
     expect(field('Password')).toHaveValue('');
+  });
+
+  it('states the password rules beside a new password before any refusal', async () => {
+    expect(field('Password')).not.toHaveAccessibleDescription(/15 characters/);
+    await press(screen.getByRole('button', { name: 'Create an Account' }));
+
+    expect(field('Password')).toHaveAccessibleDescription(/at least 15 characters/i);
+  });
+
+  it('moves focus to the alert after a refused sign-in', async () => {
+    signInEmail.mockResolvedValue({ data: null, error: { status: 401 } });
+    fillSignIn();
+
+    await press(submit('Sign In'));
+
+    expect(screen.getByRole('alert')).toHaveFocus();
+  });
+
+  it('takes the strength meter away while the server refuses the password as breached', async () => {
+    signUpEmail.mockResolvedValue({
+      data: null,
+      error: { status: 400, code: 'PASSWORD_COMPROMISED', message: 'Breached.' },
+    });
+    await openSignUp();
+    expect(await screen.findByText(/Strength:/)).toBeInTheDocument();
+
+    await press(submit('Create Account'));
+
+    expect(field('Password')).toHaveFocus();
+    expect(screen.queryByText(/Strength:/)).toBeNull();
   });
 
   it('says a breached password’s reason with the field, in the server’s words', async () => {
@@ -204,7 +250,7 @@ describe('SignInPanel, email and password', () => {
     document.cookie = `${LAST_USED_PROVIDER_COOKIE}=email; path=/`;
     render(<SignInPanel configured={['google']} />);
 
-    const heading = screen.getAllByRole('heading', { name: /Sign In With Email/ }).slice(-1)[0];
+    const heading = screen.getAllByRole('heading', { name: /Sign In with Email/ }).slice(-1)[0];
     expect(within(heading).getByText('Last Used')).toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: /^Continue with Google$/ })).toHaveLength(2);
   });

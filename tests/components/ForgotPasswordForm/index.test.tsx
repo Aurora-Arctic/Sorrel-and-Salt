@@ -47,7 +47,44 @@ describe('ForgotPasswordForm', () => {
       redirectTo: '/reset-password',
     });
     expect(screen.getByRole('status')).toHaveTextContent('someone@forgot.test');
+  });
+
+  it('replaces the form with the sent state and moves focus to it', async () => {
+    requestPasswordReset.mockResolvedValue({ data: { status: true }, error: null });
+    fireEvent.change(email(), { target: { value: 'someone@forgot.test' } });
+
+    await press(send());
+
+    expect(screen.queryByLabelText(/^Email Address/)).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Send Reset Link' })).toBeNull();
+    expect(screen.getByRole('status')).toHaveFocus();
+  });
+
+  it('asks again for the same address from Send Again', async () => {
+    requestPasswordReset.mockResolvedValue({ data: { status: true }, error: null });
+    fireEvent.change(email(), { target: { value: 'someone@forgot.test' } });
+    await press(send());
+
+    await press(screen.getByRole('button', { name: 'Send Again' }));
+
+    expect(requestPasswordReset).toHaveBeenCalledTimes(2);
+    expect(requestPasswordReset).toHaveBeenLastCalledWith({
+      email: 'someone@forgot.test',
+      redirectTo: '/reset-password',
+    });
+    expect(screen.getByRole('status')).toHaveFocus();
+  });
+
+  it('returns to an empty form from Use a Different Address', async () => {
+    requestPasswordReset.mockResolvedValue({ data: { status: true }, error: null });
+    fireEvent.change(email(), { target: { value: 'someone@forgot.test' } });
+    await press(send());
+
+    await press(screen.getByRole('button', { name: 'Use a Different Address' }));
+
     expect(email()).toHaveValue('');
+    expect(email()).toHaveFocus();
+    expect(screen.queryByRole('status')).toBeNull();
   });
 
   it('shows the busy button while the request is out', async () => {
@@ -66,6 +103,7 @@ describe('ForgotPasswordForm', () => {
     await press(send());
 
     expect(screen.getByRole('alert')).toHaveTextContent(TOO_MANY_ATTEMPTS);
+    expect(screen.getByRole('alert')).toHaveFocus();
     expect(screen.queryByRole('status')).toBeNull();
   });
 

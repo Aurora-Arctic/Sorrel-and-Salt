@@ -138,7 +138,9 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           <p className="lede">
             {passwordHeld
               ? 'Changing your password signs out every other device signed in to your account.'
-              : 'Set a password to sign in with your email address as well as your providers.'}
+              : linked.length > 0
+                ? 'Set a password to sign in with your email address as well as your providers.'
+                : 'Set a password to sign in with your email address as well.'}
           </p>
         </div>
         <PasswordSection hasPassword={passwordHeld} twoFactorEnabled={me.twoFactorEnabled} />

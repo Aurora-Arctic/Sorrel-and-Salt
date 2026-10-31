@@ -81,4 +81,8 @@ export interface PasswordLockedProps extends BaseEmailProps {
   url: string;
   /** How long the lock lasts, in minutes. */
   minutes: number;
+  /** The providers linked to the account, so the mail names only the ways in it has. */
+  providers?: readonly ProviderId[];
+  /** Whether the account has a passkey. */
+  hasPasskey?: boolean;
 }

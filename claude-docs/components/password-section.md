@@ -18,7 +18,9 @@ first password".
 | `twoFactorEnabled` | Whether two-factor is on, read from `users.two_factor_enabled`; false when left out |
 
 The section's heading, "Password", and its lede, which differs between the
-two forms, are the page's.
+two forms and, for an account without a password, with whether it has a linked
+provider, are the page's. The result of every submit takes focus
+(`useResultFocus`, the shared `Notice`'s `result`).
 
 ## Changing a password
 
