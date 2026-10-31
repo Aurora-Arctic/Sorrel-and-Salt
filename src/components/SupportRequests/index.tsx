@@ -9,12 +9,13 @@ import { RouteModal, useOpenModalClick } from '../Modal';
 import Pager from '../Pager';
 import { Mark } from '../UserList/marks';
 import SupportDetail from './detail';
-import SupportRequestsFilter, { ABOUT_OPTIONS, STATUS_OPTIONS } from './filter';
+import SupportRequestsFilter, { ABOUT_OPTIONS, STATUS_LABELS, STATUS_OPTIONS } from './filter';
 import { supportHref } from './href';
 import type {
   SupportRequestEntry,
   SupportRequestsFilter as Filter,
   SupportRequestsProps,
+  SupportStatus,
 } from './types';
 import './index.scss';
 
@@ -36,6 +37,15 @@ function emptyText({ about, status, errorCode }: Filter): string {
   ].filter((filter): filter is string => Boolean(filter));
   return noMatchText('support requests', filters, emptyList('support requests'));
 }
+
+/** The request's state as text badges under its title: the open one in the accent's tint, the rest muted. */
+const StatusBadges = ({ status }: { status: SupportStatus }): ReactElement => (
+  <div className="badges">
+    <span className={status === 'open' ? 'badge badge--local' : 'badge badge--muted'}>
+      {STATUS_LABELS[status]}
+    </span>
+  </div>
+);
 
 const SubjectLink = ({
   request,
@@ -114,9 +124,15 @@ const SupportRequests = ({
     {/* Rendered whatever the address opens, so a press shows the dialog at once. */}
     <RouteModal
       closeHref={supportHref(filter, cursor)}
+      size="listed"
       content={
         opened && {
-          heading: { title: opened.subject, focusTitle: true },
+          heading: {
+            eyebrow: `Support · ${labelOf(ABOUT_OPTIONS, opened.about)}`,
+            title: opened.subject,
+            under: <StatusBadges status={opened.status} />,
+            focusTitle: true,
+          },
           body: () => (
             <SupportDetail key={opened.id} request={opened} viewer={viewer} assignees={assignees} />
           ),
