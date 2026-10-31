@@ -73,10 +73,10 @@ password sign-ins alone ([`auth/two-factor.md`](../auth/two-factor.md)).
 - **Off**, it asks to "Confirm Your Password" (labelled so it reads differently from the change form above it) and offers "Turn On Two-Factor"
   (`twoFactor.enable`). The answer opens three steps: a QR code for the
   authenticator app (Ark UI's `QrCode`, `role="img"`), the key the code
-  holds for typing in instead (grouped in fours, with an icon-only Copy Key button centred under it that
+  holds for typing in instead (grouped in fours, with an icon-only Copy Key button left-aligned under it that
   copies the key ungrouped), and the ten backup codes, said to be shown
   once, with icon-only Copy, Download and Print buttons (the `IconTip` icon-button pattern, `icon-tip__edit--plain`,
-  tip above, centred under the codes panel), each giving one code
+  tip above, left-aligned under the codes panel), each giving one code
   per line. Print opens a window of its own with a heading ("Sorrel & Salt Backup Codes"), the
   account's email, the print date, a line saying what the codes are for, and the codes in the same two centred columns. "Code From Your App" and "Confirm and Turn On" (`twoFactor.verifyTotp`)
   turn it on; Cancel leaves it off. While the codes are on screen and none of Copy, Download or Print has
