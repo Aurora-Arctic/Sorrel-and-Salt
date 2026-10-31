@@ -22,7 +22,8 @@ const SupportPanel = ({
       <div className="support-panel--signed-out">
         <Notice kind="plain">
           Have an account? <Link href={signInPath(returnTo)}>Sign In</Link> to write about anything.
-          Without one, you can write to us about accessibility or signing in.
+          Without one, you can write to us about accessibility, a bug, signing in, privacy or a
+          question.
         </Notice>
         <SignedOutSupportForm path={path} />
       </div>

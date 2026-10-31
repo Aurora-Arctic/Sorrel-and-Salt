@@ -7,7 +7,7 @@ vi.mock('next/navigation', () => ({
 }));
 
 describe('SupportPanel', () => {
-  it('offers a signed-out visitor Sign In, returning here, and the form for the two topics open to them', () => {
+  it('offers a signed-out visitor Sign In, returning here, and the form for the five topics open to them', () => {
     render(<SupportPanel state={{ kind: 'signed-out' }} path="/support" />);
     expect(screen.getByRole('link', { name: 'Sign In' })).toHaveAttribute(
       'href',
@@ -16,7 +16,10 @@ describe('SupportPanel', () => {
     expect(screen.getByRole('textbox', { name: /Email/ })).toBeInTheDocument();
     expect(screen.getAllByRole('radio').map((radio) => radio.getAttribute('value'))).toEqual([
       'accessibility',
+      'bug',
       'account',
+      'privacy',
+      'question',
     ]);
   });
 

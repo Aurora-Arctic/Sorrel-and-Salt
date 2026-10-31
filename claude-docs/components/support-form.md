@@ -33,3 +33,5 @@ client component taking `path` (the page the request is about), and optionally `
 - **`errorReference` is shown and sent.** With an error number the Page field's note reads "Opened from the Error 500 page, reference abc123. You can change it.", the reference in a `code` element, and it goes as `errorReference`. The service trims it, refuses more than 100 characters, and stores it on
   `support_requests.error_reference`, where the admin request dialog shows it as Error Reference beside the error
   number, with a Copy button.
+
+- **The signed-out form offers five of the seven topics** (Accessibility, Bug, Account & Sign-In, Privacy & Data, Question), with the same labels and hints as this form, from `SUPPORT_ABOUTS`. `SIGNED_OUT_ABOUTS` in `src/modules/support/validation/support.ts` is the service's list; Compendium Entry and Feedback need an account.

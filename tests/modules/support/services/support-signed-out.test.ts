@@ -75,13 +75,16 @@ describe('sendSignedOutSupportRequest', () => {
     expect(received).toEqual(['visitor@example.test']);
   });
 
-  it.each(['accessibility', 'account'] as const)('accepts %s', async (about) => {
-    await send({ ...INPUT, about });
+  it.each(['accessibility', 'account', 'bug', 'privacy', 'question'] as const)(
+    'accepts %s',
+    async (about) => {
+      await send({ ...INPUT, about });
 
-    expect(await count()).toBe(1);
-  });
+      expect(await count()).toBe(1);
+    },
+  );
 
-  it.each(['bug', 'compendium', 'privacy', 'feedback', 'question'] as const)(
+  it.each(['compendium', 'feedback'] as const)(
     'refuses %s, which needs an account',
     async (about) => {
       // Precondition: the same send passes on an allowed topic.

@@ -190,7 +190,7 @@ const SignedOutSupportRequestInputRef = builder.inputType('SignedOutSupportReque
     about: t.field({
       type: SupportAboutEnum,
       required: true,
-      description: 'Only ACCESSIBILITY and ACCOUNT are accepted.',
+      description: 'Only ACCESSIBILITY, ACCOUNT, BUG, PRIVACY and QUESTION are accepted.',
     }),
     email: t.string({ required: true, description: 'Where the reply is mailed.' }),
     subject: t.string({

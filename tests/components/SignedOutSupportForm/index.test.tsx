@@ -23,12 +23,16 @@ function fill() {
 }
 
 describe('SignedOutSupportForm', () => {
-  it('offers the two topics open without an account and nothing else', () => {
+  it('offers the five topics open without an account and nothing else', () => {
     render(<SignedOutSupportForm path="/support" />);
 
-    expect(screen.getAllByRole('radio')).toHaveLength(2);
+    expect(screen.getAllByRole('radio')).toHaveLength(5);
     expect(screen.getByRole('radio', { name: /^Accessibility/ })).toBeInTheDocument();
     expect(screen.getByRole('radio', { name: /^Account/ })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /^Bug/ })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /^Privacy/ })).toBeInTheDocument();
+    expect(screen.getByRole('radio', { name: /^Question/ })).toBeInTheDocument();
+    expect(screen.queryByRole('radio', { name: /^Feedback/ })).toBeNull();
   });
 
   it('sends the trimmed address with the request, then says the answer comes by email', async () => {

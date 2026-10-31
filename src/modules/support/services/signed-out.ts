@@ -44,7 +44,7 @@ export async function sendSignedOutSupportRequest(
   if (values.website) return;
   if (!(SIGNED_OUT_ABOUTS as readonly string[]).includes(values.about)) {
     throw new Forbidden(
-      'Without an account you can write to us about Accessibility or Account & Sign-In. Sign in to write about anything else.',
+      'Without an account you can write to us about Accessibility, Bug, Account & Sign-In, Privacy & Data or a Question. Sign in to write about anything else.',
     );
   }
 

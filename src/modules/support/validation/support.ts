@@ -55,8 +55,14 @@ export const IssueUrlInput = z.string().transform((value, context) => {
   return z.NEVER;
 });
 
-/** The topics a visitor with no account may write about: the two whose problem can keep them from signing in. */
-export const SIGNED_OUT_ABOUTS = ['accessibility', 'account'] as const;
+/** The topics a visitor with no account may write about: those whose problem can keep them from signing in, or that need no account to ask. */
+export const SIGNED_OUT_ABOUTS = [
+  'accessibility',
+  'account',
+  'bug',
+  'privacy',
+  'question',
+] as const;
 
 // A signed-out request. `website` is the honeypot: a field no person sees, so a value in it is a bot.
 export const SignedOutSupportRequestInput = z.object({

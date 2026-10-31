@@ -308,7 +308,7 @@ export type SaveStockInput = {
 
 /** A support request from a visitor who is not signed in. */
 export type SignedOutSupportRequestInput = {
-  /** Only ACCESSIBILITY and ACCOUNT are accepted. */
+  /** Only ACCESSIBILITY, ACCOUNT, BUG, PRIVACY and QUESTION are accepted. */
   about: SupportAbout;
   /** Where the reply is mailed. */
   email: string;

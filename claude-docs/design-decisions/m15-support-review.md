@@ -70,8 +70,8 @@ the sixteen tasks that carry them are in [`tasks/m15.md`](../tasks/m15.md),
   is not the answer.
 - **Time-outs stay abuse-only**, with no alternative route for a timed-out
   sender.
-- **Signed-out senders** may write with an email address on two topics,
-  Accessibility and Account & Sign-In, with a per-address and per-IP rate
+- **Signed-out senders** may write with an email address on five topics,
+  Accessibility, Bug, Account & Sign-In, Privacy & Data and Question, with a per-address and per-IP rate
   limit, and get replies by email only.
 
 ## Open
@@ -124,7 +124,7 @@ A request can belong to an email address instead of an account, so a signed-out 
 
 ### A Signed-Out Request Is Limited, Trapped and Answered by Email (M15.40)
 
-A visitor with no account may send a request about `accessibility` or `account`, the two topics whose problem can keep them from signing in. It goes through `sendSignedOutSupportRequest`, the one open write besides sign-in, and is stored under the seeded signed-out sender account with the visitor's address in `sender_email` (M15.39).
+A visitor with no account may send a request about `accessibility`, `bug`, `account`, `privacy` or `question`: the first and third because their problem can keep them from signing in, the rest because they need no account to ask (widened from the first two on 2026-10-31, the owner's call). It goes through `sendSignedOutSupportRequest`, the one open write besides sign-in, and is stored under the seeded signed-out sender account with the visitor's address in `sender_email` (M15.39).
 
 - **Limits.** Ten sends per address and thirty per client address in 24 hours, counted in `support_send_counts`: one row per kind (`address` or `client`) and key, holding the window start and the count. It has audit columns and its own `updated_at` trigger, and the support repository writes it through `withAudit` as the seeded signed-out sender. No new exemption to rule 3 exists; an advisory lock per key makes sends that race each other all count. The window restarts when a send finds its row older than 24 hours.
 - **Refusal.** A send over a limit fails with `RATE_LIMITED`, which the GraphQL layer answers with HTTP 429 and a `Retry-After` header. The header holds the whole window (86,400 seconds), not the time left, because the count is kept per window and not per attempt.
