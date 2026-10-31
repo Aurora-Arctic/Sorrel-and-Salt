@@ -154,7 +154,7 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
 
       {isAdmin && (
         <aside className="support-detail__side" aria-label="Request Settings">
-          <FieldShell label="Assigned To" {...assignField}>
+          <FieldShell label="Assignee" {...assignField}>
             <span className="field__control">
               <select
                 id={assignField.controlId}

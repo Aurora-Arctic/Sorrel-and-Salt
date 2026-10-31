@@ -55,7 +55,7 @@ test('a curator reads the marked and the assigned requests, answers the assigned
       await expect(dialog).toBeVisible();
       await expect(dialog.getByLabel('Your Reply')).toHaveCount(0);
       await expect(dialog.getByRole('button', { name: 'Resolve' })).toHaveCount(0);
-      await expect(dialog.getByLabel('Assigned To')).toHaveCount(0);
+      await expect(dialog.getByLabel('Assignee')).toHaveCount(0);
       await expect(dialog.getByRole('switch', { name: 'Shared With Curators' })).toHaveCount(0);
       await assertNoAccessibilityViolations(page);
       await dialog.getByLabel('Your Note').fill('Seen by a curator.');
@@ -68,7 +68,7 @@ test('a curator reads the marked and the assigned requests, answers the assigned
     await test.step('the curator replies to and resolves the assigned request', async () => {
       await page.goto(`/admin/support?request=${assigned}`);
       const dialog = page.getByRole('dialog', { name: 'Assigned To The Curator' });
-      await expect(dialog.getByLabel('Assigned To')).toHaveCount(0);
+      await expect(dialog.getByLabel('Assignee')).toHaveCount(0);
       await expect(dialog.getByLabel('GitHub Issue')).toHaveCount(0);
       await expect(dialog.getByLabel('Time-Out Until')).toHaveCount(0);
       await dialog.getByLabel('Your Reply').fill('We have it in hand.');

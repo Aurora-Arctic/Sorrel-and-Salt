@@ -78,8 +78,8 @@ test.describe('Story 90: An Admin Works Through a Support Request', { tag: '@sto
     });
 
     await test.step('the admin assigns it and shares it with curators', async () => {
-      await dialog.getByLabel('Assigned To').selectOption(curatorId);
-      await expect(dialog.getByLabel('Assigned To')).toHaveValue(curatorId);
+      await dialog.getByLabel('Assignee').selectOption(curatorId);
+      await expect(dialog.getByLabel('Assignee')).toHaveValue(curatorId);
       await dialog.getByRole('switch', { name: 'Shared With Curators' }).click();
       await expect(dialog.getByRole('switch', { name: 'Shared With Curators' })).toBeChecked();
     });

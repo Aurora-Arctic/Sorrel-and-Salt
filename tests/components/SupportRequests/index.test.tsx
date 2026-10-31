@@ -31,7 +31,7 @@ vi.mock('next/navigation', () => ({
 
 const ADMIN: SupportViewer = { id: 'admin-1', role: 'admin' };
 const CURATOR: SupportViewer = { id: 'curator-1', role: 'curator' };
-const ADMIN_ONLY = ['Assigned To', 'GitHub Issue', 'For'];
+const ADMIN_ONLY = ['Assignee', 'GitHub Issue', 'For'];
 
 const ROW: SupportRequestEntry = {
   id: 'r1',
@@ -432,7 +432,7 @@ describe('What a viewer is shown', () => {
 
   it('gives an admin every control', () => {
     open(ADMIN);
-    for (const name of ['Assigned To', 'GitHub Issue', 'For', 'Your Reply']) {
+    for (const name of ['Assignee', 'GitHub Issue', 'For', 'Your Reply']) {
       expect(within(dialog()).getByLabelText(name)).toBeInTheDocument();
     }
     expect(
@@ -508,14 +508,14 @@ describe('The list', () => {
     expect(screen.getByRole('link', { name: /missing from Bea Hollis/ })).toBeInTheDocument();
   });
 
-  it('heads the curator column Shared With Curators and answers with a word for a reader', () => {
+  it('heads the curator column Curators and answers with a word for a reader', () => {
     render(
       <SupportRequests
         requests={[ROW, { ...ROW, id: 'r2', curatorVisible: true }]}
         viewer={ADMIN}
       />,
     );
-    expect(screen.getByRole('columnheader', { name: 'Shared With Curators' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Curators' })).toBeInTheDocument();
     expect(screen.getByText('Shared')).toBeInTheDocument();
     expect(screen.getByText('Not Shared')).toBeInTheDocument();
   });
@@ -602,8 +602,7 @@ describe('Status line in the dialog', () => {
     mockGraphQLMutation(operation, () => ({ saved: { __typename: 'Saved', id: 'r1' } }));
     open(ADMIN);
     const d = within(dialog());
-    if (action === 'assign')
-      await userEvent.selectOptions(d.getByLabelText('Assigned To'), 'Curtis');
+    if (action === 'assign') await userEvent.selectOptions(d.getByLabelText('Assignee'), 'Curtis');
     if (action === 'share')
       fireEvent.click(d.getByRole('switch', { name: 'Shared With Curators' }));
     if (action === 'link') {
@@ -692,10 +691,9 @@ describe('The views', () => {
     render(
       <SupportRequests requests={[ROW]} viewer={ADMIN} filter={{ ...FILTER, betaOnly: false }} />,
     );
-    const field = screen.getByRole('combobox', { name: 'Beta Testers' });
-    expect(field).toHaveTextContent('All');
-    await user.click(field);
-    await user.click(screen.getByRole('option', { name: 'Only' }));
+    const group = screen.getByRole('group', { name: 'Beta Testers' });
+    expect(within(group).getByRole('radio', { name: 'All' })).toBeChecked();
+    await user.click(within(group).getByRole('radio', { name: 'Only' }));
     expect(router.push).toHaveBeenLastCalledWith(
       '/admin/support?about=bug&view=mine&error=500&beta=only',
     );
@@ -703,7 +701,9 @@ describe('The views', () => {
 
   it('show the Beta Testers filter as chosen when the address names it', () => {
     render(<SupportRequests requests={[ROW]} viewer={ADMIN} filter={FILTER} />);
-    expect(screen.getByRole('combobox', { name: 'Beta Testers' })).toHaveTextContent('Only');
+    const group = screen.getByRole('group', { name: 'Beta Testers' });
+    expect(within(group).getByRole('radio', { name: 'Only' })).toBeChecked();
+    expect(within(group).getByRole('radio', { name: 'All' })).not.toBeChecked();
   });
 
   it('say in text when the sender wrote last and when the sender is a beta tester', () => {
@@ -718,7 +718,12 @@ describe('The views', () => {
     );
     const first = screen.getByRole('row', { name: /First/ });
     expect(within(first).getByText('Sender Replied')).toBeInTheDocument();
-    expect(within(first).getByText('Beta Tester')).toBeInTheDocument();
+    const columns = screen.getAllByRole('columnheader').map((h) => h.textContent);
+    const cellIn = (row: HTMLElement, heading: string) =>
+      within(row).getAllByRole('cell')[columns.indexOf(heading)];
+    expect(within(cellIn(first, 'Sender')).getByText('Beta Tester')).toBeInTheDocument();
+    expect(within(cellIn(first, 'Status')).queryByText('Beta Tester')).toBeNull();
+    expect(within(cellIn(first, 'Status')).getByText('Sender Replied')).toBeInTheDocument();
     const second = screen.getByRole('row', { name: /Second/ });
     expect(within(second).queryByText('Sender Replied')).toBeNull();
     expect(within(second).queryByText('Beta Tester')).toBeNull();

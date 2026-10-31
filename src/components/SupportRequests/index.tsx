@@ -108,14 +108,9 @@ const SupportRequests = ({
                 cell: (request) => (
                   <>
                     {STATUS_LABELS[request.status]}
-                    {(request.senderReplied || request.betaTester) && (
+                    {request.senderReplied && (
                       <span className="support-requests__labels">
-                        {request.senderReplied && (
-                          <span className="badge badge--local">Sender Replied</span>
-                        )}
-                        {request.betaTester && (
-                          <span className="badge badge--muted">Beta Tester</span>
-                        )}
+                        <span className="badge badge--local">Sender Replied</span>
                       </span>
                     )}
                   </>
@@ -124,22 +119,29 @@ const SupportRequests = ({
               {
                 heading: 'Sender',
                 cell: (request) => (
-                  <SenderName
-                    sender={request.sender}
-                    signedOut={request.signedOut}
-                    userHref={userHref}
-                  />
+                  <>
+                    <SenderName
+                      sender={request.sender}
+                      signedOut={request.signedOut}
+                      userHref={userHref}
+                    />
+                    {request.betaTester && (
+                      <span className="support-requests__labels">
+                        <span className="badge badge--muted">Beta Tester</span>
+                      </span>
+                    )}
+                  </>
                 ),
               },
               {
-                heading: 'Assigned To',
+                heading: 'Assignee',
                 cell: (request) =>
                   request.assignee?.name ?? (
                     <span className="support-requests__none">Unassigned</span>
                   ),
               },
               {
-                heading: 'Shared With Curators',
+                heading: 'Curators',
                 cell: (request) => (
                   <Mark
                     value={request.curatorVisible}
@@ -147,7 +149,7 @@ const SupportRequests = ({
                   />
                 ),
               },
-              { heading: 'Error Number', cell: (request) => request.errorCode ?? '' },
+              { heading: 'Error #', cell: (request) => request.errorCode ?? '' },
             ]}
             rows={requests}
             rowKey={(request) => request.id}
