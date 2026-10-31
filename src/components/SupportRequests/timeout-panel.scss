@@ -1,0 +1,59 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The Time-Out panel's own styles, so it looks the same in the request dialog and the user modal.
+
+// The muted ink for notes and the setter.
+.timeout-panel__muted {
+  color: $text-muted;
+}
+
+// A bare icon beside the heading at the text's own size.
+.timeout-panel__icon {
+  @include icon-button(1.5em, 1em);
+  vertical-align: middle;
+}
+
+.timeout-panel__list {
+  @include stack;
+  @include list-reset;
+}
+
+// A standing time-out: the badge and end, the note and setter in the muted ink, Lift beneath.
+.timeout-panel__card {
+  @include stack(2);
+  padding: space(3) space(4);
+  border: 1px solid $hairline;
+  border-radius: radius('surface');
+  background-color: $surface-page;
+
+  p {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+.timeout-panel__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(2);
+}
+
+// Earlier time-outs, one line each under a small uppercase label.
+.timeout-panel__ledger {
+  @include stack(2);
+}
+
+.timeout-panel__ledger-title {
+  margin: 0;
+  color: $text-muted;
+  font-size: type-size('small');
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.timeout-panel__ledger-line {
+  @include stack(1);
+  overflow-wrap: anywhere;
+}

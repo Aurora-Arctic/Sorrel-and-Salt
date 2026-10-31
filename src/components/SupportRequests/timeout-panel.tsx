@@ -18,6 +18,7 @@ import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import ConfirmedAction from '../UserList/confirmed-action';
 import { DayRange, LocalDay } from './day-range';
 import type { SupportTimeoutEntry } from './types';
+import './timeout-panel.scss';
 
 // An admin's time-out of a sender: barred from the support form until an end, or until lifted. One panel
 // serves the request dialog and the user modal, keyed by the user, so a repeat sender is seen as one.
@@ -103,15 +104,15 @@ const StandingCard = ({
   timeout: SupportTimeoutEntry;
   name: string;
 }): ReactElement => (
-  <div className="support-detail__timeout">
-    <p className="support-detail__timeout-head">
+  <div className="timeout-panel__card">
+    <p className="timeout-panel__head">
       <span className="badge badge--caution">Timed Out</span>
       <span>
         until <LocalTime at={timeout.until} long />
       </span>
     </p>
-    {timeout.note && <p className="support-detail__muted">{timeout.note}</p>}
-    <p className="support-detail__muted">
+    {timeout.note && <p className="timeout-panel__muted">{timeout.note}</p>}
+    <p className="timeout-panel__muted">
       {timeout.setBy ? `Set by ${timeout.setBy.name}, ` : 'Set '}
       <LocalDay at={timeout.createdAt} />
     </p>
@@ -121,20 +122,20 @@ const StandingCard = ({
 
 /** Earlier time-outs, each as its dates, a Lifted tag where lifted, and its note beneath. */
 const Ledger = ({ timeouts }: { timeouts: SupportTimeoutEntry[] }): ReactElement => (
-  <div className="support-detail__ledger">
-    <h4 className="support-detail__ledger-title">Earlier</h4>
-    <ul className="support-detail__list">
+  <div className="timeout-panel__ledger">
+    <h4 className="timeout-panel__ledger-title">Earlier</h4>
+    <ul className="timeout-panel__list">
       {timeouts.map((timeout) => (
         <li key={timeout.id}>
-          <span className="support-detail__ledger-line">
+          <span className="timeout-panel__ledger-line">
             <DayRange from={timeout.createdAt} to={timeout.until} />
             {timeout.liftedAt && (
-              <span className="support-detail__muted">
+              <span className="timeout-panel__muted">
                 Lifted <LocalDay at={timeout.liftedAt} />
               </span>
             )}
           </span>
-          {timeout.note && <span className="support-detail__muted">{timeout.note}</span>}
+          {timeout.note && <span className="timeout-panel__muted">{timeout.note}</span>}
         </li>
       ))}
     </ul>
@@ -270,7 +271,7 @@ const TimeoutPanel = ({
     <CollapsibleSection
       title="Time-Out"
       summary={
-        <span className="support-detail__muted">
+        <span className="timeout-panel__muted">
           {standing ? (
             <>
               · until <LocalTime at={standing.until} long />
@@ -283,7 +284,7 @@ const TimeoutPanel = ({
       info={
         earlier.length > 0 && earlierHref ? (
           <IconTip tip="Earlier Time-Outs">
-            <Link className="support-detail__icon" href={earlierHref}>
+            <Link className="timeout-panel__icon" href={earlierHref}>
               <HistoryIcon />
               <span className="visually-hidden">Earlier Time-Outs</span>
             </Link>
