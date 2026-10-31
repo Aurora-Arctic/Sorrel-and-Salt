@@ -140,3 +140,32 @@ export const Arrivals: Story = {
     </AdminTabbedFrame>
   ),
 };
+
+const MINTED = [
+  answerOperations(({ operationName }) =>
+    operationName === 'CreateInvitationCards'
+      ? {
+          createInvitationCards: {
+            batchId: BATCH,
+            expiresAt: '2027-01-29T12:00:00.000Z',
+            tokens: Array.from({ length: 9 }, (_, i) => `fixturetoken${i}abcd`),
+          },
+        }
+      : undefined,
+  ),
+];
+
+const MintedDialog = (): ReactElement => {
+  useMockHandlers(MINTED);
+  return <Cards batches={BATCHES} minting />;
+};
+
+/** The dialog after minting: where the admin downloads the PDF. */
+export const Minted: Story = {
+  render: () => <MintedDialog />,
+  play: async ({ canvasElement }) => {
+    const body = within(canvasElement.ownerDocument.body);
+    await userEvent.type(await body.findByRole('spinbutton', { name: /Number of Sheets/ }), '1');
+    await userEvent.click(await body.findByRole('button', { name: 'Mint Cards' }));
+  },
+};
