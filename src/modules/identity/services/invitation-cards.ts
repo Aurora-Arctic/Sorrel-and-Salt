@@ -168,18 +168,27 @@ export async function countCardArrivals(
   return findCardArrivalCount(admin, start);
 }
 
-const CSV_HEADER = ['Account', 'Email', 'Accepted On', 'Batch'];
+const CSV_HEADER = ['Account', 'Email', 'Accepted On', 'Batch', 'Covens Owned'];
 const ARRIVAL_PAGE = 100;
 
+/** The names of the covens each account owns, keyed by account id, for every id asked in one call. */
+export type OwnedCovenLookup = (
+  userIds: string[],
+) => Promise<ReadonlyMap<string, readonly string[]>>;
+
 /**
- * Every arrival as CSV text, newest first: the account's name and email, the day it was accepted and the batch's short name, as the Card Sign-Ups table shows them.
+ * Every arrival as CSV text, newest first: the account's name and email, the day it was accepted, the batch's short name and the covens the account owns now,
+ * as the Card Sign-Ups table shows them. `identity` may import no module, so the caller supplies `ownedCovens`; it is asked once, for every account on the list.
  * A cell that opens with a character a spreadsheet reads as a formula is prefixed with an apostrophe.
  *
  * @throws {Forbidden} the session's role is not `admin`.
  */
-export async function cardArrivalsCsv(session: Session): Promise<string> {
+export async function cardArrivalsCsv(
+  session: Session,
+  ownedCovens?: OwnedCovenLookup,
+): Promise<string> {
   const admin = assertSiteAdmin(session, REFUSAL);
-  const lines = [CSV_HEADER.join(',')];
+  const arrivals: { acceptedBy: string; acceptedAt: Date; batchId: string }[] = [];
   let after: PageRequest['after'];
   for (;;) {
     const page = await findCardArrivalPage(admin, {
@@ -188,27 +197,31 @@ export async function cardArrivalsCsv(session: Session): Promise<string> {
       after,
     });
     const shown = page.slice(0, ARRIVAL_PAGE);
-    const accounts = new Map(
-      (await findManyByIds(users, [...new Set(shown.map(({ node }) => node.acceptedBy))])).map(
-        (user) => [user.id, user],
-      ),
-    );
-    for (const { node } of shown) {
-      const account = accounts.get(node.acceptedBy);
-      lines.push(
-        [
-          account?.name ?? '',
-          account?.email ?? '',
-          node.acceptedAt.toISOString().slice(0, 10),
-          batchName(node.batchId),
-        ]
-          .map(csvCell)
-          .join(','),
-      );
-    }
+    arrivals.push(...shown.map(({ node }) => node));
     const last = shown[shown.length - 1];
     if (page.length <= ARRIVAL_PAGE || !last) break;
     after = last.cursor;
+  }
+  const ids = [...new Set(arrivals.map((node) => node.acceptedBy))];
+  const accounts = new Map(
+    (ids.length > 0 ? await findManyByIds(users, ids) : []).map((user) => [user.id, user]),
+  );
+  const owned =
+    ownedCovens && ids.length > 0 ? await ownedCovens(ids) : new Map<string, readonly string[]>();
+  const lines = [CSV_HEADER.join(',')];
+  for (const node of arrivals) {
+    const account = accounts.get(node.acceptedBy);
+    lines.push(
+      [
+        account?.name ?? '',
+        account?.email ?? '',
+        node.acceptedAt.toISOString().slice(0, 10),
+        batchName(node.batchId),
+        (owned.get(node.acceptedBy) ?? []).join('; '),
+      ]
+        .map(csvCell)
+        .join(','),
+    );
   }
   return `${lines.join('\r\n')}\r\n`;
 }

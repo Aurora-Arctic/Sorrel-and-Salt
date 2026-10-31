@@ -707,7 +707,7 @@ only the token's hash. Accepting a card follows the invitation-token rules in CL
   redrawn from it.
 - **Card sign-ups.** `cardArrivals` pages every accepted card with the account, the date and the covens that
   account owns (read as an admin may read anyone's memberships). `cardArrivalsCsv` returns the same as
-  CSV text (Account Name, Email, Accepted, Batch), with a leading apostrophe on any cell a spreadsheet
+  CSV text (Account Name, Email, Accepted, Batch, Covens Owned), with a leading apostrophe on any cell a spreadsheet
   would read as a formula. The Card Sign-Ups tab at `/admin/card-sign-ups` offers it as a download.
 - **Refused opens.** When a signed-in, verified account opens a card link that is refused as revoked,
   expired or already accepted by another account, the refused panel sends `recordCardAttempt(token)`

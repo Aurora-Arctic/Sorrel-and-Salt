@@ -155,4 +155,17 @@ describe('the card operations', () => {
     expect(edges[0]!.node.account.name).toBe(A.name);
     expect(edges[0]!.node.ownedCovens.map((coven) => coven.id)).toEqual([WORKSPACE_W_ID]);
   });
+
+  it('puts the covens an arrival owns in the CSV', async () => {
+    await run<Minted>(asUser(E), MINT, { sheets: 1, expiresAt: nextWeek() });
+    const [card] = await sql`select id from invitations where kind = 'card' limit 1`;
+    await sql`update invitations set accepted_at = now(), accepted_by = ${A.id} where id = ${card!.id}`;
+    const [coven] = await sql`select name from workspaces where id = ${WORKSPACE_W_ID}`;
+
+    const csv = await run<{ cardArrivalsCsv: string }>(asUser(E), CSV);
+
+    const lines = csv.data!.cardArrivalsCsv.trimEnd().split('\r\n');
+    expect(lines[0]).toBe('Account,Email,Accepted On,Batch,Covens Owned');
+    expect(lines[1]).toContain(coven!.name);
+  });
 });

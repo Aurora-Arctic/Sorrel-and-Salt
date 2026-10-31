@@ -8,7 +8,7 @@ yields one. The rules are [`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md
 
 ## Dates
 
-Expires is a UTC day, `2026-10-30`. Minted On, Refused Opens First and Latest and Card Sign-Ups Accepted On are `2026-10-30 2:05 pm` in the viewer's own zone, through [LocalTime](local-time.md). Above the stacking width each is muted at caption size (`admin-cards__fact`), as the user list's Signed Up is. The Card Sign-Ups CSV keeps its own date format, and has the table's headings (Account, Email, Accepted On, Batch) with the same short batch name; it has no Covens Owned column, as the covens are read through the coven module.
+Expires is a UTC day, `2026-10-30`. Minted On, Refused Opens First and Latest and Card Sign-Ups Accepted On are `2026-10-30 2:05 pm` in the viewer's own zone, through [LocalTime](local-time.md). Above the stacking width each is muted at caption size (`admin-cards__fact`), as the user list's Signed Up is. The Card Sign-Ups CSV keeps its own date format, and has the table's headings (Account, Email, Accepted On, Batch, Covens Owned) with the same short batch name. Covens Owned lists the covens the account owns, joined with "; ". The coven module's resolver supplies them from one batched memberships read for every account on the list, as `identity` may import no module.
 
 ## Contracts
 
