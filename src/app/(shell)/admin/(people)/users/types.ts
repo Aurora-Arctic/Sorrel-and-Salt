@@ -17,6 +17,8 @@ export interface UsersSearchParams {
   before?: string | string[];
   /** The id of the user whose modal is open over the list. */
   user?: string | string[];
+  /** The screen that opened the modal, where Close goes back to; none for the list itself. */
+  from?: string | string[];
 }
 
 /** The user `?user=` opens, as the page read them: the modal's head and its body's props. */

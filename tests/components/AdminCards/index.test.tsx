@@ -145,7 +145,7 @@ describe('AdminCards', () => {
     expect(within(row).getByText('other@example.test')).toBeInTheDocument();
     expect(within(row).getByRole('link', { name: 'Other Wort' })).toHaveAttribute(
       'href',
-      '/admin/users?user=u1',
+      '/admin/users?user=u1&from=invitation-cards',
     );
     expect(within(row).getByText('Sheet 2, Card 5')).toBeInTheDocument();
     expect(within(row).getByText('Revoked')).toBeInTheDocument();
@@ -196,7 +196,7 @@ describe('AdminCards', () => {
     fireEvent.click(await within(list).findByRole('link', { name: 'Other Wort' }));
 
     expect(opener.open).toHaveBeenCalledExactlyOnceWith(
-      '/admin/users?user=u1',
+      '/admin/users?user=u1&from=invitation-cards',
       expect.objectContaining({ eyebrow: 'User', title: 'Other Wort' }),
       undefined,
     );

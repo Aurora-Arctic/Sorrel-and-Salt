@@ -137,7 +137,7 @@ head, both built by the page per row, as the other admin lists carry
   ([`modal.md`](modal.md), "Opening at once"). `userListHref` (`href.ts`)
   takes the user's id as an optional third argument, written after the
   cursor; the pager and the filter leave it out, so paging or filtering
-  closes the modal, as they drop `?edit=` elsewhere.
+  closes the modal, as they drop `?edit=` elsewhere. A fourth optional argument, `from`, names a screen in `USER_MODAL_ORIGINS` (`href.ts`): the Invitation Cards and Card Sign-Ups tabs. The page then sends Close back to that tab instead of the list; a value outside the set is ignored.
 - **The user modal is the page's, not the list's.** The page renders
   `UserDialog` (`src/app/(shell)/admin/(people)/users/user-dialog.tsx`), a
   `RouteModal` at one fixed place, whatever the address opens. Its head is
