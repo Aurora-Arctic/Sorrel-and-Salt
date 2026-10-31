@@ -56,7 +56,7 @@ test('an admin mints a sheet of cards and the Invitation Cards tab lists the bat
   await expect(page).toHaveURL(
     /status=live&mintedFrom=\d{4}-\d{2}-\d{2}&mintedTo=\d{4}-\d{2}-\d{2}/,
   );
-  await expect(page.getByRole('button', { name: /^Filters\D*3/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Filters\D*2/ })).toBeVisible();
   await expect(page.getByRole('button', { name: /^Revoke Batch / })).toHaveCount(1);
   await assertNoAccessibilityViolations(page);
 
