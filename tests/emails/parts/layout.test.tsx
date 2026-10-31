@@ -3,6 +3,7 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { adminInvitationMessage } from '@/emails/admin-invitation';
 import { covenInvitationMessage } from '@/emails/coven-invitation';
 import { emailChangeNoticeMessage } from '@/emails/email-change-notice';
+import { supportReplyNoticeMessage } from '@/emails/support-reply-notice';
 import { verifyEmailMessage } from '@/emails/verify-email';
 import type { Message } from '@/lib/types';
 import { fromRoot } from '../../support/paths';
@@ -78,6 +79,16 @@ const MAILS: {
         stage: 'requested',
         newDomain: 'new-layout.test',
         at: new Date('2026-10-30T12:00:00Z'),
+      }),
+  },
+  {
+    template: 'support-reply-notice',
+    name: 'supportReplyNoticeMessage',
+    link: `${ORIGIN}/account/support`,
+    message: () =>
+      supportReplyNoticeMessage({
+        to: 'someone@layout.test',
+        url: `${ORIGIN}/account/support`,
       }),
   },
 ];
