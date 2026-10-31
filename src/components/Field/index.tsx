@@ -3,6 +3,7 @@
 // (claude-docs/components/field.md).
 
 export { FieldError, FieldShell, Required } from './shell';
+export { CharacterCount } from './character-count';
 export { fieldDescription } from './description';
 export { TextField } from './text-field';
 export { SelectField } from './select-field';

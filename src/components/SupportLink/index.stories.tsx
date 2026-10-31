@@ -6,4 +6,3 @@ const meta = { title: 'Shell / Support Link' } satisfies Meta;
 export default meta;
 
 export const OpensDialog: StoryObj = { render: () => <SupportLink>Support</SupportLink> };
-export const Plain: StoryObj = { render: () => <SupportLink plain>Support</SupportLink> };

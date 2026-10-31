@@ -364,3 +364,39 @@ export function PrintIcon(): ReactElement {
     </svg>
   );
 }
+
+/** A solid speech bubble with a question mark cut out of it: report a problem or ask for help. The cut-out takes the colour in `--icon-ground`, the surface the bubble sits on. */
+export function SupportIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M8 1.75c3.85 0 7 2.5 7 5.6s-3.15 5.6-7 5.6c-.85 0-1.65-.1-2.4-.3L2 14.5l.8-2.9C1.6 10.5.9 9.1.9 7.35.9 4.25 4.15 1.75 8 1.75z"
+        fill="currentColor"
+      />
+      <path
+        d="M6.25 5.75a1.75 1.75 0 1 1 2.45 1.6c-.55.3-.7.55-.7 1.1"
+        fill="none"
+        stroke="var(--icon-ground, var(--surface-page))"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+      <circle cx="8" cy="10.15" r="0.85" fill="var(--icon-ground, var(--surface-page))" />
+    </svg>
+  );
+}
+
+/** A clock with an arrow curving back round it: what came before. */
+export function HistoryIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" width="1em" height="1em" aria-hidden="true" focusable="false">
+      <path
+        d="M2.5 8a5.5 5.5 0 1 0 1.6-3.9M2.5 2.5v3.2h3.2M8 5v3l2 1.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}

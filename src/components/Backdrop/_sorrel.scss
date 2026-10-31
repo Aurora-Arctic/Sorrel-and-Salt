@@ -22,7 +22,7 @@
 // Size, photograph and place.
 @mixin sorrel-shape {
   position: fixed;
-  top: $top-inset;
+  top: 0;
   left: 0;
   --backdrop-scale: 0.75;
   width: calc(var(--backdrop-width, #{$ornament-width}) * var(--backdrop-scale, 1));
@@ -33,16 +33,16 @@
   background-repeat: no-repeat;
 
   // Inside the shell or the public frame the sorrel starts below its bars rather than behind them:
-  // the top inset, the bar (its hairline is inside its height), and where a
+  // the bar (its hairline is inside its height), and where a
   // context row follows, its height (a control with the lead's air above and below) and its own 1px
-  // hairline. Pages without the shell keep `$top-inset` above.
+  // hairline. Pages without the shell keep the window's top.
   body:has(.app-shell, .public-frame) & {
-    top: calc(#{$top-inset} + #{$shell-bar-height});
+    top: #{$shell-bar-height};
   }
 
   // The context row scrolls away but the bar stays: the sorrel climbs to the bar's foot.
   body:has(.context-row) & {
-    --sorrel-rest: calc(#{$top-inset} + #{$shell-bar-height});
+    --sorrel-rest: #{$shell-bar-height};
     --sorrel-lift: calc(#{$context-row-height} + 1px);
 
     @include sorrel-follows-scroll;

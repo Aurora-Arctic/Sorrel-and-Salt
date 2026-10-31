@@ -9,5 +9,5 @@ export default function ShellErrorBoundary({
   error: Error & { digest?: string };
   retry: () => void;
 }) {
-  return <ErrorScreen digest={error.digest} retry={retry} inShell />;
+  return <ErrorScreen digest={error.digest} retry={retry} />;
 }

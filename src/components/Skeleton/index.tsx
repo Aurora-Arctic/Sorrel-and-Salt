@@ -11,6 +11,7 @@ const DEFAULT_COUNT: Record<SkeletonShape, number> = {
   form: 4,
   page: 3,
   sections: 3,
+  requests: 3,
   contents: 2,
   line: 1,
 };
@@ -258,6 +259,31 @@ const Skeleton = ({
             <AccountPanels count={many} />
           </div>
         )}
+        {shape === 'requests' && (
+          // The Support Requests tab: the heading line, a heading-width bar with a small button-sized box at the right, then
+          // rows of a subject line and a meta line, in the tab's headless column.
+          <div className="page-with-nav page-with-nav--headless">
+            <div className="skeleton__requests">
+              <div className="skeleton__requests-bar">
+                <span />
+                <span />
+              </div>
+              <div className="skeleton__requests-rows">
+                {Array.from({ length: many }, (_, at) => (
+                  <div key={at} className="skeleton__request">
+                    <span className="skeleton__request-subject" />
+                    <div className="skeleton__request-meta">
+                      <span className="skeleton__request-badge" />
+                      <span />
+                      <span />
+                      <span />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
         {shape === 'line' &&
           Array.from({ length: many }, (_, line) => <span key={line} className="skeleton__line" />)}
         {shape === 'page' && (
@@ -303,8 +329,9 @@ const Skeleton = ({
         )}
         {shape === 'contents' && (
           // The admin index: a heading and a line, then titled lists of
-          // links each with its one line beneath, as `AdminContents` lays them.
-          <div className="skeleton__plain">
+          // links each with its one line beneath, as `AdminContents` lays them,
+          // in the `.admin-index` column the page sits in so the swap is in place.
+          <div className="skeleton__plain admin-index">
             <PageHead head={head} loose />
             {CONTENTS_ENTRIES.map((entries, section) => (
               <div key={section} className="skeleton__section">

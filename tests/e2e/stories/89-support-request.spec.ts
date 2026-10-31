@@ -30,13 +30,21 @@ test.describe('Story 89: Ask for Help and Read the Reply', { tag: '@story-89' },
 
     const dialog = page.getByRole('dialog');
 
-    await test.step('Send Request waits for a subject and message, then the request is received', async () => {
-      await dialog.getByRole('radio', { name: 'Question' }).check();
-      await expect(dialog.getByRole('button', { name: 'Send Request' })).toBeDisabled();
+    await test.step('Send Request names what is missing, then the request is received and named', async () => {
+      await dialog.getByRole('radio', { name: /^Question/ }).check();
+      await dialog.getByRole('button', { name: 'Send Request' }).click();
+      await expect(dialog.getByLabel('Subject')).toBeFocused();
+      await expect(dialog.getByText('Write a subject')).toBeVisible();
+      await assertNoAccessibilityViolations(page);
       await dialog.getByLabel('Subject').fill('Where is the moon table?');
       await dialog.getByLabel('Message').fill('I cannot find the moon table in my coven.');
       await dialog.getByRole('button', { name: 'Send Request' }).click();
+      await expect(dialog.getByRole('link', { name: 'Where is the moon table?' })).toHaveAttribute(
+        'href',
+        '/account/support',
+      );
       await expect(dialog.getByRole('link', { name: 'Your Support Requests' })).toBeVisible();
+      await assertNoAccessibilityViolations(page);
       await dialog.getByRole('button', { name: 'Done' }).click();
       await expect(dialog).toBeHidden();
       await expect(page).not.toHaveURL(/support=/);
@@ -48,7 +56,7 @@ test.describe('Story 89: Ask for Help and Read the Reply', { tag: '@story-89' },
       const adminDialog = adminPage.getByRole('dialog', { name: 'Where is the moon table?' });
       await adminDialog.getByLabel('Your Reply').fill('It lives under Ingredients, then Tables.');
       await adminDialog.getByRole('button', { name: 'Reply', exact: true }).click();
-      await expect(adminDialog.getByRole('region', { name: 'Replies' })).toContainText(
+      await expect(adminDialog.getByRole('region', { name: 'Thread' })).toContainText(
         'It lives under Ingredients, then Tables.',
       );
     });
@@ -56,8 +64,20 @@ test.describe('Story 89: Ask for Help and Read the Reply', { tag: '@story-89' },
     await test.step('the asker reads the reply on their own list', async () => {
       await page.goto('/account/support');
       const entry = page.getByRole('listitem').filter({ hasText: 'Where is the moon table?' });
-      await expect(entry).toContainText('It lives under Ingredients, then Tables.');
+      await expect(entry.getByText('Open')).toBeVisible();
+      await entry.getByRole('link', { name: 'Where is the moon table?' }).click();
+      const request = page.getByRole('dialog', { name: 'Where is the moon table?' });
+      await expect(page).toHaveURL(/\/account\/support\?request=/);
+      const thread = request.getByRole('region', { name: 'Thread' });
+      await expect(thread).toContainText('It lives under Ingredients, then Tables.');
+      await expect(thread).toContainText('You');
+      await expect(thread).toContainText('Staff');
+      await expect(request.getByLabel('Your Reply')).toBeDisabled();
+      await expect(request.getByRole('button', { name: 'Reply', exact: true })).toBeDisabled();
       await assertNoAccessibilityViolations(page);
+      await request.getByRole('button', { name: 'Close', exact: true }).click();
+      await expect(request).toBeHidden();
+      await expect(page).not.toHaveURL(/request=/);
     });
   });
 });

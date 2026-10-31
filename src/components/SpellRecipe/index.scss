@@ -470,5 +470,5 @@
 .spell-recipe .spell-recipe__steps,
 .spell-recipe .comparison-panel,
 .spell-recipe .spell-inventory {
-  scroll-margin-top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
+  scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
 }

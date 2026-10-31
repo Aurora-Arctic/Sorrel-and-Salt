@@ -1,17 +1,25 @@
 import { describe, expect, it } from 'vitest';
-import { errorCodeOf, supportClosedHref, supportHref, supportKindOf } from '@/lib/support-path';
+import {
+  ISSUE_REPOSITORY,
+  SUPPORT_ABOUTS,
+  errorCodeOf,
+  errorReferenceOf,
+  normaliseIssueLink,
+  supportAboutOf,
+  supportClosedHref,
+  supportHref,
+} from '@/lib/support-path';
+import { supportRequestAbout } from '@/modules/support/schema/support-requests';
 
-describe('supportKindOf', () => {
-  it('reads each kind', () => {
-    expect(supportKindOf('bug')).toBe('bug');
-    expect(supportKindOf('question')).toBe('question');
-    expect(supportKindOf('accessibility')).toBe('accessibility');
+describe('supportAboutOf', () => {
+  it('reads each about', () => {
+    for (const { value } of SUPPORT_ABOUTS) expect(supportAboutOf(value)).toBe(value);
   });
 
-  it('falls back to accessibility for a bare or unknown value', () => {
-    expect(supportKindOf('')).toBe('accessibility');
-    expect(supportKindOf(null)).toBe('accessibility');
-    expect(supportKindOf('billing')).toBe('accessibility');
+  it('names nothing for a bare, missing or unknown value', () => {
+    expect(supportAboutOf('')).toBeUndefined();
+    expect(supportAboutOf(null)).toBeUndefined();
+    expect(supportAboutOf('billing')).toBeUndefined();
   });
 });
 
@@ -46,5 +54,71 @@ describe('supportHref and supportClosedHref', () => {
       '/a?page=2',
     );
     expect(supportClosedHref('/a', new URLSearchParams('support=bug'))).toBe('/a');
+  });
+});
+
+describe('SUPPORT_ABOUTS', () => {
+  it('offers exactly the values the database enum holds, in its order', () => {
+    expect(SUPPORT_ABOUTS.map((about) => about.value)).toEqual(supportRequestAbout.enumValues);
+  });
+});
+
+describe('errorReferenceOf', () => {
+  it('reads a digest and refuses a blank or overlong one', () => {
+    expect(errorReferenceOf('abc123')).toBe('abc123');
+    expect(errorReferenceOf('  ')).toBeUndefined();
+    expect(errorReferenceOf(null)).toBeUndefined();
+    expect(errorReferenceOf('x'.repeat(101))).toBeUndefined();
+  });
+
+  it('is dropped with the other support parameters when the dialog closes', () => {
+    expect(supportClosedHref('/x', new URLSearchParams('support=bug&error=500&ref=abc'))).toBe(
+      '/x',
+    );
+  });
+});
+
+describe('normaliseIssueLink', () => {
+  const plain = 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/1409';
+
+  it('keeps an issue link as it is', () => {
+    expect(normaliseIssueLink(` ${plain} `, ISSUE_REPOSITORY)).toBe(plain);
+  });
+
+  it('turns a project-board link into the plain issue link', () => {
+    const board =
+      'https://github.com/orgs/Aurora-Arctic/projects/1/views/1?pane=issue&itemId=289423269&issue=Aurora-Arctic%7CSorrel-and-Salt%7C1409';
+    expect(normaliseIssueLink(board, ISSUE_REPOSITORY)).toBe(plain);
+  });
+
+  it('takes a board link of any project of the organisation, in any view', () => {
+    for (const path of ['projects/2/views/5', 'projects/1', 'projects/3/insights']) {
+      expect(
+        normaliseIssueLink(
+          `https://github.com/orgs/Aurora-Arctic/${path}?issue=Aurora-Arctic%7CSorrel-and-Salt%7C1409`,
+          ISSUE_REPOSITORY,
+        ),
+        path,
+      ).toBe(plain);
+    }
+  });
+
+  it('refuses anything else', () => {
+    for (const bad of [
+      '',
+      'not a link',
+      'https://github.com/Aurora-Arctic/Other/issues/1',
+      'https://github.com/Aurora-Arctic/Sorrel-and-Salt/pull/1',
+      'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/1/../../x',
+      'https://github.com/orgs/Aurora-Arctic/projects/1/views/1?issue=Aurora-Arctic%7COther%7C1',
+      'https://github.com/orgs/Aurora-Arctic/projects/1/views/1?issue=Aurora-Arctic%7CSorrel-and-Salt%7Cx',
+      'https://github.com/orgs/Aurora-Arctic/projects/1/views/1',
+      'https://github.com/orgs/Other/projects/1/views/1?issue=Aurora-Arctic%7CSorrel-and-Salt%7C1',
+      'https://github.com/orgs/Aurora-Arctic/projects/x/views/1?issue=Aurora-Arctic%7CSorrel-and-Salt%7C1',
+      'https://github.com/orgs/Aurora-Arctic/projectsX/1?issue=Aurora-Arctic%7CSorrel-and-Salt%7C1',
+      'https://example.com/orgs/Aurora-Arctic/projects/1/views/1?issue=Aurora-Arctic%7CSorrel-and-Salt%7C1',
+    ]) {
+      expect(normaliseIssueLink(bad, ISSUE_REPOSITORY), bad).toBeNull();
+    }
   });
 });

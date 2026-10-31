@@ -1,0 +1,89 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The Time-Out panel's own styles, so it looks the same in the request dialog and the user modal.
+
+// The fold's body ends a half-rem under its last control, not the section's default.
+.timeout-panel .collapsible-section__fields {
+  padding-block-end: space(2);
+}
+
+// The heading and summary sit a half-rem apart, not the section's default quarter.
+.timeout-panel .collapsible-section__head {
+  gap: space(2);
+}
+
+// The shut fold's line: the Timed Out badge, then the end in the muted ink.
+.timeout-panel__summary {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(2);
+}
+
+// The muted ink for notes and the setter.
+.timeout-panel__muted {
+  color: $text-muted;
+}
+
+// A bare icon beside the heading at the text's own size.
+.timeout-panel__icon {
+  @include icon-button(1.5em, 1em);
+  vertical-align: middle;
+}
+
+.timeout-panel__list {
+  @include stack(5);
+  @include list-reset;
+
+  > li {
+    @include stack(2);
+  }
+}
+
+// A standing time-out: the badge and end, the note and setter in the muted ink, Lift beneath.
+.timeout-panel__card {
+  @include stack(2);
+  padding: space(3) space(4);
+  border: 1px solid $hairline;
+  border-radius: radius('surface');
+  background-color: $surface-page;
+
+  p {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+.timeout-panel__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(2);
+}
+
+// Earlier time-outs, one line each under a small uppercase label.
+.timeout-panel__ledger {
+  @include stack(2);
+}
+
+.timeout-panel__ledger-title {
+  margin: 0;
+  color: $text-muted;
+  font-size: type-size('small');
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+// The range never splits; the Lifted tag follows it on the line when it fits, else wraps beneath.
+.timeout-panel__ledger-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: space(2);
+  overflow-wrap: anywhere;
+}
+
+.timeout-panel__range {
+  white-space: nowrap;
+}

@@ -268,12 +268,26 @@
     background-color: $surface-card;
     color: $text-primary;
     box-shadow: none;
+    // The surface behind the button, which an icon with a cut-out (the support bubble) shows through its mark.
+    --icon-ground: #{$surface-card};
 
     &:hover,
     &:focus-visible {
       border-color: $edge-highlight;
       background-color: $fill-highlight-field;
       color: $text-primary;
+      --icon-ground: #{$fill-highlight-field};
+    }
+  }
+
+  // An icon alone in a button: a square the height of a field, no side padding, the mark at 1.5rem.
+  .btn--icon {
+    width: $control-height;
+    padding: 0;
+
+    svg {
+      width: 1.5rem;
+      height: 1.5rem;
     }
   }
 
@@ -596,31 +610,56 @@
     align-items: center;
     justify-content: center;
     gap: space(6);
-    min-height: calc(100dvh - #{$top-inset});
+    min-height: calc(100dvh - #{$top-inset} - #{$footer-space});
     padding: space(6) space(4);
+
+    @media (max-width: #{$shell-phone-width}) {
+      min-height: calc(100dvh - #{$top-inset} - #{$footer-space-phone});
+    }
+  }
+
+  // The front door fills the whole window, so the footer always follows below the fold; the other frames
+  // leave the footer's room (`.welcome-page` is also Backdrop's hook for its larger art).
+  .page-frame.welcome-page {
+    min-height: calc(100dvh - #{$top-inset});
   }
 
   // The shell's bar takes room above the frame, so the frame is shorter by it
   // and a centred page still fits the window without a scroll.
   :is(.app-shell, .public-frame) .page-frame {
-    min-height: calc(100dvh - #{$top-inset} - #{$shell-bar-height});
+    min-height: calc(100dvh - #{$top-inset} - #{$shell-bar-height} - #{$footer-space});
+
+    @media (max-width: #{$shell-phone-width}) {
+      min-height: calc(100dvh - #{$top-inset} - #{$shell-bar-height} - #{$footer-space-phone});
+    }
   }
 
   // Beside a context row (the create page's), the frame is shorter by the row
   // and its hairline too.
   .app-shell__main:has(.context-row) .page-frame {
-    min-height: calc(100dvh - #{$top-inset} - #{$shell-bar-height} - #{$context-row-height} - 1px);
+    min-height: calc(
+      100dvh - #{$top-inset} - #{$shell-bar-height} - #{$context-row-height} - 1px -
+        #{$footer-space}
+    );
 
     @media (max-width: #{$shell-phone-width}) {
       min-height: calc(
-        100dvh - #{$top-inset} - #{$shell-bar-height} - #{$context-row-height-phone} - 1px
+        100dvh - #{$top-inset} - #{$shell-bar-height} - #{$context-row-height-phone} - 1px -
+          #{$footer-space-phone}
       );
     }
   }
 
+  // The step of air above the footer (space(8)) is the whole gap under a page's last content, so a
+  // frame gives up its bottom padding rather than stacking on it.
+  .app-shell__main :is(.page-frame, .page-column, .coven-layout),
+  .page-frame:has(+ .site-footer) {
+    padding-bottom: 0;
+  }
+
   // A jump to a section lands below the sticky bar, not under it.
   :is(.app-shell, .public-frame) .page-frame__section {
-    scroll-margin-top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
+    scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
   }
 
   // At a phone's width the section nav is a bar fixed along the bottom; the
@@ -659,7 +698,7 @@
   // the top inset when the page's own nav jumps to it.
   .page-frame__section {
     @include stack(3);
-    scroll-margin-top: calc(#{$top-inset} + #{space(4)});
+    scroll-margin-top: #{space(4)};
 
     > h2 {
       margin: 0;
@@ -731,6 +770,15 @@
     @include stack;
   }
 
+  // The `/admin` index in the reading column, centred in the admin area's wider one as the account page's sections are in the
+  // page; the text inside stays left-aligned.
+  .admin-index {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: $narrow-column;
+    margin-inline: auto;
+  }
+
   .admin-contents__list {
     @include stack(3);
 
@@ -795,7 +843,7 @@
 
     .page-with-nav > .page-nav {
       position: sticky;
-      top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
+      top: calc(#{$shell-bar-height} + #{space(4)});
       grid-column: 1;
       grid-row: 2 / span 3;
       align-self: start;
@@ -1121,6 +1169,13 @@
   // control names the hint and the error in `aria-describedby` and carries
   // `aria-invalid`, which is what draws the error edge.
   // claude-docs/styling.md, "Form fields".
+
+  // The signed-out Support panel: its notice and form stand a step apart, one gap and no margin of
+  // their own (the notice, the form's first group and its legend all sit at zero).
+  .support-panel--signed-out {
+    display: grid;
+    gap: space(4);
+  }
 
   .form {
     display: flex;
@@ -1816,6 +1871,75 @@
     &:is(:active, [data-pressed]) input:not(:disabled, :checked)::before {
       scale: 0.3;
       background-color: $text-muted;
+    }
+  }
+
+  // The cards layout of a radio group (RadioGroupField `layout="cards"`): one
+  // compact bordered card per row, the hint beside the name and wrapping under it on a phone. The
+  // whole card is the label; the chosen one takes the accent edge and a faint wash, told by the
+  // ring's dot as well (WCAG 1.4.1).
+  .radio-cards {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: space(3);
+  }
+
+  // The legend stands off the first card by a step more than a label off its input: a bordered card
+  // against the legend reads as one box, an input does not.
+  .fieldset.radio-group--cards .fieldset__legend {
+    margin-bottom: space(4);
+  }
+
+  // A card group in a form keeps a field's label gap below it, on top of the form's own gap; the extra
+  // class outranks `.form > .fieldset.radio-group` above.
+  .form > .fieldset.radio-group.radio-group--cards {
+    margin-block: 0 space(2);
+  }
+
+  .radio.radio--card {
+    box-sizing: border-box;
+    min-block-size: $control-height;
+    align-items: center;
+    padding: space(2) space(3);
+    border: 1px solid $hairline;
+    border-radius: radius('surface');
+    background-color: $surface-page;
+    @include theme-transition(border-color, background-color);
+
+    &:hover:not(:has(input:disabled)) {
+      border-color: $accent;
+      background-color: $surface-card-hover;
+    }
+
+    &:has(input:checked) {
+      border-color: $accent;
+      box-shadow: inset 0 0 0 1px $accent;
+      background-color: $fill-highlight;
+    }
+
+    &:has(input:focus-visible) {
+      @include focus-ring;
+    }
+
+    input:focus-visible {
+      outline: none;
+    }
+
+    @include forced-colors {
+      &:has(input:checked) {
+        border-color: Highlight;
+      }
+    }
+
+    .radio__text {
+      flex-flow: row wrap;
+      align-items: baseline;
+      gap: space(2);
+    }
+
+    .radio__description {
+      font-size: type-size('small');
+      color: $text-muted;
     }
   }
 

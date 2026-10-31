@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import type { ReactNode } from 'react';
 import Backdrop from '../components/Backdrop';
+import SiteFooter from '../components/SiteFooter';
 import { StatusRegionProvider } from '../components/ClickFeedback/status-region';
 import ThemeToggle from '../components/ThemeToggle';
 import { impersonationEnabled } from '../lib/impersonation';
@@ -10,6 +11,7 @@ import { body, display } from './fonts';
 import ImpersonationBannerSlot from './impersonation-banner';
 import PrePaintScripts from './pre-paint-scripts';
 import Providers from './providers';
+import SupportDialog from '../components/SupportDialog';
 import './globals.scss';
 
 // `metadataBase` resolves any relative address a page's metadata names against the production origin,
@@ -47,7 +49,15 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             (claude-docs/components/click-feedback.md). Around the page alone:
             the toggle and backdrop query nothing and say nothing. */}
         <StatusRegionProvider>
-          <Providers>{children}</Providers>
+          <Providers>
+            {/* Under every page, once, at the foot of the window on a short one. */}
+            <div className="site-frame">
+              {children}
+              <SiteFooter />
+            </div>
+            {/* The dialog the footer's Support link opens. */}
+            <SupportDialog />
+          </Providers>
         </StatusRegionProvider>
         {/* Last, so it never precedes the page in reading order even for a
             tool that ignores aria-hidden. */}

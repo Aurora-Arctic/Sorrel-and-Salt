@@ -12,6 +12,8 @@ import type { UserRow } from '../../identity';
 import { users } from '../../identity/schema/users';
 import type { SupportReplyRow, SupportTimeoutRow } from '../types';
 import { requireVerified, viewerOf } from './access';
+import { supportTiersForSenders } from './lifecycle';
+import type { SupportSenderTier } from './lifecycle';
 
 // The batches behind the loaders on a request: its replies, its sender's time-outs, and the people named on it.
 
@@ -56,5 +58,23 @@ export async function usersNamedOnRequests(
 ): Promise<(UserRow | null)[]> {
   requireVerified(session);
   const rows = await findManyByIds(users, [...ids]);
-  return inIdOrder(ids, rows, () => null);
+  // A curator is named the people on a request but not their addresses, bar their own.
+  const named =
+    session.role === 'curator'
+      ? rows.map((row) => (row.id === session.userId ? row : { ...row, email: '' }))
+      : rows;
+  return inIdOrder(ids, named, () => null);
+}
+
+/** The tier of each sender, to staff alone: anyone else's batch is refused in every slot. */
+export async function tiersForSenders(
+  session: Session,
+  userIds: readonly string[],
+): Promise<(SupportSenderTier | Forbidden)[]> {
+  try {
+    return await supportTiersForSenders(session, userIds);
+  } catch (error) {
+    if (!(error instanceof Forbidden)) throw error;
+    return userIds.map(() => error);
+  }
 }

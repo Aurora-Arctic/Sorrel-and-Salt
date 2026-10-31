@@ -404,6 +404,35 @@ export const RadioSegmented: Story = {
   },
 };
 
+// The cards layout: one compact bordered card per row, the hint beside the name and wrapping
+// under it on a phone. Nothing is chosen at first, and the error shows when it is not.
+export const RadioCards: Story = {
+  render: () => {
+    const [value, setValue] = useState<string | null>(null);
+    return (
+      <div className="form" style={{ maxWidth: '40rem' }}>
+        <RadioGroupField<string>
+          legend="What Is This About?"
+          name="about"
+          layout="cards"
+          value={value}
+          onChange={setValue}
+          error={value === null ? 'Choose what this is about.' : undefined}
+          options={[
+            { value: 'bug', label: 'Bug', description: 'Something is broken or behaves wrongly.' },
+            {
+              value: 'feedback',
+              label: 'Feedback',
+              description: 'An idea or a comment on the site.',
+            },
+            { value: 'question', label: 'Question', description: 'Something you need explained.' },
+          ]}
+        />
+      </div>
+    );
+  },
+};
+
 // A segmented group disabled as a whole, as the compendium filter's Toxic is when every
 // matching entry shares one toxicity: dashed borders, no hover, Any selected, a hint why.
 export const RadioSegmentedDisabled: Story = {

@@ -4,18 +4,29 @@ import { signInPath } from '../../lib/sign-in';
 import { SUPPORT_PATH } from '../../lib/support-path';
 import LocalTime from '../LocalTime';
 import Notice from '../Notice';
+import SignedOutSupportForm from '../SignedOutSupportForm';
 import SupportForm from '../SupportForm';
 import type { SupportPanelProps } from './types';
 
-// The body of `/support`: the form for a sender who may write, otherwise the reason there is none
+// The body of the Support dialog: the form for a sender who may write, otherwise the reason there is none
 // (claude-docs/components/support-panel.md).
 
-const SupportPanel = ({ state, path }: SupportPanelProps): ReactElement => {
+const SupportPanel = ({
+  state,
+  path,
+  returnTo = SUPPORT_PATH,
+  onDone,
+}: SupportPanelProps): ReactElement => {
   if (state.kind === 'signed-out') {
     return (
-      <Notice kind="plain">
-        Sign in to write to us. <Link href={signInPath(SUPPORT_PATH)}>Sign In</Link>
-      </Notice>
+      <div className="support-panel--signed-out">
+        <Notice kind="plain">
+          Have an account? <Link href={signInPath(returnTo)}>Sign In</Link> to write about anything.
+          Without one, you can write to us about accessibility, a bug, signing in, privacy or a
+          question.
+        </Notice>
+        <SignedOutSupportForm path={path} />
+      </div>
     );
   }
   if (state.kind === 'timed-out') {
@@ -25,7 +36,15 @@ const SupportPanel = ({ state, path }: SupportPanelProps): ReactElement => {
       </Notice>
     );
   }
-  return <SupportForm kind={state.support} errorCode={state.errorCode} path={path} />;
+  return (
+    <SupportForm
+      about={state.support}
+      errorCode={state.errorCode}
+      errorReference={state.errorReference}
+      path={path}
+      onDone={onDone}
+    />
+  );
 };
 
 export default SupportPanel;

@@ -1,16 +1,29 @@
 import type { SupportNotifier } from '@/modules/support';
+import { supportEmailReplyMessage } from '../emails/support-email-reply';
+import { supportReceivedMessage } from '../emails/support-received';
 import { supportReplyNoticeMessage } from '../emails/support-reply-notice';
 import { requestOrigin } from './request-origin';
+import { supportRequestPath } from './support-path';
 
 // Where a reply's notice becomes a mail. The origin is Better Auth's, resolved against its allowed hosts, so a forged Host cannot
 // point the link at another site. Handed to the service by the GraphQL context.
 
 export function supportNotifier(request: Request): SupportNotifier {
   return {
-    async replyWaiting(to) {
-      const url = `${await requestOrigin(request, '/')}/account/support`;
+    async replyWaiting(to, requestSubject, requestId) {
+      const url = `${await requestOrigin(request, '/')}${supportRequestPath(requestId)}`;
       const { send } = await import('./mail');
-      await send(await supportReplyNoticeMessage({ to, url }));
+      await send(await supportReplyNoticeMessage({ to, url, requestSubject }));
+    },
+    async signedOutReceived(to) {
+      const url = `${await requestOrigin(request, '/')}/support`;
+      const { send } = await import('./mail');
+      await send(await supportReceivedMessage({ to, url }));
+    },
+    async signedOutReply(to, body) {
+      const url = `${await requestOrigin(request, '/')}/support`;
+      const { send } = await import('./mail');
+      await send(await supportEmailReplyMessage({ to, url, body }));
     },
   };
 }

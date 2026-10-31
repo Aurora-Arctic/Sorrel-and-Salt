@@ -223,6 +223,15 @@ const ROWS: Record<string, PartialIndexRow> = {
   ingredient_variants_form_unique: { row: variant },
   // `identity_key` is generated: the clash is the formal name alone, under
   // another label, which the label index would otherwise refuse first.
+  support_send_counts_key_idx: {
+    row: async () =>
+      stamped({
+        kind: 'address',
+        key: `${token()}@fixture.test`,
+        window_start: new Date(),
+        count: 1,
+      }),
+  },
   card_invitation_attempts_card_user_reason_unique: {
     row: async () => {
       const [card] = await sql`

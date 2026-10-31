@@ -2,36 +2,67 @@ import { builder } from '../../../graphql/builder';
 import { AuditInfo } from '../../../graphql/schema/audit';
 import { definedArgs, sessionOf } from '../../../graphql/context-helpers';
 import { UserRef } from '../../identity';
-import { supportRequestKind, supportRequestStatus } from '../schema/support-requests';
+import { supportReplyAuthorRole, supportReplyVisibility } from '../schema/support-replies';
+import { supportRequestAbout, supportRequestStatus } from '../schema/support-requests';
+import { addSupportInternalNote, sendSenderMessage } from '../services/lifecycle';
 import {
   assignSupportRequest,
+  closeSupportRequest,
   getSupportRequest,
   listSupportRequests,
   resolveSupportRequest,
   setSupportRequestCuratorVisible,
   setSupportRequestIssueUrl,
 } from '../services/staff';
-import { getMySupportRequest, listMySupportRequests } from '../services/own';
+import {
+  getMySupportDialogState,
+  getMySupportRequest,
+  listMySupportRequests,
+} from '../services/own';
 import { replyToSupportRequest } from '../services/reply';
 import { sendSupportRequest } from '../services/send';
+import { sendSignedOutSupportRequest } from '../services/signed-out';
 import { liftSupportTimeout, timeOutSupportSender } from '../services/timeouts';
-import type { SupportReplyRow, SupportRequestRow, SupportTimeoutRow } from '../types';
+import type {
+  SupportDialogAnswer,
+  SupportReplyRow,
+  SupportRequestRow,
+  SupportTimeoutRow,
+} from '../types';
 import { MESSAGE_MAX_LENGTH, PATH_MAX_LENGTH, SUBJECT_MAX_LENGTH } from '../validation/support';
 
-const SupportKindEnum = builder.enumType('SupportKind', {
+const SupportAboutEnum = builder.enumType('SupportAbout', {
   description: 'What a support request is about.',
-  values: supportRequestKind.enumValues,
+  values: supportRequestAbout.enumValues,
 });
 
 const SupportStatusEnum = builder.enumType('SupportStatus', {
   values: supportRequestStatus.enumValues,
 });
 
+const SupportReplyAuthorRoleEnum = builder.enumType('SupportReplyAuthorRole', {
+  description: 'Whether the sender or staff wrote a message.',
+  values: supportReplyAuthorRole.enumValues,
+});
+
+const SupportReplyVisibilityEnum = builder.enumType('SupportReplyVisibility', {
+  description: 'Whether the sender reads a message (`public`) or only staff do (`internal`).',
+  values: supportReplyVisibility.enumValues,
+});
+
+const SupportSenderTierEnum = builder.enumType('SupportSenderTier', {
+  description: 'Derived from the invitation the sender accepted; never stored.',
+  values: ['beta_tester', 'standard'] as const,
+});
+
 const SupportReplyRef = builder.objectRef<SupportReplyRow>('SupportReply').implement({
-  description: 'A reply from staff to a support request.',
+  description:
+    'A message on a support request: a reply from staff, a note only staff read, or a message from the sender.',
   fields: (t) => ({
     id: t.exposeID('id'),
     body: t.exposeString('body'),
+    authorRole: t.expose('authorRole', { type: SupportReplyAuthorRoleEnum }),
+    visibility: t.expose('visibility', { type: SupportReplyVisibilityEnum }),
     author: t.field({
       type: UserRef,
       nullable: true,
@@ -59,7 +90,7 @@ const SupportRequestRef = builder.objectRef<SupportRequestRow>('SupportRequest')
     'A request for help from the support form. A sender reads their own; a curator reads those marked for curators or assigned to them; an admin reads all.',
   fields: (t) => ({
     id: t.exposeID('id'),
-    kind: t.expose('kind', { type: SupportKindEnum }),
+    about: t.expose('about', { type: SupportAboutEnum }),
     subject: t.exposeString('subject'),
     message: t.exposeString('message'),
     path: t.string({
@@ -69,6 +100,12 @@ const SupportRequestRef = builder.objectRef<SupportRequestRow>('SupportRequest')
       resolve: (row) => row.path || null,
     }),
     errorCode: t.exposeInt('errorCode', { nullable: true }),
+    errorReference: t.exposeString('errorReference', {
+      nullable: true,
+      description:
+        'The digest of the error page the sender came from, to match the server log. Staff only.',
+      authScopes: { curator: true },
+    }),
     status: t.expose('status', { type: SupportStatusEnum }),
     sender: t.field({
       type: UserRef,
@@ -82,7 +119,11 @@ const SupportRequestRef = builder.objectRef<SupportRequestRow>('SupportRequest')
         row.assignedTo ? loaders.usersOnRequests.load(row.assignedTo) : null,
     }),
     curatorVisible: t.exposeBoolean('curatorVisible'),
-    issueUrl: t.exposeString('issueUrl', { nullable: true }),
+    issueUrl: t.exposeString('issueUrl', {
+      nullable: true,
+      description: 'The linked issue’s address. Staff only.',
+      authScopes: { curator: true },
+    }),
     resolvedBy: t.field({
       type: UserRef,
       nullable: true,
@@ -90,6 +131,20 @@ const SupportRequestRef = builder.objectRef<SupportRequestRow>('SupportRequest')
         row.resolvedBy ? loaders.usersOnRequests.load(row.resolvedBy) : null,
     }),
     resolvedAt: t.expose('resolvedAt', { type: 'DateTime', nullable: true }),
+    closedAt: t.expose('closedAt', { type: 'DateTime', nullable: true }),
+    lastSenderActivityAt: t.expose('lastSenderActivityAt', { type: 'DateTime', nullable: true }),
+    lastStaffActivityAt: t.expose('lastStaffActivityAt', { type: 'DateTime', nullable: true }),
+    linkedFromId: t.exposeID('linkedFrom', {
+      nullable: true,
+      description:
+        'The closed request this one follows on from, when the sender wrote on a closed request.',
+    }),
+    senderTier: t.field({
+      type: SupportSenderTierEnum,
+      description: 'The sender’s tier. Staff only.',
+      authScopes: { curator: true },
+      resolve: (row, _args, { loaders }) => loaders.tierBySender.load(row.createdBy),
+    }),
     replies: t.field({
       type: [SupportReplyRef],
       description: 'Oldest first.',
@@ -107,7 +162,7 @@ const SupportRequestRef = builder.objectRef<SupportRequestRow>('SupportRequest')
 
 const SupportRequestInput = builder.inputType('SupportRequestInput', {
   fields: (t) => ({
-    kind: t.field({ type: SupportKindEnum, required: true }),
+    about: t.field({ type: SupportAboutEnum, required: true }),
     subject: t.string({
       required: true,
       description: `1 to ${SUBJECT_MAX_LENGTH} characters.`,
@@ -124,8 +179,67 @@ const SupportRequestInput = builder.inputType('SupportRequestInput', {
       required: false,
       description: 'The HTTP status of the error page, if any.',
     }),
+    errorReference: t.string({
+      required: false,
+      description: 'The digest of the error page, if any.',
+    }),
   }),
 });
+
+const SignedOutSupportRequestInputRef = builder.inputType('SignedOutSupportRequestInput', {
+  description: 'A support request from a visitor who is not signed in.',
+  fields: (t) => ({
+    about: t.field({
+      type: SupportAboutEnum,
+      required: true,
+      description: 'Only ACCESSIBILITY, ACCOUNT, BUG, PRIVACY and QUESTION are accepted.',
+    }),
+    email: t.string({ required: true, description: 'Where the reply is mailed.' }),
+    subject: t.string({
+      required: true,
+      description: `1 to ${SUBJECT_MAX_LENGTH} characters.`,
+    }),
+    message: t.string({
+      required: true,
+      description: `1 to ${MESSAGE_MAX_LENGTH} characters.`,
+    }),
+    path: t.string({ required: false }),
+    errorCode: t.int({ required: false }),
+    errorReference: t.string({ required: false }),
+    website: t.string({
+      required: false,
+      description: 'A trap for bots: the form hides it, so any value means the send is dropped.',
+    }),
+  }),
+});
+
+const SupportDialogKindEnum = builder.enumType('SupportDialogKind', {
+  description: 'What the Support dialog offers a visitor.',
+  values: ['signedOut', 'unverified', 'timedOut', 'form'] as const,
+});
+
+const SupportDialogStateRef = builder
+  .objectRef<SupportDialogAnswer>('SupportDialogState')
+  .implement({
+    description: 'What the asking visitor may do in the Support dialog.',
+    fields: (t) => ({
+      kind: t.expose('kind', { type: SupportDialogKindEnum }),
+      until: t.expose('until', {
+        type: 'DateTime',
+        nullable: true,
+        description: 'When the time-out ends; set only for timedOut.',
+      }),
+    }),
+  });
+
+builder.queryField('supportDialogState', (t) =>
+  t.field({
+    type: SupportDialogStateRef,
+    description:
+      'Open to a signed-out caller. The answer is about the caller alone, read under their own session.',
+    resolve: (_root, _args, context) => getMySupportDialogState(context.session),
+  }),
+);
 
 builder.queryField('mySupportRequests', (t) =>
   t.pagedConnection({
@@ -142,13 +256,13 @@ builder.queryField('supportRequests', (t) =>
     description:
       'The support requests the viewer may read, open ahead of resolved and newest first within each. A curator reads those marked for curators or assigned to them; an admin reads all.',
     args: {
-      kind: t.arg({ type: SupportKindEnum, required: false }),
+      about: t.arg({ type: SupportAboutEnum, required: false }),
       status: t.arg({ type: SupportStatusEnum, required: false }),
       errorCode: t.arg.int({ required: false }),
     },
     authScopes: { curator: true },
-    resolve: (_root, { kind, status, errorCode }, page, context) =>
-      listSupportRequests(sessionOf(context), definedArgs({ kind, status, errorCode }), page),
+    resolve: (_root, { about, status, errorCode }, page, context) =>
+      listSupportRequests(sessionOf(context), definedArgs({ about, status, errorCode }), page),
   }),
 );
 
@@ -184,15 +298,74 @@ builder.mutationField('sendSupportRequest', (t) =>
   }),
 );
 
+builder.mutationField('sendSignedOutSupportRequest', (t) =>
+  t.boolean({
+    description:
+      'Sends a support request without an account, about accessibility or signing in. Open to anyone; refused after ten sends from one address or thirty from one client in 24 hours. Nothing is returned: replies come by email.',
+    args: { input: t.arg({ type: SignedOutSupportRequestInputRef, required: true }) },
+    resolve: async (_root, { input }, context) => {
+      await sendSignedOutSupportRequest(definedArgs(input), {
+        clientIp: context.clientIp,
+        notifier: context.support,
+      });
+      return true;
+    },
+  }),
+);
+
 builder.mutationField('replyToSupportRequest', (t) =>
   t.field({
     type: SupportReplyRef,
     description:
       'Replies to a request and mails its sender that a reply is waiting. An admin may reply to any request, a curator to one assigned to them.',
+    args: {
+      requestId: t.arg.id({ required: true }),
+      body: t.arg.string({ required: true }),
+      waitingOnSender: t.arg.boolean({
+        required: false,
+        description: 'Moves an open request to waiting on the sender; refused on any other status.',
+      }),
+    },
+    authScopes: { curator: true },
+    resolve: (_root, { requestId, body, waitingOnSender }, context) =>
+      replyToSupportRequest(sessionOf(context), requestId, body, context.support, {
+        waitingOnSender: waitingOnSender ?? false,
+      }),
+  }),
+);
+
+builder.mutationField('sendSupportMessage', (t) =>
+  t.field({
+    type: SupportRequestRef,
+    description:
+      'The sender’s message on their own request. It reopens a waiting or resolved request; on a closed one it opens a new request linked to it, which is what is returned.',
+    args: { requestId: t.arg.id({ required: true }), body: t.arg.string({ required: true }) },
+    authScopes: { signedIn: true },
+    resolve: (_root, { requestId, body }, context) =>
+      sendSenderMessage(sessionOf(context), requestId, body),
+  }),
+);
+
+builder.mutationField('addSupportInternalNote', (t) =>
+  t.field({
+    type: SupportReplyRef,
+    description:
+      'Adds a note only staff read. Changes no status and mails no one. An admin may on any request, a curator on one assigned to them.',
     args: { requestId: t.arg.id({ required: true }), body: t.arg.string({ required: true }) },
     authScopes: { curator: true },
     resolve: (_root, { requestId, body }, context) =>
-      replyToSupportRequest(sessionOf(context), requestId, body, context.support),
+      addSupportInternalNote(sessionOf(context), requestId, body),
+  }),
+);
+
+builder.mutationField('closeSupportRequest', (t) =>
+  t.field({
+    type: SupportRequestRef,
+    description:
+      'Closes an open, waiting or resolved request. An admin may on any request, a curator on one assigned to them.',
+    args: { id: t.arg.id({ required: true }) },
+    authScopes: { curator: true },
+    resolve: (_root, { id }, context) => closeSupportRequest(sessionOf(context), id),
   }),
 );
 

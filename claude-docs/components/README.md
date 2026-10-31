@@ -68,10 +68,11 @@ design is in [`../design-decisions/mb.7-navigation.md`](../design-decisions/mb.7
 
 ## Support
 
-| Doc                                      | Component                                                                     |
-| ---------------------------------------- | ----------------------------------------------------------------------------- |
-| [`support-form.md`](support-form.md)     | The support request form, in the dialog and on `/support`                     |
-| [`support-dialog.md`](support-dialog.md) | The dialog opened by `?support=<kind>&error=<code>`, drawn once by `AppShell` |
-| [`support-panel.md`](support-panel.md)   | The body of `/support`: Sign In, the timeout end, or the form                 |
-| [`support-list.md`](support-list.md)     | The sender's own requests on `/account/support`, with replies and issue links |
-| [`report-this.md`](report-this.md)       | The link on the 404, 500 and global-error screens that opens a prefilled form |
+| Doc                                                      | Component                                                                       |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| [`support-form.md`](support-form.md)                     | The support request form, in the dialog and on `/support`                       |
+| [`support-dialog.md`](support-dialog.md)                 | The dialog opened by `?support=<about>&error=<code>`, drawn once by `AppShell`  |
+| [`support-panel.md`](support-panel.md)                   | The body of `/support`: Sign In, the timeout end, or the form                   |
+| [`support-list.md`](support-list.md)                     | The sender's own requests on `/account/support`, one compact row each           |
+| [`support-sender-request.md`](support-sender-request.md) | The sender's dialog for one request: thread, You and Staff tags, shut reply box |
+| [`report-this.md`](report-this.md)                       | The link on the 404, 500 and global-error screens that opens a prefilled form   |

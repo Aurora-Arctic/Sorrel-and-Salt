@@ -1,28 +1,26 @@
-import type { SupportKind, SupportStatus } from '@/modules/support';
+import type { SupportAbout, SupportStatus } from '@/modules/support';
 import type { PagePosition } from '../../lib/types';
+import type { SupportSenderRequestEntry } from '../SupportSenderRequest/types';
 
-export interface SupportReplyEntry {
-  id: string;
-  body: string;
-  createdAt: Date;
-}
-
-/** One request of the signed-in sender, with the replies staff have written to it. */
+/** One row of the sender's list: its subject, where it stands, what it is about, when it was sent and how many replies it has. */
 export interface SupportListEntry {
   id: string;
-  kind: SupportKind;
+  about: SupportAbout;
   subject: string;
-  message: string;
   status: SupportStatus;
   createdAt: Date;
-  /** The tracker issue a bug was filed as, once it has one. */
-  issueUrl: string | null;
-  /** Oldest first. */
-  replies: readonly SupportReplyEntry[];
+  /** How many staff replies it has. */
+  replyCount: number;
 }
 
 export interface SupportListProps {
   requests: readonly SupportListEntry[];
+  /** How many of all the sender's requests are open and how many closed, not just this page's. */
+  counts: { open: number; closed: number };
+  /** The request `?request=` opens; none when the address names none. */
+  opened?: SupportSenderRequestEntry;
+  /** The page's cursor, kept in every address the list builds. */
+  cursor?: { after?: string; before?: string };
   previousHref?: string;
   nextHref?: string;
   position?: PagePosition;

@@ -1,34 +1,103 @@
 @use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// Every space on the page, summed to a target. The tab frame ends at its own margin; below it the list's column is
+// one gap (4) between the count line, the rows' list and the pager, and the rows are 3 apart, that gap the one
+// contributor. Zeroed, not offset: the `ul` default margin, the empty message's `p` margin and the row's own
+// margin. The dialog is outside the flow, so it adds nothing. A row is 3 above and below its two lines, 2 apart,
+// and 4 either side.
+.support-list {
+  @include stack(4);
+}
+
+// The count line at the left and New Request at the right, centred on one line; the count wraps beneath the
+// button only when they cannot share it.
+.support-list__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: space(2) space(3);
+}
+
+.support-list__counts {
+  margin: 0;
+  color: $text-muted;
+  font-size: type-size('small');
+}
+
+// Quiet and borderless at rest, on the page's own ground; hover and focus keep `.btn--quiet`'s border, fill and cut-out.
+.support-list__new {
+  // Small's label and side padding, taller: the compact control height, about the medium button's.
+  min-block-size: $control-height-compact;
+  border-color: transparent;
+  background-color: transparent;
+  --icon-ground: #{$surface-page};
+
+  svg {
+    inline-size: 1em;
+    block-size: 1em;
+  }
+}
 
 .support-list__items {
-  display: grid;
-  gap: space(4);
+  @include stack(3);
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.support-list__head {
-  display: flex;
-  flex-wrap: wrap;
-  gap: space(2) space(4);
-  justify-content: space-between;
+.support-list__empty {
+  margin: 0;
 }
 
-.support-list__marks {
+// Two lines: the subject, then the meta row. The subject takes the row's width on one line and ends in an
+// ellipsis when it is longer; `min-inline-size: 0` lets it shrink below its text.
+.support-list__item {
+  @include stack(2);
+  position: relative;
+  margin: 0;
+  padding: space(3) space(4);
+  border: 1px solid $hairline;
+  border-radius: radius('surface');
+  background-color: $surface-page;
+  @include theme-transition(background-color, box-shadow);
+
+  // The site's ◆ marker is a ::before, which would otherwise take a cell of its own.
+  &::before {
+    content: none;
+  }
+}
+
+// The ingredient card's hover: its tint and lifted shadow, on pointers that can hover only so a tap on a phone
+// leaves no row lit, and on keyboard focus everywhere.
+@media (hover: hover) {
+  .support-list__item:hover {
+    background-color: $surface-card-hover;
+    box-shadow: $shadow-lifted;
+  }
+}
+
+.support-list__item:focus-within {
+  background-color: $surface-card-hover;
+  box-shadow: $shadow-lifted;
+}
+
+// The subject is the row's one link, stretched over the whole row.
+.support-list__link {
+  @include card-link;
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// The meta row: the badge, then the kind, day and reply count muted. It wraps on a phone.
+.support-list__meta {
   display: flex;
   flex-wrap: wrap;
-  gap: space(3);
+  align-items: center;
+  gap: space(1) space(3);
   color: $text-muted;
-}
-
-.support-list__message {
-  white-space: pre-wrap;
-}
-
-.support-list__reply {
-  margin: space(3) 0 0;
-  padding-left: space(4);
-  border-left: 2px solid $hairline;
-  white-space: pre-wrap;
+  font-size: type-size('small');
 }

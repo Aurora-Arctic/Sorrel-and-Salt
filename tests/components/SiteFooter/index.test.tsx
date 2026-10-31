@@ -6,22 +6,28 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
+const { SITE_TAGLINE } = await import('@/lib/site');
 const { default: SiteFooter } = await import('@/components/SiteFooter');
 
 describe('SiteFooter', () => {
-  it('carries one Support link that opens the dialog over the page in the shell', () => {
-    render(<SiteFooter inShell />);
+  it('carries the Support icon link that opens the dialog over the page', () => {
+    render(<SiteFooter />);
     expect(screen.getByRole('contentinfo')).toBeInTheDocument();
     expect(screen.getByRole('navigation', { name: 'Footer' })).toBeInTheDocument();
-    expect(screen.getAllByRole('link')).toHaveLength(1);
+    expect(screen.getAllByRole('link')).toHaveLength(2);
     expect(screen.getByRole('link', { name: 'Support' })).toHaveAttribute(
       'href',
-      '/coven/hearth?support=accessibility',
+      '/coven/hearth?support=',
     );
   });
 
-  it('links to the support page in the public frame, which has no dialog', () => {
+  it('states what the site is and what its reference is not', () => {
     render(<SiteFooter />);
-    expect(screen.getByRole('link', { name: 'Support' })).toHaveAttribute('href', '/support');
+    expect(screen.getByText(SITE_TAGLINE)).toBeInTheDocument();
+  });
+
+  it('links the site name to the home page', () => {
+    render(<SiteFooter />);
+    expect(screen.getByRole('link', { name: 'Sorrel & Salt' })).toHaveAttribute('href', '/');
   });
 });

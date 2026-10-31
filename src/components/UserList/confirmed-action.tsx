@@ -20,6 +20,7 @@ const ConfirmedAction = ({
   accessibleName,
   confirmLabel,
   openClass,
+  disabled = false,
   title,
   question,
   warning,
@@ -141,6 +142,7 @@ const ConfirmedAction = ({
         ref={openButton}
         className={openClass}
         type="button"
+        disabled={disabled}
         aria-label={accessibleName}
         onClick={() => {
           report(undefined);

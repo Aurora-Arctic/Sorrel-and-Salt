@@ -4,12 +4,14 @@ export interface SupportPageProps {
   searchParams: Promise<SupportSearchParams>;
 }
 
-/** The page's address: its filter (`kind`, `status`, `error`), at most one cursor, and `?request=<id>` for one opened. */
+/** The page's address: its filter (`about`, `status`, `error`), at most one cursor, and `?request=<id>` for one opened. */
 export interface SupportSearchParams {
-  kind?: string | string[];
+  about?: string | string[];
   status?: string | string[];
   error?: string | string[];
   after?: string | string[];
   before?: string | string[];
   request?: string | string[];
+  /** The id of the user whose modal is open, over the request when one is. */
+  user?: string | string[];
 }

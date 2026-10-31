@@ -908,6 +908,11 @@ type Mutation {
   addIngredientToWorkspace(input: StockInput!, variantId: ID!, workspaceId: ID!): InventoryItem!
 
   """
+  Adds a note only staff read. Changes no status and mails no one. An admin may on any request, a curator on one assigned to them.
+  """
+  addSupportInternalNote(body: String!, requestId: ID!): SupportReply!
+
+  """
   Changes the coven's overrides: a field left out keeps its value, null hands it back to the compendium, and a list, even an empty one, is the coven's own.
   """
   annotateCupboardEntry(
@@ -924,6 +929,11 @@ type Mutation {
   Assigns a request to a curator or an admin, or to no one. Site admins only.
   """
   assignSupportRequest(assigneeId: ID, id: ID!): SupportRequest!
+
+  """
+  Closes an open, waiting or resolved request. An admin may on any request, a curator on one assigned to them.
+  """
+  closeSupportRequest(id: ID!): SupportRequest!
 
   """
   Completes a draft working, taking what the recipe used from the coven’s jars. Answers the steps it took nothing for.
@@ -1097,7 +1107,15 @@ type Mutation {
   """
   Replies to a request and mails its sender that a reply is waiting. An admin may reply to any request, a curator to one assigned to them.
   """
-  replyToSupportRequest(body: String!, requestId: ID!): SupportReply!
+  replyToSupportRequest(
+    body: String!
+    requestId: ID!
+
+    """
+    Moves an open request to waiting on the sender; refused on any other status.
+    """
+    waitingOnSender: Boolean
+  ): SupportReply!
 
   """
   Marks a request resolved. An admin may on any request, a curator on one assigned to them.
@@ -1133,6 +1151,16 @@ type Mutation {
   Creates, changes and deletes one ingredient's jars in one transaction, and answers the entry's live jars. Every jar and form must be the ingredient's, or the whole save is refused; a bad row's issues are pathed `create.<i>.input.<field>` or `update.<i>.input.<field>`.
   """
   saveStock(ingredientId: ID!, input: SaveStockInput!, workspaceId: ID!): [InventoryItem!]!
+
+  """
+  Sends a support request without an account, about accessibility or signing in. Open to anyone; refused after ten sends from one address or thirty from one client in 24 hours. Nothing is returned: replies come by email.
+  """
+  sendSignedOutSupportRequest(input: SignedOutSupportRequestInput!): Boolean!
+
+  """
+  The sender’s message on their own request. It reopens a waiting or resolved request; on a closed one it opens a new request linked to it, which is what is returned.
+  """
+  sendSupportMessage(body: String!, requestId: ID!): SupportRequest!
 
   """
   Sends a support request. Needs a verified address; refused while the sender is timed out or after ten requests in 24 hours.
@@ -1597,13 +1625,18 @@ type Query {
   referenceSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryReferenceSuggestionsConnection!
   spell(id: ID!, workspaceId: ID!): Spell!
 
+  """
+  Open to a signed-out caller. The answer is about the caller alone, read under their own session.
+  """
+  supportDialogState: SupportDialogState!
+
   """One support request the viewer may read."""
   supportRequest(id: ID!): SupportRequest!
 
   """
   The support requests the viewer may read, open ahead of resolved and newest first within each. A curator reads those marked for curators or assigned to them; an admin reads all.
   """
-  supportRequests(after: String, before: String, errorCode: Int, first: Int, kind: SupportKind, last: Int, status: SupportStatus): QuerySupportRequestsConnection!
+  supportRequests(about: SupportAbout, after: String, before: String, errorCode: Int, first: Int, last: Int, status: SupportStatus): QuerySupportRequestsConnection!
   users(after: String, awaitingApproval: Boolean, before: String, first: Int, last: Int, query: String, role: UserRole): QueryUsersConnection!
 
   """
@@ -2150,6 +2183,29 @@ input SaveStockInput {
   update: [UpdateJarInput!]!
 }
 
+"""A support request from a visitor who is not signed in."""
+input SignedOutSupportRequestInput {
+  """Only ACCESSIBILITY, ACCOUNT, BUG, PRIVACY and QUESTION are accepted."""
+  about: SupportAbout!
+
+  """Where the reply is mailed."""
+  email: String!
+  errorCode: Int
+  errorReference: String
+
+  """1 to 4000 characters."""
+  message: String!
+  path: String
+
+  """1 to 120 characters."""
+  subject: String!
+
+  """
+  A trap for bots: the form hides it, so any value means the send is dropped.
+  """
+  website: String
+}
+
 """A source, local or compendium, and how many entries it would list."""
 type SourceFacetCount {
   """
@@ -2378,33 +2434,86 @@ enum SuggestionGroup {
 }
 
 """What a support request is about."""
-enum SupportKind {
+enum SupportAbout {
   accessibility
+  account
   bug
+  compendium
+  feedback
+  privacy
   question
 }
 
-"""A reply from staff to a support request."""
+"""What the Support dialog offers a visitor."""
+enum SupportDialogKind {
+  form
+  signedOut
+  timedOut
+  unverified
+}
+
+"""What the asking visitor may do in the Support dialog."""
+type SupportDialogState {
+  kind: SupportDialogKind!
+
+  """When the time-out ends; set only for timedOut."""
+  until: DateTime
+}
+
+"""
+A message on a support request: a reply from staff, a note only staff read, or a message from the sender.
+"""
 type SupportReply {
   audit: AuditInfo!
 
   """Who wrote the reply; null if no live account holds the id."""
   author: User
+  authorRole: SupportReplyAuthorRole!
   body: String!
   id: ID!
+  visibility: SupportReplyVisibility!
+}
+
+"""Whether the sender or staff wrote a message."""
+enum SupportReplyAuthorRole {
+  sender
+  staff
+}
+
+"""
+Whether the sender reads a message (`public`) or only staff do (`internal`).
+"""
+enum SupportReplyVisibility {
+  internal
+  public
 }
 
 """
 A request for help from the support form. A sender reads their own; a curator reads those marked for curators or assigned to them; an admin reads all.
 """
 type SupportRequest {
+  about: SupportAbout!
   assignedTo: User
   audit: AuditInfo!
+  closedAt: DateTime
   curatorVisible: Boolean!
   errorCode: Int
+
+  """
+  The digest of the error page the sender came from, to match the server log. Staff only.
+  """
+  errorReference: String
   id: ID!
+
+  """The linked issue’s address. Staff only."""
   issueUrl: String
-  kind: SupportKind!
+  lastSenderActivityAt: DateTime
+  lastStaffActivityAt: DateTime
+
+  """
+  The closed request this one follows on from, when the sender wrote on a closed request.
+  """
+  linkedFromId: ID
   message: String!
 
   """
@@ -2417,6 +2526,9 @@ type SupportRequest {
   resolvedAt: DateTime
   resolvedBy: User
   sender: User
+
+  """The sender’s tier. Staff only."""
+  senderTier: SupportSenderTier!
   status: SupportStatus!
   subject: String!
 
@@ -2427,9 +2539,13 @@ type SupportRequest {
 }
 
 input SupportRequestInput {
+  about: SupportAbout!
+
   """The HTTP status of the error page, if any."""
   errorCode: Int
-  kind: SupportKind!
+
+  """The digest of the error page, if any."""
+  errorReference: String
 
   """1 to 4000 characters."""
   message: String!
@@ -2443,9 +2559,17 @@ input SupportRequestInput {
   subject: String!
 }
 
+"""Derived from the invitation the sender accepted; never stored."""
+enum SupportSenderTier {
+  beta_tester
+  standard
+}
+
 enum SupportStatus {
+  closed
   open
   resolved
+  waiting_on_sender
 }
 
 """

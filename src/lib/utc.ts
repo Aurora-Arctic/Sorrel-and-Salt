@@ -97,3 +97,29 @@ export function printedDateOf(expiresAt: Date): Date {
 export function printedDayOf(expiresAt: Date): string {
   return isoDayInUtc(printedDateOf(expiresAt));
 }
+
+/** An instant's day in a time zone as `30 Oct 2026` (the viewer's own when none is given): for a list's date column. */
+export function shortDayInZone(at: Date, timeZone?: string): string {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone,
+  }).formatToParts(at);
+  const part = (type: string): string => parts.find((p) => p.type === type)?.value ?? '';
+  return `${part('day')} ${part('month')} ${part('year')}`;
+}
+
+/** An instant to the minute as `30 Oct, 2:01 pm` in a time zone (the viewer's own when none is given): for a thread's entries. */
+export function shortMinuteInZone(at: Date, timeZone?: string): string {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    hour: 'numeric',
+    minute: '2-digit',
+    hourCycle: 'h12',
+    timeZone,
+  }).formatToParts(at);
+  const part = (type: string): string => parts.find((p) => p.type === type)?.value ?? '';
+  return `${part('day')} ${part('month')}, ${part('hour')}:${part('minute')} ${part('dayPeriod').toLowerCase()}`;
+}

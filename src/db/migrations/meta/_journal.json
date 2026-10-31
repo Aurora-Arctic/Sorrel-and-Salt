@@ -771,6 +771,34 @@
       "when": 1793461415216,
       "tag": "0109_compendium-hide-uncategorised",
       "breakpoints": true
+    },
+    {
+      "idx": 110,
+      "version": "7",
+      "when": 1793467342777,
+      "tag": "0110_support-about",
+      "breakpoints": true
+    },
+    {
+      "idx": 111,
+      "version": "7",
+      "when": 1793467343777,
+      "tag": "0111_support-lifecycle",
+      "breakpoints": true
+    },
+    {
+      "idx": 112,
+      "version": "7",
+      "when": 1793467344777,
+      "tag": "0112_support-sender-email",
+      "breakpoints": true
+    },
+    {
+      "idx": 113,
+      "version": "7",
+      "when": 1793467345777,
+      "tag": "0113_support-send-counts",
+      "breakpoints": true
     }
   ]
 }

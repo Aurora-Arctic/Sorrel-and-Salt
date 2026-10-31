@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { maskError as yogaMaskError, type YogaServerOptions } from 'graphql-yoga';
-import { Forbidden, NotFound, StaleWrite, ValidationError } from '../lib/errors';
+import { Forbidden, NotFound, RateLimited, StaleWrite, ValidationError } from '../lib/errors';
 import type { ErrorExtensions } from './types';
 
 // The transport's half of src/lib/errors.ts: each service error leaves with a
@@ -11,6 +11,12 @@ function extensionsFor(error: unknown): ErrorExtensions | null {
     return {
       code: 'VALIDATION',
       fieldErrors: error.issues.map(({ path, message }) => ({ path: [...path], message })),
+    };
+  }
+  if (error instanceof RateLimited) {
+    return {
+      code: 'RATE_LIMITED',
+      http: { status: 429, headers: { 'Retry-After': String(error.retryAfterSeconds) } },
     };
   }
   if (error instanceof Forbidden) return { code: 'FORBIDDEN' };

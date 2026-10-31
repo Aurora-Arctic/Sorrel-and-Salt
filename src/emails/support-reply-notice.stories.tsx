@@ -13,7 +13,8 @@ type Story = StoryObj;
 const notice = () =>
   supportReplyNoticeMessage({
     to: 'someone@example.com',
-    url: `${WORKSHOP_ORIGIN}/account/support`,
+    url: `${WORKSHOP_ORIGIN}/account/support?request=00000000-0000-4000-8000-000000000000`,
+    requestSubject: 'The jar will not open',
     origin: WORKSHOP_ORIGIN,
   });
 

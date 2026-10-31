@@ -1,4 +1,6 @@
-export interface SupportDialogProps {
-  /** Whether the signed-in account's address is verified; an unverified one is told to confirm it, not given the form. */
-  verified: boolean;
-}
+/** What the dialog offers this visitor. */
+export type SupportDialogState =
+  | { kind: 'signed-out' }
+  | { kind: 'unverified' }
+  | { kind: 'timed-out'; until: Date }
+  | { kind: 'form' };

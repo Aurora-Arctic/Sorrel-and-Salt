@@ -22,8 +22,8 @@ $theme-toggle-icon-arc: 130deg;
 // The pinned corner (the root layout, for pages with no application shell).
 .theme-toggle--corner {
   position: fixed;
-  // Beneath anything in the page's flow above it: the impersonation banner on a touch screen.
-  top: $top-inset;
+  // At the window's top; on touch the banner in the flow scrolls away beneath it.
+  top: 0;
   // Clear of the scrollbar's room while a modal holds the page (Modal/page-hold.ts).
   right: var(--scrollbar-width, 0);
   // Above the impersonation banner, which runs beneath this corner.

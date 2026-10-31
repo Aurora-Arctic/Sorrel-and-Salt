@@ -7,13 +7,20 @@ vi.mock('next/navigation', () => ({
 }));
 
 describe('SupportPanel', () => {
-  it('offers a signed-out visitor Sign In, returning here, and no form', () => {
+  it('offers a signed-out visitor Sign In, returning here, and the form for the five topics open to them', () => {
     render(<SupportPanel state={{ kind: 'signed-out' }} path="/support" />);
     expect(screen.getByRole('link', { name: 'Sign In' })).toHaveAttribute(
       'href',
       '/sign-in?next=%2Fsupport',
     );
-    expect(screen.queryByRole('textbox')).toBeNull();
+    expect(screen.getByRole('textbox', { name: /Email/ })).toBeInTheDocument();
+    expect(screen.getAllByRole('radio').map((radio) => radio.getAttribute('value'))).toEqual([
+      'accessibility',
+      'bug',
+      'account',
+      'privacy',
+      'question',
+    ]);
   });
 
   it('tells a timed-out sender when it ends, in place of the form', () => {
@@ -27,11 +34,11 @@ describe('SupportPanel', () => {
     expect(screen.queryByRole('textbox')).toBeNull();
   });
 
-  it('shows the form to a sender who may write, with the kind and error asked for', () => {
+  it('shows the form to a sender who may write, with the about and error asked for', () => {
     render(<SupportPanel state={{ kind: 'form', support: 'bug', errorCode: 404 }} path="/gone" />);
     expect(screen.getByRole('textbox', { name: /Subject/ })).toBeInTheDocument();
-    expect(screen.getByRole('radio', { name: /Bug/ })).toBeChecked();
+    expect(screen.getByRole('radio', { name: /^Bug/ })).toBeChecked();
     expect(screen.getByText(/Error 404/)).toBeInTheDocument();
-    expect(screen.getByText('/gone')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Page' })).toHaveValue('/gone');
   });
 });

@@ -35,6 +35,9 @@ vi.mock('@/modules/identity', () => ({
 const membershipsOf = vi.fn();
 vi.mock('@/modules/coven', () => ({ membershipsOf }));
 
+// The modal also reads the user's support time-outs, which are the support page tests' to prove; none here.
+vi.mock('@/app/(shell)/admin/support/reads', () => ({ readTimeoutsOf: vi.fn(async () => []) }));
+
 const { default: AdminUsersPage } = await import('@/app/(shell)/admin/(people)/users/page');
 const { default: UsersAction } = await import('@/app/(shell)/admin/(people)/@action/users/page');
 

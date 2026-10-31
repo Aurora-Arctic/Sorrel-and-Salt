@@ -1,6 +1,7 @@
 import type { ExtractTablesWithRelations, SQL, SQLWrapper } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable, PgTransaction } from 'drizzle-orm/pg-core';
 import type { PostgresJsQueryResultHKT } from 'drizzle-orm/postgres-js';
+import type { supportRequests } from '../../modules/support/schema/support-requests';
 import type { invitations } from '../../modules/coven/schema/invitations';
 import type { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
 import type { adminRoleChangePauses } from '../../modules/identity/schema/admin-role-change-pauses';
@@ -570,6 +571,33 @@ export interface AuditWriter {
     userId: string,
     windowSeconds: number,
   ): Promise<{ recent: number; timedOutUntil: Date | undefined }>;
+  /**
+   * Counts one signed-out send against an email address and a client address, each in its own row of `support_send_counts`,
+   * and returns both counts for the window ending at `now`. A row whose window began more than `windowSeconds` before `now`
+   * starts over at one. Takes a lock per key until the transaction ends, so sends racing each other all count.
+   */
+  countSignedOutSend(
+    address: string,
+    client: string,
+    now: Date,
+    windowSeconds: number,
+  ): Promise<{ address: number; client: number }>;
+  /**
+   * Moves a support request from one of `from` to `values.status` in a single guarded update, and returns the row, or none when
+   * its status is no longer one of `from` (or, given `ownerId`, it is not that sender's): the guard is in the `where`, so two
+   * moves racing cannot both win.
+   */
+  moveSupportRequest(
+    id: string,
+    ownerId: string | null,
+    from: readonly SupportRequestStatus[],
+    values: SupportRequestMove,
+  ): Promise<(typeof supportRequests.$inferSelect)[]>;
+  /** Closes every resolved request whose `resolved_at` is at or before `cutoff`, stamping `closed_at`; returns the rows closed. */
+  closeIdleResolvedSupportRequests(
+    cutoff: Date,
+    closedAt: Date,
+  ): Promise<(typeof supportRequests.$inferSelect)[]>;
   /**
    * The live forms of the proof's coven's ingredient `ingredientId`, locked in
    * form-id order, read in the transaction so they include the ones this write
@@ -1327,9 +1355,27 @@ export interface SupportViewer {
   role: 'user' | 'curator' | 'admin';
 }
 
+export type SupportRequestStatus = 'open' | 'waiting_on_sender' | 'resolved' | 'closed';
+
+/** What a status move writes with the new status: the activity stamps and the resolved and closed marks. */
+export interface SupportRequestMove {
+  status: SupportRequestStatus;
+  resolvedAt?: Date | null;
+  resolvedBy?: string | null;
+  closedAt?: Date | null;
+  lastSenderActivityAt?: Date;
+  lastStaffActivityAt?: Date;
+}
+
 /** The admin list's narrowing; an absent part is no narrowing. */
 export interface SupportRequestFilter {
-  kind?: 'accessibility' | 'bug' | 'question';
-  status?: 'open' | 'resolved';
+  about?: 'accessibility' | 'bug' | 'account' | 'compendium' | 'privacy' | 'feedback' | 'question';
+  status?: 'open' | 'waiting_on_sender' | 'resolved' | 'closed';
   errorCode?: number;
+}
+
+/** How many of a sender's requests are still open and how many are done. */
+export interface SupportStatusCounts {
+  open: number;
+  closed: number;
 }

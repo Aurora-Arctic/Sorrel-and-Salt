@@ -33,6 +33,13 @@ $track-inset: calc(1px + 0.125rem);
   background-color: $segment-track;
 }
 
+// A framed page (the account) is its own frame, as no `.page-column` wraps it (the admin's and a coven's tabbed pages sit in one): it keeps the
+// frames' side gutter, so its head and sections never touch the window's edge on a phone.
+.tabbed-page--framed {
+  box-sizing: border-box;
+  padding-inline: space(4);
+}
+
 // A framed page (the account): its tabs hold a `.page-with-nav`, which centres a menu and a column of sections (_primitives.scss). The head
 // stands over that column of sections, and its tabs sit on a line of their own beneath the heading at every width, as the reflow below does for a narrow one.
 @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {

@@ -5,26 +5,23 @@ import type { ReactElement } from 'react';
 import ErrorPage from '../ErrorPage';
 import ReportThis from '../ReportThis';
 
-// The 404 and 500 screens, shared by the root routes and the shell's, which differ only in whether the
-// Support dialog is in the page for Report This to open (claude-docs/components/error-page.md).
+// The 404 and 500 screens, shared by the root routes and the shell's (claude-docs/components/error-page.md).
 
-export const NotFoundScreen = ({ inShell = false }: { inShell?: boolean }): ReactElement => (
+export const NotFoundScreen = (): ReactElement => (
   <ErrorPage title="Page Not Found" reason="There is nothing at this address.">
     <Link className="btn btn--quiet" href="/">
       Back to Sorrel &amp; Salt
     </Link>
-    <ReportThis code={404} inShell={inShell} />
+    <ReportThis code={404} />
   </ErrorPage>
 );
 
 export const ErrorScreen = ({
   digest,
   retry,
-  inShell = false,
 }: {
   digest?: string;
   retry: () => void;
-  inShell?: boolean;
 }): ReactElement => (
   <ErrorPage
     title="Something Went Wrong"
@@ -37,6 +34,6 @@ export const ErrorScreen = ({
     <Link className="btn btn--quiet" href="/">
       Back to Sorrel &amp; Salt
     </Link>
-    <ReportThis code={500} inShell={inShell} />
+    <ReportThis code={500} reference={digest} />
   </ErrorPage>
 );

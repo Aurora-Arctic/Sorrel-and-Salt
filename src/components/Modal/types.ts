@@ -23,6 +23,8 @@ export interface ModalHeading {
   aboveName?: ReactNode;
   /** A row under the heading's last line, for the badges that are not beside the title. Not in the dialog's name. */
   under?: ReactNode;
+  /** The open lands the focus on the title, not the body's first field: a dialog that reads a record before it asks for anything. */
+  focusTitle?: boolean;
 }
 
 export interface ModalProps extends ModalHeading {

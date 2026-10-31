@@ -24,7 +24,7 @@ export interface FieldDescriptionInput {
   /** The base the field's ids grow from: a `useId()`. */
   id: string;
   hint?: string;
-  note?: string;
+  note?: ReactNode;
   /** Another element read with the field, such as a duplicate warning. */
   describedBy?: string;
   /** The field's own error, from whichever side found it. */
@@ -48,7 +48,9 @@ export interface FieldDescription {
   };
 }
 
-export interface FieldShellProps extends FieldProps, Omit<FieldDescription, 'aria'> {
+export interface FieldShellProps extends Omit<FieldProps, 'note'>, Omit<FieldDescription, 'aria'> {
+  /** A line beneath the label; a node when it needs markup, such as a reference in `code`. */
+  note?: ReactNode;
   /** The control, carrying `controlId`, the description's `aria` and `aria-required`. */
   children: ReactNode;
   /** Beneath the error: what a field adds of its own. */
@@ -162,22 +164,28 @@ export interface RadioOption<T extends string> {
 }
 
 export interface RadioGroupFieldProps<T extends string> {
+  /** The group's `id`, for a caller that moves focus into it. */
+  id?: string;
   /** The group's name, in title case. */
   legend: string;
   /** The group's `name`, shared by its radios. */
   name: string;
   options: readonly RadioOption<T>[];
-  /** The chosen value, held by the caller. */
-  value: T;
+  /** The chosen value, held by the caller; `null` when nothing is chosen yet, so no radio is checked. */
+  value: T | null;
   onChange: (value: T) => void;
   /** Shut: every radio dashed and faded. */
   disabled?: boolean;
   /** A line for the whole group, read with it: what holds whichever is chosen. */
   note?: string;
-  /** `list` (default): a row each with its explanation; `strip`: icon-only segments, chosen name beneath; `segmented`: text segments with any `count`. A radio underneath every way. */
-  layout?: 'list' | 'strip' | 'segmented';
+  /** `list` (default): a row each with its explanation; `strip`: icon-only segments, chosen name beneath; `segmented`: text segments with any `count`; `cards`: one compact bordered card per row, the explanation beside the name. A radio underneath every way. */
+  layout?: 'list' | 'strip' | 'segmented' | 'cards';
   /** An InfoTip beside the legend, for what the choices mean. */
   hint?: string;
+  /** Why the group cannot be sent as it stands, under the choices and read with the group. */
+  error?: string;
+  /** Marked required beside the legend, and on every radio to assistive technology. */
+  required?: boolean;
 }
 
 /** A form's row of actions: Save, any further saves, Cancel and Delete. */
@@ -344,4 +352,11 @@ export interface FormHistory {
   /** The buttons register themselves here: the last place focus may land. */
   undoButton: RefObject<HTMLButtonElement | null>;
   redoButton: RefObject<HTMLButtonElement | null>;
+}
+
+export interface CharacterCountProps {
+  /** The element's id, for the field's `aria-describedby`. */
+  id: string;
+  length: number;
+  limit: number;
 }

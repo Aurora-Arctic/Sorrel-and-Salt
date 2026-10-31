@@ -3,14 +3,16 @@ import postgres from 'postgres';
 import { getTableName } from 'drizzle-orm';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
+import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
 import { FIXTURE_USERS } from '@/db/seed/standard';
+import { SUPPORT_ABOUTS } from '@/lib/support-path';
 import { supportRequests } from '@/modules/support/schema/support-requests';
 
 // A message an account sends to whoever runs the site; the sender is `created_by`.
 
 const OWN_COLUMNS = [
   'id',
-  'kind',
+  'about',
   'subject',
   'message',
   'path',
@@ -21,9 +23,17 @@ const OWN_COLUMNS = [
   'issue_url',
   'resolved_by',
   'resolved_at',
+  'last_sender_activity_at',
+  'last_staff_activity_at',
+  'closed_at',
+  'linked_from',
+  'error_reference',
+  'sender_email',
 ];
 
 const LIST_INDEX = 'support_requests_status_created_idx';
+const ACTIVITY_INDEX = 'support_requests_status_sender_activity_idx';
+const CLOSED_INDEX = 'support_requests_closed_at_idx';
 const SENDER = FIXTURE_USERS.A.id;
 
 describe('support_requests schema', () => {
@@ -37,10 +47,13 @@ describe('support_requests schema', () => {
     expect(byName).not.toHaveProperty('workspace_id');
   });
 
-  it('declares one index, partial on deleted_at and not unique', () => {
-    expect(Object.keys(byIndexName)).toEqual([LIST_INDEX]);
-    expect(byIndexName[LIST_INDEX].config.unique).toBe(false);
-    expect(byIndexName[LIST_INDEX].config.where).toBeDefined();
+  it('declares its three indexes, the first two partial on deleted_at and none unique', () => {
+    expect(Object.keys(byIndexName).sort()).toEqual([CLOSED_INDEX, LIST_INDEX, ACTIVITY_INDEX]);
+    for (const name of [LIST_INDEX, ACTIVITY_INDEX]) {
+      expect(byIndexName[name].config.unique).toBe(false);
+      expect(byIndexName[name].config.where).toBeDefined();
+    }
+    expect(byIndexName[CLOSED_INDEX].config.unique).toBe(false);
   });
 
   it('has foreign keys to the three accounts a request names', () => {
@@ -48,6 +61,7 @@ describe('support_requests schema', () => {
       nonAuditForeignKeys.map((fk) => [fk.column, getTableName(fk.foreignTable)]).sort(),
     ).toEqual([
       ['assigned_to', 'users'],
+      ['linked_from', 'support_requests'],
       ['resolved_by', 'users'],
     ]);
   });
@@ -56,16 +70,16 @@ describe('support_requests schema', () => {
 let sql: ReturnType<typeof postgres>;
 useTestDatabase((client) => (sql = client));
 
-async function insert(fields: { kind?: string; status?: string } = {}) {
-  const kind = fields.kind ?? 'question';
+async function insert(fields: { about?: string; status?: string } = {}) {
+  const about = fields.about ?? 'question';
   const [row] = fields.status
     ? await sql`
-        insert into support_requests (kind, subject, message, path, status, created_by, updated_by)
-        values (${kind}::support_request_kind, 'Subject', 'Message', '/', ${fields.status}::support_request_status, ${SENDER}, ${SENDER})
+        insert into support_requests (about, subject, message, path, status, created_by, updated_by)
+        values (${about}::support_request_about, 'Subject', 'Message', '/', ${fields.status}::support_request_status, ${SENDER}, ${SENDER})
         returning *`
     : await sql`
-        insert into support_requests (kind, subject, message, path, created_by, updated_by)
-        values (${kind}::support_request_kind, 'Subject', 'Message', '/', ${SENDER}, ${SENDER})
+        insert into support_requests (about, subject, message, path, created_by, updated_by)
+        values (${about}::support_request_about, 'Subject', 'Message', '/', ${SENDER}, ${SENDER})
         returning *`;
   return row;
 }
@@ -83,24 +97,99 @@ describe('support_requests table', () => {
     expect(row.resolved_at).toBeNull();
   });
 
-  it.each(['accessibility', 'bug', 'question'])('accepts the kind %s', async (kind) => {
-    await expect(insert({ kind })).resolves.toBeDefined();
+  it.each(SUPPORT_ABOUTS.map((about) => about.value))('accepts the about %s', async (about) => {
+    await expect(insert({ about })).resolves.toBeDefined();
   });
 
-  it('refuses a kind outside its enum', async () => {
-    const error = await failureOf(insert({ kind: 'complaint' }));
+  it('refuses an about outside its enum', async () => {
+    const error = await failureOf(insert({ about: 'complaint' }));
 
     // 22P02 is invalid_text_representation, which is what an enum refuses with.
     expect(error.code).toBe('22P02');
   });
 
   it('refuses a status outside its enum', async () => {
-    const error = await failureOf(insert({ status: 'closed' }));
+    const error = await failureOf(insert({ status: 'archived' }));
 
     expect(error.code).toBe('22P02');
   });
 
-  it('accepts the status resolved', async () => {
-    await expect(insert({ status: 'resolved' })).resolves.toBeDefined();
+  it.each(['open', 'waiting_on_sender', 'resolved', 'closed'])(
+    'accepts the status %s',
+    async (status) => {
+      await expect(insert({ status })).resolves.toBeDefined();
+    },
+  );
+
+  it('starts with no lifecycle stamps, reference or link', async () => {
+    const row = await insert();
+
+    expect(row.last_sender_activity_at).toBeNull();
+    expect(row.last_staff_activity_at).toBeNull();
+    expect(row.closed_at).toBeNull();
+    expect(row.linked_from).toBeNull();
+    expect(row.error_reference).toBeNull();
+  });
+
+  it('stores an error reference as given', async () => {
+    const [row] = await sql`
+      insert into support_requests (about, subject, message, path, error_reference, created_by, updated_by)
+      values ('bug', 'Subject', 'Message', '/', '1234567890', ${SENDER}, ${SENDER}) returning error_reference`;
+
+    expect(row.error_reference).toBe('1234567890');
+  });
+
+  describe('the sender', () => {
+    const send = (createdBy: string, email: string | null) => sql`
+      insert into support_requests (about, subject, message, path, sender_email, created_by, updated_by)
+      values ('question', 'Subject', 'Message', '/', ${email}, ${createdBy}, ${createdBy}) returning sender_email`;
+
+    async function seedSignedOutSender() {
+      await sql`insert into users (id, name, email, role, created_by, updated_by) values (${SIGNED_OUT_SENDER_ID}, 'Support, signed out', 'signed-out@sorrel.invalid', 'user', ${SENDER}, ${SENDER}) on conflict (id) do nothing`;
+    }
+
+    it('accepts an account with no address', async () => {
+      const [row] = await send(SENDER, null);
+
+      expect(row.sender_email).toBeNull();
+    });
+
+    it('accepts an address with the signed-out sender account', async () => {
+      await seedSignedOutSender();
+
+      const [row] = await send(SIGNED_OUT_SENDER_ID, 'visitor@example.test');
+
+      expect(row.sender_email).toBe('visitor@example.test');
+    });
+
+    it('refuses an address beside an ordinary account', async () => {
+      const error = await failureOf(send(SENDER, 'visitor@example.test'));
+
+      expect(error.code).toBe('23514');
+    });
+
+    it('refuses the signed-out sender account with no address', async () => {
+      await seedSignedOutSender();
+
+      const error = await failureOf(send(SIGNED_OUT_SENDER_ID, null));
+
+      expect(error.code).toBe('23514');
+    });
+  });
+
+  it('links to an existing request and refuses one that does not exist', async () => {
+    const first = await insert({ status: 'closed' });
+    await expect(
+      sql`insert into support_requests (about, subject, message, path, linked_from, created_by, updated_by)
+          values ('bug', 'Subject', 'Message', '/', ${first.id}, ${SENDER}, ${SENDER}) returning id`,
+    ).resolves.toHaveLength(1);
+
+    const error = await failureOf(
+      sql`insert into support_requests (about, subject, message, path, linked_from, created_by, updated_by)
+          values ('bug', 'Subject', 'Message', '/', pg_catalog.gen_random_uuid(), ${SENDER}, ${SENDER})`,
+    );
+
+    // 23503 is foreign_key_violation.
+    expect(error.code).toBe('23503');
   });
 });

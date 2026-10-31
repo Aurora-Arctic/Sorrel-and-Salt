@@ -78,6 +78,7 @@ const context: Context = {
   invitations: noInvitationSender,
   passwords: noPasswordSetter,
   support: noSupportNotifier,
+  clientIp: null,
 };
 
 async function run(

@@ -1,86 +1,122 @@
 import { render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import SupportList from '@/components/SupportList';
 import type { SupportListEntry } from '@/components/SupportList/types';
+import type { SupportSenderRequestEntry } from '@/components/SupportSenderRequest/types';
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
+  usePathname: () => '/account/support',
+  useSearchParams: () => new URLSearchParams(),
+}));
 
 const request = (over: Partial<SupportListEntry> = {}): SupportListEntry => ({
   id: 'r1',
-  kind: 'question',
+  about: 'question',
   subject: 'How do I join a coven?',
-  message: 'I was sent a card.',
   status: 'open',
   createdAt: new Date('2030-01-02T03:04:00Z'),
-  issueUrl: null,
+  replyCount: 0,
+  ...over,
+});
+
+const opened = (over: Partial<SupportSenderRequestEntry> = {}): SupportSenderRequestEntry => ({
+  ...request(),
+  path: '/coven/whitethorn',
+  message: 'I was sent a card.',
+  errorCode: null,
   replies: [],
   ...over,
 });
 
+const none = { open: 0, closed: 0 };
+
 describe('SupportList', () => {
+  it('counts open and closed requests across all of them, with singulars', () => {
+    const { rerender } = render(<SupportList requests={[]} counts={{ open: 3, closed: 2 }} />);
+    expect(screen.getByText('3 Open Requests / 2 Closed Requests')).toBeInTheDocument();
+    rerender(<SupportList requests={[]} counts={{ open: 1, closed: 1 }} />);
+    expect(screen.getByText('1 Open Request / 1 Closed Request')).toBeInTheDocument();
+  });
+
+  it('reads No Requests Yet with none', () => {
+    render(<SupportList requests={[]} counts={none} />);
+    expect(screen.getByText('No Requests Yet')).toBeInTheDocument();
+  });
+
+  it('offers New Request as a link, whether or not there are requests', () => {
+    render(<SupportList counts={none} requests={[]} />);
+    expect(screen.getByRole('link', { name: 'New Request' })).toBeInTheDocument();
+  });
+
   it('says so when there are no requests', () => {
-    render(<SupportList requests={[]} />);
+    render(<SupportList counts={none} requests={[]} />);
     expect(screen.getByText(/no support requests/i)).toBeInTheDocument();
   });
 
-  it('shows each request with its kind, status and subject', () => {
+  it('shows each request with its status, kind, sent day, reply count and a subject link that opens it', () => {
     render(
       <SupportList
+        counts={none}
         requests={[
-          request(),
-          request({ id: 'r2', kind: 'accessibility', subject: 'Faint text', status: 'resolved' }),
+          request({ replyCount: 1 }),
+          request({
+            id: 'r2',
+            about: 'accessibility',
+            subject: 'Faint text',
+            status: 'resolved',
+            replyCount: 2,
+          }),
         ]}
       />,
     );
     const items = screen.getAllByRole('listitem');
     expect(items).toHaveLength(2);
-    expect(within(items[0]!).getByText('How do I join a coven?')).toBeInTheDocument();
-    expect(within(items[0]!).getByText('Question')).toBeInTheDocument();
-    expect(within(items[0]!).getByText('Open')).toBeInTheDocument();
-    expect(within(items[1]!).getByText('Accessibility')).toBeInTheDocument();
-    expect(within(items[1]!).getByText('Resolved')).toBeInTheDocument();
-  });
-
-  it('shows the replies, oldest first, under their request', () => {
-    render(
-      <SupportList
-        requests={[
-          request({
-            replies: [
-              { id: 'p1', body: 'First answer.', createdAt: new Date('2030-01-03T00:00:00Z') },
-              { id: 'p2', body: 'Second answer.', createdAt: new Date('2030-01-04T00:00:00Z') },
-            ],
-          }),
-        ]}
-      />,
-    );
-    const text = screen.getByRole('listitem').textContent ?? '';
-    expect(text.indexOf('First answer.')).toBeGreaterThan(-1);
-    expect(text.indexOf('Second answer.')).toBeGreaterThan(text.indexOf('First answer.'));
-  });
-
-  it('links a bug to its issue, and no other kind', () => {
-    render(
-      <SupportList
-        requests={[
-          request({
-            id: 'b',
-            kind: 'bug',
-            subject: 'Broken',
-            issueUrl: 'https://example.test/i/1',
-          }),
-          request({ id: 'q', issueUrl: 'https://example.test/i/2' }),
-        ]}
-      />,
-    );
-    const [bug, question] = screen.getAllByRole('listitem');
-    expect(within(bug!).getByRole('link', { name: 'View Issue' })).toHaveAttribute(
+    expect(within(items[0]!).getByRole('link', { name: 'How do I join a coven?' })).toHaveAttribute(
       'href',
-      'https://example.test/i/1',
+      '/account/support?request=r1',
     );
-    expect(within(question!).queryByRole('link', { name: 'View Issue' })).toBeNull();
+    expect(within(items[0]!).getByText('Open')).toBeInTheDocument();
+    expect(within(items[0]!).getByText('Question')).toBeInTheDocument();
+    expect(within(items[0]!).getByText('2 Jan 2030')).toBeInTheDocument();
+    expect(within(items[0]!).getByText('1 reply')).toBeInTheDocument();
+    expect(within(items[1]!).getByText('Resolved')).toBeInTheDocument();
+    expect(within(items[1]!).getByText('Accessibility')).toBeInTheDocument();
+    expect(within(items[1]!).getByText('2 replies')).toBeInTheDocument();
+  });
+
+  it('says a request nobody has answered has no reply yet', () => {
+    render(<SupportList counts={none} requests={[request()]} />);
+    expect(screen.getByText('No reply yet')).toBeInTheDocument();
+  });
+
+  it('draws no page path on a row', () => {
+    render(<SupportList counts={none} requests={[request()]} />);
+    expect(screen.queryByText(/\/coven\//)).toBeNull();
+  });
+
+  it('draws a bug with no link to an issue', () => {
+    render(
+      <SupportList
+        counts={none}
+        requests={[request({ id: 'b', about: 'bug', subject: 'Broken' })]}
+      />,
+    );
+    expect(within(screen.getByRole('listitem')).getAllByRole('link')).toHaveLength(1);
   });
 
   it('draws no pager link where there is no page beyond', () => {
-    render(<SupportList requests={[request()]} />);
+    render(<SupportList counts={none} requests={[request()]} />);
     expect(screen.queryByRole('link', { name: /Next|Previous/ })).toBeNull();
+  });
+
+  it('draws no dialog while no request is opened', () => {
+    render(<SupportList counts={none} requests={[request()]} />);
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('opens the request in a dialog named by its subject', () => {
+    render(<SupportList counts={none} requests={[request()]} opened={opened()} />);
+    expect(screen.getByRole('dialog', { name: /How do I join a coven\?/ })).toBeInTheDocument();
   });
 });

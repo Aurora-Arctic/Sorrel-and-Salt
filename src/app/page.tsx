@@ -37,18 +37,20 @@ export default async function HomePage() {
   const session = await getSession();
 
   return (
-    // `page-frame` is the layout. `welcome-page` styles nothing: it stays as
-    // the hook Backdrop's `body:has(.welcome-page)` reads to draw its larger
-    // front-door art, so the root layout needs no route awareness.
-    <main className="page-frame welcome-page">
-      {!session && (
-        <script
-          type="application/ld+json"
-          // Our own serialiser's output, with `<` escaped (src/lib/json-ld.ts).
-          dangerouslySetInnerHTML={{ __html: websiteJsonLd() }}
-        />
-      )}
-      <Welcome landing={session ? await continueTarget(session) : undefined} />
-    </main>
+    <>
+      {/* `page-frame` is the layout. `welcome-page` styles nothing: it stays as the hook Backdrop's
+          `body:has(.welcome-page)` reads to draw its larger front-door art, so the root layout needs no
+          route awareness. */}
+      <main className="page-frame welcome-page">
+        {!session && (
+          <script
+            type="application/ld+json"
+            // Our own serialiser's output, with `<` escaped (src/lib/json-ld.ts).
+            dangerouslySetInnerHTML={{ __html: websiteJsonLd() }}
+          />
+        )}
+        <Welcome landing={session ? await continueTarget(session) : undefined} />
+      </main>
+    </>
   );
 }

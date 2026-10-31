@@ -17,12 +17,14 @@ test('the entry page renders signed out, without a redirect', async ({ page }) =
 
   expect(new URL(page.url()).pathname).toBe('/');
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-  // Nothing on the page is taller than the viewport, so nothing should scroll:
-  // a viewport-high frame with its own padding once overflowed by the padding.
-  const scrolls = await page.evaluate(
-    () => document.documentElement.scrollHeight > document.documentElement.clientHeight,
-  );
-  expect(scrolls).toBe(false);
+  // The welcome page fills the window and the footer starts at the fold, so the page scrolls by the footer.
+  const edges = await page.evaluate(() => ({
+    welcomeBottom: document.querySelector('.welcome-page')!.getBoundingClientRect().bottom,
+    footerTop: document.querySelector('.site-footer')!.getBoundingClientRect().top,
+    viewport: window.innerHeight,
+  }));
+  expect(Math.abs(edges.welcomeBottom - edges.viewport)).toBeLessThanOrEqual(1);
+  expect(Math.abs(edges.footerTop - edges.viewport)).toBeLessThanOrEqual(1);
   await assertNoSidewaysScroll(page);
   // Playwright's context is light unless told otherwise, and the site's own
   // default is dark, so each theme is named.

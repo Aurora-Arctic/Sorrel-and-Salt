@@ -136,7 +136,7 @@ describe('Mutation.createAdminInvitation', () => {
     for (const type of Object.values(schema.getTypeMap())) {
       if (!isObjectType(type) || type.name.startsWith('__')) continue;
       for (const name of Object.keys(type.getFields())) {
-        if (/token|hash|link/i.test(name)) carriers.push(`${type.name}.${name}`);
+        if (/token|hash|link(?!ed)/i.test(name)) carriers.push(`${type.name}.${name}`);
       }
     }
     expect(carriers).toEqual(['MintedInvitationCards.tokens']);

@@ -1,17 +1,114 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// Under the page, ruled off from it; the link sits in the content column's edges.
+// The page and the footer in one column the height of the window: a short page leaves its spare room
+// between the two, so the footer sits at the foot of the window, and a long one pushes it down.
+// The step of air above the footer is the margin of whatever precedes it.
+.site-frame {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - #{$top-inset});
+
+  > :has(+ .site-footer) {
+    margin-block-end: space(8);
+  }
+
+  // The front door fills the window, so its footer starts at the fold with no air between.
+  > .welcome-page:has(+ .site-footer) {
+    margin-block-end: 0;
+  }
+}
+
+// Under the page, a step of air below its last content. Its view timeline lets the salt rise as the footer
+// comes into view (Backdrop/index.scss); the opaque, full-width fill is what a browser without
+// scroll-driven animations keeps, so the fixed salt never shows through the row.
 .site-footer {
+  margin-block-start: auto;
+  border-top: 1px solid $hairline;
+  background-color: $surface-page;
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: the salt stays put and the fill covers it, not yet Baseline
+  view-timeline: --site-footer block;
+}
+
+// The footer's content sits in the content column's edges, a column of the row and the tagline beneath it; the hairline above is the footer's own, so it spans the window.
+.site-footer__inner {
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: space(2);
   margin-inline: auto;
   padding: space(4);
-  border-top: 1px solid $hairline;
-  color: $text-muted;
   max-width: $wide-column;
+  min-height: $footer-height;
+}
+
+// The brand at the left, the links at the right.
+.site-footer__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: space(2) space(4);
+}
+
+.site-footer__brand {
+  color: $text-primary;
+  font-size: heading-size(4);
+  line-height: 1.2;
+  text-decoration: none;
+
+  @include heading-face;
+
+  &:focus-visible {
+    @include focus-ring;
+  }
 }
 
 .site-footer__nav {
   display: flex;
   gap: space(4);
+  color: $text-muted;
+  font-size: type-size('small');
+}
+
+// A bare icon: only the glyph at rest, the quiet button's fill under a pointer or the keyboard. `--icon-ground`
+// is what the support bubble's cut-out shows through, so it follows the surface behind it.
+.site-footer__support {
+  @include icon-button(2rem, 1.5rem);
+  --icon-ground: #{$surface-page};
+
+  &:hover,
+  &:focus-visible {
+    background-color: $fill-highlight-field;
+    --icon-ground: #{$fill-highlight-field};
+  }
+}
+
+// Under the row, left-aligned beneath the brand, in the small size and the muted ink.
+.site-footer__tagline {
+  max-width: 66ch;
+  margin: 0;
+  color: $text-muted;
+  font-size: type-size('caption');
+  line-height: 1.5;
+}
+
+// At a phone's width the row stacks, the name above the links, both at the left.
+@media (max-width: $shell-phone-width) {
+  .site-footer__inner {
+    min-height: $footer-height-phone;
+  }
+
+  .site-footer__row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+// The phone's section bar is fixed along the bottom of a shell page and would cover the link; the
+// footer clears it by the bar's own height, as the page's body does (_primitives.scss).
+@media (max-width: $shell-phone-width) {
+  body:has(.section-nav) .site-footer {
+    padding-bottom: calc(#{$bottom-bar-height} + env(safe-area-inset-bottom, 0px));
+  }
 }

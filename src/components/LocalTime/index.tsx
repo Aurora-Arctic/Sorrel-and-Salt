@@ -1,7 +1,7 @@
 'use client';
 
 import { type ReactElement, useSyncExternalStore } from 'react';
-import { longMinuteInUtc, longMinuteInZone, minuteInUtc, minuteInZone } from '../../lib/utc';
+import { longMinuteInZone, minuteInZone, shortDayInZone, shortMinuteInZone } from '../../lib/utc';
 import type { LocalTimeProps } from './types';
 
 // The local zone never changes while a page is open, so there is nothing to subscribe to.
@@ -12,11 +12,16 @@ const subscribe = (): (() => void) => () => undefined;
  * hydration print UTC; once hydrated it prints the viewer's own zone, read as an external store so
  * the two renders never mismatch.
  */
-const LocalTime = ({ at, timeZone, long }: LocalTimeProps): ReactElement => {
+const LocalTime = ({ at, timeZone, long, short }: LocalTimeProps): ReactElement => {
+  const print = (zone: string | undefined): string => {
+    if (short === 'day') return shortDayInZone(at, zone);
+    if (short === 'minute') return shortMinuteInZone(at, zone);
+    return long ? longMinuteInZone(at, zone) : minuteInZone(at, zone);
+  };
   const text = useSyncExternalStore(
     subscribe,
-    () => (long ? longMinuteInZone(at, timeZone) : minuteInZone(at, timeZone)),
-    () => (long ? longMinuteInUtc(at) : minuteInUtc(at)),
+    () => print(timeZone),
+    () => print('UTC'),
   );
   return <time dateTime={at.toISOString()}>{text}</time>;
 };

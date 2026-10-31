@@ -92,6 +92,7 @@ const PROBES: Record<string, ScopeProbe> = {
     outcome: 'refuses',
   },
   cardArrivalsCsv: { source: '{ cardArrivalsCsv }', outcome: 'refuses' },
+  supportDialogState: { source: '{ supportDialogState { kind } }', outcome: 'answers' },
   mySupportRequests: {
     source: '{ mySupportRequests(first: 1) { edges { node { id } } } }',
     outcome: 'refuses',
@@ -388,12 +389,25 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   setEmail: write('mutation { setEmail(email: "fixture@example.org") { id } }'),
   setName: write('mutation { setName(name: "Fixture") { id } }'),
   setPassword: write('mutation { setPassword(newPassword: "fixture password") }'),
+  // Open to anyone by design. The honeypot field is filled, so the send is dropped and the probe stores and mails nothing.
+  sendSignedOutSupportRequest: {
+    source:
+      'mutation { sendSignedOutSupportRequest(input: { about: account, email: "fixture@example.org", subject: "Fixture", message: "Fixture", website: "filled" }) }',
+    outcome: 'answers',
+  },
   sendSupportRequest: write(
-    'mutation { sendSupportRequest(input: { kind: bug, subject: "Fixture", message: "Fixture" }) { id } }',
+    'mutation { sendSupportRequest(input: { about: bug, subject: "Fixture", message: "Fixture" }) { id } }',
   ),
   replyToSupportRequest: write(
     `mutation { replyToSupportRequest(requestId: "${NOWHERE}", body: "Fixture") { id } }`,
   ),
+  sendSupportMessage: write(
+    `mutation { sendSupportMessage(requestId: "${NOWHERE}", body: "Fixture") { id } }`,
+  ),
+  addSupportInternalNote: write(
+    `mutation { addSupportInternalNote(requestId: "${NOWHERE}", body: "Fixture") { id } }`,
+  ),
+  closeSupportRequest: write(`mutation { closeSupportRequest(id: "${NOWHERE}") { id } }`),
   assignSupportRequest: write(`mutation { assignSupportRequest(id: "${NOWHERE}") { id } }`),
   setSupportRequestCuratorVisible: write(
     `mutation { setSupportRequestCuratorVisible(id: "${NOWHERE}", visible: true) { id } }`,
@@ -723,11 +737,17 @@ const OPEN_WRITES = [
   // also needs the recorder, or for a change someone named on the working.
   // Any signed-in account may report a refused card open; the service records it only against a real card.
   'recordCardAttempt',
+  // Open to anyone, signed in or not: the service allows two topics and counts the sends.
+  'sendSignedOutSupportRequest',
   // Any verified session may send; the service reads the limit and any time-out.
   'sendSupportRequest',
+  // Any verified session may write on a request; the service finds only the sender's own.
+  'sendSupportMessage',
   // A curator's scope admits; the service decides which requests (an admin any, a curator one assigned to them).
   'replyToSupportRequest',
   'resolveSupportRequest',
+  'addSupportInternalNote',
+  'closeSupportRequest',
   'recordWorking',
   'updateWorking',
   'completeWorking',

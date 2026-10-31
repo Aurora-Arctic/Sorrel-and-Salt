@@ -210,6 +210,10 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
 .modal-dialog__title {
   margin: 0;
   overflow-wrap: anywhere;
+
+  &:focus {
+    outline: none;
+  }
 }
 
 // The formal name, the title and the title's controls (`formalActions`: the details window's Edit

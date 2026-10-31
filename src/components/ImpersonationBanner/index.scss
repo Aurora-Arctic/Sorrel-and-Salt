@@ -9,8 +9,8 @@ $impersonation-banner-peek: space(2);
 $impersonation-banner-reach: space(4);
 
 // A wrapping row of the sentence and Stop. On touch, with nothing to hover it back, it stays in the flow
-// at the top, shown in full, and everything measured from the window's top starts below it: its height,
-// published by index.tsx, is the top inset there.
+// at the top, shown in full, and scrolls away with the page; its height, published by index.tsx, is the top inset there,
+// which only the page frames' heights read (the bars and scroll offsets stand at the window's top once it has gone).
 .impersonation-banner {
   display: flex;
   flex-wrap: wrap;
@@ -30,6 +30,11 @@ $impersonation-banner-reach: space(4);
 @media (hover: none) {
   :root {
     --top-inset: var(--impersonation-banner-height, 0px);
+  }
+
+  // The corner toggle is fixed over the banner's right end at scroll 0; its width and a gap stay clear for Stop.
+  .impersonation-banner {
+    padding-inline-end: calc(#{$toggle-corner} + #{space(2)});
   }
 }
 

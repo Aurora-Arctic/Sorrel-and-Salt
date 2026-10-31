@@ -18,31 +18,36 @@ const CURATOR = { id: 'curator-1', name: 'Fern Keeper' };
 const REQUESTS: SupportRequestEntry[] = [
   {
     id: 'request-1',
-    kind: 'bug',
+    about: 'bug',
     subject: 'Wobbling Cauldron',
     status: 'open',
     sender: SENDER,
+    signedOut: false,
     assignee: CURATOR,
     curatorVisible: true,
     errorCode: 500,
+    errorReference: 'abc123',
   },
   {
     id: 'request-2',
-    kind: 'question',
+    about: 'question',
     subject: 'Where Do Invitations Go',
     status: 'resolved',
     sender: SENDER,
+    signedOut: false,
     assignee: null,
     curatorVisible: false,
     errorCode: null,
+    errorReference: null,
   },
 ];
 
 const OPENED: SupportRequestDetailEntry = {
   ...REQUESTS[0]!,
   message: 'The cauldron wobbles every time I save.',
+  createdAt: new Date('2026-10-29T09:00:00Z'),
   path: '/coven/[slug]/grimoire',
-  issueUrl: null,
+  issueUrl: 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/1448',
   resolvedBy: null,
   resolvedAt: null,
   replies: [
@@ -59,6 +64,9 @@ const OPENED: SupportRequestDetailEntry = {
       until: new Date('2026-09-01T09:00:00Z'),
       note: 'Repeated test messages',
       liftedAt: null,
+      createdAt: new Date('2026-08-25T09:00:00Z'),
+      setBy: ADMIN,
+      liftedBy: null,
     },
   ],
 };

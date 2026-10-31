@@ -7,6 +7,8 @@ import { emailChangeNoticeMessage } from '@/emails/email-change-notice';
 import { passwordChangedMessage } from '@/emails/password-changed';
 import { passwordLockedMessage } from '@/emails/password-locked';
 import { resetPasswordMessage } from '@/emails/reset-password';
+import { supportEmailReplyMessage } from '@/emails/support-email-reply';
+import { supportReceivedMessage } from '@/emails/support-received';
 import { supportReplyNoticeMessage } from '@/emails/support-reply-notice';
 import { verifyEmailMessage } from '@/emails/verify-email';
 import type { Message } from '@/lib/types';
@@ -138,6 +140,24 @@ const MAILS: {
         to: 'someone@layout.test',
         url: `${ORIGIN}/account/support`,
         origin: ORIGIN,
+        requestSubject: 'The jar will not open',
+      }),
+  },
+  {
+    template: 'support-received',
+    name: 'supportReceivedMessage',
+    link: `${ORIGIN}/support`,
+    message: () => supportReceivedMessage({ to: 'someone@layout.test', url: `${ORIGIN}/support` }),
+  },
+  {
+    template: 'support-email-reply',
+    name: 'supportEmailReplyMessage',
+    link: `${ORIGIN}/support`,
+    message: () =>
+      supportEmailReplyMessage({
+        to: 'someone@layout.test',
+        url: `${ORIGIN}/support`,
+        body: 'Thank you for writing.',
       }),
   },
 ];

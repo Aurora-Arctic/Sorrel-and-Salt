@@ -75,6 +75,7 @@ const Modal = ({
   formalActions,
   actionsUnderClose,
   under,
+  focusTitle = false,
   aboveName,
   onClose,
   returnTo,
@@ -103,6 +104,8 @@ const Modal = ({
   // or left behind by a navigation. A ref set in the event, not a mirror of `phase`: under reduced
   // motion the owner unmounts it in the same render, before an effect could copy the phase across.
   const shutting = useRef(false);
+  const focusTitleRef = useRef(focusTitle);
+  focusTitleRef.current = focusTitle;
 
   useEffect(() => {
     const dialog = ref.current;
@@ -127,7 +130,10 @@ const Modal = ({
       // (claude-docs/components/modal.md, "The first field's focus"). Contents that take it keep it.
       queueMicrotask(() => {
         if (cancelled || body.current?.contains(document.activeElement)) return;
-        (firstShownField(body.current ?? dialog) ?? dialog).focus();
+        const title = focusTitleRef.current
+          ? dialog.querySelector<HTMLElement>('.modal-dialog__title')
+          : null;
+        (title ?? firstShownField(body.current ?? dialog) ?? dialog).focus();
       });
     }
     return () => {
@@ -148,10 +154,11 @@ const Modal = ({
   useEffect(() => {
     const dialog = ref.current;
     if (wasLoading.current && !loading && dialog && document.activeElement === dialog) {
-      firstShownField(body.current ?? dialog)?.focus();
+      const title = focusTitle ? dialog.querySelector<HTMLElement>('.modal-dialog__title') : null;
+      (title ?? firstShownField(body.current ?? dialog))?.focus();
     }
     wasLoading.current = loading;
-  }, [loading]);
+  }, [loading, focusTitle]);
 
   // It fades out before the owner is asked to close it: open, fading, then closed, and closed asks
   // the owner once, in an effect, however many ways it came (the fade's end, or the limit), so
@@ -246,7 +253,7 @@ const Modal = ({
   // The hidden comma sits at the heading's end, and the spans beside it are not in the
   // dialog's name.
   const titleHeading = (
-    <h2 id={titleId} className="modal-dialog__title">
+    <h2 id={titleId} className="modal-dialog__title" tabIndex={focusTitle ? -1 : undefined}>
       {title}
       {qualifier && (
         <>

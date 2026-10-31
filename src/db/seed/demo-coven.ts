@@ -1,7 +1,8 @@
 import { seedDemoCovenContent, type DemoCovenContentReport } from './demo-coven-content';
-import { eq, isNull, or } from 'drizzle-orm';
+import { and, eq, isNull, ne, or } from 'drizzle-orm';
 import { beginSeedTransaction, insertMissingBy, insertStamped } from './idempotent';
 import { DEMO_WORKSPACE_ID, BOOTSTRAP_USER_ID } from '../bootstrap';
+import { SIGNED_OUT_SENDER_ID } from '../../lib/support-sender';
 import { slugify } from '../../lib/slugify';
 import { users } from '../../modules/identity/schema/users';
 import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
@@ -43,7 +44,8 @@ export async function seedDemoCovenSeats(tx: SeedTransaction): Promise<void> {
   const people = await tx
     .select({ id: users.id, role: users.role })
     .from(users)
-    .where(isNull(users.deletedAt));
+    // The signed-out support sender holds no seat anywhere.
+    .where(and(isNull(users.deletedAt), ne(users.id, SIGNED_OUT_SENDER_ID)));
   const seats = people.map(({ id, role }) => ({
     workspaceId,
     userId: id,

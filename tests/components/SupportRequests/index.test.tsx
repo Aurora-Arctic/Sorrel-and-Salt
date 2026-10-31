@@ -1,5 +1,7 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import SupportRequests from '@/components/SupportRequests';
 import type {
   SupportRequestDetailEntry,
@@ -24,22 +26,25 @@ vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 const ADMIN: SupportViewer = { id: 'admin-1', role: 'admin' };
 const CURATOR: SupportViewer = { id: 'curator-1', role: 'curator' };
-const ADMIN_ONLY = ['Assigned To', 'Issue Address', 'Time Out Until'];
+const ADMIN_ONLY = ['Assigned To', 'GitHub Issue', 'For'];
 
 const ROW: SupportRequestEntry = {
   id: 'r1',
-  kind: 'bug',
+  about: 'bug',
   subject: 'The moon icon is missing',
   status: 'open',
   sender: { id: 'u1', name: 'Ada Wortley', email: 'ada@example.test' },
+  signedOut: false,
   assignee: null,
   curatorVisible: false,
   errorCode: 500,
+  errorReference: null,
 };
 
 const DETAIL: SupportRequestDetailEntry = {
   ...ROW,
   message: 'There is no moon on the spell page.',
+  createdAt: new Date('2026-10-29T09:00:00Z'),
   path: '/coven/[slug]/grimoire',
   issueUrl: null,
   resolvedBy: null,
@@ -58,23 +63,35 @@ const open = (viewer: SupportViewer, detail: Partial<SupportRequestDetailEntry> 
     />,
   );
 
-const dialog = () => screen.getByRole('dialog', { name: ROW.subject });
+const dialog = () => screen.getByRole('dialog', { name: new RegExp(ROW.subject) });
+
+// The Time-Out fold starts closed; its toggle is the one Time-Out button that says whether it is open.
+const openTimeOut = () =>
+  fireEvent.click(within(dialog()).getByRole('button', { name: 'Time-Out', expanded: false }));
+
+const timeOutSubmit = () => within(dialog()).getByRole('button', { name: 'Time Out Sender' });
+
+// The question the button opens, answered.
+const confirmTimeOut = () => fireEvent.click(screen.getByRole('button', { name: 'Time Out' }));
+// The question Resolve opens over the dialog, a group named by its text.
+const resolveQuestion = () => screen.findByRole('group', { name: /sender sees it as resolved/ });
+
+const BASE = { id: 'u0', name: 'Bea Hollis', email: 'bea@example.test' };
 
 beforeEach(() => {
   router.refresh.mockClear();
 });
 
 describe('SupportRequests list', () => {
-  it('shows kind, subject, status, sender, assignee, curator visibility and error number per row', () => {
+  it('shows about, subject, status, sender, assignee, curator visibility and error number per row', () => {
     render(<SupportRequests requests={[ROW]} viewer={ADMIN} />);
     const row = screen.getByRole('row', { name: /moon icon/ });
-    for (const text of ['Bug', 'Open', 'Ada Wortley', 'Unassigned', 'Hidden', '500']) {
+    for (const text of ['Bug', 'Open', 'Ada Wortley', 'Unassigned', 'Not Shared', '500']) {
       expect(within(row).getByText(text)).toBeInTheDocument();
     }
-    expect(within(row).getByRole('link', { name: ROW.subject })).toHaveAttribute(
-      'href',
-      '/admin/support?request=r1',
-    );
+    expect(
+      within(row).getByRole('link', { name: `${ROW.subject} from Ada Wortley` }),
+    ).toHaveAttribute('href', '/admin/support?request=r1');
   });
 
   it('says what the filter left out when no request matches', () => {
@@ -82,10 +99,26 @@ describe('SupportRequests list', () => {
       <SupportRequests
         requests={[]}
         viewer={ADMIN}
-        filter={{ kind: 'bug', status: '', errorCode: '' }}
+        filter={{ about: 'bug', status: '', errorCode: '' }}
       />,
     );
     expect(screen.getByText(/No support requests match/)).toBeInTheDocument();
+  });
+});
+
+describe('Error reference', () => {
+  it('is shown beside the error number with an icon button that copies it', () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+    open(ADMIN, { errorReference: 'abc123' });
+    expect(within(dialog()).getByText('abc123')).toBeInTheDocument();
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Copy Error Reference' }));
+    expect(writeText).toHaveBeenCalledWith('abc123');
+  });
+
+  it('is left out when the request has none', () => {
+    open(ADMIN);
+    expect(within(dialog()).queryByRole('button', { name: 'Copy Error Reference' })).toBeNull();
   });
 });
 
@@ -114,21 +147,17 @@ describe('Reply', () => {
   });
 });
 
-describe('Time Out', () => {
-  it('is disabled until a future end is given', () => {
+describe('Time-Out', () => {
+  it('is off while Until a Date has no date, and on for a span', () => {
     open(ADMIN);
-    const timeOut = within(dialog()).getByRole('button', { name: 'Time Out' });
-    const until = within(dialog()).getByLabelText('Time Out Until');
-    expect(timeOut).toBeDisabled();
+    openTimeOut();
+    expect(timeOutSubmit()).toBeEnabled();
 
-    fireEvent.change(until, { target: { value: '2001-01-01T00:00' } });
-    expect(timeOut).toBeDisabled();
-
-    fireEvent.change(until, { target: { value: '2999-01-01T00:00' } });
-    expect(timeOut).toBeEnabled();
+    fireEvent.change(within(dialog()).getByLabelText('For'), { target: { value: 'date' } });
+    expect(timeOutSubmit()).toBeDisabled();
   });
 
-  it('sends the sender and the end', async () => {
+  it('sends the sender and an end a day on, after asking', async () => {
     const sent: TimeOutSupportSenderMutationVariables[] = [];
     mockGraphQLMutation<TimeOutSupportSenderMutation, TimeOutSupportSenderMutationVariables>(
       'TimeOutSupportSender',
@@ -138,17 +167,19 @@ describe('Time Out', () => {
       },
     );
     open(ADMIN);
-    fireEvent.change(within(dialog()).getByLabelText('Time Out Until'), {
-      target: { value: '2999-01-01T00:00' },
-    });
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Time Out' }));
+    openTimeOut();
+    fireEvent.click(timeOutSubmit());
+    expect(sent).toHaveLength(0);
+    confirmTimeOut();
 
     await waitFor(() => expect(router.refresh).toHaveBeenCalled());
     expect(sent[0]?.userId).toBe('u1');
-    expect(new Date(sent[0]?.until as string).getFullYear()).toBe(2999);
+    const ahead = new Date(sent[0]?.until as string).getTime() - Date.now();
+    expect(ahead).toBeGreaterThan(23 * 60 * 60 * 1000);
+    expect(ahead).toBeLessThanOrEqual(24 * 60 * 60 * 1000);
   });
 
-  it('lists past time-outs beside the sender, and offers Lift on an active one only', () => {
+  it('shows the standing time-out with Lift in place of the form, and a history link to the earlier ones', () => {
     open(ADMIN, {
       timeouts: [
         {
@@ -156,48 +187,49 @@ describe('Time Out', () => {
           until: new Date('2999-01-01T00:00:00Z'),
           note: 'Repeated sends',
           liftedAt: null,
+          createdAt: new Date('2026-10-01T00:00:00Z'),
+          setBy: { id: 'admin-1', name: 'Ash Warden' },
+          liftedBy: null,
         },
         {
           id: 't1',
-          until: new Date('2001-01-01T00:00:00Z'),
+          until: new Date('2001-01-10T00:00:00Z'),
           note: 'First warning',
           liftedAt: null,
+          createdAt: new Date('2001-01-03T00:00:00Z'),
+          setBy: null,
+          liftedBy: null,
         },
       ],
     });
-    const panel = within(dialog()).getByRole('region', { name: 'Time-Outs' });
-    expect(within(panel).getByText(/Ada Wortley/)).toBeInTheDocument();
-    expect(within(panel).getByText(/First warning/)).toBeInTheDocument();
-    expect(within(panel).getByText(/Repeated sends/)).toBeInTheDocument();
-    expect(within(panel).getAllByRole('button', { name: 'Lift' })).toHaveLength(1);
+    openTimeOut();
+    const panel = within(dialog());
+    expect(panel.getByText(/Repeated sends/)).toBeInTheDocument();
+    expect(panel.getByText(/Set by Ash Warden/)).toBeInTheDocument();
+    expect(panel.getByRole('link', { name: 'Earlier Time-Outs' })).toHaveAttribute(
+      'href',
+      expect.stringContaining('user=u1'),
+    );
+    expect(panel.queryByText(/First warning/)).toBeNull();
+    expect(panel.getAllByRole('button', { name: 'Lift' })).toHaveLength(1);
+    expect(panel.queryByLabelText('For')).toBeNull();
   });
 });
 
 describe('Issue', () => {
-  it('links Create Issue with the request written in, and not the sender', () => {
-    open(ADMIN);
-    const link = within(dialog()).getByRole('link', { name: 'Create Issue' });
-    const url = new URL(link.getAttribute('href') ?? '');
-    expect(url.searchParams.get('title')).toBe(ROW.subject);
-    const body = url.searchParams.get('body') ?? '';
-    expect(body).toContain(DETAIL.message);
-    expect(body).toContain('/coven/[slug]/grimoire');
-    expect(body).toContain('r1');
-    expect(link.getAttribute('href')).not.toMatch(/Ada|ada%40|ada@/);
-  });
-
   it('says a pasted address that is not an issue on the project beside its field', async () => {
     mockGraphQLError('SetSupportRequestIssueUrl', {
       code: 'VALIDATION',
       fieldErrors: [
         {
           path: ['issueUrl'],
-          message: 'Give the address of an issue on Aurora-Arctic/Sorrel-and-Salt',
+          message:
+            'Paste a GitHub issue link, like github.com/Aurora-Arctic/Sorrel-and-Salt/issues/1409, or a link opened from the project board.',
         },
       ],
     });
     open(ADMIN);
-    const field = within(dialog()).getByRole('textbox', { name: 'Issue Address' });
+    const field = within(dialog()).getByRole('textbox', { name: 'GitHub Issue' });
     const save = within(dialog()).getByRole('button', { name: 'Save Address' });
     expect(save).toBeDisabled();
 
@@ -205,7 +237,7 @@ describe('Issue', () => {
     fireEvent.click(save);
 
     await waitFor(() => expect(field).toHaveAttribute('aria-invalid', 'true'));
-    expect(field).toHaveAccessibleDescription(/issue on Aurora-Arctic\/Sorrel-and-Salt/);
+    expect(field).toHaveAccessibleDescription(/Paste a GitHub issue link/);
   });
 
   it('sends a good address once, with the request id', async () => {
@@ -218,7 +250,7 @@ describe('Issue', () => {
       return { setSupportRequestIssueUrl: { __typename: 'SupportRequest', id: 'r1' } };
     });
     open(ADMIN);
-    fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Issue Address' }), {
+    fireEvent.change(within(dialog()).getByRole('textbox', { name: 'GitHub Issue' }), {
       target: { value: 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/12' },
     });
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Address' }));
@@ -229,13 +261,104 @@ describe('Issue', () => {
   });
 });
 
+describe('The sender', () => {
+  it('links the name to the user modal over this page for an admin, keeping the open request, in the list and in the request', () => {
+    render(<SupportRequests requests={[ROW]} viewer={ADMIN} />);
+    const row = screen.getByRole('row', { name: /The moon icon is missing/ });
+    expect(within(row).getByRole('link', { name: 'Ada Wortley' })).toHaveAttribute(
+      'href',
+      '/admin/support?user=u1',
+    );
+    cleanup();
+    open(ADMIN);
+    expect(within(dialog()).getByRole('link', { name: 'Ada Wortley' })).toHaveAttribute(
+      'href',
+      '/admin/support?request=r1&user=u1',
+    );
+  });
+
+  it('leaves the name as text for a curator, in the list and in the request', () => {
+    render(<SupportRequests requests={[{ ...ROW, curatorVisible: true }]} viewer={CURATOR} />);
+    const row = screen.getByRole('row', { name: /The moon icon is missing/ });
+    expect(within(row).queryByRole('link', { name: 'Ada Wortley' })).toBeNull();
+    expect(within(row).getByText('Ada Wortley')).toBeInTheDocument();
+    cleanup();
+    open(CURATOR, { curatorVisible: true });
+    expect(within(dialog()).queryByRole('link', { name: 'Ada Wortley' })).toBeNull();
+  });
+
+  it('calls a deleted account that, without a link', () => {
+    open(ADMIN, { sender: null });
+    expect(within(dialog()).getAllByText('Deleted account').length).toBeGreaterThan(0);
+    expect(within(dialog()).queryByRole('link', { name: 'Deleted account' })).toBeNull();
+  });
+});
+
+describe('A linked issue', () => {
+  it('shows the address with an edit control, and opens the field when it is used', () => {
+    open(ADMIN, { issueUrl: 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/12' });
+    expect(within(dialog()).queryByRole('textbox', { name: 'GitHub Issue' })).toBeNull();
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Change Issue Address' }));
+    expect(within(dialog()).getByRole('textbox', { name: 'GitHub Issue' })).toHaveValue(
+      'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/12',
+    );
+  });
+});
+
+describe('Resolve', () => {
+  it('asks first, and sends the write only on the confirm', async () => {
+    const sent = vi.fn(() => ({ saved: { __typename: 'Saved', id: 'r1' } }));
+    mockGraphQLMutation('ResolveSupportRequest', sent);
+    open(ADMIN);
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Resolve' }));
+    const question = await resolveQuestion();
+    expect(sent).not.toHaveBeenCalled();
+
+    fireEvent.click(within(question).getByRole('button', { name: 'Cancel' }));
+    expect(sent).not.toHaveBeenCalled();
+
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Resolve' }));
+    fireEvent.click(within(await resolveQuestion()).getByRole('button', { name: 'Resolve' }));
+    await waitFor(() => expect(sent).toHaveBeenCalledTimes(1));
+  });
+});
+
 describe('What a viewer is shown', () => {
+  it('shows a curator the issue link without the control to change it', () => {
+    open(CURATOR, {
+      curatorVisible: true,
+      issueUrl: 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/12',
+    });
+    expect(within(dialog()).getByRole('link', { name: /12/ })).toHaveAttribute(
+      'href',
+      'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/12',
+    );
+    expect(within(dialog()).queryByRole('button', { name: 'Change Issue Address' })).toBeNull();
+    expect(within(dialog()).queryByLabelText('GitHub Issue')).toBeNull();
+  });
+
+  it('gives a curator the sender’s name alone, and a signed-out sender no name or address', () => {
+    open(CURATOR, { sender: { id: 'u1', name: 'Ada Wortley', email: null } });
+    expect(within(dialog()).getAllByText(/Ada Wortley/).length).toBeGreaterThan(0);
+    expect(within(dialog()).queryByText(/@/)).toBeNull();
+  });
+
+  it('calls a signed-out sender by that and shows an admin the address', () => {
+    const visitor = { id: 's0', name: 'Support, signed out', email: 'visitor@example.test' };
+    open(ADMIN, { sender: visitor, signedOut: true });
+    expect(within(dialog()).getAllByText(/Signed-out sender/).length).toBeGreaterThan(0);
+    expect(within(dialog()).getByText('visitor@example.test')).toBeInTheDocument();
+    expect(within(dialog()).queryByText(/Support, signed out/)).toBeNull();
+  });
+
   it('gives an admin every control', () => {
     open(ADMIN);
-    for (const name of ['Assigned To', 'Issue Address', 'Time Out Until', 'Your Reply']) {
+    for (const name of ['Assigned To', 'GitHub Issue', 'For', 'Your Reply']) {
       expect(within(dialog()).getByLabelText(name)).toBeInTheDocument();
     }
-    expect(within(dialog()).getByRole('switch', { name: 'Curator-Visible' })).toBeInTheDocument();
+    expect(
+      within(dialog()).getByRole('switch', { name: 'Shared With Curators' }),
+    ).toBeInTheDocument();
     expect(within(dialog()).getByRole('button', { name: 'Resolve' })).toBeInTheDocument();
   });
 
@@ -246,8 +369,7 @@ describe('What a viewer is shown', () => {
     for (const name of ADMIN_ONLY) {
       expect(within(dialog()).queryByLabelText(name)).not.toBeInTheDocument();
     }
-    expect(within(dialog()).queryByRole('switch', { name: 'Curator-Visible' })).toBeNull();
-    expect(within(dialog()).queryByRole('link', { name: 'Create Issue' })).toBeNull();
+    expect(within(dialog()).queryByRole('switch', { name: 'Shared With Curators' })).toBeNull();
     expect(within(dialog()).queryByRole('button', { name: 'Lift' })).toBeNull();
   });
 
@@ -265,5 +387,145 @@ describe('What a viewer is shown', () => {
     open(CURATOR, { assignee: { id: 'admin-1', name: 'Ada' } });
     expect(within(dialog()).queryByLabelText('Your Reply')).toBeNull();
     expect(within(dialog()).queryByRole('button', { name: 'Resolve' })).toBeNull();
+  });
+});
+
+describe('The list', () => {
+  it('tells two requests with one subject apart by their link names', () => {
+    render(
+      <SupportRequests
+        requests={[ROW, { ...ROW, id: 'r2', sender: { ...BASE } }]}
+        viewer={ADMIN}
+      />,
+    );
+    const names = screen
+      .getAllByRole('link', { name: /missing from/ })
+      .map((link) => link.textContent);
+    expect(new Set(names).size).toBe(2);
+    expect(screen.getByRole('link', { name: /missing from Ada Wortley/ })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /missing from Bea Hollis/ })).toBeInTheDocument();
+  });
+
+  it('heads the curator column Shared With Curators and answers with a word for a reader', () => {
+    render(
+      <SupportRequests
+        requests={[ROW, { ...ROW, id: 'r2', curatorVisible: true }]}
+        viewer={ADMIN}
+      />,
+    );
+    expect(screen.getByRole('columnheader', { name: 'Shared With Curators' })).toBeInTheDocument();
+    expect(screen.getByText('Shared')).toBeInTheDocument();
+    expect(screen.getByText('Not Shared')).toBeInTheDocument();
+  });
+
+  it('gives the number of requests shown in a status line', () => {
+    const { rerender } = render(
+      <SupportRequests
+        requests={[ROW, { ...ROW, id: 'r2' }, { ...ROW, id: 'r3' }]}
+        viewer={ADMIN}
+      />,
+    );
+    expect(screen.getByRole('status')).toHaveTextContent('3 Requests');
+    rerender(<SupportRequests requests={[ROW]} viewer={ADMIN} />);
+    expect(screen.getByRole('status')).toHaveTextContent('1 Request');
+    rerender(<SupportRequests requests={[]} viewer={ADMIN} />);
+    expect(screen.getByRole('status')).toHaveTextContent('0 Requests');
+  });
+});
+
+describe('Dates', () => {
+  it('are written as the account page writes them, day month year', () => {
+    open(ADMIN, {
+      status: 'resolved',
+      resolvedBy: { id: 'admin-1', name: 'Ada' },
+      resolvedAt: new Date('2026-10-27T11:05:00Z'),
+      replies: [
+        { id: 'p1', body: 'Seen.', author: null, createdAt: new Date('2026-10-27T11:05:00Z') },
+      ],
+    });
+    const d = within(dialog());
+    expect(d.getAllByText('27 October 2026, 11:05 am')).toHaveLength(1);
+    expect(d.getAllByText(/^27 Oct\b.*11:05 am$/)).toHaveLength(1);
+  });
+});
+
+describe('Unsaved input in the dialog', () => {
+  const close = () => fireEvent.click(within(dialog()).getByRole('button', { name: 'Close' }));
+
+  it.each([
+    ['GitHub Issue', 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/9'],
+    ['For', 'week'],
+    ['Note', 'Warned twice'],
+  ])('asks before closing with %s typed, though the reply is untouched', async (label, value) => {
+    open(ADMIN);
+    fireEvent.change(within(dialog()).getByLabelText(label), { target: { value } });
+    close();
+    expect(await screen.findByText('You have unsaved changes. Discard them?')).toBeInTheDocument();
+  });
+
+  it('says nothing on closing when nothing was typed', () => {
+    open(ADMIN);
+    close();
+    expect(screen.queryByText(/unsaved changes/)).toBeNull();
+  });
+});
+
+describe('Status line in the dialog', () => {
+  const status = () => within(dialog()).getByRole('status');
+
+  it('announces a reply sent', async () => {
+    mockGraphQLMutation<ReplyToSupportRequestMutation, ReplyToSupportRequestMutationVariables>(
+      'ReplyToSupportRequest',
+      () => ({ replyToSupportRequest: { __typename: 'SupportReply', id: 'x' } }),
+    );
+    open(ADMIN);
+    expect(status()).toBeEmptyDOMElement();
+    fireEvent.change(within(dialog()).getByLabelText('Your Reply'), { target: { value: 'Hi' } });
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Reply' }));
+    await waitFor(() => expect(status()).toHaveTextContent('Reply sent.'));
+  });
+
+  it.each([
+    ['assign', 'AssignSupportRequest', 'Request assigned.'],
+    ['share', 'SetSupportRequestCuratorVisible', 'Request shared with curators.'],
+    ['link', 'SetSupportRequestIssueUrl', 'Issue address saved.'],
+  ])('announces %s', async (action, operation, message) => {
+    mockGraphQLMutation(operation, () => ({ saved: { __typename: 'Saved', id: 'r1' } }));
+    open(ADMIN);
+    const d = within(dialog());
+    if (action === 'assign')
+      await userEvent.selectOptions(d.getByLabelText('Assigned To'), 'Curtis');
+    if (action === 'share')
+      fireEvent.click(d.getByRole('switch', { name: 'Shared With Curators' }));
+    if (action === 'link') {
+      fireEvent.change(d.getByLabelText('GitHub Issue'), {
+        target: { value: 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/9' },
+      });
+      fireEvent.click(d.getByRole('button', { name: 'Save Address' }));
+    }
+    await waitFor(() => expect(status()).toHaveTextContent(message));
+  });
+
+  it('announces resolve on the page status line, since the confirm sits over the dialog', async () => {
+    mockGraphQLMutation('ResolveSupportRequest', () => ({
+      saved: { __typename: 'Saved', id: 'r1' },
+    }));
+    render(
+      <StatusRegionProvider>
+        <SupportRequests
+          requests={[ROW]}
+          viewer={ADMIN}
+          opened={DETAIL}
+          assignees={[{ id: 'curator-1', name: 'Curtis' }]}
+        />
+      </StatusRegionProvider>,
+    );
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Resolve' }));
+    fireEvent.click(within(await resolveQuestion()).getByRole('button', { name: 'Resolve' }));
+    await waitFor(() =>
+      expect(
+        screen.getAllByRole('status').some((o) => /Request resolved./.test(o.textContent ?? '')),
+      ).toBe(true),
+    );
   });
 });

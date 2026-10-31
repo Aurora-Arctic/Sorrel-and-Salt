@@ -9,8 +9,9 @@ import {
   timeoutsForSenders,
   usersNamedOnRequests,
 } from '@/modules/support';
-import type { SupportRequestRow } from '@/modules/support';
+import type { SupportRequestRow, SupportTimeoutRow } from '@/modules/support';
 import { NotFound } from '@/lib/errors';
+import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
 import type { Session } from '@/lib/session';
 import type {
   SupportPerson,
@@ -18,6 +19,7 @@ import type {
   SupportRequestEntry,
   SupportRequestsFilter,
   SupportSender,
+  SupportTimeoutEntry,
 } from '@/components/SupportRequests/types';
 import { serviceFilter } from './filter';
 
@@ -31,7 +33,7 @@ async function namesOf(session: Session, ids: readonly (string | null)[]): Promi
   const found = await usersNamedOnRequests(session, wanted);
   return new Map(
     found.flatMap((user) =>
-      user ? [[user.id, { id: user.id, name: user.name, email: user.email }] as const] : [],
+      user ? [[user.id, { id: user.id, name: user.name, email: user.email || null }] as const] : [],
     ),
   );
 }
@@ -41,17 +43,43 @@ function personOf(names: Names, id: string | null): SupportPerson | null {
   return found ? { id: found.id, name: found.name } : null;
 }
 
+/** The sender; for a signed-out request, with the visitor’s own address, which the service has already withheld from a curator. */
+function senderOf(row: SupportRequestRow, names: Names): SupportSender | null {
+  const found = names.get(row.createdBy);
+  if (!found) return null;
+  return row.createdBy === SIGNED_OUT_SENDER_ID ? { ...found, email: row.senderEmail } : found;
+}
+
 function entryOf(row: SupportRequestRow, names: Names): SupportRequestEntry {
   return {
     id: row.id,
-    kind: row.kind,
+    about: row.about,
     subject: row.subject,
     status: row.status,
-    sender: names.get(row.createdBy) ?? null,
+    sender: senderOf(row, names),
+    signedOut: row.createdBy === SIGNED_OUT_SENDER_ID,
     assignee: personOf(names, row.assignedTo),
     curatorVisible: row.curatorVisible,
     errorCode: row.errorCode,
+    errorReference: row.errorReference,
   };
+}
+
+/** The accounts a time-out names: who set it and, once lifted, who lifted it. */
+const timeoutPeople = (row: SupportTimeoutRow): string[] =>
+  row.liftedAt ? [row.createdBy, row.updatedBy] : [row.createdBy];
+
+/** Time-outs as the panel draws them, their setters and lifters named. */
+function timeoutEntries(rows: readonly SupportTimeoutRow[], names: Names): SupportTimeoutEntry[] {
+  return rows.map((row) => ({
+    id: row.id,
+    until: row.until,
+    note: row.note,
+    liftedAt: row.liftedAt,
+    createdAt: row.createdAt,
+    setBy: personOf(names, row.createdBy),
+    liftedBy: row.liftedAt ? personOf(names, row.updatedBy) : null,
+  }));
 }
 
 /** One page of requests and its position, the people on them named. */
@@ -101,10 +129,12 @@ export const readOpened = cache(
       row.assignedTo,
       row.resolvedBy,
       ...replies.map((reply) => reply.createdBy),
+      ...(Array.isArray(timeouts) ? timeouts.flatMap(timeoutPeople) : []),
     ]);
     return {
       ...entryOf(row, names),
       message: row.message,
+      createdAt: row.createdAt,
       path: row.path || null,
       issueUrl: row.issueUrl,
       resolvedBy: personOf(names, row.resolvedBy),
@@ -115,14 +145,7 @@ export const readOpened = cache(
         author: personOf(names, reply.createdBy),
         createdAt: reply.createdAt,
       })),
-      timeouts: Array.isArray(timeouts)
-        ? timeouts.map(({ id: timeoutId, until, note, liftedAt }) => ({
-            id: timeoutId,
-            until,
-            note,
-            liftedAt,
-          }))
-        : [],
+      timeouts: Array.isArray(timeouts) ? timeoutEntries(timeouts, names) : [],
     };
   },
 );
@@ -137,3 +160,14 @@ export const readAssignees = cache(async (session: Session): Promise<SupportPers
   ]);
   return [...admins, ...curators].map(({ node }) => ({ id: node.id, name: node.name }));
 });
+
+/** The time-outs set on a user, newest first, with who set each; an admin's read, empty for anyone else. */
+export const readTimeoutsOf = cache(
+  async (session: Session, userId: string): Promise<SupportTimeoutEntry[]> => {
+    if (session.role !== 'admin') return [];
+    const [timeouts] = await timeoutsForSenders(session, [userId]);
+    if (!Array.isArray(timeouts)) return [];
+    const names = await namesOf(session, timeouts.flatMap(timeoutPeople));
+    return timeoutEntries(timeouts, names);
+  },
+);

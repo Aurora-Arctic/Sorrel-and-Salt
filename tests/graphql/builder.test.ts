@@ -22,6 +22,7 @@ function context(session: Context['session']): Context {
     invitations: noInvitationSender,
     passwords: noPasswordSetter,
     support: noSupportNotifier,
+    clientIp: null,
   };
 }
 

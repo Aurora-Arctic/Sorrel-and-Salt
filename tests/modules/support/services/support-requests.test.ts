@@ -5,6 +5,7 @@ import type { PageRequest } from '@/lib/types';
 import {
   assignSupportRequest,
   getMySupportRequest,
+  countMySupportRequestsByStatus,
   getMySupportTimeoutEnd,
   getSupportRequest,
   liftSupportTimeout,
@@ -13,11 +14,13 @@ import {
   repliesForRequests,
   replyToSupportRequest,
   resolveSupportRequest,
+  sendSignedOutSupportRequest,
   sendSupportRequest,
   setSupportRequestCuratorVisible,
   setSupportRequestIssueUrl,
   timeOutSupportSender,
   timeoutsForSenders,
+  usersNamedOnRequests,
 } from '@/modules/support';
 import type { SupportNotifier } from '@/modules/support';
 import { A, B, C, D, E, F, asUser } from '../../../support/as-user';
@@ -39,15 +42,23 @@ beforeEach(async () => {
 
 const PAGE: PageRequest = { limit: 101, inverted: false };
 const FUTURE = () => new Date(Date.now() + 3_600_000);
-const INPUT = { kind: 'bug', subject: 'The jar will not open', message: 'It sticks.' } as const;
+const INPUT = { about: 'bug', subject: 'The jar will not open', message: 'It sticks.' } as const;
 
-function notifier(): SupportNotifier & { sent: string[] } {
+function notifier(): SupportNotifier & { sent: string[]; subjects: string[]; ids: string[] } {
   const sent: string[] = [];
+  const subjects: string[] = [];
+  const ids: string[] = [];
   return {
     sent,
-    replyWaiting: async (to) => {
+    subjects,
+    ids,
+    replyWaiting: async (to, subject, requestId) => {
+      ids.push(requestId);
       sent.push(to);
+      subjects.push(subject);
     },
+    signedOutReceived: async () => undefined,
+    signedOutReply: async () => undefined,
   };
 }
 
@@ -83,6 +94,8 @@ describe('sendSupportRequest', () => {
     ['a subject of 121 characters', { ...INPUT, subject: 'x'.repeat(121) }],
     ['an empty message', { ...INPUT, message: '' }],
     ['a message of 4,001 characters', { ...INPUT, message: 'x'.repeat(4001) }],
+    ['a page that is not on this site', { ...INPUT, path: 'https://example.test/a' }],
+    ['a page on another host written with //', { ...INPUT, path: '//example.test/a' }],
   ])('refuses %s', async (_name, input) => {
     expect(await failureOf(send(C, input))).toBeInstanceOf(ValidationError);
   });
@@ -92,13 +105,20 @@ describe('sendSupportRequest', () => {
     expect(row.subject).toHaveLength(120);
   });
 
-  it('stores the path with the coven segment replaced, and no path as empty', async () => {
+  it('stores the error reference, and none as null', async () => {
+    const withRef = await send(C, { ...INPUT, errorCode: 500, errorReference: ' abc123 ' });
+    expect(withRef.errorReference).toBe('abc123');
+    expect((await send(C)).errorReference).toBeNull();
+    await expect(send(C, { ...INPUT, errorReference: 'x'.repeat(101) })).rejects.toThrow();
+  });
+
+  it('stores the path as sent, coven slug included, and no path as empty', async () => {
     const withPath = await send(C, {
       ...INPUT,
       path: '/coven/moonlit-hollow/grimoire',
       errorCode: 500,
     });
-    expect(withPath.path).toBe('/coven/[coven]/grimoire');
+    expect(withPath.path).toBe('/coven/moonlit-hollow/grimoire');
     expect(withPath.errorCode).toBe(500);
     expect((await send(C)).path).toBe('');
   });
@@ -159,6 +179,49 @@ describe('mySupportRequests', () => {
     expect(replies[0]?.map((reply) => reply.body)).toEqual(['Try again.']);
   });
 
+  it('carries no issue address on the sender’s own reads, though the request has one', async () => {
+    const request = await send(C);
+    const issue = 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/1394';
+    await setSupportRequestIssueUrl(asUser(E), request.id, issue);
+    expect((await getSupportRequest(asUser(E), request.id)).issueUrl).toBe(issue);
+
+    await setSupportRequestCuratorVisible(asUser(E), request.id, true);
+    expect((await getSupportRequest(asUser(F), request.id)).issueUrl).toBe(issue);
+
+    expect((await getMySupportRequest(asUser(C), request.id)).issueUrl).toBeNull();
+    const entries = await listMySupportRequests(asUser(C), PAGE);
+    expect(entries.map((entry) => entry.node.issueUrl)).toEqual([null]);
+  });
+
+  it('counts the sender’s open and closed requests across all statuses, leaving out another sender’s and a deleted one', async () => {
+    const mine = [await send(C), await send(C), await send(C), await send(C), await send(C)];
+    const statuses = ['open', 'waiting_on_sender', 'resolved', 'closed', 'open'];
+    for (const [index, request] of mine.entries()) {
+      await sql`update support_requests set status = ${statuses[index]!} where id = ${request.id}`;
+    }
+    await sql`update support_requests set deleted_at = now() where id = ${mine[4]!.id}`;
+    const other = await send(D);
+    expect(other.status).toBe('open');
+
+    expect(await countMySupportRequestsByStatus(asUser(C))).toEqual({ open: 2, closed: 2 });
+    expect(await countMySupportRequestsByStatus(asUser(D))).toEqual({ open: 1, closed: 0 });
+  });
+
+  it('refuses the status counts to an unverified account', async () => {
+    const unverified = { ...asUser(C), emailUnverified: true as const };
+    expect(await failureOf(countMySupportRequestsByStatus(unverified))).toBeInstanceOf(Forbidden);
+  });
+
+  it('carries no error reference on the sender’s own reads, though the request has one', async () => {
+    const request = await send(C);
+    await sql`update support_requests set error_code = 500, error_reference = '994764113' where id = ${request.id}`;
+    expect((await getSupportRequest(asUser(E), request.id)).errorReference).toBe('994764113');
+
+    expect((await getMySupportRequest(asUser(C), request.id)).errorReference).toBeNull();
+    const entries = await listMySupportRequests(asUser(C), PAGE);
+    expect(entries.map((entry) => entry.node.errorReference)).toEqual([null]);
+  });
+
   it('refuses another sender’s request by id, which exists and is open', async () => {
     const request = await send(C);
     const [{ status }] = await sql`select status from support_requests where id = ${request.id}`;
@@ -200,12 +263,70 @@ describe('supportRequests', () => {
     expect(ids).not.toContain(plain.id);
   });
 
-  it('filters by kind, status and error code', async () => {
+  it('shows the coven in a page to an admin and the sender, and hides it from a curator, in a list and by id', async () => {
+    const REAL = '/coven/whitethorn-coven/grimoire';
+    const request = await send(C, { ...INPUT, path: REAL });
+    await setSupportRequestCuratorVisible(asUser(E), request.id, true);
+    // The curator can read this request, and the row holds the real page.
+    expect((await getSupportRequest(asUser(F), request.id)).id).toBe(request.id);
+    const [{ path }] = await sql`select path from support_requests where id = ${request.id}`;
+    expect(path).toBe(REAL);
+
+    expect((await getSupportRequest(asUser(E), request.id)).path).toBe(REAL);
+    expect((await getSupportRequest(asUser(F), request.id)).path).toBe('/coven/[coven]/grimoire');
+    expect((await getMySupportRequest(asUser(C), request.id)).path).toBe(REAL);
+    const listed = (user: SessionUser) =>
+      listSupportRequests(asUser(user), {}, PAGE).then((entries) => entries[0]?.node.path);
+    expect(await listed(E)).toBe(REAL);
+    expect(await listed(F)).toBe('/coven/[coven]/grimoire');
+  });
+
+  it('gives an admin a signed-out sender’s address and a curator none, in a list and by id', async () => {
+    const address = 'visitor@example.test';
+    await sql`delete from support_send_counts`;
+    await sendSignedOutSupportRequest(
+      { about: 'account', email: address, subject: 'No code', message: 'It never comes.' },
+      { clientIp: '203.0.113.7', notifier: notifier() },
+    );
+    const [sent] = await sql`select id from support_requests where sender_email = ${address}`;
+    await setSupportRequestCuratorVisible(asUser(E), sent.id, true);
+    // The curator can read this request, and the row holds the address.
+    expect((await getSupportRequest(asUser(F), sent.id)).id).toBe(sent.id);
+    const [{ sender_email: stored }] =
+      await sql`select sender_email from support_requests where id = ${sent.id}`;
+    expect(stored).toBe(address);
+
+    expect((await getSupportRequest(asUser(E), sent.id)).senderEmail).toBe(address);
+    expect((await getSupportRequest(asUser(F), sent.id)).senderEmail).toBeNull();
+    const listed = (user: SessionUser) =>
+      listSupportRequests(asUser(user), {}, PAGE).then((entries) => entries[0]?.node.senderEmail);
+    expect(await listed(E)).toBe(address);
+    expect(await listed(F)).toBeNull();
+  });
+
+  it('names an account sender to an admin with the address and to a curator without it', async () => {
+    const request = await send(C);
+    await setSupportRequestCuratorVisible(asUser(E), request.id, true);
+    // The curator can read this request, and the account holds an address.
+    expect((await getSupportRequest(asUser(F), request.id)).id).toBe(request.id);
+    const [{ email }] = await sql`select email from users where id = ${C.id}`;
+    expect(email).toBeTruthy();
+
+    const [forAdmin] = await usersNamedOnRequests(asUser(E), [C.id]);
+    const [forCurator] = await usersNamedOnRequests(asUser(F), [C.id]);
+    expect(forAdmin?.email).toBe(email);
+    expect(forCurator?.name).toBe(forAdmin?.name);
+    expect(forCurator?.email).toBe('');
+    const [self] = await usersNamedOnRequests(asUser(F), [F.id]);
+    expect(self?.email).toBeTruthy();
+  });
+
+  it('filters by about, status and error code', async () => {
     const bug = await send(C, { ...INPUT, errorCode: 404 });
-    await send(C, { ...INPUT, kind: 'question' });
+    await send(C, { ...INPUT, about: 'question' });
     const open = await listSupportRequests(
       asUser(E),
-      { kind: 'bug', status: 'open', errorCode: 404 },
+      { about: 'bug', status: 'open', errorCode: 404 },
       PAGE,
     );
     expect(open.map((entry) => entry.node.id)).toEqual([bug.id]);
@@ -254,6 +375,8 @@ describe('replyToSupportRequest', () => {
       createdBy: E.id,
     });
     expect(mail.sent).toEqual([await emailOf(C)]);
+    expect(mail.subjects).toEqual([INPUT.subject]);
+    expect(mail.ids).toEqual([request.id]);
   });
 
   it('lets a curator reply only to a request assigned to them', async () => {
@@ -316,6 +439,9 @@ describe('admin-only changes', () => {
   it('sets an issue on the project repository and refuses everything else', async () => {
     const request = await send(C);
     const issue = 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/1394';
+    await setSupportRequestCuratorVisible(asUser(E), request.id, true);
+    // The curator can read this request, so the refusal is the rule on the link and not on the request.
+    expect((await getSupportRequest(asUser(F), request.id)).id).toBe(request.id);
     expect(await failureOf(setSupportRequestIssueUrl(asUser(F), request.id, issue))).toBeInstanceOf(
       Forbidden,
     );
@@ -332,6 +458,11 @@ describe('admin-only changes', () => {
         ValidationError,
       );
     }
+    const board =
+      'https://github.com/orgs/Aurora-Arctic/projects/1/views/1?pane=issue&itemId=289423269&issue=Aurora-Arctic%7CSorrel-and-Salt%7C1409';
+    expect((await setSupportRequestIssueUrl(asUser(E), request.id, board)).issueUrl).toBe(
+      'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/1409',
+    );
     expect((await setSupportRequestIssueUrl(asUser(E), request.id, null)).issueUrl).toBeNull();
   });
 

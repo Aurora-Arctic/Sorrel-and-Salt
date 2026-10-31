@@ -13,24 +13,230 @@
   }
 }
 
+// A long unbroken subject wraps inside a capped cell, so the other columns stay on screen.
+.support-requests .data-table td:has(.support-requests__subject) {
+  max-inline-size: 28rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
 .support-requests__none {
   color: $text-muted;
 }
 
+// The opened request: the request and its reply on the left, an admin's settings in a narrow column
+// on the right, stacked once the screen is a phone's with the settings after the reply.
 .support-detail {
-  @include stack;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 15rem;
+  gap: space(5);
+  // Stretch, so the side column's rule runs the height of the taller column.
+  align-items: stretch;
+
+  @media (width <= #{$shell-phone-width}) {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
-.support-detail__message {
-  white-space: pre-wrap;
+.support-detail--single {
+  grid-template-columns: minmax(0, 1fr);
 }
 
-.support-detail__list {
+.support-detail__main,
+.support-detail__side {
   @include stack;
+  min-inline-size: 0;
+}
+
+// Every space in the thread column is one of its own rules, summed to a target, so no default adds to it:
+// facts to the Thread heading is the column gap (4); the Thread heading to the first entry is the
+// section's gap (2); the last entry to the reply's rule is the section's zero bottom margin plus the
+// column gap (4). The global `section` margin and the list's default margin are zeroed, not offset.
+.support-detail__main {
+  gap: space(4);
+
+  > section {
+    gap: space(2);
+    margin-block: 0;
+  }
+}
+
+.support-detail__side {
+  padding-inline-start: space(5);
+  border-inline-start: 1px solid $hairline;
+
+  @media (width <= #{$shell-phone-width}) {
+    padding-inline-start: 0;
+    border-inline-start: 0;
+  }
+}
+
+// From, Sent, Page and Error in two columns, the term above its value in the muted ink.
+.support-detail__facts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: space(3) space(6);
+  margin: 0;
+  overflow-wrap: anywhere;
+
+  @media (width <= #{$shell-phone-width}) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  // The term and its value stand one step apart: the term's bottom margin (1) and the value's zero top margin.
+  dt {
+    margin: 0 0 space(1);
+    color: $text-muted;
+  }
+
+  dd {
+    margin: 0;
+  }
+}
+
+// The Page fact takes the whole row, so a long path stays on one line; it breaks anywhere only past the full width.
+.support-detail__fact--wide {
+  grid-column: 1 / -1;
+}
+
+.support-detail__muted {
+  color: $text-muted;
+}
+
+.support-detail__mono {
+  font-family: $font-mono;
+}
+
+.support-detail__copy {
+  @include icon-button;
+  vertical-align: middle;
+}
+
+// A bare icon beside a heading at the text's own size, as Copy is.
+.support-detail__icon {
+  @include icon-button(1.5em, 1em);
+  vertical-align: middle;
+}
+
+// The pencil beside the issue link: bare too, with the standard icon glyph (`.btn--icon`'s 1.5rem).
+.support-detail__icon--standard {
+  @include icon-button(2rem, 1.5rem);
+}
+
+// The Time-Out fold is the column's last section and keeps only its top rule; the Issue draws the same one.
+.support-detail__side .collapsible-section:last-child {
+  border-block-end: 0;
+}
+
+.support-detail__main h3 {
+  margin-block-end: 0;
+}
+
+// The Issue title and section carry no margin of their own; the main column's gap is the only space around them.
+.support-detail__issue {
+  @include stack(2);
+  margin-block: 0;
+  padding-block-start: space(3);
+  border-block-start: 1px solid $hairline;
+
+  h3 {
+    margin-block-end: 0;
+  }
+}
+
+// A curator's read-only Issue has no hairline or padding; it stands space(6) from the facts and from the Thread
+// heading, each the main column's space(4) gap plus a space(2) margin of its own. The selector outranks the column's
+// `> section` margin reset.
+.support-detail__main > .support-detail__issue--plain {
+  padding-block-start: 0;
+  border-block-start: 0;
+  margin-block: space(2);
+}
+
+.support-detail__thread {
+  @include stack(2);
+  margin: 0;
   padding: 0;
   list-style: none;
+}
+
+.support-detail__entry {
+  @include stack(2);
+  padding: space(3) space(4);
+  border: 1px solid $hairline;
+  border-radius: radius('surface');
+  background-color: $surface-page;
 
   p {
+    margin: 0;
     white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+}
+
+.support-detail__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: space(2);
+}
+
+// The date sits flush right on the head line, and stays right when the head wraps.
+.support-detail__meta > time {
+  margin-inline-start: auto;
+}
+
+.support-detail__tag {
+  color: $text-muted;
+  font-size: type-size('small');
+}
+
+// The reply form sits under the thread behind a hairline; Reply on the left, Resolve opposite.
+.support-detail__reply {
+  padding-block-start: space(5);
+  border-block-start: 1px solid $hairline;
+}
+
+.support-detail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: space(3);
+}
+
+.support-detail__issue-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(2);
+  overflow-wrap: anywhere;
+}
+
+// The reply is the dialog's one big field, so its label stands a step further off than the standard field gap.
+.support-detail__reply .field {
+  gap: space(3);
+}
+
+// The switch centres its label and toggle by default; in the side column they sit flush left with the fields around them.
+.support-detail__side .switch {
+  align-items: start;
+
+  .field__label {
+    text-align: start;
+  }
+}
+
+// The select's own arrow sits at its right end, so the saving ring stands just left of it.
+.support-detail__side .field__busy {
+  right: calc(#{space(3)} + 1.5em);
+}
+
+// The address field and its button stand a field's own gap apart: the form's gap (2) and no margin on the
+// actions row (0), where the default form gap (5) and row margin (2) would sum to 7.
+.support-detail__issue .form {
+  gap: space(2);
+
+  > .form__actions {
+    margin-block: 0;
   }
 }

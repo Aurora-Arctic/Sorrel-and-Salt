@@ -10,6 +10,6 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = { args: { path: '/support' } };
 export const FromAnErrorPage: Story = {
-  args: { path: '/coven/fixture/missing', kind: 'bug', errorCode: 404 },
+  args: { path: '/coven/fixture/missing', about: 'bug', errorCode: 404 },
 };
 export const InADialog: Story = { args: { path: '/support', onDone: () => undefined } };

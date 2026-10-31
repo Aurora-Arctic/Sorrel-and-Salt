@@ -36,7 +36,7 @@ test('a curator reads the marked and the assigned requests, answers the assigned
       [hidden, 'Kept From Curators', false, null],
     ] as const) {
       await sql`
-        insert into support_requests (id, kind, subject, message, path, curator_visible, assigned_to, created_by, updated_by)
+        insert into support_requests (id, about, subject, message, path, curator_visible, assigned_to, created_by, updated_by)
         values (${id}, 'question', ${subject}, 'A question.', '', ${visible}, ${assignee}, ${senderId}, ${senderId})
       `;
     }
@@ -56,7 +56,7 @@ test('a curator reads the marked and the assigned requests, answers the assigned
       await expect(dialog.getByLabel('Your Reply')).toHaveCount(0);
       await expect(dialog.getByRole('button', { name: 'Resolve' })).toHaveCount(0);
       await expect(dialog.getByLabel('Assigned To')).toHaveCount(0);
-      await expect(dialog.getByRole('switch', { name: 'Curator-Visible' })).toHaveCount(0);
+      await expect(dialog.getByRole('switch', { name: 'Shared With Curators' })).toHaveCount(0);
       await assertNoAccessibilityViolations(page);
     });
 
@@ -64,14 +64,18 @@ test('a curator reads the marked and the assigned requests, answers the assigned
       await page.goto(`/admin/support?request=${assigned}`);
       const dialog = page.getByRole('dialog', { name: 'Assigned To The Curator' });
       await expect(dialog.getByLabel('Assigned To')).toHaveCount(0);
-      await expect(dialog.getByLabel('Issue Address')).toHaveCount(0);
-      await expect(dialog.getByLabel('Time Out Until')).toHaveCount(0);
+      await expect(dialog.getByLabel('GitHub Issue')).toHaveCount(0);
+      await expect(dialog.getByLabel('Time-Out Until')).toHaveCount(0);
       await dialog.getByLabel('Your Reply').fill('We have it in hand.');
       await dialog.getByRole('button', { name: 'Reply', exact: true }).click();
-      await expect(dialog.getByRole('region', { name: 'Replies' })).toContainText(
+      await expect(dialog.getByRole('region', { name: 'Thread' })).toContainText(
         'We have it in hand.',
       );
       await dialog.getByRole('button', { name: 'Resolve' }).click();
+      await dialog
+        .getByRole('group', { name: /sees it as resolved/ })
+        .getByRole('button', { name: 'Resolve' })
+        .click();
       await expect(dialog.getByRole('button', { name: 'Resolve' })).toBeHidden();
       await assertNoAccessibilityViolations(page);
     });
