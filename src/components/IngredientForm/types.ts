@@ -44,6 +44,12 @@ interface IngredientFormCallbacks {
    */
   onCreated?: (ingredient: SavedIngredient) => void;
   /**
+   * Called when an autosave has written to an ingredient that already existed, with the saved row:
+   * the page brings its heading and address up to the saved name. Not called for the autosave that
+   * creates one (`onCreated`), nor by Save or Close.
+   */
+  onAutosaved?: (ingredient: SavedIngredient) => void;
+  /**
    * Reload, after another save changed the ingredient: the form is replaced with what the server
    * holds. Left out, the page reloads.
    */

@@ -55,6 +55,9 @@ export default function EntryDialog({
                   navigate(savedHref ?? closeHref, { replace: true });
                   refresh();
                 }}
+                // An autosave keeps the dialog open: the page is fetched again so its heading shows the
+                // saved name. The coven's address names the id and stays.
+                onAutosaved={() => refresh()}
                 // A delete is said in the page's status region, which outlives the dialog, and leaves
                 // for `deletedHref`, fetched again; the focus goes to the page's heading (RouteModal).
                 onDeleted={() => {
@@ -81,6 +84,16 @@ export default function EntryDialog({
                   navigate(savedHref ?? (`${publicAddress(saved.slug)}?edit` as Route), {
                     replace: true,
                   });
+                  refresh();
+                }}
+                // An autosave moves the address as Save does, but the dialog stays open.
+                onAutosaved={(saved) => {
+                  if (!savedHref) {
+                    navigate(`${publicAddress(saved.slug)}?edit` as Route, {
+                      replace: true,
+                      scroll: false,
+                    });
+                  }
                   refresh();
                 }}
                 // Not `done`, which would go back to this page: it is gone.

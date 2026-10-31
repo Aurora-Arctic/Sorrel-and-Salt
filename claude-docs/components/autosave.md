@@ -75,6 +75,10 @@ It is a closure created once per mounted form, not React state and effects,
 because timers and an in-flight promise must see one another's latest state,
 not the state of the render that set them.
 
+### What an autosave does to the page
+
+The hook knows nothing of headings or addresses. `IngredientForm` calls `onAutosaved(row)` after an autosave that updated an existing ingredient, and `onCreated(row)` after the one that created it ([`ingredient-form.md`](ingredient-form.md#autosave)). The host then moves the address to the saved slug where the address names the slug, and fetches the page again so the heading shows the saved name. The autosave engine reads `revision` only when it is created, so the fetch does not disturb it.
+
 ### Why these numbers
 
 - **3 s after the last change** is GitLab Pajamas' autosave delay: long enough

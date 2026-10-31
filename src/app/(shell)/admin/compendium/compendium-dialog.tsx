@@ -40,6 +40,11 @@ export default function CompendiumDialog({
                 setCreated(saved.id);
                 navigate(href({ edit: saved.slug }), { replace: true, scroll: false });
               }}
+              // An autosave keeps the modal open: its address and heading follow the saved name.
+              onAutosaved={(saved) => {
+                navigate(href({ edit: saved.slug }), { replace: true, scroll: false });
+                refresh();
+              }}
               workspaceId={null}
               mayPromote
               review={opened.review}
