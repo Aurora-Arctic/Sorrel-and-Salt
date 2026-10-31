@@ -24,8 +24,8 @@ export function StrengthMeter({ password, id }: { password: string; id: string }
 
   const shown = password === '' ? undefined : strength;
   return (
-    // The bar and the text line are always drawn, the line at the height of two lines, so the first
-    // keystroke or a longer warning moves nothing below. The bar is decoration; only the text is read.
+    // The bar and the text line are always drawn, the line at the height of one line (the
+    // warnings are short enough never to wrap), so the first keystroke moves nothing below. The bar is decoration; only the text is read.
     <div className="password-field__strength">
       <meter
         className="password-field__bar"
@@ -42,7 +42,8 @@ export function StrengthMeter({ password, id }: { password: string; id: string }
       <p className="field__hint password-field__strength-text" id={id} aria-live="polite">
         {shown && (
           <>
-            Strength: {STRENGTH_WORDS[shown.score]}
+            <span className="password-field__strength-label">Strength: </span>
+            {STRENGTH_WORDS[shown.score]}
             {shown.warning && `. ${shown.warning}`}
           </>
         )}

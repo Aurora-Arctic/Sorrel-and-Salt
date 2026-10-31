@@ -1,4 +1,5 @@
 @use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
 
 // The input with the eye toggle inside its right-hand end; the input's padding keeps the text clear of it.
 .password-field__control {
@@ -38,7 +39,8 @@
 }
 
 // The meter and its text under a new password: the bar spans the input, the text sits below it and
-// holds two lines (a warning can wrap) so the page does not move as the verdict changes.
+// holds one line (the warnings are short enough never to wrap) so the page does not move as the verdict
+// changes. "Strength: " is read by a screen reader and not drawn, to leave the line room.
 .password-field__strength {
   display: flex;
   flex-direction: column;
@@ -54,5 +56,9 @@
 .password-field__strength-text {
   margin: 0;
   line-height: 1.4;
-  min-block-size: 2.8em;
+  min-block-size: 1.4em;
+}
+
+.password-field__strength-label {
+  @include visually-hidden;
 }
