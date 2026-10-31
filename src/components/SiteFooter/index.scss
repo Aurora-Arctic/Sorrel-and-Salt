@@ -11,16 +11,43 @@
 // Ruled off from the page; the link sits in the content column's edges.
 .site-footer__inner {
   box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: space(2) space(4);
   margin-inline: auto;
   padding: space(4);
   border-top: 1px solid $hairline;
-  color: $text-muted;
   max-width: $wide-column;
+}
+
+.site-footer__brand {
+  color: $text-primary;
+  font-size: type-size('title');
+  line-height: 1.2;
+  text-decoration: none;
+
+  @include heading-face;
+
+  &:focus-visible {
+    @include focus-ring;
+  }
 }
 
 .site-footer__nav {
   display: flex;
   gap: space(4);
+  color: $text-muted;
+  font-size: type-size('small');
+}
+
+// At a phone's width the row stacks, the name above the links, both at the left.
+@media (max-width: $shell-phone-width) {
+  .site-footer__inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 
 // The phone's section bar is fixed along the bottom of a shell page and would cover the link; the
