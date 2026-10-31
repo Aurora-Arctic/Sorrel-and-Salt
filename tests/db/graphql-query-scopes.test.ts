@@ -388,7 +388,7 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   setEmail: write('mutation { setEmail(email: "fixture@example.org") { id } }'),
   setName: write('mutation { setName(name: "Fixture") { id } }'),
   sendSupportRequest: write(
-    'mutation { sendSupportRequest(input: { kind: bug, subject: "Fixture", message: "Fixture" }) { id } }',
+    'mutation { sendSupportRequest(input: { about: bug, subject: "Fixture", message: "Fixture" }) { id } }',
   ),
   replyToSupportRequest: write(
     `mutation { replyToSupportRequest(requestId: "${NOWHERE}", body: "Fixture") { id } }`,

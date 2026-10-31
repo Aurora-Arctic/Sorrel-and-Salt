@@ -3,18 +3,15 @@
 import { type ReactElement, useState } from 'react';
 import { FilterSelectField, SearchField } from '../Field';
 import FilterForm, { useApplyFilter } from '../FilterForm';
+import { SUPPORT_ABOUTS } from '../../lib/support-path';
 import { SUPPORT_PATH, supportHref } from './href';
-import type { SupportKind, SupportRequestsFilterProps, SupportStatus } from './types';
+import type { SupportAbout, SupportRequestsFilterProps, SupportStatus } from './types';
 
-// The list's filter on the shared FilterForm: Kind and Status apply as they change, the error number is
+// The list's filter on the shared FilterForm: About and Status apply as they change, the error number is
 // held until the magnifier or Enter sends it. Before hydration the form submits natively
-// (`kind=`, `status=`, `error=`); the list keys this by the filter shown.
+// (`about=`, `status=`, `error=`); the list keys this by the filter shown.
 
-export const KIND_OPTIONS: readonly { value: SupportKind; label: string }[] = [
-  { value: 'accessibility', label: 'Accessibility' },
-  { value: 'bug', label: 'Bug' },
-  { value: 'question', label: 'Question' },
-];
+export const ABOUT_OPTIONS: readonly { value: SupportAbout; label: string }[] = SUPPORT_ABOUTS;
 
 export const STATUS_OPTIONS: readonly { value: SupportStatus; label: string }[] = [
   { value: 'open', label: 'Open' },
@@ -31,7 +28,7 @@ const SupportRequestsFilter = ({ filter }: SupportRequestsFilterProps): ReactEle
       label="Filter Support Requests"
       action={SUPPORT_PATH}
       searchHref={() => supportHref({ ...filter, errorCode: code })}
-      shown={[filter.kind, filter.status, filter.errorCode]}
+      shown={[filter.about, filter.status, filter.errorCode]}
     >
       <SearchField
         label="Error Number"
@@ -41,13 +38,13 @@ const SupportRequestsFilter = ({ filter }: SupportRequestsFilterProps): ReactEle
         onChange={setDraftCode}
       />
       <FilterSelectField
-        label="Kind"
-        name="kind"
-        all="All Kinds"
-        options={KIND_OPTIONS}
-        defaultValue={filter.kind}
-        onChange={(kind) =>
-          apply(supportHref({ ...filter, errorCode: code, kind: kind as SupportKind | '' }))
+        label="About"
+        name="about"
+        all="All"
+        options={ABOUT_OPTIONS}
+        defaultValue={filter.about}
+        onChange={(about) =>
+          apply(supportHref({ ...filter, errorCode: code, about: about as SupportAbout | '' }))
         }
       />
       <FilterSelectField

@@ -1,17 +1,22 @@
 import { describe, expect, it } from 'vitest';
-import { errorCodeOf, supportClosedHref, supportHref, supportKindOf } from '@/lib/support-path';
+import {
+  SUPPORT_ABOUTS,
+  errorCodeOf,
+  supportAboutOf,
+  supportClosedHref,
+  supportHref,
+} from '@/lib/support-path';
+import { supportRequestAbout } from '@/modules/support/schema/support-requests';
 
-describe('supportKindOf', () => {
-  it('reads each kind', () => {
-    expect(supportKindOf('bug')).toBe('bug');
-    expect(supportKindOf('question')).toBe('question');
-    expect(supportKindOf('accessibility')).toBe('accessibility');
+describe('supportAboutOf', () => {
+  it('reads each about', () => {
+    for (const { value } of SUPPORT_ABOUTS) expect(supportAboutOf(value)).toBe(value);
   });
 
   it('falls back to accessibility for a bare or unknown value', () => {
-    expect(supportKindOf('')).toBe('accessibility');
-    expect(supportKindOf(null)).toBe('accessibility');
-    expect(supportKindOf('billing')).toBe('accessibility');
+    expect(supportAboutOf('')).toBe('accessibility');
+    expect(supportAboutOf(null)).toBe('accessibility');
+    expect(supportAboutOf('billing')).toBe('accessibility');
   });
 });
 
@@ -46,5 +51,11 @@ describe('supportHref and supportClosedHref', () => {
       '/a?page=2',
     );
     expect(supportClosedHref('/a', new URLSearchParams('support=bug'))).toBe('/a');
+  });
+});
+
+describe('SUPPORT_ABOUTS', () => {
+  it('offers exactly the values the database enum holds, in its order', () => {
+    expect(SUPPORT_ABOUTS.map((about) => about.value)).toEqual(supportRequestAbout.enumValues);
   });
 });

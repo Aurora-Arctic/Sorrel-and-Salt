@@ -31,7 +31,7 @@ test.describe('Story 89: Ask for Help and Read the Reply', { tag: '@story-89' },
     const dialog = page.getByRole('dialog');
 
     await test.step('Send Request waits for a subject and message, then the request is received', async () => {
-      await dialog.getByRole('combobox', { name: 'Kind' }).click();
+      await dialog.getByRole('combobox', { name: 'What Is This About?' }).click();
       await page.getByRole('option', { name: 'Question' }).click();
       await expect(dialog.getByRole('button', { name: 'Send Request' })).toBeDisabled();
       await dialog.getByLabel('Subject').fill('Where is the moon table?');

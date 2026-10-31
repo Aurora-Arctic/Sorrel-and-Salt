@@ -8,7 +8,7 @@ export type SupportRequestRow = typeof supportRequests.$inferSelect;
 export type SupportReplyRow = typeof supportReplies.$inferSelect;
 export type SupportTimeoutRow = typeof supportTimeouts.$inferSelect;
 
-export type SupportKind = SupportRequestRow['kind'];
+export type SupportAbout = SupportRequestRow['about'];
 export type SupportStatus = SupportRequestRow['status'];
 
 /**

@@ -27,11 +27,11 @@ describe('SupportPanel', () => {
     expect(screen.queryByRole('textbox')).toBeNull();
   });
 
-  it('shows the form to a sender who may write, with the kind and error asked for', () => {
+  it('shows the form to a sender who may write, with the about and error asked for', () => {
     render(<SupportPanel state={{ kind: 'form', support: 'bug', errorCode: 404 }} path="/gone" />);
     expect(screen.getByRole('textbox', { name: /Subject/ })).toBeInTheDocument();
-    expect(screen.getByRole('radio', { name: /Bug/ })).toBeChecked();
+    expect(screen.getByRole('combobox', { name: 'What Is This About?' })).toHaveTextContent('Bug');
     expect(screen.getByText(/Error 404/)).toBeInTheDocument();
-    expect(screen.getByText('/gone')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Page' })).toHaveValue('/gone');
   });
 });

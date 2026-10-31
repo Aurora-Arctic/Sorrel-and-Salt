@@ -11,9 +11,10 @@ import { ComboboxSelect } from '../Combobox';
 import { FieldShell, FormActions, fieldDescription } from '../Field';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
-import type { SupportFormProps, SupportKind } from './types';
+import { SUPPORT_ABOUTS } from '../../lib/support-path';
+import type { SupportAbout, SupportFormProps } from './types';
 
-// The support request form, in the Support dialog and on `/support`: a kind, a subject and a message,
+// The support request form, in the Support dialog and on `/support`: an about, a subject and a message,
 // sent as `sendSupportRequest`. The limits are the service's, said here so they are met before sending
 // (claude-docs/components/support-form.md).
 
@@ -29,27 +30,20 @@ const SUBJECT_LIMIT = 120;
 const MESSAGE_LIMIT = 4000;
 const PATH_LIMIT = 500;
 
-/** What the kind field is called. */
-const KIND_LABEL = 'Kind';
-
-/** The kinds on offer, accessibility first. */
-const KINDS: readonly { value: SupportKind; label: string }[] = [
-  { value: 'accessibility', label: 'Accessibility' },
-  { value: 'bug', label: 'Bug' },
-  { value: 'question', label: 'Question' },
-];
+/** What the about field is called. */
+const ABOUT_LABEL = 'What Is This About?';
 
 const SupportForm = ({
-  kind: initialKind = 'accessibility',
+  about: initialAbout = 'accessibility',
   errorCode,
   path,
   onDone,
 }: SupportFormProps): ReactElement => {
-  const kindId = useId();
+  const aboutId = useId();
   const subjectId = useId();
   const messageId = useId();
   const pageId = useId();
-  const [kind, setKind] = useState<SupportKind>(initialKind);
+  const [about, setAbout] = useState<SupportAbout>(initialAbout);
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [page, setPage] = useState(path);
@@ -57,7 +51,7 @@ const SupportForm = ({
   const [failure, setFailure] = useState<Failure>({});
   const [sent, setSent] = useState(false);
 
-  const kindField = fieldDescription({ id: kindId });
+  const aboutField = fieldDescription({ id: aboutId });
   const subjectField = fieldDescription({
     id: subjectId,
     note: `Up to ${SUBJECT_LIMIT} characters.`,
@@ -85,7 +79,7 @@ const SupportForm = ({
     try {
       await graphqlRequest(SendSupportRequestDocument, {
         input: {
-          kind,
+          about,
           subject: subject.trim(),
           message: message.trim(),
           ...(page.trim() !== '' && { path: page.trim() }),
@@ -122,15 +116,15 @@ const SupportForm = ({
   return (
     <form className="form" noValidate onSubmit={(event) => void submit(event)}>
       {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
-      <FieldShell label={KIND_LABEL} {...kindField}>
+      <FieldShell label={ABOUT_LABEL} {...aboutField}>
         <ComboboxSelect
-          id={kindField.controlId}
-          label={KIND_LABEL}
-          labelId={kindField.labelId}
-          value={kind}
-          choices={KINDS}
+          id={aboutField.controlId}
+          label={ABOUT_LABEL}
+          labelId={aboutField.labelId}
+          value={about}
+          choices={SUPPORT_ABOUTS}
           disabled={sending}
-          onChange={(value) => setKind(value as SupportKind)}
+          onChange={(value) => setAbout(value as SupportAbout)}
         />
       </FieldShell>
       {errorCode !== undefined && <p className="support-form__context">Error {errorCode}.</p>}

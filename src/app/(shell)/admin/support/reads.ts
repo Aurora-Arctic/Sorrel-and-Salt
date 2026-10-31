@@ -44,7 +44,7 @@ function personOf(names: Names, id: string | null): SupportPerson | null {
 function entryOf(row: SupportRequestRow, names: Names): SupportRequestEntry {
   return {
     id: row.id,
-    kind: row.kind,
+    about: row.about,
     subject: row.subject,
     status: row.status,
     sender: names.get(row.createdBy) ?? null,

@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import LocalTime from '../LocalTime';
 import Pager from '../Pager';
+import { SUPPORT_ABOUTS } from '../../lib/support-path';
 import { emptyList } from '../../lib/text';
 import type { SupportListProps } from './types';
 import './index.scss';
@@ -8,7 +9,8 @@ import './index.scss';
 // The sender's own support requests, newest first, each with its replies and, for a bug, its issue
 // (claude-docs/components/support-list.md). The service has already limited the rows to the sender's.
 
-const KIND = { accessibility: 'Accessibility', bug: 'Bug', question: 'Question' } as const;
+const labelOfAbout = (value: string): string =>
+  SUPPORT_ABOUTS.find((about) => about.value === value)?.label ?? value;
 const STATUS = { open: 'Open', resolved: 'Resolved' } as const;
 
 const SupportList = ({
@@ -27,13 +29,13 @@ const SupportList = ({
             <div className="support-list__head">
               <strong>{request.subject}</strong>
               <span className="support-list__marks">
-                <span>{KIND[request.kind]}</span>
+                <span>{labelOfAbout(request.about)}</span>
                 <span>{STATUS[request.status]}</span>
                 <LocalTime at={request.createdAt} long />
               </span>
             </div>
             <p className="support-list__message">{request.message}</p>
-            {request.kind === 'bug' && request.issueUrl && (
+            {request.about === 'bug' && request.issueUrl && (
               <a href={request.issueUrl} rel="noreferrer">
                 View Issue
               </a>

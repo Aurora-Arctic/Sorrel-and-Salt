@@ -13,7 +13,7 @@ vi.mock('next/navigation', () => ({
 
 const subject = () => screen.getByRole('textbox', { name: /Subject/ });
 const message = () => screen.getByRole('textbox', { name: /Message/ });
-const kind = () => screen.getByRole('combobox', { name: 'Kind' });
+const about = () => screen.getByRole('combobox', { name: 'What Is This About?' });
 const page = () => screen.getByRole('textbox', { name: 'Page' });
 const send = () => screen.getByRole('button', { name: /Send Request|Sending/ });
 
@@ -35,30 +35,34 @@ function fill() {
 }
 
 describe('SupportForm', () => {
-  it('offers accessibility first and selected, unless a kind is given', () => {
+  it('offers accessibility first and selected, unless an about is given', () => {
     const { unmount } = render(<SupportForm path="/a" />);
-    expect(kind()).toHaveTextContent('Accessibility');
-    fireEvent.click(kind());
+    expect(about()).toHaveTextContent('Accessibility');
+    fireEvent.click(about());
     expect(screen.getAllByRole('option').map((o) => o.textContent)).toEqual([
       'Accessibility',
       'Bug',
+      'Account & Sign-In',
+      'Compendium Entry',
+      'Privacy & Data',
+      'Feedback',
       'Question',
     ]);
     unmount();
 
-    render(<SupportForm path="/a" kind="bug" />);
-    expect(kind()).toHaveTextContent('Bug');
+    render(<SupportForm path="/a" about="bug" />);
+    expect(about()).toHaveTextContent('Bug');
   });
 
-  it('sends the kind that was chosen', async () => {
+  it('sends the about that was chosen', async () => {
     const calls = mockSending();
     render(<SupportForm path="/a" />);
     fill();
-    fireEvent.click(kind());
-    fireEvent.click(screen.getByRole('option', { name: 'Question' }));
+    fireEvent.click(about());
+    fireEvent.click(screen.getByRole('option', { name: 'Privacy & Data' }));
     fireEvent.click(send());
     await screen.findByRole('status');
-    expect(calls[0]?.input.kind).toBe('question');
+    expect(calls[0]?.input.about).toBe('privacy');
   });
 
   it('keeps Send off until both a subject and a message are written', () => {
@@ -84,7 +88,7 @@ describe('SupportForm', () => {
   });
 
   it('shows the error number, and the page it was opened from in a field', () => {
-    render(<SupportForm path="/coven/x/missing" errorCode={404} kind="bug" />);
+    render(<SupportForm path="/coven/x/missing" errorCode={404} about="bug" />);
     expect(screen.getByText(/Error 404/)).toBeInTheDocument();
     expect(page()).toHaveValue('/coven/x/missing');
     expect(page()).toHaveAttribute('maxlength', '500');
@@ -125,9 +129,9 @@ describe('SupportForm', () => {
     expect(page()).toBeInvalid();
   });
 
-  it('sends the trimmed text with the kind, page and error, then says it was received', async () => {
+  it('sends the trimmed text with the about, page and error, then says it was received', async () => {
     const calls = mockSending();
-    render(<SupportForm path="/coven/x/missing" errorCode={404} kind="bug" />);
+    render(<SupportForm path="/coven/x/missing" errorCode={404} about="bug" />);
     fill();
     fireEvent.click(send());
 
@@ -136,7 +140,7 @@ describe('SupportForm', () => {
     expect(calls).toEqual([
       {
         input: {
-          kind: 'bug',
+          about: 'bug',
           subject: 'Cannot read the menu',
           message: 'The text is too faint.',
           path: '/coven/x/missing',

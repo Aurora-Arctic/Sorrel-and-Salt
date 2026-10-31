@@ -729,6 +729,13 @@
       "when": 1793420782747,
       "tag": "0103_support-replies-timeouts",
       "breakpoints": true
+    },
+    {
+      "idx": 104,
+      "version": "7",
+      "when": 1793420783747,
+      "tag": "0104_support-about",
+      "breakpoints": true
     }
   ]
 }

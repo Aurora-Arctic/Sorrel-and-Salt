@@ -6,7 +6,7 @@ export const SUPPORT_PATH = '/support';
 /** The sender's own requests. */
 export const SUPPORT_LIST_PATH = '/account/support';
 
-/** The parameter that opens the Support dialog, holding the kind preselected. */
+/** The parameter that opens the Support dialog, holding what the request is about, preselected. */
 export const SUPPORT_PARAM = 'support';
 
 /** The parameter carrying the HTTP status of the error page the sender came from. */
@@ -15,13 +15,50 @@ export const SUPPORT_ERROR_PARAM = 'error';
 /** The parameter carrying the page a request is about, where the address is not that page. */
 export const SUPPORT_FROM_PARAM = 'from';
 
-const KINDS = ['accessibility', 'bug', 'question'] as const;
-export type SupportKindParam = (typeof KINDS)[number];
+/** What a request can be about, in the order the form offers them, each with the words the form and the lists show. */
+export const SUPPORT_ABOUTS = [
+  {
+    value: 'accessibility',
+    label: 'Accessibility',
+    description: 'Something on the site you cannot use or read.',
+  },
+  {
+    value: 'bug',
+    label: 'Bug',
+    description: 'Something is broken or does not do what it says.',
+  },
+  {
+    value: 'account',
+    label: 'Account & Sign-In',
+    description: 'Trouble signing in, changing your email, or using an invitation.',
+  },
+  {
+    value: 'compendium',
+    label: 'Compendium Entry',
+    description: 'An entry looks wrong, or is missing a source.',
+  },
+  {
+    value: 'privacy',
+    label: 'Privacy & Data',
+    description: 'A question or request about the data we hold on you.',
+  },
+  {
+    value: 'feedback',
+    label: 'Feedback',
+    description: 'Something you would like to see changed.',
+  },
+  {
+    value: 'question',
+    label: 'Question',
+    description: 'Anything else you would like to ask us.',
+  },
+] as const;
+export type SupportAboutParam = (typeof SUPPORT_ABOUTS)[number]['value'];
 
-/** The kind a value of `?support` names; accessibility, the first offered, for a bare or unknown one. */
-export function supportKindOf(value: string | null): SupportKindParam {
-  return (KINDS as readonly string[]).includes(value ?? '')
-    ? (value as SupportKindParam)
+/** The subject a value of `?support` names; accessibility, the first offered, for a bare or unknown one. */
+export function supportAboutOf(value: string | null): SupportAboutParam {
+  return SUPPORT_ABOUTS.some((about) => about.value === value)
+    ? (value as SupportAboutParam)
     : 'accessibility';
 }
 
@@ -36,11 +73,11 @@ export function errorCodeOf(value: string | null): number | undefined {
 export function supportHref(
   pathname: string,
   params: URLSearchParams,
-  kind: SupportKindParam,
+  about: SupportAboutParam,
   errorCode?: number,
 ): string {
   const rest = new URLSearchParams(params);
-  rest.set(SUPPORT_PARAM, kind);
+  rest.set(SUPPORT_PARAM, about);
   if (errorCode === undefined) rest.delete(SUPPORT_ERROR_PARAM);
   else rest.set(SUPPORT_ERROR_PARAM, String(errorCode));
   return `${pathname}?${rest}`;

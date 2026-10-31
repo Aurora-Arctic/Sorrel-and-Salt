@@ -43,14 +43,14 @@ test.describe('Story 90: An Admin Works Through a Support Request', { tag: '@sto
         data: {
           query:
             'mutation($input: SupportRequestInput!) { sendSupportRequest(input: $input) { id } }',
-          variables: { input: { kind: 'question', subject: 'Hello', message: 'Anyone there?' } },
+          variables: { input: { about: 'question', subject: 'Hello', message: 'Anyone there?' } },
         },
       });
 
     const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
     try {
       await sql`
-        insert into support_requests (kind, subject, message, path, error_code, created_by, updated_by)
+        insert into support_requests (about, subject, message, path, error_code, created_by, updated_by)
         values ('bug', 'Wobbling Cauldron', 'The cauldron wobbles on save.', '/coven/[slug]/grimoire', 500, ${senderId}, ${senderId})
       `;
     } finally {

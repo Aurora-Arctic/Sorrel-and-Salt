@@ -13,12 +13,12 @@ import {
   SUPPORT_PARAM,
   errorCodeOf,
   supportClosedHref,
-  supportKindOf,
+  supportAboutOf,
 } from '../../lib/support-path';
 import { emailPagePath } from '../../lib/account-email';
 import type { SupportDialogProps } from './types';
 
-// The Support dialog, open while the address carries `?support=<kind>` on any page in the shell, with
+// The Support dialog, open while the address carries `?support=<about>` on any page in the shell, with
 // `?error=<status>` when it comes from an error page. Drawn once in the shell; closing drops the
 // parameters and keeps the page (claude-docs/components/support-dialog.md).
 
@@ -38,7 +38,7 @@ function Dialog({ verified }: SupportDialogProps): ReactElement | null {
         body: (done) =>
           verified ? (
             <SupportForm
-              kind={supportKindOf(asked)}
+              about={supportAboutOf(asked)}
               errorCode={errorCode}
               path={path}
               onDone={done}

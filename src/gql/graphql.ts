@@ -360,15 +360,19 @@ export type SuggestionGroup =
   | 'yours';
 
 /** What a support request is about. */
-export type SupportKind =
+export type SupportAbout =
   | 'accessibility'
+  | 'account'
   | 'bug'
+  | 'compendium'
+  | 'feedback'
+  | 'privacy'
   | 'question';
 
 export type SupportRequestInput = {
+  about: SupportAbout;
   /** The HTTP status of the error page, if any. */
   errorCode?: number | null | undefined;
-  kind: SupportKind;
   /** 1 to 4000 characters. */
   message: string;
   /** The page the sender was on, at most 500 characters; a coven's slug is replaced when it is stored. */
