@@ -93,7 +93,7 @@ const SupportRequests = ({
               heading: 'Subject',
               cell: (request) => <SubjectLink request={request} filter={filter} cursor={cursor} />,
             },
-            { heading: 'Status', cell: (request) => labelOf(STATUS_OPTIONS, request.status) },
+            { heading: 'Status', cell: (request) => STATUS_LABELS[request.status] },
             { heading: 'Sender', cell: (request) => request.sender?.name ?? 'Deleted account' },
             {
               heading: 'Assigned To',
