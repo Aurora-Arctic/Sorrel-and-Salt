@@ -23,7 +23,7 @@ same ones.
     only), for an admin or a curator the request is assigned to.
   - A right column for an admin alone: **Assigned To**, **Shared With Curators**, the Issue section (the linked issue as
     repository and number, preceded by a pencil icon button named "Change Issue Address", or the address field at once while none is linked) and **Time-Out**, a
-    fold closed by default that says "none" or "until" the end of the standing time-out.
+    fold closed by default that says "none", or a "Timed Out" badge and "until" the end of the standing time-out.
 - **There is no Create Issue link.** The admin makes the GitHub issue by hand, so nothing from the request is copied
   into GitHub: the message could hold private information (the owner, 2026-10-31). The "GitHub Issue" field takes either of two
   shapes and stores both as the plain issue link, `https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/<number>`: that link itself, or a link from any project board of the `Aurora-Arctic` organisation (`github.com/orgs/Aurora-Arctic/projects/<n>/...`), such as

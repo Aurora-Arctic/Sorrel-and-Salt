@@ -274,14 +274,17 @@ const TimeoutPanel = ({
       <CollapsibleSection
         title="Time-Out"
         summary={
-          <span className="timeout-panel__muted">
-            {standing ? (
-              <>
-                · until <LocalTime at={standing.until} long />
-              </>
-            ) : (
-              '· none'
-            )}
+          <span className="timeout-panel__summary">
+            {standing && <span className="badge badge--caution">Timed Out</span>}
+            <span className="timeout-panel__muted">
+              {standing ? (
+                <>
+                  · until <LocalTime at={standing.until} long />
+                </>
+              ) : (
+                '· none'
+              )}
+            </span>
           </span>
         }
         info={

@@ -8,6 +8,14 @@
   padding-block-end: space(2);
 }
 
+// The shut fold's line: the Timed Out badge, then the end in the muted ink.
+.timeout-panel__summary {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(2);
+}
+
 // The muted ink for notes and the setter.
 .timeout-panel__muted {
   color: $text-muted;
