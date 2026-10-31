@@ -309,6 +309,8 @@ export interface SummaryJar {
 export interface ReviewMarkProps {
   ingredientId: string;
   reviewedAt: string | null;
+  /** Drawn beside the Reviewed switch at the row's end: the Shown in Compendium switch. */
+  alongside?: ReactNode;
 }
 
 /** The shown-in-the-compendium switch on an entry (`shown-toggle.tsx`): the entry, whether the public compendium lists it now, its name for the switch's name, and a visible label where the switch has room for one. */

@@ -31,9 +31,10 @@ body .review-mark {
         background-color $slide,
         border-color $slide;
 
+      // The input has a 1px border and its pseudo-element sits inside it, so the offset drops the border to land where the eye switch's thumb does.
       &::before {
-        inset-block-start: $inset;
-        inset-inline-start: $inset;
+        inset-block-start: calc(#{$inset} - 1px);
+        inset-inline-start: calc(#{$inset} - 1px);
         inline-size: $thumb-size;
         block-size: $thumb-size;
         transition:
@@ -94,7 +95,7 @@ body .review-row__standing {
 body .review-mark .switch .switch__spinner {
   inline-size: $thumb-size;
   block-size: $thumb-size;
-  inset-inline-start: calc(#{$inset} + 1px);
+  inset-inline-start: $inset;
 }
 
 body .review-mark .switch input:checked ~ .switch__spinner {

@@ -144,18 +144,18 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
         }
         reviewControl={
           review && (
-            <span className="review-row__switches">
-              <ReviewMark
-                ingredientId={entry.id}
-                reviewedAt={review.reviewedAt?.toISOString() ?? null}
-              />
-              <ShownToggle
-                ingredientId={entry.id}
-                shown={review.shown}
-                name={cardName(entry.name, entry.canonicalName)}
-                accessibleName="Shown in Compendium"
-              />
-            </span>
+            <ReviewMark
+              ingredientId={entry.id}
+              reviewedAt={review.reviewedAt?.toISOString() ?? null}
+              alongside={
+                <ShownToggle
+                  ingredientId={entry.id}
+                  shown={review.shown}
+                  name={cardName(entry.name, entry.canonicalName)}
+                  accessibleName="Shown in Compendium"
+                />
+              }
+            />
           )
         }
         hiddenFromPublic={!entry.shown}
