@@ -12,7 +12,8 @@ export type SectionIconName =
   | 'forms'
   | 'deities'
   | 'astrology'
-  | 'people';
+  | 'people'
+  | 'support';
 
 /**
  * One section: a tab on a wide screen, an item in the bottom bar on a phone.
