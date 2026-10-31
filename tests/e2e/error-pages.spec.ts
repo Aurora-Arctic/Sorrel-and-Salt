@@ -35,8 +35,9 @@ for (const path of [
     expect(response?.status()).toBe(404);
 
     await page.getByRole('link', { name: 'Report This' }).click();
-    await expect(page.getByRole('textbox', { name: 'Page' })).toHaveValue(path);
-    await expect(page.getByText('Error 404.')).toBeVisible();
+    const dialog = page.getByRole('dialog', { name: 'Contact Support' });
+    await expect(dialog.getByRole('textbox', { name: 'Page' })).toHaveValue(path);
+    await expect(dialog.getByText('Error 404.')).toBeVisible();
     await assertNoAccessibilityViolations(page);
   });
 }
