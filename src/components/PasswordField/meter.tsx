@@ -24,15 +24,29 @@ export function StrengthMeter({ password, id }: { password: string; id: string }
 
   const shown = password === '' ? undefined : strength;
   return (
-    // Polite, so a screen reader hears the verdict after the keystroke rather than over it.
-    <p className="field__hint" id={id} aria-live="polite">
-      {shown && (
-        <>
-          <meter min={0} max={4} low={2} high={3} optimum={4} value={shown.score} aria-hidden />{' '}
-          Strength: {STRENGTH_WORDS[shown.score]}
-          {shown.warning && `. ${shown.warning}`}
-        </>
-      )}
-    </p>
+    // The bar and the text line are always drawn, the line at the height of two lines, so the first
+    // keystroke or a longer warning moves nothing below. The bar is decoration; only the text is read.
+    <div className="password-field__strength">
+      <meter
+        className="password-field__bar"
+        min={0}
+        max={4}
+        low={2}
+        high={3}
+        optimum={4}
+        value={shown?.score ?? 0}
+        aria-hidden
+      />
+      {/* Polite, so a screen reader hears the verdict after the keystroke rather than over it; empty
+          until there is a verdict, so nothing is announced for it. */}
+      <p className="field__hint password-field__strength-text" id={id} aria-live="polite">
+        {shown && (
+          <>
+            Strength: {STRENGTH_WORDS[shown.score]}
+            {shown.warning && `. ${shown.warning}`}
+          </>
+        )}
+      </p>
+    </div>
   );
 }

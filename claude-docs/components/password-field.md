@@ -38,7 +38,12 @@ Its user is the sign-in panel's form
   zxcvbn's score (Very Weak to Strong) and its warning, in a polite live
   region the input names in `aria-describedby`. `strength.ts`, which carries
   the dictionaries and most of the weight, is imported on the first
-  keystroke, never with the page.
+  keystroke, never with the page. The bar (full width of the input, hidden from
+  assistive technology) and the text line below it are drawn from the first
+  render, the line holding two lines of height for a wrapping warning, so
+  nothing below them moves; the live region is empty until there is a verdict,
+  so nothing is announced before one. The sign-up form, the reset-password form
+  and the account page's change-password form all use this one component.
 
 ## Styling
 
