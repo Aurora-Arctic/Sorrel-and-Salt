@@ -50,6 +50,14 @@ provider, are the page's. The result of every submit takes focus
   account can now sign in with its email address and this password as well as
   its providers.
 
+## Forgotten password
+
+An account with a password also gets a Forgot Your Password? button. It calls Better Auth's `requestPasswordReset` for the signed-in account's own address (read from `useSession`) with `redirectTo: '/reset-password'`, the same call as the forgot-password page, and says a link was sent without printing the address. The session cannot set a new password without that emailed link. The button is absent for a placeholder address.
+
+## Refresh and password managers
+
+After a set or change the section calls `router.refresh()`, so the page's server-rendered text and Sign-In Methods follow the account. The form carries a visually hidden, read-only `username` input holding the account's email (`autocomplete="username"`), and its password fields are named `current-password` and `new-password`, so a password manager can offer to save.
+
 Both submits are disabled until every field has something in it, and are a
 `BusyButton` ("Changing Password", "Setting Password") while the request is
 out ([`busy-button.md`](busy-button.md)).
