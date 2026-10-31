@@ -1,0 +1,256 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The calendar a day field and a day-range field open: a card with a hairline edge, round day
+// marks, and a range drawn as a band between its two ends. A popover sits in the top layer, placed
+// from its field, so no scrolling body clips it; a browser with no popover leaves it in flow beneath
+// the field (claude-docs/components/date-field.md, "Styling").
+
+.calendar-panel {
+  margin-block-start: space(2);
+  padding: space(3);
+  border: 1px solid $hairline;
+  border-radius: radius('surface');
+  background-color: $surface-card;
+  inline-size: fit-content;
+  max-inline-size: 100%;
+}
+
+// A row under the grid, its one button at the end.
+.calendar-panel__footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-block-start: space(2);
+}
+
+// A popover is in the top layer and fixed to the window; the hook sets its place as two custom
+// properties. Only a popover gets this class, so the in-flow fallback keeps its margin.
+.calendar-panel--floating {
+  position: fixed;
+  inset: auto;
+  inset-block-start: var(--calendar-top, 0);
+  inset-inline-start: var(--calendar-left, 0);
+  margin: 0;
+  max-inline-size: calc(100vw - #{space(4)});
+  overflow: visible;
+  color: inherit;
+}
+
+// The field's end mark, in the muted ink.
+.calendar-icon {
+  flex: none;
+  inline-size: $glyph-size;
+  block-size: $glyph-size;
+  color: $text-muted;
+}
+
+.day-picker {
+  color: $text-primary;
+  font-family: $font-body;
+}
+
+// Two or more months sit side by side, wrapping when the window is too narrow for them.
+.day-picker__months {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(4);
+}
+
+// A month named in words rather than picked from lists (the day-range field's).
+.day-picker__caption-label {
+  font-size: type-size('caption');
+  font-weight: 400;
+}
+
+.day-picker__caption {
+  display: flex;
+  align-items: center;
+  // Clear of the previous and next steps, which sit over the caption's end: the panel grows to hold both.
+  block-size: $day-picker-caption-height;
+  padding-inline-end: $day-picker-nav-room;
+}
+
+// The month and year pickers, side by side.
+.day-picker__dropdowns {
+  display: flex;
+  gap: space(2);
+}
+
+// The month and year pickers are the app's select-only boxes in their compact form (`.field--compact`, as high as a step), as wide as their longest option and no wider.
+// `CaptionDropdown` draws them in place of the library's own, so its text label is never drawn.
+.day-picker__dropdown-root {
+  display: inline-grid;
+
+  > * {
+    grid-area: 1 / 1;
+  }
+
+  .combobox__control {
+    padding-inline: space(2) space(1);
+    gap: 0;
+  }
+
+  .combobox__indicator {
+    inline-size: $day-picker-indicator;
+  }
+
+  .combobox__option {
+    padding: space(1) space(2);
+  }
+}
+
+.day-picker__dropdown-sizer {
+  display: inline-grid;
+  padding-inline: space(2) $day-picker-sizer-end;
+  font-size: type-size('caption');
+  visibility: hidden;
+  pointer-events: none;
+
+  > * {
+    grid-area: 1 / 1;
+  }
+}
+
+// Previous and next sit at the caption's end, over the space its padding keeps clear (the nav is a sibling of the caption, so it is placed, not flowed).
+.day-picker__nav {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  display: flex;
+  align-items: center;
+  gap: space(1);
+  block-size: $day-picker-caption-height;
+}
+
+.day-picker__step {
+  display: inline-grid;
+  place-items: center;
+  inline-size: $day-picker-step;
+  block-size: $day-picker-step;
+  padding: 0;
+  border: 0;
+  border-radius: radius('control');
+  background: transparent;
+  color: $text-primary;
+  cursor: pointer;
+
+  &:hover {
+    background-color: $surface-card-hover;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  &[aria-disabled='true'] {
+    opacity: $day-picker-step-disabled-opacity;
+    cursor: not-allowed;
+  }
+}
+
+// The Combobox's stroked chevron, turned to point where the step or select does.
+.day-picker__chevron {
+  display: inline-grid;
+  inline-size: $glyph-size;
+  block-size: $glyph-size;
+
+  svg {
+    inline-size: 100%;
+    block-size: 100%;
+  }
+}
+
+.day-picker__chevron--left {
+  transform: rotate(90deg);
+}
+
+.day-picker__chevron--right {
+  transform: rotate(-90deg);
+}
+
+.day-picker__chevron--up {
+  transform: rotate(180deg);
+}
+
+.day-picker__grid {
+  inline-size: 100%;
+  border-collapse: collapse;
+}
+
+.day-picker__weekday {
+  padding-block: space(1);
+  color: $text-muted;
+  font-size: type-size('small');
+  font-weight: 400;
+  text-align: center;
+}
+
+.day-picker__day {
+  padding: 0;
+  text-align: center;
+}
+
+.day-picker__button {
+  inline-size: $day-picker-day;
+  block-size: $day-picker-day;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background-color: $surface-card-hover;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+}
+
+// Today is told by its ring and a chosen day by its fill and weight, not colour alone.
+.day-picker__day--today .day-picker__button {
+  border-color: $text-primary;
+}
+
+.day-picker__day--selected .day-picker__button {
+  background-color: $accent;
+  color: $text-on-color;
+  font-weight: 600;
+}
+
+// A range: its two ends are chosen days, and the days between sit on a band of the accent, which
+// runs on from each end towards the other. A one-day range has no band.
+.day-picker__day--range-middle {
+  background-color: $day-picker-band;
+
+  .day-picker__button {
+    background-color: transparent;
+    color: inherit;
+    font-weight: inherit;
+  }
+}
+
+.day-picker__day--range-start:not(.day-picker__day--range-end) {
+  background: linear-gradient(to right, transparent 50%, $day-picker-band 50%);
+}
+
+.day-picker__day--range-end:not(.day-picker__day--range-start) {
+  background: linear-gradient(to left, transparent 50%, $day-picker-band 50%);
+}
+
+.day-picker__day--outside {
+  color: $text-muted;
+}
+
+.day-picker__day--disabled {
+  color: $text-muted;
+  opacity: $day-picker-day-disabled-opacity;
+}
