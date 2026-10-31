@@ -897,6 +897,11 @@ type Mutation {
   ): CupboardEntry!
 
   """
+  Assigns a request to a curator or an admin, or to no one. Site admins only.
+  """
+  assignSupportRequest(assigneeId: ID, id: ID!): SupportRequest!
+
+  """
   Completes a draft working, taking what the recipe used from the coven’s jars. Answers the steps it took nothing for.
   """
   completeWorking(id: ID!, workspaceId: ID!): CompleteWorkingResult!
@@ -1034,6 +1039,9 @@ type Mutation {
   """
   leaveWorkspace(workspaceId: ID!): Boolean!
 
+  """Ends a time-out now. Site admins only."""
+  liftSupportTimeout(id: ID!): SupportTimeout!
+
   """
   Pauses admin grants and revokes for every admin but the primary one; answers true, paused. The primary admin alone may.
   """
@@ -1061,6 +1069,16 @@ type Mutation {
   Removes a member from a coven, who can no longer reach it. Owners only; refused when it would leave the coven without an owner.
   """
   removeMember(userId: ID!, workspaceId: ID!): Boolean!
+
+  """
+  Replies to a request and mails its sender that a reply is waiting. An admin may reply to any request, a curator to one assigned to them.
+  """
+  replyToSupportRequest(body: String!, requestId: ID!): SupportReply!
+
+  """
+  Marks a request resolved. An admin may on any request, a curator on one assigned to them.
+  """
+  resolveSupportRequest(id: ID!): SupportRequest!
 
   """
   Ends the pause on admin grants and revokes; answers false, not paused. The primary admin alone may.
@@ -1093,6 +1111,11 @@ type Mutation {
   saveStock(ingredientId: ID!, input: SaveStockInput!, workspaceId: ID!): [InventoryItem!]!
 
   """
+  Sends a support request. Needs a verified address; refused while the sender is timed out or after ten requests in 24 hours.
+  """
+  sendSupportRequest(input: SupportRequestInput!): SupportRequest!
+
+  """
   Marks the entry reviewed by a curator, or clears the mark so it needs review. Curators and admins only.
   """
   setCompendiumEntryReviewed(id: ID!, reviewed: Boolean!): Ingredient!
@@ -1100,10 +1123,23 @@ type Mutation {
   setName(name: String!): User!
   setPassword(newPassword: String!): Boolean!
 
+  """Shows a request to curators, or hides it from them. Site admins only."""
+  setSupportRequestCuratorVisible(id: ID!, visible: Boolean!): SupportRequest!
+
+  """
+  Links a request to an issue on the project’s GitHub repository, or clears the link with null. Site admins only.
+  """
+  setSupportRequestIssueUrl(id: ID!, issueUrl: String): SupportRequest!
+
   """
   Gives a user a site role, user, curator or admin, with an optional reason for the record. Refused for a role already held, for moving the primary admin or the last admin off admin, and for a curator.
   """
   setUserRole(note: String, role: UserRole!, userId: ID!): User!
+
+  """
+  Bars a user from sending support requests until `until`. Site admins only.
+  """
+  timeOutSupportSender(note: String, until: DateTime!, userId: ID!): SupportTimeout!
 
   """Replaces the category; the slug follows the name."""
   updateCategory(id: ID!, input: CategoryInput!): Category!
@@ -1499,6 +1535,12 @@ type Query {
     status: InvitationCardBatchStatus
   ): QueryInvitationCardBatchesConnection!
   me: User!
+
+  """One of the signed-in account’s own support requests."""
+  mySupportRequest(id: ID!): SupportRequest!
+
+  """The signed-in account’s own support requests, newest first."""
+  mySupportRequests(after: String, before: String, first: Int, last: Int): QueryMySupportRequestsConnection!
   ok: Boolean!
   possibleDuplicates(after: String, before: String, first: Int, last: Int, name: String!, workspaceId: ID): QueryPossibleDuplicatesConnection!
 
@@ -1523,6 +1565,14 @@ type Query {
   reference(id: ID!, workspaceId: ID): Reference!
   referenceSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryReferenceSuggestionsConnection!
   spell(id: ID!, workspaceId: ID!): Spell!
+
+  """One support request the viewer may read."""
+  supportRequest(id: ID!): SupportRequest!
+
+  """
+  The support requests the viewer may read, open ahead of resolved and newest first within each. A curator reads those marked for curators or assigned to them; an admin reads all.
+  """
+  supportRequests(after: String, before: String, errorCode: Int, first: Int, kind: SupportKind, last: Int, status: SupportStatus): QuerySupportRequestsConnection!
   users(after: String, awaitingApproval: Boolean, before: String, first: Int, last: Int, query: String, role: UserRole): QueryUsersConnection!
 
   """
@@ -1867,6 +1917,16 @@ type QueryInvitationCardBatchesConnectionEdge {
   node: InvitationCardBatch!
 }
 
+type QueryMySupportRequestsConnection {
+  edges: [QueryMySupportRequestsConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryMySupportRequestsConnectionEdge {
+  cursor: String!
+  node: SupportRequest!
+}
+
 type QueryPossibleDuplicatesConnection {
   edges: [QueryPossibleDuplicatesConnectionEdge!]!
   pageInfo: PageInfo!
@@ -1900,6 +1960,16 @@ type QueryReferenceSuggestionsConnection {
 type QueryReferenceSuggestionsConnectionEdge {
   cursor: String!
   node: Reference!
+}
+
+type QuerySupportRequestsConnection {
+  edges: [QuerySupportRequestsConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QuerySupportRequestsConnectionEdge {
+  cursor: String!
+  node: SupportRequest!
 }
 
 type QueryUsersConnection {
@@ -2274,6 +2344,89 @@ Where the substitute picker lists an entry: the coven's own cupboard (yours), or
 enum SuggestionGroup {
   compendium
   yours
+}
+
+"""What a support request is about."""
+enum SupportKind {
+  accessibility
+  bug
+  question
+}
+
+"""A reply from staff to a support request."""
+type SupportReply {
+  audit: AuditInfo!
+
+  """Who wrote the reply; null if no live account holds the id."""
+  author: User
+  body: String!
+  id: ID!
+}
+
+"""
+A request for help from the support form. A sender reads their own; a curator reads those marked for curators or assigned to them; an admin reads all.
+"""
+type SupportRequest {
+  assignedTo: User
+  audit: AuditInfo!
+  curatorVisible: Boolean!
+  errorCode: Int
+  id: ID!
+  issueUrl: String
+  kind: SupportKind!
+  message: String!
+
+  """
+  The page the sender was on, with a coven’s slug replaced; null when none was sent.
+  """
+  path: String
+
+  """Oldest first."""
+  replies: [SupportReply!]!
+  resolvedAt: DateTime
+  resolvedBy: User
+  sender: User
+  status: SupportStatus!
+  subject: String!
+
+  """
+  The sender’s time-outs, past and active, newest first. Site admins only.
+  """
+  timeouts: [SupportTimeout!]!
+}
+
+input SupportRequestInput {
+  """The HTTP status of the error page, if any."""
+  errorCode: Int
+  kind: SupportKind!
+
+  """1 to 4000 characters."""
+  message: String!
+
+  """
+  The page the sender was on, at most 500 characters; a coven's slug is replaced when it is stored.
+  """
+  path: String
+
+  """1 to 120 characters."""
+  subject: String!
+}
+
+enum SupportStatus {
+  open
+  resolved
+}
+
+"""
+A bar on a user sending support requests until `until`, unless lifted sooner.
+"""
+type SupportTimeout {
+  audit: AuditInfo!
+  id: ID!
+  liftedAt: DateTime
+  note: String
+  until: DateTime!
+  userId: ID!
 }
 
 """A toxic setting other than any, and how many entries it would list."""

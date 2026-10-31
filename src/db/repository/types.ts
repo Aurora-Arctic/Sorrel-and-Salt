@@ -557,6 +557,15 @@ export interface AuditWriter {
    */
   lockCovenStock(membership: Membership): Promise<void>;
   /**
+   * Takes the account's support-send lock until the transaction ends, then reads what a send decides on: the account's requests
+   * in the last `windowSeconds` and the end of its active time-out. Taken first, so two sends from one account queue and the
+   * second counts the first; another account's send is not held up.
+   */
+  lockSupportSender(
+    userId: string,
+    windowSeconds: number,
+  ): Promise<{ recent: number; timedOutUntil: Date | undefined }>;
+  /**
    * The live forms of the proof's coven's ingredient `ingredientId`, locked in
    * form-id order, read in the transaction so they include the ones this write
    * has just made. None for an ingredient that is not the coven's.
@@ -1293,4 +1302,24 @@ export interface CompendiumSlugEntry {
   description: string | null;
   /** When the entry last really changed: its `updated_at`. */
   lastModified: Date;
+}
+
+/**
+ * Who reads the support list, as the finder narrows it: an admin reads every request, a curator only those marked for curators or
+ * assigned to them. The proof is the service's `assertSiteAdmin` or `assertCurator`.
+ */
+export type SupportReader =
+  { role: 'admin'; proof: SiteAdmin } | { role: 'curator'; proof: Curator };
+
+/** Whoever is reading a request's replies: a sender reads their own requests', a curator or admin those they may see. */
+export interface SupportViewer {
+  userId: string;
+  role: 'user' | 'curator' | 'admin';
+}
+
+/** The admin list's narrowing; an absent part is no narrowing. */
+export interface SupportRequestFilter {
+  kind?: 'accessibility' | 'bug' | 'question';
+  status?: 'open' | 'resolved';
+  errorCode?: number;
 }

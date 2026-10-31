@@ -15,6 +15,7 @@ import { invitationWrites } from './invitations';
 import { membershipWrites, workspaceWrites } from './memberships';
 import { spellStepWrites } from './spells';
 import { stockWrites } from './stock';
+import { supportWrites } from './support';
 import { workingWrites } from './workings';
 import { existsIn, selectFrom } from './select';
 import { StaleWrite } from '@/lib/errors';
@@ -217,6 +218,7 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
     ...membershipWrites(context),
     ...spellStepWrites(context),
     ...stockWrites(context),
+    ...supportWrites(context),
     ...workingWrites(context),
     ...workspaceWrites(context),
     delete: (table, match) => {
