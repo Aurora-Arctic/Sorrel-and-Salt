@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { type FormEvent, type ReactElement, type ReactNode, useId, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
@@ -9,7 +10,6 @@ import { SUPPORT_LIST_PATH } from '../../lib/support-path';
 import type { Failure } from '../../lib/types';
 import {
   CharacterCount,
-  ErrorSummary,
   FieldShell,
   FormActions,
   RadioGroupField,
@@ -69,7 +69,6 @@ const SupportForm = ({
   const [page, setPage] = useState(path);
   const [sending, setSending] = useState(false);
   const [problems, setProblems] = useState<Problems>({});
-  const [attempt, setAttempt] = useState(0);
   const [failure, setFailure] = useState<Failure>({});
   const [sent, setSent] = useState(false);
   const [sentSubject, setSentSubject] = useState('');
@@ -118,13 +117,20 @@ const SupportForm = ({
     error: shown.path,
   });
 
-  // Top of the form, in the order the fields sit.
-  const summary = [
-    shown.about && { target: aboutBoxId, message: shown.about },
-    shown.path && { target: pageField.controlId, message: shown.path },
-    shown.subject && { target: subjectField.controlId, message: shown.subject },
-    shown.message && { target: messageField.controlId, message: shown.message },
-  ].filter((item): item is { target: string; message: string } => !!item);
+  // Puts the focus on the first field with a problem, in the order the fields sit, so a send that
+  // refuses is never silent. The topic group's first radio stands for the group.
+  function focusFirst(wrong: Problems) {
+    const target = wrong.about
+      ? document.getElementById(aboutBoxId)?.querySelector<HTMLElement>('input')
+      : document.getElementById(
+          wrong.path
+            ? pageField.controlId
+            : wrong.subject
+              ? subjectField.controlId
+              : messageField.controlId,
+        );
+    target?.focus();
+  }
 
   const discard = useDiscardGuard(!sent && (subject !== '' || message !== '' || page !== path));
 
@@ -148,9 +154,9 @@ const SupportForm = ({
     event.preventDefault();
     const found = problemsOf();
     if (Object.keys(found).length > 0) {
-      setProblems(found);
+      flushSync(() => setProblems(found));
       setFailure({});
-      setAttempt((count) => count + 1);
+      focusFirst(found);
       return;
     }
     setProblems({});
@@ -174,8 +180,8 @@ const SupportForm = ({
     } catch (error) {
       setSending(false);
       const failed = readGraphqlFailure(error, ['about', 'subject', 'message', 'path']);
-      setFailure(failed);
-      if (failed.field) setAttempt((count) => count + 1);
+      flushSync(() => setFailure(failed));
+      if (failed.field) focusFirst({ [failed.field.name]: failed.field.message });
     }
   }
 
@@ -201,7 +207,6 @@ const SupportForm = ({
 
   return (
     <form className="form" noValidate onSubmit={(event) => void submit(event)}>
-      {summary.length > 0 && <ErrorSummary key={attempt} errors={summary} />}
       {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
       <div id={aboutBoxId}>
         <RadioGroupField

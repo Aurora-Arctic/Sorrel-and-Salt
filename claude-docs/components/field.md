@@ -51,24 +51,23 @@ owner, 2026-10-20).
 
 ## The exports
 
-| Name                | What it is                                                                                                                |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `FieldShell`        | The `.field` block around a control the caller renders                                                                    |
-| `FieldError`        | The `.field__error` paragraph, rendered only when there is a message                                                      |
-| `Required`          | The `*` after a label, hidden from assistive technology                                                                   |
-| `fieldDescription`  | The field's ids and the control's `aria-describedby` and `aria-invalid`, from a base id and what describes it             |
-| `useField`          | `fieldDescription` for a react-hook-form field, its error read by name                                                    |
-| `TextField`         | An input, or a textarea with `multiline`, in a react-hook-form form                                                       |
-| `SelectField`       | A closed set on Combobox's select-only box, or its type-ahead box, in a react-hook-form form                              |
-| `RadioGroupField`   | One choice from a few, each radio with a line saying what it means, in a `.fieldset`                                      |
-| `SwitchField`       | An on-or-off choice as a slide toggle, its label above, in a plain-state form                                             |
-| `VisibilitySwitch`  | Who can see a spell or a working, on `SwitchField`; `brief` gives a short line and a tip, for a footer row                |
-| `ErrorSummary`      | The list at the top of a form naming every problem a send found, each linked to its field; takes the focus when it mounts |
-| `CharacterCount`    | The characters a field has left, in a polite live region, shown once it passes 75% of its limit                           |
-| `FormActions`       | A form's row of actions: Save, any further saves, Cancel and Delete                                                       |
-| `ReasonField`       | An admin change's optional Reason, in a plain-state form                                                                  |
-| `SearchField`       | A list filter's search box, its submit a magnifier at the box's end                                                       |
-| `FilterSelectField` | A list filter's closed set: a native select from the server, a select-only box or type-ahead once hydrated                |
+| Name                | What it is                                                                                                    |
+| ------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `FieldShell`        | The `.field` block around a control the caller renders                                                        |
+| `FieldError`        | The `.field__error` paragraph, rendered only when there is a message                                          |
+| `Required`          | The `*` after a label, hidden from assistive technology                                                       |
+| `fieldDescription`  | The field's ids and the control's `aria-describedby` and `aria-invalid`, from a base id and what describes it |
+| `useField`          | `fieldDescription` for a react-hook-form field, its error read by name                                        |
+| `TextField`         | An input, or a textarea with `multiline`, in a react-hook-form form                                           |
+| `SelectField`       | A closed set on Combobox's select-only box, or its type-ahead box, in a react-hook-form form                  |
+| `RadioGroupField`   | One choice from a few, each radio with a line saying what it means, in a `.fieldset`                          |
+| `SwitchField`       | An on-or-off choice as a slide toggle, its label above, in a plain-state form                                 |
+| `VisibilitySwitch`  | Who can see a spell or a working, on `SwitchField`; `brief` gives a short line and a tip, for a footer row    |
+| `CharacterCount`    | The characters a field has left, in a polite live region, shown once it passes 75% of its limit               |
+| `FormActions`       | A form's row of actions: Save, any further saves, Cancel and Delete                                           |
+| `ReasonField`       | An admin change's optional Reason, in a plain-state form                                                      |
+| `SearchField`       | A list filter's search box, its submit a magnifier at the box's end                                           |
+| `FilterSelectField` | A list filter's closed set: a native select from the server, a select-only box or type-ahead once hydrated    |
 
 ### `FormActions`
 
@@ -312,15 +311,6 @@ caller narrowing it to its own type reads it with `oneOf`
   reads the form state by the field's name.
 - **`disabled` is the attribute**, not react-hook-form's option, which would
   also drop the value from what is validated and sent.
-
-## Error summary
-
-`ErrorSummary` takes `errors: { target, message }[]`, where `target` is the id of a control, or of a
-wrapper holding a group of them (the first control inside takes the focus). It draws a `role="alert"`
-`.notice--error` block, "There is a problem" over a list of links, and focuses itself when it mounts, so a form
-mounts it with a `key` that changes on each failed send to bring the focus back. A link moves the focus to its
-field and does not change the address. The field's own error stays beside it too: the summary adds a way in, it
-does not replace the message. The first user is `SupportForm`.
 
 ## Character count
 

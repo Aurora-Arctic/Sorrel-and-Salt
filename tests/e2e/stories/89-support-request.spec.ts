@@ -33,9 +33,8 @@ test.describe('Story 89: Ask for Help and Read the Reply', { tag: '@story-89' },
     await test.step('Send Request names what is missing, then the request is received and named', async () => {
       await dialog.getByRole('radio', { name: /^Question/ }).check();
       await dialog.getByRole('button', { name: 'Send Request' }).click();
-      const problem = dialog.getByRole('alert').filter({ hasText: 'There is a problem' });
-      await expect(problem).toBeFocused();
-      await expect(problem.getByRole('link', { name: 'Write a subject' })).toBeVisible();
+      await expect(dialog.getByLabel('Subject')).toBeFocused();
+      await expect(dialog.getByText('Write a subject')).toBeVisible();
       await assertNoAccessibilityViolations(page);
       await dialog.getByLabel('Subject').fill('Where is the moon table?');
       await dialog.getByLabel('Message').fill('I cannot find the moon table in my coven.');

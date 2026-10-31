@@ -93,38 +93,27 @@ describe('SupportForm', () => {
     expect(send()).toBeEnabled();
   });
 
-  it('shows a summary linking each problem to its field when sent with nothing filled in', async () => {
+  it('shows each problem beside its field and focuses the first when sent with nothing filled in', async () => {
     const calls = mockSending();
     render(<SupportForm path="/a" />);
     fireEvent.click(send());
 
-    const summary = await screen.findByRole('alert');
-    expect(summary).toHaveFocus();
+    await waitFor(() => expect(within(aboutGroup()).getAllByRole('radio')[0]).toHaveFocus());
     expect(calls).toHaveLength(0);
-    expect(
-      within(summary)
-        .getAllByRole('link')
-        .map((link) => link.textContent),
-    ).toEqual(['Choose what this is about.', 'Write a subject', 'Write a message']);
+    expect(screen.getByText('Choose what this is about.')).toBeInTheDocument();
     expect(subject()).toHaveAccessibleDescription(/Write a subject/);
     expect(message()).toHaveAccessibleDescription(/Write a message/);
     expect(subject()).toBeInvalid();
-
-    fireEvent.click(within(summary).getByRole('link', { name: 'Write a message' }));
-    expect(message()).toHaveFocus();
-    fireEvent.click(within(summary).getByRole('link', { name: 'Write a subject' }));
-    expect(subject()).toHaveFocus();
-    fireEvent.click(within(summary).getByRole('link', { name: 'Choose what this is about.' }));
-    expect(within(aboutGroup()).getAllByRole('radio')[0]).toHaveFocus();
+    expect(screen.queryByText('There is a problem')).toBeNull();
   });
 
-  it('lists only what is wrong, and drops the summary once a send goes through', async () => {
+  it('flags only what is wrong, focuses it, and clears the errors once a send goes through', async () => {
     mockSending();
     render(<SupportForm path="/a" about="bug" />);
     fireEvent.change(subject(), { target: { value: 'Hello' } });
     fireEvent.click(send());
-    const summary = await screen.findByRole('alert');
-    expect(within(summary).getAllByRole('link')).toHaveLength(1);
+    await waitFor(() => expect(message()).toHaveFocus());
+    expect(message()).toHaveAccessibleDescription(/Write a message/);
     expect(subject()).not.toBeInvalid();
 
     fireEvent.change(message(), { target: { value: 'Body' } });
@@ -170,10 +159,8 @@ describe('SupportForm', () => {
     expect(screen.getByText('5 characters over')).toBeInTheDocument();
 
     fireEvent.click(send());
-    const summary = await screen.findByRole('alert');
-    expect(
-      within(summary).getByRole('link', { name: 'Keep the subject to 120 characters' }),
-    ).toBeInTheDocument();
+    await waitFor(() => expect(subject()).toHaveFocus());
+    expect(subject()).toHaveAccessibleDescription(/Keep the subject to 120 characters/);
     expect(calls).toHaveLength(0);
   });
 
@@ -183,7 +170,7 @@ describe('SupportForm', () => {
     fill();
     fireEvent.change(page(), { target: { value: '/'.repeat(501) } });
     fireEvent.click(send());
-    await screen.findByRole('alert');
+    await waitFor(() => expect(page()).toHaveFocus());
     expect(page()).toHaveAccessibleDescription(/too long/);
     expect(calls).toHaveLength(0);
   });
@@ -224,7 +211,7 @@ describe('SupportForm', () => {
     render(<SupportForm path="/a" />);
     fill();
     fireEvent.click(send());
-    await screen.findByRole('alert');
+    await waitFor(() => expect(page()).toHaveFocus());
     expect(page()).toHaveAccessibleDescription(/too long/);
     expect(page()).toBeInvalid();
   });
