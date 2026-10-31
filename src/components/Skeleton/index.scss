@@ -93,6 +93,25 @@
   flex: 0 0 5.75rem;
 }
 
+// The Compact switch the coven's card lists end the row with: its label over its track, a label
+// wide, as the switch field is.
+.skeleton__switch {
+  @include stack(2);
+
+  flex: 0 0 auto;
+  width: calc(#{$switch-width} + #{space(4)});
+
+  > span:nth-child(1) {
+    width: 100%;
+    height: calc(type-size('small') * 1.3);
+  }
+
+  > span:nth-child(2) {
+    width: $switch-width;
+    height: $control-height;
+  }
+}
+
 // The count line ("9 ingredients") between the filter row and the cards, a body
 // line tall as the real one is, its bar sat in the line.
 .skeleton__count {
@@ -265,6 +284,22 @@
 @container skeleton (max-width: #{$narrow-column}) {
   .skeleton__filter > span {
     flex-basis: 100%;
+  }
+
+  // With the Compact switch after it, the Filters button shares the second line with the switch,
+  // whose label then stands beside its track.
+  .skeleton__filter > .skeleton__field--button:not(:last-child) {
+    flex: 1 1 0;
+  }
+
+  .skeleton__switch {
+    flex-direction: row;
+    align-items: center;
+    width: calc(#{$switch-width} * 2 + #{space(4)} + #{space(2)});
+
+    > span:nth-child(1) {
+      flex: 1;
+    }
   }
 }
 
@@ -641,4 +676,115 @@
     block-size: 1.25rem;
     border-radius: radius('pill');
   }
+}
+
+// A spell's page, in the recipe's own grid (`.spell-recipe--with-nav`): the head, the Workings
+// menu left of it from a phone's width up, then the main and side columns. Written here as well
+// as in SpellRecipe's stylesheet, since a route loads a component's stylesheet only when it
+// draws the component.
+.skeleton__recipe {
+  @include stack(2);
+  @include entry-nav-grid;
+
+  column-gap: space(6);
+
+  > .page-nav {
+    grid-row: 2 / span 2;
+  }
+
+  @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+    row-gap: 0;
+
+    > .skeleton__recipe-columns {
+      margin-block: space(2);
+    }
+
+    > .skeleton__recipe-head {
+      margin-block-end: space(2);
+    }
+
+    > .page-nav {
+      margin-block-start: space(2);
+    }
+  }
+
+  @media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+    > .skeleton__recipe-head {
+      max-width: $measure;
+    }
+  }
+}
+
+.skeleton__recipe-head {
+  @include stack(2);
+}
+
+.skeleton__recipe-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: space(3);
+}
+
+.skeleton__shapes .skeleton__recipe-back {
+  width: 6rem;
+  height: 1.125rem;
+  margin-block-end: space(3);
+}
+
+// The Edited line stands a step off the back link, as `.meta.last-edit` does.
+.skeleton__shapes .skeleton__recipe-edited {
+  width: 10rem;
+  height: calc(type-size('caption') * 1.65);
+  margin-block: space(5) space(2);
+}
+
+.skeleton__shapes .skeleton__recipe-title {
+  width: 60%;
+  height: calc(heading-size(1) * 1.1);
+}
+
+// On a phone the title takes two lines, as a spell's usually does, and the side column stands over
+// the main one, as the page stacks them.
+@media (max-width: $shell-phone-width) {
+  .skeleton__shapes .skeleton__recipe-title {
+    height: calc(heading-size(1) * 1.1 * 2);
+  }
+
+  .skeleton__recipe > .page-nav {
+    margin-block-start: space(5);
+  }
+
+  .skeleton__recipe-columns {
+    margin-block-start: space(5);
+  }
+
+  .skeleton__recipe-aside {
+    order: -1;
+  }
+}
+
+.skeleton__recipe-actions {
+  display: flex;
+  gap: space(2);
+  flex: 0 0 auto;
+
+  > span {
+    width: $icon-size-large;
+    height: $icon-size-large;
+  }
+}
+
+.skeleton__recipe-columns {
+  @include entry-section;
+}
+
+.skeleton__recipe-main {
+  @include stack(4);
+
+  min-width: 0;
+}
+
+.skeleton__recipe-aside {
+  @include entry-side;
 }

@@ -131,6 +131,6 @@ export function covenTarget(pathname: string): NavigationTarget {
     return { region: 'coven', shape: 'page', frame: 'entry', head: 'eyebrow' };
   // Drafts is the grimoire's second tab, its list too; anything else beneath it is a spell's own page.
   if (slug && section === 'grimoire' && beneath && beneath !== 'drafts')
-    return { region: 'coven', shape: 'page' };
+    return { region: 'coven', shape: 'recipe' };
   return { region: 'coven', ...((section && PARTS_OF_SECTION[section]) || { shape: 'page' }) };
 }

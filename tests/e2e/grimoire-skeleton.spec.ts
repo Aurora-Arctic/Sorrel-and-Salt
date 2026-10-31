@@ -21,6 +21,7 @@ test.beforeAll(async ({ browser }) => {
       A: 'owner',
     });
     await withSql(async (sql) => {
+      await insertSpell(sql, coven.id, SPELL_TITLE, 'workspace', coven.users.A, 'complete');
       for (let n = 0; n < 8; n += 1) {
         await insertSpell(
           sql,
@@ -117,5 +118,151 @@ for (const width of [1280, 375]) {
       expect(waiting.columns).toBe(spells.columns);
       expect(Math.abs(waiting.height - spells.height)).toBeLessThanOrEqual(HEIGHT_TOLERANCE);
     }
+  });
+}
+
+/** How far a placeholder region may be from the loaded page's, in either axis: a line of text's worth. */
+const REGION_TOLERANCE = 12;
+const SPELL_TITLE = 'Calm Charm';
+
+type Box = { x: number; y: number; width: number; height: number };
+
+/**
+ * The boxes of a spell page's regions, in the skeleton (found by the skeleton's own shapes, which carry no
+ * role) or on the loaded page (found by role and label).
+ */
+const recipeRegions = (page: Page, waiting: boolean) =>
+  page.evaluate((inSkeleton) => {
+    const box = (element: Element | null | undefined): Box | null => {
+      if (!element) return null;
+      const { x, y, width, height } = element.getBoundingClientRect();
+      return { x, y, width, height };
+    };
+    if (inSkeleton) {
+      const root = [...document.querySelectorAll('output')].find(
+        (output) =>
+          !output.closest('[aria-hidden="true"]') &&
+          output.parentElement?.querySelector('.skeleton__recipe'),
+      )?.parentElement;
+      const at = (selector: string) => box(root?.querySelector(selector));
+      return {
+        back: at('.skeleton__recipe-back'),
+        edited: at('.skeleton__recipe-edited'),
+        title: at('.skeleton__recipe-title'),
+        actions: at('.skeleton__recipe-actions'),
+        menu: at('.skeleton__recipe .skeleton__menu'),
+        main: at('.skeleton__recipe-columns'),
+        aside: at('.skeleton__recipe-aside'),
+      };
+    }
+    const named = (role: string, name: string) =>
+      [...document.querySelectorAll(`[role="${role}"], ${role}`)].find((element) =>
+        (element.getAttribute('aria-label') ?? element.textContent ?? '').includes(name),
+      );
+    return {
+      back: box(
+        [...document.querySelectorAll('main a')].find((a) => a.textContent?.startsWith('Back to')),
+      ),
+      edited: box(document.querySelector('main .last-edit')),
+      title: box(document.querySelector('main h1')),
+      actions: box(document.querySelector('main h1')?.nextElementSibling),
+      menu: box(named('nav', 'On This Page')),
+      main: box(document.querySelector('.spell-recipe__columns')),
+      aside: box(named('aside', 'The Cupboard')),
+    };
+  }, waiting);
+
+for (const width of [1280, 375]) {
+  test(`at ${width}px a spell page's wait has the loaded page's regions in their places`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await signInAgainAs(page, coven.users.A);
+    await page.goto(`/coven/${coven.slug}/grimoire`);
+    const server = await holdServerAnswers(page);
+    const link = page.getByRole('heading', { name: SPELL_TITLE }).getByRole('link');
+    await expect(link).toBeVisible();
+    server.hold();
+    await link.click();
+    await expect.poll(server.held).toBeGreaterThan(0);
+    await expect.poll(async () => (await recipeRegions(page, true)).title).not.toBeNull();
+    // The wait is pinned in the window wherever the page was scrolled to; at the top it stands where the arrived page does.
+    await page.evaluate(() => window.scrollTo(0, 0));
+    const waiting = await recipeRegions(page, true);
+    await server.release();
+    await expect(page.getByRole('heading', { level: 1, name: SPELL_TITLE })).toBeVisible();
+    const loaded = await recipeRegions(page, false);
+
+    for (const region of ['back', 'edited', 'title', 'actions', 'menu', 'main', 'aside'] as const) {
+      const real = loaded[region];
+      const shape = waiting[region];
+      // Why the comparison means something: the loaded page has the region.
+      expect(real, `${region} on the loaded page`).not.toBeNull();
+      expect(shape, `${region} in the wait`).not.toBeNull();
+      // On a phone the columns dissolve into the page (`display: contents`) and have no box of their own.
+      if (region === 'main' && real!.width === 0) continue;
+      expect(Math.abs(shape!.x - real!.x), `${region} left edge`).toBeLessThanOrEqual(
+        REGION_TOLERANCE,
+      );
+      expect(Math.abs(shape!.y - real!.y), `${region} top edge`).toBeLessThanOrEqual(
+        REGION_TOLERANCE,
+      );
+    }
+    // The side column is as wide as the real one; the title and its icons end where the real ones do.
+    expect(Math.abs(waiting.aside!.width - loaded.aside!.width)).toBeLessThanOrEqual(
+      REGION_TOLERANCE,
+    );
+    expect(
+      Math.abs(
+        waiting.actions!.x + waiting.actions!.width - (loaded.actions!.x + loaded.actions!.width),
+      ),
+    ).toBeLessThanOrEqual(REGION_TOLERANCE);
+  });
+
+  test(`at ${width}px the Grimoire's wait holds the Compact switch where the loaded filter row does`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await signInAgainAs(page, coven.users.A);
+    await page.goto(`/coven/${coven.slug}/members`);
+    const server = await holdServerAnswers(page);
+    server.hold();
+    await page
+      .getByRole('navigation', { name: 'Coven' })
+      .getByRole('link', { name: 'Grimoire', exact: true })
+      .click();
+    await expect.poll(server.held).toBeGreaterThan(0);
+    const waiting = await page.evaluate(() => {
+      const row = [...document.querySelectorAll('output')]
+        .find(
+          (output) =>
+            !output.closest('[aria-hidden="true"]') &&
+            output.parentElement?.querySelector('.skeleton__filter'),
+        )
+        ?.parentElement?.querySelector('.skeleton__filter');
+      const last = row?.lastElementChild?.getBoundingClientRect();
+      const whole = row?.getBoundingClientRect();
+      return last && whole
+        ? { x: last.x, y: last.y - whole.y, right: last.right, rowHeight: whole.height }
+        : null;
+    });
+    await server.release();
+    await expect(page.getByRole('list', { name: 'Spells' })).toBeVisible();
+    const loaded = await page.evaluate(() => {
+      const label = [...document.querySelectorAll('main label')].find(
+        (l) => l.textContent === 'Compact',
+      );
+      const field = label?.parentElement?.getBoundingClientRect();
+      const row = label?.closest('form')?.getBoundingClientRect();
+      return field && row
+        ? { x: field.x, y: field.y - row.y, right: field.right, rowHeight: row.height }
+        : null;
+    });
+    expect(loaded, 'the loaded row has a Compact switch').not.toBeNull();
+    expect(waiting, 'the wait has a last control').not.toBeNull();
+    expect(Math.abs(waiting!.x - loaded!.x)).toBeLessThanOrEqual(REGION_TOLERANCE);
+    expect(Math.abs(waiting!.right - loaded!.right)).toBeLessThanOrEqual(REGION_TOLERANCE);
+    expect(Math.abs(waiting!.y - loaded!.y)).toBeLessThanOrEqual(REGION_TOLERANCE);
+    expect(Math.abs(waiting!.rowHeight - loaded!.rowHeight)).toBeLessThanOrEqual(REGION_TOLERANCE);
   });
 }

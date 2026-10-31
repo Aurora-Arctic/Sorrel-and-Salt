@@ -14,6 +14,7 @@ const DEFAULT_COUNT: Record<SkeletonShape, number> = {
   requests: 3,
   contents: 2,
   line: 1,
+  recipe: 1,
 };
 
 // The admin index's two sections: Compendium's five pages and People's one.
@@ -206,6 +207,13 @@ const Skeleton = ({
                   : 'skeleton__field skeleton__field--short'
               }
             />
+            {shape === 'cards' && density === 'compact' && (
+              // The Compact switch the coven's card lists end their filter row with.
+              <div className="skeleton__switch">
+                <span />
+                <span />
+              </div>
+            )}
           </div>
         )}
         {shape === 'cards' && filter && (
@@ -286,6 +294,57 @@ const Skeleton = ({
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          </div>
+        )}
+        {shape === 'recipe' && (
+          // A spell's page in its own grid (`.skeleton__recipe`, the recipe's `entry-nav-grid`): the head,
+          // the Workings menu, then the main and side columns, so each stands where the real one does.
+          <div className="skeleton__recipe">
+            <div className="skeleton__recipe-head">
+              <span className="skeleton__recipe-back" />
+              <span className="skeleton__recipe-edited" />
+              <div className="skeleton__recipe-row">
+                <span className="skeleton__recipe-title" />
+                <div className="skeleton__recipe-actions">
+                  <span />
+                  <span />
+                  <span />
+                  <span />
+                </div>
+              </div>
+            </div>
+            <div className="page-nav skeleton__menu">
+              <span />
+              <span />
+              <span />
+              <span />
+            </div>
+            <div className="skeleton__recipe-columns">
+              <div className="skeleton__recipe-main">
+                <span className="skeleton__heading" />
+                <div className="skeleton__entry-text">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+                <span className="skeleton__heading" />
+                <div className="skeleton__entry-text">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+              </div>
+              <div className="skeleton__recipe-aside">
+                <div className="skeleton__entry-block">
+                  <span />
+                  <span />
+                </div>
+                <div className="skeleton__entry-block">
+                  <span />
+                  <span />
+                </div>
               </div>
             </div>
           </div>

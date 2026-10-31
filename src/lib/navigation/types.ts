@@ -3,7 +3,7 @@ export type NavigationTarget = {
   region: 'coven' | 'admin' | 'main';
   /** A coven switch names the coven it opens, so what belongs to the old coven can leave at once. */
   coven?: string;
-  shape: 'table' | 'cards' | 'form' | 'page' | 'contents';
+  shape: 'table' | 'cards' | 'form' | 'page' | 'contents' | 'recipe';
   /** A `table` or `cards` wait draws the page's heading row above the list. */
   title?: boolean;
   /** With `title`: the page has an action (Add) at the heading's end. */
