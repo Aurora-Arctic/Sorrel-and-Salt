@@ -5,6 +5,7 @@ import { type FormEvent, type ReactElement, useId, useState } from 'react';
 import { twoFactor } from '../../lib/auth-client';
 import BusyButton from '../BusyButton';
 import { FieldShell, fieldDescription } from '../Field';
+import InfoTip from '../InfoTip';
 import Notice from '../Notice';
 import PasswordField from '../PasswordField';
 import { TOO_MANY_ATTEMPTS } from '../SignInPanel/password-form';
@@ -87,6 +88,7 @@ function printCodes(text: string): void {
 
 const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement => {
   const codeId = useId();
+  const tipId = useId();
   const [on, setOn] = useState(enabled);
   const [enrolment, setEnrolment] = useState<Enrolment>();
   const [password, setPassword] = useState('');
@@ -254,10 +256,13 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
         </>
       ) : (
         <>
-          <p>
-            {on
-              ? 'Two-factor is on: signing in with your password also asks for a code from your authenticator app. Enter your password to turn it off.'
-              : 'Two-factor is off. With it on, signing in with your password also asks for a code from an authenticator app, so a stolen password alone does not open your account.'}
+          <p className="two-factor__status">
+            {on ? 'Two-factor is on.' : 'Two-factor is off.'}
+            <InfoTip id={tipId} label="Two-Factor">
+              {on
+                ? 'Signing in with your password also asks for a code from your authenticator app. Enter your password to turn it off.'
+                : 'With it on, signing in with your password also asks for a code from an authenticator app, so a stolen password alone does not open your account.'}
+            </InfoTip>
           </p>
           <form
             className="form"

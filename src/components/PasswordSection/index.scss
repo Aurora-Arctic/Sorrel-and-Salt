@@ -8,13 +8,17 @@
   gap: space(3);
 }
 
-// Two-factor sits beneath the password form, its own heading. The QR code draws in the text colour on
+// Two-factor is its own tab. The QR code draws in the text colour on
 // the card, so it reads in either theme; its quiet zone is the card's padding.
 .two-factor {
   display: flex;
   flex-direction: column;
   gap: space(3);
-  padding-block-start: space(3);
+}
+
+// The off/on line: no margin of its own, so the column gap is the only space around it.
+.two-factor__status {
+  margin: 0;
 }
 
 .two-factor__steps {
