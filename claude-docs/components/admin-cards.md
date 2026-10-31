@@ -31,7 +31,7 @@ Expires is a UTC day, `2026-10-30`. Minted On, Refused Opens First and Latest an
   [`DateRangeField`](date-range-field.md) with quick picks (Minted: Today, Last 7 Days, Last 30 Days, This Month, Last
   Month; Expires: Today, Next 7 Days, Next 30 Days, This Month, Next Month). Days are UTC days and inclusive at both
   ends (`mintedFrom=2026-10-01&mintedTo=2026-10-31` holds the 1st and the 31st). The Filters count counts the status
-  and each end of a range given, so a full range counts two. The drawer holds
+  and each range with a day in it, one apiece whether it has one end or both, so it reads Filters (3) at most. The drawer holds
   what is picked in it until Apply Filters, which applies it with the batch typed, or until it shuts another way,
   which applies it under the batch shown when something changed. The URL names are `batch`, `status` (`live`,
   `revoked`, `expired`, `used-up`), `mintedFrom`, `mintedTo`, `expiresFrom` and `expiresTo`. Neither the select nor a
