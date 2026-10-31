@@ -32,7 +32,6 @@ $inventory-eye-box: math.div($icon-size + $icon-size-large, 2);
     $inventory-eye-box,
     math.div($glyph-size * 0.875 + math.div($glyph-size-large * 4, 3), 2)
   );
-  @include icon-button-edit;
   margin-block: calc((#{$icon-size} - #{$inventory-eye-box}) / 2);
 }
 
