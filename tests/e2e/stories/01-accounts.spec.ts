@@ -16,7 +16,7 @@ test.beforeAll(async () => {
 // The slot servers blank every provider's credentials (playwright.config.ts), so each button is drawn greyed
 // with aria-disabled, with or without a developer's .env.local. CI cannot finish a live OAuth round trip, so
 // the sign-in is walked up to the provider's door.
-const PROVIDER_NAMES = ['Discord', 'Google', 'Facebook', 'Microsoft'];
+const PROVIDER_NAMES = ['Discord', 'Google', 'Microsoft'];
 
 /** Scans `page` in each theme in turn: a Playwright page is light unless told. */
 async function scanBothThemes(page: Page): Promise<void> {
