@@ -36,3 +36,23 @@
     height: 1.25rem;
   }
 }
+
+// The meter and its text under a new password: the bar spans the input, the text sits below it and
+// holds two lines (a warning can wrap) so the page does not move as the verdict changes.
+.password-field__strength {
+  display: flex;
+  flex-direction: column;
+  gap: space(1);
+}
+
+.password-field__bar {
+  display: block;
+  width: 100%;
+  height: space(2);
+}
+
+.password-field__strength-text {
+  margin: 0;
+  line-height: 1.4;
+  min-block-size: 2.8em;
+}
