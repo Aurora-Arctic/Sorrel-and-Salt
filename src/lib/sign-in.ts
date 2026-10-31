@@ -1,5 +1,6 @@
 import type { Route } from 'next';
 import type { UserRole } from './session';
+import type { PageTab } from '../components/TabbedPage/types';
 import { curates } from './site-roles';
 
 // Pure helpers for /sign-in?next=&error=, shared by the sign-in page and route
@@ -156,7 +157,7 @@ export const ACCOUNT_TWO_FACTOR_PATH = `${ACCOUNT_SIGN_IN_PATH}#two-factor` as R
 export const ACCOUNT_PASSKEYS_PATH = `${ACCOUNT_SIGN_IN_PATH}#passkeys` as Route;
 
 /** The account page's tabs, in their order along the row. */
-export const ACCOUNT_TABS: readonly { href: Route; label: string }[] = [
+export const ACCOUNT_TABS: readonly PageTab[] = [
   { href: ACCOUNT_PATH as Route, label: 'Account', shape: 'sections', sections: 3 },
   { href: ACCOUNT_SIGN_IN_PATH as Route, label: 'Sign-In', shape: 'sections', sections: 4 },
 ];
