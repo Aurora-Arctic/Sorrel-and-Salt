@@ -42,17 +42,18 @@
 }
 
 // The live total, in the Number of Sheets field's `after` slot so it sits one field gap under the input, beneath any
-// error: one line is always reserved, so it appearing, changing or going never moves Expires On.
+// error: one line is always reserved, so it appearing, changing or going never moves Expires On. The negative
+// bottom margin takes part of the form's field gap back, so the reserved line leaves no wide space above Expires On.
 .admin-cards__total {
   min-height: 1.5em;
-  margin: 0;
+  margin: 0 0 (-(space(3)));
   color: $text-muted;
   font-size: type-size('caption');
   line-height: 1.5;
 }
 
-// Expires On and Print Backs on one line, the switch at the right level with the date's control; a phone-width form
-// wraps the switch below.
+// Expires On and Print Backs on one line, the switch just beside the date at the level of its control; a phone-width
+// form wraps the switch below.
 .admin-cards__when {
   display: flex;
   flex-wrap: wrap;
@@ -60,7 +61,7 @@
   gap: space(5);
 
   > :first-child {
-    flex: 1 1 14rem;
+    flex: 0 1 auto;
   }
 }
 
