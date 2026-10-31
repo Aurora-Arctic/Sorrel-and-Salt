@@ -170,3 +170,8 @@
     text-align: start;
   }
 }
+
+// The select's own arrow sits at its right end, so the saving ring stands just left of it.
+.support-detail__side .field__busy {
+  right: calc(#{space(3)} + 1.5em);
+}

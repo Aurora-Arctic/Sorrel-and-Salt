@@ -5,6 +5,7 @@ import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import BusyButton from '../BusyButton';
 import { FieldShell, SwitchField, fieldDescription } from '../Field';
+import Spinner from '../Spinner';
 import IconTip, { CopyIcon } from '../IconTip';
 import LocalTime from '../LocalTime';
 import Notice from '../Notice';
@@ -173,30 +174,34 @@ const DetailBody = ({ request, viewer, assignees }: SupportDetailProps): ReactEl
       {isAdmin && (
         <aside className="support-detail__side" aria-label="Request Settings">
           <FieldShell label="Assigned To" {...assignField}>
-            <select
-              id={assignField.controlId}
-              className="select"
-              {...aria}
-              value={request.assignee?.id ?? ''}
-              disabled={assign.busy}
-              onChange={(event) =>
-                void assign.run(
-                  () =>
-                    graphqlRequest(AssignDocument, {
-                      id: request.id,
-                      assigneeId: event.target.value || null,
-                    }),
-                  event.target.value ? 'Request assigned.' : 'Request unassigned.',
-                )
-              }
-            >
-              <option value="">Unassigned</option>
-              {assignees.map((person) => (
-                <option key={person.id} value={person.id}>
-                  {person.name}
-                </option>
-              ))}
-            </select>
+            <span className="field__control">
+              <select
+                id={assignField.controlId}
+                className="select"
+                {...aria}
+                value={request.assignee?.id ?? ''}
+                aria-busy={assign.busy || undefined}
+                onChange={(event) => {
+                  if (assign.busy) return;
+                  void assign.run(
+                    () =>
+                      graphqlRequest(AssignDocument, {
+                        id: request.id,
+                        assigneeId: event.target.value || null,
+                      }),
+                    event.target.value ? 'Request assigned.' : 'Request unassigned.',
+                  );
+                }}
+              >
+                <option value="">Unassigned</option>
+                {assignees.map((person) => (
+                  <option key={person.id} value={person.id}>
+                    {person.name}
+                  </option>
+                ))}
+              </select>
+              {assign.busy && <Spinner className="field__busy" />}
+            </span>
           </FieldShell>
           <SwitchField
             label="Shared With Curators"
