@@ -6,10 +6,14 @@ through the identity services (`listCardBatches`, `listCardArrivals` and their c
 rows down. A row carries no token and no hash; the database holds neither a token nor anything that
 yields one. The rules are [`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md), "Invitation cards".
 
+## Dates
+
+Expires is a UTC day, `2026-10-30`. Minted On, Refused Opens First and Latest and Card Sign-Ups Accepted On are `2026-10-30 14:05` in the viewer's own zone, through [LocalTime](local-time.md). Above the stacking width each is muted at caption size (`admin-cards__fact`), as the user list's Signed Up is. The Card Sign-Ups CSV keeps its own date format.
+
 ## Contracts
 
 - **Invitation Cards** (`index.tsx`): a region named "Invitation Cards" with one row per batch: batch (the
-  first block of the batch id, `batchName`), minted on (date and time, UTC), expires (the date alone: it is
+  first block of the batch id, `batchName`), minted on (date and time, local), expires (the date alone: it is
   midnight UTC), cards, **status**, accepted, and **Revoke Batch** while a card of the batch is pending
   (`ConfirmedAction` asks first, naming the batch and its mint date, and says accounts that already accepted
   keep their access). The Revoke column is red like the People table's Impersonate column (`row-action-column`, `.admin-cards__revoke`), with a red row button and a red confirm; the question always comes first.
