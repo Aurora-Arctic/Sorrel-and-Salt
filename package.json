@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev --hostname 0.0.0.0 --port 8000",
     "dev:debug": "next dev --inspect=0.0.0.0:9229 --hostname 0.0.0.0 --port 8000",
+    "jobs:web": "workflow web --noBrowser",
     "build": "NODE_ENV=production next build",
     "start": "next start --hostname 0.0.0.0 --port \"${PORT:-8000}\"",
     "typecheck": "tsc --noEmit",
