@@ -138,6 +138,7 @@ const MAILS: {
         to: 'someone@layout.test',
         url: `${ORIGIN}/account/support`,
         origin: ORIGIN,
+        requestSubject: 'The jar will not open',
       }),
   },
 ];

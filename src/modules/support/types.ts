@@ -16,6 +16,6 @@ export type SupportStatus = SupportRequestRow['status'];
  * may not import the origin resolution the link needs.
  */
 export interface SupportNotifier {
-  /** Mails `to` that a reply is waiting on `/account/support`. Carries no reply text; never throws on a failed send. */
-  replyWaiting(to: string): Promise<void>;
+  /** Mails `to` that a reply to the request headed `subject` is waiting on `/account/support`. Carries no reply text; never throws on a failed send. */
+  replyWaiting(to: string, subject: string): Promise<void>;
 }

@@ -31,6 +31,6 @@ export async function replyToSupportRequest(
 
   // The reply is saved before the mail goes, and a sender who has left gets none: neither loses the reply.
   const sender = await findOneById(users, request.createdBy);
-  if (sender) await notifier.replyWaiting(sender.email);
+  if (sender) await notifier.replyWaiting(sender.email, request.subject);
   return reply;
 }

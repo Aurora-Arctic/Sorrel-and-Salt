@@ -41,12 +41,15 @@ const PAGE: PageRequest = { limit: 101, inverted: false };
 const FUTURE = () => new Date(Date.now() + 3_600_000);
 const INPUT = { about: 'bug', subject: 'The jar will not open', message: 'It sticks.' } as const;
 
-function notifier(): SupportNotifier & { sent: string[] } {
+function notifier(): SupportNotifier & { sent: string[]; subjects: string[] } {
   const sent: string[] = [];
+  const subjects: string[] = [];
   return {
     sent,
-    replyWaiting: async (to) => {
+    subjects,
+    replyWaiting: async (to, subject) => {
       sent.push(to);
+      subjects.push(subject);
     },
   };
 }
@@ -254,6 +257,7 @@ describe('replyToSupportRequest', () => {
       createdBy: E.id,
     });
     expect(mail.sent).toEqual([await emailOf(C)]);
+    expect(mail.subjects).toEqual([INPUT.subject]);
   });
 
   it('lets a curator reply only to a request assigned to them', async () => {
