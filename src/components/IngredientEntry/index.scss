@@ -272,11 +272,6 @@ $formal-line: $icon-size;
     > * {
       grid-column: 1;
     }
-
-    // The review row's line runs under the side column too: the whole width of the entry's content.
-    > .review-row {
-      grid-column: 1 / -1;
-    }
   }
 }
 
