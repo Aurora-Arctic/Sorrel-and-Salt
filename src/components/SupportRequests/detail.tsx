@@ -65,7 +65,7 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
           errorCode={request.errorCode}
           errorReference={request.errorReference}
           lead={
-            <div>
+            <div className="support-detail__fact--wide">
               <dt>From</dt>
               <dd>
                 {request.sender ? (
