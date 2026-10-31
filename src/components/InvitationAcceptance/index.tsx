@@ -8,6 +8,7 @@ import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
 import { useClickFeedback } from '../ClickFeedback';
 import Notice from '../Notice';
+import PageHeader from '../PageHeader';
 import type { InvitationAcceptanceProps } from './types';
 import './index.scss';
 
@@ -119,10 +120,7 @@ const InvitationAcceptance = (props: InvitationAcceptanceProps): ReactElement =>
   const grant = grantOf(props);
   return (
     <div className="panel invitation-acceptance">
-      <div className="header">
-        <h1>Your Invitation</h1>
-        {grant && <p className="lede">{grant}</p>}
-      </div>
+      <PageHeader title="Your Invitation" lede={grant} />
       {props.status === 'signed-out' && (
         <p className="invitation-acceptance__actions">
           <a className="btn btn--solid" href={props.signInHref}>

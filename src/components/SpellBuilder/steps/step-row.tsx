@@ -4,7 +4,8 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { ChevronIcon, ClearIcon, GripIcon } from '../../Combobox/icons';
+import { GripIcon } from '../../Combobox/icons';
+import { ChevronIcon, CrossIcon } from '../../IconTip/icons';
 import { EditIcon } from '../../IngredientForm/icons';
 import { SelectField, TextField } from '../../Field';
 import SafetyNote, { SafetyMark } from '../../SafetyNote';
@@ -78,6 +79,8 @@ export function BuilderStepRow({
   const focusOnOpen = useRef(false);
   const sortable = useSortable({ id });
   const unit = `steps.${index}.unit` as const;
+  // The one name the handle, the pencil and Remove all give the row, as the drag messages say it:
+  // an ingredient with its form, an instruction by its opening words.
   const name = stepNameOf(step);
   const instruction = isInstruction(step);
   const safety = safetyOf(step);
@@ -114,7 +117,7 @@ export function BuilderStepRow({
       name={`steps.${index}.body`}
       label="Instruction"
       labelSuffix={instruction ? `Step ${index + 1}` : name}
-      placeholder={instruction ? 'Light candle' : 'Add an instruction'}
+      placeholder="Add an instruction"
       multiline
       rows={2}
     />
@@ -149,7 +152,8 @@ export function BuilderStepRow({
       name={instruction ? null : name}
       icon={step.icon}
       // The care the ingredient needs, kept in view beside the step and never in the way of
-      // saving it. A one-off has none to show: it draws nothing, not "safe".
+      // saving it, open or closed: open, the note below adds its words. A one-off has none to
+      // show: it draws nothing, not "safe".
       marks={safety && <SafetyMark {...safety} />}
       // The eye comes after every badge, with Edit and Remove in one tight group.
       look={
@@ -166,7 +170,9 @@ export function BuilderStepRow({
       badge={oneOff ? <OneOffBadge /> : null}
       summary={
         instruction ? (
-          (bodyTyped ?? '').trim() || <span className="step-row__placeholder">Write the step</span>
+          (bodyTyped ?? '').trim() || (
+            <span className="step-row__placeholder">Add an instruction</span>
+          )
         ) : amountLine || bodyLine ? (
           // The amount never shrinks; only the instruction's tail is cut by the ellipsis.
           <span className="step-row__line">
@@ -185,7 +191,7 @@ export function BuilderStepRow({
           // One disclosure button in one place (second design review): the pencil while the row is
           // closed, the up chevron, light, once it is open. It keeps the focus when it flips.
           className={['step-row__edit', open && 'step-row__edit--close'].filter(Boolean).join(' ')}
-          aria-label={`${open ? 'Close' : 'Edit'} ${instruction ? `step ${index + 1}` : step.name}`}
+          aria-label={`${open ? 'Close' : 'Edit'} ${name}`}
           aria-expanded={open}
           aria-controls={fieldsId}
           onClick={() => {
@@ -251,11 +257,11 @@ export function BuilderStepRow({
           <button
             type="button"
             className="step-row__remove"
-            aria-label={instruction ? `Remove step ${index + 1}` : `Remove ${step.name}`}
+            aria-label={`Remove ${name}`}
             onClick={onRemove}
           >
             {/* The × a variant card's Remove is, so the row keeps its width for the name. */}
-            <ClearIcon />
+            <CrossIcon />
           </button>
         )
       }

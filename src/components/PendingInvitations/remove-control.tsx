@@ -22,7 +22,7 @@ const RemoveControl = ({ workspaceId, invitation }: RevokeControlProps): ReactEl
   <ConfirmedAction
     label="Remove"
     accessibleName={`Remove the declined invitation to ${invitation.email}`}
-    openClass="btn btn--small btn--destructive"
+    openClass="btn btn--quiet btn--small"
     title="Remove Invitation"
     question={
       <>

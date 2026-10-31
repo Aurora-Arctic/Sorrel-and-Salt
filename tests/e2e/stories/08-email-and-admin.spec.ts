@@ -279,6 +279,12 @@ test(
     await expect(page.getByRole('main').getByRole('status')).toContainText(after);
     await assertNoAccessibilityViolations(page);
     const link = await mailedPath(after, VERIFY_LINK);
+    // The address being left is told, naming the new one's domain and carrying no link.
+    const requested = await latestMessageTo(before);
+    expect(requested.subject).toBe('A New Email Address Was Requested');
+    expect(requested.text).toContain('email-and-admin.test');
+    expect(requested.text).not.toContain(after);
+    expect(requested.text).not.toContain('verify-email');
 
     // Until the link is followed, the account keeps the old address.
     await visit(page, '/account/email');
@@ -303,6 +309,9 @@ test(
     await expect(page.getByRole('main')).toContainText(after);
     await expect(page.getByRole('link', { name: 'Continue', exact: true })).toBeVisible();
     await assertNoAccessibilityViolations(page);
+    await expect
+      .poll(async () => (await latestMessageTo(before)).subject)
+      .toBe('Your Email Address Was Changed');
 
     await visit(page, '/account');
     await expect(

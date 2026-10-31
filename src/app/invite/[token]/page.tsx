@@ -3,7 +3,7 @@ import InvitationPanel from './invitation-panel';
 import type { InvitePageProps } from './types';
 
 export const metadata: Metadata = {
-  title: 'Your Invitation — Sorrel & Salt',
+  title: 'Your Invitation',
 };
 
 export default async function InvitePage({ params }: InvitePageProps) {

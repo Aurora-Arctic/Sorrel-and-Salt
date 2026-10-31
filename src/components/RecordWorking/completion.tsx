@@ -11,6 +11,7 @@ import { usePendingNavigation } from '../../lib/navigation';
 import BusyButton from '../BusyButton';
 import JarLine from '../JarLine';
 import Notice from '../Notice';
+import Skeleton from '../Skeleton';
 import { stockState } from '../StockBadge/stock-state';
 import { withUnit } from '../StockBadge/stock-words';
 import './index.scss';
@@ -18,7 +19,7 @@ import type { WorkingCompletionProps, WorkingStep } from './types';
 import { SKIP_REASON } from './warnings';
 
 // The step before a working is completed: what completing it would take from each jar, read from
-// `workingDeductionPreview`, and a Confirm that runs `completeWorking`. The preview and the
+// `workingDeductionPreview`, and a Mark Complete that runs `completeWorking`. The preview and the
 // completion share one plan on the server, so what is shown is what is taken
 // (claude-docs/components/record-working.md).
 
@@ -68,8 +69,10 @@ type Skipped = Plan['warnings'][number];
 type PreviewRow = { step: WorkingStep; taken: Taken } | { step: WorkingStep; skipped: Skipped };
 
 const amount = (quantity: number, unit: string) => withUnit(Number(quantity.toFixed(3)), unit);
+// An empty jar has none, the way the recipe page's In the Cupboard panel says it.
+const holds = (quantity: number, unit: string) => (quantity > 0 ? amount(quantity, unit) : 'none');
 
-/** One line of the preview: the step's jar as the recipe page's In Coven Inventory draws it, then what the step takes from it. */
+/** One line of the preview: the step's jar as the recipe page's In the Cupboard panel draws it, then what the step takes from it. */
 function DeductionLine({ row, onSaved }: { row: PreviewRow; onSaved: () => void }): ReactElement {
   const { step } = row;
   const taken = 'taken' in row ? row.taken : null;
@@ -84,7 +87,6 @@ function DeductionLine({ row, onSaved }: { row: PreviewRow; onSaved: () => void 
   const form = step.form ?? '';
   return (
     <JarLine
-      className="working-deductions__line"
       seed={step.seed ?? step.name}
       kind={form}
       held={held}
@@ -95,7 +97,7 @@ function DeductionLine({ row, onSaved }: { row: PreviewRow; onSaved: () => void 
         step.stock
           ? {
               ...step.stock,
-              // The same dialog and handler as a jar on the recipe page's In Coven Inventory.
+              // The same dialog and handler as a jar on the recipe page's In the Cupboard panel.
               ariaLabel: ['Edit Stock', step.stock.ingredientName, form && formLabel(form)]
                 .filter(Boolean)
                 .join(', '),
@@ -104,22 +106,30 @@ function DeductionLine({ row, onSaved }: { row: PreviewRow; onSaved: () => void 
           : undefined
       }
       words={
-        taken ? (
+        taken && short ? (
+          // A short jar is emptied, so the line leads with what the step needs rather than a take and a left of none.
+          <>
+            <span>
+              needs <b>{amount(taken.quantity + taken.shortfall, taken.unit)}</b>
+            </span>
+            <span>
+              {' · '}have {holds(taken.before, taken.unit)}
+            </span>
+            <span className="working-deductions__short">
+              {' · '}short by {amount(taken.shortfall, taken.unit)}
+            </span>
+          </>
+        ) : taken ? (
           <>
             <span>
               takes <b>{amount(taken.quantity, taken.unit)}</b>
             </span>
             <span>
-              {' · '}have {amount(taken.before, taken.unit)}
+              {' · '}have {holds(taken.before, taken.unit)}
             </span>
             <span>
-              {' · '}left {amount(Math.max(taken.before - taken.quantity, 0), taken.unit)}
+              {' · '}left {holds(Math.max(taken.before - taken.quantity, 0), taken.unit)}
             </span>
-            {short && (
-              <span className="working-deductions__short">
-                {' · '}short by {amount(taken.shortfall, taken.unit)}
-              </span>
-            )}
           </>
         ) : oneOff ? (
           'one-off · not kept'
@@ -184,17 +194,22 @@ export default function WorkingCompletion({
     ? plan.warnings.filter((warning) => !steps.some((step) => step.id === warning.stepId))
     : [];
   const done = complete.isSuccess;
+  const takesSome = plan?.deductions.some((deduction) => deduction.quantity > 0) ?? false;
   return (
     <div className="form">
       {failure && <Notice kind="error">{failure}</Notice>}
       {!plan ? (
-        <p role="status">Reading the jars</p>
+        <Skeleton shape="line" count={steps.length || 1} />
       ) : (
         <>
           <p>
             {done
-              ? 'Working completed. This is what was taken from the coven’s jars.'
-              : 'Completing this working takes the following from the coven’s jars.'}
+              ? takesSome
+                ? 'Working completed. This is what was taken from the coven’s jars.'
+                : 'Working completed. Nothing was taken from the coven’s jars.'
+              : takesSome
+                ? 'Completing this working takes the following from the coven’s jars.'
+                : 'Completing this working takes nothing from the coven’s jars.'}
           </p>
           <ul aria-label="Deductions" className="working-deductions">
             {rows.map((row) => (
@@ -203,7 +218,6 @@ export default function WorkingCompletion({
             {orphans.map((warning) => (
               <JarLine
                 key={warning.stepId}
-                className="working-deductions__line"
                 seed=""
                 kind=""
                 held={null}
@@ -213,7 +227,6 @@ export default function WorkingCompletion({
               />
             ))}
           </ul>
-          {rows.length + orphans.length === 0 && <p>Nothing will be taken from any jar.</p>}
         </>
       )}
       <div className="modal__actions">
@@ -226,14 +239,14 @@ export default function WorkingCompletion({
             <BusyButton
               className="btn btn--solid"
               busy={complete.isPending}
-              busyLabel="Completing"
+              busyLabel="Marking Complete"
               disabled={!plan || complete.isPending}
               onClick={() => {
                 setFailure(undefined);
                 complete.mutate();
               }}
             >
-              Confirm
+              Mark Complete
             </BusyButton>
             <button
               type="button"
@@ -241,7 +254,8 @@ export default function WorkingCompletion({
               disabled={complete.isPending}
               onClick={onBack}
             >
-              Cancel
+              {/* The working is already saved as a draft, so leaving keeps it. */}
+              Keep as Draft
             </button>
           </>
         )}

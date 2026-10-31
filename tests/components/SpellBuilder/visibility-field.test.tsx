@@ -8,6 +8,7 @@ import type {
   UpdateSpellMutationVariables,
 } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
+import { VISIBILITY_LABELS } from '@/components/GrimoireList/params';
 import type { SpellBuilderProps, SpellBuilderSpell } from '@/components/SpellBuilder/types';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { offerCategories } from '../../support/msw/ingredient-lookups';
@@ -22,25 +23,25 @@ beforeEach(() => offerCategories([]));
 // The spell builder's visibility control: who can see the spell, its author alone or the whole coven, set at creation, widened once with a confirmation, and read-only once shared.
 // That the service refuses a narrowing is tests/modules/grimoire/services/spells.test.ts's; here the builder shows that refusal's words in its notice.
 
-// A saved spell opens with its sections shut, so each is opened
-// with Open All, as a person reaches the switch in Notes.
-function renderBuilder(props: Partial<SpellBuilderProps> = {}) {
+// A saved spell opens with its sections shut, so each is opened with Open All, to reach the
+// fields; the switch is the footer's and is reached either way.
+function renderBuilder(props: Partial<SpellBuilderProps> = {}, { openAll = true } = {}) {
   const view = render(
     <QueryClientProvider client={makeQueryClient()}>
       <SpellBuilder workspaceId="w1" {...props} />
     </QueryClientProvider>,
   );
-  if (props.spell) fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
+  if (props.spell && openAll) fireEvent.click(screen.getByRole('button', { name: 'Open All' }));
   return view;
 }
 
-// A switch: on is the coven, off is private.
-const toggle = () => screen.getByRole('switch', { name: 'Share With the Coven' });
+// A switch: on is the coven, off is private. It is named as the grimoire list names a shared spell.
+const toggle = () => screen.getByRole('switch', { name: VISIBILITY_LABELS.workspace });
 const save = () => screen.getByRole('button', { name: /^Sav/ });
 const title = () => screen.getByRole('textbox', { name: 'Title' });
 const submit = () => fireEvent.submit(save().closest('form') as HTMLFormElement);
 // The question over the form: a group named by it (ConfirmOverlay).
-const sharing = () => screen.queryByRole('group', { name: /Share With the Coven/ });
+const sharing = () => screen.queryByRole('group', { name: /^Share Fixture Working\?/ });
 
 const SPELL: SpellBuilderSpell = {
   id: 's3',
@@ -119,6 +120,15 @@ const NARROWING_REFUSED =
 const COMPLETE: SpellBuilderSpell = { ...SPELL, status: 'complete' };
 
 describe('SpellBuilder visibility', () => {
+  it('draws the switch in the footer beside Mark Complete, reached with every section shut', () => {
+    renderBuilder({ spell: SPELL }, { openAll: false });
+    // Why it could have been hidden: every section is shut, the note's with them.
+    expect(screen.getByRole('button', { name: 'Notes' })).toHaveAttribute('aria-expanded', 'false');
+
+    expect(toggle()).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Mark Complete' })).toBeVisible();
+  });
+
   it('opens a new spell private, saying what each state means', () => {
     renderBuilder();
 
@@ -129,7 +139,7 @@ describe('SpellBuilder visibility', () => {
     fireEvent.click(toggle());
 
     expect(toggle()).toBeChecked();
-    expect(toggle()).toHaveAccessibleDescription(/every member/i);
+    expect(toggle()).toHaveAccessibleDescription(/^The coven can see it\./);
   });
 
   it('creates the spell private when nothing else is chosen', async () => {
@@ -184,7 +194,10 @@ describe('SpellBuilder visibility', () => {
       fireEvent.click(toggle());
 
       const question = sharing();
-      expect(question).toBeInTheDocument();
+      // The question names the spell, then says in one sentence what sharing does.
+      expect(question).toHaveTextContent(
+        'Share Fixture Working? Every member of the coven will see it, it cannot be made private again, and your other changes are saved with it.',
+      );
       fireEvent.click(
         within(question as HTMLElement).getByRole('button', { name: 'Keep It Private' }),
       );

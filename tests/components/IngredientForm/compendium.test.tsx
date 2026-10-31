@@ -26,7 +26,12 @@ import type {
 } from '@/gql/graphql';
 import { DEBOUNCE_MS } from '@/lib/debounce';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
-import { expectAnswered, expectAskingOver, renderInModal } from '../../support/discard-guard';
+import {
+  answer,
+  expectAnswered,
+  expectAskingOver,
+  renderInModal,
+} from '../../support/discard-guard';
 import {
   box,
   renderWithClient,
@@ -200,7 +205,7 @@ describe('IngredientForm on the compendium', () => {
     });
 
     // Regression: an entry whose substitute links an ingredient in forms, with none chosen, opened as the readback gives it, its Form of X box registering a key the values lacked.
-    // React's development double mount then counted the untouched entry changed, and Cancel asked.
+    // React's development double mount then counted the untouched entry changed, and closing asked.
     it('closes an untouched entry at once whose substitute links an ingredient with no form chosen', () => {
       offerNothing();
       const values: IngredientFormValues = {
@@ -227,14 +232,13 @@ describe('IngredientForm on the compendium', () => {
             entry={{ id: ENTRY_ID, values }}
             onSaved={vi.fn()}
             onDeleted={done}
-            onCancel={done}
           />
         ),
         { strict: true },
       );
 
       expect(screen.getByRole('button', { name: 'Save Ingredient' })).toBeDisabled();
-      fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Close' }));
 
       expect(screen.queryByRole('button', { name: 'Discard Changes' })).not.toBeInTheDocument();
       expect(onClose).toHaveBeenCalledOnce();
@@ -482,7 +486,7 @@ describe('IngredientForm on the compendium', () => {
         expect(review).toHaveLength(0);
       });
 
-      it('is saved by Cancel, which closes without asking', async () => {
+      it('is saved by Close, which closes without asking', async () => {
         const review = acceptReview();
         acceptUpdate();
         offerNothing();
@@ -494,12 +498,11 @@ describe('IngredientForm on the compendium', () => {
             review={{ reviewed: false }}
             onSaved={vi.fn()}
             onDeleted={done}
-            onCancel={done}
           />
         ));
 
         fireEvent.click(reviewSwitch());
-        fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+        fireEvent.click(screen.getByRole('button', { name: 'Close' }));
 
         await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
         expect(screen.queryByRole('button', { name: 'Discard Changes' })).not.toBeInTheDocument();
@@ -569,7 +572,7 @@ describe('IngredientForm on the compendium', () => {
       expect(textbox('Name')).toBeValid();
     });
 
-    it('asks before ending another entry’s redirect, sending nothing on Keep It, and again once confirmed', async () => {
+    it('asks before ending another entry’s redirect, sending nothing on Cancel, and again once confirmed', async () => {
       const message =
         '"mockwort-fixtura-testalis" redirects to "Mockwort" (Fixtura vulgaris, root) until 4 April 2027, 00:00 UTC — confirm to end that redirect';
       mockGraphQLError('UpdateCompendiumIngredient', {
@@ -580,8 +583,8 @@ describe('IngredientForm on the compendium', () => {
 
       type('Name', 'Mockwort');
       press('Save Ingredient');
-      await waitFor(() => button('Keep It'));
-      fireEvent.click(button('Keep It'));
+      await waitFor(() => button('Cancel'));
+      fireEvent.click(button('Cancel'));
 
       noButton('End Redirect & Save');
       expect(button('Save Ingredient')).toBeEnabled();
@@ -609,7 +612,7 @@ describe('IngredientForm on the compendium', () => {
       expect(asked).toEqual([{ id: ENTRY_ID }]);
     });
 
-    // Keep It, and the focus on it, are the modal's case below.
+    // Cancel, and the focus on it, are the modal's case below.
     it('deletes it once confirmed, and says why when the delete is refused', async () => {
       const { onDeleted } = renderEntry();
       mockGraphQLError('DeleteCompendiumIngredient', {
@@ -618,8 +621,8 @@ describe('IngredientForm on the compendium', () => {
       });
 
       fireEvent.click(button('Delete Ingredient'));
-      // The question names it: a paragraph, the closed Identity's summary line naming it too.
-      expect(screen.getByText(/Testwort/, { selector: 'p' })).toBeInTheDocument();
+      // The question names it, as the group it draws is named by the question.
+      expect(screen.getByRole('group', { name: /Testwort/ })).toBeInTheDocument();
       await act(async () => {
         fireEvent.click(button('Delete'));
       });
@@ -638,7 +641,7 @@ describe('IngredientForm on the compendium', () => {
 
   // Its questions are asked over the form, as the unsaved changes' is
   // : the long form inert behind each, and the
-  // focus on its safe answer, Keep It.
+  // focus on its safe answer, Cancel.
   describe('an entry given to it, in a modal', () => {
     const renderInDialog = () =>
       renderInModal((done) => (
@@ -648,21 +651,19 @@ describe('IngredientForm on the compendium', () => {
           entry={{ id: ENTRY_ID, values: TESTWORT }}
           onSaved={vi.fn()}
           onDeleted={done}
-          onCancel={done}
         />
       ));
 
-    it('holds the form while Delete asks, gives it back on Keep It, and deletes on Delete', async () => {
+    it('holds the form while Delete asks, gives it back on Cancel, and deletes on Delete', async () => {
       offerNothing();
       const onClose = renderInDialog();
       expect(textbox('Name').closest('[inert]')).toBeNull();
 
       press('Delete Ingredient');
-      expect(expectAskingOver(textbox('Name'), button('Keep It'))).toContainElement(
-        button('Delete'),
-      );
-      press('Keep It');
-      expectAnswered(textbox('Name'), 'Keep It');
+      const question = expectAskingOver(textbox('Name'), answer('Cancel'));
+      expect(question).toContainElement(button('Delete'));
+      press(answer('Cancel'));
+      expectAnswered(textbox('Name'), question);
       expect(button('Delete Ingredient')).toHaveFocus();
 
       const calls = acceptDelete();
@@ -673,7 +674,7 @@ describe('IngredientForm on the compendium', () => {
       expect(calls).toEqual([{ id: ENTRY_ID }]);
     });
 
-    it('holds the form while a redirect asks, and gives it back on Keep It', async () => {
+    it('holds the form while a redirect asks, and gives it back on Cancel', async () => {
       offerNothing();
       mockGraphQLError('UpdateCompendiumIngredient', {
         code: 'VALIDATION',
@@ -685,9 +686,9 @@ describe('IngredientForm on the compendium', () => {
       press('Save Ingredient');
       await waitFor(() => button('End Redirect & Save'));
 
-      expectAskingOver(textbox('Name'), button('Keep It'));
-      press('Keep It');
-      expectAnswered(textbox('Name'), 'Keep It');
+      const question = expectAskingOver(textbox('Name'), answer('Cancel'));
+      press(answer('Cancel'));
+      expectAnswered(textbox('Name'), question);
       expect(textbox('Name')).toHaveValue('Mockwort');
     });
   });

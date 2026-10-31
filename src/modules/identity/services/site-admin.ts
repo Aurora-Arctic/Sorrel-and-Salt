@@ -7,6 +7,14 @@ import { isSiteAdmin } from './admin-changes';
 // CLAUDE.md rule 5's two layers on the site role: `assertCurator` and `assertSiteAdmin` check, and the `Curator` and `SiteAdmin` they return
 // are the proofs. Compendium-tier writers demand a `Curator`, people-page ones a `SiteAdmin` (claude-docs/db/site-admin-proof.md, "The SiteAdmin proof").
 
+const UNVERIFIED =
+  'Verify your email address before using this site. Open the email page from your account to finish.';
+
+// An unverified account reaches the email page and nothing else, whatever its role, as `assertMembership` refuses it every coven.
+function refuseUnverified(session: Session): void {
+  if (session.emailUnverified) throw new Forbidden(UNVERIFIED);
+}
+
 // Not exported, so no object literal outside this file satisfies either proof.
 declare const curatorBrand: unique symbol;
 declare const adminBrand: unique symbol;
@@ -32,9 +40,10 @@ export type SiteAdmin = Curator & {
  * the compendium-tier writes and the admin-curated vocabularies. Reads the
  * session's role and nothing else, as `assertSiteAdmin` does.
  *
- * @throws {Forbidden} the session's role is neither `curator` nor `admin`.
+ * @throws {Forbidden} the session's email address is unverified, or its role is neither `curator` nor `admin`.
  */
 export function assertCurator(session: Session, reason = 'Only a curator may do this'): Curator {
+  refuseUnverified(session);
   if (!curates(session.role)) throw new Forbidden(reason);
   return { userId: session.userId } as Curator;
 }
@@ -46,12 +55,13 @@ export function assertCurator(session: Session, reason = 'Only a curator may do 
  * else, which the request read off the user's row. `reason` is what the
  * refusal says, when the caller has a more particular one than the default.
  *
- * @throws {Forbidden} the session's role is not `admin`.
+ * @throws {Forbidden} the session's email address is unverified, or its role is not `admin`.
  */
 export function assertSiteAdmin(
   session: Session,
   reason = 'Only a site admin may do this',
 ): SiteAdmin {
+  refuseUnverified(session);
   if (!isSiteAdmin(session)) throw new Forbidden(reason);
   return { userId: session.userId } as SiteAdmin;
 }

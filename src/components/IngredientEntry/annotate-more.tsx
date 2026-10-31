@@ -11,7 +11,7 @@ import {
   CUPBOARD_MENU_LABEL,
   MAKE_IT_OURS_DETAILS,
   MakeItOursQuestion,
-  RemoveQuestion,
+  RemoveFromCupboardQuestion,
   useCupboardWrites,
 } from './cupboard-writes';
 import type { AnnotateMoreProps } from './types';
@@ -115,7 +115,6 @@ export default function AnnotateMore({
         tone="solid"
         confirmLabel="Make It Ours"
         busyLabel="Making It Ours"
-        keepLabel="Cancel"
         busy={writes.makeOurs.pending}
         onConfirm={async () => writes.makeOurs.run()}
         onKeep={settle}
@@ -123,10 +122,9 @@ export default function AnnotateMore({
       <ConfirmQuestion
         key="remove"
         asked={asking === 'remove' && !discardAsking}
-        question={<RemoveQuestion name={name} />}
+        question={<RemoveFromCupboardQuestion name={name} />}
         confirmLabel="Remove"
         busyLabel="Removing"
-        keepLabel="Cancel"
         busy={writes.remove.pending}
         onConfirm={async () => writes.remove.run()}
         onKeep={settle}

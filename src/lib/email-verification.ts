@@ -1,6 +1,7 @@
 import { verifiedLanding } from './account-email';
 import { VERIFICATION_LIFETIME_SECONDS, type EmailVerificationSender } from '@/modules/identity';
 import { verifyEmailMessage } from '../emails/verify-email';
+import { sendEmailChangeNotice } from './email-change-notice';
 import { requestOrigin } from './request-origin';
 
 // Where the email page's decisions meet Better Auth: a resend goes through its endpoint, and a change mints the token its /verify-email endpoint honours,
@@ -15,6 +16,16 @@ export function emailVerificationSender(request: Request): EmailVerificationSend
         body: { email, callbackURL: verifiedLanding(next) },
         headers: request.headers,
       });
+    },
+
+    async sessionIsFresh(seconds) {
+      const { auth } = await import('./auth');
+      const result = await auth.api.getSession({ headers: request.headers });
+      return !!result && Date.now() - new Date(result.session.createdAt).getTime() < seconds * 1000;
+    },
+
+    async notifyChangeRequested(current, address) {
+      await sendEmailChangeNotice(request, current, address, 'requested');
     },
 
     async requestChange(current, address, next) {

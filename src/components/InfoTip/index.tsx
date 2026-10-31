@@ -28,7 +28,7 @@ const InfoTip = ({ id, label, children }: InfoTipProps): ReactElement => {
         onClick={show}
       >
         <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-          <circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" strokeWidth="1.25" />
+          <circle cx="8" cy="8" r="7" fill="none" stroke="currentColor" strokeWidth="1.5" />
           <circle cx="8" cy="4.75" r="0.9" fill="currentColor" />
           <path d="M8 7v5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
         </svg>

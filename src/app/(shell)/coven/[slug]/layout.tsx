@@ -8,19 +8,20 @@ import CovenNav from '../../../../components/CovenNav';
 import { CovenSwitchProvider } from '../../../../components/CovenSwitchTargets/context';
 import WorkspaceSwitcher from '../../../../components/WorkspaceSwitcher';
 import { requireCovenMembership } from '../../../../lib/request-session';
+import { titleTemplate } from '../../../../lib/site';
 import { viewerOf } from '../../../../lib/viewer';
 import type { CovenLayoutParams, CovenLayoutProps } from './types';
 
-// Each page under the coven gives its own name ('Grimoire') and this template
-// finishes it with the coven's. The guard is the same cached call the layout
-// makes, so naming the coven costs no second lookup.
+// Each page under the coven gives its own name ('Grimoire') and this template finishes it with the
+// coven's; the root template finishes the default. The guard is the same cached call the layout makes,
+// so naming the coven costs no second lookup.
 export async function generateMetadata({ params }: CovenLayoutParams): Promise<Metadata> {
   const { slug } = await params;
   const { workspace } = await requireCovenMembership(slug);
   return {
     title: {
-      template: `%s — ${workspace.name} — Sorrel & Salt`,
-      default: `${workspace.name} — Sorrel & Salt`,
+      template: titleTemplate(workspace.name),
+      default: workspace.name,
     },
   };
 }

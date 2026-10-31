@@ -2,6 +2,7 @@
 @use '../../scss/mixins' as *;
 @use 'smoulder' as *;
 @use 'compact' as *;
+@use '../IngredientCard/specimen-card' as *;
 
 // The Foundations specimen (`.specimen` in _primitives.scss) carries the layout;
 // this adds IngredientCard's padding, and the title's size. Tokens only. The card's face
@@ -14,7 +15,6 @@
   // The containing block for the title link's stretched `::after` below.
   position: relative;
   padding: space(4);
-  cursor: pointer;
   color: $text-primary;
   border-radius: radius('surface');
 
@@ -56,29 +56,20 @@
   position: static;
 }
 
-.spell-card .spell-card__title a {
-  color: $text-primary;
-  text-decoration: none;
+// The title link, the title block, the badge row, the badge size and the plain chips are
+// IngredientCard's (_specimen-card.scss). The ring goes round the card, drawn on the article below.
+@include specimen-card('.spell-card', '.spell-card__heading', '.spell-card__title', $ring: false);
 
-  &:hover {
-    color: $text-primary;
-  }
+// The focus ring, on the article's own `::after`: it comes after the burn layers in the markup,
+// so it paints over the burnt corner, which the title link's overlay, earlier, does not.
+.spell-card:has(.spell-card__title a:focus-visible)::after {
+  @include focus-ring;
 
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: radius('surface');
-  }
-
-  // The ring goes round the card, drawn on the overlay.
-  &:focus-visible {
-    outline: none;
-
-    &::after {
-      @include focus-ring;
-    }
-  }
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: radius('surface');
+  pointer-events: none;
 }
 
 // The words and the badges are positioned so they paint over the face and the glow, as the
@@ -93,14 +84,6 @@
   pointer-events: none;
 }
 
-// The title block and the Edit pencil share the top row; the title's first word decides
-// when the pencil wraps below, as an ingredient card's name does.
-.spell-card__heading {
-  flex: 1 1 0;
-  max-width: 100%;
-  overflow-wrap: anywhere;
-}
-
 // h3's size, as an ingredient card's name: one of many in a grid.
 .spell-card__title {
   margin: 0;
@@ -108,38 +91,56 @@
   hyphens: auto;
 }
 
-// The pending dot hangs into the gap, as the ingredient card's does.
-.spell-card__title .link-hint {
-  margin-inline-end: -0.6em;
-}
-
-// The badges, a row under the title, as the marks sit under an ingredient card's name.
-.spell-card .spell-card__heading > .specimen__badges {
-  inline-size: 0;
-  min-inline-size: 100%;
-  margin-block: space(2) 0;
-  align-items: center;
-}
-
-.spell-card .badge {
-  @include badge-size('medium');
-}
-
-// The intent and the category chips pass a click through to the title link's overlay: each
-// is positioned by the content rule above, which paints it over the overlay. Only the chips'
-// `li`s, so the +N button keeps its press, hover and focus.
+// The intent passes a click through to the title link's overlay, as the plain chips do: it is
+// positioned by the content rule above, which paints it over the overlay.
+// Three lines at most and then an ellipsis: the whole of it is the recipe page's.
 .spell-card__intent {
+  display: -webkit-box;
+  overflow: hidden;
   margin: 0;
   color: $text-muted;
   pointer-events: none;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: -webkit-line-clamp above
+  // already clamps, the unprefixed form is for engines that drop the prefix, not yet Baseline
+  line-clamp: 3;
 }
 
-.spell-card .specimen__chips > li:not(.category-more-item) {
+// The foot passes a click through as well, so a press beside the actions opens the recipe; the
+// actions row takes the pointer back for its controls alone (_primitives.scss), and the last-edit
+// line for itself (below).
+.spell-card > .specimen__foot {
   pointer-events: none;
 }
 
-.spell-card .last-edit {
-  pointer-events: none;
+// Who last edited and how often it has been made, on one line in the edit line's ink, `space(5)`
+// clear of what is above as the edit line alone is; it wraps whole words on a narrow card.
+.spell-card__foot-line {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: space(2);
+  align-items: baseline;
+  margin-block-start: space(5);
+  color: $last-edit-ink;
+  font-size: type-size('caption');
+
+  // Three classes, over `.meta.last-edit`'s own `space(5)`, which the line already gives. The
+  // line takes the pointer back from the foot, which passes it to the title's overlay, so its
+  // hover opens its tip; it is only as wide as its text, so the rest of the row still follows the link.
+  .spell-card & > .last-edit {
+    margin-block-start: 0;
+    pointer-events: auto;
+  }
+
+  > .spell-card__made {
+    color: inherit;
+  }
+}
+
+// The buttons follow the line with no gap of their own, as they follow the edit line alone.
+.specimen__foot > .spell-card__foot-line + .specimen__actions {
+  margin-top: 0;
 }
 
 // The compact look, wherever an ancestor says `data-density="compact"`, unless a stored

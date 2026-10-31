@@ -286,7 +286,7 @@ describe('the spell builder’s undo of step changes', () => {
 
   it('undoes and redoes the removal of an instruction', async () => {
     renderBuilder();
-    fireEvent.click(screen.getByRole('button', { name: 'Remove step 3' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Stir thrice' }));
     expect(order()).toEqual([ROSEWORT, 'Testwort']);
 
     undo();
@@ -331,7 +331,7 @@ describe('the spell builder’s undo across a save', () => {
     const calls = acceptUpdateEchoingSteps();
     renderBuilder();
     const rows = () => within(steps()).getAllByRole('listitem');
-    fireEvent.click(screen.getByRole('button', { name: 'Remove step 3' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Stir thrice' }));
     await waitFor(() => expect(rows()).toHaveLength(2));
     submit();
     await waitFor(() => expect(calls).toHaveLength(1));

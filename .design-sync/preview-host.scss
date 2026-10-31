@@ -27,15 +27,28 @@ html > body {
 // re-frame all of them.
 :root.ds-solo {
   body:is(
+      :has(script[src$='/AdminInvitations.js']),
       :has(script[src$='/AdminNav.js']),
+      :has(script[src$='/CovenNav.js']),
+      :has(script[src$='/CreateWorkspaceForm.js']),
       :has(script[src$='/CompendiumList.js']),
       :has(script[src$='/ContextRow.js']),
       :has(script[src$='/CovenCards.js']),
       :has(script[src$='/EntryMarks.js']),
+      :has(script[src$='/EmailForm.js']),
+      :has(script[src$='/IconTip.js']),
+      :has(script[src$='/IngredientCard.js']),
       :has(script[src$='/IngredientEntry.js']),
+      :has(script[src$='/JarShelf.js']),
+      :has(script[src$='/MoonPhaseIcon.js']),
+      :has(script[src$='/PageHeader.js']),
       :has(script[src$='/ProviderMark.js']),
       :has(script[src$='/PublicFrame.js']),
+      :has(script[src$='/SafetyNote.js']),
       :has(script[src$='/SectionNav.js']),
+      :has(script[src$='/SignInMethods.js']),
+      :has(script[src$='/SpellCard.js']),
+      :has(script[src$='/StepRow.js']),
       :has(script[src$='/ThemeToggle.js']),
       :has(script[src$='/Welcome.js'])
     )

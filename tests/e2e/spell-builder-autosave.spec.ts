@@ -69,7 +69,7 @@ test('the save status is accessible when the save failed, with Retry', async ({ 
   const dialog = await startDraft(page, 'axe-failed');
   await refuseSaves(page, 'FORBIDDEN');
   await dialog.getByRole('button', { name: 'Save Spell' }).click();
-  await expect(dialog.getByText(/Couldn.t save/)).toBeVisible();
+  await expect(dialog.getByText(/Could not save/)).toBeVisible();
   await expect(dialog.getByRole('button', { name: 'Retry' })).toBeVisible();
   await assertNoAccessibilityViolations(page);
 });

@@ -12,7 +12,7 @@ import {
 } from 'react';
 import { chipColors } from '../../lib/chip-colors';
 import Spinner from '../Spinner';
-import { ChevronIcon, ClearIcon } from './icons';
+import { ChevronIcon, CrossIcon } from '../IconTip/icons';
 import { EmptyMessage, noMatch, Popup } from './popup';
 import { useListPosition } from './position';
 import { chipsRoom } from './room';
@@ -492,7 +492,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
                 disabled={clear.empty}
                 onClick={clear.onClear}
               >
-                <ClearIcon />
+                <CrossIcon />
               </button>
             )}
             {/* After the clear, as react-select draws it, so the spinner sits by the chevron. */}

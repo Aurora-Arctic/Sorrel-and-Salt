@@ -26,7 +26,9 @@ export interface CardAttemptEntry {
   attempts: number;
   lastAttemptedAt: Date;
   /** Null once the account is gone. */
+  accountId: string | null;
   accountName: string | null;
+  accountEmail: string | null;
 }
 
 /** The page of the list the address shows, by the cursor it turned on; none for the first. */

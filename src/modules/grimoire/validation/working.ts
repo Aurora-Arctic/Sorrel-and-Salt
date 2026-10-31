@@ -57,8 +57,6 @@ export const WorkingInput = z
     // In order. Left out: on record, the recorder alone; on update, unchanged.
     participants: z.array(Participant).optional(),
     // Left out: the column's default on record (workspace, capped at the spell's), unchanged on update.
-    visibility: z.enum(VISIBILITIES, { error: 'Choose private or workspace' }).optional(),
+    visibility: z.enum(VISIBILITIES, { error: 'Choose private or coven' }).optional(),
   })
   .superRefine(distinctParticipants);
-
-export type WorkingInputValue = z.output<typeof WorkingInput>;

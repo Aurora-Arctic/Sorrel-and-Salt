@@ -1,6 +1,6 @@
 # JarLine
 
-`src/components/JarLine/`: one line of a list that shows a jar beside a name and some words. The recipe page's In Coven Inventory (`SpellBuilder/inventory.tsx`) and the Complete Working preview (`RecordWorking/completion.tsx`) both draw their lines through it, so the two behave the same.
+`src/components/JarLine/`: one line of a list that shows a jar beside a name and some words. The recipe page's In the Cupboard panel (`SpellBuilder/inventory.tsx`) and the Complete Working preview (`RecordWorking/completion.tsx`) both draw their lines through it, so the two behave the same.
 
 ## Props
 
@@ -15,3 +15,7 @@ Reduced motion: no shake and no transition on the name, which still changes size
 ## Styling
 
 A caller styles its list and any context it needs through its own wrapper class: the inventory trims the eye and wraps names in a narrow column; the preview wraps long names and sets the words smaller.
+
+## Stories
+
+`src/components/JarLine/index.stories.tsx`, titled "Ingredients / Jar Line": `States`, one list of four lines: an ok jar with an Edit Stock press, a low jar without one, an empty form with no jar, and a one-off. Pointing at the first line shakes its jar and grows its name.

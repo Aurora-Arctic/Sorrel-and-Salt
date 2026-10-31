@@ -1,6 +1,7 @@
 'use client';
 
 import { type ReactElement, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE } from '../../lib/graphql-failure';
@@ -8,6 +9,7 @@ import { inUtc } from '../../lib/utc';
 import StackTable from '../DataTable';
 import { ModalButton } from '../Modal';
 import Notice from '../Notice';
+import { userListHref } from '../UserList/href';
 import { batchName } from './batches';
 import type { CardAttemptEntry, CardAttemptReason } from './types';
 
@@ -29,6 +31,7 @@ const CardAttemptsDocument = graphql(`
           account {
             id
             name
+            email
           }
         }
       }
@@ -72,7 +75,9 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
             reason: node.reason,
             attempts: node.attempts,
             lastAttemptedAt: new Date(node.lastAttemptedAt),
+            accountId: node.account?.id ?? null,
             accountName: node.account?.name ?? null,
+            accountEmail: node.account?.email ?? null,
           })),
         ]);
         setMore(page.pageInfo.hasNextPage);
@@ -95,7 +100,24 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
     <>
       <StackTable
         columns={[
-          { heading: 'Account', cell: (a) => a.accountName ?? 'Removed Account' },
+          {
+            heading: 'Account',
+            cell: (a) =>
+              a.accountId && a.accountName ? (
+                <Link
+                  href={userListHref(
+                    { query: '', awaitingApproval: false },
+                    undefined,
+                    a.accountId,
+                  )}
+                >
+                  {a.accountName}
+                </Link>
+              ) : (
+                'Removed Account'
+              ),
+          },
+          { heading: 'Email', cell: (a) => a.accountEmail ?? '' },
           { heading: 'Reason', cell: (a) => REASON_LABEL[a.reason] },
           { heading: 'Times', cell: (a) => a.attempts },
           {

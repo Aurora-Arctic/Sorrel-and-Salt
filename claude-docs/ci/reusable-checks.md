@@ -1,6 +1,6 @@
 ## Reusable checks (`workflow_call`, never triggered directly)
 
-- **`checks.yml`** (MB.32) — eight plain jobs, `lint`, `format`,
+- **`checks.yml`** (MB.32) — nine plain jobs, `lint`, `unused`, `format`,
   `typecheck`, `codegen`, `build`, `destructive-ddl`, `migration-order` and
   `audit`, each reporting as `checks / <name>`. One
   workflow, because the jobs share their inputs, their
@@ -74,6 +74,7 @@
     the run's summary page as a result. The summary is written whether or not
     a `pr-number` was passed; the PR comment only when one was, so
     `make act-check CHECK=audit` shows the table and skips the comment.
+  - **`unused`** — `npm run lint:unused` (knip, [`commands.md`](../commands.md)), skipped by `run-lint`'s job-level `if:` like `lint`. Non-blocking and **never a required status check**: its `run-check` step carries `continue-on-error: true`, so a run with findings records a failed outcome for the action's Run step, which `pr-comment` posts as a failure comment with the log, while the job itself passes. A later run with no findings resolves that comment (`minimize`). It has no summariser: knip's own grouped output is the report.
   - **`vitest` and `playwright` are deliberately not legs.** Each brings a
     `services: postgres:` block, a `db-image` input and its own artifact
     uploads — a different job shape, not a different npm script.

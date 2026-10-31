@@ -219,8 +219,8 @@ it bigger there at the sign-off. The rule is
 buttons sit `space(4)` apart, the room the last-used badge needs and no more. The panel is `border-box`, so the padding
 stays inside the column.
 
-Its children stretch to the column. The head is a `.header`, centred: the
-`h1` and a `.lede` saying what the buttons are for, "Sign in, or create your
+Its children stretch to the column. The head is a `PageHeader` ([`page-header.md`](page-header.md)), centred by its `sign-in-panel__header` class: the
+`h1` and a `lede` saying what the buttons are for, "Sign in, or create your
 account, with one of these.", since the first sign-in is also how an account
 is made. The buttons are one `max-content` grid column, centred, so every
 button is as wide as the widest label. Gaps are `space(4)` between the head,

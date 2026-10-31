@@ -172,7 +172,7 @@ link. `referencesOf` renders each citation and files the
 batch's answers alphabetically, `byCitation` in `src/lib/citation.ts`;
 `referencesByIngredient` batches it behind `Ingredient.references`. A
 variant's links (MB.217's `ingredientVariantId`) are read as an ingredient's,
-through `readableVariantParent`, the variant live and its ingredient readable
+through `inUseVariantParent`, the variant live and its ingredient readable
 (MB.218); `referencesOfVariants` and `referencesByVariant` sit behind
 `IngredientVariant.references`.
 
@@ -249,7 +249,8 @@ once, with its places beside it; the Locator's tip says so.
 **Measured against the seed.** Every one of the 278 sources MB.156 seeds
 passed these checks, and none was changed by a format, its locators
 included, when MB.154 ran them all through the schema: the rules hold
-Chicago's real variety, and no seeded citation, and so no `seed_key`, moves.
+Chicago's real variety, and no seeded citation, and so no `seed_key`, moves
+(unless the renderer's own wording changes: "A change to the wording", below).
 The seed writes through its own path and is not parsed by the schema; an
 admin's later edit of a seeded source is.
 
@@ -395,6 +396,18 @@ to. Link targets are found by the `seed_key` their own seed gave them, so a
 renamed deity keeps its sources, and a link present in any state is not
 written again. `migrate.yml` runs the target after the vocabularies it
 links, and `standard` seeds it inside its own transaction.
+
+**A change to the wording.** The seed finds a source by its stored `seed_key`
+and never edits that key, so a change to what `citationText` renders leaves
+every stored key unmatched: the seed reads each such source as missing,
+inserts a second copy beside it, and reports the entries citing it as pending.
+A change to the citation wording therefore needs a migration that rewrites the
+stored keys, in the same PR. `0095_rekey-citation-seed-keys` did it for the
+reference-work entry's "s.v." becoming "under": it rewrites a live compendium
+key in place, and where a row already holds the new key it moves the old row's
+live links there, soft-deletes a link that would duplicate one already on it,
+and soft-deletes the old row
+(`tests/db/migrations/0095-rekey-citation-seed-keys.test.ts`).
 
 ### How the compendium seed cites its sources (MB.242)
 

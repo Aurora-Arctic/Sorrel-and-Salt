@@ -51,7 +51,7 @@ export default function CompendiumDialog({
                 if (next === 'open') navigate(href({ edit: saved.slug }), { replace: true });
                 refresh();
               }}
-              // The modal's own close, so a delete or Cancel fades it out as Close does. An edit
+              // The modal's own close, so a delete fades it out as Close does. An edit
               // over an entry's details goes back past them on a delete, as the entry page's edit
               // does, since they are gone: `done` would close to them.
               onDeleted={
@@ -62,7 +62,6 @@ export default function CompendiumDialog({
                     }
                   : done
               }
-              onCancel={done}
               // A near match opens its own modal here, over the same list.
               duplicateHref={(match) => href({ edit: match.slug })}
               // And its Quick Look opens its details over the form, the form kept open beneath

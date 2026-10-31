@@ -33,7 +33,7 @@ A `UserCoven` is `workspaceId`, `name`, `slug`, the user's `role` there and
   the next. The address itself is not repeated: the heading carries it, under
   the name.
 - **The row's controls sit beside the facts they change, at the right edge**
-  (the owner's call, 2026-10-12): Change Role beside Role, Approve or Revoke of coven creation beside Coven Creation (none for a curator or an admin, as on the row). They are the row's own `RoleControl` and
+  (the owner's call, 2026-10-12): Change Role beside Role, Approve or Revoke of coven creation beside Coven Creation (none for a curator or an admin, as on the row). Revoke is here alone: the row offers Approve only, so the row is an index into this modal (the owner's call, MB.123 D38). They are the row's own `RoleControl` and
   `CreationControl`, keyed by their action, locked by `changesPaused` as the
   row's are (MB.63). With `inModal`, `ConfirmedAction` asks over this modal's
   body through `ConfirmOverlay`, its warning and Reason field included,
@@ -78,20 +78,21 @@ which the workshop does not serve: the question can be seen, its answer cannot.
 
 `States` has a control that chooses:
 
-- Default: a user with three covens, each role once, and Impersonate.
+- Default: a user with three covens, each role once, and the red Impersonate.
 - No Covens: the same user holding none.
 - Several Providers: four sign-in methods and an unverified address.
 - Admin: the primary admin, marked, with no Impersonate, as the endpoint
   refuses an admin. Curator and Other Admin are the other roles.
 - Without Impersonation: the user where impersonation is not registered.
-- Changes Paused, May Create Covens and No Providers.
+- Changes Paused and No Providers. May Create Covens: the plain Revoke of coven
+  creation, beside the red Impersonate.
 - `InAModal`: the detail inside a `Modal`, in its own iframe, so Impersonate's
   question draws over it.
 
 ## Tests
 
 `tests/components/UserDetail/index.test.tsx`, with the component inside a
-`Modal` (the question draws into its layer): the facts (a term and definition each, the sign-up `<time>`, the providers, the primary-admin mark only on the primary admin), Change Role and Approve beside their facts and no creation control on a curator or an admin, each asking inside the one dialog and sending its write, both locked while paused, the order, role and joining date of each coven,
+`Modal` (the question draws into its layer): the facts (a term and definition each, the sign-up `<time>`, the providers, the primary-admin mark only on the primary admin), Change Role and Approve beside their facts and no creation control on a curator or an admin, each asking inside the one dialog and sending its write, Revoke with a trimmed reason and no unverified warning, every control locked while paused, the order, role and joining date of each coven,
 no links, no coven list when empty, Impersonate present for a user and absent for an
 admin or when off, the question before any send, Cancel, a confirm sending
 `{ userId }` then landing on `/`, and a refusal showing an alert and not

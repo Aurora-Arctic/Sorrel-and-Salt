@@ -5,7 +5,7 @@ import type { GroupKind } from '../GroupForm/types';
 import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
 
-import { noMatchText } from '../../lib/text';
+import { emptyList, noMatchText } from '../../lib/text';
 import GroupListFilter from './filter';
 import { KINDS } from './kinds';
 import type { GroupListFilter as Filter, GroupListProps } from './types';
@@ -25,7 +25,7 @@ function emptyMessage(kind: GroupKind, filter: Filter | undefined): string {
   return noMatchText(
     plural,
     filter?.query ? [`“${filter.query}”`] : [],
-    `There are no ${plural} yet. Add one with ${add}.`,
+    `${emptyList(plural)} Add one with ${add}.`,
   );
 }
 

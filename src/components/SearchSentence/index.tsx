@@ -10,7 +10,7 @@ import {
 } from 'react';
 import { useHydrated } from '../../lib/hydrated';
 import { useSlide } from '../../lib/use-slide';
-import { ChevronIcon } from '../Combobox/icons';
+import { ChevronIcon } from '../IconTip/icons';
 import { clausesText, type ClausePart, MATCHING, sentenceParts } from './parts';
 import {
   advance,

@@ -70,6 +70,8 @@ box's state.
   (`matchesLabelOrGroup`, `Combobox/match.ts`, shared with the category picker), so
   "irish" lists every Irish deity. Before
   hydration the native select makes each group an `optgroup`.
+  The list toggle and the count it announces say "suggestions" ("Show Forms suggestions"),
+  as every `Combobox` does by default, since a plural label read twice would say "Forms formss".
 - **`count`, `disabled` and `note` on a choice** are drawn by both forms; the
   plain `Combobox` ignores them.
 
@@ -84,10 +86,10 @@ Tokens only.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/FacetCombobox/index.stories.tsx),
-under "Ingredients / Facet Combobox": `States`, with a control that chooses Default (its list open with every count), Some Chosen (two elements chosen, the list open on the rest, the zero value left out), Counts Loading (chips holding the placeholder), Chosen With Nothing Behind It (a chosen value with a count of 0, still removable), All Zero, Zeros Listed, With Form Icons (icons on rows and chips), Grouped (the Deities filter with tradition headings), With Hint and Custom Empty Text. `Narrow` is the box in a 16rem column, where chips stack; `Typeahead` is the Forms
-filter with typing.
+under "Forms / Facet Combobox": `States`, with a control that chooses Default (its list open with every count), Some Chosen (two elements chosen, the list open on the rest, the zero value left out), Counts Loading (chips holding the placeholder), Chosen With Nothing Behind It (a chosen value with a count of 0, still removable), All Zero, Zeros Listed, With Form Icons (icons on rows and chips), Grouped (the Deities filter with tradition headings), With Hint, Custom Empty Text, Narrow (the box in a 16rem column, where chips stack), Typeahead (the Forms
+filter with typing) and Without Counts (`counts={false}`, as In My Covens draws it).
 Story ids use a double dash between the group and the name, for example
-`ingredients-facet-combobox--states`.
+`forms-facet-combobox--states`.
 
 ## Testing
 
