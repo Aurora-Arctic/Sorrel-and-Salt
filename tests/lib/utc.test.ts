@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { inUtc, isoDayInUtc, minuteInUtc, minuteInZone } from '@/lib/utc';
+import {
+  inUtc,
+  isoDayInUtc,
+  longMinuteInUtc,
+  longMinuteInZone,
+  minuteInUtc,
+  minuteInZone,
+} from '@/lib/utc';
 
 // How a refusal names the instant a compendium redirect closes: in UTC whatever the server's
 // zone, since `expires_at` is midnight UTC.
@@ -13,6 +20,19 @@ describe('inUtc', () => {
 describe('isoDayInUtc', () => {
   it('writes the UTC day as YYYY-MM-DD', () => {
     expect(isoDayInUtc(new Date('2026-10-30T23:59:00.000Z'))).toBe('2026-10-30');
+  });
+});
+
+describe('longMinuteInZone', () => {
+  const at = new Date('2026-10-30T23:05:00.000Z');
+  it('writes the day, the month in full, the year and a 12-hour time in the zone given, with no zone suffix', () => {
+    expect(longMinuteInZone(at, 'UTC')).toBe('30 October 2026, 11:05 pm');
+    expect(longMinuteInZone(at, 'Asia/Tokyo')).toBe('31 October 2026, 8:05 am');
+    expect(longMinuteInZone(at, 'America/Los_Angeles')).toBe('30 October 2026, 4:05 pm');
+  });
+  it('writes midnight as 12:00 am and noon as 12:00 pm', () => {
+    expect(longMinuteInUtc(new Date('2026-08-28T00:00:00.000Z'))).toBe('28 August 2026, 12:00 am');
+    expect(longMinuteInUtc(new Date('2026-08-28T12:00:00.000Z'))).toBe('28 August 2026, 12:00 pm');
   });
 });
 

@@ -113,8 +113,8 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   [`StackTable`](data-table.md), which gives each cell its heading as its
   card label and writes the table's roles out so it can stack into cards at
   phone width. Revoke is a `'foot'` action, across the card's foot.
-- **The expiry** is `inUtc` (`src/lib/utc.ts`), in a `<time>`: a date and a
-  time, since a link lasts seven days to the minute.
+- **The expiry** is [`LocalTime`](local-time.md) with `long` (`28 August 2026, 12:00 am`), in the
+  viewer's own zone: a date and a time, since a link lasts seven days to the minute.
 
 ## Styling
 

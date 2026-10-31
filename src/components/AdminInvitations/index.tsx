@@ -6,7 +6,7 @@ import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import StackTable from '../DataTable';
 import { emptyList, noMatchText } from '../../lib/text';
-import { inUtc } from '../../lib/utc';
+import LocalTime from '../LocalTime';
 import ConfirmedAction from '../UserList/confirmed-action';
 import LockedControl from '../UserList/locked-control';
 import { roleLabel } from '../UserList/roles';
@@ -148,11 +148,7 @@ const AdminInvitations = ({
               },
               {
                 heading: 'Expires',
-                cell: (invitation) => (
-                  <time dateTime={invitation.expiresAt.toISOString()}>
-                    {inUtc(invitation.expiresAt)}
-                  </time>
-                ),
+                cell: (invitation) => <LocalTime at={invitation.expiresAt} long />,
               },
               // An action, so a card's foot with no label of its own.
               {
