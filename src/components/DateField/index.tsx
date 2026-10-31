@@ -161,6 +161,8 @@ export default function DateField({
       if (event.key !== 'Escape') return;
       // An open month or year list takes the key and closes alone.
       if ((event.target as HTMLElement).getAttribute?.('aria-expanded') === 'true') return;
+      // Claimed as well as stopped: a modal dialog round the field closes on any unclaimed Escape.
+      event.preventDefault();
       event.stopPropagation();
       setOpen(false);
       document.getElementById(id)?.focus();
