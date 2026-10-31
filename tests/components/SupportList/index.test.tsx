@@ -25,6 +25,11 @@ const opened = (over: Partial<SupportSenderRequestEntry> = {}): SupportSenderReq
 });
 
 describe('SupportList', () => {
+  it('offers New Request as a link, whether or not there are requests', () => {
+    render(<SupportList requests={[]} />);
+    expect(screen.getByRole('link', { name: 'New Request' })).toBeInTheDocument();
+  });
+
   it('says so when there are no requests', () => {
     render(<SupportList requests={[]} />);
     expect(screen.getByText(/no support requests/i)).toBeInTheDocument();

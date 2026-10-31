@@ -1,16 +1,36 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// Every space on the page, summed to a target. The page frame's header ends at its own margin; below it the
-// list's column is one gap (4) between the rows' list and the pager, and the rows are 2 apart. Zeroed, not
-// offset: the `ul` default margin, the empty message's `p` margin and the row's own margin. The dialog is
-// outside the flow, so it adds nothing. A row is 3 above and below its two lines, 2 apart, and 4 either side.
+// Every space on the page, summed to a target. The tab frame ends at its own margin; below it the list's column is
+// one gap (4) between the bar, the rows' list and the pager, and the rows are 3 apart, that gap the one
+// contributor. Zeroed, not offset: the `ul` default margin, the empty message's `p` margin and the row's own
+// margin. The dialog is outside the flow, so it adds nothing. A row is 3 above and below its two lines, 2 apart,
+// and 4 either side.
 .support-list {
   @include stack(4);
 }
 
+// New Request: the bare icon button the footer's Support link is, its glyph in the accent that fills the
+// solid button, at rest too, at the bar's right.
+.support-list__bar {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.support-list__new {
+  @include icon-button(2rem, 1.5rem);
+  --icon-ground: #{$surface-page};
+  color: $accent;
+
+  &:hover,
+  &:focus-visible {
+    background-color: $fill-highlight-field;
+    --icon-ground: #{$fill-highlight-field};
+  }
+}
+
 .support-list__items {
-  @include stack(2);
+  @include stack(3);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -30,11 +50,26 @@
   border: 1px solid $hairline;
   border-radius: radius('surface');
   background-color: $surface-page;
+  @include theme-transition(background-color, box-shadow);
 
   // The site's ◆ marker is a ::before, which would otherwise take a cell of its own.
   &::before {
     content: none;
   }
+}
+
+// The ingredient card's hover: its tint and lifted shadow, on pointers that can hover only so a tap on a phone
+// leaves no row lit, and on keyboard focus everywhere.
+@media (hover: hover) {
+  .support-list__item:hover {
+    background-color: $surface-card-hover;
+    box-shadow: $shadow-lifted;
+  }
+}
+
+.support-list__item:focus-within {
+  background-color: $surface-card-hover;
+  box-shadow: $shadow-lifted;
 }
 
 // The subject is the row's one link, stretched over the whole row.

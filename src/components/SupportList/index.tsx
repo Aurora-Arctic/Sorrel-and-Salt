@@ -7,9 +7,12 @@ import { SUPPORT_LIST_PATH } from '../../lib/support-path';
 import { emptyList } from '../../lib/text';
 import LocalTime from '../LocalTime';
 import { RouteModal, useOpenModalClick } from '../Modal';
+import { SupportIcon } from '../IconTip/icons';
+import IconTip from '../IconTip/icon-tip';
 import Pager from '../Pager';
 import { ABOUT_OPTIONS, STATUS_LABELS } from '../SupportRequests/filter';
 import { statusBadgeClass } from '../SupportRequests/status-badge';
+import SupportLink from '../SupportLink';
 import SupportSenderRequest from '../SupportSenderRequest';
 import type { SupportListEntry, SupportListProps } from './types';
 import './index.scss';
@@ -51,6 +54,14 @@ const SupportList = ({
   const hrefOf = (request?: string) => listHref(SUPPORT_LIST_PATH, { ...cursor, request });
   return (
     <div className="support-list">
+      <div className="support-list__bar">
+        <IconTip tip="New Request" placement="below">
+          <SupportLink className="support-list__new">
+            <SupportIcon />
+            <span className="visually-hidden">New Request</span>
+          </SupportLink>
+        </IconTip>
+      </div>
       {requests.length === 0 ? (
         <p className="support-list__empty">{emptyList('support requests')}</p>
       ) : (

@@ -5,11 +5,9 @@ import {
   listMySupportRequests,
   repliesForRequests,
 } from '@/modules/support';
-import PageHeader from '../../../../components/PageHeader';
-import SupportLink from '../../../../components/SupportLink';
-import SupportList from '../../../../components/SupportList';
-import { requireSession } from '../../../../lib/request-session';
-import { SUPPORT_LIST_PATH } from '../../../../lib/support-path';
+import SupportList from '../../../../../components/SupportList';
+import { requireSession } from '../../../../../lib/request-session';
+import { SUPPORT_LIST_PATH } from '../../../../../lib/support-path';
 import { readOpenedRequest } from './reads';
 import type { SupportListPageProps } from './types';
 
@@ -40,11 +38,7 @@ export default async function SupportListPage({ searchParams }: SupportListPageP
     `${SUPPORT_LIST_PATH}?${new URLSearchParams(cursor).toString()}` as Route;
   const { hasPreviousPage, hasNextPage, startCursor, endCursor } = page.pageInfo;
   return (
-    <main className="page-frame page-frame--narrow">
-      <PageHeader
-        title="Your Support Requests"
-        action={<SupportLink className="btn btn--solid">New Request</SupportLink>}
-      />
+    <div className="page-with-nav page-with-nav--headless">
       <SupportList
         requests={rows.map((row, index) => ({
           id: row.id,
@@ -60,6 +54,6 @@ export default async function SupportListPage({ searchParams }: SupportListPageP
         previousHref={hasPreviousPage && startCursor ? href({ before: startCursor }) : undefined}
         nextHref={hasNextPage && endCursor ? href({ after: endCursor }) : undefined}
       />
-    </main>
+    </div>
   );
 }

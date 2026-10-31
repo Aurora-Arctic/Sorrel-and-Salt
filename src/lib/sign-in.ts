@@ -2,6 +2,7 @@ import type { Route } from 'next';
 import type { UserRole } from './session';
 import type { PageTab } from '../components/TabbedPage/types';
 import { curates } from './site-roles';
+import { SUPPORT_LIST_PATH } from './support-path';
 
 // Pure helpers for /sign-in?next=&error=, shared by the sign-in page and route
 // protection (src/proxy.ts, src/lib/request-session.ts) — one rule for which
@@ -160,6 +161,7 @@ export const ACCOUNT_PASSKEYS_PATH = `${ACCOUNT_SIGN_IN_PATH}#passkeys` as Route
 export const ACCOUNT_TABS: readonly PageTab[] = [
   { href: ACCOUNT_PATH as Route, label: 'Account', shape: 'sections', sections: 3 },
   { href: ACCOUNT_SIGN_IN_PATH as Route, label: 'Sign-In', shape: 'sections', sections: 4 },
+  { href: SUPPORT_LIST_PATH as Route, label: 'Support Requests', shape: 'table' },
 ];
 
 /** The account page's Invitations section, by its id; the landing and the account menu link to it. */
