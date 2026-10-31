@@ -108,7 +108,11 @@ const SupportRequestRef = builder.objectRef<SupportRequestRow>('SupportRequest')
         row.assignedTo ? loaders.usersOnRequests.load(row.assignedTo) : null,
     }),
     curatorVisible: t.exposeBoolean('curatorVisible'),
-    issueUrl: t.exposeString('issueUrl', { nullable: true }),
+    issueUrl: t.exposeString('issueUrl', {
+      nullable: true,
+      description: 'The linked issue’s address. Staff only.',
+      authScopes: { curator: true },
+    }),
     resolvedBy: t.field({
       type: UserRef,
       nullable: true,

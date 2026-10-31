@@ -173,6 +173,17 @@ describe('mySupportRequests', () => {
     expect(replies[0]?.map((reply) => reply.body)).toEqual(['Try again.']);
   });
 
+  it('carries no issue address on the sender’s own reads, though the request has one', async () => {
+    const request = await send(C);
+    const issue = 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/1394';
+    await setSupportRequestIssueUrl(asUser(E), request.id, issue);
+    expect((await getSupportRequest(asUser(E), request.id)).issueUrl).toBe(issue);
+
+    expect((await getMySupportRequest(asUser(C), request.id)).issueUrl).toBeNull();
+    const entries = await listMySupportRequests(asUser(C), PAGE);
+    expect(entries.map((entry) => entry.node.issueUrl)).toEqual([null]);
+  });
+
   it('refuses another sender’s request by id, which exists and is open', async () => {
     const request = await send(C);
     const [{ status }] = await sql`select status from support_requests where id = ${request.id}`;

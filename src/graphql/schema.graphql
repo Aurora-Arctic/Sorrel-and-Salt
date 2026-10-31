@@ -2483,6 +2483,7 @@ type SupportRequest {
   """
   errorReference: String
   id: ID!
+  """The linked issue’s address. Staff only."""
   issueUrl: String
   lastSenderActivityAt: DateTime
   lastStaffActivityAt: DateTime

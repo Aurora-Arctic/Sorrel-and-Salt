@@ -10,7 +10,6 @@ const request = (over: Partial<SupportListEntry> = {}): SupportListEntry => ({
   message: 'I was sent a card.',
   status: 'open',
   createdAt: new Date('2030-01-02T03:04:00Z'),
-  issueUrl: null,
   replies: [],
   ...over,
 });
@@ -66,26 +65,9 @@ describe('SupportList', () => {
     expect(text.indexOf('Second answer.')).toBeGreaterThan(text.indexOf('First answer.'));
   });
 
-  it('links a bug to its issue, and no other about', () => {
-    render(
-      <SupportList
-        requests={[
-          request({
-            id: 'b',
-            about: 'bug',
-            subject: 'Broken',
-            issueUrl: 'https://example.test/i/1',
-          }),
-          request({ id: 'q', issueUrl: 'https://example.test/i/2' }),
-        ]}
-      />,
-    );
-    const [bug, question] = screen.getAllByRole('listitem');
-    expect(within(bug!).getByRole('link', { name: 'View Issue' })).toHaveAttribute(
-      'href',
-      'https://example.test/i/1',
-    );
-    expect(within(question!).queryByRole('link', { name: 'View Issue' })).toBeNull();
+  it('draws a bug with no link to an issue', () => {
+    render(<SupportList requests={[request({ id: 'b', about: 'bug', subject: 'Broken' })]} />);
+    expect(within(screen.getByRole('listitem')).queryByRole('link')).toBeNull();
   });
 
   it('draws no pager link where there is no page beyond', () => {

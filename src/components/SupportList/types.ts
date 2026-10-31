@@ -15,8 +15,6 @@ export interface SupportListEntry {
   message: string;
   status: SupportStatus;
   createdAt: Date;
-  /** The tracker issue a bug was filed as, once it has one. */
-  issueUrl: string | null;
   /** Oldest first. */
   replies: readonly SupportReplyEntry[];
 }

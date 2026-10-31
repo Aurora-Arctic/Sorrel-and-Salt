@@ -44,7 +44,6 @@ export default async function SupportListPage({ searchParams }: SupportListPageP
           message: row.message,
           status: row.status,
           createdAt: row.createdAt,
-          issueUrl: row.issueUrl,
           replies: (replies[index] ?? []).map(({ id, body, createdAt }) => ({
             id,
             body,

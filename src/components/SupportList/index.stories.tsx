@@ -21,7 +21,6 @@ export const WithRepliesAndAnIssue: Story = {
         message: 'It shows a blank page.',
         status: 'open',
         createdAt: AT,
-        issueUrl: 'https://example.test/issues/1',
         replies: [{ id: 'p1', body: 'Thank you, we have filed it.', createdAt: AT }],
       },
       {
@@ -31,7 +30,6 @@ export const WithRepliesAndAnIssue: Story = {
         message: 'I was sent a card.',
         status: 'resolved',
         createdAt: AT,
-        issueUrl: null,
         replies: [],
       },
     ],

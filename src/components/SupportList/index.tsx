@@ -40,11 +40,6 @@ const SupportList = ({
               </span>
             </div>
             <p className="support-list__message">{request.message}</p>
-            {request.about === 'bug' && request.issueUrl && (
-              <a href={request.issueUrl} rel="noreferrer">
-                View Issue
-              </a>
-            )}
             {request.replies.map((reply) => (
               <blockquote key={reply.id} className="support-list__reply">
                 <p>{reply.body}</p>
