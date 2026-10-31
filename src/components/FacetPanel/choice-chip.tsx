@@ -17,6 +17,7 @@ import { pressFeedback } from '../../lib/press-feedback';
 import InfoTip from '../InfoTip';
 import { useTip } from '../InfoTip/use-tip';
 import { FacetCount } from './facet-count';
+import './choice-chip.scss';
 
 // One choice from a few, drawn as a chip reading "Match: All" that opens a menu of radios. A
 // `<details>` so it opens before the script runs, with native radios so the GET form sends the

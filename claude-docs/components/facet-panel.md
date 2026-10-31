@@ -105,7 +105,9 @@ fields and hidden inputs only, and its Apply Filters button is the form's submit
 
 Tokens only, as signed off in MB.120 (2026-10-20). `FacetPanel/index.scss` is laid out in the order
 the panel is built: the Filters button and Clear All, the dialog and its slide, the static block
-before script, the rows (`__line`, `__quick`), then the choice chip (`.facet-chip__*`) and the foot. The
+before script, the rows (`__line`, `__quick`), then the foot. The choice chip (`.facet-chip__*`) has its own
+`choice-chip.scss`, and a count (`.facet-panel__count`) its own `facet-count.scss`, each imported by its component, so a
+chip drawn outside the panel, as on the admin support page, is styled without the panel's stylesheet. The
 sizes are `space()` steps and tokens. Four measurements stay as named, commented locals because no
 token fits: the categories floor and wide width, the compact control height, the native select's
 cap and the form's quarter-em gap.
