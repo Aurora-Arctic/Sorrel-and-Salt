@@ -64,15 +64,17 @@ password sign-ins alone ([`auth/two-factor.md`](../auth/two-factor.md)).
 - **Off**, it asks for the password and offers "Turn On Two-Factor"
   (`twoFactor.enable`). The answer opens three steps: a QR code for the
   authenticator app (Ark UI's `QrCode`, `role="img"`), the key the code
-  holds for typing in instead, and the ten backup codes, said to be shown
-  once. "Code From Your App" and "Confirm and Turn On" (`twoFactor.verifyTotp`)
+  holds for typing in instead (grouped in fours), and the ten backup codes, said to be shown
+  once, with Copy Codes, Download Codes and Print Codes, each giving one code
+  per line. "Code From Your App" and "Confirm and Turn On" (`twoFactor.verifyTotp`)
   turn it on; Cancel leaves it off. Two-factor is not on until that code is
   confirmed.
 - **On**, it asks for the password and offers "Turn Off Two-Factor"
   (`twoFactor.disable`), a destructive button.
 - **Refusals.** A wrong password (`INVALID_PASSWORD`) is `WRONG_PASSWORD`
   under the Password field; a wrong code is the sign-in step's `WRONG_CODE`
-  under the code field; a session too old to turn it off (`SESSION_NOT_FRESH`)
+  under the code field; a locked password (`PASSWORD_SIGN_IN_PAUSED`) is
+  `PASSWORD_SIGN_IN_PAUSED_MESSAGE`, in an alert; a session too old to turn it off (`SESSION_NOT_FRESH`)
   is `STALE_SESSION`, in an alert; a 429 is `TOO_MANY_ATTEMPTS`, anything else
   `GENERIC_TWO_FACTOR_ERROR`.
 - **Success** says two-factor is on or off in a success notice.

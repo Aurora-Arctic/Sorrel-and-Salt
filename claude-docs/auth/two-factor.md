@@ -37,7 +37,8 @@ options, so it does no redirect of its own: the password form reads
 Turning on, turning off, showing the app's link again
 (`/two-factor/get-totp-uri`) and making new backup codes each take the
 account's password. A wrong one there counts toward the password lockout as a
-failed sign-in does, and while the lock is on the right one is refused too
+failed sign-in does, and while the lock is on the right one is refused too, with
+the code `PASSWORD_SIGN_IN_PAUSED` rather than a wrong password's
 ([`passwords.md`](passwords.md), "Lockout"). Turning off also needs a fresh
 session, one under a day old: the plugin checks only that a session exists, so
 the hook on `/two-factor/disable` in `src/lib/auth.ts` refuses an older one

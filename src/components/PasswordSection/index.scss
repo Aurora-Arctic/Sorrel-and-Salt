@@ -46,6 +46,13 @@
   overflow-wrap: anywhere;
 }
 
+.two-factor__code-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(2);
+  margin-block-start: space(2);
+}
+
 .two-factor__codes {
   display: grid;
   grid-template-columns: repeat(2, max-content);

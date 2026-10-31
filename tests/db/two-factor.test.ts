@@ -241,7 +241,10 @@ describe('Story 72: a wrong password at a two-factor endpoint counts as a failed
       expect(row?.count).toBe(5);
       expect(row!.locked_until!.getTime()).toBeGreaterThan(Date.now());
 
-      expect((await post(auth, path, { password: PASSWORD }, cookie)).status).toBe(400);
+      // The right password during the lock is refused as a pause, not as a wrong password, so the owner is told why.
+      const held = await post(auth, path, { password: PASSWORD }, cookie);
+      expect(held.status).toBe(400);
+      expect(((await held.json()) as { code?: string }).code).toBe('PASSWORD_SIGN_IN_PAUSED');
       expect((await failureRow())?.count).toBe(5);
 
       // Precondition: once the lock is past, the same right password is accepted, so the lock is what held it.

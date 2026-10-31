@@ -410,6 +410,11 @@ async function mailResetLink({
   await send(await resetPasswordMessage({ to: user.email, url: link.toString() }));
 }
 
+const PASSWORD_SIGN_IN_PAUSED = {
+  code: 'PASSWORD_SIGN_IN_PAUSED',
+  message: 'Password sign-in is paused for this account.',
+};
+
 // The account a password sign-in, or an endpoint checking a held password, names, and whether its lock was on when the
 // attempt arrived, carried from the before hook to the after hook so the after hook does no second lookup.
 const passwordAttempt = defineRequestState<{ userId?: string; locked: boolean }>(() => ({
@@ -427,7 +432,8 @@ async function holdsPassword(ctx: HookContext, userId: string): Promise<boolean>
 
 /**
  * Holds an endpoint that checks the signed-in account's own password: while the account's password lock is on, it
- * swaps the password for one no hash can match, so the request is refused as a wrong password. `/change-password` also
+ * swaps the password for one no hash can match, so the request is refused as a wrong password; a two-factor path
+ * instead refuses with a paused code. `/change-password` also
  * signs out every other session whatever the request asks, so a change always shuts out whoever else held the old
  * password, and `/two-factor/disable` needs a fresh session, so a stolen old cookie and the password cannot turn the
  * second factor off.
@@ -445,6 +451,11 @@ async function holdHeldPassword(ctx: HookContext, field: string) {
   await passwordAttempt.set({ userId, locked });
   const body = { ...ctx.body };
   if (ctx.path === '/change-password') body.revokeOtherSessions = true;
+  // The two-factor paths are the account page's own, so the signed-in owner is told the lock is why a right password
+  // is refused; the other paths keep answering as a wrong password.
+  if (locked && ctx.path.startsWith('/two-factor/')) {
+    throw APIError.from('BAD_REQUEST', PASSWORD_SIGN_IN_PAUSED);
+  }
   if (locked && typeof body[field] === 'string') body[field] = randomBytes(32).toString('hex');
   return { context: { body } };
 }

@@ -17,6 +17,9 @@ import type { TwoFactorSettingsProps } from './types';
 
 export const WRONG_PASSWORD = "That isn't your password.";
 export const GENERIC_TWO_FACTOR_ERROR = "We couldn't change two-factor. Please try again.";
+// A lock on password sign-in holds the right password here too; the owner is told the lock is why.
+export const PASSWORD_SIGN_IN_PAUSED_MESSAGE =
+  'Password sign-in is paused for this account after too many wrong passwords. Please wait a few minutes, then try again.';
 // Turning off wants a session younger than Better Auth's `freshAge`, a day, as removing a sign-in method does.
 export const STALE_SESSION =
   'Turning two-factor off needs a recent sign-in. Sign out and sign back in, then turn it off.';
@@ -38,6 +41,7 @@ interface Refusal {
 }
 
 function refusal(failure: Failure): Refusal {
+  if (failure.code === 'PASSWORD_SIGN_IN_PAUSED') return { alert: PASSWORD_SIGN_IN_PAUSED_MESSAGE };
   if (failure.code === 'INVALID_PASSWORD') return { password: WRONG_PASSWORD };
   if (failure.code === 'INVALID_CODE') return { code: WRONG_CODE };
   if (failure.code === 'SESSION_NOT_FRESH') return { alert: STALE_SESSION };
@@ -48,6 +52,37 @@ function refusal(failure: Failure): Refusal {
 /** The key the app is given, for typing in when the QR code cannot be scanned. */
 function keyOf(totpURI: string): string {
   return new URL(totpURI).searchParams.get('secret') ?? '';
+}
+
+const codesText = ({ backupCodes }: Enrolment): string => backupCodes.join('\n');
+
+/** The key in groups of four, as an authenticator app shows it, for reading off and typing in. */
+function groupedKey(key: string): string {
+  return key.replace(/(.{4})(?=.)/g, '$1 ');
+}
+
+const CODES_FILE = 'sorrel-and-salt-backup-codes.txt';
+
+/** Hands the codes to the browser as a text file, one per line. */
+function downloadCodes(text: string): void {
+  const url = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = CODES_FILE;
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+/** Prints the codes alone, from a window of their own, since the account page around them is not for paper. */
+function printCodes(text: string): void {
+  const page = window.open('', '_blank');
+  if (!page) return;
+  const codes = page.document.createElement('pre');
+  codes.textContent = text;
+  page.document.body.append(codes);
+  page.focus();
+  page.print();
+  page.close();
 }
 
 const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement => {
@@ -144,7 +179,7 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
               </QrCode.Root>
               <p>
                 If you can&apos;t scan it, enter this key in the app instead:{' '}
-                <code className="two-factor__key">{keyOf(enrolment.totpURI)}</code>
+                <code className="two-factor__key">{groupedKey(keyOf(enrolment.totpURI))}</code>
               </p>
             </li>
             <li>
@@ -159,6 +194,29 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
                   </li>
                 ))}
               </ul>
+              <div className="two-factor__code-actions">
+                <button
+                  type="button"
+                  className="btn btn--quiet"
+                  onClick={() => void navigator.clipboard?.writeText(codesText(enrolment))}
+                >
+                  Copy Codes
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--quiet"
+                  onClick={() => downloadCodes(codesText(enrolment))}
+                >
+                  Download Codes
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--quiet"
+                  onClick={() => printCodes(codesText(enrolment))}
+                >
+                  Print Codes
+                </button>
+              </div>
             </li>
             <li>
               <p>Enter the six-digit code the app now shows to turn two-factor on.</p>
