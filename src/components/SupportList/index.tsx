@@ -27,7 +27,7 @@ const SupportList = ({
         {requests.map((request) => (
           <li key={request.id} className="support-list__item panel">
             <div className="support-list__head">
-              <strong>{request.subject}</strong>
+              <h2 className="support-list__subject">{request.subject}</h2>
               <span className="support-list__marks">
                 <span>{labelOfAbout(request.about)}</span>
                 <span>{STATUS[request.status]}</span>

@@ -21,6 +21,15 @@ describe('SupportList', () => {
     expect(screen.getByText(/no support requests/i)).toBeInTheDocument();
   });
 
+  it('gives each request a level 2 heading named by its subject', () => {
+    render(<SupportList requests={[request(), request({ id: 'r2', subject: 'Faint text' })]} />);
+    expect(screen.getAllByRole('heading')).toHaveLength(2);
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'How do I join a coven?' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Faint text' })).toBeInTheDocument();
+  });
+
   it('shows each request with its about, status and subject', () => {
     render(
       <SupportList

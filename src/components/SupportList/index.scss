@@ -15,6 +15,13 @@
   justify-content: space-between;
 }
 
+// The smallest heading size, not the h2 look; nested to outweigh typography-base's `body h2`.
+body .support-list__subject {
+  margin: 0;
+  font-size: heading-size(4);
+  line-height: 1.25;
+}
+
 .support-list__marks {
   display: flex;
   flex-wrap: wrap;
