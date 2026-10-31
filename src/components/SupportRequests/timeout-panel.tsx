@@ -133,7 +133,8 @@ const Ledger = ({ timeouts }: { timeouts: SupportTimeoutEntry[] }): ReactElement
             </span>
             {timeout.liftedAt && (
               <span className="badge badge--muted">
-                Lifted <LocalDay at={timeout.liftedAt} year={false} />
+                {'Lifted\u00a0'}
+                <LocalDay at={timeout.liftedAt} year={false} />
               </span>
             )}
           </span>
