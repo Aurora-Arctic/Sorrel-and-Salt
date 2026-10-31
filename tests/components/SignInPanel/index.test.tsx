@@ -46,7 +46,7 @@ describe('SignInPanel', () => {
       />,
     );
 
-    for (const name of ['Discord', 'Facebook', 'Microsoft']) {
+    for (const name of ['Discord', 'Microsoft']) {
       expect(screen.getByRole('button', { name: `Continue with ${name}` })).toBeEnabled();
     }
     await press(screen.getByRole('button', { name: 'Continue with Google' }));
@@ -202,7 +202,7 @@ describe('SignInPanel', () => {
     const { unmount } = render(<SignInPanel next="/coven" configured={[...roster]} />);
 
     const marked = screen.getByRole('button', { name: 'Continue with Discord Last Used' });
-    for (const name of ['Google', 'Facebook', 'Microsoft']) {
+    for (const name of ['Google', 'Microsoft']) {
       expect(screen.getByRole('button', { name: `Continue with ${name}` })).toBeInTheDocument();
     }
     await press(marked);

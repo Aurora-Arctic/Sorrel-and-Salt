@@ -87,7 +87,7 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
       </div>
       {message && <Notice kind="error">{message}</Notice>}
       <div className="sign-in-panel__providers">
-        {SOCIAL_PROVIDERS.map((provider) => (
+        {SOCIAL_PROVIDERS.filter((provider) => !provider.hidden).map((provider) => (
           <ProviderButton
             key={provider.id}
             provider={provider}
