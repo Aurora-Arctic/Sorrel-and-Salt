@@ -74,6 +74,7 @@ import {
   isEmailHeldByAnother,
   isPlaceholderEmail,
   placeholderEmail,
+  ensureProvisionalCleanup,
   scheduleProvisionalExpiry,
   clearFailedPasswordSignIns,
   isPasswordSignInLocked,
@@ -862,6 +863,8 @@ export const auth = betterAuth({
                 error,
               );
             }
+            // The daily cleanup backs up a lost run; it starts one chain at most and logs its own failure.
+            await ensureProvisionalCleanup();
           }
           try {
             const demo = await findDemoWorkspace();

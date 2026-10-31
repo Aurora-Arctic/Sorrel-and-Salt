@@ -1,6 +1,6 @@
 import 'server-only';
 // oxlint-disable-next-line no-restricted-imports
-import { start } from 'workflow/api';
+import { getHookByToken, start } from 'workflow/api';
 
 // The site's one door to the Workflow SDK from server code: a service starts a
 // job here, and the job file (a "use workflow" function) reads its sleeps and
@@ -17,4 +17,17 @@ export async function startJob<Args extends unknown[], Result>(
 ): Promise<string> {
   const run = await start(job, args);
   return run.runId;
+}
+
+/**
+ * Whether a run holds the hook with this token right now. The lookup is advisory: two callers can
+ * both see `false` and both start, so a job that must run once also checks for a conflict itself.
+ */
+export async function jobTokenActive(token: string): Promise<boolean> {
+  try {
+    await getHookByToken(token);
+    return true;
+  } catch {
+    return false;
+  }
 }

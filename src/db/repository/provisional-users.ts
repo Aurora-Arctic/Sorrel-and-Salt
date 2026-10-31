@@ -8,9 +8,9 @@ import { db } from '../connection';
 import { existsIn } from './select';
 
 /** The rows a lapse can reach: unverified, holding a provider, and not vouched for by an admin. */
-function provisional(userId: string) {
+function provisional(userId?: string) {
   return and(
-    eq(users.id, userId),
+    userId === undefined ? undefined : eq(users.id, userId),
     eq(users.emailVerified, false),
     existsIn(accounts, eq(accounts.userId, users.id)),
     not(existsIn(userPrivilegeChanges, eq(userPrivilegeChanges.userId, users.id))),
@@ -63,4 +63,30 @@ export async function provisionalSecondsLeft(
     .from(users)
     .where(provisional(userId));
   return row && row.left > 0 ? row.left : null;
+}
+
+/**
+ * The ids of provisional accounts that have lapsed, oldest first, at most `limit`, by the
+ * database's clock. The daily cleanup deletes each through `deleteLapsedProvisionalUser`.
+ */
+export async function findLapsedProvisionalUserIds(
+  lifetimeSeconds: number,
+  capSeconds: number,
+  limit: number,
+): Promise<string[]> {
+  const rows = await db
+    .select({ id: users.id })
+    .from(users)
+    .where(
+      and(
+        provisional(),
+        or(
+          lt(users.updatedAt, sql`now() - make_interval(secs => ${lifetimeSeconds})`),
+          lt(users.createdAt, sql`now() - make_interval(secs => ${capSeconds})`),
+        ),
+      ),
+    )
+    .orderBy(users.createdAt)
+    .limit(limit);
+  return rows.map((row) => row.id);
 }
