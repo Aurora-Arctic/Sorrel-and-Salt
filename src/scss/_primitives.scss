@@ -1161,6 +1161,13 @@
   // `aria-invalid`, which is what draws the error edge.
   // claude-docs/styling.md, "Form fields".
 
+  // The signed-out Support panel: its notice and form stand a step apart, one gap and no margin of
+  // their own (the notice, the form's first group and its legend all sit at zero).
+  .support-panel--signed-out {
+    display: grid;
+    gap: space(4);
+  }
+
   .form {
     display: flex;
     flex-direction: column;
