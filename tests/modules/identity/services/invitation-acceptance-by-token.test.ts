@@ -583,16 +583,33 @@ describe('acceptInvitation, on a card', () => {
   });
 
   it.each([
-    ['expired', { expired: true }],
-    ['revoked', { revoked: true }],
-  ] as const)('refuses one %s with its own reason and names no batch', async (reason, state) => {
-    await invite({ card: true, ...state });
+    ['expired', { expired: true }, 'This card has expired.'],
+    ['revoked', { revoked: true }, 'This card has been withdrawn.'],
+  ] as const)(
+    'refuses one %s with its own reason, in words for a card, and names no batch',
+    async (reason, state, words) => {
+      await invite({ card: true, ...state });
 
-    const standing = await invitationStanding(asUser(AS_STRANGER), TOKEN);
-    expect(standing).toMatchObject({ acceptable: false, reason });
-    expect(JSON.stringify(standing)).not.toContain(CARD_BATCH);
-    await expect(acceptInvitation(asUser(AS_STRANGER), TOKEN)).rejects.toThrow(Forbidden);
-    expect(await ledger()).toEqual([]);
+      const standing = await invitationStanding(asUser(AS_STRANGER), TOKEN);
+      expect(standing).toMatchObject({ acceptable: false, reason });
+      expect(standing).toMatchObject({ message: expect.stringContaining(words) });
+      expect(JSON.stringify(standing)).not.toMatch(/email|sent it|sender/i);
+      expect(JSON.stringify(standing)).not.toContain(CARD_BATCH);
+      await expect(acceptInvitation(asUser(AS_STRANGER), TOKEN)).rejects.toThrow(Forbidden);
+      expect(await ledger()).toEqual([]);
+    },
+  );
+
+  // A card's code is 16 symbols and an address invitation's token is longer, so the shape alone tells which kind was mistyped.
+  it('words a token naming nothing for a card when it has a card code’s shape, and for an email otherwise', async () => {
+    await invite({ card: true });
+
+    const card = await invitationStanding(asUser(AS_STRANGER), 'AAAAAAAAAAAAAAAA');
+    expect(card).toMatchObject({ acceptable: false, reason: 'invalid' });
+    expect(JSON.stringify(card)).toContain("That code doesn't match a card");
+    expect(JSON.stringify(card)).not.toMatch(/email|sent it/i);
+    const link = await invitationStanding(asUser(AS_STRANGER), 'no-such-token-at-all');
+    expect(JSON.stringify(link)).toContain('from the email');
   });
 
   it('leaves the flag as it was for an account that already holds it, recording no second grant', async () => {

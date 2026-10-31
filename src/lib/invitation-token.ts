@@ -34,3 +34,10 @@ export function newCardToken(): string {
   }
   return token;
 }
+
+const CARD_TOKEN_SHAPE = new RegExp(`^[${CARD_TOKEN_ALPHABET}]{${CARD_TOKEN_LENGTH}}$`);
+
+/** Whether a string has the shape of a card's token: an address invitation's is longer, so a mistyped card code is told apart from a mistyped link. */
+export function looksLikeCardToken(token: string): boolean {
+  return CARD_TOKEN_SHAPE.test(token);
+}
