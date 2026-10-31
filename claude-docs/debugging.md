@@ -326,7 +326,8 @@ it's listed there, and the rejected request is the HMR websocket the
 Turbopack client runtime boots through. Static chunks still return 200 and
 the console stays clean, so the only tell is a websocket error and a page
 where every handler is silently missing. `sorrel-app` is listed for exactly
-this reason; any _new_ hostname a real browser uses to reach `next dev`
+this reason, and `192.168.*.*` and `10.*.*.*` cover a phone reaching the
+dev server by the machine's LAN address; any _new_ hostname a real browser uses to reach `next dev`
 needs adding too.
 
 **One hydration error while recording is expected and is not an app bug.**
