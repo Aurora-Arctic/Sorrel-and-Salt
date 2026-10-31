@@ -88,7 +88,7 @@ export const ADMIN_SECTIONS: readonly AdminSection[] = [
       ADMIN_PAGES.astrology,
     ],
   },
-  { name: 'Support', pages: [ADMIN_PAGES.support], adminOnly: true },
+  { name: 'Support', pages: [ADMIN_PAGES.support] },
   { name: 'People', pages: [ADMIN_PAGES.people], adminOnly: true },
 ];
 

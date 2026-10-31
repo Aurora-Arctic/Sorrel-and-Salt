@@ -1,6 +1,6 @@
 # Support Requests
 
-`src/components/SupportRequests/` — the admin support page, `/admin/support` (M15.30; the curator view of it is M15.31).
+`src/components/SupportRequests/` — the support page, `/admin/support`, for an admin (M15.30) and, narrowed, a curator (M15.31).
 A page of the requests people have sent, open ahead of resolved and newest first, with a filter, the shared
 [`Pager`](pager.md), and one request opened to its message in a modal at `?request=<id>`. Render-only: the page reads the
 filter and cursor off its address (`support/filter.ts`), one page and its count through `listSupportRequests` and
@@ -26,4 +26,4 @@ same ones.
   active one has **Lift**. **Time Out** is disabled until the end is in the future.
 - Every action is a GraphQL mutation (`use-support-action.ts`) and refreshes the page on success; a refusal shows as a
   notice, or beside its field where it names one.
-- A curator's page hides the admin-only controls by the `viewer` prop; the service refuses them regardless.
+- A curator reaches the page through `requireCuratorSession()` and is shown the admin-only controls by none: the `viewer` prop hides them, the services refuse them regardless, and the page gives a curator no assignee list. A request neither marked nor assigned to the curator shows the same "no support request has that address" notice as an unknown id. `tests/e2e/admin-support-curator.spec.ts` proves it.
