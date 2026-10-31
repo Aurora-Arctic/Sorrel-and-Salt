@@ -44,3 +44,12 @@
 .admin-cards__filter {
   position: relative;
 }
+
+// Beside the two range fields on a wide drawer the status keeps the width its longest option
+// needs, and the ranges share the rest; stacked, it is as wide as the drawer.
+.admin-cards__status {
+  @media (min-width: $shell-tablet-width) {
+    flex: none;
+    min-inline-size: 10rem;
+  }
+}

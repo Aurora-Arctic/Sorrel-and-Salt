@@ -533,8 +533,11 @@ describe('AdminCards filter', () => {
 
   const inFlight = (ui: ReactNode) => render(<Navigating push={router.push}>{ui}</Navigating>);
   const openFilters = () => fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
-  const status = (name: string) =>
-    within(screen.getByRole('group', { name: 'Status' })).getByRole('radio', { name });
+  const statusBox = () => screen.getByRole('combobox', { name: 'Status' });
+  const pickStatus = (name: string) => {
+    fireEvent.click(statusBox());
+    fireEvent.click(screen.getByRole('option', { name }));
+  };
 
   // The drawer is the non-modal panel at the tablet width and up.
   beforeEach(() => {
@@ -579,7 +582,7 @@ describe('AdminCards filter', () => {
       target: { value: ' b22 ' },
     });
     openFilters();
-    fireEvent.click(status('Used up'));
+    pickStatus('Used Up');
     expect(router.push).not.toHaveBeenCalled();
     await act(async () => openFilters());
 
@@ -593,7 +596,7 @@ describe('AdminCards filter', () => {
       target: { value: ' b22 ' },
     });
     openFilters();
-    fireEvent.click(status('Revoked'));
+    pickStatus('Revoked');
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Apply Filters' }));
     });
@@ -602,26 +605,44 @@ describe('AdminCards filter', () => {
   });
 
   it.each([
-    ['Minted From', 'mintedFrom'],
-    ['Minted To', 'mintedTo'],
-    ['Expires From', 'expiresFrom'],
-    ['Expires To', 'expiresTo'],
-  ])('holds the day picked in %s until Apply Filters writes it to the URL', async (label, name) => {
+    ['Minted', 'mintedFrom', 'mintedTo'],
+    ['Expires', 'expiresFrom', 'expiresTo'],
+  ])(
+    'holds the range picked in %s until Apply Filters writes both ends to the URL',
+    async (label, from, to) => {
+      inFlight(<AdminCards batches={BATCHES} cursor={{ after: 'c25' }} />);
+
+      openFilters();
+      fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${label}`) }));
+      const calendar = screen.getByRole('dialog', { name: `Choose ${label} Days` });
+      fireEvent.click(within(calendar).getByRole('button', { name: / 3 October 2026/ }));
+      await act(async () => {
+        fireEvent.click(within(calendar).getByRole('button', { name: / 15 October 2026/ }));
+      });
+      expect(router.push).not.toHaveBeenCalled();
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Apply Filters' }));
+      });
+
+      expect(router.push).toHaveBeenCalledExactlyOnceWith(
+        `${PATH}?${from}=2026-10-03&${to}=2026-10-15`,
+      );
+    },
+  );
+
+  it('applies a range open at its end when the calendar shuts after the first day', async () => {
     inFlight(<AdminCards batches={BATCHES} cursor={{ after: 'c25' }} />);
 
     openFilters();
-    fireEvent.click(screen.getByRole('button', { name: new RegExp(label) }));
-    await act(async () => {
-      fireEvent.click(
-        within(screen.getByRole('grid')).getByRole('button', { name: /, 15 October 2026/ }),
-      );
-    });
-    expect(router.push).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: /^Minted/ }));
+    const calendar = screen.getByRole('dialog', { name: 'Choose Minted Days' });
+    fireEvent.click(within(calendar).getByRole('button', { name: / 15 October 2026/ }));
+    fireEvent.keyDown(within(calendar).getAllByRole('grid')[0], { key: 'Escape' });
     await act(async () => {
       fireEvent.click(screen.getByRole('button', { name: 'Apply Filters' }));
     });
 
-    expect(router.push).toHaveBeenCalledExactlyOnceWith(`${PATH}?${name}=2026-10-15`);
+    expect(router.push).toHaveBeenCalledExactlyOnceWith(`${PATH}?mintedFrom=2026-10-15`);
   });
 
   it('shows the filter the URL holds in its fields and the rows sent for it', () => {
@@ -630,8 +651,13 @@ describe('AdminCards filter', () => {
     expect(screen.getByRole('searchbox', { name: 'Batch' })).toHaveValue('b11');
     expect(screen.getByRole('button', { name: /^Filters\D*5/ })).toBeInTheDocument();
     openFilters();
-    expect(status('Live')).toBeChecked();
-    expect(screen.getByRole('button', { name: /Minted From/ })).toHaveTextContent('2026');
+    expect(statusBox()).toHaveTextContent('Live');
+    expect(screen.getByRole('button', { name: /^Minted/ })).toHaveAccessibleName(
+      /1 Oct 2026.*31 Oct 2026/,
+    );
+    expect(screen.getByRole('button', { name: /^Expires/ })).toHaveAccessibleName(
+      /1 Nov 2026.*31 Dec 2026/,
+    );
     expect(screen.getAllByRole('row')).toHaveLength(2);
   });
 
