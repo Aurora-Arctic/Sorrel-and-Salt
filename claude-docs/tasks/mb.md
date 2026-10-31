@@ -5634,7 +5634,7 @@ _Also in scope:_
 
 _Acceptance criteria:_
 
-- A regression test that fails before the fix: a test under `tests/components/IngredientForm/` (or the story itself under a forced autosave pause) that shows Save Ingredient disabled with the user's edits already autosaved, and the chosen behaviour afterwards
+- The form's behaviour is unchanged: Save Ingredient is disabled once a save the form made by itself has filed every edit. The fault was in stories 30 and 18, and their proof is those stories holding back the save request until after the click on Save. No component test is added for unchanged behaviour
 - Story 18 passes first time on CI's runner in two consecutive PR-gate runs, with no retry
 - The chosen behaviour is stated in `claude-docs/components/ingredient-form.md` ("Autosave") and, if the form changes, in that doc's form save rules
 - No other story's timing is changed to make it pass
