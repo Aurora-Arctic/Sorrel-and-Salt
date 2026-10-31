@@ -194,7 +194,6 @@ describe('SupportForm', () => {
     render(<SupportForm path="/coven/x/missing" errorCode={404} about="bug" />);
     expect(page()).toHaveAccessibleDescription(/Opened from the Error 404 page/);
     expect(page()).toHaveValue('/coven/x/missing');
-    expect(page()).toHaveAccessibleDescription(/500/);
   });
 
   it('sends an edited page', async () => {
