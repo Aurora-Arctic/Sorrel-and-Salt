@@ -133,3 +133,14 @@ A visitor with no account may send a request about `accessibility` or `account`,
 - **An address that belongs to an account** is still treated as signed out, so a request cannot reveal which addresses are registered.
 - **The sender's id** is one named constant, `SIGNED_OUT_SENDER_ID` in `src/lib/support-sender.ts`. The seed and the schema's CHECK use it, and the CHECK's migration (`0112_support-sender-email`) holds the same literal, since SQL cannot import it. The CHECK tying `created_by` to that id is accepted.
 - **Out of scope.** Better Auth's anonymous plugin (M15.48) is not built toward.
+
+## Decided while building
+
+### The Footer Is Drawn Once, by the Root Layout (the owner's call of 2026-10-31)
+
+- **One footer, in `src/app/layout.tsx`.** The footer sits under every page: both frames, the home page and the error screens. The copies in `AppShell`, `PublicFrame` and the home page are gone, and so is the `inShell` flag that chose a link. The cause of the missing footer on `/account/support` was not found by reading the code: no rule hides it there, and the page was one of those the per-frame copy did not reach. Drawing it once removes the class of fault.
+- **The home page shows it to everyone.** `/` is crawlable and shows the site name; the footer is added to it for a signed-out visitor too. It carries no data, so MB.84's rule that `/` shows no workspace data still holds.
+- **The Support dialog is mounted beside it** in the root layout (`SupportDialogSlot`), so the footer's Support link opens the dialog on every page, including the public frame. It is given what the visitor may do: sign in, confirm an address, wait out a time-out, or write. `/support` is unchanged as a page for a shared link; the link falls back to it until the address is known.
+- **Cost.** The root layout now reads the session on every page, and runs the time-out query for a verified signed-in visitor. The public layout already read the session. Moving the state to a client fetch would avoid the query but add a request per page, so it was not done.
+- **The footer sits at the foot of a short page.** The layout wraps page and footer in a column at least one window tall, and the footer's top margin is `auto`. A centred page frame is shorter by the footer's height so the two together fit one window.
+- **The salt stays above the footer.** The footer declares a scroll view timeline and the salt image rises on it; the opaque fill stays as the fallback (claude-docs/components/site-footer.md).
