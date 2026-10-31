@@ -4,7 +4,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '../../gql';
-import { changePassword } from '../../lib/auth-client';
+import { changePassword, useSession } from '../../lib/auth-client';
 import { useResultFocus } from '../../lib/use-result-focus';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
@@ -53,6 +53,7 @@ function changeRefusal(failure: Failure): Refusal {
 
 const PasswordSection = ({ hasPassword }: PasswordSectionProps): ReactElement => {
   const router = useRouter();
+  const email = useSession().data?.user.email;
   // Whether the account holds a password: the props' answer until a first one is set here.
   const [held, setHeld] = useState(hasPassword);
   const [current, setCurrent] = useState('');
@@ -134,9 +135,25 @@ const PasswordSection = ({ hasPassword }: PasswordSectionProps): ReactElement =>
       )}
       {/* `noValidate`: every refusal is the server's, worded and placed like the rest. */}
       <form className="form" onSubmit={(event) => void submit(event)} noValidate>
+        {/* A password manager saves a password against the username in the same form, so the account's
+            address rides along, read-only and visually hidden (not `display: none`, which managers skip). A placeholder address is no username. */}
+        {email && !email.endsWith('.invalid') && (
+          <input
+            type="email"
+            name="username"
+            id="password-section-username"
+            autoComplete="username"
+            value={email}
+            readOnly
+            tabIndex={-1}
+            aria-hidden
+            className="password-section__username"
+          />
+        )}
         {held && (
           <PasswordField
             label="Current Password"
+            name="current-password"
             purpose="current"
             value={current}
             onChange={setCurrent}
@@ -146,6 +163,7 @@ const PasswordSection = ({ hasPassword }: PasswordSectionProps): ReactElement =>
         )}
         <PasswordField
           label="New Password"
+          name="new-password"
           purpose="new"
           value={chosen}
           onChange={setChosen}

@@ -7,3 +7,7 @@
   flex-direction: column;
   gap: space(3);
 }
+
+.password-section__username {
+  @include visually-hidden;
+}
