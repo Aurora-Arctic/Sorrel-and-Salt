@@ -7,7 +7,8 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { SUPPORT_LIST_PATH } from '../../lib/support-path';
 import type { Failure } from '../../lib/types';
-import { FieldShell, FormActions, RadioGroupField, fieldDescription } from '../Field';
+import { ComboboxSelect } from '../Combobox';
+import { FieldShell, FormActions, fieldDescription } from '../Field';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import type { SupportFormProps, SupportKind } from './types';
@@ -28,15 +29,14 @@ const SUBJECT_LIMIT = 120;
 const MESSAGE_LIMIT = 4000;
 const PATH_LIMIT = 500;
 
+/** What the kind field is called. */
+const KIND_LABEL = 'Kind';
+
 /** The kinds on offer, accessibility first. */
-const KINDS: readonly { value: SupportKind; label: string; description: string }[] = [
-  {
-    value: 'accessibility',
-    label: 'Accessibility',
-    description: 'Something on the site you cannot use or read.',
-  },
-  { value: 'bug', label: 'Bug', description: 'Something is broken or does not do what it says.' },
-  { value: 'question', label: 'Question', description: 'Something you would like to ask us.' },
+const KINDS: readonly { value: SupportKind; label: string }[] = [
+  { value: 'accessibility', label: 'Accessibility' },
+  { value: 'bug', label: 'Bug' },
+  { value: 'question', label: 'Question' },
 ];
 
 const SupportForm = ({
@@ -45,6 +45,7 @@ const SupportForm = ({
   path,
   onDone,
 }: SupportFormProps): ReactElement => {
+  const kindId = useId();
   const subjectId = useId();
   const messageId = useId();
   const pageId = useId();
@@ -56,6 +57,7 @@ const SupportForm = ({
   const [failure, setFailure] = useState<Failure>({});
   const [sent, setSent] = useState(false);
 
+  const kindField = fieldDescription({ id: kindId });
   const subjectField = fieldDescription({
     id: subjectId,
     note: `Up to ${SUBJECT_LIMIT} characters.`,
@@ -120,14 +122,17 @@ const SupportForm = ({
   return (
     <form className="form" noValidate onSubmit={(event) => void submit(event)}>
       {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
-      <RadioGroupField
-        legend="Kind"
-        name="support-kind"
-        options={KINDS}
-        value={kind}
-        onChange={setKind}
-        disabled={sending}
-      />
+      <FieldShell label={KIND_LABEL} {...kindField}>
+        <ComboboxSelect
+          id={kindField.controlId}
+          label={KIND_LABEL}
+          labelId={kindField.labelId}
+          value={kind}
+          choices={KINDS}
+          disabled={sending}
+          onChange={(value) => setKind(value as SupportKind)}
+        />
+      </FieldShell>
       {errorCode !== undefined && <p className="support-form__context">Error {errorCode}.</p>}
       <FieldShell label="Page" note={`Up to ${PATH_LIMIT} characters.`} {...pageField}>
         <input

@@ -13,6 +13,7 @@ vi.mock('next/navigation', () => ({
 
 const subject = () => screen.getByRole('textbox', { name: /Subject/ });
 const message = () => screen.getByRole('textbox', { name: /Message/ });
+const kind = () => screen.getByRole('combobox', { name: 'Kind' });
 const page = () => screen.getByRole('textbox', { name: 'Page' });
 const send = () => screen.getByRole('button', { name: /Send Request|Sending/ });
 
@@ -36,14 +37,28 @@ function fill() {
 describe('SupportForm', () => {
   it('offers accessibility first and selected, unless a kind is given', () => {
     const { unmount } = render(<SupportForm path="/a" />);
-    expect(screen.getAllByRole('radio').map((r) => (r as HTMLInputElement).value)[0]).toBe(
-      'accessibility',
-    );
-    expect(screen.getByRole('radio', { name: /Accessibility/ })).toBeChecked();
+    expect(kind()).toHaveTextContent('Accessibility');
+    fireEvent.click(kind());
+    expect(screen.getAllByRole('option').map((o) => o.textContent)).toEqual([
+      'Accessibility',
+      'Bug',
+      'Question',
+    ]);
     unmount();
 
     render(<SupportForm path="/a" kind="bug" />);
-    expect(screen.getByRole('radio', { name: /Bug/ })).toBeChecked();
+    expect(kind()).toHaveTextContent('Bug');
+  });
+
+  it('sends the kind that was chosen', async () => {
+    const calls = mockSending();
+    render(<SupportForm path="/a" />);
+    fill();
+    fireEvent.click(kind());
+    fireEvent.click(screen.getByRole('option', { name: 'Question' }));
+    fireEvent.click(send());
+    await screen.findByRole('status');
+    expect(calls[0]?.input.kind).toBe('question');
   });
 
   it('keeps Send off until both a subject and a message are written', () => {

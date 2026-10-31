@@ -27,14 +27,14 @@ describe('SupportDialog', () => {
     search.mockReturnValue('support=question');
     render(<SupportDialog verified />);
     const dialog = screen.getByRole('dialog', { name: 'Contact Support' });
-    expect(within(dialog).getByRole('radio', { name: /Question/ })).toBeChecked();
+    expect(within(dialog).getByRole('combobox', { name: 'Kind' })).toHaveTextContent('Question');
   });
 
   it('shows the error number and the page for a report from an error page', () => {
     search.mockReturnValue('support=bug&error=404');
     render(<SupportDialog verified />);
     const dialog = screen.getByRole('dialog');
-    expect(within(dialog).getByRole('radio', { name: /Bug/ })).toBeChecked();
+    expect(within(dialog).getByRole('combobox', { name: 'Kind' })).toHaveTextContent('Bug');
     expect(within(dialog).getByText(/Error 404/)).toBeInTheDocument();
     expect(within(dialog).getByRole('textbox', { name: 'Page' })).toHaveValue(
       '/coven/fixture-coven',
