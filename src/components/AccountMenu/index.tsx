@@ -6,6 +6,7 @@ import { isAtPath } from '../../lib/at-path';
 import { PendingLink } from '../../lib/navigation';
 import { siteLinkTarget } from '../AppShell/site-target';
 import { ACCOUNT_INVITATIONS_PATH, ACCOUNT_PATH } from '../../lib/sign-in';
+import { SUPPORT_PATH } from '../../lib/support-path';
 import IconTip from '../IconTip';
 import { ChevronIcon } from '../IconTip/icons';
 import SignOutButton from './sign-out-button';
@@ -19,6 +20,9 @@ import './index.scss';
 
 // The account page: its sections beside the jump menu.
 const ACCOUNT_TARGET = { region: 'main', shape: 'page', frame: 'with-nav', head: 'title' } as const;
+
+// The support page: a narrow frame round the form.
+const SUPPORT_TARGET = { region: 'main', shape: 'form', frame: 'narrow' } as const;
 
 const AccountMenu = ({
   name,
@@ -131,6 +135,16 @@ const AccountMenu = ({
               </PendingLink>
             </li>
           ))}
+        <li className="account-menu__link">
+          <PendingLink
+            href={SUPPORT_PATH}
+            navigationTarget={SUPPORT_TARGET}
+            className="account-menu__item"
+            onClick={close}
+          >
+            Support
+          </PendingLink>
+        </li>
         <li className="account-menu__signout">
           <SignOutButton />
         </li>
