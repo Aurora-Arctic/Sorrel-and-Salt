@@ -14,6 +14,7 @@ import ReplyForm from './reply-form';
 import TimeoutPanel from './timeout-panel';
 import type { SupportDetailProps } from './types';
 import { AnnounceContext, useSupportAction } from './use-support-action';
+import SenderName from './sender-name';
 
 // A request opened: the facts and the thread for anyone who may read it, Reply and Resolve for an admin or
 // the curator it is assigned to, and for an admin alone a side column of settings: Assign, Shared With
@@ -64,7 +65,7 @@ const DetailBody = ({ request, viewer, assignees }: SupportDetailProps): ReactEl
             <dd>
               {request.sender ? (
                 <>
-                  {request.sender.name}{' '}
+                  <SenderName sender={request.sender} isAdmin={isAdmin} />{' '}
                   <span className="support-detail__muted">{request.sender.email}</span>
                 </>
               ) : (

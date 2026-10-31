@@ -11,6 +11,7 @@ import { Mark } from '../UserList/marks';
 import SupportDetail from './detail';
 import SupportRequestsFilter, { ABOUT_OPTIONS, STATUS_LABELS, STATUS_OPTIONS } from './filter';
 import { supportHref } from './href';
+import SenderName from './sender-name';
 import type {
   SupportRequestEntry,
   SupportRequestsFilter as Filter,
@@ -94,7 +95,12 @@ const SupportRequests = ({
               cell: (request) => <SubjectLink request={request} filter={filter} cursor={cursor} />,
             },
             { heading: 'Status', cell: (request) => STATUS_LABELS[request.status] },
-            { heading: 'Sender', cell: (request) => request.sender?.name ?? 'Deleted account' },
+            {
+              heading: 'Sender',
+              cell: (request) => (
+                <SenderName sender={request.sender} isAdmin={viewer.role === 'admin'} />
+              ),
+            },
             {
               heading: 'Assigned To',
               cell: (request) =>

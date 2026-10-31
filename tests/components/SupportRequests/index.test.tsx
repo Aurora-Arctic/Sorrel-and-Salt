@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import SupportRequests from '@/components/SupportRequests';
@@ -246,6 +246,38 @@ describe('Issue', () => {
     expect(sent).toEqual([
       { id: 'r1', issueUrl: 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/12' },
     ]);
+  });
+});
+
+describe('The sender', () => {
+  it('links the name to the user modal for an admin, in the list and in the request', () => {
+    render(<SupportRequests requests={[ROW]} viewer={ADMIN} />);
+    const row = screen.getByRole('row', { name: /Wobbling Cauldron/ });
+    expect(within(row).getByRole('link', { name: 'Ada Wortley' })).toHaveAttribute(
+      'href',
+      '/admin/users?user=u1',
+    );
+    cleanup();
+    open(ADMIN);
+    expect(within(dialog()).getByRole('link', { name: 'Ada Wortley' })).toHaveAttribute(
+      'href',
+      '/admin/users?user=u1',
+    );
+  });
+
+  it('leaves the name as text for a curator, in the list and in the request', () => {
+    render(<SupportRequests requests={[{ ...ROW, curatorVisible: true }]} viewer={CURATOR} />);
+    const row = screen.getByRole('row', { name: /Wobbling Cauldron/ });
+    expect(within(row).queryByRole('link', { name: 'Ada Wortley' })).toBeNull();
+    expect(within(row).getByText('Ada Wortley')).toBeInTheDocument();
+    cleanup();
+    open(CURATOR, { curatorVisible: true });
+    expect(within(dialog()).queryByRole('link', { name: 'Ada Wortley' })).toBeNull();
+  });
+
+  it('calls a deleted account that, without a link', () => {
+    open(ADMIN, { sender: null });
+    expect(within(dialog()).getByText('Deleted account')).toBeInTheDocument();
   });
 });
 

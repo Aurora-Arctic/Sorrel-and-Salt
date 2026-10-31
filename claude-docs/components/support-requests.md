@@ -13,6 +13,7 @@ same ones.
 - **A row shows** what it is about, subject (a link that opens the request), status, sender, who it is assigned to, whether
   curators can see it, and the error number. `href.ts`'s `supportHref(filter, cursor, request?)` builds every address,
   carrying `?about=`, `?status=`, `?error=`, one cursor and `?request=`.
+- **The sender's name** (the Sender column and the From fact) is, for an admin, a link to the Users list with that user's modal open, `/admin/users?user=<id>` (M9.19), so the browser's back returns to the request. A curator reaches nothing on the People pages, so for them it stays text, and a deleted account stays "Deleted account". The email beside it stays muted text.
 - **The filter** is [`FilterForm`](filter-form.md): an Error Number search, and Kind and Status selects.
 - **The opened request** is a wide dialog of two columns, stacked on a phone with the settings after the reply. Its head is
   an eyebrow ("Support · " and the kind), the subject and a status badge. The left column holds the facts (From, Sent, Page,
