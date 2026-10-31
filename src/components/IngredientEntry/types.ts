@@ -47,6 +47,8 @@ export interface IngredientEntryEdit {
 export type LinkedIngredient = Pick<IngredientRow, 'id' | 'slug' | 'workspaceId'>;
 
 export interface IngredientEntryProps {
+  /** Set on the public entry page when a curator or admin is reading an entry hidden from the compendium: a notice under the heading says so. */
+  hiddenFromPublic?: boolean;
   /** The Reviewed switch as the last row of the page's head, built for a curator or admin from the uncached review read; it saves on flip. */
   reviewControl?: ReactNode;
   /** Who last edited the entry in this coven and when, from `lastEditsOf`; none draws no line. */

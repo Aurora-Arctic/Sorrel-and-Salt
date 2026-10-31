@@ -386,6 +386,28 @@ export function readCompendiumEntry(slug: string): Promise<CompendiumEntryPage> 
   return cachedEntry(slug);
 }
 
+/**
+ * A curator's read of the entry page, for the address the public read found nothing at: the entry whether it is shown or hidden.
+ * Not cached, since what it returns depends on who asks (claude-docs/design-decisions/m14.35-curators-see-hidden-entry-pages.md).
+ *
+ * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {NotFound} nothing live is at `slug` and nothing redirects from it.
+ */
+export async function readCompendiumEntryAsCurator(
+  session: Session,
+  slug: string,
+): Promise<CompendiumEntryPage> {
+  assertCurator(session);
+  const address = await resolveCompendiumSlug(slug, session);
+  if (address.kind === 'moved') return address satisfies CompendiumEntryPage;
+  const { entry, movedAway } = address;
+  return {
+    kind: 'entry',
+    detail: await ingredientDetailOf(null, entry),
+    movedAway: movedAway ? { name: movedAway.name, slug: movedAway.slug } : null,
+  } satisfies CompendiumEntryPage;
+}
+
 /** What each field named by spelling is called in a refusal. */
 const NOUN_OF: Record<CuratedField, string> = {
   celestialBodies: 'celestial body',

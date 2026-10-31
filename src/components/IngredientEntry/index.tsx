@@ -233,6 +233,7 @@ const IngredientEntry = ({
   heldInCovens = false,
   stock,
   reviewControl,
+  hiddenFromPublic = false,
 }: IngredientEntryProps): ReactElement => {
   const { cupboardEntry, folkNames, categories, deities, substitutes, variants, retired } = detail;
   // `entry` is the row as the compendium has it, which edit and identity use; `shown` lays the
@@ -350,6 +351,11 @@ const IngredientEntry = ({
               safety={false}
             />
           </div>
+        )}
+        {hiddenFromPublic && (
+          <Notice kind="plain" block>
+            Hidden in the Compendium. Only curators and admins can see this page.
+          </Notice>
         )}
         {movedAway && (
           // Quiet: on the page from the start, so a status, never an alert.

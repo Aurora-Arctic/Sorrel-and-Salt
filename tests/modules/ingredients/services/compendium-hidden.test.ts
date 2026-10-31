@@ -10,12 +10,13 @@ import {
   listCompendiumSlugs,
   listWorkspaceIngredients,
   readCompendiumEntry,
+  readCompendiumEntryAsCurator,
   resolveCompendiumSlug,
   setCompendiumEntryShown,
   suggestIngredients,
 } from '@/modules/ingredients';
 import { resolvePage } from '@/lib/pagination';
-import { A, B, E, F, asUser } from '../../../support/as-user';
+import { A, B, D, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertCupboardEntry } from '../../../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
@@ -171,5 +172,50 @@ describe('a coven that holds a hidden entry', () => {
     });
     const rows = await suggestIngredients(asUser(B), WORKSPACE_W_ID, 'Hiddenwort', PAGE);
     expect(rows.map(({ node }) => node.id)).toContain(hidden);
+  });
+});
+
+describe('readCompendiumEntryAsCurator', () => {
+  it.each([
+    ['a curator', F],
+    ['an admin', E],
+  ])('gives %s a hidden entry by its slug', async (_who, user) => {
+    const { hidden, slug } = await seeded();
+    // Why it matters: the public read refuses the same slug.
+    await expect(readCompendiumEntry(slug)).rejects.toBeInstanceOf(NotFound);
+
+    const page = await readCompendiumEntryAsCurator(asUser(user), slug);
+    expect(page).toMatchObject({ kind: 'entry', detail: { entry: { id: hidden, shown: false } } });
+  });
+
+  it('gives a shown entry too', async () => {
+    const { shown } = await seeded();
+    const [{ slug }] = await sql<
+      { slug: string }[]
+    >`select slug from ingredients where id = ${shown}`;
+    await expect(readCompendiumEntryAsCurator(asUser(F), slug)).resolves.toMatchObject({
+      kind: 'entry',
+    });
+  });
+
+  it.each([
+    ['an owner of a coven (A)', A],
+    ['a member of a coven (B)', B],
+    ['a member of another coven (D)', D],
+  ])('refuses %s by direct slug', async (_who, user) => {
+    const { slug } = await seeded();
+    // Why it could have answered: the entry is live, and a curator's read finds it at that slug.
+    await expect(readCompendiumEntryAsCurator(asUser(F), slug)).resolves.toMatchObject({
+      kind: 'entry',
+    });
+    await expect(readCompendiumEntryAsCurator(asUser(user), slug)).rejects.toBeInstanceOf(
+      Forbidden,
+    );
+  });
+
+  it('does not return a soft-deleted entry', async () => {
+    const { hidden, slug } = await seeded();
+    await sql`update ingredients set deleted_at = now() where id = ${hidden}`;
+    await expect(readCompendiumEntryAsCurator(asUser(F), slug)).rejects.toBeInstanceOf(NotFound);
   });
 });
