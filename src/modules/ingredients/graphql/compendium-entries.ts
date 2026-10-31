@@ -5,6 +5,7 @@ import {
   createCompendiumEntry,
   deleteCompendiumEntry,
   setCompendiumEntryReviewed,
+  setCompendiumEntryShown,
   updateCompendiumEntry,
 } from '../services/compendium';
 import { clearIngredientChildren } from '../loaders/ingredient-children';
@@ -109,6 +110,22 @@ builder.mutationField('setCompendiumEntryReviewed', (t) =>
     authScopes: { curator: true },
     resolve: (_root, { id, reviewed }, context) =>
       setCompendiumEntryReviewed(sessionOf(context), id, reviewed),
+  }),
+);
+
+// Hiding an entry: curator-scoped here and refused again by the service. A hidden entry
+// leaves the public compendium and its files; admin screens and covens' cupboards still hold it.
+builder.mutationField('setCompendiumEntryShown', (t) =>
+  t.field({
+    type: IngredientRef,
+    description: 'Shows the entry on the public compendium, or hides it. Curators and admins only.',
+    args: {
+      id: t.arg.id({ required: true }),
+      shown: t.arg.boolean({ required: true }),
+    },
+    authScopes: { curator: true },
+    resolve: (_root, { id, shown }, context) =>
+      setCompendiumEntryShown(sessionOf(context), id, shown),
   }),
 );
 

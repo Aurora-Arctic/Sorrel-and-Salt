@@ -297,6 +297,28 @@ export async function setCompendiumEntryReviewed(
 }
 
 /**
+ * Hides a compendium entry from the public compendium, or shows it again. Admin screens, the audit queue and a coven's cupboard still see a hidden entry.
+ *
+ * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {NotFound} no live compendium entry has this id.
+ */
+export async function setCompendiumEntryShown(
+  session: Session,
+  id: string,
+  shown: boolean,
+): Promise<IngredientRow> {
+  const curator = assertCurator(session);
+  if (!RowId.safeParse(id).success) throw new NotFound('No such compendium entry');
+  const written = await withAudit(session, async (write) => {
+    const [row] = await write.setShownInCompendium(curator, id, shown);
+    if (!row) throw new NotFound('No such compendium entry');
+    return row;
+  });
+  expireCompendium();
+  return written;
+}
+
+/**
  * When a curator last marked a compendium entry reviewed, `null` while it needs review; uncached.
  *
  * @throws {Forbidden} the caller is neither a curator nor an admin.

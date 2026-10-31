@@ -1119,6 +1119,11 @@ type Mutation {
   Marks the entry reviewed by a curator, or clears the mark so it needs review. Curators and admins only.
   """
   setCompendiumEntryReviewed(id: ID!, reviewed: Boolean!): Ingredient!
+
+  """
+  Shows the entry on the public compendium, or hides it. Curators and admins only.
+  """
+  setCompendiumEntryShown(id: ID!, shown: Boolean!): Ingredient!
   setEmail(email: String!, next: String): User!
   setName(name: String!): User!
   setPassword(newPassword: String!): Boolean!

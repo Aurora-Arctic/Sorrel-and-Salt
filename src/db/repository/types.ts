@@ -416,6 +416,11 @@ export interface AuditWriter {
    */
   setReviewInCompendium(curator: Curator, id: string, reviewed: boolean): Promise<IngredientRow[]>;
   /**
+   * Sets whether the one live compendium entry is shown on the public compendium. A real change to the row, so its audit stamps move.
+   * The only writer of the column.
+   */
+  setShownInCompendium(curator: Curator, id: string, shown: boolean): Promise<IngredientRow[]>;
+  /**
    * Moves the one live compendium row's `updated_at` with no column changed, for a parent whose child rows just changed.
    * The `set_updated_at()` trigger ignores an UPDATE that changed nothing, so this publishes `app.touch_row` to say the touch is meant.
    * Compendium tier only.
