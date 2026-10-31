@@ -85,7 +85,7 @@ const LiftButton = ({
     title="Lift the Time-Out?"
     question={
       <>
-        <strong>{name}</strong> can send support requests again at once.
+        <strong>{name}</strong> will be able to send support requests again once you confirm.
       </>
     }
     busy="Lifting"
