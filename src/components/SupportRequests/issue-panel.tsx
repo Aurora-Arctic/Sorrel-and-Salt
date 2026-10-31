@@ -63,9 +63,6 @@ const IssuePanel = ({ request }: { request: SupportRequestDetailEntry }): ReactE
       <h3>Issue</h3>
       {request.issueUrl && (
         <div className="support-detail__issue-line">
-          <a href={request.issueUrl} target="_blank" rel="noopener noreferrer">
-            {issueLabel(request.issueUrl)}
-          </a>
           {!editing && (
             <IconTip tip="Change Issue Address">
               <button
@@ -78,6 +75,9 @@ const IssuePanel = ({ request }: { request: SupportRequestDetailEntry }): ReactE
               </button>
             </IconTip>
           )}
+          <a href={request.issueUrl} target="_blank" rel="noopener noreferrer">
+            {issueLabel(request.issueUrl)}
+          </a>
         </div>
       )}
       {showForm && (
