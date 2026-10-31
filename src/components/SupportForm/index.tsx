@@ -7,8 +7,7 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { SUPPORT_LIST_PATH } from '../../lib/support-path';
 import type { Failure } from '../../lib/types';
-import { ComboboxSelect } from '../Combobox';
-import { FieldShell, FormActions, fieldDescription } from '../Field';
+import { FieldShell, FormActions, RadioGroupField, fieldDescription } from '../Field';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { SUPPORT_ABOUTS } from '../../lib/support-path';
@@ -51,7 +50,6 @@ const SupportForm = ({
   const [failure, setFailure] = useState<Failure>({});
   const [sent, setSent] = useState(false);
 
-  const aboutField = fieldDescription({ id: aboutId });
   const subjectField = fieldDescription({
     id: subjectId,
     note: `Up to ${SUBJECT_LIMIT} characters.`,
@@ -116,17 +114,15 @@ const SupportForm = ({
   return (
     <form className="form" noValidate onSubmit={(event) => void submit(event)}>
       {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
-      <FieldShell label={ABOUT_LABEL} {...aboutField}>
-        <ComboboxSelect
-          id={aboutField.controlId}
-          label={ABOUT_LABEL}
-          labelId={aboutField.labelId}
-          value={about}
-          choices={SUPPORT_ABOUTS}
-          disabled={sending}
-          onChange={(value) => setAbout(value as SupportAbout)}
-        />
-      </FieldShell>
+      <RadioGroupField
+        legend={ABOUT_LABEL}
+        name={aboutId}
+        layout="cards"
+        options={SUPPORT_ABOUTS}
+        value={about}
+        disabled={sending}
+        onChange={setAbout}
+      />
       {errorCode !== undefined && <p className="support-form__context">Error {errorCode}.</p>}
       <FieldShell label="Page" note={`Up to ${PATH_LIMIT} characters.`} {...pageField}>
         <input

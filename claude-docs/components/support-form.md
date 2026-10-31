@@ -9,7 +9,7 @@ client component taking `path` (the page the request is about), and optionally `
 - **One mutation, `sendSupportRequest`**, through `/api/graphql` like every browser write. The service
   checks the address, the time-out and the daily limit; the form only says the limits (subject up to
   120 characters, message up to 4000) so they are met before sending.
-- **What the request is about is a dropdown (the What Is This About? field), with accessibility first and selected** unless `about` names another. Seven options, from `SUPPORT_ABOUTS` in `src/lib/support-path.ts`, which also holds a line saying what each is; the dropdown shows labels only, so those lines are not shown.
+- **What the request is about is a group of radio cards (the What Is This About? field, `RadioGroupField layout="cards"`), accessibility first and selected** unless `about` names another. Seven options, from `SUPPORT_ABOUTS` in `src/lib/support-path.ts`, which also holds a line saying what each is; every card shows its label and that line.
 - **Send Request stays disabled until the subject and message each hold something**, shows a spinner
   while sending, and is replaced by a "received" status that links to Your Support Requests.
 - **`errorCode` is shown and `path` is a field.** A request from an error page says "Error 404." as fixed

@@ -1,6 +1,7 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import SupportForm from '@/components/SupportForm';
+import { SUPPORT_ABOUTS } from '@/lib/support-path';
 import type {
   SendSupportRequestMutation,
   SendSupportRequestMutationVariables,
@@ -13,7 +14,9 @@ vi.mock('next/navigation', () => ({
 
 const subject = () => screen.getByRole('textbox', { name: /Subject/ });
 const message = () => screen.getByRole('textbox', { name: /Message/ });
-const about = () => screen.getByRole('combobox', { name: 'What Is This About?' });
+const aboutGroup = () => screen.getByRole('group', { name: 'What Is This About?' });
+const aboutRadio = (label: string) =>
+  within(aboutGroup()).getByRole('radio', { name: new RegExp(`^${label}`) });
 const page = () => screen.getByRole('textbox', { name: 'Page' });
 const send = () => screen.getByRole('button', { name: /Send Request|Sending/ });
 
@@ -35,31 +38,31 @@ function fill() {
 }
 
 describe('SupportForm', () => {
-  it('offers accessibility first and selected, unless an about is given', () => {
+  it('offers seven cards, accessibility first and checked, unless an about is given', () => {
     const { unmount } = render(<SupportForm path="/a" />);
-    expect(about()).toHaveTextContent('Accessibility');
-    fireEvent.click(about());
-    expect(screen.getAllByRole('option').map((o) => o.textContent)).toEqual([
-      'Accessibility',
-      'Bug',
-      'Account & Sign-In',
-      'Compendium Entry',
-      'Privacy & Data',
-      'Feedback',
-      'Question',
-    ]);
+    const radios = within(aboutGroup()).getAllByRole('radio');
+    expect(radios).toHaveLength(7);
+    expect(radios[0]).toBeChecked();
+    expect(radios.filter((radio) => (radio as HTMLInputElement).checked)).toHaveLength(1);
     unmount();
 
     render(<SupportForm path="/a" about="bug" />);
-    expect(about()).toHaveTextContent('Bug');
+    expect(aboutRadio('Bug')).toBeChecked();
+    expect(aboutRadio('Accessibility')).not.toBeChecked();
+  });
+
+  it('shows what each about means inside its card', () => {
+    render(<SupportForm path="/a" />);
+    for (const option of SUPPORT_ABOUTS) {
+      expect(within(aboutGroup()).getByText(option.description)).toBeVisible();
+    }
   });
 
   it('sends the about that was chosen', async () => {
     const calls = mockSending();
     render(<SupportForm path="/a" />);
     fill();
-    fireEvent.click(about());
-    fireEvent.click(screen.getByRole('option', { name: 'Privacy & Data' }));
+    fireEvent.click(aboutRadio('Privacy & Data'));
     fireEvent.click(send());
     await screen.findByRole('status');
     expect(calls[0]?.input.about).toBe('privacy');
