@@ -53,7 +53,7 @@
 
 .site-footer__brand {
   color: $text-primary;
-  font-size: type-size('title');
+  font-size: heading-size(4);
   line-height: 1.2;
   text-decoration: none;
 
@@ -89,7 +89,7 @@
   max-width: 66ch;
   margin: 0;
   color: $text-muted;
-  font-size: type-size('small');
+  font-size: type-size('caption');
   line-height: 1.5;
 }
 
