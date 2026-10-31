@@ -1154,4 +1154,39 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await expect(page.getByRole('row', { name: /Aaa Testri/ })).toHaveCount(0);
     },
   );
+
+  test(
+    'a curator hides a compendium entry from the public and shows it again',
+    { tag: '@story-18' },
+    async ({ page }) => {
+      const { userId } = await signInAs(page, 'shown@story-18.test', ['discord'], 'curator');
+      const name = 'Fixture Hidewort';
+      const slug = slugify(name);
+      await withSql((sql) =>
+        insertIngredient(
+          sql,
+          makeIngredient({ name, nomenclature: 'none', variants: [makeVariant()] }),
+          userId,
+        ),
+      );
+      const entryPage = `/compendium/ingredients/${slug}`;
+      expect((await page.goto(entryPage))?.status()).toBe(200);
+
+      await page.goto('/admin/compendium');
+      const row = page.getByRole('row').filter({ hasText: name });
+      await row.getByRole('button', { name: `Hide ${name}`, exact: true }).click();
+      await expect(row.getByText('Hidden', { exact: true })).toBeVisible();
+      await expect(row.getByRole('button', { name: `Show ${name}`, exact: true })).toBeVisible();
+
+      // The curator still sees it in the admin list, and the public route no longer does.
+      expect((await page.goto(entryPage))?.status()).toBe(404);
+      await page.goto('/compendium');
+      await expect(page.getByRole('link', { name })).toHaveCount(0);
+
+      await page.goto('/admin/compendium');
+      await row.getByRole('button', { name: `Show ${name}`, exact: true }).click();
+      await expect(row.getByRole('button', { name: `Hide ${name}`, exact: true })).toBeVisible();
+      expect((await page.goto(entryPage))?.status()).toBe(200);
+    },
+  );
 });

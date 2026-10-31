@@ -127,13 +127,17 @@ export function entryColumns(entry: SeedCompendiumEntry, picks: Picks): EntryCol
   };
 }
 
-/** The whole `ingredients` row an insert writes: the compendium tier, keyed by identity, before its stamps. */
+/**
+ * The whole `ingredients` row an insert writes: the compendium tier, keyed by identity, before its stamps.
+ * An entry with no category lands hidden; `shown` is written here and nowhere in the update, so a later run never changes it.
+ */
 export function entryRow(entry: SeedCompendiumEntry, picks: Picks, seedContentHash: string | null) {
   return {
     workspaceId: null,
     ...entryColumns(entry, picks),
     seedKey: identityOf(entry),
     seedContentHash,
+    shown: (entry.categories?.length ?? 0) > 0,
   };
 }
 
