@@ -32,13 +32,13 @@ describe('the support request seed', () => {
   describe('once run', () => {
     beforeAll(run);
 
-    it('seeds eight to twelve requests from at least four senders, all seven subjects', async () => {
+    it('seeds eight to twenty requests from at least four senders, all seven subjects', async () => {
       const [row] = await sql<{ n: number; senders: number; kinds: number }[]>`
         select count(*)::int as n, count(distinct created_by)::int as senders,
                count(distinct about)::int as kinds from support_requests
       `;
       expect(row.n).toBeGreaterThanOrEqual(8);
-      expect(row.n).toBeLessThanOrEqual(12);
+      expect(row.n).toBeLessThanOrEqual(20);
       expect(row.senders).toBeGreaterThanOrEqual(4);
       expect(row.kinds).toBe(7);
     });
@@ -59,14 +59,75 @@ describe('the support request seed', () => {
       for (const [name, n] of Object.entries(row)) expect(n, name).toBeGreaterThan(0);
     });
 
-    it('records who resolved a resolved request and when, and nothing on an open one', async () => {
+    it('records who resolved a resolved request and when, and nothing on an open or waiting one', async () => {
       const rows = await sql<{ status: string; ok: boolean }[]>`
         select status, case when status = 'resolved'
                then resolved_by is not null and resolved_at is not null and resolved_at >= created_at
-               else resolved_by is null and resolved_at is null end as ok
+               when status in ('open', 'waiting_on_sender')
+               then resolved_by is null and resolved_at is null
+               else true end as ok
         from support_requests
       `;
       expect(rows.every((r) => r.ok)).toBe(true);
+    });
+
+    it('seeds waiting requests whose latest public reply is staff and sets the lifecycle times', async () => {
+      const waiting = await sql<
+        { id: string; sender: string; staff_last: boolean; stamped: boolean }[]
+      >`
+        select q.id, q.created_by as sender,
+               (select r.author_role = 'staff' from support_replies r
+                 where r.request_id = q.id and r.visibility = 'public'
+                 order by r.created_at desc limit 1) as staff_last,
+               q.last_staff_activity_at is not null and q.last_sender_activity_at is not null as stamped
+        from support_requests q where q.status = 'waiting_on_sender'
+      `;
+      expect(waiting.length).toBeGreaterThanOrEqual(2);
+      expect(new Set(waiting.map((w) => w.sender)).size).toBe(waiting.length);
+      expect(waiting.every((w) => w.staff_last && w.stamped)).toBe(true);
+    });
+
+    it('seeds closed requests with a close time after the resolution, one idle seven days and one followed up', async () => {
+      const closed = await sql<{ id: string; ok: boolean; idle: boolean; followed: boolean }[]>`
+        select q.id,
+               q.closed_at is not null and q.resolved_at is not null and q.closed_at > q.resolved_at as ok,
+               q.closed_at - q.resolved_at >= interval '7 days' as idle,
+               exists (select 1 from support_requests n where n.linked_from = q.id) as followed
+        from support_requests q where q.status = 'closed'
+      `;
+      expect(closed.length).toBeGreaterThanOrEqual(2);
+      expect(closed.every((c) => c.ok)).toBe(true);
+      expect(closed.some((c) => c.idle)).toBe(true);
+      expect(closed.some((c) => c.followed)).toBe(true);
+    });
+
+    it('links a follow-up to a closed request of the same sender, as the service does', async () => {
+      const links = await sql<{ ok: boolean }[]>`
+        select n.created_by = c.created_by and c.status = 'closed' and n.status = 'open'
+               and n.about = c.about and n.created_at > c.closed_at as ok
+        from support_requests n join support_requests c on c.id = n.linked_from
+      `;
+      expect(links.length).toBeGreaterThan(0);
+      expect(links.every((l) => l.ok)).toBe(true);
+    });
+
+    it('has waiting and closed requests from card sign-ups (Fixtures A to D) and from staff accounts holding no card (E, F)', async () => {
+      const staff = [FIXTURE_USERS.E.id, FIXTURE_USERS.F.id];
+      for (const status of ['waiting_on_sender', 'closed']) {
+        const senders = (
+          await sql<
+            { created_by: string }[]
+          >`select created_by from support_requests where status = ${status}`
+        ).map((r) => r.created_by);
+        expect(
+          senders.some((id) => staff.includes(id)),
+          status,
+        ).toBe(true);
+        expect(
+          senders.some((id) => !staff.includes(id)),
+          status,
+        ).toBe(true);
+      }
     });
 
     it('gives every reply a seeded request and a staff author, with one request replied to twice', async () => {
