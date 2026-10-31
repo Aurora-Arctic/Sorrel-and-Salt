@@ -21,5 +21,5 @@ A visitor with no account may send a request about `accessibility` or `account`,
 - **Honeypot.** The form carries a hidden `website` input. A request that fills it is dropped before anything is counted or stored, and the caller is told it succeeded.
 - **Mail.** A receipt mail confirms the send. A staff reply to a signed-out request is mailed whole to `sender_email`, since the sender has no account to read it in.
 - **An address that belongs to an account** is still treated as signed out, so a request cannot reveal which addresses are registered.
-- **The sender's id** is one named constant, `SIGNED_OUT_SENDER_ID` in `src/lib/support-sender.ts`. The seed and the schema's CHECK use it, and the CHECK's migration (`0110_support-sender-email`) holds the same literal, since SQL cannot import it. The CHECK tying `created_by` to that id is accepted.
+- **The sender's id** is one named constant, `SIGNED_OUT_SENDER_ID` in `src/lib/support-sender.ts`. The seed and the schema's CHECK use it, and the CHECK's migration (`0112_support-sender-email`) holds the same literal, since SQL cannot import it. The CHECK tying `created_by` to that id is accepted.
 - **Out of scope.** Better Auth's anonymous plugin (M15.48) is not built toward.
