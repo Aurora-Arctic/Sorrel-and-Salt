@@ -174,7 +174,7 @@ export interface RadioGroupFieldProps<T extends string> {
   disabled?: boolean;
   /** A line for the whole group, read with it: what holds whichever is chosen. */
   note?: string;
-  /** `list` (default): a row each with its explanation; `strip`: icon-only segments, chosen name beneath; `segmented`: text segments with any `count`; `cards`: two columns of bordered cards, each with its name and explanation, one column on a phone. A radio underneath every way. */
+  /** `list` (default): a row each with its explanation; `strip`: icon-only segments, chosen name beneath; `segmented`: text segments with any `count`; `cards`: one bordered card per row, each with its name and explanation. A radio underneath every way. */
   layout?: 'list' | 'strip' | 'segmented' | 'cards';
   /** An InfoTip beside the legend, for what the choices mean. */
   hint?: string;
