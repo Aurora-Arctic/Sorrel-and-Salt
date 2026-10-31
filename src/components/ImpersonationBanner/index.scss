@@ -31,6 +31,11 @@ $impersonation-banner-reach: space(4);
   :root {
     --top-inset: var(--impersonation-banner-height, 0px);
   }
+
+  // The corner toggle is fixed over the banner's right end at scroll 0; its width and a gap stay clear for Stop.
+  .impersonation-banner {
+    padding-inline-end: calc(#{$toggle-corner} + #{space(2)});
+  }
 }
 
 .impersonation-banner__text {

@@ -58,7 +58,7 @@ badge ([`click-feedback.md`](click-feedback.md)).
   window (the page frames' and the site frame's `min-height`) subtract it. The
   shell's bar, ThemeToggle, the backdrop and every scroll offset start from the
   window's top, so the bar rides up under the banner and holds at the top once
-  it has gone ([`styling.md`](../styling.md), "The top inset"). Its bottom
+  it has gone. Its end padding reserves the corner toggle's width, `$toggle-corner`, and a `space(2)` gap, so Stop is never under the toggle at scroll 0 ([`styling.md`](../styling.md), "The top inset"). Its bottom
   padding is `space(3)`, one step more than its top, so Stop is not crowded
   by the rule when it wraps to a row of its own.
 - **Where a pointer can hover, it is fixed over the top of the page and sits
