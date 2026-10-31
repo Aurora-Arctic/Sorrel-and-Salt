@@ -1,6 +1,7 @@
 'use client';
 
 import { type FormEvent, type ReactElement, useId, useState } from 'react';
+import { useResultFocus } from '../../lib/use-result-focus';
 import { requestPasswordReset } from '../../lib/auth-client';
 import BusyButton from '../BusyButton';
 import { FieldShell, fieldDescription } from '../Field';
@@ -22,49 +23,90 @@ const ForgotPasswordForm = (): ReactElement => {
   const [sentTo, setSentTo] = useState<string>();
 
   const ready = email.trim() !== '' && !pending;
+  const { ref, settle } = useResultFocus<HTMLDivElement>();
+  // Set by Use a Different Address, so the empty form it brings back opens with the cursor in it.
+  const [retyping, setRetyping] = useState(false);
 
-  const submit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
-    event.preventDefault();
-    // A disabled submit stops a click, not Enter in the field.
-    if (!ready) return;
+  const request = async (address: string): Promise<void> => {
     setPending(true);
     setAlert(undefined);
-    setSentTo(undefined);
-    const address = email.trim();
     // Better Auth answers `{ error }` for a refusal and throws for a dropped connection.
     const { error } = await requestPasswordReset({
       email: address,
       redirectTo: '/reset-password',
     }).catch(() => ({ error: {} as { status?: number } }));
     setPending(false);
-    if (error) {
-      setAlert(error.status === 429 ? TOO_MANY_ATTEMPTS : GENERIC_RESET_REQUEST_ERROR);
-      return;
-    }
+    if (error) setAlert(error.status === 429 ? TOO_MANY_ATTEMPTS : GENERIC_RESET_REQUEST_ERROR);
+    else setSentTo(address.toLowerCase());
+    settle();
+  };
+
+  const submit = (event: FormEvent<HTMLFormElement>): void => {
+    event.preventDefault();
+    // A disabled submit stops a click, not Enter in the field.
+    if (!ready) return;
+    void request(email.trim());
+  };
+
+  // The form comes back empty, with the cursor in it, for an address typed wrong.
+  const useAnotherAddress = (): void => {
+    setSentTo(undefined);
+    setAlert(undefined);
     setEmail('');
-    setSentTo(address.toLowerCase());
+    setRetyping(true);
   };
 
   const field = fieldDescription({ id });
 
-  return (
-    <div className="forgot-password-form">
-      {alert && <Notice kind="error">{alert}</Notice>}
-      {sentTo && (
-        <Notice kind="success">
+  if (sentTo) {
+    return (
+      <div className="forgot-password-form" ref={ref}>
+        {alert && (
+          <Notice kind="error" result>
+            {alert}
+          </Notice>
+        )}
+        <Notice kind="success" result={!alert}>
           If {sentTo} has an account, we&apos;ve sent it a link to choose a new password. The link
           works once, within 15 minutes.
         </Notice>
+        <div className="form__actions">
+          <BusyButton
+            type="button"
+            className="btn"
+            busy={pending}
+            busyLabel="Sending Link"
+            onClick={() => void request(sentTo)}
+          >
+            Send Again
+          </BusyButton>
+          <button type="button" className="btn" disabled={pending} onClick={useAnotherAddress}>
+            Use a Different Address
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="forgot-password-form" ref={ref}>
+      {alert && (
+        <Notice kind="error" result>
+          {alert}
+        </Notice>
       )}
       {/* `noValidate`: every refusal is the server's, worded and placed like the rest. */}
-      <form className="form" onSubmit={(event) => void submit(event)} noValidate>
+      <form className="form" onSubmit={submit} noValidate>
         <FieldShell label="Email Address" required {...field}>
           <input
             id={field.controlId}
+            ref={(element) => {
+              if (retyping) element?.focus();
+            }}
             className="input"
             type="email"
             autoComplete="username"
-            placeholder="Your email"
+            placeholder="Add an email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             aria-required

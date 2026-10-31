@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { type FormEvent, type ReactElement, useId, useState } from 'react';
-import { signIn, signUp } from '../../lib/auth-client';
+import { getSession, signIn, signUp } from '../../lib/auth-client';
 import { reportLeaving } from '../../lib/navigation';
 import { signInPath } from '../../lib/sign-in';
+import { useResultFocus } from '../../lib/use-result-focus';
 import BusyButton from '../BusyButton';
 import { FieldShell, fieldDescription } from '../Field';
 import Notice from '../Notice';
@@ -59,6 +60,14 @@ function refusal(mode: Mode, failure: Failure): Refusal {
   return { alert: failure.status === 500 ? SIGN_UP_UNAVAILABLE : GENERIC_SIGN_UP_ERROR };
 }
 
+// Whether the browser holds a session now, read from the server so the cookie a sign-up set is what counts.
+async function hasSession(): Promise<boolean> {
+  const { data } = await getSession({ query: { disableCookieCache: true } }).catch(() => ({
+    data: null,
+  }));
+  return Boolean(data);
+}
+
 const PasswordForm = ({ next, lastUsed, onStart }: PasswordFormProps): ReactElement => {
   const nameId = useId();
   const emailId = useId();
@@ -70,6 +79,7 @@ const PasswordForm = ({ next, lastUsed, onStart }: PasswordFormProps): ReactElem
   const [problem, setProblem] = useState<Refusal>({});
   // The address a sign-up was answered for: every sign-up gets the same answer, held or not.
   const [signedUp, setSignedUp] = useState<string>();
+  const { ref, settle } = useResultFocus<HTMLDivElement>();
 
   const signingUp = mode === 'sign-up';
   const ready =
@@ -103,18 +113,21 @@ const PasswordForm = ({ next, lastUsed, onStart }: PasswordFormProps): ReactElem
     if (error) {
       setPending(false);
       setProblem(refusal(mode, error));
+      settle();
       return;
     }
-    if (signingUp) {
-      // No session yet: the account signs in, then follows the mailed link.
+    // A new account is signed in by the sign-up itself. A held address earns no session: the holder is
+    // written to instead, and the answer is the same for both until the session is looked for.
+    if (signingUp && !(await hasSession())) {
       setPending(false);
       setPassword('');
       setMode('sign-in');
       setSignedUp(address.toLowerCase());
+      settle();
       return;
     }
     // A full load of the sign-in page, which sends a signed-in account on: to `next` or its
-    // landing, and an unverified one to the email page first.
+    // landing, and an unverified one (every new account) to the email page first.
     reportLeaving();
     window.location.assign(signInPath(next));
   };
@@ -123,9 +136,9 @@ const PasswordForm = ({ next, lastUsed, onStart }: PasswordFormProps): ReactElem
   const emailField = fieldDescription({ id: emailId, error: problem.email });
 
   return (
-    <div className="sign-in-panel__password">
+    <div className="sign-in-panel__password" ref={ref}>
       <h2 className="sign-in-panel__password-heading">
-        {signingUp ? 'Create an Account' : 'Sign In With Email'}
+        {signingUp ? 'Create an Account with Email' : 'Sign In with Email'}
         {lastUsed && !signingUp && (
           <>
             {' '}
@@ -133,12 +146,14 @@ const PasswordForm = ({ next, lastUsed, onStart }: PasswordFormProps): ReactElem
           </>
         )}
       </h2>
-      {problem.alert && <Notice kind="error">{problem.alert}</Notice>}
+      {problem.alert && (
+        <Notice kind="error" result>
+          {problem.alert}
+        </Notice>
+      )}
       {signedUp && (
-        <Notice kind="success">
-          We&apos;ve sent a link to {signedUp}. Sign in below, then open the link in this browser
-          within an hour to confirm your address. If the address already has an account, we&apos;ve
-          written to it instead.
+        <Notice kind="success" result>
+          We&apos;ve written to {signedUp}: follow the link in that email to continue.
         </Notice>
       )}
       {/* `noValidate`: every refusal is the server's, worded and placed like the rest. */}
@@ -150,7 +165,7 @@ const PasswordForm = ({ next, lastUsed, onStart }: PasswordFormProps): ReactElem
               className="input"
               type="text"
               autoComplete="name"
-              placeholder="Your name"
+              placeholder="Add a name"
               value={name}
               onChange={(event) => setName(event.target.value)}
               aria-required
@@ -164,7 +179,7 @@ const PasswordForm = ({ next, lastUsed, onStart }: PasswordFormProps): ReactElem
             className="input"
             type="email"
             autoComplete={signingUp ? 'email' : PASSKEY_AUTOCOMPLETE}
-            placeholder="Your email"
+            placeholder="Add an email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             aria-required
@@ -175,7 +190,11 @@ const PasswordForm = ({ next, lastUsed, onStart }: PasswordFormProps): ReactElem
           label="Password"
           purpose={signingUp ? 'new' : 'current'}
           value={password}
-          onChange={setPassword}
+          onChange={(value) => {
+            setPassword(value);
+            // A refusal belongs to the value it refused.
+            setProblem((was) => (was.password ? { ...was, password: undefined } : was));
+          }}
           error={problem.password}
           required
         />

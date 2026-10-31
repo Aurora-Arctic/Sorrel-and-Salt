@@ -21,7 +21,7 @@ const field = (page: Page, label: string) =>
   page.getByRole('main').getByLabel(new RegExp(`^${label}`));
 
 test(
-  'a visitor signs up with an email address and a password, confirms the address by the mailed link, and signs in',
+  'a visitor signs up with an email address and a password, is signed in, and confirms the address by the mailed link',
   { tag: '@story-70' },
   async ({ page }) => {
     const email = `sign-up-${randomUUID()}@password.test`;
@@ -42,7 +42,8 @@ test(
 
     await field(page, 'Password').fill(PASSWORD);
     await page.getByRole('button', { name: 'Create Account' }).click();
-    await expect(page.getByRole('main').getByRole('status')).toContainText(email);
+    // The new account is signed in, and unproved it reaches only the email page, which keeps where it was going.
+    await expect(page).toHaveURL('/account/email?next=%2Fcoven');
     await assertNoAccessibilityViolations(page);
 
     // The account exists, unproved, and earns nothing beyond it.
@@ -51,19 +52,6 @@ test(
         select email_verified, can_create_workspace from users where email = ${email}`,
     );
     expect(made).toEqual({ email_verified: false, can_create_workspace: false });
-
-    // The form is back on sign-in. A wrong password is refused, and the right one signs in.
-    await expect(page.getByRole('heading', { name: 'Sign In With Email' })).toBeVisible();
-    await expect(field(page, 'Email Address')).toHaveValue(email);
-    await field(page, 'Password').fill('not the password at all, sadly');
-    await page.getByRole('button', { name: 'Sign In', exact: true }).click();
-    await expect(page.getByRole('main').getByRole('alert')).toBeVisible();
-    await expect(page).toHaveURL('/sign-in?next=%2Fcoven');
-
-    await field(page, 'Password').fill(PASSWORD);
-    await page.getByRole('button', { name: 'Sign In', exact: true }).click();
-    // Unproved, it reaches only the email page, which keeps where it was going.
-    await expect(page).toHaveURL('/account/email?next=%2Fcoven');
 
     // The mailed link, followed from this session, proves the address and goes on.
     const message = await latestMessageTo(email);

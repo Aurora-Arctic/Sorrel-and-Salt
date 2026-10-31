@@ -20,7 +20,9 @@ It takes no props.
 - **The submit is disabled until the field has something in it**, and is a
   `BusyButton` ("Sending Link") while the request is out
   ([`busy-button.md`](busy-button.md)). The address goes trimmed. An
-  accepted request clears the field.
+  accepted request replaces the form with the sent notice, which takes focus,
+  and two buttons: Send Again asks again for the same address, and Use a
+  Different Address brings back an empty form with the cursor in it.
 - **Refusals.** A 429 is the sign-in form's `TOO_MANY_ATTEMPTS`; anything else,
   a network failure included, is `GENERIC_RESET_REQUEST_ERROR`. Both are the
   shared `Notice` ([`notice.md`](notice.md)) in an alert region.

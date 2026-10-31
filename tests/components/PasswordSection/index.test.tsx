@@ -68,7 +68,7 @@ describe('PasswordSection, changing a password', () => {
       newPassword: ` ${CHOSEN} `,
       revokeOtherSessions: true,
     });
-    expect(screen.getByRole('status')).toBeVisible();
+    expect(screen.getByRole('status')).toHaveFocus();
     expect(field('Current Password')).toHaveValue('');
     expect(field('New Password')).toHaveValue('');
   });
@@ -153,7 +153,7 @@ describe('PasswordSection, setting a first password', () => {
 
     await press(set());
 
-    expect(await screen.findByRole('status')).toBeVisible();
+    expect(await screen.findByRole('status')).toHaveFocus();
     expect(calls).toEqual([{ newPassword: CHOSEN }]);
     expect(field('Current Password')).toHaveValue('');
     expect(changePassword).not.toHaveBeenCalled();
@@ -175,6 +175,7 @@ describe('PasswordSection, setting a first password', () => {
     expect(field('New Password')).toHaveAccessibleDescription(
       expect.stringContaining('Use at least 15 characters.'),
     );
+    expect(field('New Password')).toHaveFocus();
   });
 
   it('says any other refusal in the alert region', async () => {
@@ -187,6 +188,8 @@ describe('PasswordSection, setting a first password', () => {
 
     await press(set());
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Confirm your email address first');
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent('Confirm your email address first');
+    expect(alert).toHaveFocus();
   });
 });

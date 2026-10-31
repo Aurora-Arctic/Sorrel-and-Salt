@@ -3,6 +3,7 @@
 import { type ReactElement, useId, useState } from 'react';
 import { FieldShell, fieldDescription } from '../Field';
 import { StrengthMeter } from './meter';
+import { PASSWORD_RULES } from './rules';
 import type { PasswordFieldProps } from './types';
 import './index.scss';
 
@@ -20,16 +21,20 @@ const PasswordField = ({
   const id = useId();
   const [shown, setShown] = useState(false);
   const meterId = `${id}-strength`;
+  // The meter is advice and a refusal is the verdict, so a refused password shows no meter.
+  const metered = purpose === 'new' && !error;
   const { aria, ...field } = fieldDescription({
     id,
     error,
-    describedBy: purpose === 'new' ? meterId : undefined,
+    hint: purpose === 'new' ? PASSWORD_RULES : undefined,
+    describedBy: metered ? meterId : undefined,
   });
 
   return (
     <FieldShell
       label={label}
       required={required}
+      hint={purpose === 'new' ? PASSWORD_RULES : undefined}
       {...field}
       action={
         // A fixed name with its pressed state, rather than a name that flips, so a screen reader
@@ -45,7 +50,7 @@ const PasswordField = ({
           {shown ? 'Hide' : 'Show'}
         </button>
       }
-      after={purpose === 'new' ? <StrengthMeter password={value} id={meterId} /> : undefined}
+      after={metered ? <StrengthMeter password={value} id={meterId} /> : undefined}
     >
       <input
         id={field.controlId}
@@ -56,7 +61,7 @@ const PasswordField = ({
         autoCapitalize="none"
         autoCorrect="off"
         spellCheck={false}
-        placeholder={purpose === 'new' ? 'New password' : 'Your password'}
+        placeholder={purpose === 'new' ? 'Add a password' : 'Enter password'}
         value={value}
         onChange={(event) => onChange(event.target.value)}
         aria-required={required || undefined}
