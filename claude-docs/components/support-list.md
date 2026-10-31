@@ -10,3 +10,7 @@
 - **New Request** is a bare icon button at the right of a bar above the rows: a [`SupportLink`](support-link.md) wrapping the support glyph, named New Request for screen readers and in its icon tip. Shaped like the footer's Support link (no border or fill at rest, the quiet fill on hover and focus), with its glyph in `$accent`, the fill of the solid button, at rest too.
 - **A row is lit like an ingredient card** on hover (pointers that can hover) and focus: `$surface-card-hover` and `$shadow-lifted`. Rows sit `space(3)` apart, the list's gap the one contributor and the row margin zero.
 - **Spacing.** The list is a column with a gap of 4 between the rows' list and the pager; the rows are 2 apart. Each row is 3 above and below its two lines, which are 2 apart, and 4 either side. The meta row's items are 3 apart and, when they wrap on a phone, 1 between lines. The `ul` default margin, the empty message's paragraph margin and the row's margin are zeroed, and the row's `::before` (the site's list marker) is emptied; no global `section` is used. The dialog is outside the flow.
+
+## Loading
+
+The tab's wait is the [`Skeleton`](skeleton.md) `requests` shape, set by the tab's `shape` in `ACCOUNT_TABS`: the bar with the icon button's square, then three two-line rows at the list's padding and gap, so nothing moves when the list arrives.

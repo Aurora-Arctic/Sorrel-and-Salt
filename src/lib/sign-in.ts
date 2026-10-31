@@ -161,7 +161,7 @@ export const ACCOUNT_PASSKEYS_PATH = `${ACCOUNT_SIGN_IN_PATH}#passkeys` as Route
 export const ACCOUNT_TABS: readonly PageTab[] = [
   { href: ACCOUNT_PATH as Route, label: 'Account', shape: 'sections', sections: 3 },
   { href: ACCOUNT_SIGN_IN_PATH as Route, label: 'Sign-In', shape: 'sections', sections: 4 },
-  { href: SUPPORT_LIST_PATH as Route, label: 'Support Requests', shape: 'table' },
+  { href: SUPPORT_LIST_PATH as Route, label: 'Support Requests', shape: 'requests' },
 ];
 
 /** The account page's Invitations section, by its id; the landing and the account menu link to it. */

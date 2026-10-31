@@ -11,6 +11,7 @@ const DEFAULT_COUNT: Record<SkeletonShape, number> = {
   form: 4,
   page: 3,
   sections: 3,
+  requests: 3,
   contents: 2,
   line: 1,
 };
@@ -256,6 +257,30 @@ const Skeleton = ({
               <span />
             </div>
             <AccountPanels count={many} />
+          </div>
+        )}
+        {shape === 'requests' && (
+          // The Support Requests tab: the bar with the New Request button's square at the right, then
+          // rows of a subject line and a meta line, in the tab's headless column.
+          <div className="page-with-nav page-with-nav--headless">
+            <div className="skeleton__requests">
+              <div className="skeleton__requests-bar">
+                <span />
+              </div>
+              <div className="skeleton__requests-rows">
+                {Array.from({ length: many }, (_, at) => (
+                  <div key={at} className="skeleton__request">
+                    <span className="skeleton__request-subject" />
+                    <div className="skeleton__request-meta">
+                      <span className="skeleton__request-badge" />
+                      <span />
+                      <span />
+                      <span />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         )}
         {shape === 'line' &&

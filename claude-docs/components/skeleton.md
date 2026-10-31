@@ -27,6 +27,7 @@ way (M12.33). It was the tab panel's skeleton (MB.115) and the route modal's
 
 - **An `entry` frame also draws the entry’s parts**, in the order the page lays them: Details (a heading, three text bars, the side column’s blocks), a Stock part (a heading and three placeholder jars on a plank, sized from the jar shelf’s tokens), then the forms. See [`ingredient-entry.md`](ingredient-entry.md), “Layout”.
 
+- **`requests` draws the account's Support Requests tab** inside the tab layout, so the tabs stay put: the bar with the New Request icon button's 2rem square at the right, then three rows (`count`) of the list's own shape, each a subject bar over a meta line of a badge-sized pill and three short bars, at the row's padding (`space(3)` by `space(4)`) and `space(3)` apart. The tab sets it with `shape: 'requests'` in `ACCOUNT_TABS`; the page has no `loading.tsx` of its own.
 - **Exactly one `<output>`, "Loading"**, visually hidden, so a screen reader
   hears one announcement whatever the shape. The drawn shapes are
   `aria-hidden`.
