@@ -3,7 +3,7 @@ import { complexityFromQuery } from '@pothos/plugin-complexity';
 import { describe, expect, it } from 'vitest';
 import { MAX_COST, createBuilder } from '@/graphql/builder';
 import { createLoaders } from '@/graphql/loaders';
-import { noInvitationSender, noSender } from '../support/email-verification';
+import { noInvitationSender, noSender, noSupportNotifier } from '../support/email-verification';
 import { InvalidCursor } from '@/lib/errors';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '@/lib/types';
 import type { Context } from '@/graphql/types';
@@ -71,6 +71,7 @@ const context: Context = {
   loaders: createLoaders(null),
   emailVerification: noSender,
   invitations: noInvitationSender,
+  support: noSupportNotifier,
 };
 
 async function run(
