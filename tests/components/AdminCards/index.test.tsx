@@ -99,7 +99,7 @@ describe('AdminCards', () => {
                   reason: 'revoked',
                   attempts: 2,
                   lastAttemptedAt: '2026-10-29T09:30:00.000Z',
-                  account: { id: 'u1', name: 'Other Wort' },
+                  account: { id: 'u1', name: 'Other Wort', email: 'other@example.test' },
                 },
               },
             ],
@@ -115,9 +115,43 @@ describe('AdminCards', () => {
     const list = await screen.findByRole('dialog', { name: 'Refused Opens' });
     expect(await within(list).findByText('Other Wort')).toBeInTheDocument();
     const row = within(list).getByText('Other Wort').closest('tr') as HTMLElement;
+    expect(within(row).getByText('other@example.test')).toBeInTheDocument();
+    expect(within(row).getByRole('link', { name: 'Other Wort' })).toHaveAttribute(
+      'href',
+      '/admin/users?user=u1',
+    );
     expect(within(row).getByText('Revoked')).toBeInTheDocument();
     expect(within(row).getByText('2')).toBeInTheDocument();
     expect(row.querySelector('time')).toHaveAttribute('datetime', '2026-10-29T09:30:00.000Z');
+  });
+
+  it('shows a removed account as Removed Account, with no link and no email', async () => {
+    mockGraphQLQuery<InvitationCardAttemptsQuery, InvitationCardAttemptsQueryVariables>(
+      'InvitationCardAttempts',
+      () => ({
+        invitationCardAttempts: {
+          edges: [
+            {
+              node: {
+                id: 'a2',
+                reason: 'expired',
+                attempts: 1,
+                lastAttemptedAt: '2026-10-29T09:30:00.000Z',
+                account: null,
+              },
+            },
+          ],
+          pageInfo: { hasNextPage: false, endCursor: null },
+        },
+      }),
+    );
+    render(<AdminCards batches={BATCHES} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /^View Refused Opens/ }));
+
+    const list = await screen.findByRole('dialog', { name: 'Refused Opens' });
+    expect(await within(list).findByText('Removed Account')).toBeInTheDocument();
+    expect(within(list).queryByRole('link')).toBeNull();
   });
 
   it('lists a row per batch with its counts, and Revoke Batch only while a card is pending', () => {
