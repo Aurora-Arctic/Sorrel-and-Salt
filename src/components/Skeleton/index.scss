@@ -560,8 +560,8 @@
   height: $control-height;
 }
 
-// The Support Requests tab (SupportList): a column of one gap (4) holding the bar, whose button is the
-// icon button's 2rem square at the right, then the rows 3 apart. A row is 3 above and below, 4 either
+// The Support Requests tab (SupportList): a column of one gap (4) holding the heading line (a heading-width bar and a
+// small button-sized box at the right), then the rows 3 apart. A row is 3 above and below, 4 either
 // side, its two lines 2 apart: the subject, then the badge and three short words.
 .skeleton__requests {
   @include stack(4);
@@ -569,11 +569,19 @@
 
 .skeleton__requests-bar {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  justify-content: space-between;
+  gap: space(3);
 
-  > span {
-    width: 2rem;
-    height: 2rem;
+  > span:first-child {
+    inline-size: 12rem;
+    block-size: 1.5rem;
+  }
+
+  > span:last-child {
+    inline-size: 7.5rem;
+    block-size: 1.75rem;
+    border-radius: radius('control');
   }
 }
 

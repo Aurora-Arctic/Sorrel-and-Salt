@@ -18,6 +18,12 @@ const request = (over: Partial<SupportSenderRequestEntry> = {}): SupportSenderRe
 });
 
 describe('SupportSenderRequest', () => {
+  it('draws the Page fact as the path alone', () => {
+    render(<SupportSenderRequest request={request()} />);
+    const page = screen.getByText('Page').closest('div');
+    expect(page).toHaveTextContent(/^Page\/coven\/whitethorn$/);
+  });
+
   it('shows the sender their own message tagged You', () => {
     render(<SupportSenderRequest request={request()} />);
     const thread = screen.getByRole('region', { name: 'Thread' });

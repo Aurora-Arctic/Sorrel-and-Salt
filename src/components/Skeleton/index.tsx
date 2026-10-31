@@ -260,11 +260,12 @@ const Skeleton = ({
           </div>
         )}
         {shape === 'requests' && (
-          // The Support Requests tab: the bar with the New Request button's square at the right, then
+          // The Support Requests tab: the heading line, a heading-width bar with a small button-sized box at the right, then
           // rows of a subject line and a meta line, in the tab's headless column.
           <div className="page-with-nav page-with-nav--headless">
             <div className="skeleton__requests">
               <div className="skeleton__requests-bar">
+                <span />
                 <span />
               </div>
               <div className="skeleton__requests-rows">
