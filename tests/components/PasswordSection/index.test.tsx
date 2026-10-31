@@ -1,7 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import PasswordSection, {
   GENERIC_CHANGE_ERROR,
   WRONG_CURRENT_PASSWORD,
@@ -16,10 +16,22 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 // call; setting a first password is the `setPassword` mutation, answered by MSW in /api/graphql's shape.
 // tests/db/password-reset.test.ts proves what the server does with each.
 const changePassword = vi.fn();
+const requestPasswordReset = vi.fn();
+let sessionEmail: string | undefined = 'testwort@example.com';
 vi.mock('@/lib/auth-client', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/auth-client')>()),
   changePassword: (...args: unknown[]) => changePassword(...args),
+  requestPasswordReset: (...args: unknown[]) => requestPasswordReset(...args),
+  useSession: () => ({ data: sessionEmail ? { user: { email: sessionEmail } } : null }),
 }));
+const refresh = vi.fn();
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh }) }));
+
+beforeEach(() => {
+  sessionEmail = 'testwort@example.com';
+  refresh.mockReset();
+  requestPasswordReset.mockReset();
+});
 
 const CURRENT = 'Testwort hums along the hedge';
 const CHOSEN = 'Testwort crowns the eastern hedge';
@@ -69,6 +81,7 @@ describe('PasswordSection, changing a password', () => {
       revokeOtherSessions: true,
     });
     expect(screen.getByRole('status')).toHaveFocus();
+    expect(refresh).toHaveBeenCalledTimes(1);
     expect(field('Current Password')).toHaveValue('');
     expect(field('New Password')).toHaveValue('');
   });
@@ -123,6 +136,62 @@ describe('PasswordSection, changing a password', () => {
     await press(change());
 
     expect(screen.getByRole('alert')).toHaveTextContent(said);
+    expect(refresh).not.toHaveBeenCalled();
+  });
+});
+
+describe('PasswordSection, forgotten password', () => {
+  const forgot = () => screen.queryByRole('button', { name: 'Forgot Your Password?' });
+
+  it('is offered only to an account with a password and a real address', () => {
+    const { unmount } = renderSection(<PasswordSection hasPassword />);
+    expect(forgot()).toBeInTheDocument();
+    unmount();
+
+    const without = renderSection(<PasswordSection hasPassword={false} />);
+    expect(forgot()).toBeNull();
+    without.unmount();
+
+    sessionEmail = 'github-42@pending.invalid';
+    renderSection(<PasswordSection hasPassword />);
+    expect(forgot()).toBeNull();
+  });
+
+  it('mails the reset link to the session address and says it was sent', async () => {
+    requestPasswordReset.mockResolvedValue({ data: { status: true }, error: null });
+    renderSection(<PasswordSection hasPassword />);
+
+    await press(forgot()!);
+
+    expect(requestPasswordReset).toHaveBeenCalledWith({
+      email: 'testwort@example.com',
+      redirectTo: '/reset-password',
+    });
+    expect(screen.getByRole('status')).toBeInTheDocument();
+    expect(screen.queryByRole('alert')).toBeNull();
+    expect(changePassword).not.toHaveBeenCalled();
+  });
+
+  it('leaves an error notice when the link could not be sent', async () => {
+    requestPasswordReset.mockResolvedValue({ error: { status: 500 } });
+    renderSection(<PasswordSection hasPassword />);
+
+    await press(forgot()!);
+
+    expect(screen.getByRole('alert')).toBeInTheDocument();
+    expect(screen.queryByRole('status')).toBeNull();
+  });
+});
+
+describe('PasswordSection, password managers', () => {
+  it('carries the account address as the form username', () => {
+    const { container } = renderSection(<PasswordSection hasPassword />);
+
+    const username = container.querySelector<HTMLInputElement>('input[name="username"]');
+    expect(username).toHaveValue('testwort@example.com');
+    expect(username).toHaveAttribute('autocomplete', 'username');
+    expect(field('New Password')).toHaveAttribute('autocomplete', 'new-password');
+    expect(field('Current Password')).toHaveAttribute('autocomplete', 'current-password');
   });
 });
 
@@ -155,6 +224,7 @@ describe('PasswordSection, setting a first password', () => {
 
     expect(await screen.findByRole('status')).toHaveFocus();
     expect(calls).toEqual([{ newPassword: CHOSEN }]);
+    expect(refresh).toHaveBeenCalledTimes(1);
     expect(field('Current Password')).toHaveValue('');
     expect(changePassword).not.toHaveBeenCalled();
   });
