@@ -64,7 +64,8 @@ test(
       .locator('p', { hasText: 'enter this key' })
       .locator('code')
       .textContent();
-    const appUri = `otpauth://totp/e2e?secret=${key}`;
+    // The shown key is grouped for reading; the authenticator URI wants the bare base32.
+    const appUri = `otpauth://totp/e2e?secret=${(key ?? '').replace(/[^A-Z2-7]/gi, '')}`;
     await field(section, 'Code From Your App').fill(await totpCode(appUri));
     await section.getByRole('button', { name: 'Confirm and Turn On' }).click();
     await expect(section.getByRole('button', { name: 'Turn Off Two-Factor' })).toBeVisible();
