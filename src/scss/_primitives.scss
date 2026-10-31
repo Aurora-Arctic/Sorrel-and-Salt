@@ -1849,10 +1849,10 @@
     margin-bottom: space(4);
   }
 
-  // The topic cards sit as close to the Page label below as a label sits to its input: the form's
-  // gap less what brings it down to a field's own.
-  .support-form__about {
-    margin-block-end: calc(#{space(2)} - #{space(5)});
+  // The topic cards are wrapped for focus, so `.form > .fieldset.radio-group` does not reach them and the
+  // group keeps its standalone margin; below it only a field's label gap is wanted.
+  .support-form__about .fieldset.radio-group {
+    margin-block: 0 space(2);
   }
 
   .radio.radio--card {
