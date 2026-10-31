@@ -118,6 +118,11 @@
   @include icon-button(2rem, 1.5rem);
 }
 
+// The Time-Out fold is the column's last section and keeps only its top rule; the Issue draws the same one.
+.support-detail__side .collapsible-section:last-child {
+  border-block-end: 0;
+}
+
 .support-detail__main h3 {
   margin-block-end: 0;
 }
@@ -126,6 +131,8 @@
 .support-detail__issue {
   @include stack(2);
   margin-block: 0;
+  padding-block-start: space(3);
+  border-block-start: 1px solid $hairline;
 
   h3 {
     margin-block-end: 0;

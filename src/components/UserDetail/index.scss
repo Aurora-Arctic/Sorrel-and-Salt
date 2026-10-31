@@ -21,6 +21,11 @@
   }
 }
 
+// The section's own rules bound the Time-Out fold, so the fold draws none of its own.
+.user-detail .user-detail__section .collapsible-section {
+  border-block: 0;
+}
+
 // The ingredient modal's section-title size: a step under the h3 a page
 // draws, since the dialog's own title is the heading here.
 .user-detail .user-detail__title {
