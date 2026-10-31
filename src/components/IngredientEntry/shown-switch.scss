@@ -126,6 +126,7 @@
 
   .shown-switch__spinner {
     // Border-box, so the ring's 2px border sits inside the thumb's size.
+    display: block;
     box-sizing: border-box;
     inline-size: 100%;
     block-size: 100%;
