@@ -11,6 +11,8 @@ import {
   SUPPORT_PATH,
   SUPPORT_REF_PARAM,
 } from '../../lib/support-path';
+import IconTip from '../IconTip/icon-tip';
+import { SupportIcon } from '../IconTip/icons';
 import type { ReportThisProps } from './types';
 
 // The error pages' way to report what they show: a bug request with the status and the page filled in
@@ -33,9 +35,12 @@ const ReportThis = ({ code, reference, inShell = false }: ReportThisProps): Reac
     href = `${SUPPORT_PATH}?${params}`;
   }
   return (
-    <Link className="btn btn--quiet" href={href as Route}>
-      Report This
-    </Link>
+    <IconTip tip="Report This">
+      <Link className="btn btn--quiet btn--icon" href={href as Route}>
+        <SupportIcon />
+        <span className="visually-hidden">Report This</span>
+      </Link>
+    </IconTip>
   );
 };
 

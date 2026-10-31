@@ -5,6 +5,11 @@ request with the status (`error`) and the page filled in. With `inShell` it open
 over the same page; without, it goes to `/support` with the page as `from`, because the screen has no
 shell round it. The shell's `error.tsx` and `not-found.tsx` pass `inShell`.
 
+It is an icon-only button, `btn btn--quiet btn--icon`: `SupportIcon` (a solid speech bubble with a question mark cut out of it)
+in a square the height of a field, wrapped in `IconTip` with the tip "Report This". The link is still named "Report This", by a
+`visually-hidden` span. The bubble takes the button's ink and the cut-out takes `--icon-ground`, which `.btn--quiet` sets to its
+own background, resting and pointed at. The icon appears nowhere else.
+
 ## The path it names
 
 It reads the page from `useActualPathname` (`src/lib/use-actual-pathname.ts`), not `usePathname`. An address
