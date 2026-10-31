@@ -205,9 +205,9 @@ provider- or Better-Auth-internal and unreviewed, the same reasoning
 
 ## Two views
 
-The card shows one of two views. The first holds the provider buttons and a "Continue with Email" button, and no text field. The second holds the email and password form, with a quiet "Back" button above it. Pressing either button adds a browser-history entry with `window.history.pushState`, which Next ties to `useSearchParams`: the email view is `/sign-in?method=email`, the buttons are `/sign-in`, and `next` and `error` are carried along. So the browser's Back button returns from the form to the buttons, and a link to `?method=email` opens the form. The panel holds the typed email address, so it is still there after a trip back and forth; the name and password are not kept.
+The card shows one of two views. The first holds the provider buttons and a "Continue with Email" button, and no text field. The second holds the email and password form, with a "Back" button above it that wears the ingredient page's back-link look (`.back-link` and `BackChevron`, from `IngredientEntry/back-link`) at `caption` size. "Continue with Email" adds a browser-history entry with `window.history.pushState`, marked in `history.state`, and Next ties the address to `useSearchParams`: the email view is `/sign-in?method=email`, the buttons are `/sign-in`, and `next` and `error` are carried along. The card's "Back" button calls `history.back()` when the form's entry carries that mark, so the browser's Back button does not land on the form again. When the form was opened directly (a link to `?method=email`, or a reload) there is no mark, and "Back" uses `history.replaceState` to the address without `method` instead of adding an entry. The panel holds the typed email address, so it is still there after a trip back and forth; the name and password are not kept.
 
-When the view changes, focus moves to its heading: the `h1` of each view carries `tabIndex={-1}` and `data-view-heading`. The first render leaves focus alone. The two-factor code step is not a view of this kind and is unchanged.
+When the view changes, focus moves to its heading: the `h1` of each view carries `tabIndex={-1}` and `data-view-heading`. Each `h1` also carries `.auth-title` (`_typography.scss`), the h1 set at the `h2` heading size so a long title fits the narrow card; the forgot-password and reset-password pages use the same class. The first render leaves focus alone. The two-factor code step is not a view of this kind and is unchanged.
 
 ## Email and password
 
@@ -273,7 +273,7 @@ Below the provider buttons, "Sign In with a Passkey" (`passkey-button.tsx`)
 asks the browser for a passkey saved for this site and signs in with the one
 chosen (`signIn.passkey()`, from the passkey client plugin;
 [`auth/plugins.md`](../auth/plugins.md), "Passkeys"). It is a `BusyButton`
-like the provider buttons, with the same busy state and its own click
+like the provider buttons, but the plain green-outline `.btn` with its label centred (`.sign-in-panel__button--passkey`), with the same busy state and its own click
 feedback. A cancelled prompt, a refused passkey or a dropped connection says
 `PASSKEY_SIGN_IN_ERROR` in a callout under the button and leaves the page
 where it was. A sign-in that succeeds leaves for `/sign-in` carrying `next`

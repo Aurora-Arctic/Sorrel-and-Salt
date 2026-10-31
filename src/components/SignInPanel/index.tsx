@@ -35,6 +35,7 @@ const getLastUsedPasskey = (): boolean => getLastUsedLoginMethod() === 'passkey'
 // browser's Back button returns from the email form to the provider buttons.
 export const EMAIL_VIEW_PARAM = 'method';
 export const EMAIL_VIEW = 'email';
+const PUSHED_MARK = 'signInEmailViewPushed';
 
 const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElement => {
   // The server-rendered callback error, the page's own, until a press starts
@@ -71,7 +72,16 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
     if (toEmail) params.set(EMAIL_VIEW_PARAM, EMAIL_VIEW);
     else params.delete(EMAIL_VIEW_PARAM);
     const query = params.toString();
-    window.history.pushState(null, '', query ? `?${query}` : window.location.pathname);
+    const url = query ? `?${query}` : window.location.pathname;
+    if (toEmail) {
+      // The mark lets Back undo this push; the spread keeps the router's own state keys.
+      window.history.pushState({ ...window.history.state, [PUSHED_MARK]: true }, '', url);
+    } else if (window.history.state?.[PUSHED_MARK]) {
+      window.history.back();
+    } else {
+      // Opened straight on the email view: there is no earlier entry of this page to return to.
+      window.history.replaceState(window.history.state, '', url);
+    }
   };
 
   const [signingIn, setSigningIn] = useState<ProviderId | null>(null);
@@ -127,7 +137,7 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
       ) : (
         <>
           <div className="header sign-in-panel__header">
-            <h1 tabIndex={-1} data-view-heading>
+            <h1 className="auth-title" tabIndex={-1} data-view-heading>
               Sign In
             </h1>
             <p className="lede">Sign in or create an account.</p>
