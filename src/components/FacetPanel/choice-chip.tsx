@@ -5,6 +5,7 @@ import {
   type KeyboardEvent,
   type MouseEvent,
   type ReactElement,
+  type ReactNode,
   type TransitionEvent,
   useEffect,
   useId,
@@ -46,6 +47,8 @@ export interface ChoiceChipOption<T extends string> {
   label: string;
   /** Shown after the name once known; left out for a choice that has none, such as All. */
   count?: number;
+  /** A decorative icon before the label, in the menu and on the chip once chosen. */
+  icon?: ReactNode;
 }
 
 export interface ChoiceChipProps<T extends string> {
@@ -166,7 +169,10 @@ export function ChoiceChip<T extends string>({
   const face = (
     <>
       <span className="facet-chip__name">{legend}:</span>
-      <span className="facet-chip__value">{chosen.label}</span>
+      <span className="facet-chip__value">
+        {chosen.icon && <span className="facet-chip__icon">{chosen.icon}</span>}
+        {chosen.label}
+      </span>
       <svg className="facet-chip__caret" viewBox="0 0 10 6" aria-hidden="true" focusable="false">
         <path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.5" />
       </svg>
@@ -245,6 +251,7 @@ export function ChoiceChip<T extends string>({
                       {...pressFeedback}
                     />
                     <span>
+                      {option.icon && <span className="facet-chip__icon">{option.icon}</span>}
                       {option.label}
                       {option.count !== undefined && <FacetCount count={option.count} />}
                     </span>

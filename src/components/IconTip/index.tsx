@@ -29,6 +29,7 @@ export {
   PreviewIcon,
   PrintIcon,
   RedoIcon,
+  SproutIcon,
   StockIcon,
   UndoIcon,
 } from './icons';

@@ -40,9 +40,9 @@ test('the sender’s request page is accessible in every status and while timed 
     const dialog = page.getByRole('dialog', { name: `A ${status} request` });
     await expect(dialog).toBeVisible();
     if (status === 'closed') {
-      await expect(dialog.getByLabel('Your Reply')).toHaveCount(0);
+      await expect(dialog.getByLabel(/^Your Reply/)).toHaveCount(0);
     } else {
-      await expect(dialog.getByLabel('Your Reply')).toBeEnabled();
+      await expect(dialog.getByLabel(/^Your Reply/)).toBeEnabled();
     }
     await assertNoAccessibilityViolations(page);
   }
@@ -60,6 +60,6 @@ test('the sender’s request page is accessible in every status and while timed 
   await page.goto(`/account/support?request=${ids.open}`);
   const dialog = page.getByRole('dialog', { name: 'A open request' });
   await expect(dialog.getByText(/You cannot reply until/)).toBeVisible();
-  await expect(dialog.getByLabel('Your Reply')).toBeDisabled();
+  await expect(dialog.getByLabel(/^Your Reply/)).toBeDisabled();
   await assertNoAccessibilityViolations(page);
 });

@@ -3,6 +3,7 @@ import { test, expect } from '../fixtures';
 import { assertNoAccessibilityViolations } from '../axe';
 import { e2eDatabaseUrl, recreateE2eDatabase } from '../database';
 import { signInAs } from '../session';
+import { sendAs } from '../send-as';
 
 // Story 90: an admin works through a support request on /admin/support, and times its sender out. The sender's refused send
 // is made through the API with the sender's own session, since the form that sends one is story 89's.
@@ -66,10 +67,12 @@ test.describe('Story 90: An Admin Works Through a Support Request', { tag: '@sto
       await expect(dialog.getByRole('heading', { name: 'Wobbling Cauldron' })).toBeFocused();
     });
 
-    await test.step('Reply stays disabled until there is a body, then the reply shows', async () => {
+    await test.step('Add Note and Reply stay disabled until there is a body, then the reply shows', async () => {
+      await expect(dialog.getByRole('button', { name: 'Add Note', exact: true })).toBeDisabled();
+      await sendAs(dialog, 'Reply');
       const reply = dialog.getByRole('button', { name: 'Reply', exact: true });
       await expect(reply).toBeDisabled();
-      await dialog.getByLabel('Your Reply').fill('Thank you, we are looking at it.');
+      await dialog.getByLabel(/^Your Reply/).fill('Thank you, we are looking at it.');
       await reply.click();
       await expect(dialog.getByRole('region', { name: 'Thread' })).toContainText(
         'Thank you, we are looking at it.',

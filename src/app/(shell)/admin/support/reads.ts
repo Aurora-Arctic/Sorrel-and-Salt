@@ -25,10 +25,10 @@ import type {
 } from '@/components/SupportRequests/types';
 import { serviceFilter } from './filter';
 
-const pick = ({ about, errorCode, betaTester }: SupportRequestFilter) => ({
+const pick = ({ about, errorCode, senderGroup }: SupportRequestFilter) => ({
   about,
   errorCode,
-  betaTester,
+  senderGroup,
 });
 
 // What the page reads, through the support services, which are the guard. Each read is cached so a
@@ -78,6 +78,7 @@ function entryOf(row: SupportRequestRow, names: Names, betaTester: boolean): Sup
     errorReference: row.errorReference,
     senderReplied: senderRepliedOn(row),
     betaTester,
+    resolvedBySender: row.status === 'resolved' && row.resolvedBy === row.createdBy,
   };
 }
 

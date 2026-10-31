@@ -4,21 +4,22 @@ import { type FormEvent, type ReactElement, type ReactNode, useId, useState } fr
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import BusyButton from '../BusyButton';
-import { FieldShell, RadioGroupField, SwitchField, fieldDescription } from '../Field';
+import { ChoiceChip } from '../FacetPanel/choice-chip';
+import { FieldShell, SwitchField, fieldDescription } from '../Field';
 import { utcMinute } from '../../lib/utc';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { useSupportAction } from './use-support-action';
 
 // Reply on a request: the sender is mailed that a reply is waiting and reads it on /account/support. A mode beside the box
-// turns the same text into an internal note, which only staff read and nobody is mailed; it opens on Reply and the note is
-// always chosen. Send stays off until there is something to say; Resolve, when given, sits opposite it.
+// turns the same text into an internal note, which only staff read and nobody is mailed; it opens on Internal Note, so a
+// reply is always chosen. Send stays off until there is something to say; Resolve, when given, sits opposite it.
 
 type Mode = 'reply' | 'note';
 
 const MODES = [
-  { value: 'reply', label: 'Reply', description: 'The sender is emailed that a reply is waiting.' },
-  { value: 'note', label: 'Internal Note', description: 'Only staff read it. Nobody is emailed.' },
+  { value: 'note', label: 'Internal Note' },
+  { value: 'reply', label: 'Reply' },
 ] as const;
 
 const ReplyDocument = graphql(`
@@ -54,7 +55,7 @@ const ReplyForm = ({
   noteOnly?: boolean;
 }): ReactElement => {
   const [body, setBody] = useState('');
-  const [mode, setMode] = useState<Mode>(noteOnly ? 'note' : 'reply');
+  const [mode, setMode] = useState<Mode>('note');
   const [waiting, setWaiting] = useState(false);
   const note = mode === 'note';
   const { busy, failure, run } = useSupportAction('body');
@@ -89,17 +90,17 @@ const ReplyForm = ({
     >
       {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
       {!noteOnly && (
-        <RadioGroupField
+        <ChoiceChip
           legend="Send As"
           name="mode"
-          layout="segmented"
           options={MODES}
           value={mode}
           disabled={busy}
+          hint="A reply emails the sender that one is waiting. An internal note is read only by staff and emails nobody."
           onChange={setMode}
         />
       )}
-      <FieldShell label={note ? 'Your Note' : 'Your Reply'} {...field}>
+      <FieldShell label={note ? 'Your Note' : 'Your Reply'} required {...field}>
         <textarea
           id={field.controlId}
           className="textarea"
@@ -110,6 +111,7 @@ const ReplyForm = ({
               : 'Write a reply. The sender is emailed that one is waiting.'
           }
           {...aria}
+          aria-required
           value={body}
           disabled={busy}
           onChange={(event) => setBody(event.target.value)}

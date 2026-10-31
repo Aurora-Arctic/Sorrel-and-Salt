@@ -24,6 +24,8 @@ const MEMBER: ShellContext = {
     canCreate: false,
     verified: true,
     pendingInvitations: 0,
+    assignedSupport: 0,
+    waitingSupport: 0,
   },
   workspaces: [],
 };

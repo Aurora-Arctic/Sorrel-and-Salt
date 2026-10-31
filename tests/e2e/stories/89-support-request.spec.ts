@@ -2,6 +2,7 @@ import { test, expect } from '../fixtures';
 import { assertNoAccessibilityViolations } from '../axe';
 import { recreateE2eDatabase } from '../database';
 import { signInAs } from '../session';
+import { sendAs } from '../send-as';
 
 // Story 89: a signed-in account opens the Support dialog from the footer, sends a question, an admin replies on
 // /admin/support, and the reply shows on /account/support.
@@ -54,7 +55,8 @@ test.describe('Story 89: Ask for Help and Read the Reply', { tag: '@story-89' },
       await adminPage.goto('/admin/support');
       await adminPage.getByRole('link', { name: 'Where is the moon table?' }).click();
       const adminDialog = adminPage.getByRole('dialog', { name: 'Where is the moon table?' });
-      await adminDialog.getByLabel('Your Reply').fill('It lives under Ingredients, then Tables.');
+      await sendAs(adminDialog, 'Reply');
+      await adminDialog.getByLabel(/^Your Reply/).fill('It lives under Ingredients, then Tables.');
       await adminDialog.getByRole('button', { name: 'Reply', exact: true }).click();
       await expect(adminDialog.getByRole('region', { name: 'Thread' })).toContainText(
         'It lives under Ingredients, then Tables.',
@@ -72,7 +74,7 @@ test.describe('Story 89: Ask for Help and Read the Reply', { tag: '@story-89' },
       await expect(thread).toContainText('It lives under Ingredients, then Tables.');
       await expect(thread).toContainText('You');
       await expect(thread).toContainText('Staff');
-      await expect(request.getByLabel('Your Reply')).toBeEnabled();
+      await expect(request.getByLabel(/^Your Reply/)).toBeEnabled();
       await assertNoAccessibilityViolations(page);
       await request.getByRole('button', { name: 'Close', exact: true }).click();
       await expect(request).toBeHidden();

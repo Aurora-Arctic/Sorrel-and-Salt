@@ -4,8 +4,13 @@ import { type ReactElement, useState } from 'react';
 import { FilterSelectField, SearchField } from '../Field';
 import { ChoiceChip } from '../FacetPanel/choice-chip';
 import FilterForm, { useApplyFilter } from '../FilterForm';
-import { SUPPORT_ABOUTS } from '../../lib/support-path';
-import { BETA_ONLY, SUPPORT_PATH, supportHref } from './href';
+import { SproutIcon } from '../IconTip/icons';
+import {
+  SUPPORT_ABOUTS,
+  SUPPORT_SENDER_GROUPS,
+  type SupportSenderGroup,
+} from '../../lib/support-path';
+import { SUPPORT_PATH, supportHref } from './href';
 import type { SupportAbout, SupportRequestsFilterProps, SupportStatus } from './types';
 
 // The list's filter on the shared FilterForm: About applies as it changes, the error number is
@@ -22,6 +27,16 @@ export const STATUS_LABELS: Record<SupportStatus, string> = {
   closed: 'Closed',
 };
 
+/** Each sender group's mark, the same one its senders carry in the table. */
+const SENDER_ICONS: Record<SupportSenderGroup, ReactElement> = {
+  beta_tester: <SproutIcon />,
+};
+
+const SENDER_OPTIONS = [
+  { value: '' as const, label: 'All' },
+  ...SUPPORT_SENDER_GROUPS.map(({ value, label }) => ({ value, label, icon: SENDER_ICONS[value] })),
+];
+
 const SupportRequestsFilter = ({ filter }: SupportRequestsFilterProps): ReactElement => {
   const [draftCode, setDraftCode] = useState(filter.errorCode);
   const apply = useApplyFilter();
@@ -32,7 +47,7 @@ const SupportRequestsFilter = ({ filter }: SupportRequestsFilterProps): ReactEle
       label="Filter Support Requests"
       action={SUPPORT_PATH}
       searchHref={() => supportHref({ ...filter, errorCode: code })}
-      shown={[filter.about, filter.view, filter.errorCode, filter.betaOnly]}
+      shown={[filter.about, filter.view, filter.errorCode, filter.sender]}
     >
       <input type="hidden" name="view" value={filter.view} />
       <SearchField
@@ -53,16 +68,11 @@ const SupportRequestsFilter = ({ filter }: SupportRequestsFilterProps): ReactEle
         }
       />
       <ChoiceChip
-        legend="Beta Testers"
-        name="beta"
-        options={[
-          { value: '', label: 'All' },
-          { value: BETA_ONLY, label: 'Only' },
-        ]}
-        value={filter.betaOnly ? BETA_ONLY : ''}
-        onChange={(beta) =>
-          apply(supportHref({ ...filter, errorCode: code, betaOnly: beta === BETA_ONLY }))
-        }
+        legend="Sender"
+        name="sender"
+        options={SENDER_OPTIONS}
+        value={filter.sender}
+        onChange={(sender) => apply(supportHref({ ...filter, errorCode: code, sender }))}
       />
     </FilterForm>
   );

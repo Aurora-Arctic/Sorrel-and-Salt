@@ -67,7 +67,7 @@ export async function countSupportRequests(
  */
 export async function countSupportViews(
   session: Session,
-  filter: Pick<SupportRequestFilter, 'about' | 'errorCode' | 'betaTester'>,
+  filter: Pick<SupportRequestFilter, 'about' | 'errorCode' | 'senderGroup'>,
 ): Promise<SupportViewCounts> {
   return findSupportViewCounts(readerOf(session, READ_REFUSAL), filter);
 }

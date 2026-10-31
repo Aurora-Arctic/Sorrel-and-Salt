@@ -2,6 +2,7 @@ import { test, expect } from '../fixtures';
 import { assertNoAccessibilityViolations } from '../axe';
 import { recreateE2eDatabase } from '../database';
 import { signInAs } from '../session';
+import { sendAs } from '../send-as';
 
 // Story 91: a sender sends a request, an admin replies and waits on them, the sender answers, the admin resolves it, and the
 // sender's reply to the resolved request opens it again.
@@ -38,7 +39,8 @@ test.describe('Story 91: A Sender Answers in the Thread', { tag: '@story-91' }, 
       await adminPage.goto('/admin/support');
       await adminPage.getByRole('link', { name: subject }).click();
       const adminDialog = adminPage.getByRole('dialog', { name: subject });
-      await adminDialog.getByLabel('Your Reply').fill('Which jar is it?');
+      await sendAs(adminDialog, 'Reply');
+      await adminDialog.getByLabel(/^Your Reply/).fill('Which jar is it?');
       await adminDialog.getByRole('switch', { name: 'Waiting on Sender' }).check();
       await adminDialog.getByRole('button', { name: 'Reply', exact: true }).click();
       await expect(adminDialog.getByRole('region', { name: 'Thread' })).toContainText(
@@ -55,7 +57,7 @@ test.describe('Story 91: A Sender Answers in the Thread', { tag: '@story-91' }, 
         'Which jar is it?',
       );
       await assertNoAccessibilityViolations(page);
-      await request.getByLabel('Your Reply').fill('The red one.');
+      await request.getByLabel(/^Your Reply/).fill('The red one.');
       await request.getByRole('button', { name: 'Reply', exact: true }).click();
       await expect(request.getByRole('region', { name: 'Thread' })).toContainText('The red one.');
     });
@@ -80,7 +82,7 @@ test.describe('Story 91: A Sender Answers in the Thread', { tag: '@story-91' }, 
       await list.getByRole('link', { name: subject }).click();
       const request = page.getByRole('dialog', { name: subject });
       await assertNoAccessibilityViolations(page);
-      await request.getByLabel('Your Reply').fill('It opened, thank you, but another is stuck.');
+      await request.getByLabel(/^Your Reply/).fill('It opened, thank you, but another is stuck.');
       await request.getByRole('button', { name: 'Reply', exact: true }).click();
       await expect(request.getByRole('region', { name: 'Thread' })).toContainText(
         'another is stuck',

@@ -4,6 +4,7 @@ import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
 import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { signInAs } from './session';
+import { sendAs } from './send-as';
 
 // What a curator sees of /admin/support (M15.31): the requests marked for curators and the ones assigned to them, and nothing
 // else. Story 90 walks the admin side; this proves what no story walks, the curator's narrower page.
@@ -53,12 +54,12 @@ test('a curator reads the marked and the assigned requests, answers the assigned
       await page.goto(`/admin/support?request=${marked}`);
       const dialog = page.getByRole('dialog', { name: 'Marked For Curators' });
       await expect(dialog).toBeVisible();
-      await expect(dialog.getByLabel('Your Reply')).toHaveCount(0);
+      await expect(dialog.getByLabel(/^Your Reply/)).toHaveCount(0);
       await expect(dialog.getByRole('button', { name: 'Resolve' })).toHaveCount(0);
       await expect(dialog.getByLabel('Assignee')).toHaveCount(0);
       await expect(dialog.getByRole('switch', { name: 'Shared With Curators' })).toHaveCount(0);
       await assertNoAccessibilityViolations(page);
-      await dialog.getByLabel('Your Note').fill('Seen by a curator.');
+      await dialog.getByLabel(/^Your Note/).fill('Seen by a curator.');
       await dialog.getByRole('button', { name: 'Add Note' }).click();
       const thread = dialog.getByRole('region', { name: 'Thread' });
       await expect(thread).toContainText('Seen by a curator.');
@@ -71,7 +72,8 @@ test('a curator reads the marked and the assigned requests, answers the assigned
       await expect(dialog.getByLabel('Assignee')).toHaveCount(0);
       await expect(dialog.getByLabel('GitHub Issue')).toHaveCount(0);
       await expect(dialog.getByLabel('Time-Out Until')).toHaveCount(0);
-      await dialog.getByLabel('Your Reply').fill('We have it in hand.');
+      await sendAs(dialog, 'Reply');
+      await dialog.getByLabel(/^Your Reply/).fill('We have it in hand.');
       await dialog.getByRole('button', { name: 'Reply', exact: true }).click();
       await expect(dialog.getByRole('region', { name: 'Thread' })).toContainText(
         'We have it in hand.',

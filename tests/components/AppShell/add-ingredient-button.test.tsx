@@ -92,6 +92,8 @@ const MEMBER: ShellViewer = {
   canCreate: false,
   verified: true,
   pendingInvitations: 0,
+  assignedSupport: 0,
+  waitingSupport: 0,
 };
 const ADMIN: ShellViewer = { ...MEMBER, canCurate: true };
 const coven = (slug: string, canWrite = true): ShellWorkspace => ({

@@ -6,6 +6,7 @@ import { SUPPORT_LIST_PATH } from '../../lib/support-path';
 import SupportFacts from '../SupportRequests/facts';
 import SupportThread from '../SupportRequests/thread';
 import SupportSenderReplyBox from './reply-box';
+import SupportSenderResolveButton from './resolve-button';
 import type { SupportSenderRequestProps } from './types';
 import '../SupportRequests/index.scss';
 
@@ -40,6 +41,9 @@ const SupportSenderRequest = ({ request }: SupportSenderRequestProps): ReactElem
           })),
         ]}
       />
+      {(request.status === 'open' || request.status === 'waiting_on_sender') && (
+        <SupportSenderResolveButton requestId={request.id} />
+      )}
       {request.status !== 'closed' ? (
         <SupportSenderReplyBox requestId={request.id} timedOutUntil={request.timedOutUntil} />
       ) : (

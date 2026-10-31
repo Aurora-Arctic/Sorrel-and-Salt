@@ -5,7 +5,7 @@ import { DEFAULT_SUPPORT_VIEW, SUPPORT_VIEWS, type SupportView } from '../../lib
 import type { SupportRequestsCursor, SupportRequestsFilter } from './types';
 
 // The page's address under its filter and page, with a request and a user open or not:
-// `/admin/support?view=mine&about=bug&error=500&after=…&request=<id>&user=<id>`.
+// `/admin/support?view=mine&about=bug&error=500&sender=beta_tester&after=…&request=<id>&user=<id>`.
 
 /** The name of the page's second modal place, the user's, so a press on a sender's name shows there and not in the request's. */
 export const USER_MODAL_PLACE = 'user';
@@ -13,11 +13,8 @@ export const USER_MODAL_PLACE = 'user';
 /** The page itself, unfiltered: where the filter submits. */
 export const SUPPORT_PATH: Route = '/admin/support';
 
-/** The `beta` parameter's value that narrows the page to beta testers. */
-export const BETA_ONLY = 'only';
-
 export function supportHref(
-  { about, view, errorCode, betaOnly }: Partial<SupportRequestsFilter> = {},
+  { about, view, errorCode, sender }: Partial<SupportRequestsFilter> = {},
   { after, before }: SupportRequestsCursor = {},
   request?: string,
   user?: string,
@@ -26,7 +23,7 @@ export function supportHref(
     about,
     view: view === DEFAULT_SUPPORT_VIEW ? undefined : view,
     error: errorCode,
-    beta: betaOnly ? BETA_ONLY : undefined,
+    sender: sender || undefined,
     after,
     before,
     request,

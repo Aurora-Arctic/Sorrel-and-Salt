@@ -194,4 +194,33 @@ describe('senderStatusLabel', () => {
   ] as const)('names %s (staff wrote last: %s) %s', (status, staff, label) => {
     expect(senderStatusLabel(status, staff)).toBe(label);
   });
+
+  describe('Resolve', () => {
+    it('resolves a request waiting on the sender without a reply, and reads the page again', async () => {
+      const sent: { id: string }[] = [];
+      mockGraphQLMutation('ResolveMySupportRequest', (variables: { id: string }) => {
+        sent.push(variables);
+        return { resolveMySupportRequest: { __typename: 'SupportRequest', id: 'r1' } };
+      });
+      router.refresh.mockClear();
+      render(<SupportSenderRequest request={request({ status: 'waiting_on_sender' })} />);
+      await userEvent.click(screen.getByRole('button', { name: 'Resolve' }));
+      await waitFor(() => expect(router.refresh).toHaveBeenCalled());
+      expect(sent).toEqual([{ id: 'r1' }]);
+    });
+
+    it('is offered on an open request too', () => {
+      render(<SupportSenderRequest request={request({ status: 'open' })} />);
+      expect(screen.getByRole('button', { name: 'Resolve' })).toBeInTheDocument();
+    });
+
+    it('is not offered once resolved or closed', () => {
+      const { rerender } = render(
+        <SupportSenderRequest request={request({ status: 'resolved' })} />,
+      );
+      expect(screen.queryByRole('button', { name: 'Resolve' })).not.toBeInTheDocument();
+      rerender(<SupportSenderRequest request={request({ status: 'closed' })} />);
+      expect(screen.queryByRole('button', { name: 'Resolve' })).not.toBeInTheDocument();
+    });
+  });
 });
