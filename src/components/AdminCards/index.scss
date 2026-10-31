@@ -29,6 +29,21 @@
   }
 }
 
+// The Refused Opens table above its stacking width: a narrower side inset than the shared tables so its cells wrap
+// less in the dialog, and the card position kept on one line. The stacked cards keep the shared padding.
+@container data-table (width > #{$table-stack-width}) {
+  .data-table.admin-cards__refused {
+    th,
+    td {
+      padding-inline: space(2);
+    }
+
+    .admin-cards__card-place {
+      white-space: nowrap;
+    }
+  }
+}
+
 // A refused open's count and dates under its reason, muted at caption size; each date stays on one line, the
 // reason above may wrap.
 .admin-cards__refusal-when {
