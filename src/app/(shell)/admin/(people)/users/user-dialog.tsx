@@ -26,6 +26,7 @@ export default function UserDialog({
               key={opened.user.id}
               user={opened.user}
               memberships={opened.memberships}
+              timeouts={opened.timeouts}
               canImpersonate={canImpersonate}
               changesPaused={changesPaused}
             />

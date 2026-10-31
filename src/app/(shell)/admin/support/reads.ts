@@ -9,7 +9,7 @@ import {
   timeoutsForSenders,
   usersNamedOnRequests,
 } from '@/modules/support';
-import type { SupportRequestRow } from '@/modules/support';
+import type { SupportRequestRow, SupportTimeoutRow } from '@/modules/support';
 import { NotFound } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import type {
@@ -18,6 +18,7 @@ import type {
   SupportRequestEntry,
   SupportRequestsFilter,
   SupportSender,
+  SupportTimeoutEntry,
 } from '@/components/SupportRequests/types';
 import { serviceFilter } from './filter';
 
@@ -53,6 +54,18 @@ function entryOf(row: SupportRequestRow, names: Names): SupportRequestEntry {
     errorCode: row.errorCode,
     errorReference: row.errorReference,
   };
+}
+
+/** Time-outs as the panel draws them, their setters named. */
+function timeoutEntries(rows: readonly SupportTimeoutRow[], names: Names): SupportTimeoutEntry[] {
+  return rows.map((row) => ({
+    id: row.id,
+    until: row.until,
+    note: row.note,
+    liftedAt: row.liftedAt,
+    createdAt: row.createdAt,
+    setBy: personOf(names, row.createdBy),
+  }));
 }
 
 /** One page of requests and its position, the people on them named. */
@@ -102,6 +115,7 @@ export const readOpened = cache(
       row.assignedTo,
       row.resolvedBy,
       ...replies.map((reply) => reply.createdBy),
+      ...(Array.isArray(timeouts) ? timeouts.map((timeout) => timeout.createdBy) : []),
     ]);
     return {
       ...entryOf(row, names),
@@ -117,14 +131,7 @@ export const readOpened = cache(
         author: personOf(names, reply.createdBy),
         createdAt: reply.createdAt,
       })),
-      timeouts: Array.isArray(timeouts)
-        ? timeouts.map(({ id: timeoutId, until, note, liftedAt }) => ({
-            id: timeoutId,
-            until,
-            note,
-            liftedAt,
-          }))
-        : [],
+      timeouts: Array.isArray(timeouts) ? timeoutEntries(timeouts, names) : [],
     };
   },
 );
@@ -139,3 +146,17 @@ export const readAssignees = cache(async (session: Session): Promise<SupportPers
   ]);
   return [...admins, ...curators].map(({ node }) => ({ id: node.id, name: node.name }));
 });
+
+/** The time-outs set on a user, newest first, with who set each; an admin's read, empty for anyone else. */
+export const readTimeoutsOf = cache(
+  async (session: Session, userId: string): Promise<SupportTimeoutEntry[]> => {
+    if (session.role !== 'admin') return [];
+    const [timeouts] = await timeoutsForSenders(session, [userId]);
+    if (!Array.isArray(timeouts)) return [];
+    const names = await namesOf(
+      session,
+      timeouts.map((timeout) => timeout.createdBy),
+    );
+    return timeoutEntries(timeouts, names);
+  },
+);

@@ -220,7 +220,13 @@ const DetailBody = ({ request, viewer, assignees }: SupportDetailProps): ReactEl
             }
           />
           <IssuePanel key={request.issueUrl ?? ''} request={request} />
-          <TimeoutPanel request={request} />
+          {request.sender && (
+            <TimeoutPanel
+              userId={request.sender.id}
+              name={request.sender.name}
+              timeouts={request.timeouts}
+            />
+          )}
         </aside>
       )}
     </div>

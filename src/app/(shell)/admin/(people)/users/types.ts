@@ -1,5 +1,6 @@
 import type { Route } from 'next';
 import type { ModalHeading } from '../../../../../components/Modal/types';
+import type { SupportTimeoutEntry } from '../../../../../components/SupportRequests/types';
 import type { UserCoven, UserDetailUser } from '../../../../../components/UserDetail/types';
 
 export interface AdminUsersPageProps {
@@ -26,6 +27,7 @@ export interface OpenedUser {
   heading: ModalHeading;
   user: UserDetailUser;
   memberships: readonly UserCoven[];
+  timeouts: SupportTimeoutEntry[];
 }
 
 export interface UserDialogProps {

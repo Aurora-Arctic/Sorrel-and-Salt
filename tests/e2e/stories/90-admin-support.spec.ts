@@ -13,13 +13,6 @@ test.beforeAll(async () => {
 
 const ISSUES = 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues';
 
-/** A `datetime-local` value an hour from now, in the browser's own zone. */
-function inOneHour(): string {
-  const later = new Date(Date.now() + 60 * 60 * 1000);
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${later.getFullYear()}-${pad(later.getMonth() + 1)}-${pad(later.getDate())}T${pad(later.getHours())}:${pad(later.getMinutes())}`;
-}
-
 test.describe('Story 90: An Admin Works Through a Support Request', { tag: '@story-90' }, () => {
   test('an admin replies, assigns, shares, links an issue, resolves and times a sender out', async ({
     page,
@@ -116,11 +109,9 @@ test.describe('Story 90: An Admin Works Through a Support Request', { tag: '@sto
 
     await test.step('the admin times the sender out, and their send is refused with the end time', async () => {
       await dialog.getByRole('button', { name: 'Time-Out', expanded: false }).click();
-      const timeOut = dialog.locator('button[type=submit]', { hasText: 'Time-Out' });
-      await expect(timeOut).toBeDisabled();
-      await dialog.getByLabel('Time-Out Until').fill(inOneHour());
-      await dialog.getByLabel('Time-Out Note').fill('Repeated test messages');
-      await timeOut.click();
+      await dialog.getByLabel('Note').fill('Repeated test messages');
+      await dialog.getByRole('button', { name: 'Time Out Sender' }).click();
+      await page.getByRole('button', { name: 'Time Out' }).click();
       await expect(dialog.getByRole('button', { name: 'Lift' })).toBeVisible();
 
       const response = await send();
@@ -129,10 +120,10 @@ test.describe('Story 90: An Admin Works Through a Support Request', { tag: '@sto
     });
 
     await test.step('Lift ends the time-out, and the sender can send again', async () => {
-      const timeouts = dialog.getByRole('region', { name: 'Time-Outs' });
-      await timeouts.getByRole('button', { name: 'Lift' }).click();
-      await expect(timeouts.getByRole('button', { name: 'Lift' })).toBeHidden();
-      await expect(timeouts).toContainText('Repeated test messages');
+      await dialog.getByRole('button', { name: 'Lift' }).click();
+      await expect(dialog.getByRole('button', { name: 'Lift' })).toBeHidden();
+      await expect(dialog.getByText('Lifted')).toBeVisible();
+      await expect(dialog.getByText('Repeated test messages')).toBeVisible();
 
       const response = await send();
       const body = (await response.json()) as { errors?: unknown[] };

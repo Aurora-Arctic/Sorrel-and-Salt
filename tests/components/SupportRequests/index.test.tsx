@@ -25,7 +25,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 const ADMIN: SupportViewer = { id: 'admin-1', role: 'admin' };
 const CURATOR: SupportViewer = { id: 'curator-1', role: 'curator' };
-const ADMIN_ONLY = ['Assigned To', 'Issue Address', 'Time-Out Until'];
+const ADMIN_ONLY = ['Assigned To', 'Issue Address', 'For'];
 
 const ROW: SupportRequestEntry = {
   id: 'r1',
@@ -67,12 +67,11 @@ const dialog = () => screen.getByRole('dialog', { name: new RegExp(ROW.subject) 
 const openTimeOut = () =>
   fireEvent.click(within(dialog()).getByRole('button', { name: 'Time-Out', expanded: false }));
 
-const timeOutSubmit = () =>
-  within(dialog())
-    .getAllByRole('button', { name: 'Time-Out' })
-    .find((button) => button.getAttribute('type') === 'submit')!;
+const timeOutSubmit = () => within(dialog()).getByRole('button', { name: 'Time Out Sender' });
+
+// The question the button opens, answered.
+const confirmTimeOut = () => fireEvent.click(screen.getByRole('button', { name: 'Time Out' }));
 const BASE = { id: 'u0', name: 'Bea Hollis', email: 'bea@example.test' };
-const FAR = '2999-01-01T00:00';
 
 beforeEach(() => {
   router.refresh.mockClear();
@@ -144,21 +143,16 @@ describe('Reply', () => {
 });
 
 describe('Time-Out', () => {
-  it('is disabled until a future end is given', () => {
+  it('is off while Until a Date has no date, and on for a span', () => {
     open(ADMIN);
     openTimeOut();
-    const timeOut = timeOutSubmit();
-    const until = within(dialog()).getByLabelText('Time-Out Until');
-    expect(timeOut).toBeDisabled();
+    expect(timeOutSubmit()).toBeEnabled();
 
-    fireEvent.change(until, { target: { value: '2001-01-01T00:00' } });
-    expect(timeOut).toBeDisabled();
-
-    fireEvent.change(until, { target: { value: '2999-01-01T00:00' } });
-    expect(timeOut).toBeEnabled();
+    fireEvent.change(within(dialog()).getByLabelText('For'), { target: { value: 'date' } });
+    expect(timeOutSubmit()).toBeDisabled();
   });
 
-  it('sends the sender and the end', async () => {
+  it('sends the sender and an end a day on, after asking', async () => {
     const sent: TimeOutSupportSenderMutationVariables[] = [];
     mockGraphQLMutation<TimeOutSupportSenderMutation, TimeOutSupportSenderMutationVariables>(
       'TimeOutSupportSender',
@@ -169,17 +163,18 @@ describe('Time-Out', () => {
     );
     open(ADMIN);
     openTimeOut();
-    fireEvent.change(within(dialog()).getByLabelText('Time-Out Until'), {
-      target: { value: '2999-01-01T00:00' },
-    });
     fireEvent.click(timeOutSubmit());
+    expect(sent).toHaveLength(0);
+    confirmTimeOut();
 
     await waitFor(() => expect(router.refresh).toHaveBeenCalled());
     expect(sent[0]?.userId).toBe('u1');
-    expect(new Date(sent[0]?.until as string).getFullYear()).toBe(2999);
+    const ahead = new Date(sent[0]?.until as string).getTime() - Date.now();
+    expect(ahead).toBeGreaterThan(23 * 60 * 60 * 1000);
+    expect(ahead).toBeLessThanOrEqual(24 * 60 * 60 * 1000);
   });
 
-  it('lists past time-outs beside the sender, and offers Lift on an active one only', () => {
+  it('shows the standing time-out with Lift in place of the form, and earlier ones beneath', () => {
     open(ADMIN, {
       timeouts: [
         {
@@ -187,21 +182,26 @@ describe('Time-Out', () => {
           until: new Date('2999-01-01T00:00:00Z'),
           note: 'Repeated sends',
           liftedAt: null,
+          createdAt: new Date('2026-10-01T00:00:00Z'),
+          setBy: { id: 'admin-1', name: 'Ash Warden' },
         },
         {
           id: 't1',
-          until: new Date('2001-01-01T00:00:00Z'),
+          until: new Date('2001-01-10T00:00:00Z'),
           note: 'First warning',
           liftedAt: null,
+          createdAt: new Date('2001-01-03T00:00:00Z'),
+          setBy: null,
         },
       ],
     });
     openTimeOut();
     const panel = within(dialog());
-    expect(panel.getByText(/Ada Wortley/)).toBeInTheDocument();
-    expect(panel.getByText(/First warning/)).toBeInTheDocument();
     expect(panel.getByText(/Repeated sends/)).toBeInTheDocument();
+    expect(panel.getByText(/Set by Ash Warden/)).toBeInTheDocument();
+    expect(panel.getByText(/First warning/)).toBeInTheDocument();
     expect(panel.getAllByRole('button', { name: 'Lift' })).toHaveLength(1);
+    expect(panel.queryByLabelText('For')).toBeNull();
   });
 });
 
@@ -263,7 +263,7 @@ describe('A linked issue', () => {
 describe('What a viewer is shown', () => {
   it('gives an admin every control', () => {
     open(ADMIN);
-    for (const name of ['Assigned To', 'Issue Address', 'Time-Out Until', 'Your Reply']) {
+    for (const name of ['Assigned To', 'Issue Address', 'For', 'Your Reply']) {
       expect(within(dialog()).getByLabelText(name)).toBeInTheDocument();
     }
     expect(
@@ -360,8 +360,8 @@ describe('Unsaved input in the dialog', () => {
 
   it.each([
     ['Issue Address', 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/9'],
-    ['Time-Out Until', FAR],
-    ['Time-Out Note', 'Warned twice'],
+    ['For', 'week'],
+    ['Note', 'Warned twice'],
   ])('asks before closing with %s typed, though the reply is untouched', async (label, value) => {
     open(ADMIN);
     fireEvent.change(within(dialog()).getByLabelText(label), { target: { value } });
@@ -396,12 +396,10 @@ describe('Status line in the dialog', () => {
     ['share', 'SetSupportRequestCuratorVisible', 'Request shared with curators.'],
     ['resolve', 'ResolveSupportRequest', 'Request resolved.'],
     ['link', 'SetSupportRequestIssueUrl', 'Issue address saved.'],
-    ['time-out', 'TimeOutSupportSender', 'Sender timed out.'],
   ])('announces %s', async (action, operation, message) => {
     mockGraphQLMutation(operation, () => ({ saved: { __typename: 'Saved', id: 'r1' } }));
     open(ADMIN);
     const d = within(dialog());
-    if (action === 'time-out') openTimeOut();
     if (action === 'assign')
       await userEvent.selectOptions(d.getByLabelText('Assigned To'), 'Curtis');
     if (action === 'share')
@@ -412,10 +410,6 @@ describe('Status line in the dialog', () => {
         target: { value: 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/9' },
       });
       fireEvent.click(d.getByRole('button', { name: 'Save Address' }));
-    }
-    if (action === 'time-out') {
-      fireEvent.change(d.getByLabelText('Time-Out Until'), { target: { value: FAR } });
-      fireEvent.click(timeOutSubmit());
     }
     await waitFor(() => expect(status()).toHaveTextContent(message));
   });

@@ -197,3 +197,45 @@
     margin-block: 0;
   }
 }
+
+// A standing time-out: the badge and end, the note and setter in the muted ink, Lift beneath.
+.support-detail__timeout {
+  @include stack(2);
+  padding: space(3) space(4);
+  border: 1px solid $hairline;
+  border-radius: radius('surface');
+  background-color: $surface-page;
+
+  p {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+.support-detail__timeout-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(2);
+}
+
+// Earlier time-outs, one line each under a small uppercase label.
+.support-detail__ledger {
+  @include stack(2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.support-detail__ledger-title {
+  margin: 0;
+  color: $text-muted;
+  font-size: type-size('small');
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.support-detail__ledger-line {
+  @include stack(1);
+  overflow-wrap: anywhere;
+}

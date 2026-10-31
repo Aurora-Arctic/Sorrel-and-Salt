@@ -4,6 +4,7 @@ import { RowId } from '../../../../../lib/validation';
 import type { Session } from '../../../../../lib/session';
 import { membershipsOf } from '@/modules/coven';
 import { isPrimaryAdmin, listedOnUserList, providersOf, usersForAdmin } from '@/modules/identity';
+import { readTimeoutsOf } from '../../support/reads';
 import { userHeading } from './user-heading';
 import type { OpenedUser } from './types';
 
@@ -18,10 +19,11 @@ export const readOpenedUser = cache(async (session: Session, raw: string) => {
   const parsed = RowId.safeParse(raw);
   if (!parsed.success || !listedOnUserList(parsed.data)) return undefined;
   const id = parsed.data;
-  const [[found], [memberships], [providers]] = await Promise.all([
+  const [[found], [memberships], [providers], timeouts] = await Promise.all([
     usersForAdmin(session, [id]),
     membershipsOf(session, [id]),
     providersOf(session, [id]),
+    readTimeoutsOf(session, id),
   ]);
   // An admin's batch answers every slot; a refusal here is the guard's bug.
   if (found instanceof Error) throw found;
@@ -50,5 +52,6 @@ export const readOpenedUser = cache(async (session: Session, raw: string) => {
       role: row.role,
       joinedAt: row.joinedAt,
     })),
+    timeouts,
   } satisfies OpenedUser;
 });

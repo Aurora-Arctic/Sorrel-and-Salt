@@ -1,4 +1,5 @@
 import type { WorkspaceRole } from '@/modules/coven';
+import type { SupportTimeoutEntry } from '../SupportRequests/types';
 import type { UserListEntry } from '../UserList/types';
 
 /**
@@ -31,6 +32,8 @@ export interface UserCoven {
 export interface UserDetailProps {
   user: UserDetailUser;
   memberships: readonly UserCoven[];
+  /** The user's support time-outs, newest first; the Time-Out section shows when this is given. */
+  timeouts?: SupportTimeoutEntry[];
   /** Whether impersonation is registered here; off by default. */
   canImpersonate?: boolean;
   /**

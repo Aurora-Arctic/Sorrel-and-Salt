@@ -62,6 +62,8 @@ const OPENED: SupportRequestDetailEntry = {
       until: new Date('2026-09-01T09:00:00Z'),
       note: 'Repeated test messages',
       liftedAt: null,
+      createdAt: new Date('2026-08-25T09:00:00Z'),
+      setBy: ADMIN,
     },
   ],
 };
