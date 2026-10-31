@@ -39,7 +39,7 @@ beforeEach(async () => {
 
 const PAGE: PageRequest = { limit: 101, inverted: false };
 const FUTURE = () => new Date(Date.now() + 3_600_000);
-const INPUT = { kind: 'bug', subject: 'The jar will not open', message: 'It sticks.' } as const;
+const INPUT = { about: 'bug', subject: 'The jar will not open', message: 'It sticks.' } as const;
 
 function notifier(): SupportNotifier & { sent: string[] } {
   const sent: string[] = [];
@@ -200,12 +200,12 @@ describe('supportRequests', () => {
     expect(ids).not.toContain(plain.id);
   });
 
-  it('filters by kind, status and error code', async () => {
+  it('filters by about, status and error code', async () => {
     const bug = await send(C, { ...INPUT, errorCode: 404 });
-    await send(C, { ...INPUT, kind: 'question' });
+    await send(C, { ...INPUT, about: 'question' });
     const open = await listSupportRequests(
       asUser(E),
-      { kind: 'bug', status: 'open', errorCode: 404 },
+      { about: 'bug', status: 'open', errorCode: 404 },
       PAGE,
     );
     expect(open.map((entry) => entry.node.id)).toEqual([bug.id]);

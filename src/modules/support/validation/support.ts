@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { requiredText } from '../../../lib/validation';
-import { supportRequestKind } from '../schema/support-requests';
+import { supportRequestAbout } from '../schema/support-requests';
 
 export const SUBJECT_MAX_LENGTH = 120;
 export const MESSAGE_MAX_LENGTH = 4000;
@@ -15,7 +15,7 @@ export const SupportMessage = requiredText('Write a message').max(MESSAGE_MAX_LE
 });
 
 export const SupportRequestInput = z.object({
-  kind: z.enum(supportRequestKind.enumValues, { error: 'Choose what this is about' }),
+  about: z.enum(supportRequestAbout.enumValues, { error: 'Choose what this is about' }),
   subject: requiredText('Write a subject').max(SUBJECT_MAX_LENGTH, {
     error: `Keep the subject to ${SUBJECT_MAX_LENGTH} characters`,
   }),

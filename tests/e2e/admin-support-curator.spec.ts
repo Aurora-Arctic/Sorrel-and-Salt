@@ -36,7 +36,7 @@ test('a curator reads the marked and the assigned requests, answers the assigned
       [hidden, 'Kept From Curators', false, null],
     ] as const) {
       await sql`
-        insert into support_requests (id, kind, subject, message, path, curator_visible, assigned_to, created_by, updated_by)
+        insert into support_requests (id, about, subject, message, path, curator_visible, assigned_to, created_by, updated_by)
         values (${id}, 'question', ${subject}, 'A question.', '', ${visible}, ${assignee}, ${senderId}, ${senderId})
       `;
     }

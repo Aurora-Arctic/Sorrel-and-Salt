@@ -167,17 +167,19 @@ export interface RadioGroupFieldProps<T extends string> {
   /** The group's `name`, shared by its radios. */
   name: string;
   options: readonly RadioOption<T>[];
-  /** The chosen value, held by the caller. */
-  value: T;
+  /** The chosen value, held by the caller; `null` when nothing is chosen yet, so no radio is checked. */
+  value: T | null;
   onChange: (value: T) => void;
   /** Shut: every radio dashed and faded. */
   disabled?: boolean;
   /** A line for the whole group, read with it: what holds whichever is chosen. */
   note?: string;
-  /** `list` (default): a row each with its explanation; `strip`: icon-only segments, chosen name beneath; `segmented`: text segments with any `count`. A radio underneath every way. */
-  layout?: 'list' | 'strip' | 'segmented';
+  /** `list` (default): a row each with its explanation; `strip`: icon-only segments, chosen name beneath; `segmented`: text segments with any `count`; `cards`: two columns of bordered cards, each with its name and explanation, one column on a phone. A radio underneath every way. */
+  layout?: 'list' | 'strip' | 'segmented' | 'cards';
   /** An InfoTip beside the legend, for what the choices mean. */
   hint?: string;
+  /** Why the group cannot be sent as it stands, under the choices and read with the group. */
+  error?: string;
 }
 
 /** A form's row of actions: Save, any further saves, Cancel and Delete. */

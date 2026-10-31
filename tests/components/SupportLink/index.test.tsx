@@ -20,16 +20,13 @@ beforeEach(() => {
 describe('SupportLink', () => {
   it('links to the page it is on with the Support dialog asked for', () => {
     render(<SupportLink>Support</SupportLink>);
-    expect(link()).toHaveAttribute('href', '/coven/hearth/grimoire?support=accessibility');
+    expect(link()).toHaveAttribute('href', '/coven/hearth/grimoire?support=');
   });
 
   it('keeps the parameters the page already carries and drops a stale error code', () => {
     search.mockReturnValue('facet=moon&error=404');
     render(<SupportLink>Support</SupportLink>);
-    expect(link()).toHaveAttribute(
-      'href',
-      '/coven/hearth/grimoire?facet=moon&support=accessibility',
-    );
+    expect(link()).toHaveAttribute('href', '/coven/hearth/grimoire?facet=moon&support=');
   });
 
   it('goes to the support page where no dialog is drawn', () => {

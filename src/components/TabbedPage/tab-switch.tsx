@@ -58,6 +58,7 @@ export const TabPanel = ({ children }: TabPanelProps): ReactElement => {
       className="tabbed-page__panel"
       filter={target?.filtered}
       shape={target?.shape}
+      count={target?.sections}
       density={target?.density}
     >
       {children}

@@ -5,7 +5,7 @@ import type { SupportListEntry } from '@/components/SupportList/types';
 
 const request = (over: Partial<SupportListEntry> = {}): SupportListEntry => ({
   id: 'r1',
-  kind: 'question',
+  about: 'question',
   subject: 'How do I join a coven?',
   message: 'I was sent a card.',
   status: 'open',
@@ -21,12 +21,12 @@ describe('SupportList', () => {
     expect(screen.getByText(/no support requests/i)).toBeInTheDocument();
   });
 
-  it('shows each request with its kind, status and subject', () => {
+  it('shows each request with its about, status and subject', () => {
     render(
       <SupportList
         requests={[
           request(),
-          request({ id: 'r2', kind: 'accessibility', subject: 'Faint text', status: 'resolved' }),
+          request({ id: 'r2', about: 'accessibility', subject: 'Faint text', status: 'resolved' }),
         ]}
       />,
     );
@@ -57,13 +57,13 @@ describe('SupportList', () => {
     expect(text.indexOf('Second answer.')).toBeGreaterThan(text.indexOf('First answer.'));
   });
 
-  it('links a bug to its issue, and no other kind', () => {
+  it('links a bug to its issue, and no other about', () => {
     render(
       <SupportList
         requests={[
           request({
             id: 'b',
-            kind: 'bug',
+            about: 'bug',
             subject: 'Broken',
             issueUrl: 'https://example.test/i/1',
           }),

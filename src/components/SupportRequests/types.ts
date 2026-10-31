@@ -1,7 +1,8 @@
 import type { Route } from 'next';
+import type { SupportAboutParam } from '../../lib/support-path';
 import type { PagePosition, PagerHrefs } from '../../lib/types';
 
-export type SupportKind = 'accessibility' | 'bug' | 'question';
+export type SupportAbout = SupportAboutParam;
 export type SupportStatus = 'open' | 'resolved';
 
 /** An account named on a request, as the page shows it. */
@@ -18,7 +19,7 @@ export interface SupportSender extends SupportPerson {
 /** One row of the list. */
 export interface SupportRequestEntry {
   id: string;
-  kind: SupportKind;
+  about: SupportAbout;
   subject: string;
   status: SupportStatus;
   sender: SupportSender | null;
@@ -55,8 +56,8 @@ export interface SupportRequestDetailEntry extends SupportRequestEntry {
 
 /** What the list is narrowed by, as its address carries it. */
 export interface SupportRequestsFilter {
-  /** Blank is every kind. */
-  kind: SupportKind | '';
+  /** Blank is everything. */
+  about: SupportAbout | '';
   /** Blank is every status. */
   status: SupportStatus | '';
   /** An HTTP status, as typed; blank is none. */

@@ -1,4 +1,4 @@
-import type { SupportKind, SupportStatus } from '@/modules/support';
+import type { SupportAbout, SupportStatus } from '@/modules/support';
 import type { PagePosition } from '../../lib/types';
 
 export interface SupportReplyEntry {
@@ -10,7 +10,7 @@ export interface SupportReplyEntry {
 /** One request of the signed-in sender, with the replies staff have written to it. */
 export interface SupportListEntry {
   id: string;
-  kind: SupportKind;
+  about: SupportAbout;
   subject: string;
   message: string;
   status: SupportStatus;

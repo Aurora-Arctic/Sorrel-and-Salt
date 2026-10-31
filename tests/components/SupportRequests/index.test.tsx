@@ -28,7 +28,7 @@ const ADMIN_ONLY = ['Assigned To', 'Issue Address', 'Time Out Until'];
 
 const ROW: SupportRequestEntry = {
   id: 'r1',
-  kind: 'bug',
+  about: 'bug',
   subject: 'The moon icon is missing',
   status: 'open',
   sender: { id: 'u1', name: 'Ada Wortley', email: 'ada@example.test' },
@@ -65,7 +65,7 @@ beforeEach(() => {
 });
 
 describe('SupportRequests list', () => {
-  it('shows kind, subject, status, sender, assignee, curator visibility and error number per row', () => {
+  it('shows about, subject, status, sender, assignee, curator visibility and error number per row', () => {
     render(<SupportRequests requests={[ROW]} viewer={ADMIN} />);
     const row = screen.getByRole('row', { name: /moon icon/ });
     for (const text of ['Bug', 'Open', 'Ada Wortley', 'Unassigned', 'Hidden', '500']) {
@@ -82,7 +82,7 @@ describe('SupportRequests list', () => {
       <SupportRequests
         requests={[]}
         viewer={ADMIN}
-        filter={{ kind: 'bug', status: '', errorCode: '' }}
+        filter={{ about: 'bug', status: '', errorCode: '' }}
       />,
     );
     expect(screen.getByText(/No support requests match/)).toBeInTheDocument();

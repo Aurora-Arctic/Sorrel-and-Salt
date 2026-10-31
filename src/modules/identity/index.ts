@@ -10,11 +10,13 @@ export * from './services/email';
 export * from './services/invitation-acceptance';
 export * from './services/invitation-cards';
 export * from './services/name';
+export * from './services/password';
 export * from './services/privilege-changes';
 export * from './services/primary-admin';
 export * from './services/profile';
 export * from './services/provisional-accounts';
 export * from './services/received-invitations';
+export * from './services/sign-in-lockout';
 export * from './services/site-admin';
 export * from './services/user-list';
 export * from './services/user-role';
@@ -42,6 +44,7 @@ export type {
   InvitationRefusal,
   InvitationSender,
   InvitationStanding,
+  PasswordSetter,
   PrimaryAdminOutcome,
   PrivilegeChangeFilter,
   PrivilegeChangeRow,

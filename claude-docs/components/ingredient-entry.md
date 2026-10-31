@@ -314,4 +314,6 @@ The form's own confirmation and the annotate menu's are drawn in the one place, 
 
 ## The back link
 
+`BackLink` also exports `BackChevron`, the chevron alone. The sign-in card's Back button (a button, since it moves through history rather than to an address) draws it under the same `.back-link` class, one type-size step smaller (`caption`), so the look has one source ([`sign-in-panel.md`](sign-in-panel.md), "Two views").
+
 The link is a quiet way back above the heading: small and muted, with a chevron before it and no underline, and its ink deepens on hover and focus. The head is a stack, so the link keeps to its own width rather than stretching across the column, and the row is lifted to the head's top edge by `top`.

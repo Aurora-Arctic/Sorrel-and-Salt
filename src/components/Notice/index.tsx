@@ -19,6 +19,7 @@ const Notice = ({
   block = false,
   inRegion = false,
   id,
+  result = false,
   className,
   children,
 }: NoticeProps): ReactElement => {
@@ -29,11 +30,13 @@ const Notice = ({
   // The region round it announces it, so a role of its own would say it twice.
   const role = inRegion || kind === 'plain' ? undefined : status ? 'status' : 'alert';
 
+  const resultProps = result ? { tabIndex: -1, 'data-result': '' } : {};
+
   if (block) {
     // A `<div>` with the role written out: a `<p>` cannot hold a list or a
     // button, nor an `<output>` anything but phrasing content.
     return (
-      <div id={id} className={classes} role={role}>
+      <div id={id} className={classes} role={role} {...resultProps}>
         {children}
       </div>
     );
@@ -42,14 +45,14 @@ const Notice = ({
   if (role === 'status') {
     // `output` carries the status role itself, so it takes no `role`.
     return (
-      <output id={id} className={classes}>
+      <output id={id} className={classes} {...resultProps}>
         {children}
       </output>
     );
   }
 
   return (
-    <p id={id} className={classes} role={role}>
+    <p id={id} className={classes} role={role} {...resultProps}>
       {children}
     </p>
   );

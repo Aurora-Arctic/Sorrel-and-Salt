@@ -1,11 +1,11 @@
-import type { SupportKind } from '@/modules/support';
+import type { SupportAbout } from '@/modules/support';
 
-/** The kinds a sender may choose, in the order offered. */
-export type { SupportKind };
+/** What a request can be about, as a sender chooses it, in the order offered. */
+export type { SupportAbout };
 
 export interface SupportFormProps {
-  /** The kind chosen when the form opens; accessibility, the first on offer, when left out. */
-  kind?: SupportKind;
+  /** What it is about when the form opens; nothing is chosen when left out. */
+  about?: SupportAbout;
   /** The HTTP status of the error page the sender came from, stored with the request. */
   errorCode?: number;
   /** The page the request is about, stored with the request. */

@@ -31,7 +31,7 @@ test.describe('Story 89: Ask for Help and Read the Reply', { tag: '@story-89' },
     const dialog = page.getByRole('dialog');
 
     await test.step('Send Request waits for a subject and message, then the request is received', async () => {
-      await dialog.getByRole('radio', { name: 'Question' }).check();
+      await dialog.getByRole('radio', { name: /^Question/ }).check();
       await expect(dialog.getByRole('button', { name: 'Send Request' })).toBeDisabled();
       await dialog.getByLabel('Subject').fill('Where is the moon table?');
       await dialog.getByLabel('Message').fill('I cannot find the moon table in my coven.');

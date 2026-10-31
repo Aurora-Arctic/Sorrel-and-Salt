@@ -24,9 +24,16 @@ describe('users schema', () => {
         'role',
         'can_create_workspace',
         'verification_sent_at',
+        'two_factor_enabled',
         ...AUDIT_COLUMNS,
       ].sort(),
     );
+  });
+
+  // The `twoFactor` plugin's flag, off until an authenticator is confirmed.
+  it('starts every account with two-factor off', () => {
+    expect(byName.two_factor_enabled.notNull).toBe(true);
+    expect(byName.two_factor_enabled.default).toBe(false);
   });
 });
 

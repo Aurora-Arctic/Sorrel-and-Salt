@@ -13,6 +13,10 @@ export interface SignInMethodError {
 export interface SignInMethodsProps {
   /** The signed-in user's provider accounts, from `linkedAccounts()`. */
   linked: readonly LinkedAccount[];
+  /** Whether the account holds a password, which is a way in beside the providers. */
+  passwordHeld: boolean;
+  /** How many passkeys the account holds, each a way in beside the providers. */
+  passkeyCount: number;
   /** Providers this environment has credentials for; the rest cannot be added. */
   configured: readonly ProviderId[];
   /** A failed link's callback, from linkErrorMessage and the callback's `?provider=`. */
@@ -53,4 +57,13 @@ export interface ProviderRowProps {
   /** Each answers the failure to say under its control, or nothing on success. */
   onAdd: () => Promise<string | undefined>;
   onRemove: () => Promise<string | undefined>;
+}
+
+export interface SectionRowProps {
+  label: string;
+  /** Where the method stands, in words. */
+  status: string;
+  /** The in-page link to the section that manages it. */
+  href: string;
+  linkLabel: string;
 }

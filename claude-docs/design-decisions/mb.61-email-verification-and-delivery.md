@@ -34,7 +34,7 @@ is beside it as [`mb.61-plan.md`](mb.61-plan.md).
 
 ## Where things stand
 
-Everything below was read from the installed Better Auth, `1.7.5`, in
+Everything below was read from the installed Better Auth, in
 `node_modules/better-auth/dist` and `node_modules/@better-auth/core/dist`, not
 from its documentation.
 

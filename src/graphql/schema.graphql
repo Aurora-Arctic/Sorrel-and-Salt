@@ -1121,6 +1121,7 @@ type Mutation {
   setCompendiumEntryReviewed(id: ID!, reviewed: Boolean!): Ingredient!
   setEmail(email: String!, next: String): User!
   setName(name: String!): User!
+  setPassword(newPassword: String!): Boolean!
 
   """Shows a request to curators, or hides it from them. Site admins only."""
   setSupportRequestCuratorVisible(id: ID!, visible: Boolean!): SupportRequest!
@@ -1571,7 +1572,7 @@ type Query {
   """
   The support requests the viewer may read, open ahead of resolved and newest first within each. A curator reads those marked for curators or assigned to them; an admin reads all.
   """
-  supportRequests(after: String, before: String, errorCode: Int, first: Int, kind: SupportKind, last: Int, status: SupportStatus): QuerySupportRequestsConnection!
+  supportRequests(about: SupportAbout, after: String, before: String, errorCode: Int, first: Int, last: Int, status: SupportStatus): QuerySupportRequestsConnection!
   users(after: String, awaitingApproval: Boolean, before: String, first: Int, last: Int, query: String, role: UserRole): QueryUsersConnection!
 
   """
@@ -2346,9 +2347,13 @@ enum SuggestionGroup {
 }
 
 """What a support request is about."""
-enum SupportKind {
+enum SupportAbout {
   accessibility
+  account
   bug
+  compendium
+  feedback
+  privacy
   question
 }
 
@@ -2366,13 +2371,13 @@ type SupportReply {
 A request for help from the support form. A sender reads their own; a curator reads those marked for curators or assigned to them; an admin reads all.
 """
 type SupportRequest {
+  about: SupportAbout!
   assignedTo: User
   audit: AuditInfo!
   curatorVisible: Boolean!
   errorCode: Int
   id: ID!
   issueUrl: String
-  kind: SupportKind!
   message: String!
 
   """
@@ -2395,9 +2400,10 @@ type SupportRequest {
 }
 
 input SupportRequestInput {
+  about: SupportAbout!
+
   """The HTTP status of the error page, if any."""
   errorCode: Int
-  kind: SupportKind!
 
   """1 to 4000 characters."""
   message: String!

@@ -67,6 +67,8 @@ export type ProviderId = 'google' | 'discord' | 'facebook' | 'microsoft';
 export interface SocialProvider {
   id: ProviderId;
   label: string;
+  /** Left off the sign-in screens and the account page's offer to link; registration and an existing link stay. */
+  hidden?: true;
 }
 
 /** What registering a provider with Better Auth takes beyond its credentials. */
@@ -92,6 +94,15 @@ export type ProviderProfiles<Id extends string = ProviderId> = {
 export interface LinkedAccount {
   id: string;
   providerId: ProviderId;
+}
+
+/** One of a user's passkeys as the account page lists it: the row id the plugin's rename and remove take. */
+export interface AccountPasskey {
+  id: string;
+  /** What the person called it, or `null` for one never named. */
+  name: string | null;
+  /** When it was added, as an ISO string. */
+  createdAt: string;
 }
 
 /** One rule a value broke, pathed to the input field it is about. */

@@ -19,6 +19,7 @@ export {
   CompleteIcon,
   CopyIcon,
   CrossIcon,
+  DownloadIcon,
   DotsIcon,
   LinkIcon,
   MysticEyeIcon,

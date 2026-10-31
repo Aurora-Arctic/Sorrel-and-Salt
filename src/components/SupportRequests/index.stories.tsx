@@ -18,7 +18,7 @@ const CURATOR = { id: 'curator-1', name: 'Fern Keeper' };
 const REQUESTS: SupportRequestEntry[] = [
   {
     id: 'request-1',
-    kind: 'bug',
+    about: 'bug',
     subject: 'Wobbling Cauldron',
     status: 'open',
     sender: SENDER,
@@ -28,7 +28,7 @@ const REQUESTS: SupportRequestEntry[] = [
   },
   {
     id: 'request-2',
-    kind: 'question',
+    about: 'question',
     subject: 'Where Do Invitations Go',
     status: 'resolved',
     sender: SENDER,

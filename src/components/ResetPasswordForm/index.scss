@@ -1,0 +1,9 @@
+@use '../../scss/variables' as *;
+
+// A column on the reset-password page; the field, the notices and the button are the form
+// primitives' (_primitives.scss).
+.reset-password-form {
+  display: flex;
+  flex-direction: column;
+  gap: space(3);
+}

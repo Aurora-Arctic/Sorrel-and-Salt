@@ -441,7 +441,7 @@ accent when pointed at or focused.
 
 [`index.stories.tsx`](../../src/components/Field/index.stories.tsx), `Forms /
 Field`: `States`, a grid of the text field in each shape (Plain, Required, Pending, With Hint, With Note, With Error, Multiline, Disabled, With Label Suffix, With Placeholder, Tall Multiline, Date Type, Number Type, With Action, With Content After The Error, Described By Another Element, Marked Invalid Without An Error) and the select in each (Select With Placeholder, With Option Icons, With A Disabled Option, Disabled, With Typeahead, Required With Hint), each in a `FormProvider`;
-`RadioStrip`, the radio group as a strip of icons, with `RadioGroup`, `RadioSegmented` and `RadioSegmentedDisabled`; `PlainShell`, the shell around a native input with an error; `Switch`,
+`RadioStrip`, the radio group as a strip of icons, with `RadioGroup`, `RadioSegmented`, `RadioSegmentedDisabled` and `RadioCards`; `PlainShell`, the shell around a native input with an error; `Switch`,
 `SwitchField` off, on, and disabled off and on; `Actions`, `FormActions` with
 nothing to save, with something to save and Delete, saving, and renamed to
 Send Invitation; `ActionsInUse`, the row at work in a form of one field (Save wakes when the field
@@ -497,7 +497,7 @@ It listens through the form's `subscribe` (pass `useForm`'s), asking for `values
 
 `RadioGroupField` is one choice from a few, each with its own line of explanation: a native radio group in a `.fieldset`, its legend the group's name. It is native so the arrow keys move the choice and a screen reader hears "2 of 3". The explanation is the radio's description, read after its name. The caller holds the state, passed as `value`. A `note` is the group's own line, read with it, for what holds for every choice.
 
-`layout="strip"` draws the options as one bar of icon-only segments with the chosen name printed beneath, still a native radio underneath. `layout="segmented"` draws the same kind of bar with each choice's name in text and, if it has one, its count, as the compendium filter's Match and Toxic do.
+`layout="strip"` draws the options as one bar of icon-only segments with the chosen name printed beneath, still a native radio underneath. `layout="segmented"` draws the same kind of bar with each choice's name in text and, if it has one, its count, as the compendium filter's Match and Toxic do. `layout="cards"` draws each option as a bordered card in a grid of two columns, one under the phone breakpoint, rows as tall as the tallest card: the whole card is the label, with the ring, the name and the description inside, so every description is visible. The chosen card takes the accent edge and a faint accent wash, a card lifts to the hover surface, and the focus ring is drawn on the card. `value` may be `null`, which checks no radio, and `error` draws a field error under the choices and joins the group's `aria-describedby`. Story: `RadioCards`.
 
 ## Switch, search and select fields for filters
 

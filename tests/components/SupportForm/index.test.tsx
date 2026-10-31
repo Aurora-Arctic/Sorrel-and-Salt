@@ -1,6 +1,7 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import SupportForm from '@/components/SupportForm';
+import { SUPPORT_ABOUTS } from '@/lib/support-path';
 import type {
   SendSupportRequestMutation,
   SendSupportRequestMutationVariables,
@@ -13,6 +14,10 @@ vi.mock('next/navigation', () => ({
 
 const subject = () => screen.getByRole('textbox', { name: /Subject/ });
 const message = () => screen.getByRole('textbox', { name: /Message/ });
+const aboutGroup = () => screen.getByRole('group', { name: 'What Is This About?' });
+const aboutRadio = (label: string) =>
+  within(aboutGroup()).getByRole('radio', { name: new RegExp(`^${label}`) });
+const page = () => screen.getByRole('textbox', { name: 'Page' });
 const send = () => screen.getByRole('button', { name: /Send Request|Sending/ });
 
 function mockSending() {
@@ -27,22 +32,60 @@ function mockSending() {
   return calls;
 }
 
-function fill() {
+function fillText() {
   fireEvent.change(subject(), { target: { value: ' Cannot read the menu ' } });
   fireEvent.change(message(), { target: { value: ' The text is too faint. ' } });
 }
 
+// Writes the subject and message, and chooses Bug when the form opened with nothing chosen.
+function fill() {
+  fillText();
+  if (!within(aboutGroup()).queryByRole('radio', { checked: true })) {
+    fireEvent.click(aboutRadio('Bug'));
+  }
+}
+
 describe('SupportForm', () => {
-  it('offers accessibility first and selected, unless a kind is given', () => {
+  it('offers seven cards with none chosen, unless an about is given', () => {
     const { unmount } = render(<SupportForm path="/a" />);
-    expect(screen.getAllByRole('radio').map((r) => (r as HTMLInputElement).value)[0]).toBe(
-      'accessibility',
-    );
-    expect(screen.getByRole('radio', { name: /Accessibility/ })).toBeChecked();
+    const radios = within(aboutGroup()).getAllByRole('radio');
+    expect(radios).toHaveLength(7);
+    for (const radio of radios) expect(radio).not.toBeChecked();
     unmount();
 
-    render(<SupportForm path="/a" kind="bug" />);
-    expect(screen.getByRole('radio', { name: /Bug/ })).toBeChecked();
+    render(<SupportForm path="/a" about="bug" />);
+    expect(aboutRadio('Bug')).toBeChecked();
+    expect(aboutRadio('Accessibility')).not.toBeChecked();
+  });
+
+  it('sends nothing and says so while no about is chosen', () => {
+    const calls = mockSending();
+    render(<SupportForm path="/a" />);
+    fillText();
+    fireEvent.click(send());
+    expect(aboutGroup()).toHaveAccessibleDescription('Choose what this is about.');
+    expect(calls).toHaveLength(0);
+    expect(screen.queryByRole('status')).toBeNull();
+
+    fireEvent.click(aboutRadio('Question'));
+    expect(aboutGroup()).not.toHaveAccessibleDescription('Choose what this is about.');
+  });
+
+  it('shows what each about means inside its card', () => {
+    render(<SupportForm path="/a" />);
+    for (const option of SUPPORT_ABOUTS) {
+      expect(within(aboutGroup()).getByText(option.description)).toBeVisible();
+    }
+  });
+
+  it('sends the about that was chosen', async () => {
+    const calls = mockSending();
+    render(<SupportForm path="/a" />);
+    fill();
+    fireEvent.click(aboutRadio('Privacy & Data'));
+    fireEvent.click(send());
+    await screen.findByRole('status');
+    expect(calls[0]?.input.about).toBe('privacy');
   });
 
   it('keeps Send off until both a subject and a message are written', () => {
@@ -67,15 +110,51 @@ describe('SupportForm', () => {
     expect(message()).toHaveAccessibleDescription(/4000/);
   });
 
-  it('shows the error number and page it was opened from', () => {
-    render(<SupportForm path="/coven/x/missing" errorCode={404} kind="bug" />);
+  it('shows the error number, and the page it was opened from in a field', () => {
+    render(<SupportForm path="/coven/x/missing" errorCode={404} about="bug" />);
     expect(screen.getByText(/Error 404/)).toBeInTheDocument();
-    expect(screen.getByText('/coven/x/missing')).toBeInTheDocument();
+    expect(page()).toHaveValue('/coven/x/missing');
+    expect(page()).toHaveAttribute('maxlength', '500');
+    expect(page()).toHaveAccessibleDescription(/500/);
   });
 
-  it('sends the trimmed text with the kind, page and error, then says it was received', async () => {
+  it('sends an edited page', async () => {
     const calls = mockSending();
-    render(<SupportForm path="/coven/x/missing" errorCode={404} kind="bug" />);
+    render(<SupportForm path="/a" />);
+    fill();
+    fireEvent.change(page(), { target: { value: '/b' } });
+    fireEvent.click(send());
+    await screen.findByRole('status');
+    expect(calls[0]?.input.path).toBe('/b');
+  });
+
+  it('sends no page when the field is cleared', async () => {
+    const calls = mockSending();
+    render(<SupportForm path="/a" />);
+    fill();
+    fireEvent.change(page(), { target: { value: '  ' } });
+    fireEvent.click(send());
+    await screen.findByRole('status');
+    expect(calls[0]?.input).not.toHaveProperty('path');
+  });
+
+  it('shows the page error beside the field', async () => {
+    mockGraphQLError('SendSupportRequest', {
+      code: 'VALIDATION',
+      message: 'Invalid',
+      fieldErrors: [{ path: ['path'], message: 'That page address is too long' }],
+    });
+    render(<SupportForm path="/a" />);
+    fill();
+    fireEvent.click(send());
+    await screen.findByText('That page address is too long');
+    expect(page()).toHaveAccessibleDescription(/too long/);
+    expect(page()).toBeInvalid();
+  });
+
+  it('sends the trimmed text with the about, page and error, then says it was received', async () => {
+    const calls = mockSending();
+    render(<SupportForm path="/coven/x/missing" errorCode={404} about="bug" />);
     fill();
     fireEvent.click(send());
 
@@ -84,7 +163,7 @@ describe('SupportForm', () => {
     expect(calls).toEqual([
       {
         input: {
-          kind: 'bug',
+          about: 'bug',
           subject: 'Cannot read the menu',
           message: 'The text is too faint.',
           path: '/coven/x/missing',

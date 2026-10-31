@@ -387,8 +387,9 @@ const REFERENCE = '{ kind: book, title: "A Herbal of Fixture Covens" }';
 const MUTATION_PROBES: Record<string, ScopeProbe> = {
   setEmail: write('mutation { setEmail(email: "fixture@example.org") { id } }'),
   setName: write('mutation { setName(name: "Fixture") { id } }'),
+  setPassword: write('mutation { setPassword(newPassword: "fixture password") }'),
   sendSupportRequest: write(
-    'mutation { sendSupportRequest(input: { kind: bug, subject: "Fixture", message: "Fixture" }) { id } }',
+    'mutation { sendSupportRequest(input: { about: bug, subject: "Fixture", message: "Fixture" }) { id } }',
   ),
   replyToSupportRequest: write(
     `mutation { replyToSupportRequest(requestId: "${NOWHERE}", body: "Fixture") { id } }`,
@@ -677,6 +678,8 @@ const OPEN_WRITES = [
   // The same address match decides a decline.
   'declineInvitationById',
   'setName',
+  // The session's own cookie names the account, which Better Auth reads.
+  'setPassword',
   // The flag decides who may, which the service reads.
   'createWorkspace',
   // The owner's `member: update` decides, which the service checks.

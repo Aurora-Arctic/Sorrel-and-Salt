@@ -16,7 +16,7 @@ describe('SiteFooter', () => {
     expect(screen.getAllByRole('link')).toHaveLength(1);
     expect(screen.getByRole('link', { name: 'Support' })).toHaveAttribute(
       'href',
-      '/coven/hearth?support=accessibility',
+      '/coven/hearth?support=',
     );
   });
 

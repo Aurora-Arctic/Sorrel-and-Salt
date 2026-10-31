@@ -178,6 +178,14 @@ is a `VALIDATION` error on `name`, and a provisional account is
 `FORBIDDEN` ([`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md), "The
 account page").
 
+`setPassword(newPassword: String!): Boolean!` is the account page's Password
+section for an account with no password yet: signed-in only, by scope, and
+`setPassword` in the identity module gives the session's own account a first
+password through Better Auth. A refused password, or an account that already
+has one, is a `VALIDATION` error on `newPassword`, and a provisional account is
+`FORBIDDEN` ([`auth/passwords.md`](../auth/passwords.md), "Setting a first
+password").
+
 `grantWorkspaceCreation(userId: ID!): User!` and
 `revokeWorkspaceCreation(userId: ID!): User!` are M5.8's approval and its
 undoing: each writes `canCreateWorkspace` on a live user and a row in MB.193's

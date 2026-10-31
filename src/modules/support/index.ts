@@ -12,7 +12,7 @@ export * from './loaders/replies-by-request';
 export * from './loaders/timeouts-by-sender';
 export * from './loaders/users-on-requests';
 export type {
-  SupportKind,
+  SupportAbout,
   SupportNotifier,
   SupportReplyRow,
   SupportRequestFilter,
