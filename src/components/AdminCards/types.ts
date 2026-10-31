@@ -1,4 +1,5 @@
 import type { Route } from 'next';
+import type { ModalHeading } from '../Modal/types';
 import type { PagePosition, PagerHrefs } from '../../lib/types';
 
 /** Where a batch stands: live while a card is pending, else used up, expired or revoked. */
@@ -61,6 +62,8 @@ export interface ArrivalEntry {
   batchId: string;
   /** The covens the account owns now, by name. */
   covens: string[];
+  /** Where the account's name opens its user modal, as the Users list does; null once the account is gone. */
+  account: { openHref: Route; heading: ModalHeading } | null;
 }
 
 export interface AdminArrivalsProps extends Partial<PagerHrefs<Route>> {
