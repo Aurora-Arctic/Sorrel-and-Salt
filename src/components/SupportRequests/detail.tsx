@@ -79,7 +79,7 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
               </dd>
             </div>
           }
-          trail={
+          afterSent={
             request.resolvedBy &&
             request.resolvedAt && (
               <div>

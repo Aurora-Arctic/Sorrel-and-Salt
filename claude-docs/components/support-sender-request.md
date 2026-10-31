@@ -2,7 +2,7 @@
 
 `src/components/SupportSenderRequest/` — the body of the sender's dialog over `/account/support`, opened by `?request=<id>` ([`SupportList`](support-list.md) holds the `RouteModal`, with the eyebrow "Support · " and the kind, the subject as the title and the status badge beneath it; the close control is the dialog's).
 
-It reuses the parts of the staff dialog ([`SupportRequests`](support-requests.md)): `facts.tsx` (Sent, Page and Error), `thread.tsx` and the `support-detail` rules. It differs from the staff dialog in what it leaves out and how it names people:
+It reuses the parts of the staff dialog ([`SupportRequests`](support-requests.md)): `facts.tsx` (Sent, then Page on a row of its own, then Error; the grid's gaps are unchanged), `thread.tsx` and the `support-detail` rules. It differs from the staff dialog in what it leaves out and how it names people:
 
 - **The Error fact shows the status code alone.** The error reference (the crash digest) is staff-only: the sender's reads return none, the GraphQL field is curator-only, and the staff dialog keeps it with its Copy button (2026-10-31, the owner's call).
 - **No** issue panel, settings column, time-out panel, assignment or Resolve. There is no From fact: the sender knows who they are.

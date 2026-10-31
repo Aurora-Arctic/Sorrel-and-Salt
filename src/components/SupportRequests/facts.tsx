@@ -2,8 +2,8 @@ import type { ReactElement, ReactNode } from 'react';
 import IconTip, { CopyIcon } from '../IconTip';
 import LocalTime from '../LocalTime';
 
-// The facts at the head of an opened request: Sent, Page and Error, with a row before and after them for the
-// facts only one screen shows (From for staff).
+// The facts at the head of an opened request: Sent, Page and Error, with a fact before them and one beside Sent for the
+// facts only one screen shows (From and Resolved for staff). Page takes a row of its own, so a path never sits beside a date.
 
 export interface SupportFactsProps {
   createdAt: Date;
@@ -13,8 +13,8 @@ export interface SupportFactsProps {
   errorReference?: string | null;
   /** Rows drawn before Sent. */
   lead?: ReactNode;
-  /** Rows drawn after Error. */
-  trail?: ReactNode;
+  /** Facts drawn after Sent, sharing its row. */
+  afterSent?: ReactNode;
 }
 
 const SupportFacts = ({
@@ -23,7 +23,7 @@ const SupportFacts = ({
   errorCode,
   errorReference,
   lead,
-  trail,
+  afterSent,
 }: SupportFactsProps): ReactElement => (
   <dl className="support-detail__facts">
     {lead}
@@ -33,8 +33,9 @@ const SupportFacts = ({
         <LocalTime at={createdAt} long />
       </dd>
     </div>
+    {afterSent}
     {path && (
-      <div>
+      <div className="support-detail__fact--wide">
         <dt>Page</dt>
         <dd className="support-detail__mono">{path}</dd>
       </div>
@@ -64,7 +65,6 @@ const SupportFacts = ({
         </dd>
       </div>
     )}
-    {trail}
   </dl>
 );
 
