@@ -17,3 +17,13 @@ export function inUtc(at: Date): string {
   });
   return `${day}, ${time} UTC`;
 }
+
+/** An instant's UTC day alone (`28 August 2026`): for a date that is midnight UTC, where the time says nothing. */
+export function dayInUtc(at: Date): string {
+  return at.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+}
