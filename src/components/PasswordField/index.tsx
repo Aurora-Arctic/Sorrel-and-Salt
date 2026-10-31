@@ -2,7 +2,7 @@
 
 import { type ReactElement, useId, useState } from 'react';
 import { FieldShell, fieldDescription } from '../Field';
-import { EyeIcon } from './eye-icon';
+import { MysticEyeIcon } from '../IconTip';
 import { StrengthMeter } from './meter';
 import { PASSWORD_RULES } from './rules';
 import type { PasswordFieldProps } from './types';
@@ -65,7 +65,7 @@ const PasswordField = ({
           aria-controls={field.controlId}
           onClick={() => setShown((was) => !was)}
         >
-          <EyeIcon shown={shown} />
+          <MysticEyeIcon />
         </button>
       </div>
     </FieldShell>
