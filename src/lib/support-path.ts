@@ -54,7 +54,7 @@ export function normaliseIssueLink(value: string, repository: string): string | 
   return /^[1-9][0-9]*$/.test(parts[2]) ? `${plain}${parts[2]}` : null;
 }
 
-/** The page with the request form, for a visitor with no shell round them. */
+/** The page with the request form, for a visitor with no dialog in the page. */
 export const SUPPORT_PATH = '/support';
 
 /** The sender's own requests. */
@@ -150,6 +150,7 @@ export function supportClosedHref(pathname: string, params: URLSearchParams): st
   rest.delete(SUPPORT_PARAM);
   rest.delete(SUPPORT_ERROR_PARAM);
   rest.delete(SUPPORT_REF_PARAM);
+  rest.delete(SUPPORT_FROM_PARAM);
   const lead = rest.toString();
   return lead ? `${pathname}?${lead}` : pathname;
 }

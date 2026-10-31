@@ -8,6 +8,3 @@ export default meta;
 export const Default: StoryObj = {
   render: () => <SiteFooter />,
 };
-export const InShell: StoryObj = {
-  render: () => <SiteFooter inShell />,
-};

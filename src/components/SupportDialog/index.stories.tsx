@@ -13,5 +13,5 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Open: Story = { args: { verified: true } };
-export const Unverified: Story = { args: { verified: false } };
+export const Open: Story = { args: { state: { kind: 'form' } } };
+export const Unverified: Story = { args: { state: { kind: 'unverified' } } };

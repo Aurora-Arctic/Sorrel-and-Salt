@@ -28,9 +28,4 @@ describe('SupportLink', () => {
     render(<SupportLink>Support</SupportLink>);
     expect(link()).toHaveAttribute('href', '/coven/hearth/grimoire?facet=moon&support=');
   });
-
-  it('goes to the support page where no dialog is drawn', () => {
-    render(<SupportLink plain>Support</SupportLink>);
-    expect(link()).toHaveAttribute('href', '/support');
-  });
 });

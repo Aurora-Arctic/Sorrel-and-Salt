@@ -7,8 +7,6 @@ import { ViewerIdProvider } from '../../lib/viewer-id';
 import AddIngredientButton from './add-ingredient-button';
 import BrandName from './brand-name';
 import MainBody from './main-body';
-import SiteFooter from '../SiteFooter';
-import SupportDialog from '../SupportDialog';
 import NewSpellElsewhere from './new-spell-elsewhere';
 import SiteNav from './site-nav';
 import type { AppShellProps, SiteLink } from './types';
@@ -83,8 +81,6 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
           <MainBody>{children}</MainBody>
         </ViewerIdProvider>
       </div>
-      <SupportDialog verified={viewer.verified} />
-      <SiteFooter inShell />
     </div>
   );
 };

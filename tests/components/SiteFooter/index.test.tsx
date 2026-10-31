@@ -9,8 +9,8 @@ vi.mock('next/navigation', () => ({
 const { default: SiteFooter } = await import('@/components/SiteFooter');
 
 describe('SiteFooter', () => {
-  it('carries the Support link that opens the dialog over the page in the shell', () => {
-    render(<SiteFooter inShell />);
+  it('carries the Support link that opens the dialog over the page over the page', () => {
+    render(<SiteFooter />);
     expect(screen.getByRole('contentinfo')).toBeInTheDocument();
     expect(screen.getByRole('navigation', { name: 'Footer' })).toBeInTheDocument();
     expect(screen.getAllByRole('link')).toHaveLength(2);
@@ -23,10 +23,5 @@ describe('SiteFooter', () => {
   it('links the site name to the home page', () => {
     render(<SiteFooter />);
     expect(screen.getByRole('link', { name: 'Sorrel & Salt' })).toHaveAttribute('href', '/');
-  });
-
-  it('links to the support page in the public frame, which has no dialog', () => {
-    render(<SiteFooter />);
-    expect(screen.getByRole('link', { name: 'Support' })).toHaveAttribute('href', '/support');
   });
 });

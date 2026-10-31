@@ -905,6 +905,15 @@ $arrive-duration: 200ms;
 $shell-bar-height: 3.25rem;
 $bottom-bar-height: 4rem;
 
+// The footer row's height, fixed so the salt can rise by exactly it as the footer comes into view
+// (Backdrop/index.scss); it stacks to two lines at a phone's width.
+$footer-height: 4.5rem;
+$footer-height-phone: 7rem;
+// What the footer takes under a centred page frame: its row plus the step of air above it.
+// The step of air is space(8), spelled in rem because the steps are defined further down.
+$footer-space: $footer-height + 4rem;
+$footer-space-phone: $footer-height-phone + 4rem;
+
 // The width at or under which the shell takes its phone shape (the switcher
 // on its own row, the section nav along the bottom, the account button an
 // avatar alone): the one width the admin tables stack into cards at, so a

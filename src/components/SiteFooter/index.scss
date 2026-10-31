@@ -1,14 +1,31 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// Under the page, a step of air below its last content. The footer is opaque and full width, so the
-// fixed backdrop images (drawn beneath every in-flow element) never show through it.
-.site-footer {
-  margin-block-start: space(8);
-  background-color: $surface-page;
+// The page and the footer in one column the height of the window: a short page leaves its spare room
+// between the two, so the footer sits at the foot of the window, and a long one pushes it down.
+// The step of air above the footer is the margin of whatever precedes it.
+.site-frame {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - #{$top-inset});
+
+  > :has(+ .site-footer) {
+    margin-block-end: space(8);
+  }
 }
 
-// Ruled off from the page; the link sits in the content column's edges.
+// Under the page, a step of air below its last content. Its view timeline lets the salt rise as the footer
+// comes into view (Backdrop/index.scss); the opaque, full-width fill is what a browser without
+// scroll-driven animations keeps, so the fixed salt never shows through the row.
+.site-footer {
+  margin-block-start: auto;
+  border-top: 1px solid $hairline;
+  background-color: $surface-page;
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: the salt stays put and the fill covers it, not yet Baseline
+  view-timeline: --site-footer block;
+}
+
+// The row sits in the content column's edges; the hairline above it is the footer's own, so it spans the window.
 .site-footer__inner {
   box-sizing: border-box;
   display: flex;
@@ -18,8 +35,8 @@
   gap: space(2) space(4);
   margin-inline: auto;
   padding: space(4);
-  border-top: 1px solid $hairline;
   max-width: $wide-column;
+  min-height: $footer-height;
 }
 
 .site-footer__brand {
@@ -47,13 +64,14 @@
   .site-footer__inner {
     flex-direction: column;
     align-items: flex-start;
+    min-height: $footer-height-phone;
   }
 }
 
 // The phone's section bar is fixed along the bottom of a shell page and would cover the link; the
 // footer clears it by the bar's own height, as the page's body does (_primitives.scss).
 @media (max-width: $shell-phone-width) {
-  .app-shell:has(.section-nav) > .site-footer {
+  body:has(.section-nav) .site-footer {
     padding-bottom: calc(#{$bottom-bar-height} + env(safe-area-inset-bottom, 0px));
   }
 }

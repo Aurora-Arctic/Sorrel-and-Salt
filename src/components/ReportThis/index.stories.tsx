@@ -8,5 +8,4 @@ const meta = { title: 'Support / Report This', component: ReportThis } satisfies
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const InTheShell: Story = { args: { code: 404, inShell: true } };
 export const OutsideTheShell: Story = { args: { code: 500 } };

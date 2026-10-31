@@ -33,9 +33,22 @@ test('the footer Support link clears the tab bar and a tap opens the dialog', as
   await assertNoAccessibilityViolations(page);
 });
 
-test('the signed-in home page shows the footer', async ({ page }) => {
+test('the home page shows the footer to a signed-in visitor', async ({ page }) => {
   await signInAs(page, 'home@footer-tab-bar.test');
   await page.goto('/');
   await expect(page.getByRole('contentinfo').getByRole('link', { name: 'Support' })).toBeVisible();
   await assertNoAccessibilityViolations(page);
+});
+
+test('the home page shows the footer to a signed-out visitor', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('contentinfo').getByRole('link', { name: 'Support' })).toBeVisible();
+  await assertNoAccessibilityViolations(page);
+});
+
+test('the footer sits at the foot of the window on a short page', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/');
+  const box = await page.getByRole('contentinfo').boundingBox();
+  expect(box ? box.y + box.height : 0).toBeGreaterThanOrEqual(899);
 });

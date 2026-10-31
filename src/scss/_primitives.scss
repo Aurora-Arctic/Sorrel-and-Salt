@@ -610,30 +610,42 @@
     align-items: center;
     justify-content: center;
     gap: space(6);
-    min-height: calc(100dvh - #{$top-inset});
+    min-height: calc(100dvh - #{$top-inset} - #{$footer-space});
     padding: space(6) space(4);
+
+    @media (max-width: #{$shell-phone-width}) {
+      min-height: calc(100dvh - #{$top-inset} - #{$footer-space-phone});
+    }
   }
 
   // The shell's bar takes room above the frame, so the frame is shorter by it
   // and a centred page still fits the window without a scroll.
   :is(.app-shell, .public-frame) .page-frame {
-    min-height: calc(100dvh - #{$top-inset} - #{$shell-bar-height});
+    min-height: calc(100dvh - #{$top-inset} - #{$shell-bar-height} - #{$footer-space});
+
+    @media (max-width: #{$shell-phone-width}) {
+      min-height: calc(100dvh - #{$top-inset} - #{$shell-bar-height} - #{$footer-space-phone});
+    }
   }
 
   // Beside a context row (the create page's), the frame is shorter by the row
   // and its hairline too.
   .app-shell__main:has(.context-row) .page-frame {
-    min-height: calc(100dvh - #{$top-inset} - #{$shell-bar-height} - #{$context-row-height} - 1px);
+    min-height: calc(
+      100dvh - #{$top-inset} - #{$shell-bar-height} - #{$context-row-height} - 1px -
+        #{$footer-space}
+    );
 
     @media (max-width: #{$shell-phone-width}) {
       min-height: calc(
-        100dvh - #{$top-inset} - #{$shell-bar-height} - #{$context-row-height-phone} - 1px
+        100dvh - #{$top-inset} - #{$shell-bar-height} - #{$context-row-height-phone} - 1px -
+          #{$footer-space-phone}
       );
     }
   }
 
-  // The footer's own top margin (space(8)) is the whole gap under a page's last content, so a frame
-  // that a footer follows gives up its bottom padding rather than stacking on it.
+  // The step of air above the footer (space(8)) is the whole gap under a page's last content, so a
+  // frame gives up its bottom padding rather than stacking on it.
   .app-shell__main :is(.page-frame, .page-column, .coven-layout),
   .page-frame:has(+ .site-footer) {
     padding-bottom: 0;

@@ -57,11 +57,50 @@
   background-image: url('./salt-spoon.webp');
 }
 
+// The salt rises with the footer as it scrolls into view and stays above it, as the sorrel follows the bar
+// (the footer's view timeline is in SiteFooter/index.scss). Without scroll-driven animations the footer's
+// opaque fill covers the salt instead.
+@keyframes salt-rise {
+  from {
+    bottom: var(--salt-rest);
+  }
+
+  to {
+    bottom: calc(var(--salt-rest) + var(--salt-lift));
+  }
+}
+
+@supports (animation-timeline: view()) {
+  body {
+    // stylelint-disable-next-line plugin/use-baseline -- enhancement: as above, not yet Baseline
+    timeline-scope: --site-footer;
+  }
+
+  .backdrop--salt {
+    // stylelint-disable-next-line length-zero-no-unit -- a unitless 0 is invalid inside calc()
+    --salt-rest: 0px;
+    --salt-lift: #{$footer-height};
+
+    @media (max-width: #{$shell-phone-width}) {
+      --salt-lift: #{$footer-height-phone};
+    }
+
+    // stylelint-disable-next-line plugin/use-baseline -- enhancement: the salt stays put and the footer's fill covers it, not yet Baseline
+    animation: salt-rise linear both;
+    // stylelint-disable-next-line plugin/use-baseline -- enhancement: as above, not yet Baseline
+    animation-timeline: --site-footer;
+    // stylelint-disable-next-line plugin/use-baseline -- enhancement: as above, not yet Baseline
+    animation-range: entry 0% entry 100%;
+  }
+}
+
 // On a phone the section nav is a bar fixed along the bottom; the salt
 // sits above it rather than behind it.
 @media (max-width: #{$shell-phone-width}) {
   body:has(.section-nav) .backdrop--salt {
-    bottom: calc(#{$bottom-bar-height} + env(safe-area-inset-bottom, 0px));
+    --salt-rest: calc(#{$bottom-bar-height} + env(safe-area-inset-bottom, 0px));
+
+    bottom: var(--salt-rest);
   }
 }
 
@@ -90,6 +129,7 @@ body:has(.spell-recipe:not(dialog *), .ingredient-entry:not(dialog *)) {
 
   .backdrop--salt {
     bottom: 0;
+    animation: none;
   }
 
   // The section bar covers the body's last `$bottom-bar-height`; the band rises above it into the
