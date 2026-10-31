@@ -187,6 +187,7 @@ export type {
   CardAttemptReason,
   CardAttemptRow,
   CardBatchTotal,
+  CardPosition,
   CardInvitationValues,
   CardRow,
   SiteInvitationRow,

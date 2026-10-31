@@ -1084,6 +1084,9 @@ export interface CardInvitationValues {
   expiresAt: Date;
 }
 
+/** A card's place in its batch, from 1; null for a card minted before places were kept. */
+export type CardPosition = { id: string; position: number | null };
+
 /** One batch of cards counted: all of them, the accepted ones, those still pending, and the refused opens of its links. */
 export type CardBatchTotal = {
   batchId: string;

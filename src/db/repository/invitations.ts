@@ -21,6 +21,7 @@ import type {
   CardAttemptRow,
   CardInvitationValues,
   CardBatchTotal,
+  CardPosition,
   CardRow,
   InvitationRow,
   InvitedCoven,
@@ -469,16 +470,15 @@ export function findCardBatchTotals(
 }
 
 /** Each named card's place in its batch, by invitation id; a card minted before places were kept has none. */
-export async function findCardPositions(
+export function findCardPositions(
   _admin: SiteAdmin,
   invitationIds: readonly string[],
-): Promise<{ id: string; position: number | null }[]> {
-  if (invitationIds.length === 0) return [];
-  const rows = await selectFrom(
+): Promise<CardPosition[]> {
+  if (invitationIds.length === 0) return Promise.resolve([]);
+  return selectFrom(
     invitations,
     and(cardKind(), notSoftDeleted(invitations), inArray(invitations.id, [...invitationIds])),
-  );
-  return rows.map((row) => ({ id: row.id, position: row.position }));
+  ).then((rows) => rows.map((row) => ({ id: row.id, position: row.position })));
 }
 
 /** A batch's attempts, latest first: the key is ascending, so the instant is negated, as the other lists' is. */

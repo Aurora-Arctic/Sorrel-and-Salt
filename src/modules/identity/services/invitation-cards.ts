@@ -13,7 +13,7 @@ import {
   findManyByIds,
   withAudit,
 } from '../../../db/repository';
-import type { CardAttemptRow, CardBatchTotal, CardRow } from '../../../db/repository';
+import type { CardAttemptRow, CardBatchTotal, CardPosition, CardRow } from '../../../db/repository';
 import { NotFound, ValidationError } from '../../../lib/errors';
 import { CARDS_PER_SHEET, MAX_SHEETS_PER_BATCH } from '../../../lib/invitation-cards/limits';
 import { newCardToken } from '../../../lib/invitation-token';
@@ -116,7 +116,7 @@ export async function countCardBatches(
 export async function cardPositions(
   session: Session,
   invitationIds: readonly string[],
-): Promise<{ id: string; position: number | null }[]> {
+): Promise<CardPosition[]> {
   const admin = assertSiteAdmin(session, REFUSAL);
   return findCardPositions(admin, invitationIds);
 }
