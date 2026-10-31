@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import SupportRequests from '@/components/SupportRequests';
 import type {
   SupportRequestDetailEntry,
@@ -72,6 +73,9 @@ const timeOutSubmit = () => within(dialog()).getByRole('button', { name: 'Time O
 
 // The question the button opens, answered.
 const confirmTimeOut = () => fireEvent.click(screen.getByRole('button', { name: 'Time Out' }));
+// The question Resolve opens over the dialog, a group named by its text.
+const resolveQuestion = () => screen.findByRole('group', { name: /sender sees it as resolved/ });
+
 const BASE = { id: 'u0', name: 'Bea Hollis', email: 'bea@example.test' };
 
 beforeEach(() => {
@@ -260,7 +264,7 @@ describe('Issue', () => {
 describe('The sender', () => {
   it('links the name to the user modal over this page for an admin, keeping the open request, in the list and in the request', () => {
     render(<SupportRequests requests={[ROW]} viewer={ADMIN} />);
-    const row = screen.getByRole('row', { name: /Wobbling Cauldron/ });
+    const row = screen.getByRole('row', { name: /The moon icon is missing/ });
     expect(within(row).getByRole('link', { name: 'Ada Wortley' })).toHaveAttribute(
       'href',
       '/admin/support?user=u1',
@@ -275,7 +279,7 @@ describe('The sender', () => {
 
   it('leaves the name as text for a curator, in the list and in the request', () => {
     render(<SupportRequests requests={[{ ...ROW, curatorVisible: true }]} viewer={CURATOR} />);
-    const row = screen.getByRole('row', { name: /Wobbling Cauldron/ });
+    const row = screen.getByRole('row', { name: /The moon icon is missing/ });
     expect(within(row).queryByRole('link', { name: 'Ada Wortley' })).toBeNull();
     expect(within(row).getByText('Ada Wortley')).toBeInTheDocument();
     cleanup();
@@ -285,7 +289,8 @@ describe('The sender', () => {
 
   it('calls a deleted account that, without a link', () => {
     open(ADMIN, { sender: null });
-    expect(within(dialog()).getByText('Deleted account')).toBeInTheDocument();
+    expect(within(dialog()).getAllByText('Deleted account').length).toBeGreaterThan(0);
+    expect(within(dialog()).queryByRole('link', { name: 'Deleted account' })).toBeNull();
   });
 });
 
@@ -306,19 +311,14 @@ describe('Resolve', () => {
     mockGraphQLMutation('ResolveSupportRequest', sent);
     open(ADMIN);
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Resolve' }));
-    const question = await screen.findByRole('dialog', { name: 'Resolve This Request?' });
+    const question = await resolveQuestion();
     expect(sent).not.toHaveBeenCalled();
 
     fireEvent.click(within(question).getByRole('button', { name: 'Cancel' }));
     expect(sent).not.toHaveBeenCalled();
 
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Resolve' }));
-    fireEvent.click(
-      within(await screen.findByRole('dialog', { name: 'Resolve This Request?' })).getByRole(
-        'button',
-        { name: 'Resolve' },
-      ),
-    );
+    fireEvent.click(within(await resolveQuestion()).getByRole('button', { name: 'Resolve' }));
     await waitFor(() => expect(sent).toHaveBeenCalledTimes(1));
   });
 });
@@ -398,7 +398,9 @@ describe('The list', () => {
         viewer={ADMIN}
       />,
     );
-    const names = screen.getAllByRole('link').map((link) => link.textContent);
+    const names = screen
+      .getAllByRole('link', { name: /missing from/ })
+      .map((link) => link.textContent);
     expect(new Set(names).size).toBe(2);
     expect(screen.getByRole('link', { name: /missing from Ada Wortley/ })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /missing from Bea Hollis/ })).toBeInTheDocument();
@@ -441,7 +443,9 @@ describe('Dates', () => {
         { id: 'p1', body: 'Seen.', author: null, createdAt: new Date('2026-10-27T11:05:00Z') },
       ],
     });
-    expect(within(dialog()).getAllByText('27 October 2026, 11:05 am')).toHaveLength(2);
+    const d = within(dialog());
+    expect(d.getAllByText('27 October 2026, 11:05 am')).toHaveLength(1);
+    expect(d.getAllByText(/^27 Oct\b.*11:05 am$/)).toHaveLength(1);
   });
 });
 
@@ -484,7 +488,6 @@ describe('Status line in the dialog', () => {
   it.each([
     ['assign', 'AssignSupportRequest', 'Request assigned.'],
     ['share', 'SetSupportRequestCuratorVisible', 'Request shared with curators.'],
-    ['resolve', 'ResolveSupportRequest', 'Request resolved.'],
     ['link', 'SetSupportRequestIssueUrl', 'Issue address saved.'],
   ])('announces %s', async (action, operation, message) => {
     mockGraphQLMutation(operation, () => ({ saved: { __typename: 'Saved', id: 'r1' } }));
@@ -494,15 +497,6 @@ describe('Status line in the dialog', () => {
       await userEvent.selectOptions(d.getByLabelText('Assigned To'), 'Curtis');
     if (action === 'share')
       fireEvent.click(d.getByRole('switch', { name: 'Shared With Curators' }));
-    if (action === 'resolve') {
-      fireEvent.click(d.getByRole('button', { name: 'Resolve' }));
-      fireEvent.click(
-        within(await screen.findByRole('dialog', { name: 'Resolve This Request?' })).getByRole(
-          'button',
-          { name: 'Resolve' },
-        ),
-      );
-    }
     if (action === 'link') {
       fireEvent.change(d.getByLabelText('GitHub Issue'), {
         target: { value: 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/9' },
@@ -510,5 +504,28 @@ describe('Status line in the dialog', () => {
       fireEvent.click(d.getByRole('button', { name: 'Save Address' }));
     }
     await waitFor(() => expect(status()).toHaveTextContent(message));
+  });
+
+  it('announces resolve on the page status line, since the confirm sits over the dialog', async () => {
+    mockGraphQLMutation('ResolveSupportRequest', () => ({
+      saved: { __typename: 'Saved', id: 'r1' },
+    }));
+    render(
+      <StatusRegionProvider>
+        <SupportRequests
+          requests={[ROW]}
+          viewer={ADMIN}
+          opened={DETAIL}
+          assignees={[{ id: 'curator-1', name: 'Curtis' }]}
+        />
+      </StatusRegionProvider>,
+    );
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Resolve' }));
+    fireEvent.click(within(await resolveQuestion()).getByRole('button', { name: 'Resolve' }));
+    await waitFor(() =>
+      expect(
+        screen.getAllByRole('status').some((o) => /Request resolved./.test(o.textContent ?? '')),
+      ).toBe(true),
+    );
   });
 });
