@@ -208,11 +208,14 @@ describe('AdminCards', () => {
     expect(times[0]).toHaveAttribute('datetime', '2026-10-28T08:00:00.000Z');
     expect(times[1]).toHaveAttribute('datetime', '2026-10-29T09:30:00.000Z');
     expect(within(list).getByRole('columnheader', { name: 'First' })).toBeInTheDocument();
-    expect(within(list).queryByRole('columnheader', { name: 'Email' })).toBeNull();
-    // The email sits in the Account cell, under the name.
-    expect(
-      within(within(row).getAllByRole('cell')[0]).getByText('other@example.test'),
-    ).toBeInTheDocument();
+    // Name and Email are columns of their own, in place of one Account column.
+    const headings = within(list).getAllByRole('columnheader');
+    expect(headings[0]).toHaveTextContent('Name');
+    expect(headings[1]).toHaveTextContent('Email');
+    expect(within(list).queryByRole('columnheader', { name: 'Account' })).toBeNull();
+    const cells = within(row).getAllByRole('cell');
+    expect(within(cells[0]).getByRole('link', { name: 'Other Wort' })).toBeInTheDocument();
+    expect(cells[1]).toHaveTextContent('other@example.test');
   });
 
   it("opens the account's user modal from its name, headed with the name and email", async () => {
@@ -286,6 +289,9 @@ describe('AdminCards', () => {
     expect(within(list).getByText('Accepted by another account')).toBeInTheDocument();
     expect(within(list).getByText('Unknown')).toBeInTheDocument();
     expect(within(list).queryByRole('link')).toBeNull();
+    // The Email cell is empty, not a placeholder.
+    const removed = within(list).getByText('Removed account').closest('tr') as HTMLElement;
+    expect(within(removed).getAllByRole('cell')[1]).toBeEmptyDOMElement();
   });
 
   it('lists a row per batch with its counts, and Revoke Batch only while a card is pending', () => {
@@ -558,10 +564,15 @@ describe('AdminArrivals', () => {
     );
 
     const [head, first, second] = screen.getAllByRole('row');
-    expect(within(head).queryByText('Email')).toBeNull();
+    const headings = within(head).getAllByRole('columnheader');
+    expect(headings[0]).toHaveTextContent('Name');
+    expect(headings[1]).toHaveTextContent('Email');
+    expect(within(head).queryByRole('columnheader', { name: 'Account' })).toBeNull();
     expect(within(head).getByText('Accepted On')).toBeInTheDocument();
     expect(within(head).getByText('Covens Owned')).toBeInTheDocument();
-    expect(within(first).getByText('wort@example.test')).toBeInTheDocument();
+    const cells = within(first).getAllByRole('cell');
+    expect(within(cells[0]).getByRole('link', { name: 'Wort Tester' })).toBeInTheDocument();
+    expect(cells[1]).toHaveTextContent('wort@example.test');
     expect(within(first).getByText('Testwort Coven, Second Coven')).toBeInTheDocument();
     expect(within(second).getByText('None yet')).toBeInTheDocument();
   });

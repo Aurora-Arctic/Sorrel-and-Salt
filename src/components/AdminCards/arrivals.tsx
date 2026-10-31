@@ -51,27 +51,19 @@ const AdminArrivals = ({
         <StackTable
           columns={[
             {
-              heading: 'Account',
-              cell: (arrival) => (
-                <>
-                  {arrival.account ? (
-                    <UserLink
-                      href={arrival.account.openHref}
-                      heading={arrival.account.heading}
-                      name={arrival.accountName}
-                    />
-                  ) : (
-                    arrival.accountName
-                  )}
-                  {arrival.accountEmail && (
-                    <>
-                      <br />
-                      <span className="admin-cards__none">{arrival.accountEmail}</span>
-                    </>
-                  )}
-                </>
-              ),
+              heading: 'Name',
+              cell: (arrival) =>
+                arrival.account ? (
+                  <UserLink
+                    href={arrival.account.openHref}
+                    heading={arrival.account.heading}
+                    name={arrival.accountName}
+                  />
+                ) : (
+                  arrival.accountName
+                ),
             },
+            { heading: 'Email', cell: (arrival) => arrival.accountEmail },
             {
               heading: 'Accepted On',
               className: 'admin-cards__fact',

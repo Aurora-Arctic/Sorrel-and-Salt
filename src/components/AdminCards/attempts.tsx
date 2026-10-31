@@ -121,30 +121,23 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
         <StackTable
           columns={[
             {
-              heading: 'Account',
+              heading: 'Name',
               cell: (a) =>
                 a.accountId && a.accountName ? (
-                  <>
-                    <UserLink
-                      href={userListHref(NO_FILTER, undefined, a.accountId, 'invitation-cards')}
-                      heading={{
-                        eyebrow: 'User',
-                        title: a.accountName,
-                        qualifier: <span className="user-list__modal-email">{a.accountEmail}</span>,
-                      }}
-                      name={a.accountName}
-                    />
-                    {a.accountEmail && (
-                      <>
-                        <br />
-                        <span className="admin-cards__none">{a.accountEmail}</span>
-                      </>
-                    )}
-                  </>
+                  <UserLink
+                    href={userListHref(NO_FILTER, undefined, a.accountId, 'invitation-cards')}
+                    heading={{
+                      eyebrow: 'User',
+                      title: a.accountName,
+                      qualifier: <span className="user-list__modal-email">{a.accountEmail}</span>,
+                    }}
+                    name={a.accountName}
+                  />
                 ) : (
                   'Removed account'
                 ),
             },
+            { heading: 'Email', cell: (a) => (a.accountId && a.accountName ? a.accountEmail : '') },
             {
               heading: 'Card',
               cell: (a) => {
