@@ -3,6 +3,7 @@
 import { QrCode } from '@ark-ui/react/qr-code';
 import { type FormEvent, type ReactElement, useId, useState } from 'react';
 import { twoFactor, useSession } from '../../lib/auth-client';
+import { useLeaveGuard } from '../../lib/navigation';
 import { SITE_NAME } from '../../lib/site';
 import BusyButton from '../BusyButton';
 import { FieldShell, fieldDescription } from '../Field';
@@ -64,6 +65,9 @@ const codesText = ({ backupCodes }: Enrolment): string => backupCodes.join('\n')
 function groupedKey(key: string): string {
   return key.replace(/(.{4})(?=.)/g, '$1 ');
 }
+
+const LEAVE_QUESTION =
+  "You haven't saved your backup codes, and they won't be shown again. Leave anyway?";
 
 const CODES_FILE = 'sorrel-and-salt-backup-codes.txt';
 
@@ -139,11 +143,18 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
   const tipId = useId();
   const [on, setOn] = useState(enabled);
   const [enrolment, setEnrolment] = useState<Enrolment>();
+  // Whether Copy, Download or Print has been pressed for these codes, after which leaving needs no warning.
+  const [kept, setKept] = useState(false);
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
   const [pending, setPending] = useState(false);
   const [problem, setProblem] = useState<Refusal>({});
   const [saved, setSaved] = useState<'on' | 'off'>();
+
+  // The codes are shown once: leaving before any is saved asks first (a tab close or reload gets the browser's own question).
+  useLeaveGuard(enrolment !== undefined && !kept, (proceed) => {
+    if (window.confirm(LEAVE_QUESTION)) proceed();
+  });
 
   const entered = code.replace(/\s/g, '');
 
@@ -174,6 +185,7 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
       return;
     }
     setPassword('');
+    setKept(false);
     setEnrolment({ totpURI: data.totpURI, backupCodes: data.backupCodes });
   };
 
@@ -246,17 +258,26 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
                 <CodeAction
                   label="Copy"
                   icon={<CopyIcon />}
-                  onClick={() => void navigator.clipboard?.writeText(codesText(enrolment))}
+                  onClick={() => {
+                    setKept(true);
+                    void navigator.clipboard?.writeText(codesText(enrolment));
+                  }}
                 />
                 <CodeAction
                   label="Download"
                   icon={<DownloadIcon />}
-                  onClick={() => downloadCodes(codesText(enrolment))}
+                  onClick={() => {
+                    setKept(true);
+                    downloadCodes(codesText(enrolment));
+                  }}
                 />
                 <CodeAction
                   label="Print"
                   icon={<PrintIcon />}
-                  onClick={() => printCodes(enrolment.backupCodes, email)}
+                  onClick={() => {
+                    setKept(true);
+                    printCodes(enrolment.backupCodes, email);
+                  }}
                 />
               </div>
             </li>

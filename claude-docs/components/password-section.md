@@ -78,7 +78,10 @@ password sign-ins alone ([`auth/two-factor.md`](../auth/two-factor.md)).
   tip above, centred under the codes panel), each giving one code
   per line. Print opens a window of its own with a heading ("Sorrel & Salt Backup Codes"), the
   account's email, the print date, a line saying what the codes are for, and the codes in the same two centred columns. "Code From Your App" and "Confirm and Turn On" (`twoFactor.verifyTotp`)
-  turn it on; Cancel leaves it off. Two-factor is not on until that code is
+  turn it on; Cancel leaves it off. While the codes are on screen and none of Copy, Download or Print has
+  been pressed, the page holds a leave guard (`useLeaveGuard`): closing the tab or reloading raises the
+  browser's own question, and an in-app navigation through the app's navigation provider (the Account tabs,
+  links built on it) asks with `window.confirm`. Back and the browser's own history moves are not held. Two-factor is not on until that code is
   confirmed.
 - **On**, it asks for the password and offers "Turn Off Two-Factor"
   (`twoFactor.disable`), a destructive button.
