@@ -47,6 +47,7 @@ import {
   SOOT,
   type TextItem,
 } from './layout';
+import { CARDS_PER_SHEET } from './limits';
 import { qrShapes } from './qr';
 import { glyphAdvances } from './text';
 import type { CardAssets, CardSheetsInput, RoundedSquare } from './types';
@@ -56,7 +57,6 @@ import type { CardAssets, CardSheetsInput, RoundedSquare } from './types';
 
 const PT = 72;
 export const PAGE = { width: 8.5 * PT, height: 11 * PT };
-export const CARDS_PER_SHEET = 9;
 const TRIM = { width: 3.5 * PT, height: 2.625 * PT };
 const BLEED = 0.125 * PT;
 /** The block of nine cards and its bleed: 1/8 in from the page's ends, centred between its sides. */

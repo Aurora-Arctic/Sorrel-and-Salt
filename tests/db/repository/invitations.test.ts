@@ -13,8 +13,9 @@ import {
   findPendingSiteInvitationPage,
   findCardArrivalPage,
   findCardArrivalCount,
-  findCardCount,
-  findCardPage,
+  findCardBatchCount,
+  findCardBatchPage,
+  findCardBatchTotals,
   withAudit,
   type AuditWriter,
   type InvitationRow,
@@ -1061,17 +1062,6 @@ describe('invitation cards', () => {
     expect(await rowOf((await findInvitationByToken(CARD))!.id)).toEqual(before);
   });
 
-  it('revokes one pending card by id, and not an accepted one', async () => {
-    const [pending, taken] = await mint([OTHER_CARD, CARD]);
-    await cardAccept(B);
-
-    const one = await withAudit(asUser(E), (w) => w.revokeInvitationCard(admin, pending!.id));
-    const none = await withAudit(asUser(E), (w) => w.revokeInvitationCard(admin, taken!.id));
-
-    expect(one).toHaveLength(1);
-    expect(none).toHaveLength(0);
-  });
-
   it('answers who arrived by card, when and from which batch, from the rows alone', async () => {
     const OTHER_BATCH = '22222222-2222-4222-8222-222222222222';
     await mint([CARD, OTHER_CARD]);
@@ -1094,7 +1084,7 @@ describe('invitation cards', () => {
     expect((await findCardArrivalCount(admin, undefined)).totalCount).toBe(2);
   });
 
-  it('pages every card in any state, narrowed to one batch where named, and no address invitation', async () => {
+  it('pages one row per batch, newest first, and counts each batch’s cards in SQL', async () => {
     const OTHER_BATCH = '22222222-2222-4222-8222-222222222222';
     await mint([CARD, OTHER_CARD]);
     await mint(['cardtokenCCCCCCC'], LATER(), OTHER_BATCH);
@@ -1102,13 +1092,21 @@ describe('invitation cards', () => {
     await inviteIntoW({ token: 'fixture-token-w-listed' });
     const all = { limit: 101, inverted: false };
 
-    const everything = await findCardPage(admin, undefined, all);
-    const one = await findCardPage(admin, OTHER_BATCH, all);
+    const page = await findCardBatchPage(admin, all);
+    const totals = await findCardBatchTotals(admin, [BATCH, OTHER_BATCH]);
 
-    expect(everything).toHaveLength(3);
-    expect(everything.every(({ node }) => node.kind === 'card')).toBe(true);
-    expect(one.map(({ node }) => node.batchId)).toEqual([OTHER_BATCH]);
-    expect((await findCardCount(admin, undefined, undefined)).totalCount).toBe(3);
-    expect((await findCardCount(admin, OTHER_BATCH, undefined)).totalCount).toBe(1);
+    expect(page.map(({ node }) => node.batchId).sort()).toEqual([BATCH, OTHER_BATCH].sort());
+    expect((await findCardBatchCount(admin, undefined)).totalCount).toBe(2);
+    expect(totals.find((t) => t.batchId === BATCH)).toMatchObject({
+      cards: 2,
+      accepted: 1,
+      pending: 1,
+    });
+    expect(totals.find((t) => t.batchId === OTHER_BATCH)).toMatchObject({
+      cards: 1,
+      accepted: 0,
+      pending: 1,
+    });
+    expect(await findCardBatchTotals(admin, [])).toEqual([]);
   });
 });

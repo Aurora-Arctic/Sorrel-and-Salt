@@ -668,24 +668,24 @@
       "breakpoints": true
     },
     {
-      "idx": 95,
-      "version": "7",
-      "when": 1793392724484,
-      "tag": "0095_invitation-cards",
-      "breakpoints": true
-    },
-    {
       "idx": 96,
       "version": "7",
-      "when": 1793393108604,
-      "tag": "0096_card-privilege-route",
+      "when": 1793405000000,
+      "tag": "0096_invitation-cards",
       "breakpoints": true
     },
     {
       "idx": 97,
       "version": "7",
-      "when": 1793402476471,
-      "tag": "0099_card-invitation-attempts",
+      "when": 1793405060000,
+      "tag": "0097_card-privilege-route",
+      "breakpoints": true
+    },
+    {
+      "idx": 98,
+      "version": "7",
+      "when": 1793405120000,
+      "tag": "0098_card-invitation-attempts",
       "breakpoints": true
     }
   ]

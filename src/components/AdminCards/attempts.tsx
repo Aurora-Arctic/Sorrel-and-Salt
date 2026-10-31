@@ -8,17 +8,18 @@ import { inUtc } from '../../lib/utc';
 import StackTable from '../DataTable';
 import { ModalButton } from '../Modal';
 import Notice from '../Notice';
+import { batchName } from './batches';
 import type { CardAttemptEntry, CardAttemptReason } from './types';
 
-// The refused opens of one card: who tried, why it was refused, how often, and when last. The admin opens it
-// from the Cards tab, and the page is read when it opens, so the tab itself carries only the count
+// The refused opens of one batch's cards: who tried, why it was refused, how often, and when last. The admin opens it
+// from the Invitation Cards tab, and the page is read when it opens, so the tab itself carries only the count
 // (claude-docs/components/admin-cards.md, "Attempts").
 
 const PAGE_SIZE = 20;
 
 const CardAttemptsDocument = graphql(`
-  query InvitationCardAttempts($invitationId: ID!, $first: Int!, $after: String) {
-    invitationCardAttempts(invitationId: $invitationId, first: $first, after: $after) {
+  query InvitationCardAttempts($batchId: ID!, $first: Int!, $after: String) {
+    invitationCardAttempts(batchId: $batchId, first: $first, after: $after) {
       edges {
         node {
           id
@@ -45,7 +46,7 @@ const REASON_LABEL: Record<CardAttemptReason, string> = {
   accepted: 'Accepted By Another Account',
 };
 
-const AttemptList = ({ cardId }: { cardId: string }): ReactElement => {
+const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
   const [attempts, setAttempts] = useState<CardAttemptEntry[]>([]);
   const [after, setAfter] = useState<string | null>();
   const [more, setMore] = useState(false);
@@ -57,7 +58,7 @@ const AttemptList = ({ cardId }: { cardId: string }): ReactElement => {
   useEffect(() => {
     let current = true;
     graphqlRequest(CardAttemptsDocument, {
-      invitationId: cardId,
+      batchId,
       first: PAGE_SIZE,
       after: asked,
     })
@@ -87,7 +88,7 @@ const AttemptList = ({ cardId }: { cardId: string }): ReactElement => {
     return () => {
       current = false;
     };
-  }, [cardId, asked]);
+  }, [batchId, asked]);
 
   if (failed) return <Notice kind="error">{GENERIC_FAILURE}</Notice>;
   return (
@@ -125,15 +126,15 @@ const AttemptList = ({ cardId }: { cardId: string }): ReactElement => {
   );
 };
 
-/** The View button beside a card's count: a dialog listing the refused opens. */
-const CardAttempts = ({ cardId }: { cardId: string }): ReactElement => (
+/** The View button beside a batch's count: a dialog listing the refused opens of its cards. */
+const CardAttempts = ({ batchId }: { batchId: string }): ReactElement => (
   <ModalButton
     label="View"
-    ariaLabel={`View Attempts, card ${cardId.slice(0, 8)}`}
+    ariaLabel={`View Refused Opens, batch ${batchName(batchId)}`}
     className="btn btn--small"
     title="Refused Opens"
   >
-    {() => <AttemptList cardId={cardId} />}
+    {() => <AttemptList batchId={batchId} />}
   </ModalButton>
 );
 

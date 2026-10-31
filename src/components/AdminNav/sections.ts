@@ -63,8 +63,8 @@ export const ADMIN_PAGES = {
       { href: '/admin/users', label: 'Users', filtered: true },
       { href: '/admin/invitations', label: 'Invitations' },
       // Printed cards that admit one account each, and who arrived by them.
-      { href: '/admin/cards', label: 'Cards' },
-      { href: '/admin/arrivals', label: 'Arrivals' },
+      { href: '/admin/invitation-cards', label: 'Invitation Cards' },
+      { href: '/admin/card-sign-ups', label: 'Card Sign-Ups' },
       // Who holds which privilege, and who changed it.
       { href: '/admin/privilege-changes', label: 'Privilege Changes', filtered: true },
     ],

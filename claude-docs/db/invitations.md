@@ -27,7 +27,7 @@ undeclared the two and MB.203 dropped them (`0059`). Why one table, why it is
   `invitations_kind_shape` requires an `address` row's `email` and a `card`'s
   `email`, `workspace_id`, `role` and `site_role` to be null. A card's token is
   returned once, at minting, to the admin who mints it; only its hash is stored.
-  Migration `0095_invitation-cards.sql`. Why a shape of this table rather than a
+  Migration `0096_invitation-cards.sql`. Why a shape of this table rather than a
   new one:
   [`m15.17-invitation-cards.md`](../design-decisions/m15.17-invitation-cards.md).
 - **`invitations_tier`**, `kind = 'card' or (workspace_id is null) = (role is null)`:
@@ -473,7 +473,7 @@ column is nullable and nothing would read it until the behaviour landed with it.
 - **Writes.** The table is marked `namedWrites`, so only a named repository writer may write it. `recordCardAttempt` (identity service `invitation-acceptance.ts`) is its one writer: an upsert on `(invitation_id, user_id, reason)` that adds 1 to `attempts` and sets `last_attempted_at` to now.
 - **What is recorded.** A signed-in account with a verified address opening a card link that is refused as `revoked`, `expired` or `accepted` by another account. The dead-link order of the acceptance service picks the one reason.
 - **What is not.** Nothing is written for no session, an unverified account, an unknown token, a token that is not a card, a card still pending, or the account that accepted the card itself. The service returns quietly for each, so a probe learns nothing.
-- **Reading.** `findCardAttemptPage` and `findCardAttemptCount` (site admin only) list one card's rows, most recent first; `findCardAttemptTotals` sums `attempts` per card for the Cards tab's count.
+- **Reading.** `findCardAttemptPage` and `findCardAttemptCount` (site admin only) list one batch's rows (every card of the batch), most recent first; `findCardBatchTotals` sums `attempts` over a batch's cards for the Invitation Cards tab's count.
 
 ## Invitation acceptance details
 
@@ -487,7 +487,7 @@ column is nullable and nothing would read it until the behaviour landed with it.
 - **Workspace tier.** It seats the person at the invited role. A removed member's row is revived, since `(workspace_id, user_id)` is the key and a second insert would collide; a live member is seated nowhere and the invitation only stamped. It also sets `canCreateWorkspace`, declared the same way, which re-grants it to a person an admin revoked; one who holds it gets no ledger row. The live seat is read before the transaction. If the row is soft-deleted since the read, the stamp rolls back with it.
 - **Decline.** `declineInvitationById` kills the invitation from now on: its link reports declined, the coven's owner sees it marked declined until they remove it, and nothing is granted or seated.
 - **Card kind.** A `kind = 'card'` row has no address, coven or role. The accept predicate admits any account whose `users.email_verified` is true and says nothing of the address; it is ANDed with `pendingInvitation`, so the first accept stamps the row and a second matches nothing. `checkInvitation` reports an unverified account as `unverified` (the email page) and a used, expired or revoked card with its own reason, none naming a batch. Accepting sets `canCreateWorkspace` only, with `via: 'card'` in the privilege ledger: no seat and no site role. The by-id path and the received list read address-kind workspace rows only, so a card is never returned by them.
-- **Card arrivals.** `findCardArrivalPage` and `findCardArrivalCount` (site admin only) answer "which accounts arrived by card, when, and from which batch" from the `invitations` rows alone: accepted card rows ordered by `accepted_at`, newest first. `revokeInvitationCard` and `revokeInvitationCardBatch` touch pending cards only, so an accepted card row, the permanent record of an arrival, is never changed. `insertInvitationCards` takes plaintext tokens from `newCardToken` (`src/lib/invitation-token.ts`: 16 characters, 57-symbol alphabet without `0`, `O`, `1`, `l`, `I`) and stores only their hashes.
+- **Card arrivals.** `findCardArrivalPage` and `findCardArrivalCount` (site admin only) answer "which accounts arrived by card, when, and from which batch" from the `invitations` rows alone: accepted card rows ordered by `accepted_at`, newest first. `revokeInvitationCardBatch` touches pending cards only; `findCardBatchPage`, `findCardBatchCount` and `findCardBatchTotals` list one row per batch with its counts, so an accepted card row, the permanent record of an arrival, is never changed. `insertInvitationCards` takes plaintext tokens from `newCardToken` (`src/lib/invitation-token.ts`: 16 characters, 57-symbol alphabet without `0`, `O`, `1`, `l`, `I`) and stores only their hashes.
 - **Short link.** `/i/[token]` is public in `src/proxy.ts` and renders the same `InvitationPanel` as `/invite/[token]`.
 
 ## Coven invitation service details

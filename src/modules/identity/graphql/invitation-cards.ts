@@ -7,9 +7,8 @@ import {
   cardState,
   listCardAttempts,
   listCardArrivals,
-  listInvitationCards,
+  listCardBatches,
   mintInvitationCards,
-  revokeInvitationCard,
   revokeInvitationCardBatch,
 } from '../services/invitation-cards';
 import { recordCardAttempt } from '../services/invitation-acceptance';
@@ -51,11 +50,6 @@ export const InvitationCardRef = builder.objectRef<CardRow>('InvitationCard').im
         'The account that accepted it; null while it is unaccepted or the account is gone.',
       resolve: (row, _args, { loaders }) =>
         row.acceptedBy ? loaders.usersByIdForAdmin.load(row.acceptedBy) : null,
-    }),
-    attemptCount: t.int({
-      description:
-        'How many times signed-in accounts opened its link and were refused, all accounts and reasons added. Site admins only.',
-      resolve: (row, _args, { loaders }) => loaders.cardAttemptTotals.load(row.id),
     }),
     audit: t.field({ type: AuditInfo, resolve: (row) => row }),
   }),
@@ -99,14 +93,56 @@ const MintedCardsRef = builder.objectRef<MintedCards>('MintedInvitationCards').i
   }),
 });
 
-builder.queryField('invitationCards', (t) =>
+export interface CardBatch {
+  batchId: string;
+  mintedAt: Date;
+  expiresAt: Date;
+}
+
+const CardBatchRef = builder.objectRef<CardBatch>('InvitationCardBatch').implement({
+  description: 'The cards minted together: one sheet count, one expiry. Counts are summed in SQL.',
+  fields: (t) => ({
+    batchId: t.exposeID('batchId'),
+    mintedAt: t.expose('mintedAt', { type: 'DateTime' }),
+    expiresAt: t.expose('expiresAt', { type: 'DateTime' }),
+    cards: t.int({
+      description: 'How many cards the batch holds.',
+      resolve: async (batch, _args, { loaders }) =>
+        (await loaders.cardTotalsByBatch.load(batch.batchId)).cards,
+    }),
+    accepted: t.int({
+      description: 'How many of its cards were accepted.',
+      resolve: async (batch, _args, { loaders }) =>
+        (await loaders.cardTotalsByBatch.load(batch.batchId)).accepted,
+    }),
+    refusedOpens: t.int({
+      description:
+        'How many times signed-in accounts opened a link of the batch and were refused, all cards, accounts and reasons added.',
+      resolve: async (batch, _args, { loaders }) =>
+        (await loaders.cardTotalsByBatch.load(batch.batchId)).attempts,
+    }),
+    pending: t.int({
+      description: 'How many of its cards can still be accepted: not accepted, revoked or expired.',
+      resolve: async (batch, _args, { loaders }) =>
+        (await loaders.cardTotalsByBatch.load(batch.batchId)).pending,
+    }),
+  }),
+});
+
+builder.queryField('invitationCardBatches', (t) =>
   t.pagedConnection({
-    type: InvitationCardRef,
-    description: 'Every card in any state, newest first, optionally one batch. Site admins only.',
-    args: { batchId: t.arg.id({ required: false }) },
+    type: CardBatchRef,
+    description: 'The batches of cards, newest first. Site admins only.',
     authScopes: { admin: true },
-    resolve: (_root, { batchId }, page, context) =>
-      listInvitationCards(sessionOf(context), batchId ?? undefined, page),
+    resolve: async (_root, _args, page, context) =>
+      (await listCardBatches(sessionOf(context), page)).map((entry) => ({
+        ...entry,
+        node: {
+          batchId: entry.node.batchId,
+          mintedAt: entry.node.createdAt,
+          expiresAt: entry.node.expiresAt,
+        },
+      })),
   }),
 );
 
@@ -123,11 +159,11 @@ builder.queryField('cardArrivals', (t) =>
 builder.queryField('invitationCardAttempts', (t) =>
   t.pagedConnection({
     type: CardAttemptRef,
-    description: "One card's refused opens, latest first. Site admins only.",
-    args: { invitationId: t.arg.id({ required: true }) },
+    description: "A batch's refused opens, latest first. Site admins only.",
+    args: { batchId: t.arg.id({ required: true }) },
     authScopes: { admin: true },
-    resolve: (_root, { invitationId }, page, context) =>
-      listCardAttempts(sessionOf(context), invitationId, page),
+    resolve: (_root, { batchId }, page, context) =>
+      listCardAttempts(sessionOf(context), batchId, page),
   }),
 );
 
@@ -144,24 +180,14 @@ builder.mutationField('createInvitationCards', (t) =>
   t.field({
     type: MintedCardsRef,
     description:
-      'Mints `count` cards sharing one batch and one expiry, and answers each token once. Site admins only; a batch holds at most 500.',
+      'Mints `sheets` sheets of nine cards sharing one batch and one expiry, and answers each token once. Site admins only; a batch is at most 55 sheets.',
     args: {
-      count: t.arg.int({ required: true }),
+      sheets: t.arg.int({ required: true }),
       expiresAt: t.arg({ type: 'DateTime', required: true }),
     },
     authScopes: { admin: true },
-    resolve: (_root, { count, expiresAt }, context) =>
-      mintInvitationCards(sessionOf(context), count, expiresAt),
-  }),
-);
-
-builder.mutationField('revokeInvitationCard', (t) =>
-  t.field({
-    type: InvitationCardRef,
-    description: 'Withdraws one pending card. Site admins only.',
-    args: { id: t.arg.id({ required: true }) },
-    authScopes: { admin: true },
-    resolve: (_root, { id }, context) => revokeInvitationCard(sessionOf(context), id),
+    resolve: (_root, { sheets, expiresAt }, context) =>
+      mintInvitationCards(sessionOf(context), sheets, expiresAt),
   }),
 );
 

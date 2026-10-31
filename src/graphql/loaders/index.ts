@@ -6,7 +6,7 @@ import {
   workingCountBySpell,
 } from '@/modules/grimoire';
 import {
-  cardAttemptTotals,
+  cardTotalsByBatch,
   providersByUser,
   usersById,
   usersByIdForAdmin,
@@ -44,7 +44,7 @@ const LOADERS = {
   providersByUser,
   usersById,
   usersByIdForAdmin,
-  cardAttemptTotals,
+  cardTotalsByBatch,
   categoriesByIngredient,
   folkNamesByIngredient,
   ingredientsById,

@@ -14,7 +14,7 @@ import type {
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import { mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
 
-// The Cards and Arrivals tabs: render-only, so the page owns the read and this owns what an admin sees of it
+// The Invitation Cards and Card Sign-Ups tabs: render-only, so the page owns the read and this owns what an admin sees of it
 // and sends (claude-docs/components/admin-cards.md).
 
 vi.mock('@/lib/invitation-cards', () => ({
@@ -26,38 +26,25 @@ vi.mock('@/lib/invitation-cards', () => ({
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-const CARDS = [
+const BATCH_ONE = 'b1111111-0000-4000-8000-000000000001';
+const BATCHES = [
   {
-    id: 'c1aaaaaa-0000-4000-8000-000000000001',
-    batchId: 'b1111111-0000-4000-8000-000000000001',
-    state: 'pending' as const,
+    batchId: BATCH_ONE,
+    mintedAt: new Date('2026-10-01T00:00:00Z'),
     expiresAt: new Date('2026-12-01T00:00:00Z'),
-    accountName: null,
-    attemptCount: 0,
+    cards: 27,
+    accepted: 4,
+    pending: 20,
+    attempts: 3,
   },
   {
-    id: 'c2aaaaaa-0000-4000-8000-000000000002',
-    batchId: 'b1111111-0000-4000-8000-000000000001',
-    state: 'accepted' as const,
-    expiresAt: new Date('2026-12-01T00:00:00Z'),
-    accountName: 'Wort Tester',
-    attemptCount: 3,
-  },
-  {
-    id: 'c3aaaaaa-0000-4000-8000-000000000003',
     batchId: 'b2222222-0000-4000-8000-000000000002',
-    state: 'expired' as const,
-    expiresAt: new Date('2026-01-01T00:00:00Z'),
-    accountName: null,
-    attemptCount: 0,
-  },
-  {
-    id: 'c4aaaaaa-0000-4000-8000-000000000004',
-    batchId: 'b2222222-0000-4000-8000-000000000002',
-    state: 'revoked' as const,
-    expiresAt: new Date('2026-12-01T00:00:00Z'),
-    accountName: null,
-    attemptCount: 0,
+    mintedAt: new Date('2026-01-01T00:00:00Z'),
+    expiresAt: new Date('2026-02-01T00:00:00Z'),
+    cards: 9,
+    accepted: 9,
+    pending: 0,
+    attempts: 0,
   },
 ];
 
@@ -69,15 +56,19 @@ beforeEach(() => {
   router.refresh.mockClear();
 });
 
-afterEach(() => vi.useRealTimers());
+afterEach(() => {
+  vi.useRealTimers();
+  Reflect.deleteProperty(URL, 'createObjectURL');
+  Reflect.deleteProperty(URL, 'revokeObjectURL');
+  vi.restoreAllMocks();
+});
 
-// Opens the Expires On calendar and picks 1 December 2026, two months on from the clock.
-function pickFirstOfDecember() {
+// Opens the Expires On calendar and picks 1 February 2027, a month on from the default day, which the calendar opens at.
+function pickFirstOfFebruary() {
   fireEvent.click(within(dialog()).getByRole('button', { name: /Expires On/ }));
   fireEvent.click(screen.getByRole('button', { name: /Next Month/ }));
-  fireEvent.click(screen.getByRole('button', { name: /Next Month/ }));
   fireEvent.click(
-    within(screen.getByRole('grid')).getByRole('button', { name: /, 1 December 2026/ }),
+    within(screen.getByRole('grid')).getByRole('button', { name: /, 1 February 2027/ }),
   );
 }
 
@@ -85,37 +76,20 @@ const dialog = () => screen.getByRole('dialog', { name: 'Mint Cards' });
 const mint = () => within(dialog()).getByRole('button', { name: 'Mint Cards' });
 
 describe('AdminCards', () => {
-  it('lists each card with its state, and Revoke only on a pending one', () => {
-    render(<AdminCards cards={CARDS} />);
+  it('shows how many refused opens each batch has, and a way to the list only where there are some', () => {
+    render(<AdminCards batches={BATCHES} />);
 
-    const rows = screen.getAllByRole('row').slice(1);
-    expect(rows).toHaveLength(4);
-    for (const [row, state] of rows.map(
-      (row, i) => [row, ['Pending', 'Accepted', 'Expired', 'Revoked'][i]] as const,
-    )) {
-      expect(within(row).getByText(state)).toBeInTheDocument();
-    }
-    expect(within(rows[1]).getByText('Wort Tester')).toBeInTheDocument();
-    expect(within(rows[0]).getByRole('button', { name: /^Revoke card/ })).toBeInTheDocument();
-    for (const row of rows.slice(1)) {
-      expect(within(row).queryByRole('button', { name: /^Revoke card/ })).toBeNull();
-    }
+    const [first, second] = screen.getAllByRole('row').slice(1);
+    expect(within(first).getByText('3')).toBeInTheDocument();
+    expect(within(first).getByRole('button', { name: /^View Refused Opens/ })).toBeInTheDocument();
+    expect(within(second).queryByRole('button', { name: /^View Refused Opens/ })).toBeNull();
   });
 
-  it('shows how many refused opens each card has, and a way to the list only where there are some', () => {
-    render(<AdminCards cards={CARDS} />);
-
-    const rows = screen.getAllByRole('row').slice(1);
-    expect(within(rows[1]).getByText('3')).toBeInTheDocument();
-    expect(within(rows[1]).getByRole('button', { name: /^View Attempts/ })).toBeInTheDocument();
-    expect(within(rows[0]).queryByRole('button', { name: /^View Attempts/ })).toBeNull();
-  });
-
-  it('lists the account, the reason, the count and the latest time of one card refused opens', async () => {
+  it("lists the account, the reason, the count and the latest time of a batch's refused opens", async () => {
     mockGraphQLQuery<InvitationCardAttemptsQuery, InvitationCardAttemptsQueryVariables>(
       'InvitationCardAttempts',
-      ({ invitationId }) => {
-        expect(invitationId).toBe(CARDS[1].id);
+      ({ batchId }) => {
+        expect(batchId).toBe(BATCH_ONE);
         return {
           invitationCardAttempts: {
             edges: [
@@ -134,9 +108,9 @@ describe('AdminCards', () => {
         };
       },
     );
-    render(<AdminCards cards={CARDS} />);
+    render(<AdminCards batches={BATCHES} />);
 
-    fireEvent.click(screen.getByRole('button', { name: /^View Attempts/ }));
+    fireEvent.click(screen.getByRole('button', { name: /^View Refused Opens/ }));
 
     const list = await screen.findByRole('dialog', { name: 'Refused Opens' });
     expect(await within(list).findByText('Other Wort')).toBeInTheDocument();
@@ -146,16 +120,31 @@ describe('AdminCards', () => {
     expect(row.querySelector('time')).toHaveAttribute('datetime', '2026-10-29T09:30:00.000Z');
   });
 
+  it('lists a row per batch with its counts, and Revoke Batch only while a card is pending', () => {
+    render(<AdminCards batches={BATCHES} />);
+
+    const [first, second] = screen.getAllByRole('row').slice(1);
+    expect(screen.getAllByRole('row')).toHaveLength(3);
+    expect(within(first).getByText('b1111111')).toBeInTheDocument();
+    expect(within(first).getByText('27')).toBeInTheDocument();
+    expect(within(first).getByText('4')).toBeInTheDocument();
+    expect(
+      within(first).getByRole('button', { name: /^Revoke Batch b1111111/ }),
+    ).toBeInTheDocument();
+    expect(within(second).queryByRole('button', { name: /^Revoke Batch/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Revoke card/i })).toBeNull();
+  });
+
   it('opens the mint form by the address, from a link', () => {
     render(<MintCards />);
 
     expect(screen.getByRole('link', { name: 'Mint Cards' })).toHaveAttribute(
       'href',
-      '/admin/cards?mint',
+      '/admin/invitation-cards?mint',
     );
   });
 
-  it('keeps Mint Cards disabled until a count and an expiry date are both given, then sends them', async () => {
+  it('keeps Mint Cards disabled until a sheet count is given, shows the total, then sends the sheets', async () => {
     const calls: CreateInvitationCardsMutationVariables[] = [];
     mockGraphQLMutation<CreateInvitationCardsMutation, CreateInvitationCardsMutationVariables>(
       'CreateInvitationCards',
@@ -170,27 +159,23 @@ describe('AdminCards', () => {
         };
       },
     );
-    render(<AdminCards cards={[]} minting />);
+    render(<AdminCards batches={[]} minting />);
 
     expect(mint()).toBeDisabled();
-    fireEvent.change(within(dialog()).getByLabelText(/Number of Cards/), {
+    fireEvent.change(within(dialog()).getByLabelText(/Number of Sheets/), {
       target: { value: '3' },
     });
-    expect(mint()).toBeDisabled();
-    pickFirstOfDecember();
+    expect(within(dialog()).getByText('3 sheets: 27 cards')).toBeInTheDocument();
+    pickFirstOfFebruary();
     expect(mint()).toBeEnabled();
     fireEvent.click(mint());
 
     await waitFor(() => expect(calls).toHaveLength(1));
-    expect(calls[0]).toEqual({ count: 3, expiresAt: '2026-12-01T00:00:00.000Z' });
+    expect(calls[0]).toEqual({ sheets: 3, expiresAt: '2027-02-01T00:00:00.000Z' });
     expect(await within(dialog()).findByText(/cannot be shown again/)).toBeInTheDocument();
-    for (const n of [1, 2, 3]) {
-      expect(within(dialog()).getByRole('img', { name: `Code for Card ${n}` })).toBeInTheDocument();
-      expect(
-        within(dialog()).getByRole('button', { name: `Download Card ${n}` }),
-      ).toBeInTheDocument();
-    }
     expect(within(dialog()).getByRole('button', { name: 'Download PDF' })).toBeEnabled();
+    expect(within(dialog()).queryByRole('img')).toBeNull();
+    expect(within(dialog()).queryByRole('button', { name: /Download Card/ })).toBeNull();
   });
 
   it('revokes a batch after asking, naming the batch', async () => {
@@ -200,11 +185,11 @@ describe('AdminCards', () => {
       RevokeInvitationCardBatchMutationVariables
     >('RevokeInvitationCardBatch', (variables) => {
       calls.push(variables);
-      return { revokeInvitationCardBatch: [{ id: CARDS[0].id }] };
+      return { revokeInvitationCardBatch: [{ id: 'c1' }] };
     });
     render(
       <StatusRegionProvider>
-        <AdminCards cards={CARDS} />
+        <AdminCards batches={BATCHES} />
       </StatusRegionProvider>,
     );
 
@@ -213,10 +198,10 @@ describe('AdminCards', () => {
       within(screen.getByRole('dialog')).getByRole('button', { name: 'Revoke Batch' }),
     );
 
-    await waitFor(() => expect(calls).toEqual([{ batchId: CARDS[0].batchId }]));
+    await waitFor(() => expect(calls).toEqual([{ batchId: BATCH_ONE }]));
   });
 
-  it('builds the batch PDF from one link per code when Download PDF is pressed', async () => {
+  const mintTwo = async () => {
     mockGraphQLMutation<CreateInvitationCardsMutation, CreateInvitationCardsMutationVariables>(
       'CreateInvitationCards',
       (variables) => ({
@@ -229,21 +214,78 @@ describe('AdminCards', () => {
     );
     URL.createObjectURL = vi.fn(() => 'blob:x');
     URL.revokeObjectURL = vi.fn();
-    render(<AdminCards cards={[]} minting />);
-    fireEvent.change(within(dialog()).getByLabelText(/Number of Cards/), {
-      target: { value: '2' },
+    // The save is an anchor press; jsdom would otherwise try to open the blob address.
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    render(<AdminCards batches={[]} minting />);
+    fireEvent.change(within(dialog()).getByLabelText(/Number of Sheets/), {
+      target: { value: '1' },
     });
-    pickFirstOfDecember();
+    pickFirstOfFebruary();
     fireEvent.click(mint());
-    fireEvent.click(await within(dialog()).findByRole('button', { name: 'Download PDF' }));
+    await within(dialog()).findByRole('button', { name: 'Download PDF' });
+  };
+
+  it('builds the batch PDF from one link per code when Download PDF is pressed', async () => {
+    await mintTwo();
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Download PDF' }));
 
     await waitFor(() => expect(buildCardSheetsPdf).toHaveBeenCalled());
     const input = vi.mocked(buildCardSheetsPdf).mock.calls[0][0];
     expect(input.links).toEqual(['http://localhost:3000/i/ta', 'http://localhost:3000/i/tb']);
-    expect(input.expiresAt).toEqual(new Date('2026-12-01T00:00:00.000Z'));
+    expect(input.expiresAt).toEqual(new Date('2027-02-01T00:00:00.000Z'));
     await waitFor(() =>
       expect(within(dialog()).getByRole('button', { name: 'Download PDF' })).toBeEnabled(),
     );
+  });
+
+  it('asks before closing a minted batch whose PDF is not downloaded, and closes quietly after', async () => {
+    await mintTwo();
+
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Close' }));
+    expect(screen.getByText(/You haven't downloaded the PDF/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Keep Open' }));
+    expect(screen.queryByText(/You haven't downloaded the PDF/)).toBeNull();
+
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Download PDF' }));
+    await waitFor(() => expect(buildCardSheetsPdf).toHaveBeenCalled());
+    await waitFor(() =>
+      expect(within(dialog()).getByRole('button', { name: 'Download PDF' })).toBeEnabled(),
+    );
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Close' }));
+    expect(screen.queryByText(/You haven't downloaded the PDF/)).toBeNull();
+  });
+});
+
+describe('Mint Cards default expiry', () => {
+  it('starts the expiry 90 days from today, and sends that day', async () => {
+    const calls: CreateInvitationCardsMutationVariables[] = [];
+    mockGraphQLMutation<CreateInvitationCardsMutation, CreateInvitationCardsMutationVariables>(
+      'CreateInvitationCards',
+      (variables) => {
+        calls.push(variables);
+        return {
+          createInvitationCards: {
+            batchId: 'b5555555-0000-4000-8000-000000000005',
+            expiresAt: variables.expiresAt,
+            tokens: ['t1'],
+          },
+        };
+      },
+    );
+    render(<AdminCards batches={[]} minting />);
+
+    // 30 October 2026 plus 90 days is 28 January 2027.
+    expect(within(dialog()).getByRole('button', { name: /Expires On/ })).toHaveTextContent(
+      /28 January 2027/,
+    );
+    fireEvent.change(within(dialog()).getByLabelText(/Number of Sheets/), {
+      target: { value: '1' },
+    });
+    expect(mint()).toBeEnabled();
+    fireEvent.click(mint());
+
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]).toEqual({ sheets: 1, expiresAt: '2027-01-28T00:00:00.000Z' });
   });
 });
 
