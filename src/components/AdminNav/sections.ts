@@ -69,6 +69,12 @@ export const ADMIN_PAGES = {
       { href: '/admin/privilege-changes', label: 'Privilege Changes', filtered: true },
     ],
   },
+  support: {
+    label: 'Support',
+    icon: 'support',
+    description: 'The help requests people have sent, with replies, assignment and time-outs.',
+    tabs: [{ href: '/admin/support', label: 'Support' }],
+  },
 } as const satisfies Record<string, AdminPage>;
 
 export const ADMIN_SECTIONS: readonly AdminSection[] = [
@@ -82,6 +88,7 @@ export const ADMIN_SECTIONS: readonly AdminSection[] = [
       ADMIN_PAGES.astrology,
     ],
   },
+  { name: 'Support', pages: [ADMIN_PAGES.support], adminOnly: true },
   { name: 'People', pages: [ADMIN_PAGES.people], adminOnly: true },
 ];
 

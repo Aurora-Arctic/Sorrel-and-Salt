@@ -304,6 +304,10 @@ export const rules = {
           'a list filter that applies as it changes: nothing typed waits on a Save',
         'src/components/IngredientForm/reference-panel.tsx':
           'a panel inside IngredientForm, which it tells of its changes (`useReportPanelChanges`) and whose guard holds them',
+        'src/components/SupportRequests/issue-panel.tsx':
+          'one pasted address beside others in the request detail, whose single close guard is the reply form\u2019s',
+        'src/components/SupportRequests/timeout-panel.tsx':
+          'an end time and a note beside others in the request detail, whose single close guard is the reply form\u2019s',
         'src/components/IngredientEntry/coven-choice.tsx':
           'a single select inside a confirmation, a form only because SelectField is react-hook-form’s; nothing is submitted through it',
       };

@@ -1,0 +1,36 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The page's own rules, structure only: the list's column, the "Unassigned" ink and the detail's stack.
+.support-requests {
+  @include stack;
+}
+
+.support-requests .data-table {
+  th,
+  td {
+    vertical-align: middle;
+  }
+}
+
+.support-requests__none {
+  color: $text-muted;
+}
+
+.support-detail {
+  @include stack;
+}
+
+.support-detail__message {
+  white-space: pre-wrap;
+}
+
+.support-detail__list {
+  @include stack;
+  padding: 0;
+  list-style: none;
+
+  p {
+    white-space: pre-wrap;
+  }
+}
