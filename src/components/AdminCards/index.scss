@@ -39,6 +39,19 @@
   line-height: 1.5;
 }
 
+// Expires On and Print Backs on one line, the switch at the right level with the date's control; a phone-width form
+// wraps the switch below.
+.admin-cards__when {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: space(5);
+
+  > :first-child {
+    flex: 1 1 14rem;
+  }
+}
+
 // The filter row is the positioned ancestor the Filters drawer opens under
 // (claude-docs/components/facet-panel.md).
 .admin-cards__filter {
