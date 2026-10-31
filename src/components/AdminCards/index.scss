@@ -101,6 +101,28 @@
   }
 }
 
+// The answer after minting: the batch sentence, then its sheets and expiry close beneath it, so the two read as one
+// statement a form gap away from the notice and the buttons. The focus ring wraps the sentence, not the dialog's width.
+.admin-cards__result {
+  display: flex;
+  flex-direction: column;
+  gap: space(1);
+  margin: 0;
+
+  p {
+    margin: 0;
+  }
+}
+
+.admin-cards__result-title {
+  align-self: flex-start;
+  font-weight: 600;
+}
+
+.admin-cards__result-detail {
+  color: $text-muted;
+}
+
 // The filter row is the positioned ancestor the Filters drawer opens under
 // (claude-docs/components/facet-panel.md).
 .admin-cards__filter {

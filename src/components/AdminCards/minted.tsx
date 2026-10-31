@@ -81,13 +81,15 @@ const MintedCards = ({
           </Notice>
         )}
       </div>
-      <p ref={sentence} tabIndex={-1}>
-        Batch {name}: {batch.tokens.length} cards minted.
-      </p>
-      <p>
-        {sheets} {sheets === 1 ? 'sheet' : 'sheets'}, expiring{' '}
-        {dayInUtc(printedDateOf(new Date(batch.expiresAt)))}.
-      </p>
+      <div className="admin-cards__result">
+        <p ref={sentence} tabIndex={-1} className="admin-cards__result-title">
+          Batch {name}: {batch.tokens.length} cards minted.
+        </p>
+        <p className="admin-cards__result-detail">
+          {sheets} {sheets === 1 ? 'sheet' : 'sheets'}, expiring{' '}
+          {dayInUtc(printedDateOf(new Date(batch.expiresAt)))}.
+        </p>
+      </div>
       {failed ? <Notice kind="error">The PDF could not be built. Try again.</Notice> : null}
       <div className="modal__actions">
         <button
