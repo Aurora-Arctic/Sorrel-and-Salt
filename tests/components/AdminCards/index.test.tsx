@@ -1,9 +1,9 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { ReactNode } from 'react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { buildCardSheetsPdf } from '@/lib/invitation-cards';
 import AdminCards, { MintCards } from '@/components/AdminCards';
-import AdminArrivals from '@/components/AdminCards/arrivals';
+import AdminArrivals, { ArrivalsActions } from '@/components/AdminCards/arrivals';
 import type {
   CreateInvitationCardsMutation,
   CreateInvitationCardsMutationVariables,
@@ -15,7 +15,7 @@ import type {
 import { RouteModalContext } from '@/components/Modal/route-modal-provider';
 import type { RouteModalOpener } from '@/components/Modal/types';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
-import { FILTER_ROWS } from '../../support/filter-form';
+import { FILTER_ROWS, filterForm } from '../../support/filter-form';
 import { Navigating } from '../../support/navigating';
 import type { FilterFormSubject } from '../../support/types';
 import { mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
@@ -316,7 +316,10 @@ describe('AdminCards', () => {
     URL.createObjectURL = vi.fn(() => 'blob:x');
     URL.revokeObjectURL = vi.fn();
     // The save is an anchor press; jsdom would otherwise try to open the blob address.
-    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    const click = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(() => undefined);
+    onTestFinished(() => click.mockRestore());
     render(<AdminCards batches={[]} minting />);
     fireEvent.change(within(dialog()).getByRole('spinbutton', { name: /Number of Sheets/ }), {
       target: { value: '1' },
@@ -581,5 +584,91 @@ describe('AdminCards filter', () => {
 
     expect(screen.getByText(/zz/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Clear' })).toHaveAttribute('href', PATH);
+  });
+});
+
+describe('AdminArrivals filter', () => {
+  const PATH = '/admin/card-sign-ups';
+  const SUBJECT: FilterFormSubject = {
+    label: 'Filter Card Sign-Ups',
+    path: PATH,
+    searchLabel: 'Name or Email',
+    push: router.push,
+    none: { list: <AdminArrivals arrivals={[]} />, sends: 'query=&batch=' },
+    shown: {
+      list: <AdminArrivals arrivals={[]} filter={{ query: 'wort', batch: 'b11' }} />,
+      sends: 'query=wort&batch=b11',
+    },
+    alone: [
+      {
+        list: <AdminArrivals arrivals={[]} filter={{ query: 'wort', batch: '' }} />,
+        sends: 'query=wort&batch=',
+      },
+      {
+        list: <AdminArrivals arrivals={[]} filter={{ query: '', batch: 'b11' }} />,
+        sends: 'query=&batch=b11',
+      },
+    ],
+    searched: `${PATH}?query=Two+words&batch=b11`,
+  };
+
+  // Two search boxes draw two magnifiers, so the shared row that presses the one Search button is replaced by the test below.
+  it.each(FILTER_ROWS.filter(([title]) => !title.startsWith('opens the searched list')))(
+    '%s',
+    (_title, run) => run(SUBJECT),
+  );
+
+  it('writes both boxes to the URL together on either magnifier or Enter, trimmed', () => {
+    render(<AdminArrivals arrivals={[]} filter={{ query: 'wort', batch: '' }} />);
+
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Batch' }), {
+      target: { value: ' b22 ' },
+    });
+    fireEvent.click(screen.getAllByRole('button', { name: 'Search' })[1]);
+    fireEvent.submit(filterForm('Filter Card Sign-Ups'));
+
+    expect(router.push.mock.calls).toEqual([
+      [`${PATH}?query=wort&batch=b22`],
+      [`${PATH}?query=wort&batch=b22`],
+    ]);
+  });
+
+  it('shows what the URL holds, and Clear leads to every sign-up', () => {
+    render(<AdminArrivals arrivals={[]} filter={{ query: 'wort', batch: 'b11' }} />);
+
+    expect(screen.getByRole('searchbox', { name: 'Name or Email' })).toHaveValue('wort');
+    expect(screen.getByRole('searchbox', { name: 'Batch' })).toHaveValue('b11');
+    expect(screen.getByRole('link', { name: 'Clear' })).toHaveAttribute('href', PATH);
+  });
+
+  const askedCsv = async (filter: { query: string; batch: string }) => {
+    const asked: unknown[] = [];
+    mockGraphQLQuery('CardArrivalsCsv', (variables) => {
+      asked.push(variables);
+      return { cardArrivalsCsv: 'name,email\n' };
+    });
+    // The anchor's click is stubbed: jsdom would navigate to the object URL, and every later request in the file would fail on the page's origin.
+    const click = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(() => undefined);
+    onTestFinished(() => click.mockRestore());
+    URL.createObjectURL = vi.fn(() => 'blob:csv');
+    URL.revokeObjectURL = vi.fn();
+
+    render(<ArrivalsActions filter={filter} />);
+    fireEvent.click(screen.getByRole('button', { name: /Download CSV/ }));
+    await waitFor(() => expect(asked).toHaveLength(1));
+    return asked[0];
+  };
+
+  it('sends the filter shown to the CSV download', async () => {
+    expect(await askedCsv({ query: 'wort', batch: 'b11' })).toEqual({
+      query: 'wort',
+      batch: 'b11',
+    });
+  });
+
+  it('sends no variables when the filter is blank, as on the unfiltered tab', async () => {
+    expect(await askedCsv({ query: '', batch: '' })).toEqual({});
   });
 });

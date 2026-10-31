@@ -186,6 +186,7 @@ export type {
   CardArrivalRow,
   CardAttemptReason,
   CardAttemptRow,
+  CardArrivalFilter,
   CardBatchFilter,
   CardBatchStatus,
   CardBatchTotal,

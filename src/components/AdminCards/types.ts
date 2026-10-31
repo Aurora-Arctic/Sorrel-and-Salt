@@ -95,6 +95,8 @@ export interface AdminArrivalsProps extends Partial<PagerHrefs<Route>> {
   arrivals: ArrivalEntry[];
   /** Where this page stands, the pager's "Page X of Y". */
   position?: PagePosition;
+  /** The filter the address holds; none when left out. */
+  filter?: ArrivalsFilter;
 }
 
 /** The batch filter the address holds, every part text and blank for none: a day is `YYYY-MM-DD`, a status one of `BatchStatus`. */
@@ -107,6 +109,21 @@ export interface CardsFilter {
   expiresTo: string;
 }
 
+/** The sign-ups filter the address holds, blank for none. */
+export interface ArrivalsFilter {
+  query: string;
+  batch: string;
+}
+
 export interface CardsFilterProps {
   filter: CardsFilter;
+}
+
+export interface ArrivalsFilterProps {
+  filter: ArrivalsFilter;
+}
+
+export interface ArrivalsActionsProps {
+  /** The filter the list holds, which the CSV carries. */
+  filter?: ArrivalsFilter;
 }

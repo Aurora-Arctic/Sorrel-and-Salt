@@ -14,6 +14,7 @@ import {
   withAudit,
 } from '../../../db/repository';
 import type {
+  CardArrivalFilter,
   CardAttemptRow,
   CardBatchFilter,
   CardBatchTotal,
@@ -55,6 +56,10 @@ function parsedBatchFilter(filter: CardBatchFilter): CardBatchFilter {
     expiresFrom: day(filter.expiresFrom),
     expiresTo: day(filter.expiresTo),
   };
+}
+
+function parsedArrivalFilter(filter: CardArrivalFilter): CardArrivalFilter {
+  return { query: filter.query?.trim() || undefined, batch: filter.batch?.trim() || undefined };
 }
 
 const REFUSAL = 'Only a site admin may mint, list or revoke invitation cards';
@@ -181,9 +186,13 @@ export function cardState(
  *
  * @throws {Forbidden} the session's role is not `admin`.
  */
-export async function listCardArrivals(session: Session, page: PageRequest) {
+export async function listCardArrivals(
+  session: Session,
+  filter: CardArrivalFilter,
+  page: PageRequest,
+) {
   const admin = assertSiteAdmin(session, REFUSAL);
-  return findCardArrivalPage(admin, page);
+  return findCardArrivalPage(admin, parsedArrivalFilter(filter), page);
 }
 
 /**
@@ -193,10 +202,11 @@ export async function listCardArrivals(session: Session, page: PageRequest) {
  */
 export async function countCardArrivals(
   session: Session,
+  filter: CardArrivalFilter,
   start: Cursor | undefined,
 ): Promise<PageCount> {
   const admin = assertSiteAdmin(session, REFUSAL);
-  return findCardArrivalCount(admin, start);
+  return findCardArrivalCount(admin, parsedArrivalFilter(filter), start);
 }
 
 const CSV_HEADER = ['Account Name', 'Email', 'Accepted', 'Batch'];
@@ -208,12 +218,16 @@ const ARRIVAL_PAGE = 100;
  *
  * @throws {Forbidden} the session's role is not `admin`.
  */
-export async function cardArrivalsCsv(session: Session): Promise<string> {
+export async function cardArrivalsCsv(
+  session: Session,
+  filter: CardArrivalFilter = {},
+): Promise<string> {
   const admin = assertSiteAdmin(session, REFUSAL);
+  const narrowed = parsedArrivalFilter(filter);
   const lines = [CSV_HEADER.join(',')];
   let after: PageRequest['after'];
   for (;;) {
-    const page = await findCardArrivalPage(admin, {
+    const page = await findCardArrivalPage(admin, narrowed, {
       limit: ARRIVAL_PAGE + 1,
       inverted: false,
       after,

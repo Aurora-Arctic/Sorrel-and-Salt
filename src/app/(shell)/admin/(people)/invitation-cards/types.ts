@@ -15,3 +15,16 @@ export interface CardsSearchParams {
   expiresFrom?: string | string[];
   expiresTo?: string | string[];
 }
+
+export interface ArrivalsPageProps {
+  // A promise in Next 16: it must be awaited before use.
+  searchParams: Promise<ArrivalsSearchParams>;
+}
+
+/** The Sign-Ups tab's address: its filter and at most one cursor. */
+export interface ArrivalsSearchParams {
+  after?: string | string[];
+  before?: string | string[];
+  query?: string | string[];
+  batch?: string | string[];
+}

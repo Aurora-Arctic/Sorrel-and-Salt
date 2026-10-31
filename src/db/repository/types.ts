@@ -1112,6 +1112,14 @@ export interface CardBatchFilter {
   expiresTo?: string;
 }
 
+/** What the admin card sign-up list and its CSV are narrowed by. Each part is optional. */
+export interface CardArrivalFilter {
+  /** A substring of the account's name or address, case-insensitive. */
+  query?: string;
+  /** The start of the batch number, case-insensitive. */
+  batch?: string;
+}
+
 /** A card in any state: always in a batch. */
 export type CardRow = InvitationRow & { kind: 'card'; batchId: string };
 

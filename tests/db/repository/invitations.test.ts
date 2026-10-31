@@ -18,6 +18,7 @@ import {
   findCardBatchTotals,
   withAudit,
   type AuditWriter,
+  type CardArrivalFilter,
   type CardBatchFilter,
   type InvitationRow,
   type SiteInvitationValues,
@@ -1074,7 +1075,7 @@ describe('invitation cards', () => {
     await inviteIntoW({ token: 'fixture-token-w-accepted' });
     await acceptAs(A, 'fixture-token-w-accepted');
 
-    const page = await findCardArrivalPage(admin, { limit: 101, inverted: false });
+    const page = await findCardArrivalPage(admin, {}, { limit: 101, inverted: false });
 
     expect(page.map(({ node }) => [node.acceptedBy, node.batchId]).sort()).toEqual(
       [
@@ -1083,7 +1084,7 @@ describe('invitation cards', () => {
       ].sort(),
     );
     for (const { node } of page) expect(node.acceptedAt).toBeInstanceOf(Date);
-    expect((await findCardArrivalCount(admin, undefined)).totalCount).toBe(2);
+    expect((await findCardArrivalCount(admin, {}, undefined)).totalCount).toBe(2);
   });
 
   it('pages one row per batch, newest first, and counts each batch’s cards in SQL', async () => {
@@ -1214,6 +1215,44 @@ describe('invitation cards', () => {
         expect(await batches({ status })).toEqual(expected);
         expect((await findCardBatchCount(admin, { status }, undefined)).totalCount).toBe(1);
       }
+    });
+  });
+
+  describe('the arrivals filter', () => {
+    const OTHER_BATCH = '22222222-2222-4222-8222-222222222222';
+    const all = { limit: 101, inverted: false };
+    const arrivals = async (filter: CardArrivalFilter) =>
+      (await findCardArrivalPage(admin, filter, all)).map(({ node }) => node.acceptedBy);
+
+    beforeEach(async () => {
+      await mint([CARD, OTHER_CARD]);
+      await mint(['cardtokenCCCCCCC'], LATER(), OTHER_BATCH);
+      await cardAccept(B);
+      await cardAccept(A, 'cardtokenCCCCCCC');
+    });
+
+    it('keeps the arrivals whose name holds the query, in any case', async () => {
+      const name = B.name.toUpperCase();
+
+      expect(await arrivals({ query: name })).toEqual([B.id]);
+      expect(await arrivals({ query: 'no-such-person' })).toEqual([]);
+      expect((await findCardArrivalCount(admin, { query: name }, undefined)).totalCount).toBe(1);
+    });
+
+    it('keeps the arrivals whose address holds the query', async () => {
+      expect(await arrivals({ query: A.email.toUpperCase() })).toEqual([A.id]);
+      expect(await arrivals({ query: '%' })).toEqual([]);
+    });
+
+    it('keeps the arrivals from a batch whose number starts as typed', async () => {
+      expect(await arrivals({ batch: '2222' })).toEqual([A.id]);
+      expect(await arrivals({ batch: '1111' })).toEqual([B.id]);
+      expect(await arrivals({ batch: '1' + 'x' })).toEqual([]);
+    });
+
+    it('combines the two: both must hold', async () => {
+      expect(await arrivals({ query: A.email, batch: '2222' })).toEqual([A.id]);
+      expect(await arrivals({ query: A.email, batch: '1111' })).toEqual([]);
     });
   });
 });

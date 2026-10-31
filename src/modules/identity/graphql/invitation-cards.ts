@@ -206,9 +206,20 @@ builder.queryField('cardArrivals', (t) =>
   t.pagedConnection({
     type: InvitationCardRef,
     description:
-      'The accepted cards, newest first: each with the account that arrived by it. Site admins only.',
+      'The accepted cards, newest first: each with the account that arrived by it, narrowed by every filter given. Site admins only.',
+    args: {
+      query: t.arg.string({
+        required: false,
+        description: "Part of the account's name or email, case-insensitively.",
+      }),
+      batch: t.arg.string({
+        required: false,
+        description: 'The start of the batch number, case-insensitively.',
+      }),
+    },
     authScopes: { admin: true },
-    resolve: (_root, _args, page, context) => listCardArrivals(sessionOf(context), page),
+    resolve: (_root, { query, batch }, page, context) =>
+      listCardArrivals(sessionOf(context), definedArgs({ query, batch }), page),
   }),
 );
 
@@ -226,9 +237,20 @@ builder.queryField('invitationCardAttempts', (t) =>
 builder.queryField('cardArrivalsCsv', (t) =>
   t.string({
     description:
-      'Every arrival as CSV text: account name, email, accepted date and batch. Site admins only.',
+      'Every arrival the filter keeps as CSV text: account name, email, accepted date and batch. Site admins only.',
+    args: {
+      query: t.arg.string({
+        required: false,
+        description: "Part of the account's name or email, case-insensitively.",
+      }),
+      batch: t.arg.string({
+        required: false,
+        description: 'The start of the batch number, case-insensitively.',
+      }),
+    },
     authScopes: { admin: true },
-    resolve: (_root, _args, context) => cardArrivalsCsv(sessionOf(context)),
+    resolve: (_root, { query, batch }, context) =>
+      cardArrivalsCsv(sessionOf(context), definedArgs({ query, batch })),
   }),
 );
 

@@ -52,4 +52,21 @@ describe('/admin/card-sign-ups', () => {
     expect(within(rows[1]).getByText('Removed account')).toBeInTheDocument();
     expect(within(rows[2]).getByText('Removed account')).toBeInTheDocument();
   });
+
+  it('reads the filter from the address, sends it to the list and the count, and shows it', async () => {
+    listCardArrivals.mockResolvedValue([]);
+    countCardArrivals.mockResolvedValue({ total: 0, before: 0 });
+    usersForAdmin.mockResolvedValue([]);
+    membershipsOf.mockResolvedValue([]);
+
+    render(
+      await ArrivalsPage({ searchParams: Promise.resolve({ query: ' wort ', batch: ' b11 ' }) }),
+    );
+
+    const sent = { query: 'wort', batch: 'b11' };
+    expect(listCardArrivals).toHaveBeenCalledWith(ADMIN, sent, expect.anything());
+    expect(countCardArrivals).toHaveBeenCalledWith(ADMIN, sent, undefined);
+    expect(screen.getByRole('searchbox', { name: 'Name or Email' })).toHaveValue('wort');
+    expect(screen.getByRole('searchbox', { name: 'Batch' })).toHaveValue('b11');
+  });
 });

@@ -1,6 +1,9 @@
 import type { Metadata } from 'next';
 import { cache } from 'react';
 import AdminArrivals from '../../../../../components/AdminCards/arrivals';
+import { readArrivalsFilter } from '../../../../../components/AdminCards/filter-params';
+import { arrivalsHref } from '../../../../../components/AdminCards/href';
+import type { ArrivalsFilter } from '../../../../../components/AdminCards/types';
 import { pagerHrefs } from '../../../../../lib/list-href';
 import { requireAdminSession } from '../../../../../lib/request-session';
 import type { Session } from '../../../../../lib/session';
@@ -10,8 +13,7 @@ import { countCardArrivals, listCardArrivals, usersForAdmin } from '@/modules/id
 import { userListHref } from '../../../../../components/UserList/href';
 import { userHeading } from '../users/user-heading';
 import { readListPlace } from '../../list-page';
-import type { CardsPageProps } from '../invitation-cards/types';
-import type { Route } from 'next';
+import type { ArrivalsPageProps } from '../invitation-cards/types';
 
 export const metadata: Metadata = {
   title: 'Card Sign-Ups',
@@ -22,11 +24,16 @@ const NO_FILTER = { query: '', awaitingApproval: false };
 const REMOVED_ACCOUNT = 'Removed account';
 
 const readArrivals = cache(
-  async (session: Session, after: string | undefined, before: string | undefined) => {
+  async (
+    session: Session,
+    filter: ArrivalsFilter,
+    after: string | undefined,
+    before: string | undefined,
+  ) => {
     const page = await readNumberedPage(
       { after, before },
-      (request) => listCardArrivals(session, request),
-      (start) => countCardArrivals(session, start),
+      (request) => listCardArrivals(session, filter, request),
+      (start) => countCardArrivals(session, filter, start),
     );
     const ids = page.edges.map(({ node }) => node.acceptedBy);
     const [accounts, memberships] = await Promise.all([
@@ -59,23 +66,19 @@ const readArrivals = cache(
   },
 );
 
-const arrivalsHref = ({ after, before }: { after?: string; before?: string }): Route =>
-  (after
-    ? `/admin/card-sign-ups?after=${encodeURIComponent(after)}`
-    : before
-      ? `/admin/card-sign-ups?before=${encodeURIComponent(before)}`
-      : '/admin/card-sign-ups') as Route;
-
 // Every account that arrived by a card, with the covens it owns. Services are the guard.
-export default async function ArrivalsPage({ searchParams }: CardsPageProps) {
+export default async function ArrivalsPage({ searchParams }: ArrivalsPageProps) {
   const session = await requireAdminSession();
-  const { after, before } = readListPlace(await searchParams);
-  const { arrivals, pageInfo, position } = await readArrivals(session, after, before);
+  const params = await searchParams;
+  const { after, before } = readListPlace(params);
+  const filter = readArrivalsFilter(params);
+  const { arrivals, pageInfo, position } = await readArrivals(session, filter, after, before);
   return (
     <AdminArrivals
       arrivals={arrivals}
       position={position}
-      {...pagerHrefs(pageInfo, arrivalsHref)}
+      filter={filter}
+      {...pagerHrefs(pageInfo, (turn) => arrivalsHref(filter, turn))}
     />
   );
 }

@@ -1,6 +1,6 @@
 import { oneOf, trimmed } from '../../lib/search-params';
 import { BATCH_STATUSES } from './batches';
-import type { CardsFilter } from './types';
+import type { ArrivalsFilter, CardsFilter } from './types';
 
 // What the two tabs read off their addresses, shared by each tab's page and its action slot. A blank or hand-edited
 // value is no filter, never an error; a day that is not `YYYY-MM-DD` is dropped here, as the service refuses it.
@@ -32,4 +32,11 @@ export function readCardsFilter(params: {
     expiresFrom: day(params.expiresFrom),
     expiresTo: day(params.expiresTo),
   };
+}
+
+export function readArrivalsFilter(params: {
+  query?: string | string[];
+  batch?: string | string[];
+}): ArrivalsFilter {
+  return { query: trimmed(params.query), batch: trimmed(params.batch) };
 }

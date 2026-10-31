@@ -8,6 +8,7 @@ import {
   cardArrivalsCsv,
   cardBatchTotals,
   cardState,
+  countCardArrivals,
   countCardBatches,
   listCardArrivals,
   listCardBatches,
@@ -40,9 +41,12 @@ describe('who may mint, list and revoke', () => {
     const { batchId } = await mintInvitationCards(asUser(E), 1, NEXT_WEEK());
     const rows = await cards();
     expect(rows.every((row) => row.revoked_at === null)).toBe(true);
-    // Filters that name the batch, so an admin's call would answer a row.
+    // Filters that name the batch and an arrival it holds, so an admin's call would answer a row.
+    await sql`update invitations set accepted_at = now(), accepted_by = ${B.id} where id = ${rows[0]!.id}`;
     const FILTERED_BATCHES = { batch: batchId.slice(0, 4), status: 'live' as const };
+    const FILTERED_ARRIVALS = { query: B.email, batch: batchId.slice(0, 4) };
     expect(await listCardBatches(asUser(E), FILTERED_BATCHES, PAGE)).toHaveLength(1);
+    expect(await listCardArrivals(asUser(E), FILTERED_ARRIVALS, PAGE)).toHaveLength(1);
 
     for (const who of [F, A, B]) {
       const session = asUser(who);
@@ -55,8 +59,13 @@ describe('who may mint, list and revoke', () => {
         Forbidden,
       );
       await expect(cardBatchTotals(session, [batchId])).rejects.toBeInstanceOf(Forbidden);
-      await expect(listCardArrivals(session, PAGE)).rejects.toBeInstanceOf(Forbidden);
-      await expect(cardArrivalsCsv(session)).rejects.toBeInstanceOf(Forbidden);
+      await expect(listCardArrivals(session, FILTERED_ARRIVALS, PAGE)).rejects.toBeInstanceOf(
+        Forbidden,
+      );
+      await expect(countCardArrivals(session, FILTERED_ARRIVALS, undefined)).rejects.toBeInstanceOf(
+        Forbidden,
+      );
+      await expect(cardArrivalsCsv(session, FILTERED_ARRIVALS)).rejects.toBeInstanceOf(Forbidden);
     }
 
     expect(await cards()).toHaveLength(CARDS_PER_SHEET);
@@ -242,6 +251,23 @@ describe('the arrivals CSV', () => {
     expect(lines[1]).toBe(
       `"'=Hyperlink, ""Q""",${B.email},${new Date().toISOString().slice(0, 10)},${batchId}`,
     );
+  });
+
+  it('holds only the arrivals the filter keeps', async () => {
+    await mintInvitationCards(asUser(E), 1, NEXT_WEEK());
+    const [first, second] = await cards();
+    await sql`update invitations set accepted_at = now(), accepted_by = ${A.id} where id = ${first!.id}`;
+    await sql`update invitations set accepted_at = now(), accepted_by = ${B.id} where id = ${second!.id}`;
+
+    const everyone = await cardArrivalsCsv(asUser(E));
+    const byName = await cardArrivalsCsv(asUser(E), { query: B.email });
+    const byBatch = await cardArrivalsCsv(asUser(E), { batch: 'ffffffff' });
+
+    expect(everyone.trimEnd().split('\r\n')).toHaveLength(3);
+    expect(byName.trimEnd().split('\r\n')).toHaveLength(2);
+    expect(byName).toContain(B.email);
+    expect(byName).not.toContain(A.email);
+    expect(byBatch).toBe('Account Name,Email,Accepted,Batch\r\n');
   });
 
   it('is only a header when nobody arrived', async () => {

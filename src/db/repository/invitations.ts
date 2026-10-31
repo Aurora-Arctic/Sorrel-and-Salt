@@ -16,6 +16,7 @@ import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types'
 import type {
   AuditWriter,
   AddressInvitationRow,
+  CardArrivalFilter,
   CardArrivalRow,
   CardAttemptReason,
   CardAttemptRow,
@@ -375,25 +376,53 @@ function arrivedByCard(): SQL {
   ) as SQL;
 }
 
+// The arrivals a filter keeps: the account's name or address holds the query, and the batch number starts as given.
+function arrivalsWhere({ query, batch }: CardArrivalFilter): SQL | undefined {
+  return and(
+    query
+      ? existsIn(
+          users,
+          and(
+            eq(users.id, invitations.acceptedBy),
+            or(containsText(users.name, query), containsText(users.email, query)),
+          ),
+        )
+      : undefined,
+    batch ? startsWithText(invitations.batchId, batch) : undefined,
+  );
+}
+
 /**
  * One page of the accounts that arrived by card, newest first: the card rows alone, each with the account that
  * accepted it, when, and its batch. A site admin's read, as the admin Arrivals view is.
  */
 export function findCardArrivalPage(
   _admin: SiteAdmin,
+  filter: CardArrivalFilter,
   page: PageRequest,
 ): Promise<PageEntry<CardArrivalRow>[]> {
-  return findPageInScope(invitations, arrivedByCard(), CARD_ARRIVAL_ORDER, page) as Promise<
-    PageEntry<CardArrivalRow>[]
-  >;
+  return findPageInScope(
+    invitations,
+    arrivedByCard(),
+    CARD_ARRIVAL_ORDER,
+    page,
+    arrivalsWhere(filter),
+  ) as Promise<PageEntry<CardArrivalRow>[]>;
 }
 
 /** How many arrivals `findCardArrivalPage` pages, and how many come before `start`, a page's first row. */
 export function findCardArrivalCount(
   _admin: SiteAdmin,
+  filter: CardArrivalFilter,
   start: Cursor | undefined,
 ): Promise<PageCount> {
-  return findPageCountInScope(invitations, arrivedByCard(), CARD_ARRIVAL_ORDER, start);
+  return findPageCountInScope(
+    invitations,
+    arrivedByCard(),
+    CARD_ARRIVAL_ORDER,
+    start,
+    arrivalsWhere(filter),
+  );
 }
 
 /** Every card, newest first, the key negated as the other lists' are. */

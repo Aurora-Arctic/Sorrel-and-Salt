@@ -1264,14 +1264,31 @@ enum PrivilegeRoute {
 
 type Query {
   """
-  The accepted cards, newest first: each with the account that arrived by it. Site admins only.
+  The accepted cards, newest first: each with the account that arrived by it, narrowed by every filter given. Site admins only.
   """
-  cardArrivals(after: String, before: String, first: Int, last: Int): QueryCardArrivalsConnection!
+  cardArrivals(
+    after: String
+
+    """The start of the batch number, case-insensitively."""
+    batch: String
+    before: String
+    first: Int
+    last: Int
+
+    """Part of the account's name or email, case-insensitively."""
+    query: String
+  ): QueryCardArrivalsConnection!
 
   """
-  Every arrival as CSV text: account name, email, accepted date and batch. Site admins only.
+  Every arrival the filter keeps as CSV text: account name, email, accepted date and batch. Site admins only.
   """
-  cardArrivalsCsv: String!
+  cardArrivalsCsv(
+    """The start of the batch number, case-insensitively."""
+    batch: String
+
+    """Part of the account's name or email, case-insensitively."""
+    query: String
+  ): String!
 
   """
   The live categories by name, each under a live group: those whose name holds `query`, case-insensitively, and those filed under `groupId`, when given.

@@ -14,7 +14,7 @@ import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 type Documents = {
-    "\n  query CardArrivalsCsv {\n    cardArrivalsCsv\n  }\n": typeof types.CardArrivalsCsvDocument,
+    "\n  query CardArrivalsCsv($query: String, $batch: String) {\n    cardArrivalsCsv(query: $query, batch: $batch)\n  }\n": typeof types.CardArrivalsCsvDocument,
     "\n  query InvitationCardAttempts($batchId: ID!, $first: Int!, $after: String) {\n    invitationCardAttempts(batchId: $batchId, first: $first, after: $after) {\n      edges {\n        node {\n          id\n          reason\n          attempts\n          cardPosition\n          firstAttemptedAt\n          lastAttemptedAt\n          account {\n            id\n            name\n            email\n          }\n        }\n      }\n      pageInfo {\n        hasNextPage\n        endCursor\n      }\n    }\n  }\n": typeof types.InvitationCardAttemptsDocument,
     "\n  mutation RevokeInvitationCardBatch($batchId: ID!) {\n    revokeInvitationCardBatch(batchId: $batchId) {\n      id\n    }\n  }\n": typeof types.RevokeInvitationCardBatchDocument,
     "\n  mutation CreateInvitationCards($sheets: Int!, $expiresAt: DateTime!) {\n    createInvitationCards(sheets: $sheets, expiresAt: $expiresAt) {\n      batchId\n      expiresAt\n      tokens\n    }\n  }\n": typeof types.CreateInvitationCardsDocument,
@@ -118,7 +118,7 @@ type Documents = {
     "\n  mutation SetUserRole($userId: ID!, $role: UserRole!, $note: String) {\n    setUserRole(userId: $userId, role: $role, note: $note) {\n      id\n      role\n      canCreateWorkspace\n    }\n  }\n": typeof types.SetUserRoleDocument,
 };
 const documents: Documents = {
-    "\n  query CardArrivalsCsv {\n    cardArrivalsCsv\n  }\n": types.CardArrivalsCsvDocument,
+    "\n  query CardArrivalsCsv($query: String, $batch: String) {\n    cardArrivalsCsv(query: $query, batch: $batch)\n  }\n": types.CardArrivalsCsvDocument,
     "\n  query InvitationCardAttempts($batchId: ID!, $first: Int!, $after: String) {\n    invitationCardAttempts(batchId: $batchId, first: $first, after: $after) {\n      edges {\n        node {\n          id\n          reason\n          attempts\n          cardPosition\n          firstAttemptedAt\n          lastAttemptedAt\n          account {\n            id\n            name\n            email\n          }\n        }\n      }\n      pageInfo {\n        hasNextPage\n        endCursor\n      }\n    }\n  }\n": types.InvitationCardAttemptsDocument,
     "\n  mutation RevokeInvitationCardBatch($batchId: ID!) {\n    revokeInvitationCardBatch(batchId: $batchId) {\n      id\n    }\n  }\n": types.RevokeInvitationCardBatchDocument,
     "\n  mutation CreateInvitationCards($sheets: Int!, $expiresAt: DateTime!) {\n    createInvitationCards(sheets: $sheets, expiresAt: $expiresAt) {\n      batchId\n      expiresAt\n      tokens\n    }\n  }\n": types.CreateInvitationCardsDocument,
@@ -239,7 +239,7 @@ export function graphql(source: string): unknown;
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query CardArrivalsCsv {\n    cardArrivalsCsv\n  }\n"): (typeof documents)["\n  query CardArrivalsCsv {\n    cardArrivalsCsv\n  }\n"];
+export function graphql(source: "\n  query CardArrivalsCsv($query: String, $batch: String) {\n    cardArrivalsCsv(query: $query, batch: $batch)\n  }\n"): (typeof documents)["\n  query CardArrivalsCsv($query: String, $batch: String) {\n    cardArrivalsCsv(query: $query, batch: $batch)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

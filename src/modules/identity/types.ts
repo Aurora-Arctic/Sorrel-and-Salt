@@ -8,6 +8,7 @@ import type {
 } from '../../db/repository';
 
 export type {
+  CardArrivalFilter,
   CardBatchFilter,
   CardBatchStatus,
   PrivilegeChangeFilter,

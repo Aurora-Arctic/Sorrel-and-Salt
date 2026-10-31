@@ -48,6 +48,17 @@ test('an admin mints a sheet of cards and the Invitation Cards tab lists the bat
   await page.goto('/admin/card-sign-ups');
   await expect(page.getByText('No one has accepted a card yet.')).toBeVisible();
   await assertNoAccessibilityViolations(page);
+
+  // With no filter the download still works and is named for the tab.
+  const csv = page.waitForEvent('download');
+  await page.getByRole('button', { name: /Download CSV/ }).click();
+  expect((await csv).suggestedFilename()).toBe('card-sign-ups.csv');
+
+  await page.getByRole('searchbox', { name: 'Name or Email' }).fill('nobody');
+  await page.getByRole('searchbox', { name: 'Name or Email' }).press('Enter');
+  await expect(page).toHaveURL(/query=nobody/);
+  await expect(page.getByText(/No sign-ups match/)).toBeVisible();
+  await assertNoAccessibilityViolations(page);
 });
 
 test('an admin revokes a whole batch and its links are refused as withdrawn', async ({
