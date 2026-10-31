@@ -9,9 +9,11 @@ import DateField from '@/components/DateField';
 function Harness({
   initial = '2026-03-10',
   max = '2026-03-15',
+  min,
 }: {
   initial?: string;
   max?: string | null;
+  min?: string;
 }) {
   const [value, setValue] = useState(initial);
   return (
@@ -22,6 +24,7 @@ function Harness({
         labelledBy="label"
         value={value}
         max={max ?? undefined}
+        min={min}
         onChange={setValue}
       />
     </>
@@ -37,6 +40,20 @@ describe('DateField', () => {
       'aria-expanded',
       'false',
     );
+  });
+
+  // A field shell labels the button with a <label>, which a button naming itself would read in
+  // place of its day.
+  it('names the button by its label and its day under a label element', () => {
+    render(
+      <>
+        <label id="shell-label" htmlFor="shelled">
+          Expires On
+        </label>
+        <DateField id="shelled" labelledBy="shell-label" value="2026-11-02" onChange={() => {}} />
+      </>,
+    );
+    expect(screen.getByRole('button', { name: 'Expires On 2 November 2026' })).toBeInTheDocument();
   });
 
   it('says the button opens a dialog, and names the calendar it opens', () => {
@@ -68,6 +85,18 @@ describe('DateField', () => {
       'aria-disabled',
       'true',
     );
+  });
+
+  it('refuses a day before min, and offers no year before it', () => {
+    render(<Harness initial="2026-03-12" min="2026-03-10" max="2026-06-15" />);
+    fireEvent.click(screen.getByRole('button', { name: /Date/ }));
+    const grid = screen.getByRole('grid');
+    expect(within(grid).getByRole('button', { name: /, 9 March 2026/ })).toBeDisabled();
+    expect(within(grid).getByRole('button', { name: /, 10 March 2026/ })).toBeEnabled();
+    fireEvent.click(within(grid).getByRole('button', { name: /, 9 March 2026/ }));
+    expect(screen.getByRole('button', { name: /Date.*12 March 2026/ })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('combobox', { name: /Year/ }));
+    expect(screen.queryByRole('option', { name: '2025' })).toBeNull();
   });
 
   it('moves the calendar to a month and a year chosen from its caption, then picks a day there', () => {
@@ -150,5 +179,15 @@ describe('DateField', () => {
     fireEvent.keyDown(screen.getByRole('grid'), { key: 'Escape' });
     expect(screen.queryByRole('grid')).toBeNull();
     expect(screen.getByRole('button', { name: /10 March 2026/ })).toBeInTheDocument();
+  });
+
+  // A modal dialog closes on an Escape keydown nobody prevented, so stopping it alone would close a
+  // phone Filters sheet holding the field.
+  it('claims the Escape that closes the calendar, so a surrounding dialog stays open', () => {
+    render(<Harness />);
+    fireEvent.click(screen.getByRole('button', { name: /Date/ }));
+    const unclaimed = fireEvent.keyDown(screen.getByRole('grid'), { key: 'Escape' });
+    expect(screen.queryByRole('grid')).toBeNull();
+    expect(unclaimed).toBe(false);
   });
 });

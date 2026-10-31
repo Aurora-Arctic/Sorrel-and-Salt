@@ -14,6 +14,10 @@ import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 type Documents = {
+    "\n  query CardArrivalsCsv($query: String) {\n    cardArrivalsCsv(query: $query)\n  }\n": typeof types.CardArrivalsCsvDocument,
+    "\n  query InvitationCardAttempts($batchId: ID!, $first: Int!, $after: String) {\n    invitationCardAttempts(batchId: $batchId, first: $first, after: $after) {\n      edges {\n        node {\n          id\n          reason\n          attempts\n          cardPosition\n          firstAttemptedAt\n          lastAttemptedAt\n          account {\n            id\n            name\n            email\n          }\n        }\n      }\n      pageInfo {\n        hasNextPage\n        endCursor\n      }\n    }\n  }\n": typeof types.InvitationCardAttemptsDocument,
+    "\n  mutation RevokeInvitationCardBatch($batchId: ID!) {\n    revokeInvitationCardBatch(batchId: $batchId) {\n      id\n    }\n  }\n": typeof types.RevokeInvitationCardBatchDocument,
+    "\n  mutation CreateInvitationCards($sheets: Int!, $expiresAt: DateTime!, $note: String) {\n    createInvitationCards(sheets: $sheets, expiresAt: $expiresAt, note: $note) {\n      batchId\n      expiresAt\n      tokens\n    }\n  }\n": typeof types.CreateInvitationCardsDocument,
     "\n  mutation RevokeAdminInvitation($id: ID!) {\n    revokeAdminInvitation(id: $id) {\n      id\n    }\n  }\n": typeof types.RevokeAdminInvitationDocument,
     "\n  mutation CreateAdminInvitation($email: String!, $siteRole: InvitableSiteRole!, $note: String) {\n    createAdminInvitation(email: $email, siteRole: $siteRole, note: $note) {\n      id\n    }\n  }\n": typeof types.CreateAdminInvitationDocument,
     "\n  query CompendiumFacetCounts(\n    $query: String\n    $forms: [String!]\n    $withoutReferences: Boolean\n    $withoutForms: Boolean\n    $elements: [IngredientElement!]\n    $categoryIds: [ID!]\n    $categoryMode: CategoryMode\n    $deityIds: [ID!]\n    $zodiacSigns: [String!]\n    $celestialBodies: [String!]\n    $toxic: ToxicFilter\n    $reviewed: Boolean\n    $covenIds: [ID!]\n    $covensNot: Boolean\n  ) {\n    compendiumFacets(\n      query: $query\n      forms: $forms\n      withoutReferences: $withoutReferences\n      withoutForms: $withoutForms\n      elements: $elements\n      categoryIds: $categoryIds\n      categoryMode: $categoryMode\n      deityIds: $deityIds\n      zodiacSigns: $zodiacSigns\n      celestialBodies: $celestialBodies\n      toxic: $toxic\n      reviewed: $reviewed\n      covenIds: $covenIds\n      covensNot: $covensNot\n    ) {\n      forms {\n        value\n        count\n      }\n      deities {\n        value\n        count\n      }\n      categories {\n        value\n        count\n      }\n      zodiacSigns {\n        value\n        count\n      }\n      celestialBodies {\n        value\n        count\n      }\n      elements {\n        value\n        count\n      }\n      toxic {\n        value\n        count\n      }\n      withoutReferences\n      withoutForms\n      reviewed {\n        value\n        count\n      }\n    }\n  }\n": typeof types.CompendiumFacetCountsDocument,
@@ -81,6 +85,7 @@ type Documents = {
     "\n  query IngredientSearchCupboardMatches($workspaceId: ID!, $query: String, $first: Int) {\n    workspaceIngredients(workspaceId: $workspaceId, query: $query, first: $first) {\n      pageInfo {\n        hasNextPage\n      }\n      edges {\n        node {\n          id\n          slug\n          name\n          canonicalName\n          nomenclature\n          cupboardEntry(workspaceId: $workspaceId) {\n            label\n          }\n        }\n      }\n    }\n  }\n": typeof types.IngredientSearchCupboardMatchesDocument,
     "\n  query GrimoireSearchMatches(\n    $workspaceId: ID!\n    $query: String\n    $status: SpellStatus\n    $first: Int\n  ) {\n    grimoire(workspaceId: $workspaceId, query: $query, status: $status, first: $first) {\n      pageInfo {\n        hasNextPage\n      }\n      edges {\n        node {\n          id\n          title\n        }\n      }\n    }\n  }\n": typeof types.GrimoireSearchMatchesDocument,
     "\n  mutation AcceptInvitation($token: String!) {\n    acceptInvitation(token: $token) {\n      id\n    }\n  }\n": typeof types.AcceptInvitationDocument,
+    "\n  mutation RecordCardAttempt($token: String!) {\n    recordCardAttempt(token: $token)\n  }\n": typeof types.RecordCardAttemptDocument,
     "\n  mutation CreateInvitation($workspaceId: ID!, $email: String!, $role: InvitableRole!) {\n    createInvitation(workspaceId: $workspaceId, email: $email, role: $role) {\n      id\n    }\n  }\n": typeof types.CreateInvitationDocument,
     "\n  mutation LeaveWorkspace($workspaceId: ID!) {\n    leaveWorkspace(workspaceId: $workspaceId)\n  }\n": typeof types.LeaveWorkspaceDocument,
     "\n  mutation PromoteSuccessor($workspaceId: ID!, $userId: ID!, $role: WorkspaceRole!) {\n    updateMemberRole(workspaceId: $workspaceId, userId: $userId, role: $role) {\n      role\n    }\n  }\n": typeof types.PromoteSuccessorDocument,
@@ -113,6 +118,10 @@ type Documents = {
     "\n  mutation SetUserRole($userId: ID!, $role: UserRole!, $note: String) {\n    setUserRole(userId: $userId, role: $role, note: $note) {\n      id\n      role\n      canCreateWorkspace\n    }\n  }\n": typeof types.SetUserRoleDocument,
 };
 const documents: Documents = {
+    "\n  query CardArrivalsCsv($query: String) {\n    cardArrivalsCsv(query: $query)\n  }\n": types.CardArrivalsCsvDocument,
+    "\n  query InvitationCardAttempts($batchId: ID!, $first: Int!, $after: String) {\n    invitationCardAttempts(batchId: $batchId, first: $first, after: $after) {\n      edges {\n        node {\n          id\n          reason\n          attempts\n          cardPosition\n          firstAttemptedAt\n          lastAttemptedAt\n          account {\n            id\n            name\n            email\n          }\n        }\n      }\n      pageInfo {\n        hasNextPage\n        endCursor\n      }\n    }\n  }\n": types.InvitationCardAttemptsDocument,
+    "\n  mutation RevokeInvitationCardBatch($batchId: ID!) {\n    revokeInvitationCardBatch(batchId: $batchId) {\n      id\n    }\n  }\n": types.RevokeInvitationCardBatchDocument,
+    "\n  mutation CreateInvitationCards($sheets: Int!, $expiresAt: DateTime!, $note: String) {\n    createInvitationCards(sheets: $sheets, expiresAt: $expiresAt, note: $note) {\n      batchId\n      expiresAt\n      tokens\n    }\n  }\n": types.CreateInvitationCardsDocument,
     "\n  mutation RevokeAdminInvitation($id: ID!) {\n    revokeAdminInvitation(id: $id) {\n      id\n    }\n  }\n": types.RevokeAdminInvitationDocument,
     "\n  mutation CreateAdminInvitation($email: String!, $siteRole: InvitableSiteRole!, $note: String) {\n    createAdminInvitation(email: $email, siteRole: $siteRole, note: $note) {\n      id\n    }\n  }\n": types.CreateAdminInvitationDocument,
     "\n  query CompendiumFacetCounts(\n    $query: String\n    $forms: [String!]\n    $withoutReferences: Boolean\n    $withoutForms: Boolean\n    $elements: [IngredientElement!]\n    $categoryIds: [ID!]\n    $categoryMode: CategoryMode\n    $deityIds: [ID!]\n    $zodiacSigns: [String!]\n    $celestialBodies: [String!]\n    $toxic: ToxicFilter\n    $reviewed: Boolean\n    $covenIds: [ID!]\n    $covensNot: Boolean\n  ) {\n    compendiumFacets(\n      query: $query\n      forms: $forms\n      withoutReferences: $withoutReferences\n      withoutForms: $withoutForms\n      elements: $elements\n      categoryIds: $categoryIds\n      categoryMode: $categoryMode\n      deityIds: $deityIds\n      zodiacSigns: $zodiacSigns\n      celestialBodies: $celestialBodies\n      toxic: $toxic\n      reviewed: $reviewed\n      covenIds: $covenIds\n      covensNot: $covensNot\n    ) {\n      forms {\n        value\n        count\n      }\n      deities {\n        value\n        count\n      }\n      categories {\n        value\n        count\n      }\n      zodiacSigns {\n        value\n        count\n      }\n      celestialBodies {\n        value\n        count\n      }\n      elements {\n        value\n        count\n      }\n      toxic {\n        value\n        count\n      }\n      withoutReferences\n      withoutForms\n      reviewed {\n        value\n        count\n      }\n    }\n  }\n": types.CompendiumFacetCountsDocument,
@@ -180,6 +189,7 @@ const documents: Documents = {
     "\n  query IngredientSearchCupboardMatches($workspaceId: ID!, $query: String, $first: Int) {\n    workspaceIngredients(workspaceId: $workspaceId, query: $query, first: $first) {\n      pageInfo {\n        hasNextPage\n      }\n      edges {\n        node {\n          id\n          slug\n          name\n          canonicalName\n          nomenclature\n          cupboardEntry(workspaceId: $workspaceId) {\n            label\n          }\n        }\n      }\n    }\n  }\n": types.IngredientSearchCupboardMatchesDocument,
     "\n  query GrimoireSearchMatches(\n    $workspaceId: ID!\n    $query: String\n    $status: SpellStatus\n    $first: Int\n  ) {\n    grimoire(workspaceId: $workspaceId, query: $query, status: $status, first: $first) {\n      pageInfo {\n        hasNextPage\n      }\n      edges {\n        node {\n          id\n          title\n        }\n      }\n    }\n  }\n": types.GrimoireSearchMatchesDocument,
     "\n  mutation AcceptInvitation($token: String!) {\n    acceptInvitation(token: $token) {\n      id\n    }\n  }\n": types.AcceptInvitationDocument,
+    "\n  mutation RecordCardAttempt($token: String!) {\n    recordCardAttempt(token: $token)\n  }\n": types.RecordCardAttemptDocument,
     "\n  mutation CreateInvitation($workspaceId: ID!, $email: String!, $role: InvitableRole!) {\n    createInvitation(workspaceId: $workspaceId, email: $email, role: $role) {\n      id\n    }\n  }\n": types.CreateInvitationDocument,
     "\n  mutation LeaveWorkspace($workspaceId: ID!) {\n    leaveWorkspace(workspaceId: $workspaceId)\n  }\n": types.LeaveWorkspaceDocument,
     "\n  mutation PromoteSuccessor($workspaceId: ID!, $userId: ID!, $role: WorkspaceRole!) {\n    updateMemberRole(workspaceId: $workspaceId, userId: $userId, role: $role) {\n      role\n    }\n  }\n": types.PromoteSuccessorDocument,
@@ -226,6 +236,22 @@ const documents: Documents = {
  */
 export function graphql(source: string): unknown;
 
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query CardArrivalsCsv($query: String) {\n    cardArrivalsCsv(query: $query)\n  }\n"): (typeof documents)["\n  query CardArrivalsCsv($query: String) {\n    cardArrivalsCsv(query: $query)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query InvitationCardAttempts($batchId: ID!, $first: Int!, $after: String) {\n    invitationCardAttempts(batchId: $batchId, first: $first, after: $after) {\n      edges {\n        node {\n          id\n          reason\n          attempts\n          cardPosition\n          firstAttemptedAt\n          lastAttemptedAt\n          account {\n            id\n            name\n            email\n          }\n        }\n      }\n      pageInfo {\n        hasNextPage\n        endCursor\n      }\n    }\n  }\n"): (typeof documents)["\n  query InvitationCardAttempts($batchId: ID!, $first: Int!, $after: String) {\n    invitationCardAttempts(batchId: $batchId, first: $first, after: $after) {\n      edges {\n        node {\n          id\n          reason\n          attempts\n          cardPosition\n          firstAttemptedAt\n          lastAttemptedAt\n          account {\n            id\n            name\n            email\n          }\n        }\n      }\n      pageInfo {\n        hasNextPage\n        endCursor\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RevokeInvitationCardBatch($batchId: ID!) {\n    revokeInvitationCardBatch(batchId: $batchId) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation RevokeInvitationCardBatch($batchId: ID!) {\n    revokeInvitationCardBatch(batchId: $batchId) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreateInvitationCards($sheets: Int!, $expiresAt: DateTime!, $note: String) {\n    createInvitationCards(sheets: $sheets, expiresAt: $expiresAt, note: $note) {\n      batchId\n      expiresAt\n      tokens\n    }\n  }\n"): (typeof documents)["\n  mutation CreateInvitationCards($sheets: Int!, $expiresAt: DateTime!, $note: String) {\n    createInvitationCards(sheets: $sheets, expiresAt: $expiresAt, note: $note) {\n      batchId\n      expiresAt\n      tokens\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -494,6 +520,10 @@ export function graphql(source: "\n  query GrimoireSearchMatches(\n    $workspac
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation AcceptInvitation($token: String!) {\n    acceptInvitation(token: $token) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation AcceptInvitation($token: String!) {\n    acceptInvitation(token: $token) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RecordCardAttempt($token: String!) {\n    recordCardAttempt(token: $token)\n  }\n"): (typeof documents)["\n  mutation RecordCardAttempt($token: String!) {\n    recordCardAttempt(token: $token)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

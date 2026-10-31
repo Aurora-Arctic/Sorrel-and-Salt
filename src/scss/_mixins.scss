@@ -846,10 +846,12 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
 
 // No cell wraps, so a row stays one line and the table scrolls in its frame;
 // a confirmation opened from a cell wraps as prose again, and a card, which
-// does not scroll, wraps too. Nest inside the table's selector.
+// does not scroll, wraps too. Child combinators reach only this table's own
+// cells, so a table inside that dialog keeps its own wrapping. Nest inside the
+// table's selector.
 @mixin data-table-nowrap {
-  th,
-  td {
+  > thead > tr > th,
+  > tbody > tr > td {
     white-space: nowrap;
   }
 
@@ -859,8 +861,8 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
 
   @container data-table (max-width: #{$table-stack-width}) {
     &.data-table--stack {
-      th,
-      td {
+      > thead > tr > th,
+      > tbody > tr > td {
         white-space: normal;
       }
     }

@@ -673,6 +673,48 @@
       "when": 1793404900226,
       "tag": "0095_rekey-citation-seed-keys",
       "breakpoints": true
+    },
+    {
+      "idx": 96,
+      "version": "7",
+      "when": 1793405000000,
+      "tag": "0096_invitation-cards",
+      "breakpoints": true
+    },
+    {
+      "idx": 97,
+      "version": "7",
+      "when": 1793405060000,
+      "tag": "0097_card-privilege-route",
+      "breakpoints": true
+    },
+    {
+      "idx": 98,
+      "version": "7",
+      "when": 1793405120000,
+      "tag": "0098_card-invitation-attempts",
+      "breakpoints": true
+    },
+    {
+      "idx": 99,
+      "version": "7",
+      "when": 1793405180000,
+      "tag": "0099_card-position",
+      "breakpoints": true
+    },
+    {
+      "idx": 100,
+      "version": "7",
+      "when": 1793411379488,
+      "tag": "0100_card-expiry-end-of-day",
+      "breakpoints": true
+    },
+    {
+      "idx": 101,
+      "version": "7",
+      "when": 1793415305515,
+      "tag": "0101_card-batch-note",
+      "breakpoints": true
     }
   ]
 }

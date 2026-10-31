@@ -28,6 +28,7 @@ export const AUDIT_COLUMNS: readonly string[] = [
 // hard-deleted join tables are in it: they carry the four stamps and the trigger.
 export const AUDITED_TABLES = [
   'admin_role_change_pauses',
+  'card_invitation_attempts',
   'categories',
   'category_groups',
   'celestial_bodies',

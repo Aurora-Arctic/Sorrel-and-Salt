@@ -19,6 +19,8 @@ when something changed (MB.53), Clear disabled rather than hidden, Filter
 and Clear half each when alone on their line, and three lists filtering by
 a full page load.
 
+A list with three filter fields or fewer, its search counted, keeps them inline in this form; a list with more takes the Filters drawer ([`FacetPanel`](facet-panel.md)'s `FacetShell`) with only its search left in the row, because the drawer keeps the row to a search box and one button however many fields the list adds (the owner's rule, 2026-10-31).
+
 ## Props
 
 `FilterFormProps` (`types.ts`):

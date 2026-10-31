@@ -4,7 +4,7 @@ import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
 import { workspaceRoleLabel } from '../UserDetail/roles';
 import { emptyList } from '../../lib/text';
-import { inUtc } from '../../lib/utc';
+import LocalTime from '../LocalTime';
 import AcceptControl from './accept-control';
 import DeclineControl from './decline-control';
 import type { ReceivedInvitationsProps } from './types';
@@ -47,11 +47,7 @@ const ReceivedInvitations = ({
             {
               heading: 'Expires',
               className: 'received-invitations__expires',
-              cell: (invitation) => (
-                <time dateTime={invitation.expiresAt.toISOString()}>
-                  {inUtc(invitation.expiresAt)}
-                </time>
-              ),
+              cell: (invitation) => <LocalTime at={invitation.expiresAt} long />,
             },
             {
               heading: 'Answer',

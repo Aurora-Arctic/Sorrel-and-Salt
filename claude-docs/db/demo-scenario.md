@@ -225,3 +225,7 @@ demo jar healing itself after someone empties it, which `npm run db:reset` (M1.2
 does properly anyway; what it buys is that a reseed over an edited grimoire is
 a no-op rather than an error. A developer scenario, so no test holds it
 (MB.225).
+
+### Invitation cards
+
+`src/db/seed/invitation-cards.ts` gives the admin Invitation Cards and Card Sign-Ups tabs (M15.17 to M15.22) rows to show. It runs only in `demo`: not in `standard`, which every db test clones, and not in a reference seed, which runs on staging and production. Three batches have fixed ids, each with a different first block so the screen names them apart: a live batch of two sheets (18 cards), a revoked batch of one sheet and an expired batch of one sheet, every card with its position. Four cards are accepted, by Fixture A (who owns W, so Covens Owned shows one), B, C and D. Eight refused opens cover `revoked`, `expired` and `accepted`, with counts from 1 to 12 and times from minutes to nine days back. Tokens are random and thrown away; only the hashes are stored, so no seeded card can be redeemed. A card is found again by its batch and position, an attempt by its card, account and reason, so a second run adds nothing. Times are set from the first run's clock, so a long-lived dev database shows them ageing, and the "live" batch expires 21 days after that first run. Standard has no soft-deleted user, so no refusal names a removed account. Seeded rows are written past `withAudit`, as every seed row is.

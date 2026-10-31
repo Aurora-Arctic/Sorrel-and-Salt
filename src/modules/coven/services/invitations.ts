@@ -8,7 +8,7 @@ import {
   findRecentCovenInvitationTimes,
   withAudit,
 } from '../../../db/repository';
-import type { InvitableRole, InvitationRow } from '../../../db/repository';
+import type { AddressInvitationRow, InvitableRole, InvitationRow } from '../../../db/repository';
 import { NotFound, ValidationError } from '../../../lib/errors';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { newToken } from '../../../lib/invitation-token';
@@ -116,7 +116,7 @@ export async function listPendingWorkspaceInvitations(
   session: Session,
   workspaceId: string,
   page: PageRequest,
-): Promise<PageEntry<InvitationRow>[]> {
+): Promise<PageEntry<AddressInvitationRow>[]> {
   const membership = await assertMembership(session, workspaceId, { member: ['invite'] });
   return findPendingWorkspaceInvitationPage(membership, page);
 }

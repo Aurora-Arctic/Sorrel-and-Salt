@@ -688,3 +688,38 @@ tasks that build the rest:
   registered: nothing soft-deletes a user through Better Auth.
 - **No `user.fields` mapping.** `name`/`image` keep Better Auth's own
   column names ([`tables.md`](tables.md) has the reverted rename).
+
+## Invitation cards (M15.17–M15.19)
+
+An invitation card is a printed QR code that admits one signed-in account. It is a row in `invitations`
+with `kind = 'card'`: no email, workspace or role, a `batch_id` shared by the batch it was minted in, and
+only the token's hash. Accepting a card follows the invitation-token rules in CLAUDE.md: the link is
+`/i/<token>`, and nothing but the mint ever holds the token.
+
+- **Who may.** Only a site admin. Every service in `src/modules/identity/services/invitation-cards.ts`
+  opens with `assertSiteAdmin`, so a curator, a member and an owner are refused by direct call, and the
+  GraphQL fields add `authScopes: { admin: true }` over that. The admin page calls
+  `requireAdminSession()`, which answers a curator with the styled not-authorized page.
+- **Minting.** `createInvitationCards(sheets, expiresAt, note)` makes nine cards per sheet in one transaction under
+  one `batch_id`, at most `MAX_SHEETS_PER_BATCH` (55 sheets, 495 cards), with an expiry in the future and an optional note (trimmed, at most 500 characters, shown on the batch row). The
+  mutation returns each token once, in that response; no query or type but `MintedInvitationCards.tokens`
+  has a token, hash or link field, and a test fails if one appears.
+- **Revoking.** `revokeInvitationCardBatch(batchId)` sets `revoked_at` on the batch's pending cards only; a
+  card already accepted stays accepted. A single card is never revoked on its own.
+- **Listing.** `invitationCardBatches` pages one row per batch (minted, expiry, cards, accepted, pending),
+  counted in SQL. The Invitation Cards tab at `/admin/invitation-cards` shows it; the QR codes cannot be
+  redrawn from it.
+- **Card sign-ups.** `cardArrivals` pages every accepted card with the account, the date and the covens that
+  account owns (read as an admin may read anyone's memberships). `cardArrivalsCsv` returns the same as
+  CSV text (Account Name, Email, Accepted, Batch, Covens Owned), with a leading apostrophe on any cell a spreadsheet
+  would read as a formula. The Card Sign-Ups tab at `/admin/card-sign-ups` offers it as a download.
+- **Refused opens.** When a signed-in, verified account opens a card link that is refused as revoked,
+  expired or already accepted by another account, the refused panel sends `recordCardAttempt(token)`
+  and the service writes one row per card, account and reason, counting repeats
+  ([`db/invitations.md`](../db/invitations.md), "Card attempts"). The mutation takes the token alone;
+  the account comes from the session. A signed-out visitor, an unverified account, an unknown token,
+  a pending card and the account that accepted the card record nothing, and the signed-out page reads
+  nothing of the link. `invitationCardAttempts(batchId)` lists a batch's refused opens and
+  `InvitationCardBatch.refusedOpens` counts them; both are admin only, like every card field.
+
+The component is described in [`components/admin-cards.md`](../components/admin-cards.md).

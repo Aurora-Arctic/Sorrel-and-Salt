@@ -75,7 +75,7 @@ async function insertCoven(
 beforeEach(async () => {
   send.mockClear();
   mail.real = false;
-  await sql`truncate invitations`;
+  await sql`truncate card_invitation_attempts, invitations`;
 });
 
 afterEach(() => {

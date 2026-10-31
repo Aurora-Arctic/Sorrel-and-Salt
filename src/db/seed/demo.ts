@@ -4,6 +4,7 @@ import { assertCompendiumValid, seedCompendiumContent } from './compendium';
 import { loadCompendium } from './compendium/load';
 import { seedDemoCovenSeats } from './demo-coven';
 import { seedDemoCovenContent } from './demo-coven-content';
+import { seedInvitationCards } from './invitation-cards';
 import { DEMO_WORKINGS } from './demo-workings';
 import {
   identityOf,
@@ -1182,6 +1183,8 @@ export async function seedDemo(db: SeedDatabase): Promise<void> {
     await insertMissingStock(tx, W_COVEN, DEMO_STOCK, await ingredientIdByIdentity(tx, W_COVEN));
     // After the stock: a complete working has already taken from the jars.
     await insertMissingWorkings(tx, DEMO_WORKINGS);
+    // Fake invitation cards and refused opens, for the admin card tabs; the fixture users exist by now.
+    await seedInvitationCards(tx);
   });
 }
 
