@@ -1,9 +1,6 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The modules of the printed invitation card's QR code (QR_TONE in src/lib/invitation-cards/qr.ts); no palette token has it.
-$qr-dot: #c0baac;
-
 // A column inside its section of the account page; the field, the notices and the button are the form
 // primitives' (_primitives.scss).
 .password-section {
@@ -41,7 +38,7 @@ $qr-dot: #c0baac;
   inline-size: 12rem;
   padding: space(3);
   margin: space(3) auto;
-  color: $qr-dot;
+  color: $chalk-muted; // the printed card's QR tone (QR_TONE in src/lib/invitation-cards/qr.ts)
   background: $soot;
   display: block;
   box-sizing: content-box;

@@ -18,7 +18,7 @@ has a Categories tab at `/admin/categories` and a Groups tab at
 | `title`    | The page's `h1`, title case, which names the tabs' nav too: "Categories"                                 |
 | `tabs`     | Each tab's `href`, short label ("Groups", "Traditions"), `filtered`, `shape` and `density`, in row order |
 | `action`   | Optional: the open tab's one action, at the end of the heading's line                                    |
-| `framed`   | Optional: the tabs hold a `.page-with-nav` column (the account). See "The header at narrow widths"      |
+| `framed`   | Optional: the tabs hold a `.page-with-nav` column (the account). See "The header at narrow widths"       |
 | `children` | The open tab's content                                                                                   |
 
 Inside, `tab-switch.tsx` holds the client parts the tab row, the action and

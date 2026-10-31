@@ -169,11 +169,7 @@ const PasswordForm = ({
 
   return (
     <div className="sign-in-panel__password" ref={ref}>
-      <button
-        type="button"
-        className="back-link sign-in-panel__back"
-        onClick={onBack}
-      >
+      <button type="button" className="back-link sign-in-panel__back" onClick={onBack}>
         <BackChevron />
         Back
       </button>
@@ -183,7 +179,11 @@ const PasswordForm = ({
         headingClassName="auth-title sign-in-panel__password-heading"
         focusable
         title={signingUp ? 'Create an Account with Email' : 'Sign In with Email'}
-        suffix={lastUsed && !signingUp ? <span className="badge badge--last-used">Last Used</span> : undefined}
+        suffix={
+          lastUsed && !signingUp ? (
+            <span className="badge badge--last-used">Last Used</span>
+          ) : undefined
+        }
       />
       {problem.alert && (
         <Notice kind="error" result>
