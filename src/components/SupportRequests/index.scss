@@ -13,6 +13,20 @@
   }
 }
 
+// The subject link reads in the body ink, in every state, and is underlined on hover and focus so it still reads as a link.
+.support-requests__subject {
+  &,
+  &:visited,
+  &:hover {
+    color: $text-primary;
+  }
+
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline;
+  }
+}
+
 // A long unbroken subject wraps inside a capped cell, so the other columns stay on screen.
 .support-requests .data-table td:has(.support-requests__subject) {
   max-inline-size: 28rem;
@@ -191,6 +205,11 @@
   font-size: type-size('small');
 }
 
+// The word Internal in a thread tag and on the Send As chip, in the warning ink.
+.support-detail__internal {
+  color: $warning;
+}
+
 // The reply form sits under the thread behind a hairline; Reply on the left, Resolve opposite.
 .support-detail__reply {
   padding-block-start: space(5);
@@ -247,12 +266,12 @@
   @include icon-button($cursor: default);
 
   margin-inline-start: space(1);
-  color: $accent;
+  color: $text-primary;
   vertical-align: middle;
 
   &:hover {
     background-color: transparent;
-    color: $accent;
+    color: $text-primary;
   }
 }
 

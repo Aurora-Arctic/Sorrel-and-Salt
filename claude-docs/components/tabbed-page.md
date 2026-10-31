@@ -13,15 +13,15 @@ has a Categories tab at `/admin/categories` and a Groups tab at
 
 `TabbedPageProps` (`types.ts`):
 
-| Prop        | What it is                                                                                                                                             |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `title`     | The page's `h1`, title case, which names the tabs' nav too: "Categories"                                                                               |
-| `open`      | Optional: the open tab's `href`, for tabs told apart by query rather than path                                                                         |
-| `tabs`      | Each tab's `href`, short label ("Groups", "Traditions"), optional `count` (shown after the label), `filtered`, `shape` and `density`, in row order     |
-| `action`    | Optional: the open tab's one action, at the end of the heading's line                                                                                  |
-| `tabsBelow` | Optional: the row sits on a line of its own beneath the heading at every width (the admin support page), by the same forced break the framed page uses |
-| `framed`    | Optional: the tabs hold a `.page-with-nav` column (the account). See "The header at narrow widths"                                                     |
-| `children`  | The open tab's content                                                                                                                                 |
+| Prop        | What it is                                                                                                                                                                         |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `title`     | The page's `h1`, title case, which names the tabs' nav too: "Categories"                                                                                                           |
+| `open`      | Optional: the open tab's `href`, for tabs told apart by query rather than path                                                                                                     |
+| `tabs`      | Each tab's `href`, short label ("Groups", "Traditions"), optional `count` (shown after the label as a `FacetCount`, 99+ from 100), `filtered`, `shape` and `density`, in row order |
+| `action`    | Optional: the open tab's one action, at the end of the heading's line                                                                                                              |
+| `tabsBelow` | Optional: the row sits on a line of its own beneath the heading at every width (the admin support page), by the same forced break the framed page uses                             |
+| `framed`    | Optional: the tabs hold a `.page-with-nav` column (the account). See "The header at narrow widths"                                                                                 |
+| `children`  | The open tab's content                                                                                                                                                             |
 
 Inside, `tab-switch.tsx` holds the client parts the tab row, the action and
 the content area share: `TabSwitchProvider`, `TabAction` (the action's

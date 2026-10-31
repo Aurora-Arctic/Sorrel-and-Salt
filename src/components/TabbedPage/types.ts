@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 export interface PageTab {
   href: Route;
   label: string;
-  /** A number shown after the label, "Mine (3)"; left out, none. */
+  /** A number shown after the label as a facet count, "Mine 3", and "99+" from 100; left out, none. */
   count?: number;
   /** Whether the tab's list opens with a filter, so its loading skeleton draws a filter row; left out, none. */
   filtered?: boolean;
