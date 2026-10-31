@@ -122,4 +122,20 @@ describe('SupportList', () => {
     render(<SupportList counts={none} requests={[request()]} opened={opened()} />);
     expect(screen.getByRole('dialog', { name: /How do I join a coven\?/ })).toBeInTheDocument();
   });
+
+  it('marks a row waiting on the sender with a dot, and no other row', () => {
+    render(
+      <SupportList
+        requests={[
+          request({ id: 'a', subject: 'Waiting one', status: 'waiting_on_sender' }),
+          request({ id: 'b', subject: 'Open one', status: 'open' }),
+          request({ id: 'c', subject: 'Resolved one', status: 'resolved' }),
+        ]}
+        counts={none}
+      />,
+    );
+    const dots = screen.getAllByRole('img', { name: 'Waiting on you' });
+    expect(dots).toHaveLength(1);
+    expect(dots[0]!.closest('li')).toHaveTextContent('Waiting one');
+  });
 });

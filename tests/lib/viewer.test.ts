@@ -10,11 +10,13 @@ const getSession = vi.fn();
 const getMe = vi.fn();
 const countReceivedInvitations = vi.fn();
 const membershipsOf = vi.fn();
+const getMySupportCounts = vi.fn();
 // What a role may do is the coven module's to say; here a viewer reads no members and only an owner invites.
 const rolePermits = vi.fn((role: string, statement?: { member?: string[] }) =>
   statement?.member?.includes('invite') ? role === 'owner' : role !== 'viewer',
 );
 vi.mock('@/lib/request-session', () => ({ requireSignedIn, getSession }));
+vi.mock('@/modules/support', () => ({ getMySupportCounts }));
 vi.mock('@/modules/identity', () => ({ getMe, countReceivedInvitations }));
 // The switcher's order is the coven module's too; stood in for by the rule it states.
 const byCovenName = (a: { name: string; demo?: boolean }, b: { name: string; demo?: boolean }) =>
@@ -35,6 +37,7 @@ beforeEach(() => {
   getSession.mockResolvedValue(SESSION);
   getMe.mockResolvedValue(ME);
   membershipsOf.mockResolvedValue([[]]);
+  getMySupportCounts.mockReset().mockResolvedValue({ assignedOpen: 0, waitingOnMe: 0 });
   countReceivedInvitations.mockReset().mockResolvedValue({ totalCount: 0, countBefore: null });
 });
 
@@ -52,6 +55,8 @@ describe('viewerOf', () => {
       canCreate: false,
       verified: false,
       pendingInvitations: 0,
+      assignedSupport: 0,
+      waitingSupport: 0,
     });
   });
 
@@ -62,6 +67,18 @@ describe('viewerOf', () => {
 
     expect(viewer.pendingInvitations).toBe(3);
     expect(countReceivedInvitations).toHaveBeenCalledExactlyOnceWith(SESSION, undefined);
+  });
+
+  it('carries the support counts for a verified viewer, and reads none for an unverified one', async () => {
+    getMySupportCounts.mockResolvedValue({ assignedOpen: 4, waitingOnMe: 2 });
+    const { viewer } = await viewerOf();
+    expect(viewer).toMatchObject({ assignedSupport: 4, waitingSupport: 2 });
+
+    getMySupportCounts.mockClear();
+    getMe.mockResolvedValue({ ...ME, emailVerified: false });
+    const { viewer: unverified } = await viewerOf();
+    expect(unverified).toMatchObject({ assignedSupport: 0, waitingSupport: 0 });
+    expect(getMySupportCounts).not.toHaveBeenCalled();
   });
 
   it('asks no count for an unverified viewer, whose address has none to read', async () => {

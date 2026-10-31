@@ -93,7 +93,11 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
               <div>
                 <dt>Resolved</dt>
                 <dd>
-                  by {request.resolvedBy.name} at <LocalTime at={request.resolvedAt} long />
+                  by{' '}
+                  {request.resolvedBy.id === request.sender?.id
+                    ? 'the sender'
+                    : request.resolvedBy.name}{' '}
+                  at <LocalTime at={request.resolvedAt} long />
                 </dd>
               </div>
             )

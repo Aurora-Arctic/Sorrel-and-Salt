@@ -29,6 +29,7 @@ const REQUESTS: SupportRequestEntry[] = [
     errorReference: 'abc123',
     senderReplied: true,
     betaTester: false,
+    resolvedBySender: false,
   },
   {
     id: 'request-2',
@@ -43,6 +44,7 @@ const REQUESTS: SupportRequestEntry[] = [
     errorReference: null,
     senderReplied: false,
     betaTester: true,
+    resolvedBySender: false,
   },
 ];
 

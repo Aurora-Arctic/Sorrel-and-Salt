@@ -252,6 +252,10 @@ export interface ShellViewer {
    * unverified account, which reads 0.
    */
   pendingInvitations: number;
+  /** Open support requests assigned to them; 0 unless verified and staff. */
+  assignedSupport: number;
+  /** Their own support requests waiting on them; 0 unless verified. */
+  waitingSupport: number;
 }
 
 /** One coven the viewer belongs to, as the shell's switcher and brand link need it. */

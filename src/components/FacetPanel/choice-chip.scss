@@ -82,6 +82,18 @@
   font-weight: 500;
 }
 
+// An option's icon, a glyph wide, ahead of its label on the chip and in the menu.
+.facet-chip__icon {
+  display: inline-flex;
+  margin-inline-end: space(1);
+  vertical-align: -0.125em;
+
+  svg {
+    inline-size: $glyph-size;
+    block-size: $glyph-size;
+  }
+}
+
 .facet-chip__caret {
   // A chevron five eighths of a glyph wide and three eighths high.
   inline-size: calc(#{$glyph-size} * 0.625);

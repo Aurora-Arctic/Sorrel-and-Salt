@@ -75,6 +75,9 @@ const SupportList = ({
           {requests.map((request) => (
             <li key={request.id} className="support-list__item">
               <RowLink request={request} href={hrefOf(request.id)} />
+              {request.status === 'waiting_on_sender' && (
+                <span className="support-list__dot" role="img" aria-label="Waiting on you" />
+              )}
               <div className="support-list__meta">
                 <span className={statusBadgeClass(request.status)}>
                   {senderStatusLabel(request.status, request.staffWroteLast)}

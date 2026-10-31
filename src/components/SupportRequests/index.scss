@@ -217,8 +217,9 @@
   gap: space(3);
 }
 
-// The switch centres its label and toggle by default; in the side column they sit flush left with the fields around them.
-.support-detail__side .switch {
+// The switch centres its label and toggle by default; in the side column and the reply form they sit flush left with the fields around them.
+.support-detail__side .switch,
+.support-detail__reply .switch {
   align-items: start;
 
   .field__label {
@@ -238,6 +239,20 @@
 
   > .form__actions {
     margin-block: 0;
+  }
+}
+
+// The beta tester's sprout after the sender's name: a status mark whose press only opens its tip.
+.support-requests__beta {
+  @include icon-button($cursor: default);
+
+  margin-inline-start: space(1);
+  color: $accent;
+  vertical-align: middle;
+
+  &:hover {
+    background-color: transparent;
+    color: $accent;
   }
 }
 

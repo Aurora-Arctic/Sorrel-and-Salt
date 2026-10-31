@@ -174,4 +174,88 @@ describe('AccountMenu support link', () => {
       expect.stringMatching(/\?support=$/),
     );
   });
+
+  describe('support counts', () => {
+    const ADMIN = [{ label: 'Admin', href: '/admin' as Route, base: '/admin' }];
+    const open = (): void => {
+      fireEvent.click(screen.getByRole('button', { name: /^Fixture Owner/ }));
+    };
+
+    it('wears no dot and shows no count when nothing waits', () => {
+      const { container } = render(<AccountMenu name="Fixture Owner" verified links={ADMIN} />);
+      open();
+      expect(container.querySelector('.account-menu__dot')).toBeNull();
+      expect(screen.getByRole('link', { name: 'Support' })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Admin' })).toHaveAttribute('href', '/admin');
+    });
+
+    it('counts requests assigned to a staff viewer, links Admin to their own requests and dots the avatar', () => {
+      const { container } = render(
+        <AccountMenu name="Fixture Owner" verified links={ADMIN} assignedSupport={3} />,
+      );
+      expect(container.querySelector('.account-menu__dot')).not.toBeNull();
+      expect(
+        screen.getByRole('button', { name: 'Fixture Owner, 3 requests assigned to you' }),
+      ).toBeInTheDocument();
+      open();
+      const link = screen.getByRole('link', { name: /^Admin, 3 requests assigned to you/ });
+      expect(link).toHaveAttribute('href', '/admin/support?view=mine');
+      expect(link).toHaveTextContent('3');
+    });
+
+    it('counts requests waiting on the sender, and the Support row leads to the list', () => {
+      const { container } = render(
+        <AccountMenu name="Fixture Owner" verified waitingSupport={1} />,
+      );
+      expect(container.querySelector('.account-menu__dot')).not.toBeNull();
+      open();
+      const link = screen.getByRole('link', { name: /^Support, 1 request waiting on you/ });
+      expect(link).toHaveAttribute('href', '/account/support');
+    });
+
+    it('draws one dot when both counts apply', () => {
+      const { container } = render(
+        <AccountMenu name="Fixture Owner" verified assignedSupport={1} waitingSupport={1} />,
+      );
+      expect(container.querySelectorAll('.account-menu__dot')).toHaveLength(1);
+    });
+
+    it('shows 99 as 99 and 100 as 99+, saying the cap to a screen reader', () => {
+      const { rerender } = render(
+        <AccountMenu name="Fixture Owner" verified waitingSupport={99} />,
+      );
+      open();
+      expect(
+        screen.getByRole('link', { name: /^Support, 99 requests waiting on you/ }),
+      ).toHaveTextContent('99');
+      expect(screen.queryByText('99+')).not.toBeInTheDocument();
+
+      rerender(<AccountMenu name="Fixture Owner" verified waitingSupport={100} />);
+      expect(screen.getByText('99+')).toBeInTheDocument();
+      expect(
+        screen.getByRole('link', { name: /^Support, more than 99 requests waiting on you/ }),
+      ).toBeInTheDocument();
+    });
+
+    it('caps the Admin count the same way', () => {
+      render(<AccountMenu name="Fixture Owner" verified links={ADMIN} assignedSupport={250} />);
+      open();
+      expect(screen.getByText('99+')).toBeInTheDocument();
+      expect(
+        screen.getByRole('link', { name: /more than 99 requests assigned to you/ }),
+      ).toBeInTheDocument();
+    });
+
+    it('shows neither count for an unverified account', () => {
+      const { container } = render(
+        <AccountMenu
+          name="Fixture Owner"
+          verified={false}
+          assignedSupport={2}
+          waitingSupport={2}
+        />,
+      );
+      expect(container.querySelector('.account-menu__dot')).toBeNull();
+    });
+  });
 });

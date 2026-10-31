@@ -3,9 +3,13 @@ import type {
   SupportRequestsCursor,
   SupportRequestsFilter,
 } from '@/components/SupportRequests/types';
-import { DEFAULT_SUPPORT_VIEW, SUPPORT_ABOUTS, SUPPORT_VIEWS } from '@/lib/support-path';
+import {
+  DEFAULT_SUPPORT_VIEW,
+  SUPPORT_ABOUTS,
+  SUPPORT_SENDER_GROUPS,
+  SUPPORT_VIEWS,
+} from '@/lib/support-path';
 import { oneOf, single, trimmed } from '@/lib/search-params';
-import { BETA_ONLY } from '@/components/SupportRequests/href';
 import { readListPlace } from '../list-page';
 import type { SupportSearchParams } from './types';
 
@@ -32,7 +36,11 @@ export function readSupportPlace(params: SupportSearchParams): {
         ) ?? '',
       view: oneOf(VIEWS, single(params.view)) ?? DEFAULT_SUPPORT_VIEW,
       errorCode: /^\d{1,3}$/.test(code) ? code : '',
-      betaOnly: single(params.beta) === BETA_ONLY,
+      sender:
+        oneOf(
+          SUPPORT_SENDER_GROUPS.map((group) => group.value),
+          single(params.sender),
+        ) ?? '',
     },
     cursor: { after, before },
     request: single(params.request) || undefined,
@@ -45,12 +53,12 @@ export function serviceFilter({
   about,
   view,
   errorCode,
-  betaOnly,
+  sender,
 }: SupportRequestsFilter): SupportRequestFilter {
   return {
     view,
     ...(about && { about }),
     ...(errorCode && { errorCode: Number(errorCode) }),
-    ...(betaOnly && { betaTester: true }),
+    ...(sender && { senderGroup: sender }),
   };
 }

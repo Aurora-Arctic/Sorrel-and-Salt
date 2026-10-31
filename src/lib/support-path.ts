@@ -175,3 +175,10 @@ export type SupportView = (typeof SUPPORT_VIEWS)[number]['value'];
 
 /** The view the page opens on. */
 export const DEFAULT_SUPPORT_VIEW: SupportView = 'needs_staff';
+
+/**
+ * The kinds of sender the admin Support page can narrow to, each with the words its choice shows. A sender may be in
+ * several, so each is a narrowing of its own rather than a rank.
+ */
+export const SUPPORT_SENDER_GROUPS = [{ value: 'beta_tester', label: 'Beta Testers' }] as const;
+export type SupportSenderGroup = (typeof SUPPORT_SENDER_GROUPS)[number]['value'];

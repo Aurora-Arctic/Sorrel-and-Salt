@@ -152,12 +152,12 @@ describe('the beta-tester filter', () => {
 
     const only = await listSupportRequests(
       asUser(E),
-      { view: 'needs_staff', betaTester: true },
+      { view: 'needs_staff', senderGroup: 'beta_tester' },
       PAGE,
     );
     expect(only.map(({ node }) => node.subject)).toEqual(['beta-open']);
 
-    const counts = await countSupportViews(asUser(E), { betaTester: true });
+    const counts = await countSupportViews(asUser(E), { senderGroup: 'beta_tester' });
     expect(counts.needs_staff).toBe(1);
     expect(counts.closed).toBe(1);
     expect((await countSupportViews(asUser(E), {})).needs_staff).toBe(2);
@@ -171,7 +171,7 @@ describe('the beta-tester filter', () => {
 
     const rows = await listSupportRequests(
       asUser(F),
-      { view: 'needs_staff', betaTester: true },
+      { view: 'needs_staff', senderGroup: 'beta_tester' },
       PAGE,
     );
     expect(rows.map(({ node }) => node.subject)).toEqual(['beta-shared']);

@@ -46,6 +46,7 @@ const ROW: SupportRequestEntry = {
   errorReference: null,
   senderReplied: false,
   betaTester: false,
+  resolvedBySender: false,
 };
 
 const DETAIL: SupportRequestDetailEntry = {
@@ -71,6 +72,8 @@ const open = (viewer: SupportViewer, detail: Partial<SupportRequestDetailEntry> 
   );
 
 const dialog = () => screen.getByRole('dialog', { name: new RegExp(ROW.subject) });
+/** Turns the composer from its default, an internal note, to a reply. */
+const chooseReply = () => fireEvent.click(within(dialog()).getByRole('radio', { name: 'Reply' }));
 
 // The Time-Out fold starts closed; its toggle is the one Time-Out button that says whether it is open.
 const openTimeOut = () =>
@@ -106,7 +109,7 @@ describe('SupportRequests list', () => {
       <SupportRequests
         requests={[]}
         viewer={ADMIN}
-        filter={{ about: 'bug', view: 'needs_staff', errorCode: '', betaOnly: false }}
+        filter={{ about: 'bug', view: 'needs_staff', errorCode: '', sender: '' }}
       />,
     );
     expect(screen.getByText(/No support requests match/)).toBeInTheDocument();
@@ -140,10 +143,11 @@ describe('Reply', () => {
       },
     );
     open(ADMIN);
+    chooseReply();
     const reply = within(dialog()).getByRole('button', { name: 'Reply' });
     expect(reply).toBeDisabled();
 
-    fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Your Reply' }), {
+    fireEvent.change(within(dialog()).getByRole('textbox', { name: /^Your Reply/ }), {
       target: { value: 'Thank you, we are looking.' },
     });
     expect(reply).toBeEnabled();
@@ -165,8 +169,9 @@ describe('Reply', () => {
       },
     );
     open(ADMIN);
+    chooseReply();
     fireEvent.click(within(dialog()).getByRole('switch', { name: /Waiting on Sender/ }));
-    fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Your Reply' }), {
+    fireEvent.change(within(dialog()).getByRole('textbox', { name: /^Your Reply/ }), {
       target: { value: 'Which jar?' },
     });
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Reply' }));
@@ -197,9 +202,10 @@ describe('A timed-out sender', () => {
       },
     );
     open(ADMIN, { timeouts: [standing(new Date('2999-01-01T00:00:00Z'))] });
+    chooseReply();
     expect(within(dialog()).getByText(NOTICE)).toBeInTheDocument();
 
-    fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Your Reply' }), {
+    fireEvent.change(within(dialog()).getByRole('textbox', { name: /^Your Reply/ }), {
       target: { value: 'Noted.' },
     });
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Reply' }));
@@ -208,6 +214,7 @@ describe('A timed-out sender', () => {
 
   it('is not told to staff when no time-out stands: none, lifted or past', () => {
     open(ADMIN);
+    chooseReply();
     expect(within(dialog()).queryByText(/cannot answer until/)).toBeNull();
     cleanup();
     open(ADMIN, {
@@ -216,12 +223,12 @@ describe('A timed-out sender', () => {
         { ...standing(new Date('2001-01-01T00:00:00Z')), id: 't0' },
       ],
     });
+    chooseReply();
     expect(within(dialog()).queryByText(/cannot answer until/)).toBeNull();
   });
 
   it('is not told to staff writing an internal note', () => {
     open(ADMIN, { timeouts: [standing(new Date('2999-01-01T00:00:00Z'))] });
-    fireEvent.click(within(dialog()).getByRole('radio', { name: /^Internal Note/ }));
     expect(within(dialog()).queryByText(NOTICE)).toBeNull();
   });
 });
@@ -432,7 +439,7 @@ describe('What a viewer is shown', () => {
 
   it('gives an admin every control', () => {
     open(ADMIN);
-    for (const name of ['Assignee', 'GitHub Issue', 'For', 'Your Reply']) {
+    for (const name of ['Assignee', 'GitHub Issue', 'For', /^Your Note/]) {
       expect(within(dialog()).getByLabelText(name)).toBeInTheDocument();
     }
     expect(
@@ -443,7 +450,8 @@ describe('What a viewer is shown', () => {
 
   it('gives a curator Reply and Resolve on a request assigned to them, and no admin-only control', () => {
     open(CURATOR, { assignee: { id: CURATOR.id, name: 'Curtis' } });
-    expect(within(dialog()).getByLabelText('Your Reply')).toBeInTheDocument();
+    chooseReply();
+    expect(within(dialog()).getByLabelText(/^Your Reply/)).toBeInTheDocument();
     expect(within(dialog()).getByRole('button', { name: 'Resolve' })).toBeInTheDocument();
     for (const name of ADMIN_ONLY) {
       expect(within(dialog()).queryByLabelText(name)).not.toBeInTheDocument();
@@ -455,12 +463,12 @@ describe('What a viewer is shown', () => {
   it('gives a curator reading a request not theirs a note form alone: no Reply, mode choice, waiting switch or Resolve', () => {
     open(CURATOR, { curatorVisible: true, assignee: null });
     expect(within(dialog()).getByText(DETAIL.message)).toBeInTheDocument();
-    expect(within(dialog()).queryByLabelText('Your Reply')).toBeNull();
+    expect(within(dialog()).queryByLabelText(/^Your Reply/)).toBeNull();
     expect(within(dialog()).queryByRole('radio')).toBeNull();
     expect(within(dialog()).queryByRole('switch', { name: /Waiting on Sender/ })).toBeNull();
     expect(within(dialog()).queryByRole('button', { name: 'Resolve' })).toBeNull();
     expect(within(dialog()).queryByRole('button', { name: 'Reply' })).toBeNull();
-    expect(within(dialog()).getByLabelText('Your Note')).toBeInTheDocument();
+    expect(within(dialog()).getByLabelText(/^Your Note/)).toBeInTheDocument();
     expect(within(dialog()).getByRole('button', { name: 'Add Note' })).toBeInTheDocument();
     for (const name of ADMIN_ONLY) {
       expect(within(dialog()).queryByLabelText(name)).not.toBeInTheDocument();
@@ -469,9 +477,9 @@ describe('What a viewer is shown', () => {
 
   it('gives a curator the note form alone on a request assigned to someone else', () => {
     open(CURATOR, { curatorVisible: true, assignee: { id: 'admin-1', name: 'Ada' } });
-    expect(within(dialog()).queryByLabelText('Your Reply')).toBeNull();
+    expect(within(dialog()).queryByLabelText(/^Your Reply/)).toBeNull();
     expect(within(dialog()).queryByRole('button', { name: 'Resolve' })).toBeNull();
-    expect(within(dialog()).getByLabelText('Your Note')).toBeInTheDocument();
+    expect(within(dialog()).getByLabelText(/^Your Note/)).toBeInTheDocument();
   });
 
   it('sends a curator’s note through the note mutation', async () => {
@@ -484,7 +492,7 @@ describe('What a viewer is shown', () => {
       },
     );
     open(CURATOR, { curatorVisible: true, assignee: null });
-    fireEvent.change(within(dialog()).getByLabelText('Your Note'), {
+    fireEvent.change(within(dialog()).getByLabelText(/^Your Note/), {
       target: { value: 'Seen it too' },
     });
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Add Note' }));
@@ -589,7 +597,8 @@ describe('Status line in the dialog', () => {
     );
     open(ADMIN);
     expect(status()).toBeEmptyDOMElement();
-    fireEvent.change(within(dialog()).getByLabelText('Your Reply'), { target: { value: 'Hi' } });
+    chooseReply();
+    fireEvent.change(within(dialog()).getByLabelText(/^Your Reply/), { target: { value: 'Hi' } });
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Reply' }));
     await waitFor(() => expect(status()).toHaveTextContent('Reply sent.'));
   });
@@ -640,7 +649,7 @@ describe('Status line in the dialog', () => {
 
 describe('The views', () => {
   const COUNTS = { needs_staff: 4, mine: 1, unassigned: 2, waiting: 0, resolved: 7, closed: 3 };
-  const FILTER = { about: 'bug', view: 'mine', errorCode: '500', betaOnly: true } as const;
+  const FILTER = { about: 'bug', view: 'mine', errorCode: '500', sender: 'beta_tester' } as const;
 
   const views = () =>
     within(screen.getByRole('navigation', { name: 'Support' })).getAllByRole('link');
@@ -670,7 +679,7 @@ describe('The views', () => {
     renderTabs();
     expect(screen.getByRole('link', { name: /Closed/ })).toHaveAttribute(
       'href',
-      '/admin/support?about=bug&view=closed&error=500&beta=only',
+      '/admin/support?about=bug&view=closed&error=500&sender=beta_tester',
     );
   });
 
@@ -681,32 +690,30 @@ describe('The views', () => {
     await user.click(screen.getByRole('link', { name: /Closed/ }));
     expect(router.push).toHaveBeenCalledTimes(1);
     expect(router.push).toHaveBeenLastCalledWith(
-      '/admin/support?about=bug&view=closed&error=500&beta=only',
+      '/admin/support?about=bug&view=closed&error=500&sender=beta_tester',
     );
   });
 
-  it('are given a Beta Testers filter that shows its choice and keeps the view when changed', async () => {
+  it('are given a Sender filter that shows its choice and keeps the view when changed', async () => {
     router.push.mockClear();
     const user = userEvent.setup();
-    render(
-      <SupportRequests requests={[ROW]} viewer={ADMIN} filter={{ ...FILTER, betaOnly: false }} />,
-    );
-    const group = screen.getByRole('group', { name: 'Beta Testers' });
+    render(<SupportRequests requests={[ROW]} viewer={ADMIN} filter={{ ...FILTER, sender: '' }} />);
+    const group = screen.getByRole('group', { name: 'Sender' });
     expect(within(group).getByRole('radio', { name: 'All' })).toBeChecked();
-    await user.click(within(group).getByRole('radio', { name: 'Only' }));
+    await user.click(within(group).getByRole('radio', { name: 'Beta Testers' }));
     expect(router.push).toHaveBeenLastCalledWith(
-      '/admin/support?about=bug&view=mine&error=500&beta=only',
+      '/admin/support?about=bug&view=mine&error=500&sender=beta_tester',
     );
   });
 
-  it('show the Beta Testers filter as chosen when the address names it', () => {
+  it('show the Sender filter as chosen when the address names it', () => {
     render(<SupportRequests requests={[ROW]} viewer={ADMIN} filter={FILTER} />);
-    const group = screen.getByRole('group', { name: 'Beta Testers' });
-    expect(within(group).getByRole('radio', { name: 'Only' })).toBeChecked();
+    const group = screen.getByRole('group', { name: 'Sender' });
+    expect(within(group).getByRole('radio', { name: 'Beta Testers' })).toBeChecked();
     expect(within(group).getByRole('radio', { name: 'All' })).not.toBeChecked();
   });
 
-  it('say in text when the sender wrote last and when the sender is a beta tester', () => {
+  it('say in text when the sender wrote last, and mark a beta tester in the Sender cell', () => {
     render(
       <SupportRequests
         requests={[
@@ -721,23 +728,73 @@ describe('The views', () => {
     const columns = screen.getAllByRole('columnheader').map((h) => h.textContent);
     const cellIn = (row: HTMLElement, heading: string) =>
       within(row).getAllByRole('cell')[columns.indexOf(heading)];
-    expect(within(cellIn(first, 'Sender')).getByText('Beta Tester')).toBeInTheDocument();
-    expect(within(cellIn(first, 'Status')).queryByText('Beta Tester')).toBeNull();
+    expect(
+      within(cellIn(first, 'Sender')).getByRole('button', { name: 'Beta Tester' }),
+    ).toBeInTheDocument();
+    expect(
+      within(cellIn(first, 'Status')).queryByRole('button', { name: 'Beta Tester' }),
+    ).toBeNull();
     expect(within(cellIn(first, 'Status')).getByText('Sender Replied')).toBeInTheDocument();
     const second = screen.getByRole('row', { name: /Second/ });
     expect(within(second).queryByText('Sender Replied')).toBeNull();
-    expect(within(second).queryByText('Beta Tester')).toBeNull();
+    expect(within(second).queryByRole('button', { name: 'Beta Tester' })).toBeNull();
+  });
+});
+
+describe('Resolved by the sender', () => {
+  it('says so in the list row, and not on a row staff resolved', () => {
+    render(
+      <SupportRequests
+        requests={[
+          { ...ROW, id: 'a', subject: 'Own', status: 'resolved', resolvedBySender: true },
+          { ...ROW, id: 'b', subject: 'Staff', status: 'resolved' },
+        ]}
+        viewer={ADMIN}
+      />,
+    );
+    expect(
+      within(screen.getByRole('row', { name: /Own/ })).getByText('Resolved by Sender'),
+    ).toBeInTheDocument();
+    expect(
+      within(screen.getByRole('row', { name: /Staff/ })).queryByText('Resolved by Sender'),
+    ).toBeNull();
+  });
+
+  it('says so in the dialog when the resolver is the sender, and names the resolver otherwise', () => {
+    open(ADMIN, {
+      status: 'resolved',
+      resolvedBy: { id: 'u1', name: 'Ada Wortley' },
+      resolvedAt: new Date('2026-10-27T11:05:00Z'),
+    });
+    expect(within(dialog()).getByText(/^by the sender/)).toBeInTheDocument();
+  });
+
+  it('names a staff resolver in the dialog', () => {
+    open(ADMIN, {
+      status: 'resolved',
+      resolvedBy: { id: 'admin-1', name: 'Ada' },
+      resolvedAt: new Date('2026-10-27T11:05:00Z'),
+    });
+    expect(within(dialog()).getByText(/^by Ada/)).toBeInTheDocument();
   });
 });
 
 describe('The composer', () => {
-  const reply = () => within(dialog()).getByLabelText('Your Reply');
-
-  it('opens in reply mode, and a note must be chosen', () => {
+  it('opens on an internal note, and a reply must be chosen', () => {
     open(ADMIN);
-    expect(within(dialog()).getByRole('radio', { name: /^Reply/ })).toBeChecked();
-    expect(within(dialog()).getByRole('radio', { name: /^Internal Note/ })).not.toBeChecked();
-    expect(reply()).toBeInTheDocument();
+    expect(within(dialog()).getByRole('radio', { name: 'Internal Note' })).toBeChecked();
+    expect(within(dialog()).getByRole('radio', { name: 'Reply' })).not.toBeChecked();
+    expect(within(dialog()).getByLabelText(/^Your Note/)).toBeInTheDocument();
+    expect(within(dialog()).queryByLabelText(/^Your Reply/)).toBeNull();
+    chooseReply();
+    expect(within(dialog()).getByLabelText(/^Your Reply/)).toBeInTheDocument();
+  });
+
+  it('marks the text required, as a note and as a reply', () => {
+    open(ADMIN);
+    expect(within(dialog()).getByRole('textbox', { name: /^Your Note/ })).toBeRequired();
+    chooseReply();
+    expect(within(dialog()).getByRole('textbox', { name: /^Your Reply/ })).toBeRequired();
   });
 
   it('sends a note through the note mutation, not the reply one', async () => {
@@ -750,8 +807,7 @@ describe('The composer', () => {
       },
     );
     open(ADMIN);
-    fireEvent.click(within(dialog()).getByRole('radio', { name: /^Internal Note/ }));
-    fireEvent.change(within(dialog()).getByLabelText('Your Note'), {
+    fireEvent.change(within(dialog()).getByLabelText(/^Your Note/), {
       target: { value: 'Check the log' },
     });
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Add Note' }));

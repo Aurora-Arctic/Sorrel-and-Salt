@@ -400,3 +400,19 @@ export function HistoryIcon(): ReactElement {
     </svg>
   );
 }
+
+/** A sprout: a sender who joined by a printed card, a beta tester, as the admin Support page marks one. */
+export function SproutIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M8 14V8M8 8C8 5.2 6.2 3.5 3 3.5 3 6.3 4.8 8 8 8zM8 9.5c0-2.6 1.6-4.2 4.5-4.2 0 2.6-1.6 4.2-4.5 4.2z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}

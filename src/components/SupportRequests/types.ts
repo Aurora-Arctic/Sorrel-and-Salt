@@ -1,5 +1,5 @@
 import type { Route } from 'next';
-import type { SupportAboutParam, SupportView } from '../../lib/support-path';
+import type { SupportAboutParam, SupportSenderGroup, SupportView } from '../../lib/support-path';
 import type { PagePosition, PagerHrefs } from '../../lib/types';
 
 export type SupportAbout = SupportAboutParam;
@@ -34,6 +34,8 @@ export interface SupportRequestEntry {
   senderReplied: boolean;
   /** The sender accepted a printed card. */
   betaTester: boolean;
+  /** It is resolved, and the sender resolved it themselves rather than staff. */
+  resolvedBySender: boolean;
 }
 
 export interface SupportReplyEntry {
@@ -82,8 +84,8 @@ export interface SupportRequestsFilter {
   view: SupportView;
   /** An HTTP status, as typed; blank is none. */
   errorCode: string;
-  /** Only requests whose sender is a beta tester. */
-  betaOnly: boolean;
+  /** Only requests whose sender is in this group; blank is every sender. */
+  sender: SupportSenderGroup | '';
 }
 
 export interface SupportRequestsCursor {

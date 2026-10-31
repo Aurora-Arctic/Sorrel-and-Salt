@@ -6,6 +6,7 @@ import { emptyList, noMatchText } from '../../lib/text';
 import StackTable from '../DataTable';
 import ListFrame, { ListBody } from '../ListFrame';
 import { RouteModal, useOpenModalClick } from '../Modal';
+import IconTip, { SproutIcon } from '../IconTip';
 import Pager from '../Pager';
 import { Mark } from '../UserList/marks';
 import SupportDetail from './detail';
@@ -26,7 +27,7 @@ import './index.scss';
 // assignee, curator visibility, error number), the pager, and the request `?request=` opens over them
 // (claude-docs/components/support-requests.md).
 
-const NO_FILTER: Filter = { about: '', view: DEFAULT_SUPPORT_VIEW, errorCode: '', betaOnly: false };
+const NO_FILTER: Filter = { about: '', view: DEFAULT_SUPPORT_VIEW, errorCode: '', sender: '' };
 
 const labelOf = (options: readonly { value: string; label: string }[], value: string): string =>
   options.find((option) => option.value === value)?.label ?? value;
@@ -108,9 +109,14 @@ const SupportRequests = ({
                 cell: (request) => (
                   <>
                     {STATUS_LABELS[request.status]}
-                    {request.senderReplied && (
+                    {(request.senderReplied || request.resolvedBySender) && (
                       <span className="support-requests__labels">
-                        <span className="badge badge--local">Sender Replied</span>
+                        {request.senderReplied && (
+                          <span className="badge badge--local">Sender Replied</span>
+                        )}
+                        {request.resolvedBySender && (
+                          <span className="badge badge--muted">Resolved by Sender</span>
+                        )}
                       </span>
                     )}
                   </>
@@ -126,9 +132,16 @@ const SupportRequests = ({
                       userHref={userHref}
                     />
                     {request.betaTester && (
-                      <span className="support-requests__labels">
-                        <span className="badge badge--muted">Beta Tester</span>
-                      </span>
+                      // A status mark: a button only so the keyboard reaches its tip, which a press also opens.
+                      <IconTip tip="Beta Tester" opensOnPress>
+                        <button
+                          type="button"
+                          className="support-requests__beta"
+                          aria-label="Beta Tester"
+                        >
+                          <SproutIcon />
+                        </button>
+                      </IconTip>
                     )}
                   </>
                 ),

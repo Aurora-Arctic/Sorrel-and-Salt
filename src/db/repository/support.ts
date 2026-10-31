@@ -5,7 +5,7 @@ import { supportRequests } from '../../modules/support/schema/support-requests';
 import { supportSendCounts } from '../../modules/support/schema/support-send-counts';
 import { supportTimeouts } from '../../modules/support/schema/support-timeouts';
 import { SUPPORT_VIEWS } from '../../lib/support-path';
-import type { SupportView } from '../../lib/support-path';
+import type { SupportSenderGroup, SupportView } from '../../lib/support-path';
 import { findPage, findPageCount } from './finders';
 import { notSoftDeleted } from './predicates';
 import { existsIn, selectFrom, selectOne } from './select';
@@ -14,6 +14,7 @@ import type {
   AuditWriter,
   SortPart,
   SupportReader,
+  SupportMenuCounts,
   SupportStatusCounts,
   SupportViewCounts,
   SupportRequestFilter,
@@ -93,20 +94,24 @@ function viewArm(reader: SupportReader, view: SupportView): SQL {
   }
 }
 
-/** The request's sender accepted a printed card: the beta-tester tier, derived from the invitation and never stored. */
-const senderIsBetaTester = (): SQL =>
-  sql`exists (select 1 from ${invitations} where ${invitations.kind} = 'card' and ${invitations.acceptedBy} = ${supportRequests.createdBy} and ${invitations.deletedAt} is null)`;
+/** The request's sender is in the group. A beta tester accepted a printed card: derived from the invitation and never stored. */
+function senderArm(group: SupportSenderGroup): SQL {
+  switch (group) {
+    case 'beta_tester':
+      return sql`exists (select 1 from ${invitations} where ${invitations.kind} = 'card' and ${invitations.acceptedBy} = ${supportRequests.createdBy} and ${invitations.deletedAt} is null)`;
+  }
+}
 
 function filterArms(
   reader: SupportReader,
-  { about, status, errorCode, view, betaTester }: SupportRequestFilter,
+  { about, status, errorCode, view, senderGroup }: SupportRequestFilter,
 ): (SQL | undefined)[] {
   return [
     view ? viewArm(reader, view) : undefined,
     about ? eq(supportRequests.about, about) : undefined,
     status ? eq(supportRequests.status, status) : undefined,
     errorCode === undefined ? undefined : eq(supportRequests.errorCode, errorCode),
-    betaTester ? senderIsBetaTester() : undefined,
+    senderGroup ? senderArm(senderGroup) : undefined,
   ];
 }
 
@@ -139,19 +144,19 @@ export function findSupportRequestCount(
 }
 
 /**
- * How many requests each view holds among those the reader may see and the filter’s About, error number and beta-tester choice leave. One
+ * How many requests each view holds among those the reader may see and the filter’s About, error number and sender group leave. One
  * query, so the tab row never asks six times.
  */
 export async function findSupportViewCounts(
   reader: SupportReader,
-  { about, errorCode, betaTester }: SupportRequestFilter,
+  { about, errorCode, senderGroup }: SupportRequestFilter,
 ): Promise<SupportViewCounts> {
   const [row] = await selectFrom(
     supportRequests,
     and(
       notSoftDeleted(supportRequests),
       readerScope(reader),
-      ...filterArms(reader, { about, errorCode, betaTester }),
+      ...filterArms(reader, { about, errorCode, senderGroup }),
     ),
     {
       aggregate: Object.fromEntries(
@@ -206,6 +211,21 @@ export async function findOwnSupportStatusCounts(userId: string): Promise<Suppor
     },
   );
   return { open: row?.open ?? 0, closed: row?.closed ?? 0 };
+}
+
+/**
+ * What the account menu counts for a viewer in one query: open requests assigned to them, and their own requests waiting on them.
+ * Not cached: both are the viewer's. The caller decides whether an assignment counts for this role.
+ */
+export async function findSupportMenuCounts(userId: string): Promise<SupportMenuCounts> {
+  const [row] = await selectFrom(supportRequests, notSoftDeleted(supportRequests), {
+    aggregate: {
+      assignedOpen: sql<number>`count(*) filter (where ${supportRequests.status} = 'open' and ${supportRequests.assignedTo} = ${userId})::int`,
+      waitingOnMe: sql<number>`count(*) filter (where ${supportRequests.status} = 'waiting_on_sender' and ${supportRequests.createdBy} = ${userId})::int`,
+    },
+    over: {},
+  });
+  return { assignedOpen: row?.assignedOpen ?? 0, waitingOnMe: row?.waitingOnMe ?? 0 };
 }
 
 /** The sender's own request, or `undefined` for one that is absent or another sender's. */

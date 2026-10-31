@@ -238,6 +238,11 @@ $account-menu-avatar: 2rem;
   display: none;
 }
 
+// A row with a count shows at every width, since the count is why to open the menu.
+.account-menu__link--counted {
+  display: block;
+}
+
 // Sign Out is the one row with room around it, so the button never touches the
 // panel's edge.
 .account-menu__signout {

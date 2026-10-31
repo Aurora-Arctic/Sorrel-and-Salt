@@ -4,6 +4,7 @@
 
 ## Contracts
 
+- **A dot on a waiting row** (M15.44): a request waiting on the sender wears a wax dot (`role="img"`, named "Waiting on you"), which goes when the status leaves waiting on sender.
 - **The status badge** is `statusBadgeClass` from `SupportRequests/status-badge.ts`, the one the admin list and dialog use: `open` is `badge badge--local`, `waiting_on_sender` is `badge badge--caution`, and `resolved` and `closed` are `badge badge--muted`. The words the sender reads are `senderStatusLabel` from `SupportSenderRequest/status.ts`: Received, Replied (staff wrote last on an open request), Waiting for You, Resolved and Closed.
 - **A row opens its request** in a dialog over the list, a `RouteModal` at `?request=<id>` that keeps the page's cursor, with the same `listed` size and phone sheet as the staff dialog. The page reads the request through `getMySupportRequest` and `repliesForRequests` (`account/support/reads.ts`, cached), so another sender's id reads as absent and the dialog stays closed. Closing it drops only `request`. The body is [`SupportSenderRequest`](support-sender-request.md).
 - **The page is the Support Requests tab** of the account page (`/account/support`, last in `ACCOUNT_TABS`), inside the tab layout, so it has no heading or frame of its own.

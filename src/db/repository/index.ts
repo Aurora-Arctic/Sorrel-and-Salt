@@ -150,6 +150,7 @@ export {
   findOwnSupportRequest,
   findOwnSupportRequestCount,
   findOwnSupportStatusCounts,
+  findSupportMenuCounts,
   findOwnSupportRequestPage,
   findCardAcceptorIds,
   findSupportRepliesFor,
