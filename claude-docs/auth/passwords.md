@@ -137,8 +137,6 @@ in `sign_in_failures` (DESIGN.md §8, "Passwords"), by
   holds the previous lock, and `recordFailedPasswordSignIn` reports whether
   the new one opens a series. A completed reset or a successful sign-in
   deletes the row, so the next lock after either is mailed again.
-- **`password_disabled`** is left from the first schedule and read by
-  nothing; a later task drops it.
 - **Only an account with a password is counted.** The before hook looks the
   address up the way Better Auth's sign-in does, with its accounts, and goes
   no further when it has no `credential` row holding a password. Guesses at a

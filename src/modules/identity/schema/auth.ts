@@ -93,8 +93,7 @@ export const rateLimits = pgTable('rate_limits', {
 // audit columns: nobody writes it by hand and a failed sign-in has no session.
 // `last_failed_at` is when the last failure came, which the quiet period runs
 // from, and `locked_until` the end of the current lock; the schedule that
-// sets them is the lockout's, not the table's. Nothing reads
-// `password_disabled`: no count switches a password off.
+// sets them is the lockout's, not the table's.
 export const signInFailures = pgTable('sign_in_failures', {
   userId: uuid('user_id')
     .primaryKey()
@@ -103,7 +102,6 @@ export const signInFailures = pgTable('sign_in_failures', {
   firstFailedAt: timestamp('first_failed_at').defaultNow().notNull(),
   lastFailedAt: timestamp('last_failed_at').defaultNow().notNull(),
   lockedUntil: timestamp('locked_until'),
-  passwordDisabled: boolean('password_disabled').default(false).notNull(),
 });
 
 // The `passkey` plugin's model, named `passkeys` by `usePlural`. Its field `credentialID` is `credentialId` here, and the
