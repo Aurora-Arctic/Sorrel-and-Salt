@@ -38,6 +38,8 @@ test(
     expect(made.status(), await made.text()).toBe(200);
     await withSql((sql) => sql`update users set email_verified = true where email = ${email}`);
 
+    // Sign-up leaves a session cookie; the story starts signed out.
+    await page.context().clearCookies();
     await signInWithPassword(page, email);
     await expect(page).not.toHaveURL(/\/sign-in/);
 
@@ -80,6 +82,13 @@ test(
     await expect(main.getByRole('heading', { name: 'Enter Your Code' })).toBeVisible();
     await expect(page).toHaveURL(/\/sign-in/);
     await assertNoAccessibilityViolations(page);
+
+    // On a phone the step stays inside the card: Verify is on screen, not off an edge.
+    await page.setViewportSize({ width: 390, height: 844 });
+    const verifyBox = await main.getByRole('button', { name: 'Verify' }).boundingBox();
+    expect(verifyBox).not.toBeNull();
+    expect(verifyBox!.x).toBeGreaterThanOrEqual(0);
+    expect(verifyBox!.x + verifyBox!.width).toBeLessThanOrEqual(390);
 
     await field(main, 'Code From Your App').fill(await totpCode(appUri));
     await main.getByRole('button', { name: 'Verify' }).click();

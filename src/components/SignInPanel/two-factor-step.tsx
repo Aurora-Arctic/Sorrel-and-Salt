@@ -103,6 +103,7 @@ const TwoFactorStep = ({ next, onRestart }: TwoFactorStepProps): ReactElement =>
           <input
             // A new input for each method, so the browser's one-time-code autofill is offered only for the app's.
             key={method}
+            placeholder="Add a code"
             id={codeField.controlId}
             className="input"
             type="text"
@@ -138,16 +139,14 @@ const TwoFactorStep = ({ next, onRestart }: TwoFactorStepProps): ReactElement =>
           </BusyButton>
         </div>
       </form>
-      <p className="sign-in-panel__switch">
+      <div className="sign-in-panel__switch">
         <button type="button" className="btn btn--quiet btn--small" onClick={switchMethod}>
           {method === 'app' ? 'Use a Backup Code' : 'Use Your App Instead'}
         </button>
-      </p>
-      <p className="sign-in-panel__switch">
         <button type="button" className="btn btn--quiet btn--small" onClick={() => onRestart()}>
           Start Again
         </button>
-      </p>
+      </div>
     </div>
   );
 };

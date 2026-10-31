@@ -151,4 +151,22 @@ describe('SignInPanel, the two-factor step', () => {
     expect(field('Password')).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Enter Your Code' })).not.toBeInTheDocument();
   });
+
+  it('shows the code step alone, without the sign-in buttons, and brings them back on Start Again', async () => {
+    await passPassword();
+
+    expect(screen.queryByRole('button', { name: 'Continue with Google' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Passkey/ })).not.toBeInTheDocument();
+
+    await press(screen.getByRole('button', { name: 'Start Again' }));
+
+    expect(screen.getByRole('button', { name: 'Continue with Google' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Passkey/ })).toBeInTheDocument();
+  });
+
+  it('offers the code field an action placeholder', async () => {
+    await passPassword();
+
+    expect(field('Code From Your App')).toHaveAttribute('placeholder', 'Add a code');
+  });
 });

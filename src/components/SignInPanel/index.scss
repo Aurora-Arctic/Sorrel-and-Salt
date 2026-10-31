@@ -30,6 +30,12 @@
   }
 }
 
+// The code step alone: with the buttons gone nothing sets the column's width, so it takes the
+// buttons' usual one, or the card's when that is narrower.
+.sign-in-panel--code.sign-in-panel {
+  grid-template-columns: min(100%, 22rem);
+}
+
 .sign-in-panel__header {
   text-align: center;
 
@@ -124,10 +130,22 @@
   gap: space(3);
   margin-top: space(4);
 
-  > .notice {
+  // Prose and notices wrap at the column's width: a paragraph is capped at the reading measure and
+  // would otherwise widen the column past the card.
+  > .notice,
+  > p {
     box-sizing: border-box;
     width: 0;
     min-width: 100%;
+  }
+
+  // The code step's switch reads like the fields around it, label at the start.
+  .switch {
+    align-items: flex-start;
+
+    .field__label {
+      text-align: start;
+    }
   }
 }
 
@@ -156,4 +174,12 @@
 .sign-in-panel__switch {
   margin: 0;
   text-align: center;
+}
+
+// The code step's two quiet buttons, side by side in one row.
+div.sign-in-panel__switch {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(2);
+  justify-content: center;
 }

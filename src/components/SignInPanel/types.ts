@@ -28,6 +28,8 @@ export interface PasswordFormProps {
   lastUsed: boolean;
   /** Called at each submit, so the panel clears its own error. */
   onStart?: () => void;
+  /** Called when the code step opens (true) or closes (false), so the panel can show it alone. */
+  onCodeStep?: (open: boolean) => void;
 }
 
 export interface PasskeyButtonProps {

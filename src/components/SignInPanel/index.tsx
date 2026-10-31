@@ -35,6 +35,8 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
   // a new attempt. A failure of that press is said under its own button
   // instead (./provider-button.tsx).
   const [message, setMessage] = useState(error);
+  // The code step has one job, so it stands alone in the card.
+  const [codeStep, setCodeStep] = useState(false);
   // Better Auth's documented read, taken after hydration: the server has no
   // `document`, so rendering the mark there and here would disagree
   // (claude-docs/components/sign-in-panel.md, "Last used").
@@ -80,29 +82,38 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
   return (
     // Its own card ground, `.panel`, rather than the page's: /sign-in holds
     // nothing else (claude-docs/components/sign-in-panel.md, "Styling").
-    <div className="panel sign-in-panel">
+    <div className={codeStep ? 'panel sign-in-panel sign-in-panel--code' : 'panel sign-in-panel'}>
       <div className="header sign-in-panel__header">
         <h1>Sign In</h1>
         <p className="lede">Sign in or create an account.</p>
       </div>
       {message && <Notice kind="error">{message}</Notice>}
-      <div className="sign-in-panel__providers">
-        {SOCIAL_PROVIDERS.map((provider) => (
-          <ProviderButton
-            key={provider.id}
-            provider={provider}
-            available={configured.includes(provider.id)}
-            lastUsed={provider.id === lastUsed}
-            signingIn={signingIn}
-            onSignIn={signInWith}
-          />
-        ))}
-        <PasskeyButton next={next} lastUsed={passkeyLastUsed} />
-      </div>
-      <div className="sign-in-panel__divider" aria-hidden="true">
-        or
-      </div>
-      <PasswordForm next={next} lastUsed={lastUsedPassword} onStart={() => setMessage(undefined)} />
+      {!codeStep && (
+        <>
+          <div className="sign-in-panel__providers">
+            {SOCIAL_PROVIDERS.map((provider) => (
+              <ProviderButton
+                key={provider.id}
+                provider={provider}
+                available={configured.includes(provider.id)}
+                lastUsed={provider.id === lastUsed}
+                signingIn={signingIn}
+                onSignIn={signInWith}
+              />
+            ))}
+            <PasskeyButton next={next} lastUsed={passkeyLastUsed} />
+          </div>
+          <div className="sign-in-panel__divider" aria-hidden="true">
+            or
+          </div>
+        </>
+      )}
+      <PasswordForm
+        next={next}
+        lastUsed={lastUsedPassword}
+        onStart={() => setMessage(undefined)}
+        onCodeStep={setCodeStep}
+      />
     </div>
   );
 };

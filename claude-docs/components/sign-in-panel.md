@@ -246,7 +246,10 @@ shows `two-factor-step.tsx` in its place ([`auth/two-factor.md`](../auth/two-fac
   (`autocomplete="one-time-code"`, spaces dropped) focused, a "Trust This
   Device for 30 Days" switch, and Verify (`twoFactor.verifyTotp`). "Use a
   Backup Code" swaps the field for "Backup Code" (`twoFactor.verifyBackupCode`)
-  and back. "Start Again" returns to the password.
+  and back. "Start Again" returns to the password; it and the method switch
+  share one row. While the step shows, the provider buttons, the passkey button
+  and the "or" divider are hidden, so the card holds the step alone. The field
+  carries the placeholder "Add a code".
 - **Refusals.** A wrong code is `WRONG_CODE` under the field. The plugin's
   lock is `CODE_LOCKED` in the alert region. An expired challenge, or one
   that has had too many codes, returns to the password with

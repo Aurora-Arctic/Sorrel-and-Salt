@@ -69,7 +69,7 @@ async function hasSession(): Promise<boolean> {
   return Boolean(data);
 }
 
-const PasswordForm = ({ next, lastUsed, onStart }: PasswordFormProps): ReactElement => {
+const PasswordForm = ({ next, lastUsed, onStart, onCodeStep }: PasswordFormProps): ReactElement => {
   const nameId = useId();
   const emailId = useId();
   const [mode, setMode] = useState<Mode>('sign-in');
@@ -134,6 +134,7 @@ const PasswordForm = ({ next, lastUsed, onStart }: PasswordFormProps): ReactElem
       setPending(false);
       setPassword('');
       setAskingForCode(true);
+      onCodeStep?.(true);
       return;
     }
     // A full load of the sign-in page, which sends a signed-in account on: to `next` or its
@@ -148,6 +149,7 @@ const PasswordForm = ({ next, lastUsed, onStart }: PasswordFormProps): ReactElem
         next={next}
         onRestart={(reason) => {
           setAskingForCode(false);
+          onCodeStep?.(false);
           setProblem(reason ? { alert: reason } : {});
         }}
       />
