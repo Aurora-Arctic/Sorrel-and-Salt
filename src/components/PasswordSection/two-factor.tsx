@@ -1,7 +1,8 @@
 'use client';
 
 import { QrCode } from '@ark-ui/react/qr-code';
-import { type FormEvent, type ReactElement, useId, useState } from 'react';
+import { type FormEvent, type ReactElement, useEffect, useId, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { twoFactor, useSession } from '../../lib/auth-client';
 import { useLeaveGuard } from '../../lib/navigation';
 import { SITE_NAME } from '../../lib/site';
@@ -10,6 +11,7 @@ import { FieldShell, fieldDescription } from '../Field';
 import { CopyIcon, DownloadIcon, PrintIcon } from '../IconTip';
 import IconTip from '../IconTip';
 import InfoTip from '../InfoTip';
+import Modal from '../Modal';
 import Notice from '../Notice';
 import PasswordField from '../PasswordField';
 import { TOO_MANY_ATTEMPTS } from '../SignInPanel/password-form';
@@ -66,8 +68,6 @@ function groupedKey(key: string): string {
   return key.replace(/(.{4})(?=.)/g, '$1 ');
 }
 
-const LEAVE_QUESTION =
-  "You haven't saved your backup codes, and they won't be shown again. Leave anyway?";
 
 const CODES_FILE = 'sorrel-and-salt-backup-codes.txt';
 
@@ -152,9 +152,14 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
   const [saved, setSaved] = useState<'on' | 'off'>();
 
   // The codes are shown once: leaving before any is saved asks first (a tab close or reload gets the browser's own question).
-  useLeaveGuard(enrolment !== undefined && !kept, (proceed) => {
-    if (window.confirm(LEAVE_QUESTION)) proceed();
-  });
+  // An in-app navigation is held by a dialog, kept here until Leave or Stay answers it.
+  const [leaving, setLeaving] = useState<{ go: () => void }>();
+  const stayRef = useRef<HTMLButtonElement>(null);
+  useLeaveGuard(enrolment !== undefined && !kept, (proceed) => setLeaving({ go: proceed }));
+  // Focus starts on Stay, the safe answer, once the dialog is open.
+  useEffect(() => {
+    if (leaving) queueMicrotask(() => stayRef.current?.focus());
+  }, [leaving]);
 
   const entered = code.replace(/\s/g, '');
 
@@ -220,6 +225,32 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
 
   return (
     <div className="two-factor">
+      {leaving &&
+        createPortal(
+          <Modal title="Leave Without Saving Your Codes?" onClose={() => setLeaving(undefined)}>
+            {(close) => (
+              <>
+                <p>Your backup codes won&apos;t be shown again.</p>
+                <div className="modal__actions">
+                  <button
+                    type="button"
+                    className="btn btn--destructive"
+                    onClick={() => {
+                      leaving.go();
+                      close();
+                    }}
+                  >
+                    Leave
+                  </button>
+                  <button ref={stayRef} type="button" className="btn btn--quiet" onClick={close}>
+                    Stay
+                  </button>
+                </div>
+              </>
+            )}
+          </Modal>,
+          document.body,
+        )}
       {problem.alert && <Notice kind="error">{problem.alert}</Notice>}
       {saved === 'on' && (
         <Notice kind="success">

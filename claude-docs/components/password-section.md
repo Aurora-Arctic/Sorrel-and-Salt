@@ -82,7 +82,7 @@ password sign-ins alone ([`auth/two-factor.md`](../auth/two-factor.md)).
   turn it on; Cancel leaves it off. While the codes are on screen and none of Copy, Download or Print has
   been pressed, the page holds a leave guard (`useLeaveGuard`): closing the tab or reloading raises the
   browser's own question, and an in-app navigation through the app's navigation provider (the Account tabs,
-  links built on it) asks with `window.confirm`. Back and the browser's own history moves are not held. Two-factor is not on until that code is
+  links built on it) asks in a dialog on the `Modal` ("Leave Without Saving Your Codes?", with Leave and then Stay; Escape and Stay keep the person on the page; the guard calls `proceed` only on Leave). Back and the browser's own history moves are not held. Two-factor is not on until that code is
   confirmed.
 - **On**, it asks for the password and offers "Turn Off Two-Factor"
   (`twoFactor.disable`), a destructive button.
