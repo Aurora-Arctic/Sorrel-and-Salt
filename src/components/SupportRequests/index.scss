@@ -155,3 +155,8 @@
   padding: 0;
   list-style: none;
 }
+
+// The reply is the dialog's one big field, so its label stands a step further off than the standard field gap.
+.support-detail__reply .field {
+  gap: space(3);
+}
