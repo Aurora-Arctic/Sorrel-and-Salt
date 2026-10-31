@@ -5625,7 +5625,7 @@ Found on 2026-10-30 on the PR gate's stories job: flaky (failed, then passed on 
 
 Actual: Save Ingredient stays disabled for 60 s and the story times out; on a fast run it passes, so the story is flaky. Expected: Save Ingredient is enabled while the form holds unsaved changes, and the story passes first time on every runner.
 
-_Chosen (story 18 and story 30):_ the form keeps its behaviour: once an autosave has filed the edits there is nothing left to save, so Save Ingredient is disabled, and that is correct. The stories change instead: each holds the form's own save request with `page.route` (`holdSaves` in `tests/e2e/stories/ingredient-dialogs.ts`) until after the click on Save, so the autosave cannot land first on any runner. A longer wait would only move the race, and changing the form would make Save enabled over nothing.
+_Chosen (story 18 and story 30):_ the form keeps its behaviour: once an autosave has filed the edits there is nothing left to save, so Save Ingredient is disabled, and that is correct. The stories change instead: each holds the form's own save request with `page.route` (`holdSaves` in `tests/e2e/stories/ingredient-dialogs.ts`) until after the click on Save, so the autosave cannot land first on any runner. The story changes landed on `staging` through #1383, as `52cd4902c` (story 30's accessibility scan), `be54fd8d9` (story 18's) and `0e7017f57` (the hold). A longer wait would only move the race, and changing the form would make Save enabled over nothing.
 
 _Also in scope:_
 
