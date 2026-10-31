@@ -62,7 +62,7 @@ const SupportList = ({
     <div className="support-list">
       <div className="support-list__head">
         <p className="support-list__counts">{countsText(counts)}</p>
-        <SupportLink className="btn btn--quiet btn--small support-list__new">
+        <SupportLink className="btn btn--quiet btn--medium support-list__new">
           <SupportIcon />
           New Request
         </SupportLink>
