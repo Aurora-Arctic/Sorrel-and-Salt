@@ -2,7 +2,8 @@
 
 import { QrCode } from '@ark-ui/react/qr-code';
 import { type FormEvent, type ReactElement, useId, useState } from 'react';
-import { twoFactor } from '../../lib/auth-client';
+import { twoFactor, useSession } from '../../lib/auth-client';
+import { SITE_NAME } from '../../lib/site';
 import BusyButton from '../BusyButton';
 import { FieldShell, fieldDescription } from '../Field';
 import InfoTip from '../InfoTip';
@@ -74,19 +75,46 @@ function downloadCodes(text: string): void {
   URL.revokeObjectURL(url);
 }
 
-/** Prints the codes alone, from a window of their own, since the account page around them is not for paper. */
-function printCodes(text: string): void {
+// The print window has none of the app's stylesheets, so the page carries its own: two equal
+// columns with each code centred, as on screen.
+const PRINT_STYLE = `
+  body { font-family: sans-serif; margin: 2rem; }
+  h1 { font-size: 1.5rem; margin: 0 0 0.5rem; }
+  p { margin: 0 0 0.5rem; }
+  ul { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem 2rem; margin: 1.5rem 0 0; padding: 0; list-style: none; text-align: center; }
+  code { font-family: monospace; font-size: 1.25rem; }
+`;
+
+/**
+ * Prints the codes alone, from a window of their own, since the account page around them is not for paper.
+ * The sheet says what the codes are for, whose they are and when they were printed; the browser does not
+ * hand over the moment they were generated, and they are shown once, so the print date stands in for it.
+ */
+function printCodes(codes: string[], email: string | undefined): void {
   const page = window.open('', '_blank');
   if (!page) return;
-  const codes = page.document.createElement('pre');
-  codes.textContent = text;
-  page.document.body.append(codes);
+  const { document: doc } = page;
+  const add = (tag: string, text: string, parent: Element = doc.body): HTMLElement => {
+    const element = doc.createElement(tag);
+    element.textContent = text;
+    parent.append(element);
+    return element;
+  };
+  doc.title = `${SITE_NAME} Backup Codes`;
+  add('style', PRINT_STYLE, doc.head);
+  add('h1', `${SITE_NAME} Backup Codes`);
+  if (email) add('p', email);
+  add('p', new Date().toLocaleDateString(undefined, { dateStyle: 'long' }));
+  add('p', "Each code signs you in once, if you can't use your authenticator app.");
+  const list = add('ul', '');
+  for (const backupCode of codes) add('code', backupCode, add('li', '', list));
   page.focus();
   page.print();
   page.close();
 }
 
 const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement => {
+  const email = useSession().data?.user.email;
   const codeId = useId();
   const tipId = useId();
   const [on, setOn] = useState(enabled);
@@ -212,7 +240,7 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
                 <button
                   type="button"
                   className="btn btn--quiet"
-                  onClick={() => printCodes(codesText(enrolment))}
+                  onClick={() => printCodes(enrolment.backupCodes, email)}
                 >
                   Print Codes
                 </button>
