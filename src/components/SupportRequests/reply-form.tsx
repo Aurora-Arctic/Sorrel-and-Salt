@@ -18,7 +18,15 @@ import { useSupportAction } from './use-support-action';
 type Mode = 'reply' | 'note';
 
 const MODES = [
-  { value: 'note', label: 'Internal Note' },
+  {
+    value: 'note',
+    label: 'Internal Note',
+    display: (
+      <>
+        <span className="support-detail__internal">Internal</span> Note
+      </>
+    ),
+  },
   { value: 'reply', label: 'Reply' },
 ] as const;
 

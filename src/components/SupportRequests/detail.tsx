@@ -124,7 +124,8 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
             ...request.replies.map((reply) => ({
               id: reply.id,
               name: reply.author?.name ?? 'Deleted account',
-              tag: reply.fromSender ? 'Sender' : reply.internal ? 'Staff · Internal' : 'Staff',
+              tag: reply.fromSender ? 'Sender' : 'Staff',
+              internal: !reply.fromSender && reply.internal,
               at: reply.createdAt,
               body: reply.body,
             })),

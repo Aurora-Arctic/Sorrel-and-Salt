@@ -45,6 +45,8 @@ type Phase = 'closed' | 'opening' | 'open' | 'closing';
 export interface ChoiceChipOption<T extends string> {
   value: T;
   label: string;
+  /** What the menu and the chip draw in place of `label`, which still names the option: the same words, one of them styled. */
+  display?: ReactNode;
   /** Shown after the name once known; left out for a choice that has none, such as All. */
   count?: number;
   /** A decorative icon before the label, in the menu and on the chip once chosen. */
@@ -171,7 +173,7 @@ export function ChoiceChip<T extends string>({
       <span className="facet-chip__name">{legend}:</span>
       <span className="facet-chip__value">
         {chosen.icon && <span className="facet-chip__icon">{chosen.icon}</span>}
-        {chosen.label}
+        {chosen.display ?? chosen.label}
       </span>
       <svg className="facet-chip__caret" viewBox="0 0 10 6" aria-hidden="true" focusable="false">
         <path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.5" />
@@ -252,7 +254,7 @@ export function ChoiceChip<T extends string>({
                     />
                     <span>
                       {option.icon && <span className="facet-chip__icon">{option.icon}</span>}
-                      {option.label}
+                      {option.display ?? option.label}
                       {option.count !== undefined && <FacetCount count={option.count} />}
                     </span>
                   </label>
