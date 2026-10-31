@@ -362,8 +362,7 @@ describe('AdminCards', () => {
       target: { value: '1' },
     });
     pickFirstOfFebruary();
-    if (!printBacks)
-      fireEvent.click(within(dialog()).getByRole('checkbox', { name: 'Print Backs' }));
+    if (!printBacks) fireEvent.click(within(dialog()).getByRole('switch', { name: 'Print Backs' }));
     fireEvent.click(mint());
     await within(dialog()).findByRole('button', { name: 'Download PDF' });
   };
@@ -382,7 +381,7 @@ describe('AdminCards', () => {
     );
   });
 
-  it('offers Print Backs checked, and builds the PDF with backs', async () => {
+  it('offers Print Backs on, and builds the PDF with backs', async () => {
     await mintTwo();
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Download PDF' }));
 
@@ -390,7 +389,7 @@ describe('AdminCards', () => {
     expect(vi.mocked(buildCardSheetsPdf).mock.calls[0][0].backs).toBe(true);
   });
 
-  it('builds the PDF without backs when Print Backs is unchecked', async () => {
+  it('builds the PDF without backs when Print Backs is switched off', async () => {
     await mintTwo(false);
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Download PDF' }));
 

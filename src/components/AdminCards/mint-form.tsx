@@ -6,7 +6,7 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import type { Failure } from '../../lib/types';
 import DateField from '../DateField';
-import { FieldShell, FormActions, fieldDescription } from '../Field';
+import { FieldShell, FormActions, SwitchField, fieldDescription } from '../Field';
 import { DiscardQuestion, RouteModal, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import MintedCards from './minted';
@@ -160,15 +160,14 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
           {...dayAria}
         />
       </FieldShell>
-      <label className="admin-cards__option">
-        <input
-          type="checkbox"
-          checked={printBacks}
-          disabled={minting}
-          onChange={(event) => setPrintBacks(event.target.checked)}
-        />
-        Print Backs
-      </label>
+      <SwitchField
+        label="Print Backs"
+        name="backs"
+        value="1"
+        checked={printBacks}
+        disabled={minting}
+        onChange={setPrintBacks}
+      />
       <FormActions
         noun="Cards"
         label="Mint Cards"

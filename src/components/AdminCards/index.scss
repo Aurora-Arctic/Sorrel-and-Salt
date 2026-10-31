@@ -29,13 +29,6 @@
   }
 }
 
-// The Print Backs checkbox beside its label.
-.admin-cards__option {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
 // The live total, in the Number of Sheets field's `after` slot so it sits one field gap under the input, beneath any
 // error: one line is always reserved, so it appearing, changing or going never moves Expires On.
 .admin-cards__total {
