@@ -43,7 +43,7 @@ test(
 
     await page.goto('/account');
     const section = page.getByRole('region', { name: 'Two-Factor Sign-In' });
-    await field(section, 'Password').fill(PASSWORD);
+    await field(section, 'Confirm Your Password').fill(PASSWORD);
     await section.getByRole('button', { name: 'Turn On Two-Factor' }).click();
 
     // The setup shows the QR code, the key for typing in, and the backup codes, and is not on yet.

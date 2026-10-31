@@ -12,6 +12,7 @@ import NameForm from '../../../components/NameForm';
 import PageNav from '../../../components/PageNav';
 import Passkeys from '../../../components/Passkeys';
 import PasswordSection from '../../../components/PasswordSection';
+import TwoFactorSettings from '../../../components/PasswordSection/two-factor';
 import ReceivedInvitations from '../../../components/ReceivedInvitations';
 import SignInMethods from '../../../components/SignInMethods';
 import {
@@ -34,7 +35,7 @@ export const metadata: Metadata = {
   title: 'Your Account — Sorrel & Salt',
 };
 
-// The one account page: name, address, ways in, password and waiting coven invitations, each its own section
+// The one account page: name, address, ways in, password, two-factor, passkeys and waiting coven invitations, each its own section
 // under its own heading, with ids prefixed so no form's id meets them. A failed provider link returns
 // with `?error=` and `?provider=` (claude-docs/auth/admin-bootstrap.md, "The account page").
 export default async function AccountPage({ searchParams }: AccountPageProps) {
@@ -75,6 +76,9 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           { href: '#account-email', label: 'Email' },
           { href: '#account-sign-in-methods', label: 'Sign-In Methods' },
           { href: '#account-password', label: 'Password' },
+          ...(passwordHeld
+            ? [{ href: '#account-two-factor', label: 'Two-Factor Sign-In' } as const]
+            : []),
           { href: '#account-passkeys', label: 'Passkeys' },
           { href: `#${ACCOUNT_INVITATIONS_ID}`, label: 'Invitations' },
         ]}
@@ -120,6 +124,8 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           <p className="lede">You can sign in to this account with any of these.</p>
         </div>
         <SignInMethods
+          passwordHeld={passwordHeld}
+          passkeyCount={passkeys.length}
           linked={linked}
           configured={configuredProviders()}
           // Better Auth refuses a removal from a session older than a day,
@@ -143,8 +149,24 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
                 : 'Set a password to sign in with your email address as well.'}
           </p>
         </div>
-        <PasswordSection hasPassword={passwordHeld} twoFactorEnabled={me.twoFactorEnabled} />
+        <PasswordSection hasPassword={passwordHeld} />
       </section>
+      {/* Two-factor guards password sign-ins alone, so an account with no password has no section. */}
+      {passwordHeld && (
+        <section
+          id="account-two-factor"
+          className="page-frame__section panel"
+          aria-labelledby="account-two-factor-heading"
+        >
+          <div className="header">
+            <h2 id="account-two-factor-heading">Two-Factor Sign-In</h2>
+            <p className="lede">
+              Ask for a code from an authenticator app, as well as your password, when you sign in.
+            </p>
+          </div>
+          <TwoFactorSettings enabled={me.twoFactorEnabled} />
+        </section>
+      )}
       <section
         id="account-passkeys"
         className="page-frame__section panel"

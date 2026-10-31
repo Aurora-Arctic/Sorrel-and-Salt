@@ -12,10 +12,9 @@ first password".
 
 `PasswordSectionProps` (`types.ts`):
 
-| Prop               | What it is                                                                          |
-| ------------------ | ----------------------------------------------------------------------------------- |
-| `hasPassword`      | Whether the account holds a password, which picks the form it gets                  |
-| `twoFactorEnabled` | Whether two-factor is on, read from `users.two_factor_enabled`; false when left out |
+| Prop          | What it is                                                         |
+| ------------- | ------------------------------------------------------------------ |
+| `hasPassword` | Whether the account holds a password, which picks the form it gets |
 
 The section's heading, "Password", and its lede, which differs between the
 two forms and, for an account without a password, with whether it has a linked
@@ -57,11 +56,13 @@ out ([`busy-button.md`](busy-button.md)).
 
 ## Two-factor
 
-`two-factor.tsx`, "Two-Factor Sign-In", sits below the change form and is
-shown only when the account holds a password, since two-factor guards
+`two-factor.tsx` is `TwoFactorSettings`, which takes `enabled` (from
+`users.two_factor_enabled`). The account page draws it in its own section,
+"Two-Factor Sign-In", after Password, with its own entry in the page nav; the
+page writes the heading and intro. It is drawn only when the account holds a password, since two-factor guards
 password sign-ins alone ([`auth/two-factor.md`](../auth/two-factor.md)).
 
-- **Off**, it asks for the password and offers "Turn On Two-Factor"
+- **Off**, it asks to "Confirm Your Password" (labelled so it reads differently from the change form above it) and offers "Turn On Two-Factor"
   (`twoFactor.enable`). The answer opens three steps: a QR code for the
   authenticator app (Ark UI's `QrCode`, `role="img"`), the key the code
   holds for typing in instead, and the ten backup codes, said to be shown
@@ -100,5 +101,5 @@ mocked: a submit in the workshop fails into the alert region.
 `tests/components/PasswordSection/index.test.tsx`: which form each prop gives,
 the calls each makes, each refusal and where it lands, and the switch to the
 change form after a first password is set. `tests/components/PasswordSection/two-factor.test.tsx`:
-the section shown only with a password, the setup steps, turning on only with a
+the setup steps, turning on only with a
 confirmed code, turning off, and each refusal. Story 75 walks it in the browser.

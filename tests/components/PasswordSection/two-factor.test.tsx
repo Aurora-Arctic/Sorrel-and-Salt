@@ -1,8 +1,10 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import PasswordSection from '@/components/PasswordSection';
-import { STALE_SESSION, WRONG_PASSWORD } from '@/components/PasswordSection/two-factor';
+import TwoFactorSettings, {
+  STALE_SESSION,
+  WRONG_PASSWORD,
+} from '@/components/PasswordSection/two-factor';
 import { WRONG_CODE } from '@/components/SignInPanel/two-factor-step';
 import { makeQueryClient } from '@/lib/graphql-client';
 
@@ -25,10 +27,14 @@ const SECRET = 'JBSWY3DPEHPK3PXP';
 const TOTP_URI = `otpauth://totp/Sorrel%20%26%20Salt:someone%40two-factor.test?secret=${SECRET}&issuer=Sorrel%20%26%20Salt&digits=6&period=30`;
 const BACKUP_CODES = ['aaaaa-11111', 'bbbbb-22222', 'ccccc-33333'];
 
-function renderSection(twoFactorEnabled: boolean, hasPassword = true) {
+// The account page wraps the switch in its own section and heading; this is that frame.
+function renderSection(twoFactorEnabled: boolean) {
   return render(
     <QueryClientProvider client={makeQueryClient()}>
-      <PasswordSection hasPassword={hasPassword} twoFactorEnabled={twoFactorEnabled} />
+      <section aria-labelledby="two-factor-heading">
+        <h2 id="two-factor-heading">Two-Factor Sign-In</h2>
+        <TwoFactorSettings enabled={twoFactorEnabled} />
+      </section>
     </QueryClientProvider>,
   );
 }
@@ -53,28 +59,22 @@ const isOff = () =>
 async function startEnrolment() {
   enable.mockResolvedValue({ data: { totpURI: TOTP_URI, backupCodes: BACKUP_CODES }, error: null });
   renderSection(false);
-  type('Password', PASSWORD);
+  type('Confirm Your Password', PASSWORD);
   await press(button('Turn On Two-Factor'));
 }
 
-describe('PasswordSection, two-factor', () => {
+describe('TwoFactorSettings', () => {
   afterEach(() => {
     enable.mockReset();
     disable.mockReset();
     verifyTotp.mockReset();
   });
 
-  it('is not offered to an account with no password, as it guards password sign-ins alone', () => {
-    renderSection(false, false);
-
-    expect(screen.queryByRole('region', { name: 'Two-Factor Sign-In' })).not.toBeInTheDocument();
-  });
-
   it('asks for the password before turning on, and keeps the button disabled until it is typed', async () => {
     renderSection(false);
 
     expect(button('Turn On Two-Factor')).toBeDisabled();
-    type('Password', PASSWORD);
+    type('Confirm Your Password', PASSWORD);
     expect(button('Turn On Two-Factor')).toBeEnabled();
   });
 
@@ -126,10 +126,12 @@ describe('PasswordSection, two-factor', () => {
     enable.mockResolvedValue({ data: null, error: { status: 400, code: 'INVALID_PASSWORD' } });
     renderSection(false);
 
-    type('Password', 'Testwort guesses wrongly');
+    type('Confirm Your Password', 'Testwort guesses wrongly');
     await press(button('Turn On Two-Factor'));
 
-    expect(field('Password')).toHaveAccessibleDescription(expect.stringContaining(WRONG_PASSWORD));
+    expect(field('Confirm Your Password')).toHaveAccessibleDescription(
+      expect.stringContaining(WRONG_PASSWORD),
+    );
   });
 
   it('turns off with the password', async () => {
@@ -137,7 +139,7 @@ describe('PasswordSection, two-factor', () => {
     renderSection(true);
     expect(isOn()).toBe(true);
 
-    type('Password', PASSWORD);
+    type('Confirm Your Password', PASSWORD);
     await press(button('Turn Off Two-Factor'));
 
     expect(disable).toHaveBeenCalledWith({ password: PASSWORD });
@@ -148,10 +150,12 @@ describe('PasswordSection, two-factor', () => {
     disable.mockResolvedValue({ data: null, error: { status: 400, code: 'INVALID_PASSWORD' } });
     renderSection(true);
 
-    type('Password', 'Testwort guesses wrongly');
+    type('Confirm Your Password', 'Testwort guesses wrongly');
     await press(button('Turn Off Two-Factor'));
 
-    expect(field('Password')).toHaveAccessibleDescription(expect.stringContaining(WRONG_PASSWORD));
+    expect(field('Confirm Your Password')).toHaveAccessibleDescription(
+      expect.stringContaining(WRONG_PASSWORD),
+    );
     expect(isOn()).toBe(true);
   });
 
@@ -159,7 +163,7 @@ describe('PasswordSection, two-factor', () => {
     disable.mockResolvedValue({ data: null, error: { status: 403, code: 'SESSION_NOT_FRESH' } });
     renderSection(true);
 
-    type('Password', PASSWORD);
+    type('Confirm Your Password', PASSWORD);
     await press(button('Turn Off Two-Factor'));
 
     expect(within(twoFactorRegion()).getByRole('alert')).toHaveTextContent(STALE_SESSION);

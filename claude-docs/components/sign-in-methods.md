@@ -18,12 +18,14 @@ page").
 
 ## The props contract
 
-| Prop         | Meaning                                                                                                                                                                                                                                                                                                                    |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `linked`     | The signed-in user's provider accounts as `{ id, providerId }`: `id` is the `accounts` row's own id, which `/unlink-account` takes. `LinkedAccount` lives in `src/lib/types.ts`, which is client-safe.                                                                                                                     |
-| `configured` | Providers this environment has credentials for, from `configuredProviders()`. The rest cannot be added.                                                                                                                                                                                                                    |
-| `error`      | A failed link, as `{ providerId?, message }` (`SignInMethodError`, `types.ts`). `message` is a readable sentence from `linkErrorMessage()` (`src/lib/sign-in.ts`), never a raw `?error=` code. `providerId` is the provider the link was for, when the callback said and it is on the roster. Shown as an alert on mount.  |
-| `fresh`      | Whether the session is young enough for Better Auth to remove a method, from `sessionIsFresh()` (`src/lib/request-session.ts`). `false` withholds every Remove and offers Sign In Again ("A stale session signs in again", below). Optional, and `true` when left out, since Better Auth's refusal is the rule either way. |
+| Prop           | Meaning                                                                                                                                                                                                                                                                                                                    |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `linked`       | The signed-in user's provider accounts as `{ id, providerId }`: `id` is the `accounts` row's own id, which `/unlink-account` takes. `LinkedAccount` lives in `src/lib/types.ts`, which is client-safe.                                                                                                                     |
+| `passwordHeld` | Whether the account holds a password, from `hasPassword()`. Sets the Password row's status and link.                                                                                                                                                                                                                       |
+| `passkeyCount` | How many passkeys the account holds. Sets the Passkeys row's status.                                                                                                                                                                                                                                                       |
+| `configured`   | Providers this environment has credentials for, from `configuredProviders()`. The rest cannot be added.                                                                                                                                                                                                                    |
+| `error`        | A failed link, as `{ providerId?, message }` (`SignInMethodError`, `types.ts`). `message` is a readable sentence from `linkErrorMessage()` (`src/lib/sign-in.ts`), never a raw `?error=` code. `providerId` is the provider the link was for, when the callback said and it is on the roster. Shown as an alert on mount.  |
+| `fresh`        | Whether the session is young enough for Better Auth to remove a method, from `sessionIsFresh()` (`src/lib/request-session.ts`). `false` withholds every Remove and offers Sign In Again ("A stale session signs in again", below). Optional, and `true` when left out, since Better Auth's refusal is the rule either way. |
 
 ## The rows
 
@@ -60,6 +62,15 @@ nothing. The list works out each row's state and hands it down; the row's
 one state of its own is its click feedback, the callout and badge of its
 last failed press ([`click-feedback.md`](click-feedback.md)), named for its
 control: "Show the error for Remove Discord".
+
+## The password and passkey rows
+
+After the providers come two `SectionRow`s (`section-row.tsx`): "Password"
+(Set or Not Set, with a link "Manage Password" or "Set Password" to
+`#account-password`) and "Passkeys" (None Added or a count, with a link "Manage
+Passkeys" to `#account-passkeys`). They hold no control of their own; the
+sections they link to do. They are not providers, so they never count toward
+whether a provider is the last one.
 
 ## Adding one leaves the page
 
