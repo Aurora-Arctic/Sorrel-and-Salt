@@ -8,7 +8,7 @@
 .backdrop {
   position: fixed;
   z-index: -1;
-  width: calc(var(--backdrop-width, #{$ornament-width}) * var(--backdrop-scale, 1));
+  width: calc(var(--backdrop-width, clamp(8.75rem, 17.5vw, 13.75rem)) * var(--backdrop-scale, 1));
   pointer-events: none;
   background-size: 100% 100%;
   background-repeat: no-repeat;
@@ -108,35 +108,4 @@
 // wrapper class is the hook, so the layout needs no route awareness.
 body:has(.welcome-page) .backdrop {
   --backdrop-width: clamp(20rem, 47.5vw, 45rem);
-}
-
-// On an entry page (a recipe, an ingredient) the ornaments leave their fixed corners for a band
-// kept empty at the page's foot, so no text ever passes beneath them; a recipe or entry inside a
-// dialog leaves the page behind it alone.
-body:has(.spell-recipe:not(dialog *), .ingredient-entry:not(dialog *)) {
-  position: relative;
-  padding-block-end: calc(#{$ornament-width} * 2 / 3 + #{space(4)});
-
-  .backdrop {
-    position: absolute;
-  }
-
-  .backdrop--sorrel {
-    top: auto;
-    bottom: 0;
-    animation: none;
-  }
-
-  .backdrop--salt {
-    bottom: 0;
-    animation: none;
-  }
-
-  // The section bar covers the body's last `$bottom-bar-height`; the band rises above it into the
-  // room the shell already keeps clear of it.
-  @media (max-width: #{$shell-phone-width}) {
-    &:has(.section-nav) :is(.backdrop--sorrel, .backdrop--salt) {
-      bottom: calc(#{$bottom-bar-height} + env(safe-area-inset-bottom, 0px));
-    }
-  }
 }
