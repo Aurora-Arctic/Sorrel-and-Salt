@@ -637,9 +637,22 @@ export interface AuditWriter {
    */
   insertInvitation(admin: SiteAdmin, values: SiteInvitationValues): Promise<InvitationRow[]>;
   /**
+   * Insert a batch of cards (a whole number of sheets) in one statement, on the site tier's proof: one row per token, hashed here, sharing the batch id and the
+   * expiry, with no address, coven or role.
+   */
+  insertInvitationCards(admin: SiteAdmin, values: CardInvitationValues): Promise<InvitationRow[]>;
+  /** Revoke every pending card of the batch. An accepted card is the record of an arrival and is left untouched. */
+  revokeInvitationCardBatch(admin: SiteAdmin, batchId: string): Promise<InvitationRow[]>;
+  /**
+   * Record one refused open of the card `invitationId` by the session's user for `reason`: a new row, or the live row's `attempts` plus one and a later `last_attempted_at`.
+   * Under no proof, since the account is signed in and nothing here reads the card; the service has decided it is a recordable refusal.
+   */
+  recordCardAttempt(invitationId: string, reason: CardAttemptReason): Promise<CardAttemptRow[]>;
+  /**
    * Accept the pending invitation a link's token names, on either tier, as the session's user: stamps `accepted_at` and `accepted_by`.
    * Under no proof, since the invitee holds neither membership nor site role yet; the token admits, and the user must hold the invited address, verified.
    * No row comes back for a token naming no pending invitation, or a user whose live row holds another address or holds it unverified.
+   * A card names no address: any verified account is admitted, once.
    */
   acceptInvitation(token: string): Promise<InvitationRow[]>;
   /**
@@ -1017,6 +1030,9 @@ export interface SlugRedirect {
 /** An `invitations` row, either tier, as a finder or a write returns it. */
 export type InvitationRow = typeof invitations.$inferSelect;
 
+/** An `address` invitation, either tier: `invitations_kind_shape` gives it the address a card lacks. */
+export type AddressInvitationRow = InvitationRow & { email: string };
+
 /** The live coven a workspace invitation names, as the invited account may be told it: two fields, never the row. */
 export interface InvitedCoven {
   name: string;
@@ -1043,7 +1059,7 @@ export type InvitableSiteRole = Exclude<NonNullable<InvitationRow['siteRole']>, 
  * A site-tier invitation, which grants the site role it names: the workspace and the coven role both null, as the `invitations_tier` CHECK makes them
  * together, and the site role set, as `invitations_site_role_tier` makes it.
  */
-export type SiteInvitationRow = InvitationRow & {
+export type SiteInvitationRow = AddressInvitationRow & {
   workspaceId: null;
   role: null;
   siteRole: InvitableSiteRole;
@@ -1060,6 +1076,74 @@ type InvitationValues = Pick<typeof invitations.$inferInsert, 'email' | 'expires
 
 /** What a site-tier invitation starts with: the same, and the site role it grants. */
 export type SiteInvitationValues = InvitationValues & { siteRole: InvitableSiteRole };
+
+/** What a batch of cards starts with: a token each, never stored, and the batch and expiry they share. */
+export interface CardInvitationValues {
+  tokens: string[];
+  batchId: string;
+  expiresAt: Date;
+  /** Written on every card of the batch; null for none. */
+  note: string | null;
+}
+
+/** A card's place in its batch, from 1; null for a card minted before places were kept. */
+export type CardPosition = { id: string; position: number | null };
+
+/** One batch of cards counted: all of them, the accepted ones, those still pending, and the refused opens of its links. */
+export type CardBatchTotal = {
+  batchId: string;
+  cards: number;
+  accepted: number;
+  pending: number;
+  /** Refused opens of the batch's cards, all accounts and reasons added. */
+  attempts: number;
+};
+
+/** Where a batch of cards stands, as the admin Invitation Cards table words it. */
+export type CardBatchStatus = 'live' | 'revoked' | 'expired' | 'used-up';
+
+/** What the admin batch list is narrowed by. Each part is optional, and absent means no filter. */
+export interface CardBatchFilter {
+  /** The start of the batch number, or text anywhere in its note; case-insensitive. */
+  batch?: string;
+  status?: CardBatchStatus;
+  /** Days as `YYYY-MM-DD` in UTC, both ends included. */
+  mintedFrom?: string;
+  mintedTo?: string;
+  expiresFrom?: string;
+  expiresTo?: string;
+}
+
+/** What the admin card sign-up list and its CSV are narrowed by. */
+export interface CardArrivalFilter {
+  /** Part of the account's name or address, or the start of the batch number; case-insensitive. */
+  query?: string;
+}
+
+/** A card in any state: always in a batch. */
+export type CardRow = InvitationRow & { kind: 'card'; batchId: string };
+
+/** Why a card's link was refused to a signed-in account: the reasons a refused open is recorded under. */
+export type CardAttemptReason = 'revoked' | 'expired' | 'accepted';
+
+/** One account's refused opens of one card for one reason. */
+export type CardAttemptRow = {
+  id: string;
+  invitationId: string;
+  userId: string;
+  reason: CardAttemptReason;
+  attempts: number;
+  lastAttemptedAt: Date;
+  createdAt: Date;
+};
+
+/** A card some account accepted: who, when, and the batch it came from. */
+export type CardArrivalRow = InvitationRow & {
+  kind: 'card';
+  acceptedAt: Date;
+  acceptedBy: string;
+  batchId: string;
+};
 
 /** What a workspace invitation starts with: the same, and the coven role it grants. */
 export type WorkspaceInvitationValues = InvitationValues & { role: InvitableRole };

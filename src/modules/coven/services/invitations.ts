@@ -5,9 +5,10 @@ import {
   findOneById,
   findPendingWorkspaceInvitationCount,
   findPendingWorkspaceInvitationPage,
+  findRecentCovenInvitationTimes,
   withAudit,
 } from '../../../db/repository';
-import type { InvitableRole, InvitationRow } from '../../../db/repository';
+import type { AddressInvitationRow, InvitableRole, InvitationRow } from '../../../db/repository';
 import { NotFound, ValidationError } from '../../../lib/errors';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { newToken } from '../../../lib/invitation-token';
@@ -26,6 +27,25 @@ import { assertMembership } from './membership';
 /** The roles an invitation may grant: the database's check, said again where it can explain itself. */
 const INVITABLE: readonly WorkspaceRole[] = ['viewer', 'member'];
 
+/** How many coven invitations one account may make in a rolling window: each, and each resend, sends one mail from the site's address. */
+export const INVITATION_MAIL_LIMIT = 20;
+export const INVITATION_MAIL_WINDOW_MINUTES = 60;
+
+/** Refuses the sender once their recent invitations reach the limit, saying when the oldest one leaves the window. */
+async function assertUnderMailLimit(session: Session): Promise<void> {
+  const windowMs = INVITATION_MAIL_WINDOW_MINUTES * 60_000;
+  const times = await findRecentCovenInvitationTimes(session, windowMs / 1000);
+  if (times.length < INVITATION_MAIL_LIMIT) return;
+  const oldest = Math.min(...times.map((time) => time.getTime()));
+  const retry = new Date(oldest + windowMs);
+  throw new ValidationError([
+    {
+      path: [],
+      message: `You have sent ${INVITATION_MAIL_LIMIT} invitations in the last ${INVITATION_MAIL_WINDOW_MINUTES} minutes, which is the most allowed. Try again after ${retry.toISOString().slice(11, 16)} UTC.`,
+    },
+  ]);
+}
+
 function isInvitable(role: WorkspaceRole): role is InvitableRole {
   return INVITABLE.includes(role);
 }
@@ -35,7 +55,8 @@ function isInvitable(role: WorkspaceRole): role is InvitableRole {
  * alone; a second invitation to the address replaces the pending one (claude-docs/db/invitations.md, "Coven invitation service details").
  *
  * @throws {Forbidden} the caller is not an owner of the coven (`member: invite`).
- * @throws {ValidationError} on `role`: owner. On `email`: malformed, unmailable, or a live member's already.
+ * @throws {ValidationError} on `role`: owner. On `email`: malformed, unmailable, or a live member's already. On no field: the sender's
+ * hourly mail limit is reached, which every new invitation and every resend counts toward.
  */
 export async function createInvitation(
   session: Session,
@@ -62,6 +83,8 @@ export async function createInvitation(
       { path: ['email'], message: 'That address belongs to a member of this coven already' },
     ]);
   }
+
+  await assertUnderMailLimit(session);
 
   // The proof was minted from a live membership of it, so the workspace is there.
   const workspace = await findOneById(workspaces, workspaceId);
@@ -93,7 +116,7 @@ export async function listPendingWorkspaceInvitations(
   session: Session,
   workspaceId: string,
   page: PageRequest,
-): Promise<PageEntry<InvitationRow>[]> {
+): Promise<PageEntry<AddressInvitationRow>[]> {
   const membership = await assertMembership(session, workspaceId, { member: ['invite'] });
   return findPendingWorkspaceInvitationPage(membership, page);
 }

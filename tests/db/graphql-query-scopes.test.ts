@@ -79,6 +79,19 @@ const PROBES: Record<string, ScopeProbe> = {
     source: '{ privilegeChanges(first: 1) { edges { node { id } } } }',
     outcome: 'refuses',
   },
+  invitationCardBatches: {
+    source: '{ invitationCardBatches(first: 1) { edges { node { batchId } } } }',
+    outcome: 'refuses',
+  },
+  invitationCardAttempts: {
+    source: `{ invitationCardAttempts(batchId: "${NOWHERE}", first: 1) { edges { node { id } } } }`,
+    outcome: 'refuses',
+  },
+  cardArrivals: {
+    source: '{ cardArrivals(first: 1) { edges { node { id } } } }',
+    outcome: 'refuses',
+  },
+  cardArrivalsCsv: { source: '{ cardArrivalsCsv }', outcome: 'refuses' },
   compendium: {
     source: '{ compendium(first: 1) { edges { node { id } } } }',
     outcome: 'answers',
@@ -194,6 +207,11 @@ const PROBES: Record<string, ScopeProbe> = {
       workingDeductionPreview(workspaceId: $workspaceId, spellId: $spellId) { deductions { stepId } }
     }`,
     variables: { workspaceId: WORKSPACE_W_ID, spellId: NOWHERE },
+    outcome: 'refuses',
+  },
+  workspace: {
+    source: 'query ($id: ID!) { workspace(id: $id) { id } }',
+    variables: { id: WORKSPACE_W_ID },
     outcome: 'refuses',
   },
   deitySuggestions: suggestion('deitySuggestions'),
@@ -372,6 +390,13 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
     'mutation { createAdminInvitation(email: "not-an-address", siteRole: curator) { id } }',
   ),
   revokeAdminInvitation: write(`mutation { revokeAdminInvitation(id: "${NOWHERE}") { id } }`),
+  createInvitationCards: write(
+    'mutation { createInvitationCards(sheets: 1, expiresAt: "2099-01-01T00:00:00Z") { batchId } }',
+  ),
+  revokeInvitationCardBatch: write(
+    `mutation { revokeInvitationCardBatch(batchId: "${NOWHERE}") { id } }`,
+  ),
+  recordCardAttempt: write('mutation { recordCardAttempt(token: "no-such-token") }'),
   acceptInvitation: write('mutation { acceptInvitation(token: "no-such-token") { id } }'),
   acceptInvitationById: write(`mutation { acceptInvitationById(id: "${NOWHERE}") { id } }`),
   declineInvitationById: write(`mutation { declineInvitationById(id: "${NOWHERE}") { id } }`),
@@ -579,6 +604,9 @@ const ADMIN_WRITES: Record<string, AdminWrite> = {
   // Inviting an address to become an admin, and withdrawing it.
   createAdminInvitation: { governs: 'site role' },
   revokeAdminInvitation: { governs: 'site role' },
+  // Printed invitation cards: minting, withdrawing one or a batch.
+  createInvitationCards: { governs: 'site role' },
+  revokeInvitationCardBatch: { governs: 'site role' },
   createCategory: { governs: 'categories' },
   updateCategory: { governs: 'categories' },
   deleteCategory: { governs: 'categories' },
@@ -652,6 +680,8 @@ const OPEN_WRITES = [
   'duplicateSpell',
   // The coven's `working: create`, `update` and `delete` decide, which the working service checks; a change or a delete
   // also needs the recorder, or for a change someone named on the working.
+  // Any signed-in account may report a refused card open; the service records it only against a real card.
+  'recordCardAttempt',
   'recordWorking',
   'updateWorking',
   'completeWorking',

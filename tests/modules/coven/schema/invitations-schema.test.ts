@@ -27,6 +27,9 @@ const OWN_COLUMNS = [
   'declined_at',
   'note',
   'site_role',
+  'kind',
+  'batch_id',
+  'position',
 ];
 
 const TOKEN_HASH_INDEX = 'invitations_token_hash_unique';
@@ -36,6 +39,8 @@ const DECLINED_CHECK = 'invitations_declined_coven';
 const ANSWERED_CHECK = 'invitations_answered_once';
 const SITE_TIER_CHECK = 'invitations_site_role_tier';
 const SITE_ROLE_CHECK = 'invitations_site_role_invitable';
+const KIND_CHECK = 'invitations_kind_known';
+const CARD_SHAPE_CHECK = 'invitations_kind_shape';
 
 describe('invitations schema', () => {
   const { byName } = tableFacts(invitations);
@@ -145,7 +150,7 @@ async function inviteToSite({ tokenHash = HASH_A, siteRole = 'admin' } = {}) {
 
 describe('invitations table', () => {
   beforeEach(async () => {
-    await sql`truncate invitations`;
+    await sql`truncate card_invitation_attempts, invitations`;
   });
 
   describe('the tier', () => {
@@ -216,6 +221,76 @@ describe('invitations table', () => {
 
       const rows = await sql`select site_role::text from invitations order by site_role nulls last`;
       expect(rows.map((row) => row.site_role)).toEqual(['admin', 'curator', null]);
+    });
+  });
+
+  // A printed card is a third shape of the same table: bound to no address, coven or site role, so one token still resolves to one row.
+  describe('the kind', () => {
+    const BATCH = '3f0c6a52-9b1e-4a57-8d0e-5f6a7b8c9d01';
+
+    it('defaults to an address invitation and refuses an unknown kind', async () => {
+      const id = await invite('member');
+      const [row] = await sql`select kind, batch_id from invitations where id = ${id}`;
+      expect(row?.kind).toBe('address');
+      expect(row?.batch_id).toBeNull();
+
+      const error = await failureOf(sql`
+        insert into invitations (kind, token_hash, created_by, updated_by)
+        values ('postcard', ${HASH_B}, ${ADMIN}, ${ADMIN})
+      `);
+      expect(error.code).toBe('23514');
+      expect(error.constraint_name).toBe(KIND_CHECK);
+    });
+
+    it('refuses an address invitation with no email, on either tier', async () => {
+      const coven = await failureOf(sql`
+        insert into invitations (workspace_id, role, token_hash, created_by, updated_by)
+        values (${COVEN}, 'member', ${HASH_A}, ${OWNER}, ${OWNER})
+      `);
+      const site = await failureOf(sql`
+        insert into invitations (site_role, token_hash, created_by, updated_by)
+        values ('admin', ${HASH_B}, ${ADMIN}, ${ADMIN})
+      `);
+
+      expect(coven.constraint_name).toBe(CARD_SHAPE_CHECK);
+      expect(site.constraint_name).toBe(CARD_SHAPE_CHECK);
+    });
+
+    // Each case gives a card the one extra column, plus the partner the tier check needs, so only the card shape can refuse it.
+    it.each([
+      ['an email', 'email', "'rowan@example.com'"],
+      ['a workspace', 'workspace_id, role', `'${COVEN}', 'member'`],
+      ['a role', 'workspace_id, role', `'${COVEN}', 'member'`],
+      ['a site role', 'site_role', "'admin'"],
+    ])('refuses a card with %s', async (_label, columns, values) => {
+      const error = await failureOf(
+        sql.unsafe(`
+          insert into invitations (kind, token_hash, created_by, updated_by, ${columns})
+          values ('card', '${HASH_A}', '${ADMIN}', '${ADMIN}', ${values})
+        `),
+      );
+
+      expect(error.code).toBe('23514');
+      expect(error.constraint_name).toBe(CARD_SHAPE_CHECK);
+    });
+
+    // Why the refusals above could have succeeded: every column a card must leave null is nullable for an address row too.
+    it('accepts a card with none of them, and keeps its batch', async () => {
+      await sql`
+        insert into invitations (kind, batch_id, token_hash, created_by, updated_by)
+        values ('card', ${BATCH}, ${HASH_A}, ${ADMIN}, ${ADMIN})
+      `;
+
+      const [row] =
+        await sql`select kind, email, workspace_id, role, site_role, batch_id from invitations`;
+      expect(row).toMatchObject({
+        kind: 'card',
+        email: null,
+        workspace_id: null,
+        role: null,
+        site_role: null,
+        batch_id: BATCH,
+      });
     });
   });
 

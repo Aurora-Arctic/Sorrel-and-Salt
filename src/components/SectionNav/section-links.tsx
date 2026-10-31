@@ -13,7 +13,7 @@ import {
   useSyncExternalStore,
 } from 'react';
 import { isAtPath } from '../../lib/at-path';
-import { ChevronIcon } from '../Combobox/icons';
+import { ChevronIcon } from '../IconTip/icons';
 import SectionIcon from './icons';
 import type { SectionNavItem, SectionNavProps } from './types';
 
@@ -234,7 +234,7 @@ const SectionLinks = ({ label, sections }: SectionNavProps): ReactElement => {
               aria-current={isCurrent(pathname, section) ? 'page' : undefined}
             >
               <SectionIcon name={section.icon} />
-              <span className="section-nav__label">{section.label}</span>
+              <span>{section.label}</span>
             </PendingLink>
           </li>
         ))}
@@ -250,7 +250,7 @@ const SectionLinks = ({ label, sections }: SectionNavProps): ReactElement => {
               onClick={() => setOpenAt(open ? null : pathname)}
             >
               <SectionIcon name={hidden ? hidden.icon : 'more'} />
-              <span className="section-nav__label">
+              <span>
                 {/* The space sits outside the hidden span: a trailing one inside it is
                     trimmed from the name, which then reads "More:Astrology". */}
                 {hidden && (
@@ -274,7 +274,7 @@ const SectionLinks = ({ label, sections }: SectionNavProps): ReactElement => {
                     aria-current={isCurrent(pathname, section) ? 'page' : undefined}
                   >
                     <SectionIcon name={section.icon} />
-                    <span className="section-nav__label">{section.label}</span>
+                    <span>{section.label}</span>
                   </PendingLink>
                 </li>
               ))}

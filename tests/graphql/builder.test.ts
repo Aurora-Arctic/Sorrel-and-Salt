@@ -36,6 +36,39 @@ describe('the Pothos schema', () => {
   });
 });
 
+describe('the admin and curator scopes', () => {
+  // A throwaway schema whose fields only the scopes gate, so no service refusal can stand in for them.
+  async function read(
+    session: NonNullable<Context['session']>,
+    field: 'adminOnly' | 'curatorOnly',
+  ) {
+    const scratch = createBuilder();
+    scratch.queryType({
+      fields: (t) => ({
+        adminOnly: t.string({ authScopes: { admin: true }, resolve: () => 'ok' }),
+        curatorOnly: t.string({ authScopes: { curator: true }, resolve: () => 'ok' }),
+      }),
+    });
+    return graphql({
+      schema: scratch.toSchema(),
+      source: `{ ${field} }`,
+      contextValue: context(session),
+    });
+  }
+  const ID = '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f';
+
+  it.each([
+    ['adminOnly', 'admin'],
+    ['curatorOnly', 'admin'],
+    ['curatorOnly', 'curator'],
+  ] as const)('%s is refused an unverified %s and admitted once verified', async (field, role) => {
+    expect((await read({ userId: ID, role }, field)).errors).toBeUndefined();
+
+    const refused = await read({ userId: ID, role, emailUnverified: true }, field);
+    expect(refused.errors).toHaveLength(1);
+  });
+});
+
 describe('AuditInfo', () => {
   // The sweep over every type the schema will ever carry: a later task that
   // spreads audit columns flat onto its own type fails here, not in review.

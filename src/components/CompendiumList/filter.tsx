@@ -189,7 +189,6 @@ const PanelFacets = ({
       filter={panel}
       loading={pending || live.loading}
       clearHref={where.path}
-      className="compendium-list__panel"
       covens={covens}
       onChange={(patch) => onPanel({ ...panel, ...patch })}
       // Shut any other way than Apply Filters, whose submit applies the name as well: the

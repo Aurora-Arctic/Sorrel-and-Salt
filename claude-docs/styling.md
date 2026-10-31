@@ -30,7 +30,17 @@ to.
   colour that is not a token means adding a token, not inlining one.
   Stylelint carries it (`npm run lint:css`, part of `lint`): `color-no-hex` and
   `color-named` refuse a hue anywhere but `_variables.scss`, so a theme mixin
-  takes its hues from there too ([`commands.md`](commands.md), "The app").
+  takes its hues from there too ([`commands.md`](commands.md), "The app"). A
+  colour function whose first argument is a number, `rgb(0 0 0)` or
+  `oklch(0.5 0.1 20)`, is refused the same way; `rgba($ink, 0.5)` on a token
+  is not.
+- **Type and layers come from the tokens too.** Outside `_variables.scss`,
+  stylelint lets `font-family` be a `$font-*` token or `inherit`, `font` only
+  `inherit`, and `font-size` a `$` token, `type-size()`, `heading-size()`, a
+  `calc()` over those, an `em` value, `0` or `inherit`. `z-index` is
+  `layer()`, a `$` variable holding one, or a single digit: the small local
+  index a component keeps inside its own stacking context ("The application
+  shell and the layers").
 - **The seeded group colours live only in `src/db/seed/category-groups.ts`.**
   No Sass token restates them, and retuning one takes a data migration as well
   as the seed edit, because the seed never overwrites a row it finds (M5.6b).
@@ -58,9 +68,9 @@ to.
 - **A length with a role of its own is a token**, under "Motion and layout"
   in `_variables.scss`, so the components that share the role share the
   number (MB.115): `$wide-column` (the admin area's column, 80rem),
-  `$dialog-column` and `$dialog-column-wide` (a dialog's content, 32rem and
-  48rem), `$icon-size` (a small control's 1.5rem square, WCAG 2.2's 24px
-  target) around a `$glyph-size` mark (1rem), `$icon-size-large` around
+  `$dialog-column` (a dialog's content, 32rem), `$icon-size` (a small control's 1.5rem square, WCAG 2.2's 24px
+  target) around a `$glyph-size` mark (1rem), `$glyph-size-small` (0.875rem,
+  a click callout's arrow and a round mark's icon), `$icon-size-large` around
   `$glyph-size-large` (2rem around 1.25rem, a list row's Edit pencil, larger
   outside a form on the owner's call), `$tip-width` (a tip's widest
   line, 18rem, capped at the window), `$close-target` (the dialog's close
@@ -190,10 +200,12 @@ Three variants exist for one use each:
 2026-10-19 for a warning that should not read as an error: `$ochre-deep`
 (`#8a5a00`) on light and `$ochre-bright` (`#d9a441`) on dark, the
 `--warning` token and its `$warning` alias. It draws a warning notice's bar,
-tint and triangle, never text, so it needs 3:1 as a graphic (WCAG 1.4.11),
-and clears more: 4.89 on the light page, 5.44 on the light card, 8.32 and 7.55
-on the dark ones, and over its own tint 4.47 and 4.95 light, 7.35 and 6.57
-dark. `tests/scss/tokens.test.ts` holds those floors.
+tint and triangle, which need 3:1 as a graphic (WCAG 1.4.11), and one line of
+text, a shortfall in Record a Working's preview, which needs 4.5:1. It clears
+both: 4.89 on the light page, 5.44 on the light card, 8.32 and 7.55 on the dark
+ones, and over its own tint 4.47 and 4.95 light, 7.35 and 6.57 dark.
+`tests/scss/tokens.test.ts` holds those floors: 4.5:1 as text on the page and
+the card, 3:1 as a mark on its tint.
 
 Shadow inks are per-theme: a 0.8-alpha near-black under a card reads as a hole
 punched in parchment, so light mode gets a much softer one.
@@ -292,6 +304,8 @@ exactly (tinted, `$chalk-muted` dark, `$ink-muted` light), which spends no hue
 and needs no new contrast check. It is its own palette so that the entry page
 does not name a retired entry after stock, and so that the section's design
 review can give it a look of its own.
+
+**Muted** marks a plain fact beside a name that is no warning: a one-off ingredient in a spell's steps, and a picker row whose form is already in the jar. It takes the same treatment and inks as Retired and Low, so it needs no new contrast check, and is its own palette so that neither use borrows a name about the compendium.
 
 Each palette is one ink per theme plus the **treatment** it is drawn in, and the
 treatment decides which parts it emits:
@@ -414,7 +428,9 @@ happens at the element, and a theme toggle re-colours a chip without a render.
 It replaced one `--group-<slug>` custom property and one `.chip--<slug>` class
 per key of M0.7's `$category-groups` map (since retired), which a group created
 at runtime cannot have.
-`chip()` refuses a slug at compile time.
+`chip()` refuses a slug at compile time. A rule that needs the group's colour
+outside a chip (a combobox row's bar, a group's mark) takes `group-colour()`
+(`_mixins.scss`), the same `light-dark()` pick `chip()` makes.
 
 `light-dark()` is newer than the browser floor (it needs Safari 17.5, the floor
 is 17.4), so Turbopack's Lightning CSS lowers it: every `color-scheme` declaration also sets
@@ -648,8 +664,10 @@ Below body copy, type takes one of five sizes by role from `type-size()`:
 field errors; `caption` (0.8125rem) for hints, metadata, chips and badges;
 `overline` (0.75rem) for the `.eyebrow`; and `tab` (0.6875rem) for the one
 place five labels sit across a phone, under the icons of the section nav's
-bottom bar (MB.7). The headings' scale is
-`heading-size()`'s, above.
+bottom bar (MB.7). Two steps sit between body copy and the smallest
+heading: `title` (1.25rem) for a form section's or a detail panel's title
+(CollapsibleSection, UserDetail), and `lead` (1.125rem) for a form's group
+name (IngredientForm). The headings' scale is `heading-size()`'s, above.
 
 ### The top inset
 
@@ -714,7 +732,7 @@ Four variants:
 - **`.btn--solid`**, a view's one primary action — Save, Send, Continue.
   Filled in the accent, with the label on `$text-on-color`, and its own hover
   step (`--accent-solid-hover`, above).
-- **`.btn--quiet`**, an action that changes nothing: Cancel, Keep It, Keep Editing, Back.
+- **`.btn--quiet`**, an action that changes nothing: Cancel, Keep Editing, Back.
   The label in the body ink, so it neither competes with the primary nor reads as
   destructive — and, unlike the muted ink, not as disabled either. It sits in a
   field's ground (`$surface-card`, what an input fills with) inside a
@@ -723,11 +741,11 @@ Four variants:
   the edge `$edge-highlight`, in place of filling with ink (M8.17, the owner's
   call of 2026-10-20). The label on the lit ground holds 4.5:1 in both themes
   (`tests/scss/tokens.test.ts`).
-- **`.btn--destructive`**, what destroys something: Delete, Remove, Discard Changes. The wax,
+- **`.btn--destructive`**, what destroys something: Delete, Remove, Discard Changes. It also marks a high-risk control that destroys nothing, and only two exist: Impersonate (on the row, in the user modal and on its confirm) and Pause Admin Changes (Pause, Resume and its confirm). The wax,
   `$secondary`, which every error wears too. It was `.btn--secondary`, named
   for the token rather than the job, until M5.6, the owner's call.
 
-**Two size modifiers, `.btn--small` and `.btn--medium`**, which compose with any variant. `.btn--small` has half
+**Two size modifiers, `.btn--small` and `.btn--medium`**, which compose with any variant; a class list names the variant before the size (`btn btn--quiet btn--small`), so one search finds every use. `.btn--small` has half
 the padding (`space(1) space(3)`), no `$control-height` minimum, a 1px edge
 in place of `.btn`'s 1.6px, which reads heavy at this size, the `caption`
 type size, and a `space(2)` gap. It is for a compact strip that the full button would make taller, such
@@ -823,6 +841,7 @@ The class layer every form is built from, in `_primitives.scss`:
 | `.search-field`, `__input`, `__submit`                   | A list filter's search box, an `.input` box on a flex row holding a borderless text input and, at its end, a magnifier submit named Search, muted until pointed at or focused, then the accent. The box draws the input's focus ring. `SearchField` draws it ([`components/field.md`](components/field.md))                                                                                                                                                          |
 | `.fieldset`, `.fieldset__legend`                         | Rows under one name: checkboxes, or a list of entries                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `.notice`, `--error`, `--warn`, `--caution`, `--success` | A sentence about the whole view rather than one field. No box: a 3px bar down the start edge and a tint of the bar's colour behind the text (`--notice-tint`, 7% light, 8% dark). `--error`, `--warn` and `--caution` lead with a warning triangle, drawn by mask in the padding so a link in the text stays inline. Each kind sets `--notice-bar` and `--notice-icon`; [`components/notice.md`](components/notice.md) has the table (the owner's look, 2026-10-19). |
+| `.back-bar`                                              | The row a detail page opens with: the back link at the left, anything the page adds at the right, on one centre line. The ingredient entry page and the spell recipe page both draw it                                                                                                                                                                                                                                                                               |
 
 - **A field's hint is an info tip beside its label** (`InfoTip`,
   [`components/info-tip.md`](components/info-tip.md)), not a line beneath it:
@@ -1036,8 +1055,10 @@ is the page's: the coven index sits in the narrow column with a jump menu at
 its side (`.page-with-nav`, "The page frame", above), and its sections are
 plain `.page-frame__section`s rather than panels, the shape the admin
 index uses. The index's table of contents is the `.admin-contents` list the
-admin index draws, in `_primitives.scss` for both. The admin area's
-page-header rules stay scoped to `.page-column`.
+admin index draws, in `_primitives.scss` for both. Its links are in the
+body ink whether or not they have been followed, so the two overviews read
+the same whatever the browser's history. The admin area's page-header rules
+stay scoped to `.page-column`.
 
 ## Tables at phone width
 
@@ -1175,6 +1196,17 @@ What each section review (MB.115 to MB.124) designs to:
   of a refusal, or one pathless issue carrying the same sentence.
 - **A section head is `.header`** with an `.eyebrow`, the heading, and a
   `.lede` where the section needs saying what it is for.
+- **A page head is a `PageHeader`, always.** No page and no component writes
+  its own `h1`: `tests/guards/page-heads.test.ts` fails one that does, bar
+  the loading covers' hidden heading. Only the public pages carry an eyebrow
+  and a lede: the public Compendium has both, and its entry page has the
+  formal name as its eyebrow. The app's list pages (a coven's Ingredients and
+  Grimoire, its Members, the admin Compendium and the other admin lists)
+  have the heading alone, with its action beside it. The screens outside the
+  lists, such as the coven home, Create Coven, the sign-in, email and
+  invitation panels and the error pages, keep the eyebrow or lede they say
+  their purpose with, drawn by `PageHeader` too
+  ([`components/page-header.md`](components/page-header.md)).
 - **The copy has one voice.** Speak to the reader as "you", in plain words.
   A message says what happened in one sentence and what to do in the next.
   "Please try again." goes only where trying again can help, so a refusal
@@ -1185,7 +1217,7 @@ What each section review (MB.115 to MB.124) designs to:
 - **Use the shared pieces rather than their markup.** A field is `Field`'s
   `TextField` or `SelectField`, or its `FieldShell` around a control of
   the form's own; a button with a spinner is a `BusyButton`; a list's filter
-  is a `FilterForm`; a page's heading and its action are a `PageHeader`, and
+  is a `FilterForm`; a page's head, its heading and its action, is a `PageHeader`, and
   a page in tabs is a `TabbedPage` with each tab's action from its route
   group's `@action` slot;
   and a modal opened by its page's address, or at once by a press, is a `RouteModal`
@@ -1260,7 +1292,7 @@ heavier than the reverse; light reverts to the browser default.
   an icon sized to the text beside it), `$text-stroke-hairline` (0.6px, the
   safety note heading's stroke), `$safety-bar-width` (the safety note's side
   bar, `$rule-heavy`), `$nav-link-size` (1.125rem, a grouped jump menu's
-  top-level link), the small optical corrections in `em` (`$optical-nudge`
+  top-level link), `$notice-mark-size` (1.0125rem, a notice's warning triangle) and `$notice-mark-drop` (0.05rem, which sets it on the first line), `$step-ink-drop` (0.05rem, which sets a spell step's first-line icons level with its name), the date field's calendar sizes and fades (`$day-picker-*`, [`components/date-field.md`](components/date-field.md)), the small optical corrections in `em` (`$optical-nudge`
   0.04em, `$back-chevron-pull` 0.5em, `$link-hint-drop` 0.125em, `$cap-middle`
   0.648em, `$recency-icon-size` 1.375em, each explained where it is declared), and the ingredient card drawer's `$drawer-inset` (10px),
   `$drawer-wall` (7px), `$drawer-back-stop` and `$drawer-seam-stop` (38% and
@@ -1273,7 +1305,7 @@ heavier than the reverse; light reverts to the browser default.
   badge custom properties), `focus-ring`,
   `theme-transition`, `nav-current` (a bar link's current-page mark: weight and a
   `$rule-heavy` accent border, which forced colours keeps), `reduced-motion`,
-  `font-smoothing-antialiased`,
+  `font-smoothing-antialiased`, `notice-row` (a notice laid out as a row of sentence and buttons, as the recovery and conflict notices are under a dialog's title),
   `heading-face` (the headings' family, weight and letter spacing).
   The shapes that repeated by hand are mixins too, one line each:
   `color-scheme-light` and `forced-colors` (the two media queries, as
@@ -1296,7 +1328,7 @@ heavier than the reverse; light reverts to the browser default.
   (the card surface, floating shadow and muted edge a list or summary
   floats on); `field-box` (the edge, ground and height a field and the
   admin menu's summary share); `arrived` (the fade a list or tab's new
-  content comes in with, the one `list-frame-fade-in` keyframe,
+  content comes in with, the one `fade-in` keyframe (`fade-out` beside it),
   `$arrive-duration` by default); `loading-motion($animation, $delay)`
   (applies a loading animation and, under `reduced-motion`, swaps it for the
   `loading-pulse` keyframe at `$pulse-duration`: the one slow opacity pulse
@@ -1309,8 +1341,8 @@ heavier than the reverse; light reverts to the browser default.
   modifiers a table takes by class; `value-and-control` (a cell's value on
   the left and the control that changes it on the right); and
   `sticky-action-column($layer)` (a stacking table's pinned row-action
-  column on a neutral `$hairline` rule: the Compendium's Edit, and its card placement) and
-  `row-action-column($layer)` (the same column in red, over a `@content` block: Impersonate or Remove).
+  column on a neutral `$hairline` rule: the Compendium's Edit and the members' Remove, and its card placement) and
+  `row-action-column($layer)` (the same column in red, over a `@content` block: Impersonate).
 - **Three `*-base` mixins**, each emitting nothing on its own `@use` and
   `@include`d at exactly one site, `globals.scss`'s `body`:
   - `_typography.scss` → `typography-base` — headings, body copy capped at

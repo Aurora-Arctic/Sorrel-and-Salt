@@ -278,7 +278,7 @@ const ChipColorField = ({
               <Tooltip.Trigger asChild>
                 <button
                   type="button"
-                  className="btn btn--small btn--quiet chip-color-field__format"
+                  className="btn btn--quiet btn--small chip-color-field__format"
                   aria-label={`${label} Format: ${current.name}. Switch to ${next.name}`}
                   onClick={() => setFormat(next.format)}
                 >
@@ -295,7 +295,7 @@ const ChipColorField = ({
             {/* The pair's rule, on demand: the same hue fitted to this ground. */}
             <button
               type="button"
-              className="btn btn--small btn--quiet chip-color-field__match"
+              className="btn btn--quiet btn--small chip-color-field__match"
               disabled={!partnerHex}
               aria-label={`Match ${PARTNER_NAME[column]} Theme Colour`}
               onClick={() => partnerHex && onChange(pairedColor(partnerHex, column))}

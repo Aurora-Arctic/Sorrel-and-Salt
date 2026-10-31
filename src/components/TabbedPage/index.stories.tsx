@@ -123,7 +123,7 @@ const STATES: Record<string, ReactNode> = {
 export const States: Story = {
   args: { state: 'Invitations Tab' },
   argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
-  render: ({ state }) => <div key={String(state)}>{state}</div>,
+  render: ({ state }) => <div>{state}</div>,
 };
 
 // The widths the comments above name, pinned so they do not wait on the

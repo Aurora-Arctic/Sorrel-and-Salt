@@ -177,13 +177,11 @@ describe('EmailForm', () => {
   it('puts a field error beside the input and marks the input invalid', async () => {
     mockGraphQLError('SetEmail', {
       code: 'VALIDATION',
-      fieldErrors: [
-        { path: ['email'], message: 'That email address is already in use by another account' },
-      ],
+      fieldErrors: [{ path: ['email'], message: 'Enter a valid email address' }],
     });
     renderForm(<EmailForm email="ada@example.test" verified={false} landing="/coven" />);
 
-    fireEvent.change(emailField(), { target: { value: 'taken@example.test' } });
+    fireEvent.change(emailField(), { target: { value: 'not-an-address' } });
     fireEvent.submit(submit().closest('form') as HTMLFormElement);
 
     await waitFor(() => expect(emailField()).toHaveAttribute('aria-invalid', 'true'));

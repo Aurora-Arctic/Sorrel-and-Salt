@@ -33,7 +33,13 @@ async function run(variables: Record<string, unknown>) {
   await sql`update users set verification_sent_at = null where id = ${B.id}`;
   const requestChange = vi.fn<EmailVerificationSender['requestChange']>(async () => {});
   const result = await runOperation(asUser(B), SET_EMAIL, variables, {
-    emailVerification: { ...noSender, requestChange },
+    emailVerification: {
+      ...noSender,
+      requestChange,
+      sessionIsFresh: async () => true,
+      notifyChangeRequested: async () => {},
+      defer: (task) => void task(),
+    },
   });
   return { result, requestChange };
 }

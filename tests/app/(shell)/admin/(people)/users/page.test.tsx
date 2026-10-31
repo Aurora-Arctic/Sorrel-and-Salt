@@ -1,4 +1,5 @@
 import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
@@ -11,7 +12,8 @@ const requireAdminSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
 
 // The rows' Approval controls hold the router, which only a mounted app provides.
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
+const replace = vi.fn();
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn(), replace }) }));
 
 const listUsers = vi.fn();
 const countUsers = vi.fn();
@@ -89,6 +91,7 @@ function lastRequest(): PageRequest {
 }
 
 beforeEach(() => {
+  replace.mockReset();
   requireAdminSession.mockReset();
   requireAdminSession.mockResolvedValue(ADMIN);
   listUsers.mockReset();
@@ -284,6 +287,21 @@ describe('the /admin/users page, the user modal', () => {
       'href',
       `/admin/users?query=listed&role=user&user=${user(2).id}`,
     );
+  });
+
+  // Opened from a cards screen, Close goes back to that screen; from the list, or a `from` outside the set, back to the list.
+  it.each([
+    ['invitation-cards', '/admin/invitation-cards'],
+    [undefined, '/admin/users?query=listed'],
+    ['https://elsewhere.test', '/admin/users?query=listed'],
+  ])('closes a modal opened from %s to %s', async (from, closeTo) => {
+    await renderPage({ query: 'listed', user: user(1).id, ...(from && { from }) });
+
+    await userEvent.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: 'Close' }),
+    );
+
+    expect(replace).toHaveBeenCalledWith(closeTo);
   });
 
   // Hand-edited, or copied wrong: the list beneath is still the page asked for.

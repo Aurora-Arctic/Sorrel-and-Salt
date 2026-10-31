@@ -228,7 +228,7 @@ describe('the spell builder’s categories', () => {
     // Placed beside its field, so no notice above the form repeats it.
     // Only the save status speaks; no notice repeats the field’s error.
     expect(
-      screen.queryAllByRole('alert').filter((a) => !/Couldn.t save/.test(a.textContent ?? '')),
+      screen.queryAllByRole('alert').filter((a) => !/Could not save/.test(a.textContent ?? '')),
     ).toEqual([]);
   });
 });

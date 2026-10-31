@@ -748,9 +748,119 @@ type Invitation {
 }
 
 """
+An invitation card bound to no address, coven or role. Its token is never answered.
+"""
+type InvitationCard {
+  acceptedAt: DateTime
+
+  """
+  The account that accepted it; null while it is unaccepted or the account is gone.
+  """
+  account: User
+  audit: AuditInfo!
+
+  """The mint that made it, shared by the whole batch."""
+  batchId: ID!
+  expiresAt: DateTime!
+  id: ID!
+
+  """
+  The covens the accepting account owns now; empty while the card is unaccepted.
+  """
+  ownedCovens: [Workspace!]!
+  revokedAt: DateTime
+  state: InvitationCardState!
+}
+
+"""One account's refused opens of one card for one reason."""
+type InvitationCardAttempt {
+  """The account that opened the link; null if it is gone."""
+  account: User
+
+  """How many times this account was refused for this reason."""
+  attempts: Int!
+
+  """
+  The card's place in its batch from 1, in the order the print PDF lays the fronts out; null for a card minted before places were kept.
+  """
+  cardPosition: Int
+  firstAttemptedAt: DateTime!
+  id: ID!
+  lastAttemptedAt: DateTime!
+  reason: InvitationCardAttemptReason!
+}
+
+"""
+Why a card link was refused: withdrawn, past its date, or used by another account.
+"""
+enum InvitationCardAttemptReason {
+  accepted
+  expired
+  revoked
+}
+
+"""
+The cards minted together: one sheet count, one expiry. Counts are summed in SQL.
+"""
+type InvitationCardBatch {
+  """How many of its cards were accepted."""
+  accepted: Int!
+  batchId: ID!
+
+  """How many cards the batch holds."""
+  cards: Int!
+  expiresAt: DateTime!
+  mintedAt: DateTime!
+
+  """The admin's note written when the batch was minted; null for none."""
+  note: String
+
+  """
+  How many of its cards can still be accepted: not accepted, revoked or expired.
+  """
+  pending: Int!
+
+  """
+  How many times signed-in accounts opened a link of the batch and were refused, all cards, accounts and reasons added.
+  """
+  refusedOpens: Int!
+}
+
+"""
+Where a batch stands: live while a card can still be accepted; else used up, expired or revoked.
+"""
+enum InvitationCardBatchStatus {
+  expired
+  live
+  revoked
+  usedUp
+}
+
+"""
+Where a card stands now: an accepted card stays accepted whatever became of its date.
+"""
+enum InvitationCardState {
+  accepted
+  expired
+  pending
+  revoked
+}
+
+"""
 A local date string (i.e., with no associated timezone) in `YYYY-MM-DD` format, e.g. `2020-01-01`.
 """
 scalar LocalDate
+
+"""
+A batch just minted. The tokens are answered this once, to the admin who minted it, and are stored nowhere.
+"""
+type MintedInvitationCards {
+  batchId: ID!
+  expiresAt: DateTime!
+
+  """One token per card, in no order that matters."""
+  tokens: [String!]!
+}
 
 type Mutation {
   """
@@ -819,6 +929,19 @@ type Mutation {
   Invites an address into a coven as a viewer or member, mailing it the link; answers the invitation, never the link. Owners only.
   """
   createInvitation(email: String!, role: InvitableRole!, workspaceId: ID!): Invitation!
+
+  """
+  Mints `sheets` sheets of nine cards sharing one batch and one expiry, and answers each token once. Site admins only; a batch is at most 55 sheets.
+  """
+  createInvitationCards(
+    expiresAt: DateTime!
+
+    """
+    Plain text for the admins to track the batch by, at most 500 characters; blank is none.
+    """
+    note: String
+    sheets: Int!
+  ): MintedInvitationCards!
 
   """A null workspaceId writes the compendium's, under the admin proof."""
   createReference(input: ReferenceInput!, workspaceId: ID): Reference!
@@ -921,6 +1044,11 @@ type Mutation {
   """
   promoteFolkName(folkNameId: ID!, id: ID!, workspaceId: ID): Ingredient!
 
+  """
+  Notes that the signed-in account opened this card link and was refused. Takes the token alone: the account is the session's and the reason is worked out here. Answers true whether or not anything was recorded.
+  """
+  recordCardAttempt(token: String!): Boolean!
+
   """Records a working of a complete spell, as a draft."""
   recordWorking(input: WorkingInput!, spellId: ID!, workspaceId: ID!): SpellWorking!
 
@@ -948,6 +1076,11 @@ type Mutation {
   Withdraws a pending invitation of a coven, so its link says so; the row is kept. Refused for an invitation already accepted, which is a member to remove. Owners only.
   """
   revokeInvitation(id: ID!, workspaceId: ID!): Invitation!
+
+  """
+  Withdraws every pending card of a batch, answering the cards it withdrew. Site admins only.
+  """
+  revokeInvitationCardBatch(batchId: ID!): [InvitationCard!]!
 
   """
   Stops a user creating covens; those they own stay theirs. Refused for an admin, and for a user who cannot.
@@ -1130,16 +1263,42 @@ enum PrivilegeChangeKind {
 }
 
 """
-How a change came about: the primary admin's bootstrap, an admin's act, an invitation accepted, or a declared manual fix.
+How a change came about: the primary admin's bootstrap, an admin's act, an invitation or a card accepted, or a declared manual fix.
 """
 enum PrivilegeRoute {
   admin
   bootstrap
+  card
   invitation
   manual
 }
 
 type Query {
+  """
+  The accepted cards, newest first: each with the account that arrived by it, narrowed by every filter given. Site admins only.
+  """
+  cardArrivals(
+    after: String
+    before: String
+    first: Int
+    last: Int
+
+    """
+    Part of the account's name or email, or the start of the batch number, case-insensitively.
+    """
+    query: String
+  ): QueryCardArrivalsConnection!
+
+  """
+  Every arrival the filter keeps as CSV text: account name, email, accepted date, batch and the covens the account owns. Site admins only.
+  """
+  cardArrivalsCsv(
+    """
+    Part of the account's name or email, or the start of the batch number, case-insensitively.
+    """
+    query: String
+  ): String!
+
   """
   The live categories by name, each under a live group: those whose name holds `query`, case-insensitively, and those filed under `groupId`, when given.
   """
@@ -1307,6 +1466,37 @@ type Query {
     query: String
     workspaceId: ID!
   ): QueryIngredientSuggestionsConnection!
+
+  """A batch's refused opens, latest first. Site admins only."""
+  invitationCardAttempts(after: String, batchId: ID!, before: String, first: Int, last: Int): QueryInvitationCardAttemptsConnection!
+
+  """
+  The batches of cards, newest first, narrowed by every filter given. Site admins only.
+  """
+  invitationCardBatches(
+    after: String
+
+    """
+    The start of the batch number, or text anywhere in its note, case-insensitively.
+    """
+    batch: String
+    before: String
+
+    """First day of expiry, in UTC."""
+    expiresFrom: LocalDate
+
+    """Last day of expiry, in UTC."""
+    expiresTo: LocalDate
+    first: Int
+    last: Int
+
+    """First day minted, in UTC."""
+    mintedFrom: LocalDate
+
+    """Last day minted, in UTC."""
+    mintedTo: LocalDate
+    status: InvitationCardBatchStatus
+  ): QueryInvitationCardBatchesConnection!
   me: User!
   ok: Boolean!
   possibleDuplicates(after: String, before: String, first: Int, last: Int, name: String!, workspaceId: ID): QueryPossibleDuplicatesConnection!
@@ -1338,6 +1528,11 @@ type Query {
   What completing a working of this spell would take from the coven’s jars now: the plan completion follows, read and not applied.
   """
   workingDeductionPreview(spellId: ID!, workspaceId: ID!): WorkingDeductionPreview!
+
+  """
+  A coven the caller sits in, by id. Refused alike for a stranger and an id no coven holds.
+  """
+  workspace(id: ID!): Workspace!
 
   """
   How many of a coven's ingredients each search filter value would list under the rest of the filter.
@@ -1454,6 +1649,16 @@ type Query {
   """
   zodiacSigns(after: String, before: String, first: Int, last: Int, query: String): QueryZodiacSignsConnection!
   zodiacSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryZodiacSuggestionsConnection!
+}
+
+type QueryCardArrivalsConnection {
+  edges: [QueryCardArrivalsConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryCardArrivalsConnectionEdge {
+  cursor: String!
+  node: InvitationCard!
 }
 
 type QueryCategoriesConnection {
@@ -1639,6 +1844,26 @@ type QueryIngredientSuggestionsConnectionEdge {
   """
   group: SuggestionGroup!
   node: Ingredient!
+}
+
+type QueryInvitationCardAttemptsConnection {
+  edges: [QueryInvitationCardAttemptsConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryInvitationCardAttemptsConnectionEdge {
+  cursor: String!
+  node: InvitationCardAttempt!
+}
+
+type QueryInvitationCardBatchesConnection {
+  edges: [QueryInvitationCardBatchesConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryInvitationCardBatchesConnectionEdge {
+  cursor: String!
+  node: InvitationCardBatch!
 }
 
 type QueryPossibleDuplicatesConnection {
@@ -2233,9 +2458,9 @@ type Workspace {
   id: ID!
 
   """
-  The coven's live members, in the order they joined, for the roles that may read them.
+  The coven's live members, in the order they joined, for the roles that may read them: those whose name holds `query`, case-insensitively, when given.
   """
-  members(after: String, before: String, first: Int, last: Int): WorkspaceMembersConnection!
+  members(after: String, before: String, first: Int, last: Int, query: String): WorkspaceMembersConnection!
   name: String!
   slug: String!
 }

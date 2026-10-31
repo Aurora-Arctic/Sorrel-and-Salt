@@ -23,6 +23,10 @@ The badge is centred on the same vertical line as the icon below it in the card'
 
 The workshop's card stories (`IngredientCard/story-jars.tsx`, `IngredientCardList/story-fixtures.tsx`) draw their jar lines through this component, so no story keeps a copy of the markup.
 
+## Stories
+
+`src/components/JarLines/index.stories.tsx`, titled "Ingredients / Jar Lines": `Default`, the list's markup with no card around it.
+
 ## Tests
 
 `tests/components/JarLines/index.test.tsx`: one item per jar, the form through `formLabel`, the quantity, the badge per jar, a jar held without a quantity, and the hidden dot with its spoken comma.

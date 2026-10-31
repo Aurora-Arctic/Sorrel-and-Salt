@@ -1,6 +1,7 @@
 'use client';
 
 import { usePendingNavigation } from '../../lib/navigation';
+import { useAnnounce } from '../ClickFeedback/status-region';
 import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import { editHeading } from '../CompendiumList/heading';
@@ -27,6 +28,7 @@ export default function EntryDialog({
   edit: IngredientEntryEdit;
 }): ReactElement | null {
   const { navigate, refresh } = usePendingNavigation();
+  const announce = useAnnounce();
   const { opened, closeHref, deletedHref, savedHref, coven, review } = edit;
   // Annotate's press shares this page's skeleton; that belongs to it.
   const loading = useRouteModalOpener()?.loading?.title;
@@ -53,9 +55,13 @@ export default function EntryDialog({
                   navigate(savedHref ?? closeHref, { replace: true });
                   refresh();
                 }}
-                // A delete leaves for `deletedHref`, fetched again; the focus goes to the page's
-                // heading, the opener having gone (RouteModal).
+                // An autosave keeps the dialog open: the page is fetched again so its heading shows the
+                // saved name. The coven's address names the id and stays.
+                onAutosaved={() => refresh()}
+                // A delete is said in the page's status region, which outlives the dialog, and leaves
+                // for `deletedHref`, fetched again; the focus goes to the page's heading (RouteModal).
                 onDeleted={() => {
+                  announce(`${entry.name} deleted`);
                   navigate(deletedHref, { replace: true });
                   refresh();
                 }}
@@ -78,6 +84,16 @@ export default function EntryDialog({
                   navigate(savedHref ?? (`${publicAddress(saved.slug)}?edit` as Route), {
                     replace: true,
                   });
+                  refresh();
+                }}
+                // An autosave moves the address as Save does, but the dialog stays open.
+                onAutosaved={(saved) => {
+                  if (!savedHref) {
+                    navigate(`${publicAddress(saved.slug)}?edit` as Route, {
+                      replace: true,
+                      scroll: false,
+                    });
+                  }
                   refresh();
                 }}
                 // Not `done`, which would go back to this page: it is gone.

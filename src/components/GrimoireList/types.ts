@@ -40,13 +40,15 @@ export interface GrimoireListProps {
   filter: GrimoireListFilter;
   /** Every category the filter offers, by slug. */
   categories: readonly CompendiumCategoryChoice[];
-  /** Moon Phase, Day of Week, Visibility and Coven Member, each with its counts. */
+  /** Moon Phases, Days of the Week, Visibility and Coven Members, each with its counts. */
   facets: GrimoireFacets;
   position?: PagePosition;
   /** The cursor of the page shown, which a picked title's Quick Look opens over and closes back to. */
   cursor?: SearchCursor;
   /** How many spells the filter found on this tab, every page. */
   total: number;
+  /** The viewer may write a spell: an empty tab then names no roles. */
+  canCreate: boolean;
   previousHref?: Route;
   nextHref?: Route;
 }
@@ -56,4 +58,7 @@ export interface GrimoireFilterProps extends Pick<
   'path' | 'workspaceId' | 'status' | 'filter' | 'categories' | 'facets' | 'total' | 'cursor'
 > {}
 
-export interface EmptyGrimoireProps extends Pick<GrimoireListProps, 'status' | 'filter'> {}
+export interface EmptyGrimoireProps extends Pick<
+  GrimoireListProps,
+  'status' | 'filter' | 'canCreate'
+> {}

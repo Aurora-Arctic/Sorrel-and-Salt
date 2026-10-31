@@ -114,7 +114,7 @@ export const Open: ChosenStory = {
   argTypes: {
     state: { control: 'select', options: Object.keys(OPEN_STATES), mapping: OPEN_STATES },
   },
-  render: ({ state }) => <div key={String(state)}>{state}</div>,
+  render: ({ state }) => <div>{state}</div>,
 };
 
 // The coven's index page as src/app/(shell)/coven/[slug]/page.tsx draws it, in the
@@ -223,5 +223,5 @@ export const Overview: ChosenStory = {
   argTypes: {
     state: { control: 'select', options: Object.keys(OVERVIEW_STATES), mapping: OVERVIEW_STATES },
   },
-  render: ({ state }) => <div key={String(state)}>{state}</div>,
+  render: ({ state }) => <div>{state}</div>,
 };

@@ -38,6 +38,7 @@ async function stateFromHeaders(requestHeaders: Headers): Promise<SessionState> 
     session: {
       userId: result.user.id,
       role: toUserRole(result.user.role),
+      ...(result.user.emailVerified !== true && { emailUnverified: true as const }),
       ...(impersonatedBy && { impersonatedBy }),
     },
     emailVerified: result.user.emailVerified === true,

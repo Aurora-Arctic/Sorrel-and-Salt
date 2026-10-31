@@ -99,7 +99,7 @@ export default function FacetPanel({
   // A call, not a component, so the fields inside keep their state across renders.
   const formsHalf = (children: ReactNode): ReactNode =>
     halves && covens.length > 0 ? (
-      <div className="facet-panel__line facet-panel__grow facet-panel__half">{children}</div>
+      <div className="facet-panel__line facet-panel__grow">{children}</div>
     ) : (
       children
     );
@@ -128,7 +128,7 @@ export default function FacetPanel({
                 label="Forms"
                 name="forms"
                 typeahead
-                placeholder="Add Form"
+                placeholder="Add a form"
                 removeNoun="Form"
                 loading={loading}
                 choices={facets.forms.map((form) => ({
@@ -256,12 +256,12 @@ export default function FacetPanel({
         {/* The viewer's own covens beside the In / Not In choice, only for a viewer in one. No counts: the
             rest read cached, public counts, and a count per coven would make them the viewer's (rule 6). */}
         {covens.length > 0 && (
-          <div className="facet-panel__line facet-panel__grow facet-panel__half">
+          <div className="facet-panel__line facet-panel__grow">
             <div className="facet-panel__grow">
               <FacetCombobox
                 label="In My Covens"
                 name="covens"
-                placeholder="Add Coven"
+                placeholder="Add a coven"
                 removeNoun="Coven"
                 loading={loading}
                 counts={false}
@@ -294,7 +294,7 @@ export default function FacetPanel({
           <FacetCombobox
             label="Celestial Bodies"
             name="celestialBodies"
-            placeholder="Add Celestial Body"
+            placeholder="Add a celestial body"
             removeNoun="Celestial Body"
             loading={loading}
             choices={facets.celestialBodies}
@@ -306,8 +306,8 @@ export default function FacetPanel({
           <FacetCombobox
             label="Zodiac"
             name="zodiac"
-            placeholder="Add Sign"
-            emptyPlaceholder="No Signs"
+            placeholder="Add a sign"
+            emptyPlaceholder="No signs"
             removeNoun="Sign"
             loading={loading}
             choices={facets.zodiac}
@@ -323,7 +323,7 @@ export default function FacetPanel({
             label="Deities"
             name="deities"
             typeahead
-            placeholder="Add Deity"
+            placeholder="Add a deity"
             removeNoun="Deity"
             loading={loading}
             choices={facets.deities.map((deity) => ({
@@ -340,7 +340,7 @@ export default function FacetPanel({
           <FacetCombobox
             label="Elements"
             name="elements"
-            placeholder="Add Element"
+            placeholder="Add an element"
             removeNoun="Element"
             loading={loading}
             choices={facets.elements}

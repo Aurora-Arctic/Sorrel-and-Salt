@@ -209,7 +209,7 @@ export const States: Story = {
             with the sources behind them.
           </p>
         </header>
-        <div key={String(state)}>{state}</div>
+        <div>{state}</div>
       </main>
     </ShellFrame>
   ),

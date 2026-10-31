@@ -1,10 +1,10 @@
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
-import { assertNoAccessibilityViolations } from './axe';
+import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { signInAgainAs } from './session';
 import { insertSpell, openFilters, seedCoven, withSql } from './stories/coven-ingredients';
 
-// The grimoire's Moon Phase, Day of Week, Visibility and Coven Member facets and its Compact switch: the GET
+// The grimoire's Moon Phases, Days of the Week, Visibility and Coven Members facets and its Compact switch: the GET
 // form filters by address before hydration, the maker is read as created_by, and a hidden spell's phase is
 // never suggested. Spells are raw SQL, since the builder is not under test.
 
@@ -59,7 +59,7 @@ test('the grimoire address filters by moon phase, visibility and maker, and a hi
   });
   await signInAgainAs(page, coven.users.B);
   const path = `/coven/${coven.slug}/grimoire`;
-  const items = () => page.getByRole('list', { name: 'Grimoire' }).getByRole('listitem');
+  const items = () => page.getByRole('list', { name: 'Spells' }).getByRole('listitem');
 
   await page.goto(path);
   await expect(items()).toHaveCount(3);
@@ -84,9 +84,9 @@ test('the grimoire address filters by moon phase, visibility and maker, and a hi
   // Another member's private spell's phase is not a suggestion, though a phase B can see is.
   await page.goto(path);
   const panel = await openFilters(page);
-  await panel.getByRole('combobox', { name: 'Moon Phase' }).fill('waning');
+  await panel.getByRole('combobox', { name: 'Moon Phases' }).fill('waning');
   await expect(page.getByRole('option', { name: /Waning Crescent/ })).toBeVisible();
-  await panel.getByRole('combobox', { name: 'Moon Phase' }).fill('new');
+  await panel.getByRole('combobox', { name: 'Moon Phases' }).fill('new');
   await expect(page.getByRole('option', { name: /New Moon/ })).toHaveCount(0);
   await page.keyboard.press('Escape');
 });
@@ -101,7 +101,7 @@ test('the Compact switch sets the grimoire list density and the filter is access
     insertSpell(sql, coven.id, 'Fixture Density Working', 'workspace', coven.users.A, 'complete'),
   );
   await page.goto(`/coven/${coven.slug}/grimoire`);
-  const list = page.getByRole('list', { name: 'Grimoire' });
+  const list = page.getByRole('list', { name: 'Spells' });
   const compact = page.getByRole('search').getByRole('switch', { name: 'Compact' });
   await expect(compact).toBeChecked();
   await expect(list).toHaveAttribute('data-density', 'compact');
@@ -131,11 +131,8 @@ test('at 375px the grimoire filter panel opens, a facet can be picked, and the p
   });
   await page.goto(`/coven/${coven.slug}/grimoire`);
   const panel = await openFilters(page);
-  await panel.getByRole('combobox', { name: 'Moon Phase' }).fill('full');
+  await panel.getByRole('combobox', { name: 'Moon Phases' }).fill('full');
   await page.getByRole('option', { name: /Full Moon/ }).click();
   await expect(panel.getByRole('button', { name: 'Remove Moon Phase: Full Moon' })).toBeVisible();
-  const overflow = await page.evaluate(
-    () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
-  );
-  expect(overflow).toBe(false);
+  await assertNoSidewaysScroll(page);
 });

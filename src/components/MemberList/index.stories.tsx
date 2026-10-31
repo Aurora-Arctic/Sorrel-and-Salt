@@ -7,7 +7,8 @@ import type { MemberListEntry } from './types';
 
 // Render-only; behaviour is asserted in tests/components/MemberList. A member's
 // view leaves the addresses out; an owner's draws them. The controls are plain
-// buttons styled as the admin user table's: Change Role quiet, Remove destructive.
+// buttons styled as the real controls: Change Role and Remove both quiet, the red
+// kept for the confirm in Remove's question.
 const meta = {
   title: 'Coven / Member List',
 } satisfies Meta;
@@ -55,13 +56,13 @@ const withActionsNode = (
     currentUserId="u-ada"
     showEmail
     roleAction={() => (
-      <button type="button" className="btn btn--small btn--quiet">
+      <button type="button" className="btn btn--quiet btn--small">
         Change Role
       </button>
     )}
     removeAction={(member) =>
       member.role === 'owner' ? null : (
-        <button type="button" className="btn btn--small btn--destructive">
+        <button type="button" className="btn btn--quiet btn--small">
           Remove
         </button>
       )
@@ -84,13 +85,13 @@ const SoleOwnerPage = () => (
         currentUserId="u-ada"
         showEmail
         roleAction={() => (
-          <button type="button" className="btn btn--small btn--quiet">
+          <button type="button" className="btn btn--quiet btn--small">
             Change Role
           </button>
         )}
         removeAction={(member) =>
           member.role === 'owner' ? null : (
-            <button type="button" className="btn btn--small btn--destructive">
+            <button type="button" className="btn btn--quiet btn--small">
               Remove
             </button>
           )
@@ -131,5 +132,5 @@ export const States: Story = {
   argTypes: {
     state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
   },
-  render: ({ state }) => <div key={String(state)}>{state}</div>,
+  render: ({ state }) => <div>{state}</div>,
 };

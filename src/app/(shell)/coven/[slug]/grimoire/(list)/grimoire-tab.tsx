@@ -9,14 +9,15 @@ import { deletedHrefOf as deletedHrefFor } from '@/components/SpellRecipe/delete
 import SpellRecipeBody from '@/components/SpellRecipe/body';
 import SpellLookDialog from '@/components/SpellRecipe/look-dialog';
 import SpellDialog from '@/components/SpellBuilder/spell-dialog';
-import { GRIMOIRE_PARAMS, VISIBILITIES } from '@/components/GrimoireList/params';
+import { GRIMOIRE_PARAMS, VISIBILITIES, VISIBILITY_LABELS } from '@/components/GrimoireList/params';
 import type { GrimoireFacets, GrimoireListFilter } from '@/components/GrimoireList/types';
 import { NEW, opensNewSpell } from '@/components/AppShell/add-href';
 import { single } from '@/lib/search-params';
-import { pagerHrefs } from '@/lib/list-href';
+import { pagerHrefs, withParam } from '@/lib/list-href';
 import { readPageCursors } from '@/lib/numbered-page';
 import { requireCovenMembership } from '@/lib/request-session';
 import { RowId } from '@/lib/validation';
+import { viewerOf } from '@/lib/viewer';
 import { rolePermits } from '@/modules/coven';
 import {
   readEditedSpell,
@@ -24,7 +25,6 @@ import {
   readGrimoireCategoryCounts,
   readGrimoireFacetCounts,
   readLookedSpell,
-  readRecordingOf,
 } from './reads';
 import type { GrimoireTabProps } from './types';
 import { readViewedEntry } from '../../ingredients/reads';
@@ -38,13 +38,7 @@ import { viewedDetailsOf } from '../../ingredients/viewed-details';
 // card's Record a Working button, Edit pencil and More menu, links back to this address with
 // `deleted` or `?edit=<id>` added.
 /** `closeHref` with a saved spell's dialog open over it. */
-const editHrefOf = (closeHref: Route, id: string): Route =>
-  `${closeHref}${closeHref.includes('?') ? '&' : '?'}${new URLSearchParams({ edit: id })}` as Route;
-
-const VISIBILITY_LABELS: Record<(typeof VISIBILITIES)[number], string> = {
-  private: 'Private',
-  workspace: 'Shared',
-};
+const editHrefOf = (closeHref: Route, id: string): Route => withParam(closeHref, 'edit', id);
 
 /**
  * The four facets' choices from their counts. A picked moon phase or day no spell holds is still
@@ -117,10 +111,14 @@ export async function grimoireTab({
   const canUpdate = rolePermits(role, { spell: ['update'] });
   const canDelete = rolePermits(role, { spell: ['delete'] });
   const closeHref = GRIMOIRE_PARAMS.href(path, filter, { after, before });
-  // The members box needs the roster (`member: read`) as well as the right to record, as the spell page's.
+  // The members box searches the members (`member: read`), so it needs that as well as the right to
+  // record, as the spell page's. The dialog reads the steps once opened, so the list reads none.
   const canRecord =
     rolePermits(role, { working: ['create'] }) && rolePermits(role, { member: ['read'] });
-  const recording = await readRecordingOf(workspace, page.spells, canRecord);
+  // The recorder by name, from the viewer the shell layout already read this request.
+  const recorder = canRecord
+    ? { userId: membership.userId, name: (await viewerOf()).viewer.name }
+    : undefined;
   // Where a delete from the card or the Quick Look lands: this tab as it was, filter and page
   // kept, `?spell` dropped, with the name for the Notice.
   const deletedHrefOf = (title: string | null): Route => deletedHrefFor(closeHref, title);
@@ -173,14 +171,10 @@ export async function grimoireTab({
           ...spell,
           lookHref: lookHrefOf(closeHref, spell.id),
           ...(canUpdate && { editHref: editHrefOf(closeHref, spell.id) }),
-          ...(recording.stepsById.has(spell.id) && {
-            recordWorking: {
-              workspaceId: workspace.id,
-              members: recording.members,
-              recorderId: membership.userId,
-              steps: recording.stepsById.get(spell.id) ?? [],
-            },
-          }),
+          ...(recorder &&
+            spell.status === 'complete' && {
+              recordWorking: { workspaceId: workspace.id, recorder },
+            }),
           ...((canCreate || canDelete) && {
             more: {
               workspaceId: workspace.id,
@@ -197,6 +191,7 @@ export async function grimoireTab({
         position={page.position}
         cursor={{ after, before }}
         total={page.totalCount}
+        canCreate={canCreate}
         {...pagerHrefs(page.pageInfo, (cursor) =>
           GRIMOIRE_PARAMS.href(path, filter, { ...cursor }),
         )}
@@ -219,16 +214,11 @@ export async function grimoireTab({
           looked && !('failed' in looked)
             ? {
                 title: looked.spell.title,
+                status: looked.spell.status,
+                visibility: looked.spell.visibility,
                 lastEdit: looked.recipe.lastEdit,
                 recipeHref: `/coven/${workspace.slug}/grimoire/${looked.spell.id}` as Route,
                 ...(canUpdate && { editHref: editHrefOf(closeHref, looked.spell.id) }),
-                ...(canDelete && {
-                  deleteSpell: {
-                    workspaceId: workspace.id,
-                    spellId: looked.spell.id,
-                    deletedHref: deletedHrefOf(looked.spell.title),
-                  },
-                }),
                 children: (
                   <SpellRecipeBody
                     title={looked.spell.title}
@@ -240,6 +230,7 @@ export async function grimoireTab({
                     moonPhase={looked.spell.moonPhase}
                     dayOfWeek={looked.spell.dayOfWeek}
                     steps={looked.recipe.steps}
+                    level={3}
                   />
                 ),
               }

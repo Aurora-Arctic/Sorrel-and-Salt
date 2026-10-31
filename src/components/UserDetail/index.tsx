@@ -1,5 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
-import { CheckIcon, CrossIcon } from '../UserList/icons';
+import { CheckIcon, CrossIcon } from '../IconTip/icons';
 import CreationControl from '../UserList/creation-control';
 import { ProviderLogo } from '../UserList/marks';
 import PrimaryAdminMark from '../UserList/primary-admin-mark';

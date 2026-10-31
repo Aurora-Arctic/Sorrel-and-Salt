@@ -1,4 +1,4 @@
-import { type ReactElement, type ReactNode, useLayoutEffect, useRef } from 'react';
+import { Fragment, type ReactElement, type ReactNode, useLayoutEffect, useRef } from 'react';
 import type { Decorator, Preview } from '@storybook/nextjs-vite';
 import { mswLoader } from 'msw-storybook-addon/csf3';
 import { startMockWorker } from './mock-api';
@@ -116,7 +116,13 @@ const withWorkshopFrame: Decorator = (Story, context) => (
     // A story pins it with `parameters: { reducedMotion: true }`.
     reducedMotion={context.parameters.reducedMotion === true}
   >
-    <Story />
+    {/* A States story's choice by its name, since the mapped node it renders keys nothing:
+        a new choice remounts the story, so its state and its scripted steps start afresh.
+        Optional, since a story context outside Storybook (the design-sync previews) has no
+        unmappedArgs. */}
+    <Fragment key={String(context.unmappedArgs?.state ?? '')}>
+      <Story />
+    </Fragment>
   </Frame>
 );
 
@@ -188,6 +194,7 @@ const preview: Preview = {
           'account',
           'coven',
           'ingredients',
+          'grimoire',
           'admin',
           'emails',
           'forms',

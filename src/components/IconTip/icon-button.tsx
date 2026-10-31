@@ -2,7 +2,7 @@
 
 import type { ReactElement, Ref } from 'react';
 import MenuButton from '../MenuButton';
-import type { MenuButtonChoices } from '../MenuButton/types';
+import type { MenuButtonChoices, MenuButtonProps } from '../MenuButton/types';
 import IconTip from './icon-tip';
 import {
   AnnotateIcon,
@@ -134,31 +134,34 @@ export const PreviewButton = ({
   </IconTip>
 );
 
-/** Record a Working as a button: a spell's cauldron, named and tipped "Record a Working", opening the dialog that records one, in the accent green. */
+/** Record a Working as a button: a spell's cauldron, tipped "Record a Working" and named "Record a Working of" and the spell, opening the dialog that records one, in the accent green. */
 export const RecordButton = ({
+  name,
   onClick,
   ref,
 }: {
+  name: string;
   onClick: () => void;
   ref?: Ref<HTMLButtonElement>;
 }): ReactElement => (
   <IconTip tip="Record a Working">
     <button ref={ref} type="button" className="icon-tip__edit" onClick={onClick}>
       <CauldronIcon />
-      <span className="visually-hidden">Record a Working</span>
+      <span className="visually-hidden">Record a Working of {name}</span>
     </button>
   </IconTip>
 );
 
-/** The three dots: a menu of further choices, in the page's ink, always in labelled Compendium and Coven sections; a lone Delete or Remove is the bin instead. */
+/** The three dots: a menu of further choices, in the page's ink, as flat items or in labelled sections (an entry's Compendium and Coven); a lone Delete or Remove is the bin instead. */
 export const MoreMenu = ({
   name,
   ref,
   ...choices
-}: MenuButtonChoices & {
-  name: string;
-  ref?: Ref<HTMLButtonElement>;
-}): ReactElement => (
+}: MenuButtonChoices &
+  Pick<MenuButtonProps, 'busy' | 'busyLabel'> & {
+    name: string;
+    ref?: Ref<HTMLButtonElement>;
+  }): ReactElement => (
   <IconTip tip="More">
     <MenuButton
       ref={ref}

@@ -14,12 +14,19 @@ export default async function GrimoireLayout({ children, params }: CovenLayoutPr
   const { slug } = await params;
   const { membership, workspace } = await requireCovenMembership(slug);
   const tabs: PageTab[] = [
-    { href: `/coven/${slug}/grimoire` as Route, label: 'Spells', filtered: true, shape: 'cards' },
+    {
+      href: `/coven/${slug}/grimoire` as Route,
+      label: 'Spells',
+      filtered: true,
+      shape: 'cards',
+      density: 'compact',
+    },
     {
       href: `/coven/${slug}/grimoire/drafts` as Route,
       label: 'Drafts',
       filtered: true,
       shape: 'cards',
+      density: 'compact',
     },
   ];
   const action = rolePermits(membership.role, { spell: ['create'] }) ? (

@@ -4,7 +4,7 @@ import Backdrop from '../components/Backdrop';
 import { StatusRegionProvider } from '../components/ClickFeedback/status-region';
 import ThemeToggle from '../components/ThemeToggle';
 import { impersonationEnabled } from '../lib/impersonation';
-import { SITE_NAME, SITE_ORIGIN } from '../lib/site';
+import { SITE_NAME, SITE_ORIGIN, titleTemplate } from '../lib/site';
 import CatalogLink from './catalog-link';
 import { body, display } from './fonts';
 import ImpersonationBannerSlot from './impersonation-banner';
@@ -17,7 +17,7 @@ import './globals.scss';
 // particular to it.
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_ORIGIN),
-  title: { default: SITE_NAME, template: `%s | ${SITE_NAME}` },
+  title: { default: SITE_NAME, template: titleTemplate() },
   description: 'A compendium, ingredient store and grimoire.',
 };
 

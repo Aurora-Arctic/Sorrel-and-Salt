@@ -102,9 +102,9 @@ in one does not run past its edge (the owner's call, 2026-10-20): in the
 admin's user modal at a desktop's width, its start under Change Role's would
 leave the dialog, so its end stands under the button's end. The dialog is a
 measure only, and clips nothing of the fixed callout. The box is found and
-measured in the control's own document and window, since a story Storybook draws
-into an iframe (`meta.iframed`) runs its script in the page around the frame,
-where `instanceof Element` is false for the frame's nodes.
+measured in the control's own document and window, so a control drawn in
+another frame than the script's is measured where it sits: from outside the
+frame, `instanceof Element` is false for the frame's nodes.
 
 In a box narrower than the callout at its widest (20rem, or the screen less
 2rem), as that modal is on a phone, the callout narrows to the larger of the
@@ -142,9 +142,9 @@ half each way up and down.
 
 ## Fades
 
-The callout and the badge fade in and out at `$motion-short`, by two
-keyframes of their own, as MenuButton's menu does: `click-feedback-fade-in`
-and `click-feedback-fade-out`. Under reduced motion neither fades.
+The callout and the badge fade in and out at `$motion-short`, on the site's
+one `fade-in` and `fade-out` keyframes (`_primitives.scss`). Under reduced
+motion neither fades.
 
 Two things look simpler and do not work. The fade in starts only once the
 piece is placed (`is-placed`): a piece is hidden until Floating UI has placed
@@ -155,6 +155,10 @@ updates the finished animation in place rather than running it again, so the
 piece jumped to nothing instead of fading. A fading piece stays drawn, `inert` and marked `is-closing`, until its
 animation ends or 400ms pass; whether it is open (`aria-expanded`, the focus
 going back) never waits for the fade.
+
+## Stories
+
+`src/components/ClickFeedback/index.stories.tsx`, titled "Surfaces / Click Feedback": `States`, with the states Resting, Bordered (the badge on the button's corner), Borderless (the badge beside the button), Near Right Edge (the callout's end under the control's end) and Pinned (a box too narrow for either alignment, so the callout is pinned inside it). Each state but Resting presses its button once drawn, so it opens on the refusal. `ThenSucceeds` is refused, then a later try succeeds, and the badge and the callout fade out. `tests/e2e/workshop/click-feedback.spec.ts` measures these stories.
 
 ## Tests
 

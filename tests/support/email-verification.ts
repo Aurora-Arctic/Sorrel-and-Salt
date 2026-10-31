@@ -9,6 +9,9 @@ function unexpected(name: string): never {
 export const noSender: EmailVerificationSender = {
   resend: async () => unexpected('resend a verification mail'),
   requestChange: async () => unexpected('request an email change'),
+  sessionIsFresh: async () => unexpected('check the session'),
+  notifyChangeRequested: async () => unexpected('notify the current address'),
+  defer: () => unexpected('defer a send'),
 };
 
 export const noInvitationSender: InvitationSender = {

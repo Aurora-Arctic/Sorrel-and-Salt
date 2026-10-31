@@ -16,7 +16,7 @@ export default function OneOffBadge({ className }: { className?: string }): Reac
     <IconTip tip={ONE_OFF_TIP} placement="above" opensOnPress>
       <button
         type="button"
-        className={['badge badge--retired step-row__one-off', className].filter(Boolean).join(' ')}
+        className={['badge badge--muted step-row__one-off', className].filter(Boolean).join(' ')}
         aria-describedby={descriptionId}
       >
         One-Off

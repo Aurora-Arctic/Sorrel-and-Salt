@@ -20,8 +20,23 @@ undeclared the two and MB.203 dropped them (`0059`). Why one table, why it is
   being invited, optional as a privilege change's `note` is in
   `user_privilege_changes`; either tier may carry one, and the workspace tier's UI need
   not offer it.
-- **`invitations_tier`**, `(workspace_id is null) = (role is null)`: a row is
-  in one tier, a workspace and the role it is invited to, or neither.
+- **Cards (M15.17).** A third shape of the same table: `kind` is `address` (the
+  default) or `card`, and `batch_id` (nullable uuid, no table) groups the cards
+  of one mint. `position` (nullable smallint, from 1) is a card's place in its
+  batch, in the order the print PDF lays the fronts out; `invitations_position_card_only`
+  keeps it off address rows and `invitations_position_positive` keeps it at 1 or more.
+  A card's `note` (the column an address row uses too) is the admin's note on the mint, copied onto every card of the batch; `invitations_card_note_length` holds a card's to 500 characters and leaves an address row's alone, and accepting a card writes it into the privilege ledger like any other invitation's note. The Batch search on the Invitation Cards tab matches it with a contains-match beside the batch number's prefix match.
+  Cards minted before notes were kept hold null. `email` is nullable. A card is a printed code bound to no address,
+  coven or site role. `invitations_kind_known` admits the two kinds;
+  `invitations_kind_shape` requires an `address` row's `email` and a `card`'s
+  `email`, `workspace_id`, `role` and `site_role` to be null. A card's token is
+  returned once, at minting, to the admin who mints it; only its hash is stored.
+  Migration `0096_invitation-cards.sql`. Why a shape of this table rather than a
+  new one:
+  [`m15.17-invitation-cards.md`](../design-decisions/m15.17-invitation-cards.md).
+- **`invitations_tier`**, `kind = 'card' or (workspace_id is null) = (role is null)`:
+  an address row is in one tier, a workspace and the role it is invited to, or
+  neither; a card is in neither.
 - **`invitations_declined_coven`** (M10.34),
   `declined_at is null or workspace_id is not null`: only a coven invitation is
   declined. An admin invitation is never listed to its invitee, so it is
@@ -285,6 +300,14 @@ runs in this order, and the order is the point:
    inviting owner's name, read from their `users` row, since the session holds
    the id alone.
 
+**Each sender's mail is limited** (MB.280). Every new invitation and every repeat one sends a mail from the site's address, so
+`createInvitation` counts the sender's own coven invitations created in the last hour, revoked or replaced ones included, and refuses
+the next once there are 20. The refusal is a `ValidationError` with no field that says when the oldest one leaves the window. The count
+is a SQL read of `invitations.created_by` and `created_at` through `findRecentCovenInvitationTimes`, so it holds across server
+instances and needs no table. The limit and window are `INVITATION_MAIL_LIMIT` and `INVITATION_MAIL_WINDOW_MINUTES` in
+`src/modules/coven/services/invitations.ts`. The check runs after the input checks and before any write, so a refusal writes and mails
+nothing. Two requests at the same moment can both read a count under the limit, so the limit can be passed by the few requests that race.
+
 **A repeat invitation replaces the pending one** (MB.269). Inviting an address
 that already has a pending invitation to the same coven first stamps that one
 revoked, as the inviter, in the same `withAudit` write that inserts the new one,
@@ -452,17 +475,33 @@ column is nullable and nothing would read it until the behaviour landed with it.
   the owner to invite them again, which writes a new row with its own token.
   Nothing un-declines one.
 
+### Card attempts
+
+`card_invitation_attempts` (`src/modules/coven/schema/card-invitation-attempts.ts`) holds the refused opens of a card link by signed-in accounts: one live row per card, account and reason, with an `attempts` count and `last_attempted_at`, so a repeat open adds to the count and never to the row list. It sits beside `invitations` in the coven module because its only subject is a card.
+
+- **Columns.** `invitation_id` and `user_id` are foreign keys, `reason` is `revoked`, `expired` or `accepted`, `attempts` is at least 1, and the table carries the full audit spread and the `updated_at` trigger.
+- **Why the reason is a CHECK.** A CHECK, like `invitations.kind`, rather than a Postgres enum: adding a reason is a one-line constraint change in an ordinary migration and needs no enum migration.
+- **Indexes.** Both are partial on `deleted_at IS NULL`: the unique index on `(invitation_id, user_id, reason)` is what makes a repeat one row, and the index on `invitation_id` serves the per-card count and list.
+- **Writes.** The table is marked `namedWrites`, so only a named repository writer may write it. `recordCardAttempt` (identity service `invitation-acceptance.ts`) is its one writer: an upsert on `(invitation_id, user_id, reason)` that adds 1 to `attempts` and sets `last_attempted_at` to now.
+- **What is recorded.** A signed-in account with a verified address opening a card link that is refused as `revoked`, `expired` or `accepted` by another account. The dead-link order of the acceptance service picks the one reason.
+- **What is not.** Nothing is written for no session, an unverified account, an unknown token, a token that is not a card, a card still pending, or the account that accepted the card itself. The service returns quietly for each, so a probe learns nothing.
+- **Reading.** `findCardAttemptPage` and `findCardAttemptCount` (site admin only) list one batch's rows (every card of the batch), most recent first; `findCardBatchTotals` sums `attempts` over a batch's cards for the Invitation Cards tab's count.
+
 ## Invitation acceptance details
 
 `src/modules/identity/services/invitation-acceptance.ts` is the one accept service for both tiers of `invitations`. Holding the token names the invitation, and the session's verified address is what admits. No message names a workspace, since the reader is not yet a member of it (claude-docs/auth/admin-users.md, "Inviting an admin").
 
 - **Dead-link order.** A link reports one reason: accepted before declined before revoked before expired, so a link in two states always reports the same one. An act beats the clock, and the invitee's answer beats the owner's Remove that may follow a decline. Accepted and declined cannot coexist: the writers match a pending row only and a CHECK holds it. The database's CHECK ties a role to a workspace, so a row with one has both.
 - **Deleted coven.** A link into a deleted coven is refused as `closed`, after the dead-link and address checks, so an accepted invitation into a since-deleted coven still says accepted and a stranger learns nothing of the coven. The person never sees an Accept that fails on click; the repository write's own live-workspace check is the backstop. Workspaces are only soft-deleted, so no live coven means a deleted one and no finder of deleted rows is needed. The account page lists live covens only, so an id into a deleted one reads as none; only the link names the reason.
+- **A card's refusal words.** A card has no email and no sender, so its expired, withdrawn and unmatched-code refusals say "This card has expired.", "This card has been withdrawn." and "That code doesn't match a card. Check the link or the QR code printed on the card and try again.", each with "You can still join by invitation: ask a coven to invite you." A found card is known by `kind`; a token that names nothing is taken for a card when it has a card code's shape (`looksLikeCardToken`: 16 symbols of the card alphabet, where an address invitation's token is 43 characters). The account that accepted a card and opens its link again is refused as `used-by-you`, not `accepted`: "You've already used this card. You can start a coven from your account.", and the panel adds a Start a Coven link to `/coven/new`. Another account still reads `accepted`, and `used-by-you` is never recorded as a refused open. Accepting a card lands on `/coven/new?card=accepted`, where the page shows "Your card is accepted: you can now start a coven." to an account that can create one; the marker is a hint for the sentence only, and the page still reads the right from the row.
 - **Pause.** While admin changes are paused, an invitation is accepted only if the primary admin sent it. Another admin's waits for the resume, so one a rogue admin sent cannot be redeemed meanwhile.
 - **Two ways in.** The link's token and the account page's id share one check body so they cannot drift. The id read is the session's own (a coven invitation to its verified address, in SQL), so another address's id, a site-tier id, a deleted row and a malformed id all read as none. An id is not a link, so no message says "open the whole link". The writer's own match is the last word: an accept, a revoke or a second decline that committed since the checks leaves nothing to stamp.
 - **Site tier.** Accepting grants the named site role (curator or admin) with the creation flag the users CHECK holds both to, declared `via: 'invitation'` with the invitation's note so the trigger on `users` records it as the accepting user's act; the invitation is stamped `acceptedAt` and `acceptedBy` in the same transaction. An account already holding that role or a higher one has the invitation stamped and nothing granted, so nothing is recorded: an invitation never lowers a role.
 - **Workspace tier.** It seats the person at the invited role. A removed member's row is revived, since `(workspace_id, user_id)` is the key and a second insert would collide; a live member is seated nowhere and the invitation only stamped. It also sets `canCreateWorkspace`, declared the same way, which re-grants it to a person an admin revoked; one who holds it gets no ledger row. The live seat is read before the transaction. If the row is soft-deleted since the read, the stamp rolls back with it.
 - **Decline.** `declineInvitationById` kills the invitation from now on: its link reports declined, the coven's owner sees it marked declined until they remove it, and nothing is granted or seated.
+- **Card kind.** A `kind = 'card'` row has no address, coven or role. The accept predicate admits any account whose `users.email_verified` is true and says nothing of the address; it is ANDed with `pendingInvitation`, so the first accept stamps the row and a second matches nothing. `checkInvitation` reports an unverified account as `unverified` (the email page) and a used, expired or revoked card with its own reason, none naming a batch. Accepting sets `canCreateWorkspace` only, with `via: 'card'` in the privilege ledger: no seat and no site role. The by-id path and the received list read address-kind workspace rows only, so a card is never returned by them.
+- **Card arrivals.** `findCardArrivalPage` and `findCardArrivalCount` (site admin only) answer "which accounts arrived by card, when, and from which batch" from the `invitations` rows alone: accepted card rows ordered by `accepted_at`, newest first. `revokeInvitationCardBatch` touches pending cards only; `findCardBatchPage`, `findCardBatchCount` and `findCardBatchTotals` list one row per batch with its counts, so an accepted card row, the permanent record of an arrival, is never changed. `insertInvitationCards` takes plaintext tokens from `newCardToken` (`src/lib/invitation-token.ts`: 16 characters, 57-symbol alphabet without `0`, `O`, `1`, `l`, `I`) and stores only their hashes.
+- **Short link.** `/i/[token]` is public in `src/proxy.ts` and renders the same `InvitationPanel` as `/invite/[token]`.
 
 ## Coven invitation service details
 

@@ -6,6 +6,7 @@ import { GENERIC_SIGN_IN_ERROR, socialSignInTarget } from '../../lib/sign-in';
 import { SOCIAL_PROVIDERS } from '../../lib/social-providers';
 import { reportLeaving } from '../../lib/navigation';
 import Notice from '../Notice';
+import PageHeader from '../PageHeader';
 import ProviderButton from './provider-button';
 import PasskeyButton from './passkey-button';
 import type { ProviderId } from '../../lib/types';
@@ -77,10 +78,11 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
     // Its own card ground, `.panel`, rather than the page's: /sign-in holds
     // nothing else (claude-docs/components/sign-in-panel.md, "Styling").
     <div className="panel sign-in-panel">
-      <div className="header sign-in-panel__header">
-        <h1>Sign In</h1>
-        <p className="lede">Sign in, or create your account, with one of these.</p>
-      </div>
+      <PageHeader
+        className="sign-in-panel__header"
+        title="Sign In"
+        lede="Sign in, or create your account, with one of these."
+      />
       {message && <Notice kind="error">{message}</Notice>}
       <div className="sign-in-panel__providers">
         {SOCIAL_PROVIDERS.filter((provider) => !provider.hidden).map((provider) => (

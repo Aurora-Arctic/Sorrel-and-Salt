@@ -1,6 +1,6 @@
 {
-  "id": "2ac62a3e-6f87-4ec5-ae39-213913c770d4",
-  "prevId": "d5d0a5da-d18c-404c-8f7d-a403f74a5046",
+  "id": "3fcd3c00-8560-449c-8079-709fa91ffc11",
+  "prevId": "aab9a4e4-0b44-40fc-97b2-f07c8812a1a5",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -25,7 +25,7 @@
           "name": "email",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "role": {
           "name": "role",
@@ -81,6 +81,19 @@
           "name": "site_role",
           "type": "user_role",
           "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "kind": {
+          "name": "kind",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'address'"
+        },
+        "batch_id": {
+          "name": "batch_id",
+          "type": "uuid",
           "primaryKey": false,
           "notNull": false
         },
@@ -194,7 +207,15 @@
       "checkConstraints": {
         "invitations_tier": {
           "name": "invitations_tier",
-          "value": "(\"invitations\".\"workspace_id\" is null) = (\"invitations\".\"role\" is null)"
+          "value": "\"invitations\".\"kind\" = 'card' or (\"invitations\".\"workspace_id\" is null) = (\"invitations\".\"role\" is null)"
+        },
+        "invitations_kind_known": {
+          "name": "invitations_kind_known",
+          "value": "\"invitations\".\"kind\" in ('address', 'card')"
+        },
+        "invitations_kind_shape": {
+          "name": "invitations_kind_shape",
+          "value": "(\"invitations\".\"kind\" = 'address' and \"invitations\".\"email\" is not null) or (\"invitations\".\"kind\" = 'card' and num_nonnulls(\"invitations\".\"email\", \"invitations\".\"workspace_id\", \"invitations\".\"role\", \"invitations\".\"site_role\") = 0)"
         },
         "invitations_role_invitable": {
           "name": "invitations_role_invitable",
@@ -202,7 +223,7 @@
         },
         "invitations_site_role_tier": {
           "name": "invitations_site_role_tier",
-          "value": "(\"invitations\".\"workspace_id\" is null) = (\"invitations\".\"site_role\" is not null)"
+          "value": "\"invitations\".\"kind\" = 'card' or (\"invitations\".\"workspace_id\" is null) = (\"invitations\".\"site_role\" is not null)"
         },
         "invitations_site_role_invitable": {
           "name": "invitations_site_role_invitable",
@@ -1774,128 +1795,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.passkeys": {
-      "name": "passkeys",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "pg_catalog.gen_random_uuid()"
-        },
-        "name": {
-          "name": "name",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "public_key": {
-          "name": "public_key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "credential_id": {
-          "name": "credential_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "counter": {
-          "name": "counter",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "device_type": {
-          "name": "device_type",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "backed_up": {
-          "name": "backed_up",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "transports": {
-          "name": "transports",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "aaguid": {
-          "name": "aaguid",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "passkeys_userId_idx": {
-          "name": "passkeys_userId_idx",
-          "columns": [
-            {
-              "expression": "user_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "passkeys_credentialId_idx": {
-          "name": "passkeys_credentialId_idx",
-          "columns": [
-            {
-              "expression": "credential_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "passkeys_user_id_users_id_fk": {
-          "name": "passkeys_user_id_users_id_fk",
-          "tableFrom": "passkeys",
-          "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.rate_limits": {
       "name": "rate_limits",
       "schema": "",
@@ -2046,62 +1945,6 @@
           "columns": ["token"]
         }
       },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.sign_in_failures": {
-      "name": "sign_in_failures",
-      "schema": "",
-      "columns": {
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "count": {
-          "name": "count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "first_failed_at": {
-          "name": "first_failed_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "locked_until": {
-          "name": "locked_until",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "password_disabled": {
-          "name": "password_disabled",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "sign_in_failures_user_id_users_id_fk": {
-          "name": "sign_in_failures_user_id_users_id_fk",
-          "tableFrom": "sign_in_failures",
-          "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
