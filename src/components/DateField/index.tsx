@@ -80,7 +80,8 @@ export default function DateField({
         id={id}
         type="button"
         className="input date-field__button"
-        aria-labelledby={`${labelledBy} ${id}`}
+        // The label, then the day's words: the button itself would be named by its own <label>.
+        aria-labelledby={`${labelledBy} ${id}-text`}
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
@@ -89,7 +90,9 @@ export default function DateField({
         onClick={() => setOpen(!open)}
       >
         <Sizer />
-        <span className="date-field__text">{selected ? dayWords(value) : 'Choose a day'}</span>
+        <span id={`${id}-text`} className="date-field__text">
+          {selected ? dayWords(value) : 'Choose a day'}
+        </span>
         <CalendarIcon />
       </button>
       {open && (

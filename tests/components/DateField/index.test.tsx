@@ -42,6 +42,20 @@ describe('DateField', () => {
     );
   });
 
+  // A field shell labels the button with a <label>, which a button naming itself would read in
+  // place of its day.
+  it('names the button by its label and its day under a label element', () => {
+    render(
+      <>
+        <label id="shell-label" htmlFor="shelled">
+          Expires On
+        </label>
+        <DateField id="shelled" labelledBy="shell-label" value="2026-11-02" onChange={() => {}} />
+      </>,
+    );
+    expect(screen.getByRole('button', { name: 'Expires On 2 November 2026' })).toBeInTheDocument();
+  });
+
   it('says the button opens a dialog, and names the calendar it opens', () => {
     render(<Harness />);
     const button = screen.getByRole('button', { name: /Date/ });

@@ -685,6 +685,10 @@ describe('AdminCards filter', () => {
     [{ mintedTo: '2026-10-31' }, send('', '', '', '2026-10-31', '', '')],
     [{ expiresFrom: '2026-11-01' }, send('', '', '', '', '2026-11-01', '')],
     [{ expiresTo: '2026-12-31' }, send('', '', '', '', '', '2026-12-31')],
+    [
+      { mintedFrom: '2026-10-01', mintedTo: '2026-10-31' },
+      send('', '', '2026-10-01', '2026-10-31', '', ''),
+    ],
   ])(
     'counts %o in Filters and draws Clear All to every batch in place of Clear',
     async (part, sends) => {
@@ -776,7 +780,8 @@ describe('AdminCards filter', () => {
     render(<AdminCards batches={[BATCHES[0]]} filter={FILTER} />);
 
     expect(screen.getByRole('searchbox', { name: 'Batch' })).toHaveValue('b11');
-    expect(screen.getByRole('button', { name: /^Filters\D*5/ })).toBeInTheDocument();
+    // The status and each range count one apiece, a range with both its ends included.
+    expect(screen.getByRole('button', { name: /^Filters\D*3/ })).toBeInTheDocument();
     openFilters();
     expect(statusBox()).toHaveTextContent('Live');
     expect(screen.getByRole('button', { name: /^Minted/ })).toHaveAccessibleName(

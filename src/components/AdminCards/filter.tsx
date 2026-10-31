@@ -38,8 +38,9 @@ const heldOf = ({ status, mintedFrom, mintedTo, expiresFrom, expiresTo }: CardsF
 
 const NONE: Held = { status: '', mintedFrom: '', mintedTo: '', expiresFrom: '', expiresTo: '' };
 
-/** How many filters the drawer holds: the status and each day given count one each. */
-const countOf = (held: Held): number => Object.values(held).filter(Boolean).length;
+/** How many filters the drawer holds: the status and each range with a day in it, one apiece. */
+const countOf = ({ status, mintedFrom, mintedTo, expiresFrom, expiresTo }: Held): number =>
+  [status, mintedFrom || mintedTo, expiresFrom || expiresTo].filter(Boolean).length;
 
 /** Today and the ranges a person most often wants, worked out when pressed: ago or ahead. */
 const day = (shift: number): string => {
