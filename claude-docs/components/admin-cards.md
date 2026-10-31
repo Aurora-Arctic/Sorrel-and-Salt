@@ -6,10 +6,14 @@ through the identity services (`listCardBatches`, `listCardArrivals` and their c
 rows down. A row carries no token and no hash; the database holds neither a token nor anything that
 yields one. The rules are [`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md), "Invitation cards".
 
+## Dates
+
+Expires is a UTC day, `2026-10-30`. Minted On, Refused Opens First and Latest and Card Sign-Ups Accepted On are `2026-10-30 14:05` in the viewer's own zone, through [LocalTime](local-time.md). Above the stacking width each is muted at caption size (`admin-cards__fact`), as the user list's Signed Up is. The Card Sign-Ups CSV keeps its own date format.
+
 ## Contracts
 
 - **Invitation Cards** (`index.tsx`): a region named "Invitation Cards" with one row per batch: batch (the
-  first block of the batch id, `batchName`), minted on (date and time, UTC), expires (the date alone: it is
+  first block of the batch id, `batchName`), minted on (date and time, local), expires (the date alone: it is
   midnight UTC), cards, **status**, accepted, and **Revoke Batch** while a card of the batch is pending
   (`ConfirmedAction` asks first, naming the batch and its mint date, and says accounts that already accepted
   keep their access). The Revoke column is red like the People table's Impersonate column (`row-action-column`, `.admin-cards__revoke`), with a red row button and a red confirm; the question always comes first.
@@ -28,9 +32,9 @@ yields one. The rules are [`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md
   (`batchStatusIs` in `db/repository/invitations.ts` mirrors `batchStatus()`), then pages through `findPage`. A value
   the page cannot read (an unknown status, a day that is not a day) is dropped; the service rejects one sent directly.
 - **Refused Opens** (`attempts.tsx`): each batch shows its count of refused opens across all its cards;
-  where the count is above zero an eye icon button (tip **View Refused Opens**, right-aligned in the cell) opens a "Refused Opens, Batch 7c2d0000" dialog that reads
+  where the count is above zero an eye icon button (tip **View Refused Opens**, right-aligned in the cell) opens a dialog headed by the eyebrow "Refused Opens" over the title "Batch 7c2d0000" (its name, "Refused Opens, Batch 7c2d0000") that reads
   `invitationCardAttempts` for that batch and lists the account (its name links to that account's modal on the People page, and its email sits under it; a removed account is "Removed account" with neither), the **Card** ("Sheet 2, Card 5", from the card's `position`; "Unknown" for a card minted before positions were kept), the reason, how many times, and the **First** and **Latest** times (the row's creation and its last refusal),
-  twenty at a time with **Show More**.
+  twenty at a time with **Show More**. A plain paragraph under the head says "Every card listed here already admits nobody. Further tries are refused and counted here.": the list is a record, and no card in it can be opened or revoked from here.
 - **Mint Cards** (`mint-form.tsx`) is a link to `?mint`, which opens a modal: **Number of Sheets** (1 to
   55; a Letter sheet holds nine cards) with the total shown as typed ("3 sheets: 27 cards"), and
   **Expires On** (a `DateField` whose earliest day is tomorrow in UTC, sent as midnight UTC; with no `max`

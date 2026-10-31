@@ -3,8 +3,8 @@
 import type { ReactElement } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { inUtc } from '../../lib/utc';
 import StackTable from '../DataTable';
+import LocalTime from '../LocalTime';
 import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
 import { batchName } from './batches';
@@ -60,9 +60,8 @@ const AdminArrivals = ({
             },
             {
               heading: 'Accepted On',
-              cell: (arrival) => (
-                <time dateTime={arrival.acceptedAt.toISOString()}>{inUtc(arrival.acceptedAt)}</time>
-              ),
+              className: 'admin-cards__fact',
+              cell: (arrival) => <LocalTime at={arrival.acceptedAt} />,
             },
             { heading: 'Batch', cell: (arrival) => batchName(arrival.batchId) },
             {

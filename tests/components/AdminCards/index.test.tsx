@@ -143,6 +143,7 @@ describe('AdminCards', () => {
     fireEvent.click(screen.getByRole('button', { name: /^View Refused Opens/ }));
 
     const list = await screen.findByRole('dialog', { name: 'Refused Opens, Batch b1111111' });
+    expect(within(list).getByText(/already admits nobody/)).toBeInTheDocument();
     expect(await within(list).findByText('Other Wort')).toBeInTheDocument();
     const row = within(list).getByText('Other Wort').closest('tr') as HTMLElement;
     expect(within(row).getByText('other@example.test')).toBeInTheDocument();
@@ -154,6 +155,7 @@ describe('AdminCards', () => {
     expect(within(row).getByText('Revoked')).toBeInTheDocument();
     expect(within(row).getByText('2')).toBeInTheDocument();
     const times = row.querySelectorAll('time');
+    expect(times[0]).toHaveTextContent(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/);
     expect(times[0]).toHaveAttribute('datetime', '2026-10-28T08:00:00.000Z');
     expect(times[1]).toHaveAttribute('datetime', '2026-10-29T09:30:00.000Z');
     expect(within(list).getByRole('columnheader', { name: 'First' })).toBeInTheDocument();
@@ -214,9 +216,11 @@ describe('AdminCards', () => {
     expect(within(second).getByText('Used up')).toBeInTheDocument();
     expect(within(third).getByText('Revoked')).toBeInTheDocument();
     expect(within(fourth).getByText('Expired')).toBeInTheDocument();
-    // Expires is a date; Minted On keeps the time.
-    expect(within(first).getByText('1 December 2026')).toBeInTheDocument();
-    expect(within(first).getByText('1 October 2026, 00:00 UTC')).toBeInTheDocument();
+    // Expires is a UTC day; Minted On keeps the time, in the viewer's zone.
+    expect(within(first).getByText('2026-12-01')).toBeInTheDocument();
+    expect(first.querySelector('time[datetime="2026-10-01T00:00:00.000Z"]')).toHaveTextContent(
+      /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/,
+    );
     expect(screen.queryByRole('button', { name: /^Revoke card/i })).toBeNull();
   });
 

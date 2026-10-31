@@ -19,3 +19,22 @@
 .admin-cards__revoke {
   @include row-action-column(1);
 }
+
+// The table above the stacking width: the dates muted at caption size, as the user list's Signed Up
+// is. Scoped here because a card already labels each fact.
+@container data-table (width > #{$table-stack-width}) {
+  .admin-cards__fact {
+    color: $text-muted;
+    font-size: type-size('caption');
+  }
+}
+
+// The live total under Number of Sheets: one line is always reserved, so it appearing, changing or
+// going never moves the Expires On field beneath it.
+.admin-cards__total {
+  min-height: 1.5em;
+  margin: 0;
+  color: $text-muted;
+  font-size: type-size('caption');
+  line-height: 1.5;
+}

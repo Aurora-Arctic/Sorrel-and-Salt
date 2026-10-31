@@ -6,10 +6,10 @@ import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE } from '../../lib/graphql-failure';
 import { cardPlace } from '../../lib/invitation-cards/limits';
-import { inUtc } from '../../lib/utc';
 import StackTable from '../DataTable';
 import { MysticEyeIcon } from '../IconTip/icons';
 import { ModalButton } from '../Modal';
+import LocalTime from '../LocalTime';
 import Notice from '../Notice';
 import { userListHref } from '../UserList/href';
 import { batchName } from './batches';
@@ -104,6 +104,9 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
   if (failed) return <Notice kind="error">{GENERIC_FAILURE}</Notice>;
   return (
     <>
+      <p>
+        Every card listed here already admits nobody. Further tries are refused and counted here.
+      </p>
       <StackTable
         columns={[
           {
@@ -143,15 +146,13 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
           { heading: 'Times', cell: (a) => a.attempts },
           {
             heading: 'First',
-            cell: (a) => (
-              <time dateTime={a.firstAttemptedAt.toISOString()}>{inUtc(a.firstAttemptedAt)}</time>
-            ),
+            className: 'admin-cards__fact',
+            cell: (a) => <LocalTime at={a.firstAttemptedAt} />,
           },
           {
             heading: 'Latest',
-            cell: (a) => (
-              <time dateTime={a.lastAttemptedAt.toISOString()}>{inUtc(a.lastAttemptedAt)}</time>
-            ),
+            className: 'admin-cards__fact',
+            cell: (a) => <LocalTime at={a.lastAttemptedAt} />,
           },
         ]}
         rows={attempts}
@@ -182,7 +183,8 @@ const CardAttempts = ({ batchId }: { batchId: string }): ReactElement => (
     label={<MysticEyeIcon />}
     ariaLabel={`View Refused Opens, batch ${batchName(batchId)}`}
     className="icon-tip__edit"
-    title={`Refused Opens, Batch ${batchName(batchId)}`}
+    eyebrow="Refused Opens"
+    title={`Batch ${batchName(batchId)}`}
   >
     {() => <AttemptList batchId={batchId} />}
   </ModalButton>
