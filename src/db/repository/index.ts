@@ -159,7 +159,7 @@ export {
   findSupportTimeoutsFor,
 } from './support';
 export { findOpenAdminRoleChangePause } from './admin-roles';
-export { deleteProvisionalUsers } from './provisional-users';
+export { deleteLapsedProvisionalUser, provisionalSecondsLeft } from './provisional-users';
 export { removePasskeyKeepingAWayIn } from './passkeys';
 export type { PasskeyRemoval } from './passkeys';
 export {

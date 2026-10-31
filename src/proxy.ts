@@ -160,5 +160,5 @@ export const config = {
   // imported by their stylesheet and served under /_next/ instead. A named
   // prefix, never a file-extension pattern: what is public is listed, as in
   // PUBLIC_ROUTES. Must be a literal: Next reads it at build time.
-  matcher: ['/((?!api/|_next/).*)'],
+  matcher: ['/((?!api/|_next/|\\.well-known/workflow/).*)'],
 };

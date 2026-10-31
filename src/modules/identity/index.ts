@@ -15,6 +15,7 @@ export * from './services/privilege-changes';
 export * from './services/primary-admin';
 export * from './services/profile';
 export * from './services/provisional-accounts';
+export * from './services/provisional-expiry';
 export * from './services/received-invitations';
 export * from './services/sign-in-lockout';
 export * from './services/site-admin';

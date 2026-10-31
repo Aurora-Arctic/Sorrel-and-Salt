@@ -74,7 +74,7 @@ import {
   isEmailHeldByAnother,
   isPlaceholderEmail,
   placeholderEmail,
-  sweepProvisionalAccounts,
+  scheduleProvisionalExpiry,
   clearFailedPasswordSignIns,
   isPasswordSignInLocked,
   recordFailedPasswordSignIn,
@@ -237,22 +237,6 @@ function sessionOf(ctx: HookContext) {
 }
 
 /**
- * Deletes every lapsed provisional account, logging what went at `info`. A
- * failure is logged at `error` and never thrown: the sweep is housekeeping,
- * and must not fail the sign-in or verification it runs ahead of.
- */
-async function sweepQuietly(ctx: HookContext): Promise<void> {
-  try {
-    const swept = await sweepProvisionalAccounts();
-    if (swept.length > 0) {
-      ctx.context.logger.info(`provisional accounts swept: ${swept.join(', ')}`);
-    }
-  } catch (error) {
-    ctx.context.logger.error('provisional-account sweep failed', error);
-  }
-}
-
-/**
  * The roster providers the user's accounts sign in with, for the mail that
  * names them. Better Auth types `providerId` as any string; one outside the
  * roster has no label to name it by, so it is left out.
@@ -350,8 +334,6 @@ async function gateEmailChange(ctx: HookContext): Promise<void> {
   if (session.user.email.toLowerCase() !== claims.email.toLowerCase()) {
     throw refuseWrongAccount(ctx);
   }
-  // A lapsed row holding the address goes first, as it would on a callback.
-  await sweepQuietly(ctx);
   if (await isEmailHeldByAnother(claims.updateTo, session.user.id)) {
     throw refuseVerification(ctx, 'EMAIL_TAKEN', 'That address is held by another account.');
   }
@@ -778,10 +760,6 @@ export const auth = betterAuth({
     },
   },
   hooks: {
-    // Before the code exchange or a password sign-up, so a lapsed account
-    // holding the arriving address is gone before Better Auth looks it up. A
-    // callback does not yet know which address that is, so it sweeps every lapsed row. A failure is logged and
-    // never fails the sign-in: the sweep is housekeeping.
     before: createAuthMiddleware(async (ctx) => {
       if (ctx.path === '/verify-email') return gateEmailChange(ctx);
       if (ctx.path === '/send-verification-email') return requireOwnResend(ctx);
@@ -790,8 +768,6 @@ export const auth = betterAuth({
       if (ctx.path === '/sign-in/email') return holdLockedSignIn(ctx);
       if (PASSKEY_VERIFY_PATHS.has(ctx.path)) return pinPasskeyOrigin(ctx);
       if (ctx.path === '/passkey/delete-passkey') return keepAWayIn(ctx);
-      if (ctx.path !== '/callback/:id' && ctx.path !== '/sign-up/email') return;
-      await sweepQuietly(ctx);
       if (ctx.path === '/sign-up/email') return answerHeldSignUp(ctx);
     }),
     after: createAuthMiddleware(async (ctx) => {
@@ -875,6 +851,18 @@ export const auth = betterAuth({
         // new user as their own row is. It never throws, as Better Auth cannot roll the user row back and a half-failed sign-up is
         // worse than a missing seat; the demo coven seed's backfill repairs it.
         after: async (user, ctx) => {
+          // One run per unverified sign-up removes the row once its window lapses. A failed start is logged, as the sign-up stands
+          // either way and the account then holds its address until an admin removes it.
+          if (!user.emailVerified) {
+            try {
+              await scheduleProvisionalExpiry(user.id);
+            } catch (error) {
+              (ctx?.context.logger ?? console).error(
+                `provisional expiry not scheduled: user ${user.id}`,
+                error,
+              );
+            }
+          }
           try {
             const demo = await findDemoWorkspace();
             if (!demo) return;
