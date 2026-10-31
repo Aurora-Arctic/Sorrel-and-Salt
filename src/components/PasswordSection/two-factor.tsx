@@ -228,21 +228,21 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
                   className="btn btn--quiet"
                   onClick={() => void navigator.clipboard?.writeText(codesText(enrolment))}
                 >
-                  Copy Codes
+                  Copy
                 </button>
                 <button
                   type="button"
                   className="btn btn--quiet"
                   onClick={() => downloadCodes(codesText(enrolment))}
                 >
-                  Download Codes
+                  Download
                 </button>
                 <button
                   type="button"
                   className="btn btn--quiet"
                   onClick={() => printCodes(enrolment.backupCodes, email)}
                 >
-                  Print Codes
+                  Print
                 </button>
               </div>
             </li>

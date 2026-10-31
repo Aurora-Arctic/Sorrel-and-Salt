@@ -169,7 +169,7 @@ describe('TwoFactorSettings', () => {
       Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
       await startEnrolment();
 
-      await press(button('Copy Codes'));
+      await press(button('Copy'));
 
       expect(writeText).toHaveBeenCalledWith(EXPECTED);
     });
@@ -181,7 +181,7 @@ describe('TwoFactorSettings', () => {
       const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
       await startEnrolment();
 
-      await press(button('Download Codes'));
+      await press(button('Download'));
 
       expect(click).toHaveBeenCalledOnce();
       expect(blobs).toHaveLength(1);
@@ -200,7 +200,7 @@ describe('TwoFactorSettings', () => {
       } as unknown as Window);
       await startEnrolment();
 
-      await press(button('Print Codes'));
+      await press(button('Print'));
 
       expect(print).toHaveBeenCalledOnce();
       expect(page.body.textContent).toBe(EXPECTED);
