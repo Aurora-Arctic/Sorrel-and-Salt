@@ -2,15 +2,15 @@ import type { SupportAbout, SupportStatus } from '@/modules/support';
 import type { PagePosition } from '../../lib/types';
 import type { SupportSenderRequestEntry } from '../SupportSenderRequest/types';
 
-/** One row of the sender's list: what the request is about and which page, when it was sent and where it stands. */
+/** One row of the sender's list: its subject, where it stands, what it is about, when it was sent and how many replies it has. */
 export interface SupportListEntry {
   id: string;
   about: SupportAbout;
   subject: string;
-  /** The page it was about; none when the sender gave none. */
-  path: string | null;
   status: SupportStatus;
   createdAt: Date;
+  /** How many staff replies it has. */
+  replyCount: number;
 }
 
 export interface SupportListProps {

@@ -22,11 +22,11 @@ describe('SupportSenderRequest', () => {
     render(<SupportSenderRequest request={request()} />);
     const thread = screen.getByRole('region', { name: 'Thread' });
     const [own] = within(thread).getAllByRole('listitem');
-    expect(within(own!).getByText('You')).toBeInTheDocument();
+    expect(within(own!).getAllByText('You')).toHaveLength(2);
     expect(within(own!).getByText('I was sent a card.')).toBeInTheDocument();
   });
 
-  it('tags every reply Staff, oldest first', () => {
+  it('names every reply for the site and tags it Staff, oldest first', () => {
     render(
       <SupportSenderRequest
         request={request({
@@ -40,6 +40,7 @@ describe('SupportSenderRequest', () => {
     const items = within(screen.getByRole('region', { name: 'Thread' })).getAllByRole('listitem');
     expect(items).toHaveLength(3);
     expect(within(items[1]!).getByText('Staff')).toBeInTheDocument();
+    expect(within(items[1]!).getByText('Sorrel & Salt')).toBeInTheDocument();
     expect(within(items[1]!).getByText('First answer.')).toBeInTheDocument();
     expect(within(items[2]!).getByText('Staff')).toBeInTheDocument();
     expect(within(items[2]!).getByText('Second answer.')).toBeInTheDocument();
@@ -50,11 +51,11 @@ describe('SupportSenderRequest', () => {
     expect(screen.getByText('/coven/whitethorn')).toBeInTheDocument();
   });
 
-  it('draws a shut reply box saying replies are coming, and no way to send', () => {
+  it('draws a shut reply box with a Reply button that cannot be pressed', () => {
     render(<SupportSenderRequest request={request()} />);
     expect(screen.getByRole('textbox', { name: 'Your Reply' })).toBeDisabled();
-    expect(screen.getByText('Replies are coming.')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Reply|Send/ })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Reply' })).toBeDisabled();
+    expect(screen.queryByText('Replies are coming.')).toBeNull();
   });
 
   it('draws no issue link, assignment or settings', () => {

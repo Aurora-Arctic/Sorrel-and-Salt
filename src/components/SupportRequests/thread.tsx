@@ -1,7 +1,7 @@
 import { type ReactElement, useId } from 'react';
 import LocalTime from '../LocalTime';
 
-// A request's thread: the sender's message, then each reply, each with who wrote it, a tag and when. The
+// A request's thread (times short, `30 Oct, 2:01 pm`): the sender's message, then each reply, each with who wrote it, a tag and when. The
 // caller says what to call each author, so staff see names and the sender sees "You" and "Staff".
 
 export interface SupportThreadEntry {
@@ -24,7 +24,7 @@ const SupportThread = ({ entries }: { entries: readonly SupportThreadEntry[] }):
             <div className="support-detail__meta">
               {entry.name && <strong>{entry.name}</strong>}
               <span className="support-detail__tag">{entry.tag}</span>
-              <LocalTime at={entry.at} long />
+              <LocalTime at={entry.at} short="minute" />
             </div>
             <p>{entry.body}</p>
           </li>

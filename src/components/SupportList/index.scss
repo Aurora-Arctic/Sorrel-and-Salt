@@ -4,7 +4,7 @@
 // Every space on the page, summed to a target. The page frame's header ends at its own margin; below it the
 // list's column is one gap (4) between the rows' list and the pager, and the rows are 2 apart. Zeroed, not
 // offset: the `ul` default margin, the empty message's `p` margin and the row's own margin. The dialog is
-// outside the flow, so it adds nothing. A row is 3 above and below its text and 4 either side.
+// outside the flow, so it adds nothing. A row is 3 above and below its two lines, 2 apart, and 4 either side.
 .support-list {
   @include stack(4);
 }
@@ -20,37 +20,38 @@
   margin: 0;
 }
 
-// The kind, the page, the date and the badge in a row: the page takes the slack and wraps long, the rest fit.
-// On a phone the four stack, two to a line.
+// Two lines: the subject, then the meta row. The subject takes the row's width on one line and ends in an
+// ellipsis when it is longer; `min-inline-size: 0` lets it shrink below its text.
 .support-list__item {
+  @include stack(2);
   position: relative;
-  display: grid;
-  grid-template-columns: 9rem minmax(0, 1fr) auto auto;
-  align-items: center;
-  gap: space(3) space(4);
   margin: 0;
   padding: space(3) space(4);
   border: 1px solid $hairline;
   border-radius: radius('surface');
   background-color: $surface-page;
 
-  @media (width <= #{$shell-phone-width}) {
-    grid-template-columns: minmax(0, 1fr) auto;
+  // The site's ◆ marker is a ::before, which would otherwise take a cell of its own.
+  &::before {
+    content: none;
   }
 }
 
-// The kind is the row's one link, stretched over the whole row.
+// The subject is the row's one link, stretched over the whole row.
 .support-list__link {
   @include card-link;
-}
-
-.support-list__page {
   min-inline-size: 0;
-  font-family: $font-mono;
-  overflow-wrap: anywhere;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.support-list__none {
+// The meta row: the badge, then the kind, day and reply count muted. It wraps on a phone.
+.support-list__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(1) space(3);
   color: $text-muted;
-  font-family: inherit;
+  font-size: type-size('small');
 }

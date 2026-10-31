@@ -1,6 +1,10 @@
 import type { Metadata, Route } from 'next';
 import { readNumberedPage, readPageCursors } from '@/lib/numbered-page';
-import { countMySupportRequests, listMySupportRequests } from '@/modules/support';
+import {
+  countMySupportRequests,
+  listMySupportRequests,
+  repliesForRequests,
+} from '@/modules/support';
 import PageHeader from '../../../../components/PageHeader';
 import SupportLink from '../../../../components/SupportLink';
 import SupportList from '../../../../components/SupportList';
@@ -28,6 +32,10 @@ export default async function SupportListPage({ searchParams }: SupportListPageP
     requestParam ? readOpenedRequest(session, requestParam) : undefined,
   ]);
   const rows = page.edges.map(({ node }) => node);
+  const replies = await repliesForRequests(
+    session,
+    rows.map((row) => row.id),
+  );
   const href = (cursor: Record<string, string>) =>
     `${SUPPORT_LIST_PATH}?${new URLSearchParams(cursor).toString()}` as Route;
   const { hasPreviousPage, hasNextPage, startCursor, endCursor } = page.pageInfo;
@@ -38,13 +46,13 @@ export default async function SupportListPage({ searchParams }: SupportListPageP
         action={<SupportLink className="btn btn--solid">New Request</SupportLink>}
       />
       <SupportList
-        requests={rows.map((row) => ({
+        requests={rows.map((row, index) => ({
           id: row.id,
           about: row.about,
           subject: row.subject,
-          path: row.path || null,
           status: row.status,
           createdAt: row.createdAt,
+          replyCount: replies[index]?.length ?? 0,
         }))}
         opened={opened}
         cursor={{ after, before }}

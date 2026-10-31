@@ -148,6 +148,6 @@ A visitor with no account may send a request about `accessibility`, `bug`, `acco
 
 ### The Sender's Page Is a Compact List with a Dialog (the owner's call of 2026-10-31)
 
-- **A compact list, and the request in a dialog.** `/account/support` lists one row per request (kind, page, sent date, status badge) and a row opens the request in a dialog at `?request=<id>`, reusing the staff dialog's facts and thread (`SupportSenderRequest`).
+- **A compact list, and the request in a dialog.** `/account/support` lists one two-line row per request (the subject, then status badge, kind, sent day and reply count; no page path) and a row opens the request in a dialog at `?request=<id>`, reusing the staff dialog's facts and thread (`SupportSenderRequest`).
 - **"You" and "Staff".** The sender's own messages are tagged "You" and every reply "Staff"; the sender never sees a curator's or admin's name.
-- **A faded reply box.** Beneath the thread sits a disabled, faded reply field saying "Replies are coming." It stands in for M15.43 and sends nothing.
+- **A faded reply box.** Beneath the thread sits a disabled, faded reply form (a "Your Reply" field and a Reply button, both disabled). It stands in for M15.43 and sends nothing.
