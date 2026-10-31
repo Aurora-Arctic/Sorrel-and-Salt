@@ -2,7 +2,11 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import PasswordSection from '@/components/PasswordSection';
-import { STALE_SESSION, WRONG_PASSWORD } from '@/components/PasswordSection/two-factor';
+import {
+  PASSWORD_SIGN_IN_PAUSED_MESSAGE,
+  STALE_SESSION,
+  WRONG_PASSWORD,
+} from '@/components/PasswordSection/two-factor';
 import { WRONG_CODE } from '@/components/SignInPanel/two-factor-step';
 import { makeQueryClient } from '@/lib/graphql-client';
 
@@ -83,7 +87,7 @@ describe('PasswordSection, two-factor', () => {
 
     expect(enable).toHaveBeenCalledWith({ password: PASSWORD });
     expect(within(twoFactorRegion()).getByRole('img', { name: /QR code/ })).toBeInTheDocument();
-    expect(within(twoFactorRegion()).getByText(SECRET)).toBeInTheDocument();
+    expect(within(twoFactorRegion()).getByText('JBSW Y3DP EHPK 3PXP')).toBeInTheDocument();
     const codes = within(twoFactorRegion()).getByRole('list', { name: 'Backup Codes' });
     expect(
       within(codes)
@@ -103,7 +107,7 @@ describe('PasswordSection, two-factor', () => {
 
     expect(verifyTotp).toHaveBeenCalledWith({ code: '123456' });
     expect(isOn()).toBe(true);
-    expect(within(twoFactorRegion()).queryByText(SECRET)).not.toBeInTheDocument();
+    expect(within(twoFactorRegion()).queryByText('JBSW Y3DP EHPK 3PXP')).not.toBeInTheDocument();
     expect(
       within(twoFactorRegion()).queryByRole('list', { name: 'Backup Codes' }),
     ).not.toBeInTheDocument();
@@ -130,6 +134,79 @@ describe('PasswordSection, two-factor', () => {
     await press(button('Turn On Two-Factor'));
 
     expect(field('Password')).toHaveAccessibleDescription(expect.stringContaining(WRONG_PASSWORD));
+  });
+
+  it.each([
+    ['turning on', false, enable, 'Turn On Two-Factor'],
+    ['turning off', true, disable, 'Turn Off Two-Factor'],
+  ] as const)(
+    'says password sign-in is paused, not that the password is wrong, when %s during a lock',
+    async (_name, startsOn, call, action) => {
+      call.mockResolvedValue({
+        data: null,
+        error: { status: 400, code: 'PASSWORD_SIGN_IN_PAUSED' },
+      });
+      renderSection(startsOn);
+
+      type('Password', PASSWORD);
+      await press(button(action));
+
+      expect(call).toHaveBeenCalledWith({ password: PASSWORD });
+      const described = (field('Password').getAttribute('aria-describedby') ?? '')
+        .split(' ')
+        .map((id) => document.getElementById(id)?.textContent ?? '')
+        .join(' ');
+      const alert = within(twoFactorRegion()).queryByRole('alert')?.textContent ?? '';
+      expect(described + alert).toContain(PASSWORD_SIGN_IN_PAUSED_MESSAGE);
+      expect(described + alert).not.toContain(WRONG_PASSWORD);
+    },
+  );
+
+  describe('saving the backup codes', () => {
+    const EXPECTED = BACKUP_CODES.join('\n');
+
+    it('copies the codes one per line', async () => {
+      const writeText = vi.fn().mockResolvedValue(undefined);
+      Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+      await startEnrolment();
+
+      await press(button('Copy Codes'));
+
+      expect(writeText).toHaveBeenCalledWith(EXPECTED);
+    });
+
+    it('downloads the codes one per line as a text file', async () => {
+      const blobs: Blob[] = [];
+      URL.createObjectURL = vi.fn((blob: Blob) => (blobs.push(blob), 'blob:codes'));
+      URL.revokeObjectURL = vi.fn();
+      const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+      await startEnrolment();
+
+      await press(button('Download Codes'));
+
+      expect(click).toHaveBeenCalledOnce();
+      expect(blobs).toHaveLength(1);
+      expect(await blobs[0].text()).toBe(EXPECTED);
+      click.mockRestore();
+    });
+
+    it('prints the codes one per line', async () => {
+      const print = vi.fn();
+      const page = document.implementation.createHTMLDocument('');
+      const open = vi.spyOn(window, 'open').mockReturnValue({
+        document: page,
+        print,
+        focus: vi.fn(),
+        close: vi.fn(),
+      } as unknown as Window);
+      await startEnrolment();
+
+      await press(button('Print Codes'));
+
+      expect(print).toHaveBeenCalledOnce();
+      expect(page.body.textContent).toBe(EXPECTED);
+      open.mockRestore();
+    });
   });
 
   it('turns off with the password', async () => {

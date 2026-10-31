@@ -170,7 +170,9 @@ already holds, in `src/lib/auth.ts`:
   `/two-factor/get-totp-uri` and `/two-factor/generate-backup-codes`. For
   each, the before hook (`holdHeldPassword`) swaps the password for random
   bytes while the account is locked, so the request is refused as Better
-  Auth's own `INVALID_PASSWORD`, and the after hook (`countHeldPassword`)
+  Auth's own `INVALID_PASSWORD` (the four `/two-factor/` endpoints instead
+  refuse with `PASSWORD_SIGN_IN_PAUSED`, so the signed-in owner is told the
+  lock is why, not that the password is wrong), and the after hook (`countHeldPassword`)
   adds one for a wrong password on an unlocked account and deletes the row
   once a password is accepted. Like a sign-in, it counts only an account with
   a `credential` row holding a password. `/verify-password` is reachable
