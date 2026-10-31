@@ -619,10 +619,37 @@ describe('the update path', () => {
     );
   });
 
+  it('lands an entry shown when only one of its forms names a category, and hidden when nothing does', async () => {
+    await sql`truncate ingredients cascade`;
+    const formOnly = fileOf(TESTWORT, (draft) => {
+      draft.entry.categories = [];
+      draft.entry.variants.forEach((variant) => {
+        variant.categories = variant.form === 'Oil' ? ['Healing'] : [];
+      });
+    });
+    const nowhere = fileOf(SAMPLEWORT, (draft) => {
+      draft.entry.categories = [];
+      draft.entry.variants.forEach((variant) => {
+        variant.categories = [];
+      });
+    });
+
+    const report = await run([formOnly, nowhere]);
+
+    expect(report.hidden).toBe(1);
+    expect(await shownByKey()).toEqual({
+      [identityOf(TESTWORT)]: true,
+      [identityOf(SAMPLEWORT)]: false,
+    });
+  });
+
   it('lands an entry with no categories hidden, and counts it', async () => {
     await sql`truncate ingredients cascade`;
     const bare = fileOf(TESTWORT, (draft) => {
       draft.entry.categories = [];
+      draft.entry.variants.forEach((variant) => {
+        variant.categories = [];
+      });
     });
 
     const report = await run([bare, fileOf(SAMPLEWORT)]);

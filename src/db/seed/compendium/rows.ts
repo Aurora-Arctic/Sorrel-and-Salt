@@ -129,7 +129,8 @@ export function entryColumns(entry: SeedCompendiumEntry, picks: Picks): EntryCol
 
 /**
  * The whole `ingredients` row an insert writes: the compendium tier, keyed by identity, before its stamps.
- * An entry with no category lands hidden; `shown` is written here and nowhere in the update, so a later run never changes it.
+ * An entry lands hidden when neither it nor any of its forms names a category; `shown` is written here and nowhere in the update,
+ * so a later run never changes it.
  */
 export function entryRow(entry: SeedCompendiumEntry, picks: Picks, seedContentHash: string | null) {
   return {
@@ -137,8 +138,16 @@ export function entryRow(entry: SeedCompendiumEntry, picks: Picks, seedContentHa
     ...entryColumns(entry, picks),
     seedKey: identityOf(entry),
     seedContentHash,
-    shown: (entry.categories?.length ?? 0) > 0,
+    shown: namesCategory(entry),
   };
+}
+
+/** Whether the entry, or any one of its forms, names a category. */
+export function namesCategory(entry: SeedCompendiumEntry): boolean {
+  return (
+    (entry.categories?.length ?? 0) > 0 ||
+    entry.variants.some((variant) => (variant.categories?.length ?? 0) > 0)
+  );
 }
 
 /** A form the entry names whose curated pick is live, with that pick. */

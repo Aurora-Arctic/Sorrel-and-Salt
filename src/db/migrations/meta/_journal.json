@@ -764,6 +764,13 @@
       "when": 1793457117602,
       "tag": "0108_compendium-shown-flag",
       "breakpoints": true
+    },
+    {
+      "idx": 109,
+      "version": "7",
+      "when": 1793461415216,
+      "tag": "0109_compendium-hide-uncategorised",
+      "breakpoints": true
     }
   ]
 }
