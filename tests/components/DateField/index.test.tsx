@@ -166,4 +166,14 @@ describe('DateField', () => {
     expect(screen.queryByRole('grid')).toBeNull();
     expect(screen.getByRole('button', { name: /10 March 2026/ })).toBeInTheDocument();
   });
+
+  // A modal dialog closes on an Escape keydown nobody prevented, so stopping it alone would close a
+  // phone Filters sheet holding the field.
+  it('claims the Escape that closes the calendar, so a surrounding dialog stays open', () => {
+    render(<Harness />);
+    fireEvent.click(screen.getByRole('button', { name: /Date/ }));
+    const unclaimed = fireEvent.keyDown(screen.getByRole('grid'), { key: 'Escape' });
+    expect(screen.queryByRole('grid')).toBeNull();
+    expect(unclaimed).toBe(false);
+  });
 });

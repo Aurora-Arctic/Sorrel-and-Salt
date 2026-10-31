@@ -800,7 +800,7 @@ $filter-search-basis: 16rem;
 // (`Modal/index.scss`), well past WCAG 2.2's 24px minimum.
 $close-target: 2rem;
 
-// The day picker's calendar (`DateField`). The previous and next steps are as high as the compact
+// The day picker's calendar (`DateField`, `DateRangeField`). The previous and next steps are as high as the compact
 // month and year pickers beside them, and the caption is a little taller than both. The caption keeps
 // room at its end for the two steps, the 0.25rem gap between them and as much again before its text.
 $day-picker-step: $control-height-compact;
@@ -810,8 +810,10 @@ $day-picker-nav-room: $day-picker-step * 2 + 0.5rem;
 // select's end padding, rounded up.
 $day-picker-indicator: 1.25rem;
 $day-picker-sizer-end: 1.75rem;
-// A day's square button: 36px, over WCAG 2.2's 24px target.
+// A day's round button: 36px, over WCAG 2.2's 24px target.
 $day-picker-day: 2.25rem;
+// The band a day range's middle days sit on: the accent 22% into the card, under the body ink.
+$day-picker-band: color-mix(in srgb, $accent 22%, transparent);
 // A step past the allowed months, and a day that cannot be chosen, fade as any control that
 // cannot be used does.
 $day-picker-step-disabled-opacity: $opacity-disabled;
