@@ -8,6 +8,7 @@ import { editHeading } from '../../../../components/CompendiumList/heading';
 import { cardName } from '../../../../components/IngredientCard/card-name';
 import { detailsHeading, detailsMarks } from '../../../../components/IngredientEntry/details';
 import DetailsDialog from '../../../../components/IngredientEntry/details-dialog';
+import ShownToggle from '../../../../components/IngredientEntry/shown-toggle';
 import ReviewMark from '../../../../components/IngredientEntry/review-mark';
 import IngredientSummary from '../../../../components/IngredientEntry/summary';
 import type { ListDialog } from '../../../../lib/types';
@@ -70,7 +71,9 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
     categories: new Map(categories.map(({ slug, id }) => [slug, id])),
     deities: new Map(deities.map(({ slug, id }) => [slug, id])),
   };
-  const variables = JSON.stringify(COMPENDIUM_PARAMS.variables(filter, lookups));
+  // The admin list holds hidden entries beside shown ones; the Hidden switch narrows it to them.
+  const asked = COMPENDIUM_PARAMS.variables(filter, lookups);
+  const variables = JSON.stringify({ ...asked, listing: asked.listing ?? 'all' });
 
   // The entry whose details are open over the list, `?entry=`.
   const entrySlug = single(params.entry);
@@ -142,6 +145,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
       href: compendiumHref({ ...list, entry: node.slug }),
       heading: detailsHeading(node),
     },
+    shown: node.shown,
     editHref: compendiumHref(list, { edit: node.slug }),
     editHeading: editHeading(node),
   }));
@@ -181,10 +185,17 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
             children: summary && <IngredientSummary detail={summary} covens={covens} />,
             ...(review !== undefined && {
               reviewLine: (
-                <ReviewMark
-                  ingredientId={detailed.id}
-                  reviewedAt={review?.reviewedAt.toISOString() ?? null}
-                />
+                <>
+                  <ReviewMark
+                    ingredientId={detailed.id}
+                    reviewedAt={review?.reviewedAt.toISOString() ?? null}
+                  />
+                  <ShownToggle
+                    ingredientId={detailed.id}
+                    shown={detailed.shown}
+                    name={cardName(detailed.name, detailed.canonicalName)}
+                  />
+                </>
               ),
             }),
             // No Edit in details opened over another entry's form, an add's or an edit's: it would

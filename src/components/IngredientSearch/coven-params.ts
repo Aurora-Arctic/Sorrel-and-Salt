@@ -4,9 +4,9 @@ import { single } from '../../lib/search-params';
 import { INGREDIENT_SOURCES } from '@/modules/ingredients/schema/ingredient-enums';
 
 // The coven's ingredient search parameters: the compendium's table plus two filters only a coven has,
-// without `reviewed`, a compendium entry's mark alone
+// without `reviewed`, a compendium entry's mark alone, and `hidden`, a curator's listing
 // (claude-docs/components/ingredient-search.md, "The parameter table").
-const { reviewed: _reviewed, ...SHARED } = COMPENDIUM_PARAMS.entries;
+const { reviewed: _reviewed, hidden: _hidden, ...SHARED } = COMPENDIUM_PARAMS.entries;
 
 export const COVEN_PARAMS = defineSearchParams({
   ...SHARED,

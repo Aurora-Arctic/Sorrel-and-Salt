@@ -308,3 +308,10 @@ export interface ReviewMarkProps {
   ingredientId: string;
   reviewedAt: string | null;
 }
+
+/** The Hide and Show button on a compendium entry (`shown-toggle.tsx`): the entry, whether the public compendium lists it now, and its name for the button's label. */
+export interface ShownToggleProps {
+  ingredientId: string;
+  shown: boolean;
+  name: string;
+}

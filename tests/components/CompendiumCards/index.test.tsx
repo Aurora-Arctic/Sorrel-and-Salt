@@ -33,6 +33,7 @@ const NO_FILTER: CompendiumListFilter = {
   forms: [],
   withoutReferences: false,
   withoutForms: false,
+  hidden: false,
   elements: [],
   categories: [],
   categoryMode: 'all',

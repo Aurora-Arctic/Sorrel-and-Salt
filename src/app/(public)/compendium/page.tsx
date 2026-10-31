@@ -53,7 +53,13 @@ import type { PublicCompendiumPageProps, PublicCompendiumSearchParams } from './
 
 /** The address as the table reads it: with the curators' own filter taken out. */
 const publicParams = (params: PublicCompendiumSearchParams): PublicCompendiumSearchParams => {
-  const { withoutReferences: _refs, withoutForms: _forms, reviewed: _reviewed, ...rest } = params;
+  const {
+    withoutReferences: _refs,
+    withoutForms: _forms,
+    reviewed: _reviewed,
+    hidden: _hidden,
+    ...rest
+  } = params;
   return rest;
 };
 
