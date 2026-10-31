@@ -27,17 +27,15 @@
   font-size: type-size('small');
 }
 
+// Quiet and borderless at rest, on the page's own ground; hover and focus keep `.btn--quiet`'s border, fill and cut-out.
 .support-list__new {
+  border-color: transparent;
+  background-color: transparent;
   --icon-ground: #{$surface-page};
 
   svg {
     inline-size: 1em;
     block-size: 1em;
-  }
-
-  &:hover,
-  &:focus-visible {
-    --icon-ground: #{$accent};
   }
 }
 

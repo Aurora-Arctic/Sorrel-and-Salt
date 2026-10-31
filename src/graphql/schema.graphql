@@ -2500,7 +2500,7 @@ type SupportRequest {
   errorCode: Int
 
   """
-  The digest of the error page the sender came from, to match the server log.
+  The digest of the error page the sender came from, to match the server log. Staff only.
   """
   errorReference: String
   id: ID!

@@ -27,7 +27,6 @@ export const readOpenedRequest = cache(
       createdAt: row.createdAt,
       path: row.path || null,
       errorCode: row.errorCode,
-      errorReference: row.errorReference,
       replies: (replies ?? []).map(({ id: replyId, body, createdAt }) => ({
         id: replyId,
         body,

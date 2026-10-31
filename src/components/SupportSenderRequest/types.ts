@@ -16,7 +16,6 @@ export interface SupportSenderRequestEntry {
   createdAt: Date;
   path: string | null;
   errorCode: number | null;
-  errorReference: string | null;
   /** Oldest first. */
   replies: readonly SupportSenderReply[];
 }

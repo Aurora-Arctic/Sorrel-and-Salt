@@ -14,10 +14,10 @@ import type { SupportDialogAnswer, SupportRequestRow } from '../types';
 import { requireVerified } from './access';
 
 // The sender's reads, behind `/account/support`. The finders AND `created_by` themselves, so what another sender wrote is
-// outside the query, never filtered after it. The issue address is staff-only, so these reads blank it.
+// outside the query, never filtered after it. The issue address and the error reference (the crash digest) are staff-only, so these reads blank them.
 
-function withoutIssue(row: SupportRequestRow): SupportRequestRow {
-  return { ...row, issueUrl: null };
+function withoutStaffFields(row: SupportRequestRow): SupportRequestRow {
+  return { ...row, issueUrl: null, errorReference: null };
 }
 
 /**
@@ -31,7 +31,7 @@ export async function listMySupportRequests(
 ): Promise<PageEntry<SupportRequestRow>[]> {
   requireVerified(session);
   const entries = await findOwnSupportRequestPage(session.userId, page);
-  return entries.map((entry) => ({ ...entry, node: withoutIssue(entry.node) }));
+  return entries.map((entry) => ({ ...entry, node: withoutStaffFields(entry.node) }));
 }
 
 /**
@@ -74,7 +74,7 @@ export async function getMySupportRequest(
   requireVerified(session);
   const row = await findOwnSupportRequest(session.userId, parseInput(RowId, id));
   if (!row) throw new NotFound('No such support request');
-  return withoutIssue(row);
+  return withoutStaffFields(row);
 }
 
 /**

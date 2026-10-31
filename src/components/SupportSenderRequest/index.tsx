@@ -20,7 +20,6 @@ const SupportSenderRequest = ({ request }: SupportSenderRequestProps): ReactElem
           createdAt={request.createdAt}
           path={request.path}
           errorCode={request.errorCode}
-          errorReference={request.errorReference}
         />
         <SupportThread
           entries={[

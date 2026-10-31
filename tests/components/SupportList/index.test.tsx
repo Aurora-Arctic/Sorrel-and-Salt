@@ -19,7 +19,6 @@ const opened = (over: Partial<SupportSenderRequestEntry> = {}): SupportSenderReq
   path: '/coven/whitethorn',
   message: 'I was sent a card.',
   errorCode: null,
-  errorReference: null,
   replies: [],
   ...over,
 });

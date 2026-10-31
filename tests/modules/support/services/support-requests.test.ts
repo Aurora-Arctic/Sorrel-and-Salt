@@ -184,6 +184,16 @@ describe('mySupportRequests', () => {
     expect(entries.map((entry) => entry.node.issueUrl)).toEqual([null]);
   });
 
+  it('carries no error reference on the sender’s own reads, though the request has one', async () => {
+    const request = await send(C);
+    await sql`update support_requests set error_code = 500, error_reference = '994764113' where id = ${request.id}`;
+    expect((await getSupportRequest(asUser(E), request.id)).errorReference).toBe('994764113');
+
+    expect((await getMySupportRequest(asUser(C), request.id)).errorReference).toBeNull();
+    const entries = await listMySupportRequests(asUser(C), PAGE);
+    expect(entries.map((entry) => entry.node.errorReference)).toEqual([null]);
+  });
+
   it('refuses another sender’s request by id, which exists and is open', async () => {
     const request = await send(C);
     const [{ status }] = await sql`select status from support_requests where id = ${request.id}`;

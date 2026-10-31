@@ -151,3 +151,5 @@ A visitor with no account may send a request about `accessibility`, `bug`, `acco
 - **A compact list, and the request in a dialog.** `/account/support` lists one two-line row per request (the subject, then status badge, kind, sent day and reply count; no page path) and a row opens the request in a dialog at `?request=<id>`, reusing the staff dialog's facts and thread (`SupportSenderRequest`).
 - **"You" and "Staff".** The sender's own messages are tagged "You" and every reply "Staff"; the sender never sees a curator's or admin's name.
 - **A faded reply box.** Beneath the thread sits a disabled, faded reply form (a "Your Reply" field and a Reply button, both disabled). It stands in for M15.43 and sends nothing.
+
+- **Staff-only fields on a request (2026-10-31, the owner's call).** The sender never sees or receives the issue address or the error reference (the crash digest). The sender's reads blank both, their GraphQL fields need a curator scope, and the sender's dialog draws the Error fact as the status code alone. The staff dialog keeps both.

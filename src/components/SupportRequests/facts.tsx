@@ -9,7 +9,8 @@ export interface SupportFactsProps {
   createdAt: Date;
   path: string | null;
   errorCode: number | null;
-  errorReference: string | null;
+  /** The crash digest; staff only, so the sender's dialog leaves it out and the Error fact shows the code alone. */
+  errorReference?: string | null;
   /** Rows drawn before Sent. */
   lead?: ReactNode;
   /** Rows drawn after Error. */

@@ -12,7 +12,6 @@ const request = (over: Partial<SupportSenderRequestEntry> = {}): SupportSenderRe
   createdAt: new Date('2030-01-02T03:04:00Z'),
   path: '/coven/whitethorn',
   errorCode: null,
-  errorReference: null,
   replies: [],
   ...over,
 });
@@ -22,6 +21,12 @@ describe('SupportSenderRequest', () => {
     render(<SupportSenderRequest request={request()} />);
     const page = screen.getByText('Page').closest('div');
     expect(page).toHaveTextContent(/^Page\/coven\/whitethorn$/);
+  });
+
+  it('draws the Error fact as the code alone', () => {
+    render(<SupportSenderRequest request={request({ errorCode: 500 })} />);
+    const error = screen.getByText('Error').closest('div');
+    expect(error).toHaveTextContent(/^Error500$/);
   });
 
   it('shows the sender their own message tagged You', () => {

@@ -102,7 +102,9 @@ const SupportRequestRef = builder.objectRef<SupportRequestRow>('SupportRequest')
     errorCode: t.exposeInt('errorCode', { nullable: true }),
     errorReference: t.exposeString('errorReference', {
       nullable: true,
-      description: 'The digest of the error page the sender came from, to match the server log.',
+      description:
+        'The digest of the error page the sender came from, to match the server log. Staff only.',
+      authScopes: { curator: true },
     }),
     status: t.expose('status', { type: SupportStatusEnum }),
     sender: t.field({
