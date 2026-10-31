@@ -42,23 +42,54 @@ test('an admin mints a sheet of cards and the Invitation Cards tab lists the bat
   await page.getByRole('button', { name: /^Filters/ }).click();
   const drawer = page.getByRole('dialog', { name: 'Filters' });
   await expect(drawer).toBeVisible();
-  const status = drawer.getByRole('group', { name: 'Status' });
-  await status.locator('summary').click();
-  // The native radio is drawn invisible, so its label takes the click.
-  await status
-    .getByRole('radio', { name: 'Live' })
-    .locator('xpath=ancestor::label[1]')
-    .click({ position: { x: 10, y: 10 } });
+  await drawer.getByRole('combobox', { name: 'Status' }).click();
+  await page.getByRole('option', { name: 'Live' }).click();
+  // The batch was minted today, so the Today pick keeps it; the range's calendar is checked open.
+  await drawer.getByRole('button', { name: /^Minted/ }).click();
+  const minted = page.getByRole('dialog', { name: 'Choose Minted Days' });
+  await expect(minted).toBeVisible();
+  await assertNoAccessibilityViolations(page);
+  await minted.getByRole('button', { name: 'Today' }).click();
+  await expect(minted).toBeHidden();
   await assertNoAccessibilityViolations(page);
   await drawer.getByRole('button', { name: 'Apply Filters' }).click();
-  await expect(page).toHaveURL(/status=live/);
-  await expect(page.getByRole('button', { name: /^Filters\D*1/ })).toBeVisible();
+  await expect(page).toHaveURL(
+    /status=live&mintedFrom=\d{4}-\d{2}-\d{2}&mintedTo=\d{4}-\d{2}-\d{2}/,
+  );
+  await expect(page.getByRole('button', { name: /^Filters\D*3/ })).toBeVisible();
   await expect(page.getByRole('button', { name: /^Revoke Batch / })).toHaveCount(1);
   await assertNoAccessibilityViolations(page);
 
   await page.goto('/admin/card-sign-ups');
   await expect(page.getByText('No one has accepted a card yet.')).toBeVisible();
   await assertNoAccessibilityViolations(page);
+});
+
+// The phone drawer is a modal sheet, which closes on any Escape its controls leave unclaimed.
+test('on a phone, Escape shuts the range calendar and the status list and leaves the Filters sheet open', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await signInAs(page, 'cards-admin@admin-cards.test', ['discord'], 'admin');
+  await page.goto('/admin/invitation-cards');
+  await page.getByRole('button', { name: /^Filters/ }).click();
+  const drawer = page.getByRole('dialog', { name: 'Filters' });
+  await expect(drawer).toBeVisible();
+
+  await drawer.getByRole('button', { name: /^Expires/ }).click();
+  const expires = page.getByRole('dialog', { name: 'Choose Expires Days' });
+  await expect(expires.getByRole('grid')).toHaveCount(1);
+  await assertNoAccessibilityViolations(page);
+  await page.keyboard.press('Escape');
+  await expect(expires).toBeHidden();
+  await expect(drawer).toBeVisible();
+  await expect(drawer.getByRole('button', { name: /^Expires/ })).toBeFocused();
+
+  await drawer.getByRole('combobox', { name: 'Status' }).click();
+  await expect(page.getByRole('listbox')).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('listbox')).toBeHidden();
+  await expect(drawer).toBeVisible();
 });
 
 test('an admin revokes a whole batch and its links are refused as withdrawn', async ({
