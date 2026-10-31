@@ -8,6 +8,11 @@
   padding-block-end: space(2);
 }
 
+// The heading and summary sit a half-rem apart, not the section's default quarter.
+.timeout-panel .collapsible-section__head {
+  gap: space(2);
+}
+
 // The shut fold's line: the Timed Out badge, then the end in the muted ink.
 .timeout-panel__summary {
   display: inline-flex;
