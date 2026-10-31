@@ -11,7 +11,12 @@ import './index.scss';
 
 const labelOfAbout = (value: string): string =>
   SUPPORT_ABOUTS.find((about) => about.value === value)?.label ?? value;
-const STATUS = { open: 'Open', resolved: 'Resolved' } as const;
+const STATUS = {
+  open: 'Open',
+  waiting_on_sender: 'Waiting on Sender',
+  resolved: 'Resolved',
+  closed: 'Closed',
+} as const;
 
 const SupportList = ({
   requests,
