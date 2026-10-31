@@ -4,6 +4,7 @@ import { useMutation } from '@tanstack/react-query';
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '../../gql';
 import { changePassword } from '../../lib/auth-client';
+import { useResultFocus } from '../../lib/use-result-focus';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { newPasswordRefusal, PASSWORD_CHECK_UNAVAILABLE } from '../../lib/password-refusals';
@@ -64,13 +65,16 @@ const PasswordSection = ({ hasPassword }: PasswordSectionProps): ReactElement =>
       setChosen('');
       setHeld(true);
       setSaved('set');
+      settle();
     },
     onError: (failure) => {
       const { field, alert } = readGraphqlFailure(failure, ['newPassword']);
       setProblem({ chosen: field?.message, alert });
+      settle();
     },
   });
 
+  const { ref, settle } = useResultFocus<HTMLDivElement>();
   const pending = changing || setFirst.isPending;
   const ready = chosen !== '' && (!held || current !== '') && !pending;
 
@@ -95,24 +99,30 @@ const PasswordSection = ({ hasPassword }: PasswordSectionProps): ReactElement =>
     setChanging(false);
     if (error) {
       setProblem(changeRefusal(error));
+      settle();
       return;
     }
     setCurrent('');
     setChosen('');
     setSaved('changed');
+    settle();
   };
 
   return (
-    <div className="password-section">
-      {problem.alert && <Notice kind="error">{problem.alert}</Notice>}
+    <div className="password-section" ref={ref}>
+      {problem.alert && (
+        <Notice kind="error" result>
+          {problem.alert}
+        </Notice>
+      )}
       {saved === 'changed' && (
-        <Notice kind="success">
+        <Notice kind="success" result>
           Your password was changed, and every other device signed in to your account has been
           signed out.
         </Notice>
       )}
       {saved === 'set' && (
-        <Notice kind="success">
+        <Notice kind="success" result>
           Your password is set. You can sign in with your email address and this password as well as
           your providers.
         </Notice>

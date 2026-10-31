@@ -10,13 +10,12 @@ password", and its password control
 
 ### The config
 
-| Option                     | Value                | Why                                                                                                                                                                                                                                                                                                               |
-| -------------------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `minPasswordLength`        | 15                   | DESIGN.md §8: the password may be the only factor                                                                                                                                                                                                                                                                 |
-| `maxPasswordLength`        | 128                  | DESIGN.md §8. scrypt hashes the whole password, so two that differ after the 72nd character stay different                                                                                                                                                                                                        |
-| `requireEmailVerification` | `false`              | On, Better Auth gives an unverified account no session, and `/verify-email` verifies only from the row's own session ([`admin-bootstrap.md`](admin-bootstrap.md)), so the link could never be followed. `requireSession()` holds an unverified account at `/account/email` instead, as it does a provider account |
-| `autoSignIn`               | `false`              | What makes Better Auth answer a sign-up to a held address as it answers a new one, and call `onExistingUserSignUp`                                                                                                                                                                                                |
-| `onExistingUserSignUp`     | `mailExistingHolder` | Mails the holder instead of making a second account ("A sign-up to a held address" below)                                                                                                                                                                                                                         |
+| Option                     | Value   | Why                                                                                                                                                                                                                                                                                                               |
+| -------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `minPasswordLength`        | 15      | DESIGN.md §8: the password may be the only factor                                                                                                                                                                                                                                                                 |
+| `maxPasswordLength`        | 128     | DESIGN.md §8. scrypt hashes the whole password, so two that differ after the 72nd character stay different                                                                                                                                                                                                        |
+| `requireEmailVerification` | `false` | On, Better Auth gives an unverified account no session, and `/verify-email` verifies only from the row's own session ([`admin-bootstrap.md`](admin-bootstrap.md)), so the link could never be followed. `requireSession()` holds an unverified account at `/account/email` instead, as it does a provider account |
+| `autoSignIn`               | `true`  | A new account lands signed in; `requireSession()` holds it at the email page. Better Auth then refuses a held address with a 422, so the `before` hook answers that case first ("A sign-up to a held address" below)                                                                                              |
 
 `emailVerification.sendOnSignUp` was already on, so a password sign-up is
 mailed the same one-hour verification link a provider sign-up is.
@@ -72,19 +71,23 @@ for the standard tool. The stock plugin takes no timeout option and no
 ### A sign-up to a held address
 
 The answer to a sign-up does not say whether the address already had an
-account (OWASP Auth; DESIGN.md §8). Two pieces make it so:
+account in its body (OWASP Auth; DESIGN.md §8). Two pieces make it so:
 
-- **The same answer.** The `after` hook's `sameSignUpAnswer` replaces every
-  accepted sign-up's body with `{ status: true }`. Better Auth's own answer
-  carries the user row, and for a held address it builds a synthetic one
-  whose database-filled fields differ from a real row's.
-- **The holder is mailed instead.** `mailExistingHolder` sends
+- **The holder is mailed instead.** The `before` hook's `answerHeldSignUp`
+  finds the holder, calls `mailExistingHolder`, and answers 200
+  `{ status: true }` before Better Auth runs, so no second account is made
+  and no 422 names the address as taken. `mailExistingHolder` sends
   `src/emails/account-exists.tsx` to the held address: someone tried to make
   an account with it, no second account was made, and how to sign in (with
   the password, the linked providers, or both). It names no one, since
   whoever made the sign-up need not be the holder. It has no cooldown; the
   rate limiter on `/sign-up/email` bounds it ([`rate-limiting.md`](rate-limiting.md)).
   A placeholder address is never mailed.
+- **The same body.** The `after` hook replaces a new account's body with
+  `{ status: true }` too, since Better Auth's own carries the user row.
+
+The one difference left is the session cookie: a new account is signed in and
+a held address is not. The form reads that with `getSession`.
 
 The `before` hook runs the lapsed-account sweep on `/sign-up/email` as it does
 on an OAuth callback, so a lapsed unverified row holding the address is gone
@@ -97,9 +100,10 @@ before Better Auth looks it up ("Provisional accounts",
 same 401, which the form words as one sentence. After a sign-in, the form
 does a full load of `/sign-in?next=…`, whose server redirect already sends a
 signed-in account on: to `next` or its landing, and an unverified one to the
-email page first. A sign-up gets no session (`autoSignIn: false`): the form
-returns to sign-in with the address filled, and the person signs in, then
-follows the mailed link from that browser.
+email page first. A sign-up is signed in (`autoSignIn: true`): the form
+checks for a session and follows it on to `/sign-in?next=…`, which sends the
+unverified account to the email page. With no session the address was held,
+and the form says a mail has been sent to it.
 
 ### Lockout
 

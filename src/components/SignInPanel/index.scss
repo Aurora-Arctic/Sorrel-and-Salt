@@ -131,6 +131,23 @@
   }
 }
 
+// A hairline either side of "or", between the providers and the email form.
+.sign-in-panel__divider {
+  display: flex;
+  gap: space(3);
+  align-items: center;
+  margin-top: space(4);
+  color: $text-muted;
+  text-align: center;
+
+  &::before,
+  &::after {
+    flex: 1;
+    border-top: 1px solid $text-muted;
+    content: '';
+  }
+}
+
 .sign-in-panel__password-heading {
   margin: 0;
   text-align: center;

@@ -56,3 +56,5 @@ a token, the call Better Auth gets, each refusal and where it lands, the
 refused token, and the success notice and link. `tests/app/reset-password-page.test.tsx`:
 which URLs pass a token. Story 71 walks it in the browser
 (`tests/e2e/stories/16-password.spec.ts`).
+
+The result of a submit takes focus: the invalid field, else the notice (`useResultFocus`).
