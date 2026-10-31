@@ -197,11 +197,11 @@ describe('Story 70: the password a sign-up may choose', () => {
 });
 
 describe('Story 70: signing up', () => {
-  it('creates an unverified row with a hashed credential, mails the verification link, and issues no session', async () => {
+  it('creates an unverified row with a hashed credential, mails the verification link, and signs the account in', async () => {
     const response = await signUp(STRONG);
 
     expect(response.status).toBe(200);
-    expect(cookieHeader(response)).not.toMatch(/session_token=/);
+    expect(cookieHeader(response)).toMatch(/session_token=/);
     const row = await userRow(OWNER);
     expect(row).toMatchObject({ email_verified: false, role: 'user' });
     const credential = await credentialOf(row!.id);
@@ -225,7 +225,7 @@ describe('Story 70: signing up', () => {
     }
   });
 
-  it('answers an address that already has an account exactly as a new one, and mails the holder instead', async () => {
+  it('answers an address that already has an account as a new one, bar the session, and mails the holder instead', async () => {
     const fresh = await signUp(STRONG, `fresh${DOMAIN}`);
     await verifiedAccount('Testwort guards the first gate');
     const holder = await userRow(OWNER);
@@ -235,7 +235,9 @@ describe('Story 70: signing up', () => {
 
     expect(again.status).toBe(fresh.status);
     expect(await again.json()).toEqual(await fresh.json());
-    expect(cookieHeader(again)).toBe(cookieHeader(fresh));
+    // The one difference: a new account is signed in, and the holder's address earns no session.
+    expect(cookieHeader(fresh)).toContain('session_token');
+    expect(cookieHeader(again)).toBe('');
     // The holder's row and password are untouched, and they are told.
     const [{ count }] = await sql`select count(*)::int from users where email = ${OWNER}`;
     expect(count).toBe(1);

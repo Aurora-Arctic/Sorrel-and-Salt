@@ -79,7 +79,7 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
     <div className="panel sign-in-panel">
       <div className="header sign-in-panel__header">
         <h1>Sign In</h1>
-        <p className="lede">Sign in, or create your account, with one of these.</p>
+        <p className="lede">Sign in or create an account.</p>
       </div>
       {message && <Notice kind="error">{message}</Notice>}
       <div className="sign-in-panel__providers">
@@ -93,6 +93,9 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
             onSignIn={signInWith}
           />
         ))}
+      </div>
+      <div className="sign-in-panel__divider" aria-hidden="true">
+        or
       </div>
       <PasswordForm next={next} lastUsed={lastUsedPassword} onStart={() => setMessage(undefined)} />
     </div>

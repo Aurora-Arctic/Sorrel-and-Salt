@@ -31,7 +31,8 @@ Its user is the sign-in panel's form
   so a screen reader hears one control that is on or off; its visible text
   says Show or Hide. Showing switches the input to `type="text"` with
   spelling, capital and correction fix-ups off.
-- **The meter advises and never refuses.** For `new` only, `meter.tsx` shows
+- **A new password states its rules before any refusal**, as an InfoTip hint (`rules.ts`) the input also names in its description.
+- **The meter advises and never refuses.** For `new` only, while the field shows no error (a refused password is never rated Strong), `meter.tsx` shows
   zxcvbn's score (Very Weak to Strong) and its warning, in a polite live
   region the input names in `aria-describedby`. `strength.ts`, which carries
   the dictionaries and most of the weight, is imported on the first

@@ -222,11 +222,7 @@ is [`auth/passwords.md`](../auth/passwords.md).
   A 429 is `TOO_MANY_ATTEMPTS`; a 500 at sign-up, the breached-password check
   unable to answer, is `SIGN_UP_UNAVAILABLE`. Anything else is a generic
   sentence, never Better Auth's message. Alerts are the shared `Notice`.
-- **Every accepted sign-up gets the same notice**, naming the address: a link
-  has been sent, sign in below, then open the link in this browser within an
-  hour; and, if the address already has an account, that it was written to
-  instead. The form goes back to sign-in with the address kept and the
-  password cleared. A sign-up gets no session, so the person signs in next.
+- **A sign-up is signed in.** The form asks `getSession` and, with a session, does the same full load as a sign-in. With none the address was held, and one sentence says a mail was sent to it; the form is not reset. The result of every submit takes focus (`useResultFocus`).
 - **A sign-in does a full load of `/sign-in?next=…`**, after
   `reportLeaving()`, and the page's own server redirect sends the account on
   (the top of this page), an unverified one to the email page first.
