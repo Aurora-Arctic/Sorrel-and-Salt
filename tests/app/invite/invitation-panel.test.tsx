@@ -13,10 +13,17 @@ const recordCardAttempt = vi.fn();
 vi.mock('@/modules/identity', () => ({ invitationStanding, recordCardAttempt }));
 
 const recorded: string[] = [];
+const landings: string[] = [];
 const startCovenHrefs: (string | undefined)[] = [];
 vi.mock('@/components/InvitationAcceptance', () => ({
-  default: (props: { status: string; token?: string; startCovenHref?: string }) => {
+  default: (props: {
+    status: string;
+    token?: string;
+    startCovenHref?: string;
+    landing?: string;
+  }) => {
     if (props.token) recorded.push(props.token);
+    if (props.landing) landings.push(props.landing);
     if (props.status === 'refused') startCovenHrefs.push(props.startCovenHref);
     return <p>{props.status}</p>;
   },
@@ -30,6 +37,7 @@ beforeEach(() => {
   recordCardAttempt.mockReset();
   recorded.length = 0;
   startCovenHrefs.length = 0;
+  landings.length = 0;
 });
 
 describe('the invitation panel page', () => {
@@ -71,5 +79,14 @@ describe('the invitation panel page', () => {
     render(await InvitationPanel({ token: 'abc', here: '/i/abc' }));
 
     expect(startCovenHrefs).toEqual(['/coven/new', undefined]);
+  });
+
+  it('lands an accepted card on the coven page with the marker that says what it gave', async () => {
+    getSession.mockResolvedValue({ userId: 'u', role: 'user' });
+    invitationStanding.mockResolvedValue({ acceptable: true, tier: 'card' });
+
+    render(await InvitationPanel({ token: 'abc', here: '/i/abc' }));
+
+    expect(landings).toEqual(['/coven/new?card=accepted']);
   });
 });
