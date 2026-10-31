@@ -19,6 +19,24 @@ function utcMinute(date: Date): string {
   return `${date.toISOString().slice(0, 16).replace('T', ' ')} UTC`;
 }
 
+/** Refuses a sender who is timed out, naming when it ends. */
+export function refuseTimedOut(timedOutUntil: Date | undefined): void {
+  if (timedOutUntil) {
+    throw new Forbidden(
+      `You cannot send support requests until ${utcMinute(timedOutUntil)}. Your earlier requests are still on your support page.`,
+    );
+  }
+}
+
+/** Refuses a sender who has used the day's allowance of new requests. */
+export function refuseOverLimit(recent: number): void {
+  if (recent >= SEND_LIMIT) {
+    throw new Forbidden(
+      `You have sent ${SEND_LIMIT} support requests in the last 24 hours, which is the most allowed. Try again later.`,
+    );
+  }
+}
+
 /**
  * Files a support request from the signed-in, verified account. Any such account may send, a viewer or one in no coven
  * included: the form is the site's, not a coven's. The page address is stored with the coven's slug replaced.
@@ -41,16 +59,8 @@ export async function sendSupportRequest(
       session.userId,
       SEND_WINDOW_SECONDS,
     );
-    if (timedOutUntil) {
-      throw new Forbidden(
-        `You cannot send support requests until ${utcMinute(timedOutUntil)}. Your earlier requests are still on your support page.`,
-      );
-    }
-    if (recent >= SEND_LIMIT) {
-      throw new Forbidden(
-        `You have sent ${SEND_LIMIT} support requests in the last 24 hours, which is the most allowed. Try again later.`,
-      );
-    }
+    refuseTimedOut(timedOutUntil);
+    refuseOverLimit(recent);
 
     const [row] = await write.insert(supportRequests, {
       about: values.about,
@@ -58,6 +68,7 @@ export async function sendSupportRequest(
       message: values.message,
       path: redactPath(values.path),
       errorCode: values.errorCode ?? null,
+      lastSenderActivityAt: new Date(),
     });
     return row as SupportRequestRow;
   });

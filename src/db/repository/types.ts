@@ -1,6 +1,7 @@
 import type { ExtractTablesWithRelations, SQL, SQLWrapper } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable, PgTransaction } from 'drizzle-orm/pg-core';
 import type { PostgresJsQueryResultHKT } from 'drizzle-orm/postgres-js';
+import type { supportRequests } from '../../modules/support/schema/support-requests';
 import type { invitations } from '../../modules/coven/schema/invitations';
 import type { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
 import type { adminRoleChangePauses } from '../../modules/identity/schema/admin-role-change-pauses';
@@ -565,6 +566,22 @@ export interface AuditWriter {
     userId: string,
     windowSeconds: number,
   ): Promise<{ recent: number; timedOutUntil: Date | undefined }>;
+  /**
+   * Moves a support request from one of `from` to `values.status` in a single guarded update, and returns the row, or none when
+   * its status is no longer one of `from` (or, given `ownerId`, it is not that sender's): the guard is in the `where`, so two
+   * moves racing cannot both win.
+   */
+  moveSupportRequest(
+    id: string,
+    ownerId: string | null,
+    from: readonly SupportRequestStatus[],
+    values: SupportRequestMove,
+  ): Promise<(typeof supportRequests.$inferSelect)[]>;
+  /** Closes every resolved request whose `resolved_at` is at or before `cutoff`, stamping `closed_at`; returns the rows closed. */
+  closeIdleResolvedSupportRequests(
+    cutoff: Date,
+    closedAt: Date,
+  ): Promise<(typeof supportRequests.$inferSelect)[]>;
   /**
    * The live forms of the proof's coven's ingredient `ingredientId`, locked in
    * form-id order, read in the transaction so they include the ones this write
@@ -1315,6 +1332,18 @@ export type SupportReader =
 export interface SupportViewer {
   userId: string;
   role: 'user' | 'curator' | 'admin';
+}
+
+export type SupportRequestStatus = 'open' | 'waiting_on_sender' | 'resolved' | 'closed';
+
+/** What a status move writes with the new status: the activity stamps and the resolved and closed marks. */
+export interface SupportRequestMove {
+  status: SupportRequestStatus;
+  resolvedAt?: Date | null;
+  resolvedBy?: string | null;
+  closedAt?: Date | null;
+  lastSenderActivityAt?: Date;
+  lastStaffActivityAt?: Date;
 }
 
 /** The admin list's narrowing; an absent part is no narrowing. */

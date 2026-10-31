@@ -6,7 +6,12 @@ import {
   findSupportRequestPage,
   withAudit,
 } from '../../../db/repository';
-import type { SupportReader, SupportRequestFilter } from '../../../db/repository';
+import type {
+  SupportReader,
+  SupportRequestFilter,
+  SupportRequestMove,
+  SupportRequestStatus,
+} from '../../../db/repository';
 import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
@@ -123,9 +128,9 @@ export async function setSupportRequestCuratorVisible(
 }
 
 /**
- * Marks the request resolved, by whom and when. An admin may on any request, a curator on one assigned to them.
+ * Marks an open or waiting request resolved, by whom and when. An admin may on any request, a curator on one assigned to them.
  *
- * @throws {Forbidden} a curator, and the request is not assigned to them.
+ * @throws {Forbidden} a curator, and the request is not assigned to them; or the request is already resolved or closed.
  * @throws {NotFound} the reader may not see a request with this id.
  */
 export async function resolveSupportRequest(
@@ -133,11 +138,52 @@ export async function resolveSupportRequest(
   id: string,
 ): Promise<SupportRequestRow> {
   const row = await requestToAnswer(session, id, 'resolve');
-  return change(session, row.id, {
+  const now = new Date();
+  return moveOrRefuse(session, row, ['open', 'waiting_on_sender'], 'resolve', {
     status: 'resolved',
     resolvedBy: session.userId,
-    resolvedAt: new Date(),
+    resolvedAt: now,
+    lastStaffActivityAt: now,
   });
+}
+
+/**
+ * Closes a request that is open, waiting or resolved, stamping when. A closed request takes no more messages: the sender's next
+ * one opens a new request linked to it.
+ *
+ * @throws {Forbidden} a curator, and the request is not assigned to them; or the request is already closed.
+ * @throws {NotFound} the reader may not see a request with this id.
+ */
+export async function closeSupportRequest(
+  session: Session,
+  id: string,
+): Promise<SupportRequestRow> {
+  const row = await requestToAnswer(session, id, 'close');
+  const now = new Date();
+  return moveOrRefuse(session, row, ['open', 'waiting_on_sender', 'resolved'], 'close', {
+    status: 'closed',
+    closedAt: now,
+    lastStaffActivityAt: now,
+  });
+}
+
+/** One guarded status move by staff; an explaining refusal when the status is not one the move starts from. */
+export async function moveOrRefuse(
+  session: Session,
+  row: SupportRequestRow,
+  from: readonly SupportRequestStatus[],
+  doing: string,
+  values: SupportRequestMove,
+): Promise<SupportRequestRow> {
+  const [moved] = await withAudit(session, (write) =>
+    write.moveSupportRequest(row.id, null, from, values),
+  );
+  if (!moved) {
+    throw new Forbidden(
+      `A request can be ${doing}d only while it is ${from.join(' or ').replace(/_/g, ' ')}; this one is ${row.status.replace(/_/g, ' ')}`,
+    );
+  }
+  return moved;
 }
 
 /** Links the request to a GitHub issue on this repository, or clears the link with null. */

@@ -884,6 +884,11 @@ type Mutation {
   addIngredientToWorkspace(input: StockInput!, variantId: ID!, workspaceId: ID!): InventoryItem!
 
   """
+  Adds a note only staff read. Changes no status and mails no one. An admin may on any request, a curator on one assigned to them.
+  """
+  addSupportInternalNote(body: String!, requestId: ID!): SupportReply!
+
+  """
   Changes the coven's overrides: a field left out keeps its value, null hands it back to the compendium, and a list, even an empty one, is the coven's own.
   """
   annotateCupboardEntry(
@@ -900,6 +905,11 @@ type Mutation {
   Assigns a request to a curator or an admin, or to no one. Site admins only.
   """
   assignSupportRequest(assigneeId: ID, id: ID!): SupportRequest!
+
+  """
+  Closes an open, waiting or resolved request. An admin may on any request, a curator on one assigned to them.
+  """
+  closeSupportRequest(id: ID!): SupportRequest!
 
   """
   Completes a draft working, taking what the recipe used from the coven’s jars. Answers the steps it took nothing for.
@@ -1073,7 +1083,15 @@ type Mutation {
   """
   Replies to a request and mails its sender that a reply is waiting. An admin may reply to any request, a curator to one assigned to them.
   """
-  replyToSupportRequest(body: String!, requestId: ID!): SupportReply!
+  replyToSupportRequest(
+    body: String!
+    requestId: ID!
+
+    """
+    Moves an open request to waiting on the sender; refused on any other status.
+    """
+    waitingOnSender: Boolean
+  ): SupportReply!
 
   """
   Marks a request resolved. An admin may on any request, a curator on one assigned to them.
@@ -1109,6 +1127,11 @@ type Mutation {
   Creates, changes and deletes one ingredient's jars in one transaction, and answers the entry's live jars. Every jar and form must be the ingredient's, or the whole save is refused; a bad row's issues are pathed `create.<i>.input.<field>` or `update.<i>.input.<field>`.
   """
   saveStock(ingredientId: ID!, input: SaveStockInput!, workspaceId: ID!): [InventoryItem!]!
+
+  """
+  The sender’s message on their own request. It reopens a waiting or resolved request; on a closed one it opens a new request linked to it, which is what is returned.
+  """
+  sendSupportMessage(body: String!, requestId: ID!): SupportRequest!
 
   """
   Sends a support request. Needs a verified address; refused while the sender is timed out or after ten requests in 24 hours.
@@ -2357,14 +2380,32 @@ enum SupportAbout {
   question
 }
 
-"""A reply from staff to a support request."""
+"""
+A message on a support request: a reply from staff, a note only staff read, or a message from the sender.
+"""
 type SupportReply {
   audit: AuditInfo!
 
   """Who wrote the reply; null if no live account holds the id."""
   author: User
+  authorRole: SupportReplyAuthorRole!
   body: String!
   id: ID!
+  visibility: SupportReplyVisibility!
+}
+
+"""Whether the sender or staff wrote a message."""
+enum SupportReplyAuthorRole {
+  sender
+  staff
+}
+
+"""
+Whether the sender reads a message (`public`) or only staff do (`internal`).
+"""
+enum SupportReplyVisibility {
+  internal
+  public
 }
 
 """
@@ -2374,10 +2415,18 @@ type SupportRequest {
   about: SupportAbout!
   assignedTo: User
   audit: AuditInfo!
+  closedAt: DateTime
   curatorVisible: Boolean!
   errorCode: Int
   id: ID!
   issueUrl: String
+  lastSenderActivityAt: DateTime
+  lastStaffActivityAt: DateTime
+
+  """
+  The closed request this one follows on from, when the sender wrote on a closed request.
+  """
+  linkedFromId: ID
   message: String!
 
   """
@@ -2390,6 +2439,9 @@ type SupportRequest {
   resolvedAt: DateTime
   resolvedBy: User
   sender: User
+
+  """The sender’s tier. Staff only."""
+  senderTier: SupportSenderTier!
   status: SupportStatus!
   subject: String!
 
@@ -2417,9 +2469,17 @@ input SupportRequestInput {
   subject: String!
 }
 
+"""Derived from the invitation the sender accepted; never stored."""
+enum SupportSenderTier {
+  beta_tester
+  standard
+}
+
 enum SupportStatus {
+  closed
   open
   resolved
+  waiting_on_sender
 }
 
 """

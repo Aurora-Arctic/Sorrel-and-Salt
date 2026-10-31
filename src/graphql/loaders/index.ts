@@ -26,7 +26,12 @@ import {
   substitutesByVariant,
   variantsByIngredient,
 } from '@/modules/ingredients';
-import { repliesByRequest, timeoutsBySender, usersOnRequests } from '@/modules/support';
+import {
+  repliesByRequest,
+  tierBySender,
+  timeoutsBySender,
+  usersOnRequests,
+} from '@/modules/support';
 import {
   categoryGroupsById,
   deityTraditionsById,
@@ -47,6 +52,7 @@ const LOADERS = {
   usersById,
   usersByIdForAdmin,
   repliesByRequest,
+  tierBySender,
   timeoutsBySender,
   usersOnRequests,
   cardPositionById,

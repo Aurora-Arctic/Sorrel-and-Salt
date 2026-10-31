@@ -1,4 +1,5 @@
-import { and, eq, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
+import { and, eq, inArray, isNull, lte, or, sql, type SQL } from 'drizzle-orm';
+import { invitations } from '../../modules/coven/schema/invitations';
 import { supportReplies } from '../../modules/support/schema/support-replies';
 import { supportRequests } from '../../modules/support/schema/support-requests';
 import { supportTimeouts } from '../../modules/support/schema/support-timeouts';
@@ -168,8 +169,45 @@ export function findSupportRepliesFor(viewer: SupportViewer, requestIds: readonl
           viewerScope(viewer),
         ),
       ),
+      internalNotesScope(viewer),
     ),
   );
+}
+
+/**
+ * An internal note is staff's: a sender never reads one, even on their own request. An admin reads every note, a curator those on
+ * a request marked for curators or assigned to them. A public reply passes for everyone.
+ */
+function internalNotesScope(viewer: SupportViewer): SQL | undefined {
+  if (viewer.role === 'admin') return undefined;
+  // A reply's visibility, not a spell's.
+  // oxlint-disable-next-line sorrel/spell-visibility-read-in-one-place
+  const isPublic = eq(supportReplies.visibility, 'public');
+  if (viewer.role === 'user') return isPublic;
+  return or(
+    isPublic,
+    existsIn(
+      supportRequests,
+      and(
+        eq(supportRequests.id, supportReplies.requestId),
+        or(eq(supportRequests.curatorVisible, true), eq(supportRequests.assignedTo, viewer.userId)),
+      ),
+    ),
+  );
+}
+
+/** The ids among `userIds` that accepted a printed card: the beta-tester tier, derived from the invitation and never stored. */
+export async function findCardAcceptorIds(userIds: readonly string[]): Promise<Set<string>> {
+  if (userIds.length === 0) return new Set();
+  const rows = await selectFrom(
+    invitations,
+    and(
+      notSoftDeleted(invitations),
+      eq(invitations.kind, 'card'),
+      inArray(invitations.acceptedBy, [...userIds]),
+    ),
+  );
+  return new Set(rows.flatMap((row) => (row.acceptedBy ? [row.acceptedBy] : [])));
 }
 
 /** The live time-outs set on these senders, newest first. The service lets an admin alone ask. */
@@ -187,8 +225,30 @@ export function findSupportTimeoutsFor(userIds: readonly string[]) {
  */
 export const SUPPORT_SEND_LOCK_NAMESPACE = 0x53555031;
 
-export function supportWrites({ tx }: WriterContext): Pick<AuditWriter, 'lockSupportSender'> {
+export function supportWrites({
+  tx,
+  update,
+}: WriterContext): Pick<
+  AuditWriter,
+  'lockSupportSender' | 'moveSupportRequest' | 'closeIdleResolvedSupportRequests'
+> {
   return {
+    moveSupportRequest: (id, ownerId, from, values) =>
+      update(
+        supportRequests,
+        values,
+        and(
+          eq(supportRequests.id, id),
+          inArray(supportRequests.status, [...from]),
+          ownerId === null ? undefined : eq(supportRequests.createdBy, ownerId),
+        ),
+      ),
+    closeIdleResolvedSupportRequests: (cutoff, closedAt) =>
+      update(
+        supportRequests,
+        { status: 'closed', closedAt },
+        and(eq(supportRequests.status, 'resolved'), lte(supportRequests.resolvedAt, cutoff)),
+      ),
     // An advisory lock, not a row lock: the send limit counts rows that do not exist yet, so there is no row to lock. Taken
     // first in the send's transaction, so a second send from the same account waits and then counts the first. Both reads are
     // in that transaction, as its connection is the one the lock holds. Released at commit.
