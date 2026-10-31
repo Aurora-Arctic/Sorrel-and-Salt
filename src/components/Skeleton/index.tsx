@@ -329,8 +329,9 @@ const Skeleton = ({
         )}
         {shape === 'contents' && (
           // The admin index: a heading and a line, then titled lists of
-          // links each with its one line beneath, as `AdminContents` lays them.
-          <div className="skeleton__plain">
+          // links each with its one line beneath, as `AdminContents` lays them,
+          // in the `.admin-index` column the page sits in so the swap is in place.
+          <div className="skeleton__plain admin-index">
             <PageHead head={head} loose />
             {CONTENTS_ENTRIES.map((entries, section) => (
               <div key={section} className="skeleton__section">
