@@ -24,7 +24,7 @@ useTestDatabase((client) => {
 
 beforeEach(async () => {
   await sql`truncate support_replies, support_timeouts, support_requests cascade`;
-  await sql`delete from rate_limits where key like 'support-%'`;
+  await sql`delete from support_send_counts`;
 });
 
 const INPUT = {
@@ -95,6 +95,17 @@ describe('sendSignedOutSupportRequest', () => {
     },
   );
 
+  it('keeps one audited count row per key, written as the signed-out sender', async () => {
+    await send(INPUT);
+    await send(INPUT);
+
+    const rows = await sql`select kind, count, created_by from support_send_counts order by kind`;
+    expect(rows.map((row) => [row.kind, row.count, row.created_by])).toEqual([
+      ['address', 2, SIGNED_OUT_SENDER_ID],
+      ['client', 2, SIGNED_OUT_SENDER_ID],
+    ]);
+  });
+
   it('refuses an address that is not one', async () => {
     const error = await failureOf(send({ ...INPUT, email: 'not an address' }));
 
@@ -109,7 +120,7 @@ describe('sendSignedOutSupportRequest', () => {
 
     expect(await count()).toBe(0);
     expect(received).toEqual([]);
-    expect(await sql`select 1 from rate_limits where key like 'support-%'`).toHaveLength(0);
+    expect(await sql`select 1 from support_send_counts`).toHaveLength(0);
   });
 
   it('treats an address that belongs to an account as only an address', async () => {

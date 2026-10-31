@@ -168,7 +168,6 @@ export {
   recordSignInFailure,
 } from './sign-in-failures';
 export type { SignInFailureRow } from './sign-in-failures';
-export { countSupportSendAttempt } from './support-send-limits';
 export type { PrivilegeDeclaration, PrivilegeRoute } from '../types';
 export type {
   WorkingDeductionRow,

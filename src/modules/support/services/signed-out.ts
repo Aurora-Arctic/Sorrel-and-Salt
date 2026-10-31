@@ -1,5 +1,5 @@
 import 'server-only';
-import { countSupportSendAttempt, withAudit } from '../../../db/repository';
+import { withAudit } from '../../../db/repository';
 import { Forbidden, RateLimited } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { SIGNED_OUT_SENDER_ID } from '../../../lib/support-sender';
@@ -49,12 +49,15 @@ export async function sendSignedOutSupportRequest(
   }
 
   const now = context.now ?? new Date();
-  const windowMs = SIGNED_OUT_WINDOW_SECONDS * 1000;
-  const [fromClient, fromAddress] = await Promise.all([
-    countSupportSendAttempt(`support-client|${context.clientIp ?? 'unknown'}`, now, windowMs),
-    countSupportSendAttempt(`support-address|${values.email}`, now, windowMs),
-  ]);
-  if (fromClient > SIGNED_OUT_IP_LIMIT || fromAddress > SIGNED_OUT_ADDRESS_LIMIT) {
+  const counts = await withAudit(SIGNED_OUT_SESSION, (write) =>
+    write.countSignedOutSend(
+      values.email,
+      context.clientIp ?? 'unknown',
+      now,
+      SIGNED_OUT_WINDOW_SECONDS,
+    ),
+  );
+  if (counts.client > SIGNED_OUT_IP_LIMIT || counts.address > SIGNED_OUT_ADDRESS_LIMIT) {
     throw new RateLimited(
       SIGNED_OUT_WINDOW_SECONDS,
       'You have sent too many requests today. Try again later.',

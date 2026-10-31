@@ -56,6 +56,7 @@ export const AUDITED_TABLES = [
   'spells',
   'support_replies',
   'support_requests',
+  'support_send_counts',
   'support_timeouts',
   'user_privilege_changes',
   'users',

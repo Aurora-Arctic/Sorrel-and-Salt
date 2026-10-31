@@ -567,6 +567,17 @@ export interface AuditWriter {
     windowSeconds: number,
   ): Promise<{ recent: number; timedOutUntil: Date | undefined }>;
   /**
+   * Counts one signed-out send against an email address and a client address, each in its own row of `support_send_counts`,
+   * and returns both counts for the window ending at `now`. A row whose window began more than `windowSeconds` before `now`
+   * starts over at one. Takes a lock per key until the transaction ends, so sends racing each other all count.
+   */
+  countSignedOutSend(
+    address: string,
+    client: string,
+    now: Date,
+    windowSeconds: number,
+  ): Promise<{ address: number; client: number }>;
+  /**
    * Moves a support request from one of `from` to `values.status` in a single guarded update, and returns the row, or none when
    * its status is no longer one of `from` (or, given `ownerId`, it is not that sender's): the guard is in the `where`, so two
    * moves racing cannot both win.

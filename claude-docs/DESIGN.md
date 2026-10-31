@@ -254,6 +254,8 @@ Code, schema, and prose use _workspace_. The URL segment says _coven_, and the s
 
 **`support_replies`** — `id`, `requestId`, `body` (1–4,000 characters), `authorRole` (`sender` | `staff`, default `staff`), `visibility` (`public` | `internal`, default `public`), + audit; soft-deleted. One message on a request; the author is `created_by`. An internal note is staff-only. The sender reads it on `/account/support`, and a mailed notice says one is waiting without carrying its text.
 
+**`support_send_counts`** — `id`, `kind` (`address` | `client`), `key`, `windowStart`, `count`, + audit; one live row per kind and key. The running count of requests a signed-out visitor has sent in the current 24 hours, written as the seeded signed-out sender (M15.40).
+
 **`support_timeouts`** — `id`, `userId`, `until`, `note` (nullable), `liftedAt` (nullable), + audit; kept as history, never deleted. An admin's sanction on a sender: while a row has `until > now()` and `liftedAt IS NULL`, `sendSupportRequest` refuses with an error naming the end. The admin who set it is `created_by`; a curator may not set or lift one.
 
 **`workspaces`** — `id`, `name`, `slug`, `demo`, + audit. `demo` is true on the one demo coven (a partial unique index on `demo WHERE demo AND deleted_at IS NULL` allows at most one live row), which is seeded on every environment under the fixed id `DEMO_WORKSPACE_ID`; code finds it by the column, never the constant. Every account is seated in it as a `viewer`, the bootstrap system user and every site admin hold an `owner` seat, a user may leave it and is never re-added, and it cannot be deleted. It is a flag and not a `kind`: the row is still a workspace that takes members (M15.9; [`m15.9-demo-coven.md`](design-decisions/m15.9-demo-coven.md)).

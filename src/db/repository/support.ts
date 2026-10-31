@@ -2,6 +2,7 @@ import { and, eq, inArray, isNull, lte, or, sql, type SQL } from 'drizzle-orm';
 import { invitations } from '../../modules/coven/schema/invitations';
 import { supportReplies } from '../../modules/support/schema/support-replies';
 import { supportRequests } from '../../modules/support/schema/support-requests';
+import { supportSendCounts } from '../../modules/support/schema/support-send-counts';
 import { supportTimeouts } from '../../modules/support/schema/support-timeouts';
 import { findPage, findPageCount } from './finders';
 import { notSoftDeleted } from './predicates';
@@ -227,12 +228,55 @@ export const SUPPORT_SEND_LOCK_NAMESPACE = 0x53555031;
 
 export function supportWrites({
   tx,
+  insert,
   update,
 }: WriterContext): Pick<
   AuditWriter,
-  'lockSupportSender' | 'moveSupportRequest' | 'closeIdleResolvedSupportRequests'
+  | 'lockSupportSender'
+  | 'countSignedOutSend'
+  | 'moveSupportRequest'
+  | 'closeIdleResolvedSupportRequests'
 > {
+  // One key's count: its advisory lock first, then the live row, started again when its window has passed.
+  async function countKey(
+    kind: 'address' | 'client',
+    key: string,
+    now: Date,
+    windowSeconds: number,
+  ): Promise<number> {
+    await tx.execute(
+      sql`select pg_advisory_xact_lock(${SUPPORT_SEND_LOCK_NAMESPACE}, hashtext(${kind + '|' + key}))`,
+    );
+    const [row] = await tx
+      .select()
+      .from(supportSendCounts)
+      .where(
+        and(
+          notSoftDeleted(supportSendCounts),
+          eq(supportSendCounts.kind, kind),
+          eq(supportSendCounts.key, key),
+        ),
+      );
+    if (!row) {
+      await insert(supportSendCounts, { kind, key, windowStart: now, count: 1 });
+      return 1;
+    }
+    const expired = row.windowStart.getTime() <= now.getTime() - windowSeconds * 1000;
+    const count = expired ? 1 : row.count + 1;
+    await update(
+      supportSendCounts,
+      { count, windowStart: expired ? now : row.windowStart },
+      eq(supportSendCounts.id, row.id),
+    );
+    return count;
+  }
+
   return {
+    countSignedOutSend: async (address, client, now, windowSeconds) => ({
+      // Fixed order, so two sends taking both locks cannot wait on each other.
+      address: await countKey('address', address, now, windowSeconds),
+      client: await countKey('client', client, now, windowSeconds),
+    }),
     moveSupportRequest: (id, ownerId, from, values) =>
       update(
         supportRequests,
