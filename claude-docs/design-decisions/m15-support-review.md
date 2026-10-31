@@ -11,8 +11,7 @@ the sixteen tasks that carry them are in [`tasks/m15.md`](../tasks/m15.md),
 
 - Review page: <https://claude.ai/artifact/WRNYpvcfoFNa1uEP4TrLZN>
 - Topic radio layout mock (the chosen layout): <https://claude.ai/artifact/Jr2H8h3oa6gQUwTooeiMAE>
-- Research behind the review: `support-ux-research.md`, kept in the review
-  session's scratchpad and not committed. Its browser screenshots are in
+- Research behind the review: [`m15-support-review-research.md`](m15-support-review-research.md). The browser screenshots are in
   `.reports/support-review/` of the `support-page-field` worktree.
 
 ## The form
