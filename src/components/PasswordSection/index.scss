@@ -83,6 +83,11 @@ $qr-dot: #c0baac;
   border-radius: radius('surface');
 }
 
+// The codes' panel stands a step further from the sentence above and the buttons below.
+.two-factor__codes.two-factor__well {
+  margin-block: space(3);
+}
+
 .password-section__username {
   @include visually-hidden;
 }
