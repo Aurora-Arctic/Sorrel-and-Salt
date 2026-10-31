@@ -14,6 +14,7 @@ const notice = () =>
   supportReplyNoticeMessage({
     to: 'someone@example.com',
     url: `${WORKSHOP_ORIGIN}/account/support`,
+    requestSubject: 'The jar will not open',
     origin: WORKSHOP_ORIGIN,
   });
 

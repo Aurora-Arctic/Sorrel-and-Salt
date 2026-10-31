@@ -97,4 +97,7 @@ export interface EmailChangeNoticeProps extends BaseEmailProps {
 }
 
 /** Told to a support request's sender that a reply is waiting. `url` is their support page; the reply itself is never in the mail. */
-export type SupportReplyNoticeProps = BaseEmailProps;
+export interface SupportReplyNoticeProps extends BaseEmailProps {
+  /** The subject of the request answered, as its sender wrote it; the template cuts it to length. */
+  requestSubject: string;
+}

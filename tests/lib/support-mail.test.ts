@@ -19,10 +19,12 @@ describe('supportNotifier', () => {
   it('mails the sender a link to /account/support', async () => {
     await supportNotifier(new Request('http://localhost:8000/api/graphql')).replyWaiting(
       'sender@example.test',
+      'The jar will not open',
     );
 
     expect(sent).toHaveLength(1);
     expect(sent[0]!.to).toBe('sender@example.test');
+    expect(sent[0]!.subject).toContain('The jar will not open');
     expect(sent[0]!.text).toContain('/account/support');
     expect(sent[0]!.html).toContain('/account/support');
   });

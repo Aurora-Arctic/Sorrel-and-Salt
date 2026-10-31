@@ -7,10 +7,10 @@ import { requestOrigin } from './request-origin';
 
 export function supportNotifier(request: Request): SupportNotifier {
   return {
-    async replyWaiting(to) {
+    async replyWaiting(to, requestSubject) {
       const url = `${await requestOrigin(request, '/')}/account/support`;
       const { send } = await import('./mail');
-      await send(await supportReplyNoticeMessage({ to, url }));
+      await send(await supportReplyNoticeMessage({ to, url, requestSubject }));
     },
   };
 }
