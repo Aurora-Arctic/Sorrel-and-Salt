@@ -22,7 +22,8 @@ const SUCCESSORS = [
 ];
 
 const handOver = (dialog: HTMLElement) => within(dialog).getByRole('radio', { name: /^Hand It/ });
-const deleteIt = (dialog: HTMLElement) => within(dialog).getByRole('radio', { name: /^Delete It/ });
+const deleteIt = (dialog: HTMLElement) =>
+  within(dialog).getByRole('radio', { name: /^Delete Coven/ });
 
 /** Types into the New Owner box and picks the named member from its list. */
 function choose(dialog: HTMLElement, name: string) {

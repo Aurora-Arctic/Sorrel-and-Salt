@@ -148,7 +148,7 @@ const addingACelestialBodyNode = (
 );
 
 // Delete pressed once drawn, as a person would: the question over the form,
-// dimmed and held beneath it until Delete or Keep It answers.
+// dimmed and held beneath it until Delete or Cancel answers.
 export const AskingToDelete: Story = {
   render: () => {
     usePressOnMount('Delete Category');
@@ -172,5 +172,5 @@ const STATES: Record<string, ReactNode> = {
 export const States: Story = {
   args: { state: 'Adding A Category' },
   argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
-  render: ({ state }) => <div key={String(state)}>{state}</div>,
+  render: ({ state }) => <div>{state}</div>,
 };

@@ -10,7 +10,7 @@ import { BuilderStepRow } from './step-row';
 import type { SpellStepValue, SpellStepsValues } from './types';
 import { isInstruction, newInstruction, stepNameOf, warningOf } from './values';
 
-// The jar's steps under What Goes In: the add box, Add Instruction and the list, one step open at a time, each moved by a handle
+// The jar's steps in the Jar section: the add box, Add Instruction and the list, one step open at a time, each moved by a handle
 // (claude-docs/components/spell-builder.md, "Steps").
 
 export function SpellSteps({
@@ -31,16 +31,15 @@ export function SpellSteps({
   const { announce, announcement } = useAnnouncement();
   const regionId = useId();
 
-  // Where focus goes once the row it names has been drawn: a new instruction's
-  // field, or what is left after a Remove (the row now in that place, else the
-  // Add Instruction button).
+  // The row whose handle takes the focus once a Remove has been drawn: the one now in the removed
+  // row's place, or the one above when the last went; Add Instruction when no row is left.
   const root = useRef<HTMLElement>(null);
-  const focusAfter = useRef<{ index: number; target: 'handle' } | null>(null);
+  const focusAfter = useRef<number | null>(null);
   useEffect(() => {
     const next = focusAfter.current;
     if (next === null) return;
     focusAfter.current = null;
-    const row = root.current?.querySelectorAll<HTMLElement>('.spell-steps__list > li')[next.index];
+    const row = root.current?.querySelectorAll<HTMLElement>('.spell-steps__list > li')[next];
     const target =
       row?.querySelector<HTMLElement>('.spell-step__handle') ??
       root.current?.querySelector<HTMLElement>('.spell-steps__add-step');
@@ -138,7 +137,7 @@ export function SpellSteps({
   };
   const removeAt = (index: number) => {
     announce(`Removed ${names[index]}, from position ${index + 1} of ${fields.length}.`);
-    focusAfter.current = { index: Math.min(index, fields.length - 2), target: 'handle' };
+    focusAfter.current = Math.min(index, fields.length - 2);
     remove(index);
   };
 

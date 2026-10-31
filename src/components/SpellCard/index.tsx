@@ -5,13 +5,14 @@ import CategoryChips from '../CategoryChips';
 import LastEdit from '../LastEdit';
 import { EditLink, QuickLookLink } from '../IconTip';
 import LinkHint from '../LinkHint';
-import RecordWorkingButton from '../RecordWorking';
+import SpellMarks from '../SpellMarks';
 import SpellMoreMenu from '../SpellRecipe/more-menu';
+import CardRecordWorking from './record-working';
 import type { SpellCardProps } from './types';
 import './index.scss';
 
 // One spell in the grimoire's list: title, intent, Draft and Private badges, assigned categories,
-// last editor. Presentational, in IngredientCard's pattern, with no drawer; the title links where
+// last editor and made count, and the actions. Presentational, in IngredientCard's pattern, with no drawer; the title links where
 // `href` is given (claude-docs/components/spell-card.md).
 
 /** What a spell with no title is called, here and wherever it is listed. */
@@ -20,8 +21,8 @@ export const UNTITLED_SPELL = 'Untitled Spell';
 /** The modal place the Quick Look shows in, apart from the spell builder's. */
 export const SPELL_LOOK_PLACE = 'look';
 
-/** The id of a spell's title heading, which the list item names itself by. */
-export const spellTitleId = (id: string): string => `spell-${id}-title`;
+/** The id of a spell's title heading, which the card names itself by. */
+const spellTitleId = (id: string): string => `spell-${id}-title`;
 
 const SpellCard = ({
   id,
@@ -42,6 +43,13 @@ const SpellCard = ({
   const Heading = `h${level}` as const;
   const name = (title ?? '').trim() || UNTITLED_SPELL;
   const purpose = (intent ?? '').trim();
+  // How often it has been made: none says nothing, as a spell never worked has nothing to say.
+  const made =
+    workingCount == null || workingCount < 1
+      ? null
+      : workingCount === 1
+        ? 'Made once'
+        : `Made ${workingCount} times`;
   return (
     <article className="spell-card specimen" aria-labelledby={spellTitleId(id)}>
       {/* The card's face and shadow, and the warm glow behind them, as layers, so the
@@ -75,33 +83,28 @@ const SpellCard = ({
               <span className="spell-card__title-text">{name}</span>
             )}
           </Heading>
-          {/* Only a draft is marked: complete is the default, so a Complete badge would
-              say nothing. Likewise only a private spell: the
-              coven is the default, and a private one lists to its author alone, so
-              the badge tells them no one else sees it. Under the title, as the
-              marks sit under an ingredient card's name. */}
-          {(status === 'draft' || visibility === 'private') && (
-            <div className="specimen__badges">
-              {status === 'draft' && <span className="badge badge--draft">Draft</span>}
-              {visibility === 'private' && <span className="badge badge--private">Private</span>}
-            </div>
-          )}
+          {/* Under the title, as the marks sit under an ingredient card's name. */}
+          <SpellMarks status={status} visibility={visibility} />
         </div>
       </div>
       {purpose !== '' && <p className="spell-card__intent">{purpose}</p>}
       <CategoryChips categories={categories} label={name} />
-      {/* How often it has been made: none draws nothing, as a spell never worked has nothing to say. */}
-      {workingCount != null && workingCount > 0 && (
-        <p className="meta spell-card__made">
-          Made {workingCount} {workingCount === 1 ? 'Time' : 'Times'}
-        </p>
-      )}
-      {/* In the foot, as IngredientCard's, so cards in one grid row end on the same line. */}
-      {(lastEdit != null || lookHref || editHref || recordWorking || more) && (
-        // The foot, as IngredientCard's: who last edited, then the actions on one row, the
-        // Quick Look eye at the bottom left (the start group) and the Edit pencil and Delete Spell bin at the right.
+      {(lastEdit != null || made != null || lookHref || editHref || recordWorking || more) && (
+        // The foot, as IngredientCard's, so cards in one grid row end on the same line: who last edited
+        // and how often it has been made on one line, then the actions on one row, the Quick Look eye at
+        // the left (the start group) and Record a Working, the Edit pencil and the More menu at the right.
         <div className="specimen__foot">
-          {lastEdit != null && <LastEdit by={lastEdit.by} at={lastEdit.at} />}
+          {(lastEdit != null || made != null) && (
+            <div className="spell-card__foot-line">
+              {lastEdit != null && <LastEdit by={lastEdit.by} at={lastEdit.at} />}
+              {lastEdit != null && made != null && (
+                <span className="spell-card__foot-dot" aria-hidden="true">
+                  ·
+                </span>
+              )}
+              {made != null && <p className="meta spell-card__made">{made}</p>}
+            </div>
+          )}
           {(lookHref || editHref || recordWorking || more) && (
             <div className="specimen__actions">
               {lookHref && (
@@ -115,7 +118,12 @@ const SpellCard = ({
                 </span>
               )}
               {recordWorking && (
-                <RecordWorkingButton {...recordWorking} spellId={id} spellVisibility={visibility} />
+                <CardRecordWorking
+                  {...recordWorking}
+                  spellId={id}
+                  spellName={name}
+                  spellVisibility={visibility}
+                />
               )}
               {editHref && (
                 <EditLink

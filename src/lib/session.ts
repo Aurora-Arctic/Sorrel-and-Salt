@@ -17,12 +17,16 @@ export type UserRole = (typeof users.$inferSelect)['role'];
  */
 export interface Session extends AuditSession {
   role: UserRole;
+  /**
+   * Set while the account's address is unverified, and absent once it is. `assertMembership` refuses such a session every coven,
+   * on the API as `requireSession()` does on the pages.
+   */
+  emailUnverified?: true;
 }
 
-// `emailVerified` and `sessionFresh` stay off the service-level session:
-// pages read them and services never do. `requireSession` keeps an unverified
-// account on the email page; the account page withholds Remove while Better
-// Auth would refuse it as stale (claude-docs/components/sign-in-methods.md).
+// `sessionFresh` stays off the service-level session: pages read it and services never do. `requireSession` keeps an unverified
+// account on the email page, and the session's `emailUnverified` mark makes `assertMembership` refuse it every coven. The
+// account page withholds Remove while Better Auth would refuse it as stale (claude-docs/components/sign-in-methods.md).
 export interface SessionState {
   session: Session | null;
   emailVerified: boolean;

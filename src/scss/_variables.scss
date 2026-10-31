@@ -238,6 +238,13 @@ $badge-palettes: (
       dark: $chalk-muted,
       light: $ink-muted,
     ),
+  // A plain fact beside a name, such as a one-off ingredient or one already in the jar: the same
+  // muted tint and checked inks, under a name that says nothing about the compendium.
+  'muted': (
+      treatment: tinted,
+      dark: $chalk-muted,
+      light: $ink-muted,
+    ),
   // The accent's own inks: $text-on-color on them is 7.95:1 dark, 4.68:1 light.
   'last-used': (
       treatment: solid,
@@ -487,6 +494,8 @@ $notice-button-ink: var(--notice-button-ink);
 // "$ornament-screen").
 $ornament-screen: var(--ornament-screen);
 $ornament-multiply: var(--ornament-multiply);
+// The salt ornament's width before a page's `--backdrop-width`; the sorrel draws three quarters of it.
+$ornament-width: clamp(8.75rem, 17.5vw, 13.75rem);
 
 // The label on a solid fill — the selected chip, the safety badge. An alias for
 // the page surface: on dark the fill is the light thing and the label goes
@@ -576,8 +585,12 @@ $font-heading: var(--font-display), 'Cormorant Unicase', Georgia, 'Times New Rom
 // No webfont: incidental inline code, and every platform ships a good monospace.
 $font-mono: ui-monospace, 'SF Mono', 'SFMono-Regular', 'Menlo', 'Consolas', monospace;
 
-// The sizes below body copy, by role. The headings' scale is $heading-sizes.
+// The sizes from just above body copy down, by role. The headings' scale is $heading-sizes.
 $type-sizes: (
+  // A form section's title and a detail panel's name: between body and the smallest heading.
+  'title': 1.25rem,
+  // A form's group name, a step above body copy.
+  'lead': 1.125rem,
   'body': 1rem,
   // Labels, buttons, notices and field errors: text a person acts on.
   'small': 0.875rem,
@@ -587,7 +600,7 @@ $type-sizes: (
   'overline': 0.75rem,
   // The label under an icon in the phone's bottom bar, where five sit across a 375px screen: the one
   // role below overline, since Lexend's "Compendium" is wider than a fifth of that at 0.75rem.
-  'tab': 0.6875rem,
+  'tab': 0.6875rem
 );
 
 @function type-size($role) {
@@ -718,11 +731,8 @@ $control-height-compact: 2rem;
 // scrolling in their frame, and the privilege ledger has seven too.
 $wide-column: 80rem;
 
-// A dialog's content column, and the wide one for a form with nested panels or two columns side by
-// side, such as the ingredient form or the spell builder's jar (55rem: its step list at 30rem or
-// more beside an 18rem aside). The modal adds its padding and caps both at the window.
+// A dialog's content column. The modal adds its padding and caps it at the window.
 $dialog-column: 32rem;
-$dialog-column-wide: 55rem;
 
 // The page's ground at three quarters over what lies behind: a dialog's backdrop over the page, and
 // a question's scrim over the form it asks about. The Filters sheet shares it.
@@ -736,9 +746,16 @@ $modal-fade: 150ms ease-out;
 // and the user list's icon boxes each wrote 1.5rem.
 $icon-size: 1.5rem;
 
+// The line size that brings a form icon, drawn at 1.25em of its line, to `$icon-size`: a segmented
+// radio's icon.
+$form-icon-line: math.div($icon-size, 1.25);
+
 // The mark inside a `$icon-size` box: InfoTip's ⓘ, Combobox's icons, the
 // user list's marks. Each wrote 1rem.
 $glyph-size: 1rem;
+
+// A mark smaller than `$glyph-size`: a click callout's arrow, a round mark's icon.
+$glyph-size-small: 0.875rem;
 
 // The larger icon control outside a form: a list row's Edit pencil, a 2rem square around a 1.25rem
 // mark, so a column of them reads at a glance. A form keeps `$icon-size`, where its pencils sit
@@ -782,6 +799,23 @@ $filter-search-basis: 16rem;
 // The dialog's close button: a 2rem × in a 2rem square, set in from the dialog's corner
 // (`Modal/index.scss`), well past WCAG 2.2's 24px minimum.
 $close-target: 2rem;
+
+// The day picker's calendar (`DateField`). The previous and next steps are as high as the compact
+// month and year pickers beside them, and the caption is a little taller than both. The caption keeps
+// room at its end for the two steps, the 0.25rem gap between them and as much again before its text.
+$day-picker-step: $control-height-compact;
+$day-picker-caption-height: 2.5rem;
+$day-picker-nav-room: $day-picker-step * 2 + 0.5rem;
+// The pickers' chevron box, and the room their hidden sizer leaves at its end for it and the
+// select's end padding, rounded up.
+$day-picker-indicator: 1.25rem;
+$day-picker-sizer-end: 1.75rem;
+// A day's square button: 36px, over WCAG 2.2's 24px target.
+$day-picker-day: 2.25rem;
+// A step past the allowed months, and a day that cannot be chosen, fade as any control that
+// cannot be used does.
+$day-picker-step-disabled-opacity: $opacity-disabled;
+$day-picker-day-disabled-opacity: $opacity-disabled;
 
 // The width of its own frame under which a `.data-table--stack` table turns each row into a card: a
 // container width, not the screen's, so a table in a narrow column stacks too
@@ -968,6 +1002,10 @@ $jar-cell-min-narrow: 4.6rem;
 // forms, forms to the jar rule): one token, so the two stay equal. 16px in all.
 $ingredient-card-forms-air: space(1);
 
+// A category chip's inner padding on a compact card, between the chip's regular and compact sizes
+// (`chip()`): a hair of height, the regular sides less a little. Off the spacing scale, as a chip's is.
+$chip-padding-compact-card: 0.0625rem 0.5rem;
+
 // Written after `space()` above: a Sass function is not in scope before its
 // definition, and inside `calc()` an unknown name is left as plain CSS text,
 // which is invalid and drops the declaration.
@@ -999,3 +1037,110 @@ $radii: (
 
   @return map.get($radii, $role);
 }
+
+// The warning triangle a notice draws in its start padding, and the drop that sets it on the first line
+// of text. Off the spacing scale: the triangle is sized to the body type's cap height.
+$notice-mark-size: 1.0125rem;
+$notice-mark-drop: 0.05rem;
+
+// A spell step's name in lettering that is mostly lowercase sits a little below the middle of its
+// line, measured at 0.8px under 16px type, so an icon centred on the line looks high beside it. Each
+// icon on the step's first line drops this far.
+$step-ink-drop: 0.05rem;
+
+// The recipe's step-number column: room for a two-digit number. The page's steps and the Preview pane share it.
+$step-position-width: 1.5rem;
+// The recipe sheet's Ingredients column beside the steps, in the sheet's own em, so it scales with the print root.
+$recipe-summary-width: 17em;
+// The recipe sheet's Steps and Ingredients headings, in the sheet's em: a little above the lines they head,
+// which none of the heading scale's fixed rem sizes is.
+$recipe-heading-size: 1.1em;
+
+// A spell card's smouldering edge on hover (SpellCard/_smoulder.scss), tuned by eye against the
+// workshop's Held cell. The warm colours are the same in both themes, as light is: the dark theme's
+// warning ochre for the ember line and the dark theme's secondary red for the band behind it.
+$burn-candle: $ochre-bright;
+$burn-ember: $wax-warm;
+// The burn takes this long to reach its length, and fades and shrinks back on leave in the other.
+$burn-duration: $pulse-duration * 0.65;
+$burn-leave-duration: $motion-medium;
+$burn-easing: cubic-bezier(0.25, 0.6, 0.35, 1);
+// How far the burn reaches along the bottom edge, and how deep at the corner. Both include the
+// `$burn-hole-inset` the hole hangs past the card, so it starts outside.
+$burn-length: 10.9rem;
+$burn-depth: 1rem;
+// The corner, eaten from both edges: an elliptical corner radius on a box hanging
+// `$burn-corner-overhang` past the card, bringing the front 1.25rem up the right edge and 2rem along
+// the bottom, so it crosses the hole's top steeply and the two rims meet in a short join.
+$burn-corner-radius: 8.45rem 4.25rem;
+$burn-corner-overhang: 1rem;
+// The hole: placed this far in from the corner box's edges, so it hangs half a rem past the card,
+// and shaped as a quarter ellipse whose curve is the burn front.
+$burn-hole-inset: 0.5rem;
+$burn-hole-radius: 45% 100%;
+// The face is the spread shadow of the hole, wider than any card.
+$burn-face-spread: 100vmax;
+// The corner's inward rim is clipped this far above the hole's top, so it starts inside the hole's rim.
+$burn-curve-clip: 0.6rem;
+// The embers in the burnt part fade out over this height above the card's bottom edge.
+$burn-embers-fade: 0.25rem;
+// The glow's breathing and the ember's, at periods that never line up, each for this many
+// rounds before it holds still.
+$burn-warmth-duration: $pulse-duration * 2.35;
+$burn-ember-duration: $pulse-duration * 2.65;
+$burn-embers-duration: $pulse-duration * 1.85;
+$burn-flickers: 3;
+// The spill on the table: soft and wide, but under the ember line's brightness. Its box hangs
+// `$burn-glow-overhang` past the card's right edge and `$burn-glow-drop` below its bottom edge, and
+// runs `$burn-glow-lead` past the ember front.
+$burn-glow-opacity: 0.4;
+$burn-glow-blur: 1.25rem;
+$burn-glow-overhang: 0.5rem;
+$burn-glow-drop: 1.75rem;
+$burn-glow-height: 3.5rem;
+$burn-glow-lead: 1.5rem;
+// Where the glow's candle light gives way to ember red, and where the embers' candle front does.
+$burn-glow-candle-stop: 0.75rem;
+$burn-glow-ember-stop: 4.5rem;
+$burn-embers-ember-stop: 1.5rem;
+// The rim round the burn, at each step of the ember's flicker (the percentage of its round): the
+// candle line's blur, spread and alpha, the ember band's spread and alpha, and the char rim's
+// spread. The first is also the rim at rest.
+$burn-rim-frames: (
+  0: (
+    0,
+    1.5px,
+    0.95,
+    3px,
+    0.85,
+    3.5px,
+  ),
+  27: (
+    0,
+    1.5px,
+    0.7,
+    2.5px,
+    0.6,
+    3.5px,
+  ),
+  46: (
+    1px,
+    1.5px,
+    1,
+    3px,
+    0.9,
+    3.75px,
+  ),
+  71: (
+    0,
+    1px,
+    0.6,
+    2.5px,
+    0.5,
+    3.5px,
+  ),
+);
+// The char rim's softening, and the thin charred line outside it.
+$burn-char-blur: 1px;
+$burn-char-line-blur: 0.5px;
+$burn-char-line-spread: 4.75px;

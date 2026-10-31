@@ -31,8 +31,8 @@ full screen, with nothing else on screen. `src/components/SpellPreview/`.
   rows and spacing (`$columns: false`); the columns fit well above that width, so the breakpoint
   stays the one the recipe page stacks its own side column at. The bar holding the controls is the
   same width and centred the same way, so the close X ends where the content does. The steps carry
-  an "Instructions" heading, the Ingredients heading's twin and level with it, from `body.tsx`.
-- Two controls at the end of the bar (sticky at the top, no wider than the content), both plain icon buttons (`icon-tip__edit icon-tip__edit--plain`, a visually hidden name, no border, background or visible label): Screen Awake and Close (`CloseIcon`, an X, named "Close"). There is no site header, navigation, link or editing control.
+  a "Steps" heading, the Ingredients heading's twin and level with it, from `body.tsx`.
+- Two controls at the end of the bar (at the top of the content, no wider than it), both plain icon buttons (`icon-tip__edit icon-tip__edit--plain`, a visually hidden name, no border, background or visible label): Screen Awake and Close (`CloseIcon`, an X, named "Close"). There is no site header, navigation, link or editing control.
 
 ## How it opens and closes
 
@@ -73,7 +73,7 @@ and embers rising from the glow and from the charred edge. The owner chose it fr
 C6 for the light theme and C6b for the dark.
 
 - The burn is the card's, layer for layer: `index.scss` uses the card's smoulder partial for its
-  timings and `ember-rim`, and sizes it from the card's lengths: half as deep again (`$burn-depth * 1.5`, 1.5rem)
+  timings, `ember-rim`, the glow's and the embers' gradients and the glow's box tokens, and sizes it from the card's lengths: half as deep again (`$burn-depth * 1.5`, 1.5rem)
   and twice as long along the bottom (`$burn-length * 2`, 21.8rem), with the corner's curve, the
   spill and the edge embers' places scaled by the same two factors, and `SpellCardFilters` is drawn inside the pane while it is open,
   since the spell page has no other copy of the burn filter. The scene is mounted with the content, so
@@ -97,3 +97,33 @@ C6 for the light theme and C6b for the dark.
   pointer, and sits behind the content.
 - Under reduced motion every animation is off: the burn is shown finished, the glow steady, and the
   embers, which are invisible until they rise, do not appear.
+
+## Styling
+
+`index.scss` holds the pane and the background; "The background" above covers the burn, the glow
+and the embers.
+
+- The pane (`.spell-preview`) is the native dialog sized to the whole window. Its edge space is
+  `space(5)`, `space(4)` at phone width (the page's side gutter there), and its foot space is
+  `2.5rem` at every width, which no `space()` step equals. How the page behind holds still while it
+  is open is in "How it opens and closes".
+- The controls (`.spell-preview__bar`) are a row above the title, at the end, no wider than the
+  content (`$recipe-sheet-width`), so the close X ends where the text does. A row and not a float,
+  so a long title never wraps around them.
+- The eye (`.spell-preview__awake`), while held on, wears the accent colour and blinks once in a
+  long cycle; under reduced motion it stays still.
+- The steps take their Recipe Card look from `SpellRecipe/index.scss`, which `SpellRecipeBody`
+  imports, so the pane and the recipe page share one set of step rules.
+
+## Stories
+
+`index.stories.tsx`, titled "Grimoire / Spell Preview": `States`, with a control that chooses one
+state:
+
+- Closed: the Preview button, before the pane is opened.
+- Open: the pane over the page, with categories, a toxic step, a one-off and a step whose
+  ingredient was deleted since, and the screen kept awake as the pane asks on opening.
+- Screen Awake Off: the same pane with its Screen Awake button pressed off.
+
+It is render-only; what shows and when is asserted in `tests/components/SpellPreview/index.test.tsx`,
+and the pane's behaviour in the browser by story 85.

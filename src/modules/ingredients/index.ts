@@ -37,32 +37,22 @@ export * from './graphql/workspace-ingredient-list';
 export * from './graphql/stock';
 export * from './graphql/cupboard-entries';
 export { unitConvert } from './units/convert';
-export type { ConversionRefusal, UnitConversion } from './units/types';
 export type {
   CategoryDetail,
-  CategoryRow,
   CitedReference,
-  CompendiumAddress,
-  CompendiumEntryPage,
   CompendiumFacets,
-  ReviewFacetValue,
-  CompendiumReview,
   CompendiumSlugEntry,
   CovenPick,
-  CupboardEntryKey,
   CupboardEntryRow,
   DeityDetail,
   FacetCount,
   HoldingCoven,
-  IngredientDeityRow,
   IngredientDetail,
   IngredientFacets,
   IngredientKey,
   IngredientRow,
   IngredientVariantRow,
   LastEdit,
-  CompendiumMatches,
-  ReplacedCompendiumEntry,
   SaveStockValues,
   StockKey,
   StockRow,

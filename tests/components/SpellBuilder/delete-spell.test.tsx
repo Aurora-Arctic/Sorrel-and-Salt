@@ -52,7 +52,7 @@ const del = (title = 'Fixture Working') =>
 
 // Outside a modal the question stands in the form as a fieldset.
 const asked = async () =>
-  (await screen.findByRole('button', { name: 'Keep It' })).closest('fieldset') as HTMLElement;
+  (await screen.findByRole('button', { name: 'Cancel' })).closest('fieldset') as HTMLElement;
 
 function accept() {
   const deleted: DeleteSpellMutationVariables[] = [];
@@ -93,18 +93,26 @@ describe('Delete in the spell builder', () => {
     expect(del()).toBeNull();
   });
 
-  it('leaves everything as it was on Keep It', async () => {
+  it('leaves everything as it was on Cancel', async () => {
     const { deleted } = accept();
     renderBuilder({ spell: SPELL, deletedHrefOf });
     fireEvent.click(del()!);
     const question = await asked();
     expect(question).toHaveTextContent(
-      'Delete Fixture Working? It leaves the grimoire for every member of the coven. Nothing in stock changes.',
+      'Delete Fixture Working? It is gone for good, and nothing in stock changes.',
     );
-    fireEvent.click(within(question).getByRole('button', { name: 'Keep It' }));
-    await waitFor(() => expect(screen.queryByRole('button', { name: 'Keep It' })).toBeNull());
+    fireEvent.click(within(question).getByRole('button', { name: 'Cancel' }));
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Cancel' })).toBeNull());
     expect(deleted).toHaveLength(0);
     expect(router.replace).not.toHaveBeenCalled();
+  });
+
+  it("tells a shared spell's author that it leaves the grimoire for the whole coven", async () => {
+    renderBuilder({ spell: { ...SPELL, visibility: 'workspace' }, deletedHrefOf });
+    fireEvent.click(del()!);
+    expect(await asked()).toHaveTextContent(
+      'Delete Fixture Working? It leaves the grimoire for every member of the coven, and nothing in stock changes.',
+    );
   });
 
   it('deletes on confirm, sends no save, and leaves for the list', async () => {
@@ -142,7 +150,7 @@ describe('Delete in the spell builder', () => {
     const question = await asked();
     fireEvent.click(within(question).getByRole('button', { name: 'Delete' }));
     expect(await screen.findByText('You cannot delete this spell')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Keep It' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Cancel' })).toBeNull();
     expect(router.replace).not.toHaveBeenCalled();
   });
 });

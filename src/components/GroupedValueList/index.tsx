@@ -2,7 +2,7 @@ import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { EditLink } from '../IconTip';
 import type { ReactElement } from 'react';
 import StackTable, { GroupChip, updatedColumn } from '../DataTable';
-import { noMatchText } from '../../lib/text';
+import { emptyList, noMatchText } from '../../lib/text';
 import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
 import GroupedValueListFilter from './filter';
@@ -35,7 +35,7 @@ const GroupedValueList = ({
       filter.query && `“${filter.query}”`,
       group && filter.group && `the ${group.label.toLowerCase()} ${groupName}`,
     ].filter((part): part is string => Boolean(part)),
-    `There are no ${plural} yet. Add one with Add ${label}.`,
+    `${emptyList(plural)} Add one with Add ${label}.`,
   );
   return (
     // The kind's modifier, so a rule one kind's rows need — the category

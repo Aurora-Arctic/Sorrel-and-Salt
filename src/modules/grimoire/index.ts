@@ -8,22 +8,6 @@ export * from './services/workings';
 export * from './loaders/spell-children';
 export * from './graphql/spell';
 export * from './graphql/working';
-export type {
-  GrimoireOrder,
-  SpellInput,
-  SpellKey,
-  SpellRecipeStep,
-  SpellRow,
-  SpellStepInput,
-  SpellStepIngredient,
-  SpellStepRow,
-  SpellStepUpdate,
-  SpellStatus,
-  SpellStepVariant,
-  SpellStepView,
-  SpellUpdate,
-  SpellVisibility,
-} from './types';
+export type { SpellKey, SpellStatus, SpellStepView, SpellVisibility } from './types';
 export * from './validation/categories/summarize';
 export * from './validation/categories/compare';
-export type { StepCategories, CategoryComparison } from './validation/categories/types';

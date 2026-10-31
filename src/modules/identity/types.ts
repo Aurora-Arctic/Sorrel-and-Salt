@@ -53,6 +53,10 @@ export interface EmailVerificationSender {
    * row's address, landing on the way to `next`.
    */
   requestChange(current: string, address: string, next?: string): Promise<void>;
+  /** Whether the request's session was created less than `seconds` ago. */
+  sessionIsFresh(seconds: number): Promise<boolean>;
+  /** Tells `current`, the address being left, that a change to `address` was asked for. Names the address's domain only; never throws on a failed send. */
+  notifyChangeRequested(current: string, address: string): Promise<void>;
 }
 
 /** Whether admin changes are paused, and whether the asking admin may switch that. */

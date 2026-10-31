@@ -23,3 +23,10 @@ export interface EditLinkProps {
   /** The link's element, for a caller that returns the focus to it once a dialog it opened closes. */
   ref?: Ref<HTMLAnchorElement>;
 }
+
+export interface ChevronIconProps {
+  /** The class its user styles it by: `chevron-icon`, which the combobox and the step row style, when none is given. */
+  className?: string;
+  /** Sizes it to its text at 1em, for a place whose stylesheet gives it no size. */
+  textSized?: boolean;
+}

@@ -8,18 +8,18 @@ list field's box; MB.131 gave celestial bodies, signs, deities and substitutes t
 sources, and M5.10 and M8.10 adopt its debounce. MB.170 made a list's chips
 movable, on dnd-kit.
 
-| File               | What it holds                                                                     |
-| ------------------ | --------------------------------------------------------------------------------- |
-| `index.tsx`        | The control, the list in its buckets, the typed row, the status, the indicators   |
-| `entry.tsx`        | `ComboboxEntry`, the chip a list draws inside the control, with its × and tooltip |
-| `sortable.tsx`     | `ComboboxSortableEntries`, a list's chips moved by a handle each, on dnd-kit      |
-| `flow.ts`          | Where a sortable list's chips sit in a given order, and where a key moves one     |
-| `select.tsx`       | `ComboboxSelect`, the select-only box for a closed set                            |
-| `typeahead.tsx`    | `ComboboxTypeahead`, a closed set typed into, its list narrowing as it is         |
-| `multi-select.tsx` | `ComboboxMultiSelect`, the select-only box holding several, its choices as chips  |
-| `icons.tsx`        | The chevron and the clear's ×, which every box draws, and a sortable chip's grip  |
-| `index.scss`       | The control, the list, a row, and the entry chip                                  |
-| `types.ts`         | `ComboboxOption`, `Suggestions`, the props, and the row types                     |
+| File               | What it holds                                                                                                                                                                                                 |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `index.tsx`        | The control, the list in its buckets, the typed row, the status, the indicators                                                                                                                               |
+| `entry.tsx`        | `ComboboxEntry`, the chip a list draws inside the control, with its × and tooltip                                                                                                                             |
+| `sortable.tsx`     | `ComboboxSortableEntries`, a list's chips moved by a handle each, on dnd-kit                                                                                                                                  |
+| `flow.ts`          | Where a sortable list's chips sit in a given order, and where a key moves one                                                                                                                                 |
+| `select.tsx`       | `ComboboxSelect`, the select-only box for a closed set                                                                                                                                                        |
+| `typeahead.tsx`    | `ComboboxTypeahead`, a closed set typed into, its list narrowing as it is                                                                                                                                     |
+| `multi-select.tsx` | `ComboboxMultiSelect`, the select-only box holding several, its choices as chips                                                                                                                              |
+| `icons.tsx`        | A sortable chip's grip and a linked entry's chain. The chevron, the plus and the clear's × that every box draws are the shared set's `ChevronIcon`, `PlusIcon` and `CrossIcon` ([`icon-tip.md`](icon-tip.md)) |
+| `index.scss`       | The control, the list, a row, and the entry chip                                                                                                                                                              |
+| `types.ts`         | `ComboboxOption`, `Suggestions`, the props, and the row types                                                                                                                                                 |
 
 ## The props contract
 
@@ -29,6 +29,7 @@ movable, on dnd-kit.
 | `label`            | What the box is called. The text of a visually hidden `<label>` of its own unless `labelId` is given, not an `aria-label`: Chrome's Issues panel flags an input no `<label>` names. Also the name of its list, "Form suggestions", its status region and its chevron, "Show Form suggestions".                                                          |
 | `labelId`          | The id of a label element naming the box, which then renders no label of its own.                                                                                                                                                                                                                                                                       |
 | `value`/`onChange` | The text, held by the caller: a form field's value, or a list's box.                                                                                                                                                                                                                                                                                    |
+| `onFocus`/`onBlur` | Called as the box takes and loses the focus, after the box shows or hides its own tip                                                                                                                                                                                                                                                                   |
 | `onPick`           | `(value, option)`: a suggestion chosen, or the typed row, which comes with `null`. The text is the caller's to change, so a field fills itself and a list empties its box.                                                                                                                                                                              |
 | `onCommit`         | Enter with no suggestion highlighted: a list's add. Without it, Enter closes an open list and otherwise reaches the form, as a text box's does.                                                                                                                                                                                                         |
 | `onRemoveLast`     | Backspace or Delete in an empty box: a list takes its last entry, as react-select does. With text in the box the keys edit it as usual.                                                                                                                                                                                                                 |
@@ -40,7 +41,7 @@ movable, on dnd-kit.
 | `leading`          | A caller's own control drawn inside the control box before the text and any entries: a form's submit, say. A slot rather than a built-in, as Combobox knows nothing about forms.                                                                                                                                                                        |
 | `toggle`           | Whether a box with `suggestions` draws its chevron button; `true` unless said. Leave it out (`false`) for a free-text search that opens as you type.                                                                                                                                                                                                    |
 | `listAnchor`       | The element the open list spans and opens beside: a list field's row, its box and its Add together. The control when left out. See "Where the list opens".                                                                                                                                                                                              |
-| `action`           | `{ label, onSelect }`: a last row that does something rather than picking a suggestion, in italics: "New Reference" makes something new (no typed row, there with a blank box too), "See all results." applies a search to its list. See "The action row".                                                                                              |
+| `action`           | `{ label, onSelect }`: a last row that does something rather than picking a suggestion, in italics: "New Reference" makes something new (no typed row, there with a blank box too), "See All Results" applies a search to its list. See "The action row".                                                                                               |
 | `highlightFirst`   | The first row highlighted as the list opens and narrows, so Enter takes it: a closed set's type-ahead. Nothing is highlighted unless said.                                                                                                                                                                                                              |
 | `noun`             | What a row is called, singular: the list's name, its chevron's and its status's count, "Tradition choices", "3 choices". "suggestion" unless said.                                                                                                                                                                                                      |
 | `placeholder`      | Shown, muted, while the box is empty, beside entries too: the prompt for the next, with room kept for it (see "Styling").                                                                                                                                                                                                                               |
@@ -48,6 +49,7 @@ movable, on dnd-kit.
 | `actionFirst`      | Whether the action row is the list's first row, nearest the box, rather than its last. `false` unless said. The spell builder's Add to Jar passes it: its action, `Add "<typed>" as a one-off ingredient`, stands for the typed text.                                                                                                                   |
 | `keepOpen`         | Whether the list stays open after a pick of a row, for the next; `false` unless said, so a single-value box closes. A list field, a facet type-ahead and the category picker pass it, since each pick adds an entry (M12.54). Escape, Tab and a press outside still close it, and the focus stays in the box. An action row closes the list either way. |
 | `offerTyped`       | Whether the typed row is offered; `true` unless said. A list passes `false` for text it would refuse, a repeat (MB.174). Left out too when a suggestion reads as the typed text, case and spaces aside. Enter with nothing highlighted still reaches `onCommit`.                                                                                        |
+| `typedIcon`        | The mark on the typed row, "Use what you typed": the same slot as an option's `icon`                                                                                                                                                                                                                                                                    |
 | `empty`            | Optional: what the popup says once the lookup has settled with no rows and the text is not blank; the default is No match for “text”, and `false` says nothing. Outside the listbox, and read by the status. See "The empty message".                                                                                                                   |
 | `inputRef`, `name` | The box's, for react-hook-form.                                                                                                                                                                                                                                                                                                                         |
 | `aria-describedby` | The field's hint and error, read with the box; `aria-invalid` draws the error edge on the control.                                                                                                                                                                                                                                                      |
@@ -261,11 +263,10 @@ offer; it takes no typed text, so it has no "no match". Both draw the same
 ## The action row
 
 `action` is a last row that does something rather than picking a suggestion.
-It has two users. "See all results." (M8.10, the owner's call 2026-10-16)
-ends the ingredient search's dropdown when there is another page, and applies
-the search to the list; it is reached by the arrow keys like a result, italic
-so it reads as a message and not a match, and sentence case with a full stop
-because it is one. It is no result, so the status does not count it.
+It has two users. "See All Results" ends the ingredient search's dropdown
+when there is another page, and applies the search to the list; it is reached
+by the arrow keys like a result, italic so it reads apart from the matches, and
+title case because it is a command, as a button is. It is no result, so the status does not count it.
 
 The references' box (MB.154) is the other. A list whose entries can only be
 picked has
@@ -318,7 +319,7 @@ alone: the box marks the key handled (`keepEscapeInList`, `escape.ts`),
 which `useSelect`, unlike `useCombobox`'s typed box, does not, so a modal
 around it does not take the key as a close request and shut, or ask a
 changed form to discard (MB.115). With the list shut, Escape reaches the
-modal as ever. The Modal workshop's `WithPickers` story holds both pickers
+modal as ever. The Modal workshop's `States`, state 'With Pickers', holds both pickers
 in a modal to try it. The DateField's month and year pickers are two of these
 boxes ([`date-field.md`](date-field.md)).
 
@@ -820,7 +821,15 @@ and text, by pointer or keyboard; `NoSource`, a box that never opens; `Qualifier
 Substance, the group in the box and its description in a tooltip, dropped by
 an edit; `SelectOnly`, the select-only box; `SelectWithIcons`, the same with an icon on each choice; `Typeahead`, the type-ahead box over five
 traditions, the value shown beneath it; and
-`MultiSelect`, the multi-select box with two elements chosen (`States` is a grid of Plain and With A Summary, the box with and without the line under it) (the filter's version, with counts, is `FacetCombobox`'s stories, [`facet-combobox.md`](facet-combobox.md));
+`MultiSelect`, the multi-select box with two elements chosen (the filter's version, with counts, is `FacetCombobox`'s stories, [`facet-combobox.md`](facet-combobox.md));
+`EmptyMessage`, a lookup that settled with no rows, the popup saying so outside the list;
+`Leading`, a caller's own control at the box's start; `LoadingSearch`, a lookup under way, the box
+`aria-busy` with the ring beside the chevron; `LoadingSelect`, the select-only box while its change
+is on its way; `GroupedRows`, an open list with every kind of row (buckets under a group heading
+edged in the group's colour, a count, a disabled row with its reason, the typed row with its mark);
+`EntryChips`, a grid of one chip in each form (Plain, With A Summary, Outlined, With A Count, Count
+Loading, Naming What It Removes, Named By The List Error, With An Action, With An Action Shut, With
+An Icon, With A Qualifier And Detail, Coloured By Its Group);
 `CreateRow`, its list open on "New Reference" last whatever is typed, saying beneath the
 box each time it is picked; and `QualifierInForm`, the ingredient form's Form box under a Name
 field, "Wax" picked under Substance with a detail long enough to wrap, whose
@@ -1145,7 +1154,7 @@ It is a form group's glyph, decorative, clear of the text, and as tall as the te
 
 - **`leading`** is a slot rather than a built-in because Combobox knows nothing about forms or what the caller wants pressed. A button given here should be styled `combobox__indicator` to match the others. A press on it is inside the box, so it neither closes an open list nor moves the focus.
 
-- **`action`** is a last row that does something rather than picking a suggestion. It is there whatever is typed, in place of the typed row, and set off in italics as the typed row is. Two callers use it: "New Reference" (MB.154; last since MB.115) makes something new for a list whose entries can only be picked, and "See all results." (M8.10) applies the search to the list. It is reached by the arrow keys and picked by Enter or a click, which call `onSelect`. It is no result, so the status does not count it.
+- **`action`** is a last row that does something rather than picking a suggestion. It is there whatever is typed, in place of the typed row, and set off in italics as the typed row is. Two callers use it: "New Reference" (MB.154; last since MB.115) makes something new for a list whose entries can only be picked, and "See All Results" (M8.10) applies the search to the list. It is reached by the arrow keys and picked by Enter or a click, which call `onSelect`. It is no result, so the status does not count it.
 
 - **`offerTyped`**: false for text the caller would refuse, a list's repeat (MB.174). Enter still reaches `onCommit`, which says why.
 

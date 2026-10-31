@@ -84,7 +84,7 @@ badge ([`click-feedback.md`](click-feedback.md)).
 [`index.stories.tsx`](../../src/components/ImpersonationBanner/index.stories.tsx),
 `Layout / Impersonation Banner`: `Default`, the banner alone, `OverTheShell`,
 the banner over the shell (`ShellFrame`, `.storybook/shell-frame.tsx`),
-where the app puts it: first in the body, above the shell's bar, and `StopFailed`, Stop pressed so the failure shows. A desktop browser can hover, so it shows the
+where the app puts it: first in the body, above the shell's bar, `StopFailed`, Stop pressed so the failure shows, and `Stopping`, Stop pressed and not yet answered, the button reading Stopping and busy. A desktop browser can hover, so it shows the
 banner tucked; the review screenshots emulate a touch screen
 (`scripts/review-screenshots.mjs`), where `(hover: none)` holds and the
 banner sits in the flow with the shell starting below it. In the workshop Stop

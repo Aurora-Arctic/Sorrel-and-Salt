@@ -1,8 +1,8 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The Share With the Coven switch, start-aligned as the spell builder's is rather than centred as the
-// primitive's filter-bar switch is.
+// The Share With the Coven switch, label and note start-aligned as the ingredient form's Toxic switch
+// is, rather than centred as the primitive's filter-bar switch is.
 .working-form .switch {
   align-items: flex-start;
 
@@ -11,11 +11,9 @@
   }
 }
 
-// The deduction preview: one `JarLine` per step, as the recipe page's In Coven Inventory draws it.
+// The deduction preview: one `JarLine` per step, as the recipe page's In the Cupboard panel draws it.
 .working-deductions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+  @include stack(3);
 
   // No ◆ beside the jars: the jar is each line's mark.
   @include list-reset;
@@ -27,8 +25,10 @@
     white-space: normal;
   }
 
+  // The parts wrap whole onto the next line, so on a phone a unit never sits alone under its number.
   .jar-line__words {
-    font-size: 0.875rem;
+    flex-wrap: wrap;
+    font-size: type-size('small');
     font-variant-numeric: tabular-nums;
 
     b {

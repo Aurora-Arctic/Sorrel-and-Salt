@@ -39,6 +39,16 @@ describe('DateField', () => {
     );
   });
 
+  it('says the button opens a dialog, and names the calendar it opens', () => {
+    render(<Harness />);
+    const button = screen.getByRole('button', { name: /Date/ });
+    expect(button).toHaveAttribute('aria-haspopup', 'dialog');
+    fireEvent.click(button);
+    expect(
+      within(screen.getByRole('dialog', { name: 'Choose a Day' })).getByRole('grid'),
+    ).toBeVisible();
+  });
+
   it('picks a day, closes the calendar and answers with the day as YYYY-MM-DD', () => {
     render(<Harness />);
     fireEvent.click(screen.getByRole('button', { name: /Date/ }));

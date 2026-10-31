@@ -38,14 +38,32 @@
         "ignoreAtRules": ["function"],
         "ignoreFunctions": ["light-dark"]
       }
-    ]
+    ],
+    "declaration-property-value-allowed-list": {
+      "font-family": ["/^\\$font-/", "inherit"],
+      "font": ["inherit"],
+      "font-size": [
+        "/^\\$/",
+        "/^(type|heading)-size\\(/",
+        "/^calc\\(.*(type|heading)-size\\(/",
+        "/^[0-9.]+em$/",
+        "0",
+        "inherit"
+      ],
+      "z-index": ["/^layer\\(/", "/^\\$/", "/^-?[0-9]$/"]
+    },
+    "declaration-property-value-disallowed-list": {
+      "/.*/": ["/\\b(rgba?|hsla?|hwb|lab|lch|oklab|oklch)\\(\\s*[-.0-9]/"]
+    }
   },
   "overrides": [
     {
       "files": ["src/scss/_variables.scss"],
       "rules": {
         "color-no-hex": null,
-        "color-named": null
+        "color-named": null,
+        "declaration-property-value-allowed-list": null,
+        "declaration-property-value-disallowed-list": null
       }
     }
   ],

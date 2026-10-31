@@ -39,6 +39,7 @@ const props = (over: Partial<GrimoireListProps> = {}): GrimoireListProps => ({
   workspaceId: 'w1',
   covenSlug: 'fixture-coven',
   status: 'complete',
+  canCreate: true,
   spells: [
     {
       id: 's1',
@@ -95,12 +96,24 @@ describe('GrimoireList', () => {
     }));
   });
 
-  it('lists each spell as an item of the Grimoire list, named by its title', () => {
+  it('lists each spell as an item of the Spells list, its card named by its title', () => {
     render(<List {...props()} />);
-    const list = screen.getByRole('list', { name: 'Grimoire' });
+    const list = screen.getByRole('list', { name: 'Spells' });
     expect(within(list).getAllByRole('listitem')).toHaveLength(2);
-    expect(within(list).getByRole('listitem', { name: 'Fixture Working' })).toBeInTheDocument();
-    expect(within(list).getByRole('listitem', { name: 'Testwort Charm' })).toBeInTheDocument();
+    expect(within(list).getByRole('article', { name: 'Fixture Working' })).toBeInTheDocument();
+    expect(within(list).getByRole('article', { name: 'Testwort Charm' })).toBeInTheDocument();
+  });
+
+  it('names the list Drafts on the Drafts tab', () => {
+    render(<List {...props({ status: 'draft' })} />);
+    expect(screen.getByRole('list', { name: 'Drafts' })).toBeInTheDocument();
+    expect(screen.queryByRole('list', { name: 'Spells' })).not.toBeInTheDocument();
+  });
+
+  it('leaves each item unnamed, so the title is heard once, on its card', () => {
+    render(<List {...props()} />);
+    const items = within(screen.getByRole('list', { name: 'Spells' })).getAllByRole('listitem');
+    for (const item of items) expect(item).not.toHaveAccessibleName();
   });
 
   it("links each card's title to the spell's recipe page", () => {
@@ -127,7 +140,7 @@ describe('GrimoireList', () => {
       render(<List {...props()} />);
       const control = screen.getByRole('switch', { name: 'Compact' });
       expect(control).toBeChecked();
-      expect(screen.getByRole('list', { name: 'Grimoire' })).toHaveAttribute(
+      expect(screen.getByRole('list', { name: 'Spells' })).toHaveAttribute(
         'data-density',
         'compact',
       );
@@ -151,8 +164,27 @@ describe('GrimoireList', () => {
     render(<List {...props({ spells: [], total: 0, position: undefined })} />);
     expect(screen.getByRole('status', { name: 'No Spells' })).toBeInTheDocument();
     expect(screen.queryByRole('status', { name: 'No Matches' })).toBeNull();
-    expect(screen.queryByRole('list', { name: 'Grimoire' })).toBeNull();
+    expect(screen.queryByRole('list', { name: 'Spells' })).toBeNull();
   });
+
+  // A viewer, who cannot write a spell, is told which roles can, as an empty cupboard tells them. The
+  // roles named are the state's data: nothing else tells a viewer who to ask, and a member is not told.
+  it.each([
+    ['complete', 'No Spells'],
+    ['draft', 'No Drafts'],
+  ] as const)(
+    'names, to a viewer only, the roles that can write a spell on an empty %s tab',
+    (status, name) => {
+      const empty = { status, spells: [], total: 0, position: undefined };
+      const { unmount } = render(<List {...props({ ...empty, canCreate: false })} />);
+      const state = () => screen.getByRole('status', { name });
+      expect(state()).toHaveTextContent(/\bmember\b/i);
+      expect(state()).toHaveTextContent(/\bowner\b/i);
+      unmount();
+      render(<List {...props(empty)} />);
+      expect(state()).not.toHaveTextContent(/\bmember\b|\bowner\b/i);
+    },
+  );
 
   it('names the drafts tab in its empty region', () => {
     render(
@@ -250,7 +282,7 @@ describe('GrimoireList', () => {
     const open = () => {
       fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
     };
-    // Moon Phase, Day of Week and Coven Member type to narrow; Visibility is a chip of radios.
+    // Moon Phases, Days of the Week and Coven Members type to narrow; Visibility is a chip of radios.
     const show = (field: string) => {
       const box = screen.getByRole('combobox', { name: field });
       box.focus();
@@ -276,8 +308,8 @@ describe('GrimoireList', () => {
         </Navigating>,
       );
       open();
-      await pick('Moon Phase', /^Waxing Crescent/);
-      await pick('Day of Week', /^Friday/);
+      await pick('Moon Phases', /^Waxing Crescent/);
+      await pick('Days of the Week', /^Friday/);
       const params = await apply();
       expect(params.getAll('moonPhase')).toEqual(['Waxing Crescent']);
       expect(params.getAll('dayOfWeek')).toEqual(['Friday']);
@@ -290,7 +322,7 @@ describe('GrimoireList', () => {
         </Navigating>,
       );
       open();
-      await pick('Coven Member', /^Fixture Member/);
+      await pick('Coven Members', /^Fixture Member/);
       fireEvent.click(
         within(screen.getByRole('group', { name: 'Visibility' })).getByRole('radio', {
           name: 'Private 1',
@@ -308,7 +340,7 @@ describe('GrimoireList', () => {
         </Navigating>,
       );
       open();
-      show('Moon Phase');
+      show('Moon Phases');
       expect(screen.getByRole('option', { name: /^Waxing Crescent\D*2/ })).toBeInTheDocument();
       expect(screen.queryByRole('option', { name: /^Full/ })).not.toBeInTheDocument();
     });
@@ -375,6 +407,21 @@ describe('GrimoireList', () => {
       expect(chip).toBeDisabled();
     });
 
+    it('names each box in the plural, as it takes several, and says when it has none to offer', () => {
+      render(
+        <Navigating push={router.push}>
+          <List {...props({ facets: { ...props().facets, makers: [] } })} />
+        </Navigating>,
+      );
+      open();
+      const members = screen.getByRole('combobox', { name: 'Coven Members' });
+      expect(members).toHaveAttribute('placeholder', 'No Coven Members');
+      expect(screen.getByRole('combobox', { name: 'Days of the Week' })).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'Show Moon Phases suggestions' }),
+      ).toBeInTheDocument();
+    });
+
     it('draws the icon of a moon phase beside it in the list', () => {
       render(
         <Navigating push={router.push}>
@@ -382,7 +429,7 @@ describe('GrimoireList', () => {
         </Navigating>,
       );
       open();
-      show('Moon Phase');
+      show('Moon Phases');
       expect(
         screen.getByRole('option', { name: /^Waxing Crescent/ }).querySelector('svg'),
       ).not.toBeNull();

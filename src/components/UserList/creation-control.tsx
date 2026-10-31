@@ -44,9 +44,7 @@ const CreationControl = ({
     <LockedControl
       label={action === 'approve' ? 'Approve' : 'Revoke'}
       accessibleName={action === 'approve' ? `Approve ${name}` : `Revoke approval for ${name}`}
-      className={
-        action === 'approve' ? 'btn btn--small btn--quiet' : 'btn btn--small btn--destructive'
-      }
+      className="btn btn--quiet btn--small"
       reason={ADMIN_CHANGES_PAUSED_REFUSAL}
     />
   ) : action === 'approve' ? (
@@ -54,7 +52,7 @@ const CreationControl = ({
       label="Approve"
       accessibleName={`Approve ${name}`}
       // Quiet, the body ink.
-      openClass="btn btn--small btn--quiet"
+      openClass="btn btn--quiet btn--small"
       title="Approve Coven Creation"
       // The user's name in bold.
       question={
@@ -78,8 +76,8 @@ const CreationControl = ({
     <ConfirmedAction
       label="Revoke"
       accessibleName={`Revoke approval for ${name}`}
-      // Red: it takes something away.
-      openClass="btn btn--small btn--destructive"
+      // Plain, as Approve is: the red is its confirmation's Revoke.
+      openClass="btn btn--quiet btn--small"
       title="Revoke Coven Creation"
       question={
         <>

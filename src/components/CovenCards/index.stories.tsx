@@ -115,21 +115,9 @@ const noMatchesNode = (
   <CovenCards {...BASE} entries={[]} total={0} filter={{ ...NO_FILTER, query: 'Knitbone' }} />
 );
 
-// A role that may delete and nothing more: the coven's own entry's only choice is its bin.
-export const WithLoneBin: Story = {
-  render: () => (
-    <CovenCards
-      {...BASE}
-      entries={ENTRIES.map((shown) =>
-        shown.kind === 'own' ? { ...shown, mayDelete: true } : shown,
-      )}
-    />
-  ),
-};
-
-// A member's full foot: Edit or Annotate, the Edit Stock pencil, then More,
-// with Delete on the coven's own entry and Make It Ours and Remove on a compendium entry.
-// The jar lines stay, a badge per jar; the forms line is gone from every coven card.
+// A member's full foot: Edit or Annotate, then the Edit Stock pencil. A compendium entry adds More,
+// holding Make It Ours and Remove; the coven's own entry has no More, since its Delete is in Edit
+// Ingredient. The jar lines stay, a badge per jar; no coven card has a forms line.
 const STOCK: Record<string, CovenCardEntry['stock']> = {
   'own-1': {
     forms: [
@@ -152,7 +140,6 @@ const withStockNode = (
             ...shown,
             editHref: route(`/coven/fixture-coven/ingredients?edit=${shown.id}`),
             editHeading: { eyebrow: 'Edit Ingredient', title: shown.label },
-            mayDelete: true,
             stock: STOCK[shown.id],
           }
         : {
@@ -190,7 +177,7 @@ export const States: Story = {
     <ShellFrame area="coven" open="/coven/fixture-coven/ingredients">
       <main>
         <PageHeader title="Ingredients" />
-        <div key={String(state)}>{state}</div>
+        <div>{state}</div>
       </main>
     </ShellFrame>
   ),

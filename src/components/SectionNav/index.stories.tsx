@@ -65,7 +65,7 @@ export const States: Story = {
   argTypes: {
     state: { control: 'select', options: Object.keys(SECTION_STATES), mapping: SECTION_STATES },
   },
-  render: ({ state }) => <div key={String(state)}>{state}</div>,
+  render: ({ state }) => <div>{state}</div>,
 };
 
 // Tablet, on a page that is behind More: More names it and carries the mark. The

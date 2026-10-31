@@ -1,5 +1,5 @@
 import type { Route } from 'next';
-import type { ReactNode, RefObject } from 'react';
+import type { ReactNode, Ref, RefObject } from 'react';
 
 /** What a modal's head says: a title alone for an add dialog, an eyebrow over the entry's saved name for an edit dialog (claude-docs/components/modal.md, "An edit dialog's head"). */
 export interface ModalHeading {
@@ -17,6 +17,8 @@ export interface ModalHeading {
   topEnd?: ReactNode;
   /** The title's controls, at the end of the formal name's line and after the title in the markup. Not in the dialog's name (claude-docs/components/modal.md, "A title with its own end"). */
   formalActions?: ReactNode;
+  /** With `formalActions` and no formal name: the controls stand level with the title's first line and run to the dialog's edge beneath the ×, the head a step lower to make room (claude-docs/components/modal.md, "Controls beneath the ×"). */
+  actionsUnderClose?: boolean;
   /** A line above the formal name and the title, under any top line (the details window's last edit). Not in the dialog's name. */
   aboveName?: ReactNode;
   /** A row under the heading's last line, for the badges that are not beside the title. Not in the dialog's name. */
@@ -28,8 +30,8 @@ export interface ModalProps extends ModalHeading {
   onClose: () => void;
   /** Where the focus goes as the modal closes when its opener is gone or held none (a click in WebKit focuses no button), given the opener already out of the page, or null (claude-docs/components/modal.md, "Giving the focus back"). */
   returnTo?: (gone: Element | null) => HTMLElement | null | undefined;
-  /** The width: 32rem by default; `wide`, 48rem, for a long form; `listed`, the default column with an 11rem list beside it. */
-  size?: 'wide' | 'listed';
+  /** The width: 32rem by default; `listed`, the default column with an 11rem list beside it. */
+  size?: 'listed';
   /** A body with nothing to fill in, only to read: Tab stops on the body itself so a keyboard can scroll it. Off by default, as a form's fields already reach every part. */
   readingBody?: boolean;
   /** Its contents are on their way: the body is marked busy, and the focus moves to their first field on arrival. */
@@ -57,6 +59,10 @@ export interface ModalButtonProps {
   /** A tip over an icon button, "Edit Stock" over the pencil. Wraps the button alone, never the dialog, which would open the tip on its focus. */
   tip?: string;
   size?: ModalProps['size'];
+  /** The button, for an owner that anchors something to it, as ClickFeedback's callout is. */
+  ref?: Ref<HTMLButtonElement>;
+  /** Runs on the press, before the modal opens: an owner clears an earlier refusal here. */
+  onOpen?: () => void;
   /** What the modal holds, given the modal's close, so a form can close it after its send. */
   children: (close: () => void) => ReactNode;
 }
@@ -152,7 +158,7 @@ export interface ConfirmOverlayProps {
   question?: ReactNode;
   /** The id of what names the card when there is no `question`. */
   labelledBy?: string;
-  /** The safe answer, Keep It or Keep Editing: it takes the focus when the question comes and on each flash. Never the destructive one. */
+  /** The safe answer, Cancel or Keep Editing: it takes the focus when the question comes and on each flash. Never the destructive one. */
   safe: RefObject<HTMLElement | null>;
   /** Ways out tried again while asking, each a flash of the card; absent for none. */
   flashes?: number;
@@ -160,7 +166,7 @@ export interface ConfirmOverlayProps {
   children: ReactNode;
 }
 
-/** A form's yes-or-no question over itself: Delete and Keep It, by default. */
+/** A form's yes-or-no question over itself: Delete and Cancel, by default. */
 export interface ConfirmQuestionProps {
   /** The question, "Delete "Fixture Healing"? …", which names the card. */
   question: ReactNode;
@@ -176,7 +182,7 @@ export interface ConfirmQuestionProps {
   busyLabel?: string;
   /** The acting answer's weight: destructive for a delete, solid for a save. */
   tone?: 'destructive' | 'solid';
-  /** The safe answer, which the focus lands on: "Keep It" by default, "Back" for a step back. */
+  /** The safe answer, which the focus lands on: "Cancel" by default, "Back" for a step back. */
   keepLabel?: string;
   /** The action is in flight: the acting answer is busy and shut. */
   busy: boolean;

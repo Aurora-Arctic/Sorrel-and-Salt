@@ -1,21 +1,18 @@
 @use 'sass:map';
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
+@use 'specimen-card' as *;
 
 // The compact look of the card, a mixin so a page can switch to it from its own selector. No density
 // prop: it must switch before React runs (a pre-paint script sets `data-card-density="regular"` on
 // <html>), and a prop would mismatch on hydration. Every rule is one class deeper than what it overrides.
+// The padding, title, badges and chips are the shared part (_specimen-card.scss); the rest is this card's.
 @mixin ingredient-card-compact {
-  .ingredient-card {
-    padding: space(3) space(4);
-    gap: space(2);
-  }
-
-  // Name: h4's size, two steps under the card's h2 (h3 in the first sample).
-  .ingredient-card__name {
-    font-size: heading-size(4);
-    line-height: 1.15;
-  }
+  @include specimen-card-compact(
+    '.ingredient-card',
+    '.ingredient-card__heading',
+    '.ingredient-card__name'
+  );
 
   // Formal name: caption down to overline, the smallest size the site sets text in
   // bar the bottom bar's tab labels.
@@ -23,43 +20,17 @@
     font-size: type-size('overline');
   }
 
-  .specimen__top {
-    // One step, 8px both ways, so a wrapped badge row sits 8px under the name as it does
-    // above the chips (it was 4px under the name).
-    gap: space(2);
-  }
-
-  // Badges: the sides tighten and the gaps close. The height stays at 24px,
-  // the smallest target a tipped badge may have.
-  .specimen__badges,
+  // The corner's badges, as the badge row's, centred on the smaller name's first line as in the
+  // regular card (index.scss).
   .ingredient-card__corner {
     gap: space(1);
-
-    .badge {
-      @include badge-size('small');
-    }
-  }
-
-  // The row under the formal name, one step closer.
-  .ingredient-card__heading > .specimen__badges {
-    margin-block-start: space(1);
-  }
-
-  // Centred on the smaller name's first line, as in the regular card (index.scss).
-  .ingredient-card__corner {
     min-block-size: map.get($badge-sizes, 'small', 'min-block-size');
     margin-block-start: calc(
       (#{heading-size(4)} * 1.15 - #{map.get($badge-sizes, 'small', 'min-block-size')}) / 2
     );
-  }
 
-  // Chips: tighter inside and between. The chip row has no control in it.
-  .specimen__chips {
-    gap: space(1);
-
-    .chip {
-      font-size: type-size('overline');
-      padding: 0.0625rem 0.5rem;
+    .badge {
+      @include badge-size('small');
     }
   }
 
@@ -72,10 +43,6 @@
 
     margin-block-start: space(2);
     row-gap: 0;
-  }
-
-  .specimen__foot {
-    padding-top: space(2);
   }
 
   // Jar lines: tighter rows, the rule nearer.
@@ -91,9 +58,5 @@
     > ul {
       gap: space(1);
     }
-  }
-
-  .specimen__actions {
-    margin-top: space(2);
   }
 }

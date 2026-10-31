@@ -74,10 +74,6 @@ test('an open step stays open for a click on anything inside its fields', async 
     if (await row.locator('.step-row__note').isVisible())
       await row.locator('.step-row__note').click();
   });
-  await probe('aside', async () => {
-    if (await row.locator('.step-row__aside').isVisible())
-      await row.locator('.step-row__aside').click();
-  });
   await probe('inputs gap', async () => {
     const inputs = row.locator('.step-row__inputs');
     const b = (await inputs.boundingBox())!;

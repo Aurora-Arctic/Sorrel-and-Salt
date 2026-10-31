@@ -4,7 +4,7 @@ import { useSelect } from 'downshift';
 import { keepEscapeInList } from './escape';
 import type { KeyboardEvent, ReactElement } from 'react';
 import Spinner from '../Spinner';
-import { ChevronIcon, PlusIcon } from './icons';
+import { ChevronIcon, PlusIcon } from '../IconTip/icons';
 import { useListPosition } from './position';
 import type { ComboboxChoice, ComboboxSelectProps } from './types';
 

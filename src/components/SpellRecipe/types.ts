@@ -7,6 +7,7 @@ import type { GroupColors } from '../../lib/types';
 import type { StockDialogProps } from '../StockDialog/types';
 import type { SafetyMarkProps } from '../SafetyNote/types';
 import type { SpellStatus, SpellVisibility } from '@/modules/grimoire';
+import type { SpellMarksProps } from '../SpellMarks/types';
 import type { VerdictKind } from '../SpellBuilder/verdict-mark';
 import type { IngredientRow } from '@/modules/ingredients';
 
@@ -47,7 +48,7 @@ export interface IngredientRecipeStep {
   /** The ingredient's and the laid form's safety, for the Toxic and Caution marks; null for a one-off. */
   safety: Pick<SafetyMarkProps, 'toxic' | 'safetyNotes' | 'variants'> | null;
   /**
-   * The coven’s stock verdict on the step, as In Coven Inventory gives it: drawn in the row only
+   * The coven’s stock verdict on the step, as the In the Cupboard panel gives it: drawn in the row only
    * where the recipe has no side column (the Quick Look modal). Left out on the page.
    */
   supply?: VerdictKind | null;
@@ -85,7 +86,7 @@ export interface SpellRecipeProps {
   dayOfWeek?: string | null;
   /** The way back to the grimoire. */
   back: { href: Route; label: string };
-  /** The Edit control, for a role that may update the spell. */
+  /** The head's row of controls, each drawn only for a role that may use it. */
   action?: ReactNode;
   /** The Workings section (`SpellWorkings`), beneath the body; the Quick Look modal gives none. */
   workings?: ReactNode;
@@ -94,7 +95,7 @@ export interface SpellRecipeProps {
 }
 
 /**
- * An In Coven Inventory line's doors on the recipe page: the
+ * A line's doors on the recipe page: the
  * Quick Look eye beside the name, and Edit Stock behind the jar and the name, each null where
  * there is nothing to open (the ingredient deleted since; a role that may not update stock).
  */
@@ -131,8 +132,28 @@ export type SpellRecipeBodyProps = Pick<
   | 'dayOfWeek'
 >;
 
+/** The level of the recipe's Steps and Ingredients headings: 2 under the page's h1, 3 under a dialog's or pane's h2. */
+export type RecipeHeadingLevel = 2 | 3;
+
+/** The lead's part of the body: the purpose and the chips. */
+export type SpellRecipeLeadProps = Pick<SpellRecipeBodyProps, 'title' | 'intent' | 'categories'>;
+
+/** The rest of the body: the facts strip, the steps and the note. */
+export type SpellRecipeRestProps = Omit<SpellRecipeBodyProps, keyof SpellRecipeLeadProps> & {
+  /** A section between the facts and the steps; the Preview pane puts the Ingredients summary here. */
+  beforeSteps?: ReactNode;
+  /** The Steps heading's level, one below the heading the body sits under. Defaults to 2. */
+  level?: RecipeHeadingLevel;
+};
+
+export interface SpellRecipeSummaryProps {
+  steps: readonly RecipeStep[];
+  /** The Ingredients heading's level, one below the heading it sits under. Defaults to 2. */
+  level?: RecipeHeadingLevel;
+}
+
 /** The spell a Quick Look modal is open on; the body arrives as the page's rendered children. */
-export interface SpellLookOpened {
+export interface SpellLookOpened extends SpellMarksProps {
   /** The spell's title; a draft may have none. */
   title: string | null;
   lastEdit: LastEditProps | null;
@@ -140,8 +161,6 @@ export interface SpellLookOpened {
   recipeHref: Route;
   /** Where Edit Spell opens the spell in the builder, for a role that may update it; none draws no Edit Spell. */
   editHref?: Route;
-  /** What Delete Spell needs, for a role that may delete the spell; none draws no bin. */
-  deleteSpell?: Omit<DeleteSpellActionProps, 'name'>;
   children: ReactNode;
 }
 
@@ -154,7 +173,7 @@ export interface SpellLookDialogProps {
   failed?: boolean;
 }
 
-/** Delete Spell's bin and dialog on the recipe page. */
+/** What deleting a spell needs, from the More menu or the Edit Spell dialog. */
 export interface DeleteSpellActionProps {
   workspaceId: string;
   spellId: string;
@@ -162,14 +181,16 @@ export interface DeleteSpellActionProps {
   name: string;
   /** The grimoire tab the page leaves for, with what was deleted in its address. */
   deletedHref: Route;
+  /** Who loses the spell: the question names the coven only for a shared one, and left out says neither. */
+  visibility?: SpellVisibility;
 }
 
-/** The recipe page's three dots: Duplicate for a role that may create a spell, Delete Spell for one that may delete. */
+/** The three dots: Duplicate for a role that may create a spell, Print on the recipe page, Delete Spell for one that may delete. */
 export interface SpellMoreMenuProps extends DeleteSpellActionProps {
   /** The coven's slug, which the copy's address needs. */
   covenSlug: string;
   canDuplicate: boolean;
   canDelete: boolean;
-  /** Print is the recipe page's alone: a card's menu leaves it out, and with nothing else draws no menu. */
+  /** Print is the recipe page's alone: a card's menu leaves it out, and alone it is a Print button, not a menu. */
   canPrint: boolean;
 }

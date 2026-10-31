@@ -4,9 +4,10 @@
 @use 'sass:list';
 @use '../SpellCard/smoulder' as card;
 
-// The pane covers the window: the native dialog's top layer, sized to the viewport and no longer a
-// box in the middle. Tokens only; the look is the grimoire's design review's (MB.123).
-// The pane's edge space, and the foot's: 2.5rem at every width, which no `space()` step equals.
+// The pane covers the window: the native dialog's top layer, sized to the viewport rather than a box
+// in the middle.
+// The pane's edge space, narrower on a phone, and its foot space: 2.5rem at every width, which no
+// `space()` step equals.
 $preview-edge: space(5);
 $preview-edge-phone: space(4);
 $preview-foot: 2.5rem;
@@ -21,12 +22,19 @@ $preview-foot: 2.5rem;
   padding: $preview-edge;
   padding-bottom: $preview-foot;
   border: 0;
+  // The dialog paints nothing: the face layer is the page colour everywhere but the burn, where
+  // the backdrop, the table under the page, shows through ("The background", below).
+  background: transparent;
   overflow-y: auto;
   // stylelint-disable-next-line plugin/use-baseline -- enhancement: a browser without it lets a scroll past the pane's end reach the page behind, which is held still anyway, not yet Baseline
   overscroll-behavior: contain;
 
   &:focus {
     outline: none;
+  }
+
+  &::backdrop {
+    background: $drawer-slot;
   }
 
   // The page's side gutter on a phone.
@@ -94,15 +102,6 @@ $preview-foot: 2.5rem;
 // (claude-docs/components/spell-preview.md, "The background"). The burn is the card's, layer for
 // layer, from its smoulder partial; the ember rim and glow breathe by `opacity` here rather than
 // the card's `box-shadow` and `filter` frames, which repaint every frame on a phone kept awake.
-// The dialog itself paints nothing: the face layer is the page colour everywhere but the burn,
-// where the backdrop, the table under the page, shows through.
-.spell-preview {
-  background: transparent;
-
-  &::backdrop {
-    background: $drawer-slot;
-  }
-}
 
 $preview-ember-opacity: 0.4;
 // The pane's burn is bigger than a card's: it runs twice as far along the bottom and eats half as
@@ -347,17 +346,11 @@ $preview-hearth-duration: 11s;
 
 // The spill on the table under the burn: the card's glow, grown in with the hole.
 .spell-preview__glow {
-  inset: auto -0.5rem (-1.75rem * $preview-burn-scale-y) auto;
-  width: calc(#{$preview-burn-length} + 1.5rem);
-  height: 3.5rem * $preview-burn-scale-y;
+  inset: auto (-(card.$burn-glow-overhang)) (-(card.$burn-glow-drop) * $preview-burn-scale-y) auto;
+  width: calc(#{$preview-burn-length} + #{card.$burn-glow-lead});
+  height: card.$burn-glow-height * $preview-burn-scale-y;
   border-radius: 50%;
-  background: linear-gradient(
-    to right,
-    transparent,
-    rgba(card.$candle, 0.75) 0.75rem,
-    rgba(card.$ember, 0.4) 4.5rem,
-    rgba(card.$ember, 0.16)
-  );
+  background: card.burn-glow-gradient();
   filter: blur(card.$burn-glow-blur);
   opacity: $preview-ember-opacity;
   animation:
@@ -449,13 +442,7 @@ $preview-hearth-duration: 11s;
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background: linear-gradient(
-    to right,
-    rgba(card.$candle, 0.4),
-    rgba(card.$ember, 0.25) 1.5rem,
-    rgba(card.$ember, 0.1) 55%,
-    transparent 85%
-  );
+  background: card.burn-embers-gradient();
   // Only the mask's alpha counts, so any opaque token does.
   mask-image: linear-gradient(to bottom, $text-primary, transparent 0.25rem);
   animation: spell-preview-embers $preview-embers-duration ease-in-out card.$burn-duration infinite;

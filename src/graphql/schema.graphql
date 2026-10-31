@@ -1341,6 +1341,11 @@ type Query {
   workingDeductionPreview(spellId: ID!, workspaceId: ID!): WorkingDeductionPreview!
 
   """
+  A coven the caller sits in, by id. Refused alike for a stranger and an id no coven holds.
+  """
+  workspace(id: ID!): Workspace!
+
+  """
   How many of a coven's ingredients each search filter value would list under the rest of the filter.
   """
   workspaceIngredientFacets(
@@ -2234,9 +2239,9 @@ type Workspace {
   id: ID!
 
   """
-  The coven's live members, in the order they joined, for the roles that may read them.
+  The coven's live members, in the order they joined, for the roles that may read them: those whose name holds `query`, case-insensitively, when given.
   """
-  members(after: String, before: String, first: Int, last: Int): WorkspaceMembersConnection!
+  members(after: String, before: String, first: Int, last: Int, query: String): WorkspaceMembersConnection!
   name: String!
   slug: String!
 }

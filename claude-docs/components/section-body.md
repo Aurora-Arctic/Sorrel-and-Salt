@@ -30,8 +30,8 @@ section's page.
   section frame, so its flex column and gap are untouched, and the skeleton is
   laid over it in a copy of that frame, pinned under the bar
   ([`SkeletonFade`](skeleton-fade.md), "The page is held, not swapped"; MB.271). Nobody can act on the wrong coven's data in the wait. The
-  shape is the destination's. In the coven it is the section's (`cards` for
-  Ingredients, `table` for the people pages, `page` for the home), worked out
+  shape is the destination's. In the coven it is the section's (compact `cards` for
+  Ingredients and the grimoire, `table` for the people pages, `page` for the home), worked out
   by `WorkspaceSwitcher` or `CovenNav` when the navigation starts. In admin it
   is `adminTarget`'s (`AdminNav`).
 - **The context row is not inside it.** A move between admin pages, or

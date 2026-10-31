@@ -1,14 +1,8 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import type { Route } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type {
-  DeleteOwnIngredientMutation,
-  DeleteOwnIngredientMutationVariables,
-} from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
-import { press } from '../../support/interact';
-import { mockGraphQLMutation } from '../../support/msw/graphql';
 import { Navigating } from '../../support/navigating';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
@@ -379,7 +373,7 @@ describe('DetailsDialog from a compendium card', () => {
 });
 
 // The window's icons are the coven card's, drawn by the same `covenCardActions` the list's cards use, so the window shows what the card shows for this entry and role:
-// Edit and the bin on the coven's own entry, Annotate and More on a compendium entry the cupboard holds.
+// Edit on the coven's own entry, Annotate and More on a compendium entry the cupboard holds.
 describe('DetailsDialog coven card controls', () => {
   const WORKSPACE_ID = '00000000-0000-4000-8000-000000000001';
   const ID = '00000000-0000-4000-8000-0000000000bb';
@@ -406,14 +400,10 @@ describe('DetailsDialog coven card controls', () => {
   const actions = (fields: object) =>
     covenCardActions({ ...entry, ...fields }, WORKSPACE_ID, 'fixture-coven', COVEN_LIST);
 
-  it("draws Edit at its address and the Delete Ingredient bin for a coven's own entry, and no menu", () => {
+  it("draws Edit at its address for a coven's own entry, with no Delete Ingredient and no menu, as the Edit Ingredient dialog holds Delete", () => {
     render(
       view(true, {
-        actions: actions({
-          editHref: OWN_EDIT,
-          editHeading: editHeading(ENTRY),
-          mayDelete: true,
-        }),
+        actions: actions({ editHref: OWN_EDIT, editHeading: editHeading(ENTRY) }),
       }),
     );
 
@@ -421,9 +411,7 @@ describe('DetailsDialog coven card controls', () => {
       'href',
       OWN_EDIT,
     );
-    expect(
-      within(dialog()).getByRole('button', { name: `Delete Ingredient ${CARD_NAME}` }),
-    ).toBeInTheDocument();
+    expect(within(dialog()).queryByRole('button', { name: /^Delete/ })).toBeNull();
     expect(within(dialog()).queryByRole('button', { name: /^More/ })).toBeNull();
   });
 
@@ -468,33 +456,5 @@ describe('DetailsDialog coven card controls', () => {
 
     expect(within(dialog()).queryByRole('link', { name: /^Edit/ })).toBeNull();
     expect(within(dialog()).queryByRole('button', { name: /^Edit/ })).toBeNull();
-  });
-
-  it('deletes after asking, and leads to the list without the details, which closes them', async () => {
-    const calls: DeleteOwnIngredientMutationVariables[] = [];
-    mockGraphQLMutation<DeleteOwnIngredientMutation, DeleteOwnIngredientMutationVariables>(
-      'DeleteOwnIngredient',
-      (variables) => {
-        calls.push(variables);
-        return { deleteIngredient: String(variables.id) };
-      },
-    );
-    const { rerender } = render(
-      view(true, {
-        actions: actions({ editHref: OWN_EDIT, editHeading: editHeading(ENTRY), mayDelete: true }),
-      }),
-    );
-
-    press(within(dialog()).getByRole('button', { name: `Delete Ingredient ${CARD_NAME}` }));
-    const ask = screen.getByRole('dialog', { name: 'Delete Ingredient' });
-    // Asked first: nothing is deleted until it is confirmed.
-    expect(calls).toEqual([]);
-    press(within(ask).getByRole('button', { name: 'Delete' }));
-
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith(COVEN_LIST));
-    expect(calls).toEqual([{ id: ID, workspaceId: WORKSPACE_ID }]);
-    // The list's address no longer names the entry, so the page opens no details.
-    rerender(view(false, {}));
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 });

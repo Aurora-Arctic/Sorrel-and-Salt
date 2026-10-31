@@ -11,7 +11,7 @@ import {
   withSql,
 } from './stories/coven-ingredients';
 
-// The spell recipe page's print layout (M10.22): a Print menu item any role can choose, and
+// The spell recipe page's print layout (M10.22): Print for any role, its own button for a viewer, and
 // under print media a one-page sheet with the Ingredients summary, the steps, formal names on shared
 // labels, and none of the page's controls or the shell's bar.
 
@@ -39,11 +39,12 @@ test('a viewer prints a one-page recipe with the summary beside the steps and no
   await signInAgainAs(page, C);
   await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
 
-  // On screen: the menu is there for a viewer, reachable by keyboard, and Print in it prints.
-  const more = page.getByRole('button', { name: /^More for/ });
-  await expect(more).toBeVisible();
-  await more.focus();
-  await expect(more).toBeFocused();
+  // On screen: a viewer's Print is its own button, not a menu of one, and the keyboard reaches it.
+  await expect(page.getByRole('button', { name: /^More for/ })).toHaveCount(0);
+  const print = page.getByRole('button', { name: 'Print Fixture Working' });
+  await expect(print).toBeVisible();
+  await print.focus();
+  await expect(print).toBeFocused();
   await page.evaluate(() => {
     (window as unknown as { printed: number }).printed = 0;
     window.print = () => {
@@ -51,12 +52,11 @@ test('a viewer prints a one-page recipe with the summary beside the steps and no
     };
   });
   await page.keyboard.press('Enter');
-  await page.getByRole('menuitem', { name: 'Print' }).click();
   expect(await page.evaluate(() => (window as unknown as { printed: number }).printed)).toBe(1);
 
   // In print: the controls and the shell's bar are gone, the summary shows the formal names.
   await page.emulateMedia({ media: 'print' });
-  await expect(more).toBeHidden();
+  await expect(print).toBeHidden();
   await expect(page.getByRole('banner')).toBeHidden();
   await expect(page.getByRole('link', { name: /Back to Grimoire/ })).toBeHidden();
   const summary = page.getByRole('list', { name: 'Ingredients' });
@@ -158,8 +158,8 @@ test('the printed recipe names the coven with no line under it, leads with the i
     Math.max(heading.top, steps.top),
   );
 
-  // The Ingredients heading starts level with the Instructions heading, which stands over the steps.
-  const instructions = await box(page.getByRole('heading', { name: 'Instructions' }));
+  // The Ingredients heading starts level with the Steps heading, which stands over the steps.
+  const instructions = await box(page.getByRole('heading', { name: 'Steps', exact: true }));
   expect(Math.abs(heading.top - instructions.top)).toBeLessThanOrEqual(1);
   const firstStep = await box(
     page.getByRole('list', { name: 'Steps' }).getByRole('listitem').first(),
@@ -169,7 +169,7 @@ test('the printed recipe names the coven with no line under it, leads with the i
   // Amounts share one column and names another beside it, each set to the left, so the amounts start
   // on one line and the names on another, and a line with no amount keeps its name in its column.
   const columns = await page.evaluate(() => {
-    const lines = [...document.querySelectorAll('ul[aria-label="Ingredients"] > li')];
+    const lines = [...document.querySelectorAll('.spell-recipe__summary ul > li')];
     return lines.map((li) => {
       const [need, name] = [li.children[0]!, li.children[1]!];
       return {
@@ -192,7 +192,7 @@ test('the printed recipe names the coven with no line under it, leads with the i
   // The amounts are as heavy as the steps' own amounts.
   const weights = await page.evaluate(() => ({
     summary: getComputedStyle(
-      document.querySelector('ul[aria-label="Ingredients"] .spell-recipe__need')!,
+      document.querySelector('.spell-recipe__summary ul .spell-recipe__need')!,
     ).fontWeight,
     step: getComputedStyle(document.querySelector('.spell-recipe__steps .step-row__amount')!)
       .fontWeight,
@@ -209,4 +209,114 @@ test('the printed recipe names the coven with no line under it, leads with the i
     return line.getBoundingClientRect().left - heading.getBoundingClientRect().left;
   });
   expect(Math.abs(indent)).toBeLessThanOrEqual(1);
+});
+
+test('the printed recipe is an A4 sheet on white with no drawings, its note ruled the width of the facts and a step note at the body size', async ({
+  page,
+}) => {
+  const coven = await seedCoven(page, 'Fixture Coven Sheet', 'spell-print-sheet.test', {
+    A: 'owner',
+  });
+  const { A } = coven.users;
+  const spellId = await withSql(async (sql) => {
+    const held = await compendiumVariant(sql, 'Rosemary', 'Herb');
+    const id = await insertSpell(sql, coven.id, 'Fixture Sheet', 'workspace', A, 'complete');
+    await sql`update spells set jar_description = '4 oz jar', note = 'Keep it by the hearth' where id = ${id}`;
+    const step = await insertStep(sql, id, held, { quantity: 2, unit: 'g', position: 0 }, A);
+    await sql`update spell_steps set body = 'Crumble it over the salt' where id = ${step}`;
+    return id;
+  });
+  await signInAgainAs(page, A);
+
+  // Another page prints on the reader's own sheet (Letter, Chromium's default), so the A4 below is
+  // the recipe's own.
+  const mediaBox = async () => {
+    const pdf = (await page.pdf({ preferCSSPageSize: true })).toString('latin1');
+    const [, width, height] = pdf.match(/\/MediaBox\s*\[\s*0 0 ([\d.]+) ([\d.]+)\s*\]/)!;
+    return { width: Number(width), height: Number(height) };
+  };
+  await page.goto(`/coven/${coven.slug}/grimoire`);
+  await page.emulateMedia({ media: 'print' });
+  const other = await mediaBox();
+  expect(Math.abs(other.width - 612)).toBeLessThanOrEqual(2);
+  expect(Math.abs(other.height - 792)).toBeLessThanOrEqual(2);
+  await page.emulateMedia({ media: 'screen' });
+
+  await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+  await expect(page.getByText('Keep it by the hearth')).toBeVisible();
+
+  // On screen the drawings are drawn and the page has its ground, so their absence in print is
+  // the print rules' doing.
+  const drawings = () =>
+    page
+      .locator('.backdrop')
+      .evaluateAll((els) => els.filter((el) => getComputedStyle(el).display !== 'none').length);
+  const grounds = () =>
+    page.evaluate(() => [
+      getComputedStyle(document.documentElement).backgroundColor,
+      getComputedStyle(document.body).backgroundColor,
+    ]);
+  const clear = 'rgba(0, 0, 0, 0)';
+  expect(await drawings()).toBeGreaterThan(0);
+  expect((await grounds())[1]).not.toBe(clear);
+
+  await page.emulateMedia({ media: 'print' });
+  expect(await drawings()).toBe(0);
+  expect(await grounds()).toEqual([clear, clear]);
+
+  // The note's hairline is the note's top border, so its width is the note's.
+  const widths = await page.evaluate(() => ({
+    note: document.querySelector('.spell-recipe__note')!.getBoundingClientRect().width,
+    facts: document.querySelector('.spell-recipe__facts-box')!.getBoundingClientRect().width,
+  }));
+  expect(Math.abs(widths.note - widths.facts)).toBeLessThanOrEqual(1);
+
+  const sizes = await page.getByText('Crumble it over the salt').evaluate((el) => ({
+    note: getComputedStyle(el).fontSize,
+    root: getComputedStyle(document.documentElement).fontSize,
+  }));
+  expect(sizes.note).toBe(sizes.root);
+
+  const sheet = await mediaBox();
+  expect(Math.abs(sheet.width - 595.28)).toBeLessThanOrEqual(2);
+  expect(Math.abs(sheet.height - 841.89)).toBeLessThanOrEqual(2);
+});
+
+test('a printed draft private spell carries its Draft and Private badges in the head, with no Edited line', async ({
+  page,
+}) => {
+  const coven = await seedCoven(page, 'Fixture Coven Marks', 'spell-print-marks.test', {
+    A: 'owner',
+  });
+  const { A } = coven.users;
+  const spellId = await withSql(async (sql) => {
+    const held = await compendiumVariant(sql, 'Rosemary', 'Herb');
+    const id = await insertSpell(sql, coven.id, 'Fixture Marked', 'private', A, 'draft');
+    await sql`update spells set intent = 'To mark a draft' where id = ${id}`;
+    await insertStep(sql, id, held, { quantity: 2, unit: 'g', position: 0 }, A);
+    return id;
+  });
+  await signInAgainAs(page, A);
+  await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+  const head = page.locator('header.spell-recipe__head');
+  const draft = head.getByText('Draft', { exact: true });
+  const shared = head.getByText('Private', { exact: true });
+  const edited = page.locator('.last-edit');
+  // On screen both badges and the Edited line show, so what print does is the print rules' doing.
+  await expect(draft).toBeVisible();
+  await expect(shared).toBeVisible();
+  await expect(edited).toBeVisible();
+
+  await page.emulateMedia({ media: 'print' });
+  await expect(edited).toBeHidden();
+  await expect(draft).toBeVisible();
+  await expect(shared).toBeVisible();
+  // The badges stand in the head, between the title's top and the intent under it.
+  const box = (locator: Locator) => locator.evaluate((el) => el.getBoundingClientRect().toJSON());
+  const title = await box(page.getByRole('heading', { level: 1, name: 'Fixture Marked' }));
+  const intent = await box(page.getByText('To mark a draft'));
+  for (const badge of [await box(draft), await box(shared)]) {
+    expect(badge.top).toBeGreaterThanOrEqual(title.top - 1);
+    expect(badge.bottom).toBeLessThanOrEqual(intent.top);
+  }
 });

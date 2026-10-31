@@ -2,6 +2,7 @@ import type { Route } from 'next';
 import type { WorkingStep } from '@/components/RecordWorking/types';
 import type { StockDialogProps } from '@/components/StockDialog/types';
 import type { RecipeStep } from '@/components/SpellRecipe/types';
+import { withParam } from '@/lib/list-href';
 import type { SpellStepView } from '@/modules/grimoire';
 
 // A spell's steps as the recipe page draws them: the service's views, already in recipe order,
@@ -12,8 +13,7 @@ import type { SpellStepView } from '@/modules/grimoire';
 export const UNAVAILABLE_INGREDIENT = 'Unavailable Ingredient';
 
 /** `hereHref` with the ingredient's details asked for, `entry=<id>` added so they open over the spell. */
-export const entryHrefOf = (hereHref: Route, id: string): Route =>
-  `${hereHref}${hereHref.includes('?') ? '&' : '?'}entry=${id}` as Route;
+export const entryHrefOf = (hereHref: Route, id: string): Route => withParam(hereHref, 'entry', id);
 
 /** `views` as the recipe draws them on the page at `hereHref`, whose address the Quick Look eyes add `entry=` to. */
 export function recipeStepsOf(views: readonly SpellStepView[], hereHref: Route): RecipeStep[] {

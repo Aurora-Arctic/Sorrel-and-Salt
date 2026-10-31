@@ -110,11 +110,11 @@ const NONE: RequestHandler[] = [];
 // Pressed already, as after a click on the stock button: Dried Leaf chosen and
 // badged Low Stock (with every form held, Resin is listed as unmeasured). With no
 // jar, the fields' column holds its place so the dialog keeps its size.
-// `remove` presses the chosen jar's bin, so its removal waits for Save.
-// `save` types into the chosen jar's Quantity and presses Save, which NOT_FOUND
+// `remove` presses the chosen jar's bin, so its removal waits for Save Stock.
+// `save` types into the chosen jar's Quantity and presses Save Stock, which NOT_FOUND
 // answers: the server's sentence in the alert, no form marked, input kept.
 // `refuse` edits Dried Leaf's Quantity and Oil's Low Stock At, removes Resin and
-// presses Save, which REFUSAL answers: both forms marked, Dried Leaf chosen with
+// presses Save Stock, which REFUSAL answers: both forms marked, Dried Leaf chosen with
 // its error in view, Resin still staged, no alert.
 const Pressed = ({
   jars,
@@ -192,5 +192,5 @@ export const States: Story = {
   argTypes: {
     state: { control: 'select', options: Object.keys(STOCK_STATES), mapping: STOCK_STATES },
   },
-  render: ({ state }) => <div key={String(state)}>{state}</div>,
+  render: ({ state }) => <div>{state}</div>,
 };

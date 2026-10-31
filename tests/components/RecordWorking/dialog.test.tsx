@@ -3,6 +3,8 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import RecordWorkingButton, { RecordWorkingDialog } from '@/components/RecordWorking';
 import type {
+  RecordWorkingMembersQuery,
+  RecordWorkingMembersQueryVariables,
   RecordWorkingMutation,
   RecordWorkingMutationVariables,
   UpdateWorkingMutation,
@@ -10,7 +12,14 @@ import type {
   WorkingDeductionPreviewQuery,
 } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
-import { mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
+import { HttpResponse } from 'msw/http';
+import {
+  graphqlLink,
+  mockGraphQLError,
+  mockGraphQLMutation,
+  mockGraphQLQuery,
+} from '../../support/msw/graphql';
+import { server } from '../../support/msw/server';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
@@ -20,13 +29,35 @@ vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 const WORKSPACE = '00000000-0000-4000-8000-000000000001';
 const SPELL = '00000000-0000-4000-8000-000000000002';
+// The coven's members as the server holds them: the box searches them as the user types.
 const MEMBERS = [
-  { userId: 'u1', name: 'Testa Owner' },
-  { userId: 'u2', name: 'Mocka Member' },
+  { id: 'u1', name: 'Testa Owner' },
+  { id: 'u2', name: 'Mocka Member' },
 ];
+const RECORDER = { userId: 'u1', name: 'Testa Owner' };
 const STEPS = [{ id: 's1', name: 'Testwort' }];
 
-beforeEach(() => router.refresh.mockClear());
+/** Answers the participant box's search as the server does, with the members whose name holds the text. */
+function mockMembers(users: readonly { id: string; name: string | null }[] = MEMBERS) {
+  const asked: RecordWorkingMembersQueryVariables[] = [];
+  mockGraphQLQuery<RecordWorkingMembersQuery, RecordWorkingMembersQueryVariables>(
+    'RecordWorkingMembers',
+    (variables) => {
+      asked.push(variables);
+      const text = (variables.query ?? '').toLowerCase();
+      const edges = users
+        .filter(({ name }) => name === null || name.toLowerCase().includes(text))
+        .map((user) => ({ node: { user } }));
+      return { workspace: { id: WORKSPACE, members: { edges } } } as RecordWorkingMembersQuery;
+    },
+  );
+  return asked;
+}
+
+beforeEach(() => {
+  router.refresh.mockClear();
+  mockMembers();
+});
 
 const dialog = () => screen.getByRole('dialog');
 
@@ -67,14 +98,14 @@ function openButton(visibility: 'private' | 'workspace' = 'workspace') {
       <RecordWorkingButton
         workspaceId={WORKSPACE}
         spellId={SPELL}
+        spellName="Testwort Tonic"
         spellVisibility={visibility}
-        members={MEMBERS}
-        recorderId="u1"
+        recorder={RECORDER}
         steps={STEPS}
       />,
     ),
   );
-  fireEvent.click(screen.getByRole('button', { name: 'Record a Working' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Record a Working of Testwort Tonic' }));
 }
 
 describe('Record a Working', () => {
@@ -87,7 +118,7 @@ describe('Record a Working', () => {
     fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Note' }), {
       target: { value: 'Under the new moon' },
     });
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save as Draft' }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]).toMatchObject({
       workspaceId: WORKSPACE,
@@ -103,13 +134,132 @@ describe('Record a Working', () => {
     expect(router.refresh).toHaveBeenCalled();
   });
 
+  it('asks nothing of the server on opening, though the participant box takes the focus', async () => {
+    const asked = mockMembers();
+    openButton();
+    const people = within(dialog()).getByRole('combobox', { name: 'Participants' });
+    await waitFor(() => expect(people).toHaveFocus());
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    expect(asked).toEqual([]);
+  });
+
+  it('searches the coven’s members once the typing settles, not on every key', async () => {
+    const asked = mockMembers();
+    openButton();
+    const people = within(dialog()).getByRole('combobox', { name: 'Participants' });
+    for (const value of ['M', 'Mo', 'Moc']) fireEvent.change(people, { target: { value } });
+    expect(await screen.findByRole('option', { name: 'Mocka Member' })).toBeInTheDocument();
+    expect(asked).toEqual([{ workspaceId: WORKSPACE, query: 'Moc', first: 10 }]);
+  });
+
+  it('leaves the members already taking part out of the matches', async () => {
+    openButton();
+    // Both names hold the letter, and the recorder already takes part.
+    fireEvent.change(within(dialog()).getByRole('combobox', { name: 'Participants' }), {
+      target: { value: 'a' },
+    });
+    expect(await screen.findByRole('option', { name: 'Mocka Member' })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: 'Testa Owner' })).toBeNull();
+  });
+
+  it('calls a member the server cannot name a former member', async () => {
+    mockMembers([{ id: 'u3', name: null }]);
+    openButton();
+    fireEvent.change(within(dialog()).getByRole('combobox', { name: 'Participants' }), {
+      target: { value: 'x' },
+    });
+    expect(await screen.findByRole('option', { name: 'A former member' })).toBeInTheDocument();
+  });
+
   it('saves, then shows the deduction preview, from Complete', async () => {
     const calls = mockRecording();
     openButton();
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Complete' }));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(await screen.findByRole('list', { name: 'Deductions' })).toHaveTextContent('Testwort');
-    expect(screen.getByRole('button', { name: 'Confirm' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Mark Complete' })).toBeEnabled();
+  });
+
+  it('draws the loading skeleton while the deduction preview is read', async () => {
+    const calls = mockRecording();
+    let answer: () => void = () => {};
+    server.use(
+      graphqlLink.query(
+        'WorkingDeductionPreview',
+        () =>
+          new Promise((resolve) => {
+            answer = () =>
+              resolve(
+                HttpResponse.json({
+                  data: { workingDeductionPreview: { deductions: [], warnings: [] } },
+                }),
+              );
+          }),
+      ),
+    );
+    openButton();
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Complete' }));
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(await within(dialog()).findByRole('status')).toHaveTextContent('Loading');
+    expect(within(dialog()).queryByRole('list', { name: 'Deductions' })).toBeNull();
+    answer();
+    expect(await within(dialog()).findByRole('list', { name: 'Deductions' })).toBeInTheDocument();
+  });
+
+  it('shuts Participants with the other fields while the save is on its way, so no name is lost', async () => {
+    let answer: () => void = () => {};
+    server.use(
+      graphqlLink.mutation('RecordWorking', ({ variables }) => {
+        const workedOn = (variables as RecordWorkingMutationVariables).input.workedOn;
+        return new Promise((resolve) => {
+          answer = () =>
+            resolve(
+              HttpResponse.json({
+                data: {
+                  recordWorking: {
+                    id: 'w1',
+                    status: 'draft',
+                    note: null,
+                    workedOn,
+                    visibility: 'workspace',
+                    participants: [],
+                  },
+                },
+              }),
+            );
+        });
+      }),
+    );
+    openButton();
+    const people = within(dialog()).getByRole('combobox', { name: 'Participants' });
+    const removeRecorder = within(dialog()).getByRole('button', { name: /Remove.*Testa Owner/ });
+    expect(people).toBeEnabled();
+    expect(removeRecorder).toBeEnabled();
+
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
+
+    await waitFor(() =>
+      expect(within(dialog()).getByRole('textbox', { name: 'Note' })).toBeDisabled(),
+    );
+    expect(people).toBeDisabled();
+    expect(removeRecorder).toBeDisabled();
+    answer();
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+  });
+
+  it('describes Participants by the service’s refusal of a name', async () => {
+    mockGraphQLError('RecordWorking', {
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['participants', 0], message: 'Choose a member of this coven' }],
+    });
+    openButton();
+    const people = within(dialog()).getByRole('combobox', { name: 'Participants' });
+    expect(people).not.toHaveAccessibleDescription();
+
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
+
+    await waitFor(() => expect(people).toHaveAttribute('aria-invalid', 'true'));
+    expect(people).toHaveAccessibleDescription('Choose a member of this coven');
   });
 
   it('adds a typed name as a chip and sends it as a name', async () => {
@@ -121,7 +271,7 @@ describe('Record a Working', () => {
     expect(
       await within(dialog()).findByRole('button', { name: /Remove.*Guest Witness/ }),
     ).toBeInTheDocument();
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save as Draft' }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]?.input.participants).toEqual([{ userId: 'u1' }, { name: 'Guest Witness' }]);
   });
@@ -132,7 +282,7 @@ describe('Record a Working', () => {
     expect(
       within(dialog()).getByRole('button', { name: /Remove.*Testa Owner/ }),
     ).toBeInTheDocument();
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save as Draft' }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]?.input.participants).toEqual([{ userId: 'u1' }]);
   });
@@ -141,7 +291,7 @@ describe('Record a Working', () => {
     const calls = mockRecording();
     openButton();
     fireEvent.click(within(dialog()).getByRole('button', { name: /Remove.*Testa Owner/ }));
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save as Draft' }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]?.input.participants).toEqual([]);
   });
@@ -160,7 +310,7 @@ describe('Record a Working', () => {
     expect(share).toBeChecked();
     expect(share).toBeEnabled();
     fireEvent.click(share);
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save as Draft' }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]?.input.visibility).toBe('private');
   });
@@ -169,7 +319,7 @@ describe('Record a Working', () => {
     openButton();
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Cancel' }));
     expect(screen.queryByRole('dialog')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Record a Working' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Record a Working of Testwort Tonic' }));
     fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Note' }), {
       target: { value: 'x' },
     });
@@ -214,7 +364,6 @@ describe('Edit Working', () => {
           workspaceId={WORKSPACE}
           spellId={SPELL}
           spellVisibility="workspace"
-          members={MEMBERS}
           steps={STEPS}
           working={working}
           onClose={onClose}
@@ -228,7 +377,7 @@ describe('Edit Working', () => {
       within(dialog()).getByRole('button', { name: /Remove.*Testa Owner/ }),
     ).toBeInTheDocument();
     fireEvent.change(note, { target: { value: 'Second try' } });
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save as Draft' }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Working' }));
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]).toMatchObject({
       workspaceId: WORKSPACE,
@@ -245,7 +394,6 @@ describe('Edit Working', () => {
           workspaceId={WORKSPACE}
           spellId={SPELL}
           spellVisibility="workspace"
-          members={MEMBERS}
           steps={STEPS}
           deleteWorking={{ name: '1 October 2026', remove: () => Promise.resolve() }}
           onClose={() => {}}
@@ -266,7 +414,6 @@ describe('Edit Working', () => {
           workspaceId={WORKSPACE}
           spellId={SPELL}
           spellVisibility="workspace"
-          members={MEMBERS}
           steps={STEPS}
           working={{ ...working, workedOn }}
           onClose={() => {}}
@@ -276,8 +423,15 @@ describe('Edit Working', () => {
     const complete = within(dialog()).getByRole('button', { name: 'Complete' });
     if (enabled) expect(complete).toBeEnabled();
     else expect(complete).toBeDisabled();
+    // The reason is written under the buttons, where a keyboard or touch reader finds it without the tip.
+    const reason = within(dialog()).queryByText('Complete on or after 1 January 2999');
+    if (enabled) expect(reason).toBeNull();
+    else {
+      expect(reason).toBeVisible();
+      expect(complete).toHaveAccessibleDescription('Complete on or after 1 January 2999');
+    }
     // A draft dated ahead still saves.
-    expect(within(dialog()).getByRole('button', { name: 'Save as Draft' })).toBeInTheDocument();
+    expect(within(dialog()).getByRole('button', { name: 'Save Working' })).toBeInTheDocument();
   });
 
   it('keeps a shared complete working shared', () => {
@@ -287,7 +441,6 @@ describe('Edit Working', () => {
           workspaceId={WORKSPACE}
           spellId={SPELL}
           spellVisibility="workspace"
-          members={MEMBERS}
           steps={STEPS}
           working={{ ...working, status: 'complete', visibility: 'workspace' }}
           onClose={() => {}}
