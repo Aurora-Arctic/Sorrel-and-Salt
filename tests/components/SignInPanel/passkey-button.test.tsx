@@ -2,6 +2,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import SignInPanel from '@/components/SignInPanel';
 import PasskeyButton from '@/components/SignInPanel/passkey-button';
+import { installHistory, setQuery } from './search-params';
 
 // The passkey plugin's client runs the browser's WebAuthn prompt, which happy-dom has none of, so `signIn.passkey` is
 // mocked and `PublicKeyCredential` stubbed per test; the rest of the module is the real one.
@@ -11,13 +12,18 @@ vi.mock('@/lib/auth-client', async (importOriginal) => ({
   signIn: { social: vi.fn(), passkey: (...args: unknown[]) => passkeyMock(...args) },
 }));
 
+vi.mock('next/navigation', async () => ({
+  useSearchParams: (await import('./search-params')).useSearchParams,
+}));
+
 const assignMock = vi.fn();
 const SIGNED_IN = { data: { session: {} }, error: null };
 const REFUSED = { data: null, error: { code: 'AUTH_CANCELLED', status: 400 } };
 const BUTTON = { name: 'Sign In with a Passkey' };
 
-/** The panel, whose email field is marked for passkey autofill. */
+/** The panel opened on its email view, whose address field is marked for passkey autofill. */
 function renderWithField(next?: string) {
+  setQuery('method=email');
   return render(<SignInPanel next={next} configured={['google']} />);
 }
 
@@ -31,12 +37,15 @@ const settle = () => act(async () => {});
 
 beforeEach(() => {
   vi.stubGlobal('location', { ...window.location, assign: assignMock });
+  installHistory();
 });
 
 afterEach(() => {
   passkeyMock.mockReset();
   assignMock.mockReset();
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+  setQuery('');
 });
 
 describe('Sign In with a Passkey', () => {
@@ -82,19 +91,29 @@ describe('passkey autofill', () => {
     ['answers that it cannot', () => stubConditional(false)],
     ['has no conditional mediation', () => vi.stubGlobal('PublicKeyCredential', {})],
     ['has no WebAuthn at all', () => vi.stubGlobal('PublicKeyCredential', undefined)],
-  ])('starts no autofill where the browser %s, and the button still signs in', async (_, stub) => {
+  ])('starts no autofill where the browser %s', async (_, stub) => {
     stub();
     passkeyMock.mockResolvedValue(SIGNED_IN);
     renderWithField();
     await settle();
 
     expect(passkeyMock).not.toHaveBeenCalled();
+    expect(screen.getByLabelText(/^Email Address/)).toBeInTheDocument();
+  });
+
+  it('starts when the email view opens, and not on the view of buttons', async () => {
+    stubConditional(true);
+    passkeyMock.mockResolvedValue(REFUSED);
+    render(<SignInPanel configured={['google']} />);
+    await settle();
+    expect(passkeyMock).not.toHaveBeenCalled();
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', BUTTON));
+      fireEvent.click(screen.getByRole('button', { name: 'Continue with Email' }));
     });
-    expect(passkeyMock).toHaveBeenCalledWith();
-    expect(assignMock).toHaveBeenCalledWith('/sign-in');
+    await settle();
+
+    expect(passkeyMock).toHaveBeenCalledWith({ autoFill: true });
   });
 
   it('starts no autofill with no field on the page to offer it in', async () => {

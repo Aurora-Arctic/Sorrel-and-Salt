@@ -10,7 +10,7 @@ import BusyButton from '../BusyButton';
 import { FieldShell, fieldDescription } from '../Field';
 import Notice from '../Notice';
 import PasswordField from '../PasswordField';
-import { PASSKEY_AUTOCOMPLETE } from './passkey-autofill';
+import { PASSKEY_AUTOCOMPLETE, usePasskeyAutofill } from './passkey-autofill';
 import TwoFactorStep from './two-factor-step';
 import type { PasswordFormProps } from './types';
 
@@ -69,12 +69,19 @@ async function hasSession(): Promise<boolean> {
   return Boolean(data);
 }
 
-const PasswordForm = ({ next, lastUsed, onStart, onCodeStep }: PasswordFormProps): ReactElement => {
+const PasswordForm = ({
+  next,
+  lastUsed,
+  email,
+  onEmailChange,
+  onBack,
+  onStart,
+  onCodeStep,
+}: PasswordFormProps): ReactElement => {
   const nameId = useId();
   const emailId = useId();
   const [mode, setMode] = useState<Mode>('sign-in');
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [pending, setPending] = useState(false);
   const [problem, setProblem] = useState<Refusal>({});
@@ -83,6 +90,8 @@ const PasswordForm = ({ next, lastUsed, onStart, onCodeStep }: PasswordFormProps
   // The right password was given for an account with two-factor on: the code step replaces this form.
   const [askingForCode, setAskingForCode] = useState(false);
   const { ref, settle } = useResultFocus<HTMLDivElement>();
+  // This view holds the field the browser offers saved passkeys in, so the offer lives and dies with it.
+  usePasskeyAutofill(next);
 
   const signingUp = mode === 'sign-up';
   const ready =
@@ -161,7 +170,15 @@ const PasswordForm = ({ next, lastUsed, onStart, onCodeStep }: PasswordFormProps
 
   return (
     <div className="sign-in-panel__password" ref={ref}>
-      <h2 className="sign-in-panel__password-heading">
+      <button
+        type="button"
+        className="btn btn--quiet btn--small sign-in-panel__back"
+        onClick={onBack}
+      >
+        Back
+      </button>
+      {/* The view's heading: focus lands here when the view opens (./index.tsx). */}
+      <h1 className="sign-in-panel__password-heading" tabIndex={-1} data-view-heading>
         {signingUp ? 'Create an Account with Email' : 'Sign In with Email'}
         {lastUsed && !signingUp && (
           <>
@@ -169,7 +186,7 @@ const PasswordForm = ({ next, lastUsed, onStart, onCodeStep }: PasswordFormProps
             <span className="badge badge--last-used">Last Used</span>
           </>
         )}
-      </h2>
+      </h1>
       {problem.alert && (
         <Notice kind="error" result>
           {problem.alert}
@@ -205,7 +222,7 @@ const PasswordForm = ({ next, lastUsed, onStart, onCodeStep }: PasswordFormProps
             autoComplete={signingUp ? 'email' : PASSKEY_AUTOCOMPLETE}
             placeholder="Add an email"
             value={email}
-            onChange={(event) => setEmail(event.target.value)}
+            onChange={(event) => onEmailChange(event.target.value)}
             aria-required
             {...emailField.aria}
           />

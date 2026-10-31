@@ -33,8 +33,9 @@ async function autofillAvailable(): Promise<boolean> {
 
 /**
  * Offers saved passkeys in the autofill of the page's field marked `PASSKEY_AUTOCOMPLETE`, where the browser can, and
- * signs in with the one picked. Started only when such a field is on the page, since the browser has nowhere to offer
- * them otherwise. A ceremony that ends unpicked or refused says nothing: the visitor did not ask for it.
+ * signs in with the one picked. Started when the component using it mounts, and only if such a field is on the page, since
+ * the browser has nowhere to offer them otherwise. On unmount its result is ignored, and the next ceremony Better Auth's
+ * client starts (the passkey button's, or a remount) cancels this one. A ceremony that ends unpicked or refused says nothing: the visitor did not ask for it.
  */
 export function usePasskeyAutofill(next: string | undefined): void {
   useEffect(() => {
