@@ -21,8 +21,11 @@ vi.mock('@/lib/auth-client', async (importOriginal) => ({
     disable: (...args: unknown[]) => disable(...args),
     verifyTotp: (...args: unknown[]) => verifyTotp(...args),
   },
+  // The print sheet names the account; the session hook would otherwise fetch from a server the test has none of.
+  useSession: () => ({ data: { user: { email: EMAIL } } }),
 }));
 
+const EMAIL = 'someone@two-factor.test';
 const PASSWORD = 'Testwort hums along the hedge';
 const SECRET = 'JBSWY3DPEHPK3PXP';
 const TOTP_URI = `otpauth://totp/Sorrel%20%26%20Salt:someone%40two-factor.test?secret=${SECRET}&issuer=Sorrel%20%26%20Salt&digits=6&period=30`;
@@ -95,14 +98,20 @@ describe('TwoFactorSettings', () => {
     expect(isOn()).toBe(false);
   });
 
-  it('turns on with a code from the app, and no longer shows the codes', async () => {
+  it('turns on with a code from the app once the codes are saved, and no longer shows the codes', async () => {
     verifyTotp.mockResolvedValue({ data: {}, error: null });
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: vi.fn().mockResolvedValue(undefined) },
+      configurable: true,
+    });
     await startEnrolment();
+    await press(button('Copy'));
 
     type('Code From Your App', '123 456');
     await press(button('Confirm and Turn On'));
 
     expect(verifyTotp).toHaveBeenCalledWith({ code: '123456' });
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(isOn()).toBe(true);
     expect(within(twoFactorRegion()).queryByText('JBSW Y3DP EHPK 3PXP')).not.toBeInTheDocument();
     expect(
@@ -110,9 +119,39 @@ describe('TwoFactorSettings', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('warns before turning on with the codes unsaved, and turns on only when told to', async () => {
+    verifyTotp.mockResolvedValue({ data: {}, error: null });
+    await startEnrolment();
+    type('Code From Your App', '123456');
+
+    await press(button('Confirm and Turn On'));
+
+    const dialog = screen.getByRole('dialog', { name: 'Turn On Without Saving Your Codes?' });
+    expect(verifyTotp).not.toHaveBeenCalled();
+    expect(isOn()).toBe(false);
+
+    await press(within(dialog).getByRole('button', { name: 'Turn On' }));
+
+    expect(verifyTotp).toHaveBeenCalledWith({ code: '123456' });
+    expect(isOn()).toBe(true);
+  });
+
+  it('goes back to the codes, still unconfirmed, when the warning is answered Go Back', async () => {
+    await startEnrolment();
+    type('Code From Your App', '123456');
+    await press(button('Confirm and Turn On'));
+
+    await press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Go Back' }));
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(verifyTotp).not.toHaveBeenCalled();
+    expect(within(twoFactorRegion()).getByRole('list', { name: 'Backup Codes' })).toBeVisible();
+  });
+
   it('says a wrong code with the field and stays off', async () => {
     verifyTotp.mockResolvedValue({ data: null, error: { status: 401, code: 'INVALID_CODE' } });
     await startEnrolment();
+    await press(button('Download'));
 
     type('Code From Your App', '000000');
     await press(button('Confirm and Turn On'));
@@ -203,7 +242,9 @@ describe('TwoFactorSettings', () => {
       await press(button('Print'));
 
       expect(print).toHaveBeenCalledOnce();
-      expect(page.body.textContent).toBe(EXPECTED);
+      const printed = [...page.body.querySelectorAll('li')].map((item) => item.textContent);
+      expect(printed.join('\n')).toBe(EXPECTED);
+      expect(page.body.textContent).toContain(EMAIL);
       open.mockRestore();
     });
   });
