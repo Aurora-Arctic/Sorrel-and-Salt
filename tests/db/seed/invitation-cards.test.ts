@@ -6,6 +6,7 @@ import { useTestDatabase } from '../../support/db/database';
 import { fromRoot } from '../../support/paths';
 import { beginSeedTransaction } from '@/db/seed/idempotent';
 import { seedInvitationCards } from '@/db/seed/invitation-cards';
+import { batchName } from '@/components/AdminCards/batches';
 import { FIXTURE_USERS, WORKSPACE_W_ID } from '@/db/seed/standard';
 
 // The fake invitation cards the `demo` scenario seeds for the admin Invitation Cards and Card Sign-Ups tabs, run against the `standard` cast.
@@ -48,6 +49,13 @@ describe('the invitation card seed', () => {
       }
       const live = batches.find((b) => b.state === 'live');
       expect(live?.cards).toBe(18);
+    });
+
+    it('gives the three batches distinct batchNames, as the admin screen names them', async () => {
+      const rows = await sql<
+        { batch_id: string }[]
+      >`select distinct batch_id from invitations where kind = 'card'`;
+      expect(new Set(rows.map((r) => batchName(r.batch_id))).size).toBe(3);
     });
 
     it('stores only hashes, all different', async () => {
