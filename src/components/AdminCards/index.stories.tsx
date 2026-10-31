@@ -62,6 +62,10 @@ const ARRIVALS: ArrivalEntry[] = [
     acceptedAt: new Date('2026-10-30T10:00:00Z'),
     batchId: BATCH,
     covens: ['Fixture Coven'],
+    account: {
+      openHref: '/admin/users?user=fixture',
+      heading: { eyebrow: 'User', title: 'Fixture Wort' },
+    },
   },
 ];
 

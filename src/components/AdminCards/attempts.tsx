@@ -8,6 +8,7 @@ import { GENERIC_FAILURE } from '../../lib/graphql-failure';
 import { cardPlace } from '../../lib/invitation-cards/limits';
 import { inUtc } from '../../lib/utc';
 import StackTable from '../DataTable';
+import { MysticEyeIcon } from '../IconTip/icons';
 import { ModalButton } from '../Modal';
 import Notice from '../Notice';
 import { userListHref } from '../UserList/href';
@@ -160,7 +161,7 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
       {more && after && (
         <button
           type="button"
-          className="btn btn--small"
+          className="icon-tip__edit"
           disabled={loading}
           onClick={() => {
             setLoading(true);
@@ -174,12 +175,13 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
   );
 };
 
-/** The View button beside a batch's count: a dialog listing the refused opens of its cards. */
+/** The eye-icon button beside a batch's count: a dialog listing the refused opens of its cards. */
 const CardAttempts = ({ batchId }: { batchId: string }): ReactElement => (
   <ModalButton
-    label="View"
+    tip="View Refused Opens"
+    label={<MysticEyeIcon />}
     ariaLabel={`View Refused Opens, batch ${batchName(batchId)}`}
-    className="btn btn--small"
+    className="icon-tip__edit"
     title={`Refused Opens, Batch ${batchName(batchId)}`}
   >
     {() => <AttemptList batchId={batchId} />}

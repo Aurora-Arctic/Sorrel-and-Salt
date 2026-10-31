@@ -8,6 +8,7 @@ import StackTable from '../DataTable';
 import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
 import { batchName } from './batches';
+import UserLink from '../UserList/user-link';
 import DownloadCsv from './download-csv';
 import type { AdminArrivalsProps } from './types';
 import './index.scss';
@@ -39,7 +40,15 @@ const AdminArrivals = ({
               heading: 'Account',
               cell: (arrival) => (
                 <>
-                  {arrival.accountName}
+                  {arrival.account ? (
+                    <UserLink
+                      href={arrival.account.openHref}
+                      heading={arrival.account.heading}
+                      name={arrival.accountName}
+                    />
+                  ) : (
+                    arrival.accountName
+                  )}
                   {arrival.accountEmail && (
                     <>
                       <br />
