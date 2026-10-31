@@ -9,6 +9,8 @@ import type {
   RevokeInvitationCardBatchMutation,
   RevokeInvitationCardBatchMutationVariables,
 } from '@/gql/graphql';
+import { RouteModalContext } from '@/components/Modal/route-modal-provider';
+import type { RouteModalOpener } from '@/components/Modal/types';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import { mockGraphQLMutation } from '../../support/msw/graphql';
 
@@ -162,7 +164,7 @@ describe('AdminCards', () => {
     expect(within(dialog()).queryByRole('button', { name: /Download Card/ })).toBeNull();
   });
 
-  it('revokes a batch after asking, naming the batch', async () => {
+  it('sends nothing for Revoke Batch until the question is confirmed, then revokes the batch', async () => {
     const calls: RevokeInvitationCardBatchMutationVariables[] = [];
     mockGraphQLMutation<
       RevokeInvitationCardBatchMutation,
@@ -178,15 +180,20 @@ describe('AdminCards', () => {
     );
 
     const open = screen.getByRole('button', { name: /^Revoke Batch b1111111/ });
-    expect(open).toHaveClass('btn--quiet');
+    expect(open).toHaveClass('btn--destructive');
     fireEvent.click(open);
+    // Asking comes first: the open alone sends nothing.
+    expect(calls).toEqual([]);
     expect(
       within(screen.getByRole('dialog')).getByText(/minted 1 October 2026\?/),
     ).toBeInTheDocument();
     expect(screen.getByText(/already accepted a card keep their access/)).toBeInTheDocument();
-    fireEvent.click(
-      within(screen.getByRole('dialog')).getByRole('button', { name: 'Revoke Batch' }),
-    );
+    const confirm = within(screen.getByRole('dialog')).getByRole('button', {
+      name: 'Revoke Batch',
+    });
+    expect(confirm).toHaveClass('btn--destructive');
+    expect(calls).toEqual([]);
+    fireEvent.click(confirm);
 
     await waitFor(() => expect(calls).toEqual([{ batchId: BATCH_ONE }]));
   });
@@ -294,6 +301,11 @@ describe('Mint Cards default expiry', () => {
   });
 });
 
+const WORT = {
+  openHref: '/admin/users?user=u-wort' as const,
+  heading: { eyebrow: 'User', title: 'Wort Tester' },
+};
+
 describe('AdminArrivals', () => {
   it('lists each arrival with its account, date and owned covens', () => {
     render(
@@ -306,6 +318,7 @@ describe('AdminArrivals', () => {
             acceptedAt: new Date('2026-10-30T10:00:00Z'),
             batchId: 'b1111111-0000-4000-8000-000000000001',
             covens: ['Testwort Coven', 'Second Coven'],
+            account: WORT,
           },
           {
             id: 'a2',
@@ -314,6 +327,7 @@ describe('AdminArrivals', () => {
             acceptedAt: new Date('2026-10-29T10:00:00Z'),
             batchId: 'b1111111-0000-4000-8000-000000000001',
             covens: [],
+            account: null,
           },
         ]}
       />,
@@ -326,5 +340,42 @@ describe('AdminArrivals', () => {
     expect(within(first).getByText('wort@example.test')).toBeInTheDocument();
     expect(within(first).getByText('Testwort Coven, Second Coven')).toBeInTheDocument();
     expect(within(second).getByText('None yet')).toBeInTheDocument();
+  });
+
+  it("opens the account's user modal from its name, and leaves a removed account as plain text", () => {
+    const opener: RouteModalOpener = { loading: undefined, open: vi.fn(), cancel: vi.fn() };
+    render(
+      <RouteModalContext.Provider value={opener}>
+        <AdminArrivals
+          arrivals={[
+            {
+              id: 'a1',
+              accountName: 'Wort Tester',
+              accountEmail: 'wort@example.test',
+              acceptedAt: new Date('2026-10-30T10:00:00Z'),
+              batchId: 'b1111111-0000-4000-8000-000000000001',
+              covens: [],
+              account: WORT,
+            },
+            {
+              id: 'a2',
+              accountName: 'Removed account',
+              accountEmail: '',
+              acceptedAt: new Date('2026-10-29T10:00:00Z'),
+              batchId: 'b1111111-0000-4000-8000-000000000001',
+              covens: [],
+              account: null,
+            },
+          ]}
+        />
+      </RouteModalContext.Provider>,
+    );
+
+    const link = screen.getByRole('link', { name: 'Wort Tester' });
+    expect(link).toHaveAttribute('href', WORT.openHref);
+    fireEvent.click(link);
+    expect(opener.open).toHaveBeenCalledExactlyOnceWith(WORT.openHref, WORT.heading, undefined);
+    expect(screen.getByText('Removed account')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Removed account' })).toBeNull();
   });
 });

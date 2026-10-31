@@ -1,5 +1,14 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
 .admin-cards {
   &__none {
     opacity: 0.7;
   }
+}
+
+// The Revoke column: the shared dangerous-action column (`row-action-column`), red as the Impersonate
+// column is, since a revoke cannot be undone.
+.admin-cards__revoke {
+  @include row-action-column(1);
 }

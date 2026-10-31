@@ -7,6 +7,8 @@ import type { Session } from '../../../../../lib/session';
 import { readNumberedPage } from '@/lib/numbered-page';
 import { membershipsOf } from '@/modules/coven';
 import { countCardArrivals, listCardArrivals, usersForAdmin } from '@/modules/identity';
+import { userListHref } from '../../../../../components/UserList/href';
+import { userHeading } from '../users/user-heading';
 import { readListPlace } from '../../list-page';
 import type { CardsPageProps } from '../invitation-cards/types';
 import type { Route } from 'next';
@@ -15,6 +17,8 @@ export const metadata: Metadata = {
   title: 'Card Sign-Ups',
 };
 
+// The Users list unfiltered: a sign-up's name opens that list's own modal for the account.
+const NO_FILTER = { query: '', awaitingApproval: false };
 const REMOVED_ACCOUNT = 'Removed account';
 
 const readArrivals = cache(
@@ -39,6 +43,13 @@ const readArrivals = cache(
         accountEmail: !account || account instanceof Error ? '' : account.email,
         acceptedAt: node.acceptedAt,
         batchId: node.batchId,
+        account:
+          !account || account instanceof Error
+            ? null
+            : {
+                openHref: userListHref(NO_FILTER, undefined, account.id),
+                heading: userHeading(account),
+              },
         covens: Array.isArray(covens)
           ? covens.filter(({ role }) => role === 'owner').map(({ workspace }) => workspace.name)
           : [],
