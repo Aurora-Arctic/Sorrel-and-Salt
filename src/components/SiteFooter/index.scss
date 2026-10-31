@@ -64,12 +64,40 @@
   font-size: type-size('small');
 }
 
+// A bare icon: only the glyph at rest, the quiet button's fill under a pointer or the keyboard. `--icon-ground`
+// is what the support bubble's cut-out shows through, so it follows the surface behind it.
+.site-footer__support {
+  @include icon-button(2rem, 1.5rem);
+  --icon-ground: #{$surface-page};
+
+  &:hover,
+  &:focus-visible {
+    background-color: $fill-highlight-field;
+    --icon-ground: #{$fill-highlight-field};
+  }
+}
+
+// On a line of its own under the row, in the small size and the muted ink.
+.site-footer__tagline {
+  flex: 0 0 100%;
+  max-width: 66ch;
+  margin: 0;
+  color: $text-muted;
+  font-size: type-size('small');
+  line-height: 1.5;
+}
+
 // At a phone's width the row stacks, the name above the links, both at the left.
 @media (max-width: $shell-phone-width) {
   .site-footer__inner {
     flex-direction: column;
     align-items: flex-start;
     min-height: $footer-height-phone;
+  }
+
+  // In a column the basis would be a height.
+  .site-footer__tagline {
+    flex: none;
   }
 }
 

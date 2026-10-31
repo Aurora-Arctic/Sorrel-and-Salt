@@ -6,6 +6,7 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
+const { SITE_TAGLINE } = await import('@/lib/site');
 const { default: SiteFooter } = await import('@/components/SiteFooter');
 
 describe('SiteFooter', () => {
@@ -18,6 +19,11 @@ describe('SiteFooter', () => {
       'href',
       '/coven/hearth?support=',
     );
+  });
+
+  it('states what the site is and what its reference is not', () => {
+    render(<SiteFooter />);
+    expect(screen.getByText(SITE_TAGLINE)).toBeInTheDocument();
   });
 
   it('links the site name to the home page', () => {
