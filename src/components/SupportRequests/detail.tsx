@@ -181,6 +181,7 @@ const DetailBody = ({ request, viewer, assignees }: SupportDetailProps): ReactEl
                 {...aria}
                 value={request.assignee?.id ?? ''}
                 aria-busy={assign.busy || undefined}
+                disabled={assign.busy}
                 onChange={(event) => {
                   if (assign.busy) return;
                   void assign.run(
