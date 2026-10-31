@@ -21,7 +21,7 @@ export default function ForgotPasswordPage() {
           </p>
         </div>
         <ForgotPasswordForm />
-        <p>
+        <p className="forgot-password-form__back">
           <Link href="/sign-in">Back to Sign In</Link>
         </p>
       </div>
