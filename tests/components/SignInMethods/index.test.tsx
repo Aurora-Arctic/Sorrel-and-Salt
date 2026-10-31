@@ -88,12 +88,12 @@ describe('SignInMethods', () => {
     expect(within(row('Password')).getByText('Set')).toBeInTheDocument();
     expect(within(row('Password')).getByRole('link', { name: 'Manage Password' })).toHaveAttribute(
       'href',
-      '#account-password',
+      '/account/sign-in#password',
     );
     expect(within(row('Passkeys')).getByText('2 passkeys')).toBeInTheDocument();
     expect(within(row('Passkeys')).getByRole('link', { name: 'Manage Passkeys' })).toHaveAttribute(
       'href',
-      '#account-passkeys',
+      '/account/sign-in#passkeys',
     );
   });
 
@@ -107,15 +107,15 @@ describe('SignInMethods', () => {
     expect(within(row('Passkeys')).getByText('None Added')).toBeInTheDocument();
   });
 
-  it('starts a link with the provider, landing back on the account page either way', async () => {
+  it('starts a link with the provider, landing back on the Sign-In tab either way', async () => {
     render(<SignInMethods passwordHeld passkeyCount={0} linked={[DISCORD]} configured={ALL} />);
 
     await press(screen.getByRole('button', { name: 'Add Microsoft' }));
 
     expect(linkSocialMock).toHaveBeenCalledWith({
       provider: 'microsoft',
-      callbackURL: '/account',
-      errorCallbackURL: '/account?provider=microsoft',
+      callbackURL: '/account/sign-in',
+      errorCallbackURL: '/account/sign-in?provider=microsoft',
     });
   });
 
@@ -258,7 +258,7 @@ describe('SignInMethods', () => {
     expect(within(row('Discord')).queryByRole('paragraph')).not.toBeInTheDocument();
   });
 
-  it('Sign In Again signs out and sends the browser to sign-in with the account page as the return path', async () => {
+  it('Sign In Again signs out and sends the browser to sign-in with the Sign-In tab as the return path', async () => {
     signOutMock.mockResolvedValue({ error: null });
     vi.stubGlobal('location', { assign: assignMock });
     render(
@@ -277,7 +277,7 @@ describe('SignInMethods', () => {
     expect(signOutMock).toHaveBeenCalledTimes(1);
     const target = new URL(assignMock.mock.calls[0][0] as string, 'http://relative.invalid');
     expect(target.pathname).toBe('/sign-in');
-    expect(target.searchParams.get('next')).toBe('/account');
+    expect(target.searchParams.get('next')).toBe('/account/sign-in');
   });
 
   it('Sign In Again stays focused while busy and says a failed sign-out under itself', async () => {
