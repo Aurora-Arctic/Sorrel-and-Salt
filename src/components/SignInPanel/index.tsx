@@ -72,13 +72,13 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
     const query = params.toString();
     const url = query ? `?${query}` : window.location.pathname;
     if (toEmail) {
-      // The mark lets Back undo this push; the spread keeps the router's own state keys.
-      window.history.pushState({ ...window.history.state, [PUSHED_MARK]: true }, '', url);
+      // The mark lets Back undo this push. Next adds its own state keys; copying them in would make its patched pushState skip the sync.
+      window.history.pushState({ [PUSHED_MARK]: true }, '', url);
     } else if (window.history.state?.[PUSHED_MARK]) {
       window.history.back();
     } else {
       // Opened straight on the email view: there is no earlier entry of this page to return to.
-      window.history.replaceState(window.history.state, '', url);
+      window.history.replaceState(null, '', url);
     }
   };
 
