@@ -160,6 +160,8 @@ const SignInMethods = ({
       <ul className="sign-in-methods__list">
         {SOCIAL_PROVIDERS.map((provider) => {
           const account = accounts.find((candidate) => candidate.providerId === provider.id);
+          // A hidden provider is not offered, but a link already made is still listed so it can be removed.
+          if (provider.hidden && !account) return null;
           return (
             <ProviderRow
               key={provider.id}

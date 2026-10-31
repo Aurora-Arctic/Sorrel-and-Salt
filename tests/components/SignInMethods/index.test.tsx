@@ -61,13 +61,13 @@ describe('SignInMethods', () => {
     vi.unstubAllGlobals();
   });
 
-  it('lists every roster provider, offering the ones not linked', () => {
+  it('lists every shown roster provider, offering the ones not linked', () => {
     render(<SignInMethods passwordHeld passkeyCount={0} linked={[DISCORD]} configured={ALL} />);
 
-    expect(screen.getAllByRole('listitem')).toHaveLength(6);
+    expect(screen.getAllByRole('listitem')).toHaveLength(5);
     // A linked row is the one without an Add.
     expect(within(row('Discord')).queryByRole('button', { name: /^Add/ })).not.toBeInTheDocument();
-    for (const label of ['Google', 'Facebook', 'Microsoft']) {
+    for (const label of ['Google', 'Microsoft']) {
       expect(within(row(label)).getByRole('button', { name: `Add ${label}` })).toBeInTheDocument();
     }
   });
