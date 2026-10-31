@@ -46,12 +46,26 @@ const LastUsedView = () => {
 };
 const lastUsedNode = <LastUsedView />;
 
-// A browser that last signed in with a password: the email form carries the mark.
-const PasswordLastUsedView = () => {
-  lastUsed('email');
-  return <Page next="/" configured={ALL_PROVIDERS} />;
+// The second view, opened as a link to `?method=email` does: the workshop's router reads the query
+// from `parameters.nextjs.navigation`, as pushState does not reach it.
+const EMAIL_VIEW_PARAMETERS = { nextjs: { navigation: { query: { method: 'email' } } } };
+
+export const EmailView: Story = {
+  parameters: EMAIL_VIEW_PARAMETERS,
+  render: () => {
+    lastUsed(null);
+    return <Page next="/" configured={ALL_PROVIDERS} />;
+  },
 };
-const passwordLastUsedNode = <PasswordLastUsedView />;
+
+// A browser that last signed in with a password: the email view's heading carries the mark.
+export const PasswordLastUsed: Story = {
+  parameters: EMAIL_VIEW_PARAMETERS,
+  render: () => {
+    lastUsed('email');
+    return <Page next="/" configured={ALL_PROVIDERS} />;
+  },
+};
 
 // `error` reads the real mapping rather than a copied string, so this story
 // cannot go stale the way a hardcoded copy of the sentence did.
@@ -97,7 +111,6 @@ export const Failed: Story = {
 const STATES_STATES: Record<string, ReactNode> = {
   Default: defaultNode,
   'Last Used': lastUsedNode,
-  'Password Last Used': passwordLastUsedNode,
   'With Error': withErrorNode,
   'Some Unavailable': someUnavailableNode,
 };
