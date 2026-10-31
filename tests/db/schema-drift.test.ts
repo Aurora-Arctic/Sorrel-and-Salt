@@ -8,6 +8,8 @@ import * as cardInvitationAttempts from '@/modules/coven/schema/card-invitation-
 import * as invitations from '@/modules/coven/schema/invitations';
 import * as workspaces from '@/modules/coven/schema/workspaces';
 import * as supportRequests from '@/modules/support/schema/support-requests';
+import * as supportReplies from '@/modules/support/schema/support-replies';
+import * as supportTimeouts from '@/modules/support/schema/support-timeouts';
 import * as spellCategories from '@/modules/grimoire/schema/spell-categories';
 import * as spellSteps from '@/modules/grimoire/schema/spell-steps';
 import * as spellWorkingDeductions from '@/modules/grimoire/schema/spell-working-deductions';
@@ -60,6 +62,8 @@ const MODULES = [
   invitations,
   workspaces,
   supportRequests,
+  supportReplies,
+  supportTimeouts,
   spellCategories,
   spellSteps,
   spellWorkingDeductions,
