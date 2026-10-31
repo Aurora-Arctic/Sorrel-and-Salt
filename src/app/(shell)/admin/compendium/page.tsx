@@ -24,6 +24,7 @@ import { DEFAULT_PAGE_SIZE } from '../../../../lib/pagination';
 import { editorStamps } from '../editors';
 import { covensHolding, plusCovensOf } from '@/app/plus-covens';
 import {
+  getIngredient,
   ingredientDetailOf,
   readCompendiumReview,
   resolveCompendiumSlug,
@@ -116,6 +117,10 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
   // The review read for the entry the edit modal opens, its switch a field of the form; one row by id.
   const editReview = editing
     ? await readOrMissing(() => readCompendiumReview(session, editing.id))
+    : undefined;
+  // Whether the entry the modal edits is shown, for the form's own switch; a hidden entry is a curator's to read.
+  const editShown = editing
+    ? await readOrMissing(() => getIngredient(session, editing.id))
     : undefined;
   // The plus beside the pencil, for the covens the admin or curator is a member of and may add in:
   // none for one in no coven, so neither the plus nor its check shows.
@@ -234,6 +239,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
                   review: {
                     reviewed: editReview !== null,
                     reviewedAt: editReview?.reviewedAt.toISOString() ?? null,
+                    ...(editShown !== undefined && { shown: editShown.shown }),
                   },
                 }),
               }

@@ -47,6 +47,13 @@ body .review-row__line {
   gap: space(2);
 }
 
+// The switches at the end of the row, side by side.
+body .review-row__switches {
+  display: flex;
+  align-items: center;
+  gap: space(4);
+}
+
 body .review-row__standing {
   display: flex;
   align-items: center;

@@ -311,8 +311,11 @@ export interface ReviewMarkProps {
 
 /** The shown-in-the-compendium switch on an entry (`shown-toggle.tsx`): the entry, whether the public compendium lists it now, its name for the switch's name, and a visible label where the switch has room for one. */
 export interface ShownToggleProps {
-  ingredientId: string;
+  /** The entry whose flag the switch writes; left out where the switch is a field of a form, which saves it. */
+  ingredientId?: string;
   shown: boolean;
+  /** Given where the switch is a form field: a flip reports here and writes nothing, and `shown` is the form's own value. */
+  onChange?: (next: boolean) => void;
   name: string;
   label?: string;
 }

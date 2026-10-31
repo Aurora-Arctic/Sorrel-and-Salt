@@ -86,6 +86,8 @@ export interface ReviewOffer {
   reviewed: boolean;
   /** When, as an ISO moment, if the page has it; an add has none. */
   reviewedAt?: string | null;
+  /** Whether the public compendium lists the entry, as saved; left out on an add, which starts from its categories. */
+  shown?: boolean;
 }
 
 /** Where a linked ingredient's page is, by its address and its tier, or undefined for none. */

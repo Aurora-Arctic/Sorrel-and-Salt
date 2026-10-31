@@ -35,6 +35,7 @@ export const SetCompendiumEntryShownDocument = graphql(`
 export default function ShownToggle({
   ingredientId,
   shown,
+  onChange,
   name,
   label,
 }: ShownToggleProps): ReactElement {
@@ -57,6 +58,11 @@ export default function ShownToggle({
   const [refusal, setRefusal] = useState<string>();
 
   async function change(next: boolean) {
+    // A form field only reports: the form's Save writes it.
+    if (onChange || ingredientId === undefined) {
+      onChange?.(next);
+      return;
+    }
     if (locked.current) return;
     locked.current = true;
     setBusy(true);
