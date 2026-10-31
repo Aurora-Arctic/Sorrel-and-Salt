@@ -162,6 +162,46 @@ describe('AdminCards', () => {
     ).toBeInTheDocument();
   });
 
+  it("opens the account's user modal from its name, headed with the name and email", async () => {
+    mockGraphQLQuery<InvitationCardAttemptsQuery, InvitationCardAttemptsQueryVariables>(
+      'InvitationCardAttempts',
+      () => ({
+        invitationCardAttempts: {
+          edges: [
+            {
+              node: {
+                id: 'a1',
+                reason: 'revoked',
+                attempts: 2,
+                cardPosition: 14,
+                firstAttemptedAt: '2026-10-28T08:00:00.000Z',
+                lastAttemptedAt: '2026-10-29T09:30:00.000Z',
+                account: { id: 'u1', name: 'Other Wort', email: 'other@example.test' },
+              },
+            },
+          ],
+          pageInfo: { hasNextPage: false, endCursor: null },
+        },
+      }),
+    );
+    const opener: RouteModalOpener = { loading: undefined, open: vi.fn(), cancel: vi.fn() };
+    render(
+      <RouteModalContext.Provider value={opener}>
+        <AdminCards batches={BATCHES} />
+      </RouteModalContext.Provider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /^View Refused Opens/ }));
+    const list = await screen.findByRole('dialog', { name: 'Refused Opens, Batch b1111111' });
+    fireEvent.click(await within(list).findByRole('link', { name: 'Other Wort' }));
+
+    expect(opener.open).toHaveBeenCalledExactlyOnceWith(
+      '/admin/users?user=u1',
+      expect.objectContaining({ eyebrow: 'User', title: 'Other Wort' }),
+      undefined,
+    );
+  });
+
   it('shows a removed account as Removed account, with no link and no email', async () => {
     mockGraphQLQuery<InvitationCardAttemptsQuery, InvitationCardAttemptsQueryVariables>(
       'InvitationCardAttempts',
