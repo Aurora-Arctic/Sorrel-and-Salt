@@ -5,6 +5,7 @@ import type { Session } from '../../../lib/session';
 import { RowId } from '../../../lib/validation';
 import type { Membership } from '@/modules/coven';
 import { proofFor } from './ingredient-rows';
+import { seesReview } from './compendium-filter';
 import type { IngredientKey, IngredientRow } from '../types';
 
 /**
@@ -15,6 +16,7 @@ export async function ingredientsOf(
   session: Session,
   refs: readonly IngredientKey[],
 ): Promise<(IngredientRow | null)[]> {
+  const curates = seesReview(session);
   const covens = [...new Set(refs.flatMap((ref) => ref.workspaceId ?? []))];
   const proofs = await Promise.all(covens.map((workspaceId) => proofFor(session, workspaceId)));
   const memberships = proofs.filter((proof): proof is Membership => proof !== undefined);
@@ -31,9 +33,11 @@ export async function ingredientsOf(
     refs.map((ref) => ref.id),
     rows,
     () => null,
-  ).map((found, i) =>
-    found && (found.workspaceId === null || found.workspaceId === refs[i].workspaceId)
-      ? found
-      : null,
-  );
+  ).map((found, i) => {
+    if (!found) return null;
+    if (found.workspaceId === refs[i].workspaceId) return found;
+    // The compendium's row, hidden ones for a curator or a ref made in a coven (whose cupboard may hold it) alone.
+    const readable = found.shown || curates || refs[i].workspaceId !== null;
+    return found.workspaceId === null && readable ? found : null;
+  });
 }

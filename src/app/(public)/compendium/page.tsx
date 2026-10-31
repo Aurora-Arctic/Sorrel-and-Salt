@@ -117,8 +117,11 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
   ]);
   // After the viewer, so an address with `?edit=` reads nothing for anyone who cannot curate.
   const canEdit = viewer?.viewer.canCurate === true;
-  const { edited, missing } = canEdit
-    ? await readEditPlace({ adding: false, editSlug: single(params.edit) }, readCompendiumEntry)
+  const editor = canEdit ? await getSession() : null;
+  const { edited, missing } = editor
+    ? await readEditPlace({ adding: false, editSlug: single(params.edit) }, (slug) =>
+        readCompendiumEntry(slug, editor),
+      )
     : { edited: undefined, missing: false };
   // The search as it stands, no modal over it: where the details close to, and what each
   // card's Edit and Quick Look open over.

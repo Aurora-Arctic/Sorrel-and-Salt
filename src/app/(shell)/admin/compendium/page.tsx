@@ -79,8 +79,8 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
     readCompendium(variables, after, before, DEFAULT_PAGE_SIZE, session),
     readFacets(variables, session),
     readFormIcons(),
-    readEditPlace(place, readCompendiumEntry),
-    entrySlug ? readOrMissing(() => resolveCompendiumSlug(entrySlug)) : undefined,
+    readEditPlace(place, (slug) => readCompendiumEntry(slug, session)),
+    entrySlug ? readOrMissing(() => resolveCompendiumSlug(entrySlug, session)) : undefined,
   ]);
   const facets = compendiumFacetCounts(counts, {
     formIcons,

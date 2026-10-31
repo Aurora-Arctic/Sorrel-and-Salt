@@ -55,7 +55,7 @@ export async function redirectRefusal(
 ): Promise<ValidationError | undefined> {
   const ended: string[] = [];
   for (const { slug, entryId } of slugs) {
-    const redirect = await findCompendiumSlugRedirect(slug, at, entryId);
+    const redirect = await findCompendiumSlugRedirect(slug, at, entryId, { includeHidden: true });
     if (redirect) {
       ended.push(
         `"${slug}" redirects to ${describeEntry(redirect.entry)} until ${inUtc(redirect.expiresAt)}`,

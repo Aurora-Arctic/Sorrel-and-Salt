@@ -18,7 +18,7 @@ import { ingredientSlug } from '../../../lib/slugify';
 import { addressTaken } from '../../../lib/text';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { RowId, parseInput } from '../../../lib/validation';
-import { compendiumFilterFor } from './compendium-filter';
+import { compendiumFilterFor, seesReview } from './compendium-filter';
 import { heldCompendiumEntry } from './cupboard-entries';
 import { ingredientDetailOf } from './ingredient-detail';
 import { ingredients } from '../schema/ingredients';
@@ -116,7 +116,8 @@ export async function getIngredient(
 
   // An id that is not a uuid names nothing and would be a driver error at the comparison.
   const row = RowId.safeParse(id).success ? await findOneIngredient(memberships, id) : undefined;
-  if (row) return row;
+  // A hidden compendium entry is a curator's to read; a coven that holds it still has it through its cupboard below.
+  if (row && (row.workspaceId !== null || row.shown || seesReview(session))) return row;
   const [membership] = memberships;
   const held = membership && (await heldCompendiumEntry(membership, id));
   if (!held) throw new NotFound('No such ingredient');
@@ -335,19 +336,24 @@ export async function readCompendiumReview(
 }
 
 /**
- * The public route's one read of an address, taking no session: the live entry holding `slug`, or the current slug of
+ * The public route's one read of an address, taking no session unless a curator's: the live entry holding `slug`, or the current slug of
  * the entry whose redirect from `slug` is still running, for a 308.
  *
  * @throws {NotFound} nothing is at `slug` and nothing redirects from it.
  */
-export async function resolveCompendiumSlug(slug: string): Promise<CompendiumAddress> {
+export async function resolveCompendiumSlug(
+  slug: string,
+  viewer?: Session | null,
+): Promise<CompendiumAddress> {
   const at = new Date();
-  const entry = await findCompendiumEntryBySlug(slug);
+  // Only a curator's read reaches a hidden entry; the public route passes no viewer.
+  const reach = { includeHidden: seesReview(viewer ?? null) };
+  const entry = await findCompendiumEntryBySlug(slug, reach);
   if (entry) {
-    const previous = await findCompendiumSlugRedirect(slug, at, entry.id);
+    const previous = await findCompendiumSlugRedirect(slug, at, entry.id, reach);
     return { kind: 'entry', entry, movedAway: previous?.entry ?? null };
   }
-  const redirect = await findCompendiumSlugRedirect(slug, at);
+  const redirect = await findCompendiumSlugRedirect(slug, at, undefined, reach);
   if (redirect) return { kind: 'moved', slug: redirect.entry.slug };
   throw new NotFound('No such compendium entry');
 }
@@ -528,7 +534,7 @@ async function refuseCollision(
     case 'ingredients_compendium_slug_unique': {
       const twin = await findCompendiumEntryByIdentity(fields);
       if (twin && twin.id !== id) identity(twin);
-      const holder = await findCompendiumEntryBySlug(slug);
+      const holder = await findCompendiumEntryBySlug(slug, { includeHidden: true });
       refuse(
         'name',
         addressTaken(

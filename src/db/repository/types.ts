@@ -789,6 +789,11 @@ export interface IngredientFilter {
    */
   reviewed?: boolean;
   /**
+   * The compendium's only: which entries by their shown flag. Absent or 'shown' keeps the shown ones, 'hidden' the hidden ones and 'all' both.
+   * A coven's cupboard read ignores it and keeps a hidden entry it names. The service lets only a curator set anything but shown.
+   */
+  listing?: 'shown' | 'hidden' | 'all';
+  /**
    * The compendium only: keep an entry when a live cupboard row of any one of these covens names it. A proof each, so a coven the caller is not in
    * cannot be named; an empty list is no filter.
    */

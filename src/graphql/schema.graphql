@@ -185,6 +185,15 @@ input CompendiumIngredientUpdateInput {
   zodiacSigns: [String!]!
 }
 
+"""
+Which compendium entries a search reads: shown (the default), hidden, or all. Hidden and all are a curator or admin's alone.
+"""
+enum CompendiumListing {
+  all
+  hidden
+  shown
+}
+
 """A completed working, and the steps it took nothing for."""
 type CompleteWorkingResult {
   warnings: [WorkingWarning!]!
@@ -426,6 +435,11 @@ type Ingredient {
   """
   revision: Int!
   safetyNotes: String
+
+  """
+  Whether the public compendium lists the entry; a coven's own entry is always shown.
+  """
+  shown: Boolean!
   slug: String!
 
   """
@@ -1381,6 +1395,7 @@ type Query {
     """
     forms: [String!]
     last: Int
+    listing: CompendiumListing
     nomenclature: Nomenclature
     query: String
 
@@ -1443,6 +1458,7 @@ type Query {
     Keeps entries with a live form named any one of these, ignoring case and outer spaces.
     """
     forms: [String!]
+    listing: CompendiumListing
     nomenclature: Nomenclature
     query: String
 
