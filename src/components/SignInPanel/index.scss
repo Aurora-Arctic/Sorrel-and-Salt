@@ -7,11 +7,10 @@
 // scopes them with `:where()`.
 .sign-in-panel.panel {
   box-sizing: border-box;
-  // One `max-content` column, centred, as the button list below is: the column is as wide as
-  // the widest button, and the head and the error take that width rather than the card's.
+  // One column the width of the card's content, `$narrow-column` less the padding, which the email
+  // form fills; the button list inside it keeps its own `max-content` width and sits centred.
   display: grid;
-  grid-template-columns: max-content;
-  justify-content: center;
+  grid-template-columns: minmax(0, 1fr);
   gap: space(4);
   width: 100%;
 
@@ -20,14 +19,6 @@
   // page.
   padding: space(5) space(6) space(6);
 
-  // The lede and the error wrap at the buttons' width instead of widening
-  // the column: zero intrinsic width, then stretched to the column.
-  > .notice,
-  > .header > .lede {
-    box-sizing: border-box;
-    width: 0;
-    min-width: 100%;
-  }
 }
 
 .sign-in-panel__header {
@@ -148,12 +139,7 @@
   }
 }
 
-// Wraps at the column's width rather than widening it, as the notices do: "Create an Account with
-// Email" is longer than the buttons above.
 .sign-in-panel__password-heading {
-  box-sizing: border-box;
-  width: 0;
-  min-width: 100%;
   margin: 0;
   text-align: center;
 }
