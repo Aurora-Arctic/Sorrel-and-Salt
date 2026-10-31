@@ -241,6 +241,13 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
               <p className="two-factor__well">
                 <code className="two-factor__key">{groupedKey(keyOf(enrolment.totpURI))}</code>
               </p>
+              <div className="two-factor__code-actions">
+                <CodeAction
+                  label="Copy Key"
+                  icon={<CopyIcon />}
+                  onClick={() => void navigator.clipboard?.writeText(keyOf(enrolment.totpURI))}
+                />
+              </div>
             </li>
             <li>
               <p>
