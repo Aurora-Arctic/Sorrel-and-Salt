@@ -39,12 +39,15 @@ const NoteDocument = graphql(`
 const ReplyForm = ({
   requestId,
   resolve,
+  noteOnly = false,
 }: {
   requestId: string;
   resolve?: ReactNode;
+  /** The viewer may add an internal note but not reply: no mode choice, and the form is a note form. */
+  noteOnly?: boolean;
 }): ReactElement => {
   const [body, setBody] = useState('');
-  const [mode, setMode] = useState<Mode>('reply');
+  const [mode, setMode] = useState<Mode>(noteOnly ? 'note' : 'reply');
   const note = mode === 'note';
   const { busy, failure, run } = useSupportAction('body');
   const discard = useDiscardGuard(body.trim() !== '');
@@ -72,15 +75,17 @@ const ReplyForm = ({
       onSubmit={(event) => void submit(event)}
     >
       {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
-      <RadioGroupField
-        legend="Send As"
-        name="mode"
-        layout="segmented"
-        options={MODES}
-        value={mode}
-        disabled={busy}
-        onChange={setMode}
-      />
+      {!noteOnly && (
+        <RadioGroupField
+          legend="Send As"
+          name="mode"
+          layout="segmented"
+          options={MODES}
+          value={mode}
+          disabled={busy}
+          onChange={setMode}
+        />
+      )}
       <FieldShell label={note ? 'Your Note' : 'Your Reply'} {...field}>
         <textarea
           id={field.controlId}

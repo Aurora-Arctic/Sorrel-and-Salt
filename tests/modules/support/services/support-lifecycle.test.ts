@@ -330,6 +330,23 @@ describe('internal notes', () => {
     }
   });
 
+  it('saves a curator’s note and refuses their public reply on the same request, by direct id', async () => {
+    const request = await send();
+    await sql`update support_requests set curator_visible = true where id = ${request.id}`;
+    // The preconditions: the curator can read the request, and it is not assigned to them.
+    expect((await getSupportRequest(asUser(F), request.id)).assignedTo).not.toBe(F.id);
+
+    expect((await addSupportInternalNote(asUser(F), request.id, 'A note.')).visibility).toBe(
+      'internal',
+    );
+    expect(
+      await failureOf(replyToSupportRequest(asUser(F), request.id, 'Hello.', mail)),
+    ).toBeInstanceOf(Forbidden);
+    const [{ n }] = await sql`
+      select count(*)::int as n from support_replies where request_id = ${request.id} and visibility = 'public'`;
+    expect(n).toBe(0);
+  });
+
   it('leave replies assigned-only: a curator still cannot reply on a request that is visible but not theirs', async () => {
     const request = await send();
     await sql`update support_requests set curator_visible = true where id = ${request.id}`;

@@ -58,6 +58,11 @@ test('a curator reads the marked and the assigned requests, answers the assigned
       await expect(dialog.getByLabel('Assigned To')).toHaveCount(0);
       await expect(dialog.getByRole('switch', { name: 'Shared With Curators' })).toHaveCount(0);
       await assertNoAccessibilityViolations(page);
+      await dialog.getByLabel('Your Note').fill('Seen by a curator.');
+      await dialog.getByRole('button', { name: 'Add Note' }).click();
+      const thread = dialog.getByRole('region', { name: 'Thread' });
+      await expect(thread).toContainText('Seen by a curator.');
+      await expect(thread).toContainText('Internal');
     });
 
     await test.step('the curator replies to and resolves the assigned request', async () => {
