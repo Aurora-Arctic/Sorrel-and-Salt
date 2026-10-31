@@ -38,6 +38,8 @@ test(
     expect(made.status(), await made.text()).toBe(200);
     await withSql((sql) => sql`update users set email_verified = true where email = ${email}`);
 
+    // Sign-up signs the browser in; start from signed out so the sign-in page is shown.
+    await page.context().clearCookies();
     await signInWithPassword(page, email);
     await expect(page).not.toHaveURL(/\/sign-in/);
 
