@@ -106,7 +106,6 @@ export default function ShownToggle({
                     <path
                       className="shown-switch__lashes"
                       strokeWidth="0.8"
-                      style={{ opacity: on ? 0 : 1 }}
                       d="M3.1 10.6L2.2 11.6M4.84 11.78L4.3 13.1M6.37 12.32L6.1 13.8M8 12.5V14.1M9.63 12.32L9.9 13.8M11.16 11.78L11.7 13.1M12.9 10.6L13.8 11.6"
                     />
                   </g>

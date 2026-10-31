@@ -10,6 +10,8 @@
   $thumb-size: 1.335rem;
   $inset: 0.1669rem;
   $travel: 1.335rem;
+  // One duration and easing for the track, the thumb and the eye, so they arrive together.
+  $slide: 260ms cubic-bezier(0.3, 0.7, 0.3, 1);
   // The open and shut lids of the Quick Look eye's 16-unit grid; the markup carries the same shapes
   // as attributes for a browser that cannot set `d` from CSS.
   $lid-open: 'M1 8C2.8 5 5.2 3.5 8 3.5S13.2 5 15 8';
@@ -41,8 +43,8 @@
     appearance: none;
     cursor: pointer;
     transition:
-      background-color $motion-short ease-out,
-      border-color $motion-short ease-out;
+      background-color $slide,
+      border-color $slide;
 
     &:checked {
       border-color: $accent;
@@ -72,9 +74,9 @@
     color: $surface-card;
     pointer-events: none;
     transition:
-      translate 260ms cubic-bezier(0.3, 0.7, 0.3, 1),
-      background-color $motion-short ease-out,
-      color $motion-short ease-out,
+      translate $slide,
+      background-color $slide,
+      color $slide,
       opacity $motion-short ease-out;
   }
 
@@ -84,8 +86,14 @@
     translate: $travel 0;
   }
 
+  // Busy fades the thumb only after a wait, so a quick save never starts a fade mid-slide.
   input[aria-busy='true'] ~ .shown-switch__thumb {
     opacity: 0.6;
+    transition:
+      translate $slide,
+      background-color $slide,
+      color $slide,
+      opacity $motion-short ease-out 300ms;
   }
 
   input:disabled ~ .shown-switch__thumb {
@@ -114,7 +122,7 @@
   @supports (d: path('M0 0')) {
     .shown-switch__lid,
     .shown-switch__gap {
-      transition: d 260ms ease-out;
+      transition: d $slide;
     }
 
     .shown-switch__lid {
