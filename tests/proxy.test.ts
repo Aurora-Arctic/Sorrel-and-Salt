@@ -78,6 +78,25 @@ describe('the proxy matcher', () => {
   ])('stays off %s', (path) => {
     expect(matches(path)).toBe(false);
   });
+
+  // The Workflow SDK's generated routes receive its own queue calls, which carry no cookie and a
+  // body the proxy must not touch (it fails on a detached buffer when the proxy runs first).
+  it.each(['/.well-known/workflow/v1/flow', '/.well-known/workflow/v1/step'])(
+    'stays off the SDK route %s',
+    (path) => {
+      expect(matches(path)).toBe(false);
+    },
+  );
+
+  // Only that one prefix is exempt: every other path under /.well-known/ still reaches the proxy.
+  it.each([
+    '/.well-known/other',
+    '/.well-known/ai-catalog.json',
+    '/.well-known/workflowx/v1/flow',
+    '/.well-known/workflow',
+  ])('still runs on %s', (path) => {
+    expect(matches(path)).toBe(true);
+  });
 });
 
 describe('public routes', () => {
