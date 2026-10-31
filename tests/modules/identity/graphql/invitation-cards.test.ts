@@ -14,13 +14,13 @@ useTestDatabase((client) => {
   sql = client;
 });
 
-const MINT = `mutation($sheets: Int!, $expiresAt: DateTime!) {
-  createInvitationCards(sheets: $sheets, expiresAt: $expiresAt) { batchId expiresAt tokens }
+const MINT = `mutation($sheets: Int!, $expiresAt: DateTime!, $note: String) {
+  createInvitationCards(sheets: $sheets, expiresAt: $expiresAt, note: $note) { batchId expiresAt tokens }
 }`;
 const REVOKE_BATCH = `mutation($batchId: ID!) { revokeInvitationCardBatch(batchId: $batchId) { id state } }`;
 const BATCHES = `query {
   invitationCardBatches(first: 50) {
-    edges { node { batchId mintedAt expiresAt cards accepted pending } }
+    edges { node { batchId mintedAt expiresAt note cards accepted pending } }
   }
 }`;
 const ARRIVALS = `query {
@@ -101,6 +101,26 @@ describe('the card operations', () => {
       expect(row.accepted_at).toBeNull();
       expect(row.revoked_at).toBeNull();
     }
+  });
+
+  it('stores the note given and answers it on the batch, found by a word of it', async () => {
+    await run<Minted>(asUser(E), MINT, {
+      sheets: 1,
+      expiresAt: nextWeek(),
+      note: 'Autumn fair stall',
+    });
+    await run<Minted>(asUser(E), MINT, { sheets: 1, expiresAt: nextWeek() });
+
+    const found = await run<{
+      invitationCardBatches: { edges: { node: { note: string | null } }[] };
+    }>(
+      asUser(E),
+      `query { invitationCardBatches(first: 50, batch: "fair") { edges { node { note } } } }`,
+    );
+
+    expect(found.data!.invitationCardBatches.edges.map((edge) => edge.node.note)).toEqual([
+      'Autumn fair stall',
+    ]);
   });
 
   it('answers a batch over the cap with a validation error naming the sheets', async () => {

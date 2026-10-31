@@ -23,7 +23,11 @@ import type {
 } from '../../../db/repository';
 import { NotFound, ValidationError } from '../../../lib/errors';
 import { batchName } from '../../../lib/invitation-cards/batch-name';
-import { CARDS_PER_SHEET, MAX_SHEETS_PER_BATCH } from '../../../lib/invitation-cards/limits';
+import {
+  CARDS_PER_SHEET,
+  MAX_NOTE_LENGTH,
+  MAX_SHEETS_PER_BATCH,
+} from '../../../lib/invitation-cards/limits';
 import { newCardToken } from '../../../lib/invitation-token';
 import type { Session } from '../../../lib/session';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
@@ -70,12 +74,15 @@ const REFUSAL = 'Only a site admin may mint, list or revoke invitation cards';
  * is readable, as the rows hold the hash alone.
  *
  * @throws {Forbidden} the session's role is not `admin`.
- * @throws {ValidationError} on `count`: not a whole number from 1 to `MAX_SHEETS_PER_BATCH`, so a part sheet is never minted; on `expiresAt`: not a future date.
+ * `note` is trimmed and written on every card of the batch; blank or absent is none.
+ *
+ * @throws {ValidationError} on `sheets`: not a whole number from 1 to `MAX_SHEETS_PER_BATCH`, so a part sheet is never minted; on `expiresAt`: not a future date; on `note`: over `MAX_NOTE_LENGTH` characters.
  */
 export async function mintInvitationCards(
   session: Session,
   sheets: number,
   expiresAt: Date,
+  note?: string | null,
 ): Promise<MintedCards> {
   const admin = assertSiteAdmin(session, REFUSAL);
   const issues = [];
@@ -88,12 +95,19 @@ export async function mintInvitationCards(
   if (Number.isNaN(expiresAt.getTime()) || expiresAt.getTime() <= Date.now()) {
     issues.push({ path: ['expiresAt'], message: 'Choose an expiry date in the future' });
   }
+  const trimmedNote = note?.trim() || null;
+  if (trimmedNote !== null && trimmedNote.length > MAX_NOTE_LENGTH) {
+    issues.push({
+      path: ['note'],
+      message: `A note is at most ${MAX_NOTE_LENGTH} characters`,
+    });
+  }
   if (issues.length > 0) throw new ValidationError(issues);
 
   const batchId = randomUUID();
   const tokens = Array.from({ length: sheets * CARDS_PER_SHEET }, newCardToken);
   const rows = await withAudit(session, (write) =>
-    write.insertInvitationCards(admin, { tokens, batchId, expiresAt }),
+    write.insertInvitationCards(admin, { tokens, batchId, expiresAt, note: trimmedNote }),
   );
   return { batchId, expiresAt: rows[0]?.expiresAt ?? expiresAt, tokens };
 }

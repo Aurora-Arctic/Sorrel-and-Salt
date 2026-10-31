@@ -44,6 +44,7 @@ const BATCHES = [
     accepted: 4,
     pending: 20,
     attempts: 3,
+    note: null,
     status: 'live' as const,
   },
   {
@@ -54,6 +55,7 @@ const BATCHES = [
     accepted: 9,
     pending: 0,
     attempts: 0,
+    note: null,
     status: 'used-up' as const,
   },
   {
@@ -64,6 +66,7 @@ const BATCHES = [
     accepted: 2,
     pending: 0,
     attempts: 0,
+    note: null,
     status: 'revoked' as const,
   },
   {
@@ -74,6 +77,7 @@ const BATCHES = [
     accepted: 0,
     pending: 0,
     attempts: 0,
+    note: null,
     status: 'expired' as const,
   },
 ];
@@ -113,6 +117,15 @@ describe('AdminCards', () => {
     expect(within(first).getByText('3')).toBeInTheDocument();
     expect(within(first).getByRole('button', { name: /^View Refused Opens/ })).toBeInTheDocument();
     expect(within(second).queryByRole('button', { name: /^View Refused Opens/ })).toBeNull();
+  });
+
+  it('shows a batch’s note in its own row and none in a row without one', () => {
+    const batches = [{ ...BATCHES[0], note: 'Handed out at the autumn fair' }, ...BATCHES.slice(1)];
+    render(<AdminCards batches={batches} />);
+
+    const [first, second] = screen.getAllByRole('row').slice(1);
+    expect(within(first).getByText('Handed out at the autumn fair')).toBeInTheDocument();
+    expect(within(second).queryByText('Handed out at the autumn fair')).toBeNull();
   });
 
   it('shows the standard loading state while the refused opens are read, then the rows', async () => {
@@ -175,6 +188,7 @@ describe('AdminCards', () => {
                   id: 'a1',
                   reason: 'revoked',
                   attempts: 2,
+                  note: null,
                   cardPosition: 14,
                   firstAttemptedAt: '2026-10-28T08:00:00.000Z',
                   lastAttemptedAt: '2026-10-29T09:30:00.000Z',
@@ -226,6 +240,7 @@ describe('AdminCards', () => {
                 id: 'a1',
                 reason: 'revoked',
                 attempts: 2,
+                note: null,
                 cardPosition: 14,
                 firstAttemptedAt: '2026-10-28T08:00:00.000Z',
                 lastAttemptedAt: '2026-10-29T09:30:00.000Z',
@@ -266,6 +281,7 @@ describe('AdminCards', () => {
                 id: 'a2',
                 reason: 'accepted',
                 attempts: 1,
+                note: null,
                 cardPosition: null,
                 firstAttemptedAt: '2026-10-28T08:00:00.000Z',
                 lastAttemptedAt: '2026-10-29T09:30:00.000Z',
@@ -397,16 +413,21 @@ describe('AdminCards', () => {
     await waitFor(() => expect(calls).toEqual([{ batchId: BATCH_ONE }]));
   });
 
-  const mintTwo = async (printBacks = true) => {
+  const sent: CreateInvitationCardsMutationVariables[] = [];
+  const mintTwo = async (printBacks = true, note?: string) => {
+    sent.length = 0;
     mockGraphQLMutation<CreateInvitationCardsMutation, CreateInvitationCardsMutationVariables>(
       'CreateInvitationCards',
-      (variables) => ({
-        createInvitationCards: {
-          batchId: 'b4444444-0000-4000-8000-000000000004',
-          expiresAt: variables.expiresAt,
-          tokens: ['ta', 'tb'],
-        },
-      }),
+      (variables) => (
+        sent.push(variables),
+        {
+          createInvitationCards: {
+            batchId: 'b4444444-0000-4000-8000-000000000004',
+            expiresAt: variables.expiresAt,
+            tokens: ['ta', 'tb'],
+          },
+        }
+      ),
     );
     URL.createObjectURL = vi.fn(() => 'blob:x');
     URL.revokeObjectURL = vi.fn();
@@ -421,9 +442,24 @@ describe('AdminCards', () => {
     });
     pickFirstOfFebruary();
     if (!printBacks) fireEvent.click(within(dialog()).getByRole('switch', { name: 'Print Backs' }));
+    if (note !== undefined) {
+      fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Note' }), {
+        target: { value: note },
+      });
+    }
     fireEvent.click(mint());
     await within(dialog()).findByRole('button', { name: 'Download PDF' });
   };
+
+  it('sends the Note typed, trimmed, with the mint', async () => {
+    await mintTwo(true, '  For the autumn fair  ');
+    expect(sent[0]?.note).toBe('For the autumn fair');
+  });
+
+  it('sends no note when the Note is left blank', async () => {
+    await mintTwo(true, '   ');
+    expect(sent[0]?.note).toBeUndefined();
+  });
 
   it('builds the batch PDF from one link per code when Download PDF is pressed', async () => {
     await mintTwo();

@@ -23,6 +23,7 @@ const BATCHES: BatchEntry[] = [
     accepted: 4,
     pending: 20,
     attempts: 3,
+    note: 'Handed out at the autumn fair stall. Two sheets went to the shop on the high street, one to the library desk, and the rest are held back for the winter market, so check with the stall lead before minting another batch.',
     status: 'live',
   },
   {
@@ -33,6 +34,7 @@ const BATCHES: BatchEntry[] = [
     accepted: 3,
     pending: 0,
     attempts: 0,
+    note: 'Shop counter',
     status: 'revoked',
   },
   {
@@ -43,6 +45,7 @@ const BATCHES: BatchEntry[] = [
     accepted: 5,
     pending: 0,
     attempts: 0,
+    note: null,
     status: 'expired',
   },
   {
@@ -53,6 +56,7 @@ const BATCHES: BatchEntry[] = [
     accepted: 9,
     pending: 0,
     attempts: 0,
+    note: null,
     status: 'used-up',
   },
 ];

@@ -964,7 +964,7 @@ describe('invitation cards', () => {
 
   const mint = (tokens: string[], expiresAt = LATER(), batchId = BATCH) =>
     withAudit(asUser(E), (write) =>
-      write.insertInvitationCards(admin, { tokens, batchId, expiresAt }),
+      write.insertInvitationCards(admin, { tokens, batchId, expiresAt, note: null }),
     );
   const cardAccept = (user: SessionUser, token = CARD) =>
     withAudit(asUser(user), (write) => write.acceptInvitation(token));
@@ -1134,6 +1134,25 @@ describe('invitation cards', () => {
       // The middle of a number is no start.
       expect(await batches({ batch: '1111' })).toEqual([]);
       expect((await findCardBatchCount(admin, { batch: 'aaaa' }, undefined)).totalCount).toBe(1);
+    });
+
+    it('keeps the batches whose note holds the text anywhere, in any case, a percent sign read literally', async () => {
+      await sql`update invitations set batch_note = 'Handed out at the Autumn Fair' where batch_id = ${ALPHA}`;
+      await sql`update invitations set batch_note = '100% for the shop' where batch_id = ${BRAVO}`;
+
+      expect(await batches({ batch: 'autumn' })).toEqual([ALPHA]);
+      expect(await batches({ batch: 'FAIR' })).toEqual([ALPHA]);
+      expect(await batches({ batch: 'shop' })).toEqual([BRAVO]);
+      expect(await batches({ batch: '%' })).toEqual([BRAVO]);
+      expect(await batches({ batch: '_' })).toEqual([]);
+      expect(await batches({ batch: 'market' })).toEqual([]);
+      // The number still matches by its start, so a note does not displace it.
+      expect(await batches({ batch: 'aaaa' })).toEqual([ALPHA]);
+      expect((await findCardBatchCount(admin, { batch: 'autumn' }, undefined)).totalCount).toBe(1);
+    });
+
+    it('keeps a batch with no note out of a note search', async () => {
+      expect(await batches({ batch: 'fair' })).toEqual([]);
     });
 
     it('keeps the batches minted within the days, both end days included', async () => {

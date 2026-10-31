@@ -1,5 +1,6 @@
 import { builder } from '../../../graphql/builder';
 import { AuditInfo } from '../../../graphql/schema/audit';
+import { MAX_NOTE_LENGTH } from '../../../lib/invitation-cards/limits';
 import { definedArgs, sessionOf } from '../../../graphql/context-helpers';
 import type { CardAttemptRow, CardBatchStatus, CardRow } from '../../../db/repository';
 import {
@@ -113,6 +114,7 @@ export interface CardBatch {
   batchId: string;
   mintedAt: Date;
   expiresAt: Date;
+  note: string | null;
 }
 
 const CardBatchRef = builder.objectRef<CardBatch>('InvitationCardBatch').implement({
@@ -121,6 +123,10 @@ const CardBatchRef = builder.objectRef<CardBatch>('InvitationCardBatch').impleme
     batchId: t.exposeID('batchId'),
     mintedAt: t.expose('mintedAt', { type: 'DateTime' }),
     expiresAt: t.expose('expiresAt', { type: 'DateTime' }),
+    note: t.exposeString('note', {
+      nullable: true,
+      description: "The admin's note written when the batch was minted; null for none.",
+    }),
     cards: t.int({
       description: 'How many cards the batch holds.',
       resolve: async (batch, _args, { loaders }) =>
@@ -153,7 +159,8 @@ builder.queryField('invitationCardBatches', (t) =>
     args: {
       batch: t.arg.string({
         required: false,
-        description: 'The start of the batch number, case-insensitively.',
+        description:
+          'The start of the batch number, or text anywhere in its note, case-insensitively.',
       }),
       status: t.arg({ type: CardBatchStatusEnum, required: false }),
       mintedFrom: t.arg({
@@ -196,6 +203,7 @@ builder.queryField('invitationCardBatches', (t) =>
           batchId: entry.node.batchId,
           mintedAt: entry.node.createdAt,
           expiresAt: entry.node.expiresAt,
+          note: entry.node.batchNote,
         },
       })),
   }),
@@ -238,10 +246,14 @@ builder.mutationField('createInvitationCards', (t) =>
     args: {
       sheets: t.arg.int({ required: true }),
       expiresAt: t.arg({ type: 'DateTime', required: true }),
+      note: t.arg.string({
+        required: false,
+        description: `Plain text for the admins to track the batch by, at most ${MAX_NOTE_LENGTH} characters; blank is none.`,
+      }),
     },
     authScopes: { admin: true },
-    resolve: (_root, { sheets, expiresAt }, context) =>
-      mintInvitationCards(sessionOf(context), sheets, expiresAt),
+    resolve: (_root, { sheets, expiresAt, note }, context) =>
+      mintInvitationCards(sessionOf(context), sheets, expiresAt, note),
   }),
 );
 

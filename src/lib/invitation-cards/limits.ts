@@ -17,3 +17,6 @@ export function cardPlace(position: number): { sheet: number; card: number } {
     card: ((position - 1) % CARDS_PER_SHEET) + 1,
   };
 }
+
+/** The most characters a batch's note holds, once trimmed; the database check says the same. */
+export const MAX_NOTE_LENGTH = 500;

@@ -15,22 +15,27 @@ import type { MintedBatch } from './minted';
 import {
   CARDS_PER_SHEET,
   DEFAULT_EXPIRY_DAYS,
+  MAX_NOTE_LENGTH,
   MAX_SHEETS_PER_BATCH,
 } from '../../lib/invitation-cards/limits';
 import type { MintFieldsProps, MintFormProps } from './types';
 
-// The modal Mint Cards opens at `?mint`: how many sheets of cards and the day they stop working, sent as `createInvitationCards`.
+// The modal Mint Cards opens at `?mint`: how many sheets of cards, the day they stop working and a note on the batch, sent as `createInvitationCards`.
 // The answer carries each token once, so the modal then shows the codes and stays until closed; closing re-reads the tab.
 
 const CreateInvitationCardsDocument = graphql(`
-  mutation CreateInvitationCards($sheets: Int!, $expiresAt: DateTime!) {
-    createInvitationCards(sheets: $sheets, expiresAt: $expiresAt) {
+  mutation CreateInvitationCards($sheets: Int!, $expiresAt: DateTime!, $note: String) {
+    createInvitationCards(sheets: $sheets, expiresAt: $expiresAt, note: $note) {
       batchId
       expiresAt
       tokens
     }
   }
 `);
+
+/** What the Note is for, behind its info tip. */
+const NOTE_HINT =
+  'Shown to admins beside the batch on the Invitation Cards tab, and searchable there.';
 
 /** The modal's head, and the tab's action that opens it. */
 export const MINT_TITLE = 'Mint Cards';
@@ -62,10 +67,12 @@ const totalOf = (text: string): string | undefined => {
 const MintFields = ({ close }: MintFieldsProps): ReactElement => {
   const sheetsId = useId();
   const dayId = useId();
+  const noteId = useId();
   const [sheets, setSheets] = useState('');
   const [first] = useState(defaultDay);
   const [day, setDay] = useState(first);
   const [printBacks, setPrintBacks] = useState(true);
+  const [note, setNote] = useState('');
   const [downloaded, setDownloaded] = useState(false);
   const [minting, setMinting] = useState(false);
   const [failure, setFailure] = useState<Failure>({});
@@ -79,11 +86,19 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
     id: dayId,
     error: failure.field?.name === 'expiresAt' ? failure.field.message : undefined,
   });
+  const noteField = fieldDescription({
+    id: noteId,
+    hint: NOTE_HINT,
+    error: failure.field?.name === 'note' ? failure.field.message : undefined,
+  });
+  const { aria: noteAria, ...noteShell } = noteField;
   const { aria: sheetsAria, ...sheetsShell } = sheetsField;
   const { aria: dayAria, ...dayShell } = dayField;
 
   // Anything typed or changed is a change; once minted the codes are what a way out would lose, until the PDF is saved.
-  const discard = useDiscardGuard(minted ? !downloaded : sheets !== '' || day !== first);
+  const discard = useDiscardGuard(
+    minted ? !downloaded : sheets !== '' || day !== first || note !== '',
+  );
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -95,12 +110,13 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
       const answer = await graphqlRequest(CreateInvitationCardsDocument, {
         sheets: wanted,
         expiresAt: expiryOf(day),
+        note: note.trim() || undefined,
       });
       setMinting(false);
       setMinted(answer.createInvitationCards);
     } catch (error) {
       setMinting(false);
-      setFailure(readGraphqlFailure(error, ['sheets', 'expiresAt']));
+      setFailure(readGraphqlFailure(error, ['sheets', 'expiresAt', 'note']));
     }
   }
 
@@ -171,6 +187,19 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
           onChange={setPrintBacks}
         />
       </div>
+      <FieldShell label="Note" hint={NOTE_HINT} {...noteShell}>
+        <textarea
+          id={noteShell.controlId}
+          className="textarea"
+          rows={3}
+          maxLength={MAX_NOTE_LENGTH}
+          placeholder="Add a note"
+          {...noteAria}
+          value={note}
+          disabled={minting}
+          onChange={(event) => setNote(event.target.value)}
+        />
+      </FieldShell>
       <FormActions
         noun="Cards"
         label="Mint Cards"
