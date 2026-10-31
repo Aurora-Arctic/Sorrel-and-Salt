@@ -18,10 +18,10 @@ test('an admin mints a sheet of cards and the Invitation Cards tab lists the bat
 
   await page.getByRole('link', { name: 'Mint Cards' }).click();
   const dialog = page.getByRole('dialog', { name: 'Mint Cards' });
-  await dialog.getByLabel(/Number of Sheets/).fill('1');
+  await dialog.getByRole('spinbutton', { name: 'Number of Sheets' }).fill('1');
   await expect(dialog.getByText('1 sheet: 9 cards')).toBeVisible();
   await dialog.getByRole('button', { name: 'Mint Cards' }).click();
-  await expect(dialog.getByText(/9 cards minted/)).toBeVisible();
+  await expect(dialog.getByText(/9 cards on 1 sheet/)).toBeVisible();
 
   // Closing before the download asks first, and keeping the dialog open leaves the PDF on offer.
   await dialog.getByRole('button', { name: 'Done' }).click();
@@ -52,7 +52,7 @@ test('an admin revokes a whole batch and its links are refused as withdrawn', as
 
   await page.getByRole('link', { name: 'Mint Cards' }).click();
   const dialog = page.getByRole('dialog', { name: 'Mint Cards' });
-  await dialog.getByLabel(/Number of Sheets/).fill('1');
+  await dialog.getByRole('spinbutton', { name: 'Number of Sheets' }).fill('1');
   await dialog.getByRole('button', { name: 'Mint Cards' }).click();
   const download = page.waitForEvent('download');
   await dialog.getByRole('button', { name: 'Download PDF' }).click();

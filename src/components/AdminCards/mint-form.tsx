@@ -70,6 +70,7 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
   const [minted, setMinted] = useState<MintedBatch>();
   const sheetsField = fieldDescription({
     id: sheetsId,
+    hint: `A Letter sheet holds ${CARDS_PER_SHEET} cards.`,
     error: failure.field?.name === 'sheets' ? failure.field.message : undefined,
   });
   const dayField = fieldDescription({
@@ -115,11 +116,16 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
   return (
     <form className="form" noValidate onSubmit={(event) => void submit(event)}>
       <p>
-        Each card admits one signed-in account, once. The codes are shown after minting and cannot
-        be shown again.
+        Each card admits one signed-in account, once. After minting, the only copy of the cards is
+        the PDF you download; it cannot be made again.
       </p>
       {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
-      <FieldShell label="Number of Sheets" required {...sheetsShell}>
+      <FieldShell
+        label="Number of Sheets"
+        required
+        hint={`A Letter sheet holds ${CARDS_PER_SHEET} cards.`}
+        {...sheetsShell}
+      >
         <input
           id={sheetsShell.controlId}
           className="input"
@@ -136,7 +142,7 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
           onChange={(event) => setSheets(event.target.value)}
         />
       </FieldShell>
-      <p aria-live="polite">{totalOf(sheets) ?? `Each sheet holds ${CARDS_PER_SHEET} cards.`}</p>
+      <p aria-live="polite">{totalOf(sheets)}</p>
       <FieldShell label="Expires On" required {...dayShell}>
         <DateField
           id={dayShell.controlId}

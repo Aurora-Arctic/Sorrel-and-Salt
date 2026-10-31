@@ -1,6 +1,9 @@
 import type { Route } from 'next';
 import type { PagePosition, PagerHrefs } from '../../lib/types';
 
+/** Where a batch stands: live while a card is pending, else used up, expired or revoked. */
+export type BatchStatus = 'live' | 'revoked' | 'expired' | 'used-up';
+
 /** One batch, as `/admin/invitation-cards` lists it: the mint, with its cards counted. No token or hash is in it. */
 export interface BatchEntry {
   batchId: string;
@@ -12,6 +15,7 @@ export interface BatchEntry {
   accepted: number;
   /** How many can still be accepted, and so revoked. */
   pending: number;
+  status: BatchStatus;
 }
 
 /** The page of the list the address shows, by the cursor it turned on; none for the first. */

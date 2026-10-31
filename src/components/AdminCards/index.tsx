@@ -4,20 +4,20 @@ import Link from 'next/link';
 import type { ReactElement } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { inUtc } from '../../lib/utc';
+import { dayInUtc, inUtc } from '../../lib/utc';
 import StackTable from '../DataTable';
 import ListFrame, { ListBody } from '../ListFrame';
 import { useOpenModalClick } from '../Modal';
 import Pager from '../Pager';
 import ConfirmedAction from '../UserList/confirmed-action';
-import { batchName } from './batches';
+import { batchName, STATUS_LABEL } from './batches';
 import { cardsHref } from './href';
 import MintForm, { MINT_TITLE } from './mint-form';
 import type { AdminCardsProps, MintCardsProps } from './types';
 import './index.scss';
 
 // The People page's Invitation Cards tab, `/admin/invitation-cards`: one row per batch (minted, expiry, cards,
-// accepted, Revoke Batch while any card is pending), the pager, and the mint form `?mint` opens
+// status, accepted, Revoke Batch while any card is pending), the pager, and the mint form `?mint` opens
 // (claude-docs/components/admin-cards.md).
 
 const RevokeCardBatchDocument = graphql(`
@@ -62,10 +62,11 @@ const AdminCards = ({
             {
               heading: 'Expires',
               cell: (batch) => (
-                <time dateTime={batch.expiresAt.toISOString()}>{inUtc(batch.expiresAt)}</time>
+                <time dateTime={batch.expiresAt.toISOString()}>{dayInUtc(batch.expiresAt)}</time>
               ),
             },
             { heading: 'Cards', cell: (batch) => batch.cards },
+            { heading: 'Status', cell: (batch) => STATUS_LABEL[batch.status] },
             { heading: 'Accepted', cell: (batch) => batch.accepted },
             {
               heading: 'Revoke',
@@ -75,15 +76,16 @@ const AdminCards = ({
                   <ConfirmedAction
                     label="Revoke Batch"
                     accessibleName={`Revoke Batch ${batchName(batch.batchId)}`}
-                    openClass="btn btn--small btn--destructive"
+                    openClass="btn btn--quiet btn--small"
                     title="Revoke Batch"
                     question={
                       <>
                         Revoke every pending card in batch{' '}
-                        <strong>{batchName(batch.batchId)}</strong>? Printed codes from it will no
-                        longer work.
+                        <strong>{batchName(batch.batchId)}</strong>, minted{' '}
+                        {dayInUtc(batch.mintedAt)}?
                       </>
                     }
+                    warning="Accounts that already accepted a card keep their access."
                     busy="Revoking"
                     confirmClass="btn btn--destructive"
                     announcement={`Batch ${batchName(batch.batchId)} is revoked.`}

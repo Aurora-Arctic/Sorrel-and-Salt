@@ -29,9 +29,9 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
       await page.goto('/admin/invitation-cards');
       await page.getByRole('link', { name: 'Mint Cards' }).click();
       const dialog = page.getByRole('dialog', { name: 'Mint Cards' });
-      await dialog.getByLabel(/Number of Sheets/).fill('1');
+      await dialog.getByRole('spinbutton', { name: 'Number of Sheets' }).fill('1');
       await dialog.getByRole('button', { name: 'Mint Cards' }).click();
-      await expect(dialog.getByText(/9 cards minted/)).toBeVisible();
+      await expect(dialog.getByText(/9 cards on 1 sheet/)).toBeVisible();
 
       const pdfDownload = page.waitForEvent('download');
       await dialog.getByRole('button', { name: 'Download PDF' }).click();
