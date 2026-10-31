@@ -27,7 +27,7 @@ undeclared the two and MB.203 dropped them (`0059`). Why one table, why it is
   `invitations_kind_shape` requires an `address` row's `email` and a `card`'s
   `email`, `workspace_id`, `role` and `site_role` to be null. A card's token is
   returned once, at minting, to the admin who mints it; only its hash is stored.
-  Migration `0095_invitation-cards.sql`. Why a shape of this table rather than a
+  Migration `0096_invitation-cards.sql`. Why a shape of this table rather than a
   new one:
   [`m15.17-invitation-cards.md`](../design-decisions/m15.17-invitation-cards.md).
 - **`invitations_tier`**, `kind = 'card' or (workspace_id is null) = (role is null)`:
