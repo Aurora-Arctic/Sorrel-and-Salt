@@ -283,7 +283,7 @@ const TimeoutPanel = ({
       info={
         earlier.length > 0 && earlierHref ? (
           <IconTip tip="Earlier Time-Outs">
-            <Link className="btn btn--quiet btn--icon" href={earlierHref}>
+            <Link className="support-detail__history" href={earlierHref}>
               <HistoryIcon />
               <span className="visually-hidden">Earlier Time-Outs</span>
             </Link>
