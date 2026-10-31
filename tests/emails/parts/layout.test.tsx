@@ -89,6 +89,7 @@ const MAILS: {
       supportReplyNoticeMessage({
         to: 'someone@layout.test',
         url: `${ORIGIN}/account/support`,
+        origin: ORIGIN,
       }),
   },
 ];
