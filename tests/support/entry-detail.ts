@@ -35,6 +35,7 @@ export function entryDetail(overrides: Partial<IngredientRow> = {}): IngredientD
       seedKey: null,
       revision: 1,
       seedContentHash: null,
+      shown: true,
       ...STAMPS,
       ...overrides,
     },
