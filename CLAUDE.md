@@ -29,7 +29,7 @@ The devcontainer has no `make`, no `docker` and **no Python**: run the npm scrip
 | `npm run dev`                   | Dev server on **8000**, Altair at `/api/graphql` |
 | `npm run build` / `start`       | Production build; e2e serves it on **8001**+     |
 | `npm run pre-commit`            | Lint, format, types on changed files (MB.38)     |
-| `npm run test:coverage`         | Vitest's five projects, 80% threshold            |
+| `npm run test:coverage`         | Vitest's six projects, 80% threshold             |
 | `npm run test:stories`          | Story suite (Playwright), one line per story     |
 | `npm run e2e`                   | Playwright, a database and server per worker     |
 | `npm run codegen`               | `src/gql/` from the SDL; commit the output       |
