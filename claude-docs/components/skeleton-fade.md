@@ -26,7 +26,7 @@ During a wait the old page stays mounted, hidden, at its full height, and the sk
 - **One heading, one status.** The overlay carries no hidden `h1` and is `aria-hidden`; the arrived page has its own heading and landmark. The hidden `h1` exists only while the wait is on.
 - **A new wait mid-fade** takes the skeleton back at once; the old timer is cleared.
 - **No skeleton, no fade.** A navigation with no skeleton target (a refresh) leaves the page standing and nothing fades: the page was never replaced.
-- **The page is not wrapped to fade in.** Its fade-in is the overlay fading out over it, on the page's ground: wrapping the arriving page in a box to run `arrived` on it would put a box round it that the section layouts' flex columns would feel. The same keyframe (`list-frame-fade-in`) runs backwards.
+- **The page is not wrapped to fade in.** Its fade-in is the overlay fading out over it, on the page's ground: wrapping the arriving page in a box to run `arrived` on it would put a box round it that the section layouts' flex columns would feel. The same keyframe (`fade-in`) runs backwards.
 - **Reduced motion** follows `arrived`: it shows the new content at once, so the overlay is `display: none` and nothing fades.
 
 ## Holding the page during a wait
@@ -36,3 +36,7 @@ While a wait is on, the page stays mounted at its full height but unseen (`visib
 ## The fade out
 
 When a wait ends, the bodies (`MainBody`, `SectionBody`) do not drop the skeleton at once. They keep the last one over the page that has arrived, and it fades away while the page shows through. This is a client part, since the timer is the browser's. The skeleton fades rather than the page fading in, because wrapping the arriving page would put a box round it that the section layouts' flex columns would feel. The overlay is out of layout and unmounts when it has gone.
+
+## Stories
+
+`src/components/SkeletonFade/index.stories.tsx`, titled "Feedback / Skeleton Fade": `Default`. A press of its button starts a wait and a second press ends it, and the skeleton fades for 200ms over the page that arrived.

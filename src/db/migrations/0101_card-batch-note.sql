@@ -1,0 +1,1 @@
+ALTER TABLE "invitations" ADD CONSTRAINT "invitations_card_note_length" CHECK ("invitations"."kind" <> 'card' or char_length("invitations"."note") <= 500);

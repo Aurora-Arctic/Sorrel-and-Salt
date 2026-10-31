@@ -64,7 +64,9 @@ describe('AdminInvitations', () => {
     expect(within(first).getByText('Curator')).toBeInTheDocument();
     expect(within(second).getByText('Admin')).toBeInTheDocument();
     expect(within(first).getByText('Curates the resins')).toBeInTheDocument();
-    expect(within(first).getByText('17 October 2026, 20:05 UTC')).toBeInTheDocument();
+    expect(
+      within(first).getByText(/^\d{1,2} October \d{4}, \d{1,2}:\d{2} (am|pm)$/),
+    ).toBeInTheDocument();
     expect(within(second).getByText('brook@example.test')).toBeInTheDocument();
   });
 

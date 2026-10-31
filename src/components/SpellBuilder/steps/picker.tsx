@@ -7,15 +7,15 @@ import { useFormContext, useWatch } from 'react-hook-form';
 import { chipColors } from '../../../lib/chip-colors';
 import type { GroupColors } from '../../../lib/types';
 import { compareJar } from '../comparison-panel';
-import { useCategoryColors, useCategoryNames } from '../category-colors';
+import { useCategoryIndex } from '../category-index';
 import type { SpellBuilderValues } from '../types';
 import type { SpellIngredientSuggestionsQuery } from '../../../gql/graphql';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 import Combobox from '../../Combobox';
-import InfoTip from '../../InfoTip';
 import CategoryChips from '../../CategoryChips';
-import { FieldError } from '../../Field';
+import { FieldShell, fieldDescription } from '../../Field';
 import FormIcon from '../../FormIcon';
+import { CheckIcon } from '../../IconTip';
 import { useLookup } from '../../IngredientForm/suggestions';
 import { COMPENDIUM_HEADING, YOUR_INGREDIENTS } from '../../IngredientForm/values';
 import { SpellIngredientSuggestionsDocument } from './documents';
@@ -33,7 +33,8 @@ export interface StepPickerProps {
   onAdd: (step: SpellStepValue) => void;
 }
 
-const ONE_OFF_TAKEN = 'This ingredient is already in the jar';
+const PICKER_HINT = 'Type to search your ingredients and the compendium.';
+const ONE_OFF_TAKEN = 'This ingredient is already in the jar.';
 
 /** A one-off's name as the jar compares it: case and outer spaces aside. */
 export const oneOffKey = (name: string): string => name.trim().toLocaleLowerCase();
@@ -56,8 +57,11 @@ const assignedFirst = <T extends { id: string }>(
   ...categories.filter(({ id }) => !assigned.has(id)),
 ];
 
-/** The chip colours of a category whose group has not loaded (or has none): a neutral grey. */
-const NEUTRAL: GroupColors = { colorDark: '#a1a1aa', colorLight: '#52525b' };
+/**
+ * The chip colours of a category whose group has not loaded (or has none): the theme's muted text
+ * token, which is already the right grey in each theme.
+ */
+const NEUTRAL: GroupColors = { colorDark: 'var(--text-muted)', colorLight: 'var(--text-muted)' };
 
 /**
  * The categories as small print on a row, drawn by CategoryChips (compact size, group colours)
@@ -106,23 +110,6 @@ const noteOf = (formal: string | null | undefined, chips: ReactNode): ReactNode 
   );
 };
 
-/** Lucide's Check (not a dependency here), drawn at 12px: the mark on a pressed filter chip. */
-const CheckMark = (): ReactElement => (
-  <svg
-    width="12"
-    height="12"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="3"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-  >
-    <path d="M20 6 9 17l-5-5" />
-  </svg>
-);
-
 /** Every live form of every live ingredient found, under the heading of where it came from. */
 function pickRows(
   data: SpellIngredientSuggestionsQuery,
@@ -144,10 +131,7 @@ function pickRows(
             label: `${name} (${formLabel(form)})`,
             // Information only: the row stays pickable, since a form may be laid again.
             badge: inJar.has(variant.id) ? (
-              <span className="badge badge--retired spell-steps__in-jar">
-                <span aria-hidden="true">In Jar</span>
-                <span className="visually-hidden">already in the jar</span>
-              </span>
+              <span className="badge badge--muted spell-steps__in-jar">In Jar</span>
             ) : undefined,
             // The form's categories, else the ingredient's, as small print on that line.
             // The formal name in italics, then the chips, with a dot between the two only.
@@ -194,8 +178,7 @@ export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): Re
   const [text, setText] = useState('');
   const [active, setActive] = useState(false);
   const [refused, setRefused] = useState(false);
-  const colors = useCategoryColors();
-  const names = useCategoryNames();
+  const { colors, names } = useCategoryIndex();
   const { control } = useFormContext<SpellBuilderValues>();
   const assignedIds = useWatch({ control, name: 'categoryIds' });
   const assigned = useMemo(() => new Set(assignedIds ?? []), [assignedIds]);
@@ -262,18 +245,19 @@ export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): Re
     setText('');
   };
 
-  const labelId = `${id}-label`;
+  const { aria, ...shell } = fieldDescription({
+    id,
+    hint: PICKER_HINT,
+    error: refused ? ONE_OFF_TAKEN : undefined,
+  });
   return (
-    <div className="field">
-      <label className="field__label" id={labelId} htmlFor={`${id}-search`}>
-        Add to Jar
-      </label>
+    <FieldShell label="Add to Jar" hint={PICKER_HINT} {...shell}>
       {/* One frame round the box and the filter tray: the filter reads as part of the search. */}
       <div className="spell-steps__frame">
         <Combobox<IngredientPickOption>
-          id={`${id}-search`}
+          id={shell.controlId}
           label="Add to Jar"
-          labelId={labelId}
+          labelId={shell.labelId}
           value={text}
           onChange={(value) => {
             setText(value);
@@ -295,9 +279,8 @@ export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): Re
           offerTyped={false}
           actionFirst
           noun="ingredient"
-          placeholder="Add an ingredient or search"
-          aria-invalid={refused || undefined}
-          aria-describedby={refused ? `${id}-error` : undefined}
+          placeholder="Add an ingredient"
+          {...aria}
         />
         {/* The tray inside the frame; the open list is layered over it (z-index, Combobox). Each chip
           is a toggle: none pressed is no filter, one or more keeps ingredients carrying any. */}
@@ -307,9 +290,6 @@ export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): Re
               <span id={`${id}-filter-label`} className="spell-steps__filter-label">
                 Filter By Category
               </span>
-              <InfoTip id={`${id}-filter-tip`} label="Filter By Category">
-                Show only ingredients in any of the pressed categories.
-              </InfoTip>
               {narrowedBy.length > 0 && (
                 <button
                   type="button"
@@ -320,11 +300,15 @@ export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): Re
                 </button>
               )}
             </div>
+            <p id={`${id}-filter-note`} className="field__hint">
+              Show only ingredients in any of the pressed categories.
+            </p>
             <div className="spell-steps__filter-row">
               <div
                 // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- a fieldset or details would add a legend or a disclosure; this is a plain labelled group
                 role="group"
                 aria-labelledby={`${id}-filter-label`}
+                aria-describedby={`${id}-filter-note`}
                 className="spell-steps__filter-chips"
               >
                 {[...assigned].flatMap((categoryId) => {
@@ -348,7 +332,7 @@ export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): Re
                       }
                     >
                       {on ? (
-                        <CheckMark />
+                        <CheckIcon />
                       ) : (
                         <span className="spell-steps__filter-dot" aria-hidden="true" />
                       )}
@@ -361,7 +345,6 @@ export function StepPicker({ workspaceId, oneOffs, onAdd }: StepPickerProps): Re
           </div>
         )}
       </div>
-      <FieldError id={`${id}-error`} message={refused ? ONE_OFF_TAKEN : undefined} />
-    </div>
+    </FieldShell>
   );
 }

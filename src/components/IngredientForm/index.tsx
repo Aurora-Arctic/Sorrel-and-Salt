@@ -27,8 +27,7 @@ import {
 } from '../../lib/autosave';
 import { GraphQLClientError, StaleWriteError } from '../../lib/graphql-client-error';
 import { useViewerId } from '../../lib/viewer-id';
-import SaveStatus from '../SaveStatus';
-import { clockTime } from '../LastEdit/relative';
+import SaveStatus, { RecoveryNotice } from '../SaveStatus';
 import { useSaveOnClose } from '../SpellBuilder/save-on-close';
 import { PanelChangesContext, usePanelChanges } from './panel-changes';
 import {
@@ -239,13 +238,13 @@ const IngredientForm = ({
   entry,
   onSaved,
   onDeleted,
-  onCancel,
   duplicateHref,
   quickLookOf,
   entryHref,
   mayPromote = false,
   review,
   onCreated,
+  onAutosaved,
   onReload,
 }: IngredientFormProps): ReactElement => {
   // A null coven is the compendium: the classification answered, the
@@ -370,12 +369,11 @@ const IngredientForm = ({
   // Whether the last save sent through `handleSubmit(save)` landed: Save and
   // Promote promotes only if it did.
   const landed = useRef(false);
-  // Cancel, and every other way out of the modal, asks first while the form has changes, ahead of any
-  // other question; a save or a delete does not. A reference panel's own edits count too, though
-  // `isDirty` never sees them.
+  // A reference panel's own edits, which `isDirty` never sees: the promotion question counts them as
+  // changes to save or discard first.
   const panels = usePanelChanges();
   // The Reviewed switch lives beside react-hook-form's values, not in the entry's input, and is
-  // saved on its own once the entry is. A flip still counts as a change: Save enables, Cancel and the guard ask.
+  // saved on its own once the entry is. A flip still counts as a change: Save enables, and closing saves it.
   const [reviewed, setReviewed] = useState(review?.reviewed ?? false);
   const [reviewedSaved, setReviewedSaved] = useState(review?.reviewed ?? false);
   const reviewChanged = compendium && review !== undefined && reviewed !== reviewedSaved;
@@ -748,6 +746,8 @@ const IngredientForm = ({
     if (creating) {
       setCreatedId(row.id);
       if (!closing.current) onCreated?.(row);
+    } else if (!closing.current) {
+      onAutosaved?.(row);
     }
     return { revision: row.revision ?? 0, savedAt: new Date(), id: row.id };
   };
@@ -815,32 +815,18 @@ const IngredientForm = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const recovery = recovered && (
-    <Notice kind="warn" block>
-      <span>Restored unsaved changes from {clockTime(recovered.at)}</span>
-      <span className="ingredient-form__recovered">
-        <button
-          type="button"
-          className="btn btn--small btn--solid"
-          onClick={() => {
-            reset(recovered.value.fields, { keepDefaultValues: true });
-            setReviewed(recovered.value.reviewed);
-            setRecovered(null);
-          }}
-        >
-          Keep
-        </button>
-        <button
-          type="button"
-          className="btn btn--small btn--quiet"
-          onClick={() => {
-            if (mirror) clearMirror(mirror);
-            setRecovered(null);
-          }}
-        >
-          Discard
-        </button>
-      </span>
-    </Notice>
+    <RecoveryNotice
+      at={recovered.at}
+      onKeep={() => {
+        reset(recovered.value.fields, { keepDefaultValues: true });
+        setReviewed(recovered.value.reviewed);
+        setRecovered(null);
+      }}
+      onDiscard={() => {
+        if (mirror) clearMirror(mirror);
+        setRecovered(null);
+      }}
+    />
   );
 
   /** Reload after a stale save: the page fetches the server's copy, which replaces the form. */
@@ -954,7 +940,7 @@ const IngredientForm = ({
                     <TextField<IngredientFormValues>
                       name="canonicalName"
                       label="Formal Name"
-                      placeholder="Add formal name"
+                      placeholder="Add a formal name"
                       note={
                         kind === NAMELESS_KIND
                           ? 'A "none" entry records no formal name.'
@@ -1130,16 +1116,6 @@ const IngredientForm = ({
                   submitting={isSubmitting}
                   busy={busy('open')}
                   saveValue="open"
-                  onCancel={
-                    onCancel &&
-                    (() => {
-                      // Nothing to save closes at once.
-                      if (!changed) return onCancel();
-                      void saveForClose().then((saved) => {
-                        if (saved) onCancel();
-                      });
-                    })
-                  }
                   aside={
                     editing ? (
                       <BinButton
@@ -1177,8 +1153,7 @@ const IngredientForm = ({
                   />
                 </FormActions>
                 {/* A question is asked over the form, centred in view however far it is scrolled,
-              the focus on Keep It: the unsaved changes' first, then the end-redirect's, then
-              Delete's. */}
+              the focus on its Cancel: the promotion's, then the end-redirect's, then Delete's. */}
                 {promoteOffered && (
                   <PromoteFolkNameQuestion
                     promotion={promotion}
@@ -1201,7 +1176,7 @@ const IngredientForm = ({
                 )}
                 {question ? (
                   // The address this save takes is another entry's redirect. Asked before anything
-                  // else is pressed; Keep It leaves the entry as typed, unsaved.
+                  // else is pressed; Cancel leaves the entry as typed, unsaved.
                   <ConfirmQuestion
                     key="redirect"
                     question={question.message}
@@ -1218,7 +1193,7 @@ const IngredientForm = ({
                     asked={deleting}
                     question={
                       <>
-                        Delete &quot;{entry?.values.name}&quot;? It leaves the{' '}
+                        Delete <strong>{entry?.values.name}</strong>? It leaves the{' '}
                         {compendium ? 'compendium' : 'coven'}, but any spell that uses it keeps it.
                       </>
                     }

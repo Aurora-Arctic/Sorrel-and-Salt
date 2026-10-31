@@ -5,6 +5,7 @@ import { signInAgainAs } from './session';
 import {
   insertSpell,
   insertStep,
+  insertStock,
   insertWorking,
   compendiumVariant,
   seedCoven,
@@ -44,7 +45,7 @@ for (const [name, size] of [
     const workings = await box(page.getByRole('heading', { name: 'Workings' }));
     const steps = await box(page.getByRole('list', { name: 'Steps' }));
     const note = await box(page.getByText('A closing note'));
-    const aside = await box(page.getByRole('complementary', { name: 'The Jar' }));
+    const aside = await box(page.getByRole('complementary', { name: 'The Cupboard' }));
 
     // The rows carry no list marker.
     const marker = await page
@@ -120,6 +121,32 @@ test('the moon phase sits on one line in the facts strip on a desktop', async ({
   expect(lines).toEqual([1, 1, 1, 1]);
 });
 
+test("the side column's Quick Look eye is a 24px target with a smaller glyph, and the step carries none", async ({
+  page,
+}) => {
+  const coven = await seedCoven(page, 'Fixture Coven Eye', 'spell-eye.test', { A: 'owner' });
+  const { A } = coven.users;
+  const spellId = await withSql(async (sql) => {
+    const held = await compendiumVariant(sql, "Cat's Claw", 'Bark', 'Uncaria tomentosa');
+    const id = await insertSpell(sql, coven.id, 'Fixture Eye', 'workspace', A, 'complete');
+    await insertStep(sql, id, held, { quantity: 2, unit: 'g', position: 0 }, A);
+    return id;
+  });
+  await signInAgainAs(page, A);
+  await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+  await expect(
+    page.getByRole('list', { name: 'Steps' }).getByRole('link', { name: "Quick Look Cat's Claw" }),
+  ).toHaveCount(0);
+  const eye = page
+    .getByRole('region', { name: 'In the Cupboard' })
+    .getByRole('link', { name: "Quick Look Cat's Claw" });
+  const target = await eye.evaluate((el) => el.getBoundingClientRect().toJSON());
+  const glyph = await eye.locator('svg').evaluate((el) => el.getBoundingClientRect().toJSON());
+  expect(target.width).toBeGreaterThanOrEqual(24);
+  expect(target.height).toBeGreaterThanOrEqual(24);
+  expect(glyph.width).toBeLessThan(target.width);
+});
+
 // Each working row's badges sit right after its date, whatever else the row holds, so the gap from
 // the date to the first badge is the same on a draft row and a complete one.
 test('the badges of a draft and a complete working sit the same distance after the date on a desktop', async ({
@@ -188,18 +215,18 @@ for (const [name, size] of [
     await expect(nav.getByRole('link')).toHaveText(
       name === 'desktop'
         ? ['Steps', 'Workings']
-        : ['Steps', 'Category Match', 'In Coven Inventory', 'Workings'],
+        : ['Steps', 'Category Match', 'In the Cupboard', 'Workings'],
     );
     // The group label and its list go with the links on a desktop, and stand over them below it.
-    await expect(nav.getByText('The Jar', { exact: true })).toBeVisible({
+    await expect(nav.getByText('The Cupboard', { exact: true })).toBeVisible({
       visible: name !== 'desktop',
     });
     if (name === 'phone') {
       const top = (label: string) =>
         page
-          .getByRole(label === 'The Jar' ? 'complementary' : 'region', { name: label })
+          .getByRole(label === 'The Cupboard' ? 'complementary' : 'region', { name: label })
           .evaluate((el) => el.getBoundingClientRect().top);
-      expect(await top('The Jar')).toBeLessThan(await top('Workings'));
+      expect(await top('The Cupboard')).toBeLessThan(await top('Workings'));
     }
     if (name === 'desktop') {
       // Left of the body, not above it.
@@ -376,13 +403,13 @@ for (const [name, size] of [
     expect(await noteTop()).toBe(before);
 
     // The calendar's box is whole: inside the window, and its far corner is the calendar, not the dialog's edge.
-    const box = (await page.locator('.date-field__panel').boundingBox())!;
+    const box = (await page.locator('.calendar-panel').boundingBox())!;
     expect(box.x).toBeGreaterThanOrEqual(0);
     expect(box.y).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width).toBeLessThanOrEqual(size.width);
     expect(box.y + box.height).toBeLessThanOrEqual(size.height);
     const corner = await page.evaluate(
-      ([x, y]) => document.elementFromPoint(x, y)?.closest('.date-field__panel') !== null,
+      ([x, y]) => document.elementFromPoint(x, y)?.closest('.calendar-panel') !== null,
       [box.x + box.width - 3, box.y + box.height - 3],
     );
     expect(corner).toBe(true);
@@ -405,3 +432,168 @@ for (const [name, size] of [
     expect(await widthOf()).toBe(todayWidth);
   });
 }
+
+test("a short jar's deduction line keeps each part whole at 375px", async ({ page }) => {
+  const coven = await seedCoven(page, 'Fixture Coven Deduction', 'spell-deduction.test', {
+    A: 'owner',
+  });
+  const { A } = coven.users;
+  const spellId = await withSql(async (sql) => {
+    const held = await compendiumVariant(sql, 'Rosemary', 'Herb');
+    await insertStock(sql, coven.id, held, { quantity: 1, unit: 'g', threshold: 0 }, A);
+    const id = await insertSpell(sql, coven.id, 'Fixture Deduction', 'workspace', A, 'complete');
+    await insertStep(sql, id, held, { quantity: 3, unit: 'g', position: 0 }, A);
+    return id;
+  });
+  await signInAgainAs(page, A);
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+  await page
+    .getByRole('region', { name: 'Workings' })
+    .getByRole('button', { name: 'Record a Working' })
+    .click();
+  const dialog = page.getByRole('dialog', { name: 'Record a Working' });
+  await dialog.getByRole('button', { name: 'Complete' }).click();
+  const words = dialog.getByRole('list', { name: 'Deductions' }).locator('.jar-line__words');
+  await expect(words).toContainText('needs 3 g · have 1 g · short by 2 g');
+
+  // Every part (needs, have, short by) stands on one line, so no unit sits alone under its number.
+  const parts = await words.locator('> span').evaluateAll((spans) =>
+    spans.map((span) => {
+      const range = document.createRange();
+      range.selectNodeContents(span);
+      const tops = new Set([...range.getClientRects()].map((rect) => Math.round(rect.top)));
+      return { text: span.textContent, lines: tops.size };
+    }),
+  );
+  expect(parts).toHaveLength(3);
+  for (const part of parts) expect(part, part.text ?? '').toMatchObject({ lines: 1 });
+});
+
+test('on a phone the jump menu stands under the intent and over the facts', async ({ page }) => {
+  const coven = await seedCoven(page, 'Fixture Coven Nav Order', 'spell-nav-order.test', {
+    A: 'owner',
+  });
+  const { A } = coven.users;
+  const spellId = await withSql(async (sql) => {
+    const held = await compendiumVariant(sql, 'Rosemary', 'Herb');
+    const id = await insertSpell(sql, coven.id, 'Fixture Nav Order', 'workspace', A, 'complete');
+    await sql`update spells set intent = 'To draw a steady hand', jar_description = '4 oz jar' where id = ${id}`;
+    await insertStep(sql, id, held, { quantity: 2, unit: 'g', position: 0 }, A);
+    return id;
+  });
+  await signInAgainAs(page, A);
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+
+  const box = (locator: Locator) => locator.evaluate((el) => el.getBoundingClientRect().toJSON());
+  const intent = await box(page.getByText('To draw a steady hand'));
+  const nav = await box(page.getByRole('navigation', { name: 'On This Page' }));
+  const facts = await box(page.getByText('4 oz jar'));
+  // The reader learns what the spell is for before the five links that jump past it.
+  expect(nav.top).toBeGreaterThanOrEqual(intent.bottom);
+  expect(nav.bottom).toBeLessThanOrEqual(facts.top);
+});
+
+test('on a phone the keyboard reaches the jump menu after the intent and categories, and none of it before them', async ({
+  page,
+}) => {
+  const coven = await seedCoven(page, 'Fixture Coven Nav Focus', 'spell-nav-focus.test', {
+    A: 'owner',
+  });
+  const { A } = coven.users;
+  const spellId = await withSql(async (sql) => {
+    const held = await compendiumVariant(sql, 'Rosemary', 'Herb');
+    const id = await insertSpell(sql, coven.id, 'Fixture Nav Focus', 'workspace', A, 'complete');
+    await sql`update spells set intent = 'To draw a steady hand', jar_description = '4 oz jar' where id = ${id}`;
+    await sql`
+      insert into spell_categories (spell_id, category_id, created_by, updated_by)
+      select ${id}, id, ${A}, ${A} from categories where deleted_at is null limit 2`;
+    await insertStep(sql, id, held, { quantity: 2, unit: 'g', position: 0 }, A);
+    await insertWorking(sql, id, A, { workedOn: '2026-03-04' });
+    return id;
+  });
+  await signInAgainAs(page, A);
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+
+  const nav = page.getByRole('navigation', { name: 'On This Page' });
+  const chips = page.getByRole('article').getByRole('list', { name: 'Categories' }).first();
+  const lastChip = chips.getByRole('listitem').last();
+  // The chips are drawn above the menu, so a keyboard that met the menu first would read out of
+  // the order the screen shows.
+  await expect(chips.getByRole('listitem')).toHaveCount(2);
+  const chipsBottom = await chips.evaluate((el) => el.getBoundingClientRect().bottom);
+  expect(await nav.evaluate((el) => el.getBoundingClientRect().top)).toBeGreaterThanOrEqual(
+    chipsBottom,
+  );
+
+  // A click on the last chip, which takes no focus itself, starts the keyboard's sequence there.
+  await lastChip.click();
+  await page.keyboard.press('Tab');
+  await expect(nav.getByRole('link').first()).toBeFocused();
+
+  // Backwards from the same place the keyboard lands before the chips, outside the menu.
+  await lastChip.click();
+  await page.keyboard.press('Shift+Tab');
+  const before = await chips.evaluate((el) => {
+    const active = document.activeElement;
+    return {
+      inMenu: document.querySelector('nav[aria-label="On This Page"]')?.contains(active) ?? false,
+      precedes:
+        active !== null &&
+        active !== document.body &&
+        (el.compareDocumentPosition(active) & Node.DOCUMENT_POSITION_PRECEDING) !== 0,
+    };
+  });
+  expect(before).toEqual({ inMenu: false, precedes: true });
+});
+
+test('on a phone the keyboard reaches The Cupboard after the recipe and before Workings, as they stand', async ({
+  page,
+}) => {
+  const coven = await seedCoven(page, 'Fixture Coven Side Focus', 'spell-side-focus.test', {
+    A: 'owner',
+  });
+  const { A } = coven.users;
+  const spellId = await withSql(async (sql) => {
+    const held = await compendiumVariant(sql, "Cat's Claw", 'Bark', 'Uncaria tomentosa');
+    const id = await insertSpell(sql, coven.id, 'Fixture Side Focus', 'workspace', A, 'complete');
+    await sql`update spells set note = 'A closing note' where id = ${id}`;
+    await insertStep(sql, id, held, { quantity: 2, unit: 'g', position: 0 }, A);
+    await insertStock(sql, coven.id, held, { quantity: 10, unit: 'g', threshold: 0 }, A);
+    await insertWorking(sql, id, A, { workedOn: '2026-03-04' });
+    return id;
+  });
+  await signInAgainAs(page, A);
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
+
+  const side = page.getByRole('complementary', { name: 'The Cupboard' });
+  const workings = page.getByRole('region', { name: 'Workings' });
+  // The side column is drawn above Workings, so a keyboard that met Workings first would read out
+  // of the order the screen shows.
+  const sideTop = await side.evaluate((el) => el.getBoundingClientRect().top);
+  expect(await workings.evaluate((el) => el.getBoundingClientRect().top)).toBeGreaterThan(sideTop);
+
+  // Where each Tab lands: in the side column, in Workings, or elsewhere.
+  const where = () =>
+    page.evaluate(() => {
+      const active = document.activeElement;
+      if (document.querySelector('aside[aria-label="The Cupboard"]')?.contains(active))
+        return 'side';
+      if (document.getElementById('spell-workings')?.contains(active)) return 'workings';
+      return 'elsewhere';
+    });
+
+  // The note closes the recipe and holds nothing focusable; a click on it starts the sequence there.
+  await page.getByText('A closing note').click();
+  const seen: string[] = [];
+  for (let i = 0; i < 30 && !seen.includes('workings'); i++) {
+    await page.keyboard.press('Tab');
+    seen.push(await where());
+  }
+  expect(seen[0]).toBe('side');
+  expect(seen).toContain('workings');
+  expect(seen.slice(0, seen.indexOf('workings')).every((at) => at === 'side')).toBe(true);
+});

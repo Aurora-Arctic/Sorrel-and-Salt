@@ -68,7 +68,9 @@ its mixin in `_mixins.scss`:
   categories' list and the user list take it.
 - **`data-table--nowrap`**: no cell wraps, so a row stays one line and the
   table scrolls in its frame. A confirmation opened from a cell wraps as
-  prose again, and a card, which does not scroll, wraps too. The user list
+  prose again, and a card, which does not scroll, wraps too. It reaches only
+  the table's own cells (child combinators), so a table inside a dialog opened
+  from one of them wraps as normal. The user list
   and the invitations take it.
 
 ## GroupChip

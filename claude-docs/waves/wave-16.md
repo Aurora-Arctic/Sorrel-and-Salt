@@ -4,11 +4,11 @@
 
 **It runs before Wave 15 (Launch)**, because Launch's sweeps (the axe scan M11.8, the last design review MB.124) assume every page already exists, and this wave adds a sign-up form, two password pages and three sections of the account page. It depends on nothing after Wave 10: the account page, the mail transport (MB.65) and the verification link (MB.61) are all in place by then.
 
-**The order is M16.1 to M16.10, in id order.**
+**The order is M16.1 to M16.10 in id order, except that M16.11 sits after M16.5.**
 
 1. **M16.1 first**, so the rules the code is reviewed against already allow it. It is documentation only.
 2. **M16.2 and M16.3**, email and password: sign-in and sign-up, then reset and change. Reset needs the sign-up form's password field and the account to have a password to reset.
-3. **M16.4 then M16.5**, the lockout: a table task, then the behaviour that writes to it (`CLAUDE.md`, "A table task, then a behaviour task"). It follows M16.2 because it hooks the sign-in endpoint M16.2 turns on.
+3. **M16.4 then M16.5**, the lockout: a table task, then the behaviour that writes to it (`CLAUDE.md`, "A table task, then a behaviour task"). It follows M16.2 because it hooks the sign-in endpoint M16.2 turns on. **M16.11 comes straight after M16.5**: it changes the lockout so a lock lifts on its own and mails the account's owner, instead of a count that never falls and eventually switches the password off.
 4. **M16.6, M16.7, M16.8**, passkeys: M16.6 installs the passkey plugin and adds its table, so the dependency change lands alone and its effect on the existing auth tests is seen apart from any new code. The installed core already meets the plugin's peer range, so no core bump rides with it. Sign-in comes before the account page's management section, though each needs the other to be useful, because sign-in is the riskier half.
 5. **M16.9 then M16.10**, two-factor: its table, then the behaviour. Last, because it covers password sign-ins only and builds on the account page's Password section from M16.3.
 

@@ -49,7 +49,7 @@ function recordingSender() {
 }
 
 beforeEach(async () => {
-  await sql`truncate invitations`;
+  await sql`truncate card_invitation_attempts, invitations`;
   await sql`truncate admin_role_change_pauses`;
   await sql`truncate user_privilege_changes`;
   await sql`delete from workspace_members where user_id = ${GRANTEE}`;
@@ -109,7 +109,8 @@ describe('Mutation.createAdminInvitation', () => {
     expect(JSON.stringify(result)).not.toContain(sha256(token));
   });
 
-  // Not merely absent from this answer: no field could carry them.
+  // Not merely absent from this answer: no field could carry them. The one exception is the card mint, whose result
+  // answers each new token once (invitation-cards.test.ts holds that mutation to the minting admin).
   it('has no field that could carry the token, its hash or a link', () => {
     const type = schema.getType('Invitation');
     if (!isObjectType(type)) throw new Error('Invitation is not an object type');
@@ -128,6 +129,17 @@ describe('Mutation.createAdminInvitation', () => {
       'siteRole',
       'workspace',
     ]);
+  });
+
+  it('has no token, hash or link field on any type but the card mint result', () => {
+    const carriers: string[] = [];
+    for (const type of Object.values(schema.getTypeMap())) {
+      if (!isObjectType(type) || type.name.startsWith('__')) continue;
+      for (const name of Object.keys(type.getFields())) {
+        if (/token|hash|link/i.test(name)) carriers.push(`${type.name}.${name}`);
+      }
+    }
+    expect(carriers).toEqual(['MintedInvitationCards.tokens']);
   });
 
   // The role is the admin's choice, and the transport carries it through.

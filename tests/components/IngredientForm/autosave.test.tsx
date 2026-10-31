@@ -9,6 +9,7 @@ import { ViewerIdProvider } from '@/lib/viewer-id';
 import { server } from '../../support/msw/server';
 import { graphqlLink, mockGraphQLError } from '../../support/msw/graphql';
 import { duplicateHref, renderWithClient, textbox, waitFor } from '../../support/ingredient-form';
+import { renderInModal } from '../../support/discard-guard';
 import { press, type } from '../../support/interact';
 import {
   ENTRY_ID,
@@ -141,15 +142,20 @@ describe('an ingredient opened for editing', () => {
     expect(screen.getByText('Did you mean one of these?')).toBeInTheDocument();
   });
 
-  it('saves an unsaved change when Cancel is pressed, and closes with no question', async () => {
+  it('offers no Cancel, and saves an unsaved change as the modal closes, asking nothing', async () => {
     const updated = acceptCovenUpdate();
-    const onCancel = vi.fn();
-    renderForm({ entry: OPENED, onCancel });
+    offerNothing();
+    const onClose = renderInModal(() => (
+      <ViewerIdProvider id={USER}>
+        <IngredientForm duplicateHref={duplicateHref} workspaceId={WORKSPACE_ID} entry={OPENED} />
+      </ViewerIdProvider>
+    ));
+    expect(screen.queryByRole('button', { name: 'Cancel' })).toBeNull();
 
     type('Name', 'Mockwort');
-    press('Cancel');
+    press('Close');
 
-    await waitFor(() => expect(onCancel).toHaveBeenCalledOnce());
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
     expect(updated).toHaveLength(1);
     expect(screen.queryByRole('button', { name: 'Discard Changes' })).toBeNull();
   });
@@ -163,7 +169,7 @@ describe('a save that does not get through', () => {
     type('Name', 'Mockwort');
     await wait(30000);
 
-    expect(await screen.findByText(/Couldn.t save\./)).toBeInTheDocument();
+    expect(await screen.findByText(/Could not save\./)).toBeInTheDocument();
     expect(
       readMirror(mirrorKey({ entity: 'ingredient', id: ENTRY_ID, userId: USER })),
     ).not.toBeNull();
@@ -177,7 +183,7 @@ describe('a save that does not get through', () => {
         readMirror(mirrorKey({ entity: 'ingredient', id: ENTRY_ID, userId: USER })),
       ).toBeNull(),
     );
-    expect(screen.queryByText(/Couldn.t save\./)).toBeNull();
+    expect(screen.queryByText(/Could not save\./)).toBeNull();
   });
 });
 

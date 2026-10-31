@@ -81,3 +81,7 @@ well would be a second copy to keep equal.
 The sentence above a list says what the list is searching for. Settled, it is one closed line such as "12 ingredients matching rue", which opens to the clauses beneath it.
 
 While a search is on its way, the whole sentence is typed out in place as the loading animation. The count reads "Searching for ingredients" until the result returns, then is backspaced to the real count. The clauses finish typing, are held for a moment, and slide up into the closed line. The typed line is hidden from assistive technology, and a status region is given the finished sentence once, when the search returns.
+
+## Stories
+
+`src/components/SearchSentence/index.stories.tsx`, titled "Ingredients / Search Sentence": `States`, with the states Settled (one closed line), Slow Search (results after four seconds), Fast Search (results before the clauses finish typing) and Nothing To Open (a search term and no filter, so a plain line). Each starts its own search on load; New Search and Search Again start another.

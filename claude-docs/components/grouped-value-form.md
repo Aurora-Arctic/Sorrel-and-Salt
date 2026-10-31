@@ -44,7 +44,7 @@ its three mutation documents, and nothing else:
 - **Its copy**: `noun`, the title-case word the buttons say ("Category",
   "Form", "Deity", "Celestial Body", "Zodiac Sign"); `group`, for a grouped kind only, the
   group field's `label`, `placeholder`, what it shows until one is chosen
-  ("Group", "Choose a group"; a deity's "Tradition", "Choose a tradition"), and `hint`, what the group does for the value; `descriptionHint`, the Description's info tip, set only on the kinds whose suggestions match the description as well as the name (form, deity, celestial body, zodiac sign), since that is a flow the label does not say, and absent on a category, whose label and placeholder say it (the owner's call, 2026-10-20; [`info-tip.md`](info-tip.md), "When a field gets a tip"); `describe`, its placeholder, a one-line prompt ("What this category covers"); `deleteNote`, what the
+  ("Group", "Choose a group"; a deity's "Tradition", "Choose a tradition"), and `hint`, the field's info tip, set only where it gives a rule the label does not (a deity's Tradition: a god several peoples honour is filed under one) and absent on a category and a form, whose Group label says it; `descriptionHint`, the Description's info tip, set only on the kinds whose suggestions match the description as well as the name (form, deity, celestial body, zodiac sign), since that is a flow the label does not say, and absent on a category, whose label and placeholder say it (the owner's call, 2026-10-20; [`info-tip.md`](info-tip.md), "When a field gets a tip"); `describe`, its placeholder, a one-line prompt ("What this category covers"); `deleteNote`, what the
   confirmation says after `Delete "<name>"?`; and `renameNote`, for a kind
   whose rename reaches further than its row (every kind but the category); and
   `otherNamesHint`, the Other Names list's info tip, set only on the deity,
@@ -146,10 +146,10 @@ its three mutation documents, and nothing else:
   ([`db/ingredient-slugs.md`](../db/ingredient-slugs.md)).
 - **A delete asks first, and says what it does.** Delete Category, Delete
   Form, Delete Deity, Delete Celestial Body or Delete Zodiac Sign asks
-  `Delete "<name>"?` and the kind's note, beside Delete and Keep It, on a
+  `Delete "<name>"?` and the kind's note, beside Delete and Cancel, on a
   card over the form, which is dimmed and held until it is answered, the
-  focus on Keep It (MB.115, the owner's call; [`modal.md`](modal.md),
-  "Asking over the form"). Keep It puts it away, the focus back on the
+  focus on Cancel (MB.115, the owner's call; [`modal.md`](modal.md),
+  "Asking over the form"). Cancel puts it away, the focus back on the
   delete button pressed. A category's: `Covens' ingredients and spells filed under it
 stay in their lists, but can no longer be filtered by it.` Deleting a
   category removes nothing of a coven's: an entry filed under it keeps its
@@ -167,8 +167,8 @@ it. Covens' ingredients keep what they wrote, as their own value.` A refusal com
   hands `formState.isDirty` to the shared guard
   ([`modal.md`](modal.md#unsaved-changes)); Discard Changes calls `onDone`.
 - **Buttons are title case**: Save and Delete with the kind's `noun` (Save
-  Category, Delete Zodiac Sign and so on), Cancel, Delete, Keep It, Discard
-  Changes, Keep Editing. Save is solid; Cancel, Keep It and Keep Editing are
+  Category, Delete Zodiac Sign and so on), Cancel, Delete, Cancel, Discard
+  Changes, Keep Editing. Save is solid; Cancel and Keep Editing are
   quiet, since they change nothing; the two deletes and Discard Changes are
   destructive.
 
@@ -250,7 +250,7 @@ save answers with the generic error.
   tradition after it.
 - `AskingToDelete`: the category's edit with Delete pressed once drawn, the
   question over the form, which is dimmed and held beneath it until Delete or
-  Keep It answers.
+  Cancel answers.
 
 ## Testing
 
@@ -264,7 +264,7 @@ run would prove nothing more (MB.189). Its unsaved-changes wiring is one test, t
 (`tests/support/discard-guard.tsx`): Cancel and Escape asking after a
 change, and Discard Changes closing; the guard's shape is the Modal's test.
 The delete question in a modal has its own three, on the category: the form
-inert while it asks and the focus on Keep It, both given back on Keep It, the
+inert while it asks and the focus on Cancel, both given back on Cancel, the
 focus on the delete button; Delete deleting from over the form; and Escape
 closing with nothing changed, and with a change asking about it first, Keep
 Editing bringing the delete question back. `describe('GroupedValueForm, its Description tip')`

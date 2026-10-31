@@ -30,6 +30,7 @@ import {
   pickCategoryIn,
   shellAddIngredient,
   shellEditControls,
+  holdSaves,
 } from './ingredient-dialogs';
 
 // The add and edit dialogs of a coven's ingredient: the add opens from the coven's home, its members page and
@@ -370,6 +371,8 @@ test(
 
     await page.goto(`/coven/${coven.slug}`);
     const dialog = await openAddIngredient(page);
+    // The form's own saves are held until after the click on Save, so the autosave cannot file the picks first.
+    const saves = await holdSaves(page, ['CreateWorkspaceIngredient', 'UpdateWorkspaceIngredient']);
     await nameField(dialog).fill('Plimsbark');
 
     await test.step('each pick shows as a chip, and its × takes it out', async () => {
@@ -386,6 +389,7 @@ test(
 
     await test.step('the save files the ingredient under the picks left', async () => {
       await saveIngredient(dialog).click();
+      saves.release();
       await expect(dialog).toHaveCount(0);
       const [row] = await savedRows(coven.id, 'Plimsbark');
       const filed = await withSql(

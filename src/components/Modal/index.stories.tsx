@@ -58,45 +58,6 @@ const defaultNode = <DefaultView />;
 
 // In its own iframe: `showModal()` puts the dialog in the top layer, which in
 // the workshop's own document would cover Storybook's sidebar too.
-// The wide size, for a long form: the compendium entry's is the first.
-const WideView = () => {
-  const [open, setOpen] = useState(true);
-  return (
-    <>
-      <button type="button" className="btn btn--solid" onClick={() => setOpen(true)}>
-        Open
-      </button>
-      {open && (
-        <Modal title="Add Ingredient" size="wide" onClose={() => setOpen(false)}>
-          <form className="form" onSubmit={(event) => event.preventDefault()}>
-            <div className="field">
-              <label className="field__label" htmlFor="story-wide-name">
-                Name
-              </label>
-              <input id="story-wide-name" className="input" defaultValue="Testwort" />
-            </div>
-            <div className="field">
-              <label className="field__label" htmlFor="story-wide-formal">
-                Formal Name
-              </label>
-              <input id="story-wide-formal" className="input" defaultValue="Fixtura testalis" />
-            </div>
-            <div className="modal__actions">
-              <button type="submit" className="btn btn--solid">
-                Save Ingredient
-              </button>
-              <button type="button" className="btn" onClick={() => setOpen(false)}>
-                Cancel
-              </button>
-            </div>
-          </form>
-        </Modal>
-      )}
-    </>
-  );
-};
-const wideNode = <WideView />;
-
 /**
  * An edit dialog's head: the eyebrow says the action, the title which entry, and a
  * qualifier follows it (here a binomial in italics). The name wraps rather than
@@ -347,8 +308,8 @@ const PICKS = asSlugs(GROUP_NAMES.form.slice(0, 3)).map(({ slug, name }) => ({
 }));
 
 /**
- * A form asked to confirm a delete over itself: Delete (destructive) and Keep It,
- * focused. Delete leaves it busy, "Deleting", since this one never lands; Keep It
+ * A form asked to confirm a delete over itself: Delete (destructive) and Cancel,
+ * focused. Delete leaves it busy, "Deleting", since this one never lands; Cancel
  * closes the question.
  */
 function DeletingForm() {
@@ -441,7 +402,6 @@ const withPickersNode = <WithPickersView />;
 
 const MODAL_STATES: Record<string, ReactNode> = {
   Plain: defaultNode,
-  Wide: wideNode,
   Editing: editingNode,
   'Opened By A Button': openedByAButtonNode,
   'Opened By A Button And Pressed': openedByAButtonOpenNode,
@@ -460,5 +420,5 @@ export const States: Story = {
   argTypes: {
     state: { control: 'select', options: Object.keys(MODAL_STATES), mapping: MODAL_STATES },
   },
-  render: ({ state }) => <div key={String(state)}>{state}</div>,
+  render: ({ state }) => <div>{state}</div>,
 };

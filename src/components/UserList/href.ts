@@ -10,10 +10,21 @@ import type { UserListFilterValue } from './types';
 /** The page itself, unfiltered: where the filter submits. */
 export const USERS_PATH: Route = '/admin/users';
 
+/**
+ * The screens that open a user's modal over the Users list and take the close back: the key is the
+ * `from` parameter, the value where Close goes. A fixed set, so the parameter is never an address of the caller's choosing.
+ */
+export const USER_MODAL_ORIGINS = {
+  'invitation-cards': '/admin/invitation-cards',
+} as const satisfies Record<string, Route>;
+
+export type UserModalOrigin = keyof typeof USER_MODAL_ORIGINS;
+
 export function userListHref(
   { query, awaitingApproval, role }: UserListFilterValue,
   cursor?: PagerCursor,
   user?: string,
+  from?: UserModalOrigin,
 ): Route {
-  return listHref(USERS_PATH, { query, awaiting: awaitingApproval, role, ...cursor, user });
+  return listHref(USERS_PATH, { query, awaiting: awaitingApproval, role, ...cursor, user, from });
 }

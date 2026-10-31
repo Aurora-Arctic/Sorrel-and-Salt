@@ -23,7 +23,7 @@ export function FormHistoryButtons(): ReactElement | null {
         <button
           ref={undoButton}
           type="button"
-          className="btn btn--small btn--quiet"
+          className="btn btn--quiet btn--small"
           aria-label="Undo"
           disabled={!canUndo}
           onClick={undo}
@@ -35,7 +35,7 @@ export function FormHistoryButtons(): ReactElement | null {
         <button
           ref={redoButton}
           type="button"
-          className="btn btn--small btn--quiet"
+          className="btn btn--quiet btn--small"
           aria-label="Redo"
           disabled={!canRedo}
           onClick={redo}

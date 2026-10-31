@@ -874,7 +874,7 @@ export default function Foundations(): ReactElement {
                 Delete
               </button>
               <button type="button" className="btn btn--quiet">
-                Keep It
+                Cancel
               </button>
             </div>
           </div>

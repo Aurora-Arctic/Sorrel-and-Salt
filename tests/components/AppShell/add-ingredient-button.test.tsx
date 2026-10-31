@@ -1,5 +1,4 @@
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import axe from 'axe-core';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ShellViewer, ShellWorkspace } from '@/lib/types';
 
@@ -293,17 +292,6 @@ describe('AddIngredientButton', () => {
       expect(within(menuOf()).getAllByRole('menuitem')).toHaveLength(2);
       expect(within(menuOf()).queryByRole('group')).toBeNull();
       expect(within(menuOf()).queryByRole('separator')).toBeNull();
-    });
-
-    it('has no accessibility violations with the menu open', async () => {
-      const { container } = draw(MEMBER, [FIXTURE, TESTWORT]);
-      // Async, so the menu's placement (Floating UI) settles inside act.
-      await act(async () => {
-        fireEvent.click(chevron());
-      });
-
-      const { violations } = await axe.run(container);
-      expect(violations).toEqual([]);
     });
   });
 

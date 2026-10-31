@@ -1,17 +1,18 @@
 'use client';
 
 import { usePendingNavigation } from '../../lib/navigation';
-import { type ReactElement, useState } from 'react';
+import { type ReactElement, useEffect, useRef, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
 import { useClickFeedback } from '../ClickFeedback';
 import Notice from '../Notice';
+import PageHeader from '../PageHeader';
 import type { InvitationAcceptanceProps } from './types';
 import './index.scss';
 
-// `/invite/[token]`'s one panel: the page reads where the visitor stands and this shows it. Accept
+// `/invite/[token]` and `/i/[token]` share this one panel: the page reads where the visitor stands and this shows it. Accept
 // sends the mutation, which decides, and a refusal is shown in the service's words
 // (claude-docs/components/invitation-acceptance.md).
 
@@ -20,6 +21,12 @@ const AcceptInvitationDocument = graphql(`
     acceptInvitation(token: $token) {
       id
     }
+  }
+`);
+
+const RecordCardAttemptDocument = graphql(`
+  mutation RecordCardAttempt($token: String!) {
+    recordCardAttempt(token: $token)
   }
 `);
 
@@ -35,10 +42,17 @@ const WORKSPACE_GRANT = "You've been invited to join a coven on Sorrel & Salt.";
 const SIGNED_OUT_GRANT =
   "You've been invited to Sorrel & Salt. Sign in with an account whose email address is the one this invitation was sent to.";
 
+/** What a card grants, and what a signed-out visitor holding one is told: no address, no batch. */
+const CARD_GRANT = "You've been given a card to join Sorrel & Salt.";
+
+const CARD_SIGNED_OUT_GRANT =
+  "You've been given a card to join Sorrel & Salt. Sign in with any account, once its email address is verified.";
+
 /** The sentence under the heading, or none for a refusal: its alert says all there is to say. */
 function grantOf(props: InvitationAcceptanceProps): string | undefined {
-  if (props.status === 'signed-out') return SIGNED_OUT_GRANT;
+  if (props.status === 'signed-out') return props.card ? CARD_SIGNED_OUT_GRANT : SIGNED_OUT_GRANT;
   if (props.status !== 'acceptable') return undefined;
+  if (props.tier === 'card') return CARD_GRANT;
   if (props.tier === 'site') return SITE_GRANTS[props.siteRole];
   return props.covenName
     ? `You've been invited to join ${props.covenName} on Sorrel & Salt.`
@@ -90,14 +104,23 @@ const Accept = ({
   );
 };
 
+// Tells the server a signed-in account opened a link it refused, once per view. The service decides whether
+// the open is worth a row; a failure is ignored, as the refusal on the page already says all there is to say.
+const RecordRefusal = ({ token }: { token: string }): null => {
+  const sent = useRef(false);
+  useEffect(() => {
+    if (sent.current) return;
+    sent.current = true;
+    graphqlRequest(RecordCardAttemptDocument, { token }).catch(() => undefined);
+  }, [token]);
+  return null;
+};
+
 const InvitationAcceptance = (props: InvitationAcceptanceProps): ReactElement => {
   const grant = grantOf(props);
   return (
     <div className="panel invitation-acceptance">
-      <div className="header">
-        <h1>Your Invitation</h1>
-        {grant && <p className="lede">{grant}</p>}
-      </div>
+      <PageHeader title="Your Invitation" lede={grant} />
       {props.status === 'signed-out' && (
         <p className="invitation-acceptance__actions">
           <a className="btn btn--solid" href={props.signInHref}>
@@ -108,6 +131,14 @@ const InvitationAcceptance = (props: InvitationAcceptanceProps): ReactElement =>
       {props.status === 'refused' && (
         <>
           <Notice kind="error">{props.message}</Notice>
+          {props.token && <RecordRefusal token={props.token} />}
+          {props.startCovenHref && (
+            <p className="invitation-acceptance__actions">
+              <a className="btn btn--solid" href={props.startCovenHref}>
+                Start a Coven
+              </a>
+            </p>
+          )}
           {props.emailHref && (
             <p className="invitation-acceptance__actions">
               <a className="btn btn--solid" href={props.emailHref}>

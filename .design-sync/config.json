@@ -56,7 +56,8 @@
   "cssEntry": "sorrel-and-salt.css",
   "overrides": {
     "EmailForm": {
-      "cardMode": "column"
+      "cardMode": "column",
+      "viewport": "900x800"
     },
     "NameForm": {
       "cardMode": "column"
@@ -139,7 +140,7 @@
     },
     "IngredientForm": {
       "cardMode": "single",
-      "primaryStory": "AskingToDiscardInModal",
+      "primaryStory": "AskingToDeleteInModal",
       "viewport": "900x2000"
     },
     "LastEdit": {
@@ -196,7 +197,8 @@
     },
     "SignInMethods": {
       "cardMode": "single",
-      "primaryStory": "FailedRemove"
+      "primaryStory": "FailedRemove",
+      "viewport": "900x1450"
     },
     "SignInPanel": {
       "cardMode": "single",
@@ -229,6 +231,35 @@
     },
     "ReceivedInvitations": {
       "viewport": "900x860"
+    },
+    "DateField": {
+      "cardMode": "single",
+      "primaryStory": "States"
+    },
+    "GrimoireList": {
+      "cardMode": "column",
+      "viewport": "900x1000"
+    },
+    "SpellBuilder": {
+      "cardMode": "single",
+      "primaryStory": "States"
+    },
+    "SpellRecipe": {
+      "cardMode": "column",
+      "viewport": "900x1500"
+    },
+    "NotAuthorized": {
+      "cardMode": "single",
+      "primaryStory": "Default"
+    },
+    "SafetyNote": {
+      "viewport": "900x1200"
+    },
+    "SpellCard": {
+      "viewport": "900x2000"
+    },
+    "StepRow": {
+      "viewport": "900x1300"
     }
   },
   "readmeHeader": ".design-sync/conventions.md"

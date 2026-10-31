@@ -18,7 +18,7 @@ export function SourceEditIcon(): ReactElement {
         d="M7 14H3.5a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1h5l3 3v2.5M8.5 2v3h3M13 9.5l1.5 1.5-4 4H9v-1.5z"
         fill="none"
         stroke="currentColor"
-        strokeWidth="1.25"
+        strokeWidth="1.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -26,8 +26,8 @@ export function SourceEditIcon(): ReactElement {
   );
 }
 
-/** A cross: take this row out. The type-ahead's clear, which is drawn the same. */
-export { ClearIcon as RemoveIcon } from '../Combobox/icons';
+/** A cross: take this row out. The shared set's cross, which the type-ahead's clear draws too. */
+export { CrossIcon as RemoveIcon } from '../IconTip/icons';
 
 /** An arrow up, the way a folk name rises to be the display name: promote this row. */
 export function PromoteIcon(): ReactElement {

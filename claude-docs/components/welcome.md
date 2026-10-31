@@ -54,8 +54,8 @@ nothing; it stays only as the hook `Backdrop` reads,
 `body:has(.welcome-page)`, to draw its art larger on the front door.
 
 The component's own column is a flex column with a `space(5)` gap. The
-heading and the first paragraph are a `.header`, the paragraph a `.lede`,
-as every section head is. The way in sits a further `space(2)` down, so it
+heading and the first paragraph are a `PageHeader` ([`page-header.md`](page-header.md)), the paragraph its `lede`,
+as every page head is. The way in sits a further `space(2)` down, so it
 reads as the page's end. The way in takes `.btn .btn--solid`, the page's one primary action; the
 compendium link sits beside it as `.btn .btn--quiet`, wrapping below on a phone. Function used: `space()`.
 

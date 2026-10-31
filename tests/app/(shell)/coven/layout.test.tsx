@@ -133,6 +133,9 @@ describe('the /coven/[slug] layout', () => {
     const metadata = await generateMetadata({ params: params('fixture-coven') });
 
     expect(requireCovenMembership).toHaveBeenCalledExactlyOnceWith('fixture-coven');
-    expect(metadata.title).toMatchObject({ template: expect.stringContaining('Fixture Coven') });
+    expect(metadata.title).toEqual({
+      template: '%s | Fixture Coven | Sorrel & Salt',
+      default: 'Fixture Coven',
+    });
   });
 });

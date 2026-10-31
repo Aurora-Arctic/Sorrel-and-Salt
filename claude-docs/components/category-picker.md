@@ -13,6 +13,7 @@ Categories filter (M8.11, `CompendiumList/filter.tsx`). A client component, for 
 | Prop          | What it is                                                                                                                             |
 | ------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | `legend`      | The fieldset's name, "Categories"                                                                                                      |
+| `boxName`     | The box's `name` attribute, which a form that moves the focus by field name (an undo) finds it by                                      |
 | `hint`        | The legend's `InfoTip` text, if any                                                                                                    |
 | `entry`       | The box's name, "Category": what a pick adds                                                                                           |
 | `placeholder` | A short action shown, muted, while the box is empty: "Add a category"; the box keeps it after the chips ([`combobox.md`](combobox.md)) |

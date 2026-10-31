@@ -86,7 +86,7 @@ Every page is protected unless `src/proxy.ts`'s `PUBLIC_ROUTES` lists it: the pr
 
 ## The coven index page (M9.15)
 
-`/coven/[slug]` is the page a coven opens on. The layout carries `CovenNav`, the section nav, above every page beneath it, and the page holds a Contents section listing the coven's pages the caller can open, Your Membership with Leave Coven, shown to every role, and for roles holding `workspace: delete` a Delete This Coven section, all reached from a jump menu. [`auth/coven-guard.md`](auth/coven-guard.md)
+`/coven/[slug]` is the page a coven opens on. The layout carries `CovenNav`, the section nav, above every page beneath it, and the page holds a Contents section listing the coven's pages the caller can open, Your Membership with Leave Coven, shown to every role, and for roles holding `workspace: delete` a Delete Coven section, all reached from a jump menu. [`auth/coven-guard.md`](auth/coven-guard.md)
 
 ## The create page (M9.16)
 

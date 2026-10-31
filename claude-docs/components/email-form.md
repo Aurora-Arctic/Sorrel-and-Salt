@@ -95,8 +95,9 @@ The submit is disabled only while the value, trimmed and lower-cased, equals
 `email` **and** `verified` is true — a verified, unchanged address has nothing
 to send — and while the mutation is pending. An unverified, unchanged address
 stays submittable: the service resends its link. While the send is in
-flight the button is busy, as NameForm's Save is: a `BusyButton`
-([`busy-button.md`](busy-button.md)), it carries `aria-busy` and the
+flight the button is busy, as NameForm's Save is: the row is the shared
+`FormActions` with its `label` and `busyLabel` given, so its button, a `BusyButton`
+([`busy-button.md`](busy-button.md)), carries `aria-busy` and the
 `.spinner` and reads "Sending Confirmation", the owner's rule for every
 form ([`styling.md`](../styling.md), "Buttons"). It is a real `disabled`
 attribute, not `aria-disabled` — unlike SignInPanel's roster, a submit with
@@ -139,8 +140,8 @@ Built on the form primitives in `_primitives.scss` ([`styling.md`](../styling.md
 "Form fields"): `.form` and `.form__actions`, and one field drawn by the
 shared `FieldShell` ([`field.md`](field.md)) around the form's own `.input`, and the `Notice` component
 ([`notice.md`](notice.md)) for the alert and the sent message. On the email
-page the `<h1>` and the status line are a `.header`, the status line its
-`.lede`; embedded, the status line is a `.lede` on its own, under the
+page the `<h1>` and the status line are a `PageHeader` ([`page-header.md`](page-header.md)), the status line its
+`lede`; embedded, the status line is a `.lede` on its own, under the
 section's head. Send Confirmation and Continue are each the view's one primary action,
 so both are `.btn--solid`; Continue is `.btn` on an anchor, which `.btn`
 itself keeps from underlining or taking the visited ink

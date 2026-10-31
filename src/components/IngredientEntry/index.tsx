@@ -281,7 +281,7 @@ const IngredientEntry = ({
           // One row for the way back (left, first for a screen reader), the New / Updated marker
           // (top right) and the one safety badge beside the marker or in its place; the badge alone
           // where neither else shows.
-          <div className="ingredient-entry__bar">
+          <div className="back-bar ingredient-entry__bar">
             {back && (
               <BackLink href={back.href}>
                 Back to {back.label} <LinkHint />

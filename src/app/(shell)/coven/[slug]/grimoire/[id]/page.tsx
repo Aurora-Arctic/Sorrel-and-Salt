@@ -13,14 +13,15 @@ import CompleteWorkingAction from '@/components/RecordWorking/complete-action';
 import EditWorkingAction from '@/components/SpellWorkings/edit-working';
 import SpellWorkings from '@/components/SpellWorkings';
 import SpellRecipeAside from '@/components/SpellRecipe/aside';
+import { deletedHrefOf } from '@/components/SpellRecipe/deleted-href';
 import { UNTITLED_SPELL } from '@/components/SpellCard';
 import { DEMO_NOTICE, DEMO_OWNER_NOTICE } from '@/lib/demo-notice';
 import { Forbidden, NotFound } from '@/lib/errors';
 import { RowId } from '@/lib/validation';
-import { memberRoster, rolePermits } from '@/modules/coven';
+import { viewerOf } from '@/lib/viewer';
+import { rolePermits } from '@/modules/coven';
 import { requireCovenMembership, requireSession } from '@/lib/request-session';
 import RecordWorkingButton from '@/components/RecordWorking';
-import { displayNamesOf } from '@/modules/identity';
 import { readSpell } from '@/modules/grimoire';
 import { readEditedSpell } from '../(list)/reads';
 import { readViewedEntry } from '../../ingredients/reads';
@@ -60,7 +61,7 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
   const { workspace, membership, session, spell } = await spellOf(slug, id);
   const recipePath = `/coven/${workspace.slug}/grimoire/${spell.id}` as Route;
   const recipe = await readRecipeOf(session, spell, recipePath);
-  // The side column: the builder's In Coven Inventory and Category Match on the saved spell, for
+  // The side column: the builder's In the Cupboard panel and Category Match on the saved spell, for
   // the page and not the Quick Look modal.
   const aside = await readRecipeAsideOf(
     session,
@@ -79,22 +80,6 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
     rolePermits(membership.role, { working: ['delete'] }),
     rolePermits(membership.role, { working: ['update'] }),
   );
-  // The members are read only for a role that records or edits a working, and only on the
-  // permission `memberRoster` asserts (`member: read`), which a viewer lacks.
-  const listsMembers =
-    rolePermits(membership.role, { member: ['read'] }) &&
-    rolePermits(membership.role, { working: ['create'] });
-  const roster = listsMembers ? await memberRoster(session, workspace) : [];
-  const memberNames = listsMembers
-    ? await displayNamesOf(
-        session,
-        roster.map(({ userId }) => userId),
-      )
-    : [];
-  const members = roster.map(({ userId }, i) => ({
-    userId,
-    name: memberNames[i] ?? 'A former member',
-  }));
   const ingredientSteps = workingStepsOf(
     recipe.views,
     recipePath,
@@ -106,19 +91,21 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
   // Only a complete spell is worked, and on the permission `recordWorking` asserts.
   const canRecord =
     spell.status === 'complete' && rolePermits(membership.role, { working: ['create'] });
+  const name = spell.title?.trim() || UNTITLED_SPELL;
+  // The recorder by name, from the viewer the shell layout already read this request.
+  const { viewer } = await viewerOf();
   const recordButton = (
     <RecordWorkingButton
       workspaceId={workspace.id}
       spellId={spell.id}
+      spellName={name}
       spellVisibility={spell.visibility}
-      members={members}
-      recorderId={membership.userId}
+      recorder={{ userId: membership.userId, name: viewer.name }}
       steps={ingredientSteps}
     />
   );
-  const name = spell.title?.trim() || UNTITLED_SPELL;
   const listPath = `/coven/${workspace.slug}/grimoire${spell.status === 'draft' ? '/drafts' : ''}`;
-  const deletedHref = `${listPath}?${new URLSearchParams({ deleted: name })}` as Route;
+  const deletedHref = deletedHrefOf(listPath as Route, spell.title);
   const query = await searchParams;
   const edit = query.edit;
   // An ingredient step's Quick Look eye opens the ingredient's details over the recipe, at this
@@ -149,11 +136,11 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
           steps={recipe.steps}
           workings={
             <SpellWorkings
-              workspaceId={workspace.id}
               workings={workings}
               headingAction={canRecord ? recordButton : undefined}
-              completeAction={(workingId, workedOn) => (
+              completeAction={(workingId, workedOn, name) => (
                 <CompleteWorkingAction
+                  label={`Complete Working ${name}`}
                   workspaceId={workspace.id}
                   spellId={spell.id}
                   workingId={workingId}
@@ -169,7 +156,6 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
                   workspaceId={workspace.id}
                   spellId={spell.id}
                   spellVisibility={spell.visibility}
-                  members={members}
                   steps={ingredientSteps}
                   working={editable}
                 />
@@ -212,6 +198,7 @@ export default async function SpellRecipePage({ params, searchParams }: SpellRec
                 spellId={spell.id}
                 name={name}
                 deletedHref={deletedHref}
+                visibility={spell.visibility}
                 canDuplicate={canDuplicate}
                 canDelete={canDelete}
                 canPrint

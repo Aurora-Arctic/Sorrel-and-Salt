@@ -356,7 +356,7 @@ them in one statement for the whole batch.
   `memberships` proves. They read only where the reference is one its readers may
   read, the compendium's or its own coven's.
 - A variant's links are the same, through the variant to its ingredient
-  (`readableVariantParent`), since a variant is a coven's where its ingredient is
+  (`inUseVariantParent`), since a variant is a coven's where its ingredient is
   though it carries no `workspace_id`.
 - Every other sourced table is global reference data. Its links read while the row
   is live, and only to a compendium reference, the one tier every reader shares.

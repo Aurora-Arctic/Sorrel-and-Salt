@@ -40,6 +40,10 @@ All in `values.ts`, re-exported from the component:
 
 `units.ts` holds `UNIT_OPTIONS`: None first, then every unit in the vocabulary's own order. The two fluid ounces read "fl oz (UK)" and "fl oz (US)"; every other unit reads as its code.
 
+## Stories
+
+`src/components/StockFields/index.stories.tsx`, titled "Ingredients / Stock Fields": `Rows`, two jars in one form, each field named for its form; and `States`, with the states Default (an amount, a unit and a threshold), Unmeasured (all three empty) and Out Of Stock (a quantity of zero, which is an amount, not an empty box).
+
 ## Tests
 
 `tests/components/StockFields/index.test.tsx`: a held jar shown as it is, an unmeasured one, zero kept as zero, what is typed reaching the form, the any-decimal step, the unit changing with the numbers left alone, None clearing the unit, the option list, the keyboard path to a unit, and the conversions in `values.ts`.

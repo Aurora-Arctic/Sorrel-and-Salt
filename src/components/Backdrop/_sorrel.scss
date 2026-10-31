@@ -25,7 +25,7 @@
   top: $top-inset;
   left: 0;
   --backdrop-scale: 0.75;
-  width: calc(var(--backdrop-width, clamp(8.75rem, 17.5vw, 13.75rem)) * var(--backdrop-scale, 1));
+  width: calc(var(--backdrop-width, #{$ornament-width}) * var(--backdrop-scale, 1));
   aspect-ratio: 4 / 3;
   pointer-events: none;
   background-image: url('./sorrel-plate.webp');

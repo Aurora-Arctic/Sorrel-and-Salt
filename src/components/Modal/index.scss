@@ -150,12 +150,6 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
   padding-inline-end: var(--scrollbar-width, 0);
 }
 
-// A long form's width, the compendium entry's first: its list fields and nested References panel
-// are cramped in the default `$dialog-column`.
-.modal-dialog--wide {
-  width: min(calc($dialog-column-wide + #{$modal-padding}), calc(100vw - #{$modal-gap} * 2));
-}
-
 // The default column with a list down its side: a third of the body to the list and two to the
 // column, half a column more and a step of gap, so the column keeps the width it has alone.
 .modal-dialog--listed {
@@ -248,6 +242,23 @@ $eyebrow-line: calc(#{type-size('overline')} * 1.65);
 // pinned to the screen's top left corner.
 .modal-dialog__naming > .modal-dialog__formal-actions > :not(dialog) {
   margin: 0;
+}
+
+// Controls beneath the × (`actionsUnderClose`): the naming grid runs to the dialog's edge, the
+// controls level with the title's first line, while the head's other lines keep clear of the ×. The
+// head stands a step lower, for room between the × and the control beneath it.
+.modal-dialog__heading--under-close {
+  padding-block-start: space(3);
+  padding-inline-end: 0;
+
+  > :not(.modal-dialog__naming) {
+    padding-inline-end: $close-reserve;
+  }
+
+  > .modal-dialog__naming > .modal-dialog__formal-actions {
+    align-self: start;
+    margin-block: calc((#{heading-size(2)} * 1.15 - #{$action-icon-size}) / 2);
+  }
 }
 
 // Gone while nothing is in it (no Edit, no plus).

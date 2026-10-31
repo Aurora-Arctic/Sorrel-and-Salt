@@ -19,6 +19,8 @@ when something changed (MB.53), Clear disabled rather than hidden, Filter
 and Clear half each when alone on their line, and three lists filtering by
 a full page load.
 
+A list with three filter fields or fewer, its search counted, keeps them inline in this form; a list with more takes the Filters drawer ([`FacetPanel`](facet-panel.md)'s `FacetShell`) with only its search left in the row, because the drawer keeps the row to a search box and one button however many fields the list adds (the owner's rule, 2026-10-31).
+
 ## Props
 
 `FilterFormProps` (`types.ts`):
@@ -29,6 +31,9 @@ a full page load.
 | `action`     | The page itself, the path its list's `href.ts` exports: what the form submits to natively before hydration, and the unfiltered first page Clear opens    |
 | `searchHref` | Builds the address the search's submit opens: the filter shown with the search box's text, trimmed, from the first page, usually through `listHref`      |
 | `shown`      | Each value of the filter the page shows: Clear is drawn while any is set                                                                                 |
+| `clear`      | Draw Clear while a filter is shown. Default true; a row with its own Clear All turns it off                                                              |
+| `sorrel`     | Draw the layer a sticky row fills itself with, so the corner sorrel shows through it. Default false                                                      |
+| `className`  | Joins the form's class: a row whose panel opens under it sets `position: relative`                                                                       |
 | `children`   | The fields, a `SearchField` first (or `IngredientSearch`'s box, see [`ingredient-search.md`](ingredient-search.md)), each with the `name` the page reads |
 
 Beside the component, `index.tsx` exports `useApplyFilter()`, which returns
@@ -178,7 +183,7 @@ the workshop's invented groups. The `States` story has a `state` control: `No Fi
 page showing no filter, so no Clear; `Filtered`, a page showing one, Clear at the row's end; `Without Clear` and `With Sorrel`, the row without Clear and with the sorrel in it. `Narrow` stays a story of its own, at a phone's width. Each
 sits in a `ListFrame`, whose navigation it needs; the workshop's router goes
 nowhere, so a change shows nothing on its way here. The row greyed over a
-list on its way is GroupedValueList's `CategoriesPending`.
+list on its way is GroupedValueList's `Pending`.
 
 ## Testing
 

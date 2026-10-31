@@ -1,7 +1,8 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The recipe page's Workings section: a stack of rows, each a plain block under its date.
+// The recipe page's Workings section: a stack of rows, each a plain block under its date. The
+// section's gap is `.page-frame__section`'s; the top margin stays, as the recipe is no `.page-frame` column.
 
 .spell-workings {
   margin-top: space(6);
@@ -20,7 +21,6 @@
 
   &__list {
     display: grid;
-    margin-top: space(4);
     gap: space(5);
 
     // No margin, indent or typography-base's ◆ marker: each row is headed by its date.
@@ -58,11 +58,24 @@
     margin: space(2) 0 0;
   }
 
+  // What completing a draft would skip, clear of the date line above it.
+  &__warning {
+    margin-block-start: space(2);
+  }
+
+  // The small label over a complete working's lines, which names the list; clear of the note above.
+  // The metadata look (`.meta`), set here so its margin is not left to the order the sheets load in.
+  &__taken {
+    margin: space(3) 0 0;
+    color: $text-muted;
+    font-size: type-size('caption');
+  }
+
   // Same reset as the list above: the global ◆ marker would otherwise lead each ingredient line.
   &__deductions {
     @include list-reset;
 
-    margin-top: space(3);
+    margin-top: space(1);
   }
 
   &__deduction {

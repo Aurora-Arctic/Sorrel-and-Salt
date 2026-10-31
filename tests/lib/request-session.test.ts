@@ -95,6 +95,16 @@ describe('getSession', () => {
 
 // The proxy has no `headers()` to call; it hands over the request's own.
 describe('sessionFromHeaders', () => {
+  it('marks the session of an unverified account, and leaves a verified one unmarked', async () => {
+    getSessionMock.mockResolvedValue(betterAuthSession('user', false));
+    await expect(sessionFromHeaders(new Headers())).resolves.toMatchObject({
+      emailUnverified: true,
+    });
+
+    getSessionMock.mockResolvedValue(betterAuthSession('user', true));
+    await expect(sessionFromHeaders(new Headers())).resolves.not.toHaveProperty('emailUnverified');
+  });
+
   it('asks Better Auth with the headers it is given, not the ambient request', async () => {
     getSessionMock.mockResolvedValue(betterAuthSession('admin'));
     const given = new Headers({ cookie: 'better-auth.session_token=other.s' });
@@ -111,7 +121,11 @@ describe('requireSignedIn', () => {
     getSessionMock.mockResolvedValue(betterAuthSession('user', false));
     requestHeaders.set(RETURN_PATH_HEADER, '/coven');
 
-    await expect(requireSignedIn()).resolves.toEqual({ userId: USER_ID, role: 'user' });
+    await expect(requireSignedIn()).resolves.toEqual({
+      userId: USER_ID,
+      role: 'user',
+      emailUnverified: true,
+    });
     // The same request is one `requireSession()` sends away, so it is the
     // missing email check, not the path, that let it through.
     await expect(requireSession()).rejects.toThrow('redirect:/account/email?next=%2Fcoven');
@@ -165,7 +179,11 @@ describe('requireSession', () => {
     it('reaches the email page itself, whatever its query', async () => {
       requestHeaders.set(RETURN_PATH_HEADER, '/account/email?next=%2Fcoven&error=TOKEN_EXPIRED');
 
-      await expect(requireSession()).resolves.toEqual({ userId: USER_ID, role: 'user' });
+      await expect(requireSession()).resolves.toEqual({
+        userId: USER_ID,
+        role: 'user',
+        emailUnverified: true,
+      });
     });
   });
 });

@@ -50,3 +50,11 @@ export function pagerHrefs<Href extends string>(
     nextHref: hasNextPage && endCursor ? build({ after: endCursor }) : undefined,
   };
 }
+
+/**
+ * `href` with one more pair on its query, so a dialog or notice opened over a filtered list keeps the
+ * filter: `?` when `href` has no query yet, `&` after one.
+ */
+export function withParam(href: string, name: string, value: string): Route {
+  return `${href}${href.includes('?') ? '&' : '?'}${pair(name, value)}` as Route;
+}

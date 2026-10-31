@@ -8,11 +8,11 @@ import { InCovenInventory, type LineDoors } from '../SpellBuilder/inventory';
 import type { SpellStepValue } from '../SpellBuilder/steps/types';
 import { CATEGORY_MATCH_ID, INVENTORY_ID } from './sections';
 import type { SpellRecipeAsideProps } from './types';
-// The two panels' own styles live with the builder, whose index.tsx loads them; the page
-// mounts the builder's dialog too, but the column loads them itself rather than by that chance.
-import '../SpellBuilder/index.scss';
+// The two panels' own stylesheet, which the builder's also uses; the column loads it itself
+// rather than the builder's whole stylesheet.
+import '../SpellBuilder/panels.scss';
 
-// The recipe page's side column of Category Match and In Coven Inventory, read-only here, beside the text past tablet width and beneath it on a phone; a client part
+// The recipe page's side column of Category Match and In the Cupboard, read-only here, beside the text past tablet width and beneath it on a phone; a client part
 // (claude-docs/components/spell-recipe.md, "The aside component").
 
 export default function SpellRecipeAside({
