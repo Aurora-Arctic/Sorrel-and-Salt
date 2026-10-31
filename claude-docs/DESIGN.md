@@ -1643,7 +1643,7 @@ Modern module system throughout — `@use '../../scss/variables' as *;`, never t
 
 ### Notes — deferred to v2
 
-Stories 35–46 covered the three-tier experience-notes system. They move to v2 with the rest of the notes subsystem (§13). Story numbers are **not** reused: the grimoire stories keep their original 47–56, story 57 (MB.40) took the next free number rather than one of the twelve, and 58–62 (M2.9: email verification, changing an email, granting admin, the ledger, inviting an admin) followed the same way, as their own list because Prettier renumbers a list from its first item, and 63 (MB.80: the public compendium) the same way after them, and 64 (MB.151: references) after it, and 76 (recording a working), 77 (step units), 78 (completing a working), 79 (workings on the recipe page), 80 (a spell's steps) and 81 (autosave) after them, and 82 (duplicate a spell), 83 (a spell's Quick Look) and 84 (the grimoire's filters) after those, and 85 (Spell Preview) and 86 (keeping the screen awake) after them, and 87 (the demo coven) after those, and 88 (an invitation card), 89 (a support request) and 90 (an admin works through one) after those, and 70–75 (M16.2–M16.10: password sign-in, reset, lockout, passkeys and two-factor) took the numbers left free between 64 and 76, so a v1 count is 73 stories (1–34, 47–64, 70–90).
+Stories 35–46 covered the three-tier experience-notes system. They move to v2 with the rest of the notes subsystem (§13). Story numbers are **not** reused: the grimoire stories keep their original 47–56, story 57 (MB.40) took the next free number rather than one of the twelve, and 58–62 (M2.9: email verification, changing an email, granting admin, the ledger, inviting an admin) followed the same way, as their own list because Prettier renumbers a list from its first item, and 63 (MB.80: the public compendium) the same way after them, and 64 (MB.151: references) after it, and 76 (recording a working), 77 (step units), 78 (completing a working), 79 (workings on the recipe page), 80 (a spell's steps) and 81 (autosave) after them, and 82 (duplicate a spell), 83 (a spell's Quick Look) and 84 (the grimoire's filters) after those, and 85 (Spell Preview) and 86 (keeping the screen awake) after them, and 87 (the demo coven) after those, and 88 (an invitation card), 89 (a support request), 90 (an admin works through one) and 91 (a sender answers in the thread) after those, and 70–75 (M16.2–M16.10: password sign-in, reset, lockout, passkeys and two-factor) took the numbers left free between 64 and 76, so a v1 count is 74 stories (1–34, 47–64, 70–91).
 
 ### Grimoire
 
@@ -1731,6 +1731,7 @@ Keeping a spell `private` while building it, and the one-way widen of a complete
 
 89. Send a question, a bug or an accessibility bug from wherever I am, and read the reply later, so that I never have to search for an address.
 90. Work through a support request as an admin: reply, assign it, share it with curators, turn it into an issue, resolve it, and time its sender out and lift it, so that I can answer people and stop abuse from one page.
+91. Answer an admin in the thread as a sender, and reply again after it is resolved, so that I can finish a conversation without writing a new request.
 
 ---
 
