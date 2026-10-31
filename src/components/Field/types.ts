@@ -24,7 +24,7 @@ export interface FieldDescriptionInput {
   /** The base the field's ids grow from: a `useId()`. */
   id: string;
   hint?: string;
-  note?: string;
+  note?: ReactNode;
   /** Another element read with the field, such as a duplicate warning. */
   describedBy?: string;
   /** The field's own error, from whichever side found it. */
@@ -48,7 +48,9 @@ export interface FieldDescription {
   };
 }
 
-export interface FieldShellProps extends FieldProps, Omit<FieldDescription, 'aria'> {
+export interface FieldShellProps extends Omit<FieldProps, 'note'>, Omit<FieldDescription, 'aria'> {
+  /** A line beneath the label; a node when it needs markup, such as a reference in `code`. */
+  note?: ReactNode;
   /** The control, carrying `controlId`, the description's `aria` and `aria-required`. */
   children: ReactNode;
   /** Beneath the error: what a field adds of its own. */
@@ -174,7 +176,7 @@ export interface RadioGroupFieldProps<T extends string> {
   disabled?: boolean;
   /** A line for the whole group, read with it: what holds whichever is chosen. */
   note?: string;
-  /** `list` (default): a row each with its explanation; `strip`: icon-only segments, chosen name beneath; `segmented`: text segments with any `count`; `cards`: one bordered card per row, each with its name and explanation. A radio underneath every way. */
+  /** `list` (default): a row each with its explanation; `strip`: icon-only segments, chosen name beneath; `segmented`: text segments with any `count`; `cards`: one compact bordered card per row, the explanation beside the name. A radio underneath every way. */
   layout?: 'list' | 'strip' | 'segmented' | 'cards';
   /** An InfoTip beside the legend, for what the choices mean. */
   hint?: string;

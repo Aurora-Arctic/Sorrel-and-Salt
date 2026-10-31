@@ -21,8 +21,8 @@ client component taking `path` (the page the request is about), and optionally `
   Support Requests), saying "We aim to reply within 5 working days" and that we are a small team, and that replies
   appear on Your Support Requests and arrive by email.
 - **Focus on open** is the Modal's rule: the first field, here the first topic card. The page has no dialog to open.
-- **`errorCode` is shown and `path` is a field.** A request from an error page says "Error 404." as fixed
-  text. The Page field starts as `path`, and the sender may edit or clear it; an empty field (or only
+- **`errorCode` is shown and `path` is a field.** A request from an error page says so in the Page field's
+  note, "Opened from the Error 404 page. You can change it.", in place of the limit. The Page field starts as `path`, and the sender may edit or clear it; an empty field (or only
   spaces) sends no `path`. The server takes any text up to 500 characters, which the field's note says,
   and checks no format; a longer one is refused with a field error shown on the Page field.
 - **Closing asks first while text is typed or the Page differs from its starting value**, through
@@ -30,7 +30,6 @@ client component taking `path` (the page the request is about), and optionally `
   `onDone` is given, because a page has nothing to close.
 - A refusal is said in an alert above the form; a refused subject, message or page is said beside its field.
 
-- **`errorReference` is shown and sent.** With an error number it reads "Error 500, reference abc123." as fixed
-  text and goes as `errorReference`. The service trims it, refuses more than 100 characters, and stores it on
+- **`errorReference` is shown and sent.** With an error number the Page field's note reads "Opened from the Error 500 page, reference abc123. You can change it.", the reference in a `code` element, and it goes as `errorReference`. The service trims it, refuses more than 100 characters, and stores it on
   `support_requests.error_reference`, where the admin request dialog shows it as Error Reference beside the error
   number, with a Copy button.

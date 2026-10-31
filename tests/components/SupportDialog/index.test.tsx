@@ -43,7 +43,9 @@ describe('SupportDialog', () => {
     render(<SupportDialog verified />);
     const dialog = screen.getByRole('dialog');
     expect(within(dialog).getByRole('radio', { name: /^Bug/ })).toBeChecked();
-    expect(within(dialog).getByText(/Error 404/)).toBeInTheDocument();
+    expect(within(dialog).getByRole('textbox', { name: 'Page' })).toHaveAccessibleDescription(
+      /Opened from the Error 404 page/,
+    );
     expect(within(dialog).getByRole('textbox', { name: 'Page' })).toHaveValue(
       '/coven/fixture-coven',
     );

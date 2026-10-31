@@ -17,7 +17,7 @@ the sixteen tasks that carry them are in [`tasks/m15.md`](../tasks/m15.md),
 ## The form
 
 - **The footer stays.**
-- **Topics are radios shown as cards, one per row** (two columns at first; one per row on the owner's review of the PR, 2026-10-31), every hint visible, none
+- **Topics are radios shown as cards, one per row** (two columns at first; one per row, and compact, with the ring, name and hint on one line, on the owner's review of the PR, 2026-10-31), every hint visible, none
   preselected, so the sender must choose. `kind` is renamed `about`.
 - **The Page field is editable.**
 - **No captcha.** The signed-out path has a rate limit and a honeypot field.

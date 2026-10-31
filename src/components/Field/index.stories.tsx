@@ -404,8 +404,8 @@ export const RadioSegmented: Story = {
   },
 };
 
-// The cards layout: one bordered card per row, each with its name and a line saying what it
-// is, one column on a phone. Nothing is chosen at first, and the error shows when it is not.
+// The cards layout: one compact bordered card per row, the hint beside the name and wrapping
+// under it on a phone. Nothing is chosen at first, and the error shows when it is not.
 export const RadioCards: Story = {
   render: () => {
     const [value, setValue] = useState<string | null>(null);

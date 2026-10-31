@@ -10,7 +10,7 @@ import type { RadioGroupFieldProps } from './types';
 /**
  * One choice from a few, each with its own line of explanation: a native radio group in a `.fieldset`,
  * so the arrow keys move the choice. Controlled by `value`. `note` is the group's own line; `layout`
- * `strip` or `segmented` draws a bar and `cards` a column of cards; `error` is drawn under the choices (claude-docs/components/field.md).
+ * `strip` or `segmented` draws a bar and `cards` a column of one-row cards, the hint beside the name; `error` is drawn under the choices (claude-docs/components/field.md).
  */
 export function RadioGroupField<T extends string>({
   legend,

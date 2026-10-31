@@ -37,7 +37,9 @@ for (const path of [
     await page.getByRole('link', { name: 'Report This' }).click();
     const dialog = page.getByRole('dialog', { name: 'Contact Support' });
     await expect(dialog.getByRole('textbox', { name: 'Page' })).toHaveValue(path);
-    await expect(dialog.getByText('Error 404.')).toBeVisible();
+    await expect(dialog.getByRole('textbox', { name: 'Page' })).toHaveAccessibleDescription(
+      /Opened from the Error 404 page/,
+    );
     await assertNoAccessibilityViolations(page);
   });
 }

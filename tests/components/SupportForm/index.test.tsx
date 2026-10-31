@@ -190,7 +190,7 @@ describe('SupportForm', () => {
 
   it('shows the error number, and the page it was opened from in a field', () => {
     render(<SupportForm path="/coven/x/missing" errorCode={404} about="bug" />);
-    expect(screen.getByText(/Error 404/)).toBeInTheDocument();
+    expect(page()).toHaveAccessibleDescription(/Opened from the Error 404 page/);
     expect(page()).toHaveValue('/coven/x/missing');
     expect(page()).toHaveAccessibleDescription(/500/);
   });
@@ -259,7 +259,9 @@ describe('SupportForm', () => {
   it('shows the reference as fixed text and sends it as errorReference', async () => {
     const calls = mockSending();
     render(<SupportForm path="/x" errorCode={500} errorReference="abc123" about="bug" />);
-    expect(screen.getByText('Error 500, reference abc123.')).toBeInTheDocument();
+    expect(screen.getByRole('textbox', { name: 'Page' })).toHaveAccessibleDescription(
+      /Opened from the Error 500 page, reference abc123\. You can change it\./,
+    );
     fill();
     fireEvent.click(send());
     await screen.findByRole('status');

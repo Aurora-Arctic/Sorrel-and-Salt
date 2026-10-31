@@ -1833,10 +1833,10 @@
     }
   }
 
-  // The cards layout of a radio group (RadioGroupField `layout="cards"`): two
-  // columns of bordered cards, one on a phone, rows as tall as their tallest
-  // card. The whole card is the label; the chosen one takes the accent edge
-  // and a faint wash, told by the ring's dot as well (WCAG 1.4.1).
+  // The cards layout of a radio group (RadioGroupField `layout="cards"`): one
+  // compact bordered card per row, the hint beside the name and wrapping under it on a phone. The
+  // whole card is the label; the chosen one takes the accent edge and a faint wash, told by the
+  // ring's dot as well (WCAG 1.4.1).
   .radio-cards {
     display: grid;
     grid-template-columns: minmax(0, 1fr);
@@ -1846,7 +1846,8 @@
   .radio.radio--card {
     box-sizing: border-box;
     min-block-size: $control-height;
-    padding: space(3);
+    align-items: center;
+    padding: space(2) space(3);
     border: 1px solid $hairline;
     border-radius: radius('surface');
     background-color: $surface-page;
@@ -1875,6 +1876,17 @@
       &:has(input:checked) {
         border-color: Highlight;
       }
+    }
+
+    .radio__text {
+      flex-flow: row wrap;
+      align-items: baseline;
+      gap: space(2);
+    }
+
+    .radio__description {
+      font-size: type-size('small');
+      color: $text-muted;
     }
   }
 

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { type FormEvent, type ReactElement, useId, useState } from 'react';
+import { type FormEvent, type ReactElement, type ReactNode, useId, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
@@ -82,6 +82,22 @@ const SupportForm = ({
   const messageCountId = `${messageId}-count`;
   const pageCountId = `${pageId}-count`;
 
+  // Where the request came from, when it came from an error page, in place of the limit.
+  const pageNote: ReactNode =
+    errorCode === undefined ? (
+      `Up to ${PATH_LIMIT} characters.`
+    ) : (
+      <>
+        Opened from the Error {errorCode} page
+        {errorReference && (
+          <>
+            , reference <code>{errorReference}</code>
+          </>
+        )}
+        . You can change it.
+      </>
+    );
+
   const subjectField = fieldDescription({
     id: subjectId,
     describedBy: subjectCountId,
@@ -98,7 +114,7 @@ const SupportForm = ({
   const pageField = fieldDescription({
     id: pageId,
     describedBy: pageCountId,
-    note: `Up to ${PATH_LIMIT} characters.`,
+    note: pageNote,
     error: shown.path,
   });
 
@@ -202,15 +218,9 @@ const SupportForm = ({
           }}
         />
       </div>
-      {errorCode !== undefined && (
-        <p className="support-form__context">
-          Error {errorCode}
-          {errorReference ? `, reference ${errorReference}` : ''}.
-        </p>
-      )}
       <FieldShell
         label="Page"
-        note={`Up to ${PATH_LIMIT} characters.`}
+        note={pageNote}
         after={<CharacterCount id={pageCountId} length={page.length} limit={PATH_LIMIT} />}
         {...pageField}
       >
