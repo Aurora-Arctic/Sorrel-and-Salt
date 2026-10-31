@@ -1,0 +1,34 @@
+@use '../../scss/variables' as *;
+
+.support-list__items {
+  display: grid;
+  gap: space(4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.support-list__head {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(2) space(4);
+  justify-content: space-between;
+}
+
+.support-list__marks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(3);
+  color: $text-muted;
+}
+
+.support-list__message {
+  white-space: pre-wrap;
+}
+
+.support-list__reply {
+  margin: space(3) 0 0;
+  padding-left: space(4);
+  border-left: 2px solid $hairline;
+  white-space: pre-wrap;
+}

@@ -1,1 +1,5 @@
-export { default } from '../not-found';
+import { NotFoundScreen } from '../../components/ErrorScreens';
+
+export default function ShellNotFound() {
+  return <NotFoundScreen inShell />;
+}

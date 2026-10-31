@@ -8,6 +8,7 @@ import { siteLinkTarget } from '../AppShell/site-target';
 import { ACCOUNT_INVITATIONS_PATH, ACCOUNT_PATH } from '../../lib/sign-in';
 import IconTip from '../IconTip';
 import { ChevronIcon } from '../IconTip/icons';
+import SupportLink from '../SupportLink';
 import SignOutButton from './sign-out-button';
 import { initialsOf } from './initials';
 import type { AccountMenuProps } from './types';
@@ -131,6 +132,13 @@ const AccountMenu = ({
               </PendingLink>
             </li>
           ))}
+        {verified && (
+          <li className="account-menu__link">
+            <SupportLink className="account-menu__item" onClick={close}>
+              Support
+            </SupportLink>
+          </li>
+        )}
         <li className="account-menu__signout">
           <SignOutButton />
         </li>

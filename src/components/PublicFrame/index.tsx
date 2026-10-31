@@ -4,6 +4,7 @@ import BrandName from '../AppShell/brand-name';
 import MainBody from '../AppShell/main-body';
 import { PendingLink } from '../../lib/navigation';
 import ThemeToggle from '../ThemeToggle';
+import SiteFooter from '../SiteFooter';
 import SiteNav from '../AppShell/site-nav';
 import type { SiteLink } from '../AppShell/types';
 import type { PublicFrameProps } from './types';
@@ -57,6 +58,7 @@ const PublicFrame = ({ children }: PublicFrameProps): ReactElement => (
     <div className="app-shell__main">
       <MainBody>{children}</MainBody>
     </div>
+    <SiteFooter />
   </div>
 );
 

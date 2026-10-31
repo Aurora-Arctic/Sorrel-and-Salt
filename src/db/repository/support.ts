@@ -127,6 +127,20 @@ export function findOwnSupportRequest(userId: string, id: string) {
   );
 }
 
+/** When the sender's latest live time-out ends, or `undefined` with none in force. */
+export async function findActiveSupportTimeoutEnd(userId: string): Promise<Date | undefined> {
+  const rows = await selectFrom(
+    supportTimeouts,
+    and(
+      notSoftDeleted(supportTimeouts),
+      eq(supportTimeouts.userId, userId),
+      isNull(supportTimeouts.liftedAt),
+      sql`${supportTimeouts.until} > now()`,
+    ),
+  );
+  return rows.map((row) => row.until).sort((x, y) => y.getTime() - x.getTime())[0];
+}
+
 /** A time-out by id, for an admin to lift. */
 export function findSupportTimeoutById(id: string) {
   return selectOne(

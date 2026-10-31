@@ -1,0 +1,17 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// Under the page, ruled off from it; the link sits in the content column's edges.
+.site-footer {
+  box-sizing: border-box;
+  margin-inline: auto;
+  padding: space(4);
+  border-top: 1px solid $hairline;
+  color: $text-muted;
+  max-width: $wide-column;
+}
+
+.site-footer__nav {
+  display: flex;
+  gap: space(4);
+}
