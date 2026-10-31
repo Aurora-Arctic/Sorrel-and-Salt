@@ -5,6 +5,7 @@ import { loadCompendium } from './compendium/load';
 import { seedDemoCovenSeats } from './demo-coven';
 import { seedDemoCovenContent } from './demo-coven-content';
 import { seedInvitationCards } from './invitation-cards';
+import { seedSupportRequests } from './support-requests';
 import { DEMO_WORKINGS } from './demo-workings';
 import {
   identityOf,
@@ -1185,6 +1186,8 @@ export async function seedDemo(db: SeedDatabase): Promise<void> {
     await insertMissingWorkings(tx, DEMO_WORKINGS);
     // Fake invitation cards and refused opens, for the admin card tabs; the fixture users exist by now.
     await seedInvitationCards(tx);
+    // Fake support requests, replies and time-outs, for the admin Support tab and the account's own requests.
+    await seedSupportRequests(tx);
   });
 }
 
