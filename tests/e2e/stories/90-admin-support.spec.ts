@@ -123,8 +123,7 @@ test.describe('Story 90: An Admin Works Through a Support Request', { tag: '@sto
       await dialog.getByRole('button', { name: 'Lift', exact: true }).click();
       await page.getByRole('button', { name: 'Lift Time-Out' }).click();
       await expect(dialog.getByRole('button', { name: 'Lift', exact: true })).toBeHidden();
-      await expect(dialog.getByText('Lifted')).toBeVisible();
-      await expect(dialog.getByText('Repeated test messages')).toBeVisible();
+      await expect(dialog.getByRole('link', { name: 'Earlier time-outs' })).toBeVisible();
 
       const response = await send();
       const body = (await response.json()) as { errors?: unknown[] };

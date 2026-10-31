@@ -165,8 +165,7 @@
 
 .support-detail__list {
   @include stack;
-  padding: 0;
-  list-style: none;
+  @include list-reset;
 }
 
 // The reply is the dialog's one big field, so its label stands a step further off than the standard field gap.
@@ -222,9 +221,6 @@
 // Earlier time-outs, one line each under a small uppercase label.
 .support-detail__ledger {
   @include stack(2);
-  margin: 0;
-  padding: 0;
-  list-style: none;
 }
 
 .support-detail__ledger-title {

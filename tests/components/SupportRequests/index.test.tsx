@@ -174,7 +174,7 @@ describe('Time-Out', () => {
     expect(ahead).toBeLessThanOrEqual(24 * 60 * 60 * 1000);
   });
 
-  it('shows the standing time-out with Lift in place of the form, and earlier ones beneath', () => {
+  it('shows the standing time-out with Lift in place of the form, and a link to the earlier ones', () => {
     open(ADMIN, {
       timeouts: [
         {
@@ -199,7 +199,11 @@ describe('Time-Out', () => {
     const panel = within(dialog());
     expect(panel.getByText(/Repeated sends/)).toBeInTheDocument();
     expect(panel.getByText(/Set by Ash Warden/)).toBeInTheDocument();
-    expect(panel.getByText(/First warning/)).toBeInTheDocument();
+    expect(panel.getByRole('link', { name: 'Earlier time-outs' })).toHaveAttribute(
+      'href',
+      expect.stringContaining('user=u1'),
+    );
+    expect(panel.queryByText(/First warning/)).toBeNull();
     expect(panel.getAllByRole('button', { name: 'Lift' })).toHaveLength(1);
     expect(panel.queryByLabelText('For')).toBeNull();
   });
@@ -212,7 +216,8 @@ describe('Issue', () => {
       fieldErrors: [
         {
           path: ['issueUrl'],
-          message: 'Paste a GitHub issue link, like github.com/Aurora-Arctic/Sorrel-and-Salt/issues/1409, or a link opened from the project board.',
+          message:
+            'Paste a GitHub issue link, like github.com/Aurora-Arctic/Sorrel-and-Salt/issues/1409, or a link opened from the project board.',
         },
       ],
     });

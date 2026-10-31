@@ -1,5 +1,7 @@
 'use client';
 
+import type { Route } from 'next';
+import Link from 'next/link';
 import { type ReactElement, useId, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
@@ -241,17 +243,20 @@ const TimeoutForm = ({ userId, name }: { userId: string; name: string }): ReactE
 };
 
 /**
- * A user's time-outs: the one that stands, or the form to set one, and the earlier ones beneath.
+ * A user's time-outs: the one that stands, or the form to set one, and the earlier ones beneath, or
+ * with `earlierHref` one line linking to where they are listed.
  * `timeouts` is newest first.
  */
 const TimeoutPanel = ({
   userId,
   name,
   timeouts,
+  earlierHref,
 }: {
   userId: string;
   name: string;
   timeouts: SupportTimeoutEntry[];
+  earlierHref?: Route;
 }): ReactElement => {
   // Read once per render of the panel: a time-out that lapses while it is open shows as past on the next.
   const [now] = useState(() => Date.now());
@@ -280,7 +285,16 @@ const TimeoutPanel = ({
       ) : (
         <TimeoutForm userId={userId} name={name} />
       )}
-      {earlier.length > 0 && <Ledger timeouts={earlier} />}
+      {earlier.length > 0 &&
+        (earlierHref ? (
+          <p className="support-detail__muted">
+            <Link href={earlierHref}>
+              {earlier.length === 1 ? 'Earlier time-outs' : `${earlier.length} earlier time-outs`}
+            </Link>
+          </p>
+        ) : (
+          <Ledger timeouts={earlier} />
+        ))}
     </CollapsibleSection>
   );
 };

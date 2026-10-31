@@ -11,6 +11,7 @@ import LocalTime from '../LocalTime';
 import Notice from '../Notice';
 import IssuePanel from './issue-panel';
 import ReplyForm from './reply-form';
+import { userListHref } from '../UserList/href';
 import TimeoutPanel from './timeout-panel';
 import type { SupportDetailProps } from './types';
 import { AnnounceContext, useSupportAction } from './use-support-action';
@@ -227,6 +228,11 @@ const DetailBody = ({ request, viewer, assignees }: SupportDetailProps): ReactEl
               userId={request.sender.id}
               name={request.sender.name}
               timeouts={request.timeouts}
+              earlierHref={userListHref(
+                { query: '', awaitingApproval: false },
+                undefined,
+                request.sender.id,
+              )}
             />
           )}
         </aside>
