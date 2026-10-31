@@ -7,6 +7,7 @@ import {
   assignSupportRequest,
   closeResolvedRequests,
   closeSupportRequest,
+  getMySupportFollowUpId,
   getMySupportRequest,
   getSupportRequest,
   listSupportRequests,
@@ -286,6 +287,18 @@ describe('a timed-out sender’s reply', () => {
 
     const refused = await failureOf(sendSenderMessage(asUser(C), closed.id, 'Again.'));
     expect((refused as Error).message).toContain('You cannot send support requests until');
+  });
+});
+
+describe('a closed request’s follow-up', () => {
+  it('is found by its sender and no one else, and is absent before the sender writes again', async () => {
+    const closed = await send();
+    await closeSupportRequest(asUser(E), closed.id);
+    expect(await getMySupportFollowUpId(asUser(C), closed.id)).toBeNull();
+
+    const followUp = await sendSenderMessage(asUser(C), closed.id, 'Same fault again.');
+    expect(await getMySupportFollowUpId(asUser(C), closed.id)).toBe(followUp.id);
+    expect(await getMySupportFollowUpId(asUser(D), closed.id)).toBeNull();
   });
 });
 

@@ -1,6 +1,7 @@
 import 'server-only';
 import {
   findActiveSupportTimeoutEnd,
+  findOwnSupportFollowUp,
   findOwnSupportRequest,
   findOwnSupportRequestCount,
   findOwnSupportRequestPage,
@@ -75,6 +76,16 @@ export async function getMySupportRequest(
   const row = await findOwnSupportRequest(session.userId, parseInput(RowId, id));
   if (!row) throw new NotFound('No such support request');
   return withoutStaffFields(row);
+}
+
+/**
+ * The id of the request the signed-in sender opened as a follow-up to their closed one, or `null` when there is none.
+ *
+ * @throws {Forbidden} the address is unverified.
+ */
+export async function getMySupportFollowUpId(session: Session, id: string): Promise<string | null> {
+  requireVerified(session);
+  return (await findOwnSupportFollowUp(session.userId, parseInput(RowId, id)))?.id ?? null;
 }
 
 /**

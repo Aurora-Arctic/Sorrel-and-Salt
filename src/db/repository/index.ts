@@ -146,6 +146,7 @@ export {
 } from './invitations';
 export {
   findActiveSupportTimeoutEnd,
+  findOwnSupportFollowUp,
   findOwnSupportRequest,
   findOwnSupportRequestCount,
   findOwnSupportStatusCounts,

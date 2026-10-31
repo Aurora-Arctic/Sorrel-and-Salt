@@ -219,6 +219,18 @@ export function findOwnSupportRequest(userId: string, id: string) {
   );
 }
 
+/** The request the sender opened as a follow-up to this closed one of theirs, or `undefined` when they have not. */
+export function findOwnSupportFollowUp(userId: string, id: string) {
+  return selectOne(
+    supportRequests,
+    and(
+      notSoftDeleted(supportRequests),
+      eq(supportRequests.linkedFrom, id),
+      eq(supportRequests.createdBy, userId),
+    ),
+  );
+}
+
 /** When the sender's latest live time-out ends, or `undefined` with none in force. */
 export async function findActiveSupportTimeoutEnd(userId: string): Promise<Date | undefined> {
   const rows = await selectFrom(
