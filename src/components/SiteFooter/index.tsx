@@ -8,9 +8,11 @@ import './index.scss';
 
 const SiteFooter = ({ inShell = false }: { inShell?: boolean }): ReactElement => (
   <footer className="site-footer">
-    <nav aria-label="Footer" className="site-footer__nav">
-      <SupportLink plain={!inShell}>Support</SupportLink>
-    </nav>
+    <div className="site-footer__inner">
+      <nav aria-label="Footer" className="site-footer__nav">
+        <SupportLink plain={!inShell}>Support</SupportLink>
+      </nav>
+    </div>
   </footer>
 );
 

@@ -632,6 +632,13 @@
     }
   }
 
+  // The footer's own top margin (space(8)) is the whole gap under a page's last content, so a frame
+  // that a footer follows gives up its bottom padding rather than stacking on it.
+  .app-shell__main :is(.page-frame, .page-column, .coven-layout),
+  .page-frame:has(+ .site-footer) {
+    padding-bottom: 0;
+  }
+
   // A jump to a section lands below the sticky bar, not under it.
   :is(.app-shell, .public-frame) .page-frame__section {
     scroll-margin-top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
