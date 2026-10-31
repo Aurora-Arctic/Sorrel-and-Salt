@@ -104,6 +104,9 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
   if (failed) return <Notice kind="error">{GENERIC_FAILURE}</Notice>;
   return (
     <>
+      <p>
+        Every card listed here already admits nobody. Further tries are refused and counted here.
+      </p>
       <StackTable
         columns={[
           {

@@ -139,6 +139,7 @@ describe('AdminCards', () => {
     fireEvent.click(screen.getByRole('button', { name: /^View Refused Opens/ }));
 
     const list = await screen.findByRole('dialog', { name: 'Refused Opens, Batch b1111111' });
+    expect(within(list).getByText(/already admits nobody/)).toBeInTheDocument();
     expect(await within(list).findByText('Other Wort')).toBeInTheDocument();
     const row = within(list).getByText('Other Wort').closest('tr') as HTMLElement;
     expect(within(row).getByText('other@example.test')).toBeInTheDocument();
