@@ -4,7 +4,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '../../gql';
-import { changePassword, useSession } from '../../lib/auth-client';
+import { changePassword, requestPasswordReset, useSession } from '../../lib/auth-client';
 import { useResultFocus } from '../../lib/use-result-focus';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
@@ -13,6 +13,7 @@ import BusyButton from '../BusyButton';
 import Notice from '../Notice';
 import PasswordField from '../PasswordField';
 import { TOO_MANY_ATTEMPTS } from '../SignInPanel/password-form';
+import { GENERIC_RESET_REQUEST_ERROR } from '../ForgotPasswordForm';
 import type { PasswordSectionProps } from './types';
 import './index.scss';
 
@@ -60,7 +61,8 @@ const PasswordSection = ({ hasPassword }: PasswordSectionProps): ReactElement =>
   const [chosen, setChosen] = useState('');
   const [changing, setChanging] = useState(false);
   const [problem, setProblem] = useState<Refusal>({});
-  const [saved, setSaved] = useState<'changed' | 'set'>();
+  const [sending, setSending] = useState(false);
+  const [saved, setSaved] = useState<'changed' | 'set' | 'link'>();
 
   const setFirst = useMutation({
     mutationFn: (newPassword: string) => graphqlRequest(SetPasswordDocument, { newPassword }),
@@ -80,8 +82,28 @@ const PasswordSection = ({ hasPassword }: PasswordSectionProps): ReactElement =>
   });
 
   const { ref, settle } = useResultFocus<HTMLDivElement>();
-  const pending = changing || setFirst.isPending;
+  const pending = changing || setFirst.isPending || sending;
   const ready = chosen !== '' && (!held || current !== '') && !pending;
+
+  // The reset link goes to the account's own address and is what proves the owner: this session sets
+  // no new password without it.
+  const sendResetLink = async (): Promise<void> => {
+    if (!email || sending) return;
+    setSending(true);
+    setProblem({});
+    setSaved(undefined);
+    const { error } = await requestPasswordReset({
+      email,
+      redirectTo: '/reset-password',
+    }).catch(() => ({ error: {} as { status?: number } }));
+    setSending(false);
+    if (error) {
+      setProblem({ alert: error.status === 429 ? TOO_MANY_ATTEMPTS : GENERIC_RESET_REQUEST_ERROR });
+    } else {
+      setSaved('link');
+    }
+    settle();
+  };
 
   const submit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
@@ -133,6 +155,12 @@ const PasswordSection = ({ hasPassword }: PasswordSectionProps): ReactElement =>
           your providers.
         </Notice>
       )}
+      {saved === 'link' && (
+        <Notice kind="success" result>
+          We've sent a link to your email address to choose a new password. The link works once,
+          within 15 minutes.
+        </Notice>
+      )}
       {/* `noValidate`: every refusal is the server's, worded and placed like the rest. */}
       <form className="form" onSubmit={(event) => void submit(event)} noValidate>
         {/* A password manager saves a password against the username in the same form, so the account's
@@ -180,6 +208,18 @@ const PasswordSection = ({ hasPassword }: PasswordSectionProps): ReactElement =>
           >
             {held ? 'Change Password' : 'Set Password'}
           </BusyButton>
+          {held && email && !email.endsWith('.invalid') && (
+            <BusyButton
+              type="button"
+              className="btn"
+              busy={sending}
+              busyLabel="Sending Link"
+              disabled={pending}
+              onClick={() => void sendResetLink()}
+            >
+              Forgot Your Password?
+            </BusyButton>
+          )}
         </div>
       </form>
     </div>
