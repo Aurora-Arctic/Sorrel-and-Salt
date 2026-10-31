@@ -7,3 +7,13 @@
   flex-direction: column;
   gap: space(3);
 }
+
+// Room under the page's heading and lede, the step the site's `header` leaves above what follows.
+.forgot-password-form {
+  margin-top: space(4);
+}
+
+// The page's "Back to Sign In" link, centred under the form.
+.forgot-password-form__back {
+  text-align: center;
+}
