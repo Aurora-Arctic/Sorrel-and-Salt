@@ -32,6 +32,8 @@
 
 **M14.38 joined on 2026-10-31**, the owner's call: once M14.35 counts a form's categories toward showing an entry, search has to settle how it shows and filters on them. It is a discussion that ends in a design decision, and sits **right after M14.35** ([`tasks/m14.md`](../tasks/m14.md)).
 
+**M14.36 and M14.37 joined on 2026-10-31**, the owner's call, from the M14.24 proposal: three of the sourcing score's facts need data the rows do not hold. M14.36 adds a citation's name basis and supported fields and a source's scholarly mark as columns, and M14.37 has the seed and the admin screens write them. They sit **after MB.249 and ahead of M14.24**, so the score reads every fact from the row ([`tasks/m14.md`](../tasks/m14.md)).
+
 **M14.26 joined on 2026-10-24**, the owner's call: a workflow started by hand runs the reference seeds on the environment chosen, as a dry run unless that is turned off, with an option to force the compendium update past refusals 1 to 4. It sits **after M14.14 and ahead of M14.22**.
 
 **M14.27 joined on 2026-10-27**, the owner's call, from the second test-bloat audit ([`design-decisions/m14.27-test-audit.md`](../design-decisions/m14.27-test-audit.md)): the test suites are cut back to one proof per requirement at the owning layer, the five files over the 10 s budget are split or re-set-up, the timeouts are fixed at their cause, and the one Vitest CI job becomes three project jobs with a coverage-merge job as the required check. It sits **first among the wave's unstarted items**, because every pull request pays the gate's time, and nothing in the wave depends on it ([`tasks/m14.md`](../tasks/m14.md)).
