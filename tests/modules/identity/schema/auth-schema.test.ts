@@ -102,7 +102,6 @@ describe('sign_in_failures schema', () => {
       'count',
       'first_failed_at',
       'locked_until',
-      'password_disabled',
       'user_id',
     ]);
   });
@@ -114,9 +113,8 @@ describe('sign_in_failures schema', () => {
     expect(signInFailures.userId.notNull).toBe(true);
   });
 
-  it('starts at zero and enabled, with no lock', () => {
+  it('starts at zero, with no lock', () => {
     expect(byName.count.default).toBe(0);
-    expect(byName.password_disabled.default).toBe(false);
     expect(byName.locked_until.notNull).toBe(false);
   });
 });
