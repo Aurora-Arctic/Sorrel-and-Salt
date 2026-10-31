@@ -5,6 +5,7 @@ import type { PageRequest } from '@/lib/types';
 import {
   assignSupportRequest,
   getMySupportRequest,
+  countMySupportRequestsByStatus,
   getMySupportTimeoutEnd,
   getSupportRequest,
   liftSupportTimeout,
@@ -182,6 +183,25 @@ describe('mySupportRequests', () => {
     expect((await getMySupportRequest(asUser(C), request.id)).issueUrl).toBeNull();
     const entries = await listMySupportRequests(asUser(C), PAGE);
     expect(entries.map((entry) => entry.node.issueUrl)).toEqual([null]);
+  });
+
+  it('counts the sender’s open and closed requests across all statuses, leaving out another sender’s and a deleted one', async () => {
+    const mine = [await send(C), await send(C), await send(C), await send(C), await send(C)];
+    const statuses = ['open', 'waiting_on_sender', 'resolved', 'closed', 'open'];
+    for (const [index, request] of mine.entries()) {
+      await sql`update support_requests set status = ${statuses[index]!} where id = ${request.id}`;
+    }
+    await sql`update support_requests set deleted_at = now() where id = ${mine[4]!.id}`;
+    const other = await send(D);
+    expect(other.status).toBe('open');
+
+    expect(await countMySupportRequestsByStatus(asUser(C))).toEqual({ open: 2, closed: 2 });
+    expect(await countMySupportRequestsByStatus(asUser(D))).toEqual({ open: 1, closed: 0 });
+  });
+
+  it('refuses the status counts to an unverified account', async () => {
+    const unverified = { ...asUser(C), emailUnverified: true as const };
+    expect(await failureOf(countMySupportRequestsByStatus(unverified))).toBeInstanceOf(Forbidden);
   });
 
   it('carries no error reference on the sender’s own reads, though the request has one', async () => {
