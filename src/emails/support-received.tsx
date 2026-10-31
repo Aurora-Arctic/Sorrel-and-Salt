@@ -1,25 +1,46 @@
 import { Action, EmailLayout, Paragraph, actionVerb, defineMessage } from './parts/layout';
+import { supportTitle } from './parts/support-title';
 import type { SupportReceivedProps } from './types';
 
-// Sent to a signed-out visitor when their request arrives. It carries the answer time and none of what they wrote.
+// Sent to a request's sender when it arrives. It names the request and carries the answer time, and none of what they wrote.
 
-export function SupportReceived({ url, origin = new URL(url).origin, part }: SupportReceivedProps) {
+const titleOf = (requestSubject: string): string =>
+  supportTitle('We have your support request', requestSubject);
+
+export function SupportReceived({
+  url,
+  origin = new URL(url).origin,
+  part,
+  requestSubject,
+  signedOut = false,
+}: SupportReceivedProps) {
+  const title = titleOf(requestSubject);
   return (
-    <EmailLayout preview="We have your message." heading="We Have Your Message" origin={origin}>
+    <EmailLayout preview="We have your message." heading={title} origin={origin}>
       <Paragraph>
-        We have your message to Sorrel & Salt, and we will reply to this address within 5 working
-        days.
+        {`${title}. We will reply within 5 working days${signedOut ? ', to this address' : ''}.`}
       </Paragraph>
-      <Paragraph>
-        {`You have no account to sign in to, so the reply comes by email. If you need to add something, ${actionVerb(part)} to write to us again.`}
-      </Paragraph>
-      <Action href={url} label="Write to Us Again" part={part} />
+      {signedOut ? (
+        <>
+          <Paragraph>
+            {`You have no account to sign in to, so the reply comes by email. If you need to add something, ${actionVerb(part)} to write to us again.`}
+          </Paragraph>
+          <Action href={url} label="Write to Us Again" part={part} />
+        </>
+      ) : (
+        <>
+          <Paragraph>
+            {`You can follow it on your support page. To open the request, ${actionVerb(part)}.`}
+          </Paragraph>
+          <Action href={url} label="Open the Request" part={part} />
+        </>
+      )}
     </EmailLayout>
   );
 }
 
 /** The receipt for `to`, rendered to the html and plain text `send` takes. */
 export const supportReceivedMessage = defineMessage<SupportReceivedProps>(
-  'We Have Your Message',
+  ({ requestSubject }) => titleOf(requestSubject),
   SupportReceived,
 );

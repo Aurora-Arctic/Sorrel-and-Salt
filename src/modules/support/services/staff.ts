@@ -19,9 +19,10 @@ import { RowId, parseInput } from '../../../lib/validation';
 import { assertSiteAdmin } from '../../identity';
 import { users } from '../../identity/schema/users';
 import { supportRequests } from '../schema/support-requests';
-import type { SupportRequestRow } from '../types';
+import type { SupportNotifier, SupportRequestRow } from '../types';
 import { IssueUrlInput } from '../validation/support';
 import { readerOf } from './access';
+import { mailSender } from './mail-sender';
 import { redactPathForCurator } from './redact-path';
 
 // What the staff do to a request. An admin reads every request and may do everything; a curator reads the requests marked for
@@ -151,15 +152,19 @@ export async function setSupportRequestCuratorVisible(
 export async function resolveSupportRequest(
   session: Session,
   id: string,
+  notifier: SupportNotifier,
 ): Promise<SupportRequestRow> {
   const row = await requestToAnswer(session, id, 'resolve');
   const now = new Date();
-  return moveOrRefuse(session, row, ['open', 'waiting_on_sender'], 'resolve', {
+  const resolved = await moveOrRefuse(session, row, ['open', 'waiting_on_sender'], 'resolve', {
     status: 'resolved',
     resolvedBy: session.userId,
     resolvedAt: now,
     lastStaffActivityAt: now,
   });
+  // The move is saved before the mail goes, so a failed mail loses nothing.
+  await mailSender(notifier, resolved, 'resolved');
+  return resolved;
 }
 
 /**

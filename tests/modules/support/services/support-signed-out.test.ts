@@ -35,13 +35,15 @@ const INPUT = {
 } as const;
 
 function notifier() {
-  const received: string[] = [];
+  const received: { to: string; subject: string; requestId: string | null }[] = [];
   const replies: { to: string; body: string }[] = [];
   const mail: SupportNotifier = {
     replyWaiting: async () => undefined,
-    signedOutReceived: async (to) => {
-      received.push(to);
+    received: async (to, subject, requestId) => {
+      received.push({ to, subject, requestId });
     },
+    resolved: async () => undefined,
+    closingSoon: async () => undefined,
     signedOutReply: async (to, body) => {
       replies.push({ to, body });
     },
@@ -72,7 +74,9 @@ describe('sendSignedOutSupportRequest', () => {
     expect(row!.sender_email).toBe('visitor@example.test');
     expect(row!.about).toBe('account');
     expect(row!.status).toBe('open');
-    expect(received).toEqual(['visitor@example.test']);
+    expect(received).toEqual([
+      { to: 'visitor@example.test', subject: INPUT.subject, requestId: null },
+    ]);
   });
 
   it.each(['accessibility', 'account', 'bug', 'privacy', 'question'] as const)(

@@ -38,11 +38,13 @@ const PAGE: PageRequest = { limit: 101, inverted: false };
 const INPUT = { about: 'bug', subject: 'The jar will not open', message: 'It sticks.' } as const;
 const mail: SupportNotifier = {
   replyWaiting: async () => undefined,
-  signedOutReceived: async () => undefined,
+  received: async () => undefined,
+  resolved: async () => undefined,
+  closingSoon: async () => undefined,
   signedOutReply: async () => undefined,
 };
 
-const send = () => sendSupportRequest(asUser(C), INPUT);
+const send = () => sendSupportRequest(asUser(C), INPUT, mail);
 const waiting = () =>
   send().then(async (request) => {
     await replyToSupportRequest(asUser(E), request.id, 'Which jar?', mail, {
@@ -98,30 +100,32 @@ describe('the staff transitions', () => {
 
   it('resolves an open request and a waiting one, stamping who and when', async () => {
     const open = await send();
-    const resolved = await resolveSupportRequest(asUser(E), open.id);
+    const resolved = await resolveSupportRequest(asUser(E), open.id, mail);
     expect(resolved).toMatchObject({ status: 'resolved', resolvedBy: E.id });
     expect(resolved.resolvedAt).toBeInstanceOf(Date);
 
     const waitingOne = await waiting();
-    expect((await resolveSupportRequest(asUser(E), waitingOne.id)).status).toBe('resolved');
+    expect((await resolveSupportRequest(asUser(E), waitingOne.id, mail)).status).toBe('resolved');
   });
 
   it('refuses resolving a request that is already resolved or closed', async () => {
     const request = await send();
-    await resolveSupportRequest(asUser(E), request.id);
-    const again = await failureOf(resolveSupportRequest(asUser(E), request.id));
+    await resolveSupportRequest(asUser(E), request.id, mail);
+    const again = await failureOf(resolveSupportRequest(asUser(E), request.id, mail));
     expect(again).toBeInstanceOf(Forbidden);
     expect((again as Error).message).toMatch(/resolved/);
 
     await closeSupportRequest(asUser(E), request.id);
-    expect(await failureOf(resolveSupportRequest(asUser(E), request.id))).toBeInstanceOf(Forbidden);
+    expect(await failureOf(resolveSupportRequest(asUser(E), request.id, mail))).toBeInstanceOf(
+      Forbidden,
+    );
   });
 
   it.each(['open', 'waiting', 'resolved'])(
     'lets staff close a request that is %s',
     async (from) => {
       const request = from === 'waiting' ? await waiting() : await send();
-      if (from === 'resolved') await resolveSupportRequest(asUser(E), request.id);
+      if (from === 'resolved') await resolveSupportRequest(asUser(E), request.id, mail);
 
       const closed = await closeSupportRequest(asUser(E), request.id);
 
@@ -182,7 +186,7 @@ describe('a sender’s message', () => {
   it('reopens a resolved request, clearing resolved_at, and keeps the assignee', async () => {
     const request = await send();
     await assignSupportRequest(asUser(E), request.id, F.id);
-    await resolveSupportRequest(asUser(E), request.id);
+    await resolveSupportRequest(asUser(E), request.id, mail);
     expect(await statusOf(request.id)).toBe('resolved');
 
     const row = await sendSenderMessage(asUser(C), request.id, 'It came back.');
@@ -286,7 +290,9 @@ describe('internal notes', () => {
       replyWaiting: async (to) => {
         sent.push(to);
       },
-      signedOutReceived: async () => undefined,
+      received: async () => undefined,
+      resolved: async () => undefined,
+      closingSoon: async () => undefined,
       signedOutReply: async () => undefined,
     });
 
@@ -345,8 +351,8 @@ describe('closeResolvedRequests', () => {
     const old = await send();
     const recent = await send();
     const open = await send();
-    await resolveSupportRequest(asUser(E), old.id);
-    await resolveSupportRequest(asUser(E), recent.id);
+    await resolveSupportRequest(asUser(E), old.id, mail);
+    await resolveSupportRequest(asUser(E), recent.id, mail);
     await sql`update support_requests set resolved_at = now() - interval '8 days' where id = ${old.id}`;
     await sql`update support_requests set resolved_at = now() - interval '6 days' where id = ${recent.id}`;
     await sql`update support_requests set created_at = now() - interval '30 days' where id = ${open.id}`;

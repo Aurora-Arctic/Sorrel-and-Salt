@@ -4,9 +4,10 @@ import { Forbidden } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { parseInput } from '../../../lib/validation';
 import { supportRequests } from '../schema/support-requests';
-import type { SupportRequestRow } from '../types';
+import type { SupportNotifier, SupportRequestRow } from '../types';
 import { SupportRequestInput } from '../validation/support';
 import { requireVerified } from './access';
+import { mailSender } from './mail-sender';
 import { redactPath } from './redact-path';
 
 /** Requests one sender may make in a window; the next is refused until the oldest leaves it. */
@@ -44,17 +45,20 @@ export function refuseOverLimit(recent: number): void {
  * The limit and the time-out are read after a per-account lock taken in the insert's transaction, so two sends racing at the
  * limit queue and the second counts the first.
  *
+ * The sender is mailed a receipt once the request is saved.
+ *
  * @throws {Forbidden} the address is unverified, the sender is timed out, or they have sent ten requests in 24 hours.
  * @throws {ValidationError} the subject, message, path or error code is not acceptable.
  */
 export async function sendSupportRequest(
   session: Session,
   input: SupportRequestInput,
+  notifier: SupportNotifier,
 ): Promise<SupportRequestRow> {
   requireVerified(session);
   const values = parseInput(SupportRequestInput, input);
 
-  return withAudit(session, async (write) => {
+  const request = await withAudit(session, async (write) => {
     const { recent, timedOutUntil } = await write.lockSupportSender(
       session.userId,
       SEND_WINDOW_SECONDS,
@@ -73,4 +77,7 @@ export async function sendSupportRequest(
     });
     return row as SupportRequestRow;
   });
+  // The request is saved before the mail goes, so a failed mail loses nothing.
+  await mailSender(notifier, request, 'received');
+  return request;
 }

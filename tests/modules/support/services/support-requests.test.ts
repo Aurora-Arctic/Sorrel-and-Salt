@@ -57,13 +57,15 @@ function notifier(): SupportNotifier & { sent: string[]; subjects: string[]; ids
       sent.push(to);
       subjects.push(subject);
     },
-    signedOutReceived: async () => undefined,
+    received: async () => undefined,
+    resolved: async () => undefined,
+    closingSoon: async () => undefined,
     signedOutReply: async () => undefined,
   };
 }
 
 const send = (user: SessionUser = C, input: Parameters<typeof sendSupportRequest>[1] = INPUT) =>
-  sendSupportRequest(asUser(user), input);
+  sendSupportRequest(asUser(user), input, notifier());
 
 async function emailOf(user: SessionUser): Promise<string> {
   const [row] = await sql`select email from users where id = ${user.id}`;
@@ -85,7 +87,9 @@ describe('sendSupportRequest', () => {
 
   it('refuses an unverified account', async () => {
     const unverified = { ...asUser(C), emailUnverified: true as const };
-    expect(await failureOf(sendSupportRequest(unverified, INPUT))).toBeInstanceOf(Forbidden);
+    expect(await failureOf(sendSupportRequest(unverified, INPUT, notifier()))).toBeInstanceOf(
+      Forbidden,
+    );
     expect(await send(C)).toBeDefined();
   });
 
@@ -245,7 +249,7 @@ describe('supportRequests', () => {
     const resolved = await send(C);
     const newOpen = await send(D);
     await sql`update support_requests set created_at = now() - interval '3 hours' where id = ${oldOpen.id}`;
-    await resolveSupportRequest(asUser(E), resolved.id);
+    await resolveSupportRequest(asUser(E), resolved.id, notifier());
 
     const entries = await listSupportRequests(asUser(E), {}, PAGE);
     expect(entries.map((entry) => entry.node.id)).toEqual([newOpen.id, oldOpen.id, resolved.id]);
@@ -494,7 +498,7 @@ describe('admin-only changes', () => {
 describe('resolveSupportRequest', () => {
   it('records who and when, for an admin on any request', async () => {
     const request = await send(C);
-    const resolved = await resolveSupportRequest(asUser(E), request.id);
+    const resolved = await resolveSupportRequest(asUser(E), request.id, notifier());
     expect(resolved).toMatchObject({ status: 'resolved', resolvedBy: E.id });
     expect(resolved.resolvedAt).toBeInstanceOf(Date);
   });
@@ -502,10 +506,12 @@ describe('resolveSupportRequest', () => {
   it('lets a curator resolve only a request assigned to them', async () => {
     const request = await send(C);
     await setSupportRequestCuratorVisible(asUser(E), request.id, true);
-    expect(await failureOf(resolveSupportRequest(asUser(F), request.id))).toBeInstanceOf(Forbidden);
+    expect(
+      await failureOf(resolveSupportRequest(asUser(F), request.id, notifier())),
+    ).toBeInstanceOf(Forbidden);
 
     await assignSupportRequest(asUser(E), request.id, F.id);
-    expect((await resolveSupportRequest(asUser(F), request.id)).resolvedBy).toBe(F.id);
+    expect((await resolveSupportRequest(asUser(F), request.id, notifier())).resolvedBy).toBe(F.id);
   });
 });
 
@@ -513,7 +519,7 @@ describe('the cursor', () => {
   it('pages through open and resolved requests by a cursor that round-trips', async () => {
     await send(C);
     const resolved = await send(C);
-    await resolveSupportRequest(asUser(E), resolved.id);
+    await resolveSupportRequest(asUser(E), resolved.id, notifier());
     const first = await listSupportRequests(asUser(E), {}, { limit: 2, inverted: false });
     expect(first).toHaveLength(2);
     const rest = await listSupportRequests(
