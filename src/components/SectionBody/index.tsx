@@ -33,6 +33,7 @@ export default function SectionBody({
         entry={target.frame === 'entry'}
         head={target.head}
         density={target.density}
+        card={target.card}
       />
     ) : null;
   // When the wait ends the skeleton stays over the arrived page and fades

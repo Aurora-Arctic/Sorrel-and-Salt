@@ -26,6 +26,8 @@ export interface SkeletonProps {
   head?: 'eyebrow' | 'title';
   /** A `cards` skeleton draws compact cards, as the coven lists open at, unless a stored Regular choice sits on `<html>`. */
   density?: 'compact';
+  /** A `cards` skeleton draws the Grimoire's spell cards (a title, an edited line and the card's actions) rather than the Ingredients cards. */
+  card?: 'spell';
   /** How many rows, cards, fields, blocks or lines it draws; each shape has its own default. */
   count?: number;
 }
@@ -43,6 +45,8 @@ export interface SwapPanelProps {
   count?: number;
   /** The density of a `cards` skeleton, as `TabPanelLoading`'s. */
   density?: 'compact';
+  /** The card a `cards` skeleton draws, as `TabPanelLoading`'s. */
+  card?: 'spell';
   /** A minimum height for the skeleton's wrapper only, so the content it replaces keeps its room; the new content takes none. */
   loadingMinHeight?: number;
   children: ReactNode;

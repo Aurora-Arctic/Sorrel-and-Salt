@@ -14,6 +14,8 @@ export type NavigationTarget = {
   tabs?: boolean;
   /** A `cards` wait draws the compact cards the list opens at, unless the viewer stored Regular. */
   density?: 'compact';
+  /** A `cards` wait draws the Grimoire's spell cards, not the Ingredients cards. */
+  card?: 'spell';
   /**
    * The frame the destination sits in, so a `main` wait is drawn in it: `wide`
    * (the page column), `narrow` (a forms column) or `with-nav` (the narrow column

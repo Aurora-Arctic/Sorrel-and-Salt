@@ -181,6 +181,29 @@
   }
 }
 
+// The Grimoire's spell card: a title bar, the edited line set a step below it, and a row of the card's
+// actions at its foot (SpellCard), in place of the Ingredients card's caption and chips. It has no minimum
+// height: its three bars stand where the real card's title, edited line and action row do.
+.skeleton__card--spell {
+  min-height: 0;
+
+  > span:nth-child(1) {
+    width: 60%;
+    height: calc(heading-size(3) * 1.15);
+  }
+
+  > span:nth-child(2) {
+    width: 35%;
+    margin-block-start: space(5);
+  }
+
+  > span:nth-child(3) {
+    width: 100%;
+    height: $control-height;
+    margin-block-start: 0;
+  }
+}
+
 // Compact, inside an ancestor that says `data-density="compact"` (the coven lists), unless a
 // stored Regular choice sits on <html>: the narrower column, tighter gap and padding of the compact
 // cards (`.ingredient-card-list`, IngredientCard/_compact.scss), so the list does not jump on arrival.
