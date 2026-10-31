@@ -5,8 +5,7 @@ import { type FormEvent, type ReactElement, useId, useState } from 'react';
 import { graphql } from '../../gql';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
-import BusyButton from '../BusyButton';
-import { FieldShell, fieldDescription } from '../Field';
+import { FieldShell, FormActions, fieldDescription } from '../Field';
 import Notice from '../Notice';
 import type { NameFormProps } from './types';
 import './index.scss';
@@ -80,19 +79,7 @@ const NameForm = ({ name }: NameFormProps): ReactElement => {
             {...aria}
           />
         </FieldShell>
-        <div className="form__actions">
-          {/* Offered only when there is something to save, and busy, saying so, from the press
-                        to the answer. */}
-          <BusyButton
-            type="submit"
-            className="btn btn--solid"
-            disabled={unchanged || mutation.isPending}
-            busy={mutation.isPending}
-            busyLabel="Saving Name"
-          >
-            Save Name
-          </BusyButton>
-        </div>
+        <FormActions noun="Name" dirty={!unchanged} submitting={mutation.isPending} />
       </form>
     </div>
   );

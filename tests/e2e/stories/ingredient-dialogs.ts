@@ -70,7 +70,7 @@ export async function openEditIngredient(
   return dialog;
 }
 
-/** Opens the edit from the entry's page, where Edit is an icon beside the bin, and its sections, as `openEditIngredient` does from a row. */
+/** Opens the edit from the entry's page, where Edit is an icon beside the three dots, and its sections, as `openEditIngredient` does from a row. */
 export async function openEditIngredientFromMenu(
   page: Page,
   name: string,
@@ -162,4 +162,26 @@ export function destinationMenu(page: Page) {
     choices: menu.getByRole('menuitem'),
     choice: (name: string) => menu.getByRole('menuitem', { name, exact: true }),
   };
+}
+
+/**
+ * Holds the named GraphQL operations, as a user's slow connection would, until `release()`: the form autosaves
+ * 3 s after its last change, and a held write keeps that save from landing between a step's edits and the click
+ * on Save, which would leave Save disabled with nothing to save. Saves sent after `release()` pass at once.
+ */
+export async function holdSaves(page: Page, operationNames: string[]) {
+  let open!: () => void;
+  const opened = new Promise<void>((resolve) => {
+    open = resolve;
+  });
+  await page.route('**/api/graphql', async (route) => {
+    const body = route.request().postDataJSON() as { operationName?: string } | null;
+    if (!body?.operationName || !operationNames.includes(body.operationName)) {
+      await route.fallback();
+      return;
+    }
+    await opened;
+    await route.continue();
+  });
+  return { release: open };
 }

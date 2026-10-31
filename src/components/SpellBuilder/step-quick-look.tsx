@@ -7,7 +7,7 @@ import { DuplicateQuickLook } from '../IngredientForm/quick-look';
 /** The coven a Quick Look reads in, and the URL segment of the entry page it links to. */
 export type QuickLookCoven = { workspaceId: string; covenSlug: string };
 
-// The Quick Look eye of an ingredient step, in a step row and In Coven Inventory alike. It opens
+// The Quick Look eye on an ingredient step's row. It opens
 // `DuplicateQuickLook` over the builder, so nothing typed is lost; until the entry arrives the head
 // shows only the name, since "Not yet looked up" would be false
 // (claude-docs/components/spell-builder.md).

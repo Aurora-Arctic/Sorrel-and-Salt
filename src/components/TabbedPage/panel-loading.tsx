@@ -8,6 +8,9 @@ const TabPanelLoading = ({
   filter = false,
   shape = 'table',
   count,
-}: TabPanelLoadingProps): ReactElement => <Skeleton shape={shape} filter={filter} count={count} />;
+  density,
+}: TabPanelLoadingProps): ReactElement => (
+  <Skeleton shape={shape} filter={filter} count={count} density={density} />
+);
 
 export default TabPanelLoading;

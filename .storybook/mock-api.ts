@@ -23,6 +23,8 @@ export type MockError = {
   fieldErrors?: readonly { path: readonly (string | number)[]; message: string }[];
   /** The GraphQL path of the failed field, as Yoga sends it (`['saveStock']`). */
   path?: readonly (string | number)[];
+  /** Present on `STALE_WRITE`: the revision the row holds now, which the client reads to offer a choice. */
+  currentRevision?: number;
 };
 
 function operationName(document: DocumentNode): string {
@@ -52,11 +54,19 @@ type Options = {
 
 function body(result: unknown): object {
   if (!(result instanceof Refusal)) return { data: result };
-  const { message, code, fieldErrors, path } = result.error;
+  const { message, code, fieldErrors, path, currentRevision } = result.error;
   return {
     data: null,
     errors: [
-      { message, ...(path && { path }), extensions: { code, ...(fieldErrors && { fieldErrors }) } },
+      {
+        message,
+        ...(path && { path }),
+        extensions: {
+          code,
+          ...(fieldErrors && { fieldErrors }),
+          ...(currentRevision !== undefined && { currentRevision }),
+        },
+      },
     ],
   };
 }
@@ -117,9 +127,9 @@ export function hangAllOperations(): RequestHandler {
 }
 
 /** Never answers a query or mutation, for a story that shows its loading or saving state for good. */
-export function hangOperation(
+export function hangOperation<Result, Variables extends object>(
   kind: 'query' | 'mutation',
-  document: TypedDocumentNode,
+  document: TypedDocumentNode<Result, Variables>,
 ): RequestHandler {
   return graphqlEndpoint[kind](operationName(document), () => delay('infinite'));
 }

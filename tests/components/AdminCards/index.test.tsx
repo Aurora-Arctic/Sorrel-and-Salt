@@ -1,0 +1,931 @@
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import type { ReactNode } from 'react';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
+import { buildCardSheetsPdf } from '@/lib/invitation-cards';
+import AdminCards, { MintCards } from '@/components/AdminCards';
+import AdminArrivals, { ArrivalsActions } from '@/components/AdminCards/arrivals';
+import type {
+  CreateInvitationCardsMutation,
+  CreateInvitationCardsMutationVariables,
+  InvitationCardAttemptsQuery,
+  InvitationCardAttemptsQueryVariables,
+  RevokeInvitationCardBatchMutation,
+  RevokeInvitationCardBatchMutationVariables,
+} from '@/gql/graphql';
+import { RouteModalContext } from '@/components/Modal/route-modal-provider';
+import type { RouteModalOpener } from '@/components/Modal/types';
+import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
+import { FILTER_ROWS, filterForm, sent } from '../../support/filter-form';
+import { Navigating } from '../../support/navigating';
+import type { FilterFormSubject } from '../../support/types';
+import { HttpResponse } from 'msw/http';
+import { graphqlLink, mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
+import { server } from '../../support/msw/server';
+
+// The Invitation Cards and Card Sign-Ups tabs: render-only, so the page owns the read and this owns what an admin sees of it
+// and sends (claude-docs/components/admin-cards.md).
+
+vi.mock('@/lib/invitation-cards', () => ({
+  cardQrSvg: (link: string) =>
+    `<svg xmlns="http://www.w3.org/2000/svg"><title>${link}</title></svg>`,
+  buildCardSheetsPdf: vi.fn(async () => new Uint8Array([37, 80, 68, 70])),
+}));
+
+const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
+vi.mock('next/navigation', () => ({ useRouter: () => router }));
+
+const BATCH_ONE = 'b1111111-0000-4000-8000-000000000001';
+const BATCHES = [
+  {
+    batchId: BATCH_ONE,
+    mintedAt: new Date('2026-10-01T00:00:00Z'),
+    expiresAt: new Date('2026-12-02T12:00:00Z'),
+    cards: 27,
+    accepted: 4,
+    pending: 20,
+    attempts: 3,
+    note: null,
+    status: 'live' as const,
+  },
+  {
+    batchId: 'b2222222-0000-4000-8000-000000000002',
+    mintedAt: new Date('2026-01-01T00:00:00Z'),
+    expiresAt: new Date('2026-02-02T12:00:00Z'),
+    cards: 9,
+    accepted: 9,
+    pending: 0,
+    attempts: 0,
+    note: null,
+    status: 'used-up' as const,
+  },
+  {
+    batchId: 'b3333333-0000-4000-8000-000000000003',
+    mintedAt: new Date('2026-08-01T00:00:00Z'),
+    expiresAt: new Date('2026-11-02T12:00:00Z'),
+    cards: 9,
+    accepted: 2,
+    pending: 0,
+    attempts: 0,
+    note: null,
+    status: 'revoked' as const,
+  },
+  {
+    batchId: 'b4444444-0000-4000-8000-000000000004',
+    mintedAt: new Date('2026-03-01T00:00:00Z'),
+    expiresAt: new Date('2026-04-02T12:00:00Z'),
+    cards: 9,
+    accepted: 0,
+    pending: 0,
+    attempts: 0,
+    note: null,
+    status: 'expired' as const,
+  },
+];
+
+// A fixed clock, so the earliest pickable expiry and the calendar's first month do not move.
+beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['Date'], now: new Date('2026-10-30T12:00:00Z') });
+  router.push.mockClear();
+  router.replace.mockClear();
+  router.refresh.mockClear();
+});
+
+afterEach(() => {
+  vi.useRealTimers();
+  Reflect.deleteProperty(URL, 'createObjectURL');
+  Reflect.deleteProperty(URL, 'revokeObjectURL');
+  vi.restoreAllMocks();
+});
+
+// Opens the Expires On calendar and picks 1 February 2027, a month on from the default day, which the calendar opens at.
+function pickFirstOfFebruary() {
+  fireEvent.click(within(dialog()).getByRole('button', { name: /Expires On/ }));
+  fireEvent.click(screen.getByRole('button', { name: /Next Month/ }));
+  fireEvent.click(
+    within(screen.getByRole('grid')).getByRole('button', { name: /, 1 February 2027/ }),
+  );
+}
+
+const dialog = () => screen.getByRole('dialog', { name: 'Mint Cards' });
+const mint = () => within(dialog()).getByRole('button', { name: 'Mint Cards' });
+
+describe('AdminCards', () => {
+  it('shows how many refused opens each batch has, and a way to the list only where there are some', () => {
+    render(<AdminCards batches={BATCHES} />);
+
+    const [first, second] = screen.getAllByRole('row').slice(1);
+    expect(within(first).getByText('3')).toBeInTheDocument();
+    expect(within(first).getByRole('button', { name: /^View Refused Opens/ })).toBeInTheDocument();
+    expect(within(second).queryByRole('button', { name: /^View Refused Opens/ })).toBeNull();
+  });
+
+  it('shows a batch’s note in its own row and none in a row without one', () => {
+    const batches = [{ ...BATCHES[0], note: 'Handed out at the autumn fair' }, ...BATCHES.slice(1)];
+    render(<AdminCards batches={batches} />);
+
+    const [first, second] = screen.getAllByRole('row').slice(1);
+    expect(within(first).getByText('Handed out at the autumn fair')).toBeInTheDocument();
+    expect(within(second).queryByText('Handed out at the autumn fair')).toBeNull();
+  });
+
+  it('shows the standard loading state while the refused opens are read, then the rows', async () => {
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    server.use(
+      graphqlLink.query<InvitationCardAttemptsQuery, InvitationCardAttemptsQueryVariables>(
+        'InvitationCardAttempts',
+        async () => {
+          await gate;
+          return HttpResponse.json({
+            data: {
+              invitationCardAttempts: {
+                edges: [
+                  {
+                    node: {
+                      id: 'a1',
+                      reason: 'revoked',
+                      attempts: 1,
+                      cardPosition: 1,
+                      firstAttemptedAt: '2026-10-28T08:00:00.000Z',
+                      lastAttemptedAt: '2026-10-28T08:00:00.000Z',
+                      account: { id: 'u1', name: 'Other Wort', email: 'other@example.test' },
+                    },
+                  },
+                ],
+                pageInfo: { hasNextPage: false, endCursor: null },
+              },
+            },
+          });
+        },
+      ),
+    );
+    render(<AdminCards batches={BATCHES} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /^View Refused Opens/ }));
+    const list = await screen.findByRole('dialog', { name: 'Refused Opens, Batch b1111111' });
+
+    expect(within(list).getByRole('status')).toHaveTextContent('Loading');
+    expect(within(list).queryByText('Loading…')).toBeNull();
+    expect(within(list).queryByText('No refused opens.')).toBeNull();
+
+    release();
+    expect(await within(list).findByText('Other Wort', {}, { timeout: 2000 })).toBeInTheDocument();
+    expect(within(list).queryByRole('status')).toBeNull();
+  });
+
+  it("lists the account, the reason, the count and the first and latest times of a batch's refused opens", async () => {
+    mockGraphQLQuery<InvitationCardAttemptsQuery, InvitationCardAttemptsQueryVariables>(
+      'InvitationCardAttempts',
+      ({ batchId }) => {
+        expect(batchId).toBe(BATCH_ONE);
+        return {
+          invitationCardAttempts: {
+            edges: [
+              {
+                node: {
+                  id: 'a1',
+                  reason: 'revoked',
+                  attempts: 2,
+                  note: null,
+                  cardPosition: 14,
+                  firstAttemptedAt: '2026-10-28T08:00:00.000Z',
+                  lastAttemptedAt: '2026-10-29T09:30:00.000Z',
+                  account: { id: 'u1', name: 'Other Wort', email: 'other@example.test' },
+                },
+              },
+            ],
+            pageInfo: { hasNextPage: false, endCursor: null },
+          },
+        };
+      },
+    );
+    render(<AdminCards batches={BATCHES} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /^View Refused Opens/ }));
+
+    const list = await screen.findByRole('dialog', { name: 'Refused Opens, Batch b1111111' });
+    expect(within(list).getByText(/already admits nobody/)).toBeInTheDocument();
+    expect(await within(list).findByText('Other Wort')).toBeInTheDocument();
+    const row = within(list).getByText('Other Wort').closest('tr') as HTMLElement;
+    expect(within(row).getByText('other@example.test')).toBeInTheDocument();
+    expect(within(row).getByRole('link', { name: 'Other Wort' })).toHaveAttribute(
+      'href',
+      '/admin/users?user=u1&from=invitation-cards',
+    );
+    expect(within(row).getByText('Sheet 2, Card 5')).toBeInTheDocument();
+    expect(within(row).getByText('Revoked')).toBeInTheDocument();
+    expect(within(row).getByText(/^2 times,/)).toBeInTheDocument();
+    const times = row.querySelectorAll('time');
+    expect(times[0]).toHaveTextContent(/^\d{4}-\d{2}-\d{2} \d{1,2}:\d{2} (am|pm)$/);
+    expect(times[0]).toHaveAttribute('datetime', '2026-10-28T08:00:00.000Z');
+    expect(times[1]).toHaveAttribute('datetime', '2026-10-29T09:30:00.000Z');
+    // Four columns: the reason, count and dates share the Refusal column.
+    const headings = within(list).getAllByRole('columnheader');
+    expect(headings.map((h) => h.textContent)).toEqual(['Name', 'Email', 'Card', 'Refusal']);
+    const cells = within(row).getAllByRole('cell');
+    expect(within(cells[0]).getByRole('link', { name: 'Other Wort' })).toBeInTheDocument();
+    expect(cells[1]).toHaveTextContent('other@example.test');
+  });
+
+  it("opens the account's user modal from its name, headed with the name and email", async () => {
+    mockGraphQLQuery<InvitationCardAttemptsQuery, InvitationCardAttemptsQueryVariables>(
+      'InvitationCardAttempts',
+      () => ({
+        invitationCardAttempts: {
+          edges: [
+            {
+              node: {
+                id: 'a1',
+                reason: 'revoked',
+                attempts: 2,
+                note: null,
+                cardPosition: 14,
+                firstAttemptedAt: '2026-10-28T08:00:00.000Z',
+                lastAttemptedAt: '2026-10-29T09:30:00.000Z',
+                account: { id: 'u1', name: 'Other Wort', email: 'other@example.test' },
+              },
+            },
+          ],
+          pageInfo: { hasNextPage: false, endCursor: null },
+        },
+      }),
+    );
+    const opener: RouteModalOpener = { loading: undefined, open: vi.fn(), cancel: vi.fn() };
+    render(
+      <RouteModalContext.Provider value={opener}>
+        <AdminCards batches={BATCHES} />
+      </RouteModalContext.Provider>,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /^View Refused Opens/ }));
+    const list = await screen.findByRole('dialog', { name: 'Refused Opens, Batch b1111111' });
+    fireEvent.click(await within(list).findByRole('link', { name: 'Other Wort' }));
+
+    expect(opener.open).toHaveBeenCalledExactlyOnceWith(
+      '/admin/users?user=u1&from=invitation-cards',
+      expect.objectContaining({ eyebrow: 'User', title: 'Other Wort' }),
+      undefined,
+    );
+  });
+
+  it('shows a removed account as Removed account, with no link and no email', async () => {
+    mockGraphQLQuery<InvitationCardAttemptsQuery, InvitationCardAttemptsQueryVariables>(
+      'InvitationCardAttempts',
+      () => ({
+        invitationCardAttempts: {
+          edges: [
+            {
+              node: {
+                id: 'a2',
+                reason: 'accepted',
+                attempts: 1,
+                note: null,
+                cardPosition: null,
+                firstAttemptedAt: '2026-10-28T08:00:00.000Z',
+                lastAttemptedAt: '2026-10-29T09:30:00.000Z',
+                account: null,
+              },
+            },
+          ],
+          pageInfo: { hasNextPage: false, endCursor: null },
+        },
+      }),
+    );
+    render(<AdminCards batches={BATCHES} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /^View Refused Opens/ }));
+
+    const list = await screen.findByRole('dialog', { name: 'Refused Opens, Batch b1111111' });
+    expect(await within(list).findByText('Removed account')).toBeInTheDocument();
+    expect(within(list).getByText('Accepted by another account')).toBeInTheDocument();
+    expect(within(list).getByText('Unknown')).toBeInTheDocument();
+    expect(within(list).queryByRole('link')).toBeNull();
+    // The Email cell is empty, not a placeholder.
+    const removed = within(list).getByText('Removed account').closest('tr') as HTMLElement;
+    expect(within(removed).getAllByRole('cell')[1]).toBeEmptyDOMElement();
+  });
+
+  it('lists a row per batch with its counts, and Revoke Batch only while a card is pending', () => {
+    render(<AdminCards batches={BATCHES} />);
+
+    const [first, second, third, fourth] = screen.getAllByRole('row').slice(1);
+    expect(screen.getAllByRole('row')).toHaveLength(5);
+    expect(within(first).getByText('b1111111')).toBeInTheDocument();
+    expect(within(first).getByText('27')).toBeInTheDocument();
+    expect(within(first).getByText('4')).toBeInTheDocument();
+    expect(
+      within(first).getByRole('button', { name: /^Revoke Batch b1111111/ }),
+    ).toBeInTheDocument();
+    expect(within(second).queryByRole('button', { name: /^Revoke Batch/ })).toBeNull();
+    expect(within(first).getByText('Live')).toBeInTheDocument();
+    expect(within(second).getByText('Used up')).toBeInTheDocument();
+    expect(within(third).getByText('Revoked')).toBeInTheDocument();
+    expect(within(fourth).getByText('Expired')).toBeInTheDocument();
+    // Expires is a UTC day; Minted On keeps the time, in the viewer's zone.
+    expect(within(first).getByText('2026-12-01')).toBeInTheDocument();
+    expect(first.querySelector('time[datetime="2026-10-01T00:00:00.000Z"]')).toHaveTextContent(
+      /^\d{4}-\d{2}-\d{2} \d{1,2}:\d{2} (am|pm)$/,
+    );
+    expect(screen.queryByRole('button', { name: /^Revoke card/i })).toBeNull();
+  });
+
+  it('opens the mint form by the address, from a link', () => {
+    render(<MintCards />);
+
+    expect(screen.getByRole('link', { name: 'Mint Cards' })).toHaveAttribute(
+      'href',
+      '/admin/invitation-cards?mint',
+    );
+  });
+
+  it('keeps Mint Cards disabled until a sheet count is given, shows the total, then sends the sheets', async () => {
+    const calls: CreateInvitationCardsMutationVariables[] = [];
+    mockGraphQLMutation<CreateInvitationCardsMutation, CreateInvitationCardsMutationVariables>(
+      'CreateInvitationCards',
+      (variables) => {
+        calls.push(variables);
+        return {
+          createInvitationCards: {
+            batchId: 'b3333333-0000-4000-8000-000000000003',
+            expiresAt: variables.expiresAt,
+            tokens: ['t1', 't2', 't3'],
+          },
+        };
+      },
+    );
+    render(<AdminCards batches={[]} minting />);
+
+    expect(mint()).toBeDisabled();
+    expect(
+      within(dialog()).getByRole('spinbutton', { name: /Number of Sheets/ }),
+    ).toHaveAccessibleDescription('A Letter sheet holds 9 cards.');
+    fireEvent.change(within(dialog()).getByRole('spinbutton', { name: /Number of Sheets/ }), {
+      target: { value: '3' },
+    });
+    expect(within(dialog()).getByText('27 cards')).toBeInTheDocument();
+    pickFirstOfFebruary();
+    expect(mint()).toBeEnabled();
+    fireEvent.click(mint());
+
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]).toEqual({ sheets: 3, expiresAt: '2027-02-02T12:00:00.000Z' });
+    expect(
+      await within(dialog()).findByText(/only copy of these cards and cannot be made again/),
+    ).toBeInTheDocument();
+    expect(within(dialog()).getByRole('button', { name: 'Download PDF' })).toBeEnabled();
+    expect(within(dialog()).queryByRole('img')).toBeNull();
+    expect(within(dialog()).queryByRole('button', { name: /Download Card/ })).toBeNull();
+  });
+
+  it('says a sheet count out of range while it is typed, before any submit, and clears it when it is back in range', () => {
+    const calls: CreateInvitationCardsMutationVariables[] = [];
+    mockGraphQLMutation<CreateInvitationCardsMutation, CreateInvitationCardsMutationVariables>(
+      'CreateInvitationCards',
+      (variables) => {
+        calls.push(variables);
+        throw new Error('the form must refuse this itself');
+      },
+    );
+    render(<AdminCards batches={[]} minting />);
+    const sheets = within(dialog()).getByRole('spinbutton', { name: /Number of Sheets/ });
+    const refusal = 'A batch is from 1 to 55 sheets';
+
+    expect(within(dialog()).queryByText(refusal)).not.toBeInTheDocument();
+    fireEvent.change(sheets, { target: { value: '56' } });
+    expect(within(dialog()).getByText(refusal)).toBeInTheDocument();
+    expect(sheets).toBeInvalid();
+    fireEvent.change(sheets, { target: { value: '55' } });
+    expect(within(dialog()).queryByText(refusal)).not.toBeInTheDocument();
+    fireEvent.change(sheets, { target: { value: '0' } });
+    expect(within(dialog()).getByText(refusal)).toBeInTheDocument();
+    fireEvent.change(sheets, { target: { value: '' } });
+    expect(within(dialog()).queryByText(refusal)).not.toBeInTheDocument();
+
+    // jsdom does not move the focus; the browser does, from its own report of the invalid field.
+    const report = vi.spyOn(sheets as HTMLInputElement, 'reportValidity');
+    fireEvent.change(sheets, { target: { value: '56' } });
+    pickFirstOfFebruary();
+    expect(mint()).toBeEnabled();
+    fireEvent.click(mint());
+    expect(calls).toHaveLength(0);
+    expect(report).toHaveBeenCalled();
+    expect(sheets).toHaveValue(56);
+  });
+
+  it('sends nothing for Revoke Batch until the question is confirmed, then revokes the batch', async () => {
+    const calls: RevokeInvitationCardBatchMutationVariables[] = [];
+    mockGraphQLMutation<
+      RevokeInvitationCardBatchMutation,
+      RevokeInvitationCardBatchMutationVariables
+    >('RevokeInvitationCardBatch', (variables) => {
+      calls.push(variables);
+      return { revokeInvitationCardBatch: [{ id: 'c1' }] };
+    });
+    render(
+      <StatusRegionProvider>
+        <AdminCards batches={BATCHES} />
+      </StatusRegionProvider>,
+    );
+
+    const open = screen.getByRole('button', { name: /^Revoke Batch b1111111/ });
+    expect(open).toHaveClass('btn--destructive');
+    fireEvent.click(open);
+    // Asking comes first: the open alone sends nothing.
+    expect(calls).toEqual([]);
+    expect(
+      within(screen.getByRole('dialog')).getByText(/minted 1 October 2026\?/),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/already accepted a card keep their access/)).toBeInTheDocument();
+    const confirm = within(screen.getByRole('dialog')).getByRole('button', {
+      name: 'Revoke Batch',
+    });
+    expect(confirm).toHaveClass('btn--destructive');
+    expect(calls).toEqual([]);
+    fireEvent.click(confirm);
+
+    await waitFor(() => expect(calls).toEqual([{ batchId: BATCH_ONE }]));
+  });
+
+  const sent: CreateInvitationCardsMutationVariables[] = [];
+  const mintTwo = async (printBacks = true, note?: string) => {
+    sent.length = 0;
+    mockGraphQLMutation<CreateInvitationCardsMutation, CreateInvitationCardsMutationVariables>(
+      'CreateInvitationCards',
+      (variables) => (
+        sent.push(variables),
+        {
+          createInvitationCards: {
+            batchId: 'b4444444-0000-4000-8000-000000000004',
+            expiresAt: variables.expiresAt,
+            tokens: ['ta', 'tb'],
+          },
+        }
+      ),
+    );
+    URL.createObjectURL = vi.fn(() => 'blob:x');
+    URL.revokeObjectURL = vi.fn();
+    // The save is an anchor press; jsdom would otherwise try to open the blob address.
+    const click = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(() => undefined);
+    onTestFinished(() => click.mockRestore());
+    render(<AdminCards batches={[]} minting />);
+    fireEvent.change(within(dialog()).getByRole('spinbutton', { name: /Number of Sheets/ }), {
+      target: { value: '1' },
+    });
+    pickFirstOfFebruary();
+    if (!printBacks) fireEvent.click(within(dialog()).getByRole('switch', { name: 'Print Backs' }));
+    if (note !== undefined) {
+      fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Note' }), {
+        target: { value: note },
+      });
+    }
+    fireEvent.click(mint());
+    await within(dialog()).findByRole('button', { name: 'Download PDF' });
+  };
+
+  it('sends the Note typed, trimmed, with the mint', async () => {
+    await mintTwo(true, '  For the autumn fair  ');
+    expect(sent[0]?.note).toBe('For the autumn fair');
+  });
+
+  it('sends no note when the Note is left blank', async () => {
+    await mintTwo(true, '   ');
+    expect(sent[0]?.note).toBeUndefined();
+  });
+
+  it('builds the batch PDF from one link per code when Download PDF is pressed', async () => {
+    await mintTwo();
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Download PDF' }));
+
+    await waitFor(() => expect(buildCardSheetsPdf).toHaveBeenCalled());
+    const input = vi.mocked(buildCardSheetsPdf).mock.calls[0][0];
+    expect(input.links).toEqual(['http://localhost:3000/i/ta', 'http://localhost:3000/i/tb']);
+    expect(input.batch).toBe('b4444444');
+    expect(input.expiresAt).toEqual(new Date('2027-02-02T12:00:00.000Z'));
+    await waitFor(() =>
+      expect(within(dialog()).getByRole('button', { name: 'Download Again' })).toBeEnabled(),
+    );
+  });
+
+  it('offers Print Backs on, and builds the PDF with backs', async () => {
+    await mintTwo();
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Download PDF' }));
+
+    await waitFor(() => expect(buildCardSheetsPdf).toHaveBeenCalled());
+    expect(vi.mocked(buildCardSheetsPdf).mock.calls[0][0].backs).toBe(true);
+  });
+
+  it('builds the PDF without backs when Print Backs is switched off', async () => {
+    await mintTwo(false);
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Download PDF' }));
+
+    await waitFor(() => expect(buildCardSheetsPdf).toHaveBeenCalled());
+    expect(vi.mocked(buildCardSheetsPdf).mock.calls[0][0].backs).toBe(false);
+  });
+
+  it('names the batch and the count after minting, and moves focus to that sentence', async () => {
+    await mintTwo();
+
+    const sentence = within(dialog()).getByText('Batch b4444444: 2 cards minted.');
+    expect(sentence).toHaveFocus();
+  });
+
+  it('says the file is saved once downloaded, offers Download Again, and keeps the object URL alive for a minute', async () => {
+    await mintTwo();
+    const timers = vi.spyOn(globalThis, 'setTimeout');
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Download PDF' }));
+
+    expect(await within(dialog()).findByText(/Saved as cards-b4444444\.pdf/)).toBeInTheDocument();
+    expect(
+      within(dialog()).queryByText(/only copy of these cards and cannot be made again/),
+    ).toBeNull();
+    expect(within(dialog()).getByRole('button', { name: 'Download Again' })).toBeInTheDocument();
+    expect(URL.revokeObjectURL).not.toHaveBeenCalled();
+    expect(timers.mock.calls.some(([, delay]) => delay === 60_000)).toBe(true);
+  });
+
+  it('asks before closing a minted batch whose PDF is not downloaded, and closes quietly after', async () => {
+    await mintTwo();
+
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Close' }));
+    expect(screen.getByText(/You haven't downloaded the PDF/)).toBeInTheDocument();
+    expect(screen.getByText(/revoke the batch from the list/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Keep Open' }));
+    expect(screen.queryByText(/You haven't downloaded the PDF/)).toBeNull();
+
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Download PDF' }));
+    await waitFor(() => expect(buildCardSheetsPdf).toHaveBeenCalled());
+    await waitFor(() =>
+      expect(within(dialog()).getByRole('button', { name: 'Download Again' })).toBeEnabled(),
+    );
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Close' }));
+    expect(screen.queryByText(/You haven't downloaded the PDF/)).toBeNull();
+  });
+});
+
+describe('Mint Cards default expiry', () => {
+  it('starts the expiry 90 days from today, and sends that day', async () => {
+    const calls: CreateInvitationCardsMutationVariables[] = [];
+    mockGraphQLMutation<CreateInvitationCardsMutation, CreateInvitationCardsMutationVariables>(
+      'CreateInvitationCards',
+      (variables) => {
+        calls.push(variables);
+        return {
+          createInvitationCards: {
+            batchId: 'b5555555-0000-4000-8000-000000000005',
+            expiresAt: variables.expiresAt,
+            tokens: ['t1'],
+          },
+        };
+      },
+    );
+    render(<AdminCards batches={[]} minting />);
+
+    // 30 October 2026 plus 90 days is 28 January 2027.
+    expect(within(dialog()).getByRole('button', { name: /Expires On/ })).toHaveTextContent(
+      /28 January 2027/,
+    );
+    fireEvent.change(within(dialog()).getByRole('spinbutton', { name: /Number of Sheets/ }), {
+      target: { value: '1' },
+    });
+    expect(mint()).toBeEnabled();
+    fireEvent.click(mint());
+
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(calls[0]).toEqual({ sheets: 1, expiresAt: '2027-01-29T12:00:00.000Z' });
+  });
+});
+
+const WORT = {
+  openHref: '/admin/users?user=u-wort' as const,
+  heading: { eyebrow: 'User', title: 'Wort Tester' },
+};
+
+describe('AdminArrivals', () => {
+  it('lists each arrival with its account, date and owned covens', () => {
+    render(
+      <AdminArrivals
+        arrivals={[
+          {
+            id: 'a1',
+            accountName: 'Wort Tester',
+            accountEmail: 'wort@example.test',
+            acceptedAt: new Date('2026-10-30T10:00:00Z'),
+            batchId: 'b1111111-0000-4000-8000-000000000001',
+            covens: ['Testwort Coven', 'Second Coven'],
+            account: WORT,
+          },
+          {
+            id: 'a2',
+            accountName: 'Fern Tester',
+            accountEmail: 'fern@example.test',
+            acceptedAt: new Date('2026-10-29T10:00:00Z'),
+            batchId: 'b1111111-0000-4000-8000-000000000001',
+            covens: [],
+            account: null,
+          },
+        ]}
+      />,
+    );
+
+    const [head, first, second] = screen.getAllByRole('row');
+    const headings = within(head).getAllByRole('columnheader');
+    expect(headings[0]).toHaveTextContent('Name');
+    expect(headings[1]).toHaveTextContent('Email');
+    expect(within(head).queryByRole('columnheader', { name: 'Account' })).toBeNull();
+    expect(within(head).getByText('Accepted On')).toBeInTheDocument();
+    expect(within(head).getByText('Covens Owned')).toBeInTheDocument();
+    const cells = within(first).getAllByRole('cell');
+    expect(within(cells[0]).getByRole('link', { name: 'Wort Tester' })).toBeInTheDocument();
+    expect(cells[1]).toHaveTextContent('wort@example.test');
+    expect(within(first).getByText('Testwort Coven, Second Coven')).toBeInTheDocument();
+    expect(within(second).getByText('None yet')).toBeInTheDocument();
+  });
+
+  it("opens the account's user modal from its name, and leaves a removed account as plain text", () => {
+    const opener: RouteModalOpener = { loading: undefined, open: vi.fn(), cancel: vi.fn() };
+    render(
+      <RouteModalContext.Provider value={opener}>
+        <AdminArrivals
+          arrivals={[
+            {
+              id: 'a1',
+              accountName: 'Wort Tester',
+              accountEmail: 'wort@example.test',
+              acceptedAt: new Date('2026-10-30T10:00:00Z'),
+              batchId: 'b1111111-0000-4000-8000-000000000001',
+              covens: [],
+              account: WORT,
+            },
+            {
+              id: 'a2',
+              accountName: 'Removed account',
+              accountEmail: '',
+              acceptedAt: new Date('2026-10-29T10:00:00Z'),
+              batchId: 'b1111111-0000-4000-8000-000000000001',
+              covens: [],
+              account: null,
+            },
+          ]}
+        />
+      </RouteModalContext.Provider>,
+    );
+
+    const link = screen.getByRole('link', { name: 'Wort Tester' });
+    expect(link).toHaveAttribute('href', WORT.openHref);
+    fireEvent.click(link);
+    expect(opener.open).toHaveBeenCalledExactlyOnceWith(WORT.openHref, WORT.heading, undefined);
+    expect(screen.getByText('Removed account')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Removed account' })).toBeNull();
+  });
+});
+
+// The Cards tab's filter. The shared rows assert the address it builds and which values count as a filter;
+// the rest proves each field writes the URL and the table shows what the URL holds.
+describe('AdminCards filter', () => {
+  const NONE = {
+    batch: '',
+    status: '' as const,
+    mintedFrom: '',
+    mintedTo: '',
+    expiresFrom: '',
+    expiresTo: '',
+  };
+  const FILTER = {
+    batch: 'b11',
+    status: 'live' as const,
+    mintedFrom: '2026-10-01',
+    mintedTo: '2026-10-31',
+    expiresFrom: '2026-11-01',
+    expiresTo: '2026-12-31',
+  };
+  const PATH = '/admin/invitation-cards';
+  const send = (batch: string, status: string, mf: string, mt: string, ef: string, et: string) =>
+    `batch=${batch}&status=${status}&mintedFrom=${mf}&mintedTo=${mt}&expiresFrom=${ef}&expiresTo=${et}`;
+
+  const SUBJECT: FilterFormSubject = {
+    label: 'Filter Invitation Cards',
+    path: PATH,
+    searchLabel: 'Batch',
+    push: router.push,
+    none: { list: <AdminCards batches={BATCHES} />, sends: send('', '', '', '', '', '') },
+    shown: {
+      list: <AdminCards batches={BATCHES} filter={FILTER} cursor={{ after: 'c25' }} />,
+      sends: send('b11', 'live', '2026-10-01', '2026-10-31', '2026-11-01', '2026-12-31'),
+    },
+    // The batch alone draws Clear; a part the drawer holds draws its Clear All instead, below.
+    alone: [
+      {
+        list: <AdminCards batches={[]} filter={{ ...NONE, batch: 'b11' }} />,
+        sends: send('b11', '', '', '', '', ''),
+      },
+    ],
+    searched: `${PATH}?batch=Two+words&status=live&mintedFrom=2026-10-01&mintedTo=2026-10-31&expiresFrom=2026-11-01&expiresTo=2026-12-31`,
+  };
+
+  const inFlight = (ui: ReactNode) => render(<Navigating push={router.push}>{ui}</Navigating>);
+  const openFilters = () => fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
+  const statusBox = () => screen.getByRole('combobox', { name: 'Status' });
+  const pickStatus = (name: string) => {
+    fireEvent.click(statusBox());
+    fireEvent.click(screen.getByRole('option', { name }));
+  };
+
+  // The drawer is the non-modal panel at the tablet width and up.
+  beforeEach(() => {
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: query.includes('min-width'),
+      media: query,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+    }));
+  });
+  afterEach(() => vi.unstubAllGlobals());
+
+  it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));
+
+  it.each([
+    [{ status: 'revoked' as const }, send('', 'revoked', '', '', '', '')],
+    [{ mintedFrom: '2026-10-01' }, send('', '', '2026-10-01', '', '', '')],
+    [{ mintedTo: '2026-10-31' }, send('', '', '', '2026-10-31', '', '')],
+    [{ expiresFrom: '2026-11-01' }, send('', '', '', '', '2026-11-01', '')],
+    [{ expiresTo: '2026-12-31' }, send('', '', '', '', '', '2026-12-31')],
+    [
+      { mintedFrom: '2026-10-01', mintedTo: '2026-10-31' },
+      send('', '', '2026-10-01', '2026-10-31', '', ''),
+    ],
+  ])(
+    'counts %o in Filters and draws Clear All to every batch in place of Clear',
+    async (part, sends) => {
+      inFlight(<AdminCards batches={[]} filter={{ ...NONE, ...part }} />);
+
+      expect(sent(filterForm('Filter Invitation Cards'))).toBe(sends);
+      expect(screen.getByRole('button', { name: /^Filters\D*1/ })).toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: 'Clear' })).not.toBeInTheDocument();
+      const [clearAll] = screen.getAllByRole('link', { name: 'Clear All' });
+      expect(clearAll).toHaveAttribute('href', PATH);
+      await act(async () => fireEvent.click(clearAll));
+      expect(router.push).toHaveBeenLastCalledWith(PATH);
+    },
+  );
+
+  it('holds a status picked in the drawer until it shuts, then applies it under the batch shown', async () => {
+    inFlight(
+      <AdminCards batches={BATCHES} filter={{ ...NONE, batch: 'b11' }} cursor={{ after: 'c25' }} />,
+    );
+
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Batch' }), {
+      target: { value: ' b22 ' },
+    });
+    openFilters();
+    pickStatus('Used Up');
+    expect(router.push).not.toHaveBeenCalled();
+    await act(async () => openFilters());
+
+    expect(router.push).toHaveBeenCalledExactlyOnceWith(`${PATH}?batch=b11&status=used-up`);
+  });
+
+  it('applies the batch typed and everything the drawer holds on Apply Filters, from the first page', async () => {
+    inFlight(<AdminCards batches={BATCHES} cursor={{ after: 'c25' }} />);
+
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Batch' }), {
+      target: { value: ' b22 ' },
+    });
+    openFilters();
+    pickStatus('Revoked');
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Apply Filters' }));
+    });
+
+    expect(router.push).toHaveBeenCalledExactlyOnceWith(`${PATH}?batch=b22&status=revoked`);
+  });
+
+  it.each([
+    ['Minted', 'mintedFrom', 'mintedTo'],
+    ['Expires', 'expiresFrom', 'expiresTo'],
+  ])(
+    'holds the range picked in %s until Apply Filters writes both ends to the URL',
+    async (label, from, to) => {
+      inFlight(<AdminCards batches={BATCHES} cursor={{ after: 'c25' }} />);
+
+      openFilters();
+      fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${label}`) }));
+      const calendar = screen.getByRole('dialog', { name: `Choose ${label} Days` });
+      fireEvent.click(within(calendar).getByRole('button', { name: / 3 October 2026/ }));
+      await act(async () => {
+        fireEvent.click(within(calendar).getByRole('button', { name: / 15 October 2026/ }));
+      });
+      expect(router.push).not.toHaveBeenCalled();
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Apply Filters' }));
+      });
+
+      expect(router.push).toHaveBeenCalledExactlyOnceWith(
+        `${PATH}?${from}=2026-10-03&${to}=2026-10-15`,
+      );
+    },
+  );
+
+  it('applies a range open at its end when the calendar shuts after the first day', async () => {
+    inFlight(<AdminCards batches={BATCHES} cursor={{ after: 'c25' }} />);
+
+    openFilters();
+    fireEvent.click(screen.getByRole('button', { name: /^Minted/ }));
+    const calendar = screen.getByRole('dialog', { name: 'Choose Minted Days' });
+    fireEvent.click(within(calendar).getByRole('button', { name: / 15 October 2026/ }));
+    fireEvent.keyDown(within(calendar).getAllByRole('grid')[0], { key: 'Escape' });
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Apply Filters' }));
+    });
+
+    expect(router.push).toHaveBeenCalledExactlyOnceWith(`${PATH}?mintedFrom=2026-10-15`);
+  });
+
+  it('shows the filter the URL holds in its fields and the rows sent for it', () => {
+    render(<AdminCards batches={[BATCHES[0]]} filter={FILTER} />);
+
+    expect(screen.getByRole('searchbox', { name: 'Batch' })).toHaveValue('b11');
+    // The status and each range count one apiece, a range with both its ends included.
+    expect(screen.getByRole('button', { name: /^Filters\D*3/ })).toBeInTheDocument();
+    openFilters();
+    expect(statusBox()).toHaveTextContent('Live');
+    expect(screen.getByRole('button', { name: /^Minted/ })).toHaveAccessibleName(
+      /1 Oct 2026.*31 Oct 2026/,
+    );
+    expect(screen.getByRole('button', { name: /^Expires/ })).toHaveAccessibleName(
+      /1 Nov 2026.*31 Dec 2026/,
+    );
+    expect(screen.getAllByRole('row')).toHaveLength(2);
+  });
+
+  it('names the filter in use when nothing matches, and Clear leads to every batch', () => {
+    render(<AdminCards batches={[]} filter={{ ...NONE, batch: 'zz' }} />);
+
+    expect(screen.getByText(/zz/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Clear' })).toHaveAttribute('href', PATH);
+  });
+});
+
+describe('AdminArrivals filter', () => {
+  const PATH = '/admin/card-sign-ups';
+  const SUBJECT: FilterFormSubject = {
+    label: 'Filter Card Sign-Ups',
+    path: PATH,
+    searchLabel: 'Name, Email or Batch',
+    push: router.push,
+    none: { list: <AdminArrivals arrivals={[]} />, sends: 'query=' },
+    shown: {
+      list: <AdminArrivals arrivals={[]} filter={{ query: 'wort' }} />,
+      sends: 'query=wort',
+    },
+    alone: [
+      {
+        list: <AdminArrivals arrivals={[]} filter={{ query: 'b11' }} />,
+        sends: 'query=b11',
+      },
+    ],
+    searched: `${PATH}?query=Two+words`,
+  };
+
+  it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));
+
+  it('is one search box, saying in its tip what it matches', () => {
+    render(<AdminArrivals arrivals={[]} filter={{ query: 'wort' }} />);
+
+    expect(screen.getAllByRole('searchbox')).toHaveLength(1);
+    const box = screen.getByRole('searchbox', { name: 'Name, Email or Batch' });
+    expect(box).toHaveValue('wort');
+    expect(box).toHaveAccessibleDescription(/batch/i);
+  });
+
+  const askedCsv = async (filter: { query: string }) => {
+    const asked: unknown[] = [];
+    mockGraphQLQuery('CardArrivalsCsv', (variables) => {
+      asked.push(variables);
+      return { cardArrivalsCsv: 'name,email\n' };
+    });
+    // The anchor's click is stubbed: jsdom would navigate to the object URL, and every later request in the file would fail on the page's origin.
+    const click = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(() => undefined);
+    onTestFinished(() => click.mockRestore());
+    URL.createObjectURL = vi.fn(() => 'blob:csv');
+    URL.revokeObjectURL = vi.fn();
+
+    render(<ArrivalsActions filter={filter} />);
+    fireEvent.click(screen.getByRole('button', { name: /Download CSV/ }));
+    await waitFor(() => expect(asked).toHaveLength(1));
+    return asked[0];
+  };
+
+  it('sends the filter shown to the CSV download', async () => {
+    expect(await askedCsv({ query: 'wort' })).toEqual({ query: 'wort' });
+  });
+
+  it('sends no variables when the filter is blank, as on the unfiltered tab', async () => {
+    expect(await askedCsv({ query: '' })).toEqual({});
+  });
+});

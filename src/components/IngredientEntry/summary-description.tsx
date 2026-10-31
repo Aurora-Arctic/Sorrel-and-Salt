@@ -1,6 +1,7 @@
 'use client';
 
 import { useId, useLayoutEffect, useRef, useState, type ReactElement } from 'react';
+import { ChevronIcon } from '../IconTip/icons';
 
 // The details modal's description: the page's paragraph cut to its first six lines, Show More
 // opening the rest in place. The cut is the script's, so without JavaScript the whole text shows
@@ -93,23 +94,7 @@ export default function SummaryDescription({ text }: { text: string }): ReactEle
           onClick={toggle}
         >
           {open ? 'Show Less' : 'Show More'}
-          <svg
-            className="ingredient-summary__more-chevron"
-            viewBox="0 0 16 16"
-            width="1em"
-            height="1em"
-            aria-hidden="true"
-            focusable="false"
-          >
-            <path
-              d="M3.5 6l4.5 4.5L12.5 6"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <ChevronIcon className="ingredient-summary__more-chevron" textSized />
         </button>
       )}
     </div>

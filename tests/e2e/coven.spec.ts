@@ -114,7 +114,7 @@ test("a refused deletion in the only owner's exit keeps Cancel inside the dialog
   await page.goto(`/coven/${COVEN_SLUG}`);
   await page.getByRole('main').getByRole('button', { name: 'Leave Coven', exact: true }).click();
   const dialog = page.getByRole('dialog');
-  await dialog.getByRole('radio', { name: /^Delete It/ }).check();
+  await dialog.getByRole('radio', { name: /^Delete Coven/ }).check();
   const remove = dialog.getByRole('button', { name: 'Delete Coven', exact: true });
   const cancel = dialog.getByRole('button', { name: 'Cancel', exact: true });
 

@@ -4,7 +4,7 @@ import { StockJarButton } from '../StockDialog';
 import type { JarLineProps } from './types';
 import './index.scss';
 
-// A jar you can press beside its name and words: the recipe page's In Coven Inventory and the
+// A jar you can press beside its name and words: the recipe page's In the Cupboard and the
 // completion preview draw their lines through it, so the shake and the name's growth are one thing
 // (claude-docs/components/jar-line.md).
 

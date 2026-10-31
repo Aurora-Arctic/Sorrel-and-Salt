@@ -165,7 +165,7 @@ export const States: Story = {
               name="name"
               label="Name"
               action={
-                <button type="button" className="btn btn--small btn--quiet">
+                <button type="button" className="btn btn--quiet btn--small">
                   Copy From Ingredient
                 </button>
               }

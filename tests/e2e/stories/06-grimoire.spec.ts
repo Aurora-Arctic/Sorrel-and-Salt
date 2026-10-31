@@ -49,7 +49,7 @@ function stepList(page: Page): Locator {
 
 /** The grimoire's list of spells, named after its page. */
 function grimoireList(page: Page): Locator {
-  return page.getByRole('list', { name: 'Grimoire' });
+  return page.getByRole('list', { name: /^(Spells|Drafts)$/ });
 }
 
 /**
@@ -225,16 +225,22 @@ test(
     await signInAgainAs(page, coven.users.B);
     await openBuilder(page, coven.slug);
     await page.getByRole('textbox', { name: 'Title' }).fill('Fixture Working');
+    const said = (text: string) => page.getByRole('status').filter({ hasText: text });
+    const addToJar = page.getByRole('combobox', { name: 'Add to Jar' });
+    // An added ingredient is said with its place, and the focus stays in the box for the next one.
     await addIngredientStep(page, 'Rosemary (Herb)');
+    await expect(said('Added Rosemary (Herb), at position 1 of 1.')).toBeAttached();
+    await expect(addToJar).toBeFocused();
     await addIngredientStep(page, 'Mugwort (Herb)');
+    await expect(said('Added Mugwort (Herb), at position 2 of 2.')).toBeAttached();
+    await expect(addToJar).toBeFocused();
     const steps = stepList(page).getByRole('listitem');
     await expect(steps.first()).toContainText('Rosemary');
     // Keyboard alone: pick the handle up, move it one place, put it down.
-    const handle = page.getByRole('button', { name: 'Move Mugwort (Herb)' });
+    const handle = page.getByRole('button', { name: 'Move Mugwort (Herb)', exact: true });
     // Each key waits for what the last one said, as a person hears it. dnd-kit
     // starts listening for the moving keys in a timer it sets at the lift, which
     // can run after the lift is said, so the Up also waits one timer behind it.
-    const said = (text: string) => page.getByRole('status').filter({ hasText: text });
     await handle.focus();
     await page.keyboard.press('Space');
     await expect(said('Picked up Mugwort (Herb), at position 2 of 2.')).toBeAttached();
@@ -265,6 +271,27 @@ test(
       { name: 'Mugwort', position: 1 },
       { name: 'Rosemary', position: 2 },
     ]);
+
+    // A new instruction is said with its place, and the focus goes into its field.
+    await page.getByRole('button', { name: 'Add Instruction' }).click();
+    await expect(said('Added New Instruction, at position 3 of 3.')).toBeAttached();
+    await expect(steps.nth(2).getByRole('textbox', { name: 'Instruction' })).toBeFocused();
+    // A removal is said with the place it left, and the focus goes to the handle now in that
+    // place; with the last step gone, to Add Instruction.
+    await steps.nth(2).getByRole('button', { name: 'Close New Instruction' }).click();
+    await page.getByRole('button', { name: 'Remove New Instruction' }).click();
+    await expect(said('Removed New Instruction, from position 3 of 3.')).toBeAttached();
+    await expect(
+      page.getByRole('button', { name: 'Move Rosemary (Herb)', exact: true }),
+    ).toBeFocused();
+    await page.getByRole('button', { name: 'Remove Mugwort (Herb)' }).click();
+    await expect(said('Removed Mugwort (Herb), from position 1 of 2.')).toBeAttached();
+    await expect(
+      page.getByRole('button', { name: 'Move Rosemary (Herb)', exact: true }),
+    ).toBeFocused();
+    await page.getByRole('button', { name: 'Remove Rosemary (Herb)' }).click();
+    await expect(said('Removed Rosemary (Herb), from position 1 of 1.')).toBeAttached();
+    await expect(page.getByRole('button', { name: 'Add Instruction' })).toBeFocused();
   },
 );
 
@@ -292,7 +319,7 @@ test(
     await expect(row('Extra')).toBeVisible();
     // Prosperity is still intended and nothing carries it: its chip says so in its tip.
     await expect(panel.getByRole('button', { name: 'Prosperity' })).toHaveAccessibleDescription(
-      'Assigned to this spell, and nothing in the jar carries it',
+      'Assigned to this spell, and nothing in the jar carries it.',
     );
     // The step just added is open: its pencil reads Close, and Remove is hidden until it is shut.
     await page.getByRole('button', { name: /Close Mugwort/ }).click();
@@ -363,10 +390,10 @@ test(
     await expect(look.getByRole('button', { name: 'Out' })).toHaveCount(1);
     const emptyStep = look.getByRole('listitem').filter({ hasText: 'Fixture Emptywort' });
     await expect(emptyStep.getByRole('button', { name: 'Out' })).toBeVisible();
-    // The recipe page says the same in its In Coven Inventory.
+    // The recipe page says the same in its In the Cupboard panel.
     await look.getByRole('link', { name: 'See Full Recipe' }).click();
     await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}/grimoire/${spellId}$`));
-    const inventory = page.getByRole('region', { name: 'In Coven Inventory' });
+    const inventory = page.getByRole('region', { name: 'In the Cupboard' });
     await expect(inventory.getByRole('button', { name: 'Out' })).toHaveCount(1);
     const emptyLine = inventory.getByRole('listitem').filter({ hasText: 'Fixture Emptywort' });
     await expect(emptyLine.getByRole('button', { name: 'Out' })).toBeVisible();
@@ -386,7 +413,7 @@ test('a member saves a spell as a draft', { tag: '@story-55' }, async ({ page })
   const draft = page.url();
   // It lists as a draft.
   await page.goto(`/coven/${coven.slug}/grimoire/drafts`);
-  const card = grimoireList(page).getByRole('listitem', { name: /Fixture Working/ });
+  const card = grimoireList(page).getByRole('article', { name: /Fixture Working/ });
   await expect(card.getByText('Draft')).toBeVisible();
   // Marking it complete is explicit, and final: the button goes and nothing replaces it.
   await page.goto(draft);
@@ -427,7 +454,7 @@ test(
     await page.goto(path);
     await expect(grimoireList(page).getByRole('listitem')).toHaveCount(2);
     // Its author is told it is theirs alone, in a word, not a colour.
-    const item = (name: string) => grimoireList(page).getByRole('listitem', { name });
+    const item = (name: string) => grimoireList(page).getByRole('article', { name });
     await expect(item('Private Working').getByText('Private', { exact: true })).toBeVisible();
     await expect(item('Shared Working').getByText('Private', { exact: true })).toHaveCount(0);
     for (const reader of [B, C]) {
@@ -468,11 +495,11 @@ test(
     };
     const listPath = `/coven/${coven.slug}/grimoire`;
     const recipePath = `${listPath}/${gone}`;
-    // The three dots in the page's header hold Delete Spell (claude-docs/components/spell-recipe.md).
-    const more = page.getByRole('button', { name: 'More for Doomed Working', exact: true });
-    const openDelete = async () => {
-      await more.click();
-      await page.getByRole('menuitem', { name: /^Delete Spell/ }).click();
+    // Delete is in the page's More menu, and its dialog is titled Delete Spell.
+    const dots = page.getByRole('button', { name: 'More for Doomed Working', exact: true });
+    const askToDelete = async () => {
+      await dots.click();
+      await page.getByRole('menuitem', { name: 'Delete', exact: true }).click();
     };
     const question = page.getByRole('dialog', { name: 'Delete Spell', exact: true });
 
@@ -483,18 +510,18 @@ test(
     await expect(page.getByRole('heading', { level: 1, name: 'Doomed Working' })).toBeVisible();
 
     await test.step('the Delete asks first, naming the spell, and Cancel changes nothing', async () => {
-      await openDelete();
+      await askToDelete();
       await expect(question).toContainText('Doomed Working');
       await assertNoAccessibilityViolations(page);
       await question.getByRole('button', { name: 'Cancel', exact: true }).click();
 
       await expect(question).toHaveCount(0);
-      await expect(more).toBeFocused();
+      await expect(dots).toBeFocused();
       expect(await deletedAt('spells', gone)).toBeNull();
     });
 
     await test.step('confirmed, the page leaves for the grimoire, which says so, with the focus on its heading', async () => {
-      await openDelete();
+      await askToDelete();
       await question.getByRole('button', { name: 'Delete', exact: true }).click();
 
       await expect(page).toHaveURL(/\/grimoire\?deleted=/);
@@ -522,6 +549,13 @@ test(
       await page.goto(`${listPath}/${kept}`);
       // Why it could be offered: the viewer reads the page the member could delete from.
       await expect(page.getByRole('heading', { level: 1, name: 'Kept Working' })).toBeVisible();
+      // Print stands alone because nothing else is offered: a Delete would put both in the dots' menu.
+      await expect(
+        page.getByRole('button', { name: 'Print Kept Working', exact: true }),
+      ).toBeVisible();
+      await expect(
+        page.getByRole('button', { name: 'More for Kept Working', exact: true }),
+      ).toHaveCount(0);
       await expect(page.getByRole('main').getByRole('button', { name: /^Delete/ })).toHaveCount(0);
 
       const answer = await graphqlFromPage(
@@ -557,7 +591,7 @@ test(
     await grimoireList(page)
       .getByRole('button', { name: 'More for Card Doomed Working', exact: true })
       .click();
-    await page.getByRole('menuitem', { name: /^Delete Spell/ }).click();
+    await page.getByRole('menuitem', { name: 'Delete', exact: true }).click();
     const question = page.getByRole('dialog', { name: 'Delete Spell', exact: true });
     await expect(question).toContainText('Card Doomed Working');
     await assertNoAccessibilityViolations(page);
@@ -666,7 +700,7 @@ test(
     const dialog = page.getByRole('dialog', { name: 'Record a Working' });
     await dialog.getByRole('combobox', { name: 'Participants' }).fill('Fixture A');
     await page.getByRole('option', { name: 'Fixture A' }).click();
-    await dialog.getByRole('button', { name: 'Save as Draft' }).click();
+    await dialog.getByRole('button', { name: 'Save Working' }).click();
     // Save keeps the draft and closes the dialog. The Workings list is M13.8's, so the row is read from the database.
     await expect(dialog).toBeHidden();
     await expect(recordButton).toBeFocused();
@@ -759,7 +793,7 @@ test(
     // The preview says what will be taken before anything is.
     await expect(dialog.getByRole('list', { name: 'Deductions' })).toContainText('2 g');
     await assertNoAccessibilityViolations(page);
-    await dialog.getByRole('button', { name: 'Confirm' }).click();
+    await dialog.getByRole('button', { name: 'Mark Complete' }).click();
     await expect(dialog.getByText('Done')).toBeVisible();
     await page.goto(`/coven/${coven.slug}/ingredients`);
     await expect(page.getByRole('listitem').filter({ hasText: 'Herb' }).first()).toContainText(
@@ -838,7 +872,7 @@ test(
     }
     await expect(workings.getByRole('button', { name: 'Complete' })).toHaveCount(2);
     await expect(workings.getByRole('listitem').filter({ hasText: 'Waiting rite' })).toContainText(
-      /Completing does not affect inventory for \d+ items?/,
+      /Completing takes nothing from the jars for \d+ ingredients?\./,
     );
     const first = workings.getByRole('listitem').filter({ hasText: 'First brewing' });
     // The recorder is not listed again among the people who took part.
@@ -849,12 +883,12 @@ test(
     await expect(alone).toContainText('Recorded by Fixture A');
     await expect(alone).not.toContainText('With');
     await expect(
-      first.getByRole('list', { name: 'Deductions' }).getByRole('listitem'),
+      first.getByRole('list', { name: 'Taken From the Jars' }).getByRole('listitem'),
     ).toContainText('Rosemary');
     await assertNoAccessibilityViolations(page);
     await page.goto(`/coven/${coven.slug}/grimoire`);
-    const card = grimoireList(page).getByRole('listitem', { name: /Fixture Working/ });
-    await expect(card.getByText('Made 2 Times')).toBeVisible();
+    const card = grimoireList(page).getByRole('article', { name: /Fixture Working/ });
+    await expect(card.getByText('Made 2 times')).toBeVisible();
     // The pencil is on the workings B may change, their own two and the draft that names them, and not on A's others; it saves a changed note in place.
     await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
     await expect(workings.getByRole('button', { name: /^Edit Working / })).toHaveCount(3);
@@ -872,17 +906,19 @@ test(
     await waitingEdit.getByRole('button', { name: 'Delete', exact: true }).click();
     await expect(waitingEdit).toHaveCount(0);
     await expect(workings.getByText('Waiting rite')).toHaveCount(0);
-    // Deleting B's own working takes it out of the list and the count.
+    // A row carries no bin: deleting B's own working goes through its Edit dialog, and takes it out
+    // of the list and the count.
     await page.goto(`/coven/${coven.slug}/grimoire/${spellId}`);
-    await first.getByRole('button', { name: /^Delete Working/ }).click();
-    await page
-      .getByRole('dialog', { name: 'Delete Working' })
-      .getByRole('button', { name: 'Delete' })
-      .click();
+    await expect(workings.getByRole('button', { name: /^Delete Working/ })).toHaveCount(0);
+    await first.getByRole('button', { name: /^Edit Working / }).click();
+    const firstEdit = page.getByRole('dialog', { name: /^Edit (a )?Working$/ });
+    await firstEdit.getByRole('button', { name: /^Delete Working/ }).click();
+    await firstEdit.getByRole('button', { name: 'Delete', exact: true }).click();
+    await expect(firstEdit).toHaveCount(0);
     await expect(workings.getByText('First brewing')).toHaveCount(0);
     await expect(workings.getByRole('listitem')).toHaveCount(2);
     await page.goto(`/coven/${coven.slug}/grimoire`);
-    await expect(card.getByText('Made 1 Time')).toBeVisible();
+    await expect(card.getByText('Made once')).toBeVisible();
   },
 );
 
@@ -913,7 +949,7 @@ test(
     await expect(steps).toHaveCount(2);
     // A saved instruction step is shut too, and reads as its text; its pencil opens the field.
     await expect(steps.first()).toContainText('Light the candle');
-    await steps.first().getByRole('button', { name: 'Edit step 1' }).click();
+    await steps.first().getByRole('button', { name: 'Edit Light the candle' }).click();
     await expect(steps.first().getByRole('textbox', { name: 'Instruction' })).toHaveValue(
       'Light the candle',
     );
@@ -960,7 +996,7 @@ test(
     // Offline, the save fails after its retries and says so; back online, Retry saves it.
     await reopened.getByRole('textbox', { name: 'Intent' }).fill('To see clearly, offline');
     await page.context().setOffline(true);
-    await expect(reopened.getByText(/Couldn.t save/)).toBeVisible({ timeout: 45_000 });
+    await expect(reopened.getByText(/Could not save/)).toBeVisible({ timeout: 45_000 });
     await page.context().setOffline(false);
     await reopened.getByRole('button', { name: 'Retry' }).click();
     await expect(reopened.getByRole('status').filter({ hasText: /^Draft saved/ })).toBeVisible();
@@ -1127,12 +1163,12 @@ test(
     await signInAgainAs(page, coven.users.B);
     await page.goto(`/coven/${coven.slug}/grimoire`);
     const items = grimoireList(page).getByRole('listitem');
-    const item = (name: string) => grimoireList(page).getByRole('listitem', { name });
+    const item = (name: string) => grimoireList(page).getByRole('article', { name });
     await expect(items).toHaveCount(3);
 
     // The moon phase it is worked under.
     let panel = await openFilters(page);
-    await panel.getByRole('combobox', { name: 'Moon Phase' }).fill('full');
+    await panel.getByRole('combobox', { name: 'Moon Phases' }).fill('full');
     await page.getByRole('option', { name: /Full Moon/ }).click();
     await applyFilters(page, panel);
     await expect(items).toHaveCount(2);
@@ -1148,10 +1184,10 @@ test(
     // Who made it: a member's own, whatever its phase.
     await page.goto(`/coven/${coven.slug}/grimoire`);
     panel = await openFilters(page);
-    await panel.getByRole('combobox', { name: 'Coven Member' }).fill('Fixture B');
+    await panel.getByRole('combobox', { name: 'Coven Members' }).fill('Fixture B');
     await page.getByRole('option', { name: /^Fixture B/ }).click();
     // The box takes several members, so its menu stays open on the rest until it is shut.
-    await panel.getByRole('button', { name: 'Show Coven Member coven members' }).click();
+    await panel.getByRole('button', { name: 'Show Coven Members suggestions' }).click();
     await applyFilters(page, panel);
     await expect(items).toHaveCount(2);
     await expect(item('Private Full Moon Working')).toBeVisible();
@@ -1174,17 +1210,22 @@ test(
     const recipe = `/coven/${coven.slug}/grimoire/${spell}`;
 
     // A viewer may not create a spell, so the recipe page offers no Duplicate.
+    const dots = page.getByRole('button', { name: 'More for Fixture Working', exact: true });
     await signInAgainAs(page, coven.users.C);
     await page.goto(recipe);
-    await page.getByRole('button', { name: 'More for Fixture Working', exact: true }).click();
-    await expect(page.getByRole('menuitem', { name: 'Duplicate', exact: true })).toHaveCount(0);
-    await page.keyboard.press('Escape');
+    await expect(page.getByRole('heading', { level: 1, name: 'Fixture Working' })).toBeVisible();
+    // The head's controls are drawn (Print stands alone), and a menu holding Duplicate would draw the dots.
+    await expect(
+      page.getByRole('button', { name: 'Print Fixture Working', exact: true }),
+    ).toBeVisible();
+    await expect(dots).toHaveCount(0);
+    await expect(page.getByRole('main').getByRole('button', { name: /^Duplicate/ })).toHaveCount(0);
 
     // A member duplicates it and lands in the copy's builder.
     await signInAgainAs(page, coven.users.B);
     await page.goto(recipe);
-    await page.getByRole('button', { name: 'More for Fixture Working', exact: true }).click();
-    await page.getByRole('menuitem', { name: 'Duplicate', exact: true }).click();
+    await dots.click();
+    await page.getByRole('menuitem', { name: 'Duplicate' }).click();
     const builder = page.getByRole('dialog', { name: 'Edit Spell, Fixture Working (Copy)' });
     await expect(builder).toBeVisible();
     await expect(page).toHaveURL(/\/grimoire\/drafts\?edit=[0-9a-f-]{36}$/);

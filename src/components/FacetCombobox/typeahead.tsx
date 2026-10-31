@@ -83,7 +83,6 @@ export function FacetTypeahead({
       keepOpen
       highlightFirst
       empty="No Matches"
-      noun={label.toLowerCase()}
       suggestions={{ options, pending: false }}
       onRemoveLast={() => onChange(values.slice(0, -1))}
       entries={

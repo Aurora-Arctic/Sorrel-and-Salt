@@ -178,12 +178,13 @@ const Skeleton = ({
   menu = false,
   entry = false,
   head,
+  density,
   count,
 }: SkeletonProps): ReactElement => {
   const many = count ?? DEFAULT_COUNT[shape];
   const listed = shape === 'table' || shape === 'cards';
   return (
-    <div className={`skeleton skeleton--${shape}`}>
+    <div className={`skeleton skeleton--${shape}`} data-density={density}>
       <output className="visually-hidden">Loading</output>
       <div className="skeleton__shapes" aria-hidden="true">
         {listed && title && (
@@ -257,7 +258,8 @@ const Skeleton = ({
             <AccountPanels count={many} />
           </div>
         )}
-        {shape === 'line' && <span className="skeleton__line" />}
+        {shape === 'line' &&
+          Array.from({ length: many }, (_, line) => <span key={line} className="skeleton__line" />)}
         {shape === 'page' && (
           // The page's own grid when it has a menu (`.page-with-nav`), its
           // children in the page's order: head, menu, then the sections, so

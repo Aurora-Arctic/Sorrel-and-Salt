@@ -7,7 +7,7 @@ import './index.stories.scss';
 // Render-only, for reviewing the drawings: each phase in the list's order with its
 // name beneath, the maria on its lit part. The toolbar's theme control shows each theme.
 const meta = {
-  title: 'Surfaces / Moon Phase Icon',
+  title: 'Grimoire / Moon Phase Icon',
 } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
@@ -29,4 +29,4 @@ const Row = (): ReactElement => (
 );
 
 // Every listed phase in a row, New Moon to Waning Moon.
-export const AllPhases: Story = { render: () => <Row /> };
+export const Default: Story = { render: () => <Row /> };

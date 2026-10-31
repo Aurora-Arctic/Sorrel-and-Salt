@@ -13,6 +13,7 @@ const SwapPanel = ({
   filter,
   shape,
   count,
+  density,
   loadingMinHeight,
   children,
 }: SwapPanelProps): ReactElement => {
@@ -25,6 +26,7 @@ const SwapPanel = ({
       style={loadingMinHeight ? { minHeight: loadingMinHeight } : undefined}
     >
       <TabPanelLoading filter={filter} shape={shape} count={count} />
+      <TabPanelLoading filter={filter} shape={shape} count={count} density={density} />
     </div>
   ) : (
     <div key="content" className={className} data-arrived={swapped || undefined}>

@@ -10,6 +10,8 @@ export type NavigationTarget = {
   filter?: boolean;
   /** With `title`: the page has a tab row between its heading and its action. */
   tabs?: boolean;
+  /** A `cards` wait draws the compact cards the list opens at, unless the viewer stored Regular. */
+  density?: 'compact';
   /**
    * The frame the destination sits in, so a `main` wait is drawn in it: `wide`
    * (the page column), `narrow` (a forms column) or `with-nav` (the narrow column

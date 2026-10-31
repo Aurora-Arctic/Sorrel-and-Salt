@@ -17,3 +17,83 @@ export function inUtc(at: Date): string {
   });
   return `${day}, ${time} UTC`;
 }
+
+/** An instant's UTC day alone (`28 August 2026`): for a date that is midnight UTC, where the time says nothing. */
+export function dayInUtc(at: Date): string {
+  return at.toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
+}
+
+/** An instant's UTC day as `2026-10-30`: for a date that is midnight UTC, where the time says nothing. */
+export function isoDayInUtc(at: Date): string {
+  return at.toISOString().slice(0, 10);
+}
+
+/**
+ * An instant to the minute as `2026-10-30 2:05 pm` in a time zone (the viewer's own when none is given),
+ * built from parts so it never depends on a locale's separators.
+ */
+export function minuteInZone(at: Date, timeZone?: string): string {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: 'numeric',
+    minute: '2-digit',
+    hourCycle: 'h12',
+    timeZone,
+  }).formatToParts(at);
+  const part = (type: string): string => parts.find((p) => p.type === type)?.value ?? '';
+  const period = part('dayPeriod').toLowerCase();
+  return `${part('year')}-${part('month')}-${part('day')} ${part('hour')}:${part('minute')} ${period}`;
+}
+
+/**
+ * An instant to the minute as `28 August 2026, 12:00 am` in a time zone (the viewer's own when none is given), with no zone suffix: the long form
+ * beside `minuteInZone`, for invitation expiries and the like.
+ */
+export function longMinuteInZone(at: Date, timeZone?: string): string {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hourCycle: 'h12',
+    timeZone,
+  }).formatToParts(at);
+  const part = (type: string): string => parts.find((p) => p.type === type)?.value ?? '';
+  const period = part('dayPeriod').toLowerCase();
+  return `${part('day')} ${part('month')} ${part('year')}, ${part('hour')}:${part('minute')} ${period}`;
+}
+
+/** An instant to the minute as `28 August 2026, 12:00 am` in UTC: what the server and hydration print. */
+export function longMinuteInUtc(at: Date): string {
+  return longMinuteInZone(at, 'UTC');
+}
+
+/** An instant to the minute as `2026-10-30 2:05 pm` in UTC: what the server and hydration print. */
+export function minuteInUtc(at: Date): string {
+  return minuteInZone(at, 'UTC');
+}
+
+/** The instant a card chosen to last through `day` (`2027-01-29`) stops working: the end of that day in UTC-12, the last zone on Earth, so it never stops before its printed day is over anywhere. */
+export function expiryOfDay(day: string): Date {
+  const end = new Date(`${day}T12:00:00.000Z`);
+  end.setUTCDate(end.getUTCDate() + 1);
+  return end;
+}
+
+/** The chosen day's midnight UTC, read back from a stored expiry: format it in UTC to print the day. */
+export function printedDateOf(expiresAt: Date): Date {
+  return new Date(expiresAt.getTime() - 36 * 60 * 60 * 1000);
+}
+
+/** The day `expiryOfDay` was given, as `2027-01-29`, read back from the stored instant. */
+export function printedDayOf(expiresAt: Date): string {
+  return isoDayInUtc(printedDateOf(expiresAt));
+}

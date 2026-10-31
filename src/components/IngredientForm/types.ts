@@ -39,10 +39,16 @@ interface IngredientFormCallbacks {
   onSaved?: (ingredient: SavedIngredient, next: AfterSave) => void;
   /**
    * Called once, when an autosave has created a new ingredient, with the saved row: the page moves
-   * its address from the add to the edit. Not called by Save, Close or Cancel, whose callbacks say
+   * its address from the add to the edit. Not called by Save or Close, whose callbacks say
    * what the page does next.
    */
   onCreated?: (ingredient: SavedIngredient) => void;
+  /**
+   * Called when an autosave has written to an ingredient that already existed, with the saved row:
+   * the page brings its heading and address up to the saved name. Not called for the autosave that
+   * creates one (`onCreated`), nor by Save or Close.
+   */
+  onAutosaved?: (ingredient: SavedIngredient) => void;
   /**
    * Reload, after another save changed the ingredient: the form is replaced with what the server
    * holds. Left out, the page reloads.
@@ -50,8 +56,6 @@ interface IngredientFormCallbacks {
   onReload?: () => void;
   /** Called once the entry given has been deleted. */
   onDeleted?: () => void;
-  /** Cancel, offered beside the saves when given: the page the form sits in closes it. */
-  onCancel?: () => void;
   /** Where a near match the duplicate warning names links: a coven's ingredient page, or the admin's compendium modal. */
   duplicateHref: (match: Duplicate) => string;
   /**
@@ -801,4 +805,10 @@ export interface RemoveQuestionProps {
   afterRemove: () => void;
   /** Stops asking, the row kept. */
   onKeep: () => void;
+}
+
+/** What `ReadFailure` takes: the failed read's error, and what Try Again does. */
+export interface ReadFailureProps {
+  error: unknown;
+  onRetry: () => void;
 }

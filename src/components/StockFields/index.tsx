@@ -25,7 +25,7 @@ export default function StockFields<V extends FieldValues = StockFormValues>({
         labelSuffix={form}
         disabled={disabled}
         type="number"
-        placeholder="Add amount"
+        placeholder="Add an amount"
         autoComplete="off"
       />
       <SelectField<V>
@@ -34,7 +34,7 @@ export default function StockFields<V extends FieldValues = StockFormValues>({
         labelSuffix={form}
         disabled={disabled}
         hint="Changing the unit keeps the numbers as typed. It does not convert them."
-        placeholder="Choose unit"
+        placeholder="Choose a unit"
         options={UNIT_OPTIONS}
       />
       <TextField<V>
@@ -44,7 +44,7 @@ export default function StockFields<V extends FieldValues = StockFormValues>({
         disabled={disabled}
         type="number"
         hint="The jar is badged Low Stock at this amount or below. Zero turns the badge off."
-        placeholder="Add level"
+        placeholder="Add a level"
         autoComplete="off"
       />
     </>

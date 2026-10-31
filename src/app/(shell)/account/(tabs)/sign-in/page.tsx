@@ -22,7 +22,7 @@ import { getMe } from '@/modules/identity';
 import type { SignInPageProps } from './types';
 
 export const metadata: Metadata = {
-  title: 'Sign-In — Sorrel & Salt',
+  title: 'Sign-In',
 };
 
 // The account's ways in, one section each: sign-in methods, password, two-factor and passkeys. A failed provider link returns

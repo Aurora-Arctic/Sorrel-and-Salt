@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import ForgotPasswordForm from '../../components/ForgotPasswordForm';
+import PageHeader from '../../components/PageHeader';
 
 export const metadata: Metadata = {
-  title: 'Forgot Password — Sorrel & Salt',
+  title: 'Forgot Password',
   // A second guard beside robots.txt, which leaves this path out of its allow list: a crawler that
   // fetches the page anyway is told not to list it.
   robots: { index: false },
@@ -14,12 +15,13 @@ export default function ForgotPasswordPage() {
   return (
     <main className="page-frame page-frame--narrow">
       <div className="panel">
-        <div className="header">
-          <h1 className="auth-title">Forgot Your Password?</h1>
-          <p className="lede">
-            Enter your email address and we&apos;ll send you a link to choose a new password.
-          </p>
-        </div>
+        <PageHeader
+          headingClassName="auth-title"
+          title="Forgot Your Password?"
+          lede={
+            <>Enter your email address and we&apos;ll send you a link to choose a new password.</>
+          }
+        />
         <ForgotPasswordForm />
         <p className="forgot-password-form__back">
           <Link href="/sign-in">Back to Sign In</Link>

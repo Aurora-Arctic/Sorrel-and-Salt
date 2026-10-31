@@ -45,7 +45,7 @@ page, per CLAUDE.md ("`/coven/[slug]` returns 404 to a non-member").
 
 ## Stories and tests
 
-`index.stories.tsx` — `States`, with a control that chooses Default (not found, inside the app shell as a signed-in visitor sees it), Not Found Signed Out, Something Went Wrong or Not Authorized (the 403 page, [NotAuthorized](not-authorized.md), in the shell of an account with no coven to write in, so no Add Ingredient); Default, Not Found Signed Out and Not Authorized also draw the layout's corner Backdrop; the toolbar viewport and theme menus show the latter at 375px
+`index.stories.tsx` — `States`, with a control that chooses Default (not found, inside the app shell as a signed-in visitor sees it), Not Found Signed Out or Something Went Wrong; the 403 page has its own story, under [NotAuthorized](not-authorized.md). Default and Not Found Signed Out also draw the layout's corner Backdrop; the toolbar viewport and theme menus show each state at 375px
 in each theme. `tests/components/ErrorPage` covers the children and the
 reference; `tests/app/error.test.tsx` the three screens;
 `tests/e2e/error-pages.spec.ts` the 404 against the built server, with axe.

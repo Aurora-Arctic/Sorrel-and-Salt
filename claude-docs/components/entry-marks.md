@@ -8,16 +8,17 @@ both draw them through this one component, so the two cannot drift. The entry pa
 
 `EntryMarksProps` (`types.ts`):
 
-| Prop                               | What it is                                                                                                                                                                |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `kind`                             | `own`, `cupboard` or `compendium`: the three kinds below                                                                                                                  |
-| `annotated`                        | The cupboard row overrides a field of the compendium's. Only a `cupboard` entry shows it                                                                                  |
-| `retired`                          | The curators retired the entry (M12.24)                                                                                                                                   |
-| `inCoven`                          | Read inside a coven: a `compendium` entry then shows Compendium. Left out on the public compendium                                                                        |
-| `provenance`                       | Compendium and Annotated, the two marks saying where a held entry came from. On by default; the ingredient card turns it off                                              |
-| `recency`                          | New or Updated, drawn by `RecencyMark` before every badge (below, "New and Updated")                                                                                      |
-| `safety`                           | The safety badge. On by default; the ingredient card turns it off in the row under the formal name and draws it in its corner                                             |
-| `toxic`, `safetyNotes`, `variants` | The ingredient's own flag and notes, and the forms the caller shows; any one set shows Toxic, or else Caution, drawn by `SafetyMark` ([`safety-note.md`](safety-note.md)) |
+| Prop                               | What it is                                                                                                                                                                                         |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `kind`                             | `own`, `cupboard` or `compendium`: the three kinds below                                                                                                                                           |
+| `annotated`                        | The cupboard row overrides a field of the compendium's. Only a `cupboard` entry shows it                                                                                                           |
+| `retired`                          | The curators retired the entry (M12.24)                                                                                                                                                            |
+| `inCoven`                          | Read inside a coven: a `compendium` entry then shows Compendium. Left out on the public compendium                                                                                                 |
+| `provenance`                       | Compendium and Annotated, the two marks saying where a held entry came from. On by default; the ingredient card turns it off                                                                       |
+| `recency`                          | New or Updated, drawn by `RecencyMark` before every badge (below, "New and Updated")                                                                                                               |
+| `safety`                           | The safety badge. On by default; the ingredient card turns it off in the row under the formal name and draws it in its corner                                                                      |
+| `reviewedAt`                       | The curators' review mark, shown to everyone: an ISO date for a Reviewed By Curator badge, `null` for Needs Review, left out for no badge. Never drawn on a coven's own entry; only the date shows |
+| `toxic`, `safetyNotes`, `variants` | The ingredient's own flag and notes, and the forms the caller shows; any one set shows Toxic, or else Caution, drawn by `SafetyMark` ([`safety-note.md`](safety-note.md))                          |
 
 ## The three kinds
 

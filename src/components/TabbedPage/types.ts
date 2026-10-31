@@ -11,6 +11,8 @@ export interface PageTab {
   shape?: 'table' | 'cards' | 'sections';
   /** With the `sections` shape: how many panels the skeleton draws, to match the tab's own. */
   sections?: number;
+  /** With `cards`: the tab's list opens compact, so its loading skeleton does too. */
+  density?: 'compact';
 }
 
 export interface TabbedPageProps {
@@ -54,6 +56,8 @@ export interface TabPanelLoadingProps {
   shape?: 'table' | 'cards' | 'sections';
   /** With `sections`: how many panels it draws. */
   count?: number;
+  /** The density of a `cards` skeleton: the pressed tab's `density`. */
+  density?: 'compact';
 }
 
 export interface TabPanelProps {

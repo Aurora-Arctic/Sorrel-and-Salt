@@ -2,6 +2,7 @@ import { readdirSync } from 'node:fs';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { adminInvitationMessage } from '@/emails/admin-invitation';
 import { covenInvitationMessage } from '@/emails/coven-invitation';
+import { emailChangeNoticeMessage } from '@/emails/email-change-notice';
 import { verifyEmailMessage } from '@/emails/verify-email';
 import type { Message } from '@/lib/types';
 import { fromRoot } from '../../support/paths';
@@ -15,7 +16,8 @@ const ORIGIN = 'https://staging.sorrelandsalt.com';
 const MAILS: {
   template: string;
   name: string;
-  link: string;
+  /** The mail's action address; absent for a mail that deliberately carries none. */
+  link?: string;
   message: () => Promise<Message>;
 }[] = [
   {
@@ -66,6 +68,18 @@ const MAILS: {
         inviterName: 'Fixture Owner',
       }),
   },
+  {
+    template: 'email-change-notice',
+    name: 'emailChangeNoticeMessage',
+    message: () =>
+      emailChangeNoticeMessage({
+        to: 'someone@layout.test',
+        url: ORIGIN,
+        stage: 'requested',
+        newDomain: 'new-layout.test',
+        at: new Date('2026-10-30T12:00:00Z'),
+      }),
+  },
 ];
 
 // Each mail is rendered once, here, and every test below reads that result:
@@ -94,7 +108,7 @@ function sentences(html: string): string[] {
   );
 }
 
-describe.each(MAILS)('$name', ({ name, link }) => {
+describe.each(MAILS)('$name', ({ name }) => {
   it('has a text part that says everything the HTML does', () => {
     const { html, text } = rendered.get(name)!;
     const said = collapse(text);
@@ -107,7 +121,13 @@ describe.each(MAILS)('$name', ({ name, link }) => {
     expect(expected.length).toBeGreaterThan(2);
     for (const sentence of expected) expect(said).toContain(sentence);
   });
+});
 
+const LINKED = MAILS.filter(
+  (mail): mail is typeof mail & { link: string } => mail.link !== undefined,
+);
+
+describe.each(LINKED)('$name, link', ({ name, link }) => {
   it('writes the address out as text, not only behind a button', () => {
     const { html } = rendered.get(name)!;
 
@@ -118,6 +138,17 @@ describe.each(MAILS)('$name', ({ name, link }) => {
     const { text } = rendered.get(name)!;
 
     expect(text.match(/https?:\/\/\S+/)?.[0]).toBe(link);
+  });
+});
+
+// The notice goes to the address an account is leaving, so it carries no link but the wordmark (claude-docs/email.md).
+describe('a mail with no action', () => {
+  it('links only the wordmark and prints no address in the text part', () => {
+    const { html, text } = rendered.get('emailChangeNoticeMessage')!;
+    const hrefs = [...html.matchAll(/<a\b[^>]*\shref="([^"]*)"/g)].map(([, href]) => href);
+
+    expect(hrefs).toEqual([ORIGIN]);
+    expect(text).not.toMatch(/https?:\/\//);
   });
 });
 

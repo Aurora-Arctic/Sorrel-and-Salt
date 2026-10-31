@@ -4,71 +4,131 @@
 ingredient with the quantity and unit if it has them, and its text. A step is an instruction,
 an ingredient, or both, and the row draws whichever it holds.
 
-It is presentational: it takes props and works nothing out. Three places draw steps with it:
+It is presentational: it takes props and works nothing out. Two places draw steps with it:
 
-- the spell builder (M13.3), which hands it editing controls;
-- the recipe page (MB.6), which hands it none and so reads the spell;
-- a working's deduction lines (M13.8).
+- the spell builder (M13.3), which hands it editing controls and asks for the card;
+- the recipe page (MB.6), which hands it none and so reads the spell.
 
-It renders an `<li>`, so the caller wraps it in an `<ol>` it names.
+A working's deduction lines (RecordWorking) do not use it. It renders an `<li>`, so the caller
+wraps it in an `<ol>` it names.
 
 ## Props
 
-| Prop                                                                 | What it is                                                                                                                                                                                                                                         |
-| -------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `position`                                                           | Where the step stands, counting from 1                                                                                                                                                                                                             |
-| `name`                                                               | The ingredient and form as the step reads them, text or markup (the recipe body adds its eye). Null draws an instruction-only step                                                                                                                 |
-| `icon`                                                               | The form's group icon; null draws the generic spoon                                                                                                                                                                                                |
-| `quantity`, `unit`                                                   | The amount as text, drawn as one phrase ("2 tsp") with the quantity's trailing zeros dropped ("1.000" is "1", "2.500" "2.5"; the owner, 2026-10-28); a unit with no quantity reads "— tsp", the dash muted (`.step-row__dash`); none draws nothing |
-| `body`                                                               | The instruction as text                                                                                                                                                                                                                            |
-| `marks`, `look`, `note`                                              | Beside the name, and on a line below the row: the builder's safety mark, the Quick Look eye (`look`, after the badges) and the safety note                                                                                                         |
-| `handle`, `actions`                                                  | Controls before and after the row: the builder's move handle and Remove                                                                                                                                                                            |
-| `quantityField`, `unitField`, `bodyField`                            | A control drawn in place of the plain text it stands for                                                                                                                                                                                           |
-| `open`, `fieldsId`, `summary`, `badge`, `edit`, `aside`, `formField` | The collapsible card: whether it is open, the id of the fields it reveals, the closed summary, a badge at the right of the first line, the pencil, a slot after the name, and a Form control                                                       |
-| `rowRef`, `className`, `style`                                       | For a caller that makes the row sortable                                                                                                                                                                                                           |
+| Prop                                                                            | What it is                                                                                                                                                                                                                  |
+| ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `position`                                                                      | Where the step stands, counting from 1                                                                                                                                                                                      |
+| `name`                                                                          | The ingredient and form as the step reads them, text or markup (the recipe body adds its eye). Null draws an instruction-only step                                                                                          |
+| `icon`                                                                          | The form's group icon; null draws the generic spoon                                                                                                                                                                         |
+| `quantity`, `unit`                                                              | The amount as text, drawn as one phrase ("2 tsp") with the quantity's trailing zeros dropped ("1.000" is "1", "2.500" "2.5"); a unit with no quantity reads "— tsp", the dash muted (`.step-row__dash`); none draws nothing |
+| `body`                                                                          | The instruction as text                                                                                                                                                                                                     |
+| `marks`, `note`                                                                 | Beside the name, and on a line below the row: the safety mark and the safety note                                                                                                                                           |
+| `rowRef`, `className`, `style`                                                  | For a caller that makes the row sortable                                                                                                                                                                                    |
+| `open`                                                                          | Asks for the collapsible card, open or closed (below). Left out, the row is the plain line                                                                                                                                  |
+| `fieldsId`, `summary`, `badge`, `look`, `edit`, `onToggle`                      | The card's: the id of the fields it reveals, the closed summary, the badge (One-Off) beside the marks, the Quick Look eye, the pencil, and a click on its face                                                              |
+| `handle`, `actions`                                                             | The card's controls: the move handle before the position, and the buttons after `edit` (Remove)                                                                                                                             |
+| `nameField`, `formField`, `quantityField`, `unitField`, `bodyField`, `errorRef` | The card's open fields, each in place of the plain text it stands for, and the node the fields' error is drawn in                                                                                                           |
 
-An instruction-only step (`name` null) never draws an amount, `marks` or `note`, whatever it is given.
+An instruction-only step (`name` null) never draws an amount, `marks` or `note`, whatever it
+is given. A row without `open` draws none of the card's props.
 
 ## Markup
 
-Inside the `<li class="step-row">`, in order: `handle`, `step-row__position`, `step-row__name`
-(icon and name), `step-row__marks` (the `marks` slot; empty, it is `display: none`),
-`step-row__fields` (Quantity and Unit together) or `step-row__amount` (the plain phrase),
-`step-row__field` (a control in place of the text) or `step-row__body` (the plain text),
-`actions`, `step-row__note`. `StepRow`'s base style is a wrapping flex line, which is
-all the recipe page needs. The builder lays the same markup out as a card on a grid
-(`step-row--card`, below).
+The plain row, inside `<li class="step-row">`, in order: `step-row__position`, `step-row__name`
+(icon and name), `step-row__marks` (empty, it is `display: none`), `step-row__amount`,
+`step-row__body`, `step-row__note`. Its style is a wrapping flex line, which is all the recipe
+page needs.
+
+The card adds `step-row--closed` or `step-row--open` (an ingredient step) or, for an
+instruction-only step, `step-row--folded` while closed. An ingredient card holds the handle,
+position, name, `step-row__summary` (closed only), `step-row__marks` (the badge, then the marks),
+`step-row__controls` (eye, pencil, Remove) and, open, `step-row__open`: the inputs
+(`step-row__name-field`, `__form`, `__quantity`, `__unit`, `__instruction`), the error node and
+the note. An instruction card holds the handle, position, `step-row__text` (closed) or
+`step-row__field` (open), and the controls.
 
 ## The card
 
-A caller that edits adds `step-row--card` (and `step-row--instruction` for an instruction-only step), as the spell builder does. The card follows the ingredient form's variant card: a `$hairline` border (it was the muted ink `$text-muted`; the second design review, 2026-10-28, finding 3, made the card quieter than the fields in it, which keep their stronger edge), `radius('surface')`, `$surface-card`, the same padding. `handle`, position, icon and name, the amount fields and Remove stand on one grid row, level along the bottoms of their fields. Beneath, from the name's column: the marks, the instruction field, the note. The amount fields are 7rem and 8rem (the Quantity is 7rem so its "Amount" placeholder, 60px in the real font, shows whole beside the spin buttons: 60 + 24 padding + 2 border + about 15 for the arrows is 101px; it was 6rem, 96px, and clipped, 2026-10-28). Remove is the variant card's × (`step-row__remove`, an icon button; the caller gives it its accessible name). In a closed or open ingredient row the handle, position, pencil, Remove and marks centre on the first line of the name (a paragraph's 1.65 line), not on the whole row, so a name that wraps, or a summary that stands beneath it on a narrow list, leaves them on the name's line. They sit `$step-ink-drop` (0.05rem, 0.8px) below that line's centre, because a name's lettering sits that far below the middle of its line (measured on the ink, not the boxes: the icons' ink centres are within 0.5px of the name's). An instruction-only card has the same solid border and ground as the other cards (it was a dashed hairline on the page's ground until the owner asked for the same, 2026-10-28). Closed (`step-row--folded`), it shows the handle, position, the instruction text itself (one line under an ellipsis, so the row is the height of a closed ingredient row; a muted "Write the step" when empty), a pencil and Remove. The position stands in a box the height of the text's first line, down the same `space(2)` the text's padding takes, closed or open, so it does not move when the textarea takes the text's place (a shared baseline did: the textarea's text sits lower than the closed text). The handle, pencil and Remove sit at the middle of that first line, not at the row's top or middle (a long instruction wraps beneath them). Open, the textarea takes the text's place; its visible label is hidden but it keeps its accessible name. A new instruction step opens at once with focus in its textarea. The handle's drawn grip is 8 by 16 px; a `::before` widens its hit area to 24 by 44 px without changing the drawing (second design review).
+The builder adds `step-row--card` (and `step-row--instruction` for an instruction-only step).
+The card takes the ingredient form's variant card look: a `$hairline` border (quieter than the
+fields inside it, which keep their 3:1 edge), `radius('surface')`, `$surface-card` and the same
+padding. Remove is the variant card's × (`step-row__remove`); the caller gives it its accessible
+name.
 
-**The Instruction field** starts two lines high and grows as lines are typed (`field-sizing: content` inside `@supports`, past Baseline widely available: without it the box stays two lines and scrolls inside). In an open ingredient row the safety note is the compact `SafetyNote` ([`safety-note.md`](safety-note.md)).
+**Closed and open.** Closed, an ingredient card is one line: handle, position, icon and name,
+then the badge and marks, then the controls (`step-row__controls`, `space(1)` apart, always
+three slots wide and right-aligned, so every row's badges end at the same x and the name, cut by
+an ellipsis, takes the rest). Beneath the name, in its column, a muted summary line: the
+amount, then " · " and the instruction, the amount never shrinking and the instruction cut by an
+ellipsis. Open, the card adds the fields: a one-off's Name on a line of its own, then Form,
+Quantity and Unit on one line where they fit, then the Instruction on a full-width line, then
+the safety note. Lines of fields stand `space(4)` apart and fields on one line `space(2)`. A
+field's error (the Unit's) is drawn across the whole row of inputs (`errorRef`, `errorInto`).
 
-**The safety note** in an open ingredient row is the compact `SafetyNote` ([`safety-note.md`](safety-note.md)).
+The handle, position, marks, pencil and Remove centre on the name's first line (a paragraph's
+1.65 line) rather than on the whole row, `$step-ink-drop` (0.05rem) below its centre, where the
+name's lettering sits.
 
-**The opened fields.** A one-off's Name (required, `nameField`) is the first, a full-width line of its own at every width; then Form (a one-off's), Quantity and Unit stand on one line where they fit; the Instruction is always a full-width line of its own beneath them, at every width. The lines of fields stand `space(4)` apart, the gap between fields in the ingredient form's variant sections, and fields on one line `space(2)` (the owner's call, 2026-10-29: the Instruction was too close under Quantity and Unit at `space(2)`). A one-off has no line beneath its fields: "Used in this spell only; not kept in your cupboard." is the tip of its One-Off badge, `OneOffBadge` (`one-off-badge.tsx`), a button named One-Off in an `IconTip` with the sentence as its description, reached by hover, focus or tap; the recipe page draws the same badge in its marks, so the two say the same thing (the owner, 2026-10-29). The `aside` prop remains for other rows; the spell builder passes none. The fields sit from the top of their row, and a field's error (the Unit's) is drawn across the whole row of inputs (`errorRef`, `errorInto`) rather than wrapped inside its narrow column (second design review). A name wraps with `overflow-wrap: break-word`, so a word breaks only when longer than the line.
+**An instruction-only card** has the same border and ground. Closed, it shows the handle,
+position, the instruction on one line under an ellipsis (a muted "Add an instruction" when
+empty), the pencil and Remove. Open, the textarea takes the text's place; its label is visually
+hidden and keeps its accessible name. The position stands in a box the height of the text's
+first line, closed or open, so it does not move when the textarea replaces the text.
 
-**One-Off colour.** The One-Off badge takes the muted tint (`badge--retired`, the palette Retired, Draft, Private and Low Stock share: `$chalk-muted` in dark, `$ink-muted` in light), no longer Local's accent, set in `OneOffBadge`, so the builder and the recipe page draw the same (the owner's call, 2026-10-29).
+**Toggling.** The caller (`SpellSteps`, `src/components/SpellBuilder/steps/index.tsx`) holds
+which row is open: one at a time across both kinds of step, a new step opens, and a row with a
+unit error stays open. A click on a closed card's face opens it, and a click on an open card's
+position, name or summary closes it (`onToggle`, a mouse shortcut). Clicks on a button, input,
+textarea, select, link or combobox, and anywhere in the open fields, do not toggle. The pencil
+is the one disclosure button: "Edit <name>" while closed, the up chevron "Close <name>" while
+open (`step-row__edit--close`), with `aria-expanded` and `aria-controls` throughout. Remove shows
+only while the row is closed.
 
-**The Quick Look eye.** The spell builder puts a small Quick Look eye (`QuickLookButton size="small"`, 1rem in a 24px box) in `look`, after the badges and before Edit, on an ingredient step with a coven to look in; none on a one-off or an instruction-only step (the owner's call, 2026-10-29). A click on it does not toggle the row.
+**The Instruction field** starts two lines high and grows as lines are typed
+(`field-sizing: content` inside `@supports`; without it the box stays two lines and scrolls).
 
-**One-Off colour.** The One-Off badge takes the muted tint (`badge--retired`, the palette Retired, Draft, Private and Low Stock share: `$chalk-muted` in dark, `$ink-muted` in light), no longer Local's accent; the recipe page draws the same (the owner's call, 2026-10-29).
+**The safety note** in an open ingredient row is the compact `SafetyNote`
+([`safety-note.md`](safety-note.md)). The row's safety badge, Toxic or Caution, is drawn open or
+closed; an open row adds the note beneath it.
 
-**Badge size.** The badges in `step-row__marks` (Caution, Toxic, One-Off) take the `small` badge size, the compact ingredient card's: 12px text, 24px least height, 5px sides (the owner's call, second design review, 2026-10-28). The default badge was 13px text at about 24.2px.
+**The One-Off badge** (`OneOffBadge`, `one-off-badge.tsx`) is a button named One-Off in an
+`IconTip` whose description is "Used in this spell only; not kept in your cupboard.", reached by
+hover, focus or tap. It takes the muted tint (`badge--muted`), and the recipe page draws the
+same badge in its marks. A badge is not a `.btn`, so `.step-row__one-off` takes the shared
+`focus-ring` itself.
 
-**Open and closed.** With `open` given, the card is collapsible: closed, it shows the handle, position, icon, name, the `badge` and marks together at the right of the first line, then the eye (`look`), the pencil and Remove in one tight group (`step-row__controls`, `space(1)` apart; the owner's call, 2026-10-29. The group is always three slots wide (eye, Edit or Close, Remove) and right-aligned, whichever controls are drawn, so every row's badges end at the same x and a missing control leaves its slot empty; the name takes the rest and is cut by an ellipsis) (the owner's call, 2026-10-28; the badge is in `step-row__marks`, never in the name's line, so it cannot wrap onto a line of its own; in a narrow list the two stack and keep the right edge), `summary` (one muted line beneath the name, in the name's column, drawn as a closed CollapsibleSection draws its summary: caption size, weight 300, `$text-muted`, one line under an ellipsis; the amount, then " · " and the instruction, the instruction left out when blank; the amount never shrinks (`step-row__line-amount`) and an over-long instruction is cut by an ellipsis (`step-row__line-body`); the owner's call, 2026-10-29), the supply `aside`, the pencil (`edit`, which carries `aria-expanded` and `aria-controls` for `fieldsId`) and Remove. Open, it adds the fields (Form, Quantity, Unit, the instruction, the note). The caller holds which row is open, across both kinds of step: one at a time, a new step opens, and a row with a unit error is forced open. An open row closes when a click or tap lands outside it, or the focus leaves it (Tab, for example); a click inside a listbox a field in it opened counts as inside. A newly added step stays open while the focus is in Add to Jar, and closes on the next click or focus outside both the box and the row. A click on a closed ingredient card's plain face opens it, and on an open card's header text (position, name, summary) closes it (`onToggle`, a mouse shortcut: the pencil stays the keyboard and screen-reader toggle, so the `li` gets no role or tab stop). Clicks on a button, input, textarea, select, link or combobox, and anywhere in the open fields, do not toggle. The closed ingredient card shows a pointer cursor; instruction-only cards are unaffected. The pencil is the one disclosure button: closed it is the pencil (named "Edit <name>"), open the same button shows the Combobox's chevron turned up (`step-row__edit--close`, in `$text-primary`, named "Close <name>"), with `aria-expanded` on it throughout and the focus staying on it. Remove stays last in the group and shows only while the row is closed, so a row being edited is never deleted by a stray press. This supersedes the owner's earlier call of 2026-10-28 for a separate pencil and Close chevron: the second design review found two buttons doing one job. An instruction-only step opens and closes the same way (the owner's call, 2026-10-29): a click on its closed text, or its pencil ("Edit step N"), opens it; open, the pencil is the Close chevron ("Close step N") at the right edge, which it reaches because Remove is hidden and Remove ("Remove step N") is hidden; an open row closes from its number or the Close button, or by the outside-click rule. A closed row keeps its values (`shouldUnregister` stays false). The caller does this (`SpellSteps`, in `src/components/SpellBuilder/steps/index.tsx`), not StepRow. Without `open` the card is always open, as before.
+**The Quick Look eye** (`QuickLookButton size="small"`) sits in `look`, after the badges and
+before the pencil, on an ingredient step with a coven to look in; a one-off or an
+instruction-only step has none. A click on it does not toggle the row.
 
-The list holding the cards is a size container (`spell-steps`, declared in this file on `.spell-steps__list`): at `$narrow-column` (28rem) or narrower the amount drops to a second line under the name and the × stays at the end of the first. The recipe page does not ask for the card and draws the bare flex line; it needs no change, and reads as before.
+**Badge size.** The badges in `step-row__marks` (Caution, Toxic, One-Off) take the `small`
+badge size: 12px text, 24px least height.
+
+**The narrow list.** The builder's list is a size container (`spell-steps`, declared on
+`.spell-steps__list` in SpellBuilder's stylesheet). At `$narrow-column` (28rem) or narrower, a
+card's badges and marks take their own line under the name, so the name, the eye, the pencil
+and Remove always fit the first line; the opened fields stack (Form whole, Quantity and Unit half
+each, Instruction whole); and a closed instruction shows two lines instead of one. The recipe
+page does not ask for the card and is unaffected.
+
+## Styling
+
+`src/components/StepRow/index.scss`. Tokens: `$hairline`, `$surface-card`, `$text-muted`,
+`radius('surface')`, `space()`, `type-size('body')`, `$narrow-column` and `$step-ink-drop`. One local value:
+`$step-line` (the name's line, `type-size('body') * 1.65`). The move handle's
+own style (`.spell-step__handle`, its grip drawn 8 by 16 px with a `::before` that widens the hit
+area to 24 by 44 px) is in SpellBuilder's stylesheet, which owns the handle.
+
+## Stories
+
+`src/components/StepRow/index.stories.tsx`, titled "Grimoire / Step Row": `States`, a grid of the
+plain row (Instruction Only, Ingredient Only, Ingredient With Instruction, One-Off Without Amount,
+Toxic, Toxic, Open with its safety note, and Caution, Open, whose notes draw the Caution badge) and the card (Folded, Unfolded and Editing). The
+spell builder's stories draw the rows in their list ([`spell-builder.md`](spell-builder.md)).
 
 ## Testing
 
-`tests/components/StepRow/index.test.tsx`: what each kind of step draws, and that a control
-replaces its plain text. The builder's controls are tested with the builder
-([`spell-builder.md`](spell-builder.md), "Steps").
-
-**Spacing under the name, and the narrow list (owner, 2026-10-29).** The summary line and, open, the fields stand `space(3)` below the name (it was `space(2)`, the name's own padding). At the list's narrow width a closed or open card keeps its six-column template, the name column `minmax(6rem, 1fr)`. The narrow rule that moves the amount beneath the name now applies only to a card with no open state: it matched closed and open cards too, and being the more specific it replaced their template with four columns, so the marks and pencil had no area and overlapped, and the name, given the leftover width, wrapped a letter a line.
-
-## The card
-
-A step is drawn as a card in the manner of the ingredient form's variant card: the muted-ink edge, the surface radius and ground, and the same padding. One row holds the handle, the step's number, the form's icon and name, the amount and Remove. They are aligned along the bottoms of their fields, so the name sits on the line of the boxes and not of their labels. Whatever else the step has stands beneath, in the name's column and at its width: first the marks, then the instruction, then the safety note. The marks are words as well as colour, so no state is carried by colour alone.
+`tests/components/StepRow/index.test.tsx`: what each kind of step draws, the amount phrase, and
+the card's closed and open faces. The builder's controls are tested with the builder
+([`spell-builder.md`](spell-builder.md), "Steps"); the narrow layout and the handle's hit area in
+`tests/e2e/spell-step-row-phone.spec.ts`; the outside-click rules in
+`tests/e2e/step-row-stays-open.spec.ts`.

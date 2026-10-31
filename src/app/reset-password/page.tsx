@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
 import ResetPasswordForm from '../../components/ResetPasswordForm';
+import PageHeader from '../../components/PageHeader';
 import type { ResetPasswordPageProps } from './types';
 
 export const metadata: Metadata = {
-  title: 'Choose a New Password — Sorrel & Salt',
+  title: 'Choose a New Password',
   // A second guard beside robots.txt, which leaves this path out of its allow list: a crawler that
   // fetches the page anyway is told not to list it.
   robots: { index: false },
@@ -20,12 +21,13 @@ export default async function ResetPasswordPage({ searchParams }: ResetPasswordP
   return (
     <main className="page-frame page-frame--narrow">
       <div className="panel">
-        <div className="header">
-          <h1 className="auth-title">Choose a New Password</h1>
-          <p className="lede">
-            Your new password signs out every device signed in to your account.
-          </p>
-        </div>
+        <PageHeader
+          headingClassName="auth-title"
+          title="Choose a New Password"
+          lede={
+            <>Your new password signs out every device signed in to your account.</>
+          }
+        />
         <ResetPasswordForm token={usable} />
       </div>
     </main>

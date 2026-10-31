@@ -104,4 +104,6 @@ export interface InvitationFixture {
   expired?: boolean;
   revoked?: boolean;
   accepted?: boolean;
+  /** A card: bound to no address, coven or site role, in a batch. */
+  card?: boolean;
 }

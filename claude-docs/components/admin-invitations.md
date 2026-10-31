@@ -73,7 +73,7 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   "Revoke Invitation": "Revoke the invitation to <address>? Its link will say
   it was withdrawn." Once revoked, the page's status region says "The
   invitation to <address> is revoked."; a refusal is said in a callout under
-  Revoke, which keeps the focus ([`click-feedback.md`](click-feedback.md)). A locked control is `UserList/locked-control.tsx`'s `LockedControl`:
+  Revoke, which keeps the focus ([`click-feedback.md`](click-feedback.md)). The row's Revoke, live or locked, is `btn btn--quiet btn--small`; the red is the confirm's own. A locked control is `UserList/locked-control.tsx`'s `LockedControl`:
   `aria-disabled` with the reason in a tip and said again as an alert on a
   click. Each brings its own rules (`UserList/controls.scss`), so the section
   stands on its own in the workshop without the list's stylesheet (MB.115).
@@ -104,8 +104,8 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   this component's state, set by the form before it closes, so the notice
   outlasts `?invite` without the address riding in the URL; opening the
   form again clears it. No link is ever shown: the mutation answers none.
-- **No invitation waiting is a sentence**: "No admin invitations are
-  waiting." Under a filter it names the filters in use, as the user list's
+- **No invitation waiting is a sentence**: "There are no admin
+  invitations yet." Under a filter it names the filters in use, as the user list's
   and the compendium's do, through the one wording `noMatchText`
   (`src/lib/text.ts`): "No invitations match “fern” and Expires in 24 Hrs.
   Change or clear the filter to see more."
@@ -113,8 +113,8 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   [`StackTable`](data-table.md), which gives each cell its heading as its
   card label and writes the table's roles out so it can stack into cards at
   phone width. Revoke is a `'foot'` action, across the card's foot.
-- **The expiry** is `inUtc` (`src/lib/utc.ts`), in a `<time>`: a date and a
-  time, since a link lasts seven days to the minute.
+- **The expiry** is [`LocalTime`](local-time.md) with `long` (`28 August 2026, 12:00 am`), in the
+  viewer's own zone: a date and a time, since a link lasts seven days to the minute.
 
 ## Styling
 

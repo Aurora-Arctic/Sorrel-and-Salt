@@ -1,5 +1,6 @@
 import { createElement, type ReactElement } from 'react';
 import { SHAPES } from '../JarShelf/shapes';
+import type { ChevronIconProps } from './types';
 
 // The pencil every Edit control shows, in the control's own ink and hidden from assistive technology, as the control around it names it.
 
@@ -40,6 +41,41 @@ export function PlusIcon(): ReactElement {
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
       <path
         d="M8 3v10M3 8h10"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** A cross: clear this, or no. Smaller than `CloseIcon`'s, to sit inside a field or a table cell. */
+export function CrossIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** A chevron pointing down: this opens a list or a panel below it. */
+export function ChevronIcon({
+  className = 'chevron-icon',
+  textSized = false,
+}: ChevronIconProps): ReactElement {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 16 16"
+      width={textSized ? '1em' : undefined}
+      height={textSized ? '1em' : undefined}
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path
+        d="M3.5 6l4.5 4.5L12.5 6"
         fill="none"
         stroke="currentColor"
         strokeWidth="1.5"
@@ -149,22 +185,6 @@ export function DownloadIcon(): ReactElement {
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
       <path
         d="M8 2v8M4.5 7 8 10.5 11.5 7M2.5 13.5h11"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-/** A printer: send what is shown to paper; the backup codes wear it. */
-export function PrintIcon(): ReactElement {
-  return (
-    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
-      <path
-        d="M4.5 6V2.5h7V6M4.5 11.5h-2v-5h11v5h-2M4.5 9.5h7v4h-7z"
         fill="none"
         stroke="currentColor"
         strokeWidth="1.5"
@@ -305,7 +325,7 @@ export function CauldronIcon(): ReactElement {
   );
 }
 
-/** The jar shelf's round flask with a tick on its bulb: Complete a Working. The flask is the shelf's own drawing, read from `SHAPES.flask` (its lid parts, and its body left open at the rim, as the shelf draws it); the tick is the icon's. */
+/** The jar shelf's round flask with a tick on its bulb: Complete Working. The flask is the shelf's own drawing, read from `SHAPES.flask` (its lid parts, and its body left open at the rim, as the shelf draws it); the tick is the icon's. */
 export function CompleteIcon(): ReactElement {
   const { lid, body } = SHAPES.flask;
   return (
@@ -315,16 +335,32 @@ export function CompleteIcon(): ReactElement {
       focusable="false"
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.25"
+      strokeWidth="1.5"
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      {/* The shelf's 48-unit box scaled to fit the 16, its stroke widened to come out at 1.25. */}
-      <g transform="translate(-1 0) scale(.375)" strokeWidth="3.33">
+      {/* The shelf's 48-unit box scaled to fit the 16, its stroke widened to come out at the set's 1.5. */}
+      <g transform="translate(-1 0) scale(.375)" strokeWidth="4">
         {lid.map((part, i) => createElement(part.el, { key: i, ...part.attrs }))}
         <path d={body.replace(/z$/, '')} />
-        <path d="M16.8 28.5l5 5 9.6-10.5" strokeWidth="4" />
+        <path d="M16.8 28.5l5 5 9.6-10.5" />
       </g>
+    </svg>
+  );
+}
+
+/** A printer: print this page; the recipe page's Print and the backup codes wear it. */
+export function PrintIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M4.5 6V2.5h7V6M4.5 11.5h-2v-5h11v5h-2M4.5 9.5h7v4h-7z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }

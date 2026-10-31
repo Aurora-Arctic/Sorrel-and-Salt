@@ -5,8 +5,8 @@ import { type ReactElement, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import StackTable from '../DataTable';
-import { noMatchText } from '../../lib/text';
-import { inUtc } from '../../lib/utc';
+import { emptyList, noMatchText } from '../../lib/text';
+import LocalTime from '../LocalTime';
 import ConfirmedAction from '../UserList/confirmed-action';
 import LockedControl from '../UserList/locked-control';
 import { roleLabel } from '../UserList/roles';
@@ -41,7 +41,7 @@ function emptyText({ email, expiringSoon }: Filter): string {
   const filters = [email && `“${email}”`, expiringSoon && 'Expires in 24 Hrs'].filter(
     (filter): filter is string => Boolean(filter),
   );
-  return noMatchText('invitations', filters, 'No admin invitations are waiting.');
+  return noMatchText('invitations', filters, emptyList('admin invitations'));
 }
 
 const RevokeAdminInvitationDocument = graphql(`
@@ -59,7 +59,7 @@ const Revoke = ({ invitation, locked }: RevokeInvitationProps): ReactElement => 
       <LockedControl
         label="Revoke"
         accessibleName={accessibleName}
-        className="btn btn--small btn--destructive"
+        className="btn btn--quiet btn--small"
         reason={locked}
       />
     );
@@ -68,7 +68,7 @@ const Revoke = ({ invitation, locked }: RevokeInvitationProps): ReactElement => 
     <ConfirmedAction
       label="Revoke"
       accessibleName={accessibleName}
-      openClass="btn btn--small btn--destructive"
+      openClass="btn btn--quiet btn--small"
       title="Revoke Invitation"
       question={
         <>
@@ -148,11 +148,7 @@ const AdminInvitations = ({
               },
               {
                 heading: 'Expires',
-                cell: (invitation) => (
-                  <time dateTime={invitation.expiresAt.toISOString()}>
-                    {inUtc(invitation.expiresAt)}
-                  </time>
-                ),
+                cell: (invitation) => <LocalTime at={invitation.expiresAt} long />,
               },
               // An action, so a card's foot with no label of its own.
               {

@@ -5,8 +5,6 @@
 // (claude-docs/components/click-feedback.md). Both are placed by script (position.ts) and out of the
 // flow, so neither moves anything.
 
-// The warning triangle's size in the callout, as an error notice draws it.
-$callout-mark: 1.0125rem;
 // The Dismiss button: 24px, a step in from the corner.
 $dismiss-size: 1.5rem;
 // The badge as drawn, and the mark inside it.
@@ -29,11 +27,11 @@ $arrow-rise: 7px;
   }
 
   &.is-placed {
-    animation: click-feedback-fade-in $motion-short ease both;
+    animation: fade-in $motion-short ease both;
   }
 
   &.is-closing {
-    animation: click-feedback-fade-out $motion-short ease both;
+    animation: fade-out $motion-short ease both;
     pointer-events: none;
   }
 
@@ -42,18 +40,6 @@ $arrow-rise: 7px;
     &.is-closing {
       animation: none;
     }
-  }
-}
-
-@keyframes click-feedback-fade-in {
-  from {
-    opacity: 0;
-  }
-}
-
-@keyframes click-feedback-fade-out {
-  to {
-    opacity: 0;
   }
 }
 
@@ -69,7 +55,7 @@ $arrow-rise: 7px;
   max-inline-size: min(20rem, calc(100vw - 2rem), var(--click-feedback-room, 20rem));
   margin: 0;
   padding: space(3) calc(#{space(1)} + #{$dismiss-size} + #{space(2)}) space(3)
-    calc(#{space(4)} + #{$callout-mark} + #{space(2)});
+    calc(#{space(4)} + #{$notice-mark-size} + #{space(2)});
   border: 1px solid $secondary;
   border-radius: radius('surface');
   background-color: $surface-card;
@@ -90,8 +76,8 @@ $arrow-rise: 7px;
     position: absolute;
     inset-block-start: 0.8rem;
     inset-inline-start: space(4);
-    inline-size: $callout-mark;
-    block-size: $callout-mark;
+    inline-size: $notice-mark-size;
+    block-size: $notice-mark-size;
     @include warning-mark($secondary);
   }
 
@@ -124,8 +110,8 @@ $arrow-rise: 7px;
   color: $dismiss-ink;
 
   svg {
-    inline-size: 0.875rem;
-    block-size: 0.875rem;
+    inline-size: $glyph-size-small;
+    block-size: $glyph-size-small;
   }
 
   &:hover {

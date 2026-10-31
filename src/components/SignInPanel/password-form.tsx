@@ -8,6 +8,7 @@ import { signInPath } from '../../lib/sign-in';
 import { useResultFocus } from '../../lib/use-result-focus';
 import { BackChevron } from '../IngredientEntry/back-link';
 import BusyButton from '../BusyButton';
+import PageHeader from '../PageHeader';
 import { FieldShell, fieldDescription } from '../Field';
 import Notice from '../Notice';
 import PasswordField from '../PasswordField';
@@ -177,15 +178,13 @@ const PasswordForm = ({
         Back
       </button>
       {/* The view's heading: focus lands here when the view opens (./index.tsx). */}
-      <h1 className="auth-title sign-in-panel__password-heading" tabIndex={-1} data-view-heading>
-        {signingUp ? 'Create an Account with Email' : 'Sign In with Email'}
-        {lastUsed && !signingUp && (
-          <>
-            {' '}
-            <span className="badge badge--last-used">Last Used</span>
-          </>
-        )}
-      </h1>
+      <PageHeader
+        className="sign-in-panel__password-head"
+        headingClassName="auth-title sign-in-panel__password-heading"
+        focusable
+        title={signingUp ? 'Create an Account with Email' : 'Sign In with Email'}
+        suffix={lastUsed && !signingUp ? <span className="badge badge--last-used">Last Used</span> : undefined}
+      />
       {problem.alert && (
         <Notice kind="error" result>
           {problem.alert}

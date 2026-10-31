@@ -223,6 +223,15 @@ const ROWS: Record<string, PartialIndexRow> = {
   ingredient_variants_form_unique: { row: variant },
   // `identity_key` is generated: the clash is the formal name alone, under
   // another label, which the label index would otherwise refuse first.
+  card_invitation_attempts_card_user_reason_unique: {
+    row: async () => {
+      const [card] = await sql`
+        insert into invitations (kind, token_hash, created_by, updated_by)
+        values ('card', ${token().padEnd(64, '0')}, ${AUTHOR}, ${AUTHOR}) returning id
+      `;
+      return stamped({ invitation_id: card.id, user_id: FIXTURE_USERS.D.id, reason: 'revoked' });
+    },
+  },
   ingredients_compendium_identity_key_unique: {
     row: compendiumIngredient,
     clash: ['workspace_id', 'canonical_name'],

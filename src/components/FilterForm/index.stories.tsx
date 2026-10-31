@@ -70,7 +70,7 @@ const STATES: Record<string, ReactNode> = {
 export const States: Story = {
   args: { state: 'No Filter' },
   argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
-  render: ({ state }) => <div key={String(state)}>{state}</div>,
+  render: ({ state }) => <div>{state}</div>,
 };
 
 // On a phone: the row stacks, the search over Clear. It stays a story of its own because the

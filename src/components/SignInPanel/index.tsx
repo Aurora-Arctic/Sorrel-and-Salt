@@ -7,6 +7,7 @@ import { GENERIC_SIGN_IN_ERROR, socialSignInTarget } from '../../lib/sign-in';
 import { SOCIAL_PROVIDERS } from '../../lib/social-providers';
 import { reportLeaving } from '../../lib/navigation';
 import Notice from '../Notice';
+import PageHeader from '../PageHeader';
 import PasswordForm from './password-form';
 import ProviderButton from './provider-button';
 import PasskeyButton from './passkey-button';
@@ -136,12 +137,13 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
         />
       ) : (
         <>
-          <div className="header sign-in-panel__header">
-            <h1 className="auth-title" tabIndex={-1} data-view-heading>
-              Sign In
-            </h1>
-            <p className="lede">Sign in or create an account.</p>
-          </div>
+          <PageHeader
+            className="sign-in-panel__header"
+            headingClassName="auth-title"
+            focusable
+            title="Sign In"
+            lede="Sign in or create an account."
+          />
           <div className="sign-in-panel__providers">
             {SOCIAL_PROVIDERS.filter((provider) => !provider.hidden).map((provider) => (
               <ProviderButton

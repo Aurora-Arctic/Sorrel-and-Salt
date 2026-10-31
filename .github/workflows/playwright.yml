@@ -199,19 +199,6 @@ jobs:
           path: /app/.next-e2e/cache
           key: ${{ steps.e2e-cache.outputs.cache-primary-key }}
 
-      # A failing story fails only its step, under continue-on-error, so the
-      # step's outcome is read as well as the job's. Each suite names its own
-      # artifact: the two run in one workflow, where a name may appear once.
-      - name: Upload Playwright report
-        if: failure() || steps.run.outcome == 'failure'
-        uses: actions/upload-artifact@v7
-        with:
-          name: ${{ inputs.suite == 'stories' && 'stories-report' || 'playwright-report' }}
-          path: |
-            /app/.reports/playwright-report/
-            /app/.reports/test-results/
-          retention-days: 7
-
       # Not failure-only: a coverage report on every run that ran a spec. Named
       # per suite for the same reason as the report above.
       - name: Upload coverage artifact
@@ -233,6 +220,20 @@ jobs:
           else
             node .github/scripts/summarize-playwright.mjs
           fi
+
+      # A failing story fails only its step, under continue-on-error, so the step's outcome is read as well as
+      # the job's. Each suite names its own artifact: the two run in one workflow, where a name may appear once.
+      # After the summary, which says whether a test failed and then passed on retry: that run is green, and
+      # its report holds the trace of the first attempt.
+      - name: Upload Playwright report
+        if: failure() || steps.run.outcome == 'failure' || steps.summarize.outputs.flaky == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ inputs.suite == 'stories' && 'stories-report' || 'playwright-report' }}
+          path: |
+            /app/.reports/playwright-report/
+            /app/.reports/test-results/
+          retention-days: 7
 
       - name: Write job summary
         if: always()

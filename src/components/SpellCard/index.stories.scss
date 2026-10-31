@@ -1,6 +1,6 @@
 @use 'smoulder' as *;
 
-// The Hover story's held card: the hovered look drawn with no pointer, so it shows on a
+// The States story's Held card: the hovered look drawn with no pointer, so it shows on a
 // touch screen and in a still screenshot. Story-only; the site applies the same mixin on
 // hover and focus (index.scss).
 .spell-card-story-held .spell-card {

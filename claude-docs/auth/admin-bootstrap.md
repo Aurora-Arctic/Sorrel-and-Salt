@@ -350,16 +350,39 @@ proved. Stories 58 and 59; the plan is
 component [`components/email-form.md`](../components/email-form.md), and
 the tests [`tests.md`](tests.md).
 
+- **The API refuses an unverified account too.** The session built from the
+  request headers carries `emailUnverified` while the address is unverified,
+  and `assertMembership` refuses such a session with an explaining
+  `Forbidden`, and `membershipsOf` answers an empty list, so no coven data or name is reachable through `/api/graphql` by
+  skipping the page redirect. `me`, `setEmail` and sign-out take no
+  membership and still work. `assertSiteAdmin` and `assertCurator` refuse it too, so an unverified admin or curator reaches no
+  curation or people operation either (the `usersById` loader batch is left as it is), and the GraphQL `admin` and `curator` scopes are false for it, so `selfOrAdmin` falls back to `self`. The list is empty rather than refused because the shell draws the email page and public pages from it.
 - **One rule: an address becomes the account's at verification, never
   before.** `setEmail(session, email, sender, next?)` in
   `src/modules/identity/services/email.ts` writes nothing to `users.email`.
   It normalises and validates the address (`ValidationError` on `email`),
-  refuses one a live _verified_ account holds — a provisional holder lapses
-  first — stamps the row as mailed (`recordVerificationSent`, which is also
+  refuses a change from a session created more than
+  `EMAIL_CHANGE_WINDOW_SECONDS` ago (a day, as Better Auth's `freshAge` is for
+  unlinking a provider) with a `ValidationError` on `email` that says to
+  sign in again, which the form shows under the field; resending the row's own
+  link asks no such thing. A taken address is not refused: held (by a live _verified_ account;
+  a provisional holder lapses first) or free, the call stamps, notifies and
+  answers alike, and only a free address is mailed a link, so the response
+  does not say which it was. Both mails are handed to `sender.defer` (Next's
+  `after`), so the call does not wait for either and a free address does not
+  take longer to answer than a taken one. It tells the address being left that a
+  change was asked for (`sender.notifyChangeRequested`: when, and the new
+  address's domain only, with no link in it), stamps the row as mailed (`recordVerificationSent`, which is also
   what restarts a provisional caller's window), and asks the sender to mail
   the new address a change link. The row's own, still-unverified address is
   mailed again instead; verified, there is nothing to do. Either way `next`
   is handed to the sender as given, for the link's landing.
+- **The address being left is told twice.** `src/emails/email-change-notice.tsx`
+  goes to the old address when the change is asked for and again when
+  `afterEmailVerification` runs on a change link (`noticeCompletedChange` in
+  `src/lib/auth.ts`, which reads the old address from the link's token). The
+  mail carries no action: a link in it would be one a thief could press.
+  Nothing is sent to a `.invalid` placeholder.
 - **One verification mail a minute per account.** `users.verification_sent_at`
   is set by every mail sent for the row's own account, and `setEmail`
   refuses the next within `RESEND_COOLDOWN_SECONDS` with a `VALIDATION`
@@ -677,3 +700,38 @@ tasks that build the rest:
   registered: nothing soft-deletes a user through Better Auth.
 - **No `user.fields` mapping.** `name`/`image` keep Better Auth's own
   column names ([`tables.md`](tables.md) has the reverted rename).
+
+## Invitation cards (M15.17–M15.19)
+
+An invitation card is a printed QR code that admits one signed-in account. It is a row in `invitations`
+with `kind = 'card'`: no email, workspace or role, a `batch_id` shared by the batch it was minted in, and
+only the token's hash. Accepting a card follows the invitation-token rules in CLAUDE.md: the link is
+`/i/<token>`, and nothing but the mint ever holds the token.
+
+- **Who may.** Only a site admin. Every service in `src/modules/identity/services/invitation-cards.ts`
+  opens with `assertSiteAdmin`, so a curator, a member and an owner are refused by direct call, and the
+  GraphQL fields add `authScopes: { admin: true }` over that. The admin page calls
+  `requireAdminSession()`, which answers a curator with the styled not-authorized page.
+- **Minting.** `createInvitationCards(sheets, expiresAt, note)` makes nine cards per sheet in one transaction under
+  one `batch_id`, at most `MAX_SHEETS_PER_BATCH` (55 sheets, 495 cards), with an expiry in the future and an optional note (trimmed, at most 500 characters, shown on the batch row). The
+  mutation returns each token once, in that response; no query or type but `MintedInvitationCards.tokens`
+  has a token, hash or link field, and a test fails if one appears.
+- **Revoking.** `revokeInvitationCardBatch(batchId)` sets `revoked_at` on the batch's pending cards only; a
+  card already accepted stays accepted. A single card is never revoked on its own.
+- **Listing.** `invitationCardBatches` pages one row per batch (minted, expiry, cards, accepted, pending),
+  counted in SQL. The Invitation Cards tab at `/admin/invitation-cards` shows it; the QR codes cannot be
+  redrawn from it.
+- **Card sign-ups.** `cardArrivals` pages every accepted card with the account, the date and the covens that
+  account owns (read as an admin may read anyone's memberships). `cardArrivalsCsv` returns the same as
+  CSV text (Account Name, Email, Accepted, Batch, Covens Owned), with a leading apostrophe on any cell a spreadsheet
+  would read as a formula. The Card Sign-Ups tab at `/admin/card-sign-ups` offers it as a download.
+- **Refused opens.** When a signed-in, verified account opens a card link that is refused as revoked,
+  expired or already accepted by another account, the refused panel sends `recordCardAttempt(token)`
+  and the service writes one row per card, account and reason, counting repeats
+  ([`db/invitations.md`](../db/invitations.md), "Card attempts"). The mutation takes the token alone;
+  the account comes from the session. A signed-out visitor, an unverified account, an unknown token,
+  a pending card and the account that accepted the card record nothing, and the signed-out page reads
+  nothing of the link. `invitationCardAttempts(batchId)` lists a batch's refused opens and
+  `InvitationCardBatch.refusedOpens` counts them; both are admin only, like every card field.
+
+The component is described in [`components/admin-cards.md`](../components/admin-cards.md).

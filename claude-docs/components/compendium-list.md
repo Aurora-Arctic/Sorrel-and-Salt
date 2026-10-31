@@ -122,8 +122,8 @@ different groups, so the page offers each name once, whatever its case.
   there because it is the entry's identity: two rows can share a label,
   never a formal name.
 - **An empty list says why, with no table.** With no filter the compendium
-  itself is empty, and the paragraph says how to begin it: "The compendium is
-  empty. Add the first entry with Add Ingredient." A filtered list with no
+  itself is empty, and the paragraph says how to begin it: "There are no
+  ingredients yet. Add the first with Add Ingredient." A filtered list with no
   rows names each filter in use, so an admin sees what to change, then says
   to change or clear it: "No entries match “wort”, the form “Oil”, the
   classification Botanical and No Refs. Change or clear the

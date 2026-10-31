@@ -4,7 +4,7 @@ import { type ReactElement, type ReactNode, useMemo } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import type { GroupColors } from '../../lib/types';
 import { JarDrawing, pickJarShape } from '../JarShelf';
-import { useCategoryColors } from './category-colors';
+import { useCategoryIndex } from './category-index';
 import type { SpellStepsValues } from './steps/types';
 import { isInstruction } from './steps/values';
 
@@ -40,7 +40,7 @@ const NO_STEPS: SpellStepsValues['steps'] = [];
 function SpellJar(): ReactElement {
   const { control } = useFormContext<SpellStepsValues>();
   const steps = useWatch({ control, name: 'steps' }) ?? NO_STEPS;
-  const colors = useCategoryColors();
+  const { colors } = useCategoryIndex();
   const bands = useMemo(
     () =>
       steps.filter((step) => !isInstruction(step)).map((step) => groupOf(step.categories, colors)),

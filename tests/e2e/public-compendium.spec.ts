@@ -233,7 +233,7 @@ test('the category chips and the +N count cover every category, and opening the 
       ) c`,
   );
   await page.goto('/compendium');
-  const search = page.getByPlaceholder(/^Search names/);
+  const search = page.getByRole('combobox', { name: 'Name' });
   await search.fill('Amethyst');
   await search.press('Enter');
   await expect(page).toHaveURL(/query=/);

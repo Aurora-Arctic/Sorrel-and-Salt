@@ -1,9 +1,12 @@
 import { test, expect } from './fixtures';
 
+// What the site's own client sends; a mutation without it or an Origin is refused.
+const WEB = { 'x-sorrel-client': 'web' };
+
 // Against `next start`, which runs at NODE_ENV=production like every deploy:
 // the endpoint is served by the app's own process, and the IDE is not.
 test('/api/graphql answers a query from the app itself', async ({ request }) => {
-  const response = await request.post('/api/graphql', { data: { query: '{ ok }' } });
+  const response = await request.post('/api/graphql', { data: { query: '{ ok }' }, headers: WEB });
 
   expect(response.status()).toBe(200);
   expect(await response.json()).toEqual({ data: { ok: true } });
@@ -20,6 +23,7 @@ test('/api/graphql serves no IDE in a production build', async ({ request }) => 
 test('/api/graphql refuses introspection in a production build', async ({ request }) => {
   const response = await request.post('/api/graphql', {
     data: { query: '{ __schema { queryType { name } } }' },
+    headers: WEB,
   });
 
   const result = await response.json();
@@ -28,9 +32,19 @@ test('/api/graphql refuses introspection in a production build', async ({ reques
 });
 
 test('/api/graphql suggests no field in a production build', async ({ request }) => {
-  const response = await request.post('/api/graphql', { data: { query: '{ ko }' } });
+  const response = await request.post('/api/graphql', { data: { query: '{ ko }' }, headers: WEB });
 
   const result = await response.json();
   expect(result.errors[0].message).toMatch(/^Cannot query field "ko" on type "Query"\./);
   expect(result.errors[0].message).not.toMatch(/"ok"|did you mean/i);
+});
+
+test('/api/graphql refuses a form post and a post with no sign it came from the site', async ({
+  request,
+}) => {
+  const form = await request.post('/api/graphql', { form: { query: '{ ok }' } });
+  const bare = await request.post('/api/graphql', { data: { query: '{ ok }' } });
+
+  expect(form.status()).toBe(415);
+  expect(bare.status()).toBe(403);
 });

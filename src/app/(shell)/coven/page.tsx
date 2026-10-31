@@ -2,13 +2,14 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import Notice from '../../../components/Notice';
 import { NEW_COVEN_PATH } from '../../../lib/coven-path';
+import PageHeader from '../../../components/PageHeader';
 import { PendingLink } from '../../../lib/navigation';
 import { requireSession } from '../../../lib/request-session';
 import { ACCOUNT_INVITATIONS_PATH } from '../../../lib/sign-in';
 import { viewerOf } from '../../../lib/viewer';
 
 export const metadata: Metadata = {
-  title: 'Your Coven — Sorrel & Salt',
+  title: 'Your Coven',
 };
 
 // The post-sign-in landing for someone with no return path. A member goes into the first coven; one who
@@ -26,15 +27,16 @@ export default async function CovenLandingPage() {
   return (
     <main className="page-frame page-frame--narrow">
       <section className="page-frame__section" aria-labelledby="coven-landing-heading">
-        <div className="header">
-          <p className="eyebrow">Welcome</p>
-          <h1 id="coven-landing-heading">{viewer.canCreate ? 'Start a Coven' : 'Join a Coven'}</h1>
-          <p className="lede">
-            {viewer.canCreate
+        <PageHeader
+          id="coven-landing-heading"
+          eyebrow="Welcome"
+          title={viewer.canCreate ? 'Start a Coven' : 'Join a Coven'}
+          lede={
+            viewer.canCreate
               ? 'You are not in a coven yet, but you can start one of your own and invite others to it.'
-              : 'Your account is ready. Sorrel & Salt is invite-only, so the next step is to join a coven.'}
-          </p>
-        </div>
+              : 'Your account is ready. Sorrel & Salt is invite-only, so the next step is to join a coven.'
+          }
+        />
         {pending > 0 && (
           <Notice kind="success" className="page-frame__notice">
             {pending === 1

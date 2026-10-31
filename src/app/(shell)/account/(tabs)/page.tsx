@@ -17,7 +17,7 @@ import { signedInLanding } from '../../../../lib/landing';
 import type { AccountPageProps } from './types';
 
 export const metadata: Metadata = {
-  title: 'Your Account — Sorrel & Salt',
+  title: 'Your Account',
 };
 
 // The account page: name, address and waiting coven invitations, each its own section under its own heading, with ids

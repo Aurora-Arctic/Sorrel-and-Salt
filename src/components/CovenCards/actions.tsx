@@ -20,7 +20,6 @@ export type CovenCardActionsEntry = Pick<
   | 'editHref'
   | 'editHeading'
   | 'annotateHref'
-  | 'mayDelete'
   | 'mayMakeOurs'
   | 'mayRemove'
   | 'stock'
@@ -67,7 +66,7 @@ export function covenCardActions(
   leaveHref?: Route,
 ): ReactElement | undefined {
   const opens = opensOf(entry);
-  const more = entry.mayDelete || entry.mayMakeOurs || entry.mayRemove;
+  const more = entry.mayMakeOurs;
   if (!opens && !entry.stock && !more) return undefined;
   return (
     <>
@@ -88,7 +87,6 @@ export function covenCardActions(
           name={covenCardName(entry)}
           workspaceId={workspaceId}
           covenSlug={covenSlug}
-          mayDelete={entry.mayDelete}
           mayMakeOurs={entry.mayMakeOurs}
           mayRemove={entry.mayRemove}
           leaveHref={leaveHref}
