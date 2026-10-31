@@ -155,7 +155,7 @@ export {
   recordSignInFailure,
 } from './sign-in-failures';
 export type { SignInFailureRow } from './sign-in-failures';
-export type { PrivilegeDeclaration } from '../types';
+export type { PrivilegeDeclaration, PrivilegeRoute } from '../types';
 export type {
   WorkingDeductionRow,
   WorkingParticipantRow,
