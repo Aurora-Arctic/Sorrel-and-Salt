@@ -5,6 +5,8 @@ import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import Passkeys, { ADD_FAILED, LAST_WAY_IN } from '@/components/Passkeys';
 import type { AccountPasskey } from '@/lib/types';
 
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }) }));
+
 // The plugin's client actions, mocked: each answers `{ data }` or `{ error }`, as Better Auth's client does.
 const addMock = vi.fn();
 const listMock = vi.fn();
@@ -98,11 +100,29 @@ describe('Passkeys', () => {
     expect(updateMock).toHaveBeenCalledWith({ id: 'pk-laptop', name: 'Work Laptop' });
   });
 
-  it('removes a passkey, and the list no longer holds it', async () => {
+  it('asks before removing, and removes nothing until the question is confirmed', async () => {
     deleteMock.mockResolvedValue({ data: { status: true } });
     renderOnPage(<Passkeys passkeys={[LAPTOP, UNNAMED]} />);
 
     await press(screen.getByRole('button', { name: 'Remove Laptop' }));
+
+    const dialog = await screen.findByRole('dialog', { name: 'Remove Passkey' });
+    expect(deleteMock).not.toHaveBeenCalled();
+    expect(listed()).toEqual(['Laptop', 'Passkey']);
+
+    await press(within(dialog).getByRole('button', { name: 'Cancel' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(deleteMock).not.toHaveBeenCalled();
+    expect(listed()).toEqual(['Laptop', 'Passkey']);
+  });
+
+  it('removes a passkey once confirmed, and the list no longer holds it', async () => {
+    deleteMock.mockResolvedValue({ data: { status: true } });
+    renderOnPage(<Passkeys passkeys={[LAPTOP, UNNAMED]} />);
+
+    await press(screen.getByRole('button', { name: 'Remove Laptop' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Remove Passkey' });
+    await press(within(dialog).getByRole('button', { name: 'Remove' }));
 
     await waitFor(() => expect(listed()).toEqual(['Passkey']));
     expect(deleteMock).toHaveBeenCalledWith({ id: 'pk-laptop' });
@@ -116,9 +136,11 @@ describe('Passkeys', () => {
     remove.focus();
 
     await press(remove);
+    const dialog = await screen.findByRole('dialog', { name: 'Remove Passkey' });
+    await press(within(dialog).getByRole('button', { name: 'Remove' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent(LAST_WAY_IN);
-    expect(remove).toHaveFocus();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(listed()).toEqual(['Laptop']);
   });
 });

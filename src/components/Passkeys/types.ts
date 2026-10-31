@@ -7,13 +7,10 @@ export interface PasskeysProps {
 
 export interface PasskeyRowProps {
   passkey: AccountPasskey;
-  /** A removal is in flight somewhere in the list, so every Remove waits for it. */
-  pending: boolean;
-  /** This row's removal is in flight. */
-  busy: boolean;
-  /** Each answers the failure to say under its control, or nothing on success. */
+  /** Answers the failure to say in the dialog, or nothing on success. */
   onRename: (name: string) => Promise<string | undefined>;
-  onRemove: () => Promise<string | undefined>;
+  /** Resolves once the passkey is gone; a refusal rejects with the sentence to say under Remove. */
+  onRemove: () => Promise<void>;
 }
 
 export interface RenameFieldsProps {
