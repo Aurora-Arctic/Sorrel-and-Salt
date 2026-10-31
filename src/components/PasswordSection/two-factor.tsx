@@ -1,6 +1,5 @@
 'use client';
 
-import { QrCode } from '@ark-ui/react/qr-code';
 import { type FormEvent, type ReactElement, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { twoFactor, useSession } from '../../lib/auth-client';
@@ -14,6 +13,7 @@ import InfoTip from '../InfoTip';
 import Modal from '../Modal';
 import Notice from '../Notice';
 import PasswordField from '../PasswordField';
+import QrCode from '../QrCode';
 import { TOO_MANY_ATTEMPTS } from '../SignInPanel/password-form';
 import { WRONG_CODE } from '../SignInPanel/two-factor-step';
 import type { TwoFactorSettingsProps } from './types';
@@ -275,11 +275,11 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
           <ol className="two-factor__steps">
             <li>
               <p>Scan this QR code with your authenticator app.</p>
-              <QrCode.Root value={enrolment.totpURI} className="two-factor__qr">
-                <QrCode.Frame role="img" aria-label="QR code for your authenticator app">
-                  <QrCode.Pattern />
-                </QrCode.Frame>
-              </QrCode.Root>
+              <QrCode
+                value={enrolment.totpURI}
+                label="QR code for your authenticator app"
+                className="two-factor__qr"
+              />
               <p>If you can&apos;t scan it, enter this key in the app instead:</p>
               <p className="two-factor__well">
                 <code className="two-factor__key">{groupedKey(keyOf(enrolment.totpURI))}</code>
