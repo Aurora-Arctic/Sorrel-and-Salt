@@ -111,6 +111,7 @@ component's stylesheet only when it draws the component.
 - **The index** lists each section's pages in a column without bullets, a
   link over its line in the muted ink, the line capped at `$measure`, since
   it is not a `<p>`.
+- **The page is centred** in the admin area: the `/admin` page's `<main>` carries `.admin-index` (`src/scss/_primitives.scss`), a `$narrow-column` wide block with `margin-inline: auto` inside the layout's `.page-column`. The heading and the text stay left-aligned within it. A curator and an admin get the same markup; they differ only in which sections `AdminContents` draws.
 - **Its links are in the body ink (`$text-primary`), followed or not**, with
   the accent on hover as every link has: the list reads as a table of
   contents, and the default link colours would make the admin and coven

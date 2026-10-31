@@ -770,6 +770,15 @@
     @include stack;
   }
 
+  // The `/admin` index in the reading column, centred in the admin area's wider one as the account page's sections are in the
+  // page; the text inside stays left-aligned.
+  .admin-index {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: $narrow-column;
+    margin-inline: auto;
+  }
+
   .admin-contents__list {
     @include stack(3);
 
