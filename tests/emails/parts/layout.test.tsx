@@ -1,8 +1,12 @@
 import { readdirSync } from 'node:fs';
 import { beforeAll, describe, expect, it } from 'vitest';
+import { accountExistsMessage } from '@/emails/account-exists';
 import { adminInvitationMessage } from '@/emails/admin-invitation';
 import { covenInvitationMessage } from '@/emails/coven-invitation';
 import { emailChangeNoticeMessage } from '@/emails/email-change-notice';
+import { passwordChangedMessage } from '@/emails/password-changed';
+import { passwordLockedMessage } from '@/emails/password-locked';
+import { resetPasswordMessage } from '@/emails/reset-password';
 import { verifyEmailMessage } from '@/emails/verify-email';
 import type { Message } from '@/lib/types';
 import { fromRoot } from '../../support/paths';
@@ -78,6 +82,50 @@ const MAILS: {
         stage: 'requested',
         newDomain: 'new-layout.test',
         at: new Date('2026-10-30T12:00:00Z'),
+      }),
+  },
+  {
+    template: 'account-exists',
+    name: 'accountExistsMessage',
+    link: `${ORIGIN}/sign-in`,
+    message: () =>
+      accountExistsMessage({
+        to: 'someone@layout.test',
+        url: `${ORIGIN}/sign-in`,
+        providers: ['google'],
+        hasPassword: true,
+      }),
+  },
+  {
+    template: 'reset-password',
+    name: 'resetPasswordMessage',
+    link: `${ORIGIN}/api/auth/reset-password/fixture-token?callbackURL=%2Freset-password`,
+    message: () =>
+      resetPasswordMessage({
+        to: 'someone@layout.test',
+        url: `${ORIGIN}/api/auth/reset-password/fixture-token?callbackURL=%2Freset-password`,
+      }),
+  },
+  {
+    template: 'password-changed',
+    name: 'passwordChangedMessage',
+    link: `${ORIGIN}/forgot-password`,
+    message: () =>
+      passwordChangedMessage({
+        to: 'someone@layout.test',
+        url: `${ORIGIN}/forgot-password`,
+        how: 'change',
+      }),
+  },
+  {
+    template: 'password-locked',
+    name: 'passwordLockedMessage',
+    link: `${ORIGIN}/api/auth/reset-password/fixture-lock-token?callbackURL=%2Freset-password`,
+    message: () =>
+      passwordLockedMessage({
+        to: 'someone@layout.test',
+        url: `${ORIGIN}/api/auth/reset-password/fixture-lock-token?callbackURL=%2Freset-password`,
+        minutes: 15,
       }),
   },
 ];
