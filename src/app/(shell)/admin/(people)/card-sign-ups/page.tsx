@@ -7,8 +7,15 @@ import type { Session } from '../../../../../lib/session';
 import { readNumberedPage } from '@/lib/numbered-page';
 import { membershipsOf } from '@/modules/coven';
 import { countCardArrivals, listCardArrivals, usersForAdmin } from '@/modules/identity';
-import { userListHref } from '../../../../../components/UserList/href';
+import { changesLocked } from '../../../../../components/UserList/lock';
+import { impersonationEnabled } from '../../../../../lib/impersonation';
+import { single } from '../../../../../lib/search-params';
+import { withParam } from '../../../../../lib/list-href';
+import { readOpenedUser } from '../users/opened-user';
+import UserDialog from '../users/user-dialog';
 import { userHeading } from '../users/user-heading';
+import MissingNotice from '../../missing-notice';
+import { readPauseState } from '../pause-state';
 import { readListPlace } from '../../list-page';
 import type { CardsPageProps } from '../invitation-cards/types';
 import type { Route } from 'next';
@@ -17,8 +24,6 @@ export const metadata: Metadata = {
   title: 'Card Sign-Ups',
 };
 
-// The Users list unfiltered: a sign-up's name opens that list's own modal for the account.
-const NO_FILTER = { query: '', awaitingApproval: false };
 const REMOVED_ACCOUNT = 'Removed account';
 
 const readArrivals = cache(
@@ -47,7 +52,7 @@ const readArrivals = cache(
           !account || account instanceof Error
             ? null
             : {
-                openHref: userListHref(NO_FILTER, undefined, account.id, 'card-sign-ups'),
+                openHref: withParam(arrivalsHref({ after, before }), 'user', account.id),
                 heading: userHeading(account),
               },
         covens: Array.isArray(covens)
@@ -70,12 +75,29 @@ const arrivalsHref = ({ after, before }: { after?: string; before?: string }): R
 export default async function ArrivalsPage({ searchParams }: CardsPageProps) {
   const session = await requireAdminSession();
   const { after, before } = readListPlace(await searchParams);
-  const { arrivals, pageInfo, position } = await readArrivals(session, after, before);
+  // Blank is no modal, as a blank `?edit=` is.
+  const userParam = single((await searchParams).user) || undefined;
+  const [{ arrivals, pageInfo, position }, adminChanges, opened] = await Promise.all([
+    readArrivals(session, after, before),
+    readPauseState(session),
+    userParam ? readOpenedUser(session, userParam) : undefined,
+  ]);
   return (
-    <AdminArrivals
-      arrivals={arrivals}
-      position={position}
-      {...pagerHrefs(pageInfo, arrivalsHref)}
-    />
+    <>
+      {userParam && !opened && <MissingNotice noun="user" />}
+      <AdminArrivals
+        arrivals={arrivals}
+        position={position}
+        {...pagerHrefs(pageInfo, arrivalsHref)}
+      />
+      {/* Rendered whatever the address opens, so a press on a name opens it at once. Close returns to this list at its
+          cursor. */}
+      <UserDialog
+        closeHref={arrivalsHref({ after, before })}
+        opened={opened}
+        canImpersonate={impersonationEnabled()}
+        changesPaused={Boolean(adminChanges && changesLocked(adminChanges))}
+      />
+    </>
   );
 }

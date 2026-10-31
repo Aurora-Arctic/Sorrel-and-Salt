@@ -16,7 +16,6 @@ export const USERS_PATH: Route = '/admin/users';
  */
 export const USER_MODAL_ORIGINS = {
   'invitation-cards': '/admin/invitation-cards',
-  'card-sign-ups': '/admin/card-sign-ups',
 } as const satisfies Record<string, Route>;
 
 export type UserModalOrigin = keyof typeof USER_MODAL_ORIGINS;
