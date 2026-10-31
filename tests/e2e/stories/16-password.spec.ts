@@ -85,6 +85,8 @@ test(
     });
     expect(made.status(), await made.text()).toBe(200);
     await withSql((sql) => sql`update users set email_verified = true where email = ${email}`);
+    // Sign-up leaves a session cookie; the story starts signed out.
+    await page.context().clearCookies();
 
     await page.goto('/sign-in');
     await page.getByRole('link', { name: 'Forgot Password?' }).click();
@@ -144,6 +146,8 @@ test(
     });
     expect(made.status(), await made.text()).toBe(200);
     await withSql((sql) => sql`update users set email_verified = true where email = ${email}`);
+    // Sign-up leaves a session cookie; the story starts signed out.
+    await page.context().clearCookies();
     // Four wrong guesses already counted, so the browser's next is the fifth; the server allows three sign-in
     // attempts in ten seconds from one client, which four more would pass.
     await withSql(
