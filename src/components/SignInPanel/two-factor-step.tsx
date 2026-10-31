@@ -7,6 +7,7 @@ import { signInPath } from '../../lib/sign-in';
 import BusyButton from '../BusyButton';
 import { FieldShell, SwitchField, fieldDescription } from '../Field';
 import Notice from '../Notice';
+import PageHeader from '../PageHeader';
 import type { TwoFactorStepProps } from './types';
 
 // The second step of a password sign-in with two-factor on: a code from an authenticator app, or a
@@ -86,7 +87,11 @@ const TwoFactorStep = ({ next, onRestart }: TwoFactorStepProps): ReactElement =>
 
   return (
     <div className="sign-in-panel__password">
-      <h1 className="auth-title sign-in-panel__password-heading">Enter Your Code</h1>
+      <PageHeader
+        className="sign-in-panel__password-head"
+        headingClassName="auth-title sign-in-panel__password-heading"
+        title="Enter Your Code"
+      />
       {problem.alert && <Notice kind="error">{problem.alert}</Notice>}
       <p>
         {method === 'app'
