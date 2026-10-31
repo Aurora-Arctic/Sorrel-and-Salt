@@ -56,27 +56,42 @@
   }
 }
 
-// The live total, in the Number of Sheets field's `after` slot so it sits one field gap under the input, beneath any
-// error: one line is always reserved, so it appearing, changing or going never moves Expires On. The negative
-// bottom margin takes part of the form's field gap back, so the reserved line leaves no wide space above Expires On.
+// The live total, in the Number of Sheets field's `after` slot under its input and any error. One line is always
+// reserved, so it appearing, changing or going never moves the fields beside or below it.
 .admin-cards__total {
   min-height: 1.5em;
-  margin: 0 0 (-(space(3)));
+  margin: 0;
   color: $text-muted;
   font-size: type-size('caption');
   line-height: 1.5;
 }
 
-// Expires On and Print Backs on one line, the switch just beside the date at the level of its control; a phone-width
-// form wraps the switch below.
+// Number of Sheets, Expires On and Print Backs on one row, each top-aligned so the three labels share a line and the
+// controls share the next. The sheets field is sized for its label and a number up to 55; a phone-width form wraps the row.
 .admin-cards__when {
   display: flex;
   flex-wrap: wrap;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: space(5);
 
   > :first-child {
+    flex: 0 0 12rem;
+  }
+
+  > :nth-child(2) {
     flex: 0 1 auto;
+  }
+
+  // The sheets label carries an info tip and so stands taller than the other two; every label row here takes that
+  // height so the three controls start on one line.
+  .field__label-row,
+  > .switch > .field__label {
+    min-block-size: 24px;
+  }
+
+  > .switch > .field__label {
+    display: flex;
+    align-items: center;
   }
 
   // The shared switch centres its track under its label; here the track starts at the label's left edge, as the
