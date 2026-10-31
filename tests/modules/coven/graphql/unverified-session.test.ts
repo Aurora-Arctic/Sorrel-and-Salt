@@ -60,7 +60,7 @@ const COVENS = /* GraphQL */ `
 `;
 
 beforeEach(async () => {
-  await sql`truncate invitations`;
+  await sql`truncate card_invitation_attempts, invitations`;
 });
 
 describe('an unverified session on the API', () => {
