@@ -20,11 +20,11 @@
 }
 
 .timeout-panel__list {
-  @include stack(3);
+  @include stack(5);
   @include list-reset;
 
   > li {
-    @include stack(1);
+    @include stack(2);
   }
 }
 
