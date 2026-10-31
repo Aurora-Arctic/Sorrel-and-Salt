@@ -349,6 +349,13 @@ proved. Stories 58 and 59; the plan is
 component [`components/email-form.md`](../components/email-form.md), and
 the tests [`tests.md`](tests.md).
 
+- **The API refuses an unverified account too.** The session built from the
+  request headers carries `emailUnverified` while the address is unverified,
+  and `assertMembership` refuses such a session with an explaining
+  `Forbidden`, and `membershipsOf` answers an empty list, so no coven data or name is reachable through `/api/graphql` by
+  skipping the page redirect. `me`, `setEmail` and sign-out take no
+  membership and still work. `assertSiteAdmin` and `assertCurator` refuse it too, so an unverified admin or curator reaches no
+  curation or people operation either (the `usersById` loader batch is left as it is), and the GraphQL `admin` and `curator` scopes are false for it, so `selfOrAdmin` falls back to `self`. The list is empty rather than refused because the shell draws the email page and public pages from it.
 - **One rule: an address becomes the account's at verification, never
   before.** `setEmail(session, email, sender, next?)` in
   `src/modules/identity/services/email.ts` writes nothing to `users.email`.
