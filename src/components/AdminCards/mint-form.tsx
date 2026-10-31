@@ -142,7 +142,9 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
           onChange={(event) => setSheets(event.target.value)}
         />
       </FieldShell>
-      <p aria-live="polite">{totalOf(sheets)}</p>
+      <p className="admin-cards__total" aria-live="polite">
+        {totalOf(sheets)}
+      </p>
       <FieldShell label="Expires On" required {...dayShell}>
         <DateField
           id={dayShell.controlId}

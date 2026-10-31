@@ -28,3 +28,13 @@
     font-size: type-size('caption');
   }
 }
+
+// The live total under Number of Sheets: one line is always reserved, so it appearing, changing or
+// going never moves the Expires On field beneath it.
+.admin-cards__total {
+  min-height: 1.5em;
+  margin: 0;
+  color: $text-muted;
+  font-size: type-size('caption');
+  line-height: 1.5;
+}
