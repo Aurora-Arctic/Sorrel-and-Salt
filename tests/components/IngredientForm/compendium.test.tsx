@@ -23,6 +23,8 @@ import type {
   DeleteCompendiumIngredientMutationVariables,
   SetCompendiumEntryReviewedMutation,
   SetCompendiumEntryReviewedMutationVariables,
+  SetCompendiumEntryShownMutation,
+  SetCompendiumEntryShownMutationVariables,
 } from '@/gql/graphql';
 import { DEBOUNCE_MS } from '@/lib/debounce';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
@@ -507,6 +509,125 @@ describe('IngredientForm on the compendium', () => {
         await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
         expect(screen.queryByRole('button', { name: 'Discard Changes' })).not.toBeInTheDocument();
         expect(review).toHaveLength(1);
+      });
+    });
+
+    // Shown in Compendium is a field of the form beside Reviewed: a flip changes the form,
+    // Save writes it after the entry, and an add starts from its categories until the curator flips it.
+    describe('the Shown in Compendium switch', () => {
+      const shownSwitch = () => screen.getByRole('switch', { name: 'Shown in Compendium' });
+
+      function acceptShown() {
+        const calls: SetCompendiumEntryShownMutationVariables[] = [];
+        mockGraphQLMutation<SetCompendiumEntryShownMutation, SetCompendiumEntryShownMutationVariables>(
+          'SetCompendiumEntryShown',
+          (variables) => {
+            calls.push(variables);
+            return { setCompendiumEntryShown: { id: String(variables.id) } };
+          },
+        );
+        return calls;
+      }
+
+      it('starts from the entry on an edit', () => {
+        renderForm({
+          entry: { id: ENTRY_ID, values: TESTWORT },
+          review: { reviewed: false, shown: false },
+        });
+        expect(shownSwitch()).not.toBeChecked();
+        cleanup();
+
+        renderForm({
+          entry: { id: ENTRY_ID, values: TESTWORT },
+          review: { reviewed: false, shown: true },
+        });
+        expect(shownSwitch()).toBeChecked();
+      });
+
+      it('starts hidden on an add with no categories', () => {
+        renderForm({ review: { reviewed: false } });
+        expect(shownSwitch()).not.toBeChecked();
+      });
+
+      it('changes the form when flipped and writes nothing until Save', async () => {
+        const shown = acceptShown();
+        const saves = acceptUpdate();
+        renderForm({
+          entry: { id: ENTRY_ID, values: TESTWORT },
+          review: { reviewed: false, shown: true },
+        });
+        expect(button('Save Ingredient')).toBeDisabled();
+
+        fireEvent.click(shownSwitch());
+
+        expect(shownSwitch()).not.toBeChecked();
+        expect(button('Save Ingredient')).toBeEnabled();
+        await act(async () => {});
+        expect(shown).toHaveLength(0);
+        expect(saves).toHaveLength(0);
+      });
+
+      it('is sent with Save for the entry it edited', async () => {
+        const shown = acceptShown();
+        acceptUpdate();
+        renderForm({
+          entry: { id: ENTRY_ID, values: TESTWORT },
+          review: { reviewed: false, shown: true },
+        });
+
+        fireEvent.click(shownSwitch());
+        press('Save Ingredient');
+
+        await waitFor(() => expect(shown).toHaveLength(1));
+        expect(shown[0]).toEqual({ id: ENTRY_ID, shown: false });
+        await waitFor(() => expect(button('Save Ingredient')).toBeDisabled());
+      });
+
+      it('is not sent when left as the entry had it', async () => {
+        const shown = acceptShown();
+        acceptUpdate();
+        const { onSaved } = renderForm({
+          entry: { id: ENTRY_ID, values: TESTWORT },
+          review: { reviewed: false, shown: false },
+        });
+
+        type('Name', 'Mockwort');
+        press('Save Ingredient');
+
+        await waitFor(() => expect(onSaved).toHaveBeenCalled());
+        expect(shown).toHaveLength(0);
+      });
+
+      it('lets the curator turn an add on, and sends it after the create', async () => {
+        const shown = acceptShown();
+        const creates = acceptCompendiumCreate();
+        renderForm({ review: { reviewed: false } });
+
+        type('Name', 'Testwort');
+        choose('Classification', 'None');
+        fireEvent.click(shownSwitch());
+        expect(shownSwitch()).toBeChecked();
+        press('Save Ingredient');
+
+        await waitFor(() => expect(shown).toHaveLength(1));
+        expect(creates).toHaveLength(1);
+        expect(shown[0]).toEqual({ id: ENTRY_ID, shown: true });
+      });
+
+      it('says the entry saved when only the shown write was refused', async () => {
+        acceptUpdate();
+        mockGraphQLError('SetCompendiumEntryShown', { code: 'FORBIDDEN', message: 'Forbidden' });
+        renderForm({
+          entry: { id: ENTRY_ID, values: TESTWORT },
+          review: { reviewed: false, shown: true },
+        });
+
+        fireEvent.click(shownSwitch());
+        press('Save Ingredient');
+
+        expect(
+          await screen.findByText(/Saved, but whether it is shown was not/),
+        ).toBeInTheDocument();
       });
     });
 

@@ -71,4 +71,21 @@ describe('ShownToggle', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Forbidden');
     expect(router.refresh).not.toHaveBeenCalled();
   });
+
+  it('only reports the flip when given onChange, sending nothing', async () => {
+    const calls = accept();
+    const onChange = vi.fn();
+    render(
+      <QueryClientProvider client={makeQueryClient()}>
+        <ShownToggle shown name="Testwort" onChange={onChange} label="Shown in Compendium" />
+      </QueryClientProvider>,
+    );
+
+    press(screen.getByRole('switch', { name: 'Shown in Compendium' }));
+
+    expect(onChange).toHaveBeenCalledWith(false);
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(calls).toHaveLength(0);
+    expect(router.refresh).not.toHaveBeenCalled();
+  });
 });
