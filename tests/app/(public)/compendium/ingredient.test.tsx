@@ -23,7 +23,13 @@ vi.mock('@/lib/viewer', () => ({ viewerIfSignedIn }));
 const readCompendiumEntry = vi.fn();
 // The review switch's read, per viewer, made for a curator or admin only.
 const readCompendiumReview = vi.fn();
-vi.mock('@/modules/ingredients', () => ({ readCompendiumEntry, readCompendiumReview }));
+// The row itself, for the form's shown switch.
+const getIngredient = vi.fn();
+vi.mock('@/modules/ingredients', () => ({
+  readCompendiumEntry,
+  readCompendiumReview,
+  getIngredient,
+}));
 const SESSION = { userId: 'user-fixture' };
 const getSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ getSession }));
@@ -77,6 +83,7 @@ beforeEach(() => {
   entryValues.mockResolvedValue(EMPTY_VALUES);
   getSession.mockResolvedValue(SESSION);
   readCompendiumReview.mockResolvedValue(null);
+  getIngredient.mockResolvedValue({ shown: true });
 });
 
 describe('the compendium entry page', () => {
