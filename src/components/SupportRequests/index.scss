@@ -160,3 +160,12 @@
 .support-detail__reply .field {
   gap: space(3);
 }
+
+// The switch centres its label and toggle by default; in the side column they sit flush left with the fields around them.
+.support-detail__side .switch {
+  align-items: start;
+
+  .field__label {
+    text-align: start;
+  }
+}
