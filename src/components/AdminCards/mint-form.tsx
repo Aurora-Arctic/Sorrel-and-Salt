@@ -139,34 +139,34 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
         the PDF you download; it cannot be made again.
       </p>
       {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
-      <FieldShell
-        label="Number of Sheets"
-        required
-        hint={`A Letter sheet holds ${CARDS_PER_SHEET} cards.`}
-        {...sheetsShell}
-        after={
-          <p className="admin-cards__total" aria-live="polite">
-            {totalOf(sheets)}
-          </p>
-        }
-      >
-        <input
-          id={sheetsShell.controlId}
-          className="input"
-          type="number"
-          inputMode="numeric"
-          min={1}
-          max={MAX_SHEETS_PER_BATCH}
-          step={1}
-          placeholder={`1 to ${MAX_SHEETS_PER_BATCH}`}
-          aria-required
-          {...sheetsAria}
-          value={sheets}
-          disabled={minting}
-          onChange={(event) => setSheets(event.target.value)}
-        />
-      </FieldShell>
       <div className="admin-cards__when">
+        <FieldShell
+          label="Number of Sheets"
+          required
+          hint={`A Letter sheet holds ${CARDS_PER_SHEET} cards.`}
+          {...sheetsShell}
+          after={
+            <p className="admin-cards__total" aria-live="polite">
+              {totalOf(sheets)}
+            </p>
+          }
+        >
+          <input
+            id={sheetsShell.controlId}
+            className="input"
+            type="number"
+            inputMode="numeric"
+            min={1}
+            max={MAX_SHEETS_PER_BATCH}
+            step={1}
+            placeholder={`1 to ${MAX_SHEETS_PER_BATCH}`}
+            aria-required
+            {...sheetsAria}
+            value={sheets}
+            disabled={minting}
+            onChange={(event) => setSheets(event.target.value)}
+          />
+        </FieldShell>
         <FieldShell label="Expires On" required {...dayShell}>
           <DateField
             id={dayShell.controlId}
