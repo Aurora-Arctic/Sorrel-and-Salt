@@ -5,7 +5,7 @@ import { createLoaders } from '@/graphql/loaders';
 import { schema } from '@/graphql/schema';
 import type { Context } from '@/graphql/types';
 import type { Session } from '@/lib/session';
-import { noInvitationSender, noSender } from '../email-verification';
+import { noInvitationSender, noSender, noSupportNotifier } from '../email-verification';
 import type { Answer, ContextOverrides } from './types';
 
 // A resolver test's one way in: the route's schema behind Yoga with the route's own `maskedErrors`, so a
@@ -38,6 +38,7 @@ function runnerOn(target: GraphQLSchema) {
         loaders: createLoaders(session),
         emailVerification: noSender,
         invitations: noInvitationSender,
+        support: noSupportNotifier,
         ...context,
       },
     );

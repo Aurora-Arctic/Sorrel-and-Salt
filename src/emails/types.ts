@@ -61,3 +61,6 @@ export interface EmailChangeNoticeProps extends BaseEmailProps {
   /** When the change was asked for, or finished. */
   at: Date;
 }
+
+/** Told to a support request's sender that a reply is waiting. `url` is their support page; the reply itself is never in the mail. */
+export type SupportReplyNoticeProps = BaseEmailProps;
