@@ -1,5 +1,6 @@
 'use client';
 
+import ReportThis from '../components/ReportThis';
 import ErrorPage from '../components/ErrorPage';
 import './globals.scss';
 
@@ -19,6 +20,7 @@ export default function GlobalError({ error }: { error: Error & { digest?: strin
           <a className="btn btn--solid" href="/">
             Back to Sorrel &amp; Salt
           </a>
+          <ReportThis code={500} />
         </ErrorPage>
       </body>
     </html>

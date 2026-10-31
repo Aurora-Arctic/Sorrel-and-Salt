@@ -25,6 +25,7 @@ const PAGES = [
   '/admin/forms',
   '/admin/deities',
   '/admin/celestial-bodies',
+  '/admin/support',
   '/admin/users',
 ];
 
@@ -39,12 +40,13 @@ describe('AdminNav', () => {
     expect(hrefs(row())).toEqual(PAGES);
   });
 
-  // A curator is shown the curation pages and not People, which every
+  // A curator is shown the curation pages and neither People nor Support, which every
   // page beneath refuses them anyway (claude-docs/auth/admin-guard.md).
   it('leaves People out for a curator, who manages no one', () => {
     render(<AdminNav managesPeople={false} />);
 
     expect(hrefs(row())).toEqual(PAGES.filter((href) => href !== '/admin/users'));
+    expect(hrefs(row())).toContain('/admin/support');
   });
 
   it.each([

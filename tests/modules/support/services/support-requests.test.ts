@@ -5,6 +5,7 @@ import type { PageRequest } from '@/lib/types';
 import {
   assignSupportRequest,
   getMySupportRequest,
+  getMySupportTimeoutEnd,
   getSupportRequest,
   liftSupportTimeout,
   listMySupportRequests,
@@ -390,5 +391,24 @@ describe('the cursor', () => {
       { limit: 2, inverted: false, after: first[0]!.cursor },
     );
     expect(rest.map((entry) => entry.node.id)).toEqual([resolved.id]);
+  });
+});
+
+describe('getMySupportTimeoutEnd', () => {
+  it('names when the sender’s live time-out ends, and nothing once it is lifted', async () => {
+    expect(await getMySupportTimeoutEnd(asUser(C))).toBeNull();
+    const until = FUTURE();
+    const timeout = await timeOutSupportSender(asUser(E), C.id, until, null);
+    expect((await getMySupportTimeoutEnd(asUser(C)))?.getTime()).toBe(until.getTime());
+    // Another sender's time-out is outside the query.
+    expect(await getMySupportTimeoutEnd(asUser(B))).toBeNull();
+    await liftSupportTimeout(asUser(E), timeout.id);
+    expect(await getMySupportTimeoutEnd(asUser(C))).toBeNull();
+  });
+
+  it('refuses an unverified account', async () => {
+    const unverified = { ...asUser(C), emailUnverified: true as const };
+    expect(await failureOf(getMySupportTimeoutEnd(unverified))).toBeInstanceOf(Forbidden);
+    expect(await getMySupportTimeoutEnd(asUser(C))).toBeNull();
   });
 });

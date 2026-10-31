@@ -25,6 +25,7 @@ const PUBLIC_ROUTES = [
   '/email/*', // public/email/: a mail client fetches its images and fonts with no cookie
   '/compendium', // the one public surface, read by anyone, indexed by search engines
   '/compendium/*',
+  '/support', // offers a signed-out visitor Sign In and holds no data
   // What a crawler or a browser asks for with no cookie and no page to ask it.
   // The icon and manifest files are listed ahead of their existence so the first favicon request
   // is never redirected to sign-in.

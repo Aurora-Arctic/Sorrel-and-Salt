@@ -36,6 +36,8 @@ design is in [`../design-decisions/mb.7-navigation.md`](../design-decisions/mb.7
 | [`section-nav.md`](section-nav.md)   | The one section nav for the coven and admin areas: icon tabs in the context row, a bottom bar on a phone                                     |
 | [`page-nav.md`](page-nav.md)         | A page's own menu of jump links to its sections, marking the one in view                                                                     |
 | [`link-hint.md`](link-hint.md)       | A dot inside a link that shows the click took while the next page loads                                                                      |
+| [`support-link.md`](support-link.md) | A link that opens the Support dialog over the current page                                                                                   |
+| [`site-footer.md`](site-footer.md)   | The line under every page in both frames, holding the Support link                                                                           |
 
 ## Lists
 
@@ -63,3 +65,13 @@ design is in [`../design-decisions/mb.7-navigation.md`](../design-decisions/mb.7
 | Doc                                          | Component                                                                                 |
 | -------------------------------------------- | ----------------------------------------------------------------------------------------- |
 | [`ingredient-entry.md`](ingredient-entry.md) | An ingredient's page body on both entry routes: its own fields, then one section per form |
+
+## Support
+
+| Doc                                      | Component                                                                     |
+| ---------------------------------------- | ----------------------------------------------------------------------------- |
+| [`support-form.md`](support-form.md)     | The support request form, in the dialog and on `/support`                     |
+| [`support-dialog.md`](support-dialog.md) | The dialog opened by `?support=<kind>&error=<code>`, drawn once by `AppShell` |
+| [`support-panel.md`](support-panel.md)   | The body of `/support`: Sign In, the timeout end, or the form                 |
+| [`support-list.md`](support-list.md)     | The sender's own requests on `/account/support`, with replies and issue links |
+| [`report-this.md`](report-this.md)       | The link on the 404, 500 and global-error screens that opens a prefilled form |

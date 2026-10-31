@@ -112,6 +112,14 @@ type Documents = {
     "\n  mutation DuplicateSpell($workspaceId: ID!, $id: ID!) {\n    duplicateSpell(workspaceId: $workspaceId, id: $id) {\n      id\n    }\n  }\n": typeof types.DuplicateSpellDocument,
     "\n  mutation DeleteWorking($workspaceId: ID!, $id: ID!) {\n    deleteWorking(workspaceId: $workspaceId, id: $id)\n  }\n": typeof types.DeleteWorkingDocument,
     "\n  mutation SaveStock($workspaceId: ID!, $ingredientId: ID!, $input: SaveStockInput!) {\n    saveStock(workspaceId: $workspaceId, ingredientId: $ingredientId, input: $input) {\n      id\n    }\n  }\n": typeof types.SaveStockDocument,
+    "\n  mutation SendSupportRequest($input: SupportRequestInput!) {\n    sendSupportRequest(input: $input) {\n      id\n    }\n  }\n": typeof types.SendSupportRequestDocument,
+    "\n  mutation AssignSupportRequest($id: ID!, $assigneeId: ID) {\n    assignSupportRequest(id: $id, assigneeId: $assigneeId) {\n      id\n    }\n  }\n": typeof types.AssignSupportRequestDocument,
+    "\n  mutation SetSupportRequestCuratorVisible($id: ID!, $visible: Boolean!) {\n    setSupportRequestCuratorVisible(id: $id, visible: $visible) {\n      id\n    }\n  }\n": typeof types.SetSupportRequestCuratorVisibleDocument,
+    "\n  mutation ResolveSupportRequest($id: ID!) {\n    resolveSupportRequest(id: $id) {\n      id\n    }\n  }\n": typeof types.ResolveSupportRequestDocument,
+    "\n  mutation SetSupportRequestIssueUrl($id: ID!, $issueUrl: String) {\n    setSupportRequestIssueUrl(id: $id, issueUrl: $issueUrl) {\n      id\n    }\n  }\n": typeof types.SetSupportRequestIssueUrlDocument,
+    "\n  mutation ReplyToSupportRequest($requestId: ID!, $body: String!) {\n    replyToSupportRequest(requestId: $requestId, body: $body) {\n      id\n    }\n  }\n": typeof types.ReplyToSupportRequestDocument,
+    "\n  mutation TimeOutSupportSender($userId: ID!, $until: DateTime!, $note: String) {\n    timeOutSupportSender(userId: $userId, until: $until, note: $note) {\n      id\n    }\n  }\n": typeof types.TimeOutSupportSenderDocument,
+    "\n  mutation LiftSupportTimeout($id: ID!) {\n    liftSupportTimeout(id: $id) {\n      id\n    }\n  }\n": typeof types.LiftSupportTimeoutDocument,
     "\n  mutation GrantWorkspaceCreation($userId: ID!, $note: String) {\n    grantWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": typeof types.GrantWorkspaceCreationDocument,
     "\n  mutation RevokeWorkspaceCreation($userId: ID!, $note: String) {\n    revokeWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": typeof types.RevokeWorkspaceCreationDocument,
     "\n  mutation PauseAdminRoleChanges {\n    pauseAdminRoleChanges\n  }\n": typeof types.PauseAdminRoleChangesDocument,
@@ -217,6 +225,14 @@ const documents: Documents = {
     "\n  mutation DuplicateSpell($workspaceId: ID!, $id: ID!) {\n    duplicateSpell(workspaceId: $workspaceId, id: $id) {\n      id\n    }\n  }\n": types.DuplicateSpellDocument,
     "\n  mutation DeleteWorking($workspaceId: ID!, $id: ID!) {\n    deleteWorking(workspaceId: $workspaceId, id: $id)\n  }\n": types.DeleteWorkingDocument,
     "\n  mutation SaveStock($workspaceId: ID!, $ingredientId: ID!, $input: SaveStockInput!) {\n    saveStock(workspaceId: $workspaceId, ingredientId: $ingredientId, input: $input) {\n      id\n    }\n  }\n": types.SaveStockDocument,
+    "\n  mutation SendSupportRequest($input: SupportRequestInput!) {\n    sendSupportRequest(input: $input) {\n      id\n    }\n  }\n": types.SendSupportRequestDocument,
+    "\n  mutation AssignSupportRequest($id: ID!, $assigneeId: ID) {\n    assignSupportRequest(id: $id, assigneeId: $assigneeId) {\n      id\n    }\n  }\n": types.AssignSupportRequestDocument,
+    "\n  mutation SetSupportRequestCuratorVisible($id: ID!, $visible: Boolean!) {\n    setSupportRequestCuratorVisible(id: $id, visible: $visible) {\n      id\n    }\n  }\n": types.SetSupportRequestCuratorVisibleDocument,
+    "\n  mutation ResolveSupportRequest($id: ID!) {\n    resolveSupportRequest(id: $id) {\n      id\n    }\n  }\n": types.ResolveSupportRequestDocument,
+    "\n  mutation SetSupportRequestIssueUrl($id: ID!, $issueUrl: String) {\n    setSupportRequestIssueUrl(id: $id, issueUrl: $issueUrl) {\n      id\n    }\n  }\n": types.SetSupportRequestIssueUrlDocument,
+    "\n  mutation ReplyToSupportRequest($requestId: ID!, $body: String!) {\n    replyToSupportRequest(requestId: $requestId, body: $body) {\n      id\n    }\n  }\n": types.ReplyToSupportRequestDocument,
+    "\n  mutation TimeOutSupportSender($userId: ID!, $until: DateTime!, $note: String) {\n    timeOutSupportSender(userId: $userId, until: $until, note: $note) {\n      id\n    }\n  }\n": types.TimeOutSupportSenderDocument,
+    "\n  mutation LiftSupportTimeout($id: ID!) {\n    liftSupportTimeout(id: $id) {\n      id\n    }\n  }\n": types.LiftSupportTimeoutDocument,
     "\n  mutation GrantWorkspaceCreation($userId: ID!, $note: String) {\n    grantWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": types.GrantWorkspaceCreationDocument,
     "\n  mutation RevokeWorkspaceCreation($userId: ID!, $note: String) {\n    revokeWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": types.RevokeWorkspaceCreationDocument,
     "\n  mutation PauseAdminRoleChanges {\n    pauseAdminRoleChanges\n  }\n": types.PauseAdminRoleChangesDocument,
@@ -630,6 +646,38 @@ export function graphql(source: "\n  mutation DeleteWorking($workspaceId: ID!, $
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation SaveStock($workspaceId: ID!, $ingredientId: ID!, $input: SaveStockInput!) {\n    saveStock(workspaceId: $workspaceId, ingredientId: $ingredientId, input: $input) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation SaveStock($workspaceId: ID!, $ingredientId: ID!, $input: SaveStockInput!) {\n    saveStock(workspaceId: $workspaceId, ingredientId: $ingredientId, input: $input) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation SendSupportRequest($input: SupportRequestInput!) {\n    sendSupportRequest(input: $input) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation SendSupportRequest($input: SupportRequestInput!) {\n    sendSupportRequest(input: $input) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation AssignSupportRequest($id: ID!, $assigneeId: ID) {\n    assignSupportRequest(id: $id, assigneeId: $assigneeId) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation AssignSupportRequest($id: ID!, $assigneeId: ID) {\n    assignSupportRequest(id: $id, assigneeId: $assigneeId) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation SetSupportRequestCuratorVisible($id: ID!, $visible: Boolean!) {\n    setSupportRequestCuratorVisible(id: $id, visible: $visible) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation SetSupportRequestCuratorVisible($id: ID!, $visible: Boolean!) {\n    setSupportRequestCuratorVisible(id: $id, visible: $visible) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation ResolveSupportRequest($id: ID!) {\n    resolveSupportRequest(id: $id) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation ResolveSupportRequest($id: ID!) {\n    resolveSupportRequest(id: $id) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation SetSupportRequestIssueUrl($id: ID!, $issueUrl: String) {\n    setSupportRequestIssueUrl(id: $id, issueUrl: $issueUrl) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation SetSupportRequestIssueUrl($id: ID!, $issueUrl: String) {\n    setSupportRequestIssueUrl(id: $id, issueUrl: $issueUrl) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation ReplyToSupportRequest($requestId: ID!, $body: String!) {\n    replyToSupportRequest(requestId: $requestId, body: $body) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation ReplyToSupportRequest($requestId: ID!, $body: String!) {\n    replyToSupportRequest(requestId: $requestId, body: $body) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation TimeOutSupportSender($userId: ID!, $until: DateTime!, $note: String) {\n    timeOutSupportSender(userId: $userId, until: $until, note: $note) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation TimeOutSupportSender($userId: ID!, $until: DateTime!, $note: String) {\n    timeOutSupportSender(userId: $userId, until: $until, note: $note) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation LiftSupportTimeout($id: ID!) {\n    liftSupportTimeout(id: $id) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation LiftSupportTimeout($id: ID!) {\n    liftSupportTimeout(id: $id) {\n      id\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

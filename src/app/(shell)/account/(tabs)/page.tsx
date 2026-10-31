@@ -1,4 +1,5 @@
 import type { Metadata, Route } from 'next';
+import Link from 'next/link';
 import { readNumberedPage, readPageCursors } from '@/lib/numbered-page';
 import {
   countReceivedInvitations,
@@ -13,6 +14,7 @@ import PageNav from '../../../../components/PageNav';
 import ReceivedInvitations from '../../../../components/ReceivedInvitations';
 import { requireSession } from '../../../../lib/request-session';
 import { ACCOUNT_INVITATIONS_ID, ACCOUNT_PATH } from '../../../../lib/sign-in';
+import { SUPPORT_LIST_PATH } from '../../../../lib/support-path';
 import { signedInLanding } from '../../../../lib/landing';
 import type { AccountPageProps } from './types';
 
@@ -99,6 +101,19 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           }
           nextHref={hasNextPage && endCursor ? invitationsHref({ after: endCursor }) : undefined}
         />
+      </section>
+      <section
+        id="account-support"
+        className="page-frame__section panel"
+        aria-labelledby="account-support-heading"
+      >
+        <div className="header">
+          <h2 id="account-support-heading">Support</h2>
+          <p className="lede">
+            See what you have asked us and any replies on{' '}
+            <Link href={SUPPORT_LIST_PATH}>Your Support Requests</Link>.
+          </p>
+        </div>
       </section>
     </div>
   );

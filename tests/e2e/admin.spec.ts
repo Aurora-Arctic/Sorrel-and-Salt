@@ -31,6 +31,7 @@ test('an admin sees the admin layout and its nav', async ({ page }) => {
     ['Forms', '/admin/forms'],
     ['Deities', '/admin/deities'],
     ['Astrology', '/admin/celestial-bodies'],
+    ['Support', '/admin/support'],
     ['People', '/admin/users'],
   ];
   await expect(nav.getByRole('link')).toHaveCount(pages.length);
@@ -132,6 +133,7 @@ test('a curator reaches /admin and the curation pages, and is refused People and
     '/admin/deity-traditions',
     '/admin/celestial-bodies',
     '/admin/zodiac-signs',
+    '/admin/support',
   ]) {
     expect((await page.goto(path))?.status(), path).toBe(200);
   }

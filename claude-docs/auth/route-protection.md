@@ -19,7 +19,7 @@ answer.
   person who has forgotten their password has no session
   ([`passwords.md`](passwords.md)); `/invite/*`; and `/email/*`, the one prefix under
   `public/`, whose images and fonts a mail client fetches with no cookie
-  (MB.66, [`email.md`](../email.md)). MB.83 adds `/compendium`, `/compendium/*`,
+  (MB.66, [`email.md`](../email.md)). M15.29 adds `/support`, which shows a signed-out visitor Sign In in place of the form and holds no data. MB.83 adds `/compendium`, `/compendium/*`,
   `/robots.txt`, `/sitemap.xml`, `/llms.txt` and `/.well-known/*` (which covers
   `ai-catalog.json` and `ard.json`, [`../seo/ai-discovery.md`](../seo/ai-discovery.md)): the public
   compendium's pages and the files a crawler reads (MB.80), with the icon and
