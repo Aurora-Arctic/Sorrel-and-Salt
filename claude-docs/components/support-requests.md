@@ -23,6 +23,7 @@ same ones.
   and one Error line with the reference in monospace and an icon-only copy button, when the request has one), then the
   Issue section (below), then the
   thread (the sender's message first, tagged Sender, then each reply, tagged Staff) and the reply form. The controls are:
+  - **Waiting on Sender**, a switch beside the reply box on an open request in Reply mode (never in Internal Note mode): on, the reply moves the request to waiting on the sender. While the sender has a standing time-out (`request.timeouts`, not lifted, ending in the future) a notice beside it says "The sender cannot answer until <time>.", and the reply still sends. A sender's follow-up is tagged "Sender" in the thread.
   - **Reply** (a "Your Reply" field; Reply is disabled until there is a body) with **Resolve** opposite it (open requests
     only), for an admin or a curator the request is assigned to. The internal-note mode (M15.42) is open to a curator on any request they can read, not only an assigned one: the service allows it (`addSupportInternalNote` reads the request as the curator's own visible read), so the form needs no assigned-to gate.
   - A right column for an admin alone: **Assigned To**, **Shared With Curators** and **Time-Out**, a
