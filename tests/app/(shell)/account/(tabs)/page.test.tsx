@@ -5,25 +5,12 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import { encodeCursor } from '@/lib/pagination';
 import type { Session } from '@/lib/session';
 
-// The one account page: the Name, Email, Sign-In Methods, Password and Invitations sections, each linked from the page's own nav (claude-docs/auth/admin-bootstrap.md, "The account page").
+// The Account tab: the Name, Email and Invitations sections, each linked from the page's own nav (claude-docs/auth/admin-bootstrap.md, "The account page").
 // The session, row and linked accounts are mocked (tests/lib/request-session.test.ts's and the identity service's); that an unverified account never reaches the page is `requireSession()`'s, asserted there and in tests/e2e/account.spec.ts.
 
 const requireSession = vi.fn<() => Promise<Session>>();
-const linkedAccounts = vi.fn(async () => [{ id: 'a1', providerId: 'discord', accountId: 'd-1' }]);
-const sessionIsFresh = vi.fn(async () => true);
-const hasPassword = vi.fn(async () => true);
-const accountPasskeys = vi.fn(async () => [
-  { id: 'pk-1', name: 'Fixture Laptop', createdAt: '2026-10-01T09:00:00.000Z' },
-]);
-vi.mock('@/lib/request-session', () => ({
-  requireSession,
-  linkedAccounts,
-  sessionIsFresh,
-  hasPassword,
-  accountPasskeys,
-}));
+vi.mock('@/lib/request-session', () => ({ requireSession }));
 vi.mock('@/modules/coven', () => ({ firstCovenSlugOf: async () => undefined }));
-vi.mock('@/lib/social-providers-config', () => ({ configuredProviders: () => [] }));
 // Accept reads the router, which a page test has no app to give.
 vi.mock('next/navigation', async (importOriginal) => ({
   ...(await importOriginal<typeof import('next/navigation')>()),
@@ -85,8 +72,7 @@ describe('the /account page', () => {
 
     const nav = screen.getByRole('navigation', { name: 'On This Page' });
     const links = within(nav).getAllByRole('link');
-    expect(links.map((link) => link.textContent)).toContain('Two-Factor Sign-In');
-    expect(links).toHaveLength(7);
+    expect(links.map((link) => link.textContent)).toEqual(['Name', 'Email', 'Invitations']);
     // Each link lands on the section headed by its own words.
     for (const link of links) {
       const target = document.getElementById(link.getAttribute('href')?.slice(1) ?? '');
@@ -108,75 +94,12 @@ describe('the /account page', () => {
     );
   });
 
-  it("lists the session's passkeys in their section", async () => {
-    await renderPage();
-
-    const passkeys = within(section('Passkeys')).getByRole('list', { name: 'Passkeys' });
-    expect(within(passkeys).getAllByRole('listitem')).toHaveLength(1);
-    expect(within(passkeys).getByRole('button', { name: 'Remove Fixture Laptop' })).toBeEnabled();
-  });
-
   it('never shows a placeholder address', async () => {
     await renderPage('discord-1@pending.invalid');
 
     expect(within(section('Email')).getByRole('textbox', { name: 'Email Address' })).toHaveValue(
       '',
     );
-  });
-
-  it('makes Two-Factor Sign-In a section of its own, not a heading inside Password', async () => {
-    await renderPage();
-
-    expect(
-      within(section('Two-Factor Sign-In')).getByRole('button', { name: 'Turn On Two-Factor' }),
-    ).toBeVisible();
-    expect(within(section('Password')).queryByText('Two-Factor Sign-In')).toBeNull();
-    expect(within(section('Password')).queryByRole('button', { name: /Two-Factor/ })).toBeNull();
-  });
-
-  it('offers no Two-Factor Sign-In section, or nav entry, to an account with no password', async () => {
-    hasPassword.mockResolvedValueOnce(false);
-
-    await renderPage();
-
-    expect(screen.queryByRole('region', { name: 'Two-Factor Sign-In' })).toBeNull();
-    const nav = screen.getByRole('navigation', { name: 'On This Page' });
-    expect(within(nav).queryByRole('link', { name: 'Two-Factor Sign-In' })).toBeNull();
-  });
-
-  it('lists the password and the passkeys among the sign-in methods, each linking to its section', async () => {
-    await renderPage();
-
-    const methods = within(section('Sign-In Methods'));
-    expect(methods.getByRole('link', { name: 'Manage Password' })).toHaveAttribute(
-      'href',
-      '#account-password',
-    );
-    expect(methods.getByRole('link', { name: 'Manage Passkeys' })).toHaveAttribute(
-      'href',
-      '#account-passkeys',
-    );
-  });
-
-  // What each form does is PasswordSection's own tests'; the page picks the form by whether a password is held.
-  it('asks an account with a password for its current one, to change it', async () => {
-    hasPassword.mockResolvedValueOnce(true);
-
-    await renderPage();
-
-    expect(within(section('Password')).getByLabelText(/^Current Password/)).toBeVisible();
-    expect(
-      within(section('Password')).getByRole('button', { name: 'Change Password' }),
-    ).toBeVisible();
-  });
-
-  it('lets an account with providers alone set a first password without a current one', async () => {
-    hasPassword.mockResolvedValueOnce(false);
-
-    await renderPage();
-
-    expect(within(section('Password')).queryByLabelText(/^Current Password/)).toBeNull();
-    expect(within(section('Password')).getByRole('button', { name: 'Set Password' })).toBeVisible();
   });
 
   // The rows and their Accept are ReceivedInvitations' own tests'; the page reads them.
