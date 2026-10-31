@@ -81,12 +81,14 @@ const AdminCards = ({
             {
               heading: 'Revoke',
               action: 'foot',
+              headingClassName: 'admin-cards__revoke',
+              className: 'admin-cards__revoke',
               cell: (batch) =>
                 batch.pending > 0 ? (
                   <ConfirmedAction
                     label="Revoke Batch"
                     accessibleName={`Revoke Batch ${batchName(batch.batchId)}`}
-                    openClass="btn btn--quiet btn--small"
+                    openClass="btn btn--destructive btn--small"
                     title="Revoke Batch"
                     question={
                       <>
