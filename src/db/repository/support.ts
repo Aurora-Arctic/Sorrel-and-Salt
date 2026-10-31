@@ -4,6 +4,8 @@ import { supportReplies } from '../../modules/support/schema/support-replies';
 import { supportRequests } from '../../modules/support/schema/support-requests';
 import { supportSendCounts } from '../../modules/support/schema/support-send-counts';
 import { supportTimeouts } from '../../modules/support/schema/support-timeouts';
+import { SUPPORT_VIEWS } from '../../lib/support-path';
+import type { SupportView } from '../../lib/support-path';
 import { findPage, findPageCount } from './finders';
 import { notSoftDeleted } from './predicates';
 import { existsIn, selectFrom, selectOne } from './select';
@@ -13,6 +15,7 @@ import type {
   SortPart,
   SupportReader,
   SupportStatusCounts,
+  SupportViewCounts,
   SupportRequestFilter,
   SupportViewer,
   WriterContext,
@@ -58,8 +61,48 @@ const NEWEST_FIRST: readonly SortPart[] = [
   { expression: sql`-extract(epoch from ${supportRequests.createdAt})`, type: 'numeric' },
 ];
 
-function filterArms({ about, status, errorCode }: SupportRequestFilter): (SQL | undefined)[] {
+// The queue views: beta testers first, then the oldest sender activity, which a request with none dates from its sending.
+const QUEUE_ORDER: readonly SortPart[] = [
+  {
+    expression: sql`case when exists (select 1 from ${invitations} where ${invitations.kind} = 'card' and ${invitations.acceptedBy} = ${supportRequests.createdBy} and ${invitations.deletedAt} is null) then 0 else 1 end`,
+    type: 'integer',
+  },
+  {
+    expression: sql`extract(epoch from coalesce(${supportRequests.lastSenderActivityAt}, ${supportRequests.createdAt}))`,
+    type: 'numeric',
+  },
+];
+
+const QUEUE_VIEWS: readonly SupportView[] = ['needs_staff', 'mine', 'unassigned'];
+
+const orderOf = ({ view }: SupportRequestFilter): readonly SortPart[] =>
+  view && QUEUE_VIEWS.includes(view) ? QUEUE_ORDER : REQUEST_ORDER;
+
+/** What a view holds: the status, and for the queue views who holds the request. */
+function viewArm(reader: SupportReader, view: SupportView): SQL {
+  const open = eq(supportRequests.status, 'open');
+  switch (view) {
+    case 'needs_staff':
+      return open;
+    case 'mine':
+      return and(open, eq(supportRequests.assignedTo, reader.proof.userId)) as SQL;
+    case 'unassigned':
+      return and(open, isNull(supportRequests.assignedTo)) as SQL;
+    case 'waiting':
+      return eq(supportRequests.status, 'waiting_on_sender');
+    case 'resolved':
+      return eq(supportRequests.status, 'resolved');
+    case 'closed':
+      return eq(supportRequests.status, 'closed');
+  }
+}
+
+function filterArms(
+  reader: SupportReader,
+  { about, status, errorCode, view }: SupportRequestFilter,
+): (SQL | undefined)[] {
   return [
+    view ? viewArm(reader, view) : undefined,
     about ? eq(supportRequests.about, about) : undefined,
     status ? eq(supportRequests.status, status) : undefined,
     errorCode === undefined ? undefined : eq(supportRequests.errorCode, errorCode),
@@ -74,9 +117,9 @@ export function findSupportRequestPage(
 ) {
   return findPage(
     supportRequests,
-    REQUEST_ORDER,
+    orderOf(filter),
     page,
-    and(readerScope(reader), ...filterArms(filter)),
+    and(readerScope(reader), ...filterArms(reader, filter)),
   );
 }
 
@@ -88,10 +131,40 @@ export function findSupportRequestCount(
 ): Promise<PageCount> {
   return findPageCount(
     supportRequests,
-    REQUEST_ORDER,
+    orderOf(filter),
     start,
-    and(readerScope(reader), ...filterArms(filter)),
+    and(readerScope(reader), ...filterArms(reader, filter)),
   );
+}
+
+/**
+ * How many requests each view holds among those the reader may see and the filter’s About and error number leave. One
+ * query, so the tab row never asks six times.
+ */
+export async function findSupportViewCounts(
+  reader: SupportReader,
+  { about, errorCode }: SupportRequestFilter,
+): Promise<SupportViewCounts> {
+  const [row] = await selectFrom(
+    supportRequests,
+    and(
+      notSoftDeleted(supportRequests),
+      readerScope(reader),
+      ...filterArms(reader, { about, errorCode }),
+    ),
+    {
+      aggregate: Object.fromEntries(
+        SUPPORT_VIEWS.map(({ value }) => [
+          value,
+          sql<number>`count(*) filter (where ${viewArm(reader, value)})::int`,
+        ]),
+      ) as Record<SupportView, SQL<number>>,
+      over: {},
+    },
+  );
+  return Object.fromEntries(
+    SUPPORT_VIEWS.map(({ value }) => [value, row?.[value] ?? 0]),
+  ) as SupportViewCounts;
 }
 
 /** The request the reader may see, or `undefined` for one that is absent or outside their scope. */
