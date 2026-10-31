@@ -69,6 +69,10 @@ function groupedKey(key: string): string {
 }
 
 
+type Warning = { title: string; yes: string; no: string; go: () => void };
+const LEAVE_WARNING = { title: 'Leave Without Saving Your Codes?', yes: 'Leave', no: 'Stay' };
+const TURN_ON_WARNING = { title: 'Turn On Without Saving Your Codes?', yes: 'Turn On', no: 'Go Back' };
+
 const CODES_FILE = 'sorrel-and-salt-backup-codes.txt';
 
 /** Hands the codes to the browser as a text file, one per line. */
@@ -152,14 +156,17 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
   const [saved, setSaved] = useState<'on' | 'off'>();
 
   // The codes are shown once: leaving before any is saved asks first (a tab close or reload gets the browser's own question).
-  // An in-app navigation is held by a dialog, kept here until Leave or Stay answers it.
-  const [leaving, setLeaving] = useState<{ go: () => void }>();
-  const stayRef = useRef<HTMLButtonElement>(null);
-  useLeaveGuard(enrolment !== undefined && !kept, (proceed) => setLeaving({ go: proceed }));
-  // Focus starts on Stay, the safe answer, once the dialog is open.
+  // The codes' warning dialog: an in-app navigation held by the leave guard, or a Confirm pressed before the codes were saved.
+  // `go` runs on the acting answer; the other answer, Esc and Close only close it.
+  const [warning, setWarning] = useState<Warning>();
+  const backRef = useRef<HTMLButtonElement>(null);
+  useLeaveGuard(enrolment !== undefined && !kept, (proceed) =>
+    setWarning({ ...LEAVE_WARNING, go: proceed }),
+  );
+  // Focus starts on the safe answer once the dialog is open.
   useEffect(() => {
-    if (leaving) queueMicrotask(() => stayRef.current?.focus());
-  }, [leaving]);
+    if (warning) queueMicrotask(() => backRef.current?.focus());
+  }, [warning]);
 
   const entered = code.replace(/\s/g, '');
 
@@ -194,9 +201,14 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
     setEnrolment({ totpURI: data.totpURI, backupCodes: data.backupCodes });
   };
 
-  const confirm = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
+  const confirm = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
     if (entered === '' || pending) return;
+    if (kept) void verify();
+    else setWarning({ ...TURN_ON_WARNING, go: () => void verify() });
+  };
+
+  const verify = async (): Promise<void> => {
     const data = await run(() => twoFactor.verifyTotp({ code: entered }));
     if (!data) return;
     setCode('');
@@ -225,9 +237,9 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
 
   return (
     <div className="two-factor">
-      {leaving &&
+      {warning &&
         createPortal(
-          <Modal title="Leave Without Saving Your Codes?" onClose={() => setLeaving(undefined)}>
+          <Modal title={warning.title} onClose={() => setWarning(undefined)}>
             {(close) => (
               <>
                 <p>Your backup codes won&apos;t be shown again.</p>
@@ -236,14 +248,14 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
                     type="button"
                     className="btn btn--destructive"
                     onClick={() => {
-                      leaving.go();
                       close();
+                      warning.go();
                     }}
                   >
-                    Leave
+                    {warning.yes}
                   </button>
-                  <button ref={stayRef} type="button" className="btn btn--quiet" onClick={close}>
-                    Stay
+                  <button ref={backRef} type="button" className="btn btn--quiet" onClick={close}>
+                    {warning.no}
                   </button>
                 </div>
               </>
@@ -324,7 +336,7 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
             </li>
           </ol>
           {/* `noValidate`: every refusal is the server's, worded and placed like the rest. */}
-          <form className="form" onSubmit={(event) => void confirm(event)} noValidate>
+          <form className="form" onSubmit={confirm} noValidate>
             <FieldShell label="Code From Your App" required {...codeField}>
               <input
                 id={codeField.controlId}
