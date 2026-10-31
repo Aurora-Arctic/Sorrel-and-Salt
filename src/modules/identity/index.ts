@@ -32,6 +32,8 @@ export * from './loaders/users-by-id';
 export * from './loaders/users-by-id-for-admin';
 export type {
   AdminInvitationFilter,
+  CardBatchFilter,
+  CardBatchStatus,
   CardState,
   MintedCards,
   AdminRoleChangePauseState,

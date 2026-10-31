@@ -38,6 +38,13 @@ test('an admin mints a sheet of cards and the Invitation Cards tab lists the bat
   await expect(page.getByRole('button', { name: /^Revoke Batch / })).toHaveCount(1);
   await assertNoAccessibilityViolations(page);
 
+  // A filter applied from the form: the URL holds it and the page has no violations with it on.
+  await page.getByRole('combobox', { name: 'Status' }).click();
+  await page.getByRole('option', { name: 'Live' }).click();
+  await expect(page).toHaveURL(/status=live/);
+  await expect(page.getByRole('button', { name: /^Revoke Batch / })).toHaveCount(1);
+  await assertNoAccessibilityViolations(page);
+
   await page.goto('/admin/card-sign-ups');
   await expect(page.getByText('No one has accepted a card yet.')).toBeVisible();
   await assertNoAccessibilityViolations(page);

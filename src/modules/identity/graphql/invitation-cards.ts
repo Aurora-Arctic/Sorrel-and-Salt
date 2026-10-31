@@ -1,7 +1,7 @@
 import { builder } from '../../../graphql/builder';
 import { AuditInfo } from '../../../graphql/schema/audit';
-import { sessionOf } from '../../../graphql/context-helpers';
-import type { CardAttemptRow, CardRow } from '../../../db/repository';
+import { definedArgs, sessionOf } from '../../../graphql/context-helpers';
+import type { CardAttemptRow, CardBatchStatus, CardRow } from '../../../db/repository';
 import {
   cardArrivalsCsv,
   cardState,
@@ -99,6 +99,17 @@ const MintedCardsRef = builder.objectRef<MintedCards>('MintedInvitationCards').i
   }),
 });
 
+const CardBatchStatusEnum = builder.enumType('InvitationCardBatchStatus', {
+  description:
+    'Where a batch stands: live while a card can still be accepted; else used up, expired or revoked.',
+  values: {
+    live: { value: 'live' },
+    revoked: { value: 'revoked' },
+    expired: { value: 'expired' },
+    usedUp: { value: 'used-up' },
+  } satisfies Record<string, { value: CardBatchStatus }>,
+});
+
 export interface CardBatch {
   batchId: string;
   mintedAt: Date;
@@ -138,10 +149,49 @@ const CardBatchRef = builder.objectRef<CardBatch>('InvitationCardBatch').impleme
 builder.queryField('invitationCardBatches', (t) =>
   t.pagedConnection({
     type: CardBatchRef,
-    description: 'The batches of cards, newest first. Site admins only.',
+    description:
+      'The batches of cards, newest first, narrowed by every filter given. Site admins only.',
+    args: {
+      batch: t.arg.string({
+        required: false,
+        description: 'The start of the batch number, case-insensitively.',
+      }),
+      status: t.arg({ type: CardBatchStatusEnum, required: false }),
+      mintedFrom: t.arg({
+        type: 'LocalDate',
+        required: false,
+        description: 'First day minted, in UTC.',
+      }),
+      mintedTo: t.arg({
+        type: 'LocalDate',
+        required: false,
+        description: 'Last day minted, in UTC.',
+      }),
+      expiresFrom: t.arg({
+        type: 'LocalDate',
+        required: false,
+        description: 'First day of expiry, in UTC.',
+      }),
+      expiresTo: t.arg({
+        type: 'LocalDate',
+        required: false,
+        description: 'Last day of expiry, in UTC.',
+      }),
+    },
     authScopes: { admin: true },
-    resolve: async (_root, _args, page, context) =>
-      (await listCardBatches(sessionOf(context), page)).map((entry) => ({
+    resolve: async (
+      _root,
+      { batch, status, mintedFrom, mintedTo, expiresFrom, expiresTo },
+      page,
+      context,
+    ) =>
+      (
+        await listCardBatches(
+          sessionOf(context),
+          definedArgs({ batch, status, mintedFrom, mintedTo, expiresFrom, expiresTo }),
+          page,
+        )
+      ).map((entry) => ({
         ...entry,
         node: {
           batchId: entry.node.batchId,

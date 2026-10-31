@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // The `/admin/invitation-cards` page: the guard first, then the identity reads. What the guard and services decide is
@@ -54,10 +54,49 @@ describe('/admin/invitation-cards', () => {
 
     render(await CardsPage({ searchParams: Promise.resolve({}) }));
 
-    expect(screen.getByText('27')).toBeInTheDocument();
-    expect(screen.getByText('Live')).toBeInTheDocument();
+    const row = within(screen.getAllByRole('row')[1]);
+    expect(row.getByText('27')).toBeInTheDocument();
+    expect(row.getByText('Live')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Revoke Batch b1111111/ })).toBeInTheDocument();
     expect(screen.queryByText(/a-hash-that-must-not-render/)).toBeNull();
     expect(cardBatchTotals).toHaveBeenCalledWith(ADMIN, [BATCH]);
+  });
+
+  it('reads the filter from the address, sends it to the list and the count, and shows it', async () => {
+    listCardBatches.mockResolvedValue([]);
+    countCardBatches.mockResolvedValue({ total: 0, before: 0 });
+    cardBatchTotals.mockResolvedValue([]);
+    const sent = {
+      batch: 'b11',
+      status: 'revoked',
+      mintedFrom: '2026-10-01',
+      mintedTo: '2026-10-31',
+      expiresFrom: '2026-11-01',
+      expiresTo: '2026-12-31',
+    };
+
+    render(
+      await CardsPage({
+        searchParams: Promise.resolve({ ...sent, status: ' revoked ', batch: ' b11 ' }),
+      }),
+    );
+
+    expect(listCardBatches).toHaveBeenCalledWith(ADMIN, sent, expect.anything());
+    expect(countCardBatches).toHaveBeenCalledWith(ADMIN, sent, undefined);
+    expect(screen.getByRole('searchbox', { name: 'Batch' })).toHaveValue('b11');
+  });
+
+  it('drops a status it does not know and a day that is not a day', async () => {
+    listCardBatches.mockResolvedValue([]);
+    countCardBatches.mockResolvedValue({ total: 0, before: 0 });
+    cardBatchTotals.mockResolvedValue([]);
+
+    await CardsPage({ searchParams: Promise.resolve({ status: 'gone', mintedFrom: 'soon' }) });
+
+    expect(listCardBatches).toHaveBeenCalledWith(
+      ADMIN,
+      expect.objectContaining({ status: undefined, mintedFrom: '' }),
+      expect.anything(),
+    );
   });
 });

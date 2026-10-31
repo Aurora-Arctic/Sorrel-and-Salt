@@ -7,7 +7,12 @@ import type {
   SiteInvitationRow,
 } from '../../db/repository';
 
-export type { PrivilegeChangeFilter, UserFilter } from '../../db/repository';
+export type {
+  CardBatchFilter,
+  CardBatchStatus,
+  PrivilegeChangeFilter,
+  UserFilter,
+} from '../../db/repository';
 
 export type UserRow = typeof users.$inferSelect;
 

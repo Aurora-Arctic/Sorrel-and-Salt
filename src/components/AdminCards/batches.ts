@@ -25,3 +25,6 @@ export const STATUS_LABEL: Record<BatchStatus, string> = {
   expired: 'Expired',
   'used-up': 'Used up',
 };
+
+/** Every status, in the order the filter lists them. */
+export const BATCH_STATUSES = Object.keys(STATUS_LABEL) as BatchStatus[];

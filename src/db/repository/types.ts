@@ -1097,6 +1097,21 @@ export type CardBatchTotal = {
   attempts: number;
 };
 
+/** Where a batch of cards stands, as the admin Invitation Cards table words it. */
+export type CardBatchStatus = 'live' | 'revoked' | 'expired' | 'used-up';
+
+/** What the admin batch list is narrowed by. Each part is optional, and absent means no filter. */
+export interface CardBatchFilter {
+  /** The start of the batch number, case-insensitive. */
+  batch?: string;
+  status?: CardBatchStatus;
+  /** Days as `YYYY-MM-DD` in UTC, both ends included. */
+  mintedFrom?: string;
+  mintedTo?: string;
+  expiresFrom?: string;
+  expiresTo?: string;
+}
+
 /** A card in any state: always in a batch. */
 export type CardRow = InvitationRow & { kind: 'card'; batchId: string };
 

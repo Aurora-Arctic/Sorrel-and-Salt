@@ -52,11 +52,15 @@ export interface AdminCardsProps extends Partial<PagerHrefs<Route>> {
   cursor?: AdminCardsCursor;
   /** Where this page stands, the pager's "Page X of Y". */
   position?: PagePosition;
+  /** The filter the address holds; none when left out. */
+  filter?: CardsFilter;
   /** Whether the address opens the mint form, `?mint`. */
   minting?: boolean;
 }
 
 export interface MintCardsProps {
+  /** The filter the form opens over, which the tab keeps. */
+  filter?: CardsFilter;
   /** The page the tab shows, which the form opens over; the first when left out. */
   cursor?: AdminCardsCursor;
 }
@@ -91,4 +95,18 @@ export interface AdminArrivalsProps extends Partial<PagerHrefs<Route>> {
   arrivals: ArrivalEntry[];
   /** Where this page stands, the pager's "Page X of Y". */
   position?: PagePosition;
+}
+
+/** The batch filter the address holds, every part text and blank for none: a day is `YYYY-MM-DD`, a status one of `BatchStatus`. */
+export interface CardsFilter {
+  batch: string;
+  status: BatchStatus | '';
+  mintedFrom: string;
+  mintedTo: string;
+  expiresFrom: string;
+  expiresTo: string;
+}
+
+export interface CardsFilterProps {
+  filter: CardsFilter;
 }

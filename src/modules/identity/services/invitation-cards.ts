@@ -13,7 +13,13 @@ import {
   findManyByIds,
   withAudit,
 } from '../../../db/repository';
-import type { CardAttemptRow, CardBatchTotal, CardPosition, CardRow } from '../../../db/repository';
+import type {
+  CardAttemptRow,
+  CardBatchFilter,
+  CardBatchTotal,
+  CardPosition,
+  CardRow,
+} from '../../../db/repository';
 import { NotFound, ValidationError } from '../../../lib/errors';
 import { CARDS_PER_SHEET, MAX_SHEETS_PER_BATCH } from '../../../lib/invitation-cards/limits';
 import { newCardToken } from '../../../lib/invitation-token';
@@ -26,6 +32,30 @@ import type { CardState, MintedCards } from '../types';
 
 // The admin's half of the invitation cards: minting a batch by the sheet, listing the cards and the batches, revoking a batch, and the arrivals list with its CSV.
 // What a card admits is invitation-acceptance.ts's (claude-docs/design-decisions/m15.17-invitation-cards.md).
+
+const DAY = /^\d{4}-\d{2}-\d{2}$/;
+
+// A blank text part is no filter, and a day is checked here: the database would refuse a malformed one with an error.
+function parsedBatchFilter(filter: CardBatchFilter): CardBatchFilter {
+  const day = (value: string | undefined) => {
+    if (!value) return undefined;
+    if (
+      !DAY.test(value) ||
+      Number.isNaN(Date.parse(value)) ||
+      new Date(value).toISOString().slice(0, 10) !== value
+    )
+      throw new ValidationError([{ path: ['day'], message: 'A day is written YYYY-MM-DD' }]);
+    return value;
+  };
+  return {
+    batch: filter.batch?.trim() || undefined,
+    status: filter.status,
+    mintedFrom: day(filter.mintedFrom),
+    mintedTo: day(filter.mintedTo),
+    expiresFrom: day(filter.expiresFrom),
+    expiresTo: day(filter.expiresTo),
+  };
+}
 
 const REFUSAL = 'Only a site admin may mint, list or revoke invitation cards';
 
@@ -89,10 +119,11 @@ export async function revokeInvitationCardBatch(
  */
 export async function listCardBatches(
   session: Session,
+  filter: CardBatchFilter,
   page: PageRequest,
 ): Promise<PageEntry<CardRow>[]> {
   const admin = assertSiteAdmin(session, REFUSAL);
-  return findCardBatchPage(admin, page);
+  return findCardBatchPage(admin, parsedBatchFilter(filter), page);
 }
 
 /**
@@ -102,10 +133,11 @@ export async function listCardBatches(
  */
 export async function countCardBatches(
   session: Session,
+  filter: CardBatchFilter,
   start: Cursor | undefined,
 ): Promise<PageCount> {
   const admin = assertSiteAdmin(session, REFUSAL);
-  return findCardBatchCount(admin, start);
+  return findCardBatchCount(admin, parsedBatchFilter(filter), start);
 }
 
 /**
