@@ -249,6 +249,17 @@ describe('Issue', () => {
   });
 });
 
+describe('A linked issue', () => {
+  it('shows the address with an edit control, and opens the field when it is used', () => {
+    open(ADMIN, { issueUrl: 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/12' });
+    expect(within(dialog()).queryByRole('textbox', { name: 'Issue Address' })).toBeNull();
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Change Issue Address' }));
+    expect(within(dialog()).getByRole('textbox', { name: 'Issue Address' })).toHaveValue(
+      'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/12',
+    );
+  });
+});
+
 describe('What a viewer is shown', () => {
   it('gives an admin every control', () => {
     open(ADMIN);
