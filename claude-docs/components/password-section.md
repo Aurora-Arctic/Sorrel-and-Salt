@@ -97,7 +97,8 @@ Each submit is disabled until its field has something in it, and is a
 `.panel` inside the account page's `.page-frame--narrow`. Nothing past the
 tokens. `.two-factor` draws the QR code in `$text-primary` on `$surface-card`,
 so it is light on dark in the dark theme; the design review should check that
-common authenticator apps scan the inverted code.
+common authenticator apps scan the inverted code. The backup codes sit in two equal columns,
+each code centred in its column, with no list marker.
 
 ## Stories
 
