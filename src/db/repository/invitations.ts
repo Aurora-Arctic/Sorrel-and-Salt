@@ -468,6 +468,19 @@ export function findCardBatchTotals(
   );
 }
 
+/** Each named card's place in its batch, by invitation id; a card minted before places were kept has none. */
+export async function findCardPositions(
+  _admin: SiteAdmin,
+  invitationIds: readonly string[],
+): Promise<{ id: string; position: number | null }[]> {
+  if (invitationIds.length === 0) return [];
+  const rows = await selectFrom(
+    invitations,
+    and(cardKind(), notSoftDeleted(invitations), inArray(invitations.id, [...invitationIds])),
+  );
+  return rows.map((row) => ({ id: row.id, position: row.position }));
+}
+
 /** A batch's attempts, latest first: the key is ascending, so the instant is negated, as the other lists' is. */
 const CARD_ATTEMPT_ORDER: readonly SortPart[] = [
   {
@@ -568,10 +581,16 @@ export function invitationWrites({
             .insert(invitations)
             .values(
               tokens.map(
-                (token) =>
+                (token, index) =>
                   applyAudit(
                     'insert',
-                    { kind: 'card', batchId, expiresAt, tokenHash: hashToken(token) },
+                    {
+                      kind: 'card',
+                      batchId,
+                      expiresAt,
+                      tokenHash: hashToken(token),
+                      position: index + 1,
+                    },
                     session,
                   ) as never,
               ),

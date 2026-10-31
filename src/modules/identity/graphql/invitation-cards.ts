@@ -72,6 +72,12 @@ const CardAttemptRef = builder.objectRef<CardAttemptRow>('InvitationCardAttempt'
     }),
     firstAttemptedAt: t.expose('createdAt', { type: 'DateTime' }),
     lastAttemptedAt: t.expose('lastAttemptedAt', { type: 'DateTime' }),
+    cardPosition: t.int({
+      nullable: true,
+      description:
+        "The card's place in its batch from 1, in the order the print PDF lays the fronts out; null for a card minted before places were kept.",
+      resolve: (row, _args, { loaders }) => loaders.cardPositionById.load(row.invitationId),
+    }),
     account: t.field({
       type: UserRef,
       nullable: true,

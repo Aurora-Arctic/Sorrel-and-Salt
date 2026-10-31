@@ -779,6 +779,11 @@ type InvitationCardAttempt {
 
   """How many times this account was refused for this reason."""
   attempts: Int!
+
+  """
+  The card's place in its batch from 1, in the order the print PDF lays the fronts out; null for a card minted before places were kept.
+  """
+  cardPosition: Int
   firstAttemptedAt: DateTime!
   id: ID!
   lastAttemptedAt: DateTime!

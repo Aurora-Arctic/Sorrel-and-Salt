@@ -9,6 +9,7 @@ import {
   findCardBatchPage,
   findCardBatchTotals,
   findCardCount,
+  findCardPositions,
   findManyByIds,
   withAudit,
 } from '../../../db/repository';
@@ -105,6 +106,19 @@ export async function countCardBatches(
 ): Promise<PageCount> {
   const admin = assertSiteAdmin(session, REFUSAL);
   return findCardBatchCount(admin, start);
+}
+
+/**
+ * The place in its batch of each named card, from 1; null for a card minted before places were kept. A card not named is absent.
+ *
+ * @throws {Forbidden} the session's role is not `admin`.
+ */
+export async function cardPositions(
+  session: Session,
+  invitationIds: readonly string[],
+): Promise<{ id: string; position: number | null }[]> {
+  const admin = assertSiteAdmin(session, REFUSAL);
+  return findCardPositions(admin, invitationIds);
 }
 
 /**

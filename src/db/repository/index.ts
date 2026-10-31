@@ -129,6 +129,7 @@ export {
   findCardAttemptPage,
   findCardBatchTotals,
   findCardCount,
+  findCardPositions,
   findInvitationByToken,
   findInvitationInWorkspace,
   findInvitedCoven,

@@ -22,7 +22,10 @@ undeclared the two and MB.203 dropped them (`0059`). Why one table, why it is
   not offer it.
 - **Cards (M15.17).** A third shape of the same table: `kind` is `address` (the
   default) or `card`, and `batch_id` (nullable uuid, no table) groups the cards
-  of one mint. `email` is nullable. A card is a printed code bound to no address,
+  of one mint. `position` (nullable smallint, from 1) is a card's place in its
+  batch, in the order the print PDF lays the fronts out; `invitations_position_card_only`
+  keeps it off address rows and `invitations_position_positive` keeps it at 1 or more.
+  Cards minted before it was kept hold null. `email` is nullable. A card is a printed code bound to no address,
   coven or site role. `invitations_kind_known` admits the two kinds;
   `invitations_kind_shape` requires an `address` row's `email` and a `card`'s
   `email`, `workspace_id`, `role` and `site_role` to be null. A card's token is

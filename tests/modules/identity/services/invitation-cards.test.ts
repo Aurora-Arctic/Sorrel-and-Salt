@@ -78,6 +78,25 @@ describe('mintInvitationCards', () => {
     expect(JSON.stringify(rows)).not.toContain(minted.tokens[0]);
   });
 
+  it('numbers each card by its place in the token list, which is the order the PDF lays the fronts out', async () => {
+    const minted = await mintInvitationCards(asUser(E), 2, NEXT_WEEK());
+
+    const rows =
+      await sql`select token_hash, position from invitations where kind = 'card' order by position`;
+    expect(rows.map((row) => row.position)).toEqual(Array.from({ length: 18 }, (_, i) => i + 1));
+    expect(rows.map((row) => row.token_hash)).toEqual(minted.tokens.map(sha256));
+  });
+
+  it('refuses a position on an address invitation and a position below 1 on a card', async () => {
+    await mintInvitationCards(asUser(E), 1, NEXT_WEEK());
+    await expect(sql`update invitations set position = 0 where kind = 'card'`).rejects.toThrow(
+      /invitations_position_positive/,
+    );
+    await expect(
+      sql`insert into invitations (email, token_hash, kind, site_role, position, created_by, updated_by) values ('x@example.test', 'h', 'address', 'curator', 1, ${E.id}, ${E.id})`,
+    ).rejects.toThrow(/invitations_position_card_only/);
+  });
+
   it(`mints ${MAX_SHEETS_PER_BATCH} sheets in one call and refuses one more`, async () => {
     const minted = await mintInvitationCards(asUser(E), MAX_SHEETS_PER_BATCH, NEXT_WEEK());
     expect(minted.tokens).toHaveLength(MAX_SHEETS_PER_BATCH * CARDS_PER_SHEET);
@@ -169,6 +188,7 @@ describe('listing', () => {
 
     expect(totals.find((t) => t.batchId === batch.batchId)).toEqual({
       batchId: batch.batchId,
+      attempts: 0,
       cards: CARDS_PER_SHEET,
       accepted: 1,
       pending: CARDS_PER_SHEET - 3,
