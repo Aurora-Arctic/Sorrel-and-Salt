@@ -60,7 +60,7 @@ const readBatches = cache(
         batchId: node.batchId,
         mintedAt: node.createdAt,
         expiresAt: node.expiresAt,
-        note: node.batchNote,
+        note: node.note,
         ...counts,
         attempts: total?.attempts ?? 0,
         status: batchStatus(counts, node.expiresAt, now),

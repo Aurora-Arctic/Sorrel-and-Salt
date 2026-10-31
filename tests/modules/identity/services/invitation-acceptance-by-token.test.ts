@@ -5,6 +5,7 @@ import { Forbidden, NotFound } from '@/lib/errors';
 import {
   acceptInvitation,
   invitationStanding,
+  mintInvitationCards,
   pauseAdminRoleChanges,
   resumeAdminRoleChanges,
 } from '@/modules/identity';
@@ -554,6 +555,27 @@ describe('acceptInvitation, on a card', () => {
     expect((await sql`select batch_id from invitations`)[0]).toMatchObject({
       batch_id: CARD_BATCH,
     });
+  });
+
+  it('records the note the batch was minted with in the privilege ledger', async () => {
+    const minted = await mintInvitationCards(
+      asUser(E),
+      1,
+      new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      'Handed out at the autumn fair',
+    );
+    // The precondition: the minted card is pending and the note was stored on its row.
+    expect(
+      (await sql`select note from invitations where batch_id = ${minted.batchId}`)[0],
+    ).toMatchObject({
+      note: 'Handed out at the autumn fair',
+    });
+
+    await acceptInvitation(asUser(AS_STRANGER), minted.tokens[0]!);
+
+    expect(await ledger()).toEqual([
+      expect.objectContaining({ via: 'card', note: 'Handed out at the autumn fair' }),
+    ]);
   });
 
   it('points an unverified account at the email page, while the card stays pending', async () => {

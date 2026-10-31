@@ -30,7 +30,6 @@ const OWN_COLUMNS = [
   'kind',
   'batch_id',
   'position',
-  'batch_note',
 ];
 
 const TOKEN_HASH_INDEX = 'invitations_token_hash_unique';

@@ -1137,8 +1137,8 @@ describe('invitation cards', () => {
     });
 
     it('keeps the batches whose note holds the text anywhere, in any case, a percent sign read literally', async () => {
-      await sql`update invitations set batch_note = 'Handed out at the Autumn Fair' where batch_id = ${ALPHA}`;
-      await sql`update invitations set batch_note = '100% for the shop' where batch_id = ${BRAVO}`;
+      await sql`update invitations set note = 'Handed out at the Autumn Fair' where batch_id = ${ALPHA}`;
+      await sql`update invitations set note = '100% for the shop' where batch_id = ${BRAVO}`;
 
       expect(await batches({ batch: 'autumn' })).toEqual([ALPHA]);
       expect(await batches({ batch: 'FAIR' })).toEqual([ALPHA]);
