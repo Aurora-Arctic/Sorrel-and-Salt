@@ -39,7 +39,7 @@ convention) and split across two schema files:
 - **`sign_in_failures`, `passkeys` and `two_factors`**, in the same file —
   tables for the sign-in options of M16, none yet read by a hook or a plugin.
   `sign_in_failures` is one row per account counting failed password
-  sign-ins (`user_id` is its key, `locked_until`, `password_disabled`); it
+  sign-ins (`user_id` is its key, `locked_until`); it
   is the app's, written outside `withAudit` by `repository/sign-in-failures.ts`.
   `passkeys` and `two_factors` (with `users.two_factor_enabled`) hold the
   columns the `passkey` and `twoFactor` plugins declare, and carry no audit
