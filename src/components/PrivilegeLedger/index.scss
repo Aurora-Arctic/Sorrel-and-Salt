@@ -8,6 +8,15 @@
   white-space: nowrap;
 }
 
+// The table above the stacking width: the time muted at caption size, as the user list's Signed Up is.
+// Scoped here because a card already labels each fact.
+@container data-table (width > #{$table-stack-width}) {
+  .privilege-ledger .privilege-ledger__fact {
+    color: $text-muted;
+    font-size: type-size('caption');
+  }
+}
+
 // A note is running text in a narrow column, held to the reading measure.
 .privilege-ledger__note {
   max-width: $measure;
