@@ -3,6 +3,7 @@ import postgres from 'postgres';
 import { getTableName } from 'drizzle-orm';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
+import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 import { SUPPORT_ABOUTS } from '@/lib/support-path';
 import { supportRequests } from '@/modules/support/schema/support-requests';
@@ -27,6 +28,7 @@ const OWN_COLUMNS = [
   'closed_at',
   'linked_from',
   'error_reference',
+  'sender_email',
 ];
 
 const LIST_INDEX = 'support_requests_status_created_idx';
@@ -135,6 +137,44 @@ describe('support_requests table', () => {
       values ('bug', 'Subject', 'Message', '/', '1234567890', ${SENDER}, ${SENDER}) returning error_reference`;
 
     expect(row.error_reference).toBe('1234567890');
+  });
+
+  describe('the sender', () => {
+    const send = (createdBy: string, email: string | null) => sql`
+      insert into support_requests (about, subject, message, path, sender_email, created_by, updated_by)
+      values ('question', 'Subject', 'Message', '/', ${email}, ${createdBy}, ${createdBy}) returning sender_email`;
+
+    async function seedSignedOutSender() {
+      await sql`insert into users (id, name, email, role, created_by, updated_by) values (${SIGNED_OUT_SENDER_ID}, 'Support, signed out', 'signed-out@sorrel.invalid', 'user', ${SENDER}, ${SENDER}) on conflict (id) do nothing`;
+    }
+
+    it('accepts an account with no address', async () => {
+      const [row] = await send(SENDER, null);
+
+      expect(row.sender_email).toBeNull();
+    });
+
+    it('accepts an address with the signed-out sender account', async () => {
+      await seedSignedOutSender();
+
+      const [row] = await send(SIGNED_OUT_SENDER_ID, 'visitor@example.test');
+
+      expect(row.sender_email).toBe('visitor@example.test');
+    });
+
+    it('refuses an address beside an ordinary account', async () => {
+      const error = await failureOf(send(SENDER, 'visitor@example.test'));
+
+      expect(error.code).toBe('23514');
+    });
+
+    it('refuses the signed-out sender account with no address', async () => {
+      await seedSignedOutSender();
+
+      const error = await failureOf(send(SIGNED_OUT_SENDER_ID, null));
+
+      expect(error.code).toBe('23514');
+    });
   });
 
   it('links to an existing request and refuses one that does not exist', async () => {
