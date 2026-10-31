@@ -1849,6 +1849,12 @@
     margin-bottom: space(4);
   }
 
+  // The topic cards sit as close to the Page label below as a label sits to its input: the form's
+  // gap less what brings it down to a field's own.
+  .support-form__about {
+    margin-block-end: calc(#{space(2)} - #{space(5)});
+  }
+
   .radio.radio--card {
     box-sizing: border-box;
     min-block-size: $control-height;

@@ -1,7 +1,24 @@
 // The addresses of the support screens and the parameters that open the Support dialog. Client-safe.
 
+import { SITE_ORIGIN } from './site';
+
 /** The longest error reference a request keeps; a digest is a short number. */
 export const ERROR_REFERENCE_MAX_LENGTH = 100;
+
+/** What a Page field says when its value is neither a path on this site nor an address of it. */
+export const PAGE_NOT_ON_SITE = "Start with / or the site's address.";
+
+/**
+ * Whether a request's page is a path on this site: empty, or starting with one `/` (not `//`, another host) or with
+ * `SITE_ORIGIN` followed by a path, query or fragment.
+ */
+export function isSitePage(value: string): boolean {
+  const page = value.trim();
+  if (page === '') return true;
+  if (page.startsWith('/')) return !page.startsWith('//');
+  if (!page.startsWith(SITE_ORIGIN)) return false;
+  return page.length === SITE_ORIGIN.length || /^[/?#]/.test(page.slice(SITE_ORIGIN.length));
+}
 
 /** The page with the request form, for a visitor with no shell round them. */
 export const SUPPORT_PATH = '/support';
@@ -32,37 +49,37 @@ export const SUPPORT_ABOUTS = [
   {
     value: 'accessibility',
     label: 'Accessibility',
-    description: 'Something on the site you cannot use or read.',
+    description: 'Something you cannot use or read.',
   },
   {
     value: 'bug',
     label: 'Bug',
-    description: 'Something is broken or does not do what it says.',
+    description: 'Something is broken or wrong.',
   },
   {
     value: 'account',
     label: 'Account & Sign-In',
-    description: 'Trouble signing in, changing your email, or using an invitation.',
+    description: 'Signing in, your email or an invitation.',
   },
   {
     value: 'compendium',
     label: 'Compendium Entry',
-    description: 'An entry looks wrong, or is missing a source.',
+    description: 'An entry looks wrong or lacks a source.',
   },
   {
     value: 'privacy',
     label: 'Privacy & Data',
-    description: 'A question or request about the data we hold on you.',
+    description: 'Your data, or a request about it.',
   },
   {
     value: 'feedback',
     label: 'Feedback',
-    description: 'Something you would like to see changed.',
+    description: 'Something you would like changed.',
   },
   {
     value: 'question',
     label: 'Question',
-    description: 'Anything else you would like to ask us.',
+    description: 'Anything else you would like to ask.',
   },
 ] as const;
 export type SupportAboutParam = (typeof SUPPORT_ABOUTS)[number]['value'];

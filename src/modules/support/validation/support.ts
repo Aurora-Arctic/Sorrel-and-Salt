@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { PAGE_NOT_ON_SITE, isSitePage } from '../../../lib/support-path';
 import { requiredText } from '../../../lib/validation';
 import { supportRequestAbout } from '../schema/support-requests';
 
@@ -21,7 +22,11 @@ export const SupportRequestInput = z.object({
     error: `Keep the subject to ${SUBJECT_MAX_LENGTH} characters`,
   }),
   message: SupportMessage,
-  path: z.string().max(PATH_MAX_LENGTH, { error: 'That page address is too long' }).nullish(),
+  path: z
+    .string()
+    .max(PATH_MAX_LENGTH, { error: 'That page address is too long' })
+    .refine(isSitePage, { error: PAGE_NOT_ON_SITE })
+    .nullish(),
   errorCode: z
     .number()
     .int()

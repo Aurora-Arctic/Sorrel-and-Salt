@@ -17,7 +17,7 @@ import {
 } from '../Field';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
-import { SUPPORT_ABOUTS } from '../../lib/support-path';
+import { PAGE_NOT_ON_SITE, SUPPORT_ABOUTS, isSitePage } from '../../lib/support-path';
 import type { SupportAbout, SupportFormProps } from './types';
 
 type Problems = Partial<Record<'about' | 'subject' | 'message' | 'path', string>>;
@@ -139,6 +139,7 @@ const SupportForm = ({
     const found: Problems = {};
     if (about === null) found.about = ABOUT_REQUIRED;
     if (page.trim().length > PATH_LIMIT) found.path = PATH_TOO_LONG;
+    else if (!isSitePage(page)) found.path = PAGE_NOT_ON_SITE;
     if (subject.trim() === '') found.subject = SUBJECT_REQUIRED;
     else if (subject.trim().length > SUBJECT_LIMIT) found.subject = SUBJECT_TOO_LONG;
     if (message.trim() === '') found.message = MESSAGE_REQUIRED;
@@ -208,7 +209,7 @@ const SupportForm = ({
   return (
     <form className="form" noValidate onSubmit={(event) => void submit(event)}>
       {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
-      <div id={aboutBoxId}>
+      <div id={aboutBoxId} className="support-form__about">
         <RadioGroupField
           legend={ABOUT_LABEL}
           required

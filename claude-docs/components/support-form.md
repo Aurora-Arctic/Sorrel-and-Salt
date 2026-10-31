@@ -24,7 +24,7 @@ client component taking `path` (the page the request is about), and optionally `
 - **`errorCode` is shown and `path` is a field.** A request from an error page says so in the Page field's
   note, "Opened from the Error 404 page. You can change it.", in place of the limit. The Page field starts as `path`, and the sender may edit or clear it; an empty field (or only
   spaces) sends no `path`. The server takes any text up to 500 characters, which the field's note says,
-  and checks no format; a longer one is refused with a field error shown on the Page field.
+  and a longer one is refused with a field error shown on the Page field. The Page must be a path on this site: empty, or starting with `/` (not `//`), or with the site's own address, `SITE_ORIGIN` in `src/lib/site.ts` (`https://sorrelandsalt.com`). Anything else is refused with "Start with / or the site's address.", by `isSitePage` in the form and by the same check in `SupportRequestInput`, which the signed-out request shares, so the GraphQL path cannot skip it.
 - **Closing asks first while text is typed or the Page differs from its starting value**, through
   `useDiscardGuard`. Cancel and Done exist only when
   `onDone` is given, because a page has nothing to close.
