@@ -115,7 +115,7 @@ describe('covenTarget', () => {
     expect(covenTarget('/coven/a/settings')).toEqual({ region: 'coven', shape: 'page' });
   });
 
-  it('draws both grimoire tabs as compact cards under the heading, the tab row and a filter, and a page beneath them as a page', () => {
+  it('draws both grimoire tabs as compact spell cards under the heading, the tab row and a filter, and the page of one spell as a recipe', () => {
     const list = {
       region: 'coven',
       shape: 'cards',
@@ -123,9 +123,10 @@ describe('covenTarget', () => {
       filter: true,
       tabs: true,
       density: 'compact',
+      card: 'spell',
     };
     expect(covenTarget('/coven/a/grimoire')).toEqual(list);
     expect(covenTarget('/coven/a/grimoire/drafts')).toEqual(list);
-    expect(covenTarget('/coven/a/grimoire/some-id')).toEqual({ region: 'coven', shape: 'page' });
+    expect(covenTarget('/coven/a/grimoire/some-id')).toEqual({ region: 'coven', shape: 'recipe' });
   });
 });
