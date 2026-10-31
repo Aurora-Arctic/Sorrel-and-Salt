@@ -5,18 +5,15 @@ import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { usePendingNavigation } from '../../lib/navigation';
 import { longMinuteInZone } from '../../lib/utc';
-import BusyButton from '../BusyButton';
 import { CollapsibleSection } from '../CollapsibleSection';
 import DateField from '../DateField';
 import { today } from '../DateField/day';
 import { FieldShell, fieldDescription } from '../Field';
 import LocalTime from '../LocalTime';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
-import Notice from '../Notice';
 import ConfirmedAction from '../UserList/confirmed-action';
 import { DayRange, LocalDay } from './day-range';
 import type { SupportTimeoutEntry } from './types';
-import { useSupportAction } from './use-support-action';
 
 // An admin's time-out of a sender: barred from the support form until an end, or until lifted. One panel
 // serves the request dialog and the user modal, keyed by the user, so a repeat sender is seen as one.
@@ -68,27 +65,40 @@ function endOf(span: Span, day: string, now: Date): Date | undefined {
 const isActive = (timeout: SupportTimeoutEntry, now: number): boolean =>
   timeout.liftedAt === null && timeout.until.getTime() > now;
 
-const LiftButton = ({ timeout }: { timeout: SupportTimeoutEntry }): ReactElement => {
-  const { busy, failure, run } = useSupportAction();
-  return (
-    <>
-      <BusyButton
-        className="btn btn--quiet btn--small"
-        busy={busy}
-        busyLabel="Lifting"
-        onClick={() =>
-          void run(() => graphqlRequest(LiftDocument, { id: timeout.id }), 'Time-out lifted.')
-        }
-      >
-        Lift
-      </BusyButton>
-      {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
-    </>
-  );
-};
+const LiftButton = ({
+  timeout,
+  name,
+}: {
+  timeout: SupportTimeoutEntry;
+  name: string;
+}): ReactElement => (
+  <ConfirmedAction
+    label="Lift"
+    accessibleName="Lift"
+    confirmLabel="Lift Time-Out"
+    openClass="btn btn--quiet btn--small"
+    title="Lift the Time-Out?"
+    question={
+      <>
+        <strong>{name}</strong> can send support requests again at once.
+      </>
+    }
+    busy="Lifting"
+    confirmClass="btn btn--quiet"
+    announcement="Time-out lifted."
+    inModal
+    send={() => graphqlRequest(LiftDocument, { id: timeout.id })}
+  />
+);
 
 /** The time-out that stands: a badge, its end, the note, who set it and when, and Lift. */
-const StandingCard = ({ timeout }: { timeout: SupportTimeoutEntry }): ReactElement => (
+const StandingCard = ({
+  timeout,
+  name,
+}: {
+  timeout: SupportTimeoutEntry;
+  name: string;
+}): ReactElement => (
   <div className="support-detail__timeout">
     <p className="support-detail__timeout-head">
       <span className="badge badge--caution">Timed Out</span>
@@ -101,7 +111,7 @@ const StandingCard = ({ timeout }: { timeout: SupportTimeoutEntry }): ReactEleme
       {timeout.setBy ? `Set by ${timeout.setBy.name}, ` : 'Set '}
       <LocalDay at={timeout.createdAt} />
     </p>
-    <LiftButton timeout={timeout} />
+    <LiftButton timeout={timeout} name={name} />
   </div>
 );
 
@@ -265,7 +275,11 @@ const TimeoutPanel = ({
       }
       fold={{ open: folded, invalid: false, onToggle: () => setFolded((value) => !value) }}
     >
-      {standing ? <StandingCard timeout={standing} /> : <TimeoutForm userId={userId} name={name} />}
+      {standing ? (
+        <StandingCard timeout={standing} name={name} />
+      ) : (
+        <TimeoutForm userId={userId} name={name} />
+      )}
       {earlier.length > 0 && <Ledger timeouts={earlier} />}
     </CollapsibleSection>
   );
