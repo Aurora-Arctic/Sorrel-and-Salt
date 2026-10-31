@@ -32,15 +32,15 @@ describe('the support request seed', () => {
   describe('once run', () => {
     beforeAll(run);
 
-    it('seeds eight to twelve requests from at least four senders, all three kinds', async () => {
+    it('seeds eight to twelve requests from at least four senders, all seven subjects', async () => {
       const [row] = await sql<{ n: number; senders: number; kinds: number }[]>`
         select count(*)::int as n, count(distinct created_by)::int as senders,
-               count(distinct kind)::int as kinds from support_requests
+               count(distinct about)::int as kinds from support_requests
       `;
       expect(row.n).toBeGreaterThanOrEqual(8);
       expect(row.n).toBeLessThanOrEqual(12);
       expect(row.senders).toBeGreaterThanOrEqual(4);
-      expect(row.kinds).toBe(3);
+      expect(row.kinds).toBe(7);
     });
 
     it('covers open and unassigned, assigned, shared, linked to an issue and resolved', async () => {

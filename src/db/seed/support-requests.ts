@@ -19,7 +19,7 @@ const { A, B, C, D, E, F } = FIXTURE_USERS;
 interface SeedRequest {
   id: string;
   sender: string;
-  kind: 'accessibility' | 'bug' | 'question';
+  about: 'accessibility' | 'bug' | 'account' | 'compendium' | 'privacy' | 'feedback' | 'question';
   subject: string;
   message: string;
   path: string;
@@ -38,7 +38,7 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
   {
     id: '00000000-0000-0000-0005-000000000001',
     sender: A.id,
-    kind: 'question',
+    about: 'accessibility',
     subject: 'Can I add an ingredient that is not in the compendium?',
     message:
       'I grow a few herbs that I cannot find in the compendium. Can I add my own to my coven, or do I have to ask someone to add them first?',
@@ -48,7 +48,7 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
   {
     id: '00000000-0000-0000-0005-000000000002',
     sender: B.id,
-    kind: 'bug',
+    about: 'bug',
     subject: 'Ingredients page will not load',
     message:
       'I opened our ingredients and got a blank page with an error. I tried again after a few minutes and it did the same thing. It worked fine yesterday.',
@@ -59,7 +59,7 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
   {
     id: '00000000-0000-0000-0005-000000000003',
     sender: C.id,
-    kind: 'accessibility',
+    about: 'account',
     subject: 'Cannot tell the spell status chips apart',
     message:
       'I have trouble with colours, and the Draft and Complete chips on the grimoire look the same to me. Could they say more than colour does?',
@@ -70,7 +70,7 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
   {
     id: '00000000-0000-0000-0005-000000000004',
     sender: D.id,
-    kind: 'question',
+    about: 'compendium',
     subject: 'Why was my invitation not accepted?',
     message:
       'Someone sent me an invitation to their coven but the link says it cannot be used. I signed in with the same email address it was sent to.',
@@ -82,7 +82,7 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
   {
     id: '00000000-0000-0000-0005-000000000005',
     sender: A.id,
-    kind: 'bug',
+    about: 'privacy',
     subject: 'Jar quantity goes back after I save it',
     message:
       'I change the amount in a jar from 40 g to 25 g and press Save. It says saved, but when I reload the page it shows 40 g again.',
@@ -94,7 +94,7 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
   {
     id: '00000000-0000-0000-0005-000000000006',
     sender: B.id,
-    kind: 'accessibility',
+    about: 'feedback',
     subject: 'Keyboard cannot reach the filter menu',
     message:
       'I use the keyboard only. On the compendium page I cannot tab into the filters, so I cannot narrow the list down.',
@@ -107,7 +107,7 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
   {
     id: '00000000-0000-0000-0005-000000000007',
     sender: C.id,
-    kind: 'question',
+    about: 'question',
     subject: 'How do I change my display name?',
     message: 'My name on the members page has a typo in it. Where do I fix it?',
     path: '/coven/[coven]/members',
@@ -119,7 +119,7 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
   {
     id: '00000000-0000-0000-0005-000000000008',
     sender: D.id,
-    kind: 'bug',
+    about: 'bug',
     subject: 'Not found when I open a coven link',
     message:
       'A friend sent me a link to their coven and I get a page saying not found. I am signed in.',
@@ -131,7 +131,7 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
   {
     id: '00000000-0000-0000-0005-000000000009',
     sender: C.id,
-    kind: 'bug',
+    about: 'accessibility',
     subject: 'Spell steps in the wrong order',
     message:
       'I moved step 3 above step 2 and saved the spell. The page showed the new order, but when I opened the spell later the steps were back as before.',
@@ -141,7 +141,7 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
   {
     id: '00000000-0000-0000-0005-000000000010',
     sender: B.id,
-    kind: 'question',
+    about: 'feedback',
     subject: 'Can a viewer see a private spell?',
     message:
       'I made a spell private so that only I can read it. Can the viewers in our coven see it anyway?',
@@ -310,7 +310,7 @@ export async function seedSupportRequests(tx: SeedTransaction): Promise<void> {
     SUPPORT_REQUESTS,
     (r) => r.sender,
     (r) => ({
-      kind: r.kind,
+      about: r.about,
       subject: r.subject,
       message: r.message,
       path: r.path,
