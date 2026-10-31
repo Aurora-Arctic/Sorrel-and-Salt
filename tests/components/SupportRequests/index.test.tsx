@@ -601,6 +601,15 @@ describe('The views', () => {
     expect(router.push).toHaveBeenLastCalledWith('/admin/support');
   });
 
+  it('open through the shared navigation hook on a plain click, so the wait shows', async () => {
+    router.push.mockClear();
+    const user = userEvent.setup();
+    render(<SupportRequests requests={[ROW]} viewer={ADMIN} counts={COUNTS} />);
+    await user.click(screen.getByRole('tab', { name: /Mine/ }));
+    expect(router.push).toHaveBeenCalledTimes(1);
+    expect(router.push).toHaveBeenLastCalledWith('/admin/support?view=mine');
+  });
+
   it('say in text when the sender wrote last and when the sender is a beta tester', () => {
     render(
       <SupportRequests
