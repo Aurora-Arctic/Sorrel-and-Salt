@@ -26,6 +26,7 @@ const SendSupportRequestDocument = graphql(`
 
 const SUBJECT_LIMIT = 120;
 const MESSAGE_LIMIT = 4000;
+const PATH_LIMIT = 500;
 
 /** The kinds on offer, accessibility first. */
 const KINDS: readonly { value: SupportKind; label: string; description: string }[] = [
@@ -46,9 +47,11 @@ const SupportForm = ({
 }: SupportFormProps): ReactElement => {
   const subjectId = useId();
   const messageId = useId();
+  const pageId = useId();
   const [kind, setKind] = useState<SupportKind>(initialKind);
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
+  const [page, setPage] = useState(path);
   const [sending, setSending] = useState(false);
   const [failure, setFailure] = useState<Failure>({});
   const [sent, setSent] = useState(false);
@@ -64,8 +67,14 @@ const SupportForm = ({
     error: failure.field?.name === 'message' ? failure.field.message : undefined,
   });
 
+  const pageField = fieldDescription({
+    id: pageId,
+    note: `Up to ${PATH_LIMIT} characters.`,
+    error: failure.field?.name === 'path' ? failure.field.message : undefined,
+  });
+
   const ready = subject.trim() !== '' && message.trim() !== '';
-  const discard = useDiscardGuard(!sent && (subject !== '' || message !== ''));
+  const discard = useDiscardGuard(!sent && (subject !== '' || message !== '' || page !== path));
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -77,7 +86,7 @@ const SupportForm = ({
           kind,
           subject: subject.trim(),
           message: message.trim(),
-          path,
+          ...(page.trim() !== '' && { path: page.trim() }),
           ...(errorCode !== undefined && { errorCode }),
         },
       });
@@ -85,7 +94,7 @@ const SupportForm = ({
       setSent(true);
     } catch (error) {
       setSending(false);
-      setFailure(readGraphqlFailure(error, ['subject', 'message']));
+      setFailure(readGraphqlFailure(error, ['subject', 'message', 'path']));
     }
   }
 
@@ -119,14 +128,20 @@ const SupportForm = ({
         onChange={setKind}
         disabled={sending}
       />
-      {(errorCode !== undefined || path) && (
-        <p className="support-form__context">
-          {errorCode !== undefined && <span>Error {errorCode}. </span>}
-          <span>
-            Page: <code>{path}</code>
-          </span>
-        </p>
-      )}
+      {errorCode !== undefined && <p className="support-form__context">Error {errorCode}.</p>}
+      <FieldShell label="Page" note={`Up to ${PATH_LIMIT} characters.`} {...pageField}>
+        <input
+          id={pageField.controlId}
+          className="input"
+          type="text"
+          autoComplete="off"
+          maxLength={PATH_LIMIT}
+          {...pageField.aria}
+          value={page}
+          disabled={sending}
+          onChange={(event) => setPage(event.target.value)}
+        />
+      </FieldShell>
       <FieldShell
         label="Subject"
         required

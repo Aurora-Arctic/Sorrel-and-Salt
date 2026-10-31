@@ -13,6 +13,7 @@ vi.mock('next/navigation', () => ({
 
 const subject = () => screen.getByRole('textbox', { name: /Subject/ });
 const message = () => screen.getByRole('textbox', { name: /Message/ });
+const page = () => screen.getByRole('textbox', { name: 'Page' });
 const send = () => screen.getByRole('button', { name: /Send Request|Sending/ });
 
 function mockSending() {
@@ -67,10 +68,46 @@ describe('SupportForm', () => {
     expect(message()).toHaveAccessibleDescription(/4000/);
   });
 
-  it('shows the error number and page it was opened from', () => {
+  it('shows the error number, and the page it was opened from in a field', () => {
     render(<SupportForm path="/coven/x/missing" errorCode={404} kind="bug" />);
     expect(screen.getByText(/Error 404/)).toBeInTheDocument();
-    expect(screen.getByText('/coven/x/missing')).toBeInTheDocument();
+    expect(page()).toHaveValue('/coven/x/missing');
+    expect(page()).toHaveAttribute('maxlength', '500');
+    expect(page()).toHaveAccessibleDescription(/500/);
+  });
+
+  it('sends an edited page', async () => {
+    const calls = mockSending();
+    render(<SupportForm path="/a" />);
+    fill();
+    fireEvent.change(page(), { target: { value: '/b' } });
+    fireEvent.click(send());
+    await screen.findByRole('status');
+    expect(calls[0]?.input.path).toBe('/b');
+  });
+
+  it('sends no page when the field is cleared', async () => {
+    const calls = mockSending();
+    render(<SupportForm path="/a" />);
+    fill();
+    fireEvent.change(page(), { target: { value: '  ' } });
+    fireEvent.click(send());
+    await screen.findByRole('status');
+    expect(calls[0]?.input).not.toHaveProperty('path');
+  });
+
+  it('shows the page error beside the field', async () => {
+    mockGraphQLError('SendSupportRequest', {
+      code: 'VALIDATION',
+      message: 'Invalid',
+      fieldErrors: [{ path: ['path'], message: 'That page address is too long' }],
+    });
+    render(<SupportForm path="/a" />);
+    fill();
+    fireEvent.click(send());
+    await screen.findByText('That page address is too long');
+    expect(page()).toHaveAccessibleDescription(/too long/);
+    expect(page()).toBeInvalid();
   });
 
   it('sends the trimmed text with the kind, page and error, then says it was received', async () => {

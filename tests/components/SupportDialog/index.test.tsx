@@ -36,13 +36,17 @@ describe('SupportDialog', () => {
     const dialog = screen.getByRole('dialog');
     expect(within(dialog).getByRole('radio', { name: /Bug/ })).toBeChecked();
     expect(within(dialog).getByText(/Error 404/)).toBeInTheDocument();
-    expect(within(dialog).getByText('/coven/fixture-coven')).toBeInTheDocument();
+    expect(within(dialog).getByRole('textbox', { name: 'Page' })).toHaveValue(
+      '/coven/fixture-coven',
+    );
   });
 
   it('reports the page named by from over the address it sits on', () => {
     search.mockReturnValue('support=bug&error=500&from=%2Fcoven%2Fx%2Fbroken');
     render(<SupportDialog verified />);
-    expect(within(screen.getByRole('dialog')).getByText('/coven/x/broken')).toBeInTheDocument();
+    expect(within(screen.getByRole('dialog')).getByRole('textbox', { name: 'Page' })).toHaveValue(
+      '/coven/x/broken',
+    );
   });
 
   it('sends an unverified account to confirm its address instead of showing the form', () => {
