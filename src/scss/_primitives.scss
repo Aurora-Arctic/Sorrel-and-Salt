@@ -1843,6 +1843,12 @@
     gap: space(3);
   }
 
+  // The legend stands off the first card by a step more than a label off its input: a bordered card
+  // against the legend reads as one box, an input does not.
+  .fieldset.radio-group--cards .fieldset__legend {
+    margin-bottom: space(4);
+  }
+
   .radio.radio--card {
     box-sizing: border-box;
     min-block-size: $control-height;
