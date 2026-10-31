@@ -7,13 +7,17 @@ vi.mock('next/navigation', () => ({
 }));
 
 describe('SupportPanel', () => {
-  it('offers a signed-out visitor Sign In, returning here, and no form', () => {
+  it('offers a signed-out visitor Sign In, returning here, and the form for the two topics open to them', () => {
     render(<SupportPanel state={{ kind: 'signed-out' }} path="/support" />);
     expect(screen.getByRole('link', { name: 'Sign In' })).toHaveAttribute(
       'href',
       '/sign-in?next=%2Fsupport',
     );
-    expect(screen.queryByRole('textbox')).toBeNull();
+    expect(screen.getByRole('textbox', { name: /Email/ })).toBeInTheDocument();
+    expect(screen.getAllByRole('radio').map((radio) => radio.getAttribute('value'))).toEqual([
+      'accessibility',
+      'account',
+    ]);
   });
 
   it('tells a timed-out sender when it ends, in place of the form', () => {
