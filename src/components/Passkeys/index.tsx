@@ -30,7 +30,7 @@ const listed = (rows: readonly { id: string; name?: string | null; createdAt: Da
   }));
 
 const Passkeys = ({ passkeys }: PasskeysProps): ReactElement => {
-  // Seeded from the server's list; each change answers in place and refreshes the page's other server-rendered sections.
+  // Seeded from the server's list; each change answers in place, then refreshes the page's server-rendered sections.
   const [rows, setRows] = useState(passkeys);
   const [adding, setAdding] = useState(false);
   const router = useRouter();
