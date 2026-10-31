@@ -58,6 +58,8 @@ export type LeaveGuard = {
 export type LeaveGuardSlot = {
   /** Registers a guard; returns its removal. */
   put: (guard: LeaveGuard) => () => void;
+  /** True while some mounted guard has changes. */
+  held: () => boolean;
   /** Calls `go` at once when no guard has changes; otherwise asks the first that has. */
   leave: (go: () => void) => void;
 };
