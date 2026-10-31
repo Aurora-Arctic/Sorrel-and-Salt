@@ -347,3 +347,20 @@ export interface FormHistory {
   undoButton: RefObject<HTMLButtonElement | null>;
   redoButton: RefObject<HTMLButtonElement | null>;
 }
+
+/** One problem in an `ErrorSummary`: what is wrong, and the id of the field (or group of fields) it is about. */
+export interface ErrorSummaryItem {
+  target: string;
+  message: string;
+}
+
+export interface ErrorSummaryProps {
+  errors: ErrorSummaryItem[];
+}
+
+export interface CharacterCountProps {
+  /** The element's id, for the field's `aria-describedby`. */
+  id: string;
+  length: number;
+  limit: number;
+}

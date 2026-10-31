@@ -2,8 +2,8 @@
 
 import type { Route } from 'next';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import type { ReactElement } from 'react';
+import { useActualPathname } from '../../lib/use-actual-pathname';
 import {
   SUPPORT_ERROR_PARAM,
   SUPPORT_FROM_PARAM,
@@ -17,14 +17,15 @@ import type { ReportThisProps } from './types';
 // no shell round it, it goes to `/support`, which takes the page as `from`.
 
 const ReportThis = ({ code, inShell = false }: ReportThisProps): ReactElement => {
-  const pathname = usePathname();
+  const pathname = useActualPathname();
   const params = new URLSearchParams({
     [SUPPORT_PARAM]: 'bug',
     [SUPPORT_ERROR_PARAM]: String(code),
   });
   let href: string;
-  if (inShell && pathname) {
-    href = `${pathname}?${params}`;
+  if (inShell) {
+    // With no path to name, a query on its own keeps the address the browser is at.
+    href = `${pathname ?? ''}?${params}`;
   } else {
     if (pathname) params.set(SUPPORT_FROM_PARAM, pathname);
     href = `${SUPPORT_PATH}?${params}`;

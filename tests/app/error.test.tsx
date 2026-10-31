@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import ErrorBoundary from '@/app/error';
@@ -5,6 +7,7 @@ import GlobalError from '@/app/global-error';
 import NotFound from '@/app/not-found';
 
 vi.mock('next/navigation', () => ({ usePathname: () => '/gone' }));
+window.history.replaceState({}, '', '/gone');
 
 // The screens a failure lands on. Each must offer a way onward and a way to report it, and
 // must not print the error's message or stack, whatever it holds.
@@ -39,8 +42,13 @@ describe('the global error boundary', () => {
     const { container } = render(<GlobalError error={failure} />, { container: document });
 
     expect(home()).toHaveAttribute('href', '/');
-    expect(report()).toHaveAttribute('href', '/support?support=bug&error=500&from=%2Fgone');
+    expect(report()).toHaveAttribute('href', '/support?support=bug&error=500');
     expect(container.textContent).not.toMatch(/secret_table|secret-file/);
+  });
+
+  it('reaches Report This with a plain anchor and imports neither the router nor the report component', () => {
+    const source = readFileSync(resolve(__dirname, '../../src/app/global-error.tsx'), 'utf8');
+    expect(source).not.toMatch(/from '(next\/|[^']*ReportThis)/);
   });
 });
 

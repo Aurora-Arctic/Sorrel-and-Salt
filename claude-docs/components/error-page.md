@@ -7,12 +7,12 @@ or without the shell around it.
 
 ## Where it is used
 
-| File                                         | Catches                                        | Way onward             |
-| -------------------------------------------- | ---------------------------------------------- | ---------------------- |
-| `src/app/not-found.tsx`                      | `notFound()` and an address with no page (404) | link to `/`            |
-| `src/app/error.tsx`                          | an error thrown while a page renders (500)     | Try Again, link to `/` |
-| `src/app/global-error.tsx`                   | an error in the root layout itself             | plain link to `/`      |
-| `src/app/(shell)/not-found.tsx`, `error.tsx` | the same two, re-exported inside the shell     | as above               |
+| File                                         | Catches                                        | Way onward                                                 |
+| -------------------------------------------- | ---------------------------------------------- | ---------------------------------------------------------- |
+| `src/app/not-found.tsx`                      | `notFound()` and an address with no page (404) | link to `/`                                                |
+| `src/app/error.tsx`                          | an error thrown while a page renders (500)     | Try Again, link to `/`                                     |
+| `src/app/global-error.tsx`                   | an error in the root layout itself             | plain links to `/` and to `/support?support=bug&error=500` |
+| `src/app/(shell)/not-found.tsx`, `error.tsx` | the same two, re-exported inside the shell     | as above                                                   |
 
 The `(shell)` copies exist because a boundary replaces everything beneath its
 own layout. The root one would drop the shell's bar for a signed-in page.
