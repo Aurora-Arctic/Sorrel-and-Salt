@@ -3,13 +3,16 @@ import { randomUUID } from 'node:crypto';
 import {
   findCardArrivalCount,
   findCardArrivalPage,
+  findCardBatchCount,
+  findCardBatchPage,
+  findCardBatchTotals,
   findCardCount,
-  findCardPage,
   findManyByIds,
   withAudit,
 } from '../../../db/repository';
-import type { CardRow } from '../../../db/repository';
+import type { CardBatchTotal, CardRow } from '../../../db/repository';
 import { NotFound, ValidationError } from '../../../lib/errors';
+import { CARDS_PER_SHEET, MAX_SHEETS_PER_BATCH } from '../../../lib/invitation-cards/limits';
 import { newCardToken } from '../../../lib/invitation-token';
 import type { Session } from '../../../lib/session';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
@@ -18,32 +21,29 @@ import { users } from '../schema/users';
 import { assertSiteAdmin } from './site-admin';
 import type { CardState, MintedCards } from '../types';
 
-// The admin's half of the invitation cards: minting a batch, listing them, revoking one or a batch, and the arrivals list with its CSV.
+// The admin's half of the invitation cards: minting a batch by the sheet, listing the cards and the batches, revoking a batch, and the arrivals list with its CSV.
 // What a card admits is invitation-acceptance.ts's (claude-docs/design-decisions/m15.17-invitation-cards.md).
 
 const REFUSAL = 'Only a site admin may mint, list or revoke invitation cards';
 
-/** The most cards one mint makes: a printed batch is cut by hand, and one statement writes the rows. */
-export const MAX_CARDS_PER_BATCH = 500;
-
 /**
- * Mints `count` pending cards sharing one batch and `expiresAt`, and answers their tokens: the only time any of them
+ * Mints `sheets` sheets of `CARDS_PER_SHEET` pending cards each, sharing one batch and `expiresAt`, and answers their tokens: the only time any of them
  * is readable, as the rows hold the hash alone.
  *
  * @throws {Forbidden} the session's role is not `admin`.
- * @throws {ValidationError} on `count`: not a whole number from 1 to `MAX_CARDS_PER_BATCH`; on `expiresAt`: not a future date.
+ * @throws {ValidationError} on `count`: not a whole number from 1 to `MAX_SHEETS_PER_BATCH`, so a part sheet is never minted; on `expiresAt`: not a future date.
  */
 export async function mintInvitationCards(
   session: Session,
-  count: number,
+  sheets: number,
   expiresAt: Date,
 ): Promise<MintedCards> {
   const admin = assertSiteAdmin(session, REFUSAL);
   const issues = [];
-  if (!Number.isInteger(count) || count < 1 || count > MAX_CARDS_PER_BATCH) {
+  if (!Number.isInteger(sheets) || sheets < 1 || sheets > MAX_SHEETS_PER_BATCH) {
     issues.push({
-      path: ['count'],
-      message: `A batch holds from 1 to ${MAX_CARDS_PER_BATCH} cards`,
+      path: ['sheets'],
+      message: `A batch is from 1 to ${MAX_SHEETS_PER_BATCH} sheets`,
     });
   }
   if (Number.isNaN(expiresAt.getTime()) || expiresAt.getTime() <= Date.now()) {
@@ -52,27 +52,11 @@ export async function mintInvitationCards(
   if (issues.length > 0) throw new ValidationError(issues);
 
   const batchId = randomUUID();
-  const tokens = Array.from({ length: count }, newCardToken);
+  const tokens = Array.from({ length: sheets * CARDS_PER_SHEET }, newCardToken);
   const rows = await withAudit(session, (write) =>
     write.insertInvitationCards(admin, { tokens, batchId, expiresAt }),
   );
   return { batchId, expiresAt: rows[0]?.expiresAt ?? expiresAt, tokens };
-}
-
-/**
- * Withdraws one pending card, stamped as the admin: its link is dead from now on. An accepted card is the record of an
- * arrival and is not touched.
- *
- * @throws {Forbidden} the session's role is not `admin`.
- * @throws {ValidationError} `id` is not an id.
- * @throws {NotFound} no pending card has this id.
- */
-export async function revokeInvitationCard(session: Session, id: string): Promise<CardRow> {
-  const admin = assertSiteAdmin(session, REFUSAL);
-  const cardId = parseInput(RowId, id);
-  const [row] = await withAudit(session, (write) => write.revokeInvitationCard(admin, cardId));
-  if (!row) throw new NotFound('No pending card has this id');
-  return row as CardRow;
 }
 
 /**
@@ -96,37 +80,43 @@ export async function revokeInvitationCardBatch(
 }
 
 /**
- * One page of the cards in any state, newest first, narrowed to one batch where `batchId` names it.
+ * One page of the batches, newest first, each as the batch's first card (its batch id and dates).
  *
  * @throws {Forbidden} the session's role is not `admin`.
- * @throws {ValidationError} `batchId` is not an id.
  */
-export async function listInvitationCards(
+export async function listCardBatches(
   session: Session,
-  batchId: string | undefined,
   page: PageRequest,
 ): Promise<PageEntry<CardRow>[]> {
   const admin = assertSiteAdmin(session, REFUSAL);
-  return findCardPage(admin, optionalBatch(batchId), page);
+  return findCardBatchPage(admin, page);
 }
 
 /**
- * How many cards `listInvitationCards` pages under `batchId`, and how many come before `start`: "Page X of Y".
+ * How many batches `listCardBatches` pages, and how many come before `start`: "Page X of Y".
  *
  * @throws {Forbidden} the session's role is not `admin`.
- * @throws {ValidationError} `batchId` is not an id.
  */
-export async function countInvitationCards(
+export async function countCardBatches(
   session: Session,
-  batchId: string | undefined,
   start: Cursor | undefined,
 ): Promise<PageCount> {
   const admin = assertSiteAdmin(session, REFUSAL);
-  return findCardCount(admin, optionalBatch(batchId), start);
+  return findCardBatchCount(admin, start);
 }
 
-const optionalBatch = (batchId: string | undefined): string | undefined =>
-  batchId === undefined ? undefined : parseInput(RowId, batchId);
+/**
+ * The cards, accepted cards and pending cards of each named batch, counted in SQL.
+ *
+ * @throws {Forbidden} the session's role is not `admin`.
+ */
+export async function cardBatchTotals(
+  session: Session,
+  batchIds: readonly string[],
+): Promise<CardBatchTotal[]> {
+  const admin = assertSiteAdmin(session, REFUSAL);
+  return findCardBatchTotals(admin, batchIds);
+}
 
 /** A card's standing now: an accepted card stays accepted, whatever became of its date. */
 export function cardState(

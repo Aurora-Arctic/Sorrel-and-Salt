@@ -10,30 +10,15 @@ import ListFrame, { ListBody } from '../ListFrame';
 import { useOpenModalClick } from '../Modal';
 import Pager from '../Pager';
 import ConfirmedAction from '../UserList/confirmed-action';
-import { batchName, summariseBatches } from './batches';
+import { batchName } from './batches';
 import { cardsHref } from './href';
 import MintForm, { MINT_TITLE } from './mint-form';
-import type { AdminCardsProps, CardState, MintCardsProps } from './types';
+import type { AdminCardsProps, MintCardsProps } from './types';
 import './index.scss';
 
-// The People page's Cards tab, `/admin/cards`: the batches on the page with Revoke Batch, a page of cards
-// (state, batch, expiry, the account that accepted it, Revoke), the pager, and the mint form `?mint` opens
+// The People page's Invitation Cards tab, `/admin/invitation-cards`: one row per batch (minted, expiry, cards,
+// accepted, Revoke Batch while any card is pending), the pager, and the mint form `?mint` opens
 // (claude-docs/components/admin-cards.md).
-
-const STATE_LABEL: Record<CardState, string> = {
-  pending: 'Pending',
-  accepted: 'Accepted',
-  expired: 'Expired',
-  revoked: 'Revoked',
-};
-
-const RevokeCardDocument = graphql(`
-  mutation RevokeInvitationCard($id: ID!) {
-    revokeInvitationCard(id: $id) {
-      id
-    }
-  }
-`);
 
 const RevokeCardBatchDocument = graphql(`
   mutation RevokeInvitationCardBatch($batchId: ID!) {
@@ -55,7 +40,7 @@ export const MintCards = ({ cursor }: MintCardsProps): ReactElement => {
 };
 
 const AdminCards = ({
-  cards,
+  batches,
   cursor,
   previousHref,
   nextHref,
@@ -63,73 +48,52 @@ const AdminCards = ({
   minting = false,
 }: AdminCardsProps): ReactElement => (
   <section className="admin-cards" aria-label="Invitation Cards">
-    {summariseBatches(cards).some((batch) => batch.pending > 0) && (
-      <ul className="admin-cards__batches" aria-label="Batches">
-        {summariseBatches(cards)
-          .filter((batch) => batch.pending > 0)
-          .map((batch) => (
-            <li key={batch.batchId}>
-              <span>
-                Batch {batchName(batch.batchId)}: {batch.pending} pending
-              </span>
-              <ConfirmedAction
-                label="Revoke Batch"
-                accessibleName={`Revoke Batch ${batchName(batch.batchId)}`}
-                openClass="btn btn--small btn--destructive"
-                title="Revoke Batch"
-                question={
-                  <>
-                    Revoke every pending card in batch <strong>{batchName(batch.batchId)}</strong>?
-                    Printed codes from it will no longer work.
-                  </>
-                }
-                busy="Revoking"
-                confirmClass="btn btn--destructive"
-                announcement={`Batch ${batchName(batch.batchId)} is revoked.`}
-                send={() => graphqlRequest(RevokeCardBatchDocument, { batchId: batch.batchId })}
-              />
-            </li>
-          ))}
-      </ul>
-    )}
     <ListFrame>
       <ListBody>
         <StackTable
           columns={[
-            { heading: 'State', cell: (card) => STATE_LABEL[card.state] },
-            { heading: 'Batch', cell: (card) => batchName(card.batchId) },
+            { heading: 'Batch', cell: (batch) => batchName(batch.batchId) },
             {
-              heading: 'Expires',
-              cell: (card) => (
-                <time dateTime={card.expiresAt.toISOString()}>{inUtc(card.expiresAt)}</time>
+              heading: 'Minted On',
+              cell: (batch) => (
+                <time dateTime={batch.mintedAt.toISOString()}>{inUtc(batch.mintedAt)}</time>
               ),
             },
             {
-              heading: 'Account',
-              cell: (card) =>
-                card.accountName ?? <span className="admin-cards__none">Not accepted</span>,
+              heading: 'Expires',
+              cell: (batch) => (
+                <time dateTime={batch.expiresAt.toISOString()}>{inUtc(batch.expiresAt)}</time>
+              ),
             },
+            { heading: 'Cards', cell: (batch) => batch.cards },
+            { heading: 'Accepted', cell: (batch) => batch.accepted },
             {
               heading: 'Revoke',
               action: 'foot',
-              cell: (card) =>
-                card.state === 'pending' ? (
+              cell: (batch) =>
+                batch.pending > 0 ? (
                   <ConfirmedAction
-                    label="Revoke"
-                    accessibleName={`Revoke card ${card.id.slice(0, 8)}`}
+                    label="Revoke Batch"
+                    accessibleName={`Revoke Batch ${batchName(batch.batchId)}`}
                     openClass="btn btn--small btn--destructive"
-                    title="Revoke Card"
-                    question="Revoke this card? Its printed code will no longer work."
+                    title="Revoke Batch"
+                    question={
+                      <>
+                        Revoke every pending card in batch{' '}
+                        <strong>{batchName(batch.batchId)}</strong>? Printed codes from it will no
+                        longer work.
+                      </>
+                    }
                     busy="Revoking"
                     confirmClass="btn btn--destructive"
-                    announcement="The card is revoked."
-                    send={() => graphqlRequest(RevokeCardDocument, { id: card.id })}
+                    announcement={`Batch ${batchName(batch.batchId)} is revoked.`}
+                    send={() => graphqlRequest(RevokeCardBatchDocument, { batchId: batch.batchId })}
                   />
                 ) : null,
             },
           ]}
-          rows={cards}
-          rowKey={(card) => card.id}
+          rows={batches}
+          rowKey={(batch) => batch.batchId}
           empty="No cards have been minted."
           className="data-table--nowrap"
         />

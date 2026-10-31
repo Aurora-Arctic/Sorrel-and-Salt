@@ -637,12 +637,10 @@ export interface AuditWriter {
    */
   insertInvitation(admin: SiteAdmin, values: SiteInvitationValues): Promise<InvitationRow[]>;
   /**
-   * Insert a batch of cards (up to 500) in one statement, on the site tier's proof: one row per token, hashed here, sharing the batch id and the
+   * Insert a batch of cards (a whole number of sheets) in one statement, on the site tier's proof: one row per token, hashed here, sharing the batch id and the
    * expiry, with no address, coven or role.
    */
   insertInvitationCards(admin: SiteAdmin, values: CardInvitationValues): Promise<InvitationRow[]>;
-  /** Revoke the pending card `id` names. No row comes back for an accepted, revoked or expired card, or an address invitation. */
-  revokeInvitationCard(admin: SiteAdmin, id: string): Promise<InvitationRow[]>;
   /** Revoke every pending card of the batch. An accepted card is the record of an arrival and is left untouched. */
   revokeInvitationCardBatch(admin: SiteAdmin, batchId: string): Promise<InvitationRow[]>;
   /**
@@ -1082,6 +1080,9 @@ export interface CardInvitationValues {
 }
 
 /** A card in any state: always in a batch. */
+/** One batch of cards counted: all of them, the accepted ones, and those still pending. */
+export type CardBatchTotal = { batchId: string; cards: number; accepted: number; pending: number };
+
 export type CardRow = InvitationRow & { kind: 'card'; batchId: string };
 
 /** A card some account accepted: who, when, and the batch it came from. */

@@ -140,8 +140,8 @@ test('a curator reaches /admin and the curation pages, and is refused People and
     '/admin/users',
     '/admin/privilege-changes',
     '/admin/invitations',
-    '/admin/cards',
-    '/admin/arrivals',
+    '/admin/invitation-cards',
+    '/admin/card-sign-ups',
   ]) {
     expect((await page.goto(path))?.status(), path).toBe(403);
   }

@@ -2,16 +2,16 @@ import { createHash } from 'node:crypto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
+import { CARDS_PER_SHEET, MAX_SHEETS_PER_BATCH } from '@/lib/invitation-cards/limits';
 import type { PageRequest } from '@/lib/types';
 import {
-  MAX_CARDS_PER_BATCH,
   cardArrivalsCsv,
+  cardBatchTotals,
   cardState,
-  countInvitationCards,
+  countCardBatches,
   listCardArrivals,
-  listInvitationCards,
+  listCardBatches,
   mintInvitationCards,
-  revokeInvitationCard,
   revokeInvitationCardBatch,
 } from '@/modules/identity';
 import { A, B, E, F, asUser } from '../../../support/as-user';
@@ -38,36 +38,34 @@ beforeEach(async () => {
 describe('who may mint, list and revoke', () => {
   it('refuses a curator, a member and a non-admin each call, with a card there to be reached', async () => {
     const { batchId } = await mintInvitationCards(asUser(E), 1, NEXT_WEEK());
-    const [card] = await cards();
-    expect(card!.revoked_at).toBeNull();
+    const rows = await cards();
+    expect(rows.every((row) => row.revoked_at === null)).toBe(true);
 
     for (const who of [F, A, B]) {
       const session = asUser(who);
       await expect(mintInvitationCards(session, 1, NEXT_WEEK())).rejects.toBeInstanceOf(Forbidden);
-      await expect(revokeInvitationCard(session, card!.id)).rejects.toBeInstanceOf(Forbidden);
       await expect(revokeInvitationCardBatch(session, batchId)).rejects.toBeInstanceOf(Forbidden);
-      await expect(listInvitationCards(session, undefined, PAGE)).rejects.toBeInstanceOf(Forbidden);
-      await expect(countInvitationCards(session, undefined, undefined)).rejects.toBeInstanceOf(
-        Forbidden,
-      );
+      await expect(listCardBatches(session, PAGE)).rejects.toBeInstanceOf(Forbidden);
+      await expect(countCardBatches(session, undefined)).rejects.toBeInstanceOf(Forbidden);
+      await expect(cardBatchTotals(session, [batchId])).rejects.toBeInstanceOf(Forbidden);
       await expect(listCardArrivals(session, PAGE)).rejects.toBeInstanceOf(Forbidden);
       await expect(cardArrivalsCsv(session)).rejects.toBeInstanceOf(Forbidden);
     }
 
-    expect(await cards()).toHaveLength(1);
-    expect((await cards())[0]!.revoked_at).toBeNull();
+    expect(await cards()).toHaveLength(CARDS_PER_SHEET);
+    expect((await cards()).every((row) => row.revoked_at === null)).toBe(true);
   });
 });
 
 describe('mintInvitationCards', () => {
-  it('writes N pending cards sharing one batch and the chosen expiry, and returns each token once', async () => {
+  it('writes nine pending cards a sheet sharing one batch and the chosen expiry, and returns each token once', async () => {
     const expiresAt = NEXT_WEEK();
 
-    const minted = await mintInvitationCards(asUser(E), 3, expiresAt);
+    const minted = await mintInvitationCards(asUser(E), 2, expiresAt);
 
     const rows = await cards();
-    expect(rows).toHaveLength(3);
-    expect(new Set(minted.tokens).size).toBe(3);
+    expect(rows).toHaveLength(2 * CARDS_PER_SHEET);
+    expect(new Set(minted.tokens).size).toBe(2 * CARDS_PER_SHEET);
     expect(new Set(rows.map((row) => row.batch_id))).toEqual(new Set([minted.batchId]));
     for (const row of rows) {
       expect(row.expires_at.getTime()).toBe(expiresAt.getTime());
@@ -80,23 +78,24 @@ describe('mintInvitationCards', () => {
     expect(JSON.stringify(rows)).not.toContain(minted.tokens[0]);
   });
 
-  it(`mints ${MAX_CARDS_PER_BATCH} in one call and refuses one more`, async () => {
-    const minted = await mintInvitationCards(asUser(E), MAX_CARDS_PER_BATCH, NEXT_WEEK());
-    expect(minted.tokens).toHaveLength(MAX_CARDS_PER_BATCH);
-    expect(await cards()).toHaveLength(MAX_CARDS_PER_BATCH);
+  it(`mints ${MAX_SHEETS_PER_BATCH} sheets in one call and refuses one more`, async () => {
+    const minted = await mintInvitationCards(asUser(E), MAX_SHEETS_PER_BATCH, NEXT_WEEK());
+    expect(minted.tokens).toHaveLength(MAX_SHEETS_PER_BATCH * CARDS_PER_SHEET);
+    expect(MAX_SHEETS_PER_BATCH * CARDS_PER_SHEET).toBe(495);
+    expect(await cards()).toHaveLength(495);
 
     const refused = await mintInvitationCards(
       asUser(E),
-      MAX_CARDS_PER_BATCH + 1,
+      MAX_SHEETS_PER_BATCH + 1,
       NEXT_WEEK(),
     ).catch((error: unknown) => error);
     expect(refused).toBeInstanceOf(ValidationError);
-    expect((refused as ValidationError).issues[0]!.message).toMatch(/from 1 to 500/);
-    expect(await cards()).toHaveLength(MAX_CARDS_PER_BATCH);
+    expect((refused as ValidationError).issues[0]!.message).toMatch(/from 1 to 55 sheets/);
+    expect(await cards()).toHaveLength(495);
   });
 
-  it.each([0, -1, 1.5, Number.NaN])('refuses a count of %s', async (count) => {
-    await expect(mintInvitationCards(asUser(E), count, NEXT_WEEK())).rejects.toBeInstanceOf(
+  it.each([0, -1, 1.5, Number.NaN])('refuses %s sheets, a part sheet included', async (sheets) => {
+    await expect(mintInvitationCards(asUser(E), sheets, NEXT_WEEK())).rejects.toBeInstanceOf(
       ValidationError,
     );
     expect(await cards()).toHaveLength(0);
@@ -114,20 +113,8 @@ describe('mintInvitationCards', () => {
 });
 
 describe('revoking', () => {
-  it('revokes one pending card by id, and not twice', async () => {
-    await mintInvitationCards(asUser(E), 2, NEXT_WEEK());
-    const [first, second] = await cards();
-
-    const row = await revokeInvitationCard(asUser(E), first!.id);
-
-    expect(row.revokedAt).toBeInstanceOf(Date);
-    expect((await cards()).map((card) => card.revoked_at !== null)).toEqual([true, false]);
-    await expect(revokeInvitationCard(asUser(E), first!.id)).rejects.toBeInstanceOf(NotFound);
-    expect(second!.revoked_at).toBeNull();
-  });
-
   it('revokes the pending cards of a batch and leaves an accepted card and another batch', async () => {
-    const batch = await mintInvitationCards(asUser(E), 3, NEXT_WEEK());
+    const batch = await mintInvitationCards(asUser(E), 1, NEXT_WEEK());
     await mintInvitationCards(asUser(E), 1, NEXT_WEEK());
     const rows = await cards();
     const inBatch = rows.filter((row) => row.batch_id === batch.batchId);
@@ -135,7 +122,7 @@ describe('revoking', () => {
 
     const revoked = await revokeInvitationCardBatch(asUser(E), batch.batchId);
 
-    expect(revoked).toHaveLength(2);
+    expect(revoked).toHaveLength(CARDS_PER_SHEET - 1);
     const after = await cards();
     expect(after.filter((row) => row.revoked_at).map((row) => row.id)).toEqual(
       inBatch
@@ -153,19 +140,45 @@ describe('revoking', () => {
     await expect(revokeInvitationCardBatch(asUser(E), 'nope')).rejects.toBeInstanceOf(
       ValidationError,
     );
-    await expect(revokeInvitationCard(asUser(E), 'nope')).rejects.toBeInstanceOf(ValidationError);
   });
 });
 
 describe('listing', () => {
-  it('pages every card, narrowed to a batch, and counts them', async () => {
-    const one = await mintInvitationCards(asUser(E), 2, NEXT_WEEK());
-    await mintInvitationCards(asUser(E), 1, NEXT_WEEK());
+  it('pages one entry per batch, newest first, and counts the batches', async () => {
+    const first = await mintInvitationCards(asUser(E), 2, NEXT_WEEK());
+    await sql`update invitations set created_at = created_at - interval '1 day' where batch_id = ${first.batchId}`;
+    const second = await mintInvitationCards(asUser(E), 1, NEXT_WEEK());
 
-    expect(await listInvitationCards(asUser(E), undefined, PAGE)).toHaveLength(3);
-    const narrowed = await listInvitationCards(asUser(E), one.batchId, PAGE);
-    expect(narrowed.map(({ node }) => node.batchId)).toEqual([one.batchId, one.batchId]);
-    expect((await countInvitationCards(asUser(E), one.batchId, undefined)).totalCount).toBe(2);
+    const page = await listCardBatches(asUser(E), PAGE);
+
+    expect(page.map(({ node }) => node.batchId)).toEqual([second.batchId, first.batchId]);
+    expect((await countCardBatches(asUser(E), undefined)).totalCount).toBe(2);
+    const turned = await listCardBatches(asUser(E), { ...PAGE, limit: 2, after: page[0]!.cursor });
+    expect(turned.map(({ node }) => node.batchId)).toEqual([first.batchId]);
+  });
+
+  it('totals each batch in SQL: its cards, the accepted and the ones still pending', async () => {
+    const batch = await mintInvitationCards(asUser(E), 1, NEXT_WEEK());
+    const other = await mintInvitationCards(asUser(E), 1, NEXT_WEEK());
+    const rows = (await cards()).filter((row) => row.batch_id === batch.batchId);
+    await sql`update invitations set accepted_at = now(), accepted_by = ${B.id} where id = ${rows[0]!.id}`;
+    await sql`update invitations set revoked_at = now() where id = ${rows[1]!.id}`;
+    await sql`update invitations set expires_at = now() - interval '1 second' where id = ${rows[2]!.id}`;
+
+    const totals = await cardBatchTotals(asUser(E), [batch.batchId, other.batchId]);
+
+    expect(totals.find((t) => t.batchId === batch.batchId)).toEqual({
+      batchId: batch.batchId,
+      cards: CARDS_PER_SHEET,
+      accepted: 1,
+      pending: CARDS_PER_SHEET - 3,
+    });
+    expect(totals.find((t) => t.batchId === other.batchId)).toMatchObject({
+      cards: CARDS_PER_SHEET,
+      accepted: 0,
+      pending: CARDS_PER_SHEET,
+    });
+    expect(await cardBatchTotals(asUser(E), [])).toEqual([]);
   });
 
   it('names the four states, an accepted card staying accepted past its date', () => {

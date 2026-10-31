@@ -11,15 +11,19 @@ import { DiscardQuestion, RouteModal, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import MintedCards from './minted';
 import type { MintedBatch } from './minted';
-import { MAX_CARDS_PER_BATCH } from './limits';
+import {
+  CARDS_PER_SHEET,
+  DEFAULT_EXPIRY_DAYS,
+  MAX_SHEETS_PER_BATCH,
+} from '../../lib/invitation-cards/limits';
 import type { MintFieldsProps, MintFormProps } from './types';
 
-// The modal Mint Cards opens at `?mint`: how many cards and the day they stop working, sent as `createInvitationCards`.
+// The modal Mint Cards opens at `?mint`: how many sheets of cards and the day they stop working, sent as `createInvitationCards`.
 // The answer carries each token once, so the modal then shows the codes and stays until closed; closing re-reads the tab.
 
 const CreateInvitationCardsDocument = graphql(`
-  mutation CreateInvitationCards($count: Int!, $expiresAt: DateTime!) {
-    createInvitationCards(count: $count, expiresAt: $expiresAt) {
+  mutation CreateInvitationCards($sheets: Int!, $expiresAt: DateTime!) {
+    createInvitationCards(sheets: $sheets, expiresAt: $expiresAt) {
       batchId
       expiresAt
       tokens
@@ -37,54 +41,76 @@ const expiryOf = (day: string): string => `${day}T00:00:00.000Z`;
 const earliestDay = (): string =>
   new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
-/** The count a field holds, or undefined while it is not a whole number the field can send. */
-const countOf = (text: string): number | undefined => {
-  const count = Number(text);
-  return text.trim() !== '' && Number.isInteger(count) ? count : undefined;
+/** The day the expiry starts at: today in UTC plus the default span, a calendar day the admin may change. */
+const defaultDay = (): string =>
+  new Date(Date.now() + DEFAULT_EXPIRY_DAYS * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+/** The sheets a field holds, or undefined while it is not a whole number the field can send. */
+const sheetsOf = (text: string): number | undefined => {
+  const sheets = Number(text);
+  return text.trim() !== '' && Number.isInteger(sheets) ? sheets : undefined;
+};
+
+/** What the sheets come to, as typed: "3 sheets: 27 cards"; empty while the field holds no whole number. */
+const totalOf = (text: string): string | undefined => {
+  const sheets = sheetsOf(text);
+  if (sheets === undefined) return undefined;
+  return `${sheets} ${sheets === 1 ? 'sheet' : 'sheets'}: ${sheets * CARDS_PER_SHEET} cards`;
 };
 
 const MintFields = ({ close }: MintFieldsProps): ReactElement => {
-  const countId = useId();
+  const sheetsId = useId();
   const dayId = useId();
-  const [count, setCount] = useState('');
-  const [day, setDay] = useState('');
+  const [sheets, setSheets] = useState('');
+  const [first] = useState(defaultDay);
+  const [day, setDay] = useState(first);
+  const [downloaded, setDownloaded] = useState(false);
   const [minting, setMinting] = useState(false);
   const [failure, setFailure] = useState<Failure>({});
   const [minted, setMinted] = useState<MintedBatch>();
-  const countField = fieldDescription({
-    id: countId,
-    error: failure.field?.name === 'count' ? failure.field.message : undefined,
+  const sheetsField = fieldDescription({
+    id: sheetsId,
+    error: failure.field?.name === 'sheets' ? failure.field.message : undefined,
   });
   const dayField = fieldDescription({
     id: dayId,
     error: failure.field?.name === 'expiresAt' ? failure.field.message : undefined,
   });
-  const { aria: countAria, ...countShell } = countField;
+  const { aria: sheetsAria, ...sheetsShell } = sheetsField;
   const { aria: dayAria, ...dayShell } = dayField;
 
-  // Anything typed is a change; once minted there is nothing left to lose but the codes, which the notice names.
-  const discard = useDiscardGuard(!minted && (count !== '' || day !== ''));
+  // Anything typed or changed is a change; once minted the codes are what a way out would lose, until the PDF is saved.
+  const discard = useDiscardGuard(minted ? !downloaded : sheets !== '' || day !== first);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const wanted = countOf(count);
+    const wanted = sheetsOf(sheets);
     if (wanted === undefined || !day) return;
     setMinting(true);
     setFailure({});
     try {
       const answer = await graphqlRequest(CreateInvitationCardsDocument, {
-        count: wanted,
+        sheets: wanted,
         expiresAt: expiryOf(day),
       });
       setMinting(false);
       setMinted(answer.createInvitationCards);
     } catch (error) {
       setMinting(false);
-      setFailure(readGraphqlFailure(error, ['count', 'expiresAt']));
+      setFailure(readGraphqlFailure(error, ['sheets', 'expiresAt']));
     }
   }
 
-  if (minted) return <MintedCards batch={minted} onDone={close} />;
+  if (minted) {
+    return (
+      <MintedCards
+        batch={minted}
+        guard={discard}
+        onDownloaded={() => setDownloaded(true)}
+        onDone={close}
+      />
+    );
+  }
 
   return (
     <form className="form" noValidate onSubmit={(event) => void submit(event)}>
@@ -93,23 +119,24 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
         be shown again.
       </p>
       {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
-      <FieldShell label="Number of Cards" required {...countShell}>
+      <FieldShell label="Number of Sheets" required {...sheetsShell}>
         <input
-          id={countShell.controlId}
+          id={sheetsShell.controlId}
           className="input"
           type="number"
           inputMode="numeric"
           min={1}
-          max={MAX_CARDS_PER_BATCH}
+          max={MAX_SHEETS_PER_BATCH}
           step={1}
-          placeholder={`1 to ${MAX_CARDS_PER_BATCH}`}
+          placeholder={`1 to ${MAX_SHEETS_PER_BATCH}`}
           aria-required
-          {...countAria}
-          value={count}
+          {...sheetsAria}
+          value={sheets}
           disabled={minting}
-          onChange={(event) => setCount(event.target.value)}
+          onChange={(event) => setSheets(event.target.value)}
         />
       </FieldShell>
+      <p aria-live="polite">{totalOf(sheets) ?? `Each sheet holds ${CARDS_PER_SHEET} cards.`}</p>
       <FieldShell label="Expires On" required {...dayShell}>
         <DateField
           id={dayShell.controlId}
@@ -125,7 +152,7 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
         noun="Cards"
         label="Mint Cards"
         busyLabel="Minting"
-        dirty={countOf(count) !== undefined && day !== ''}
+        dirty={sheetsOf(sheets) !== undefined && day !== ''}
         submitting={minting}
         holdCancel
         onCancel={() => discard.request(close)}
