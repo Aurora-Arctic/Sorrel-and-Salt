@@ -66,7 +66,12 @@ const IssuePanel = ({
   const showForm = canEdit && (!request.issueUrl || editing);
 
   return (
-    <section className="support-detail__issue" aria-label="Issue">
+    <section
+      className={
+        canEdit ? 'support-detail__issue' : 'support-detail__issue support-detail__issue--plain'
+      }
+      aria-label="Issue"
+    >
       <h3>Issue</h3>
       {request.issueUrl && (
         <div className="support-detail__issue-line">

@@ -144,6 +144,15 @@
   }
 }
 
+// A curator's read-only Issue has no hairline or padding; it stands space(6) from the facts and from the Thread
+// heading, each the main column's space(4) gap plus a space(2) margin of its own. The selector outranks the column's
+// `> section` margin reset.
+.support-detail__main > .support-detail__issue--plain {
+  padding-block-start: 0;
+  border-block-start: 0;
+  margin-block: space(2);
+}
+
 .support-detail__thread {
   @include stack(2);
   margin: 0;
