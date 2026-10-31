@@ -12,6 +12,11 @@
   > :has(+ .site-footer) {
     margin-block-end: space(8);
   }
+
+  // The front door fills the window, so its footer starts at the fold with no air between.
+  > .welcome-page:has(+ .site-footer) {
+    margin-block-end: 0;
+  }
 }
 
 // Under the page, a step of air below its last content. Its view timeline lets the salt rise as the footer
