@@ -107,8 +107,8 @@
   vertical-align: middle;
 }
 
-// The history link beside the Time-Out heading: a bare icon at the heading's own size, as Copy is.
-.support-detail__history {
+// A bare icon beside a heading or a link (the history link, the issue's pencil) at the text's own size, as Copy is.
+.support-detail__icon {
   @include icon-button(1.5em, 1em);
   vertical-align: middle;
 }
