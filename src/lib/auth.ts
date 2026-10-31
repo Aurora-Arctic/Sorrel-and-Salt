@@ -431,10 +431,22 @@ async function mailLockNotice(ctx: HookContext, userId: string, length: number) 
     identifier: `reset-password:${token}`,
     expiresAt: new Date(Date.now() + RESET_TOKEN_SECONDS * 1000),
   });
+  const accounts = await ctx.context.internalAdapter.findAccounts(user.id);
+  const passkeys = await ctx.context.adapter.findMany({
+    model: 'passkey',
+    where: [{ field: 'userId', value: user.id }],
+    limit: 1,
+  });
   const link = new URL(`${ctx.context.baseURL}/reset-password/${token}`);
   link.searchParams.set('callbackURL', RESET_PASSWORD_PAGE);
   await send(
-    await passwordLockedMessage({ to: user.email, url: link.toString(), minutes: length / 60_000 }),
+    await passwordLockedMessage({
+      to: user.email,
+      url: link.toString(),
+      minutes: length / 60_000,
+      providers: accounts.map((account) => account.providerId).filter(isRosterProvider),
+      hasPasskey: passkeys.length > 0,
+    }),
   );
 }
 
