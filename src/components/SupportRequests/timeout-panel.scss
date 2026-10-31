@@ -3,6 +3,11 @@
 
 // The Time-Out panel's own styles, so it looks the same in the request dialog and the user modal.
 
+// The fold's body ends a half-rem under its last control, not the section's default.
+.timeout-panel .collapsible-section__fields {
+  padding-block-end: space(2);
+}
+
 // The muted ink for notes and the setter.
 .timeout-panel__muted {
   color: $text-muted;

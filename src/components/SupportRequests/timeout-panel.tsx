@@ -263,38 +263,40 @@ const TimeoutPanel = ({
   const earlier = timeouts.filter((timeout) => timeout !== standing);
 
   return (
-    <CollapsibleSection
-      title="Time-Out"
-      summary={
-        <span className="timeout-panel__muted">
-          {standing ? (
-            <>
-              · until <LocalTime at={standing.until} long />
-            </>
-          ) : (
-            '· none'
-          )}
-        </span>
-      }
-      info={
-        earlier.length > 0 && earlierHref ? (
-          <IconTip tip="Earlier Time-Outs">
-            <Link className="timeout-panel__icon" href={earlierHref}>
-              <HistoryIcon />
-              <span className="visually-hidden">Earlier Time-Outs</span>
-            </Link>
-          </IconTip>
-        ) : undefined
-      }
-      fold={{ open: folded, invalid: false, onToggle: () => setFolded((value) => !value) }}
-    >
-      {standing ? (
-        <StandingCard timeout={standing} name={name} />
-      ) : (
-        <TimeoutForm userId={userId} name={name} />
-      )}
-      {earlier.length > 0 && !earlierHref && <Ledger timeouts={earlier} />}
-    </CollapsibleSection>
+    <div className="timeout-panel">
+      <CollapsibleSection
+        title="Time-Out"
+        summary={
+          <span className="timeout-panel__muted">
+            {standing ? (
+              <>
+                · until <LocalTime at={standing.until} long />
+              </>
+            ) : (
+              '· none'
+            )}
+          </span>
+        }
+        info={
+          earlier.length > 0 && earlierHref ? (
+            <IconTip tip="Earlier Time-Outs">
+              <Link className="timeout-panel__icon" href={earlierHref}>
+                <HistoryIcon />
+                <span className="visually-hidden">Earlier Time-Outs</span>
+              </Link>
+            </IconTip>
+          ) : undefined
+        }
+        fold={{ open: folded, invalid: false, onToggle: () => setFolded((value) => !value) }}
+      >
+        {standing ? (
+          <StandingCard timeout={standing} name={name} />
+        ) : (
+          <TimeoutForm userId={userId} name={name} />
+        )}
+        {earlier.length > 0 && !earlierHref && <Ledger timeouts={earlier} />}
+      </CollapsibleSection>
+    </div>
   );
 };
 
