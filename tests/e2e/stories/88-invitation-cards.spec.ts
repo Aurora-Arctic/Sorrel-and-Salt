@@ -109,7 +109,7 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
     await test.step('the revoked card’s link is refused as withdrawn', async () => {
       await signInAs(page, 'latecomer@story-88.test');
       await page.goto(links[1]);
-      await expect(page.getByText(/This invitation was withdrawn/)).toBeVisible();
+      await expect(page.getByText(/This card has been withdrawn/)).toBeVisible();
     });
   });
 });
