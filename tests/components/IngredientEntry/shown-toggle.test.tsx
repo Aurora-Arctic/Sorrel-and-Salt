@@ -77,7 +77,7 @@ describe('ShownToggle', () => {
     const onChange = vi.fn();
     render(
       <QueryClientProvider client={makeQueryClient()}>
-        <ShownToggle shown name="Testwort" onChange={onChange} label="Shown in Compendium" />
+        <ShownToggle shown name="Testwort" onChange={onChange} accessibleName="Shown in Compendium" />
       </QueryClientProvider>,
     );
 

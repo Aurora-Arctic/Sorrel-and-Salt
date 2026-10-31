@@ -190,7 +190,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
             children: summary && <IngredientSummary detail={summary} covens={covens} />,
             ...(review !== undefined && {
               reviewLine: (
-                <>
+                <span className="review-row__switches">
                   <ReviewMark
                     ingredientId={detailed.id}
                     reviewedAt={review?.reviewedAt.toISOString() ?? null}
@@ -199,9 +199,9 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
                     ingredientId={detailed.id}
                     shown={detailed.shown}
                     name={cardName(detailed.name, detailed.canonicalName)}
-                    label="Shown in Compendium"
+                    accessibleName="Shown in Compendium"
                   />
-                </>
+                </span>
               ),
             }),
             // No Edit in details opened over another entry's form, an add's or an edit's: it would
