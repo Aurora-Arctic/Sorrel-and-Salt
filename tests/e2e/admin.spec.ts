@@ -31,6 +31,7 @@ test('an admin sees the admin layout and its nav', async ({ page }) => {
     ['Forms', '/admin/forms'],
     ['Deities', '/admin/deities'],
     ['Astrology', '/admin/celestial-bodies'],
+    ['Support', '/admin/support'],
     ['People', '/admin/users'],
   ];
   await expect(nav.getByRole('link')).toHaveCount(pages.length);

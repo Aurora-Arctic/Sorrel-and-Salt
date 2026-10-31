@@ -25,6 +25,7 @@ const PAGES = [
   '/admin/forms',
   '/admin/deities',
   '/admin/celestial-bodies',
+  '/admin/support',
   '/admin/users',
 ];
 
@@ -44,7 +45,9 @@ describe('AdminNav', () => {
   it('leaves People out for a curator, who manages no one', () => {
     render(<AdminNav managesPeople={false} />);
 
-    expect(hrefs(row())).toEqual(PAGES.filter((href) => href !== '/admin/users'));
+    expect(hrefs(row())).toEqual(
+      PAGES.filter((href) => href !== '/admin/users' && href !== '/admin/support'),
+    );
   });
 
   it.each([
