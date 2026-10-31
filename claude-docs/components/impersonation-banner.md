@@ -50,8 +50,10 @@ screenshots. The button is
 badge ([`click-feedback.md`](click-feedback.md)).
 
 - **Full width, and never adding to a page's height.**
-- **On a touch screen it sits in the page's flow at the very top**, shown in
-  full, since nothing can hover to bring it back. Everything that measures from
+- **On a touch screen it sits in the page's flow at the very top and stays
+  pinned there** (`position: sticky; top: 0`, at `layer('banner')`), shown in
+  full, since nothing can hover to bring it back. The shell's bar sticks at the
+  inset, so the banner must not scroll away and leave the bar a gap above it. Everything that measures from
   the top of the window starts below it: the component publishes its height as
   `--impersonation-banner-height` on the root while mounted (a
   `ResizeObserver`), and its stylesheet maps that to the top inset under
