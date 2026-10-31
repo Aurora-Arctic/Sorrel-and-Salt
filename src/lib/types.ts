@@ -67,6 +67,8 @@ export type ProviderId = 'google' | 'discord' | 'facebook' | 'microsoft';
 export interface SocialProvider {
   id: ProviderId;
   label: string;
+  /** Left off the sign-in screens and the account page's offer to link; registration and an existing link stay. */
+  hidden?: true;
 }
 
 /** What registering a provider with Better Auth takes beyond its credentials. */
