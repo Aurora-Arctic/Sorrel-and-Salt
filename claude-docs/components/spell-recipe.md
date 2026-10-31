@@ -112,7 +112,7 @@ neither.
 
 Each inventory line of a linked step carries two doors (the owner, 2026-10-29), read in the same
 pass as `doors` and drawn by `InCovenInventory`'s `doorsOf`: a Quick Look eye in a column of its own at the line's right,
-the same `QuickLookLink` the Quick Look modal's steps carry, to this page's `?entry=<id>`, in the full 24px box (`index.scss`; the builder's own column draws it at seven eighths); and, for a role that
+the same `QuickLookLink` the Quick Look modal's steps carry, to this page's `?entry=<id>`, between the step eye's size and an entry's, a 28px box (halfway from `$icon-size` to `$icon-size-large`) round a mark of about 20px, its margin keeping the line's height (`SpellBuilder/panels.scss`); and, for a role that
 may update stock (`rolePermits(role, { inventory: ['update'] })`, the permission `saveStock`
 asserts), Edit Stock behind the jar and the name, a `StockJarButton` ([`stock-dialog.md`](stock-dialog.md))
 named "Edit Stock, <name>" and opening on the step's form, with the ingredient's forms

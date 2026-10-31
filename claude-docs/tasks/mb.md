@@ -287,6 +287,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.283 | An Email Change Needs a Recent Sign-in and Tells the Old Address                                                         | Bugfixes | —                      |
 | MB.284 | Changing an Email Address Answers the Same Whether or Not It Is Taken                                                    | Bugfixes | —                      |
 | MB.285 | Compendium Entries Stay Pending After the Citation Wording Changed                                                       | Bugfixes | —                      |
+| MB.286 | Seven Cosmetic Faults in Loading, Spell Preview and Quick Look                                                           | Bugfixes | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -5811,3 +5812,90 @@ _Acceptance criteria:_
 - Links from `needs-review` entries follow the source they point to.
 - Workspace references are not touched.
 - Docs: `claude-docs/db/references.md` says that a change to the citation wording needs a migration that rewrites the stored keys.
+
+**MB.286 — Seven Cosmetic Faults in Loading, Spell Preview and Quick Look** · 7h
+
+_Story:_ As a coven member, I want each screen to show only what belongs to it, in full, so that a loading page, the spell preview pane and Quick Look never show stale or clipped things.
+
+Seven cosmetic faults, reported together:
+
+- A. Clicking an ingredient card leaves the card's green pending dot (`LinkHint`, `src/components/LinkHint/`) pulsing over the ingredients loading skeleton.
+- B. In the spell preview pane on a phone, the Screen Awake eye's tip opens under the camera cutout.
+- C. The Quick Look eye in the spell page's In the Cupboard panel is too small to read or press easily.
+- D. After a switch from the demo coven to another coven, the demo warning stays on screen while the other coven loads.
+- E. The loading skeleton for the spells page (the Grimoire) does not match the page it stands in for.
+- F. The loading skeleton for a single spell's page, and the Grimoire skeleton's filter row, do not match the pages they stand in for.
+- G. On the list pages (the Grimoire and the Ingredients list at least), the loading skeleton's filter row sits lower than the loaded page's.
+
+Found on 2026-10-31 on staging; cosmetic, every time. Steps to reproduce:
+
+A. Phantom dot
+
+1. Sign in as a coven member.
+2. Open the coven's Ingredients list.
+3. Click an ingredient card.
+
+Actual: the card's green pending dot shows, pulsing, over the loading skeleton.
+Expected: the dot goes with the card; the skeleton shows alone.
+
+B. Eye tip under the cutout
+
+1. On a phone with a camera cutout, open a spell and press Preview.
+2. Touch the Screen Awake eye (assumed: the pane is full screen).
+
+Actual: the tip opens under the camera cutout.
+Expected: the tip shows in full, clear of the cutout.
+
+C. Quick Look eye too small
+
+1. Open a spell's page in a coven that holds stock.
+2. Look at the Quick Look eye on a line of the In the Cupboard panel.
+
+Actual: the eye is drawn smaller than the Quick Look eye elsewhere.
+Expected: the eye is the Quick Look eye's usual size, and the panel's lines stay aligned.
+
+D. Demo warning while switching
+
+1. Sign in with seats in the demo coven and another coven.
+2. Open the demo coven.
+3. Switch to the other coven with the coven switcher.
+
+Actual: the demo warning stays on screen while the other coven loads.
+Expected: the warning goes as soon as the switch starts.
+
+E. Grimoire skeleton
+
+1. Open a coven's Grimoire from another section of the coven.
+2. Watch the skeleton while the page loads, and again on switching from Spells to Drafts.
+
+Actual: the skeleton draws the Ingredients cards placeholder: each card is about 204px tall with an ingredient card's bars, where a loaded spell card is about 157px.
+Expected: the skeleton has the loaded page's shape.
+
+F. Spell page skeleton and the Compact switch
+
+1. Open a spell from the Grimoire list.
+2. Watch the skeleton while the spell's page loads.
+3. Open the Grimoire from another section and look at the skeleton's filter row.
+
+Actual: the spell page shows the generic page skeleton, three plain blocks (assumed: found from the code, not yet seen in a browser). The Grimoire skeleton's filter row has no Compact switch.
+Expected: the spell page skeleton has the loaded page's shape: the back link, the title row, the Workings menu and both columns. The filter row has the Compact switch's place.
+
+G. Filter row lower in the skeleton
+
+1. Open a coven's Grimoire, or its Ingredients list, from another section of the coven.
+2. Compare the skeleton's filter row with the loaded page's.
+
+Actual: the skeleton's filter row sits lower than the loaded row: about 24px lower at 1280px wide and about 80px lower at 375px on the Grimoire, measured in Playwright.
+Expected: the skeleton's filter row sits where the loaded row does.
+
+_Acceptance criteria:_
+
+- Each of the seven has a regression test that fails before its fix and passes after.
+- A: while a page is held under the loading skeleton, the pending dot is not visible.
+- B: on a phone viewport, the Screen Awake tip's box lies inside the visible area, clear of the safe-area insets.
+- C: the Quick Look eye in the In the Cupboard panel renders at the Quick Look eye's usual size, set from the tokens, at desktop and phone widths.
+- D: once a switch away from the demo coven starts, the demo warning is not shown; a switch into the demo coven shows no stale state from the coven left behind.
+- E: the skeleton shown while the Grimoire loads has the loaded page's shape: its placeholder cards match the real cards' size and the grid's columns, at desktop and phone widths.
+- F: the skeleton shown while a spell's page loads has the loaded page's regions in their places, and the Grimoire skeleton's filter row holds a Compact switch placeholder, at desktop and phone widths.
+- G: on every list page whose skeleton draws a filter row, the row sits where the loaded page's row does, at desktop and phone widths.
+- Docs: `claude-docs/components/link-hint.md`, `claude-docs/components/spell-preview.md` and the Quick Look and demo coven docs describe the behaviour after the fix.

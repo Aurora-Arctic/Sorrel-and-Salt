@@ -241,6 +241,8 @@ fails there.
 
 `placement` is `side` (the default, left of the control), `below` (its right edge on the control's) or `above` (centred over it).
 
+The spell preview's Screen Awake eye uses `below`: it stands at the top edge of a full-screen pane, where a tip beside it fell level with a phone's camera cutout.
+
 - `side` suits every Edit, which stands at the end of its line, so to its left is room the line already has.
 - `above` suits a segment of the radio strip, where a tip to the side would cover the next segment and one below would cover the chosen name printed under the bar.
 - `below` suits a mark at a row's right end with rows beneath it, such as the account menu's count, where a tip to the left would cover the row's words and one centred under it would run past the edge a menu panel clips at.

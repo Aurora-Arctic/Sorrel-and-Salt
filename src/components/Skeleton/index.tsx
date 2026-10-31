@@ -14,6 +14,7 @@ const DEFAULT_COUNT: Record<SkeletonShape, number> = {
   requests: 3,
   contents: 2,
   line: 1,
+  recipe: 1,
 };
 
 // The admin index's two sections: Compendium's five pages and People's one.
@@ -180,6 +181,7 @@ const Skeleton = ({
   entry = false,
   head,
   density,
+  card,
   count,
 }: SkeletonProps): ReactElement => {
   const many = count ?? DEFAULT_COUNT[shape];
@@ -189,10 +191,24 @@ const Skeleton = ({
       <output className="visually-hidden">Loading</output>
       <div className="skeleton__shapes" aria-hidden="true">
         {listed && title && (
-          <div className="page-header skeleton__header">
-            <span className="skeleton__title" />
-            {tabs && <span className="skeleton__tabs" />}
-            {action && <span className="skeleton__action" />}
+          // A list page with an eyebrow and a lede (the public Compendium) holds its heading row in the
+          // same column, as the page does, so the filter row below lands where the page's does.
+          <div className={head === 'eyebrow' ? 'skeleton__intro' : undefined}>
+            {head === 'eyebrow' && <span className="skeleton__eyebrow" />}
+            <div className="page-header skeleton__header">
+              <div className="skeleton__title-row">
+                <span className="skeleton__title" />
+              </div>
+              {tabs && <span className="skeleton__tabs" />}
+              {action && <span className="skeleton__action" />}
+            </div>
+            {head === 'eyebrow' && (
+              <div className="skeleton__lede">
+                <span />
+                <span />
+                <span className="skeleton__lede-more" />
+              </div>
+            )}
           </div>
         )}
         {listed && filter && (
@@ -205,6 +221,13 @@ const Skeleton = ({
                   : 'skeleton__field skeleton__field--short'
               }
             />
+            {shape === 'cards' && density === 'compact' && (
+              // The Compact switch the coven's card lists end their filter row with.
+              <div className="skeleton__switch">
+                <span />
+                <span />
+              </div>
+            )}
           </div>
         )}
         {shape === 'cards' && filter && (
@@ -214,7 +237,12 @@ const Skeleton = ({
         )}
         {shape === 'cards' && (
           <div className="skeleton__cards">
-            <Bars of={many} className="skeleton__card" />
+            <Bars
+              of={many}
+              className={
+                card === 'spell' ? 'skeleton__card skeleton__card--spell' : 'skeleton__card'
+              }
+            />
           </div>
         )}
         {shape === 'table' && (
@@ -280,6 +308,57 @@ const Skeleton = ({
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          </div>
+        )}
+        {shape === 'recipe' && (
+          // A spell's page in its own grid (`.skeleton__recipe`, the recipe's `entry-nav-grid`): the head,
+          // the Workings menu, then the main and side columns, so each stands where the real one does.
+          <div className="skeleton__recipe">
+            <div className="skeleton__recipe-head">
+              <span className="skeleton__recipe-back" />
+              <span className="skeleton__recipe-edited" />
+              <div className="skeleton__recipe-row">
+                <span className="skeleton__recipe-title" />
+                <div className="skeleton__recipe-actions">
+                  <span />
+                  <span />
+                  <span />
+                  <span />
+                </div>
+              </div>
+            </div>
+            <div className="page-nav skeleton__menu">
+              <span />
+              <span />
+              <span />
+              <span />
+            </div>
+            <div className="skeleton__recipe-columns">
+              <div className="skeleton__recipe-main">
+                <span className="skeleton__heading" />
+                <div className="skeleton__entry-text">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+                <span className="skeleton__heading" />
+                <div className="skeleton__entry-text">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+              </div>
+              <div className="skeleton__recipe-aside">
+                <div className="skeleton__entry-block">
+                  <span />
+                  <span />
+                </div>
+                <div className="skeleton__entry-block">
+                  <span />
+                  <span />
+                </div>
               </div>
             </div>
           </div>
