@@ -29,6 +29,8 @@ const OWN_COLUMNS = [
   'site_role',
   'kind',
   'batch_id',
+  'position',
+  'batch_note',
 ];
 
 const TOKEN_HASH_INDEX = 'invitations_token_hash_unique';
