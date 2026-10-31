@@ -1,6 +1,7 @@
-import { InvitationCardRef, InvitationRef } from '@/modules/identity';
+import { InvitationCardRef, InvitationRef, cardArrivalsCsv } from '@/modules/identity';
 import { builder } from '../../../graphql/builder';
-import { sessionOf } from '../../../graphql/context-helpers';
+import { definedArgs, sessionOf } from '../../../graphql/context-helpers';
+import { membershipsOf } from '../services/memberships';
 import { createInvitation, revokeWorkspaceInvitation } from '../services/invitations';
 import { WorkspaceRef } from './workspace';
 
@@ -79,6 +80,38 @@ builder.objectField(InvitationCardRef, 'ownedCovens', (t) =>
       if (!card.acceptedBy) return [];
       const seats = await loaders.membershipsByUser.load(card.acceptedBy);
       return seats.filter((seat) => seat.role === 'owner').map((seat) => seat.workspace);
+    },
+  }),
+);
+
+// Here for the same reason: the CSV's Covens Owned column is read through this module, in one batched lookup for every
+// account on the list. The admin check stays in `cardArrivalsCsv`.
+builder.queryField('cardArrivalsCsv', (t) =>
+  t.string({
+    description:
+      'Every arrival the filter keeps as CSV text: account name, email, accepted date, batch and the covens the account owns. Site admins only.',
+    args: {
+      query: t.arg.string({
+        required: false,
+        description:
+          "Part of the account's name or email, or the start of the batch number, case-insensitively.",
+      }),
+    },
+    authScopes: { admin: true },
+    resolve: (_root, { query }, context) => {
+      const session = sessionOf(context);
+      return cardArrivalsCsv(session, definedArgs({ query }), async (userIds) => {
+        const seats = await membershipsOf(session, userIds);
+        return new Map(
+          userIds.map((id, index) => {
+            const list = seats[index];
+            const names = Array.isArray(list)
+              ? list.filter((seat) => seat.role === 'owner').map((seat) => seat.workspace.name)
+              : [];
+            return [id, names];
+          }),
+        );
+      });
     },
   }),
 );

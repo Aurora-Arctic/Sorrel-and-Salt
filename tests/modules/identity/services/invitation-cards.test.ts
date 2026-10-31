@@ -246,10 +246,10 @@ describe('the arrivals CSV', () => {
     const csv = await cardArrivalsCsv(asUser(E));
 
     const lines = csv.trimEnd().split('\r\n');
-    expect(lines[0]).toBe('Account,Email,Accepted On,Batch');
+    expect(lines[0]).toBe('Account,Email,Accepted On,Batch,Covens Owned');
     expect(lines).toHaveLength(2);
     expect(lines[1]).toBe(
-      `"'=Hyperlink, ""Q""",${B.email},${new Date().toISOString().slice(0, 10)},${batchId.slice(0, 8)}`,
+      `"'=Hyperlink, ""Q""",${B.email},${new Date().toISOString().slice(0, 10)},${batchId.slice(0, 8)},`,
     );
   });
 
@@ -267,12 +267,33 @@ describe('the arrivals CSV', () => {
     expect(byName.trimEnd().split('\r\n')).toHaveLength(2);
     expect(byName).toContain(B.email);
     expect(byName).not.toContain(A.email);
-    expect(byNoBatch).toBe('Account Name,Email,Accepted,Batch\r\n');
+    expect(byNoBatch).toBe('Account,Email,Accepted On,Batch,Covens Owned\r\n');
+  });
+
+  it('lists the covens each account owns from one lookup for every row, joined and guarded', async () => {
+    await mintInvitationCards(asUser(E), 2, NEXT_WEEK());
+    const [first, second] = await cards();
+    await sql`update invitations set accepted_at = now(), accepted_by = ${A.id} where id = ${first!.id}`;
+    await sql`update invitations set accepted_at = now(), accepted_by = ${B.id} where id = ${second!.id}`;
+    const asked: string[][] = [];
+
+    const csv = await cardArrivalsCsv(asUser(E), {}, async (ids) => {
+      asked.push([...ids]);
+      return new Map([[A.id, ['=Cellar', 'Hearth, East']]]);
+    });
+
+    expect(asked).toHaveLength(1);
+    expect(asked[0]!.slice().sort()).toEqual([A.id, B.id].sort());
+    const rows = csv.trimEnd().split('\r\n').slice(1);
+    expect(rows.find((row) => row.includes(A.email))).toMatch(/,"'=Cellar; Hearth, East"$/);
+    expect(rows.find((row) => row.includes(B.email))).toMatch(/,$/);
   });
 
   it('is only a header when nobody arrived', async () => {
     await mintInvitationCards(asUser(E), 1, NEXT_WEEK());
-    expect(await cardArrivalsCsv(asUser(E))).toBe('Account,Email,Accepted On,Batch\r\n');
+    expect(await cardArrivalsCsv(asUser(E))).toBe(
+      'Account,Email,Accepted On,Batch,Covens Owned\r\n',
+    );
   });
 });
 

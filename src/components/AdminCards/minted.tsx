@@ -23,11 +23,14 @@ const linkOf = (token: string): string => `${window.location.origin}/i/${token}`
 
 const MintedCards = ({
   batch,
+  printBacks,
   guard,
   onDownloaded,
   onDone,
 }: {
   batch: MintedBatch;
+  /** Whether the PDF holds a page of backs after each page of fronts. */
+  printBacks: boolean;
   /** Asks before a way out while the PDF is not yet downloaded. */
   guard: DiscardGuard;
   onDownloaded: () => void;
@@ -52,6 +55,7 @@ const MintedCards = ({
       const bytes = await buildCardSheetsPdf({
         links: batch.tokens.map(linkOf),
         batch: name,
+        backs: printBacks,
         expiresAt: new Date(batch.expiresAt),
       });
       saveFile(new Blob([bytes as BlobPart], { type: 'application/pdf' }), `cards-${name}.pdf`);

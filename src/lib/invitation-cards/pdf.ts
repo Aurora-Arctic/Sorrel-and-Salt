@@ -74,7 +74,8 @@ const MARK = { width: 0.75, endGap: 2.25, endLength: 6, sideGap: 4.5, sideLength
 
 interface Sheet {
   fronts: PDFPage;
-  backs: PDFPage;
+  /** Absent when the backs are left out. */
+  backs?: PDFPage;
 }
 
 interface Embedded {
@@ -292,9 +293,9 @@ async function embedAssets(doc: PDFDocument, assets: CardAssets): Promise<Embedd
   return { fonts, measure, pictures: { salt, sorrel } };
 }
 
-/** Builds the print PDF: per sheet of nine, a page of fronts, then a page of their backs. */
+/** Builds the print PDF: per sheet of nine, a page of fronts, then (unless `backs` is false) a page of their backs. */
 export async function renderCardSheets(
-  { links, batch, expiresAt }: CardSheetsInput,
+  { links, batch, expiresAt, backs = true }: CardSheetsInput,
   assets: CardAssets,
 ): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
@@ -309,7 +310,7 @@ export async function renderCardSheets(
     const sheetLinks = links.slice(start, start + CARDS_PER_SHEET);
     const sheet: Sheet = {
       fronts: doc.addPage([PAGE.width, PAGE.height]),
-      backs: doc.addPage([PAGE.width, PAGE.height]),
+      backs: backs ? doc.addPage([PAGE.width, PAGE.height]) : undefined,
     };
     drawPage(
       sheet.fronts,
@@ -318,13 +319,18 @@ export async function renderCardSheets(
       embedded,
       marginText(batch, number, sheets, 'front', BLOCK, BLEED),
     );
-    drawPage(
-      sheet.backs,
-      'back',
-      sheetLinks.map((_, i) => ({ position: backPosition(i), picture: BACK_PICTURE, text: back })),
-      embedded,
-      marginText(batch, number, sheets, 'back', BLOCK, BLEED),
-    );
+    if (sheet.backs)
+      drawPage(
+        sheet.backs,
+        'back',
+        sheetLinks.map((_, i) => ({
+          position: backPosition(i),
+          picture: BACK_PICTURE,
+          text: back,
+        })),
+        embedded,
+        marginText(batch, number, sheets, 'back', BLOCK, BLEED),
+      );
   }
   return doc.save();
 }

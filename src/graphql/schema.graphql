@@ -1279,7 +1279,7 @@ type Query {
   ): QueryCardArrivalsConnection!
 
   """
-  Every arrival the filter keeps as CSV text: account name, email, accepted date and batch. Site admins only.
+  Every arrival the filter keeps as CSV text: account name, email, accepted date, batch and the covens the account owns. Site admins only.
   """
   cardArrivalsCsv(
     """

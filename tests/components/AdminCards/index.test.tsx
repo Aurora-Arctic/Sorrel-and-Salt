@@ -346,7 +346,7 @@ describe('AdminCards', () => {
     await waitFor(() => expect(calls).toEqual([{ batchId: BATCH_ONE }]));
   });
 
-  const mintTwo = async () => {
+  const mintTwo = async (printBacks = true) => {
     mockGraphQLMutation<CreateInvitationCardsMutation, CreateInvitationCardsMutationVariables>(
       'CreateInvitationCards',
       (variables) => ({
@@ -369,6 +369,8 @@ describe('AdminCards', () => {
       target: { value: '1' },
     });
     pickFirstOfFebruary();
+    if (!printBacks)
+      fireEvent.click(within(dialog()).getByRole('checkbox', { name: 'Print Backs' }));
     fireEvent.click(mint());
     await within(dialog()).findByRole('button', { name: 'Download PDF' });
   };
@@ -385,6 +387,22 @@ describe('AdminCards', () => {
     await waitFor(() =>
       expect(within(dialog()).getByRole('button', { name: 'Download Again' })).toBeEnabled(),
     );
+  });
+
+  it('offers Print Backs checked, and builds the PDF with backs', async () => {
+    await mintTwo();
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Download PDF' }));
+
+    await waitFor(() => expect(buildCardSheetsPdf).toHaveBeenCalled());
+    expect(vi.mocked(buildCardSheetsPdf).mock.calls[0][0].backs).toBe(true);
+  });
+
+  it('builds the PDF without backs when Print Backs is unchecked', async () => {
+    await mintTwo(false);
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Download PDF' }));
+
+    await waitFor(() => expect(buildCardSheetsPdf).toHaveBeenCalled());
+    expect(vi.mocked(buildCardSheetsPdf).mock.calls[0][0].backs).toBe(false);
   });
 
   it('names the batch and the count after minting, and moves focus to that sentence', async () => {

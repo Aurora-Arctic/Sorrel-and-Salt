@@ -3,7 +3,6 @@ import { AuditInfo } from '../../../graphql/schema/audit';
 import { definedArgs, sessionOf } from '../../../graphql/context-helpers';
 import type { CardAttemptRow, CardBatchStatus, CardRow } from '../../../db/repository';
 import {
-  cardArrivalsCsv,
   cardState,
   listCardAttempts,
   listCardArrivals,
@@ -228,23 +227,6 @@ builder.queryField('invitationCardAttempts', (t) =>
     authScopes: { admin: true },
     resolve: (_root, { batchId }, page, context) =>
       listCardAttempts(sessionOf(context), batchId, page),
-  }),
-);
-
-builder.queryField('cardArrivalsCsv', (t) =>
-  t.string({
-    description:
-      'Every arrival the filter keeps as CSV text: account name, email, accepted date and batch. Site admins only.',
-    args: {
-      query: t.arg.string({
-        required: false,
-        description:
-          "Part of the account's name or email, or the start of the batch number, case-insensitively.",
-      }),
-    },
-    authScopes: { admin: true },
-    resolve: (_root, { query }, context) =>
-      cardArrivalsCsv(sessionOf(context), definedArgs({ query })),
   }),
 );
 

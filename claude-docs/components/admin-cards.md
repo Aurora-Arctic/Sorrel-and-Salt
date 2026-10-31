@@ -8,7 +8,7 @@ yields one. The rules are [`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md
 
 ## Dates
 
-Expires is the day the card was chosen to last through, `2026-10-30`, read back from the stored instant by `printedDayOf`. Minted On, Refused Opens First and Latest and Card Sign-Ups Accepted On are `2026-10-30 2:05 pm` in the viewer's own zone, through [LocalTime](local-time.md). Above the stacking width each is muted at caption size (`admin-cards__fact`), as the user list's Signed Up is. The Card Sign-Ups CSV keeps its own date format, and has the table's headings (Account, Email, Accepted On, Batch) with the same short batch name; it has no Covens Owned column, as the covens are read through the coven module.
+Expires is the day the card was chosen to last through, `2026-10-30`, read back from the stored instant by `printedDayOf`. Minted On, Refused Opens First and Latest and Card Sign-Ups Accepted On are `2026-10-30 2:05 pm` in the viewer's own zone, through [LocalTime](local-time.md). Above the stacking width each is muted at caption size (`admin-cards__fact`), as the user list's Signed Up is. The Card Sign-Ups CSV keeps its own date format, and has the table's headings (Account, Email, Accepted On, Batch, Covens Owned) with the same short batch name. Covens Owned lists the covens the account owns, joined with "; ". The coven module's resolver supplies them from one batched memberships read for every account on the list, as `identity` may import no module.
 
 ## Contracts
 
@@ -44,7 +44,7 @@ Expires is the day the card was chosen to last through, `2026-10-30`, read back 
   55; a Letter sheet holds nine cards) with the total shown as typed ("27 cards"), and
   **Expires On** (a `DateField` whose earliest day is tomorrow in UTC, sent as the end of that day in UTC-12 (`expiryOfDay`: the next day at 12:00 UTC), so a card works through its printed day in every zone; with no `max`
   it ends at the end of next year). Expires On opens on today plus 90 days (`DEFAULT_EXPIRY_DAYS`), a
-  calendar day. The submit stays disabled until both are given. The answer carries each token once, and the
+  calendar day. A **Print Backs** checkbox, checked, sits under them: unchecked, the PDF holds the fronts alone (`backs: false` in `CardSheetsInput`, a choice of the build and not stored, as the PDF is built once, in the dialog). The sheet count counts sheets of nine cards, which the choice does not change. The submit stays disabled until both are given. The answer carries each token once, and the
   tokens live only in that dialog's state. The sheet hint ("A Letter sheet holds 9 cards.") is the field's hint, so it joins the input's description;
   only the live total sits below it, in the field's `after` slot, directly under the input and beneath any error, with one line reserved. After minting, the dialog says "Batch 7c2d0000: 27 cards minted." and moves focus to that sentence
   (the form that minted has gone, so focus would otherwise fall to the page), then "3 sheets, expiring 29 January 2027.". The PDF prints the batch name small on each back and,
