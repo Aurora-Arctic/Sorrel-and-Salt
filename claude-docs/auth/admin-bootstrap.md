@@ -242,17 +242,17 @@ stale session signs in again"). Removal
 hard-deletes the `accounts` row, which is Better Auth's table and outside
 rule 4, and leaves `users` alone.
 
-**The page.** The Sign-In Methods tab of the sign-in page, `/account/sign-in`
+**The page.** The Sign-In Methods section of the Sign-In tab, `/account/sign-in`
 (["The account page"](#the-account-page-mb88) below), which calls
 `requireSession()`, so an unverified account never reaches it, though
-Better Auth itself would link to an unverified row. The tab reads
+Better Auth itself would link to an unverified row. The page reads
 `linkedAccounts()` (`src/lib/request-session.ts`, Better Auth's
 `listUserAccounts` with the request headers) and `sessionIsFresh()`, and
 renders `SignInMethods`
 ([`components/sign-in-methods.md`](../components/sign-in-methods.md)). A
 link's `?error=` goes through `linkErrorMessage` in `src/lib/sign-in.ts`,
 and an unlink refusal through `unlinkErrorMessage`. A link lands back on the
-Sign-In Methods tab, `/account/sign-in`, with `?error=` and `?provider=` when it failed, so
+Sign-In tab, `/account/sign-in`, with `?error=` and `?provider=` when it failed, so
 the page can put the sentence in the row of the provider that failed.
 
 **The sign-in page's side.** `account_not_linked` has one sentence
@@ -497,7 +497,7 @@ the tests [`tests.md`](tests.md).
 ### The account page (MB.88)
 
 `/account` holds the name the site shows, the address it writes to, and the
-coven invitations waiting for that address; the ways in are four tabs under
+coven invitations waiting for that address; the ways in are the Sign-In tab,
 `/account/sign-in`, below. Stories 1, 2, 6 and 59; the
 component docs are [`components/name-form.md`](../components/name-form.md),
 [`components/email-form.md`](../components/email-form.md),
@@ -518,7 +518,7 @@ component docs are [`components/name-form.md`](../components/name-form.md),
   carries no link to `/account/email`.
   Under the heading, a nav labelled "On This Page"
   links to each section by its prefixed id (`#account-name`,
-  `#account-email`, `#account-invitations`), and a link, "Manage Your Sign-In", to the tabs.
+  `#account-email`, `#account-invitations`).
   The Invitations section is always shown, with the table's empty state when
   none wait. It pages with `?after=` and `?before=`, and its pager links keep
   `#account-invitations`. Its id, `ACCOUNT_INVITATIONS_ID`, and the link to it,
@@ -530,17 +530,17 @@ component docs are [`components/name-form.md`](../components/name-form.md),
   sections and the panels are primitives
   (`.page-frame--narrow`, `.page-frame__section`, `.panel`;
   [`styling.md`](../styling.md), "The page frame"), so the page has no stylesheet of its own beyond `.page-with-nav` in `_primitives.scss`, shared with the coven index: wider than a phone the nav is a vertical menu in a column left of the sections, sticky under the shell bar, and on a phone it is the same menu, a full-width column above them (`PageNav`, [`page-nav.md`](../components/page-nav.md)). A failed link
-  lands back on the Sign-In Methods tab with `?error=` and `?provider=`: that page turns the code into
+  lands back on the Sign-In tab with `?error=` and `?provider=`: that page turns the code into
   a sentence with `linkErrorMessage`, and passes it to `SignInMethods` with
   the provider, when it is one on the roster, so the sentence shows in that
   provider's row. The heading stands alone; Sign Out is in the shell's account menu
   (`SignOutButton`,
   [`components/account-menu.md`](../components/account-menu.md)):
   Better Auth's own sign-out, then a full load of `/` (MB.63, moved by MB.7).
-- **The sign-in tabs.** `/account/sign-in` is a `TabbedPage` (`src/app/(shell)/account/sign-in/layout.tsx`, tabs in `ACCOUNT_SIGN_IN_TABS` in `src/lib/sign-in.ts`), each tab its own address and its own `requireSession()` and reads: Sign-In Methods (`/account/sign-in`, which also takes the failed-link `?error=` and `?provider=`), Password (`/account/sign-in/password`, which renders with no password to offer setting one), Two-Factor Sign-In (`/account/sign-in/two-factor`) and Passkeys (`/account/sign-in/passkeys`). The paths are `ACCOUNT_SIGN_IN_PATH`, `ACCOUNT_PASSWORD_PATH`, `ACCOUNT_TWO_FACTOR_PATH` and `ACCOUNT_PASSKEYS_PATH`.
-- **Two-Factor Sign-In (M16.10, Story 75).** Its own tab; for an account with no password it says so and links to the Password tab, since two-factor guards password sign-ins alone. The page writes its heading and intro and hands `TwoFactorSettings` (`components/PasswordSection/two-factor.tsx`) whether it is on ([`components/password-section.md`](../components/password-section.md), "Two-factor").
-- **Sign-In Methods lists the password and the passkeys too.** After the providers come a Password row (Set or Not Set, linking to the Password tab) and a Passkeys row (how many, linking to the Passkeys tab), so the list matches its sentence ([`components/sign-in-methods.md`](../components/sign-in-methods.md)).
-- **Passkeys (M16.8, Story 74).** A Passkeys tab follows Password and Two-Factor Sign-In, at `/account/sign-in/passkeys`. Its intro says a passkey is tied
+- **The account tabs.** `/account` and `/account/sign-in` are one `TabbedPage` titled Account, with the tabs Account and Sign-In (`src/app/(shell)/account/(tabs)/layout.tsx`, tabs in `ACCOUNT_TABS` in `src/lib/sign-in.ts`); the route group leaves `/account/email` outside them. Each page runs its own `requireSession()` and reads. The Sign-In tab stacks four sections, each a `.panel`, in this order: Sign-In Methods (which also takes the failed-link `?error=` and `?provider=`), Password (`#password`, which renders with no password to offer setting one), Two-Factor Sign-In (`#two-factor`) and Passkeys (`#passkeys`). `ACCOUNT_SIGN_IN_PATH` is the tab; `ACCOUNT_PASSWORD_PATH`, `ACCOUNT_TWO_FACTOR_PATH` and `ACCOUNT_PASSKEYS_PATH` are its fragment links.
+- **Two-Factor Sign-In (M16.10, Story 75).** Its own section; for an account with no password it says so and links to the Password section, since two-factor guards password sign-ins alone. The page writes its heading and intro and hands `TwoFactorSettings` (`components/PasswordSection/two-factor.tsx`) whether it is on ([`components/password-section.md`](../components/password-section.md), "Two-factor").
+- **Sign-In Methods lists the password and the passkeys too.** After the providers come a Password row (Set or Not Set, linking to the Password section) and a Passkeys row (how many, linking to the Passkeys section), so the list matches its sentence ([`components/sign-in-methods.md`](../components/sign-in-methods.md)).
+- **Passkeys (M16.8, Story 74).** A Passkeys section follows Password and Two-Factor Sign-In, at `/account/sign-in#passkeys`. Its intro says a passkey is tied
   to this website's address and to the device or password manager that holds
   it; that a passkey made on one Sorrel & Salt site, such as staging, does not
   work on another is in the plugin's notes, not on the page ([`plugins.md`](plugins.md), "Passkeys"). The page reads the

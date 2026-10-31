@@ -1,5 +1,4 @@
 import type { Metadata, Route } from 'next';
-import Link from 'next/link';
 import { readNumberedPage, readPageCursors } from '@/lib/numbered-page';
 import {
   countReceivedInvitations,
@@ -8,13 +7,13 @@ import {
   listReceivedInvitations,
   verificationWaitSeconds,
 } from '@/modules/identity';
-import EmailForm from '../../../components/EmailForm';
-import NameForm from '../../../components/NameForm';
-import PageNav from '../../../components/PageNav';
-import ReceivedInvitations from '../../../components/ReceivedInvitations';
-import { requireSession } from '../../../lib/request-session';
-import { ACCOUNT_INVITATIONS_ID, ACCOUNT_PATH, ACCOUNT_SIGN_IN_PATH } from '../../../lib/sign-in';
-import { signedInLanding } from '../../../lib/landing';
+import EmailForm from '../../../../components/EmailForm';
+import NameForm from '../../../../components/NameForm';
+import PageNav from '../../../../components/PageNav';
+import ReceivedInvitations from '../../../../components/ReceivedInvitations';
+import { requireSession } from '../../../../lib/request-session';
+import { ACCOUNT_INVITATIONS_ID, ACCOUNT_PATH } from '../../../../lib/sign-in';
+import { signedInLanding } from '../../../../lib/landing';
 import type { AccountPageProps } from './types';
 
 export const metadata: Metadata = {
@@ -22,7 +21,7 @@ export const metadata: Metadata = {
 };
 
 // The account page: name, address and waiting coven invitations, each its own section under its own heading, with ids
-// prefixed so no form's id meets them. The ways in are the tabs at /account/sign-in.
+// prefixed so no form's id meets them.
 export default async function AccountPage({ searchParams }: AccountPageProps) {
   const [session, params] = await Promise.all([requireSession(), searchParams]);
   const { after, before } = readPageCursors(params);
@@ -41,8 +40,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
   const { hasPreviousPage, hasNextPage, startCursor, endCursor } = invitations.pageInfo;
 
   return (
-    <main className="page-frame page-frame--narrow page-with-nav">
-      <h1>Your Account</h1>
+    <div className="page-frame page-frame--narrow page-with-nav">
       <PageNav
         label="On This Page"
         entries={[
@@ -51,10 +49,6 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           { href: `#${ACCOUNT_INVITATIONS_ID}`, label: 'Invitations' },
         ]}
       />
-      <p>
-        <Link href={ACCOUNT_SIGN_IN_PATH as Route}>Manage Your Sign-In</Link>: sign-in methods,
-        password, two-factor and passkeys.
-      </p>
       <section
         id="account-name"
         className="page-frame__section panel"
@@ -106,6 +100,6 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           nextHref={hasNextPage && endCursor ? invitationsHref({ after: endCursor }) : undefined}
         />
       </section>
-    </main>
+    </div>
   );
 }

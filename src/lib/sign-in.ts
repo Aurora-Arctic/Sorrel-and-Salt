@@ -147,18 +147,18 @@ export const signInErrorMessage = messageLookup(ERROR_MESSAGES, GENERIC_SIGN_IN_
 /** The account page: name, address and waiting coven invitations. */
 export const ACCOUNT_PATH = '/account';
 
-/** The Sign-In Methods tab, where a provider link starts and lands again, with `?error=` when it failed. */
+/** The Sign-In tab, where a provider link starts and lands again, with `?error=` when it failed. */
 export const ACCOUNT_SIGN_IN_PATH = '/account/sign-in';
-export const ACCOUNT_PASSWORD_PATH = `${ACCOUNT_SIGN_IN_PATH}/password` as Route;
-export const ACCOUNT_TWO_FACTOR_PATH = `${ACCOUNT_SIGN_IN_PATH}/two-factor` as Route;
-export const ACCOUNT_PASSKEYS_PATH = `${ACCOUNT_SIGN_IN_PATH}/passkeys` as Route;
 
-/** The sign-in page's tabs, in their order along the row. */
-export const ACCOUNT_SIGN_IN_TABS: readonly { href: Route; label: string }[] = [
-  { href: ACCOUNT_SIGN_IN_PATH as Route, label: 'Sign-In Methods' },
-  { href: ACCOUNT_PASSWORD_PATH, label: 'Password' },
-  { href: ACCOUNT_TWO_FACTOR_PATH, label: 'Two-Factor Sign-In' },
-  { href: ACCOUNT_PASSKEYS_PATH, label: 'Passkeys' },
+/** The Sign-In tab's sections, by their ids: the sign-in methods' rows and the two-factor note link to them. */
+export const ACCOUNT_PASSWORD_PATH = `${ACCOUNT_SIGN_IN_PATH}#password` as Route;
+export const ACCOUNT_TWO_FACTOR_PATH = `${ACCOUNT_SIGN_IN_PATH}#two-factor` as Route;
+export const ACCOUNT_PASSKEYS_PATH = `${ACCOUNT_SIGN_IN_PATH}#passkeys` as Route;
+
+/** The account page's tabs, in their order along the row. */
+export const ACCOUNT_TABS: readonly { href: Route; label: string }[] = [
+  { href: ACCOUNT_PATH as Route, label: 'Account' },
+  { href: ACCOUNT_SIGN_IN_PATH as Route, label: 'Sign-In' },
 ];
 
 /** The account page's Invitations section, by its id; the landing and the account menu link to it. */

@@ -41,7 +41,7 @@ vi.mock('@/modules/identity', () => ({
   verificationWaitSeconds: () => 0,
 }));
 
-const { default: AccountPage } = await import('@/app/(shell)/account/page');
+const { default: AccountPage } = await import('@/app/(shell)/account/(tabs)/page');
 
 const SESSION = { userId: '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f', role: 'user' } as const;
 
