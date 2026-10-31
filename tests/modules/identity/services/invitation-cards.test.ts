@@ -198,7 +198,12 @@ describe('revoking', () => {
 
     expect(revoked).toHaveLength(CARDS_PER_SHEET - 1);
     const after = await cards();
-    expect(after.filter((row) => row.revoked_at).map((row) => row.id)).toEqual(
+    expect(
+      after
+        .filter((row) => row.revoked_at)
+        .map((row) => row.id)
+        .sort(),
+    ).toEqual(
       inBatch
         .slice(1)
         .map((row) => row.id)
