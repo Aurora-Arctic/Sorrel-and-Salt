@@ -38,10 +38,21 @@ test('an admin mints a sheet of cards and the Invitation Cards tab lists the bat
   await expect(page.getByRole('button', { name: /^Revoke Batch / })).toHaveCount(1);
   await assertNoAccessibilityViolations(page);
 
-  // A filter applied from the form: the URL holds it and the page has no violations with it on.
-  await page.getByRole('combobox', { name: 'Status' }).click();
-  await page.getByRole('option', { name: 'Live' }).click();
+  // A filter applied from the Filters drawer: the URL holds it and the page has no violations with it on.
+  await page.getByRole('button', { name: /^Filters/ }).click();
+  const drawer = page.getByRole('dialog', { name: 'Filters' });
+  await expect(drawer).toBeVisible();
+  const status = drawer.getByRole('group', { name: 'Status' });
+  await status.locator('summary').click();
+  // The native radio is drawn invisible, so its label takes the click.
+  await status
+    .getByRole('radio', { name: 'Live' })
+    .locator('xpath=ancestor::label[1]')
+    .click({ position: { x: 10, y: 10 } });
+  await assertNoAccessibilityViolations(page);
+  await drawer.getByRole('button', { name: 'Apply Filters' }).click();
   await expect(page).toHaveURL(/status=live/);
+  await expect(page.getByRole('button', { name: /^Filters\D*1/ })).toBeVisible();
   await expect(page.getByRole('button', { name: /^Revoke Batch / })).toHaveCount(1);
   await assertNoAccessibilityViolations(page);
 
