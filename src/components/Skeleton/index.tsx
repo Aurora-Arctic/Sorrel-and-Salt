@@ -180,6 +180,7 @@ const Skeleton = ({
   entry = false,
   head,
   density,
+  card,
   count,
 }: SkeletonProps): ReactElement => {
   const many = count ?? DEFAULT_COUNT[shape];
@@ -214,7 +215,12 @@ const Skeleton = ({
         )}
         {shape === 'cards' && (
           <div className="skeleton__cards">
-            <Bars of={many} className="skeleton__card" />
+            <Bars
+              of={many}
+              className={
+                card === 'spell' ? 'skeleton__card skeleton__card--spell' : 'skeleton__card'
+              }
+            />
           </div>
         )}
         {shape === 'table' && (

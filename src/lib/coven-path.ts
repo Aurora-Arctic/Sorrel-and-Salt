@@ -104,7 +104,14 @@ export function pathInCoven(
  */
 const PARTS_OF_SECTION: Record<string, Omit<NavigationTarget, 'region'>> = {
   ingredients: { shape: 'cards', title: true, filter: true, density: 'compact' },
-  grimoire: { shape: 'cards', title: true, filter: true, tabs: true, density: 'compact' },
+  grimoire: {
+    shape: 'cards',
+    title: true,
+    filter: true,
+    tabs: true,
+    density: 'compact',
+    card: 'spell',
+  },
   members: { shape: 'table', title: true, tabs: true },
   invitations: { shape: 'table', title: true, tabs: true },
 };
