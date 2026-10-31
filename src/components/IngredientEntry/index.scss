@@ -50,6 +50,11 @@ $jump-link-line: 1.25;
   padding-block-start: space(4);
 }
 
+// A notice in the head fills its column, as the review row's line does; `.notice`'s own 66ch cap is the notice's own font, so it can fall short of the column.
+.ingredient-entry__head > .notice {
+  max-width: none;
+}
+
 // The `.back-bar` holding the back link (left) and the New / Updated marker (right), raised into the
 // page's top padding (claude-docs/components/ingredient-entry.md, "Styling").
 .ingredient-entry__bar {
