@@ -1,8 +1,14 @@
 import { render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import SupportList from '@/components/SupportList';
 import type { SupportListEntry } from '@/components/SupportList/types';
 import type { SupportSenderRequestEntry } from '@/components/SupportSenderRequest/types';
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
+  usePathname: () => '/account/support',
+  useSearchParams: () => new URLSearchParams(),
+}));
 
 const request = (over: Partial<SupportListEntry> = {}): SupportListEntry => ({
   id: 'r1',
@@ -111,6 +117,6 @@ describe('SupportList', () => {
 
   it('opens the request in a dialog named by its subject', () => {
     render(<SupportList counts={none} requests={[request()]} opened={opened()} />);
-    expect(screen.getByRole('dialog', { name: 'How do I join a coven?' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: /How do I join a coven\?/ })).toBeInTheDocument();
   });
 });
