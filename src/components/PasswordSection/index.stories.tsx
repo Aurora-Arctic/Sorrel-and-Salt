@@ -14,13 +14,7 @@ type Story = StoryObj<{ state?: ReactNode }>;
 
 // Inside the account page's frame and section, on its panel, as src/app/(shell)/account/page.tsx writes
 // them, so the workshop shows what the page shows.
-const Section = ({
-  hasPassword,
-  twoFactorEnabled = false,
-}: {
-  hasPassword: boolean;
-  twoFactorEnabled?: boolean;
-}) => (
+const Section = ({ hasPassword }: { hasPassword: boolean }) => (
   <ShellFrame area="none" open="/account">
     <main className="page-frame page-frame--narrow">
       <h1>Your Account</h1>
@@ -37,7 +31,7 @@ const Section = ({
               : 'Set a password to sign in with your email address as well as your providers.'}
           </p>
         </div>
-        <PasswordSection hasPassword={hasPassword} twoFactorEnabled={twoFactorEnabled} />
+        <PasswordSection hasPassword={hasPassword} />
       </section>
     </main>
   </ShellFrame>
@@ -48,8 +42,6 @@ const STATES_STATES: Record<string, ReactNode> = {
   Change: <Section hasPassword />,
   // An account with providers alone sets a first one.
   Set: <Section hasPassword={false} />,
-  // Two-factor on, offering to turn it off with the password.
-  'Two-Factor On': <Section hasPassword twoFactorEnabled />,
 };
 
 export const States: Story = {

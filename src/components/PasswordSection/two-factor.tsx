@@ -11,7 +11,7 @@ import { TOO_MANY_ATTEMPTS } from '../SignInPanel/password-form';
 import { WRONG_CODE } from '../SignInPanel/two-factor-step';
 import type { TwoFactorSettingsProps } from './types';
 
-// Turning two-factor on and off, inside the Password section. Turning on takes the password, then
+// Turning two-factor on and off, inside its own section of the account page. Turning on takes the password, then
 // shows the app's QR code and the backup codes once, and is on only when a code from the app is
 // confirmed; turning off takes the password (claude-docs/components/password-section.md, "Two-factor").
 
@@ -86,7 +86,6 @@ function printCodes(text: string): void {
 }
 
 const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement => {
-  const headingId = useId();
   const codeId = useId();
   const [on, setOn] = useState(enabled);
   const [enrolment, setEnrolment] = useState<Enrolment>();
@@ -158,8 +157,7 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
   const codeField = fieldDescription({ id: codeId, error: problem.code });
 
   return (
-    <section className="two-factor" aria-labelledby={headingId}>
-      <h3 id={headingId}>Two-Factor Sign-In</h3>
+    <div className="two-factor">
       {problem.alert && <Notice kind="error">{problem.alert}</Notice>}
       {saved === 'on' && (
         <Notice kind="success">
@@ -267,7 +265,7 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
             noValidate
           >
             <PasswordField
-              label="Password"
+              label="Confirm Your Password"
               purpose="current"
               value={password}
               onChange={setPassword}
@@ -288,7 +286,7 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
           </form>
         </>
       )}
-    </section>
+    </div>
   );
 };
 

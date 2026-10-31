@@ -17,15 +17,18 @@ import { useClickFeedback } from '../ClickFeedback';
 import { useAnnounce } from '../ClickFeedback/status-region';
 import Notice from '../Notice';
 import { ProviderRow } from './provider-row';
+import { SectionRow } from './section-row';
 import type { ProviderRemoval, SignInMethodError, SignInMethodsProps } from './types';
 import './index.scss';
 
 // The account page's list of the ways into this account: each roster provider, linked or addable,
-// removable while another is left. Adding is Better Auth's /link-social, removing /unlink-account.
+// removable while another is left, then the password and the passkeys, each linking to its section. Adding is Better Auth's /link-social, removing /unlink-account.
 // A session too old to remove one is offered a fresh sign-in in place of every Remove. The heading
 // and intro are the page's (claude-docs/components/sign-in-methods.md).
 
 const SignInMethods = ({
+  passwordHeld,
+  passkeyCount,
   linked,
   configured,
   error,
@@ -173,6 +176,22 @@ const SignInMethods = ({
             />
           );
         })}
+        <SectionRow
+          label="Password"
+          status={passwordHeld ? 'Set' : 'Not Set'}
+          href="#account-password"
+          linkLabel={passwordHeld ? 'Manage Password' : 'Set Password'}
+        />
+        <SectionRow
+          label="Passkeys"
+          status={
+            passkeyCount === 0
+              ? 'None Added'
+              : `${passkeyCount} ${passkeyCount === 1 ? 'passkey' : 'passkeys'}`
+          }
+          href="#account-passkeys"
+          linkLabel="Manage Passkeys"
+        />
       </ul>
     </div>
   );

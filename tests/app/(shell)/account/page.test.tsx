@@ -85,7 +85,8 @@ describe('the /account page', () => {
 
     const nav = screen.getByRole('navigation', { name: 'On This Page' });
     const links = within(nav).getAllByRole('link');
-    expect(links).toHaveLength(6);
+    expect(links.map((link) => link.textContent)).toContain('Two-Factor Sign-In');
+    expect(links).toHaveLength(7);
     // Each link lands on the section headed by its own words.
     for (const link of links) {
       const target = document.getElementById(link.getAttribute('href')?.slice(1) ?? '');
@@ -120,6 +121,40 @@ describe('the /account page', () => {
 
     expect(within(section('Email')).getByRole('textbox', { name: 'Email Address' })).toHaveValue(
       '',
+    );
+  });
+
+  it('makes Two-Factor Sign-In a section of its own, not a heading inside Password', async () => {
+    await renderPage();
+
+    expect(
+      within(section('Two-Factor Sign-In')).getByRole('button', { name: 'Turn On Two-Factor' }),
+    ).toBeVisible();
+    expect(within(section('Password')).queryByText('Two-Factor Sign-In')).toBeNull();
+    expect(within(section('Password')).queryByRole('button', { name: /Two-Factor/ })).toBeNull();
+  });
+
+  it('offers no Two-Factor Sign-In section, or nav entry, to an account with no password', async () => {
+    hasPassword.mockResolvedValueOnce(false);
+
+    await renderPage();
+
+    expect(screen.queryByRole('region', { name: 'Two-Factor Sign-In' })).toBeNull();
+    const nav = screen.getByRole('navigation', { name: 'On This Page' });
+    expect(within(nav).queryByRole('link', { name: 'Two-Factor Sign-In' })).toBeNull();
+  });
+
+  it('lists the password and the passkeys among the sign-in methods, each linking to its section', async () => {
+    await renderPage();
+
+    const methods = within(section('Sign-In Methods'));
+    expect(methods.getByRole('link', { name: 'Manage Password' })).toHaveAttribute(
+      'href',
+      '#account-password',
+    );
+    expect(methods.getByRole('link', { name: 'Manage Passkeys' })).toHaveAttribute(
+      'href',
+      '#account-passkeys',
     );
   });
 

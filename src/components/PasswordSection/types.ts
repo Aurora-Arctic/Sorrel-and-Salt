@@ -4,8 +4,6 @@ export interface PasswordSectionProps {
    * a provider alone, sets a first one without it.
    */
   hasPassword: boolean;
-  /** Whether two-factor is on; offered only once the account holds a password, as it guards password sign-ins alone. */
-  twoFactorEnabled?: boolean;
 }
 
 export interface TwoFactorSettingsProps {

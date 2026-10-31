@@ -28,7 +28,7 @@ The client half is `twoFactorClient()` in `src/lib/auth-client.ts`, with no
 options, so it does no redirect of its own: the password form reads
 `twoFactorRedirect` from the sign-in answer and shows the second step
 ([`components/sign-in-panel.md`](../components/sign-in-panel.md),
-"Two-factor"). Turning it on and off is in the account page's Password section
+"Two-factor"). Turning it on and off is in the account page's own Two-Factor Sign-In section
 ([`components/password-section.md`](../components/password-section.md),
 "Two-factor").
 
