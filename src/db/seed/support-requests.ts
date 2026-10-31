@@ -218,7 +218,7 @@ interface SeedTimeout {
   note: string;
 }
 
-// D has a time-out in force, C one that has run out, and B one an admin lifted early.
+// D has a time-out in force and an earlier one an admin lifted, C one that has run out, and B one an admin lifted early.
 const SUPPORT_TIMEOUTS: readonly SeedTimeout[] = [
   {
     id: '00000000-0000-0000-0005-000000000201',
@@ -241,6 +241,14 @@ const SUPPORT_TIMEOUTS: readonly SeedTimeout[] = [
     daysAgo: 9,
     liftedDaysAgo: 8.5,
     note: 'Timed out by mistake.',
+  },
+  {
+    id: '00000000-0000-0000-0005-000000000204',
+    userId: D.id,
+    untilInDays: -16,
+    daysAgo: 21,
+    liftedDaysAgo: 19,
+    note: 'Asked the same question in three requests in one day.',
   },
 ];
 
