@@ -80,3 +80,20 @@ export function longMinuteInUtc(at: Date): string {
 export function minuteInUtc(at: Date): string {
   return minuteInZone(at, 'UTC');
 }
+
+/** The instant a card chosen to last through `day` (`2027-01-29`) stops working: the end of that day in UTC-12, the last zone on Earth, so it never stops before its printed day is over anywhere. */
+export function expiryOfDay(day: string): Date {
+  const end = new Date(`${day}T12:00:00.000Z`);
+  end.setUTCDate(end.getUTCDate() + 1);
+  return end;
+}
+
+/** The chosen day's midnight UTC, read back from a stored expiry: format it in UTC to print the day. */
+export function printedDateOf(expiresAt: Date): Date {
+  return new Date(expiresAt.getTime() - 36 * 60 * 60 * 1000);
+}
+
+/** The day `expiryOfDay` was given, as `2027-01-29`, read back from the stored instant. */
+export function printedDayOf(expiresAt: Date): string {
+  return isoDayInUtc(printedDateOf(expiresAt));
+}

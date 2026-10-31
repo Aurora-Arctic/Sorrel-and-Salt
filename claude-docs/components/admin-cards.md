@@ -8,13 +8,13 @@ yields one. The rules are [`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md
 
 ## Dates
 
-Expires is a UTC day, `2026-10-30`. Minted On, Refused Opens First and Latest and Card Sign-Ups Accepted On are `2026-10-30 2:05 pm` in the viewer's own zone, through [LocalTime](local-time.md). Above the stacking width each is muted at caption size (`admin-cards__fact`), as the user list's Signed Up is. The Card Sign-Ups CSV keeps its own date format, and has the table's headings (Account, Email, Accepted On, Batch) with the same short batch name; it has no Covens Owned column, as the covens are read through the coven module.
+Expires is the day the card was chosen to last through, `2026-10-30`, read back from the stored instant by `printedDayOf`. Minted On, Refused Opens First and Latest and Card Sign-Ups Accepted On are `2026-10-30 2:05 pm` in the viewer's own zone, through [LocalTime](local-time.md). Above the stacking width each is muted at caption size (`admin-cards__fact`), as the user list's Signed Up is. The Card Sign-Ups CSV keeps its own date format, and has the table's headings (Account, Email, Accepted On, Batch) with the same short batch name; it has no Covens Owned column, as the covens are read through the coven module.
 
 ## Contracts
 
 - **Invitation Cards** (`index.tsx`): a region named "Invitation Cards" with one row per batch: batch (the
   first block of the batch id, `batchName`), **status**, cards, accepted, refused opens, minted on (date and
-  time, local), expires (the date alone: it is midnight UTC), and **Revoke Batch** while a card of the batch is pending
+  time, local), expires (the chosen day alone, never a time), and **Revoke Batch** while a card of the batch is pending
   (`ConfirmedAction` asks first, naming the batch and its mint date, and says accounts that already accepted
   keep their access). The Revoke column is red like the People table's Impersonate column (`row-action-column`, `.admin-cards__revoke`), with a red row button and a red confirm; the question always comes first.
   Revoking is by batch only. Counts come from SQL. Status is `batchStatus()` in `batches.ts`, read from the
@@ -42,7 +42,7 @@ Expires is a UTC day, `2026-10-30`. Minted On, Refused Opens First and Latest an
   twenty at a time with **Show More**. A plain paragraph under the head says "Every card listed here already admits nobody. Further tries are refused and counted here.": the list is a record, and no card in it can be opened or revoked from here.
 - **Mint Cards** (`mint-form.tsx`) is a link to `?mint`, which opens a modal: **Number of Sheets** (1 to
   55; a Letter sheet holds nine cards) with the total shown as typed ("27 cards"), and
-  **Expires On** (a `DateField` whose earliest day is tomorrow in UTC, sent as midnight UTC; with no `max`
+  **Expires On** (a `DateField` whose earliest day is tomorrow in UTC, sent as the end of that day in UTC-12 (`expiryOfDay`: the next day at 12:00 UTC), so a card works through its printed day in every zone; with no `max`
   it ends at the end of next year). Expires On opens on today plus 90 days (`DEFAULT_EXPIRY_DAYS`), a
   calendar day. The submit stays disabled until both are given. The answer carries each token once, and the
   tokens live only in that dialog's state. The sheet hint ("A Letter sheet holds 9 cards.") is the field's hint, so it joins the input's description;

@@ -26,7 +26,7 @@ const assets: CardAssets = {
   lexend400: read('fonts/lexend-400.ttf'),
   lexend500: read('fonts/lexend-500.ttf'),
 };
-const EXPIRES = new Date('2027-03-31T12:00:00Z');
+const EXPIRES = new Date('2027-04-01T12:00:00Z');
 const links = (n: number) =>
   Array.from(
     { length: n },

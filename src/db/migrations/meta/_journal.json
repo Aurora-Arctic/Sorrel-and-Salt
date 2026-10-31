@@ -701,6 +701,13 @@
       "when": 1793405180000,
       "tag": "0099_card-position",
       "breakpoints": true
+    },
+    {
+      "idx": 100,
+      "version": "7",
+      "when": 1793411379488,
+      "tag": "0100_card-expiry-end-of-day",
+      "breakpoints": true
     }
   ]
 }

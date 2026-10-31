@@ -5,7 +5,7 @@ import type { ReactElement } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { noMatchText } from '../../lib/text';
-import { dayInUtc, isoDayInUtc } from '../../lib/utc';
+import { dayInUtc, printedDayOf } from '../../lib/utc';
 import StackTable from '../DataTable';
 import LocalTime from '../LocalTime';
 import ListFrame, { ListBody } from '../ListFrame';
@@ -101,7 +101,9 @@ const AdminCards = ({
               heading: 'Expires',
               className: 'admin-cards__fact',
               cell: (batch) => (
-                <time dateTime={batch.expiresAt.toISOString()}>{isoDayInUtc(batch.expiresAt)}</time>
+                <time dateTime={batch.expiresAt.toISOString()}>
+                  {printedDayOf(batch.expiresAt)}
+                </time>
               ),
             },
             {

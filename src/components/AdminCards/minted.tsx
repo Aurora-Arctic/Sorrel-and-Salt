@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type ReactElement } from 'react';
 import { buildCardSheetsPdf } from '@/lib/invitation-cards';
 import type { DiscardGuard } from '../Modal/types';
 import { ConfirmQuestion } from '../Modal';
-import { dayInUtc } from '../../lib/utc';
+import { dayInUtc, printedDateOf } from '../../lib/utc';
 import Notice from '../Notice';
 import { batchName } from './batches';
 import { saveFile } from './save-file';
@@ -81,8 +81,8 @@ const MintedCards = ({
         Batch {name}: {batch.tokens.length} cards minted.
       </p>
       <p>
-        {sheets} {sheets === 1 ? 'sheet' : 'sheets'}, expiring {dayInUtc(new Date(batch.expiresAt))}
-        .
+        {sheets} {sheets === 1 ? 'sheet' : 'sheets'}, expiring{' '}
+        {dayInUtc(printedDateOf(new Date(batch.expiresAt)))}.
       </p>
       {failed ? <Notice kind="error">The PDF could not be built. Try again.</Notice> : null}
       <div className="modal__actions">
