@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import ShownToggle from '@/components/IngredientEntry/shown-toggle';
 import type {
@@ -13,7 +13,7 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// The curator's Hide and Show button on a compendium entry.
+// The curator's Shown in Compendium switch on a compendium entry: it saves on the flip.
 
 const ID = '00000000-0000-4000-8000-000000000002';
 
@@ -42,21 +42,21 @@ describe('ShownToggle', () => {
     router.refresh.mockClear();
   });
 
-  it('offers Hide on a shown entry and hides it', async () => {
+  it('hides a shown entry when flipped off', async () => {
     const calls = accept();
     renderToggle(true);
 
-    press(screen.getByRole('button', { name: 'Hide Testwort' }));
+    press(screen.getByRole('switch', { name: 'Shown in Compendium: Testwort' }));
 
     await waitFor(() => expect(router.refresh).toHaveBeenCalledOnce());
     expect(calls).toEqual([{ id: ID, shown: false }]);
   });
 
-  it('offers Show on a hidden entry and shows it', async () => {
+  it('shows a hidden entry when flipped on', async () => {
     const calls = accept();
     renderToggle(false);
 
-    press(screen.getByRole('button', { name: 'Show Testwort' }));
+    press(screen.getByRole('switch', { name: 'Shown in Compendium: Testwort' }));
 
     await waitFor(() => expect(router.refresh).toHaveBeenCalledOnce());
     expect(calls).toEqual([{ id: ID, shown: true }]);
@@ -66,7 +66,7 @@ describe('ShownToggle', () => {
     mockGraphQLError('SetCompendiumEntryShown', { code: 'FORBIDDEN', message: 'Forbidden' });
     renderToggle(true);
 
-    press(screen.getByRole('button', { name: 'Hide Testwort' }));
+    press(screen.getByRole('switch', { name: 'Shown in Compendium: Testwort' }));
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Forbidden');
     expect(router.refresh).not.toHaveBeenCalled();
@@ -77,14 +77,21 @@ describe('ShownToggle', () => {
     const onChange = vi.fn();
     render(
       <QueryClientProvider client={makeQueryClient()}>
-        <ShownToggle shown name="Testwort" onChange={onChange} accessibleName="Shown in Compendium" />
+        <ShownToggle
+          shown
+          name="Testwort"
+          onChange={onChange}
+          accessibleName="Shown in Compendium"
+        />
       </QueryClientProvider>,
     );
 
     press(screen.getByRole('switch', { name: 'Shown in Compendium' }));
 
     expect(onChange).toHaveBeenCalledWith(false);
-    await new Promise((resolve) => setTimeout(resolve, 50));
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
     expect(calls).toHaveLength(0);
     expect(router.refresh).not.toHaveBeenCalled();
   });

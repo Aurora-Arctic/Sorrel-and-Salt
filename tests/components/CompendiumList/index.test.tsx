@@ -48,17 +48,19 @@ describe('CompendiumList', () => {
     expect(within(rows[2]).getByRole('link', { name: 'Fixture Salt' })).toBeInTheDocument();
   });
 
-  it('labels a hidden entry and offers Show, and offers Hide on a shown one', () => {
+  it('gives each row a switch set to whether it is shown', () => {
     const [shown, hidden] = props().entries;
     render(<CompendiumList {...props({ entries: [shown, { ...hidden, shown: false }] })} />);
 
     const rows = within(screen.getByRole('table')).getAllByRole('row');
-    expect(within(rows[1]).queryByText('Hidden')).not.toBeInTheDocument();
     expect(
-      within(rows[1]).getByRole('button', { name: 'Hide Testwort, Fixtura testalis' }),
-    ).toBeInTheDocument();
-    expect(within(rows[2]).getByText('Hidden')).toBeInTheDocument();
-    expect(within(rows[2]).getByRole('button', { name: 'Show Fixture Salt' })).toBeInTheDocument();
+      within(rows[1]).getByRole('switch', {
+        name: 'Shown in Compendium: Testwort, Fixtura testalis',
+      }),
+    ).toBeChecked();
+    expect(
+      within(rows[2]).getByRole('switch', { name: 'Shown in Compendium: Fixture Salt' }),
+    ).not.toBeChecked();
   });
 
   // Categories column: the card's chips, the first few shown and the rest behind +N.

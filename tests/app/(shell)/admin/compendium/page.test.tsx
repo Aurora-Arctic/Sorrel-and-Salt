@@ -60,8 +60,11 @@ const compendiumFacets = vi.fn();
 const covensHoldingEntry = vi.fn();
 // The open entry's review mark, read uncached with the curator's session.
 const readCompendiumReview = vi.fn();
+// The entry the edit modal opens, read with the curator's session for its shown flag.
+const getIngredient = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
   readCompendiumReview,
+  getIngredient,
   listCompendium,
   countCompendium,
   compendiumFacets,
@@ -255,6 +258,8 @@ beforeEach(() => {
   resolveCompendiumSlug.mockResolvedValue({ kind: 'entry', entry: TESTWORT, movedAway: null });
   readCompendiumReview.mockReset();
   readCompendiumReview.mockResolvedValue(null);
+  getIngredient.mockReset();
+  getIngredient.mockResolvedValue({ ...TESTWORT, shown: true });
   ingredientDetailOf.mockReset();
   ingredientDetailOf.mockResolvedValue({
     ...entryDetail({ safetyNotes: 'Fixture admin caution.' }),
