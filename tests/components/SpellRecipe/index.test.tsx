@@ -4,6 +4,8 @@ import { describe, expect, it, vi } from 'vitest';
 import SpellRecipeAside from '@/components/SpellRecipe/aside';
 import SpellWorkings from '@/components/SpellWorkings';
 import SpellRecipe from '@/components/SpellRecipe';
+import SpellRecipeBody from '@/components/SpellRecipe/body';
+import SpellRecipeSummary from '@/components/SpellRecipe/summary';
 import type { RecipeStep, SpellRecipeProps } from '@/components/SpellRecipe';
 
 vi.mock('next/navigation', () => ({
@@ -217,7 +219,7 @@ describe('SpellRecipe', () => {
     ).toBeInTheDocument();
   });
 
-  it('gives an ingredient a Quick Look eye, not a link on its name, and a one-off neither, marking it One-Off', () => {
+  it('names an ingredient plainly in its step, with no Quick Look eye, which the side column carries, and marks a one-off One-Off', () => {
     render(
       <SpellRecipe
         {...props({
@@ -236,12 +238,8 @@ describe('SpellRecipe', () => {
       />,
     );
     const steps = screen.getByRole('list', { name: 'Steps' });
-    expect(within(steps).getAllByRole('link')).toHaveLength(1);
-    expect(within(steps).getByRole('link', { name: /Quick Look Testwort/ })).toHaveAttribute(
-      'href',
-      '/coven/fixture-coven/ingredients?entry=i1',
-    );
-    expect(within(steps).getByText('Testwort').closest('a')).toBeNull();
+    expect(within(steps).queryAllByRole('link')).toHaveLength(0);
+    expect(within(steps).getByText('Testwort')).toBeInTheDocument();
     expect(within(steps).getByText(/Fixture Moss \(Fresh\)/)).toBeInTheDocument();
     const oneOff = within(steps).getByRole('button', { name: 'One-Off' });
     expect(oneOff).toHaveAccessibleDescription(
@@ -312,7 +310,7 @@ describe('SpellRecipe', () => {
         })}
       />,
     );
-    const aside = screen.getByRole('complementary');
+    const aside = screen.getByRole('complementary', { name: 'The Cupboard' });
     expect(within(aside).getByRole('region', { name: 'Fixture Aside' })).toBeInTheDocument();
     const note = screen.getByText('Best at dusk.');
     expect(note.compareDocumentPosition(aside) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
@@ -323,12 +321,7 @@ describe('SpellRecipe', () => {
       within(screen.getByRole('navigation', { name: 'On This Page' })).getAllByRole('link');
     const aside = <SpellRecipeAside steps={[]} doors={[]} intended={[]} groups={[]} />;
     const workings = (
-      <SpellWorkings
-        workspaceId="w"
-        workings={[]}
-        completeAction={() => null}
-        editAction={() => null}
-      />
+      <SpellWorkings workings={[]} completeAction={() => null} editAction={() => null} />
     );
 
     it('lists the sections the page draws, each link pointing at one that exists', () => {
@@ -336,13 +329,13 @@ describe('SpellRecipe', () => {
       expect(linksOf().map((link) => link.textContent)).toEqual([
         'Steps',
         'Category Match',
-        'In Coven Inventory',
+        'In the Cupboard',
         'Workings',
       ]);
       // The two jar links are nested under one group label, and the group is narrow-only whole.
       const group = within(screen.getByRole('navigation', { name: 'On This Page' })).getByRole(
         'list',
-        { name: 'The Jar' },
+        { name: 'The Cupboard' },
       );
       expect(within(group).getAllByRole('link')).toHaveLength(2);
       expect(group.parentElement).toHaveClass('page-nav__narrow');
@@ -350,6 +343,43 @@ describe('SpellRecipe', () => {
         const target = document.getElementById(link.getAttribute('href')!.slice(1));
         expect(target, link.textContent ?? '').not.toBeNull();
       }
+    });
+
+    it('comes after the intent and the categories in the source, and before the steps', () => {
+      render(
+        <SpellRecipe
+          {...props({
+            categories: [
+              {
+                category: { id: 'c1', name: 'Testwort Lore' },
+                group: { colorDark: '#112233', colorLight: '#445566' },
+              },
+            ],
+            steps: [instruction('s1', 'Stir.')],
+            aside,
+            workings,
+          })}
+        />,
+      );
+      const nav = screen.getByRole('navigation', { name: 'On This Page' });
+      const follows = (a: Node, b: Node) =>
+        Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+      expect(follows(screen.getByText('To keep the testwort fresh.'), nav)).toBe(true);
+      expect(follows(screen.getByRole('list', { name: 'Categories' }), nav)).toBe(true);
+      expect(follows(nav, screen.getByRole('list', { name: 'Steps' }))).toBe(true);
+    });
+
+    it('puts the side column before Workings in the source, as the menu lists them', () => {
+      render(<SpellRecipe {...props({ steps: [instruction('s1', 'Stir.')], aside, workings })} />);
+      const side = screen.getByRole('complementary', { name: 'The Cupboard' });
+      const section = screen.getByRole('region', { name: 'Workings' });
+      // The menu names them in this order, so the keyboard and a screen reader meet them so too.
+      expect(
+        linksOf()
+          .map((link) => link.textContent)
+          .slice(-2),
+      ).toEqual(['In the Cupboard', 'Workings']);
+      expect(side.compareDocumentPosition(section) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     });
 
     it('leaves out an entry whose section is not drawn', () => {
@@ -361,5 +391,29 @@ describe('SpellRecipe', () => {
       render(<SpellRecipe {...props({ steps: [instruction('s1', 'Stir.')], workings })} />);
       expect(linksOf().map((link) => link.textContent)).toEqual(['Steps', 'Workings']);
     });
+  });
+});
+
+describe("SpellRecipeBody and SpellRecipeSummary under a dialog's title", () => {
+  it('draw Steps and Ingredients at the level given, one below the title they sit under', () => {
+    const steps = [ingredient('s1')];
+    render(
+      <SpellRecipeBody
+        {...props({ steps })}
+        level={3}
+        beforeSteps={<SpellRecipeSummary steps={steps} level={3} />}
+      />,
+    );
+    expect(screen.getByRole('heading', { level: 3, name: 'Steps' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 3, name: 'Ingredients' })).toBeInTheDocument();
+  });
+
+  it("draw them at level 2 by default, under the page's h1", () => {
+    const steps = [ingredient('s1')];
+    render(
+      <SpellRecipeBody {...props({ steps })} beforeSteps={<SpellRecipeSummary steps={steps} />} />,
+    );
+    expect(screen.getByRole('heading', { level: 2, name: 'Steps' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 2, name: 'Ingredients' })).toBeInTheDocument();
   });
 });

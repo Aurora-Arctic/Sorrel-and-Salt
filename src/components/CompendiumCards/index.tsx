@@ -9,6 +9,7 @@ import IngredientCardList from '../IngredientCardList';
 import DetailsLink from '../IngredientEntry/details-link';
 import IngredientSearch from '../IngredientSearch';
 import AddIcon from '../AddIcon';
+import { emptyList } from '../../lib/text';
 import CompendiumCardMore from './card-more';
 import { HeldMark } from './held-mark';
 import type { CompendiumCardEntry, CompendiumCardsProps } from './types';
@@ -126,7 +127,7 @@ const CompendiumCards = ({
     position={position}
   >
     {entries.length === 0 ? (
-      <p>{emptyText(filter, categories, facets, 'The compendium is empty.')}</p>
+      <p>{emptyText(filter, categories, facets, emptyList('ingredients'))}</p>
     ) : (
       <IngredientCardList label="Compendium">
         {entries.map((entry) => (

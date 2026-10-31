@@ -8,7 +8,7 @@ import { ACCOUNT_PATH, safeReturnPath } from '../../../../lib/sign-in';
 import type { EmailPageProps } from './types';
 
 export const metadata: Metadata = {
-  title: 'Your Email — Sorrel & Salt',
+  title: 'Your Email',
 };
 
 // The narrow page frame centres the form inside the shell, on a panel as the account page's

@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import StackTable, { updatedColumn } from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
+import { emptyList } from '../../lib/text';
 import { workspaceRoleLabel } from '../UserDetail/roles';
 import type { MemberListEntry, MemberListProps } from './types';
 import './index.scss';
@@ -92,7 +93,7 @@ const MemberList = ({
       columns={columns(currentUserId, { showEmail, roleAction, removeAction })}
       rows={members}
       rowKey={(member) => member.userId}
-      empty="There are no members yet."
+      empty={emptyList('members')}
       className="data-table--roomy data-table--nowrap"
     />
   </div>

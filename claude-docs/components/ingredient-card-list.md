@@ -1,14 +1,14 @@
 # IngredientCardList
 
-The grid every list of ingredient cards uses (M8.14), so the compendium page (M8.18), the workspace ingredients page (M9.6) and the admin compendium share one layout.
+The grid every list of cards uses (M8.14), so the compendium page (M8.18), the workspace ingredients page (M9.6), the admin compendium and the grimoire (its spell cards, M10.11) share one layout.
 
 ## Props
 
-| Prop       | What it does                                               |
-| ---------- | ---------------------------------------------------------- |
-| `label`    | The list's accessible name                                 |
-| `density`  | `'regular'` (default) or `'compact'`; see below            |
-| `children` | One `IngredientCard` per child; each is wrapped in an `li` |
+| Prop       | What it does                                                                         |
+| ---------- | ------------------------------------------------------------------------------------ |
+| `label`    | The list's accessible name                                                           |
+| `density`  | `'regular'` (default) or `'compact'`; see below                                      |
+| `children` | One card per child, an `IngredientCard` or a `SpellCard`; each is wrapped in an `li` |
 
 ## Contracts
 

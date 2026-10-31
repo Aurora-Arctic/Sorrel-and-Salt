@@ -103,7 +103,7 @@ const STATES: Record<string, ReactNode> = {
 export const States: Story = {
   args: { state: 'Resting' },
   argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
-  render: ({ state }) => <div key={String(state)}>{state}</div>,
+  render: ({ state }) => <div>{state}</div>,
 };
 
 // Refused, then a later try that succeeds: the badge and the callout both go,

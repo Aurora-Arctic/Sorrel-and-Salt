@@ -172,7 +172,7 @@ link. `referencesOf` renders each citation and files the
 batch's answers alphabetically, `byCitation` in `src/lib/citation.ts`;
 `referencesByIngredient` batches it behind `Ingredient.references`. A
 variant's links (MB.217's `ingredientVariantId`) are read as an ingredient's,
-through `readableVariantParent`, the variant live and its ingredient readable
+through `inUseVariantParent`, the variant live and its ingredient readable
 (MB.218); `referencesOfVariants` and `referencesByVariant` sit behind
 `IngredientVariant.references`.
 

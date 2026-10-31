@@ -55,7 +55,7 @@ const AcceptControl = ({
     <>
       <BusyButton
         ref={feedback.anchorRef}
-        className="btn btn--small btn--solid"
+        className="btn btn--solid btn--small"
         aria-label={`Accept the invitation to ${covenName}`}
         aria-disabled={sending || undefined}
         busy={sending}

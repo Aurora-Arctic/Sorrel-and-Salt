@@ -527,6 +527,15 @@ describe('IngredientSearch', () => {
       expect(screen.getByRole('option', { name: 'Untitled Spell' })).toBeInTheDocument();
     });
 
+    it("names a spell titled with spaces only 'Untitled Spell', as its card does", async () => {
+      const spellsAsked = offerSpells(['   ']);
+      renderSearch('', GRIMOIRE);
+
+      await typeTitle('hearth', spellsAsked);
+
+      expect(await screen.findByRole('option', { name: 'Untitled Spell' })).toBeInTheDocument();
+    });
+
     it("opens a picked spell's recipe page, by the spell's id", async () => {
       const spellsAsked = offerSpells(['Hearth Ward', null]);
       renderSearch('', GRIMOIRE);

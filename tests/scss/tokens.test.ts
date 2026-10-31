@@ -250,6 +250,8 @@ describe('the brand and text colours clear their floors on the page and the card
       ['card', card],
     ] as const) {
       row(`the warning's bar on the ${ground}`, warning, under, 3);
+      // Words in the warning colour, as a shortfall in Record a Working's preview says it, are text: 4.5:1.
+      row(`text in the warning colour on the ${ground}`, warning, under, 4.5);
       row(
         `the warning's triangle on its tint on the ${ground}`,
         warning,

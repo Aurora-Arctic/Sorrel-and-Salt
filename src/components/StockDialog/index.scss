@@ -16,9 +16,7 @@
 }
 
 .stock-dialog__list {
-  display: flex;
-  flex-direction: column;
-  gap: space(3);
+  @include stack(3);
   min-width: 0;
   padding-inline-end: space(4);
   border-inline-end: 1px solid $hairline;
@@ -27,9 +25,7 @@
 .stock-dialog__picks {
   @include list-reset;
 
-  display: flex;
-  flex-direction: column;
-  gap: space(1);
+  @include stack(1);
 }
 
 // A form in the list, positioned for its badge, which sits at the top right of the name's line.
@@ -46,9 +42,7 @@
 .stock-dialog__choose {
   @include button-reset;
 
-  display: flex;
-  flex-direction: column;
-  gap: space(1);
+  @include stack(1);
   width: 100%;
   padding: space(2);
   padding-inline-end: calc(#{$control-height-compact} + #{space(2)});
@@ -137,9 +131,7 @@
 
 // Add Form and its Add button on one line, under the list.
 .stock-dialog__add {
-  display: flex;
-  flex-direction: column;
-  gap: space(2);
+  @include stack(2);
   padding-block-start: space(3);
   border-block-start: 1px dashed $hairline;
 
@@ -149,16 +141,12 @@
 }
 
 .stock-dialog__detail {
-  display: flex;
-  flex-direction: column;
-  gap: space(3);
+  @include stack(3);
   min-width: 0;
 }
 
 .stock-dialog__jar {
-  display: flex;
-  flex-direction: column;
-  gap: space(3);
+  @include stack(3);
   min-width: 0;
   margin: 0;
   padding: 0;
@@ -182,9 +170,7 @@
 
 // Quantity, Unit and Low Stock At one under another, each the column's full width.
 .stock-dialog__fields {
-  display: flex;
-  flex-direction: column;
-  gap: space(3);
+  @include stack(3);
 
   // As tall as a hint’s ⓘ whether or not the field has one, so the fields stand evenly below the heading.
   .field__label-row {

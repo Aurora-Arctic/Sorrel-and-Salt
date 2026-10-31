@@ -13,7 +13,7 @@ import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
 import StackTable from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
-import { noMatchText } from '../../lib/text';
+import { emptyList, noMatchText } from '../../lib/text';
 import type { UserListEntry, UserListFilterProps, UserListProps } from './types';
 import './index.scss';
 
@@ -33,7 +33,7 @@ function noMatch({ query, role, awaitingApproval }: UserListFilterProps): string
     role && `the role ${roleLabel(role)}`,
     awaitingApproval && 'Needs Approval',
   ].filter((filter): filter is string => Boolean(filter));
-  return noMatchText('users', filters, 'There are no users yet.');
+  return noMatchText('users', filters, emptyList('users'));
 }
 
 /**
@@ -103,22 +103,19 @@ const columns = (
   },
   {
     heading: 'Coven Creation',
-    // Whether they may, and beside it the control that changes it;
-    // none on an admin's or a curator's row, whom the users CHECK holds to the
-    // flag.
+    // Whether they may, and Approve beside a No; Revoke is the user modal's alone, so the
+    // row is an index into it. None on an admin's or a curator's row, whom the users CHECK
+    // holds to the flag.
     cell: (user) => (
       <div className="user-list__creation">
         <Mark value={user.canCreateWorkspace} label={user.canCreateWorkspace ? 'Yes' : 'No'} />
-        {user.role !== 'user' ? null : (
-          // Keyed by the action, so the refresh after a change mounts a fresh
-          // control for the other one rather than keeping this one's busy state.
+        {user.role === 'user' && !user.canCreateWorkspace && (
           <CreationControl
-            key={user.canCreateWorkspace ? 'revoke' : 'approve'}
             userId={user.id}
             name={user.name}
             emailVerified={user.emailVerified}
             paused={changesPaused}
-            action={user.canCreateWorkspace ? 'revoke' : 'approve'}
+            action="approve"
           />
         )}
       </div>

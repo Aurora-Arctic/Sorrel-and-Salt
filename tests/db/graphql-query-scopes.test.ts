@@ -209,6 +209,11 @@ const PROBES: Record<string, ScopeProbe> = {
     variables: { workspaceId: WORKSPACE_W_ID, spellId: NOWHERE },
     outcome: 'refuses',
   },
+  workspace: {
+    source: 'query ($id: ID!) { workspace(id: $id) { id } }',
+    variables: { id: WORKSPACE_W_ID },
+    outcome: 'refuses',
+  },
   deitySuggestions: suggestion('deitySuggestions'),
   formSuggestions: suggestion('formSuggestions'),
   celestialBodySuggestions: suggestion('celestialBodySuggestions'),

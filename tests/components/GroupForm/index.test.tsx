@@ -27,6 +27,7 @@ import { FORM_GROUP_ICONS } from '@/modules/vocabulary/schema/form-group-icons';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { choose, press, redo, typeIn, undo } from '../../support/interact';
 import {
+  answer,
   expectAnswered,
   expectAskingOver,
   expectGuardedWaysOut,
@@ -84,30 +85,30 @@ describe('GroupForm, its unsaved changes', () => {
 // changes' is: the form inert behind it, each
 // step's focus on its own safe answer.
 describe('GroupForm, its delete questions in a modal', () => {
-  it('holds the form through both steps, the focus on each safe answer, and gives both back on Keep It', () => {
+  it('holds the form through both steps, the focus on each safe answer, and gives both back on Cancel', () => {
     const onClose = renderInModal((done) => (
       <GroupForm kind="category" group={WARDS} groups={GROUPS} memberCount={3} onDone={done} />
     ));
     expect(name().closest('[inert]')).toBeNull();
 
     press('Delete Group');
-    expect(
-      expectAskingOver(name(), screen.getByRole('button', { name: 'Keep It' })),
-    ).toContainElement(screen.getByRole('combobox', { name: 'Move Its 3 Categories To' }));
+    expect(expectAskingOver(name(), answer('Cancel'))).toContainElement(
+      screen.getByRole('combobox', { name: 'Move Its 3 Categories To' }),
+    );
 
     choose('Move Its 3 Categories To', 'Fixture Mineral');
     press('Continue');
     expectAskingOver(name(), screen.getByRole('button', { name: 'Back' }));
 
     press('Back');
-    expectAskingOver(name(), screen.getByRole('button', { name: 'Keep It' }));
+    const choosing = expectAskingOver(name(), answer('Cancel'));
     // Going back keeps the choice made.
     expect(screen.getByRole('combobox', { name: 'Move Its 3 Categories To' })).toHaveTextContent(
       'Fixture Mineral',
     );
-    press('Keep It');
+    press(answer('Cancel'));
 
-    expectAnswered(name(), 'Keep It');
+    expectAnswered(name(), choosing);
     expect(screen.getByRole('button', { name: 'Delete Group' })).toHaveFocus();
     expect(onClose).not.toHaveBeenCalled();
   });
@@ -608,7 +609,7 @@ describe('GroupForm, its undo and redo', () => {
     ));
     typeIn(name(), 'Fixture Shields');
     press('Delete Group');
-    expectAskingOver(name(), screen.getByRole('button', { name: 'Keep It' }));
+    expectAskingOver(name(), answer('Cancel'));
     undo();
     expect(name()).toHaveValue('Fixture Shields');
 
@@ -619,7 +620,7 @@ describe('GroupForm, its undo and redo', () => {
     expect(name()).toHaveValue('Fixture Shields');
 
     press('Back');
-    press('Keep It');
+    press(answer('Cancel'));
     undo();
     expect(name()).toHaveValue(WARDS.name);
   });

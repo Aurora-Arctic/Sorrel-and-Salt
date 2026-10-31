@@ -53,8 +53,8 @@ const ADD_TITLE = 'Add Ingredient';
 /** The add dialog's head, "Add Ingredient to Compendium": the destination over the action. */
 const ADD_HEADING: ModalHeading = { destination: 'Compendium', title: ADD_TITLE };
 
-// The global compendium, for an admin to add to, edit and retire. A wide modal over the list does
-// the writing, opened by `?new=ingredient-compendium` (or a bare `?new`) or `?edit=<slug>`; any
+// The global compendium, for an admin to add to, edit and retire. A modal over the list does the
+// writing, opened by `?new=ingredient-compendium` (or a bare `?new`) or `?edit=<slug>`; any
 // other `?new` is the shell's Add Ingredient. Each filter shows how many entries each choice lists.
 export default async function AdminCompendiumPage({ searchParams }: AdminCompendiumPageProps) {
   const session = await requireCuratorSession();

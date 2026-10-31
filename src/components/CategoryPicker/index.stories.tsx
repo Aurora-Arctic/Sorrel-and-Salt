@@ -106,7 +106,7 @@ const withActionAndNoHintNode = (
     action={(announce) => (
       <button
         type="button"
-        className="btn btn--small btn--quiet"
+        className="btn btn--quiet btn--small"
         onClick={() => announce('Copied.')}
       >
         Copy From Ingredient
@@ -129,5 +129,5 @@ const STATES: Record<string, ReactNode> = {
 export const States: Story = {
   args: { state: 'Default' },
   argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
-  render: ({ state }) => <div key={String(state)}>{state}</div>,
+  render: ({ state }) => <div>{state}</div>,
 };

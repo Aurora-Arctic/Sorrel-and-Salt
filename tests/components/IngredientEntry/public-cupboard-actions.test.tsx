@@ -15,7 +15,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // The cupboard choices on the public entry page, across every coven the viewer may write in (claude-docs/components/ingredient-entry.md, "On the public page").
 // The card's plus shows while any coven lacks the entry, just before the other icons and never among their choices; a curator's Edit is the main icon and never in the dots;
-// the held choices sit in the dots and the bin while a holding coven permits them, acting in that coven alone or asking which where several do.
+// the held choices sit in the dots while a holding coven permits them, acting in that coven alone or asking which where several do.
 
 const PAGE = '/compendium/ingredients/testwort' as Route;
 
@@ -100,12 +100,8 @@ function choices(): string[] {
   return shownChoices();
 }
 
-/** The bin where Remove is the one choice left, else an item of the three dots' menu. */
+/** An item of the three dots' menu. */
 function choose(name: string): void {
-  if (name === 'Remove' && screen.queryByRole('button', { name: 'Remove Testwort' })) {
-    fireEvent.click(screen.getByRole('button', { name: 'Remove Testwort' }));
-    return;
-  }
   fireEvent.click(screen.getByRole('button', { name: 'More for Testwort' }));
   fireEvent.click(within(screen.getByRole('menu')).getByRole('menuitem', { name }));
 }

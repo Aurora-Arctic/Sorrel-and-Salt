@@ -1,17 +1,21 @@
 # SpellCard
 
 `src/components/SpellCard/` draws one spell in the grimoire's list (M10.11, story 56). It
-shows seven things:
+shows:
 
 - the spell's title, or "Untitled Spell" when it has none (`UNTITLED_SPELL`), since a draft
   may have no title;
-- its intent, the member's own sentence saying what the spell is for;
+- its intent, the member's own sentence saying what the spell is for, cut to three lines;
 - a Draft badge, on a draft only;
 - a Private badge, on a private spell only (M10.13);
 - the categories its author assigned it, as `CategoryChips`;
-- how many times it has been made, "Made 2 Times", when `workingCount` is above zero (M13.8);
 - who last edited it and when, as `LastEdit` ([last-edit.md](last-edit.md)), in the card's
-  foot as an ingredient card's is, when the caller hands in an edit (the owner, 2026-10-27).
+  foot as an ingredient card's is, when the caller hands in an edit (the owner, 2026-10-27);
+- how many times it has been made, "Made once" or "Made 3 times", when `workingCount` is above
+  zero (M13.8), on the same line as the edit, after a dot: "Edited 5 minutes ago · Made 3 times";
+- its actions, in the foot: the Quick Look eye at the left, and Record a Working, the Edit
+  pencil and the More menu at the right, each drawn only when the caller hands in what it
+  needs (below).
 
 The card is presentational: it takes props and works nothing out from the data, as
 [ingredient-card.md](ingredient-card.md) is.
@@ -20,25 +24,26 @@ The card is presentational: it takes props and works nothing out from the data, 
 
 | Prop            | What it is                                                                                                                            |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`            | The spell's id. It names the title heading, `spellTitleId(id)`                                                                        |
+| `id`            | The spell's id. It gives the title heading the id the card is named by                                                                |
+| `href`          | The spell's recipe page, which the title links to. None leaves the title plain text                                                   |
 | `title`         | The title, or null. Null or blank lists as "Untitled Spell"                                                                           |
 | `intent`        | The intent, or null. Without one the card draws no paragraph                                                                          |
 | `status`        | `draft` or `complete`                                                                                                                 |
 | `visibility`    | `private` or `workspace`: who can see it                                                                                              |
 | `categories`    | The assigned categories, each with its group's colours. Never the derived ones (DESIGN.md §5)                                         |
-| `workingCount`  | How many complete workings the viewer can see, from the count loader. Zero or none draws no line                                      |
+| `workingCount`  | How many complete workings the viewer can see, from the count loader. Zero or none says nothing on the foot line                      |
 | `lastEdit`      | Who last edited it and when, `{ by, at }`, worked out by the caller. None draws no line                                               |
 | `editHref`      | Where the Edit pencil opens the spell, the tab's own address plus `?edit=<id>`. None draws no pencil                                  |
-| `recordWorking` | What the Record a Working button needs: `{ workspaceId, members, recorderId, steps }`. None draws no button                           |
+| `recordWorking` | What the Record a Working button needs: `{ workspaceId, recorder }`. The dialog reads the rest once opened. None draws no button      |
 | `more`          | What the More menu needs: `{ workspaceId, covenSlug, deletedHref, canDuplicate, canDelete }`. None, or nothing allowed, draws no menu |
 | `lookHref`      | Where the Quick Look eye opens the spell, the tab's own address plus `?spell=<id>`. None draws no eye                                 |
 | `level`         | The title's heading level, 2 by default                                                                                               |
 
 ## Its name
 
-The `article` is named by its title heading through `aria-labelledby`. The grimoire list
-names each list item the same way, pointing at the same id (`spellTitleId`), so a test or a
-screen reader finds a spell by `getByRole('listitem', { name: 'Hearth Warding Jar' })`.
+The `article` is named by its title heading through `aria-labelledby`, so a test or a screen
+reader finds a spell by `getByRole('article', { name: 'Hearth Warding Jar' })`. The grimoire
+list leaves its items unnamed, so the title is heard once.
 
 ## Only a draft is marked
 
@@ -61,13 +66,17 @@ when a spell is both.
 
 Given an `href`, the title is a `PendingLink` with a `LinkHint`, as IngredientCard's name
 is; the grimoire list passes each spell's recipe page (MB.6, `recipeHref`). Without one the
-title is plain text. The card has no drawer behind it, since nothing opens from it.
+title is plain text, and the card keeps the default cursor, since a press does nothing. The card
+has no drawer behind it, since nothing opens from it.
 
 The link covers the whole card, as IngredientCard's does: the title's `<a>` stretches an
-empty `::after` over the article, so a press anywhere opens the recipe, and the focus ring
-is drawn round the card on that overlay. The intent, the chips' plain items and the last-edit
-line pass the pointer through to it; the Edit pencil and the +N button sit above it and keep
-their own press, hover and focus.
+empty `::after` over the article, so a press anywhere opens the recipe. While the link holds
+focus, the focus ring is drawn round the card on the article's own `::after`, which comes after
+the burn layers and so is not covered by the burnt corner. The intent, the chips' plain items, the made count and the
+foot (the gaps between the actions and beside the last-edit line) pass the pointer through to it; the foot's four actions, the
+last-edit line and the category chips' +N button sit above it and keep their own press, hover and focus. The foot passes the
+pointer through with `pointer-events: none`, which its children inherit, so the actions row and the last-edit line each take
+it back with `pointer-events: auto`; without that, the last-edit line's tip opened on focus only, never on hover.
 
 ## The Edit pencil
 
@@ -79,9 +88,9 @@ the address, so closing the dialog returns to the list as it was.
 
 ## Record a Working, Edit and the More menu
 
-The foot's actions, after the Quick Look eye, are the spell page's own parts, so each has one implementation: `RecordWorkingButton` (the green cauldron, opening the same Record a Working dialog), the Edit pencil (text colour) and `SpellMoreMenu` (`SpellRecipe/more-menu.tsx`) holding Duplicate and Delete Spell (destructive). The card passes its own `id`, `visibility` and name, and `canPrint={false}`: Print is the spell page's alone. The menu draws nothing when neither Duplicate nor Delete Spell is allowed. The buttons sit in the foot, outside the title link, so no interactive element nests in another. Each needs a query client, which the workshop does not provide, so the card has no story with them.
+The foot's actions, after the Quick Look eye, are the spell page's own parts, so each has one implementation: Record a Working (the green cauldron, `SpellCard/record-working.tsx`, opening the same form the spell page's `RecordWorkingButton` opens), the Edit pencil (text colour) and `SpellMoreMenu` (`SpellRecipe/more-menu.tsx`) holding Duplicate and Delete Spell (destructive). The card passes its own `id`, `visibility` and name, and `canPrint={false}`: Print is the spell page's alone. The menu draws nothing when neither Duplicate nor Delete Spell is allowed. The buttons sit in the foot, outside the title link, so no interactive element nests in another. Each needs a query client, which the workshop does not provide, so the card has no story with them.
 
-The grimoire tab builds `recordWorking` for a complete spell when the role may record a working and read members (the spell page's rule) and `more` when the role may create or delete a spell (`rolePermits`: owner and member, never viewer). The list does not already hold what the dialog needs, so `readRecordingOf` (`(list)/reads.ts`) reads the coven's members once and every complete spell's ingredient steps in one `stepsOfSpells` batch per page. `deletedHref` is the tab's address with its filter and page kept and `deleted=<name>` added.
+The grimoire tab builds `recordWorking` for a complete spell when the role may record a working and read members (the spell page's rule), naming the recorder from `viewerOf()`, and `more` when the role may create or delete a spell (`rolePermits`: owner and member, never viewer). The list does not hold what the dialog needs, and reads none of it: the button opens the dialog at once, and the dialog reads the spell's steps in one `RecordWorkingSetup` query through `/api/graphql` (`spell(workspaceId, id).steps`), so a list nobody records from costs no steps batch, and its participant box searches the members as the user types ([`record-working.md`](record-working.md)). While the query runs the dialog holds a `form` skeleton and one Loading status, as [`loading.md`](../loading.md) sets out; a refused or failed read is one error Notice in the dialog. A linked step with no name to read is "Unavailable Ingredient", as on the spell page. `deletedHref` is the tab's address with its filter and page kept and `deleted=<name>` added.
 
 ## The Quick Look eye
 
@@ -96,17 +105,24 @@ the address, and closing returns there with focus back on the eye. What the moda
 
 The layout is the Foundations specimen (`.specimen` in `_primitives.scss`). The card is
 IngredientCard's sibling (the owner's request, 2026-10-28): the same surface, shadow, radius,
-padding, title size, medium badges and category chips. The Draft and Private badges sit under
+padding, title size, medium badges and category chips. The Draft and Private badges are drawn by `SpellMarks` ([spell-marks.md](spell-marks.md)) and sit under
 the title as an ingredient card's marks sit under its name, the last-edit line is in the foot,
+the intent stops at three lines with an ellipsis (`-webkit-line-clamp`, the unprefixed `line-clamp` beside it
+as an enhancement), and the made count shares the last-edit line: `.spell-card__foot-line` is a wrapping flex row
+in `$last-edit-ink` at caption size, `space(5)` below the chips, with an `aria-hidden` dot between the two,
 and the hover is the same tint and lifted shadow plus the smoulder below, with no drawer.
-Tokens only.
+Tokens only. The rules the two cards share come from `IngredientCard/_specimen-card.scss`:
+`specimen-card()` gives the title link stretched over the card, the pointer on a card whose
+title links, the title block, the badge row, the medium badge size and the plain chips passing
+a click through. It is included with `$ring: false`, as this card draws its focus ring on the
+article's own `::after`, which paints over the burnt corner where the link's overlay would not.
 
 ## Compact
 
 Under a list's `data-density="compact"`, unless a stored Regular choice sits on `<html>`
 (`data-card-density`, [card-density-switch.md](card-density-switch.md)), `_compact.scss`
-mirrors `IngredientCard/_compact.scss`: padding `space(3) space(4)`, gap `space(2)`, the
-title at h4's size, small badges, overline chips and a tighter foot. The card takes no
+includes IngredientCard's shared `specimen-card-compact()`: padding `space(3) space(4)`, gap `space(2)`, the
+title at h4's size, small badges, overline chips and a tighter foot, and the intent a step smaller. The card takes no
 density prop, so the look can switch before React runs.
 
 ## The smouldering edge
@@ -116,7 +132,9 @@ smouldering from its bottom-right corner (found in the owner's review of M10.11,
 from a set of hover options). The card's face also takes IngredientCard's hover tint and
 lifted shadow, and nothing else: nothing moves the card.
 
-What the effect is, in `_smoulder.scss`:
+What the effect is, in `_smoulder.scss`. Its colours, lengths, durations and the rim's flicker frames are `$burn-*` tokens at the end of
+`src/scss/_variables.scss`; the partial forwards the ones SpellPreview reads, and keeps `$candle` and `$ember` as its names for
+`$burn-candle` and `$burn-ember`.
 
 - **A true hole.** The burnt part is gone, through the card's face and its shadow both, so
   the page itself shows through it. The card's face and shadow are not on the `article` but
@@ -127,8 +145,8 @@ What the effect is, in `_smoulder.scss`:
   1rem deep in all, so along the bottom it stays inside the card's padding. At the corner it
   bites deeper and curves about 1.25rem up the right edge (an elliptical corner radius,
   `$burn-corner-radius`), where no text runs.
-- **An ember line, a char rim and a char line.** A thin bright line (`$ochre-bright`,
-  `$wax-warm`) runs round the burn front, with a dark char rim (`--burn-char`) outside it,
+- **An ember line, a char rim and a char line.** A thin bright line (`$burn-candle`, the dark theme's warning ochre,
+  and `$burn-ember`, its secondary red) runs round the burn front, with a dark char rim (`--burn-char`) outside it,
   and outside that a thin soft near-black line (`--burn-char-line`) where the paper is
   charred but not yet alight. Both char colours are tokens per theme, taken from the
   theme's darkest ink, never pure black. One SVG filter, `#spell-card-burn` from
@@ -136,10 +154,16 @@ What the effect is, in `_smoulder.scss`:
   meet exactly.
 - **One glow.** A single soft warm glow sits behind the face: it shows through the hole and
   spills onto the table below the card as one continuous layer, so there is no dark row
-  between the glow inside the hole and the glow off the card. It runs 1.5rem past the ember
+  between the glow inside the hole and the glow off the card. It runs `$burn-glow-lead` (1.5rem) past the ember
   front, at opacity 0.4 under a 1.25rem blur, kept below the ember line's brightness (the
-  owner, 2026-10-28).
-- **Timing.** The burn creeps along the edge for 1.3s, and the glow grows with it. On
+  owner, 2026-10-28). Faint embers glow in the burnt part, brightest along the ember line and
+  fading towards the corner.
+- **Nothing warm sits under text.** With its rim and the tearing, the hole stays inside the
+  card's padding along the bottom, and climbs higher only at the corner, where no text runs.
+- **Timing.** The burn creeps along the edge for 1.3s, and the glow grows with it, then holds
+  while the ember glows unevenly for three rounds (`$burn-flickers`), the glow and the embers breathing at their own
+  paces for three rounds too, and each then holds its last frame, so a card left under the pointer or holding the focus
+  settles rather than flickering for as long as it is hovered. On
   leaving, the burn fades while the hole, the face's shadow and the glow shrink back to the
   corner, so a quick return burns on from where they had shrunk to.
 - **Reduced motion** shows the finished burn at once, still. **Touch** gets no hover at all:
@@ -161,22 +185,20 @@ warm glow on parchment, together with the card's shadow, is slightly darker than
 as any warm tint on parchment is. On the hovered card the intent measures 6.95:1 (light)
 and 7.99:1 (dark), the title 15.56:1 and 12.20:1.
 
-The Workshop's `Hover` story holds the effect lit on one card and leaves a second to hover.
-
-## How the burn is built
-
-What burns is gone. The hole in the card's foot corner goes through the card's face and its shadow, so the page shows through and no edge of the whole card is left. The face and its shadow are one layer (`.spell-card__face`). The face is the spread shadow of a hole-shaped box, so it covers everything but the hole. The shadow is a `drop-shadow()` of that, so it follows the burnt edge, not the rectangle.
-
-Over the content, a thin bright ember line and a thin dark char rim run round the burn front. One SVG filter, `#spell-card-burn` from `SpellCardFilters`, tears the hole and the rim alike so their edges meet. Faint embers glow in the burnt part, brightest along the ember line and fading towards the corner. A little warmth spills onto the table below the card, behind it, and shows through the hole.
-
-The layers stack by markup order with no `z-index`. Nothing transforms the card or any ancestor of it, because a transformed ancestor becomes the containing block of the category chips' `position: fixed` tip bubbles.
-
-## Timing and the text clearance
-
-The burn creeps along the bottom edge for 1.3s, then holds while the ember glows unevenly. On leaving, the burn fades while the hole and the spill shrink back to the corner, so a quick return burns on from where they have shrunk to.
-
-Nothing warm sits under text. The hole is under 1rem deep, half of it past the card's edge, so with its rim and the tearing it stays inside the card's padding. Only at the corner does it climb higher, about 1.25rem up the right edge, where no text runs. The card's face takes `IngredientCard`'s hover tint and lifted shadow and nothing else.
-
-## The burn filter
+### The burn filter
 
 `SpellCardFilters` renders the filter once per page beside the list of cards (`GrimoireList`), not once per card: an id must be unique and one filter serves every card. Without it the burn front is a smooth curve. The filter uses coarse noise to displace the hole and its ember and char bands. The noise is still, since a burn line does not wriggle.
+
+## Stories
+
+`Grimoire / Spell Card` (`index.stories.tsx`): `States`, a grid of Complete, As Listed (the
+title link, the made count, the last edit and the foot's Quick Look eye, Record a Working, Edit
+pencil and More menu, as the grimoire lists a card to a member who may use them), Viewer, As
+Listed (the link, the eye and the lines, with no Record, Edit or More), Draft, Private, Private
+Draft, Untitled, No Intent, No Categories, Made Once, Made Several Times, Edited, Heading Level 3,
+Long Title, Held (the finished hovered look, drawn with no pointer), Hover It (a card at rest to
+hover), Compact and Compact Private Draft (each under `data-density="compact"`).
+
+Every cell with a last edit opens the line's tip on hover. The More menu's items are the bare
+verbs Duplicate and Delete; the card has no Print. The foot's buttons open their dialogs, but
+nothing they write is answered in this story; Record a Working's own story answers its writes.

@@ -1,3 +1,4 @@
+import { assertNoAccessibilityViolations } from './axe';
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
@@ -6,6 +7,7 @@ import { destinationMenu } from './stories/ingredient-dialogs';
 
 // A MenuButton's menu hangs from its button's end edge and stays on screen (claude-docs/components/menu-button.md,
 // "Contracts"), measured on the bar's Add Ingredient chevron at a desktop width and the narrowest phone.
+// At the desktop width the page is scanned with the menu open, as happy-dom cannot run axe on a placed menu.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -63,5 +65,6 @@ for (const { viewport, hangs } of [
     expect(box.x + box.width).toBeLessThanOrEqual(viewport.width);
     expect(box.y).toBeGreaterThanOrEqual(button.y + button.height);
     expect(box.y + box.height).toBeLessThanOrEqual(viewport.height);
+    if (hangs) await assertNoAccessibilityViolations(page);
   });
 }
