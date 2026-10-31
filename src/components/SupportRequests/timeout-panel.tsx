@@ -89,7 +89,7 @@ const LiftButton = ({
       </>
     }
     busy="Lifting"
-    confirmClass="btn btn--quiet"
+    confirmClass="btn btn--destructive"
     announcement="Time-out lifted."
     inModal
     send={() => graphqlRequest(LiftDocument, { id: timeout.id })}
