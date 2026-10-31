@@ -79,5 +79,5 @@ test('an admin revokes a whole batch and its links are refused as withdrawn', as
 
   await signInAs(page, 'latecomer@admin-cards.test');
   await page.goto(links[0]!);
-  await expect(page.getByText(/This invitation was withdrawn/)).toBeVisible();
+  await expect(page.getByText(/This card has been withdrawn/)).toBeVisible();
 });
