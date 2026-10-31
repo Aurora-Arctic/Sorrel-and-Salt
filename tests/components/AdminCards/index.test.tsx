@@ -14,7 +14,9 @@ import type {
 import { RouteModalContext } from '@/components/Modal/route-modal-provider';
 import type { RouteModalOpener } from '@/components/Modal/types';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
-import { mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
+import { HttpResponse } from 'msw/http';
+import { graphqlLink, mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
+import { server } from '../../support/msw/server';
 
 // The Invitation Cards and Card Sign-Ups tabs: render-only, so the page owns the read and this owns what an admin sees of it
 // and sends (claude-docs/components/admin-cards.md).
@@ -107,6 +109,53 @@ describe('AdminCards', () => {
     expect(within(first).getByText('3')).toBeInTheDocument();
     expect(within(first).getByRole('button', { name: /^View Refused Opens/ })).toBeInTheDocument();
     expect(within(second).queryByRole('button', { name: /^View Refused Opens/ })).toBeNull();
+  });
+
+  it('shows the standard loading state while the refused opens are read, then the rows', async () => {
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    server.use(
+      graphqlLink.query<InvitationCardAttemptsQuery, InvitationCardAttemptsQueryVariables>(
+        'InvitationCardAttempts',
+        async () => {
+          await gate;
+          return HttpResponse.json({
+            data: {
+              invitationCardAttempts: {
+                edges: [
+                  {
+                    node: {
+                      id: 'a1',
+                      reason: 'revoked',
+                      attempts: 1,
+                      cardPosition: 1,
+                      firstAttemptedAt: '2026-10-28T08:00:00.000Z',
+                      lastAttemptedAt: '2026-10-28T08:00:00.000Z',
+                      account: { id: 'u1', name: 'Other Wort', email: 'other@example.test' },
+                    },
+                  },
+                ],
+                pageInfo: { hasNextPage: false, endCursor: null },
+              },
+            },
+          });
+        },
+      ),
+    );
+    render(<AdminCards batches={BATCHES} />);
+
+    fireEvent.click(screen.getByRole('button', { name: /^View Refused Opens/ }));
+    const list = await screen.findByRole('dialog', { name: 'Refused Opens, Batch b1111111' });
+
+    expect(within(list).getByRole('status')).toHaveTextContent('Loading');
+    expect(within(list).queryByText('Loading…')).toBeNull();
+    expect(within(list).queryByText('No refused opens.')).toBeNull();
+
+    release();
+    expect(await within(list).findByText('Other Wort', {}, { timeout: 2000 })).toBeInTheDocument();
+    expect(within(list).queryByRole('status')).toBeNull();
   });
 
   it("lists the account, the reason, the count and the first and latest times of a batch's refused opens", async () => {
@@ -229,7 +278,6 @@ describe('AdminCards', () => {
     fireEvent.click(screen.getByRole('button', { name: /^View Refused Opens/ }));
 
     const list = await screen.findByRole('dialog', { name: 'Refused Opens, Batch b1111111' });
-    expect(within(list).getByText('Loading…')).toBeInTheDocument();
     expect(await within(list).findByText('Removed account')).toBeInTheDocument();
     expect(within(list).getByText('Accepted by another account')).toBeInTheDocument();
     expect(within(list).getByText('Unknown')).toBeInTheDocument();
