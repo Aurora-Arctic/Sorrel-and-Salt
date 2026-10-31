@@ -18,12 +18,13 @@ describe('isoDayInUtc', () => {
 
 describe('minuteInZone', () => {
   const at = new Date('2026-10-30T23:05:00.000Z');
-  it('writes YYYY-MM-DD HH:mm in the zone given, moving the day across midnight', () => {
-    expect(minuteInZone(at, 'UTC')).toBe('2026-10-30 23:05');
-    expect(minuteInZone(at, 'Asia/Tokyo')).toBe('2026-10-31 08:05');
-    expect(minuteInZone(at, 'America/Los_Angeles')).toBe('2026-10-30 16:05');
+  it('writes YYYY-MM-DD h:mm am/pm in the zone given, moving the day across midnight', () => {
+    expect(minuteInZone(at, 'UTC')).toBe('2026-10-30 11:05 pm');
+    expect(minuteInZone(at, 'Asia/Tokyo')).toBe('2026-10-31 8:05 am');
+    expect(minuteInZone(at, 'America/Los_Angeles')).toBe('2026-10-30 4:05 pm');
   });
-  it('writes midnight as 00, not 24', () => {
-    expect(minuteInUtc(new Date('2026-10-30T00:00:00.000Z'))).toBe('2026-10-30 00:00');
+  it('writes midnight as 12:00 am and noon as 12:00 pm', () => {
+    expect(minuteInUtc(new Date('2026-10-30T00:00:00.000Z'))).toBe('2026-10-30 12:00 am');
+    expect(minuteInUtc(new Date('2026-10-30T12:00:00.000Z'))).toBe('2026-10-30 12:00 pm');
   });
 });

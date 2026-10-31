@@ -54,7 +54,7 @@ id.
   each heading in title case (DESIGN.md §9), drawn by
   [`StackTable`](data-table.md), so each heading is also its cells'
   `data-label` and the table's roles are written out to stack into cards at
-  phone width. When is the minute as `2026-10-30 14:05` in the
+  phone width. When is the minute as `2026-10-30 2:05 pm` in the
   viewer's own zone (UTC until the page hydrates), through [LocalTime](local-time.md), muted at caption
   size above the stacking width.
   Privilege reads Admin or Coven Creation, from `PRIVILEGE_LABELS`

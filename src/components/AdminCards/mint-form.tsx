@@ -51,11 +51,11 @@ const sheetsOf = (text: string): number | undefined => {
   return text.trim() !== '' && Number.isInteger(sheets) ? sheets : undefined;
 };
 
-/** What the sheets come to, as typed: "3 sheets: 27 cards"; empty while the field holds no whole number. */
+/** What the sheets come to, as typed: "27 cards"; empty while the field holds no whole number. */
 const totalOf = (text: string): string | undefined => {
   const sheets = sheetsOf(text);
   if (sheets === undefined) return undefined;
-  return `${sheets} ${sheets === 1 ? 'sheet' : 'sheets'}: ${sheets * CARDS_PER_SHEET} cards`;
+  return `${sheets * CARDS_PER_SHEET} cards`;
 };
 
 const MintFields = ({ close }: MintFieldsProps): ReactElement => {
@@ -125,6 +125,11 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
         required
         hint={`A Letter sheet holds ${CARDS_PER_SHEET} cards.`}
         {...sheetsShell}
+        after={
+          <p className="admin-cards__total" aria-live="polite">
+            {totalOf(sheets)}
+          </p>
+        }
       >
         <input
           id={sheetsShell.controlId}
@@ -142,9 +147,6 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
           onChange={(event) => setSheets(event.target.value)}
         />
       </FieldShell>
-      <p className="admin-cards__total" aria-live="polite">
-        {totalOf(sheets)}
-      </p>
       <FieldShell label="Expires On" required {...dayShell}>
         <DateField
           id={dayShell.controlId}

@@ -80,6 +80,18 @@ const AdminCards = ({
         <StackTable
           columns={[
             { heading: 'Batch', cell: (batch) => batchName(batch.batchId) },
+            { heading: 'Status', cell: (batch) => STATUS_LABEL[batch.status] },
+            { heading: 'Cards', cell: (batch) => batch.cards },
+            { heading: 'Accepted', cell: (batch) => batch.accepted },
+            {
+              heading: 'Refused Opens',
+              cell: (batch) => (
+                <span className="admin-cards__attempts">
+                  {batch.attempts}
+                  {batch.attempts > 0 && <CardAttempts batchId={batch.batchId} />}
+                </span>
+              ),
+            },
             {
               heading: 'Minted On',
               className: 'admin-cards__fact',
@@ -90,18 +102,6 @@ const AdminCards = ({
               className: 'admin-cards__fact',
               cell: (batch) => (
                 <time dateTime={batch.expiresAt.toISOString()}>{isoDayInUtc(batch.expiresAt)}</time>
-              ),
-            },
-            { heading: 'Cards', cell: (batch) => batch.cards },
-            { heading: 'Status', cell: (batch) => STATUS_LABEL[batch.status] },
-            { heading: 'Accepted', cell: (batch) => batch.accepted },
-            {
-              heading: 'Refused Opens',
-              cell: (batch) => (
-                <span className="admin-cards__attempts">
-                  {batch.attempts}
-                  {batch.attempts > 0 && <CardAttempts batchId={batch.batchId} />}
-                </span>
               ),
             },
             {

@@ -47,7 +47,7 @@ describe('PrivilegeLedger', () => {
     render(<PrivilegeLedger changes={[GRANT, REVOKE]} filter={{}} />);
 
     const [first, second] = rows();
-    expect(first).toHaveTextContent(/\d{4}-\d{2}-\d{2} \d{2}:\d{2}/);
+    expect(first).toHaveTextContent(/\d{4}-\d{2}-\d{2} \d{1,2}:\d{2} (am|pm)/);
     expect(within(first).getByRole('cell', { name: 'Ada Fixturewort' })).toBeInTheDocument();
     expect(within(first).getByRole('cell', { name: 'Bram Testwort' })).toBeInTheDocument();
     expect(
@@ -75,10 +75,9 @@ describe('PrivilegeLedger', () => {
   it('marks its time for a machine, in full', () => {
     render(<PrivilegeLedger changes={[GRANT]} filter={{}} />);
 
-    expect(within(rows()[0]).getByText(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/)).toHaveAttribute(
-      'datetime',
-      '2026-03-04T05:06:07.000Z',
-    );
+    expect(
+      within(rows()[0]).getByText(/^\d{4}-\d{2}-\d{2} \d{1,2}:\d{2} (am|pm)$/),
+    ).toHaveAttribute('datetime', '2026-03-04T05:06:07.000Z');
   });
 
   describe('the filter', () => {

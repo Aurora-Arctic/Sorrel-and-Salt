@@ -8,13 +8,13 @@ yields one. The rules are [`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md
 
 ## Dates
 
-Expires is a UTC day, `2026-10-30`. Minted On, Refused Opens First and Latest and Card Sign-Ups Accepted On are `2026-10-30 14:05` in the viewer's own zone, through [LocalTime](local-time.md). Above the stacking width each is muted at caption size (`admin-cards__fact`), as the user list's Signed Up is. The Card Sign-Ups CSV keeps its own date format.
+Expires is a UTC day, `2026-10-30`. Minted On, Refused Opens First and Latest and Card Sign-Ups Accepted On are `2026-10-30 2:05 pm` in the viewer's own zone, through [LocalTime](local-time.md). Above the stacking width each is muted at caption size (`admin-cards__fact`), as the user list's Signed Up is. The Card Sign-Ups CSV keeps its own date format.
 
 ## Contracts
 
 - **Invitation Cards** (`index.tsx`): a region named "Invitation Cards" with one row per batch: batch (the
-  first block of the batch id, `batchName`), minted on (date and time, local), expires (the date alone: it is
-  midnight UTC), cards, **status**, accepted, and **Revoke Batch** while a card of the batch is pending
+  first block of the batch id, `batchName`), **status**, cards, accepted, refused opens, minted on (date and
+  time, local), expires (the date alone: it is midnight UTC), and **Revoke Batch** while a card of the batch is pending
   (`ConfirmedAction` asks first, naming the batch and its mint date, and says accounts that already accepted
   keep their access). The Revoke column is red like the People table's Impersonate column (`row-action-column`, `.admin-cards__revoke`), with a red row button and a red confirm; the question always comes first.
   Revoking is by batch only. Counts come from SQL. Status is `batchStatus()` in `batches.ts`, read from the
@@ -33,15 +33,15 @@ Expires is a UTC day, `2026-10-30`. Minted On, Refused Opens First and Latest an
   the page cannot read (an unknown status, a day that is not a day) is dropped; the service rejects one sent directly.
 - **Refused Opens** (`attempts.tsx`): each batch shows its count of refused opens across all its cards;
   where the count is above zero an eye icon button (tip **View Refused Opens**, right-aligned in the cell) opens a dialog headed by the eyebrow "Refused Opens" over the title "Batch 7c2d0000" (its name, "Refused Opens, Batch 7c2d0000") that reads
-  `invitationCardAttempts` for that batch and lists the account (its name links to that account's modal on the People page, and its email sits under it; a removed account is "Removed account" with neither), the **Card** ("Sheet 2, Card 5", from the card's `position`; "Unknown" for a card minted before positions were kept), the reason, how many times, and the **First** and **Latest** times (the row's creation and its last refusal),
+  `invitationCardAttempts` for that batch and lists the account (its name is the Users list's own `UserLink`, which opens that account's user modal at `/admin/users?user=<id>` at once, headed "User" over the name with the email beneath; the press leaves the Invitation Cards tab, so the Refused Opens dialog goes with it and closing the user modal lands on the Users list, not back on the tab; its email sits under the name; a removed account is "Removed account" with neither), the **Card** ("Sheet 2, Card 5", from the card's `position`; "Unknown" for a card minted before positions were kept), the reason, how many times, and the **First** and **Latest** times (the row's creation and its last refusal),
   twenty at a time with **Show More**. A plain paragraph under the head says "Every card listed here already admits nobody. Further tries are refused and counted here.": the list is a record, and no card in it can be opened or revoked from here.
 - **Mint Cards** (`mint-form.tsx`) is a link to `?mint`, which opens a modal: **Number of Sheets** (1 to
-  55; a Letter sheet holds nine cards) with the total shown as typed ("3 sheets: 27 cards"), and
+  55; a Letter sheet holds nine cards) with the total shown as typed ("27 cards"), and
   **Expires On** (a `DateField` whose earliest day is tomorrow in UTC, sent as midnight UTC; with no `max`
   it ends at the end of next year). Expires On opens on today plus 90 days (`DEFAULT_EXPIRY_DAYS`), a
   calendar day. The submit stays disabled until both are given. The answer carries each token once, and the
   tokens live only in that dialog's state. The sheet hint ("A Letter sheet holds 9 cards.") is the field's hint, so it joins the input's description;
-  only the live total sits below it. After minting, the dialog recaps "27 cards on 3 sheets, batch
+  only the live total sits below it, in the field's `after` slot, directly under the input and beneath any error, with one line reserved. After minting, the dialog recaps "27 cards on 3 sheets, batch
   7c2d0000, expiring 29 January 2027." with **Download PDF** (solid) and **Done** (quiet) in the modal's
   action row, and nothing per card. A warn notice says the PDF is the only copy; once a download has been
   made it becomes a success notice in a polite live region ("Saved as cards-<batch>.pdf. Keep that

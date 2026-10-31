@@ -1,6 +1,6 @@
 # LocalTime
 
-`src/components/LocalTime/` — an instant to the minute, as `2026-10-30 14:05`, in a `<time>` whose
+`src/components/LocalTime/` — an instant to the minute, as `2026-10-30 2:05 pm`, in a `<time>` whose
 `datetime` carries the full instant.
 
 ## Props

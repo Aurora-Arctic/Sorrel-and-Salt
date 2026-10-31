@@ -1,7 +1,6 @@
 'use client';
 
 import { type ReactElement, useEffect, useState } from 'react';
-import Link from 'next/link';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE } from '../../lib/graphql-failure';
@@ -12,6 +11,7 @@ import { ModalButton } from '../Modal';
 import LocalTime from '../LocalTime';
 import Notice from '../Notice';
 import { userListHref } from '../UserList/href';
+import UserLink from '../UserList/user-link';
 import { batchName } from './batches';
 import type { CardAttemptEntry, CardAttemptReason } from './types';
 
@@ -20,6 +20,9 @@ import type { CardAttemptEntry, CardAttemptReason } from './types';
 // (claude-docs/components/admin-cards.md, "Attempts").
 
 const PAGE_SIZE = 20;
+
+// The Users list unfiltered: an account's name opens that list's own modal for it, headed as the list heads it.
+const NO_FILTER = { query: '', awaitingApproval: false };
 
 const CardAttemptsDocument = graphql(`
   query InvitationCardAttempts($batchId: ID!, $first: Int!, $after: String) {
@@ -114,15 +117,15 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
             cell: (a) =>
               a.accountId && a.accountName ? (
                 <>
-                  <Link
-                    href={userListHref(
-                      { query: '', awaitingApproval: false },
-                      undefined,
-                      a.accountId,
-                    )}
-                  >
-                    {a.accountName}
-                  </Link>
+                  <UserLink
+                    href={userListHref(NO_FILTER, undefined, a.accountId)}
+                    heading={{
+                      eyebrow: 'User',
+                      title: a.accountName,
+                      qualifier: <span className="user-list__modal-email">{a.accountEmail}</span>,
+                    }}
+                    name={a.accountName}
+                  />
                   {a.accountEmail && (
                     <>
                       <br />

@@ -8,7 +8,7 @@ import type { LocalTimeProps } from './types';
 const subscribe = (): (() => void) => () => undefined;
 
 /**
- * An instant to the minute (`2026-10-30 14:05`) in a `<time>` carrying the full instant. The server and
+ * An instant to the minute (`2026-10-30 2:05 pm`) in a `<time>` carrying the full instant. The server and
  * hydration print UTC; once hydrated it prints the viewer's own zone, read as an external store so
  * the two renders never mismatch.
  */
