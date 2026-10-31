@@ -107,7 +107,7 @@ is therefore always inverted (light on dark): the design review must scan-test i
 authenticator apps, in both themes. The backup codes sit in two equal columns,
 each code centred in its column, with no list marker. The setup key and the backup codes each sit
 on their own in a `.two-factor__well`: `$surface-page` (darker than the card in both themes) with
-`radius('surface')` and `space(3)` padding. The codes' panel has `space(3)` above and below it, the key's `space(2)`.
+`radius('surface')` and `space(3)` padding. The QR code and the codes' panel have `space(3)` above and below them, the key's `space(2)`.
 
 ## Stories
 
