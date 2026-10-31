@@ -30,18 +30,25 @@
   view-timeline: --site-footer block;
 }
 
-// The row sits in the content column's edges; the hairline above it is the footer's own, so it spans the window.
+// The footer's content sits in the content column's edges, a column of the row and the tagline beneath it; the hairline above is the footer's own, so it spans the window.
 .site-footer__inner {
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: space(2);
+  margin-inline: auto;
+  padding: space(4);
+  max-width: $wide-column;
+  min-height: $footer-height;
+}
+
+// The brand at the left, the links at the right.
+.site-footer__row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: space(2) space(4);
-  margin-inline: auto;
-  padding: space(4);
-  max-width: $wide-column;
-  min-height: $footer-height;
 }
 
 .site-footer__brand {
@@ -77,9 +84,8 @@
   }
 }
 
-// On a line of its own under the row, in the small size and the muted ink.
+// Under the row, left-aligned beneath the brand, in the small size and the muted ink.
 .site-footer__tagline {
-  flex: 0 0 100%;
   max-width: 66ch;
   margin: 0;
   color: $text-muted;
@@ -90,14 +96,12 @@
 // At a phone's width the row stacks, the name above the links, both at the left.
 @media (max-width: $shell-phone-width) {
   .site-footer__inner {
-    flex-direction: column;
-    align-items: flex-start;
     min-height: $footer-height-phone;
   }
 
-  // In a column the basis would be a height.
-  .site-footer__tagline {
-    flex: none;
+  .site-footer__row {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 

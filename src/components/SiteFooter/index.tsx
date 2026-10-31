@@ -14,17 +14,19 @@ import './index.scss';
 const SiteFooter = (): ReactElement => (
   <footer className="site-footer">
     <div className="site-footer__inner">
-      <Link href="/" className="site-footer__brand">
-        {SITE_NAME}
-      </Link>
-      <nav aria-label="Footer" className="site-footer__nav">
-        <IconTip tip="Support">
-          <SupportLink className="site-footer__support">
-            <SupportIcon />
-            <span className="visually-hidden">Support</span>
-          </SupportLink>
-        </IconTip>
-      </nav>
+      <div className="site-footer__row">
+        <Link href="/" className="site-footer__brand">
+          {SITE_NAME}
+        </Link>
+        <nav aria-label="Footer" className="site-footer__nav">
+          <IconTip tip="Support">
+            <SupportLink className="site-footer__support">
+              <SupportIcon />
+              <span className="visually-hidden">Support</span>
+            </SupportLink>
+          </IconTip>
+        </nav>
+      </div>
       <p className="site-footer__tagline">{SITE_TAGLINE}</p>
     </div>
   </footer>
