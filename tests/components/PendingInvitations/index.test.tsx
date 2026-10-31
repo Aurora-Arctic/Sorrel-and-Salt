@@ -75,7 +75,7 @@ describe('PendingInvitations', () => {
       ).not.toBeInTheDocument();
 
     const row = screen.getByRole('row', { name: /sage@fixture\.test/ });
-    const time = within(row).getByText(/UTC$/);
+    const time = within(row).getByText(/^\d{1,2} \w+ \d{4}, \d{1,2}:\d{2} (am|pm)$/);
     expect(time.tagName).toBe('TIME');
     expect(time).toHaveAttribute('datetime', DECLINED_AT.toISOString());
   });
@@ -84,7 +84,7 @@ describe('PendingInvitations', () => {
     show();
 
     const row = screen.getByRole('row', { name: /fern@fixture\.test/ });
-    expect(within(row).getByText(/UTC$/)).toHaveAttribute(
+    expect(within(row).getByText(/^\d{1,2} \w+ \d{4}, \d{1,2}:\d{2} (am|pm)$/)).toHaveAttribute(
       'datetime',
       INVITATIONS[0].expiresAt.toISOString(),
     );

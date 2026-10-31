@@ -1,7 +1,7 @@
+import { batchName } from '../../lib/invitation-cards/batch-name';
 import type { BatchStatus } from './types';
 
-/** A batch's short name: the first block of its id, enough to tell two apart on a page. */
-export const batchName = (batchId: string): string => batchId.slice(0, 8);
+export { batchName };
 
 /**
  * Where a batch stands, from its counts: a card still pending makes it live. With none pending, every card accepted is

@@ -118,7 +118,7 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
               a.accountId && a.accountName ? (
                 <>
                   <UserLink
-                    href={userListHref(NO_FILTER, undefined, a.accountId)}
+                    href={userListHref(NO_FILTER, undefined, a.accountId, 'invitation-cards')}
                     heading={{
                       eyebrow: 'User',
                       title: a.accountName,

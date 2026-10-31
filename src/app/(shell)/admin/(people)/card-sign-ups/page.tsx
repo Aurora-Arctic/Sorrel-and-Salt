@@ -54,7 +54,7 @@ const readArrivals = cache(
           !account || account instanceof Error
             ? null
             : {
-                openHref: userListHref(NO_FILTER, undefined, account.id),
+                openHref: userListHref(NO_FILTER, undefined, account.id, 'card-sign-ups'),
                 heading: userHeading(account),
               },
         covens: Array.isArray(covens)

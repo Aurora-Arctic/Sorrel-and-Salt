@@ -15,6 +15,15 @@ describe('LocalTime', () => {
     );
   });
 
+  it('prints the long form in the zone given, and in UTC on the server', () => {
+    render(<LocalTime at={AT} timeZone="Asia/Tokyo" long />);
+
+    expect(screen.getByText('31 October 2026, 8:05 am')).toBeInTheDocument();
+    expect(renderToString(<LocalTime at={AT} timeZone="Asia/Tokyo" long />)).toContain(
+      '30 October 2026, 11:05 pm',
+    );
+  });
+
   it('prints UTC on the server, whatever zone is asked for', () => {
     expect(renderToString(<LocalTime at={AT} timeZone="Asia/Tokyo" />)).toContain(
       '2026-10-30 11:05 pm',

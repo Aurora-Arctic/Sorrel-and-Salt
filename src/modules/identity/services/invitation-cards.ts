@@ -22,6 +22,7 @@ import type {
   CardRow,
 } from '../../../db/repository';
 import { NotFound, ValidationError } from '../../../lib/errors';
+import { batchName } from '../../../lib/invitation-cards/batch-name';
 import { CARDS_PER_SHEET, MAX_SHEETS_PER_BATCH } from '../../../lib/invitation-cards/limits';
 import { newCardToken } from '../../../lib/invitation-token';
 import type { Session } from '../../../lib/session';
@@ -209,11 +210,11 @@ export async function countCardArrivals(
   return findCardArrivalCount(admin, parsedArrivalFilter(filter), start);
 }
 
-const CSV_HEADER = ['Account Name', 'Email', 'Accepted', 'Batch'];
+const CSV_HEADER = ['Account', 'Email', 'Accepted On', 'Batch'];
 const ARRIVAL_PAGE = 100;
 
 /**
- * Every arrival as CSV text, newest first: the account's name and email, the day it was accepted and the batch.
+ * Every arrival as CSV text, newest first: the account's name and email, the day it was accepted and the batch's short name, as the Card Sign-Ups table shows them.
  * A cell that opens with a character a spreadsheet reads as a formula is prefixed with an apostrophe.
  *
  * @throws {Forbidden} the session's role is not `admin`.
@@ -245,7 +246,7 @@ export async function cardArrivalsCsv(
           account?.name ?? '',
           account?.email ?? '',
           node.acceptedAt.toISOString().slice(0, 10),
-          node.batchId,
+          batchName(node.batchId),
         ]
           .map(csvCell)
           .join(','),

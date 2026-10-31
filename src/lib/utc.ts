@@ -52,6 +52,30 @@ export function minuteInZone(at: Date, timeZone?: string): string {
   return `${part('year')}-${part('month')}-${part('day')} ${part('hour')}:${part('minute')} ${period}`;
 }
 
+/**
+ * An instant to the minute as `28 August 2026, 12:00 am` in a time zone (the viewer's own when none is given), with no zone suffix: the long form
+ * beside `minuteInZone`, for invitation expiries and the like.
+ */
+export function longMinuteInZone(at: Date, timeZone?: string): string {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hourCycle: 'h12',
+    timeZone,
+  }).formatToParts(at);
+  const part = (type: string): string => parts.find((p) => p.type === type)?.value ?? '';
+  const period = part('dayPeriod').toLowerCase();
+  return `${part('day')} ${part('month')} ${part('year')}, ${part('hour')}:${part('minute')} ${period}`;
+}
+
+/** An instant to the minute as `28 August 2026, 12:00 am` in UTC: what the server and hydration print. */
+export function longMinuteInUtc(at: Date): string {
+  return longMinuteInZone(at, 'UTC');
+}
+
 /** An instant to the minute as `2026-10-30 2:05 pm` in UTC: what the server and hydration print. */
 export function minuteInUtc(at: Date): string {
   return minuteInZone(at, 'UTC');

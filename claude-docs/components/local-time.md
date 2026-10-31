@@ -15,13 +15,15 @@ page has hydrated, the component prints the viewer's zone. It reads the zone thr
 `useSyncExternalStore` with a server snapshot, so React does the swap itself and there is no mismatch
 and no `suppressHydrationWarning`. The text carries no zone label.
 
-The formatters (`minuteInZone`, `minuteInUtc`, `isoDayInUtc`) are in `src/lib/utc.ts`, beside
-`inUtc` and `dayInUtc`, which other screens still use. `minuteInZone` builds the text from
-`Intl.DateTimeFormat` parts, so no locale's separators leak in, and midnight is `00`, not `24`.
+The formatters (`minuteInZone`, `minuteInUtc`, `longMinuteInZone`, `longMinuteInUtc`, `isoDayInUtc`) are in
+`src/lib/utc.ts`, beside `inUtc` and `dayInUtc`. `inUtc` (24-hour, with a UTC suffix) is left to the
+compendium redirect refusal, a server-built sentence that cannot know the viewer's zone. `minuteInZone`
+builds the text from `Intl.DateTimeFormat` parts, so no locale's separators leak in; midnight is `12:00 am`.
+`LocalTime` takes `long` to print `28 August 2026, 12:00 am` through `longMinuteInZone`.
 
 ## Where it is used
 
-The invitation cards tables (Minted On, Refused Opens First and Latest, Card Sign-Ups Accepted On;
+The three invitation tables (admin, pending and received, with `long`) and the invitation cards tables (Minted On, Refused Opens First and Latest, Card Sign-Ups Accepted On;
 see [admin-cards](admin-cards.md)) and the Privilege Changes When column. A UTC day with no time, such as
 the cards' Expires, is a plain `<time>` with `isoDayInUtc` instead.
 

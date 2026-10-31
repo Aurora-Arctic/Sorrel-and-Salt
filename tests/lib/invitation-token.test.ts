@@ -1,6 +1,11 @@
 import { randomBytes } from 'node:crypto';
 import { describe, expect, it, vi } from 'vitest';
-import { CARD_TOKEN_ALPHABET, newCardToken, newToken } from '@/lib/invitation-token';
+import {
+  CARD_TOKEN_ALPHABET,
+  looksLikeCardToken,
+  newCardToken,
+  newToken,
+} from '@/lib/invitation-token';
 
 // The token is the CSPRNG's bytes as they came, so the spy is the real
 // `randomBytes` under watch: a generator that drew from anything else, or
@@ -51,5 +56,15 @@ describe('newCardToken', () => {
         .join(''),
     );
     expect(mocked).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('looksLikeCardToken', () => {
+  it('accepts 16 symbols of the card alphabet and nothing else', () => {
+    expect(looksLikeCardToken('AAAAAAAAAAAAAAAA')).toBe(true);
+    expect(looksLikeCardToken('AAAAAAAAAAAAAAA')).toBe(false);
+    expect(looksLikeCardToken('AAAAAAAAAAAAAAAAA')).toBe(false);
+    expect(looksLikeCardToken('AAAAAAAAAAAAAAA0')).toBe(false);
+    expect(looksLikeCardToken(newToken())).toBe(false);
   });
 });

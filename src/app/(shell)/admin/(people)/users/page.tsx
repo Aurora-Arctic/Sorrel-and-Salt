@@ -1,9 +1,10 @@
 import type { Metadata } from 'next';
 import { cache } from 'react';
 import UserList from '../../../../../components/UserList';
-import { userListHref } from '../../../../../components/UserList/href';
+import { USER_MODAL_ORIGINS, userListHref } from '../../../../../components/UserList/href';
 import { changesLocked } from '../../../../../components/UserList/lock';
 import { ROLES } from '../../../../../components/UserList/roles';
+import type { UserModalOrigin } from '../../../../../components/UserList/href';
 import type { UserListEntry } from '../../../../../components/UserList/types';
 import type { PagerCursor } from '../../../../../lib/types';
 import { impersonationEnabled } from '../../../../../lib/impersonation';
@@ -141,6 +142,8 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
   const role = oneOf(ROLES, single(params.role));
   // Blank is no modal, as a blank `?edit=` is.
   const userParam = single(params.user) || undefined;
+  // Where the modal was opened from, so Close goes back there; a value outside the set is the list.
+  const from = oneOf(Object.keys(USER_MODAL_ORIGINS) as UserModalOrigin[], single(params.from));
 
   const [{ users, pageInfo, position }, adminChanges, opened] = await Promise.all([
     readUsers(session, query, awaitingApproval, role, after, before),
@@ -171,7 +174,11 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
       {/* Rendered whatever the address opens, so a press on a name opens it at
           once and the covens arrive in it. */}
       <UserDialog
-        closeHref={userListHref({ query, awaitingApproval, role }, cursorOf(after, before))}
+        closeHref={
+          userParam && from
+            ? USER_MODAL_ORIGINS[from]
+            : userListHref({ query, awaitingApproval, role }, cursorOf(after, before))
+        }
         opened={opened}
         canImpersonate={canImpersonate}
         changesPaused={changesPaused}

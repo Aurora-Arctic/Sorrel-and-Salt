@@ -8,7 +8,7 @@ yields one. The rules are [`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md
 
 ## Dates
 
-Expires is a UTC day, `2026-10-30`. Minted On, Refused Opens First and Latest and Card Sign-Ups Accepted On are `2026-10-30 2:05 pm` in the viewer's own zone, through [LocalTime](local-time.md). Above the stacking width each is muted at caption size (`admin-cards__fact`), as the user list's Signed Up is. The Card Sign-Ups CSV keeps its own date format.
+Expires is a UTC day, `2026-10-30`. Minted On, Refused Opens First and Latest and Card Sign-Ups Accepted On are `2026-10-30 2:05 pm` in the viewer's own zone, through [LocalTime](local-time.md). Above the stacking width each is muted at caption size (`admin-cards__fact`), as the user list's Signed Up is. The Card Sign-Ups CSV keeps its own date format, and has the table's headings (Account, Email, Accepted On, Batch) with the same short batch name; it has no Covens Owned column, as the covens are read through the coven module.
 
 ## Contracts
 
@@ -33,7 +33,7 @@ Expires is a UTC day, `2026-10-30`. Minted On, Refused Opens First and Latest an
   the page cannot read (an unknown status, a day that is not a day) is dropped; the service rejects one sent directly.
 - **Refused Opens** (`attempts.tsx`): each batch shows its count of refused opens across all its cards;
   where the count is above zero an eye icon button (tip **View Refused Opens**, right-aligned in the cell) opens a dialog headed by the eyebrow "Refused Opens" over the title "Batch 7c2d0000" (its name, "Refused Opens, Batch 7c2d0000") that reads
-  `invitationCardAttempts` for that batch and lists the account (its name is the Users list's own `UserLink`, which opens that account's user modal at `/admin/users?user=<id>` at once, headed "User" over the name with the email beneath; the press leaves the Invitation Cards tab, so the Refused Opens dialog goes with it and closing the user modal lands on the Users list, not back on the tab; its email sits under the name; a removed account is "Removed account" with neither), the **Card** ("Sheet 2, Card 5", from the card's `position`; "Unknown" for a card minted before positions were kept), the reason, how many times, and the **First** and **Latest** times (the row's creation and its last refusal),
+  `invitationCardAttempts` for that batch and lists the account (its name is the Users list's own `UserLink`, which opens that account's user modal at `/admin/users?user=<id>&from=invitation-cards` at once, headed "User" over the name with the email beneath; the press leaves the Invitation Cards tab, so the Refused Opens dialog goes with it, and closing the user modal returns to the Invitation Cards tab (the `from` parameter); its email sits under the name; a removed account is "Removed account" with neither), the **Card** ("Sheet 2, Card 5", from the card's `position`; "Unknown" for a card minted before positions were kept), the reason, how many times, and the **First** and **Latest** times (the row's creation and its last refusal),
   twenty at a time with **Show More**. A plain paragraph under the head says "Every card listed here already admits nobody. Further tries are refused and counted here.": the list is a record, and no card in it can be opened or revoked from here.
 - **Mint Cards** (`mint-form.tsx`) is a link to `?mint`, which opens a modal: **Number of Sheets** (1 to
   55; a Letter sheet holds nine cards) with the total shown as typed ("27 cards"), and
@@ -51,7 +51,7 @@ Expires is a UTC day, `2026-10-30`. Minted On, Refused Opens First and Latest an
   be revoked from the list (Close Anyway, Keep Open); after it, Close is quiet.
 - **Card Sign-Ups** (`arrivals.tsx`): every account that accepted a card, with its email under its name, the
   date (**Accepted On**), the batch and the covens it owns (**Covens Owned**; "None yet" when none). An account
-  that can no longer be read keeps its row as plain "Removed account" text. The name opens that account's user modal over the page, through the Users list's own `UserLink`. **Download CSV** reads `cardArrivalsCsv` through
+  that can no longer be read keeps its row as plain "Removed account" text. The name opens that account's user modal over the page, through the Users list's own `UserLink`, and closing the modal returns to this tab (`from=card-sign-ups`). **Download CSV** reads `cardArrivalsCsv` through
   GraphQL and hands the string to the browser as `card-sign-ups.csv`; a failure shows as the button's click feedback; the service refuses anyone but an admin.
 - **Card Sign-Ups filter** (`arrivals-filter.tsx`): the shared `FilterForm` ("Filter Card Sign-Ups") with **Name or Email**
   (`query`, part of either, case-folded) and **Batch** (`batch`, the start of the batch number), both held in the URL and

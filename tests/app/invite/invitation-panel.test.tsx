@@ -13,9 +13,18 @@ const recordCardAttempt = vi.fn();
 vi.mock('@/modules/identity', () => ({ invitationStanding, recordCardAttempt }));
 
 const recorded: string[] = [];
+const landings: string[] = [];
+const startCovenHrefs: (string | undefined)[] = [];
 vi.mock('@/components/InvitationAcceptance', () => ({
-  default: (props: { status: string; token?: string }) => {
+  default: (props: {
+    status: string;
+    token?: string;
+    startCovenHref?: string;
+    landing?: string;
+  }) => {
     if (props.token) recorded.push(props.token);
+    if (props.landing) landings.push(props.landing);
+    if (props.status === 'refused') startCovenHrefs.push(props.startCovenHref);
     return <p>{props.status}</p>;
   },
 }));
@@ -27,6 +36,8 @@ beforeEach(() => {
   invitationStanding.mockReset();
   recordCardAttempt.mockReset();
   recorded.length = 0;
+  startCovenHrefs.length = 0;
+  landings.length = 0;
 });
 
 describe('the invitation panel page', () => {
@@ -54,5 +65,28 @@ describe('the invitation panel page', () => {
     expect(screen.getByText('refused')).toBeInTheDocument();
     expect(recorded).toEqual(['abc']);
     expect(recordCardAttempt).not.toHaveBeenCalled();
+  });
+
+  it('points the account that already used a card at starting a coven, and no other refusal', async () => {
+    getSession.mockResolvedValue({ userId: 'u', role: 'user' });
+    invitationStanding.mockResolvedValue({
+      acceptable: false,
+      reason: 'used-by-you',
+      message: 'Used.',
+    });
+    render(await InvitationPanel({ token: 'abc', here: '/i/abc' }));
+    invitationStanding.mockResolvedValue({ acceptable: false, reason: 'accepted', message: 'x' });
+    render(await InvitationPanel({ token: 'abc', here: '/i/abc' }));
+
+    expect(startCovenHrefs).toEqual(['/coven/new', undefined]);
+  });
+
+  it('lands an accepted card on the coven page with the marker that says what it gave', async () => {
+    getSession.mockResolvedValue({ userId: 'u', role: 'user' });
+    invitationStanding.mockResolvedValue({ acceptable: true, tier: 'card' });
+
+    render(await InvitationPanel({ token: 'abc', here: '/i/abc' }));
+
+    expect(landings).toEqual(['/coven/new?card=accepted']);
   });
 });

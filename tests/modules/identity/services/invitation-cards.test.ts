@@ -246,10 +246,10 @@ describe('the arrivals CSV', () => {
     const csv = await cardArrivalsCsv(asUser(E));
 
     const lines = csv.trimEnd().split('\r\n');
-    expect(lines[0]).toBe('Account Name,Email,Accepted,Batch');
+    expect(lines[0]).toBe('Account,Email,Accepted On,Batch');
     expect(lines).toHaveLength(2);
     expect(lines[1]).toBe(
-      `"'=Hyperlink, ""Q""",${B.email},${new Date().toISOString().slice(0, 10)},${batchId}`,
+      `"'=Hyperlink, ""Q""",${B.email},${new Date().toISOString().slice(0, 10)},${batchId.slice(0, 8)}`,
     );
   });
 
@@ -272,7 +272,7 @@ describe('the arrivals CSV', () => {
 
   it('is only a header when nobody arrived', async () => {
     await mintInvitationCards(asUser(E), 1, NEXT_WEEK());
-    expect(await cardArrivalsCsv(asUser(E))).toBe('Account Name,Email,Accepted,Batch\r\n');
+    expect(await cardArrivalsCsv(asUser(E))).toBe('Account,Email,Accepted On,Batch\r\n');
   });
 });
 

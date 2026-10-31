@@ -68,7 +68,7 @@ describe('ReceivedInvitations', () => {
   it('draws each expiry as a time element', () => {
     show();
 
-    const times = screen.getAllByText(/UTC$/);
+    const times = screen.getAllByText(/^\d{1,2} \w+ \d{4}, \d{1,2}:\d{2} (am|pm)$/);
     expect(times.map((time) => time.tagName)).toEqual(['TIME', 'TIME']);
     expect(times[0]).toHaveAttribute('datetime', INVITATIONS[0]?.expiresAt.toISOString());
   });

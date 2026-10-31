@@ -116,6 +116,8 @@ export interface ReceivedInvitation {
 export type InvitationRefusal =
   | 'invalid'
   | 'accepted'
+  /** A card the signed-in account itself accepted. */
+  | 'used-by-you'
   | 'declined'
   | 'revoked'
   | 'expired'
@@ -136,7 +138,8 @@ export type InvitationStanding =
 
 /** The accept service's checks, inside the module: a refusal, or the invitation and the account it admits. */
 export type InvitationCheck =
-  | { refusal: InvitationRefusal }
+  /** `card` when the link is a card's, found or shaped like one, so the words fit a printed card. */
+  | { refusal: InvitationRefusal; card?: boolean }
   | { refusal?: undefined; tier: 'site'; invitation: SiteInvitationRow; user: UserRow }
   | { refusal?: undefined; tier: 'card'; invitation: InvitationRow; user: UserRow }
   | {

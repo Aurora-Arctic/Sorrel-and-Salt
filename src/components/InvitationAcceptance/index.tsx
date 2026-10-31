@@ -132,6 +132,13 @@ const InvitationAcceptance = (props: InvitationAcceptanceProps): ReactElement =>
         <>
           <Notice kind="error">{props.message}</Notice>
           {props.token && <RecordRefusal token={props.token} />}
+          {props.startCovenHref && (
+            <p className="invitation-acceptance__actions">
+              <a className="btn btn--solid" href={props.startCovenHref}>
+                Start a Coven
+              </a>
+            </p>
+          )}
           {props.emailHref && (
             <p className="invitation-acceptance__actions">
               <a className="btn btn--solid" href={props.emailHref}>
