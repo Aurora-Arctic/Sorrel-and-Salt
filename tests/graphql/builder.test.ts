@@ -3,7 +3,12 @@ import { describe, expect, it } from 'vitest';
 import type { ingredients } from '@/modules/ingredients/schema/ingredients';
 import { builder, createBuilder } from '@/graphql/builder';
 import { createLoaders } from '@/graphql/loaders';
-import { noInvitationSender, noPasswordSetter, noSender } from '../support/email-verification';
+import {
+  noInvitationSender,
+  noPasswordSetter,
+  noSender,
+  noSupportNotifier,
+} from '../support/email-verification';
 import { schema } from '@/graphql/schema';
 import type { Context } from '@/graphql/types';
 
@@ -16,6 +21,7 @@ function context(session: Context['session']): Context {
     emailVerification: noSender,
     invitations: noInvitationSender,
     passwords: noPasswordSetter,
+    support: noSupportNotifier,
   };
 }
 

@@ -7,6 +7,7 @@ import { emailChangeNoticeMessage } from '@/emails/email-change-notice';
 import { passwordChangedMessage } from '@/emails/password-changed';
 import { passwordLockedMessage } from '@/emails/password-locked';
 import { resetPasswordMessage } from '@/emails/reset-password';
+import { supportReplyNoticeMessage } from '@/emails/support-reply-notice';
 import { verifyEmailMessage } from '@/emails/verify-email';
 import type { Message } from '@/lib/types';
 import { fromRoot } from '../../support/paths';
@@ -126,6 +127,17 @@ const MAILS: {
         to: 'someone@layout.test',
         url: `${ORIGIN}/api/auth/reset-password/fixture-lock-token?callbackURL=%2Freset-password`,
         minutes: 15,
+      }),
+  },
+  {
+    template: 'support-reply-notice',
+    name: 'supportReplyNoticeMessage',
+    link: `${ORIGIN}/account/support`,
+    message: () =>
+      supportReplyNoticeMessage({
+        to: 'someone@layout.test',
+        url: `${ORIGIN}/account/support`,
+        origin: ORIGIN,
       }),
   },
 ];

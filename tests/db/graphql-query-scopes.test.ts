@@ -92,6 +92,16 @@ const PROBES: Record<string, ScopeProbe> = {
     outcome: 'refuses',
   },
   cardArrivalsCsv: { source: '{ cardArrivalsCsv }', outcome: 'refuses' },
+  mySupportRequests: {
+    source: '{ mySupportRequests(first: 1) { edges { node { id } } } }',
+    outcome: 'refuses',
+  },
+  mySupportRequest: { source: `{ mySupportRequest(id: "${NOWHERE}") { id } }`, outcome: 'refuses' },
+  supportRequests: {
+    source: '{ supportRequests(first: 1) { edges { node { id } } } }',
+    outcome: 'refuses',
+  },
+  supportRequest: { source: `{ supportRequest(id: "${NOWHERE}") { id } }`, outcome: 'refuses' },
   compendium: {
     source: '{ compendium(first: 1) { edges { node { id } } } }',
     outcome: 'answers',
@@ -378,6 +388,24 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   setEmail: write('mutation { setEmail(email: "fixture@example.org") { id } }'),
   setName: write('mutation { setName(name: "Fixture") { id } }'),
   setPassword: write('mutation { setPassword(newPassword: "fixture password") }'),
+  sendSupportRequest: write(
+    'mutation { sendSupportRequest(input: { kind: bug, subject: "Fixture", message: "Fixture" }) { id } }',
+  ),
+  replyToSupportRequest: write(
+    `mutation { replyToSupportRequest(requestId: "${NOWHERE}", body: "Fixture") { id } }`,
+  ),
+  assignSupportRequest: write(`mutation { assignSupportRequest(id: "${NOWHERE}") { id } }`),
+  setSupportRequestCuratorVisible: write(
+    `mutation { setSupportRequestCuratorVisible(id: "${NOWHERE}", visible: true) { id } }`,
+  ),
+  resolveSupportRequest: write(`mutation { resolveSupportRequest(id: "${NOWHERE}") { id } }`),
+  setSupportRequestIssueUrl: write(
+    `mutation { setSupportRequestIssueUrl(id: "${NOWHERE}", issueUrl: null) { id } }`,
+  ),
+  timeOutSupportSender: write(
+    `mutation { timeOutSupportSender(userId: "${NOWHERE}", until: "2999-01-01T00:00:00Z") { id } }`,
+  ),
+  liftSupportTimeout: write(`mutation { liftSupportTimeout(id: "${NOWHERE}") { id } }`),
   grantWorkspaceCreation: write(`mutation { grantWorkspaceCreation(userId: "${NOWHERE}") { id } }`),
   revokeWorkspaceCreation: write(
     `mutation { revokeWorkspaceCreation(userId: "${NOWHERE}") { id } }`,
@@ -608,6 +636,12 @@ const ADMIN_WRITES: Record<string, AdminWrite> = {
   // Printed invitation cards: minting, withdrawing one or a batch.
   createInvitationCards: { governs: 'site role' },
   revokeInvitationCardBatch: { governs: 'site role' },
+  // A sender's requests and their sanctions: an admin's alone, so a curator is refused at the scope.
+  assignSupportRequest: { governs: 'support' },
+  setSupportRequestCuratorVisible: { governs: 'support' },
+  setSupportRequestIssueUrl: { governs: 'support' },
+  timeOutSupportSender: { governs: 'support' },
+  liftSupportTimeout: { governs: 'support' },
   createCategory: { governs: 'categories' },
   updateCategory: { governs: 'categories' },
   deleteCategory: { governs: 'categories' },
@@ -685,6 +719,11 @@ const OPEN_WRITES = [
   // also needs the recorder, or for a change someone named on the working.
   // Any signed-in account may report a refused card open; the service records it only against a real card.
   'recordCardAttempt',
+  // Any verified session may send; the service reads the limit and any time-out.
+  'sendSupportRequest',
+  // A curator's scope admits; the service decides which requests (an admin any, a curator one assigned to them).
+  'replyToSupportRequest',
+  'resolveSupportRequest',
   'recordWorking',
   'updateWorking',
   'completeWorking',
@@ -743,7 +782,7 @@ describe('a signed-in non-admin at every admin write', () => {
 
 // The people page's writes are an admin's alone; every other admin write is curation, which a curator's scope admits.
 // A write added to ADMIN_WRITES lands on one side or the other.
-const PEOPLE_PAGE: readonly Governed[] = ['workspace creation', 'site role'];
+const PEOPLE_PAGE: readonly Governed[] = ['workspace creation', 'site role', 'support'];
 const governsPeople = (field: string) => PEOPLE_PAGE.includes(ADMIN_WRITES[field].governs);
 const PEOPLE_WRITES = Object.keys(ADMIN_WRITES).filter(governsPeople);
 const CURATION_WRITES = Object.keys(ADMIN_WRITES).filter((field) => !governsPeople(field));
