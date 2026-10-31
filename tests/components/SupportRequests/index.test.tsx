@@ -25,7 +25,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 const ADMIN: SupportViewer = { id: 'admin-1', role: 'admin' };
 const CURATOR: SupportViewer = { id: 'curator-1', role: 'curator' };
-const ADMIN_ONLY = ['Assigned To', 'Issue Address', 'For'];
+const ADMIN_ONLY = ['Assigned To', 'GitHub Issue', 'For'];
 
 const ROW: SupportRequestEntry = {
   id: 'r1',
@@ -212,12 +212,12 @@ describe('Issue', () => {
       fieldErrors: [
         {
           path: ['issueUrl'],
-          message: 'Give the address of an issue on Aurora-Arctic/Sorrel-and-Salt',
+          message: 'Paste a GitHub issue link, like github.com/Aurora-Arctic/Sorrel-and-Salt/issues/1409, or a link opened from the project board.',
         },
       ],
     });
     open(ADMIN);
-    const field = within(dialog()).getByRole('textbox', { name: 'Issue Address' });
+    const field = within(dialog()).getByRole('textbox', { name: 'GitHub Issue' });
     const save = within(dialog()).getByRole('button', { name: 'Save Address' });
     expect(save).toBeDisabled();
 
@@ -225,7 +225,7 @@ describe('Issue', () => {
     fireEvent.click(save);
 
     await waitFor(() => expect(field).toHaveAttribute('aria-invalid', 'true'));
-    expect(field).toHaveAccessibleDescription(/issue on Aurora-Arctic\/Sorrel-and-Salt/);
+    expect(field).toHaveAccessibleDescription(/Paste a GitHub issue link/);
   });
 
   it('sends a good address once, with the request id', async () => {
@@ -238,7 +238,7 @@ describe('Issue', () => {
       return { setSupportRequestIssueUrl: { __typename: 'SupportRequest', id: 'r1' } };
     });
     open(ADMIN);
-    fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Issue Address' }), {
+    fireEvent.change(within(dialog()).getByRole('textbox', { name: 'GitHub Issue' }), {
       target: { value: 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/12' },
     });
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Save Address' }));
@@ -252,9 +252,9 @@ describe('Issue', () => {
 describe('A linked issue', () => {
   it('shows the address with an edit control, and opens the field when it is used', () => {
     open(ADMIN, { issueUrl: 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/12' });
-    expect(within(dialog()).queryByRole('textbox', { name: 'Issue Address' })).toBeNull();
+    expect(within(dialog()).queryByRole('textbox', { name: 'GitHub Issue' })).toBeNull();
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Change Issue Address' }));
-    expect(within(dialog()).getByRole('textbox', { name: 'Issue Address' })).toHaveValue(
+    expect(within(dialog()).getByRole('textbox', { name: 'GitHub Issue' })).toHaveValue(
       'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/12',
     );
   });
@@ -263,7 +263,7 @@ describe('A linked issue', () => {
 describe('What a viewer is shown', () => {
   it('gives an admin every control', () => {
     open(ADMIN);
-    for (const name of ['Assigned To', 'Issue Address', 'For', 'Your Reply']) {
+    for (const name of ['Assigned To', 'GitHub Issue', 'For', 'Your Reply']) {
       expect(within(dialog()).getByLabelText(name)).toBeInTheDocument();
     }
     expect(
@@ -359,7 +359,7 @@ describe('Unsaved input in the dialog', () => {
   const close = () => fireEvent.click(within(dialog()).getByRole('button', { name: 'Close' }));
 
   it.each([
-    ['Issue Address', 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/9'],
+    ['GitHub Issue', 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/9'],
     ['For', 'week'],
     ['Note', 'Warned twice'],
   ])('asks before closing with %s typed, though the reply is untouched', async (label, value) => {
@@ -406,7 +406,7 @@ describe('Status line in the dialog', () => {
       fireEvent.click(d.getByRole('switch', { name: 'Shared With Curators' }));
     if (action === 'resolve') fireEvent.click(d.getByRole('button', { name: 'Resolve' }));
     if (action === 'link') {
-      fireEvent.change(d.getByLabelText('Issue Address'), {
+      fireEvent.change(d.getByLabelText('GitHub Issue'), {
         target: { value: 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/9' },
       });
       fireEvent.click(d.getByRole('button', { name: 'Save Address' }));

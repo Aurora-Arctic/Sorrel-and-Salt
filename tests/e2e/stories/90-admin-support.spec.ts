@@ -85,7 +85,7 @@ test.describe('Story 90: An Admin Works Through a Support Request', { tag: '@sto
     });
 
     await test.step('A pasted address is checked', async () => {
-      const address = dialog.getByLabel('Issue Address');
+      const address = dialog.getByLabel('GitHub Issue');
       await address.fill('https://example.com/not-an-issue');
       await dialog.getByRole('button', { name: 'Save Address' }).click();
       await expect(

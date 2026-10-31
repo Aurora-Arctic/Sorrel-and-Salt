@@ -20,6 +20,39 @@ export function isSitePage(value: string): boolean {
   return page.length === SITE_ORIGIN.length || /^[/?#]/.test(page.slice(SITE_ORIGIN.length));
 }
 
+/** The repository whose issues an admin may attach to a request. */
+export const ISSUE_REPOSITORY = 'Aurora-Arctic/Sorrel-and-Salt';
+
+/** What the GitHub Issue field says when its value is neither an issue link nor a project-board link. */
+export const ISSUE_LINK_EXPECTED =
+  'Paste a GitHub issue link, like github.com/Aurora-Arctic/Sorrel-and-Salt/issues/1409, or a link opened from the project board.';
+
+/** The shorter form of the same, for the field's hint. */
+export const ISSUE_LINK_HINT = 'An issue link, or a link opened from the project board.';
+
+/**
+ * The plain issue link, `https://github.com/<repository>/issues/<number>`, for a pasted issue link or a project-board link
+ * whose `issue` parameter reads `owner|repo|number`; null for anything else, or an issue of another repository.
+ */
+export function normaliseIssueLink(value: string, repository: string): string | null {
+  const text = value.trim();
+  const plain = `https://github.com/${repository}/issues/`;
+  if (text.startsWith(plain)) {
+    return /^[1-9][0-9]*$/.test(text.slice(plain.length)) ? text : null;
+  }
+  let url: URL;
+  try {
+    url = new URL(text);
+  } catch {
+    return null;
+  }
+  if (url.protocol !== 'https:' || url.hostname !== 'github.com') return null;
+  if (!/^\/orgs\/[^/]+\/projects\/[0-9]+\/views\/[0-9]+\/?$/.test(url.pathname)) return null;
+  const parts = (url.searchParams.get('issue') ?? '').split('|');
+  if (parts.length !== 3 || `${parts[0]}/${parts[1]}` !== repository) return null;
+  return /^[1-9][0-9]*$/.test(parts[2]) ? `${plain}${parts[2]}` : null;
+}
+
 /** The page with the request form, for a visitor with no shell round them. */
 export const SUPPORT_PATH = '/support';
 

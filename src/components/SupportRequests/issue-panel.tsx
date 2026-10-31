@@ -3,6 +3,12 @@
 import { type FormEvent, type ReactElement, useId, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
+import {
+  ISSUE_LINK_EXPECTED,
+  ISSUE_LINK_HINT,
+  ISSUE_REPOSITORY,
+  normaliseIssueLink,
+} from '../../lib/support-path';
 import BusyButton from '../BusyButton';
 import { FieldShell, fieldDescription } from '../Field';
 import IconTip from '../IconTip';
@@ -27,17 +33,26 @@ const SetIssueUrlDocument = graphql(`
 const IssuePanel = ({ request }: { request: SupportRequestDetailEntry }): ReactElement => {
   const [editing, setEditing] = useState(false);
   const [address, setAddress] = useState(request.issueUrl ?? '');
+  const [refused, setRefused] = useState(false);
   const { busy, failure, run } = useSupportAction('issueUrl');
-  const { aria, ...field } = fieldDescription({ id: useId(), error: failure.field?.message });
+  const { aria, ...field } = fieldDescription({
+    id: useId(),
+    note: ISSUE_LINK_HINT,
+    error: refused ? ISSUE_LINK_EXPECTED : failure.field?.message,
+  });
   const changed = address.trim() !== (request.issueUrl ?? '');
   const discard = useDiscardGuard(changed);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const link = address.trim() === '' ? null : normaliseIssueLink(address, ISSUE_REPOSITORY);
+    if (address.trim() !== '' && link === null) {
+      setRefused(true);
+      return;
+    }
     void run(
-      () =>
-        graphqlRequest(SetIssueUrlDocument, { id: request.id, issueUrl: address.trim() || null }),
-      address.trim() ? 'Issue address saved.' : 'Issue address removed.',
+      () => graphqlRequest(SetIssueUrlDocument, { id: request.id, issueUrl: link }),
+      link ? 'Issue address saved.' : 'Issue address removed.',
     );
   }
 
@@ -68,7 +83,7 @@ const IssuePanel = ({ request }: { request: SupportRequestDetailEntry }): ReactE
       {showForm && (
         <form className="form" noValidate onSubmit={submit}>
           {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
-          <FieldShell label="Issue Address" {...field}>
+          <FieldShell label="GitHub Issue" note={ISSUE_LINK_HINT} {...field}>
             <input
               id={field.controlId}
               className="input"
@@ -78,7 +93,10 @@ const IssuePanel = ({ request }: { request: SupportRequestDetailEntry }): ReactE
               {...aria}
               value={address}
               disabled={busy}
-              onChange={(event) => setAddress(event.target.value)}
+              onChange={(event) => {
+                setRefused(false);
+                setAddress(event.target.value);
+              }}
             />
           </FieldShell>
           <div className="form__actions">

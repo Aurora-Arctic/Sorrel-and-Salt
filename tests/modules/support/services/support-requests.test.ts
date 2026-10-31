@@ -347,6 +347,11 @@ describe('admin-only changes', () => {
         ValidationError,
       );
     }
+    const board =
+      'https://github.com/orgs/Aurora-Arctic/projects/1/views/1?pane=issue&itemId=289423269&issue=Aurora-Arctic%7CSorrel-and-Salt%7C1409';
+    expect((await setSupportRequestIssueUrl(asUser(E), request.id, board)).issueUrl).toBe(
+      'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/1409',
+    );
     expect((await setSupportRequestIssueUrl(asUser(E), request.id, null)).issueUrl).toBeNull();
   });
 

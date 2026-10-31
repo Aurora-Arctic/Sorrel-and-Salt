@@ -1,5 +1,11 @@
 import { z } from 'zod';
-import { PAGE_NOT_ON_SITE, isSitePage } from '../../../lib/support-path';
+import {
+  ISSUE_LINK_EXPECTED,
+  ISSUE_REPOSITORY,
+  PAGE_NOT_ON_SITE,
+  isSitePage,
+  normaliseIssueLink,
+} from '../../../lib/support-path';
 import { requiredText } from '../../../lib/validation';
 import { supportRequestAbout } from '../schema/support-requests';
 
@@ -8,8 +14,7 @@ export const MESSAGE_MAX_LENGTH = 4000;
 export const PATH_MAX_LENGTH = 500;
 export const ERROR_REFERENCE_MAX_LENGTH = 100;
 
-/** The repository whose issues an admin may attach to a request. */
-export const ISSUE_REPOSITORY = 'Aurora-Arctic/Sorrel-and-Salt';
+export { ISSUE_REPOSITORY };
 
 // A request as its sender writes it. The reply's body shares the message's limits, so one schema serves both.
 export const SupportMessage = requiredText('Write a message').max(MESSAGE_MAX_LENGTH, {
@@ -42,13 +47,13 @@ export const SupportRequestInput = z.object({
 
 export type SupportRequestInput = z.input<typeof SupportRequestInput>;
 
-/** The pattern of an issue's address on the repository: `https://github.com/<repository>/issues/<number>`, nothing after. */
-const ISSUE_URL = new RegExp(`^https://github\\.com/${ISSUE_REPOSITORY}/issues/[1-9][0-9]*$`);
-
-export const IssueUrlInput = z
-  .string()
-  .trim()
-  .regex(ISSUE_URL, { error: `Give the address of an issue on ${ISSUE_REPOSITORY}` });
+/** An issue link or a project-board link, stored as the plain issue link; see `normaliseIssueLink`. */
+export const IssueUrlInput = z.string().transform((value, context) => {
+  const link = normaliseIssueLink(value, ISSUE_REPOSITORY);
+  if (link !== null) return link;
+  context.addIssue({ code: 'custom', message: ISSUE_LINK_EXPECTED });
+  return z.NEVER;
+});
 
 /** The topics a visitor with no account may write about: the two whose problem can keep them from signing in. */
 export const SIGNED_OUT_ABOUTS = ['accessibility', 'account'] as const;

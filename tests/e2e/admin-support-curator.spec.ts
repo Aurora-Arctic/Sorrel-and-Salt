@@ -64,7 +64,7 @@ test('a curator reads the marked and the assigned requests, answers the assigned
       await page.goto(`/admin/support?request=${assigned}`);
       const dialog = page.getByRole('dialog', { name: 'Assigned To The Curator' });
       await expect(dialog.getByLabel('Assigned To')).toHaveCount(0);
-      await expect(dialog.getByLabel('Issue Address')).toHaveCount(0);
+      await expect(dialog.getByLabel('GitHub Issue')).toHaveCount(0);
       await expect(dialog.getByLabel('Time-Out Until')).toHaveCount(0);
       await dialog.getByLabel('Your Reply').fill('We have it in hand.');
       await dialog.getByRole('button', { name: 'Reply', exact: true }).click();
