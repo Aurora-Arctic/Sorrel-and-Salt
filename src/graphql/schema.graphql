@@ -141,6 +141,11 @@ input CompendiumIngredientInput {
   nomenclature: Nomenclature!
   references: [ReferenceLinkInput!]
   safetyNotes: String
+
+  """
+  Whether the public compendium lists the entry. Left out, a create is shown and an update leaves the flag as it is.
+  """
+  shown: Boolean
   substitutes: [SubstituteInput!]
 
   """
@@ -173,6 +178,11 @@ input CompendiumIngredientUpdateInput {
   nomenclature: Nomenclature!
   references: [ReferenceLinkInput!]!
   safetyNotes: String!
+
+  """
+  Whether the public compendium lists the entry. Left out, a create is shown and an update leaves the flag as it is.
+  """
+  shown: Boolean
   substitutes: [SubstituteInput!]!
 
   """Whether the ingredient is toxic; each form's flag is its own."""

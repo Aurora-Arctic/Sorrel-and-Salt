@@ -41,6 +41,8 @@ export type CompendiumIngredientInput = {
   nomenclature: Nomenclature;
   references?: Array<ReferenceLinkInput> | null | undefined;
   safetyNotes?: string | null | undefined;
+  /** Whether the public compendium lists the entry. Left out, a create is shown and an update leaves the flag as it is. */
+  shown?: boolean | null | undefined;
   substitutes?: Array<SubstituteInput> | null | undefined;
   /** Whether the ingredient is toxic, off when left out; each form's flag is its own. */
   toxic?: boolean | null | undefined;
@@ -64,6 +66,8 @@ export type CompendiumIngredientUpdateInput = {
   nomenclature: Nomenclature;
   references: Array<ReferenceLinkInput>;
   safetyNotes: string;
+  /** Whether the public compendium lists the entry. Left out, a create is shown and an update leaves the flag as it is. */
+  shown?: boolean | null | undefined;
   substitutes: Array<SubstituteInput>;
   /** Whether the ingredient is toxic; each form's flag is its own. */
   toxic: boolean;

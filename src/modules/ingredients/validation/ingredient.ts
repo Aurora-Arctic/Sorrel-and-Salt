@@ -410,10 +410,11 @@ function categoryRules(ids: readonly string[], ctx: z.RefinementCtx) {
 
 /**
  * The compendium tier: the admin answers `nomenclature` explicitly, since
- * every compendium entry declares one (§5).
+ * every compendium entry declares one (§5). `shown` is the entry's place in the public compendium: left out, a create is shown
+ * (the column's default) and an update leaves the flag as it is.
  */
 export const CompendiumIngredientInput = z
-  .object({ ...fields, nomenclature })
+  .object({ ...fields, nomenclature, shown: z.boolean().nullish() })
   .superRefine(crossFieldRules)
   .transform(dropBlankEntries)
   .transform(asEntries);

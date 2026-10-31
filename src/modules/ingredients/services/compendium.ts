@@ -145,7 +145,10 @@ export async function createCompendiumEntry(
   const curated = await inCuratedValues(input, parsed, picked, []);
   const { fields } = curated;
 
-  const columns = ingredientColumns(fields);
+  const columns = {
+    ...ingredientColumns(fields),
+    ...(input.shown != null && { shown: input.shown }),
+  };
   const { slug } = columns;
   const at = new Date();
   await refuseEndingARedirect(slug, at, input.endRedirect);
@@ -191,7 +194,10 @@ export async function updateCompendiumEntry(
   const current = await findOneIngredient([], id);
   if (!current) throw new NotFound('No such compendium entry');
 
-  const columns = ingredientColumns(fields);
+  const columns = {
+    ...ingredientColumns(fields),
+    ...(input.shown != null && { shown: input.shown }),
+  };
   const { slug } = columns;
   const at = new Date();
   const moves = slug !== current.slug;
