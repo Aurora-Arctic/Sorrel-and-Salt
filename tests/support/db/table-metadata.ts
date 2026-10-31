@@ -54,6 +54,7 @@ export const AUDITED_TABLES = [
   'spell_working_participants',
   'spell_workings',
   'spells',
+  'support_requests',
   'user_privilege_changes',
   'users',
   'workspace_compendium_entries',
