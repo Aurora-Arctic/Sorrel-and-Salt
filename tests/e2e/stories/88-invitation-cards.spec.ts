@@ -76,14 +76,19 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
       await signInAs(page, 'stranger@story-88.test');
       await page.goto(links[0]);
       await page.getByRole('button', { name: 'Accept Invitation' }).click();
-      await expect(page).toHaveURL(/\/coven\/new$/);
+      await expect(page).toHaveURL(/\/coven\/new\?card=accepted$/);
+      await expect(
+        page.getByText('Your card is accepted: you can now start a coven.'),
+      ).toBeVisible();
       await expect(page.getByRole('heading', { level: 1, name: 'Create Coven' })).toBeVisible();
       await expect(page.getByRole('button', { name: 'Create Coven' })).toBeVisible();
     });
 
     await test.step('the same link a second time is refused as already used', async () => {
       await page.goto(links[0]);
-      await expect(page.getByText('This invitation has already been accepted.')).toBeVisible();
+      await expect(
+        page.getByText("You've already used this card. You can start a coven from your account."),
+      ).toBeVisible();
       await expect(page.getByRole('button', { name: 'Accept Invitation' })).toHaveCount(0);
     });
 
