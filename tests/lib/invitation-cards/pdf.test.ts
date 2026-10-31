@@ -237,6 +237,21 @@ describe('the card sheets PDF', () => {
     },
   );
 
+  it.each([
+    [9, 1],
+    [10, 2],
+    [19, 3],
+  ])('gives %i cards %i pages of fronts alone when the backs are left out', async (n, pages) => {
+    const bytes = await renderCardSheets(
+      { links: links(n), batch: 'b4444444', expiresAt: EXPIRES, backs: false },
+      assets,
+    );
+    const doc = await PDFDocument.load(bytes);
+    expect(doc.getPageCount()).toBe(pages);
+    expect(doc.getPages().flatMap((_, i) => pictures(doc, i, 'sorrel'))).toHaveLength(0);
+    expect(doc.getPages().flatMap((_, i) => pictures(doc, i, 'salt'))).toHaveLength(n);
+  });
+
   it('fills, and clips to, a centred 8.125 × 10.75 in block 1/8 in from the top and bottom of each page', () => {
     for (let i = 0; i < nine.getPageCount(); i += 1) {
       const page = drawn(nine, i);

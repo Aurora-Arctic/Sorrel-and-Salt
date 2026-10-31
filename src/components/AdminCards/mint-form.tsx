@@ -64,6 +64,7 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
   const [sheets, setSheets] = useState('');
   const [first] = useState(defaultDay);
   const [day, setDay] = useState(first);
+  const [printBacks, setPrintBacks] = useState(true);
   const [downloaded, setDownloaded] = useState(false);
   const [minting, setMinting] = useState(false);
   const [failure, setFailure] = useState<Failure>({});
@@ -106,6 +107,7 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
     return (
       <MintedCards
         batch={minted}
+        printBacks={printBacks}
         guard={discard}
         onDownloaded={() => setDownloaded(true)}
         onDone={close}
@@ -158,6 +160,15 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
           {...dayAria}
         />
       </FieldShell>
+      <label className="admin-cards__option">
+        <input
+          type="checkbox"
+          checked={printBacks}
+          disabled={minting}
+          onChange={(event) => setPrintBacks(event.target.checked)}
+        />
+        Print Backs
+      </label>
       <FormActions
         noun="Cards"
         label="Mint Cards"

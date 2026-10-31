@@ -5,6 +5,8 @@ export interface CardSheetsInput {
   batch: string;
   /** The date printed as "Valid until" on every front. */
   expiresAt: Date;
+  /** Whether each page of fronts is followed by its page of backs; true when left out. */
+  backs?: boolean;
 }
 
 export interface RoundedSquare {
