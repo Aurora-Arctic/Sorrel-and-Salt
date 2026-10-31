@@ -52,7 +52,7 @@ $track-inset: calc(1px + 0.125rem);
 
 .tabbed-page--framed > .page-header:not(:has(.add-action)) {
   &::after {
-    content: ;
+    content: '';
     flex-basis: 100%;
     order: 1;
     height: 0;
