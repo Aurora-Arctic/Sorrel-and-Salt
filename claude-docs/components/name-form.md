@@ -21,8 +21,8 @@ by its own `<label>`, so the label and the heading read the same.
 - **Save Name stays disabled until there is something to save.** The typed
   value, trimmed, must differ from the saved name, so outer whitespace alone
   is no change, since the service trims it away.
-- **Busy while it saves.** The button, a `BusyButton`
-  ([`busy-button.md`](busy-button.md)), reads "Saving Name", carries
+- **Busy while it saves.** The row is the shared `FormActions`
+  ([`field.md`](field.md), "Form actions"); its Save, a `BusyButton`, reads "Saving Name", carries
   `aria-busy` and the `.spinner`, and is disabled from the press to the
   answer: the owner's rule for every Save button.
 - **The answer is the new baseline.** `setName` answers the renamed row, and

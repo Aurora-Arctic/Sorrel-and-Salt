@@ -38,7 +38,9 @@ visitors three ways, all from the server:
   query between them.
 - **The layout also names the coven in the page title.** Each page gives its
   own name ('Grimoire'), and the layout's title template adds the coven's:
-  `Grimoire — Whitethorn Coven — Sorrel & Salt`.
+  `Grimoire | Whitethorn Coven | Sorrel & Salt`. The template comes from
+  `titleTemplate()` in `src/lib/site.ts`, so " | " is the one separator and no
+  page writes the site's name itself (`tests/guards/page-titles.test.ts`).
 
 Tests: `tests/modules/coven/services/workspace-by-slug.test.ts` (against
 Postgres, every fixture user), `tests/lib/request-session.test.ts` (the 404
@@ -77,8 +79,9 @@ Ingredients by M9.6 and Grimoire by M10.11.
 | Delete This Coven | Roles holding `workspace: delete` (owners) | Delete Coven (M6.14's confirmation), under one sentence     |
 
 Contents lists a page only if the caller can open it, so a link is never a
-404: Ingredients (M9.6) for every role, viewers included, and Members for roles holding
-`member: read`. Each button says its own
+404: Ingredients (M9.6) and the Grimoire (M10.11) for every role, viewers included, and Members
+for roles holding `member: read`, in that order. The Grimoire line reads "What the coven makes: its
+spells, and the workings it has recorded." Each button says its own
 refusal in a callout under itself (M12.31). Leave
 and Delete are in sections of their own so the button that ends a seat is never
 beside the one that ends a coven.

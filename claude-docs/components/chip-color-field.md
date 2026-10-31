@@ -13,7 +13,7 @@ Ark was the owner's choice of picker, for its built-in format switch, with `@col
 | `id`                                                            | The hex box's id, which the form's `<label>` names                                            |
 | `label`                                                         | The field's name, which also names the picker's parts: "Dark Theme Colour hue"                |
 | `column`                                                        | `colorDark` or `colorLight`: which ground the veil, the sample and the ratio use              |
-| `placeholder`                                                   | Shown, muted, in the empty hex box: GroupForm passes "Add hex"                                |
+| `placeholder`                                                   | Shown, muted, in the empty hex box: GroupForm passes "Add a hex"                              |
 | `value`, `onChange`, `onBlur`                                   | The hex as typed, whole or not, and its handlers, which react-hook-form's `Controller` passes |
 | `sample`                                                        | The sample chip's text                                                                        |
 | `others`                                                        | Every other group's colour in this theme, `{ name, hex }`, which the warning compares against |

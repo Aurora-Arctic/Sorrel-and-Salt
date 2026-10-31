@@ -1,16 +1,13 @@
 @use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
 
 // The page's own column. `.page-frame` on the page's `main` centres it and caps it at the reading
 // measure (claude-docs/styling.md, "The page frame"): three paragraphs and a button, so the longest
 // comfortable line, not a card.
 .welcome {
-  display: flex;
-  flex-direction: column;
-  gap: space(5);
+  @include stack(5);
 }
 
-.welcome__title,
-.welcome__lede,
 .welcome__gate {
   margin: 0;
 }

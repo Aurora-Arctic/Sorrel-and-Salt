@@ -70,7 +70,7 @@ export async function openEditIngredient(
   return dialog;
 }
 
-/** Opens the edit from the entry's page, where Edit is an icon beside the bin, and its sections, as `openEditIngredient` does from a row. */
+/** Opens the edit from the entry's page, where Edit is an icon beside the three dots, and its sections, as `openEditIngredient` does from a row. */
 export async function openEditIngredientFromMenu(
   page: Page,
   name: string,

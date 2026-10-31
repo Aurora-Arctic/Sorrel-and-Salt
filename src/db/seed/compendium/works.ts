@@ -92,6 +92,3 @@ export const WORKS = {
     accessed: '2026-10-11',
   },
 } as const satisfies Record<string, CitationFields>;
-
-/** A shared work's handle. */
-export type WorkHandle = keyof typeof WORKS;

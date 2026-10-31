@@ -128,11 +128,11 @@ export function PromoteFolkNameQuestion({
         <>
           <dl className="promote-question__swap">
             <div>
-              <dt>New display name</dt>
+              <dt>New Display Name</dt>
               <dd>{folkName?.value}</dd>
             </div>
             <div>
-              <dt>Becomes a folk name</dt>
+              <dt>Becomes a Folk Name</dt>
               <dd>{displayName}</dd>
             </div>
           </dl>
@@ -147,7 +147,6 @@ export function PromoteFolkNameQuestion({
         </>
       }
       tone="solid"
-      keepLabel="Cancel"
       confirmLabel={dirty ? 'Save & Promote' : 'Promote'}
       busyLabel="Promoting"
       busy={step === 'confirm'}

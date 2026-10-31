@@ -63,7 +63,7 @@
 }
 
 [data-state='returning'] .add-icon__check {
-  animation: add-icon-fade-out $arrive-duration ease-in both;
+  animation: fade-out $arrive-duration ease-in both;
 
   @include reduced-motion {
     animation: none;
@@ -83,12 +83,6 @@
 
   to {
     stroke-dashoffset: 0;
-  }
-}
-
-@keyframes add-icon-fade-out {
-  to {
-    opacity: 0;
   }
 }
 

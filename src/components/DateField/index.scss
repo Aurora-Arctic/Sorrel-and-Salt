@@ -43,8 +43,6 @@
   max-inline-size: 100%;
 }
 
-// A popover is in the top layer and fixed to the window; the component sets its place as two custom
-// properties. Only a popover gets this class, so the in-flow fallback keeps its margin.
 // A row under the grid, its one button at the end.
 .date-field__footer {
   display: flex;
@@ -52,6 +50,8 @@
   margin-block-start: space(2);
 }
 
+// A popover is in the top layer and fixed to the window; the component sets its place as two custom
+// properties. Only a popover gets this class, so the in-flow fallback keeps its margin.
 .date-field__panel--floating {
   position: fixed;
   inset: auto;
@@ -76,18 +76,18 @@
   display: flex;
   align-items: center;
   // Clear of the previous and next steps, which sit over the caption's end: the panel grows to hold both.
-  block-size: 2.5rem;
-  padding-inline-end: 4.5rem;
+  block-size: $day-picker-caption-height;
+  padding-inline-end: $day-picker-nav-room;
 }
 
-// The two selects are the month and year pickers; the library's own text label for them is spoken twice, so it stays hidden.
+// The month and year pickers, side by side.
 .day-picker__dropdowns {
   display: flex;
   gap: space(2);
 }
 
-// The month and year pickers are the app's select-only boxes, shorter than a field to sit in the caption; the library's own text label for them is not drawn.
 // The month and year pickers are the app's select-only boxes in their compact form (`.field--compact`, as high as a step), as wide as their longest option and no wider.
+// `CaptionDropdown` draws them in place of the library's own, so its text label is never drawn.
 .day-picker__dropdown-root {
   display: inline-grid;
 
@@ -101,7 +101,7 @@
   }
 
   .combobox__indicator {
-    inline-size: 1.25rem;
+    inline-size: $day-picker-indicator;
   }
 
   .combobox__option {
@@ -111,7 +111,7 @@
 
 .day-picker__dropdown-sizer {
   display: inline-grid;
-  padding-inline: space(2) 1.75rem;
+  padding-inline: space(2) $day-picker-sizer-end;
   font-size: type-size('caption');
   visibility: hidden;
   pointer-events: none;
@@ -129,14 +129,14 @@
   display: flex;
   align-items: center;
   gap: space(1);
-  block-size: 2.5rem;
+  block-size: $day-picker-caption-height;
 }
 
 .day-picker__step {
   display: inline-grid;
   place-items: center;
-  inline-size: 2rem;
-  block-size: 2rem;
+  inline-size: $day-picker-step;
+  block-size: $day-picker-step;
   padding: 0;
   border: 0;
   border-radius: radius('control');
@@ -153,7 +153,7 @@
   }
 
   &[aria-disabled='true'] {
-    opacity: 0.4;
+    opacity: $day-picker-step-disabled-opacity;
     cursor: not-allowed;
   }
 }
@@ -161,8 +161,8 @@
 // The Combobox's stroked chevron, turned to point where the step or select does.
 .day-picker__chevron {
   display: inline-grid;
-  inline-size: 1rem;
-  block-size: 1rem;
+  inline-size: $glyph-size;
+  block-size: $glyph-size;
 
   svg {
     inline-size: 100%;
@@ -201,8 +201,8 @@
 }
 
 .day-picker__button {
-  inline-size: 2.25rem;
-  block-size: 2.25rem;
+  inline-size: $day-picker-day;
+  block-size: $day-picker-day;
   padding: 0;
   border: 1px solid transparent;
   border-radius: radius('control');
@@ -241,5 +241,5 @@
 
 .day-picker__day--disabled {
   color: $text-muted;
-  opacity: 0.5;
+  opacity: $day-picker-day-disabled-opacity;
 }

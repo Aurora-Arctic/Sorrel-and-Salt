@@ -13,8 +13,9 @@ import {
   stepsOfSpells,
 } from '@/modules/grimoire';
 import type { SpellKey, SpellVisibility } from '@/modules/grimoire';
-import { A, B, C, D, asUser } from '../../../support/as-user';
+import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
+import { insertCupboardEntry } from '../../../support/db/insert-cupboard-entry';
 import { insertIngredient, insertVariant } from '../../../support/db/insert-ingredient';
 import { insertSpell } from '../../../support/db/insert-spell';
 import { makeIngredient, makeSpell, makeVariant } from '../../../support/fixtures';
@@ -285,6 +286,34 @@ describe('stepsOfSpells', () => {
         variant: { id: (before as { variantId: string }[])[0].variantId, deleted: true },
       },
     ]);
+  });
+
+  it('names a compendium entry by the label of the reading coven’s cupboard, and another coven by the compendium’s name', async () => {
+    const entry = await insertIngredient(
+      sql,
+      makeIngredient({
+        workspaceId: null,
+        name: 'Compendium Testwort',
+        nomenclature: 'none',
+        variants: [makeVariant()],
+      }),
+      E.id,
+    );
+    await insertCupboardEntry(
+      sql,
+      { workspaceId: WORKSPACE_W_ID, ingredientId: entry, label: 'Hedge Testwort' },
+      A.id,
+    );
+    await insertCupboardEntry(sql, { workspaceId: WORKSPACE_X_ID, ingredientId: entry }, D.id);
+    const ours = await seed(B, 'workspace', { steps: [{ ingredientId: entry }] });
+    const theirs = await seed(D, 'workspace', { steps: [{ ingredientId: entry }] }, WORKSPACE_X_ID);
+
+    const [steps] = await stepsOfSpells(asUser(C), [key(ours)]);
+    const [foreign] = await stepsOfSpells(asUser(D), [key(theirs, WORKSPACE_X_ID)]);
+
+    expect(steps).toMatchObject([{ ingredient: { id: entry, name: 'Hedge Testwort' } }]);
+    // X's cupboard sets no label, so W's never reaches it.
+    expect(foreign).toMatchObject([{ ingredient: { id: entry, name: 'Compendium Testwort' } }]);
   });
 
   it('answers a batch, a refused coven’s slot Forbidden and a hidden spell’s empty', async () => {

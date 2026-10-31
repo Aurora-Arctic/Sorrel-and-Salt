@@ -53,7 +53,7 @@ const CupboardCards = ({ density }: { density?: 'regular' | 'compact' }) => (
             <button type="button" className="btn btn--small">
               Edit
             </button>
-            <button type="button" className="btn btn--small btn--destructive">
+            <button type="button" className="btn btn--destructive btn--small">
               Delete
             </button>
           </>
@@ -78,5 +78,5 @@ const STATES: Record<string, ReactNode> = {
 export const States: Story = {
   args: { state: 'Default' },
   argTypes: { state: { control: 'select', options: Object.keys(STATES), mapping: STATES } },
-  render: ({ state }) => <div key={String(state)}>{state}</div>,
+  render: ({ state }) => <div>{state}</div>,
 };

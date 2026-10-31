@@ -640,8 +640,15 @@ test(
     await expect(page.getByRole('main').getByRole('status')).toBeVisible();
     await expect(page.getByRole('textbox', { name: 'Name' })).toHaveCount(0);
 
-    // Never opening the mail: the invitation is listed on the account page.
-    await page.goto('/account#account-invitations');
+    // Never opening the mail: the bar's account button counts the invitation, and its badge in the
+    // panel is a working link. A click proves the badge is drawn at size: a badge clipped to a pixel
+    // takes no pointer, so the click fails rather than lands.
+    const banner = page.getByRole('banner');
+    await banner
+      .getByRole('button', { name: 'Fixture Account Invitee, 1 coven invitation' })
+      .click();
+    await banner.getByRole('link', { name: '1 Coven Invitation' }).click();
+    await expect(page).toHaveURL(/\/account#account-invitations$/);
     const accept = page
       .getByRole('table', { name: 'Your Invitations' })
       .getByRole('button', { name: `Accept the invitation to ${COVEN_NAME}` });

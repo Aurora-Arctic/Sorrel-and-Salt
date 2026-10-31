@@ -81,7 +81,8 @@ export async function countGrimoireCategories(
 }
 
 /**
- * The counts behind the Moon Phase, Day of Week, Visibility and Coven Member facets, which are also the facets' choices
+ * The counts behind the Moon Phases, Days of the Week, Visibility and Coven Members facets, which
+ * are also the facets' choices
  * (claude-docs/db/grimoire.md, "Grimoire read details").
  *
  * @throws {Forbidden} the caller is not a member of this coven.

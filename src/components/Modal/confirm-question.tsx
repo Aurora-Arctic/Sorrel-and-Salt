@@ -8,7 +8,7 @@ import { DiscardQuestion } from './discard';
 import type { ConfirmQuestionProps } from './types';
 
 /**
- * A form's yes-or-no question over itself: Delete (destructive, busy until answered) and Keep It,
+ * A form's yes-or-no question over itself: Delete (destructive, busy until answered) and Cancel,
  * the safe answer the focus lands on. With the discard guard it yields to the unsaved changes'
  * question; a rejected `onConfirm` hands the server's first sentence to `onRefused` (DESIGN.md §7).
  */
@@ -20,7 +20,7 @@ export function ConfirmQuestion({
   confirmLabel = 'Delete',
   busyLabel = 'Deleting',
   tone = 'destructive',
-  keepLabel = 'Keep It',
+  keepLabel = 'Cancel',
   busy,
   onConfirm,
   also,

@@ -9,6 +9,7 @@ import type {
 } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
 import type { SpellBuilderProps } from '@/components/SpellBuilder/types';
+import { VISIBILITY_LABELS } from '@/components/GrimoireList/params';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { offerCategories } from '../../support/msw/ingredient-lookups';
 
@@ -318,7 +319,7 @@ describe('SpellBuilder', () => {
     );
     // Only the save status speaks; no notice repeats the field’s error.
     expect(
-      screen.queryAllByRole('alert').filter((a) => !/Couldn.t save/.test(a.textContent ?? '')),
+      screen.queryAllByRole('alert').filter((a) => !/Could not save/.test(a.textContent ?? '')),
     ).toEqual([]);
     expect(save()).toBeEnabled();
   });
@@ -481,10 +482,8 @@ describe('SpellBuilder', () => {
           ).toBeVisible();
         }
       }
-      // The switch folds with the note.
-      expect(
-        within(fieldsOf('Notes')).getByRole('switch', { name: 'Share With the Coven' }),
-      ).toBeVisible();
+      // The visibility switch is the footer's, not a field Notes folds.
+      expect(within(fieldsOf('Notes')).queryByRole('switch')).toBeNull();
     });
 
     it('opens a saved spell with every section shut, each line naming what it holds', () => {
@@ -496,8 +495,8 @@ describe('SpellBuilder', () => {
       expect(section('Purpose')).toHaveAccessibleDescription('Fixture Working · To see clearly');
       expect(section('Jar')).toHaveAccessibleDescription('4 oz · Blue');
       expect(when()).toHaveAccessibleDescription('Waxing Moon · Monday');
-      // Notes holds no note, so its line is the visibility switch's alone.
-      expect(section('Notes')).toHaveAccessibleDescription('Private');
+      // Notes holds no note, and the visibility is the footer's, so its line has nothing to read.
+      expect(section('Notes')).toHaveAccessibleDescription('Nothing yet');
     });
 
     it('shuts every section with Close All, then opens every one with Open All', () => {
@@ -568,7 +567,7 @@ describe('SpellBuilder', () => {
       // Why the tab could have closed: nothing typed, so no question yet.
       expect(tabCloseAsks()).toBe(false);
 
-      fireEvent.click(screen.getByRole('switch', { name: 'Share With the Coven' }));
+      fireEvent.click(screen.getByRole('switch', { name: VISIBILITY_LABELS.workspace }));
 
       expect(tabCloseAsks()).toBe(true);
     });

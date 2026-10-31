@@ -4,10 +4,6 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import CardMore from '@/components/CovenCards/card-more';
 import type { CardMoreProps } from '@/components/CovenCards/types';
-import type {
-  DeleteOwnIngredientMutation,
-  DeleteOwnIngredientMutationVariables,
-} from '@/gql/graphql';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { press } from '../../support/interact';
@@ -16,26 +12,20 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// A coven card's More: Delete on the coven's own entry, Make It Ours and Remove on a compendium entry, a lone Delete or Remove as its own bin and two choices as a menu.
-// Delete, Make It Ours and Remove ask in place (option A); a write that takes the card away leaves the focus on the page's heading, a refusal on More (claude-docs/components/coven-cards.md).
+// A coven card's More: Make It Ours and Remove on a compendium entry the cupboard holds, as a menu.
+// Delete and a lone Remove are never on the card, since the entry's edit dialog holds them; a
+// refusal gives More the focus back (claude-docs/components/coven-cards.md).
 
 const WORKSPACE_ID = '00000000-0000-4000-8000-000000000001';
 const ID = '00000000-0000-4000-8000-000000000002';
 const LIST = '/coven/fixture-coven/ingredients' as Route;
 
-const OWN: CardMoreProps = {
-  id: ID,
-  label: 'Testwort',
-  name: 'Testwort',
-  workspaceId: WORKSPACE_ID,
-  covenSlug: 'fixture-coven',
-  mayDelete: true,
-};
 const HELD: CardMoreProps = {
-  ...OWN,
+  id: ID,
   label: 'House Salt',
   name: 'House Salt',
-  mayDelete: false,
+  workspaceId: WORKSPACE_ID,
+  covenSlug: 'fixture-coven',
   mayMakeOurs: true,
   mayRemove: true,
 };
@@ -68,38 +58,11 @@ function choose(name: string, item: string): void {
   fireEvent.click(within(screen.getByRole('menu')).getByRole('menuitem', { name: item }));
 }
 
-function acceptDelete() {
-  const calls: DeleteOwnIngredientMutationVariables[] = [];
-  mockGraphQLMutation<DeleteOwnIngredientMutation, DeleteOwnIngredientMutationVariables>(
-    'DeleteOwnIngredient',
-    (variables) => {
-      calls.push(variables);
-      return { deleteIngredient: String(variables.id) };
-    },
-  );
-  return calls;
-}
-
 describe('CardMore', () => {
   beforeEach(() => {
     router.replace.mockClear();
     router.push.mockClear();
     router.refresh.mockClear();
-  });
-
-  it("draws a lone Delete on the coven's own entry as a button of its own, and no menu", async () => {
-    renderOnPage(OWN);
-    expect(screen.queryByRole('button', { name: /^More for/ })).not.toBeInTheDocument();
-    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
-    press(screen.getByRole('button', { name: 'Delete Ingredient Testwort' }));
-    expect(await screen.findByRole('dialog', { name: 'Delete Ingredient' })).toBeInTheDocument();
-  });
-
-  it('draws a lone Remove as a button of its own, which asks in a dialog', async () => {
-    renderOnPage({ ...HELD, mayMakeOurs: false });
-    expect(screen.queryByRole('button', { name: /^More for/ })).not.toBeInTheDocument();
-    press(screen.getByRole('button', { name: 'Remove House Salt' }));
-    expect(await screen.findByRole('dialog')).toBeInTheDocument();
   });
 
   it('offers Make It Ours and Remove on a compendium entry the cupboard holds', () => {
@@ -113,74 +76,33 @@ describe('CardMore', () => {
     expect(within(menu).queryByRole('group', { name: 'Compendium' })).not.toBeInTheDocument();
   });
 
+  it('draws no bin for a lone Remove, which the Annotate dialog holds', () => {
+    renderOnPage({ ...HELD, mayMakeOurs: false });
+    // Why it could show: the role may remove the entry.
+    expect(screen.queryByRole('button', { name: 'Remove House Salt' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+  });
+
   it('keeps a lone Make It Ours in the menu', () => {
     renderOnPage({ ...HELD, mayRemove: false });
     expect(choices('House Salt')).toEqual(['Make It Ours']);
   });
 
   it('draws nothing where the role may do nothing more', () => {
-    renderOnPage({ ...OWN, mayDelete: false });
+    renderOnPage({ ...HELD, mayMakeOurs: false, mayRemove: false });
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
 
-  it("deletes the entry, reads the list again, and gives the page's heading the focus once the card is gone", async () => {
-    const calls = acceptDelete();
-    const view = renderOnPage(OWN);
-
-    press(screen.getByRole('button', { name: 'Delete Ingredient Testwort' }));
-    press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }));
-
-    await waitFor(() => expect(router.refresh).toHaveBeenCalled());
-    expect(calls).toEqual([{ id: ID, workspaceId: WORKSPACE_ID }]);
-    expect(router.replace).not.toHaveBeenCalled();
-
-    // The removal is said in the page's status region, which outlives the card.
-    expect(screen.getByRole('status')).toHaveTextContent('Testwort deleted');
-
-    // The list arrives again without the card.
-    view.rerender(onPage());
-    await waitFor(() =>
-      expect(screen.getByRole('heading', { level: 1, name: 'Ingredients' })).toHaveFocus(),
-    );
-  });
-
-  it('leaves for the given address after a delete, replacing the history entry and reading nothing again', async () => {
-    const calls = acceptDelete();
-    renderOnPage({ ...OWN, leaveHref: LIST });
-
-    press(screen.getByRole('button', { name: 'Delete Ingredient Testwort' }));
-    press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }));
-
-    await waitFor(() => expect(router.replace).toHaveBeenCalledWith(LIST));
-    expect(calls).toEqual([{ id: ID, workspaceId: WORKSPACE_ID }]);
-    expect(router.refresh).not.toHaveBeenCalled();
-  });
-
-  it('leaves for the given address after a remove', async () => {
+  it('leaves for the given address after a remove, replacing the history entry and reading nothing again', async () => {
     mockGraphQLMutation('RemoveCupboardEntry', () => ({ removeCupboardEntry: ID }));
-    renderOnPage({ ...HELD, mayMakeOurs: false, leaveHref: LIST });
+    renderOnPage({ ...HELD, leaveHref: LIST });
 
-    press(screen.getByRole('button', { name: 'Remove House Salt' }));
+    choose('House Salt', 'Remove');
     press(within(await screen.findByRole('dialog')).getByRole('button', { name: /^Remove/ }));
 
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith(LIST));
     expect(router.refresh).not.toHaveBeenCalled();
-  });
-
-  it("shows the service's refusal of a lone Delete and gives its bin the focus back", async () => {
-    mockGraphQLError('DeleteOwnIngredient', { code: 'FORBIDDEN', message: 'Not allowed' });
-    renderOnPage(OWN);
-
-    const bin = screen.getByRole('button', { name: 'Delete Ingredient Testwort' });
-    press(bin);
-    press(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Delete' }));
-
-    expect(await screen.findByRole('alert')).toBeInTheDocument();
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    expect(bin).toHaveFocus();
-    expect(router.refresh).not.toHaveBeenCalled();
-    expect(screen.getByRole('status')).toBeEmptyDOMElement();
   });
 
   it("shows the service's refusal of a Remove and gives More the focus back", async () => {

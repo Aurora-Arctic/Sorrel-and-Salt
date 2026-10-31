@@ -15,7 +15,7 @@ export function FoldAll({ anyOpen, onToggle, disabled }: FoldAllProps): ReactEle
   const button = (
     <button
       type="button"
-      className="btn btn--small btn--quiet"
+      className="btn btn--quiet btn--small"
       disabled={disabled}
       onClick={onToggle}
     >

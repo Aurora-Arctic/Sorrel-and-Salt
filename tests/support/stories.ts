@@ -29,5 +29,3 @@ export function parseStories(design: string): Story[] {
 export const V1_STORIES: readonly Story[] = parseStories(
   readFileSync(resolve(process.cwd(), 'claude-docs/DESIGN.md'), 'utf8'),
 );
-
-export const V1_STORY_IDS: readonly number[] = V1_STORIES.map((story) => story.id);

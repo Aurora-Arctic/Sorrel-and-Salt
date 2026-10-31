@@ -349,16 +349,35 @@ proved. Stories 58 and 59; the plan is
 component [`components/email-form.md`](../components/email-form.md), and
 the tests [`tests.md`](tests.md).
 
+- **The API refuses an unverified account too.** The session built from the
+  request headers carries `emailUnverified` while the address is unverified,
+  and `assertMembership` refuses such a session with an explaining
+  `Forbidden`, and `membershipsOf` answers an empty list, so no coven data or name is reachable through `/api/graphql` by
+  skipping the page redirect. `me`, `setEmail` and sign-out take no
+  membership and still work. `assertSiteAdmin` and `assertCurator` refuse it too, so an unverified admin or curator reaches no
+  curation or people operation either (the `usersById` loader batch is left as it is), and the GraphQL `admin` and `curator` scopes are false for it, so `selfOrAdmin` falls back to `self`. The list is empty rather than refused because the shell draws the email page and public pages from it.
 - **One rule: an address becomes the account's at verification, never
   before.** `setEmail(session, email, sender, next?)` in
   `src/modules/identity/services/email.ts` writes nothing to `users.email`.
   It normalises and validates the address (`ValidationError` on `email`),
-  refuses one a live _verified_ account holds — a provisional holder lapses
-  first — stamps the row as mailed (`recordVerificationSent`, which is also
+  refuses a change from a session created more than
+  `EMAIL_CHANGE_WINDOW_SECONDS` ago (a day, as Better Auth's `freshAge` is for
+  unlinking a provider) with a `ValidationError` on `email` that says to
+  sign in again, which the form shows under the field; resending the row's own
+  link asks no such thing. It refuses one a live _verified_ account holds — a
+  provisional holder lapses first — tells the address being left that a
+  change was asked for (`sender.notifyChangeRequested`: when, and the new
+  address's domain only, with no link in it), stamps the row as mailed (`recordVerificationSent`, which is also
   what restarts a provisional caller's window), and asks the sender to mail
   the new address a change link. The row's own, still-unverified address is
   mailed again instead; verified, there is nothing to do. Either way `next`
   is handed to the sender as given, for the link's landing.
+- **The address being left is told twice.** `src/emails/email-change-notice.tsx`
+  goes to the old address when the change is asked for and again when
+  `afterEmailVerification` runs on a change link (`noticeCompletedChange` in
+  `src/lib/auth.ts`, which reads the old address from the link's token). The
+  mail carries no action: a link in it would be one a thief could press.
+  Nothing is sent to a `.invalid` placeholder.
 - **One verification mail a minute per account.** `users.verification_sent_at`
   is set by every mail sent for the row's own account, and `setEmail`
   refuses the next within `RESEND_COOLDOWN_SECONDS` with a `VALIDATION`

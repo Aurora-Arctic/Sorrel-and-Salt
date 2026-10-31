@@ -4,7 +4,7 @@ import { useMultipleSelection, useSelect, type UseSelectStateChangeOptions } fro
 import { type MouseEvent, type ReactElement, useState } from 'react';
 import { ComboboxEntry } from './entry';
 import { keepEscapeInList } from './escape';
-import { ChevronIcon, ClearIcon } from './icons';
+import { ChevronIcon, CrossIcon } from '../IconTip/icons';
 import { EmptyMessage, Popup } from './popup';
 import { useListPosition } from './position';
 import { chipsRoom } from './room';
@@ -201,7 +201,7 @@ export function ComboboxMultiSelect({
               focusBox();
             }}
           >
-            <ClearIcon />
+            <CrossIcon />
           </button>
           <span
             className={empty ? 'combobox__separator is-empty' : 'combobox__separator'}

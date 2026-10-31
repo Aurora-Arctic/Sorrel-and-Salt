@@ -31,6 +31,7 @@ import {
   stockEditor,
   withSql,
 } from './coven-ingredients';
+import { editIngredientControl, editIngredientDialog } from './ingredient-dialogs';
 
 // Stories 20–27: the coven's ingredient list at /coven/[slug]/ingredients,
 // and everything a member does from it. Every story here walks it. Each story writes its own coven, so one story's rows
@@ -708,14 +709,12 @@ test(
     await expect(cardsIn(list)).toHaveCount(2);
     await markDocument(page);
 
-    // A coven's own entry's card carries a bin, named for the entry
-    // ("Delete Ingredient Testwort, Fixtura testalis"), which asks in a dialog
-    // named for the delete it is: Delete Ingredient, the `deleteIngredient` mutation.
-    const bin = rowOf(list, 'Testwort').getByRole('button', {
-      name: 'Delete Ingredient Testwort, Fixtura testalis',
-      exact: true,
-    });
-    const question = page.getByRole('dialog', { name: 'Delete Ingredient', exact: true });
+    // A coven's own entry's Delete is in its Edit Ingredient dialog, not on its card; the
+    // dialog's Delete Ingredient asks over the form, the `deleteIngredient` mutation.
+    const edit = editIngredientControl(rowOf(list, 'Testwort'), 'Testwort', 'Fixtura testalis');
+    const dialog = editIngredientDialog(page, 'Testwort', 'Fixtura testalis');
+    const bin = dialog.getByRole('button', { name: 'Delete Ingredient', exact: true });
+    const question = dialog.getByRole('group', { name: /^Delete/ });
     const deletedAt = async (id: string) => {
       const [row] = await withSql(
         (sql) => sql<{ deleted_at: Date | null }[]>`
@@ -724,7 +723,11 @@ test(
       return row.deleted_at;
     };
 
-    await test.step('the Delete asks first, naming the item, and Cancel changes nothing', async () => {
+    await test.step('the card carries no Delete, and the Edit Ingredient dialog asks first, naming the item, and Cancel changes nothing', async () => {
+      // The precondition: the card offers Edit, whose dialog holds the Delete.
+      await expect(edit).toBeVisible();
+      await expect(rowOf(list, 'Testwort').getByRole('button', { name: /^Delete/ })).toHaveCount(0);
+      await edit.click();
       await bin.click();
       await expect(question).toContainText('Testwort');
       await assertNoAccessibilityViolations(page);
@@ -736,15 +739,15 @@ test(
       expect(await deletedAt(testwort.ingredientId)).toBeNull();
     });
 
-    await test.step('confirmed, the card goes without a reload, the focus goes to the heading, and the removal is announced', async () => {
+    await test.step('confirmed, the dialog and the card go without a reload, the focus goes to the heading, and the removal is announced', async () => {
       await bin.click();
       await question.getByRole('button', { name: 'Delete', exact: true }).click();
 
-      await expect(question).toHaveCount(0);
+      await expect(dialog).toHaveCount(0);
       await expect(rowOf(list, 'Testwort')).toHaveCount(0);
       await expect(rowOf(list, 'Fixture Keptwort')).toHaveCount(1);
       expect(await stillSameDocument(page)).toBe(true);
-      // The bin went with its card, so the focus goes to the page's heading.
+      // The dialog and its card went, so the focus goes to the page's heading.
       await expect(page.getByRole('heading', { level: 1, name: 'Ingredients' })).toBeFocused();
       // The page's one status region carries the item the delete removed.
       await expect(page.getByRole('status').filter({ hasText: 'Testwort' })).toHaveCount(1);

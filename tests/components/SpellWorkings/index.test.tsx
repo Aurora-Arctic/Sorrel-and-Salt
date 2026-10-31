@@ -6,6 +6,7 @@ import EditWorkingAction from '@/components/SpellWorkings/edit-working';
 import type { SpellWorkingsProps, WorkingView } from '@/components/SpellWorkings/types';
 import type { DeleteWorkingMutation, DeleteWorkingMutationVariables } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
+import { answer } from '../../support/discard-guard';
 import { press } from '../../support/interact';
 import { mockGraphQLMutation } from '../../support/msw/graphql';
 
@@ -31,14 +32,13 @@ const working = (over: Partial<WorkingView> & Pick<WorkingView, 'id'>): WorkingV
 
 function renderSection(
   workings: WorkingView[],
-  complete?: (id: string) => React.ReactNode,
+  complete?: SpellWorkingsProps['completeAction'],
   edit?: SpellWorkingsProps['editAction'],
   headingAction?: React.ReactNode,
 ) {
   return render(
     <QueryClientProvider client={makeQueryClient()}>
       <SpellWorkings
-        workspaceId={WORKSPACE_ID}
         workings={workings}
         completeAction={complete}
         editAction={edit}
@@ -104,9 +104,10 @@ describe('SpellWorkings', () => {
         deductions: [{ id: 'd1', name: 'Testwort (Dried Leaf)', quantity: '2', unit: 'g' }],
       }),
     ]);
-    const lines = within(within(rows()[0]!).getByRole('list', { name: 'Deductions' })).getAllByRole(
-      'listitem',
-    );
+    // A visible label over the lines names the list, so the screen and a screen reader say the same.
+    const list = within(rows()[0]!).getByRole('list', { name: 'Taken From the Jars' });
+    expect(within(rows()[0]!).getByText('Taken From the Jars')).toBeVisible();
+    const lines = within(list).getAllByRole('listitem');
     expect(lines).toHaveLength(1);
     expect(lines[0]).toHaveTextContent('Testwort (Dried Leaf)');
     expect(lines[0]).toHaveTextContent('2');
@@ -115,20 +116,20 @@ describe('SpellWorkings', () => {
     expect(lines[0]).toHaveTextContent(/^Testwort/);
   });
 
-  it('says on a draft row what completing it would skip, and on no complete row', () => {
+  it('warns on a draft row, in a warning notice, what completing it would skip, and on no complete row', () => {
     renderSection([
       working({
         id: 'w1',
         status: 'draft',
-        warnings: ['Completing does not affect inventory for 2 items'],
+        warnings: ['Completing takes nothing from the jars for 2 ingredients.'],
       }),
-      working({ id: 'w2', warnings: ['Completing does not affect inventory for 1 item'] }),
+      working({ id: 'w2', warnings: ['Completing takes nothing from the jars for 1 ingredient.'] }),
     ]);
+    expect(within(rows()[0]!).getByRole('status')).toHaveTextContent(
+      'Completing takes nothing from the jars for 2 ingredients.',
+    );
     expect(
-      within(rows()[0]!).getByText('Completing does not affect inventory for 2 items'),
-    ).toBeVisible();
-    expect(
-      screen.queryByText(/Completing does not affect inventory for 1 item/),
+      screen.queryByText(/Completing takes nothing from the jars for 1 ingredient\./),
     ).not.toBeInTheDocument();
   });
 
@@ -154,6 +155,40 @@ describe('SpellWorkings', () => {
     expect(within(rows()[0]!).getByRole('button', { name: 'Complete w1' })).toBeInTheDocument();
   });
 
+  it('hands Complete the day it names, so two drafts have two different Complete buttons', () => {
+    const own = (id: string, workedOn: string): WorkingView['editable'] => ({
+      id,
+      workedOn,
+      note: null,
+      visibility: 'workspace',
+      status: 'draft',
+      participants: [],
+    });
+    renderSection(
+      [
+        working({
+          id: 'w1',
+          status: 'draft',
+          workedOn: '2026-03-04',
+          editable: own('w1', '2026-03-04'),
+        }),
+        working({
+          id: 'w2',
+          status: 'draft',
+          workedOn: '2026-03-01',
+          editable: own('w2', '2026-03-01'),
+        }),
+      ],
+      (_id, _workedOn, name) => <button type="button">Complete Working {name}</button>,
+    );
+    expect(
+      within(rows()[0]!).getByRole('button', { name: 'Complete Working 4 March 2026' }),
+    ).toBeInTheDocument();
+    expect(
+      within(rows()[1]!).getByRole('button', { name: 'Complete Working 1 March 2026' }),
+    ).toBeInTheDocument();
+  });
+
   it("takes the Edit pencil's ink from the text only on a row that shows Complete", () => {
     const editable = (id: string, status: 'draft' | 'complete'): WorkingView['editable'] => ({
       id,
@@ -176,7 +211,6 @@ describe('SpellWorkings', () => {
           workspaceId={WORKSPACE_ID}
           spellId="s1"
           spellVisibility="workspace"
-          members={[]}
           steps={[]}
           working={working}
         />
@@ -189,25 +223,10 @@ describe('SpellWorkings', () => {
     expect(edit(rows()[1]!)).not.toHaveClass('icon-tip__edit--plain');
   });
 
-  it('draws Delete Working only for a working its viewer may change, and deletes it after a confirmation', async () => {
-    const calls: DeleteWorkingMutationVariables[] = [];
-    mockGraphQLMutation<DeleteWorkingMutation, DeleteWorkingMutationVariables>(
-      'DeleteWorking',
-      (variables) => {
-        calls.push(variables);
-        return { deleteWorking: String(variables.id) };
-      },
-    );
+  it('draws no Delete Working bin on a row, even for a working its viewer may delete, which the Edit dialog deletes', () => {
     renderSection([working({ id: 'w1', canChange: true }), working({ id: 'w2' })]);
-    expect(screen.getAllByRole('button', { name: /^Delete Working/ })).toHaveLength(1);
-    press(screen.getByRole('button', { name: /^Delete Working/ }));
-    const dialog = await screen.findByRole('dialog', { name: 'Delete Working' });
-    // The dialog says the stock the working took is not given back.
-    expect(dialog).toHaveTextContent(/stays taken/);
-    expect(calls).toHaveLength(0);
-    press(within(dialog).getByRole('button', { name: 'Delete' }));
-    await waitFor(() => expect(calls).toEqual([{ id: 'w1', workspaceId: WORKSPACE_ID }]));
-    await waitFor(() => expect(router.refresh).toHaveBeenCalled());
+    expect(rows()).toHaveLength(2);
+    expect(screen.queryByRole('button', { name: /^Delete Working/ })).toBeNull();
   });
 });
 
@@ -236,7 +255,6 @@ describe('Delete Working in the Edit dialog', () => {
           workspaceId={WORKSPACE_ID}
           spellId="s1"
           spellVisibility="workspace"
-          members={[]}
           steps={[]}
           working={working}
         />
@@ -266,7 +284,7 @@ describe('Delete Working in the Edit dialog', () => {
     );
     renderEditable(true);
     press((await bin())!);
-    const question = (await screen.findByRole('button', { name: 'Keep It' })).closest('fieldset')!;
+    const question = (await waitFor(() => answer('Cancel'))).closest('fieldset')!;
     expect(question).toHaveTextContent(/stays taken/);
     expect(calls).toHaveLength(0);
     press(within(question).getByRole('button', { name: 'Delete' }));

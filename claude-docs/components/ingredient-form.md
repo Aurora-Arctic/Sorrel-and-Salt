@@ -45,7 +45,6 @@ foot, as the compendium's does, as the bin icon (`BinButton`, named and tipped "
 | `entry`         | The entry to edit, `{ id, values }`, its values in the form's own shape, `IngredientFormValues`: a compendium entry with a null `workspaceId`, or the coven's own with a coven's id (M8.17). Left out, the form creates.                                                                                                                                                                                                                                                                   |
 | `onSaved`       | Called with the saved row (`id`, `name`, `slug`, and for a coven’s new ingredient `stock`, the jars it holds, each with its form, quantity and unit, which is always empty since M12.27 stopped a save moving jars; a compendium save carries none) once the server has accepted it, and which save was pressed: `'open'`, Save Ingredient, for the page to open the ingredient, or `'another'`, Save & Add Another, after which the form clears (MB.131). An edit's one save is `'open'`. |
 | `onDeleted`     | Called once the `entry` given has been deleted, from the compendium or, with a coven's id, from that coven.                                                                                                                                                                                                                                                                                                                                                                                |
-| `onCancel`      | Given, a quiet Cancel follows the saves (the coven's Add and Edit Ingredient dialogs and the public route's edit leave it out, so their only ways out are Close, Escape and a click outside), and calls it: the page holding the form closes it. With unsaved changes Cancel asks first, and calls it on Discard Changes (["On the compendium"](#on-the-compendium), "Unsaved changes").                                                                                                   |
 | `duplicateHref` | Required. Where the duplicate warning links a near match: the admin's compendium page opens its modal, the shell's add button goes to the coven's ingredient page, `/coven/[slug]/ingredients/[id]` (["The duplicate warning"](#the-duplicate-warning)).                                                                                                                                                                                                                                   |
 | `quickLookOf`   | Given, each near match in the duplicate warning offers its Quick Look, opening the details `{ href, heading }` it names over the form ("Quick Look in the warning", under ["The duplicate warning"](#the-duplicate-warning)). The admin compendium's form passes it; the public search's and the coven's leave it out.                                                                                                                                                                     |
 | `entryHref`     | Where a linked substitute's summary links its ingredient, given `{ slug, isGlobal }`, opened in a new tab; `undefined` for one with no page. Left out, a summary links nothing (MB.115; ["A linked substitute's summary"](#a-linked-substitutes-summary)).                                                                                                                                                                                                                                 |
@@ -89,7 +88,7 @@ a level beneath the Variants `h3`, and each folds as the ingredient's do
 
 **Every field shows a short action while it is empty**, and what it is for,
 where its label does not say it, sits in its hint (the owner's call at MB.115's review; [`field.md`](field.md),
-"Contracts"): "Add a name", "Add formal name", "Add a folk name", "What it is, where it comes from and how it is used" on the Description, "Add an element", "Add a body", "Add a sign", "Add a colour", "Add a deity", "Add a category", "Add a substitute", "Add safety notes", "Search references" and
+"Contracts"): "Add a name", "Add a formal name", "Add a folk name", "What it is, where it comes from and how it is used" on the Description, "Add an element", "Add a body", "Add a sign", "Add a colour", "Add a deity", "Add a category", "Add a substitute", "Add safety notes", "Search references" and
 "Add a locator", a variant's Form "Add a form" and Description "What sets this form apart", and the new reference
 panel's fields "Add a title", "Name the book" and so on, or an example
 where the format matters ("2nd ed."; ["The new reference panel"](#the-new-reference-panel)). `SuggestField`,
@@ -748,7 +747,7 @@ the source, not the row's link to it, so it reaches every entry citing it.
   new or editing (MB.115, the owner's call that every way out of an admin
   form asks while it has changes). Each panel reports its own `isDirty`
   through `PanelChangesContext` (`panel-changes.ts`), and the form's guard
-  reads its `isDirty` or any panel holding edits, so the form's Cancel, the
+  reads its `isDirty` or any panel holding edits, so the
   modal's ×, Escape and the backdrop all ask first. Keep Editing returns to
   the panel with its text as typed; Discard Changes closes everything. A
   closed panel reports nothing.
@@ -780,7 +779,7 @@ as the ingredient's page shows its forms after it (MB.221).
   named for the form, "Edit Oil" and "Remove Oil". The card is
   a fieldset named by the form alone, through `aria-labelledby`.
 - **Remove asks first, and only removes.** It never opens or closes the
-  card: Keep It leaves the variant as it was, open or closed, and Remove
+  card: Cancel leaves the variant as it was, open or closed, and Remove
   takes it, the focus going to the New Form box
   ([Removing a variant or a reference](#removing-a-variant-or-a-reference)).
 - **Edit opens it in place, one at a time.** Edit carries `aria-expanded`
@@ -885,12 +884,12 @@ owner's call (2026-10-16). Both rows take more typing to put back than a
 chip does, and a variant's × had read as closing its card. The question is
 the form's usual card ([`ConfirmQuestion`](modal.md)), drawn by
 `RemoveQuestion` in `remove-question.tsx`: "Remove "Oil"? …" with
-**Remove** and **Keep It**, the focus on Keep It.
+**Remove** and **Cancel**, the focus on Cancel.
 
 - **Nothing is lost until the save.** Remove takes the row from the form,
   as the × did before; the entry changes only when it is saved, and Cancel
   still discards the removal with the rest.
-- **The focus.** Keep It hands it back to the ×. Remove hands it to the
+- **The focus.** Cancel hands it back to the ×. Remove hands it to the
   list's box, New Form or Reference, since the × went with its row. The
   removal is committed at once (`flushSync`) so the card's own hand-back,
   to the first field when the × is gone, comes first and the box's second.
@@ -918,8 +917,8 @@ server, so it has no arrow.
   alone, the owner's call:
   - The question, "Make this folk name the display name?", is set larger, as
     the card's heading. It names no name, since the panel beneath names both.
-  - The swap is a `dl` on a tinted panel. Each term ("New display name",
-    "Becomes a folk name") is a small uppercase overline, with its name
+  - The swap is a `dl` on a tinted panel. Each term ("New Display Name",
+    "Becomes a Folk Name") is a small uppercase overline, with its name
     larger beneath it.
   - On the compendium a muted caption says every coven sees the change at
     once. A coven's question leaves that out.
@@ -1159,7 +1158,7 @@ compendium page opens the match's own modal, `?edit=<slug>` — and the shell's 
 reaches compendium and coven entries alike. It opens in a new tab, so the
 form and what is typed in it stay where they are (the owner's call at
 MB.115's review), and its name ends "(opens in a new tab)" for a screen
-reader, as the substitute summary's Open Entry does. It is a plain anchor,
+reader, as the substitute summary's See Entry does. It is a plain anchor,
 since the caller hands back a plain string, where a typed `<Link>` wants a route
 the build contains. Nothing refuses the create on the server: the warning is the
 form's alone.
@@ -1424,7 +1423,7 @@ parses the sent input with that schema to show it.
 
 ## Autosave
 
-The form saves itself (M13.24), through `useAutosave` ([`autosave.md`](autosave.md)): 3 s after the last change, and at least every 30 s while changes keep coming. `SaveStatus` sits beside the main button and shows Saving, Saved, "Couldn't save." with Retry, or the conflict notice.
+The form saves itself (M13.24), through `useAutosave` ([`autosave.md`](autosave.md)): 3 s after the last change, and at least every 30 s while changes keep coming. `SaveStatus` sits beside the main button and shows Saving, Saved, "Could not save." with Retry, or the conflict notice.
 
 - **A new ingredient is created at its first save, once it has a name.** The coven gate is the display name; a "none" or "unknown" entry has no formal name, so the name alone opens the gate. The create returns the row's id, slug and revision, the form keeps them, and every later save is an update that sends `expectedRevision`. The host moves the address (`onCreated`): see [`modal.md`](modal.md#add-ingredient) for the coven dialog and the compendium dialog.
 - **A new entry with near-duplicate matches showing is not autosaved** until the matches are dismissed or the name changes (`heldBack` in `values.ts`).
@@ -1434,8 +1433,8 @@ The form saves itself (M13.24), through `useAutosave` ([`autosave.md`](autosave.
 - **The blur flush is held while Save is submitting.** Pressing Save disables the button, which moves focus out of the form; the form stops that focusout reaching the autosave until the submit ends, so the autosave cannot create the row before Save has asked about duplicates.
 - **`persist` reads whether the write created the row.** The write itself records that it created the row, so the id is handed to `onCreated` only by the write that made it, even when a queued write ran first.
 - **Conflict.** Another tab's save makes this one's refused with "This ingredient was changed elsewhere." **Reload Latest** reloads the page (or calls `onReload`); **Keep My Version** sends the form over the newer revision.
-- **Offline.** A failed save retries after 2, 5 and 15 s, then shows "Couldn't save." with Retry. The form stays in the local mirror, which Retry clears when the save lands. A reopened form with a mirror newer than the row shows the recovery banner.
-- **No Discard question.** The form no longer uses the unsaved-changes guard: Close saves first ([`modal.md`](modal.md#unsaved-changes)). Older passages here that describe Discard Changes for this form are out of date. A viewer's form has no autosave and writes nothing.
+- **Offline.** A failed save retries after 2, 5 and 15 s, then shows "Could not save." with Retry. The form stays in the local mirror, which Retry clears when the save lands. A reopened form with a mirror newer than the row shows the recovery banner, `RecoveryNotice` ([`save-status.md`](save-status.md)), with Keep and Discard.
+- **No Discard question, and no Cancel.** The form no longer uses the unsaved-changes guard: Close saves first, so a Cancel beside the saves would only be a second Close, and the form draws none in any dialog ([`modal.md`](modal.md#unsaved-changes)). Older passages here that describe Discard Changes for this form are out of date. A viewer's form has no autosave and writes nothing.
 
 ## After a save
 
@@ -1604,15 +1603,14 @@ site admin's, through the compendium mutations
   whole entry, sends them all, so categories left alone stay
   ([`design-decisions/m5.5-admin-compendium.md`](../design-decisions/m5.5-admin-compendium.md)).
 - **Delete Ingredient** stands apart at the far end of an edit's actions,
-  `.btn--destructive`. Pressed, it asks `Delete
-"Testwort"? It leaves the compendium, but any spell that uses it keeps it.`, or
-  on a coven's own entry `Delete "Testwort"? It leaves the coven, but any spell
-that uses it keeps it.`, with
-  Delete, destructive, and Keep It, quiet, as
+  `.btn--destructive`. Pressed, it asks "Delete **Testwort**? It leaves the compendium, but any spell that
+  uses it keeps it.", or on a coven's own entry "Delete **Testwort**? It leaves
+  the coven, but any spell that uses it keeps it.", the name in bold, with
+  Delete, destructive, and Cancel, quiet, as
   [`GroupedValueForm`](grouped-value-form.md) asks: on a card over the form,
   centred in the part in view however far the long form is scrolled, the
-  form dimmed and held until it is answered, the focus on Keep It, its safe
-  answer, and back on Delete Ingredient once Keep It puts it away (MB.115,
+  form dimmed and held until it is answered, the focus on Cancel, its safe
+  answer, and back on Delete Ingredient once Cancel puts it away (MB.115,
   the owner's call; [`modal.md`](modal.md), "Asking over the form"). Delete sends
   `deleteCompendiumIngredient`, or for a coven `deleteIngredient(id,
 workspaceId)`, busy until the answer, and calls
@@ -1628,13 +1626,13 @@ workspaceId)`, busy until the answer, and calls
   ([`db/ingredient-slugs.md`](../db/ingredient-slugs.md), "Ingredient
   slugs"). That issue is no field's, so the form asks over itself, as the
   delete does: the server's message, then **End Redirect & Save**, which sends
-  the same input again with `endRedirect: true`, and **Keep It**, which
+  the same input again with `endRedirect: true`, and **Cancel**, which
   drops the question and sends nothing, the entry left as typed.
 - **Unsaved changes** (MB.115, the owner's call). The form hands
   `formState.isDirty`, the flag that turns the saves on, to the shared guard
   ([`modal.md`](modal.md#unsaved-changes)). Its question comes before any
-  other and takes its place until answered; Discard Changes closes as Cancel
-  did. Every question's buttons stand on the card's `.modal__actions`
+  other and takes its place until answered; Discard Changes closes the
+  dialog. Every question's buttons stand on the card's `.modal__actions`
   row, the form's own `.form__actions` staying beneath the card. The form's
   row is the shared [`FormActions`](field.md), its two saves passed to it,
   and its Delete and End Redirect & Save questions the shared
@@ -1656,8 +1654,8 @@ picker offers — so opening the modal sends no browser read
 `RouteModal` ([`modal.md`](modal.md), "RouteModal"), in the default width, that closes back to the
 list, with a router of its own for what RouteModal does not do: Save
 Ingredient replaces the address with the saved entry's `?edit=`, at the
-slug its name now spells; Save & Add Another stays on `?new`; a delete,
-Cancel and the modal's close replace it with the list's, filter and cursor
+slug its name now spells; Save & Add Another stays on `?new`; a delete
+and the modal's close replace it with the list's, filter and cursor
 kept; and each refreshes, so the list re-reads. A near match opens its own
 modal over the same list, in a new tab. Why a modal, and `?edit=` after a save:
 [`design-decisions/m5.5-admin-compendium.md`](../design-decisions/m5.5-admin-compendium.md).
@@ -1849,11 +1847,11 @@ length, and no other text field has one either.
 
 ## Stories
 
-The promote control has its own stories: `PromoteControl`, `PromoteQuestion` (clean), `PromoteQuestionWithChanges`, phone dark and light, and `PromoteQuestionCoven`.
+The promote control has its own stories: `PromoteControl`, `PromoteQuestion` (clean), `PromoteQuestionWithChanges` and `PromoteQuestionCoven`.
 
 [`index.stories.tsx`](../../src/components/IngredientForm/index.stories.tsx),
 titled "Ingredients / Ingredient Form":
-`Blank`, unframed, with every lookup answered and the save faked (MB.131),
+`States`, state 'Coven', unframed, with every lookup answered and the save faked (MB.131),
 under a "What to try" panel saying what to type for each state: the
 suggestions, free text, the duplicate warning, the missing name, the
 classification coupling, a pick of a form or a deity, moving an entry, text left in a box, a
@@ -1861,14 +1859,12 @@ repeated entry, a long entry,
 the two server refusals, a save, and the references: picking sources,
 a locator, the panel per kind and its refusals. The workshop has no API, and on staging
 its pages may not fetch at all ([`workshop.md`](../workshop.md), "On
-staging"), so the story answers the form itself: while it is mounted it
-stands in for `window.fetch`, which the client wrapper looks up on every
-request, and answers a request to `/api/graphql` naming one of the eight
+staging"), so the workshop's fake API (`.storybook/mock-api.ts`, set for the whole
+file by its `beforeEach`) answers a request to `/api/graphql` naming one of the
 lookups, the categories, or either save, from invented rows filtered by what was typed. Each
 answer is checked against its query's generated type with `satisfies`, so a
 fixture that drifts from the schema stops compiling. A name holding "cat"
-shows the duplicate warning. `DuplicatesNotice`, with a phone dark and a phone
-light, draws the warning and the held state in one column from fixed state. A save is answered after two seconds
+shows the duplicate warning. `DuplicatesNotice` draws the warning and the held state in one column from fixed state. A save is answered after two seconds
 (`SAVE_DELAY_MS`), so Save can be watched busy and shut with its spinner: a
 name holding "taken" is refused as a `VALIDATION` error on the name, one
 holding "refuse" as a `FORBIDDEN` above the fields, one holding "retired"
@@ -1883,18 +1879,18 @@ same pause, and refused by its title as an ingredient is by its name. The worksh
 the story says beneath the buttons where its page would go,
 "/ingredients/<id>", in a `.story-note` from `.storybook/story-frame.scss`;
 Save & Add Another clears it.
-`Compendium` and `CompendiumEntry` (M5.5) are the form on the compendium,
-new and given an entry to edit, on the same stand-in, which also answers the
+States 'Compendium' and 'Compendium Entry' (M5.5) are the form on the compendium,
+new and given an entry to edit, on the same fake API, which also answers the
 compendium's substitute search and its three writes: a name holding
 "redirect" meets MB.82's question until it is sent again confirmed.
-The original `fetch` is put back on unmount. The TanStack Query client is the
-workshop's global provider's: a second provider would split the cache. This replaces M5.10's
-`DuplicateWarning` story, which filled that cache ahead for one exact name.
-`CompendiumEntry` holds two linked substitutes, Fixturewort and Testwort in
+The TanStack Query client is the
+workshop's global provider's: a second provider would split the cache.
+'Compendium Entry' holds two linked substitutes, Fixturewort and Testwort in
 its oil, and a typed one, Hedge Mockroot, so both kinds of chip show; the
-stand-in answers `IngredientSummary` for each invented ingredient, and
+fake API answers `IngredientSummary` for each invented ingredient, and
 `CompendiumEntrySubstituteSummary` is the same entry with Fixturewort's
-summary open (MB.115). It also holds three sources, so its rows show each short form —
+summary open (MB.115), and `LoadingSubstituteSummary` a linked substitute's summary
+pressed open with its read left unanswered, so its loading line shows. It also holds three sources, so its rows show each short form —
 a book with a locator, an article by two authors with one, and an
 authorless web page — and two forms,
 Dried leaf carrying a safety note, its own toxic flag (the entry's is off), a celestial body, two categories, a source and
@@ -1909,18 +1905,18 @@ the ingredient's substitutes, opens Dried leaf and its Relations and presses its
 Ingredients' Copy From Ingredient: Testwort links its Dried leaf, and the
 notice beneath the list names Mockleaf with Copy Anyway;
 And `CompendiumEntryEditSource` is the same entry with its first
-source's row open and Edit Source pressed, the panel prefilled; the stand-in
+source's row open and Edit Source pressed, the panel prefilled; the fake API
 answers `Reference` from each source's whole fields and keeps what
-`UpdateReference` saves. `Compendium` and `Blank` show a new entry's sections all open,
-`CompendiumEntry` an edit's all closed to their summaries,
+`UpdateReference` saves. 'Compendium' and 'Coven' show a new entry's sections all open,
+'Compendium Entry' an edit's all closed to their summaries,
 `CompendiumEntrySectionOpen` the edit with Correspondences open, and
 `CompendiumEntrySaveError` the edit, a colour left in its box, submitted
 once drawn: Correspondences opens on the error, flagged, the box focused
 (MB.115). `CompendiumEntryInModal` is the edit in its modal.
 `AskingToDeleteInModal` opens every section, scrolls to the foot and presses
-Delete Ingredient, and `AskingToDiscardInModal` types a change, opens every
-section, scrolls half way and presses Close: each question over the long
-form, centred where it was scrolled to (MB.115). The stories that open
+Delete Ingredient: the question over the long form, the name in bold,
+centred where it was scrolled to (MB.115). Close asks nothing, since it saves
+a change before closing, so there is no discard story. The stories that open
 something inside an edit open its section first, as a person would. The toolbar viewport menu shows any of them at 375px. On a phone the
 compendium's modal stays inset, the page in view on every side, rather than
 a full-height sheet: the owner's call in M5.5, kept at MB.115's design
@@ -1984,7 +1980,7 @@ a time; a variant added from the New Form box opened, the other closed,
 listed first after the New Form box (MB.115), and sent in `variants` with no
 top-level `form`; Add refusing a form not picked, and a repeat form, with no
 second fieldset added; a variant removed by its own button once confirmed,
-and kept open as it was on Keep It; an open variant's `h4` section headings
+and kept open as it was on Cancel; an open variant's `h4` section headings
 in the ingredient's order (MB.115); those sections folding (MB.115): an
 edit's variant opened with every one closed, each heading described by its
 line, the variant's own data in it; a variant added here with every one
@@ -2195,7 +2191,7 @@ short form, open, the citation whole; a row kept to one
 line until its edit opens it (`aria-expanded`, the Locator focused) and
 closes it again (MB.115); each row's locator
 labelled and read with its citation and its tip, and tidied as it is left; the
-× removing a row once confirmed and keeping it on Keep It; Backspace and
+× removing a row once confirmed and keeping it on Cancel; Backspace and
 Delete in the empty box taking none; Enter with nothing picked submitting nothing;
 a search left in the box, and an open panel, each stopping the save. The panel
 from the field: opened by the create row, "New Reference", taking you to
@@ -2243,10 +2239,10 @@ and flat, Enter on text not picked refused — is `list-field.test.tsx`'s. An
 entry given: its values shown, one save, off until something changes, and the
 update sent whole, its categories carried through; the duplicate warning
 leaving the entry out, and a rename near another entry naming it but saving
-at once, with no Create Anyway; MB.82's question, Keep It sending nothing and End
+at once, with no Create Anyway; MB.82's question, Cancel sending nothing and End
 Redirect & Save sending again with `endRedirect: true`; and a refused delete's alert, and a confirmed delete calling `onDeleted`.
 In a modal, the delete's and MB.82's questions are asked over the form: the
-form inert while each asks, the focus on Keep It, both given back on Keep It,
+form inert while each asks, the focus on Cancel, both given back on Cancel,
 and Delete deleting from over the form.
 An entry's categories shown picked, and a pick beside them sent, are
 CategoryPicker's and `index.test.tsx`'s.
@@ -2285,7 +2281,7 @@ An issue naming a picked category lands on the picker's one error element, named
 
 ## Questions the form asks over itself
 
-**Remove.** A variant's × had read as closing its card, and a reference row takes more typing than a chip to put back, so both ask before removing. The form's own question card (Remove and Keep It) is the one way of asking. `RemoveQuestion` runs `onRemove`, which removes the row and stops asking, then `afterRemove` once the card has gone and handed the focus back. The pressed × went with its row, so the focus goes where the list says, not to the form's first field. `flushSync(onRemove)` commits at once, the card's cleanup with it, so the focus that cleanup gives back is moved on after it, not before.
+**Remove.** A variant's × had read as closing its card, and a reference row takes more typing than a chip to put back, so both ask before removing. The form's own question card (Remove and Cancel) is the one way of asking. `RemoveQuestion` runs `onRemove`, which removes the row and stops asking, then `afterRemove` once the card has gone and handed the focus back. The pressed × went with its row, so the focus goes where the list says, not to the form's first field. `flushSync(onRemove)` commits at once, the card's cleanup with it, so the focus that cleanup gives back is moved on after it, not before.
 
 **Promote.** `promote.tsx` is written for either tier, a compendium entry (a null `workspaceId`) or a coven's ingredient. The question always comes first. With unsaved changes it offers Save & Promote, which runs the form's own save first and promotes only if that landed, and Discard & Promote, which puts the form back to its saved values. Cancel sends nothing. The question steps aside while the unsaved-changes question asks, as a removal's does. Its four tiers are told apart by type as well as by space: the question as the card's heading, naming no name because the panel beneath names both; the swap on a tinted panel; the compendium's reach as a muted aside; and, ruled off above the buttons, the question they answer. The promote question's term overline takes the `.eyebrow` look, so the names carry the weight.
 

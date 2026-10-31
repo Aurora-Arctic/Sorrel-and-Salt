@@ -54,9 +54,9 @@ worth knowing:
 ## Styling
 
 A `.panel` (MB.119, decision c), as sign-in's panel, the email page's and the create page's are:
-the root is `panel invitation-acceptance`, and its `.header` (the layout primitive's) holds the
-`h1` and the grant sentence as a `.lede`. A refusal has no grant, so its header is the heading
-alone and the alert says the rest. The page has no AppShell, the signed-in pages' shared frame, so
+the root is `panel invitation-acceptance`, and its `PageHeader` ([`page-header.md`](page-header.md)) holds the
+`h1` and the grant sentence as its `lede`. A refusal has no grant, so its head is the heading
+alone, its row's margin dropped so the panel's gap spaces it, and the alert says the rest. The page has no AppShell, the signed-in pages' shared frame, so
 its `main` is the page frame, `.page-frame.page-frame--narrow`
 ([`styling.md`](../styling.md), "The page frame"): it centres the panel,
 holds it clear of the top inset and caps it at the forms' column,

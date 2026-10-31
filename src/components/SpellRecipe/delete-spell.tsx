@@ -1,22 +1,20 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import { type ReactElement, useCallback, useRef, useState } from 'react';
+import type { ReactElement } from 'react';
 import { graphql } from '../../gql';
 import { covenTarget } from '../../lib/coven-path';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
 import { usePendingNavigation } from '../../lib/navigation';
 import BusyButton from '../BusyButton';
-import { useClickFeedback } from '../ClickFeedback';
-import { BinButton } from '../IconTip';
 import Modal from '../Modal';
 import type { DeleteSpellActionProps } from './types';
+import type { SpellVisibility } from '@/modules/grimoire';
 
-// Delete Spell: the bin beside the Edit pencil, which asks in a dialog naming the spell before
-// `deleteSpell` runs. Confirmed, the page leaves for the grimoire list, replacing the history
-// entry so Back does not return to a 404. Not a `ConfirmQuestion`, which asks over a form and this
-// page has none (claude-docs/components/spell-recipe.md, "Delete Spell").
+// Delete Spell: the question naming the spell, asked in a dialog before `deleteSpell` runs. Confirmed,
+// the page leaves for the grimoire list, replacing the history entry so Back does not return to a 404.
+// Not a `ConfirmQuestion`, which asks over a form and the More menu has none (claude-docs/components/spell-recipe.md, "Delete Spell").
 
 export const DeleteSpellDocument = graphql(`
   mutation DeleteSpell($workspaceId: ID!, $id: ID!) {
@@ -53,15 +51,76 @@ export function useDeleteSpell({
   return { remove: remove.mutate, pending: remove.isPending || remove.isSuccess };
 }
 
-/** The question naming the spell, which gives the focus to `returnTo()` once it closes. */
+/**
+ * The question naming the spell in bold, then one sentence on what deleting it does: a shared
+ * spell leaves the whole coven's grimoire, a private one only its author's. Asked by the recipe
+ * page's More menu and the builder's bin.
+ */
+export function DeleteSpellWords({
+  name,
+  visibility,
+}: {
+  name: string;
+  visibility?: SpellVisibility;
+}): ReactElement {
+  return (
+    <>
+      Delete <strong>{name}</strong>?{' '}
+      {visibility === 'workspace'
+        ? 'It leaves the grimoire for every member of the coven, and nothing in stock changes.'
+        : 'It is gone for good, and nothing in stock changes.'}
+    </>
+  );
+}
+
+/** The question naming the spell and its two answers. */
+function DeleteSpellQuestion({
+  name,
+  visibility,
+  pending,
+  onConfirm,
+  close,
+}: {
+  name: string;
+  visibility?: SpellVisibility;
+  pending: boolean;
+  onConfirm: () => void;
+  close: () => void;
+}): ReactElement {
+  return (
+    <>
+      <p>
+        <DeleteSpellWords name={name} visibility={visibility} />
+      </p>
+      <div className="modal__actions">
+        <BusyButton
+          className="btn btn--destructive"
+          busy={pending}
+          busyLabel="Deleting"
+          disabled={pending}
+          onClick={onConfirm}
+        >
+          Delete
+        </BusyButton>
+        <button type="button" className="btn btn--quiet" disabled={pending} onClick={close}>
+          Cancel
+        </button>
+      </div>
+    </>
+  );
+}
+
+/** The question in a dialog opened by state, as the More menu's item opens it; it gives the focus to `returnTo()` once it closes. */
 export function DeleteSpellDialog({
   name,
+  visibility,
   pending,
   onConfirm,
   onClose,
   returnTo,
 }: {
   name: string;
+  visibility?: SpellVisibility;
   pending: boolean;
   onConfirm: () => void;
   onClose: () => void;
@@ -70,79 +129,14 @@ export function DeleteSpellDialog({
   return (
     <Modal title="Delete Spell" onClose={onClose} returnTo={returnTo}>
       {(close) => (
-        <>
-          <p>
-            Delete <strong>{name}</strong>? It leaves the grimoire for every member of the coven.
-            Nothing in stock changes.
-          </p>
-          <div className="modal__actions">
-            <BusyButton
-              className="btn btn--destructive"
-              busy={pending}
-              busyLabel="Deleting"
-              disabled={pending}
-              onClick={onConfirm}
-            >
-              Delete
-            </BusyButton>
-            <button type="button" className="btn btn--quiet" disabled={pending} onClick={close}>
-              Cancel
-            </button>
-          </div>
-        </>
-      )}
-    </Modal>
-  );
-}
-
-export default function DeleteSpellAction({
-  workspaceId,
-  spellId,
-  name,
-  deletedHref,
-}: DeleteSpellActionProps): ReactElement {
-  const [asking, setAsking] = useState(false);
-  // The bin, where the focus goes back to once the dialog closes; once the delete has led
-  // away it is gone, and Modal gives the focus to the heading.
-  const trigger = useRef<HTMLButtonElement | null>(null);
-  const feedback = useClickFeedback({ name: `Delete Spell ${name}` });
-  const { anchorRef } = feedback;
-  const triggerRef = useCallback(
-    (node: HTMLButtonElement | null) => {
-      trigger.current = node;
-      anchorRef(node);
-    },
-    [anchorRef],
-  );
-  const { remove, pending } = useDeleteSpell({
-    workspaceId,
-    spellId,
-    deletedHref,
-    onRefused: feedback.report,
-    onClosed: () => setAsking(false),
-  });
-
-  return (
-    <>
-      <BinButton
-        ref={triggerRef}
-        verb="Delete Spell"
-        name={name}
-        onClick={() => {
-          feedback.report(undefined);
-          setAsking(true);
-        }}
-      />
-      {feedback.feedback}
-      {asking && (
-        <DeleteSpellDialog
+        <DeleteSpellQuestion
           name={name}
+          visibility={visibility}
           pending={pending}
-          onConfirm={() => remove()}
-          onClose={() => setAsking(false)}
-          returnTo={() => (trigger.current?.isConnected ? trigger.current : null)}
+          onConfirm={onConfirm}
+          close={close}
         />
       )}
-    </>
+    </Modal>
   );
 }

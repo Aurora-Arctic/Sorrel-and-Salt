@@ -28,9 +28,7 @@
 }
 
 .safety-note__forms {
-  display: flex;
-  flex-direction: column;
-  gap: space(4);
+  @include stack(4);
   margin: space(3) 0 0;
 
   dt {

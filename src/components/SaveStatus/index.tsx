@@ -71,11 +71,11 @@ const SaveStatus = ({
     <Notice kind="warn" block className="save-status__conflict">
       <span>{conflictMessage}</span>
       <span className="save-status__actions">
-        {/* One primary: Reload Latest, the safe choice; Keep My Version sits back, quiet. */}
-        <button type="button" className="btn btn--small btn--solid" onClick={onReload}>
+        {/* Outline, so the view keeps one solid button: Reload Latest, the safe choice, then a quiet Keep My Version. */}
+        <button type="button" className="btn btn--small" onClick={onReload}>
           Reload Latest
         </button>
-        <button type="button" className="btn btn--small btn--quiet" onClick={onKeepMine}>
+        <button type="button" className="btn btn--quiet btn--small" onClick={onKeepMine}>
           Keep My Version
         </button>
       </span>
@@ -89,7 +89,7 @@ const SaveStatus = ({
         conflict
       ) : next.failing ? (
         <Notice kind="warn" block className="save-status__failed">
-          <span>Couldn&rsquo;t save.</span>
+          <span>Could not save.</span>
           <button
             type="button"
             className="btn btn--small"
@@ -119,3 +119,4 @@ const SaveStatus = ({
 };
 
 export default SaveStatus;
+export { default as RecoveryNotice } from './recovery-notice';
