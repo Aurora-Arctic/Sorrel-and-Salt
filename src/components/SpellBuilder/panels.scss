@@ -1,3 +1,4 @@
+@use 'sass:math';
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
@@ -21,10 +22,18 @@
   @include list-reset;
 }
 
-// The eye at the size it has beside any entry (`.icon-tip__look`, a `$icon-size-large` box); the margin takes
-// its excess over a `$icon-size` line, so the line keeps its height and the eye its centre.
+// The eye sits between the two icon sizes: its box halfway from `$icon-size` to `$icon-size-large`, its mark halfway
+// from the step eye's (`$glyph-size` * 0.875) to an entry's (`$glyph-size-large` * 4 / 3). The margin takes the box's
+// excess over a `$icon-size` line, so the line keeps its height and the eye its centre.
+$inventory-eye-box: math.div($icon-size + $icon-size-large, 2);
+
 .spell-inventory .jar-line__look .icon-tip__look {
-  margin-block: calc((#{$icon-size} - #{$icon-size-large}) / 2);
+  @include icon-button(
+    $inventory-eye-box,
+    math.div($glyph-size * 0.875 + math.div($glyph-size-large * 4, 3), 2)
+  );
+  @include icon-button-edit;
+  margin-block: calc((#{$icon-size} - #{$inventory-eye-box}) / 2);
 }
 
 // The verdict is raised above the press's stretch, so each keeps its own press.

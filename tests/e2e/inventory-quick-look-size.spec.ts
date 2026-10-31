@@ -10,14 +10,14 @@ import {
   withSql,
 } from './stories/coven-ingredients';
 
-// The Quick Look eye on a line of the recipe page's In the Cupboard panel is as large as it is beside an
-// entry elsewhere (a 32px box, a mark over 24px), and the line is no taller for it.
+// The Quick Look eye on a line of the recipe page's In the Cupboard panel sits between the step eye (a 24px box,
+// a 14px mark) and an entry's (32px, 26.7px): a 28px box round a mark of about 20px, and the line is no taller for it.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-test('the eye in In the Cupboard is the full-size eye, at desktop and phone width', async ({
+test('the eye in In the Cupboard is between the step eye and the entry eye, at desktop and phone width', async ({
   page,
 }) => {
   const coven = await seedCoven(page, 'Fixture Coven Eye', 'eye.test', { A: 'owner' });
@@ -50,9 +50,9 @@ test('the eye in In the Cupboard is the full-size eye, at desktop and phone widt
     await expect(eye).toBeVisible();
     const box = await eye.boundingBox();
     const mark = await eye.locator('svg').boundingBox();
-    expect(box!.width).toBeGreaterThanOrEqual(32);
-    expect(box!.height).toBeGreaterThanOrEqual(32);
-    expect(mark!.width).toBeGreaterThanOrEqual(24);
+    expect(Math.abs(box!.width - 28)).toBeLessThanOrEqual(1);
+    expect(Math.abs(box!.height - 28)).toBeLessThanOrEqual(1);
+    expect(Math.abs(mark!.width - 20.3)).toBeLessThanOrEqual(1);
     // The line is no taller than its jar and words need: the eye adds nothing to it.
     const lineBox = await line.boundingBox();
     const nameBox = await line.locator('.jar-line__words').boundingBox();
