@@ -22,6 +22,8 @@ export interface TabbedPageProps {
   tabs: readonly PageTab[];
   /** The open tab's one action at the end of the heading's line, from the route group's `@action` slot; nothing for a tab with none. */
   action?: ReactNode;
+  /** The page's tabs hold a `.page-with-nav` column (the account): the head stands over the sections' column and the tabs sit beneath it at every width. */
+  framed?: boolean;
   /** The open tab's content. */
   children: ReactNode;
 }

@@ -6,7 +6,7 @@ import { ACCOUNT_TABS } from '../../../../lib/sign-in';
 // so each page runs `requireSession()` itself. The route group leaves the unverified-email page outside the tabs.
 export default function AccountLayout({ children }: { children: ReactNode }) {
   return (
-    <TabbedPage title="Account" tabs={ACCOUNT_TABS}>
+    <TabbedPage title="Account" tabs={ACCOUNT_TABS} framed>
       {children}
     </TabbedPage>
   );
