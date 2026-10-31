@@ -157,7 +157,8 @@ const EmailForm = ({
       {alert && <Notice kind="error">{alert}</Notice>}
       {sentTo && (
         <Notice kind="success">
-          We&apos;ve sent a link to {sentTo}. Open it in this browser within an hour to confirm it.
+          If {sentTo} can be used, a link is on its way. Open it in this browser within an hour to
+          confirm it.
         </Notice>
       )}
       {/* `noValidate`: every refusal is the server's, worded and placed like

@@ -244,6 +244,7 @@ const IngredientForm = ({
   mayPromote = false,
   review,
   onCreated,
+  onAutosaved,
   onReload,
 }: IngredientFormProps): ReactElement => {
   // A null coven is the compendium: the classification answered, the
@@ -745,6 +746,8 @@ const IngredientForm = ({
     if (creating) {
       setCreatedId(row.id);
       if (!closing.current) onCreated?.(row);
+    } else if (!closing.current) {
+      onAutosaved?.(row);
     }
     return { revision: row.revision ?? 0, savedAt: new Date(), id: row.id };
   };

@@ -11,6 +11,7 @@ export const noSender: EmailVerificationSender = {
   requestChange: async () => unexpected('request an email change'),
   sessionIsFresh: async () => unexpected('check the session'),
   notifyChangeRequested: async () => unexpected('notify the current address'),
+  defer: () => unexpected('defer a send'),
 };
 
 export const noInvitationSender: InvitationSender = {

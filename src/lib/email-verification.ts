@@ -1,3 +1,4 @@
+import { after } from 'next/server';
 import { verifiedLanding } from './account-email';
 import { VERIFICATION_LIFETIME_SECONDS, type EmailVerificationSender } from '@/modules/identity';
 import { verifyEmailMessage } from '../emails/verify-email';
@@ -22,6 +23,10 @@ export function emailVerificationSender(request: Request): EmailVerificationSend
       const { auth } = await import('./auth');
       const result = await auth.api.getSession({ headers: request.headers });
       return !!result && Date.now() - new Date(result.session.createdAt).getTime() < seconds * 1000;
+    },
+
+    defer(task) {
+      after(task);
     },
 
     async notifyChangeRequested(current, address) {

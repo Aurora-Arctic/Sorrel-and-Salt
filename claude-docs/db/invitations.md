@@ -300,6 +300,14 @@ runs in this order, and the order is the point:
    inviting owner's name, read from their `users` row, since the session holds
    the id alone.
 
+**Each sender's mail is limited** (MB.280). Every new invitation and every repeat one sends a mail from the site's address, so
+`createInvitation` counts the sender's own coven invitations created in the last hour, revoked or replaced ones included, and refuses
+the next once there are 20. The refusal is a `ValidationError` with no field that says when the oldest one leaves the window. The count
+is a SQL read of `invitations.created_by` and `created_at` through `findRecentCovenInvitationTimes`, so it holds across server
+instances and needs no table. The limit and window are `INVITATION_MAIL_LIMIT` and `INVITATION_MAIL_WINDOW_MINUTES` in
+`src/modules/coven/services/invitations.ts`. The check runs after the input checks and before any write, so a refusal writes and mails
+nothing. Two requests at the same moment can both read a count under the limit, so the limit can be passed by the few requests that race.
+
 **A repeat invitation replaces the pending one** (MB.269). Inviting an address
 that already has a pending invitation to the same coven first stamps that one
 revoked, as the inviter, in the same `withAudit` write that inserts the new one,

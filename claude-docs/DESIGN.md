@@ -89,7 +89,7 @@ src/
   app/                      # routes, layouts, server components
     api/graphql/route.ts    # Yoga handler
   components/<Name>/        # index.tsx + index.scss
-  modules/<name>/           # one per domain: identity, coven, vocabulary, ingredients, grimoire
+  modules/<name>/           # one per domain: identity, coven, vocabulary, ingredients, grimoire, support
     index.ts                # the public surface — services, types, GraphQL refs, loader factories
     schema/                 # the Drizzle tables the module owns; public too, for the seed and foreign keys
     validation/             # Zod input schemas, shared by the form and the service; public, and client-safe
@@ -247,6 +247,12 @@ Code, schema, and prose use _workspace_. The URL segment says _coven_, and the s
 **`admin_role_change_pauses`** — `id`, `endedAt` (nullable), `endedBy` (nullable), + audit. The primary admin's pause on every other admin's grants and revokes of admin and of coven creation (the latter amended 2026-10-10, on the owner's call), one row per pause: `created_by` is who paused and `created_at` when, and the ended pair who resumed and when. Admin changes are paused while a live row has no `endedAt`; a unique index on a constant, partial on that, allows one such row at most, and a CHECK keeps the ended pair together. Nothing is seeded: no row is the state of a site that has never paused. Reached only through the open-pause finder and the writer's named pause and resume, each under the `SiteAdmin` proof, the finder also under a site-tier invitation, whose accept reads the pause from a session holding no proof (MB.70); the generic insert, updates and deletes refuse the table at compile time (MB.62; [`mb.62-pause-ledger.md`](design-decisions/mb.62-pause-ledger.md)).
 
 **`user_privilege_changes`** — `id`, `userId`, `privilege` (`admin` | `curator` | `create_workspace`), `change` (`grant` | `revoke`), `via` (`bootstrap` | `admin` | `invitation` | `manual`), `note` (nullable), + audit; each set a closed enum. The one privilege ledger: one row per change to a privilege column on `users`, `role` as `admin` and as `curator`, each its own privilege, and `canCreateWorkspace` as `create_workspace`, because the next update to a user's row overwrites its `updated_by`. `created_by` is who made the change and `created_at` when. `via` is how it came about: `bootstrap` the primary admin's promotion by `ADMIN_BOOTSTRAP_EMAIL`, `admin` an admin's act on `/admin/users`, `invitation` an acceptance, and `manual` a `psql` fix that declared itself. Append-only by the database: a `forbid_rewrite()` trigger refuses every update and delete from any client, so the writer's types need no marker for it. Its migration copied the two one-privilege ledgers it replaced (MB.58's and MB.193's) with their ids and stamps, and `record_privilege_change()`, a trigger on `users`, fills it (MB.195): one row per changed privilege (a move from curator to admin writes a curator revoke and an admin grant at one instant; user to curator writes a curator grant and a create_workspace grant), its actor `app.current_user_id` or else the row's own `updated_by`, its route and note those the writer declared to `withAudit` (or, outside it, set as `app.privilege_route` and `app.privilege_note`), and a change declaring no route refused. Nothing in the application inserts into it. A third privilege is a value in the enum and a line in that trigger, not a table. A privilege's account, not §13's edit history (MB.194; [`mb.194-privilege-ledger-by-trigger.md`](design-decisions/mb.194-privilege-ledger-by-trigger.md)).
+
+**`support_requests`** — `id`, `kind` (`accessibility` | `bug` | `question`), `subject` (1–120 characters), `message` (1–4,000), `path` (the page it was sent from, with the segment after `/coven/` redacted, because a coven's existence is private to its members), `errorCode` (nullable integer; the HTTP status of the error page it was sent from), `status` (`open` | `resolved`), `assignedTo` (nullable user), `curatorVisible` (boolean, default `false`), `issueUrl` (nullable; an issue on the project's repository), `resolvedBy` (nullable user), `resolvedAt` (nullable), + audit; soft-deleted, resolved rows kept. A message a signed-in, verified account sends to whoever runs the site (M15.1; [`m15.1-support-form.md`](design-decisions/m15.1-support-form.md)). No workspace id: a request is the account's, and the sender is `created_by`, so the sender's finder ANDs `created_by`. A curator reads a request only when `curatorVisible` or `assignedTo` them, filtered in SQL. An account may send ten in 24 hours, counted from this table. Owned by the `support` module.
+
+**`support_replies`** — `id`, `requestId`, `body` (1–4,000 characters), + audit; soft-deleted. One reply to a request; the author is `created_by`. The sender reads it on `/account/support`, and a mailed notice says one is waiting without carrying its text.
+
+**`support_timeouts`** — `id`, `userId`, `until`, `note` (nullable), `liftedAt` (nullable), + audit; kept as history, never deleted. An admin's sanction on a sender: while a row has `until > now()` and `liftedAt IS NULL`, `sendSupportRequest` refuses with an error naming the end. The admin who set it is `created_by`; a curator may not set or lift one.
 
 **`workspaces`** — `id`, `name`, `slug`, `demo`, + audit. `demo` is true on the one demo coven (a partial unique index on `demo WHERE demo AND deleted_at IS NULL` allows at most one live row), which is seeded on every environment under the fixed id `DEMO_WORKSPACE_ID`; code finds it by the column, never the constant. Every account is seated in it as a `viewer`, the bootstrap system user and every site admin hold an `owner` seat, a user may leave it and is never re-added, and it cannot be deleted. It is a flag and not a `kind`: the row is still a workspace that takes members (M15.9; [`m15.9-demo-coven.md`](design-decisions/m15.9-demo-coven.md)).
 
@@ -880,6 +886,14 @@ type Query {
     after: String
   ): QueryGrimoireConnection! # workspace-visible + own private spells; status filters in SQL
   spell(id: ID!, workspaceId: ID!): Spell! # NOT_FOUND for a spell this reader may not see
+  mySupportRequests(first: Int, after: String): QueryMySupportRequestsConnection! # the session's own requests, newest first, each with its replies; the finder ANDs created_by (M15.1)
+  supportRequests(
+    kind: SupportKind
+    status: SupportStatus
+    errorCode: Int
+    first: Int
+    after: String
+  ): QuerySupportRequestsConnection! # curator or admin; open ahead of resolved, newest first; a curator's holds only curatorVisible or assigned requests, filtered in SQL
 }
 
 # Mutations return the entity; a delete returns the deleted id, since a
@@ -943,6 +957,14 @@ type Mutation {
   createDeityTradition(input: DeityTraditionInput!): DeityTradition! # name, description
   updateDeityTradition(id: ID!, input: DeityTraditionInput!): DeityTradition! # touches no deity
   deleteDeityTradition(id: ID!, moveTo: ID): ID! # its live deities move to moveTo first; needed only when it has some
+  sendSupportRequest(input: SupportRequestInput!): SupportRequest! # a verified session; refuses the eleventh in 24 hours and a send during a time-out, each with an explaining error (M15.1)
+  replyToSupportRequest(requestId: ID!, body: String!): SupportReply! # an admin on any request, a curator on one assigned to them; mails a notice with no reply text
+  assignSupportRequest(id: ID!, assigneeId: ID): SupportRequest! # admin only; null unassigns
+  setSupportRequestCuratorVisible(id: ID!, visible: Boolean!): SupportRequest! # admin only
+  resolveSupportRequest(id: ID!): SupportRequest! # an admin on any request, a curator on one assigned to them
+  setSupportRequestIssueUrl(id: ID!, issueUrl: String): SupportRequest! # admin only; must be an issue on Aurora-Arctic/Sorrel-and-Salt
+  timeOutSupportSender(userId: ID!, until: DateTime!, note: String): SupportTimeout! # admin only
+  liftSupportTimeout(id: ID!): SupportTimeout! # admin only
 }
 
 type Ingredient {
@@ -1290,6 +1312,55 @@ type Invitation {
   # no url and no token: the link exists only in the mail (MB.61)
 }
 
+enum SupportKind {
+  accessibility
+  bug
+  question
+} # listed in this order (M15.1)
+enum SupportStatus {
+  open
+  resolved
+}
+input SupportRequestInput {
+  kind: SupportKind!
+  subject: String! # 1–120 characters
+  message: String! # 1–4,000 characters
+  path: String # the page it was sent from; the segment after /coven/ is redacted on write
+  errorCode: Int # the HTTP status of the error page it was sent from
+}
+type SupportRequest {
+  id: ID!
+  kind: SupportKind!
+  subject: String!
+  message: String!
+  path: String
+  errorCode: Int
+  status: SupportStatus!
+  sender: User! # a curator or admin reads it; a sender is the session's own user
+  assignedTo: User
+  curatorVisible: Boolean!
+  issueUrl: String
+  resolvedBy: User
+  resolvedAt: DateTime
+  replies: [SupportReply!]! # through a loader
+  timeouts: [SupportTimeout!]! # the sender's, past and active; admin only
+  audit: AuditInfo!
+}
+type SupportReply {
+  id: ID!
+  body: String!
+  author: User! # created_by
+  audit: AuditInfo!
+}
+type SupportTimeout {
+  id: ID!
+  userId: ID!
+  until: DateTime!
+  note: String
+  liftedAt: DateTime
+  audit: AuditInfo! # createdBy is the admin who set it
+}
+
 scalar DateTime # ISO 8601 on the wire; a Date in a resolver
 scalar LocalDate # a calendar date, YYYY-MM-DD on the wire, for a reference's dates (MB.153)
 # One shape for every audited type, never flat fields on the type itself.
@@ -1391,10 +1462,13 @@ The same shape covers spell `visibility`: the finders that reach a `private` one
 | `/admin/deity-traditions`        | Admin CRUD on the deity traditions                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `/admin/users`                   | Every account with its role and its right to create a coven; an admin grants and revokes both here (M2.9, M5.8); a user's name opens their covens in a modal, `?user=<id>`, with Impersonate (M9.19)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `/admin/invitations`             | The pending invitations to become an admin, with Revoke on each, and the invite form `?invite` opens (MB.70)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `/admin/support`                 | Support requests, open ahead of resolved, newest first: reply, assign, mark viewable by curators, resolve, Create Issue, time a sender out. A curator sees only the requests marked viewable or assigned to them (M15.1)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `/admin/privilege-changes`       | Who changed which privilege, and when, read from `user_privilege_changes` (MB.200)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `/support`                       | The support form's own page, for a shared link and the public footer; the modal `?support=<kind>&error=<code>` opens over a shell page. Signed out, it shows Sign In in the form's place (M15.1)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `/invite/[token]`                | Accept invitation                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `/sign-in`                       | OAuth                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `/account`                       | The one account page (MB.88): "Your Account" (Sign Out is in the shell's account menu), over four sections — the name the site shows, the address it writes to (EmailForm's field, sending a change link), the sign-in methods, each provider linked or addable, removable while another is left (MB.71), and the coven invitations waiting for that address, each with an Accept and a Decline (M10.32, M10.34). The only way a second provider joins an account                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `/account/support`               | The sender's own requests, each with its status, replies and issue link (M15.1)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `/account/email`                 | The account's email: prefilled from the provider, editable, counting once a mailed link is followed (MB.54). Where every unverified sign-in lands, and the only protected page an unverified account can reach (the public pages, `/` and the compendium, are open to it)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 
 **The admin pages are grouped into tabbed pages** (MB.115, the owner's call): a list shares a page with the groups that organise it, a tab each — Categories (Categories, Groups), Forms (Forms, Groups), Deities (Deities, Traditions), Astrology (Celestial Bodies, Zodiac Signs) and People (Users, Invitations, Privilege Changes). Each tab keeps its own address above, so a link or a reload lands on it. A page's heading and tabs stay put while the open tab's content and its action beside the heading change: each page is a route group under `src/app/(shell)/admin/` with one shared layout, and the action is an `@action` slot. `src/components/AdminNav/sections.ts` lists every page and its tabs, which the nav, the `/admin` index and each layout all read ([`components/tabbed-page.md`](components/tabbed-page.md)).
@@ -1491,7 +1565,7 @@ Modern module system throughout — `@use '../../scss/variables' as *;`, never t
 
 ### Notes — deferred to v2
 
-Stories 35–46 covered the three-tier experience-notes system. They move to v2 with the rest of the notes subsystem (§13). Story numbers are **not** reused: the grimoire stories keep their original 47–56, story 57 (MB.40) took the next free number rather than one of the twelve, and 58–62 (M2.9: email verification, changing an email, granting admin, the ledger, inviting an admin) followed the same way, as their own list because Prettier renumbers a list from its first item, and 63 (MB.80: the public compendium) the same way after them, and 64 (MB.151: references) after it, and 76 (recording a working), 77 (step units), 78 (completing a working), 79 (workings on the recipe page), 80 (a spell's steps) and 81 (autosave) after them, and 82 (duplicate a spell), 83 (a spell's Quick Look) and 84 (the grimoire's filters) after those, and 85 (Spell Preview) and 86 (keeping the screen awake) after them, and 87 (the demo coven) and 88 (an invitation card) after those, so a v1 count is 65 stories (1–34, 47–64, 76–88).
+Stories 35–46 covered the three-tier experience-notes system. They move to v2 with the rest of the notes subsystem (§13). Story numbers are **not** reused: the grimoire stories keep their original 47–56, story 57 (MB.40) took the next free number rather than one of the twelve, and 58–62 (M2.9: email verification, changing an email, granting admin, the ledger, inviting an admin) followed the same way, as their own list because Prettier renumbers a list from its first item, and 63 (MB.80: the public compendium) the same way after them, and 64 (MB.151: references) after it, and 76 (recording a working), 77 (step units), 78 (completing a working), 79 (workings on the recipe page), 80 (a spell's steps) and 81 (autosave) after them, and 82 (duplicate a spell), 83 (a spell's Quick Look) and 84 (the grimoire's filters) after those, and 85 (Spell Preview) and 86 (keeping the screen awake) after them, and 87 (the demo coven) after those, and 89 (a support request) after them, so a v1 count is 66 stories (1–34, 47–64, 76–89). Story 88 is M15.20’s invitation cards.
 
 ### Grimoire
 
@@ -1565,6 +1639,10 @@ Stories 35–46 covered the three-tier experience-notes system. They move to v2 
 88. Open an invitation card's link and be signed in with a coven to create, and have the admin see the card accepted, so that a printed card handed to a stranger brings them in once.
 
 Keeping a spell `private` while building it, and the one-way widen of a complete spell to `workspace`, are governed by §5's visibility rule rather than a numbered story.
+
+### Support (M15.1)
+
+89. Send a question, a bug or an accessibility bug from wherever I am, and read the reply later, so that I never have to search for an address.
 
 ---
 

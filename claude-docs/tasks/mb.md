@@ -179,7 +179,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.173 | Refuse a migration older than its base's newest                                                                          | Wave 8   | —                      |
 | MB.174 | Stop the list fields offering or adding a repeat                                                                         | Wave 8   | M5.5                   |
 | MB.175 | Help and FAQ articles                                                                                                    | Wave 15  | —                      |
-| MB.176 | Bug reports                                                                                                              | Wave 15  | M11.8                  |
+| MB.176 | ~~Bug reports~~ — **retired into M15.1**                                                                                 | —        | —                      |
 | MB.177 | Every admin holds `canCreateWorkspace`                                                                                   | Wave 8   | M5.8, M6.7             |
 | MB.178 | Search and filter the admin categories list                                                                              | Wave 8   | —                      |
 | MB.179 | Keep the test suite inside Postgres's connection limit                                                                   | Wave 8   | —                      |
@@ -5155,7 +5155,9 @@ _Acceptance criteria:_
 - The five build tasks are minted with estimates, placed after this one, and each names its prerequisite
 - Nothing is built in this task
 
-**MB.176 — Bug reports** · 1h
+**MB.176 — [RETIRED] Bug reports** · 1h
+
+> **Folded into M15.1, not done on its own.** The owner's call (2026-10-31): one table and one form serve bug reports and support requests. What survives is recorded in [`design-decisions/m15.1-support-form.md`](../design-decisions/m15.1-support-form.md), "MB.176 folded in". The ID is kept, and its issue is closed as not planned.
 
 _Story:_ As a signed-in user, I want to report a bug from the page I hit it on and follow what happens to it, so that a problem reaches someone who can fix it and I can see when it has been.
 
@@ -5609,7 +5611,7 @@ _Acceptance criteria:_
 - The Playwright admin spec covers approving an unverified user through the warning, with `@axe-core/playwright` clean, run against the e2e container
 - `components/user-list.md` describes the warning
 
-**MB.276 — An Admin's Compendium Edit Saves Whatever the Autosave Timing** · 3h
+**MB.276 — An Admin's Compendium Edit Saves Whatever the Autosave Timing** · 4h
 
 _Story:_ As a site admin editing a compendium entry, I want the Save Ingredient button to reflect what is unsaved whatever the autosave timing, so that the edit flow behaves the same on a slow machine as on a fast one and story 18 passes first time.
 
@@ -5625,12 +5627,21 @@ Found on 2026-10-30 on the PR gate's stories job: flaky (failed, then passed on 
 
 Actual: Save Ingredient stays disabled for 60 s and the story times out; on a fast run it passes, so the story is flaky. Expected: Save Ingredient is enabled while the form holds unsaved changes, and the story passes first time on every runner.
 
+_Chosen (story 18 and story 30):_ the form keeps its behaviour: once an autosave has filed the edits there is nothing left to save, so Save Ingredient is disabled, and that is correct. The stories change instead: each holds the form's own save request with `page.route` (`holdSaves` in `tests/e2e/stories/ingredient-dialogs.ts`) until after the click on Save, so the autosave cannot land first on any runner. The story changes landed on `staging` through #1383, as `52cd4902c` (story 30's accessibility scan), `be54fd8d9` (story 18's) and `0e7017f57` (the hold). A longer wait would only move the race, and changing the form would make Save enabled over nothing.
+
+_Also in scope:_
+
+- The dialog heading and address after a save the form makes by itself. The heading came from the page's data, which only Save and the create updated, so an autosave that renamed an entry left the old name in the heading. The form now calls a new `onAutosaved(row)` after an autosave that updates an existing ingredient. The admin compendium dialog replaces its address with the saved slug and fetches the page again; the coven entry dialog only fetches again.
+- The Playwright report and trace upload on a test that failed and then passed on retry. The upload ran only when the run failed, so a flaky pass left no trace to read. The summarisers now write a `flaky` output and the upload step runs on it.
+
 _Acceptance criteria:_
 
-- A regression test that fails before the fix: a test under `tests/components/IngredientForm/` (or the story itself under a forced autosave pause) that shows Save Ingredient disabled with the user's edits already autosaved, and the chosen behaviour afterwards
+- The form's behaviour is unchanged: Save Ingredient is disabled once a save the form made by itself has filed every edit. The fault was in stories 30 and 18, and their proof is those stories holding back the save request until after the click on Save. No component test is added for unchanged behaviour
 - Story 18 passes first time on CI's runner in two consecutive PR-gate runs, with no retry
 - The chosen behaviour is stated in `claude-docs/components/ingredient-form.md` ("Autosave") and, if the form changes, in that doc's form save rules
 - No other story's timing is changed to make it pass
+- After an autosave renames an existing ingredient, the dialog heading shows the saved name and the admin compendium dialog's address names the saved slug, and what was typed after the autosave is kept: a component test under `tests/app/(shell)/admin/compendium/` that failed before the fix
+- A run where a test failed and then passed on retry uploads the Playwright report and traces, and a clean run still does not
 
 **MB.277 — The Unused Code Check Finds Nothing Left to Clear** · 4h
 

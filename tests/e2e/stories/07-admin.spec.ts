@@ -6,6 +6,7 @@ import { makeIngredient, makeVariant } from '../../support/fixtures/ingredient';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from '../axe';
 import { e2eDatabaseUrl, recreateE2eDatabase } from '../database';
 import { test, expect } from '../fixtures';
+import { holdSaves } from './ingredient-dialogs';
 import { signInAgainAs, signInAs } from '../session';
 
 // What a site admin curates and how, what everyone else is refused, and what an admin does not reach (a
@@ -388,6 +389,8 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await editing.getByRole('button', { name: 'Open All' }).click();
       const save = editing.getByRole('button', { name: 'Save Ingredient' });
       await expect(save).toBeDisabled();
+      // The form's own saves are held until after the click on Save, so the autosave cannot file the edits first.
+      const saves = await holdSaves(page, ['UpdateCompendiumIngredient']);
       await editing
         .getByRole('textbox', { name: 'Name', exact: true })
         .fill('Aaa Testwort Renamed');
@@ -395,9 +398,10 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await addForm(editing, 'Oil');
       const oil = editing.getByRole('group', { name: 'Oil', exact: true });
       await oil.getByRole('textbox', { name: 'Safety Notes' }).fill('Dilute before use.');
-      await expect(save).toBeEnabled();
       await assertNoAccessibilityViolations(page);
+      await expect(save).toBeEnabled();
       await save.click();
+      saves.release();
       const renamed = page.getByRole('dialog', {
         name: 'Edit Ingredient, Aaa Testwort Renamed',
         exact: true,
