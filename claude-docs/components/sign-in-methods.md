@@ -75,8 +75,8 @@ whether a provider is the last one.
 ## Adding one leaves the page
 
 "Add &lt;Provider&gt;" calls `linkSocial` from `src/lib/auth-client.ts` with
-`ACCOUNT_PATH` (`/account`) as `callbackURL` and
-`/account?provider=<id>` as `errorCallbackURL`. Better Auth's client then
+`ACCOUNT_SIGN_IN_PATH` (`/account/sign-in`) as `callbackURL` and
+`/account/sign-in?provider=<id>` as `errorCallbackURL`. Better Auth's client then
 assigns `window.location.href` to the provider, and the callback lands back
 here. A failure adds `?error=` to the error callback, so the page gets both
 the code and the provider it was for, and the sentence shows in that

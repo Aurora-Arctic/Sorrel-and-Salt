@@ -4,7 +4,9 @@ import { type ReactElement, useEffect, useId, useState } from 'react';
 import { linkSocial, signOut, unlinkAccount } from '../../lib/auth-client';
 import { GENERIC_FAILURE } from '../../lib/graphql-failure';
 import {
-  ACCOUNT_PATH,
+  ACCOUNT_PASSKEYS_PATH,
+  ACCOUNT_PASSWORD_PATH,
+  ACCOUNT_SIGN_IN_PATH,
   GENERIC_LINK_ERROR,
   signInPath,
   unlinkErrorMessage,
@@ -70,10 +72,10 @@ const SignInMethods = ({
       try {
         return await linkSocial({
           provider: providerId,
-          callbackURL: ACCOUNT_PATH,
+          callbackURL: ACCOUNT_SIGN_IN_PATH,
           // The provider rides back on the failure, so the page can put the
           // sentence in this row (claude-docs/components/sign-in-methods.md).
-          errorCallbackURL: `${ACCOUNT_PATH}?provider=${providerId}`,
+          errorCallbackURL: `${ACCOUNT_SIGN_IN_PATH}?provider=${providerId}`,
         });
       } catch (thrown) {
         return { error: thrown };
@@ -123,7 +125,7 @@ const SignInMethods = ({
       signInAgain.report(GENERIC_FAILURE);
       return;
     }
-    window.location.assign(signInPath(ACCOUNT_PATH));
+    window.location.assign(signInPath(ACCOUNT_SIGN_IN_PATH));
   };
 
   const removal: ProviderRemoval = accounts.length < 2 ? 'last' : fresh ? 'offered' : 'withheld';
@@ -181,7 +183,7 @@ const SignInMethods = ({
         <SectionRow
           label="Password"
           status={passwordHeld ? 'Set' : 'Not Set'}
-          href="#account-password"
+          href={ACCOUNT_PASSWORD_PATH}
           linkLabel={passwordHeld ? 'Manage Password' : 'Set Password'}
         />
         <SectionRow
@@ -191,7 +193,7 @@ const SignInMethods = ({
               ? 'None Added'
               : `${passkeyCount} ${passkeyCount === 1 ? 'passkey' : 'passkeys'}`
           }
-          href="#account-passkeys"
+          href={ACCOUNT_PASSKEYS_PATH}
           linkLabel="Manage Passkeys"
         />
       </ul>
