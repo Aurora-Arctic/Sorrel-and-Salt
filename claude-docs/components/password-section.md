@@ -79,7 +79,7 @@ password sign-ins alone ([`auth/two-factor.md`](../auth/two-factor.md)).
   tip above, left-aligned under the codes panel), each giving one code
   per line. Print opens a window of its own with a heading ("Sorrel & Salt Backup Codes"), the
   account's email, the print date, a line saying what the codes are for, and the codes in the same two centred columns. "Code From Your App" and "Confirm and Turn On" (`twoFactor.verifyTotp`)
-  turn it on; Cancel leaves it off. While the codes are on screen and none of Copy, Download or Print has
+  turn it on; Cancel leaves it off. Confirm and Turn On stays disabled until Copy, Download or Print has been pressed (Copy Key does not count), with the line "Copy, download or print your backup codes first." under the actions, tied to the button by `aria-describedby` and shown only while it is disabled for that reason; an empty code or a request in flight disable it as before. While the codes are on screen and none of Copy, Download or Print has
   been pressed, the page holds a leave guard (`useLeaveGuard`): closing the tab or reloading raises the
   browser's own question, and an in-app navigation through the app's navigation provider (the Account tabs,
   links built on it) asks in a dialog on the `Modal` ("Leave Without Saving Your Codes?", with Leave and then Stay; Escape and Stay keep the person on the page; the guard calls `proceed` only on Leave). Back and the browser's own history moves are not held. Two-factor is not on until that code is
