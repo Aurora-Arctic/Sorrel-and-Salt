@@ -20,8 +20,12 @@
 }
 
 .timeout-panel__list {
-  @include stack;
+  @include stack(3);
   @include list-reset;
+
+  > li {
+    @include stack(1);
+  }
 }
 
 // A standing time-out: the badge and end, the note and setter in the muted ink, Lift beneath.
@@ -58,7 +62,14 @@
   text-transform: uppercase;
 }
 
+// The range never splits; the Lifted tag follows it on the line when it fits, else wraps beneath.
 .timeout-panel__ledger-line {
-  @include stack(1);
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: space(2);
   overflow-wrap: anywhere;
+}
+
+.timeout-panel__range {
+  white-space: nowrap;
 }

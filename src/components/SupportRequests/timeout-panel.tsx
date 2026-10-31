@@ -128,7 +128,9 @@ const Ledger = ({ timeouts }: { timeouts: SupportTimeoutEntry[] }): ReactElement
       {timeouts.map((timeout) => (
         <li key={timeout.id}>
           <span className="timeout-panel__ledger-line">
-            <DayRange from={timeout.createdAt} to={timeout.until} />
+            <span className="timeout-panel__range">
+              <DayRange from={timeout.createdAt} to={timeout.until} />
+            </span>
             {timeout.liftedAt && (
               <span className="timeout-panel__muted">
                 Lifted <LocalDay at={timeout.liftedAt} />
