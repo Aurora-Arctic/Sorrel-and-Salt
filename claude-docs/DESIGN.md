@@ -889,6 +889,8 @@ type Query {
   ): QueryGrimoireConnection! # workspace-visible + own private spells; status filters in SQL
   spell(id: ID!, workspaceId: ID!): Spell! # NOT_FOUND for a spell this reader may not see
   mySupportRequests(first: Int, after: String): QueryMySupportRequestsConnection! # the session's own requests, newest first, each with its replies; the finder ANDs created_by (M15.1)
+  mySupportRequest(id: ID!): SupportRequest! # one of the session's own; NOT_FOUND for another sender's
+  supportRequest(id: ID!): SupportRequest! # curator or admin; NOT_FOUND for a request a curator may not see
   supportRequests(
     kind: SupportKind
     status: SupportStatus
@@ -1338,7 +1340,7 @@ type SupportRequest {
   path: String
   errorCode: Int
   status: SupportStatus!
-  sender: User! # a curator or admin reads it; a sender is the session's own user
+  sender: User # a curator or admin reads it; a sender is the session's own user; null once the account is gone
   assignedTo: User
   curatorVisible: Boolean!
   issueUrl: String
@@ -1351,7 +1353,7 @@ type SupportRequest {
 type SupportReply {
   id: ID!
   body: String!
-  author: User! # created_by
+  author: User # created_by; null once the account is gone
   audit: AuditInfo!
 }
 type SupportTimeout {
