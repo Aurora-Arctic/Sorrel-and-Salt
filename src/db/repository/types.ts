@@ -1112,12 +1112,10 @@ export interface CardBatchFilter {
   expiresTo?: string;
 }
 
-/** What the admin card sign-up list and its CSV are narrowed by. Each part is optional. */
+/** What the admin card sign-up list and its CSV are narrowed by. */
 export interface CardArrivalFilter {
-  /** A substring of the account's name or address, case-insensitive. */
+  /** Part of the account's name or address, or the start of the batch number; case-insensitive. */
   query?: string;
-  /** The start of the batch number, case-insensitive. */
-  batch?: string;
 }
 
 /** A card in any state: always in a batch. */

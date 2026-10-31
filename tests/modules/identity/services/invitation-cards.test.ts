@@ -44,7 +44,7 @@ describe('who may mint, list and revoke', () => {
     // Filters that name the batch and an arrival it holds, so an admin's call would answer a row.
     await sql`update invitations set accepted_at = now(), accepted_by = ${B.id} where id = ${rows[0]!.id}`;
     const FILTERED_BATCHES = { batch: batchId.slice(0, 4), status: 'live' as const };
-    const FILTERED_ARRIVALS = { query: B.email, batch: batchId.slice(0, 4) };
+    const FILTERED_ARRIVALS = { query: batchId.slice(0, 4) };
     expect(await listCardBatches(asUser(E), FILTERED_BATCHES, PAGE)).toHaveLength(1);
     expect(await listCardArrivals(asUser(E), FILTERED_ARRIVALS, PAGE)).toHaveLength(1);
 
@@ -261,13 +261,13 @@ describe('the arrivals CSV', () => {
 
     const everyone = await cardArrivalsCsv(asUser(E));
     const byName = await cardArrivalsCsv(asUser(E), { query: B.email });
-    const byBatch = await cardArrivalsCsv(asUser(E), { batch: 'ffffffff' });
+    const byNoBatch = await cardArrivalsCsv(asUser(E), { query: 'ffffffff' });
 
     expect(everyone.trimEnd().split('\r\n')).toHaveLength(3);
     expect(byName.trimEnd().split('\r\n')).toHaveLength(2);
     expect(byName).toContain(B.email);
     expect(byName).not.toContain(A.email);
-    expect(byBatch).toBe('Account Name,Email,Accepted,Batch\r\n');
+    expect(byNoBatch).toBe('Account Name,Email,Accepted,Batch\r\n');
   });
 
   it('is only a header when nobody arrived', async () => {

@@ -53,10 +53,11 @@ Expires is a UTC day, `2026-10-30`. Minted On, Refused Opens First and Latest an
   date (**Accepted On**), the batch and the covens it owns (**Covens Owned**; "None yet" when none). An account
   that can no longer be read keeps its row as plain "Removed account" text. The name opens that account's user modal over the page, through the Users list's own `UserLink`. **Download CSV** reads `cardArrivalsCsv` through
   GraphQL and hands the string to the browser as `card-sign-ups.csv`; a failure shows as the button's click feedback; the service refuses anyone but an admin.
-- **Card Sign-Ups filter** (`arrivals-filter.tsx`): the shared `FilterForm` ("Filter Card Sign-Ups") with **Name or Email**
-  (`query`, part of either, case-folded) and **Batch** (`batch`, the start of the batch number), both held in the URL and
-  applied together by either magnifier or Enter. `cardArrivals` and its count filter in SQL and page through
-  `findPage`; **Download CSV** sends the same `query` and `batch` to `cardArrivalsCsv`, so the file holds the filtered rows.
+- **Card Sign-Ups filter** (`arrivals-filter.tsx`): the shared `FilterForm` ("Filter Card Sign-Ups") with one search
+  box, **Name, Email or Batch** (`query`, held in the URL, sent by the magnifier or Enter). It keeps a sign-up whose
+  account name or email holds the text, or whose batch number starts with it, case-folded; an info tip beside the label
+  says so. `cardArrivals` and its count filter in SQL and page through `findPage`; **Download CSV** sends the same
+  `query` to `cardArrivalsCsv`, so the file holds the filtered rows.
 - `src/lib/invitation-cards/limits.ts` holds `CARDS_PER_SHEET`, `MAX_SHEETS_PER_BATCH` and
   `DEFAULT_EXPIRY_DAYS`, a file with no imports so a client file can read it; the service rejects anything
   past the cap whatever the form allows.

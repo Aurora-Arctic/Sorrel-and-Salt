@@ -54,8 +54,8 @@ test('an admin mints a sheet of cards and the Invitation Cards tab lists the bat
   await page.getByRole('button', { name: /Download CSV/ }).click();
   expect((await csv).suggestedFilename()).toBe('card-sign-ups.csv');
 
-  await page.getByRole('searchbox', { name: 'Name or Email' }).fill('nobody');
-  await page.getByRole('searchbox', { name: 'Name or Email' }).press('Enter');
+  await page.getByRole('searchbox', { name: 'Name, Email or Batch' }).fill('nobody');
+  await page.getByRole('searchbox', { name: 'Name, Email or Batch' }).press('Enter');
   await expect(page).toHaveURL(/query=nobody/);
   await expect(page.getByText(/No sign-ups match/)).toBeVisible();
   await assertNoAccessibilityViolations(page);

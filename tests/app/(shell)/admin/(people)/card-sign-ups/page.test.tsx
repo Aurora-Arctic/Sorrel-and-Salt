@@ -59,14 +59,11 @@ describe('/admin/card-sign-ups', () => {
     usersForAdmin.mockResolvedValue([]);
     membershipsOf.mockResolvedValue([]);
 
-    render(
-      await ArrivalsPage({ searchParams: Promise.resolve({ query: ' wort ', batch: ' b11 ' }) }),
-    );
+    render(await ArrivalsPage({ searchParams: Promise.resolve({ query: ' wort ' }) }));
 
-    const sent = { query: 'wort', batch: 'b11' };
+    const sent = { query: 'wort' };
     expect(listCardArrivals).toHaveBeenCalledWith(ADMIN, sent, expect.anything());
     expect(countCardArrivals).toHaveBeenCalledWith(ADMIN, sent, undefined);
-    expect(screen.getByRole('searchbox', { name: 'Name or Email' })).toHaveValue('wort');
-    expect(screen.getByRole('searchbox', { name: 'Batch' })).toHaveValue('b11');
+    expect(screen.getByRole('searchbox', { name: 'Name, Email or Batch' })).toHaveValue('wort');
   });
 });

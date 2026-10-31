@@ -1244,15 +1244,17 @@ describe('invitation cards', () => {
       expect(await arrivals({ query: '%' })).toEqual([]);
     });
 
-    it('keeps the arrivals from a batch whose number starts as typed', async () => {
-      expect(await arrivals({ batch: '2222' })).toEqual([A.id]);
-      expect(await arrivals({ batch: '1111' })).toEqual([B.id]);
-      expect(await arrivals({ batch: '1' + 'x' })).toEqual([]);
+    it('keeps the arrivals from a batch whose number starts with the query, and only from its start', async () => {
+      expect(await arrivals({ query: '2222' })).toEqual([A.id]);
+      expect(await arrivals({ query: '1111' })).toEqual([B.id]);
+      expect(await arrivals({ query: '4222' })).toEqual([]);
+      expect((await findCardArrivalCount(admin, { query: '2222' }, undefined)).totalCount).toBe(1);
     });
 
-    it('combines the two: both must hold', async () => {
-      expect(await arrivals({ query: A.email, batch: '2222' })).toEqual([A.id]);
-      expect(await arrivals({ query: A.email, batch: '1111' })).toEqual([]);
+    it('keeps an arrival when any one of its name, address or batch matches', async () => {
+      // "fixture" is in both names, "2222" starts only A's batch: one box, either match keeps the row.
+      expect((await arrivals({ query: 'fixture' })).sort()).toEqual([A.id, B.id].sort());
+      expect(await arrivals({ query: B.email })).toEqual([B.id]);
     });
   });
 });

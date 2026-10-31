@@ -15,7 +15,7 @@ import type {
 import { RouteModalContext } from '@/components/Modal/route-modal-provider';
 import type { RouteModalOpener } from '@/components/Modal/types';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
-import { FILTER_ROWS, filterForm } from '../../support/filter-form';
+import { FILTER_ROWS } from '../../support/filter-form';
 import { Navigating } from '../../support/navigating';
 import type { FilterFormSubject } from '../../support/types';
 import { mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
@@ -596,56 +596,34 @@ describe('AdminArrivals filter', () => {
   const SUBJECT: FilterFormSubject = {
     label: 'Filter Card Sign-Ups',
     path: PATH,
-    searchLabel: 'Name or Email',
+    searchLabel: 'Name, Email or Batch',
     push: router.push,
-    none: { list: <AdminArrivals arrivals={[]} />, sends: 'query=&batch=' },
+    none: { list: <AdminArrivals arrivals={[]} />, sends: 'query=' },
     shown: {
-      list: <AdminArrivals arrivals={[]} filter={{ query: 'wort', batch: 'b11' }} />,
-      sends: 'query=wort&batch=b11',
+      list: <AdminArrivals arrivals={[]} filter={{ query: 'wort' }} />,
+      sends: 'query=wort',
     },
     alone: [
       {
-        list: <AdminArrivals arrivals={[]} filter={{ query: 'wort', batch: '' }} />,
-        sends: 'query=wort&batch=',
-      },
-      {
-        list: <AdminArrivals arrivals={[]} filter={{ query: '', batch: 'b11' }} />,
-        sends: 'query=&batch=b11',
+        list: <AdminArrivals arrivals={[]} filter={{ query: 'b11' }} />,
+        sends: 'query=b11',
       },
     ],
-    searched: `${PATH}?query=Two+words&batch=b11`,
+    searched: `${PATH}?query=Two+words`,
   };
 
-  // Two search boxes draw two magnifiers, so the shared row that presses the one Search button is replaced by the test below.
-  it.each(FILTER_ROWS.filter(([title]) => !title.startsWith('opens the searched list')))(
-    '%s',
-    (_title, run) => run(SUBJECT),
-  );
+  it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));
 
-  it('writes both boxes to the URL together on either magnifier or Enter, trimmed', () => {
-    render(<AdminArrivals arrivals={[]} filter={{ query: 'wort', batch: '' }} />);
+  it('is one search box, saying in its tip what it matches', () => {
+    render(<AdminArrivals arrivals={[]} filter={{ query: 'wort' }} />);
 
-    fireEvent.change(screen.getByRole('searchbox', { name: 'Batch' }), {
-      target: { value: ' b22 ' },
-    });
-    fireEvent.click(screen.getAllByRole('button', { name: 'Search' })[1]);
-    fireEvent.submit(filterForm('Filter Card Sign-Ups'));
-
-    expect(router.push.mock.calls).toEqual([
-      [`${PATH}?query=wort&batch=b22`],
-      [`${PATH}?query=wort&batch=b22`],
-    ]);
+    expect(screen.getAllByRole('searchbox')).toHaveLength(1);
+    const box = screen.getByRole('searchbox', { name: 'Name, Email or Batch' });
+    expect(box).toHaveValue('wort');
+    expect(box).toHaveAccessibleDescription(/batch/i);
   });
 
-  it('shows what the URL holds, and Clear leads to every sign-up', () => {
-    render(<AdminArrivals arrivals={[]} filter={{ query: 'wort', batch: 'b11' }} />);
-
-    expect(screen.getByRole('searchbox', { name: 'Name or Email' })).toHaveValue('wort');
-    expect(screen.getByRole('searchbox', { name: 'Batch' })).toHaveValue('b11');
-    expect(screen.getByRole('link', { name: 'Clear' })).toHaveAttribute('href', PATH);
-  });
-
-  const askedCsv = async (filter: { query: string; batch: string }) => {
+  const askedCsv = async (filter: { query: string }) => {
     const asked: unknown[] = [];
     mockGraphQLQuery('CardArrivalsCsv', (variables) => {
       asked.push(variables);
@@ -666,13 +644,10 @@ describe('AdminArrivals filter', () => {
   };
 
   it('sends the filter shown to the CSV download', async () => {
-    expect(await askedCsv({ query: 'wort', batch: 'b11' })).toEqual({
-      query: 'wort',
-      batch: 'b11',
-    });
+    expect(await askedCsv({ query: 'wort' })).toEqual({ query: 'wort' });
   });
 
   it('sends no variables when the filter is blank, as on the unfiltered tab', async () => {
-    expect(await askedCsv({ query: '', batch: '' })).toEqual({});
+    expect(await askedCsv({ query: '' })).toEqual({});
   });
 });

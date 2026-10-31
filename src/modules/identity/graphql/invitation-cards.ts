@@ -210,16 +210,13 @@ builder.queryField('cardArrivals', (t) =>
     args: {
       query: t.arg.string({
         required: false,
-        description: "Part of the account's name or email, case-insensitively.",
-      }),
-      batch: t.arg.string({
-        required: false,
-        description: 'The start of the batch number, case-insensitively.',
+        description:
+          "Part of the account's name or email, or the start of the batch number, case-insensitively.",
       }),
     },
     authScopes: { admin: true },
-    resolve: (_root, { query, batch }, page, context) =>
-      listCardArrivals(sessionOf(context), definedArgs({ query, batch }), page),
+    resolve: (_root, { query }, page, context) =>
+      listCardArrivals(sessionOf(context), definedArgs({ query }), page),
   }),
 );
 
@@ -241,16 +238,13 @@ builder.queryField('cardArrivalsCsv', (t) =>
     args: {
       query: t.arg.string({
         required: false,
-        description: "Part of the account's name or email, case-insensitively.",
-      }),
-      batch: t.arg.string({
-        required: false,
-        description: 'The start of the batch number, case-insensitively.',
+        description:
+          "Part of the account's name or email, or the start of the batch number, case-insensitively.",
       }),
     },
     authScopes: { admin: true },
-    resolve: (_root, { query, batch }, context) =>
-      cardArrivalsCsv(sessionOf(context), definedArgs({ query, batch })),
+    resolve: (_root, { query }, context) =>
+      cardArrivalsCsv(sessionOf(context), definedArgs({ query })),
   }),
 );
 

@@ -26,5 +26,4 @@ export interface ArrivalsSearchParams {
   after?: string | string[];
   before?: string | string[];
   query?: string | string[];
-  batch?: string | string[];
 }

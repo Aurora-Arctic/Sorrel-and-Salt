@@ -16,13 +16,14 @@ export function SearchField({
   label,
   name,
   placeholder,
+  hint,
   value,
   onChange,
 }: SearchFieldProps): ReactElement {
   const own = useId();
-  const { aria, ...field } = fieldDescription({ id: id ?? own });
+  const { aria, ...field } = fieldDescription({ id: id ?? own, hint });
   return (
-    <FieldShell label={label} {...field}>
+    <FieldShell label={label} hint={hint} {...field}>
       <div className="input search-field">
         <input
           id={field.controlId}

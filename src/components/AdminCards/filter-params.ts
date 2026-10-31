@@ -34,9 +34,6 @@ export function readCardsFilter(params: {
   };
 }
 
-export function readArrivalsFilter(params: {
-  query?: string | string[];
-  batch?: string | string[];
-}): ArrivalsFilter {
-  return { query: trimmed(params.query), batch: trimmed(params.batch) };
+export function readArrivalsFilter(params: { query?: string | string[] }): ArrivalsFilter {
+  return { query: trimmed(params.query) };
 }
