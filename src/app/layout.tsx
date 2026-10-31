@@ -11,7 +11,7 @@ import { body, display } from './fonts';
 import ImpersonationBannerSlot from './impersonation-banner';
 import PrePaintScripts from './pre-paint-scripts';
 import Providers from './providers';
-import SupportDialogSlot from './support-dialog-slot';
+import SupportDialog from '../components/SupportDialog';
 import './globals.scss';
 
 // `metadataBase` resolves any relative address a page's metadata names against the production origin,
@@ -56,7 +56,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
               <SiteFooter />
             </div>
             {/* The dialog the footer's Support link opens. */}
-            <SupportDialogSlot />
+            <SupportDialog />
           </Providers>
         </StatusRegionProvider>
         {/* Last, so it never precedes the page in reading order even for a

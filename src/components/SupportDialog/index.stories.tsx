@@ -1,8 +1,20 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { SupportDialogStateDocument } from '@/gql/graphql';
+import { answerQuery } from '../../../.storybook/mock-api';
 import SupportDialog from '.';
 
 // Render-only; behaviour is asserted in tests/components/SupportDialog. The address carries the
-// parameters that open it.
+// parameters that open it, and the fake API (.storybook/mock-api.ts) answers the state query.
+const answering = (kind: 'form' | 'unverified') => ({
+  msw: {
+    handlers: [
+      answerQuery(SupportDialogStateDocument, () => ({
+        supportDialogState: { kind, until: null },
+      })),
+    ],
+  },
+});
+
 const meta = {
   title: 'Support / Support Dialog',
   component: SupportDialog,
@@ -13,5 +25,5 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const Open: Story = { args: { state: { kind: 'form' } } };
-export const Unverified: Story = { args: { state: { kind: 'unverified' } } };
+export const Open: Story = { parameters: answering('form') };
+export const Unverified: Story = { parameters: answering('unverified') };

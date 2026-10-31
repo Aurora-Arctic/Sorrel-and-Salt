@@ -9,7 +9,7 @@ import { NotFound } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { RowId, parseInput } from '../../../lib/validation';
-import type { SupportRequestRow } from '../types';
+import type { SupportDialogAnswer, SupportRequestRow } from '../types';
 import { requireVerified } from './access';
 
 // The sender's reads, behind `/account/support`. The finders AND `created_by` themselves, so what another sender wrote is
@@ -71,4 +71,17 @@ export async function getMySupportRequest(
 export async function getMySupportTimeoutEnd(session: Session): Promise<Date | null> {
   requireVerified(session);
   return (await findActiveSupportTimeoutEnd(session.userId)) ?? null;
+}
+
+/**
+ * What the Support dialog offers this visitor, asked as it opens: a signed-out one writes without an account, an unverified one confirms
+ * the address first, a timed-out one sees when it ends. Open to a signed-out caller, which is the first answer.
+ */
+export async function getMySupportDialogState(
+  session: Session | null,
+): Promise<SupportDialogAnswer> {
+  if (!session) return { kind: 'signedOut', until: null };
+  if (session.emailUnverified) return { kind: 'unverified', until: null };
+  const until = await getMySupportTimeoutEnd(session);
+  return until ? { kind: 'timedOut', until } : { kind: 'form', until: null };
 }

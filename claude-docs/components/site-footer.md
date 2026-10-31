@@ -2,7 +2,7 @@
 
 `src/components/SiteFooter/` — the footer, drawn once by the root layout (`src/app/layout.tsx`) under every page: the shell, the public frame, the home page and the error screens. It is one row in the wide column, under a hairline that spans the whole window (the footer's own top border, not the row's): at the left the site name (`SITE_NAME`) as a link to `/`, in the heading face, and at the right the footer nav, in the body face at the small size. The two are baseline-aligned and wrap; at phone width the row stacks, name above links, left-aligned. The nav carries a Support link and nothing else; later footer links are added to it here, and there is no descriptive line under the name.
 
-The link is a [`SupportLink`](support-link.md): it opens the Support dialog over the current page. The dialog is mounted beside the footer in the root layout (`src/app/support-dialog-slot.tsx`), so every page has one. Before the address is known, the link goes to `/support`.
+The link is a [`SupportLink`](support-link.md): it opens the Support dialog over the current page. The dialog is mounted beside the footer in the root layout, so every page has one. Before the address is known, the link goes to `/support`.
 
 ## At the foot of the window
 

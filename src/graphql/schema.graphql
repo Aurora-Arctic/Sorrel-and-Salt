@@ -1625,6 +1625,11 @@ type Query {
   referenceSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryReferenceSuggestionsConnection!
   spell(id: ID!, workspaceId: ID!): Spell!
 
+  """
+  Open to a signed-out caller. The answer is about the caller alone, read under their own session.
+  """
+  supportDialogState: SupportDialogState!
+
   """One support request the viewer may read."""
   supportRequest(id: ID!): SupportRequest!
 
@@ -2437,6 +2442,22 @@ enum SupportAbout {
   feedback
   privacy
   question
+}
+
+"""What the Support dialog offers a visitor."""
+enum SupportDialogKind {
+  form
+  signedOut
+  timedOut
+  unverified
+}
+
+"""What the asking visitor may do in the Support dialog."""
+type SupportDialogState {
+  kind: SupportDialogKind!
+
+  """When the time-out ends; set only for timedOut."""
+  until: DateTime
 }
 
 """

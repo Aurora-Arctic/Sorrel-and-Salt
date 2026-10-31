@@ -23,3 +23,9 @@ export interface SupportNotifier {
   /** Mails a signed-out visitor a staff reply in full, since they have no page to read it on. Never throws on a failed send. */
   signedOutReply(to: string, body: string): Promise<void>;
 }
+
+/** What the Support dialog offers a visitor: `until` is set only for `timedOut`. */
+export interface SupportDialogAnswer {
+  kind: 'signedOut' | 'unverified' | 'timedOut' | 'form';
+  until: Date | null;
+}

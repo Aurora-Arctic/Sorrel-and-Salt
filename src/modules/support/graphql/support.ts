@@ -14,12 +14,21 @@ import {
   setSupportRequestCuratorVisible,
   setSupportRequestIssueUrl,
 } from '../services/staff';
-import { getMySupportRequest, listMySupportRequests } from '../services/own';
+import {
+  getMySupportDialogState,
+  getMySupportRequest,
+  listMySupportRequests,
+} from '../services/own';
 import { replyToSupportRequest } from '../services/reply';
 import { sendSupportRequest } from '../services/send';
 import { sendSignedOutSupportRequest } from '../services/signed-out';
 import { liftSupportTimeout, timeOutSupportSender } from '../services/timeouts';
-import type { SupportReplyRow, SupportRequestRow, SupportTimeoutRow } from '../types';
+import type {
+  SupportDialogAnswer,
+  SupportReplyRow,
+  SupportRequestRow,
+  SupportTimeoutRow,
+} from '../types';
 import { MESSAGE_MAX_LENGTH, PATH_MAX_LENGTH, SUBJECT_MAX_LENGTH } from '../validation/support';
 
 const SupportAboutEnum = builder.enumType('SupportAbout', {
@@ -201,6 +210,34 @@ const SignedOutSupportRequestInputRef = builder.inputType('SignedOutSupportReque
     }),
   }),
 });
+
+const SupportDialogKindEnum = builder.enumType('SupportDialogKind', {
+  description: 'What the Support dialog offers a visitor.',
+  values: ['signedOut', 'unverified', 'timedOut', 'form'] as const,
+});
+
+const SupportDialogStateRef = builder
+  .objectRef<SupportDialogAnswer>('SupportDialogState')
+  .implement({
+    description: 'What the asking visitor may do in the Support dialog.',
+    fields: (t) => ({
+      kind: t.expose('kind', { type: SupportDialogKindEnum }),
+      until: t.expose('until', {
+        type: 'DateTime',
+        nullable: true,
+        description: 'When the time-out ends; set only for timedOut.',
+      }),
+    }),
+  });
+
+builder.queryField('supportDialogState', (t) =>
+  t.field({
+    type: SupportDialogStateRef,
+    description:
+      'Open to a signed-out caller. The answer is about the caller alone, read under their own session.',
+    resolve: (_root, _args, context) => getMySupportDialogState(context.session),
+  }),
+);
 
 builder.queryField('mySupportRequests', (t) =>
   t.pagedConnection({

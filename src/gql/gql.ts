@@ -114,6 +114,7 @@ type Documents = {
     "\n  mutation DuplicateSpell($workspaceId: ID!, $id: ID!) {\n    duplicateSpell(workspaceId: $workspaceId, id: $id) {\n      id\n    }\n  }\n": typeof types.DuplicateSpellDocument,
     "\n  mutation DeleteWorking($workspaceId: ID!, $id: ID!) {\n    deleteWorking(workspaceId: $workspaceId, id: $id)\n  }\n": typeof types.DeleteWorkingDocument,
     "\n  mutation SaveStock($workspaceId: ID!, $ingredientId: ID!, $input: SaveStockInput!) {\n    saveStock(workspaceId: $workspaceId, ingredientId: $ingredientId, input: $input) {\n      id\n    }\n  }\n": typeof types.SaveStockDocument,
+    "\n  query SupportDialogState {\n    supportDialogState {\n      kind\n      until\n    }\n  }\n": typeof types.SupportDialogStateDocument,
     "\n  mutation SendSupportRequest($input: SupportRequestInput!) {\n    sendSupportRequest(input: $input) {\n      id\n    }\n  }\n": typeof types.SendSupportRequestDocument,
     "\n  mutation AssignSupportRequest($id: ID!, $assigneeId: ID) {\n    assignSupportRequest(id: $id, assigneeId: $assigneeId) {\n      id\n    }\n  }\n": typeof types.AssignSupportRequestDocument,
     "\n  mutation SetSupportRequestCuratorVisible($id: ID!, $visible: Boolean!) {\n    setSupportRequestCuratorVisible(id: $id, visible: $visible) {\n      id\n    }\n  }\n": typeof types.SetSupportRequestCuratorVisibleDocument,
@@ -229,6 +230,7 @@ const documents: Documents = {
     "\n  mutation DuplicateSpell($workspaceId: ID!, $id: ID!) {\n    duplicateSpell(workspaceId: $workspaceId, id: $id) {\n      id\n    }\n  }\n": types.DuplicateSpellDocument,
     "\n  mutation DeleteWorking($workspaceId: ID!, $id: ID!) {\n    deleteWorking(workspaceId: $workspaceId, id: $id)\n  }\n": types.DeleteWorkingDocument,
     "\n  mutation SaveStock($workspaceId: ID!, $ingredientId: ID!, $input: SaveStockInput!) {\n    saveStock(workspaceId: $workspaceId, ingredientId: $ingredientId, input: $input) {\n      id\n    }\n  }\n": types.SaveStockDocument,
+    "\n  query SupportDialogState {\n    supportDialogState {\n      kind\n      until\n    }\n  }\n": types.SupportDialogStateDocument,
     "\n  mutation SendSupportRequest($input: SupportRequestInput!) {\n    sendSupportRequest(input: $input) {\n      id\n    }\n  }\n": types.SendSupportRequestDocument,
     "\n  mutation AssignSupportRequest($id: ID!, $assigneeId: ID) {\n    assignSupportRequest(id: $id, assigneeId: $assigneeId) {\n      id\n    }\n  }\n": types.AssignSupportRequestDocument,
     "\n  mutation SetSupportRequestCuratorVisible($id: ID!, $visible: Boolean!) {\n    setSupportRequestCuratorVisible(id: $id, visible: $visible) {\n      id\n    }\n  }\n": types.SetSupportRequestCuratorVisibleDocument,
@@ -658,6 +660,10 @@ export function graphql(source: "\n  mutation DeleteWorking($workspaceId: ID!, $
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation SaveStock($workspaceId: ID!, $ingredientId: ID!, $input: SaveStockInput!) {\n    saveStock(workspaceId: $workspaceId, ingredientId: $ingredientId, input: $input) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation SaveStock($workspaceId: ID!, $ingredientId: ID!, $input: SaveStockInput!) {\n    saveStock(workspaceId: $workspaceId, ingredientId: $ingredientId, input: $input) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query SupportDialogState {\n    supportDialogState {\n      kind\n      until\n    }\n  }\n"): (typeof documents)["\n  query SupportDialogState {\n    supportDialogState {\n      kind\n      until\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
