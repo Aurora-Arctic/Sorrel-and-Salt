@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm';
 import {
   type AnyPgColumn,
   boolean,
+  check,
   index,
   integer,
   pgEnum,
@@ -10,6 +11,7 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
+import { SIGNED_OUT_SENDER_ID } from '../../../lib/support-sender';
 import { idColumn } from '../../../db/schema-parts';
 import { auditColumns, users } from '../../identity/schema/users';
 
@@ -57,9 +59,16 @@ export const supportRequests = pgTable(
     linkedFrom: uuid('linked_from').references((): AnyPgColumn => supportRequests.id),
     // The digest Next gives an error page, so a request can be matched to the server log line.
     errorReference: text('error_reference'),
+    // The address of a signed-out visitor who sent this; null on a request an account sent.
+    senderEmail: text('sender_email'),
     ...auditColumns,
   },
   (table) => [
+    // A request belongs to an account or to an address, never both: the signed-out sender account stands as `created_by` exactly when an address is set.
+    check(
+      'support_requests_one_sender',
+      sql`(${table.senderEmail} is not null) = (${table.createdBy} = ${sql.raw(`'${SIGNED_OUT_SENDER_ID}'`)})`,
+    ),
     // The admin list: open ahead of resolved, newest first.
     index('support_requests_status_created_idx')
       .on(table.status, table.createdAt)

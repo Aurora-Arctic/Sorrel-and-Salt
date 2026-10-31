@@ -1,0 +1,2 @@
+ALTER TABLE "support_requests" ADD COLUMN "sender_email" text;--> statement-breakpoint
+ALTER TABLE "support_requests" ADD CONSTRAINT "support_requests_one_sender" CHECK (("support_requests"."sender_email" is not null) = ("support_requests"."created_by" = '00000000-0000-4000-8000-00000000a110'));
