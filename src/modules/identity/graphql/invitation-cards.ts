@@ -203,7 +203,7 @@ builder.queryField('invitationCardBatches', (t) =>
           batchId: entry.node.batchId,
           mintedAt: entry.node.createdAt,
           expiresAt: entry.node.expiresAt,
-          note: entry.node.batchNote,
+          note: entry.node.note,
         },
       })),
   }),

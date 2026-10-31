@@ -25,8 +25,8 @@ undeclared the two and MB.203 dropped them (`0059`). Why one table, why it is
   of one mint. `position` (nullable smallint, from 1) is a card's place in its
   batch, in the order the print PDF lays the fronts out; `invitations_position_card_only`
   keeps it off address rows and `invitations_position_positive` keeps it at 1 or more.
-  `batch_note` (nullable text, at most 500 characters) is the admin's note on the mint, copied onto every card of the batch; `invitations_batch_note_card_only` and `invitations_batch_note_length` guard it, and the Batch search on the Invitation Cards tab matches it with a contains-match beside the batch number's prefix match.
-  Cards minted before it was kept hold null. `email` is nullable. A card is a printed code bound to no address,
+  A card's `note` (the column an address row uses too) is the admin's note on the mint, copied onto every card of the batch; `invitations_card_note_length` holds a card's to 500 characters and leaves an address row's alone, and accepting a card writes it into the privilege ledger like any other invitation's note. The Batch search on the Invitation Cards tab matches it with a contains-match beside the batch number's prefix match.
+  Cards minted before notes were kept hold null. `email` is nullable. A card is a printed code bound to no address,
   coven or site role. `invitations_kind_known` admits the two kinds;
   `invitations_kind_shape` requires an `address` row's `email` and a `card`'s
   `email`, `workspace_id`, `role` and `site_role` to be null. A card's token is

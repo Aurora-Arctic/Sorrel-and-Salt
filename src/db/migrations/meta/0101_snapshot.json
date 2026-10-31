@@ -293,12 +293,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "batch_note": {
-          "name": "batch_note",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
         "created_at": {
           "name": "created_at",
           "type": "timestamp",
@@ -419,14 +413,6 @@
           "name": "invitations_position_positive",
           "value": "\"invitations\".\"position\" is null or \"invitations\".\"position\" >= 1"
         },
-        "invitations_batch_note_card_only": {
-          "name": "invitations_batch_note_card_only",
-          "value": "\"invitations\".\"batch_note\" is null or \"invitations\".\"kind\" = 'card'"
-        },
-        "invitations_batch_note_length": {
-          "name": "invitations_batch_note_length",
-          "value": "char_length(\"invitations\".\"batch_note\") <= 500"
-        },
         "invitations_kind_known": {
           "name": "invitations_kind_known",
           "value": "\"invitations\".\"kind\" in ('address', 'card')"
@@ -454,6 +440,10 @@
         "invitations_answered_once": {
           "name": "invitations_answered_once",
           "value": "num_nonnulls(\"invitations\".\"accepted_at\", \"invitations\".\"declined_at\") <= 1"
+        },
+        "invitations_card_note_length": {
+          "name": "invitations_card_note_length",
+          "value": "\"invitations\".\"kind\" <> 'card' or char_length(\"invitations\".\"note\") <= 500"
         }
       },
       "isRLSEnabled": false

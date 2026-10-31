@@ -37,6 +37,7 @@ export const invitations = namedWrites(
       // that wrote it; the owner's Remove afterwards stamps `revoked_at`.
       declinedAt: timestamp('declined_at'),
       // Why the person is being invited; optional, and either tier may carry one.
+      // The admin's reason for the invitation. A card carries its batch's note, copied onto every card of the batch as the expiry is; null when none was written.
       note: text('note'),
       // The site role a site-tier invitation grants, `curator` or `admin`;
       // null on a coven invitation, which grants `role` instead.
@@ -48,8 +49,6 @@ export const invitations = namedWrites(
       batchId: uuid('batch_id'),
       // A card's place in its batch from 1, in the order the PDF lays the fronts out; null on an address row and on a card minted before this was kept.
       position: smallint('position'),
-      // The admin's note on the mint a card came from, copied onto every card of its batch as the expiry is; null on an address row and when none was written.
-      batchNote: text('batch_note'),
       ...auditColumns,
     },
     (table) => [
@@ -67,13 +66,10 @@ export const invitations = namedWrites(
         'invitations_position_positive',
         sql`${table.position} is null or ${table.position} >= 1`,
       ),
+      // Only a card's note is capped; an address row's note has no length limit.
       check(
-        'invitations_batch_note_card_only',
-        sql`${table.batchNote} is null or ${table.kind} = 'card'`,
-      ),
-      check(
-        'invitations_batch_note_length',
-        sql`char_length(${table.batchNote}) <= ${sql.raw(String(MAX_NOTE_LENGTH))}`,
+        'invitations_card_note_length',
+        sql`${table.kind} <> 'card' or char_length(${table.note}) <= ${sql.raw(String(MAX_NOTE_LENGTH))}`,
       ),
       check('invitations_kind_known', sql`${table.kind} in ('address', 'card')`),
       // An address row names its address; a card names none of address, coven, role or site role.

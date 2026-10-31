@@ -485,7 +485,7 @@ function batchesWhere(filter: CardBatchFilter): SQL | undefined {
   ];
   return and(
     batch
-      ? or(startsWithText(invitations.batchId, batch), containsText(invitations.batchNote, batch))
+      ? or(startsWithText(invitations.batchId, batch), containsText(invitations.note, batch))
       : undefined,
     status ? batchStatusIs(status) : undefined,
     ...through(invitations.createdAt, mintedFrom, mintedTo),
@@ -662,7 +662,7 @@ export function invitationWrites({
                     {
                       kind: 'card',
                       batchId,
-                      batchNote: note,
+                      note,
                       expiresAt,
                       tokenHash: hashToken(token),
                       position: index + 1,

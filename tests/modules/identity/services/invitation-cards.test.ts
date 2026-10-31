@@ -104,9 +104,7 @@ describe('mintInvitationCards', () => {
     const blank = await mintInvitationCards(asUser(E), 1, NEXT_WEEK(), '   ');
 
     const notes = async (batchId: string) =>
-      (await sql`select batch_note from invitations where batch_id = ${batchId}`).map(
-        (row) => row.batch_note,
-      );
+      (await sql`select note from invitations where batch_id = ${batchId}`).map((row) => row.note);
     expect(await notes(noted.batchId)).toEqual(Array(CARDS_PER_SHEET).fill('For the autumn fair'));
     expect(await notes(plain.batchId)).toEqual(Array(CARDS_PER_SHEET).fill(null));
     expect(await notes(blank.batchId)).toEqual(Array(CARDS_PER_SHEET).fill(null));
@@ -127,14 +125,12 @@ describe('mintInvitationCards', () => {
     expect(await cards()).toHaveLength(CARDS_PER_SHEET);
   });
 
-  it('refuses a note over the length in the database too, and a note on an address invitation’s batch column', async () => {
+  it('refuses a card note over the length in the database too, and leaves an address invitation’s note of any length alone', async () => {
     await mintInvitationCards(asUser(E), 1, NEXT_WEEK());
     await expect(
-      sql`update invitations set batch_note = ${'x'.repeat(MAX_NOTE_LENGTH + 1)} where kind = 'card'`,
-    ).rejects.toThrow(/invitations_batch_note_length/);
-    await expect(
-      sql`insert into invitations (email, token_hash, kind, site_role, batch_note, created_by, updated_by) values ('x@example.test', 'h', 'address', 'curator', 'a note', ${E.id}, ${E.id})`,
-    ).rejects.toThrow(/invitations_batch_note_card_only/);
+      sql`update invitations set note = ${'x'.repeat(MAX_NOTE_LENGTH + 1)} where kind = 'card'`,
+    ).rejects.toThrow(/invitations_card_note_length/);
+    await sql`insert into invitations (email, token_hash, kind, site_role, note, created_by, updated_by) values ('x@example.test', 'h', 'address', 'curator', ${'x'.repeat(MAX_NOTE_LENGTH + 1)}, ${E.id}, ${E.id})`;
   });
 
   it('numbers each card by its place in the token list, which is the order the PDF lays the fronts out', async () => {
