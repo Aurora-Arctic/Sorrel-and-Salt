@@ -255,6 +255,24 @@ describe('supportRequests', () => {
     expect(ids).not.toContain(plain.id);
   });
 
+  it('shows the coven in a page to an admin and the sender, and hides it from a curator, in a list and by id', async () => {
+    const REAL = '/coven/whitethorn-coven/grimoire';
+    const request = await send(C, { ...INPUT, path: REAL });
+    await setSupportRequestCuratorVisible(asUser(E), request.id, true);
+    // The curator can read this request, and the row holds the real page.
+    expect((await getSupportRequest(asUser(F), request.id)).id).toBe(request.id);
+    const [{ path }] = await sql`select path from support_requests where id = ${request.id}`;
+    expect(path).toBe(REAL);
+
+    expect((await getSupportRequest(asUser(E), request.id)).path).toBe(REAL);
+    expect((await getSupportRequest(asUser(F), request.id)).path).toBe('/coven/[coven]/grimoire');
+    expect((await getMySupportRequest(asUser(C), request.id)).path).toBe(REAL);
+    const listed = (user: SessionUser) =>
+      listSupportRequests(asUser(user), {}, PAGE).then((entries) => entries[0]?.node.path);
+    expect(await listed(E)).toBe(REAL);
+    expect(await listed(F)).toBe('/coven/[coven]/grimoire');
+  });
+
   it('filters by about, status and error code', async () => {
     const bug = await send(C, { ...INPUT, errorCode: 404 });
     await send(C, { ...INPUT, about: 'question' });

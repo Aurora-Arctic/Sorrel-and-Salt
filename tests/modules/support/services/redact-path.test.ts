@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { redactPath } from '@/modules/support';
+import { redactPath, redactPathForCurator } from '@/modules/support';
 
 describe('redactPath', () => {
   it('keeps the coven segment, so a reviewer can tell which coven the page was', () => {
@@ -17,5 +17,10 @@ describe('redactPath', () => {
   it('stores nothing as an empty string', () => {
     expect(redactPath(undefined)).toBe('');
     expect(redactPath('  ')).toBe('');
+  });
+
+  it('replaces the coven segment for a curator and keeps the screen', () => {
+    expect(redactPathForCurator('/coven/moonlit-hollow/grimoire')).toBe('/coven/[coven]/grimoire');
+    expect(redactPathForCurator('/compendium')).toBe('/compendium');
   });
 });

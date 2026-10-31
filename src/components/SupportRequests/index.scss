@@ -94,6 +94,11 @@
   }
 }
 
+// The Page fact takes the whole row, so a long path stays on one line; it breaks anywhere only past the full width.
+.support-detail__fact--wide {
+  grid-column: 1 / -1;
+}
+
 .support-detail__muted {
   color: $text-muted;
 }

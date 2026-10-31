@@ -2,7 +2,7 @@
 // internal to the module.
 export * from './services/send';
 export * from './services/signed-out';
-export { redactPath } from './services/redact-path';
+export { redactPath, redactPathForCurator } from './services/redact-path';
 export * from './services/own';
 export * from './services/staff';
 export * from './services/reply';

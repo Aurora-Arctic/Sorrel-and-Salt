@@ -22,6 +22,7 @@ import { supportRequests } from '../schema/support-requests';
 import type { SupportRequestRow } from '../types';
 import { IssueUrlInput } from '../validation/support';
 import { readerOf } from './access';
+import { redactPathForCurator } from './redact-path';
 
 // What the staff do to a request. An admin reads every request and may do everything; a curator reads the requests marked for
 // curators or assigned to them, and may reply to and resolve the ones assigned to them. Both are checked here, by direct call.
@@ -29,13 +30,19 @@ import { readerOf } from './access';
 const READ_REFUSAL = 'Only a curator or a site admin may read support requests';
 const ADMIN_REFUSAL = 'Only a site admin may do this to a support request';
 
+/** The request as this session reads it: a curator sees no coven slug in its page, an admin sees it as stored. */
+function asRead(session: Session, row: SupportRequestRow): SupportRequestRow {
+  return session.role === 'curator' ? { ...row, path: redactPathForCurator(row.path) } : row;
+}
+
 /** An admin's or curator's page of requests under `filter`: open ahead of resolved, newest first within each. */
 export async function listSupportRequests(
   session: Session,
   filter: SupportRequestFilter,
   page: PageRequest,
 ): Promise<PageEntry<SupportRequestRow>[]> {
-  return findSupportRequestPage(readerOf(session, READ_REFUSAL), filter, page);
+  const entries = await findSupportRequestPage(readerOf(session, READ_REFUSAL), filter, page);
+  return entries.map((entry) => ({ ...entry, node: asRead(session, entry.node) }));
 }
 
 /** How many requests `listSupportRequests` pages under `filter`, and how many come before `start`, a page's first row. */
@@ -54,7 +61,10 @@ export async function countSupportRequests(
  * @throws {NotFound} no request the reader may see has this id.
  */
 export async function getSupportRequest(session: Session, id: string): Promise<SupportRequestRow> {
-  return visibleRequest(readerOf(session, READ_REFUSAL), parseInput(RowId, id));
+  return asRead(
+    session,
+    await visibleRequest(readerOf(session, READ_REFUSAL), parseInput(RowId, id)),
+  );
 }
 
 async function visibleRequest(reader: SupportReader, id: string): Promise<SupportRequestRow> {
@@ -88,7 +98,7 @@ async function change(
 ): Promise<SupportRequestRow> {
   const [row] = await withAudit(session, (write) => write.updateById(supportRequests, id, values));
   if (!row) throw new NotFound('No such support request');
-  return row as SupportRequestRow;
+  return asRead(session, row as SupportRequestRow);
 }
 
 /**
@@ -183,7 +193,7 @@ export async function moveOrRefuse(
       `A request can be ${doing}d only while it is ${from.join(' or ').replace(/_/g, ' ')}; this one is ${row.status.replace(/_/g, ' ')}`,
     );
   }
-  return moved;
+  return asRead(session, moved);
 }
 
 /** Links the request to a GitHub issue on this repository, or clears the link with null. */

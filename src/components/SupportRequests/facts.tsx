@@ -34,7 +34,7 @@ const SupportFacts = ({
       </dd>
     </div>
     {path && (
-      <div>
+      <div className="support-detail__fact--wide">
         <dt>Page</dt>
         <dd className="support-detail__mono">{path}</dd>
       </div>
