@@ -21,7 +21,7 @@ export default async function ResetPasswordPage({ searchParams }: ResetPasswordP
     <main className="page-frame page-frame--narrow">
       <div className="panel">
         <div className="header">
-          <h1 className="reset-password-form__heading">Choose a New Password</h1>
+          <h1 className="auth-title">Choose a New Password</h1>
           <p className="lede">
             Your new password signs out every device signed in to your account.
           </p>

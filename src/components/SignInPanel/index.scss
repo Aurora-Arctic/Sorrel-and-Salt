@@ -147,8 +147,17 @@
   }
 }
 
-.sign-in-panel__back {
+// The ingredient page's `.back-link` look (IngredientEntry/back-link.scss) on a button: the reset
+// takes the button's own box away, and the type is one step under the link's. Compounded so load
+// order does not matter.
+.sign-in-panel__back.back-link {
   align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-size: type-size('caption');
+  cursor: pointer;
 }
 
 .sign-in-panel__password-heading {
