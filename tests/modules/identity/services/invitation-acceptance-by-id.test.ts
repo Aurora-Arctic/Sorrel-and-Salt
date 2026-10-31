@@ -134,3 +134,19 @@ describe('acceptInvitationById', () => {
     }
   });
 });
+
+// A card has no addressee, so no account is ever sent one to accept by id.
+describe('acceptInvitationById, given a card', () => {
+  it('answers NotFound for a pending card the account could otherwise accept by its link', async () => {
+    const id = await invite({ card: true });
+    await expect(acceptInvitation(asUser(AS_GRANTEE), TOKEN)).resolves.toMatchObject({ id });
+    await sql`update invitations set accepted_at = null, accepted_by = null`;
+    await sql`truncate user_privilege_changes`;
+
+    await expect(acceptInvitationById(asUser(AS_GRANTEE), id)).rejects.toThrow(NotFound);
+    expect(
+      (await sql`select accepted_at from invitations where id = ${id}`)[0]!.accepted_at,
+    ).toBeNull();
+    expect(await ledger()).toEqual([]);
+  });
+});

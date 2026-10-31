@@ -11,12 +11,20 @@ import {
   findPendingWorkspaceInvitationCount,
   findPendingWorkspaceInvitationPage,
   findPendingSiteInvitationPage,
+  findCardArrivalPage,
+  findCardArrivalCount,
+  findCardBatchCount,
+  findCardBatchPage,
+  findCardBatchTotals,
   withAudit,
   type AuditWriter,
+  type CardArrivalFilter,
+  type CardBatchFilter,
   type InvitationRow,
   type SiteInvitationValues,
   type WorkspaceInvitationValues,
 } from '@/db/repository';
+import { batchStatus } from '@/components/AdminCards/batches';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { workspaces } from '@/modules/coven/schema/workspaces';
 import { eq } from 'drizzle-orm';
@@ -56,7 +64,7 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  await sql`truncate invitations`;
+  await sql`truncate card_invitation_attempts, invitations`;
   await sql`update users set email_verified = true where id in (${A.id}, ${B.id})`;
 });
 
@@ -715,7 +723,7 @@ describe('the received invitations', () => {
     });
 
     it('names no inviter for a site invitation, though it is pending and the address matches', async () => {
-      await sql`truncate invitations`;
+      await sql`truncate card_invitation_attempts, invitations`;
       const [site] = await inviteToSite({ token: 'fixture-token-n-site' });
 
       expect(site?.createdBy).toBe(E.id);
@@ -945,5 +953,327 @@ describe('the named writes’ signatures', () => {
     ];
 
     expect(writes).toHaveLength(12);
+  });
+});
+
+describe('invitation cards', () => {
+  const BATCH = '11111111-1111-4111-8111-111111111111';
+  const CARD = 'cardtokenAAAAAAA';
+  const OTHER_CARD = 'cardtokenBBBBBBB';
+  const LATER = () => new Date(Date.now() + 7 * 24 * 3600 * 1000);
+
+  const mint = (tokens: string[], expiresAt = LATER(), batchId = BATCH) =>
+    withAudit(asUser(E), (write) =>
+      write.insertInvitationCards(admin, { tokens, batchId, expiresAt, note: null }),
+    );
+  const cardAccept = (user: SessionUser, token = CARD) =>
+    withAudit(asUser(user), (write) => write.acceptInvitation(token));
+
+  it('stores only the hash, with no address, coven or role, one batch and one expiry', async () => {
+    const expiresAt = LATER();
+    const inserted = await mint([CARD, OTHER_CARD], expiresAt);
+
+    expect(inserted).toHaveLength(2);
+    expect(inserted[0]).toMatchObject({
+      kind: 'card',
+      email: null,
+      workspaceId: null,
+      role: null,
+      siteRole: null,
+      batchId: BATCH,
+      tokenHash: sha256(CARD),
+      createdBy: E.id,
+      acceptedAt: null,
+    });
+    expect(inserted[0]!.expiresAt).toEqual(expiresAt);
+    for (const row of inserted) {
+      expect(Object.values(await rowOf(row.id))).not.toContain(CARD);
+      expect(Object.values(await rowOf(row.id))).not.toContain(OTHER_CARD);
+    }
+  });
+
+  it('inserts five hundred cards in one statement', async () => {
+    const tokens = Array.from({ length: 500 }, (_, i) => `card-${String(i).padStart(11, '0')}`);
+    expect(await mint(tokens)).toHaveLength(500);
+  });
+
+  it('is accepted by any verified account, whatever its address', async () => {
+    await mint([CARD]);
+    const [accepted] = await cardAccept(B);
+
+    expect(accepted).toMatchObject({ acceptedBy: B.id, batchId: BATCH });
+    expect((await findInvitationByToken(CARD))?.acceptedBy).toBe(B.id);
+  });
+
+  it('is accepted by no unverified account, though the card is pending', async () => {
+    await mint([CARD]);
+    await sql`update users set email_verified = false where id = ${B.id}`;
+
+    expect(await cardAccept(B)).toHaveLength(0);
+
+    await sql`update users set email_verified = true where id = ${B.id}`;
+    expect(await cardAccept(B)).toHaveLength(1);
+  });
+
+  // The second account is verified and the card was pending until the first stamp, so the single-use predicate alone refuses.
+  it('affects no row on a second accept', async () => {
+    await mint([CARD]);
+    expect(await cardAccept(B)).toHaveLength(1);
+
+    expect(await cardAccept(A)).toHaveLength(0);
+    expect(await cardAccept(B)).toHaveLength(0);
+    expect((await findInvitationByToken(CARD))?.acceptedBy).toBe(B.id);
+  });
+
+  it('is not accepted once expired or revoked', async () => {
+    await mint([CARD]);
+    await mint([OTHER_CARD], LATER());
+    await sql`update invitations set expires_at = now() - interval '1 second' where token_hash = ${sha256(CARD)}`;
+    await sql`update invitations set revoked_at = now() where token_hash = ${sha256(OTHER_CARD)}`;
+
+    expect(await cardAccept(B)).toHaveLength(0);
+    expect(await cardAccept(B, OTHER_CARD)).toHaveLength(0);
+  });
+
+  it('never reaches the received list, the accept by id, the decline or the site tier’s lists', async () => {
+    const [card] = await mint([CARD]);
+
+    const received = await findReceivedInvitationPage(asUser(B), { limit: 101, inverted: false });
+    expect(received).toHaveLength(0);
+    expect(await findReceivedInvitation(asUser(B), card!.id)).toBeUndefined();
+    expect(await withAudit(asUser(B), (w) => w.acceptReceivedInvitation(card!.id))).toHaveLength(0);
+    expect(await withAudit(asUser(B), (w) => w.declineReceivedInvitation(card!.id))).toHaveLength(
+      0,
+    );
+    expect(
+      await findPendingSiteInvitationPage(admin, {}, { limit: 101, inverted: false }),
+    ).toHaveLength(0);
+    expect(await withAudit(asUser(E), (w) => w.revokeInvitation(admin, card!.id))).toHaveLength(0);
+  });
+
+  it('revokes a batch’s pending cards and leaves an accepted one untouched', async () => {
+    await mint([CARD, OTHER_CARD]);
+    await cardAccept(B);
+    const before = await rowOf((await findInvitationByToken(CARD))!.id);
+
+    const revoked = await withAudit(asUser(E), (write) =>
+      write.revokeInvitationCardBatch(admin, BATCH),
+    );
+
+    expect(revoked).toHaveLength(1);
+    expect(revoked[0]!.tokenHash).toBe(sha256(OTHER_CARD));
+    expect(await rowOf((await findInvitationByToken(CARD))!.id)).toEqual(before);
+  });
+
+  it('answers who arrived by card, when and from which batch, from the rows alone', async () => {
+    const OTHER_BATCH = '22222222-2222-4222-8222-222222222222';
+    await mint([CARD, OTHER_CARD]);
+    await mint(['cardtokenCCCCCCC'], LATER(), OTHER_BATCH);
+    await cardAccept(B);
+    await cardAccept(A, 'cardtokenCCCCCCC');
+    // An address invitation accepted is no card arrival.
+    await inviteIntoW({ token: 'fixture-token-w-accepted' });
+    await acceptAs(A, 'fixture-token-w-accepted');
+
+    const page = await findCardArrivalPage(admin, {}, { limit: 101, inverted: false });
+
+    expect(page.map(({ node }) => [node.acceptedBy, node.batchId]).sort()).toEqual(
+      [
+        [A.id, OTHER_BATCH],
+        [B.id, BATCH],
+      ].sort(),
+    );
+    for (const { node } of page) expect(node.acceptedAt).toBeInstanceOf(Date);
+    expect((await findCardArrivalCount(admin, {}, undefined)).totalCount).toBe(2);
+  });
+
+  it('pages one row per batch, newest first, and counts each batch’s cards in SQL', async () => {
+    const OTHER_BATCH = '22222222-2222-4222-8222-222222222222';
+    await mint([CARD, OTHER_CARD]);
+    await mint(['cardtokenCCCCCCC'], LATER(), OTHER_BATCH);
+    await cardAccept(B);
+    await inviteIntoW({ token: 'fixture-token-w-listed' });
+    const all = { limit: 101, inverted: false };
+
+    const page = await findCardBatchPage(admin, {}, all);
+    const totals = await findCardBatchTotals(admin, [BATCH, OTHER_BATCH]);
+
+    expect(page.map(({ node }) => node.batchId).sort()).toEqual([BATCH, OTHER_BATCH].sort());
+    expect((await findCardBatchCount(admin, {}, undefined)).totalCount).toBe(2);
+    expect(totals.find((t) => t.batchId === BATCH)).toMatchObject({
+      cards: 2,
+      accepted: 1,
+      pending: 1,
+    });
+    expect(totals.find((t) => t.batchId === OTHER_BATCH)).toMatchObject({
+      cards: 1,
+      accepted: 0,
+      pending: 1,
+    });
+    expect(await findCardBatchTotals(admin, [])).toEqual([]);
+  });
+
+  describe('the batch filter', () => {
+    const ALPHA = 'aaaa1111-1111-4111-8111-111111111111';
+    const BRAVO = 'bbbb2222-2222-4222-8222-222222222222';
+    const all = { limit: 101, inverted: false };
+    const batches = async (filter: CardBatchFilter) =>
+      (await findCardBatchPage(admin, filter, all)).map(({ node }) => node.batchId);
+    const age = (batchId: string, days: number) =>
+      sql`update invitations set created_at = created_at - make_interval(days => ${days}) where batch_id = ${batchId}`;
+
+    beforeEach(async () => {
+      await mint(['cardtokenALPHA001', 'cardtokenALPHA002'], LATER(), ALPHA);
+      await mint(['cardtokenBRAVO001'], LATER(), BRAVO);
+    });
+
+    it('keeps the batches whose number starts as typed, in any case, a percent sign read literally', async () => {
+      expect(await batches({ batch: 'AAAA' })).toEqual([ALPHA]);
+      expect(await batches({ batch: 'bbbb2222-2' })).toEqual([BRAVO]);
+      expect(await batches({ batch: '%' })).toEqual([]);
+      // The middle of a number is no start.
+      expect(await batches({ batch: '1111' })).toEqual([]);
+      expect((await findCardBatchCount(admin, { batch: 'aaaa' }, undefined)).totalCount).toBe(1);
+    });
+
+    it('keeps the batches whose note holds the text anywhere, in any case, a percent sign read literally', async () => {
+      await sql`update invitations set note = 'Handed out at the Autumn Fair' where batch_id = ${ALPHA}`;
+      await sql`update invitations set note = '100% for the shop' where batch_id = ${BRAVO}`;
+
+      expect(await batches({ batch: 'autumn' })).toEqual([ALPHA]);
+      expect(await batches({ batch: 'FAIR' })).toEqual([ALPHA]);
+      expect(await batches({ batch: 'shop' })).toEqual([BRAVO]);
+      expect(await batches({ batch: '%' })).toEqual([BRAVO]);
+      expect(await batches({ batch: '_' })).toEqual([]);
+      expect(await batches({ batch: 'market' })).toEqual([]);
+      // The number still matches by its start, so a note does not displace it.
+      expect(await batches({ batch: 'aaaa' })).toEqual([ALPHA]);
+      expect((await findCardBatchCount(admin, { batch: 'autumn' }, undefined)).totalCount).toBe(1);
+    });
+
+    it('keeps a batch with no note out of a note search', async () => {
+      expect(await batches({ batch: 'fair' })).toEqual([]);
+    });
+
+    it('keeps the batches minted within the days, both end days included', async () => {
+      await age(ALPHA, 10);
+      const day = (offset: number) =>
+        new Date(Date.now() - offset * 24 * 3600 * 1000).toISOString().slice(0, 10);
+
+      expect(await batches({ mintedTo: day(5) })).toEqual([ALPHA]);
+      expect(await batches({ mintedFrom: day(5) })).toEqual([BRAVO]);
+      // Minted today, so today as both ends keeps it and drops the one ten days back.
+      expect(await batches({ mintedFrom: day(0), mintedTo: day(0) })).toEqual([BRAVO]);
+      expect(await batches({ mintedFrom: day(10), mintedTo: day(10) })).toEqual([ALPHA]);
+    });
+
+    it('keeps the batches expiring within the days, both end days included', async () => {
+      const today = (await sql`select (now() at time zone 'UTC')::date::text as day`)[0]!
+        .day as string;
+      const on = (offset: number) =>
+        new Date(Date.parse(today) + offset * 24 * 3600 * 1000).toISOString().slice(0, 10);
+      // The last minute of a day three days on, and of one nine days on.
+      const expireOn = (batchId: string, offset: number) =>
+        sql`update invitations set expires_at = (${on(offset)}::date)::timestamp at time zone 'UTC' + interval '23 hours 59 minutes' where batch_id = ${batchId}`;
+      await expireOn(ALPHA, 3);
+      await expireOn(BRAVO, 9);
+
+      expect(await batches({ expiresFrom: on(3), expiresTo: on(3) })).toEqual([ALPHA]);
+      expect(await batches({ expiresFrom: on(9), expiresTo: on(9) })).toEqual([BRAVO]);
+      expect(await batches({ expiresTo: on(5) })).toEqual([ALPHA]);
+      expect(await batches({ expiresFrom: on(4) })).toEqual([BRAVO]);
+      expect(await batches({ expiresFrom: on(3), expiresTo: on(9) })).toHaveLength(2);
+    });
+
+    it('combines the filters: each narrows what the others leave', async () => {
+      await age(ALPHA, 10);
+      const today = new Date().toISOString().slice(0, 10);
+
+      expect(await batches({ batch: 'aaaa', mintedFrom: today })).toEqual([]);
+      expect(await batches({ batch: 'bbbb', mintedFrom: today })).toEqual([BRAVO]);
+      expect(await batches({ batch: 'aaaa', status: 'live' })).toEqual([ALPHA]);
+      expect(await batches({ batch: 'aaaa', status: 'revoked' })).toEqual([]);
+    });
+
+    it('agrees with the status the table works out, for a batch in each of the four states', async () => {
+      const LIVE = '11110000-0000-4000-8000-000000000001';
+      const USED = '22220000-0000-4000-8000-000000000002';
+      const EXPIRED = '33330000-0000-4000-8000-000000000003';
+      const REVOKED = '44440000-0000-4000-8000-000000000004';
+      await sql`delete from invitations where kind = 'card'`;
+      await mint(['cardtokenLIVE0001', 'cardtokenLIVE0002'], LATER(), LIVE);
+      // Live although one card was accepted and one revoked: a third is still pending.
+      await mint(['cardtokenLIVE0003'], LATER(), LIVE);
+      await mint(['cardtokenUSED0001'], LATER(), USED);
+      await mint(['cardtokenEXPD0001'], LATER(), EXPIRED);
+      await mint(['cardtokenREVK0001'], LATER(), REVOKED);
+      await cardAccept(B, 'cardtokenLIVE0001');
+      await sql`update invitations set revoked_at = now() where token_hash = ${sha256('cardtokenLIVE0002')}`;
+      await cardAccept(B, 'cardtokenUSED0001');
+      await sql`update invitations set expires_at = now() - interval '1 hour' where batch_id = ${EXPIRED}`;
+      await sql`update invitations set revoked_at = now() where batch_id = ${REVOKED}`;
+
+      const totals = await findCardBatchTotals(admin, [LIVE, USED, EXPIRED, REVOKED]);
+      const heads = await findCardBatchPage(admin, {}, all);
+      const worked = new Map(
+        heads.map(({ node }) => [
+          node.batchId,
+          batchStatus(
+            totals.find((t) => t.batchId === node.batchId)!,
+            node.expiresAt,
+            new Date(),
+          ),
+        ]),
+      );
+      expect([...worked.values()].sort()).toEqual(['expired', 'live', 'revoked', 'used-up']);
+
+      for (const status of ['live', 'used-up', 'expired', 'revoked'] as const) {
+        const expected = [...worked]
+          .filter(([, standing]) => standing === status)
+          .map(([id]) => id);
+        expect(await batches({ status })).toEqual(expected);
+        expect((await findCardBatchCount(admin, { status }, undefined)).totalCount).toBe(1);
+      }
+    });
+  });
+
+  describe('the arrivals filter', () => {
+    const OTHER_BATCH = '22222222-2222-4222-8222-222222222222';
+    const all = { limit: 101, inverted: false };
+    const arrivals = async (filter: CardArrivalFilter) =>
+      (await findCardArrivalPage(admin, filter, all)).map(({ node }) => node.acceptedBy);
+
+    beforeEach(async () => {
+      await mint([CARD, OTHER_CARD]);
+      await mint(['cardtokenCCCCCCC'], LATER(), OTHER_BATCH);
+      await cardAccept(B);
+      await cardAccept(A, 'cardtokenCCCCCCC');
+    });
+
+    it('keeps the arrivals whose name holds the query, in any case', async () => {
+      const name = B.name.toUpperCase();
+
+      expect(await arrivals({ query: name })).toEqual([B.id]);
+      expect(await arrivals({ query: 'no-such-person' })).toEqual([]);
+      expect((await findCardArrivalCount(admin, { query: name }, undefined)).totalCount).toBe(1);
+    });
+
+    it('keeps the arrivals whose address holds the query', async () => {
+      expect(await arrivals({ query: A.email.toUpperCase() })).toEqual([A.id]);
+      expect(await arrivals({ query: '%' })).toEqual([]);
+    });
+
+    it('keeps the arrivals from a batch whose number starts with the query, and only from its start', async () => {
+      expect(await arrivals({ query: '2222' })).toEqual([A.id]);
+      expect(await arrivals({ query: '1111' })).toEqual([B.id]);
+      expect(await arrivals({ query: '4222' })).toEqual([]);
+      expect((await findCardArrivalCount(admin, { query: '2222' }, undefined)).totalCount).toBe(1);
+    });
+
+    it('keeps an arrival when any one of its name, address or batch matches', async () => {
+      // "fixture" is in both names, "2222" starts only A's batch: one box, either match keeps the row.
+      expect((await arrivals({ query: 'fixture' })).sort()).toEqual([A.id, B.id].sort());
+      expect(await arrivals({ query: B.email })).toEqual([B.id]);
+    });
   });
 });

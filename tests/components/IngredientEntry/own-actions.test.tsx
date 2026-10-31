@@ -49,7 +49,12 @@ function renderOnPage(edit?: IngredientEntryEdit) {
   return render(onPage(edit));
 }
 
-const bin = () => screen.getByRole('button', { name: 'Delete Ingredient Testwort' });
+const dots = () => screen.getByRole('button', { name: 'More for Testwort' });
+/** Opens the three dots and chooses Delete Ingredient. */
+function askDelete() {
+  fireEvent.click(dots());
+  fireEvent.click(screen.getByRole('menuitem', { name: 'Delete Ingredient' }));
+}
 
 function acceptDelete() {
   const calls: DeleteOwnIngredientMutationVariables[] = [];
@@ -69,28 +74,30 @@ describe('OwnEntryActions', () => {
     router.push.mockClear();
   });
 
-  // The icons the list card has: the pencil, a link to the page's
-  // own edit address, and the bin; no menu to open for either.
-  it('is an Edit link at its address and a Delete Ingredient bin, each named for the entry, and no menu', () => {
+  // The pencil, a link to the page's own edit address, and the three dots, which hold
+  // Delete Ingredient even with no stock to edit: the page never draws a lone bin.
+  it('is an Edit link at its address and the three dots holding Delete Ingredient, each named for the entry, and no bin', () => {
     renderOnPage();
 
     expect(screen.getByRole('link', { name: 'Edit Testwort' })).toHaveAttribute('href', EDIT.href);
-    expect(bin()).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /^More/ })).not.toBeInTheDocument();
-    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Delete/ })).not.toBeInTheDocument();
+    fireEvent.click(dots());
+    expect(screen.getAllByRole('menuitem').map((item) => item.textContent)).toEqual([
+      'Delete Ingredient',
+    ]);
   });
 
-  it('asks before deleting, in a dialog, deletes nothing on Cancel, and gives the bin the focus back', async () => {
+  it('asks before deleting, in a dialog, deletes nothing on Cancel, and gives the dots the focus back', async () => {
     const calls = acceptDelete();
     renderOnPage();
 
-    press(bin());
+    askDelete();
     const ask = screen.getByRole('dialog', { name: 'Delete Ingredient' });
     expect(within(ask).getByText('Testwort')).toBeInTheDocument();
     press(within(ask).getByRole('button', { name: 'Cancel' }));
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    expect(bin()).toHaveFocus();
+    expect(dots()).toHaveFocus();
     expect(calls).toEqual([]);
   });
 
@@ -98,7 +105,7 @@ describe('OwnEntryActions', () => {
     const calls = acceptDelete();
     const view = renderOnPage();
 
-    press(bin());
+    askDelete();
     press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }));
 
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith(EDIT.deletedHref));
@@ -121,21 +128,20 @@ describe('OwnEntryActions', () => {
     );
   });
 
-  it("shows the service's refusal and gives the bin the focus back", async () => {
+  it("shows the service's refusal and gives the dots the focus back", async () => {
     mockGraphQLError('DeleteOwnIngredient', { code: 'NOT_FOUND', message: 'No such ingredient' });
     renderOnPage();
 
-    press(bin());
+    askDelete();
     press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }));
 
     expect(await screen.findByRole('alert')).toBeInTheDocument();
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    expect(bin()).toHaveFocus();
+    expect(dots()).toHaveFocus();
     expect(router.replace).not.toHaveBeenCalled();
   });
 
-  // Edit Stock: with the stock handed over the bin joins
-  // Edit Stock in the three dots, a lone choice being its own icon and two being a menu.
+  // Edit Stock: with the stock handed over, it comes first in the three dots.
   describe('with the stock to edit', () => {
     const FLOWER = '00000000-0000-4000-8000-0000000000f1';
     const withStock: IngredientEntryEdit = {
@@ -156,8 +162,6 @@ describe('OwnEntryActions', () => {
         },
       },
     };
-    const dots = () => screen.getByRole('button', { name: 'More for Testwort' });
-
     it('puts Edit Stock first and Delete Ingredient after it in the three dots, and draws no bin', () => {
       renderOnPage(withStock);
       fireEvent.click(dots());
@@ -179,10 +183,9 @@ describe('OwnEntryActions', () => {
       expect(within(dialog).getByRole('button', { name: /^Flower\b/ })).toBeInTheDocument();
     });
 
-    it('asks to delete from the dots just as the bin does', async () => {
+    it('asks to delete from the dots beside Edit Stock', async () => {
       renderOnPage(withStock);
-      fireEvent.click(dots());
-      fireEvent.click(screen.getByRole('menuitem', { name: 'Delete Ingredient' }));
+      askDelete();
 
       expect(await screen.findByRole('dialog', { name: 'Delete Ingredient' })).toBeInTheDocument();
     });

@@ -7,6 +7,7 @@ import DeleteWorkspaceButton from '../../../../components/DeleteWorkspaceButton'
 import LeaveWorkspaceButton from '../../../../components/LeaveWorkspaceButton';
 import type { Successor } from '../../../../components/LeaveWorkspaceButton/types';
 import { WORKSPACE_ROLE_ACCESS } from '../../../../components/MemberList/role-access';
+import PageHeader from '../../../../components/PageHeader';
 import PageNav from '../../../../components/PageNav';
 import type { PageNavEntry } from '../../../../components/PageNav/types';
 import { requireCovenMembership, requireSession } from '../../../../lib/request-session';
@@ -46,32 +47,27 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
   }
 
   // Only the pages the caller can open are listed, so none is a link to a 404. Every role can open
-  // Ingredients; Members is listed only for a role that may read it. The section and its menu entry
-  // are built together, so they agree.
+  // Ingredients and the Grimoire; Members is listed only for a role that may read it. The section and
+  // its menu entry are built together, so they agree.
   const entries: PageNavEntry[] = [
     { href: '#coven-contents' as const, label: 'Contents' },
     { href: '#coven-membership', label: 'Your Membership' },
-    ...(canDelete ? [{ href: '#coven-delete' as const, label: 'Delete This Coven' }] : []),
+    ...(canDelete ? [{ href: '#coven-delete' as const, label: 'Delete Coven' }] : []),
   ];
 
   return (
     <main className="page-with-nav">
-      <div className="header">
-        <p className="eyebrow">Coven</p>
-        <h1 className={workspace.demo ? 'page-title--tagged' : undefined}>
-          <span>{workspace.name}</span>
-          {workspace.demo && (
-            <>
-              {' '}
-              <span className="badge badge--demo">Demo</span>
-            </>
-          )}
-        </h1>
-        <p className="lede">
-          You are {ROLE_NAME[membership.role]} of this coven.{' '}
-          {WORKSPACE_ROLE_ACCESS[membership.role]}
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Coven"
+        title={workspace.name}
+        tag={workspace.demo ? <span className="badge badge--demo">Demo</span> : undefined}
+        lede={
+          <>
+            You are {ROLE_NAME[membership.role]} of this coven.{' '}
+            {WORKSPACE_ROLE_ACCESS[membership.role]}
+          </>
+        }
+      />
       <PageNav label="On This Page" entries={entries} />
       <section
         id="coven-contents"
@@ -90,6 +86,18 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
             </PendingLink>
             <span id="coven-contents-ingredients" className="admin-contents__description">
               What the coven has in its cupboard, and what it can add from the compendium.
+            </span>
+          </li>
+          <li>
+            <PendingLink
+              href={`/coven/${slug}/grimoire` as Route}
+              navigationTarget={covenTarget(`/coven/${slug}/grimoire`)}
+              aria-describedby="coven-contents-grimoire"
+            >
+              Grimoire
+            </PendingLink>
+            <span id="coven-contents-grimoire" className="admin-contents__description">
+              What the coven makes: its spells, and the workings it has recorded.
             </span>
           </li>
           {canReadMembers && (
@@ -135,7 +143,7 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
           className="page-frame__section"
           aria-labelledby="coven-delete-heading"
         >
-          <h2 id="coven-delete-heading">Delete This Coven</h2>
+          <h2 id="coven-delete-heading">Delete Coven</h2>
           <p>Closes its ingredients and its grimoire to every member, other owners included.</p>
           <div className="form__actions">
             <DeleteWorkspaceButton workspaceId={workspace.id} name={workspace.name} />

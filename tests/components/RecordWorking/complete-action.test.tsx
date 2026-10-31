@@ -18,7 +18,7 @@ import { mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// Complete on a working's row: the preview first, then Confirm
+// Complete on a working's row: the preview first, then Mark Complete
 // (claude-docs/components/record-working.md).
 
 const WORKSPACE = '00000000-0000-4000-8000-000000000001';
@@ -62,7 +62,7 @@ function open(steps: readonly WorkingStep[] = STEPS) {
         },
         {
           inventoryItemId: 'i3',
-          quantity: 5,
+          quantity: 3.5,
           shortfall: 1.5,
           stepId: 's3',
           unit: 'ml',
@@ -87,7 +87,7 @@ function open(steps: readonly WorkingStep[] = STEPS) {
 }
 
 describe('Complete on a working', () => {
-  it('lists each step by its name, with no step number, with what is taken, held and left, or why nothing is', async () => {
+  it('lists each step by its name, with no step number, with what is taken, held and left, what a short one needs, or why nothing is', async () => {
     open();
     const list = await screen.findByRole('list', { name: 'Deductions' });
     const rows = within(list).getAllByRole('listitem');
@@ -100,10 +100,47 @@ describe('Complete on a working', () => {
     expect(rows[1]).toHaveTextContent(/^Mockroot/);
     expect(rows[1]).toHaveTextContent('units differ · takes nothing');
     expect(rows[2]).toHaveTextContent(/^Fixtureleaf/);
-    expect(rows[2]).toHaveTextContent('takes 5 ml · have 3.5 ml · left 0 ml');
-    expect(rows[2]).toHaveTextContent('short by 1.5 ml');
+    // A short jar leads with what the step needs; what is left is always none, so it is not said.
+    expect(rows[2]).toHaveTextContent('needs 5 ml · have 3.5 ml · short by 1.5 ml');
+    expect(rows[2]).not.toHaveTextContent('left');
     expect(rows[3]).toHaveTextContent(/^Oddment/);
     expect(rows[3]).toHaveTextContent('one-off · not kept');
+  });
+
+  it('says when nothing is taken, and that an empty jar has none', async () => {
+    mockGraphQLQuery<WorkingDeductionPreviewQuery>('WorkingDeductionPreview', () => ({
+      workingDeductionPreview: {
+        deductions: [
+          {
+            inventoryItemId: 'i1',
+            quantity: 0,
+            shortfall: 3,
+            stepId: 's1',
+            unit: 'g',
+            before: 0,
+            lowStockThreshold: null,
+          },
+        ],
+        warnings: [],
+      },
+    }));
+    render(
+      <QueryClientProvider client={makeQueryClient()}>
+        <CompleteWorkingAction
+          workspaceId={WORKSPACE}
+          spellId={SPELL}
+          workingId={WORKING}
+          steps={[STEPS[0]!]}
+        />
+      </QueryClientProvider>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Complete' }));
+    expect(
+      await screen.findByText('Completing this working takes nothing from the coven’s jars.'),
+    ).toBeVisible();
+    expect(screen.getByRole('list', { name: 'Deductions' })).toHaveTextContent(
+      'needs 3 g · have none · short by 3 g',
+    );
   });
 
   it('says a form with no jar has none', async () => {
@@ -125,6 +162,9 @@ describe('Complete on a working', () => {
     );
     fireEvent.click(screen.getByRole('button', { name: 'Complete' }));
     expect(await screen.findByText('have no jar · takes nothing')).toBeVisible();
+    expect(
+      screen.getByText('Completing this working takes nothing from the coven’s jars.'),
+    ).toBeVisible();
   });
 
   it('draws a jar as a button only for a step that carries a stock door', async () => {
@@ -180,7 +220,7 @@ describe('Complete on a working', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Edit Stock, Testwort, Leaf' }));
     const stock = await screen.findByRole('dialog', { name: 'Edit Stock, Testwort' });
     typeIn(within(stock).getByRole('spinbutton', { name: 'Quantity, Leaf' }), '12');
-    press(within(stock).getByRole('button', { name: 'Save' }));
+    press(within(stock).getByRole('button', { name: 'Save Stock' }));
     await waitFor(() =>
       expect(screen.getByRole('list', { name: 'Deductions' })).toHaveTextContent(
         'have 10 g · left 8 g',
@@ -189,7 +229,7 @@ describe('Complete on a working', () => {
     expect(reads).toBe(2);
   });
 
-  it('takes nothing until Confirm, then completes the working and reads the page again', async () => {
+  it('takes nothing until Mark Complete, offers Keep as Draft beside it, then completes the working and reads the page again', async () => {
     const calls: CompleteWorkingMutationVariables[] = [];
     mockGraphQLMutation<CompleteWorkingMutation, CompleteWorkingMutationVariables>(
       'CompleteWorking',
@@ -206,7 +246,8 @@ describe('Complete on a working', () => {
     open();
     await screen.findByRole('list', { name: 'Deductions' });
     expect(calls).toEqual([]);
-    fireEvent.click(screen.getByRole('button', { name: 'Confirm' }));
+    expect(screen.getByRole('button', { name: 'Keep as Draft' })).toBeEnabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Mark Complete' }));
     await waitFor(() => expect(calls).toEqual([{ workspaceId: WORKSPACE, id: WORKING }]));
     expect(await screen.findByRole('button', { name: 'Done' })).toBeVisible();
     expect(router.refresh).toHaveBeenCalled();
@@ -234,7 +275,26 @@ describe('Complete on a draft dated ahead', () => {
       </QueryClientProvider>,
     );
     const button = screen.getByRole('button', { name: 'Complete' });
-    if (off) expect(button).toBeDisabled();
-    else expect(button).toBeEnabled();
+    if (off) expect(button).toHaveAttribute('aria-disabled', 'true');
+    else expect(button).not.toHaveAttribute('aria-disabled');
+  });
+
+  it('keeps an early Complete in the tab order, says why it is off, and opens nothing on a press', () => {
+    render(
+      <QueryClientProvider client={makeQueryClient()}>
+        <CompleteWorkingAction
+          workspaceId={WORKSPACE}
+          spellId={SPELL}
+          workingId={WORKING}
+          steps={STEPS}
+          workedOn="2999-01-01"
+        />
+      </QueryClientProvider>,
+    );
+    const button = screen.getByRole('button', { name: 'Complete' });
+    expect(button).toBeEnabled();
+    expect(button).toHaveAccessibleDescription('Complete on or after 1 January 2999');
+    fireEvent.click(button);
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 });

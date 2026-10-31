@@ -2,20 +2,21 @@
 @use './mixins' as *;
 @use './recipe-columns' as *;
 
-// The one print stylesheet: the spell recipe page (M10.22), the only view with print rules.
-// Every rule sits behind `:has(.spell-recipe)`, the page's own article, so no other page prints
-// differently; the Quick Look modal draws only the body and has no such article. A browser
-// without `:has()` simply prints the screen layout.
+// The one print stylesheet: the spell recipe page, the only view with print rules. Every rule
+// but the sheet's margin sits behind `:has(.spell-recipe)`, the page's own article, so no other
+// page prints differently; the Quick Look modal draws only the body and has no such article. A
+// browser without `:has()` simply prints the screen layout.
 
-.spell-recipe__summary {
-  display: none;
+// Every page's sheet margin, which the recipe's content width is worked out from (_variables.scss).
+// stylelint-disable-next-line plugin/use-baseline -- enhancement: a browser without `@page` prints with its own default margin, and the article is capped at the same content width either way
+@page {
+  margin: $print-page-margin;
 }
 
-// The sheet: A4, with the margin the content width is worked out from (_variables.scss).
-// stylelint-disable-next-line plugin/use-baseline -- enhancement: a browser without `@page` prints on its own default sheet, and the article is capped at the same content width either way
-@page {
+// The recipe's sheet is A4, named so other pages print on the reader's own paper.
+// stylelint-disable-next-line plugin/use-baseline -- enhancement: a browser without named pages prints the recipe on its default sheet
+@page recipe {
   size: a4;
-  margin: $print-page-margin;
 }
 
 @media print {
@@ -27,23 +28,27 @@
     scroll-padding: 0;
   }
 
+  // White paper, which a printer leaves bare, rather than the screen's ground.
   body:has(.spell-recipe) {
-    background: $surface-page;
+    // stylelint-disable-next-line plugin/use-baseline -- enhancement: a browser without named pages prints on its default sheet
+    page: recipe;
+    background: none;
     color: $text-primary;
 
-    // Chrome that does nothing on paper.
+    // Chrome that does nothing on paper. The Draft and Private badges stay in the head, so a printed
+    // draft is not taken for a finished spell; the Edited line goes.
+    .backdrop,
     .skip-link,
     .skip-target,
     .app-shell__bar,
     .section-nav,
     .page-nav,
-    .spell-recipe__back,
+    .spell-recipe__bar,
     .spell-recipe__actions,
     .spell-recipe__aside,
     .spell-workings,
     .last-edit,
     .icon-tip__look,
-    .specimen__badges,
     [role='dialog'],
     [role='tooltip'] {
       display: none !important;
@@ -98,6 +103,13 @@
     // (_recipe-columns.scss).
     .spell-recipe {
       @include recipe-columns;
+    }
+
+    // A step's line at the body's size: the screen's caption size is too small for paper. It stays
+    // muted, under the amount and name.
+    .spell-recipe__steps .step-row__body,
+    .spell-recipe__steps .step-row__note .meta {
+      font-size: type-size('body');
     }
 
     // A step or a heading is not split across pages.

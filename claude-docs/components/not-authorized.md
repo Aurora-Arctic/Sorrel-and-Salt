@@ -36,14 +36,16 @@ The page draws the frame: `forbidden.tsx`'s `main` is `.page-frame`, which
 centres the column without an AppShell and stops it at the reading measure,
 `$measure` ([`styling.md`](../styling.md), "The page frame"). The
 component's own column follows `Welcome`'s: a flex column with a `space(5)`
-gap, its heading and reason a `.header` with the reason as the `.lede`.
+gap, its heading and reason a `PageHeader` ([`page-header.md`](page-header.md)) with the reason as its `lede`.
 Function used: `space()`.
 
 ## Stories
 
-It has no stories file of its own: it is the Not Authorized option of the
-[Error Page `States` story](../../src/components/ErrorPage/index.stories.tsx),
-inside `forbidden.tsx`'s real `main.page-frame` ([`workshop.md`](../workshop.md)).
+[`index.stories.tsx`](../../src/components/NotAuthorized/index.stories.tsx),
+`Pages / Not Authorized`: one story, `Default`, inside `forbidden.tsx`'s real
+`main.page-frame` ([`workshop.md`](../workshop.md)), in the shell of an account
+with no coven to write in, so no Add Ingredient, and with the layout's corner
+Backdrop.
 Render-only, no test ids, no snapshots.
 
 ## Testing

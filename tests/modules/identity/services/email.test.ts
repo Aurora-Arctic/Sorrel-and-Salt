@@ -31,6 +31,12 @@ afterAll(async () => {
 const sender: EmailVerificationSender = {
   resend: vi.fn(async () => {}),
   requestChange: vi.fn(async () => {}),
+  sessionIsFresh: vi.fn(async () => true),
+  notifyChangeRequested: vi.fn(async () => {}),
+  // Starts the task at once and leaves it running, as `after` does once the response is out.
+  defer: vi.fn((task: () => Promise<void>) => {
+    void task();
+  }),
 };
 
 async function userRow(id: string): Promise<EmailUserRow> {
@@ -63,6 +69,8 @@ async function setVerified(id: string, verified: boolean): Promise<void> {
 beforeEach(async () => {
   vi.mocked(sender.resend).mockClear();
   vi.mocked(sender.requestChange).mockClear();
+  vi.mocked(sender.notifyChangeRequested).mockClear();
+  vi.mocked(sender.sessionIsFresh).mockReset().mockResolvedValue(true);
   // Both start unverified and stamped by someone else, so a stamp of their own id shows as this call's write.
   // A save that changes no column keeps updated_by (migration 0079), so the stamp is written under the touch setting, as writeChildren does.
   await asTouch(
@@ -99,6 +107,61 @@ describe('the placeholder', () => {
 });
 
 describe('setEmail', () => {
+  it('refuses a change from a session older than the window, with a message that says to sign in again, and sends and writes nothing', async () => {
+    // The precondition that the change could otherwise have gone through: the address is free and the caller's row is not cooling down.
+    expect(await userRow(B.id)).toMatchObject({ verification_sent_at: null });
+    const before = await userRow(B.id);
+    vi.mocked(sender.sessionIsFresh).mockResolvedValue(false);
+
+    const refusal = setEmail(asUser(B), NEW, sender);
+
+    await expect(refusal).rejects.toBeInstanceOf(ValidationError);
+    await expect(refusal).rejects.toMatchObject({
+      issues: [{ path: ['email'], message: expect.stringMatching(/sign in again/i) }],
+    });
+    expect(sender.requestChange).not.toHaveBeenCalled();
+    expect(sender.notifyChangeRequested).not.toHaveBeenCalled();
+    expect(await userRow(B.id)).toEqual(before);
+  });
+
+  it('takes the same change from a fresh session, and tells the current address once', async () => {
+    await setEmail(asUser(B), NEW, sender);
+
+    expect(sender.requestChange).toHaveBeenCalledTimes(1);
+    expect(sender.notifyChangeRequested).toHaveBeenCalledTimes(1);
+    expect(sender.notifyChangeRequested).toHaveBeenCalledWith(B.email, NEW);
+  });
+
+  it.each([
+    ['a free address', NEW],
+    ['an address a verified account holds', A.email],
+  ])('answers %s without waiting for any mail to go out', async (_name, address) => {
+    await setVerified(A.id, true);
+    const stuck = new Promise<void>(() => {});
+    const slow: EmailVerificationSender = {
+      ...sender,
+      requestChange: vi.fn(() => stuck),
+      notifyChangeRequested: vi.fn(() => stuck),
+    };
+    const timedOut = Symbol('timed out');
+    const timeout = new Promise<symbol>((resolve) => setTimeout(() => resolve(timedOut), 1000));
+
+    const outcome = await Promise.race([setEmail(asUser(B), address, slow), timeout]);
+
+    expect(outcome).not.toBe(timedOut);
+    // The send was handed over to run after the answer, not dropped.
+    expect(slow.notifyChangeRequested).toHaveBeenCalledWith(B.email, address);
+  });
+
+  it("does not ask a stale session for freshness when it only asks for the row's own link again", async () => {
+    vi.mocked(sender.sessionIsFresh).mockResolvedValue(false);
+
+    await setEmail(asUser(B), B.email, sender);
+
+    expect(sender.resend).toHaveBeenCalledTimes(1);
+    expect(sender.notifyChangeRequested).not.toHaveBeenCalled();
+  });
+
   it('refuses a malformed address on the email field, sending nothing and writing nothing', async () => {
     const before = await userRow(B.id);
 
@@ -111,18 +174,44 @@ describe('setEmail', () => {
     expect(await userRow(B.id)).toEqual(before);
   });
 
-  it("refuses an address a live verified account holds, and accepts it once that account isn't verified", async () => {
+  it('answers an address a live verified account holds exactly as it answers a free one, mailing the holder nothing', async () => {
     await setVerified(A.id, true);
-    // Why the refusal below could otherwise be explained: A's row is live and verified.
+    // Why the held address could otherwise be refused: A's row is live and verified.
     expect(await userRow(A.id)).toMatchObject({ email: A.email, email_verified: true });
 
-    const taken = setEmail(asUser(B), A.email, sender);
-    await expect(taken).rejects.toBeInstanceOf(ValidationError);
-    await expect(taken).rejects.toMatchObject({ issues: [{ path: ['email'] }] });
-    expect(sender.requestChange).not.toHaveBeenCalled();
+    const free = await setEmail(asUser(B), NEW, sender);
+    const freeMailed = vi.mocked(sender.requestChange).mock.calls.length;
+    vi.mocked(sender.requestChange).mockClear();
+    await setSentAt(B.id, null);
+    const held = await setEmail(asUser(B), A.email, sender);
 
-    // The same address held by a provisional row is not refused: that row lapses.
-    await setVerified(A.id, false);
+    const stable = ({ updatedAt: _a, updatedBy: _b, ...rest }: typeof free) => rest;
+    expect(stable(held)).toEqual(stable(free));
+    // The difference is real: the free address was mailed its link and the held one was not, nor was its holder.
+    expect(freeMailed).toBe(1);
+    expect(sender.requestChange).not.toHaveBeenCalled();
+    expect(sender.resend).not.toHaveBeenCalled();
+    // The request still counts: the row is stamped and the address being left told, so the two cases cost the same cooldown.
+    expect((await userRow(B.id)).verification_sent_at).not.toBeNull();
+    expect(sender.notifyChangeRequested).toHaveBeenLastCalledWith(B.email, A.email);
+  });
+
+  it('holds a held address to the same cooldown as a free one, so the wait gives nothing away', async () => {
+    await setVerified(A.id, true);
+    await setSentAt(B.id, '10 seconds');
+
+    const heldWait = setEmail(asUser(B), A.email, sender);
+    const freeWait = setEmail(asUser(B), NEW, sender);
+
+    const [held, free] = await Promise.all([
+      heldWait.catch((failure: ValidationError) => failure),
+      freeWait.catch((failure: ValidationError) => failure),
+    ]);
+    expect(held).toBeInstanceOf(ValidationError);
+    expect(held).toEqual(free);
+  });
+
+  it('accepts a held address the same way once the holder is no longer verified', async () => {
     await expect(setEmail(asUser(B), A.email, sender)).resolves.toMatchObject({ id: B.id });
     expect(sender.requestChange).toHaveBeenCalledWith(B.email, A.email, undefined);
   });

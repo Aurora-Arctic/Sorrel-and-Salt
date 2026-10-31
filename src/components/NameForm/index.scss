@@ -1,10 +1,9 @@
 @use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
 
 // A column inside its section of the account page; the field, the notices and the
 // button are the form primitives' (_primitives.scss), and the section's
 // width is the page frame's.
 .name-form {
-  display: flex;
-  flex-direction: column;
-  gap: space(3);
+  @include stack(3);
 }

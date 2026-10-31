@@ -1,18 +1,15 @@
 @use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
 
 // The list inside the account page's Sign-In Methods section, whose frame,
 // heading and intro are the page's own primitives (`.page-frame__section`,
 // `.header`). A callback error's notice, then the rows.
 .sign-in-methods {
-  display: flex;
-  flex-direction: column;
-  gap: space(3);
+  @include stack(3);
 }
 
 .sign-in-methods__list {
-  display: flex;
-  flex-direction: column;
-  gap: space(3);
+  @include stack(3);
   margin: 0;
   padding: 0;
   list-style: none;

@@ -13,7 +13,7 @@
 }
 
 // The last skeleton over the arrived page, on the page's ground so it shows through as it fades:
-// `list-frame-fade-in` (_primitives.scss) run backwards, out of layout and pointer reach. It takes
+// `fade-in` (_primitives.scss) run backwards, out of layout and pointer reach. It takes
 // the host's padding; under reduced motion it is gone at once.
 .skeleton-fade {
   position: absolute;
@@ -23,7 +23,7 @@
   box-sizing: border-box;
   background-color: $surface-page;
   pointer-events: none;
-  animation: list-frame-fade-in $arrive-duration ease both reverse;
+  animation: fade-in $arrive-duration ease both reverse;
 
   @include reduced-motion {
     display: none;

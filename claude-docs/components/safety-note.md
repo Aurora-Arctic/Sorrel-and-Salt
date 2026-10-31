@@ -104,13 +104,19 @@ takes tokens only.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/SafetyNote/index.stories.tsx),
-under `Ingredients / Safety Note`:
+under `Feedback / Safety Note`:
 
 `States` is a grid:
 
 - Notes Only shows the ingredient's notes alone.
 - With Forms adds two forms' notes; a third form has none, so it gets no line.
 - Toxic shows the mark.
+- Compact is the spell builder's small caution, its heading run on in the line.
+- With Footnote adds the details modal's line after the notes; Footnote Only shows the
+  caution with no notes, for the footnote alone.
+- Caution Mark shows the caution mark for notes.
+- Safety Mark, Notes and Safety Mark, Toxic Form show the one mark `SafetyMark` picks: the
+  caution for notes alone, the toxic mark once a form is toxic.
 
 ## Testing
 

@@ -5,7 +5,6 @@ import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import { graphql } from '../../gql';
 import type { DuplicateQuickLookQuery } from '../../gql/graphql';
-import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlQuery } from '../../lib/graphql-client';
 import { headingOf } from '../IngredientEntry/details-dialog';
 import { detailsHeading, detailsMarks } from '../IngredientEntry/details';
@@ -13,6 +12,7 @@ import IngredientSummary from '../IngredientEntry/summary';
 import type { SummaryJar } from '../IngredientEntry/types';
 import Modal from '../Modal';
 import Skeleton from '../Skeleton';
+import ReadFailure from './read-failure';
 import ModalLoading from '../Modal/loading';
 import type { Duplicate } from './types';
 import { applyCupboardEntry } from '@/modules/ingredients/validation/cupboard-merge';
@@ -215,12 +215,7 @@ export function DuplicateQuickLook({
   if (error) {
     return (
       <Modal {...pendingHeading(entry, false)} onClose={onClose} returnTo={returnTo}>
-        {/* The server's sentence, "No such ingredient" for one deleted since,
-            or else "That didn't work. Please try again." */}
-        <p role="alert">{readGraphqlFailure(error).alert}</p>
-        <button type="button" className="btn btn--small" onClick={() => void refetch()}>
-          Try Again
-        </button>
+        <ReadFailure error={error} onRetry={() => void refetch()} />
       </Modal>
     );
   }

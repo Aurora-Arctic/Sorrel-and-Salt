@@ -1,15 +1,17 @@
 import 'server-only';
 import {
+  findCupboardEntriesOf,
   findFormsInSpellsIncludingSoftDeleted,
   findIngredientsInSpellsIncludingSoftDeleted,
   findManyInSpells,
 } from '../../../db/repository';
 import { spellSteps } from '../schema/spell-steps';
 import type { Membership } from '@/modules/coven';
+import { applyCupboardEntry } from '@/modules/ingredients';
 import type { SpellStepView } from '../types';
 
 /**
- * The live steps of each readable spell named, in recipe order, each with its ingredient and the form it lays.
+ * The live steps of each readable spell named, in recipe order, each with its ingredient, as this coven reads it, and the form it lays.
  * Internal to the module. Deleted ingredients and forms are kept and marked `deleted` (claude-docs/db/grimoire.md, "Grimoire service and schema details").
  */
 export async function stepsInSpells(
@@ -20,11 +22,16 @@ export async function stepsInSpells(
   const linked = [
     ...new Set(rows.flatMap((step) => (step.ingredientId === null ? [] : [step.ingredientId]))),
   ];
-  const [held, forms] = await Promise.all([
+  const [held, forms, cupboard] = await Promise.all([
     findIngredientsInSpellsIncludingSoftDeleted(membership, linked),
     findFormsInSpellsIncludingSoftDeleted(membership, linked),
+    findCupboardEntriesOf(membership, linked),
   ]);
-  const ingredientById = new Map(held.map((row) => [row.id, row]));
+  // A compendium entry reads as this coven's cupboard has it, its label standing over the compendium's name.
+  const entryById = new Map(cupboard.map((entry) => [entry.ingredientId, entry]));
+  const ingredientById = new Map(
+    held.map((row) => [row.id, applyCupboardEntry(row, entryById.get(row.id))]),
+  );
   const formById = new Map(forms.map((row) => [row.id, row]));
 
   const steps = rows

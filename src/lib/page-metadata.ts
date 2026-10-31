@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { SITE_NAME, siteUrl } from './site';
+import { SITE_NAME, siteUrl, titleTemplate } from './site';
 
 // The search-result text of a public page: a description of about 160
 // characters, and the Open Graph and Twitter tags that repeat the title and
@@ -50,6 +50,6 @@ export function publicPageMetadata(title: string, description: string, path: str
     title,
     description,
     alternates: { canonical: url },
-    ...social(`${title} | ${SITE_NAME}`, description, url),
+    ...social(titleTemplate().replace('%s', title), description, url),
   };
 }

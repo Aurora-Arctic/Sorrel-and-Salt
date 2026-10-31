@@ -36,6 +36,7 @@ import { send } from './mail';
 import { runInBackground } from './background-tasks';
 import { emailPagePath, returnPathOf, verifiedLanding } from './account-email';
 import { LAST_USED_PROVIDER_COOKIE, SIGN_IN_TO_VERIFY_PATH } from './sign-in';
+import { sendEmailChangeNotice } from './email-change-notice';
 import { signedInLanding } from './landing';
 import { e2eTrustedOrigins, plainSessionCookie } from './e2e-session-cookie';
 import { impersonation, impersonationEnabled } from './impersonation';
@@ -460,6 +461,13 @@ async function countPasswordSignIn(ctx: HookContext) {
   if (userId && !locked) await recordFailedPasswordSignIn(userId);
 }
 
+// The change link's token names the address being left and the one taken; the left one is told once the swap is written.
+async function noticeCompletedChange(request: Request | undefined): Promise<void> {
+  const claims = tokenClaims(request && new URL(request.url).searchParams.get('token'));
+  if (!request || !claims?.email || !claims.updateTo) return;
+  await sendEmailChangeNotice(request, claims.email, claims.updateTo, 'completed');
+}
+
 // /api/auth/* is the one exception to the GraphQL-only rule (CLAUDE.md rule 1).
 export const auth = betterAuth({
   // Better Auth's own `validateSecret` is swallowed — with the secret unset it
@@ -551,8 +559,9 @@ export const auth = betterAuth({
     },
     // Only for the row a gate admitted: this one's, or `gateEmailChange`'s for
     // a change link, which Better Auth calls it on without the check above.
-    afterEmailVerification: async (user) => {
+    afterEmailVerification: async (user, request) => {
       if (!(await hasRequestState()) || (await actingUser.get()) !== user.id) return;
+      await noticeCompletedChange(request);
       // The adapter returns the whole row; the hook's type omits additionalFields.
       const role = toUserRole(Reflect.get(user, 'role'));
       await promotePrimaryAdminAtVerification(

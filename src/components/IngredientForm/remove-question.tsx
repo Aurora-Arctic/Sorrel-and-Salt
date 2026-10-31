@@ -19,7 +19,7 @@ export const DiscardAskingContext = createContext(false);
 /**
  * Asks whether to remove a row, while `asked`. Remove runs `onRemove`, which removes the row and
  * stops asking, then `afterRemove` once the card has gone, so the focus goes where the list says:
- * the pressed × went with its row. Keep It leaves the row as it was, the focus back on its ×.
+ * the pressed × went with its row. Cancel leaves the row as it was, the focus back on its ×.
  */
 export function RemoveQuestion({
   asked,

@@ -149,7 +149,7 @@ describe('ComparisonPanel', () => {
     );
     expect(named('Cleansing')).toHaveAccessibleDescription('From Fixture Basil (Dried)');
     expect(named('Love')).toHaveAccessibleDescription(
-      'Assigned to this spell, and nothing in the jar carries it',
+      'Assigned to this spell, and nothing in the jar carries it.',
     );
     // The drawn tip is decoration (aria-hidden), so it is found by its role with hidden on.
     expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
@@ -294,7 +294,7 @@ describe('the panel in the builder', () => {
     );
     expect(row('Missing')).toHaveTextContent('Testward');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Remove Fixture Rosewort' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Fixture Rosewort (Dried Leaf)' }));
     await waitFor(() => expect(row('Extra')).toBeNull());
     expect(row('Missing')).toHaveTextContent('Testward');
   });

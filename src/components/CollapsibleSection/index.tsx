@@ -1,5 +1,5 @@
 import { type ReactElement, type ReactNode, useId } from 'react';
-import { ChevronIcon } from '../Combobox/icons';
+import { ChevronIcon } from '../IconTip/icons';
 import type { CollapsibleSectionProps, FoldFlagProps, FoldIds, FoldIdsOptions } from './types';
 import './index.scss';
 

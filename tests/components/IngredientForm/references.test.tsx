@@ -290,27 +290,27 @@ describe('ReferencesField', () => {
       press(within(references()).getByRole('button', { name: `Remove ${HERBAL_SHORT}` }));
 
       expect(rows()).toHaveLength(2);
-      expect(screen.getByRole('button', { name: 'Keep It' })).toHaveFocus();
+      expect(screen.getByRole('button', { name: 'Cancel' })).toHaveFocus();
       press(screen.getByRole('button', { name: 'Remove' }));
 
       expect(rows()).toHaveLength(1);
       expect(row(NOTES.citation)).toBeInTheDocument();
       expect(changes()).toHaveTextContent(HERBAL_SHORT);
-      expect(screen.queryByRole('button', { name: 'Keep It' })).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Cancel' })).toBeNull();
       expect(box()).toHaveFocus();
     });
 
-    it('keeps a row, and the focus on its ×, when its removal is answered Keep It', async () => {
+    it('keeps a row, and the focus on its ×, when its removal is answered Cancel', async () => {
       renderField();
       const calls = offerReferences([HERBAL, NOTES]);
 
       await pickBoth(calls);
       const remove = within(references()).getByRole('button', { name: `Remove ${HERBAL_SHORT}` });
       press(remove);
-      press(screen.getByRole('button', { name: 'Keep It' }));
+      press(screen.getByRole('button', { name: 'Cancel' }));
 
       expect(rows()).toHaveLength(2);
-      expect(screen.queryByRole('button', { name: 'Keep It' })).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Cancel' })).toBeNull();
       expect(remove).toHaveFocus();
     });
 
@@ -327,7 +327,7 @@ describe('ReferencesField', () => {
 
       expect(rows()).toHaveLength(1);
       expect(changes()).toHaveTextContent(said ?? '');
-      expect(screen.queryByRole('button', { name: 'Keep It' })).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Cancel' })).toBeNull();
     });
 
     it('never submits the ingredient on Enter in the box with nothing picked', async () => {

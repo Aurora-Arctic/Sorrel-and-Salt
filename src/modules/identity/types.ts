@@ -7,7 +7,13 @@ import type {
   SiteInvitationRow,
 } from '../../db/repository';
 
-export type { PrivilegeChangeFilter, UserFilter } from '../../db/repository';
+export type {
+  CardArrivalFilter,
+  CardBatchFilter,
+  CardBatchStatus,
+  PrivilegeChangeFilter,
+  UserFilter,
+} from '../../db/repository';
 
 export type UserRow = typeof users.$inferSelect;
 
@@ -53,6 +59,12 @@ export interface EmailVerificationSender {
    * row's address, landing on the way to `next`.
    */
   requestChange(current: string, address: string, next?: string): Promise<void>;
+  /** Whether the request's session was created less than `seconds` ago. */
+  sessionIsFresh(seconds: number): Promise<boolean>;
+  /** Tells `current`, the address being left, that a change to `address` was asked for. Names the address's domain only; never throws on a failed send. */
+  notifyChangeRequested(current: string, address: string): Promise<void>;
+  /** Runs `task` once the response is sent, so a mail adds nothing to how long the answer takes. */
+  defer(task: () => Promise<void>): void;
 }
 
 /**
@@ -121,6 +133,8 @@ export interface ReceivedInvitation {
 export type InvitationRefusal =
   | 'invalid'
   | 'accepted'
+  /** A card the signed-in account itself accepted. */
+  | 'used-by-you'
   | 'declined'
   | 'revoked'
   | 'expired'
@@ -135,12 +149,16 @@ export type InvitationStanding =
   | { acceptable: true; tier: 'site'; siteRole: InvitableSiteRole }
   /** The coven's name, for the matching verified account alone, and its slug, where accepting lands: `/coven/[slug]`. */
   | { acceptable: true; tier: 'workspace'; slug: string; name: string }
+  /** A card: it names no coven, role or batch, and accepting lands on the account's own page. */
+  | { acceptable: true; tier: 'card' }
   | { acceptable: false; reason: InvitationRefusal; message: string };
 
 /** The accept service's checks, inside the module: a refusal, or the invitation and the account it admits. */
 export type InvitationCheck =
-  | { refusal: InvitationRefusal }
+  /** `card` when the link is a card's, found or shaped like one, so the words fit a printed card. */
+  | { refusal: InvitationRefusal; card?: boolean }
   | { refusal?: undefined; tier: 'site'; invitation: SiteInvitationRow; user: UserRow }
+  | { refusal?: undefined; tier: 'card'; invitation: InvitationRow; user: UserRow }
   | {
       refusal?: undefined;
       tier: 'workspace';
@@ -149,3 +167,13 @@ export type InvitationCheck =
       /** The live coven, as the invited account may be told it. */
       coven: InvitedCoven;
     };
+
+/** Where a card stands: pending until accepted, revoked or past its date. */
+export type CardState = 'pending' | 'accepted' | 'expired' | 'revoked';
+
+/** A mint's answer: the batch, its expiry, and each card's token, which no later read returns. */
+export interface MintedCards {
+  batchId: string;
+  expiresAt: Date;
+  tokens: string[];
+}

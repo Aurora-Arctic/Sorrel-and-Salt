@@ -4,6 +4,7 @@ import { is } from 'drizzle-orm';
 import { PgTable, getTableConfig } from 'drizzle-orm/pg-core';
 import { useTestDatabase } from '../support/db/database';
 import { tableFacts } from '../support/db/table-metadata';
+import * as cardInvitationAttempts from '@/modules/coven/schema/card-invitation-attempts';
 import * as invitations from '@/modules/coven/schema/invitations';
 import * as workspaces from '@/modules/coven/schema/workspaces';
 import * as spellCategories from '@/modules/grimoire/schema/spell-categories';
@@ -54,6 +55,7 @@ const pendingIn = (table: string, kind: (typeof PENDING_DROPS)[number]['kind']) 
   );
 
 const MODULES = [
+  cardInvitationAttempts,
   invitations,
   workspaces,
   spellCategories,

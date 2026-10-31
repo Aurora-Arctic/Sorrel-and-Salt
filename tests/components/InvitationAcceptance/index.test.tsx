@@ -2,7 +2,12 @@ import type { Route } from 'next';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import InvitationAcceptance from '@/components/InvitationAcceptance';
-import type { AcceptInvitationMutation, AcceptInvitationMutationVariables } from '@/gql/graphql';
+import type {
+  AcceptInvitationMutation,
+  AcceptInvitationMutationVariables,
+  RecordCardAttemptMutation,
+  RecordCardAttemptMutationVariables,
+} from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
 // `/invite/[token]`'s one panel: the page reads where the visitor
@@ -20,6 +25,58 @@ const accept = () => screen.getByRole('button', { name: 'Accept Invitation' });
 
 // A cast: the built routes know `/coven/[slug]`, not this literal.
 const COVEN_LANDING = '/coven/fixture-coven' as Route;
+
+describe('InvitationAcceptance, for a card', () => {
+  it('tells a signed-out visitor any account will do, with no address to match', () => {
+    render(<InvitationAcceptance status="signed-out" card signInHref="/sign-in?next=%2Fi%2Fabc" />);
+
+    expect(screen.getByText(/any account/i)).toBeVisible();
+    expect(screen.queryByText(/email address is the one/i)).toBeNull();
+  });
+
+  it('accepts, and lands where the account starts a coven', async () => {
+    mockGraphQLMutation<AcceptInvitationMutation, AcceptInvitationMutationVariables>(
+      'AcceptInvitation',
+      ({ token }) => {
+        expect(token).toBe('abc');
+        return { acceptInvitation: { id: 'x' } };
+      },
+    );
+    render(
+      <InvitationAcceptance
+        status="acceptable"
+        token="abc"
+        tier="card"
+        landing={'/coven/new' as Route}
+      />,
+    );
+
+    fireEvent.click(accept());
+
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/coven/new'));
+  });
+});
+
+describe('InvitationAcceptance, for the account that already used a card', () => {
+  it('offers the way to start a coven, where a stranger refused gets none', () => {
+    const { rerender } = render(
+      <InvitationAcceptance
+        status="refused"
+        message="You've already used this card."
+        startCovenHref={'/coven/new' as Route}
+      />,
+    );
+
+    expect(screen.getByRole('link', { name: 'Start a Coven' })).toHaveAttribute(
+      'href',
+      '/coven/new',
+    );
+
+    rerender(<InvitationAcceptance status="refused" message="Already accepted." />);
+
+    expect(screen.queryByRole('link', { name: 'Start a Coven' })).toBeNull();
+  });
+});
 
 describe('InvitationAcceptance', () => {
   it('asks a signed-out visitor to sign in, and back to the link', () => {
@@ -187,5 +244,49 @@ describe('InvitationAcceptance', () => {
     );
     expect(button).not.toHaveAccessibleDescription();
     await waitFor(() => expect(router.push).toHaveBeenCalledWith('/admin'));
+  });
+});
+
+describe('InvitationAcceptance, recording a refused open', () => {
+  it('sends the token once when the refusal shows, and says nothing of it', async () => {
+    const tokens: string[] = [];
+    mockGraphQLMutation<RecordCardAttemptMutation, RecordCardAttemptMutationVariables>(
+      'RecordCardAttempt',
+      ({ token }) => {
+        tokens.push(token);
+        return { recordCardAttempt: true };
+      },
+    );
+    render(
+      <InvitationAcceptance status="refused" token="abc" message="This card has been revoked." />,
+    );
+
+    await waitFor(() => expect(tokens).toEqual(['abc']));
+    expect(screen.getByText('This card has been revoked.')).toBeInTheDocument();
+  });
+
+  it('keeps the refusal when the record fails', async () => {
+    mockGraphQLError('RecordCardAttempt', { code: 'FORBIDDEN', message: 'Nope' });
+    render(
+      <InvitationAcceptance status="refused" token="abc" message="This card has been revoked." />,
+    );
+
+    await act(async () => {});
+    expect(screen.getByText('This card has been revoked.')).toBeInTheDocument();
+  });
+
+  it('sends nothing for a signed-out visitor', async () => {
+    let sent = 0;
+    mockGraphQLMutation<RecordCardAttemptMutation, RecordCardAttemptMutationVariables>(
+      'RecordCardAttempt',
+      () => {
+        sent += 1;
+        return { recordCardAttempt: true };
+      },
+    );
+    render(<InvitationAcceptance status="signed-out" card signInHref="/sign-in?next=%2Fi%2Fabc" />);
+
+    await act(async () => {});
+    expect(sent).toBe(0);
   });
 });
