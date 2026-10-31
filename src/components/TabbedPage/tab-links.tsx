@@ -11,18 +11,20 @@ import type { TabLinksProps } from './types';
 
 // The tabs' links: a client part because only `usePathname()` knows which tab is open. Pressing another tab navigates through the
 // tab switch, and the sliding pill and scrolling are described in claude-docs/components/tabbed-page.md, "The sliding pill".
-const TabLinks = ({ tabs }: TabLinksProps): ReactElement => {
+const TabLinks = ({ tabs, open: openTab }: TabLinksProps): ReactElement => {
   const pathname = usePathname();
   const { pending, target, go } = useTabSwitch();
   const track = useRef<HTMLUListElement>(null);
   const pill = useRef<HTMLLIElement>(null);
-  // The open tab is the longest matching address: the grimoire's Drafts lies beneath Spells, so on Drafts both match.
-  const openHref = tabs
-    .filter(({ href }) => isAtPath(pathname, href))
-    .reduce<string | undefined>(
-      (best, { href }) => (best === undefined || href.length > best.length ? href : best),
-      undefined,
-    );
+  // The open tab is the one named by `open` when given, else the longest matching address: the grimoire's Drafts lies beneath Spells, so on Drafts both match.
+  const openHref =
+    openTab ??
+    tabs
+      .filter(({ href }) => isAtPath(pathname, href))
+      .reduce<string | undefined>(
+        (best, { href }) => (best === undefined || href.length > best.length ? href : best),
+        undefined,
+      );
   const pressedHref = pending ? target?.href : undefined;
   const marked = pressedHref ?? openHref;
   useLayoutEffect(() => {
@@ -58,7 +60,7 @@ const TabLinks = ({ tabs }: TabLinksProps): ReactElement => {
     <ul ref={track} className="tabbed-page__row" aria-busy={pending || undefined}>
       <li ref={pill} className="tabbed-page__pill" aria-hidden="true" />
       {tabs.map((tab) => {
-        const { href, label } = tab;
+        const { href, label, count } = tab;
         const open = href === openHref;
         const press = (event: MouseEvent<HTMLAnchorElement>) => {
           if (pending) {
@@ -80,6 +82,7 @@ const TabLinks = ({ tabs }: TabLinksProps): ReactElement => {
               {...pressFeedback}
             >
               {label}
+              {count !== undefined && ` (${count})`}
             </Link>
           </li>
         );

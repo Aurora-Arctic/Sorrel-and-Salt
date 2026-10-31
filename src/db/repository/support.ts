@@ -61,12 +61,8 @@ const NEWEST_FIRST: readonly SortPart[] = [
   { expression: sql`-extract(epoch from ${supportRequests.createdAt})`, type: 'numeric' },
 ];
 
-// The queue views: beta testers first, then the oldest sender activity, which a request with none dates from its sending.
+// The queue views: the oldest sender activity first, which a request with none dates from its sending.
 const QUEUE_ORDER: readonly SortPart[] = [
-  {
-    expression: sql`case when exists (select 1 from ${invitations} where ${invitations.kind} = 'card' and ${invitations.acceptedBy} = ${supportRequests.createdBy} and ${invitations.deletedAt} is null) then 0 else 1 end`,
-    type: 'integer',
-  },
   {
     expression: sql`extract(epoch from coalesce(${supportRequests.lastSenderActivityAt}, ${supportRequests.createdAt}))`,
     type: 'numeric',
@@ -97,15 +93,20 @@ function viewArm(reader: SupportReader, view: SupportView): SQL {
   }
 }
 
+/** The request's sender accepted a printed card: the beta-tester tier, derived from the invitation and never stored. */
+const senderIsBetaTester = (): SQL =>
+  sql`exists (select 1 from ${invitations} where ${invitations.kind} = 'card' and ${invitations.acceptedBy} = ${supportRequests.createdBy} and ${invitations.deletedAt} is null)`;
+
 function filterArms(
   reader: SupportReader,
-  { about, status, errorCode, view }: SupportRequestFilter,
+  { about, status, errorCode, view, betaTester }: SupportRequestFilter,
 ): (SQL | undefined)[] {
   return [
     view ? viewArm(reader, view) : undefined,
     about ? eq(supportRequests.about, about) : undefined,
     status ? eq(supportRequests.status, status) : undefined,
     errorCode === undefined ? undefined : eq(supportRequests.errorCode, errorCode),
+    betaTester ? senderIsBetaTester() : undefined,
   ];
 }
 
@@ -138,19 +139,19 @@ export function findSupportRequestCount(
 }
 
 /**
- * How many requests each view holds among those the reader may see and the filter’s About and error number leave. One
+ * How many requests each view holds among those the reader may see and the filter’s About, error number and beta-tester choice leave. One
  * query, so the tab row never asks six times.
  */
 export async function findSupportViewCounts(
   reader: SupportReader,
-  { about, errorCode }: SupportRequestFilter,
+  { about, errorCode, betaTester }: SupportRequestFilter,
 ): Promise<SupportViewCounts> {
   const [row] = await selectFrom(
     supportRequests,
     and(
       notSoftDeleted(supportRequests),
       readerScope(reader),
-      ...filterArms(reader, { about, errorCode }),
+      ...filterArms(reader, { about, errorCode, betaTester }),
     ),
     {
       aggregate: Object.fromEntries(

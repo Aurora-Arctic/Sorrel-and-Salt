@@ -82,6 +82,8 @@ export interface SupportRequestsFilter {
   view: SupportView;
   /** An HTTP status, as typed; blank is none. */
   errorCode: string;
+  /** Only requests whose sender is a beta tester. */
+  betaOnly: boolean;
 }
 
 export interface SupportRequestsCursor {
@@ -97,8 +99,6 @@ export interface SupportViewer {
 
 export interface SupportRequestsProps extends Partial<PagerHrefs<Route>> {
   requests: SupportRequestEntry[];
-  /** How many requests each tab holds, under the About and Error Number filter. */
-  counts?: Record<SupportView, number>;
   viewer: SupportViewer;
   filter?: SupportRequestsFilter;
   cursor?: SupportRequestsCursor;

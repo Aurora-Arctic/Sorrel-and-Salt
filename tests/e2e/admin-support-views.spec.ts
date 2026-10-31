@@ -4,7 +4,7 @@ import { assertNoAccessibilityViolations } from './axe';
 import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
-// What no story walks: the six views are the tab pattern (keyboard-operable, one tab in the tab order, a panel they control)
+// What no story walks: the six views are links in the shared tab row, the open one marked as the current page,
 // and each view passes the accessibility check.
 
 test.beforeAll(async () => {
@@ -13,9 +13,7 @@ test.beforeAll(async () => {
 
 const VIEWS = ['Needs Staff', 'Mine', 'Unassigned', 'Waiting on Sender', 'Resolved', 'Closed'];
 
-test('the views are tabs the arrow keys move between, and every view is accessible', async ({
-  page,
-}) => {
+test('the views are links that open each view, and every view is accessible', async ({ page }) => {
   const { userId } = await signInAs(page, 'admin@support-views.test', ['discord'], 'admin');
   const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
   try {
@@ -28,24 +26,22 @@ test('the views are tabs the arrow keys move between, and every view is accessib
   }
 
   await page.goto('/admin/support');
-  const tabs = page.getByRole('tablist', { name: 'Support Views' }).getByRole('tab');
-  await expect(tabs).toHaveCount(6);
-  await expect(tabs.first()).toHaveAttribute('aria-selected', 'true');
-  await expect(tabs.first()).toContainText('Needs Staff (1)');
+  const views = page.getByRole('navigation', { name: 'Support', exact: true }).getByRole('link');
+  await expect(views).toHaveCount(6);
+  await expect(views.first()).toHaveAttribute('aria-current', 'page');
+  await expect(views.first()).toContainText('Needs Staff (1)');
   await assertNoAccessibilityViolations(page);
 
-  await tabs.first().focus();
   for (const [at, view] of VIEWS.slice(1).entries()) {
-    await page.keyboard.press('ArrowRight');
+    await views.nth(at + 1).click();
     await expect(page).toHaveURL(
       new RegExp(`view=${['mine', 'unassigned', 'waiting', 'resolved', 'closed'][at]}`),
     );
-    await expect(tabs.nth(at + 1)).toHaveAttribute('aria-selected', 'true');
-    await expect(tabs.nth(at + 1)).toBeFocused();
-    await expect(tabs.nth(at + 1)).toContainText(view);
+    await expect(views.nth(at + 1)).toHaveAttribute('aria-current', 'page');
+    await expect(views.nth(at + 1)).toContainText(view);
     await assertNoAccessibilityViolations(page);
   }
-  await page.keyboard.press('Home');
+  await views.first().click();
   await expect(page).toHaveURL(/\/admin\/support$/);
-  await expect(page.getByRole('tabpanel')).toContainText('Wobbling Cauldron');
+  await expect(page.getByRole('main')).toContainText('Wobbling Cauldron');
 });
