@@ -212,13 +212,8 @@ const TimeoutForm = ({ userId, name }: { userId: string; name: string }): ReactE
           confirmLabel="Time Out"
           openClass="btn btn--quiet"
           disabled={!ready}
-          title="Time Out Sender"
-          question={
-            <>
-              Time Out <strong>{name}</strong>? They cannot send a support request until{' '}
-              {end ? longMinuteInZone(end) : 'then'}. You can lift it sooner.
-            </>
-          }
+          title={`Time Out ${name}?`}
+          question={`They cannot send a support request until ${end ? longMinuteInZone(end) : 'then'}. You can lift it sooner.`}
           busy="Timing Out"
           confirmClass="btn btn--destructive"
           announcement="Sender timed out."
