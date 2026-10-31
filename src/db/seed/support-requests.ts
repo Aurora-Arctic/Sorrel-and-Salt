@@ -24,6 +24,8 @@ interface SeedRequest {
   message: string;
   path: string;
   errorCode?: number;
+  /** The error page's digest. */
+  errorReference?: string;
   assignedTo?: string;
   /** Shared with the curators. */
   curatorVisible?: boolean;
@@ -148,6 +150,18 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
     path: '/coven/[coven]/grimoire',
     assignedTo: E.id,
     daysAgo: 0.6,
+  },
+  {
+    id: '00000000-0000-0000-0005-000000000011',
+    sender: B.id,
+    about: 'bug',
+    subject: 'Grimoire will not open, even after Try Again',
+    message:
+      'My Grimoire showed an error page with a server error (500). I pressed Try Again and it came back with the same page, and it has done so every time since.',
+    path: '/coven/[coven]/grimoire',
+    errorCode: 500,
+    errorReference: '994764113',
+    daysAgo: 1.1,
   },
 ];
 
@@ -323,6 +337,7 @@ export async function seedSupportRequests(tx: SeedTransaction): Promise<void> {
       message: r.message,
       path: r.path,
       errorCode: r.errorCode ?? null,
+      errorReference: r.errorReference ?? null,
       status: r.resolved ? ('resolved' as const) : ('open' as const),
       assignedTo: r.assignedTo ?? null,
       curatorVisible: r.curatorVisible ?? false,
