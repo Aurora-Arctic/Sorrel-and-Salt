@@ -8,6 +8,7 @@ import { useClickFeedback } from '../ClickFeedback';
 import { useAnnounce } from '../ClickFeedback/status-region';
 import { passkeyLabel } from './label';
 import { PasskeyRow } from './passkey-row';
+import { GENERIC, LAST_WAY_IN, refusal } from './refusal';
 import type { PasskeysProps } from './types';
 import './index.scss';
 
@@ -17,12 +18,7 @@ import './index.scss';
 
 const ADD = 'Add a Passkey';
 export const ADD_FAILED = 'No passkey was added. Try again, or add one from another device.';
-export const LAST_WAY_IN =
-  'This passkey is your only way to sign in, so it cannot be removed. Add another way first.';
-const GENERIC = 'That did not work. Try again.';
-
-/** The sentence for a refused call: the last-way-in rule by its code, anything else generically. */
-const refusal = (code: unknown): string => (code === 'LAST_SIGN_IN_METHOD' ? LAST_WAY_IN : GENERIC);
+export { LAST_WAY_IN };
 
 /** The plugin's rows as the list holds them. */
 const listed = (rows: readonly { id: string; name?: string | null; createdAt: Date | string }[]) =>
@@ -35,7 +31,6 @@ const listed = (rows: readonly { id: string; name?: string | null; createdAt: Da
 const Passkeys = ({ passkeys }: PasskeysProps): ReactElement => {
   // Seeded from the server's list; each change answers in place rather than reloading the page.
   const [rows, setRows] = useState(passkeys);
-  const [pending, setPending] = useState<string>();
   const [adding, setAdding] = useState(false);
   const announce = useAnnounce();
   const add = useClickFeedback({ name: ADD });
@@ -70,16 +65,14 @@ const Passkeys = ({ passkeys }: PasskeysProps): ReactElement => {
     return undefined;
   };
 
-  const handleRemove = async (target: AccountPasskey) => {
-    setPending(target.id);
+  // A refusal rejects with its sentence, which the row's confirm shows under Remove.
+  const handleRemove = async (target: AccountPasskey): Promise<void> => {
     const result = await passkeyActions
       .deletePasskey({ id: target.id })
       .catch(() => ({ error: { code: undefined } }));
-    setPending(undefined);
-    if (result?.error) return refusal(result.error.code);
+    if (result?.error) throw new Error(refusal(result.error.code));
     setRows((current) => current.filter((row) => row.id !== target.id));
     announce(`${passkeyLabel(target.name)} was removed from your passkeys.`);
-    return undefined;
   };
 
   return (
@@ -92,8 +85,6 @@ const Passkeys = ({ passkeys }: PasskeysProps): ReactElement => {
             <PasskeyRow
               key={row.id}
               passkey={row}
-              pending={pending !== undefined}
-              busy={pending === row.id}
               onRename={(name) => handleRename(row, name)}
               onRemove={() => handleRemove(row)}
             />

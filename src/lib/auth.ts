@@ -25,6 +25,7 @@ import { appendQueryParams } from '@better-auth/core/utils/url';
 import { db } from '../db/connection';
 import { workspaceMembers } from '../modules/coven/schema/workspaces';
 import { users } from '../modules/identity/schema/users';
+import { defaultPasskeyName } from './passkey-name';
 import { findDemoWorkspace, removePasskeyKeepingAWayIn } from '../db/repository';
 import {
   sessions,
@@ -625,6 +626,13 @@ export const auth = betterAuth({
     passkey({
       rpName: 'Sorrel & Salt',
       schema: { passkey: { fields: { credentialID: 'credentialId' } } },
+      // A passkey the person did not name is called after the browser and platform that made it, read from this
+      // request's own header; a name the client sends wins.
+      registration: {
+        afterVerification: ({ ctx }) => ({
+          name: defaultPasskeyName(ctx.headers?.get('user-agent')),
+        }),
+      },
     }),
     // An authenticator-app step after a right password, offered, never required. It answers only the password sign-in,
     // so a provider or passkey sign-in is never asked (claude-docs/auth/two-factor.md).

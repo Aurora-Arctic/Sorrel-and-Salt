@@ -114,7 +114,7 @@ export interface ConfirmedActionProps {
    * The sentence a refusal shows; absent, the service's own, read from the
    * GraphQL error.
    */
-  refusal?: string;
+  refusal?: string | ((error: unknown) => string);
   /**
    * Said in the page's status region after a success, for a screen reader:
    * the result the page then shows, in words. Absent for a control whose
