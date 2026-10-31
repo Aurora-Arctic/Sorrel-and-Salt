@@ -24,22 +24,49 @@
   color: $text-muted;
 }
 
+// The opened request: the request and its reply on the left, an admin's settings in a narrow column
+// on the right, stacked once the screen is a phone's with the settings after the reply.
 .support-detail {
-  @include stack;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 15rem;
+  gap: space(5);
+  align-items: start;
+
+  @media (width <= #{$shell-phone-width}) {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
-// From, Status, Error Number and Page: the term in the muted ink, its value beside it, as the user
-// modal lays out its facts.
+.support-detail--single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.support-detail__main,
+.support-detail__side {
+  @include stack;
+  min-inline-size: 0;
+}
+
+.support-detail__side {
+  padding-inline-start: space(5);
+  border-inline-start: 1px solid $hairline;
+
+  @media (width <= #{$shell-phone-width}) {
+    padding-inline-start: 0;
+    border-inline-start: 0;
+  }
+}
+
+// From, Sent, Page and Error in two columns, the term above its value in the muted ink.
 .support-detail__facts {
   display: grid;
-  grid-template-columns: max-content minmax(0, 1fr);
-  gap: space(2) space(4);
-  align-items: baseline;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: space(3) space(4);
   margin: 0;
   overflow-wrap: anywhere;
 
-  > div {
-    display: contents;
+  @media (width <= #{$shell-phone-width}) {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   dt {
@@ -51,16 +78,74 @@
   }
 }
 
-.support-detail__message {
-  white-space: pre-wrap;
+.support-detail__muted {
+  color: $text-muted;
+}
+
+.support-detail__mono {
+  font-family: $font-mono;
+}
+
+.support-detail__copy {
+  @include icon-button;
+  vertical-align: middle;
+}
+
+.support-detail__thread {
+  @include stack(3);
+  padding: 0;
+  list-style: none;
+}
+
+.support-detail__entry {
+  @include stack(2);
+  padding: space(3) space(4);
+  border: 1px solid $hairline;
+  border-radius: radius('surface');
+  background-color: $surface-page;
+
+  p {
+    margin: 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+}
+
+.support-detail__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: space(2);
+}
+
+.support-detail__tag {
+  color: $text-muted;
+  font-size: type-size('small');
+}
+
+// The reply form sits under the thread behind a hairline; Reply on the left, Resolve opposite.
+.support-detail__reply {
+  padding-block-start: space(5);
+  border-block-start: 1px solid $hairline;
+}
+
+.support-detail__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: space(3);
+}
+
+.support-detail__issue-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(2);
+  overflow-wrap: anywhere;
 }
 
 .support-detail__list {
   @include stack;
   padding: 0;
   list-style: none;
-
-  p {
-    white-space: pre-wrap;
-  }
 }

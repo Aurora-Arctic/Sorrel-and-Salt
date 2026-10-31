@@ -5,6 +5,7 @@ import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import BusyButton from '../BusyButton';
 import { FieldShell, SwitchField, fieldDescription } from '../Field';
+import IconTip, { CopyIcon } from '../IconTip';
 import LocalTime from '../LocalTime';
 import Notice from '../Notice';
 import IssuePanel from './issue-panel';
@@ -13,9 +14,10 @@ import TimeoutPanel from './timeout-panel';
 import type { SupportDetailProps } from './types';
 import { AnnounceContext, useSupportAction } from './use-support-action';
 
-// A request opened: the message and replies for anyone who may read it, Reply and Resolve for an admin or
-// the curator it is assigned to, and for an admin alone Assign, Shared With Curators, the issue link and the
-// sender's time-outs. The service is the guard; what a viewer may not do is not drawn.
+// A request opened: the facts and the thread for anyone who may read it, Reply and Resolve for an admin or
+// the curator it is assigned to, and for an admin alone a side column of settings: Assign, Shared With
+// Curators, the issue link and the sender's time-outs. The service is the guard; what a viewer may not do
+// is not drawn.
 
 const AssignDocument = graphql(`
   mutation AssignSupportRequest($id: ID!, $assigneeId: ID) {
@@ -49,84 +51,127 @@ const DetailBody = ({ request, viewer, assignees }: SupportDetailProps): ReactEl
   const visible = useSupportAction();
   const resolve = useSupportAction();
   const { aria, ...assignField } = fieldDescription({ id: useId() });
+  const threadId = useId();
   const failure = assign.failure.alert ?? visible.failure.alert ?? resolve.failure.alert;
 
   return (
-    <div className="support-detail">
-      <dl className="support-detail__facts">
-        <div>
-          <dt>From</dt>
-          <dd>
-            {request.sender
-              ? `${request.sender.name} (${request.sender.email})`
-              : 'Deleted account'}
-          </dd>
-        </div>
-        <div>
-          <dt>Status</dt>
-          <dd>
-            {request.status === 'open' ? 'Open' : 'Resolved'}
-            {request.resolvedBy && request.resolvedAt && (
-              <>
-                {' '}
-                by {request.resolvedBy.name} at <LocalTime at={request.resolvedAt} long />
-              </>
-            )}
-          </dd>
-        </div>
-        {request.errorCode !== null && (
+    <div className={isAdmin ? 'support-detail' : 'support-detail support-detail--single'}>
+      <div className="support-detail__main">
+        <dl className="support-detail__facts">
           <div>
-            <dt>Error Number</dt>
-            <dd>{request.errorCode}</dd>
-          </div>
-        )}
-        {request.errorReference && (
-          <>
-            <dt>Error Reference</dt>
+            <dt>From</dt>
             <dd>
-              {request.errorReference}{' '}
-              <button
-                type="button"
-                className="btn btn--quiet"
-                onClick={() => void navigator.clipboard?.writeText(request.errorReference ?? '')}
-              >
-                Copy
-              </button>
+              {request.sender ? (
+                <>
+                  {request.sender.name}{' '}
+                  <span className="support-detail__muted">{request.sender.email}</span>
+                </>
+              ) : (
+                'Deleted account'
+              )}
             </dd>
-          </>
-        )}
-        {request.path && (
-          <div>
-            <dt>Page</dt>
-            <dd>{request.path}</dd>
           </div>
-        )}
-      </dl>
-      <p className="support-detail__message">{request.message}</p>
+          <div>
+            <dt>Sent</dt>
+            <dd>
+              <LocalTime at={request.createdAt} long />
+            </dd>
+          </div>
+          {request.path && (
+            <div>
+              <dt>Page</dt>
+              <dd className="support-detail__mono">{request.path}</dd>
+            </div>
+          )}
+          {request.errorCode !== null && (
+            <div>
+              <dt>Error</dt>
+              <dd>
+                {request.errorCode}
+                {request.errorReference && (
+                  <>
+                    {' '}
+                    <span aria-hidden="true">·</span>{' '}
+                    <span className="support-detail__mono">{request.errorReference}</span>
+                    <IconTip tip="Copy" placement="above">
+                      <button
+                        type="button"
+                        className="support-detail__copy"
+                        onClick={() =>
+                          void navigator.clipboard?.writeText(request.errorReference ?? '')
+                        }
+                      >
+                        <CopyIcon />
+                        <span className="visually-hidden">Copy Error Reference</span>
+                      </button>
+                    </IconTip>
+                  </>
+                )}
+              </dd>
+            </div>
+          )}
+          {request.resolvedBy && request.resolvedAt && (
+            <div>
+              <dt>Resolved</dt>
+              <dd>
+                by {request.resolvedBy.name} at <LocalTime at={request.resolvedAt} long />
+              </dd>
+            </div>
+          )}
+        </dl>
 
-      {failure && <Notice kind="error">{failure}</Notice>}
+        {failure && <Notice kind="error">{failure}</Notice>}
 
-      <section aria-label="Replies">
-        <h3>Replies</h3>
-        {request.replies.length === 0 ? (
-          <p>No replies yet.</p>
-        ) : (
-          <ul className="support-detail__list">
+        <section aria-labelledby={threadId}>
+          <h3 id={threadId}>Thread</h3>
+          <ol className="support-detail__thread">
+            <li className="support-detail__entry">
+              <div className="support-detail__meta">
+                <strong>{request.sender?.name ?? 'Deleted account'}</strong>
+                <span className="support-detail__tag">Sender</span>
+                <LocalTime at={request.createdAt} long />
+              </div>
+              <p>{request.message}</p>
+            </li>
             {request.replies.map((reply) => (
-              <li key={reply.id}>
-                <strong>{reply.author?.name ?? 'Deleted account'}</strong> at{' '}
-                <LocalTime at={reply.createdAt} long />
+              <li key={reply.id} className="support-detail__entry">
+                <div className="support-detail__meta">
+                  <strong>{reply.author?.name ?? 'Deleted account'}</strong>
+                  <span className="support-detail__tag">Staff</span>
+                  <LocalTime at={reply.createdAt} long />
+                </div>
                 <p>{reply.body}</p>
               </li>
             ))}
-          </ul>
-        )}
-      </section>
+          </ol>
+        </section>
 
-      {answers && <ReplyForm requestId={request.id} />}
+        {answers && (
+          <ReplyForm
+            requestId={request.id}
+            resolve={
+              open && (
+                <BusyButton
+                  className="btn btn--quiet"
+                  busy={resolve.busy}
+                  busyLabel="Resolving"
+                  onClick={() =>
+                    void resolve.run(
+                      () => graphqlRequest(ResolveDocument, { id: request.id }),
+                      'Request resolved.',
+                    )
+                  }
+                >
+                  Resolve
+                </BusyButton>
+              )
+            }
+          />
+        )}
+      </div>
 
       {isAdmin && (
-        <>
+        <aside className="support-detail__side" aria-label="Request Settings">
           <FieldShell label="Assigned To" {...assignField}>
             <select
               id={assignField.controlId}
@@ -159,7 +204,7 @@ const DetailBody = ({ request, viewer, assignees }: SupportDetailProps): ReactEl
             value="1"
             checked={request.curatorVisible}
             busy={visible.busy}
-            hint="Lets any curator read this request, not only the one it is assigned to."
+            hint="Any curator can read it, not only the assignee."
             onChange={(checked) =>
               void visible.run(
                 () => graphqlRequest(CuratorVisibleDocument, { id: request.id, visible: checked }),
@@ -170,28 +215,9 @@ const DetailBody = ({ request, viewer, assignees }: SupportDetailProps): ReactEl
             }
           />
           <IssuePanel key={request.issueUrl ?? ''} request={request} />
-        </>
+          <TimeoutPanel request={request} />
+        </aside>
       )}
-
-      {answers && open && (
-        <div className="form__actions">
-          <BusyButton
-            className="btn"
-            busy={resolve.busy}
-            busyLabel="Resolving"
-            onClick={() =>
-              void resolve.run(
-                () => graphqlRequest(ResolveDocument, { id: request.id }),
-                'Request resolved.',
-              )
-            }
-          >
-            Resolve
-          </BusyButton>
-        </div>
-      )}
-
-      {isAdmin && <TimeoutPanel request={request} />}
     </div>
   );
 };

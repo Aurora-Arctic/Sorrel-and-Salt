@@ -7,7 +7,7 @@ import BusyButton from '../BusyButton';
 import { FieldShell, fieldDescription } from '../Field';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
-import { createIssueHref } from './issue-link';
+import { createIssueHref, issueLabel } from './issue-link';
 import type { SupportRequestDetailEntry } from './types';
 import { useSupportAction } from './use-support-action';
 
@@ -23,6 +23,7 @@ const SetIssueUrlDocument = graphql(`
 `);
 
 const IssuePanel = ({ request }: { request: SupportRequestDetailEntry }): ReactElement => {
+  const [editing, setEditing] = useState(false);
   const [address, setAddress] = useState(request.issueUrl ?? '');
   const { busy, failure, run } = useSupportAction('issueUrl');
   const { aria, ...field } = fieldDescription({ id: useId(), error: failure.field?.message });
@@ -38,39 +39,65 @@ const IssuePanel = ({ request }: { request: SupportRequestDetailEntry }): ReactE
     );
   }
 
+  const showForm = !request.issueUrl || editing;
+
   return (
     <section className="support-detail__issue" aria-label="Issue">
-      <a className="btn" href={createIssueHref(request)} target="_blank" rel="noopener noreferrer">
-        Create Issue
-      </a>
-      <form className="form" noValidate onSubmit={submit}>
-        {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
-        <FieldShell label="Issue Address" {...field}>
-          <input
-            id={field.controlId}
-            className="input"
-            type="url"
-            autoComplete="off"
-            placeholder="Paste the issue address"
-            {...aria}
-            value={address}
-            disabled={busy}
-            onChange={(event) => setAddress(event.target.value)}
-          />
-        </FieldShell>
-        <div className="form__actions">
-          <BusyButton
-            type="submit"
-            className="btn btn--solid"
-            disabled={!changed || busy}
-            busy={busy}
-            busyLabel="Saving Address"
+      <h3>Issue</h3>
+      <div className="support-detail__issue-line">
+        {request.issueUrl && (
+          <a href={request.issueUrl} target="_blank" rel="noopener noreferrer">
+            {issueLabel(request.issueUrl)}
+          </a>
+        )}
+        {request.issueUrl && !editing && (
+          <button
+            type="button"
+            className="btn btn--quiet btn--small"
+            onClick={() => setEditing(true)}
           >
-            Save Address
-          </BusyButton>
-        </div>
-        {discard.asking && <DiscardQuestion guard={discard} />}
-      </form>
+            Change
+          </button>
+        )}
+        <a
+          className="btn btn--quiet btn--small"
+          href={createIssueHref(request)}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Create Issue
+        </a>
+      </div>
+      {showForm && (
+        <form className="form" noValidate onSubmit={submit}>
+          {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
+          <FieldShell label="Issue Address" {...field}>
+            <input
+              id={field.controlId}
+              className="input"
+              type="url"
+              autoComplete="off"
+              placeholder="Paste the issue address"
+              {...aria}
+              value={address}
+              disabled={busy}
+              onChange={(event) => setAddress(event.target.value)}
+            />
+          </FieldShell>
+          <div className="form__actions">
+            <BusyButton
+              type="submit"
+              className="btn btn--solid"
+              disabled={!changed || busy}
+              busy={busy}
+              busyLabel="Saving Address"
+            >
+              Save Address
+            </BusyButton>
+          </div>
+          {discard.asking && <DiscardQuestion guard={discard} />}
+        </form>
+      )}
     </section>
   );
 };

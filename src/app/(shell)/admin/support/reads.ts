@@ -106,6 +106,7 @@ export const readOpened = cache(
     return {
       ...entryOf(row, names),
       message: row.message,
+      createdAt: row.createdAt,
       path: row.path || null,
       issueUrl: row.issueUrl,
       resolvedBy: personOf(names, row.resolvedBy),

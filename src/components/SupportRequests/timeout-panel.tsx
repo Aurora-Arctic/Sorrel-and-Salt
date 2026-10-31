@@ -4,6 +4,7 @@ import { type FormEvent, type ReactElement, useId, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import BusyButton from '../BusyButton';
+import { CollapsibleSection } from '../CollapsibleSection';
 import { FieldShell, fieldDescription } from '../Field';
 import LocalTime from '../LocalTime';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
@@ -58,6 +59,7 @@ const TimeoutPanel = ({ request }: { request: SupportRequestDetailEntry }): Reac
   const [note, setNote] = useState('');
   // Read once per render of the panel: a time-out that lapses while it is open shows as past on the next.
   const [now] = useState(() => Date.now());
+  const [folded, setFolded] = useState(false);
   const { busy, failure, run } = useSupportAction('until');
   const discard = useDiscardGuard(until !== '' || note.trim() !== '');
   const untilId = useId();
@@ -69,6 +71,8 @@ const TimeoutPanel = ({ request }: { request: SupportRequestDetailEntry }): Reac
   const { aria: noteAria, ...noteField } = fieldDescription({ id: noteId });
   const sender = request.sender;
   if (!sender) return null;
+
+  const standing = request.timeouts.find((timeout) => isActive(timeout, now));
 
   const end = until ? new Date(until) : undefined;
   const future = end !== undefined && !Number.isNaN(end.getTime()) && end.getTime() > now;
@@ -92,8 +96,22 @@ const TimeoutPanel = ({ request }: { request: SupportRequestDetailEntry }): Reac
   }
 
   return (
-    <section className="support-detail__timeouts" aria-label="Time-Outs">
-      <h3>Time-Outs for {sender.name}</h3>
+    <CollapsibleSection
+      title="Time-Out"
+      summary={
+        <span className="support-detail__muted">
+          {standing ? (
+            <>
+              · until <LocalTime at={standing.until} long />
+            </>
+          ) : (
+            '· none'
+          )}
+        </span>
+      }
+      fold={{ open: folded, invalid: false, onToggle: () => setFolded((value) => !value) }}
+    >
+      <h4>Time-Outs for {sender.name}</h4>
       {request.timeouts.length === 0 ? (
         <p>No time-outs yet.</p>
       ) : (
@@ -148,7 +166,7 @@ const TimeoutPanel = ({ request }: { request: SupportRequestDetailEntry }): Reac
         </div>
         {discard.asking && <DiscardQuestion guard={discard} />}
       </form>
-    </section>
+    </CollapsibleSection>
   );
 };
 

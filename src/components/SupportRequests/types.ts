@@ -47,6 +47,8 @@ export interface SupportTimeoutEntry {
 /** A request opened to its message, replies and, for an admin, the sender's time-outs. */
 export interface SupportRequestDetailEntry extends SupportRequestEntry {
   message: string;
+  /** When it was sent. */
+  createdAt: Date;
   path: string | null;
   issueUrl: string | null;
   resolvedBy: SupportPerson | null;

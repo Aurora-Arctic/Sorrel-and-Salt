@@ -42,6 +42,7 @@ const ROW: SupportRequestEntry = {
 const DETAIL: SupportRequestDetailEntry = {
   ...ROW,
   message: 'There is no moon on the spell page.',
+  createdAt: new Date('2026-10-29T09:00:00Z'),
   path: '/coven/[slug]/grimoire',
   issueUrl: null,
   resolvedBy: null,

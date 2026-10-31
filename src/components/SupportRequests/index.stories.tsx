@@ -43,8 +43,9 @@ const REQUESTS: SupportRequestEntry[] = [
 const OPENED: SupportRequestDetailEntry = {
   ...REQUESTS[0]!,
   message: 'The cauldron wobbles every time I save.',
+  createdAt: new Date('2026-10-29T09:00:00Z'),
   path: '/coven/[slug]/grimoire',
-  issueUrl: null,
+  issueUrl: 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/1448',
   resolvedBy: null,
   resolvedAt: null,
   replies: [
