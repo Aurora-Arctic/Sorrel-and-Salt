@@ -8,6 +8,7 @@ import { usePendingNavigation } from '../../lib/navigation';
 import { useAnnounce } from '../ClickFeedback/status-region';
 import IconTip from '../IconTip';
 import Notice from '../Notice';
+import Spinner from '../Spinner';
 import type { ShownToggleProps } from './types';
 import './shown-switch.scss';
 
@@ -77,7 +78,7 @@ export default function ShownToggle({
               aria-busy={busy || pending}
               onChange={(event) => void change(event.target.checked)}
             />
-            <span className="shown-switch__thumb">
+            <span className="shown-switch__thumb" data-busy={busy || pending || undefined}>
               <svg
                 className="shown-switch__eye"
                 viewBox="0 0 16 16"
@@ -112,6 +113,7 @@ export default function ShownToggle({
                 </g>
               </svg>
             </span>
+            {(busy || pending) && <Spinner className="shown-switch__spinner" />}
           </span>
         </label>
       </IconTip>

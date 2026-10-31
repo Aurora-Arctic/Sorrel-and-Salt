@@ -56,6 +56,9 @@
   // The pencil and the switch stand side by side with no gap of their own; this one is theirs alone.
   .shown-switch {
     margin-inline-start: space(2);
+    // Level with the pencil: an offset, as the inline boxes' middles differ by a pixel.
+    position: relative;
+    inset-block-start: 1px;
   }
 }
 
