@@ -167,6 +167,26 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
   useEffect(() => {
     if (warning) queueMicrotask(() => backRef.current?.focus());
   }, [warning]);
+  // The dialog gives the focus back to what opened it, which for a held link is the site nav at the top of the page and
+  // for Confirm is a button that is disabled while it works. When the answer was not the acting one (Stay, Go Back, Esc,
+  // Close, a click outside), the focus goes on to the section instead, so the page keeps it in view.
+  const root = useRef<HTMLDivElement>(null);
+  const acted = useRef(false);
+  const shown = useRef<Warning>();
+  useEffect(() => {
+    const was = shown.current;
+    shown.current = warning;
+    if (!was || warning) return;
+    const proceeded = acted.current;
+    acted.current = false;
+    if (proceeded) return;
+    const target =
+      was.no === TURN_ON_WARNING.no
+        ? root.current?.querySelector<HTMLElement>('input[inputmode=numeric]')
+        : root.current;
+    target?.focus();
+    target?.scrollIntoView({ block: 'start' });
+  }, [warning]);
 
   const entered = code.replace(/\s/g, '');
 
@@ -236,7 +256,7 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
   const codeField = fieldDescription({ id: codeId, error: problem.code });
 
   return (
-    <div className="two-factor">
+    <div className="two-factor" ref={root} tabIndex={-1}>
       {warning &&
         createPortal(
           <Modal title={warning.title} onClose={() => setWarning(undefined)}>
@@ -248,6 +268,7 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
                     type="button"
                     className="btn btn--destructive"
                     onClick={() => {
+                      acted.current = true;
                       close();
                       warning.go();
                     }}

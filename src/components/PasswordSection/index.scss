@@ -18,6 +18,11 @@ $qr-dot: #c0baac;
   display: flex;
   flex-direction: column;
   gap: space(3);
+
+  // Taken by script after a dialog is dismissed (two-factor.tsx), so it shows no ring.
+  &:focus {
+    outline: none;
+  }
 }
 
 // The off/on line: no margin of its own, so the column gap is the only space around it.
