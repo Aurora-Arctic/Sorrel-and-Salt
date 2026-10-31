@@ -9,7 +9,7 @@ describe('LocalTime', () => {
   it('prints the minute in the zone given and carries the full instant', () => {
     render(<LocalTime at={AT} timeZone="Asia/Tokyo" />);
 
-    expect(screen.getByText('2026-10-31 08:05')).toHaveAttribute(
+    expect(screen.getByText('2026-10-31 8:05 am')).toHaveAttribute(
       'datetime',
       '2026-10-30T23:05:00.000Z',
     );
@@ -17,7 +17,7 @@ describe('LocalTime', () => {
 
   it('prints UTC on the server, whatever zone is asked for', () => {
     expect(renderToString(<LocalTime at={AT} timeZone="Asia/Tokyo" />)).toContain(
-      '2026-10-30 23:05',
+      '2026-10-30 11:05 pm',
     );
   });
 });

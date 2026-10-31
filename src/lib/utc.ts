@@ -34,7 +34,7 @@ export function isoDayInUtc(at: Date): string {
 }
 
 /**
- * An instant to the minute as `2026-10-30 14:05` in a time zone (the viewer's own when none is given),
+ * An instant to the minute as `2026-10-30 2:05 pm` in a time zone (the viewer's own when none is given),
  * built from parts so it never depends on a locale's separators.
  */
 export function minuteInZone(at: Date, timeZone?: string): string {
@@ -42,16 +42,17 @@ export function minuteInZone(at: Date, timeZone?: string): string {
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
-    hour: '2-digit',
+    hour: 'numeric',
     minute: '2-digit',
-    hourCycle: 'h23',
+    hourCycle: 'h12',
     timeZone,
   }).formatToParts(at);
   const part = (type: string): string => parts.find((p) => p.type === type)?.value ?? '';
-  return `${part('year')}-${part('month')}-${part('day')} ${part('hour')}:${part('minute')}`;
+  const period = part('dayPeriod').toLowerCase();
+  return `${part('year')}-${part('month')}-${part('day')} ${part('hour')}:${part('minute')} ${period}`;
 }
 
-/** An instant to the minute as `2026-10-30 14:05` in UTC: what the server and hydration print. */
+/** An instant to the minute as `2026-10-30 2:05 pm` in UTC: what the server and hydration print. */
 export function minuteInUtc(at: Date): string {
   return minuteInZone(at, 'UTC');
 }

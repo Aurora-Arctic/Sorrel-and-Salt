@@ -151,7 +151,7 @@ describe('AdminCards', () => {
     expect(within(row).getByText('Revoked')).toBeInTheDocument();
     expect(within(row).getByText('2')).toBeInTheDocument();
     const times = row.querySelectorAll('time');
-    expect(times[0]).toHaveTextContent(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/);
+    expect(times[0]).toHaveTextContent(/^\d{4}-\d{2}-\d{2} \d{1,2}:\d{2} (am|pm)$/);
     expect(times[0]).toHaveAttribute('datetime', '2026-10-28T08:00:00.000Z');
     expect(times[1]).toHaveAttribute('datetime', '2026-10-29T09:30:00.000Z');
     expect(within(list).getByRole('columnheader', { name: 'First' })).toBeInTheDocument();
@@ -255,7 +255,7 @@ describe('AdminCards', () => {
     // Expires is a UTC day; Minted On keeps the time, in the viewer's zone.
     expect(within(first).getByText('2026-12-01')).toBeInTheDocument();
     expect(first.querySelector('time[datetime="2026-10-01T00:00:00.000Z"]')).toHaveTextContent(
-      /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/,
+      /^\d{4}-\d{2}-\d{2} \d{1,2}:\d{2} (am|pm)$/,
     );
     expect(screen.queryByRole('button', { name: /^Revoke card/i })).toBeNull();
   });
