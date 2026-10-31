@@ -54,6 +54,11 @@ export async function replyToSupportRequest(
   });
 
   // The reply is saved before the mail goes, and a sender who has left gets none: neither loses the reply.
+  // A signed-out sender has no page to read the reply on, so it goes in the mail whole.
+  if (request.senderEmail) {
+    await notifier.signedOutReply(request.senderEmail, text);
+    return reply;
+  }
   const sender = await findOneById(users, request.createdBy);
   if (sender) await notifier.replyWaiting(sender.email);
   return reply;

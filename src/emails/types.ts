@@ -98,3 +98,12 @@ export interface EmailChangeNoticeProps extends BaseEmailProps {
 
 /** Told to a support request's sender that a reply is waiting. `url` is their support page; the reply itself is never in the mail. */
 export type SupportReplyNoticeProps = BaseEmailProps;
+
+/** Told to a signed-out visitor that their support request arrived. `url` is the support page, for writing again. */
+export type SupportReceivedProps = BaseEmailProps;
+
+/** A staff reply to a signed-out visitor, whose only way to read it is this mail. `url` is the support page, for writing again. */
+export interface SupportEmailReplyProps extends BaseEmailProps {
+  /** What staff wrote. */
+  body: string;
+}

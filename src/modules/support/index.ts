@@ -1,6 +1,7 @@
 // The support module's behaviour surface. Schema tables are reached at `@/modules/support/schema/*`; `types.ts` and the services' helpers are
 // internal to the module.
 export * from './services/send';
+export * from './services/signed-out';
 export { redactPath } from './services/redact-path';
 export * from './services/own';
 export * from './services/staff';

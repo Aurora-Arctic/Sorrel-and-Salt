@@ -48,6 +48,8 @@ function notifier(): SupportNotifier & { sent: string[] } {
     replyWaiting: async (to) => {
       sent.push(to);
     },
+    signedOutReceived: async () => undefined,
+    signedOutReply: async () => undefined,
   };
 }
 

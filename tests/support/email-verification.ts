@@ -27,4 +27,6 @@ export const noPasswordSetter: PasswordSetter = {
 
 export const noSupportNotifier: SupportNotifier = {
   replyWaiting: async () => unexpected('mail a support reply notice'),
+  signedOutReceived: async () => unexpected('mail a signed-out receipt'),
+  signedOutReply: async () => unexpected('mail a signed-out reply'),
 };

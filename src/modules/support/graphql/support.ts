@@ -17,6 +17,7 @@ import {
 import { getMySupportRequest, listMySupportRequests } from '../services/own';
 import { replyToSupportRequest } from '../services/reply';
 import { sendSupportRequest } from '../services/send';
+import { sendSignedOutSupportRequest } from '../services/signed-out';
 import { liftSupportTimeout, timeOutSupportSender } from '../services/timeouts';
 import type { SupportReplyRow, SupportRequestRow, SupportTimeoutRow } from '../types';
 import { MESSAGE_MAX_LENGTH, PATH_MAX_LENGTH, SUBJECT_MAX_LENGTH } from '../validation/support';
@@ -162,6 +163,33 @@ const SupportRequestInput = builder.inputType('SupportRequestInput', {
   }),
 });
 
+const SignedOutSupportRequestInputRef = builder.inputType('SignedOutSupportRequestInput', {
+  description: 'A support request from a visitor who is not signed in.',
+  fields: (t) => ({
+    about: t.field({
+      type: SupportAboutEnum,
+      required: true,
+      description: 'Only ACCESSIBILITY and ACCOUNT are accepted.',
+    }),
+    email: t.string({ required: true, description: 'Where the reply is mailed.' }),
+    subject: t.string({
+      required: true,
+      description: `1 to ${SUBJECT_MAX_LENGTH} characters.`,
+    }),
+    message: t.string({
+      required: true,
+      description: `1 to ${MESSAGE_MAX_LENGTH} characters.`,
+    }),
+    path: t.string({ required: false }),
+    errorCode: t.int({ required: false }),
+    errorReference: t.string({ required: false }),
+    website: t.string({
+      required: false,
+      description: 'A trap for bots: the form hides it, so any value means the send is dropped.',
+    }),
+  }),
+});
+
 builder.queryField('mySupportRequests', (t) =>
   t.pagedConnection({
     type: SupportRequestRef,
@@ -216,6 +244,21 @@ builder.mutationField('sendSupportRequest', (t) =>
     authScopes: { signedIn: true },
     resolve: (_root, { input }, context) =>
       sendSupportRequest(sessionOf(context), definedArgs(input)),
+  }),
+);
+
+builder.mutationField('sendSignedOutSupportRequest', (t) =>
+  t.boolean({
+    description:
+      'Sends a support request without an account, about accessibility or signing in. Open to anyone; refused after ten sends from one address or thirty from one client in 24 hours. Nothing is returned: replies come by email.',
+    args: { input: t.arg({ type: SignedOutSupportRequestInputRef, required: true }) },
+    resolve: async (_root, { input }, context) => {
+      await sendSignedOutSupportRequest(definedArgs(input), {
+        clientIp: context.clientIp,
+        notifier: context.support,
+      });
+      return true;
+    },
   }),
 );
 

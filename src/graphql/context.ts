@@ -16,5 +16,6 @@ export async function createContext({ request }: { request: Request }): Promise<
     invitations: invitationSender(request),
     passwords: passwordSetter(request),
     support: supportNotifier(request),
+    clientIp: request.headers.get('x-vercel-forwarded-for')?.split(',')[0]?.trim() || null,
   };
 }

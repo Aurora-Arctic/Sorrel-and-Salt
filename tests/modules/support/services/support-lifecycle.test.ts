@@ -35,7 +35,11 @@ beforeEach(async () => {
 
 const PAGE: PageRequest = { limit: 101, inverted: false };
 const INPUT = { about: 'bug', subject: 'The jar will not open', message: 'It sticks.' } as const;
-const mail: SupportNotifier = { replyWaiting: async () => undefined };
+const mail: SupportNotifier = {
+  replyWaiting: async () => undefined,
+  signedOutReceived: async () => undefined,
+  signedOutReply: async () => undefined,
+};
 
 const send = () => sendSupportRequest(asUser(C), INPUT);
 const waiting = () =>
@@ -267,6 +271,8 @@ describe('internal notes', () => {
       replyWaiting: async (to) => {
         sent.push(to);
       },
+      signedOutReceived: async () => undefined,
+      signedOutReply: async () => undefined,
     });
 
     expect(await statusOf(request.id)).toBe('open');

@@ -38,3 +38,25 @@ export const IssueUrlInput = z
   .string()
   .trim()
   .regex(ISSUE_URL, { error: `Give the address of an issue on ${ISSUE_REPOSITORY}` });
+
+/** The topics a visitor with no account may write about: the two whose problem can keep them from signing in. */
+export const SIGNED_OUT_ABOUTS = ['accessibility', 'account'] as const;
+
+// A signed-out request. `website` is the honeypot: a field no person sees, so a value in it is a bot.
+export const SignedOutSupportRequestInput = z.object({
+  about: z.enum(supportRequestAbout.enumValues, { error: 'Choose what this is about' }),
+  email: z
+    .string()
+    .trim()
+    .toLowerCase()
+    .max(254, { error: 'That address is too long' })
+    .pipe(z.email({ error: 'Enter an email address' })),
+  subject: SupportRequestInput.shape.subject,
+  message: SupportMessage,
+  path: SupportRequestInput.shape.path,
+  errorCode: SupportRequestInput.shape.errorCode,
+  errorReference: z.string().trim().max(64, { error: 'That reference is too long' }).nullish(),
+  website: z.string().nullish(),
+});
+
+export type SignedOutSupportRequestInput = z.input<typeof SignedOutSupportRequestInput>;
