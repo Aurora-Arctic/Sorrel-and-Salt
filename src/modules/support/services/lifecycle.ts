@@ -9,7 +9,7 @@ import type { SupportReplyRow, SupportRequestRow } from '../types';
 import { SupportMessage } from '../validation/support';
 import { readerOf, requireVerified } from './access';
 import { SEND_WINDOW_SECONDS, refuseOverLimit, refuseTimedOut } from './send';
-import { requestToAnswer } from './staff';
+import { getSupportRequest } from './staff';
 
 // The request lifecycle. The transitions, and who may make each:
 //
@@ -92,9 +92,9 @@ export async function sendSenderMessage(
 
 /**
  * Adds a note only staff read. It never changes the request's status and is never mailed. An admin may on any request, a
- * curator on one assigned to them.
+ * curator on any request they can read, assigned to them or not.
  *
- * @throws {Forbidden} the session is neither a curator nor an admin, or a curator and the request is not assigned to them.
+ * @throws {Forbidden} the session is neither a curator nor an admin.
  * @throws {NotFound} the reader may not see a request with this id.
  * @throws {ValidationError} the body is empty or over 4,000 characters.
  */
@@ -103,7 +103,7 @@ export async function addSupportInternalNote(
   requestId: string,
   body: string,
 ): Promise<SupportReplyRow> {
-  const request = await requestToAnswer(session, requestId, 'add a note to');
+  const request = await getSupportRequest(session, requestId);
   const text = parseInput(SupportMessage, body);
   return withAudit(session, async (write) => {
     const [row] = await write.insert(supportReplies, {

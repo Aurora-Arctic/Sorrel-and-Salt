@@ -153,3 +153,7 @@ A visitor with no account may send a request about `accessibility`, `bug`, `acco
 - **A faded reply box.** Beneath the thread sits a disabled, faded reply form (a "Your Reply" field and a Reply button, both disabled). It stands in for M15.43 and sends nothing.
 
 - **Staff-only fields on a request (2026-10-31, the owner's call).** The sender never sees or receives the issue address or the error reference (the crash digest). The sender's reads blank both, their GraphQL fields need a curator scope, and the sender's dialog draws the Error fact as the status code alone. The staff dialog keeps both. The reference is shown at the time of the error (the error screens) and sent with the request (Report This), but never shown to the sender afterwards.
+
+### Internal Notes On Any Readable Request (2026-10-31)
+
+The owner's call: a curator may add an internal note to any request they can read, assigned to them or not; an admin on any. A reply to the sender and Resolve stay assigned-only. A request outside the curator's scope still reads as absent. The note has its own guard, the staff read by id, in place of `requestToAnswer`.

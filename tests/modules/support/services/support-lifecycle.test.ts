@@ -8,6 +8,7 @@ import {
   closeResolvedRequests,
   closeSupportRequest,
   getMySupportRequest,
+  getSupportRequest,
   listSupportRequests,
   repliesForRequests,
   replyToSupportRequest,
@@ -18,7 +19,7 @@ import {
   timeOutSupportSender,
 } from '@/modules/support';
 import type { SupportNotifier } from '@/modules/support';
-import { A, C, D, E, F, asUser } from '../../../support/as-user';
+import { A, B, C, D, E, F, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 
 // The support lifecycle by direct call: each row of the transition table, the pairs it leaves out, the reopen guard, what a
@@ -293,20 +294,49 @@ describe('internal notes', () => {
     expect(sent).toHaveLength(1);
   });
 
-  it('are written by an admin, or a curator on a request assigned to them, and refused to a plain user', async () => {
+  it('are written by an admin, and by a curator on any request they can read, assigned to them or not', async () => {
     const request = await send();
     await sql`update support_requests set curator_visible = true where id = ${request.id}`;
-    expect(await failureOf(addSupportInternalNote(asUser(F), request.id, 'Note.'))).toBeInstanceOf(
-      Forbidden,
-    );
-    expect(await failureOf(addSupportInternalNote(asUser(A), request.id, 'Note.'))).toBeInstanceOf(
-      Forbidden,
-    );
-
-    await assignSupportRequest(asUser(E), request.id, F.id);
+    // The precondition: the curator can read the request, and it is assigned to no one.
+    expect((await getSupportRequest(asUser(F), request.id)).assignedTo).toBeNull();
     expect((await addSupportInternalNote(asUser(F), request.id, 'Note.')).visibility).toBe(
       'internal',
     );
+
+    await assignSupportRequest(asUser(E), request.id, E.id);
+    expect((await getSupportRequest(asUser(F), request.id)).assignedTo).toBe(E.id);
+    expect((await addSupportInternalNote(asUser(F), request.id, 'Again.')).visibility).toBe(
+      'internal',
+    );
+    expect((await addSupportInternalNote(asUser(E), request.id, 'Admin.')).visibility).toBe(
+      'internal',
+    );
+  });
+
+  it('are refused to a curator on a request not marked for curators, by direct id, and to a plain user', async () => {
+    const request = await send();
+    // The preconditions: the request exists and an admin can read it, while the curator cannot.
+    expect((await getSupportRequest(asUser(E), request.id)).curatorVisible).toBe(false);
+    expect(await failureOf(getSupportRequest(asUser(F), request.id))).toBeInstanceOf(NotFound);
+    expect(await failureOf(addSupportInternalNote(asUser(F), request.id, 'Note.'))).toBeInstanceOf(
+      NotFound,
+    );
+
+    await sql`update support_requests set curator_visible = true where id = ${request.id}`;
+    for (const user of [A, B]) {
+      expect(
+        await failureOf(addSupportInternalNote(asUser(user), request.id, 'Note.')),
+      ).toBeInstanceOf(Forbidden);
+    }
+  });
+
+  it('leave replies assigned-only: a curator still cannot reply on a request that is visible but not theirs', async () => {
+    const request = await send();
+    await sql`update support_requests set curator_visible = true where id = ${request.id}`;
+    expect((await getSupportRequest(asUser(F), request.id)).id).toBe(request.id);
+    expect(
+      await failureOf(replyToSupportRequest(asUser(F), request.id, 'Hello.', mail)),
+    ).toBeInstanceOf(Forbidden);
   });
 });
 

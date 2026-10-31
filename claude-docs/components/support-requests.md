@@ -20,7 +20,7 @@ same ones.
   and one Error line with the reference in monospace and an icon-only copy button, when the request has one), then the
   thread (the sender's message first, tagged Sender, then each reply, tagged Staff) and the reply form. The controls are:
   - **Reply** (a "Your Reply" field; Reply is disabled until there is a body) with **Resolve** opposite it (open requests
-    only), for an admin or a curator the request is assigned to.
+    only), for an admin or a curator the request is assigned to. The internal-note mode (M15.42) is open to a curator on any request they can read, not only an assigned one: the service allows it (`addSupportInternalNote` reads the request as the curator's own visible read), so the form needs no assigned-to gate.
   - A right column for an admin alone: **Assigned To**, **Shared With Curators**, the Issue section (the linked issue as
     repository and number, preceded by a pencil icon button named "Change Issue Address", or the address field at once while none is linked) and **Time-Out**, a
     fold closed by default that says "none", or a "Timed Out" badge and "until" the end of the standing time-out.
