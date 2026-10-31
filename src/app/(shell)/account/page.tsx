@@ -132,8 +132,8 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
         <div className="header">
           <h2 id="account-passkeys-heading">Passkeys</h2>
           <p className="lede">
-            A passkey works only on the site where it was added: one added here will not sign you in
-            on another Sorrel &amp; Salt site, such as staging.
+            A passkey is tied to this website&rsquo;s address and to the device or password manager
+            that holds it.
           </p>
         </div>
         <Passkeys passkeys={passkeys} />

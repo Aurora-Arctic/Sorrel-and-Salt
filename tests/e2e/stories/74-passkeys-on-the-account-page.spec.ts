@@ -41,7 +41,15 @@ test.describe('passkeys on the account page', () => {
       await section.getByRole('button', { name: 'Add a Passkey' }).click();
       await expect(list.getByRole('listitem')).toHaveCount(2);
 
-      await section.getByRole('button', { name: 'Rename Passkey' }).click();
+      // Made unnamed, it is called after the browser that made it.
+      const [{ name: made }] = await withSql(
+        (sql) =>
+          sql`select name from passkeys where user_id = ${userId} order by created_at desc limit 1`,
+      );
+      expect(made).toMatch(/^Chrome/);
+      await expect(section.getByRole('button', { name: `Rename ${made}` })).toBeVisible();
+
+      await section.getByRole('button', { name: `Rename ${made}` }).click();
       const dialog = page.getByRole('dialog', { name: 'Rename Passkey' });
       await dialog.getByRole('textbox', { name: 'Name' }).fill('Phone');
       await scanBothThemes(page);
@@ -50,6 +58,9 @@ test.describe('passkeys on the account page', () => {
       await expect(section.getByRole('button', { name: 'Rename Phone' })).toBeVisible();
 
       await section.getByRole('button', { name: 'Remove Laptop' }).click();
+      const confirm = page.getByRole('dialog', { name: 'Remove Passkey' });
+      await scanBothThemes(page);
+      await confirm.getByRole('button', { name: 'Remove', exact: true }).click();
       await expect(list.getByRole('listitem')).toHaveCount(1);
       await expect(section.getByRole('button', { name: 'Remove Phone' })).toBeVisible();
 

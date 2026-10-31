@@ -5,8 +5,8 @@ section (M16.8, Story 74): each passkey the signed-in account holds, with
 Rename and Remove, and Add a Passkey beneath. Server component
 `src/app/(shell)/account/page.tsx` reads the list with `accountPasskeys()`
 (`src/lib/request-session.ts`) and hands it down. The section's heading and
-intro, which says a passkey works only on the site where it was added, are
-the page's ([`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md), "The
+intro, which says a passkey is tied to this website's address and to the
+device or password manager that holds it, are the page's ([`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md), "The
 account page").
 
 Every call is the passkey plugin's own route through `passkey` in
@@ -35,14 +35,25 @@ UTC, then two small buttons:
   with a spinner while saving. Cancel with a typed change asks before
   discarding it. A refusal is a notice in the dialog; a success closes it and
   the row shows the new name.
-- **Remove** (`.btn--destructive.btn--small`) removes at once, with no
-  confirmation, as a sign-in method's Remove does. While one removal is
-  pending the others are disabled. A refusal is a callout under the button.
+- **Remove** (`.btn--quiet.btn--small`, drawn plain as the destructive-control
+  rule has it) asks first, through `ConfirmedAction`
+  ([`user-list.md`](user-list.md), "Actions that ask first"), as an admin
+  invitation's Revoke does: a dialog titled "Remove Passkey" asks "Remove
+  <name>? You will need another passkey or your password to sign in from
+  that device." and holds the red Remove (`.btn--destructive`) and Cancel.
+  Nothing is sent until Remove. A refusal closes the dialog and is a callout
+  under the row's button.
 
 ## Add a Passkey
 
-Add a Passkey asks the browser to make a passkey, unnamed, then reads the
-list again (`listUserPasskeys`) so the new row is the server's own. A
+Add a Passkey asks the browser to make a passkey, sending no name, then reads
+the list again (`listUserPasskeys`) so the new row is the server's own. The
+server names it from the request's `User-Agent` header, such as "Chrome on
+Linux" (`defaultPasskeyName`, `src/lib/passkey-name.ts`, set in the plugin's
+`afterVerification` in `src/lib/auth.ts`): a small table of the common
+browsers and platforms rather than a parsing library, which names whichever
+of the two it can read and falls back to "Passkey" when it reads neither. A
+name the client sends wins, and Rename changes it. A
 cancelled prompt, or one the device cannot answer, leaves the list as it was
 and says "No passkey was added. Try again, or add one from another device."
 under the button.
@@ -59,8 +70,8 @@ grey the button beforehand, since the page does not read the password.
 ## Tests
 
 `tests/components/Passkeys/index.test.tsx` covers the list, add, a cancelled
-add, rename and remove, and the last-way-in refusal, with the plugin's
+add, rename, the ask-first remove, and the last-way-in refusal, with the plugin's
 client actions mocked. `tests/db/passkey-account.test.ts` covers the server:
 rename and remove by the owner, another account's id refused for both, and
 the last-way-in rule. `tests/e2e/stories/74-passkeys-on-the-account-page.spec.ts`
-walks add, rename and remove in Chromium with a virtual authenticator.
+walks add (named after the browser), rename and a confirmed remove in Chromium with a virtual authenticator.

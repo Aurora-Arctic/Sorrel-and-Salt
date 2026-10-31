@@ -537,9 +537,10 @@ component docs are [`components/name-form.md`](../components/name-form.md),
   [`components/account-menu.md`](../components/account-menu.md)):
   Better Auth's own sign-out, then a full load of `/` (MB.63, moved by MB.7).
 - **Passkeys (M16.8, Story 74).** A Passkeys section follows Sign-In Methods,
-  linked from the nav as `#account-passkeys`. Its intro says a passkey works
-  only on the site where it was added, because a passkey is bound to the host
-  that made it ([`plugins.md`](plugins.md), "Passkeys"). The page reads the
+  linked from the nav as `#account-passkeys`. Its intro says a passkey is tied
+  to this website's address and to the device or password manager that holds
+  it; that a passkey made on one Sorrel & Salt site, such as staging, does not
+  work on another is in the plugin's notes, not on the page ([`plugins.md`](plugins.md), "Passkeys"). The page reads the
   list with `accountPasskeys()` in `src/lib/request-session.ts`, the plugin's
   `listPasskeys` cut to id, name and day added, and hands it to `Passkeys`
   ([`components/passkeys.md`](../components/passkeys.md)), whose Add a
