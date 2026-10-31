@@ -27,9 +27,9 @@ interface SeedCardBatch {
 }
 
 export const CARD_BATCHES: readonly SeedCardBatch[] = [
-  { id: '00000000-0000-0000-0004-000000000001', state: 'live', sheets: 2, expiresInDays: 21 },
-  { id: '00000000-0000-0000-0004-000000000002', state: 'revoked', sheets: 1, expiresInDays: 14 },
-  { id: '00000000-0000-0000-0004-000000000003', state: 'expired', sheets: 1, expiresInDays: -10 },
+  { id: '7c2d41a0-5b3e-4f18-9a6d-2e8b1c4f7a01', state: 'live', sheets: 2, expiresInDays: 21 },
+  { id: 'b39e0f52-8d14-4c67-a1e3-6f20d9b5c802', state: 'revoked', sheets: 1, expiresInDays: 14 },
+  { id: 'e15a8c7d-3f96-4b2a-8c05-91d7a4e6b303', state: 'expired', sheets: 1, expiresInDays: -10 },
 ];
 
 const [LIVE, REVOKED, EXPIRED] = CARD_BATCHES;
