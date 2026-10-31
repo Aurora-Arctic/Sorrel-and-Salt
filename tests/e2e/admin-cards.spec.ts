@@ -49,7 +49,7 @@ test('an admin mints a sheet of cards and the Invitation Cards tab lists the bat
   const minted = page.getByRole('dialog', { name: 'Choose Minted Days' });
   await expect(minted).toBeVisible();
   await assertNoAccessibilityViolations(page);
-  await minted.getByRole('button', { name: 'Today' }).click();
+  await minted.getByRole('button', { name: 'Today', exact: true }).click();
   await expect(minted).toBeHidden();
   await assertNoAccessibilityViolations(page);
   await drawer.getByRole('button', { name: 'Apply Filters' }).click();
