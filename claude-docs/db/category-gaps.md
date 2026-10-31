@@ -1,6 +1,6 @@
 # Category Gaps
 
-This is the list for M14.25. It records every category word that a source prints, that an earlier seed lane reported as missing from the category vocabulary, and what I propose to do about each. Nothing here is decided. The owner approves, changes or rejects each row before any seed or entry file changes.
+This is the list for M14.25. It records every category word that a source prints, that an earlier seed lane reported as missing from the category vocabulary, and what I propose to do about each. An entry with no category lands hidden from the public (M14.35), so a gap that leaves an entry with no category also keeps it out of the public compendium until a curator shows it. Nothing here is decided. The owner approves, changes or rejects each row before any seed or entry file changes.
 
 The seed rule is that a category is the source's own word, so a different word is never mapped silently (`compendium-seed/README.md`). Each "Map to" row below is therefore a proposal to make an exception on purpose, with a reason. Each "Add" row proposes a new category in `src/db/seed/categories.ts`, which needs no migration.
 

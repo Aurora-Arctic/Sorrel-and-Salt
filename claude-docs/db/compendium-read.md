@@ -663,3 +663,7 @@ the facets, so they cannot disagree.
   oil is sourced (the union rule), so it is not on the list. `hasNoForm` lists
   entries nobody can stock or put in a spell yet; a soft-deleted variant is none,
   through `existsIn`.
+
+## Hidden entries (M14.35)
+
+An entry with `shown = false` is excluded in SQL from the public read: the list, its search and counts, the slug finder and its redirects, the picker and `ingredients-by-id`, so a hidden slug is a 404. The `listing` filter (`shown`, the default, `hidden` or `all`) is a curator's: a call from anyone else that sets it is refused with `Forbidden`, because the cache is keyed by the parsed filter. A coven's cupboard is read without the arm, so an entry it names stays visible there, as do the admin screens and the audit queue.
