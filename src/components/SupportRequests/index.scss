@@ -83,7 +83,9 @@
     grid-template-columns: minmax(0, 1fr);
   }
 
+  // The term and its value stand one step apart: the term's bottom margin (1) and the value's zero top margin.
   dt {
+    margin: 0 0 space(1);
     color: $text-muted;
   }
 
