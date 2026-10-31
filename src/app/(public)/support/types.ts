@@ -1,0 +1,9 @@
+export interface SupportPageProps {
+  // A promise, awaited before use. `support` is the kind asked for, `error` the status of the error
+  // page the sender came from, and `from` the page the request is about.
+  searchParams: Promise<{
+    support?: string | string[];
+    error?: string | string[];
+    from?: string | string[];
+  }>;
+}
