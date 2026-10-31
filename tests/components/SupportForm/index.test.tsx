@@ -231,6 +231,16 @@ describe('SupportForm', () => {
     expect(page()).toBeInvalid();
   });
 
+  it('sends a path with a coven slug as it is, never a route pattern', async () => {
+    const calls = mockSending();
+    render(<SupportForm path="/coven/whitethorn-coven/grimoire" about="bug" />);
+    fill();
+    fireEvent.click(send());
+
+    await screen.findByRole('status');
+    expect(calls[0]?.input.path).toBe('/coven/whitethorn-coven/grimoire');
+  });
+
   it('sends the trimmed text with the about, page and error, then says it was received', async () => {
     const calls = mockSending();
     render(<SupportForm path="/coven/x/missing" errorCode={404} about="bug" />);

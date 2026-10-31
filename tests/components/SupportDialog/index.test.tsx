@@ -10,7 +10,8 @@ import { server } from '../../support/msw/server';
 const search = vi.fn<() => string>();
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn(), back: vi.fn() };
 vi.mock('next/navigation', () => ({
-  usePathname: () => '/coven/fixture-coven',
+  // The router answers the framework's own route on a 404; the dialog must read the address bar instead.
+  usePathname: () => '/_not-found',
   useSearchParams: () => new URLSearchParams(search()),
   useRouter: () => router,
 }));
@@ -34,6 +35,7 @@ function open() {
 }
 
 beforeEach(() => {
+  window.history.replaceState(null, '', '/coven/fixture-coven');
   search.mockReturnValue('');
   router.replace.mockClear();
   router.push.mockClear();

@@ -54,7 +54,7 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
     subject: 'Ingredients page shows an error and will not load',
     message:
       "I opened my coven's Ingredients page and got a blank page with a server error (500) instead of the list. I reloaded it several times over a few minutes and it fails every time. It worked yesterday.",
-    path: '/coven/[coven]/ingredients',
+    path: '/coven/whitethorn-coven/ingredients',
     errorCode: 500,
     daysAgo: 0.9,
   },
@@ -65,7 +65,7 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
     subject: 'Suggestion: spell status chips could say more than colour',
     message:
       'I have trouble with colours, and the Draft and Complete chips on the grimoire look the same to me. Could they say more than colour does?',
-    path: '/coven/[coven]/grimoire',
+    path: '/coven/whitethorn-coven/grimoire',
     assignedTo: E.id,
     daysAgo: 1.7,
   },
@@ -88,7 +88,7 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
     subject: 'Jar quantity goes back after I save it',
     message:
       'I change the amount in a jar from 40 g to 25 g and press Save. It says saved, but when I reload the page it shows 40 g again.',
-    path: '/coven/[coven]/ingredients',
+    path: '/coven/whitethorn-coven/ingredients',
     assignedTo: E.id,
     issueNumber: 1301,
     daysAgo: 4.1,
@@ -112,7 +112,7 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
     about: 'question',
     subject: 'How do I change my display name?',
     message: 'My name on the members page has a typo in it. Where do I fix it?',
-    path: '/coven/[coven]/members',
+    path: '/coven/whitethorn-coven/members',
     assignedTo: F.id,
     curatorVisible: true,
     resolved: { by: F.id, daysAgo: 6 },
@@ -125,7 +125,7 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
     subject: 'Coven page shows not found although I am signed in',
     message:
       "I followed the link to my coven's home page from the My Covens list. I am signed in and a member, but the page says not found (404). Other pages in the coven open normally.",
-    path: '/coven/[coven]',
+    path: '/coven/ninebark-coven',
     errorCode: 404,
     curatorVisible: true,
     daysAgo: 5.2,
@@ -137,7 +137,7 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
     subject: 'Spell steps go back to their old order after saving',
     message:
       'I moved step 3 above step 2 and saved the spell. The page showed the new order, but when I opened the spell later the steps were back as before.',
-    path: '/coven/[coven]/grimoire',
+    path: '/coven/whitethorn-coven/grimoire',
     daysAgo: 13.5,
   },
   {
@@ -147,7 +147,7 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
     subject: 'Can a viewer see a private spell?',
     message:
       'I made a spell private so that only I can read it. Can the viewers in our coven see it anyway?',
-    path: '/coven/[coven]/grimoire',
+    path: '/coven/whitethorn-coven/grimoire',
     assignedTo: E.id,
     daysAgo: 0.6,
   },
@@ -158,7 +158,7 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
     subject: 'Grimoire will not open, even after Try Again',
     message:
       'My Grimoire showed an error page with a server error (500). I pressed Try Again and it came back with the same page, and it has done so every time since.',
-    path: '/coven/[coven]/grimoire',
+    path: '/coven/whitethorn-coven/grimoire',
     errorCode: 500,
     errorReference: '994764113',
     daysAgo: 1.1,

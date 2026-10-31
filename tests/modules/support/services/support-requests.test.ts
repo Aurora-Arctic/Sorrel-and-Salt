@@ -106,13 +106,13 @@ describe('sendSupportRequest', () => {
     await expect(send(C, { ...INPUT, errorReference: 'x'.repeat(101) })).rejects.toThrow();
   });
 
-  it('stores the path with the coven segment replaced, and no path as empty', async () => {
+  it('stores the path as sent, coven slug included, and no path as empty', async () => {
     const withPath = await send(C, {
       ...INPUT,
       path: '/coven/moonlit-hollow/grimoire',
       errorCode: 500,
     });
-    expect(withPath.path).toBe('/coven/[coven]/grimoire');
+    expect(withPath.path).toBe('/coven/moonlit-hollow/grimoire');
     expect(withPath.errorCode).toBe(500);
     expect((await send(C)).path).toBe('');
   });

@@ -22,6 +22,7 @@ import {
   supportClosedHref,
   supportAboutOf,
 } from '../../lib/support-path';
+import { useActualPathname } from '../../lib/use-actual-pathname';
 import { emailPagePath } from '../../lib/account-email';
 import type { SupportPanelState } from '../SupportPanel/types';
 import type { SupportDialogState } from './types';
@@ -41,7 +42,9 @@ const SupportDialogStateDocument = graphql(`
 `);
 
 function Dialog(): ReactElement | null {
-  const pathname = usePathname();
+  const routed = usePathname();
+  // The address bar, since the router answers `/_not-found` on a 404 and a request must name the real page.
+  const pathname = useActualPathname() ?? routed;
   const params = useSearchParams();
   const asked = params.get(SUPPORT_PARAM);
   // Asked on every open, never reused: a visitor may have signed in or been timed out since.
