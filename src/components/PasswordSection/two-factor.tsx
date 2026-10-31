@@ -267,9 +267,6 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
               />
             </FieldShell>
             <div className="form__actions">
-              <button type="button" className="btn btn--quiet" onClick={cancel}>
-                Cancel
-              </button>
               <BusyButton
                 type="submit"
                 className="btn btn--solid"
@@ -279,6 +276,9 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
               >
                 Confirm and Turn On
               </BusyButton>
+              <button type="button" className="btn btn--quiet" onClick={cancel}>
+                Cancel
+              </button>
             </div>
           </form>
         </>
