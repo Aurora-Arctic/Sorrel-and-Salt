@@ -11,7 +11,6 @@ import BusyButton from '../BusyButton';
 import { FieldShell, fieldDescription } from '../Field';
 import Notice from '../Notice';
 import PasswordField from '../PasswordField';
-import { PASSKEY_AUTOCOMPLETE, usePasskeyAutofill } from './passkey-autofill';
 import type { PasswordFormProps } from './types';
 
 // The email and password half of the panel: sign in, or switch to create an account. Every refusal is
@@ -87,8 +86,6 @@ const PasswordForm = ({
   // The address a sign-up was answered for: every sign-up gets the same answer, held or not.
   const [signedUp, setSignedUp] = useState<string>();
   const { ref, settle } = useResultFocus<HTMLDivElement>();
-  // This view holds the field the browser offers saved passkeys in, so the offer lives and dies with it.
-  usePasskeyAutofill(next);
 
   const signingUp = mode === 'sign-up';
   const ready =
@@ -196,7 +193,7 @@ const PasswordForm = ({
             id={emailField.controlId}
             className="input"
             type="email"
-            autoComplete={signingUp ? 'email' : PASSKEY_AUTOCOMPLETE}
+            autoComplete={signingUp ? 'email' : 'username'}
             placeholder="Add an email"
             value={email}
             onChange={(event) => onEmailChange(event.target.value)}

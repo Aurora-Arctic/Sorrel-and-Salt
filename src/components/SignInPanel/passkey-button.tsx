@@ -4,13 +4,13 @@ import { type ReactElement, useState } from 'react';
 import { signIn } from '../../lib/auth-client';
 import BusyButton from '../BusyButton';
 import { useClickFeedback } from '../ClickFeedback';
-import { PASSKEY_SIGN_IN_ERROR, leaveSignedIn } from './passkey-autofill';
+import { PASSKEY_SIGN_IN_ERROR, leaveSignedIn } from './passkey-sign-in';
 import type { PasskeyButtonProps } from './types';
 
 const NAME = 'Sign In with a Passkey';
 
-// "Sign In with a Passkey": the browser's own passkey prompt, and the fallback wherever autofill is not offered
-// (./passkey-autofill.ts, started by the email view). A failure is said in a callout under the button, the focus kept on it.
+// "Sign In with a Passkey": the browser's own passkey prompt, started only by pressing it.
+// A failure is said in a callout under the button, the focus kept on it.
 const PasskeyButton = ({ next, lastUsed }: PasskeyButtonProps): ReactElement => {
   const { anchorRef, report, feedback } = useClickFeedback({ name: NAME });
   const [busy, setBusy] = useState(false);
