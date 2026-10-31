@@ -10,7 +10,7 @@ import {
   useRef,
 } from 'react';
 import Notice from '../Notice';
-import IconTip, { CloseIcon, MysticEyeIcon, PreviewButton } from '../IconTip';
+import IconTip, { CloseIcon, LiddedEyeIcon, PreviewButton } from '../IconTip';
 import { SpellCardFilters } from '../SpellCard';
 import SpellRecipeBody from '../SpellRecipe/body';
 import SpellRecipeSummary from '../SpellRecipe/summary';
@@ -187,7 +187,7 @@ export default function SpellPreview(props: SpellPreviewProps): ReactElement {
                 aria-pressed={wake.held}
                 onClick={wake.toggle}
               >
-                <MysticEyeIcon />
+                <LiddedEyeIcon open={wake.held} />
                 <span className="visually-hidden">Screen Awake</span>
               </button>
             </IconTip>

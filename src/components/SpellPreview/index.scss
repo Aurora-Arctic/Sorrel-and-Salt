@@ -63,8 +63,9 @@ $preview-foot: 2.5rem;
   margin-inline: auto;
 }
 
-// The eye, held on, wears the accent and blinks now and then: still for most of the cycle, the lid
-// closing and opening once; still under reduced motion.
+// The eye opens as the lock is held and shuts as it is let go (lidded-eye.scss). Held, it wears the
+// accent and blinks now and then: still for most of the cycle, closing and opening once; still under
+// reduced motion.
 .spell-preview__awake {
   svg {
     transform-origin: center;
