@@ -29,6 +29,18 @@
   }
 }
 
+// A refused open's count and dates under its reason, muted at caption size; each date stays on one line, the
+// reason above may wrap.
+.admin-cards__refusal-when {
+  display: block;
+  color: $text-muted;
+  font-size: type-size('caption');
+
+  time {
+    white-space: nowrap;
+  }
+}
+
 // The live total, in the Number of Sheets field's `after` slot so it sits one field gap under the input, beneath any
 // error: one line is always reserved, so it appearing, changing or going never moves Expires On.
 .admin-cards__total {

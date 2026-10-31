@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
 import type { ReactElement } from 'react';
+import { userEvent, within } from 'storybook/test';
 import { AdminTabbedFrame } from '../../../.storybook/admin-frame';
+import { answerOperations, useMockHandlers } from '../../../.storybook/mock-api';
 import AdminCards, { MintCards } from '.';
 import AdminArrivals from './arrivals';
 import type { ArrivalEntry, BatchEntry } from './types';
@@ -84,6 +86,49 @@ const Cards = ({
 export const Default: Story = { render: () => <Cards batches={BATCHES} /> };
 export const Empty: Story = { render: () => <Cards batches={[]} /> };
 export const Minting: Story = { render: () => <Cards batches={BATCHES} minting /> };
+const ATTEMPTS = [
+  ['Fixture Wort', 'fixture.wort@example.test', 4, 'revoked', 3],
+  ['Testa Longname Mockleaf', 'testa.longname.mockleaf@example.test', 11, 'accepted', 12],
+  ['Mocka Once', 'mocka.once@example.test', 20, 'expired', 1],
+].map(([name, email, cardPosition, reason, attempts], i) => ({
+  node: {
+    id: `at${i}`,
+    reason,
+    attempts,
+    cardPosition,
+    firstAttemptedAt: '2026-10-30T10:00:00Z',
+    lastAttemptedAt: '2026-10-31T09:30:00Z',
+    account: { id: `ac${i}`, name, email },
+  },
+}));
+const REFUSED = [
+  answerOperations(({ operationName }) =>
+    operationName === 'InvitationCardAttempts'
+      ? {
+          invitationCardAttempts: {
+            edges: ATTEMPTS,
+            pageInfo: { hasNextPage: false, endCursor: null },
+          },
+        }
+      : undefined,
+  ),
+];
+
+const RefusedOpens = (): ReactElement => {
+  useMockHandlers(REFUSED);
+  return <Cards batches={BATCHES} />;
+};
+
+/** The Refused Opens dialog open on a batch: a table where the dialog is wide, stacked on a phone. */
+export const RefusedOpensDialog: Story = {
+  render: () => <RefusedOpens />,
+  play: async ({ canvasElement }) => {
+    await userEvent.click(
+      await within(canvasElement).findByRole('button', { name: /View Refused Opens/ }),
+    );
+  },
+};
+
 export const Arrivals: Story = {
   render: () => (
     <AdminTabbedFrame page="people" open="/admin/card-sign-ups">

@@ -202,17 +202,14 @@ describe('AdminCards', () => {
     );
     expect(within(row).getByText('Sheet 2, Card 5')).toBeInTheDocument();
     expect(within(row).getByText('Revoked')).toBeInTheDocument();
-    expect(within(row).getByText('2')).toBeInTheDocument();
+    expect(within(row).getByText(/^2 times,/)).toBeInTheDocument();
     const times = row.querySelectorAll('time');
     expect(times[0]).toHaveTextContent(/^\d{4}-\d{2}-\d{2} \d{1,2}:\d{2} (am|pm)$/);
     expect(times[0]).toHaveAttribute('datetime', '2026-10-28T08:00:00.000Z');
     expect(times[1]).toHaveAttribute('datetime', '2026-10-29T09:30:00.000Z');
-    expect(within(list).getByRole('columnheader', { name: 'First' })).toBeInTheDocument();
-    // Name and Email are columns of their own, in place of one Account column.
+    // Four columns: the reason, count and dates share the Refusal column.
     const headings = within(list).getAllByRole('columnheader');
-    expect(headings[0]).toHaveTextContent('Name');
-    expect(headings[1]).toHaveTextContent('Email');
-    expect(within(list).queryByRole('columnheader', { name: 'Account' })).toBeNull();
+    expect(headings.map((h) => h.textContent)).toEqual(['Name', 'Email', 'Card', 'Refusal']);
     const cells = within(row).getAllByRole('cell');
     expect(within(cells[0]).getByRole('link', { name: 'Other Wort' })).toBeInTheDocument();
     expect(cells[1]).toHaveTextContent('other@example.test');
