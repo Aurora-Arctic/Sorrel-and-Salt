@@ -48,6 +48,11 @@
   min-inline-size: 0;
 }
 
+// The thread column stands a step closer than the side column: facts to Thread, and Thread to the reply rule.
+.support-detail__main {
+  gap: space(4);
+}
+
 .support-detail__side {
   padding-inline-start: space(5);
   border-inline-start: 1px solid $hairline;
@@ -93,7 +98,7 @@
 }
 
 .support-detail__main h3 {
-  margin-block-end: space(3);
+  margin-block-end: space(2);
 }
 
 .support-detail__thread {
