@@ -76,76 +76,89 @@ const SupportRequests = ({
   position,
   opened,
   assignees = [],
-}: SupportRequestsProps): ReactElement => (
-  <section className="support-requests" aria-label="Support Requests">
-    <ListFrame>
-      <SupportRequestsFilter
-        key={`${filter.about}\n${filter.status}\n${filter.errorCode}`}
-        filter={filter}
-      />
-      <ListBody>
-        <output className="visually-hidden">
-          {requests.length} {requests.length === 1 ? 'Request' : 'Requests'}
-        </output>
-        <StackTable
-          columns={[
-            { heading: 'About', cell: (request) => labelOf(ABOUT_OPTIONS, request.about) },
-            {
-              heading: 'Subject',
-              cell: (request) => <SubjectLink request={request} filter={filter} cursor={cursor} />,
-            },
-            { heading: 'Status', cell: (request) => STATUS_LABELS[request.status] },
-            {
-              heading: 'Sender',
-              cell: (request) => (
-                <SenderName sender={request.sender} isAdmin={viewer.role === 'admin'} />
-              ),
-            },
-            {
-              heading: 'Assigned To',
-              cell: (request) =>
-                request.assignee?.name ?? (
-                  <span className="support-requests__none">Unassigned</span>
-                ),
-            },
-            {
-              heading: 'Shared With Curators',
-              cell: (request) => (
-                <Mark
-                  value={request.curatorVisible}
-                  label={request.curatorVisible ? 'Shared' : 'Not Shared'}
-                />
-              ),
-            },
-            { heading: 'Error Number', cell: (request) => request.errorCode ?? '' },
-          ]}
-          rows={requests}
-          rowKey={(request) => request.id}
-          empty={emptyText(filter)}
-          className="data-table--nowrap"
+}: SupportRequestsProps): ReactElement => {
+  // The sender's modal opens on top of the request when one is open, which stays beneath it.
+  const userHref =
+    viewer.role === 'admin'
+      ? (id: string) => supportHref(filter, cursor, opened?.id, id)
+      : undefined;
+  return (
+    <section className="support-requests" aria-label="Support Requests">
+      <ListFrame>
+        <SupportRequestsFilter
+          key={`${filter.about}\n${filter.status}\n${filter.errorCode}`}
+          filter={filter}
         />
-        <Pager previousHref={previousHref} nextHref={nextHref} position={position} />
-      </ListBody>
-    </ListFrame>
-    {/* Rendered whatever the address opens, so a press shows the dialog at once. */}
-    <RouteModal
-      closeHref={supportHref(filter, cursor)}
-      size="listed"
-      content={
-        opened && {
-          heading: {
-            eyebrow: `Support · ${labelOf(ABOUT_OPTIONS, opened.about)}`,
-            title: opened.subject,
-            under: <StatusBadges status={opened.status} />,
-            focusTitle: true,
-          },
-          body: () => (
-            <SupportDetail key={opened.id} request={opened} viewer={viewer} assignees={assignees} />
-          ),
+        <ListBody>
+          <output className="visually-hidden">
+            {requests.length} {requests.length === 1 ? 'Request' : 'Requests'}
+          </output>
+          <StackTable
+            columns={[
+              { heading: 'About', cell: (request) => labelOf(ABOUT_OPTIONS, request.about) },
+              {
+                heading: 'Subject',
+                cell: (request) => (
+                  <SubjectLink request={request} filter={filter} cursor={cursor} />
+                ),
+              },
+              { heading: 'Status', cell: (request) => STATUS_LABELS[request.status] },
+              {
+                heading: 'Sender',
+                cell: (request) => <SenderName sender={request.sender} userHref={userHref} />,
+              },
+              {
+                heading: 'Assigned To',
+                cell: (request) =>
+                  request.assignee?.name ?? (
+                    <span className="support-requests__none">Unassigned</span>
+                  ),
+              },
+              {
+                heading: 'Shared With Curators',
+                cell: (request) => (
+                  <Mark
+                    value={request.curatorVisible}
+                    label={request.curatorVisible ? 'Shared' : 'Not Shared'}
+                  />
+                ),
+              },
+              { heading: 'Error Number', cell: (request) => request.errorCode ?? '' },
+            ]}
+            rows={requests}
+            rowKey={(request) => request.id}
+            empty={emptyText(filter)}
+            className="data-table--nowrap"
+          />
+          <Pager previousHref={previousHref} nextHref={nextHref} position={position} />
+        </ListBody>
+      </ListFrame>
+      {/* Rendered whatever the address opens, so a press shows the dialog at once. */}
+      <RouteModal
+        closeHref={supportHref(filter, cursor)}
+        size="listed"
+        content={
+          opened && {
+            heading: {
+              eyebrow: `Support · ${labelOf(ABOUT_OPTIONS, opened.about)}`,
+              title: opened.subject,
+              under: <StatusBadges status={opened.status} />,
+              focusTitle: true,
+            },
+            body: () => (
+              <SupportDetail
+                key={opened.id}
+                request={opened}
+                viewer={viewer}
+                assignees={assignees}
+                userHref={userHref}
+              />
+            ),
+          }
         }
-      }
-    />
-  </section>
-);
+      />
+    </section>
+  );
+};
 
 export default SupportRequests;

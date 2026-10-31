@@ -11,7 +11,6 @@ import LocalTime from '../LocalTime';
 import Notice from '../Notice';
 import IssuePanel from './issue-panel';
 import ReplyForm from './reply-form';
-import { userListHref } from '../UserList/href';
 import TimeoutPanel from './timeout-panel';
 import type { SupportDetailProps } from './types';
 import { AnnounceContext, useSupportAction } from './use-support-action';
@@ -46,7 +45,7 @@ const ResolveDocument = graphql(`
   }
 `);
 
-const DetailBody = ({ request, viewer, assignees }: SupportDetailProps): ReactElement => {
+const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps): ReactElement => {
   const isAdmin = viewer.role === 'admin';
   const answers = isAdmin || request.assignee?.id === viewer.id;
   const open = request.status === 'open';
@@ -66,7 +65,7 @@ const DetailBody = ({ request, viewer, assignees }: SupportDetailProps): ReactEl
             <dd>
               {request.sender ? (
                 <>
-                  <SenderName sender={request.sender} isAdmin={isAdmin} />{' '}
+                  <SenderName sender={request.sender} userHref={userHref} />{' '}
                   <span className="support-detail__muted">{request.sender.email}</span>
                 </>
               ) : (
@@ -228,11 +227,7 @@ const DetailBody = ({ request, viewer, assignees }: SupportDetailProps): ReactEl
               userId={request.sender.id}
               name={request.sender.name}
               timeouts={request.timeouts}
-              earlierHref={userListHref(
-                { query: '', awaitingApproval: false },
-                undefined,
-                request.sender.id,
-              )}
+              earlierHref={userHref?.(request.sender.id)}
             />
           )}
         </aside>

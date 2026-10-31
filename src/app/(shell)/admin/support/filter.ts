@@ -18,6 +18,7 @@ export function readSupportPlace(params: SupportSearchParams): {
   filter: SupportRequestsFilter;
   cursor: SupportRequestsCursor;
   request: string | undefined;
+  user: string | undefined;
 } {
   const { after, before } = readListPlace(params);
   const code = trimmed(params.error);
@@ -33,6 +34,7 @@ export function readSupportPlace(params: SupportSearchParams): {
     },
     cursor: { after, before },
     request: single(params.request) || undefined,
+    user: single(params.user) || undefined,
   };
 }
 

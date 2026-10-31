@@ -12,4 +12,6 @@ export interface SupportSearchParams {
   after?: string | string[];
   before?: string | string[];
   request?: string | string[];
+  /** The id of the user whose modal is open, over the request when one is. */
+  user?: string | string[];
 }

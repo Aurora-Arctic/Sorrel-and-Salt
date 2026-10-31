@@ -255,18 +255,18 @@ describe('Issue', () => {
 });
 
 describe('The sender', () => {
-  it('links the name to the user modal for an admin, in the list and in the request', () => {
+  it('links the name to the user modal over this page for an admin, keeping the open request, in the list and in the request', () => {
     render(<SupportRequests requests={[ROW]} viewer={ADMIN} />);
     const row = screen.getByRole('row', { name: /Wobbling Cauldron/ });
     expect(within(row).getByRole('link', { name: 'Ada Wortley' })).toHaveAttribute(
       'href',
-      '/admin/users?user=u1',
+      '/admin/support?user=u1',
     );
     cleanup();
     open(ADMIN);
     expect(within(dialog()).getByRole('link', { name: 'Ada Wortley' })).toHaveAttribute(
       'href',
-      '/admin/users?user=u1',
+      '/admin/support?request=r1&user=u1',
     );
   });
 

@@ -39,4 +39,6 @@ export interface UserDialogProps {
   canImpersonate: boolean;
   /** Whether admin changes are locked for this admin, as the list's controls read it. */
   changesPaused: boolean;
+  /** The modal place it shows in, where the page has another modal; unnamed on the Users page. */
+  place?: string;
 }

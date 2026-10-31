@@ -103,4 +103,6 @@ export interface SupportDetailProps {
   request: SupportRequestDetailEntry;
   viewer: SupportViewer;
   assignees: SupportPerson[];
+  /** The address that opens a user's modal over this page; none for a curator, who has no user modal. */
+  userHref?: (id: string) => Route;
 }
