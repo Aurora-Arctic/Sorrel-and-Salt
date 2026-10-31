@@ -91,13 +91,7 @@ test.describe('Story 90: An Admin Works Through a Support Request', { tag: '@sto
       await expect(dialog.getByRole('switch', { name: 'Shared With Curators' })).toBeChecked();
     });
 
-    await test.step('Create Issue opens the new-issue page, and a pasted address is checked', async () => {
-      const link = dialog.getByRole('link', { name: 'Create Issue' });
-      const href = (await link.getAttribute('href')) ?? '';
-      expect(href.startsWith(`${ISSUES}/new?`)).toBe(true);
-      const body = new URL(href).searchParams.get('body') ?? '';
-      expect(body).not.toContain('sender@story-90.test');
-
+    await test.step('A pasted address is checked', async () => {
       const address = dialog.getByLabel('Issue Address');
       await address.fill('https://example.com/not-an-issue');
       await dialog.getByRole('button', { name: 'Save Address' }).click();

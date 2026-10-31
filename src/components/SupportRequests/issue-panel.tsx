@@ -7,12 +7,12 @@ import BusyButton from '../BusyButton';
 import { FieldShell, fieldDescription } from '../Field';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
-import { createIssueHref, issueLabel } from './issue-link';
+import { issueLabel } from './issue-link';
 import type { SupportRequestDetailEntry } from './types';
 import { useSupportAction } from './use-support-action';
 
-// An admin's two steps for a bug that needs tracking: Create Issue opens GitHub's new-issue page filled
-// in (a plain link, nothing is sent from here), and the issue's address is pasted back to link it.
+// An admin tracks a bug in GitHub by hand and pastes the issue's address here to link it. Nothing is
+// copied from the request into GitHub, as its message could hold private information.
 
 const SetIssueUrlDocument = graphql(`
   mutation SetSupportRequestIssueUrl($id: ID!, $issueUrl: String) {
@@ -59,14 +59,6 @@ const IssuePanel = ({ request }: { request: SupportRequestDetailEntry }): ReactE
             Change
           </button>
         )}
-        <a
-          className="btn btn--quiet btn--small"
-          href={createIssueHref(request)}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Create Issue
-        </a>
       </div>
       {showForm && (
         <form className="form" noValidate onSubmit={submit}>

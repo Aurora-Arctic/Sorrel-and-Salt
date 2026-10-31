@@ -206,18 +206,6 @@ describe('Time-Out', () => {
 });
 
 describe('Issue', () => {
-  it('links Create Issue with the request written in, and not the sender', () => {
-    open(ADMIN);
-    const link = within(dialog()).getByRole('link', { name: 'Create Issue' });
-    const url = new URL(link.getAttribute('href') ?? '');
-    expect(url.searchParams.get('title')).toBe(ROW.subject);
-    const body = url.searchParams.get('body') ?? '';
-    expect(body).toContain(DETAIL.message);
-    expect(body).toContain('/coven/[slug]/grimoire');
-    expect(body).toContain('r1');
-    expect(link.getAttribute('href')).not.toMatch(/Ada|ada%40|ada@/);
-  });
-
   it('says a pasted address that is not an issue on the project beside its field', async () => {
     mockGraphQLError('SetSupportRequestIssueUrl', {
       code: 'VALIDATION',
@@ -281,7 +269,6 @@ describe('What a viewer is shown', () => {
       expect(within(dialog()).queryByLabelText(name)).not.toBeInTheDocument();
     }
     expect(within(dialog()).queryByRole('switch', { name: 'Shared With Curators' })).toBeNull();
-    expect(within(dialog()).queryByRole('link', { name: 'Create Issue' })).toBeNull();
     expect(within(dialog()).queryByRole('button', { name: 'Lift' })).toBeNull();
   });
 

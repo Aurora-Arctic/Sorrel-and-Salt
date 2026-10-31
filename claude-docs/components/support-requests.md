@@ -23,10 +23,10 @@ same ones.
   - A right column for an admin alone: **Assigned To**, **Shared With Curators**, the Issue section (the linked issue as
     repository and number with a Change button, or the address field at once while none is linked) and **Time-Out**, a
     fold closed by default that says "none" or "until" the end of the standing time-out.
-- **Create Issue** is a link to GitHub's new-issue page on `Aurora-Arctic/Sorrel-and-Salt` with `?title=` and `?body=`
-  filled from the subject, message, redacted path and request id (`issue-link.ts`). No token, no API call, and the
-  sender's name and address are never read. The "Issue Address" field takes the issue's address back; one that is not an
-  issue on that repository is refused beside the field by the service.
+- **There is no Create Issue link.** The admin makes the GitHub issue by hand, so nothing from the request is copied
+  into GitHub: the message could hold private information (the owner, 2026-10-31). The "Issue Address" field takes the
+  issue's address back; one that is not an issue on `Aurora-Arctic/Sorrel-and-Salt` is refused beside the field by the
+  service.
 - **Time-outs** sit beside the sender: each one lists its end (or "Ended"), its note and whether it was lifted, and an
   active one has **Lift**. **Time-Out** is disabled until the end is in the future.
 - **The page announces itself.** A visually hidden `<output>` in the list gives the result count ("3 Requests") after a filter change, and one in the dialog gives each save's outcome ("Reply sent.", "Request assigned.", "Time-out lifted."). Each row link is named subject plus sender ("Wobbling Cauldron from Ada Wortley"). The Shared With Curators column draws a check or cross with its text, the Subject cell wraps long unbroken text inside a capped width, and the dialog opens with the focus on its title. Dates use `LocalTime` long, as the account page does. The Issue Address and Time-Out forms ask before discarding typed input.

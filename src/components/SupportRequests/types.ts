@@ -100,11 +100,3 @@ export interface SupportDetailProps {
   viewer: SupportViewer;
   assignees: SupportPerson[];
 }
-
-/** What Create Issue writes into the new issue: never the sender. */
-export interface IssueLinkRequest {
-  id: string;
-  subject: string;
-  message: string;
-  path: string | null;
-}

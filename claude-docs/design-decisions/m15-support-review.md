@@ -50,6 +50,8 @@ the sixteen tasks that carry them are in [`tasks/m15.md`](../tasks/m15.md),
   view of its own. The tier is derived, never stored, so paying users can join
   it later.
 
+- **No Create Issue link** (the owner, 2026-10-31): the prefilled GitHub link copied the message, which could hold private
+  information. The admin makes the issue by hand and pastes its address back.
 - **The opened request's layout is the owner's call of 2026-10-31:** two columns, a thread of the sender's message and
   the replies, one composer with Resolve opposite Reply, a settings column beside it, and Time-Out folded. The Internal
   note mode and tag, the "Sender Replied" and "Beta Tester" badges and the sender's later messages in the thread are
