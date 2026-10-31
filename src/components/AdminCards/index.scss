@@ -63,6 +63,12 @@
   > :first-child {
     flex: 0 1 auto;
   }
+
+  // The shared switch centres its track under its label; here the track starts at the label's left edge, as the
+  // date field's control does under its label.
+  > .switch {
+    align-items: flex-start;
+  }
 }
 
 // The filter row is the positioned ancestor the Filters drawer opens under
