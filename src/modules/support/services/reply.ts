@@ -65,6 +65,6 @@ export async function replyToSupportRequest(
     return reply;
   }
   const sender = await findOneById(users, request.createdBy);
-  if (sender) await notifier.replyWaiting(sender.email, request.subject);
+  if (sender) await notifier.replyWaiting(sender.email, request.subject, request.id);
   return reply;
 }

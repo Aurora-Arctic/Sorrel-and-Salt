@@ -60,6 +60,10 @@ export const SUPPORT_PATH = '/support';
 /** The sender's own requests. */
 export const SUPPORT_LIST_PATH = '/account/support';
 
+/** The address that opens one of the sender's requests in a dialog over their list. */
+export const supportRequestPath = (id: string) =>
+  `${SUPPORT_LIST_PATH}?request=${encodeURIComponent(id)}`;
+
 /** The parameter that opens the Support dialog, holding what the request is about, preselected. */
 export const SUPPORT_PARAM = 'support';
 
