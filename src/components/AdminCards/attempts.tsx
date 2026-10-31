@@ -152,6 +152,7 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
             },
             {
               heading: 'Card',
+              className: 'admin-cards__card-place',
               cell: (a) => {
                 if (a.cardPosition === null) return 'Unknown';
                 const { sheet, card } = cardPlace(a.cardPosition);
@@ -181,6 +182,7 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
           ]}
           rows={attempts}
           rowKey={(a) => a.id}
+          className="admin-cards__refused"
           empty="No refused opens."
         />
       )}
