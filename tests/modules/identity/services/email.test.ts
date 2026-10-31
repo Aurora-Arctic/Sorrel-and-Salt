@@ -31,6 +31,8 @@ afterAll(async () => {
 const sender: EmailVerificationSender = {
   resend: vi.fn(async () => {}),
   requestChange: vi.fn(async () => {}),
+  sessionIsFresh: vi.fn(async () => true),
+  notifyChangeRequested: vi.fn(async () => {}),
 };
 
 async function userRow(id: string): Promise<EmailUserRow> {
@@ -63,6 +65,8 @@ async function setVerified(id: string, verified: boolean): Promise<void> {
 beforeEach(async () => {
   vi.mocked(sender.resend).mockClear();
   vi.mocked(sender.requestChange).mockClear();
+  vi.mocked(sender.notifyChangeRequested).mockClear();
+  vi.mocked(sender.sessionIsFresh).mockReset().mockResolvedValue(true);
   // Both start unverified and stamped by someone else, so a stamp of their own id shows as this call's write.
   // A save that changes no column keeps updated_by (migration 0079), so the stamp is written under the touch setting, as writeChildren does.
   await asTouch(
@@ -99,6 +103,40 @@ describe('the placeholder', () => {
 });
 
 describe('setEmail', () => {
+  it('refuses a change from a session older than the window, with a message that says to sign in again, and sends and writes nothing', async () => {
+    // The precondition that the change could otherwise have gone through: the address is free and the caller's row is not cooling down.
+    expect(await userRow(B.id)).toMatchObject({ verification_sent_at: null });
+    const before = await userRow(B.id);
+    vi.mocked(sender.sessionIsFresh).mockResolvedValue(false);
+
+    const refusal = setEmail(asUser(B), NEW, sender);
+
+    await expect(refusal).rejects.toBeInstanceOf(ValidationError);
+    await expect(refusal).rejects.toMatchObject({
+      issues: [{ path: ['email'], message: expect.stringMatching(/sign in again/i) }],
+    });
+    expect(sender.requestChange).not.toHaveBeenCalled();
+    expect(sender.notifyChangeRequested).not.toHaveBeenCalled();
+    expect(await userRow(B.id)).toEqual(before);
+  });
+
+  it('takes the same change from a fresh session, and tells the current address once', async () => {
+    await setEmail(asUser(B), NEW, sender);
+
+    expect(sender.requestChange).toHaveBeenCalledTimes(1);
+    expect(sender.notifyChangeRequested).toHaveBeenCalledTimes(1);
+    expect(sender.notifyChangeRequested).toHaveBeenCalledWith(B.email, NEW);
+  });
+
+  it("does not ask a stale session for freshness when it only asks for the row's own link again", async () => {
+    vi.mocked(sender.sessionIsFresh).mockResolvedValue(false);
+
+    await setEmail(asUser(B), B.email, sender);
+
+    expect(sender.resend).toHaveBeenCalledTimes(1);
+    expect(sender.notifyChangeRequested).not.toHaveBeenCalled();
+  });
+
   it('refuses a malformed address on the email field, sending nothing and writing nothing', async () => {
     const before = await userRow(B.id);
 
