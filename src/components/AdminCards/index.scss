@@ -68,6 +68,13 @@
 
 // Number of Sheets, Expires On and Print Backs on one row, each top-aligned so the three labels share a line and the
 // controls share the next. The sheets field is sized for its label (kept on one line with its info tip) and a number up to 55; the row wraps only when the dialog is narrower than about 453px, a phone-width form.
+// The refusal stays on one line, running on under the next field, which has nothing beneath its control.
+.admin-cards__total--error .field__error {
+  font-size: type-size('caption');
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
 .admin-cards__when {
   display: flex;
   flex-wrap: wrap;
@@ -78,6 +85,7 @@
 
   > :first-child {
     flex: 0 0 10.5rem;
+    min-inline-size: 0;
   }
 
   > :nth-child(2) {
