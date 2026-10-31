@@ -69,10 +69,26 @@ the sixteen tasks that carry them are in [`tasks/m15.md`](../tasks/m15.md),
 
 ## Open
 
-- **The scheduled-job mechanism (M15.46).** The repo has no job queue. Its
-  only scheduled thing is a GitHub Actions cron, and its precedent for expiry
-  is a SQL predicate plus cleanup on the next write. The owner wants a queued
-  job; the task opens with a proposal to the owner.
 - **The signed-out sender's place in the table (M15.39).** The sender is
   `created_by` today, which `withAudit` fills from the session; the task
   settles whether the sender account becomes a column of its own.
+
+## Decided: the job mechanism
+
+The owner chose Vercel Workflows on 2026-10-31, for M15.46 and every later job. The repo had no job queue; its only scheduled thing was a GitHub Actions cron, and its precedent for expiry was a SQL predicate plus cleanup on the next write.
+
+| Option              | Status and limits                                            | Route of ours needed          | Retries and event work        |
+| ------------------- | ------------------------------------------------------------ | ----------------------------- | ----------------------------- |
+| Vercel Cron         | General availability; once a day on Hobby                    | Yes, a public protected route | None; the route does the work |
+| Vercel Queues       | Beta; delay capped at 7 days                                 | Yes, a consumer route         | Retries yes                   |
+| GitHub Actions cron | No route needed, but cannot run in-app code                  | No                            | None, and no event work       |
+| Workflows (chosen)  | Beta; sleep has no limit; `start()` is called from a service | Only the generated route      | Retries and sleeps built in   |
+
+- **Money:** nil at this scale. Hobby includes 50,000 events a month, and extra events cost $0.02 per 1,000.
+- **Hours:** Workflows would cost about 6h for M15.46 alone against about 5h for the crons. The work is split into M15.49 (the mechanism) and M15.46 (its use), so the mechanism is paid once.
+- **Reused by:** M15.46, M15.48, MB.163 and the M17 billing webhooks and timers.
+- **Kept as predicates:** invitations, retired slugs, lockouts and Better Auth's own expiries. A date check is enough where nothing must happen on time.
+- **Moved onto jobs:** the MB.67 provisional-account sweep (to M15.49) and mail retries (to M15.50).
+- **Day 5** is when the closing-soon notice goes out; the close is day 7.
+
+Sources: <https://vercel.com/docs/workflow>, <https://vercel.com/docs/workflows/pricing>, <https://vercel.com/docs/queues/concepts>, <https://vercel.com/docs/cron-jobs/usage-and-pricing>.
