@@ -132,7 +132,7 @@
   margin-block-end: 0;
 }
 
-// The Issue title and section carry no margin of their own; the side column's gap is the only space around them.
+// The Issue title and section carry no margin of their own; the main column's gap is the only space around them.
 .support-detail__issue {
   @include stack(2);
   margin-block: 0;

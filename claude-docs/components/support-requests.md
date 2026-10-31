@@ -19,12 +19,13 @@ same ones.
 - **The opened request** is a wide dialog of two columns, stacked on a phone with the settings after the reply. Its head is
   an eyebrow ("Support · " and the kind), the subject and a status badge. The left column holds the facts (From on a row of its own, also `.support-detail__fact--wide`, then Sent with Resolved beside it, then Page on a row of its own as `.support-detail__fact--wide` (`grid-column: 1 / -1`, so a long path stays on one line and breaks anywhere only past the full width, and never sits beside a date), then Error; the grid's gaps are unchanged;
   and one Error line with the reference in monospace and an icon-only copy button, when the request has one), then the
+  Issue section (below), then the
   thread (the sender's message first, tagged Sender, then each reply, tagged Staff) and the reply form. The controls are:
   - **Reply** (a "Your Reply" field; Reply is disabled until there is a body) with **Resolve** opposite it (open requests
     only), for an admin or a curator the request is assigned to. The internal-note mode (M15.42) is open to a curator on any request they can read, not only an assigned one: the service allows it (`addSupportInternalNote` reads the request as the curator's own visible read), so the form needs no assigned-to gate.
-  - A right column for an admin alone: **Assigned To**, **Shared With Curators**, the Issue section (the linked issue as
-    repository and number, preceded by a pencil icon button named "Change Issue Address", or the address field at once while none is linked) and **Time-Out**, a
+  - A right column for an admin alone: **Assigned To**, **Shared With Curators** and **Time-Out**, a
     fold closed by default that says "none", or a "Timed Out" badge and "until" the end of the standing time-out.
+- **The Issue section sits in the left column above the thread, for both roles** (2026-10-31): the linked issue as repository and number, preceded for an admin by a pencil icon button named "Change Issue Address", or the address field at once while none is linked; a curator sees the link alone, and nothing while none is linked. Spacing: the facts to its hairline, and its last line to the Thread heading, are each the column gap, `space(4)` (before, the facts to the Thread was `space(4)`); its own `space(3)` of padding sits below its border, and its margin stays zero.
 - **There is no Create Issue link.** The admin makes the GitHub issue by hand, so nothing from the request is copied
   into GitHub: the message could hold private information (the owner, 2026-10-31). The "GitHub Issue" field takes either of two
   shapes and stores both as the plain issue link, `https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/<number>`: that link itself, or a link from any project board of the `Aurora-Arctic` organisation (`github.com/orgs/Aurora-Arctic/projects/<n>/...`), such as

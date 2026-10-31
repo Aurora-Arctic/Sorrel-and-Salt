@@ -103,6 +103,10 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
 
         {failure && <Notice kind="error">{failure}</Notice>}
 
+        {(isAdmin || request.issueUrl) && (
+          <IssuePanel key={request.issueUrl ?? ''} request={request} canEdit={isAdmin} />
+        )}
+
         <SupportThread
           entries={[
             {
@@ -146,7 +150,6 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
             }
           />
         )}
-        {!isAdmin && request.issueUrl && <IssuePanel request={request} canEdit={false} />}
       </div>
 
       {isAdmin && (
@@ -198,7 +201,6 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
               )
             }
           />
-          <IssuePanel key={request.issueUrl ?? ''} request={request} />
           {request.sender && (
             <TimeoutPanel
               userId={request.sender.id}
