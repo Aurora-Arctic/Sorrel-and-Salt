@@ -94,3 +94,4 @@ ds-bundle/
 
 # Playwright output
 /test-results/
+/.swc

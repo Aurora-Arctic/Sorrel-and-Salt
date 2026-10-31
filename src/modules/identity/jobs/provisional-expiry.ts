@@ -1,8 +1,5 @@
 import { sleep } from '@/lib/jobs/runtime';
-import {
-  VERIFICATION_LIFETIME_SECONDS,
-  expireProvisionalAccount,
-} from '../services/provisional-accounts';
+import { expireStep, firstLookDelay } from './provisional-expiry-steps';
 
 /**
  * One run per sign-up: waits out the verification window, then deletes the
@@ -11,14 +8,9 @@ import {
  */
 export async function provisionalAccountExpiry(userId: string): Promise<void> {
   'use workflow';
-  let left: number | null = VERIFICATION_LIFETIME_SECONDS;
+  let left: number | null = await firstLookDelay();
   while (left !== null) {
     await sleep(`${left}s`);
     left = await expireStep(userId);
   }
-}
-
-async function expireStep(userId: string): Promise<number | null> {
-  'use step';
-  return expireProvisionalAccount(userId);
 }
