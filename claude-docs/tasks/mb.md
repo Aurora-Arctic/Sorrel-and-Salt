@@ -179,7 +179,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.173 | Refuse a migration older than its base's newest                                                                          | Wave 8   | —                      |
 | MB.174 | Stop the list fields offering or adding a repeat                                                                         | Wave 8   | M5.5                   |
 | MB.175 | Help and FAQ articles                                                                                                    | Wave 15  | —                      |
-| MB.176 | Bug reports                                                                                                              | Wave 15  | M11.8                  |
+| MB.176 | ~~Bug reports~~ — **retired into M15.1**                                                                                 | —        | —                      |
 | MB.177 | Every admin holds `canCreateWorkspace`                                                                                   | Wave 8   | M5.8, M6.7             |
 | MB.178 | Search and filter the admin categories list                                                                              | Wave 8   | —                      |
 | MB.179 | Keep the test suite inside Postgres's connection limit                                                                   | Wave 8   | —                      |
@@ -5155,7 +5155,9 @@ _Acceptance criteria:_
 - The five build tasks are minted with estimates, placed after this one, and each names its prerequisite
 - Nothing is built in this task
 
-**MB.176 — Bug reports** · 1h
+**MB.176 — [RETIRED] Bug reports** · 1h
+
+> **Folded into M15.1, not done on its own.** The owner's call (2026-10-31): one table and one form serve bug reports and support requests. What survives is recorded in [`design-decisions/m15.1-support-form.md`](../design-decisions/m15.1-support-form.md), "MB.176 folded in". The ID is kept, and its issue is closed as not planned.
 
 _Story:_ As a signed-in user, I want to report a bug from the page I hit it on and follow what happens to it, so that a problem reaches someone who can fix it and I can see when it has been.
 
