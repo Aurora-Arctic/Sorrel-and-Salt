@@ -36,6 +36,7 @@ import {
   ARTBOARD,
   BACK_PICTURE,
   backText,
+  marginText,
   type CardFonts,
   type FontKey,
   FRONT_PICTURE,
@@ -243,6 +244,7 @@ function drawPage(
   face: 'front' | 'back',
   cards: { position: number; picture: PictureItem; text: TextItem[]; link?: string }[],
   embedded: Embedded,
+  margin: TextItem,
 ) {
   const ops: Operator[] = [pushGraphicsState(), ...frameOperators(face), pushGraphicsState()];
   ops.push(rectangle(BLOCK.x, BLOCK.y, BLOCK.width, BLOCK.height), clip(), endPath());
@@ -264,7 +266,8 @@ function drawPage(
     if (card.link) ops.push(...qrOperators(card.link));
     ops.push(popGraphicsState());
   }
-  ops.push(popGraphicsState(), ...cropMarkOperators(), popGraphicsState());
+  ops.push(popGraphicsState(), ...cropMarkOperators(), ...textOperators(page, embedded, margin));
+  ops.push(popGraphicsState());
   page.pushOperators(...ops);
 }
 // The browser bundle gives the ES build's API on `default` only; Node's gives it on the namespace.
@@ -291,16 +294,18 @@ async function embedAssets(doc: PDFDocument, assets: CardAssets): Promise<Embedd
 
 /** Builds the print PDF: per sheet of nine, a page of fronts, then a page of their backs. */
 export async function renderCardSheets(
-  { links, expiresAt }: CardSheetsInput,
+  { links, batch, expiresAt }: CardSheetsInput,
   assets: CardAssets,
 ): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
   doc.setTitle('Sorrel & Salt invitation cards');
   const embedded = await embedAssets(doc, assets);
   const valid = validUntil(expiresAt);
-  const back = backText(embedded.measure);
+  const back = backText(embedded.measure, batch);
   const fronts = FRONT_COPY.map((copy) => frontText(embedded.measure, copy, valid));
+  const sheets = Math.ceil(links.length / CARDS_PER_SHEET);
   for (let start = 0; start < links.length; start += CARDS_PER_SHEET) {
+    const number = start / CARDS_PER_SHEET + 1;
     const sheetLinks = links.slice(start, start + CARDS_PER_SHEET);
     const sheet: Sheet = {
       fronts: doc.addPage([PAGE.width, PAGE.height]),
@@ -311,12 +316,14 @@ export async function renderCardSheets(
       'front',
       sheetLinks.map((link, i) => ({ position: i, picture: FRONT_PICTURE, text: fronts[i], link })),
       embedded,
+      marginText(batch, number, sheets, 'front', BLOCK, BLEED),
     );
     drawPage(
       sheet.backs,
       'back',
       sheetLinks.map((_, i) => ({ position: backPosition(i), picture: BACK_PICTURE, text: back })),
       embedded,
+      marginText(batch, number, sheets, 'back', BLOCK, BLEED),
     );
   }
   return doc.save();

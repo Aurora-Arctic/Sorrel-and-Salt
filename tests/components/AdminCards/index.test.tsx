@@ -380,10 +380,18 @@ describe('AdminCards', () => {
     await waitFor(() => expect(buildCardSheetsPdf).toHaveBeenCalled());
     const input = vi.mocked(buildCardSheetsPdf).mock.calls[0][0];
     expect(input.links).toEqual(['http://localhost:3000/i/ta', 'http://localhost:3000/i/tb']);
+    expect(input.batch).toBe('b4444444');
     expect(input.expiresAt).toEqual(new Date('2027-02-01T00:00:00.000Z'));
     await waitFor(() =>
       expect(within(dialog()).getByRole('button', { name: 'Download Again' })).toBeEnabled(),
     );
+  });
+
+  it('names the batch and the count after minting, and moves focus to that sentence', async () => {
+    await mintTwo();
+
+    const sentence = within(dialog()).getByText('Batch b4444444: 2 cards minted.');
+    expect(sentence).toHaveFocus();
   });
 
   it('says the file is saved once downloaded, offers Download Again, and keeps the object URL alive for a minute', async () => {

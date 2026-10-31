@@ -17,6 +17,7 @@ describe('buildCardSheetsPdf', () => {
     });
     const bytes = await buildCardSheetsPdf({
       links: ['https://sorrelandsalt.com/i/a', 'https://sorrelandsalt.com/i/b'],
+      batch: 'b4444444',
       expiresAt: new Date('2027-03-31'),
     });
     expect((await PDFDocument.load(bytes)).getPageCount()).toBe(2);
@@ -28,6 +29,7 @@ describe('buildCardSheetsPdf', () => {
     await expect(
       buildCardSheetsPdf({
         links: ['https://sorrelandsalt.com/i/a'],
+        batch: 'b4444444',
         expiresAt: new Date('2027-03-31'),
       }),
     ).rejects.toThrow('Could not load');

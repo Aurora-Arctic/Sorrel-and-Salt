@@ -31,7 +31,7 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
       const dialog = page.getByRole('dialog', { name: 'Mint Cards' });
       await dialog.getByRole('spinbutton', { name: 'Number of Sheets' }).fill('1');
       await dialog.getByRole('button', { name: 'Mint Cards' }).click();
-      await expect(dialog.getByText(/9 cards on 1 sheet/)).toBeVisible();
+      await expect(dialog.getByText(/9 cards minted/)).toBeVisible();
 
       const pdfDownload = page.waitForEvent('download');
       await dialog.getByRole('button', { name: 'Download PDF' }).click();
@@ -109,7 +109,7 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
     await test.step('the revoked card’s link is refused as withdrawn', async () => {
       await signInAs(page, 'latecomer@story-88.test');
       await page.goto(links[1]);
-      await expect(page.getByText(/This invitation was withdrawn/)).toBeVisible();
+      await expect(page.getByText(/This card has been withdrawn/)).toBeVisible();
     });
   });
 });
