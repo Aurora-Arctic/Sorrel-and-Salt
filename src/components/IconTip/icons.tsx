@@ -143,6 +143,38 @@ export function RedoIcon(): ReactElement {
   );
 }
 
+/** An arrow down into a tray: save what is shown as a file; the backup codes wear it. */
+export function DownloadIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M8 2v8M4.5 7 8 10.5 11.5 7M2.5 13.5h11"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** A printer: send what is shown to paper; the backup codes wear it. */
+export function PrintIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M4.5 6V2.5h7V6M4.5 11.5h-2v-5h11v5h-2M4.5 9.5h7v4h-7z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 /** Two overlapping sheets: copy what another holds into this; Restore Original and Copy From Ingredient wear it. */
 export function CopyIcon(): ReactElement {
   return (

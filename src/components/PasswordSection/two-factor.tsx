@@ -6,6 +6,8 @@ import { twoFactor, useSession } from '../../lib/auth-client';
 import { SITE_NAME } from '../../lib/site';
 import BusyButton from '../BusyButton';
 import { FieldShell, fieldDescription } from '../Field';
+import { CopyIcon, DownloadIcon, PrintIcon } from '../IconTip';
+import IconTip from '../IconTip';
 import InfoTip from '../InfoTip';
 import Notice from '../Notice';
 import PasswordField from '../PasswordField';
@@ -112,6 +114,24 @@ function printCodes(codes: string[], email: string | undefined): void {
   page.print();
   page.close();
 }
+
+/** An icon-only button with its tip above; the label names it for a screen reader. */
+const CodeAction = ({
+  label,
+  icon,
+  onClick,
+}: {
+  label: string;
+  icon: ReactElement;
+  onClick: () => void;
+}): ReactElement => (
+  <IconTip tip={label} placement="above">
+    <button type="button" className="icon-tip__edit icon-tip__edit--plain" onClick={onClick}>
+      {icon}
+      <span className="visually-hidden">{label}</span>
+    </button>
+  </IconTip>
+);
 
 const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement => {
   const email = useSession().data?.user.email;
@@ -223,27 +243,21 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
                 ))}
               </ul>
               <div className="two-factor__code-actions">
-                <button
-                  type="button"
-                  className="btn btn--quiet btn--medium"
+                <CodeAction
+                  label="Copy"
+                  icon={<CopyIcon />}
                   onClick={() => void navigator.clipboard?.writeText(codesText(enrolment))}
-                >
-                  Copy
-                </button>
-                <button
-                  type="button"
-                  className="btn btn--quiet btn--medium"
+                />
+                <CodeAction
+                  label="Download"
+                  icon={<DownloadIcon />}
                   onClick={() => downloadCodes(codesText(enrolment))}
-                >
-                  Download
-                </button>
-                <button
-                  type="button"
-                  className="btn btn--quiet btn--medium"
+                />
+                <CodeAction
+                  label="Print"
+                  icon={<PrintIcon />}
                   onClick={() => printCodes(enrolment.backupCodes, email)}
-                >
-                  Print
-                </button>
+                />
               </div>
             </li>
             <li>

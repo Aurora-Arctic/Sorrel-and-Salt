@@ -58,6 +58,7 @@ $qr-dot: #c0baac;
 .two-factor__code-actions {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: space(2);
   margin-block-start: space(2);
 }
