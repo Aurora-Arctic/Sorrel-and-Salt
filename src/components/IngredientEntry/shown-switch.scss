@@ -125,6 +125,9 @@
   }
 
   .shown-switch__spinner {
+    // The ring's own hide-for-`$loading-delay` is dropped: `.shown-switch__ring` already waits and fades in.
+    @include loading-motion(spinner-turn $spin-duration linear infinite);
+
     // Border-box, so the ring's 2px border sits inside the thumb's size.
     display: block;
     box-sizing: border-box;
