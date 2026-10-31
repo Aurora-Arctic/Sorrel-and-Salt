@@ -113,5 +113,5 @@ The client half is `passkeyClient()` in `src/lib/auth-client.ts`, which adds
 - **Rate limit.** The plugin ships no rate rule, so `rateLimit.customRules`
   sets `/passkey/*` to three per ten seconds (["Rate limiting"](rate-limiting.md)).
 
-The sign-in page's button and autofill are described in
+The sign-in page's button, which is the only thing that starts a passkey request, is described in
 [`components/sign-in-panel.md`](../components/sign-in-panel.md), "Passkey".

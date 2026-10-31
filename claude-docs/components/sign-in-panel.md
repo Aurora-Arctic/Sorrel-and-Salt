@@ -218,19 +218,13 @@ it where any sign-in goes. It carries the "Last Used" badge when the
 `lastLoginMethod` cookie says `passkey`. It is always offered, configured
 providers or not, because a passkey needs no provider.
 
-**Autofill.** Where the browser can offer saved passkeys among a field's
-suggestions (WebAuthn conditional mediation), `usePasskeyAutofill`
-(`passkey-autofill.ts`) starts that ceremony as the page loads, and the
-passkey picked from the suggestions signs in. Conditional mediation is past
-the browser floor, so it is an enhancement behind
-`PublicKeyCredential.isConditionalMediationAvailable`, and the button is the
-fallback where that answers false or does not exist. The browser shows the
-suggestions only in an input whose `autocomplete` ends in `webauthn`, so
-the hook starts only when the page has a field marked
-`PASSKEY_AUTOCOMPLETE` (`username webauthn`). The panel has no such field of
-its own: the email field of the email-and-password sign-in carries it, and
-until that field is on the page the autofill does not start. An autofill that
-ends unpicked says nothing, since the visitor did not ask for it.
+**Started only by the button.** The passkey request starts only when someone
+presses "Sign In with a Passkey". The panel makes no request as the page loads
+and offers no saved passkeys in the email field's autofill (WebAuthn
+conditional mediation): the owner decided an automatic request was
+obnoxious. The email field's `autocomplete` is `username` and carries no
+`webauthn` token. `passkey-sign-in.ts` holds what the button uses: the
+error text and the navigation after a sign-in.
 
 ## Styling
 
