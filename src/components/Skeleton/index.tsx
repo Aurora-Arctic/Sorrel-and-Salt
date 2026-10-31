@@ -191,10 +191,24 @@ const Skeleton = ({
       <output className="visually-hidden">Loading</output>
       <div className="skeleton__shapes" aria-hidden="true">
         {listed && title && (
-          <div className="page-header skeleton__header">
-            <span className="skeleton__title" />
-            {tabs && <span className="skeleton__tabs" />}
-            {action && <span className="skeleton__action" />}
+          // A list page with an eyebrow and a lede (the public Compendium) holds its heading row in the
+          // same column, as the page does, so the filter row below lands where the page's does.
+          <div className={head === 'eyebrow' ? 'skeleton__intro' : undefined}>
+            {head === 'eyebrow' && <span className="skeleton__eyebrow" />}
+            <div className="page-header skeleton__header">
+              <div className="skeleton__title-row">
+                <span className="skeleton__title" />
+              </div>
+              {tabs && <span className="skeleton__tabs" />}
+              {action && <span className="skeleton__action" />}
+            </div>
+            {head === 'eyebrow' && (
+              <div className="skeleton__lede">
+                <span />
+                <span />
+                <span className="skeleton__lede-more" />
+              </div>
+            )}
           </div>
         )}
         {listed && filter && (

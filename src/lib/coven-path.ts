@@ -109,6 +109,8 @@ const PARTS_OF_SECTION: Record<string, Omit<NavigationTarget, 'region'>> = {
     title: true,
     filter: true,
     tabs: true,
+    // New Spell is for members and owners; a viewer sees a block where it is not, which keeps the rows from jumping.
+    action: true,
     density: 'compact',
     card: 'spell',
   },

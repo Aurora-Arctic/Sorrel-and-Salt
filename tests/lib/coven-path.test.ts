@@ -122,6 +122,7 @@ describe('covenTarget', () => {
       title: true,
       filter: true,
       tabs: true,
+      action: true,
       density: 'compact',
       card: 'spell',
     };
