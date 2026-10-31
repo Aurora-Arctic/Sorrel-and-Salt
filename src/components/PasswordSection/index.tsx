@@ -211,7 +211,7 @@ const PasswordSection = ({ hasPassword }: PasswordSectionProps): ReactElement =>
           {held && email && !email.endsWith('.invalid') && (
             <BusyButton
               type="button"
-              className="btn"
+              className="btn btn--quiet btn--small"
               busy={sending}
               busyLabel="Sending Link"
               disabled={pending}

@@ -52,7 +52,7 @@ provider, are the page's. The result of every submit takes focus
 
 ## Forgotten password
 
-An account with a password also gets a Forgot Your Password? button. It calls Better Auth's `requestPasswordReset` for the signed-in account's own address (read from `useSession`) with `redirectTo: '/reset-password'`, the same call as the forgot-password page, and says a link was sent without printing the address. The session cannot set a new password without that emailed link. The button is absent for a placeholder address.
+An account with a password also gets a quiet, small Forgot Your Password? button (`btn btn--quiet btn--small`). It calls Better Auth's `requestPasswordReset` for the signed-in account's own address (read from `useSession`) with `redirectTo: '/reset-password'`, the same call as the forgot-password page, and says a link was sent without printing the address. The session cannot set a new password without that emailed link. The button is absent for a placeholder address.
 
 ## Refresh and password managers
 
