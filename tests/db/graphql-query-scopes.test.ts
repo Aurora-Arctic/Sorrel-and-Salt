@@ -92,6 +92,7 @@ const PROBES: Record<string, ScopeProbe> = {
     outcome: 'refuses',
   },
   cardArrivalsCsv: { source: '{ cardArrivalsCsv }', outcome: 'refuses' },
+  supportDialogState: { source: '{ supportDialogState { kind } }', outcome: 'answers' },
   mySupportRequests: {
     source: '{ mySupportRequests(first: 1) { edges { node { id } } } }',
     outcome: 'refuses',

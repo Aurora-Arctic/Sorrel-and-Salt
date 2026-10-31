@@ -12,6 +12,7 @@ import type {
   AuditWriter,
   SortPart,
   SupportReader,
+  SupportStatusCounts,
   SupportRequestFilter,
   SupportViewer,
   WriterContext,
@@ -118,9 +119,7 @@ export function findOwnSupportRequestCount(
 }
 
 /** How many of the sender's requests are still open (open, waiting on the sender) and how many are done (resolved, closed). */
-export async function findOwnSupportStatusCounts(
-  userId: string,
-): Promise<{ open: number; closed: number }> {
+export async function findOwnSupportStatusCounts(userId: string): Promise<SupportStatusCounts> {
   const [row] = await selectFrom(
     supportRequests,
     and(notSoftDeleted(supportRequests), eq(supportRequests.createdBy, userId)),

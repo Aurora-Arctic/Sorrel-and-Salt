@@ -1373,3 +1373,9 @@ export interface SupportRequestFilter {
   status?: 'open' | 'waiting_on_sender' | 'resolved' | 'closed';
   errorCode?: number;
 }
+
+/** How many of a sender's requests are still open and how many are done. */
+export interface SupportStatusCounts {
+  open: number;
+  closed: number;
+}
