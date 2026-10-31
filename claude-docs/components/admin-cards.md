@@ -13,7 +13,7 @@ yields one. The rules are [`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md
   the batch is pending (`ConfirmedAction` asks first). Revoking is by batch only. Counts come from SQL.
 - **Refused Opens** (`attempts.tsx`): each batch shows its count of refused opens across all its cards;
   where the count is above zero a **View** button opens a "Refused Opens" dialog that reads
-  `invitationCardAttempts` for that batch and lists the account (its name links to that account's modal on the People page, and its email sits beside it; a removed account is "Removed Account" with neither), the reason, how many times and the latest
+  `invitationCardAttempts` for that batch and lists the account (its name links to that account's modal on the People page, and its email sits beside it; a removed account is "Removed Account" with neither), the **Card** ("Sheet 2, Card 5", from the card's `position`; "Unknown" for a card minted before positions were kept), the reason, how many times and the latest
   time, twenty at a time with **Show More**.
 - **Mint Cards** (`mint-form.tsx`) is a link to `?mint`, which opens a modal: **Number of Sheets** (1 to
   55; a Letter sheet holds nine cards) with the total shown as typed ("3 sheets: 27 cards"), and

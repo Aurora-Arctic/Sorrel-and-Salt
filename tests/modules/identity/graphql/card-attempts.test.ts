@@ -22,7 +22,7 @@ const { invite } = setUpInvitationAcceptance((client) => {
 const RECORD = `mutation($token: String!) { recordCardAttempt(token: $token) }`;
 const ATTEMPTS = `query($id: ID!) {
   invitationCardAttempts(first: 50, batchId: $id) {
-    edges { node { reason attempts firstAttemptedAt lastAttemptedAt account { name email } } }
+    edges { node { reason attempts cardPosition firstAttemptedAt lastAttemptedAt account { name email } } }
   }
 }`;
 const BATCHES = `query { invitationCardBatches(first: 50) { edges { node { batchId refusedOpens } } } }`;
@@ -74,6 +74,7 @@ describe('the attempts reads, by request', () => {
     expect(list.data!.invitationCardAttempts.edges[0]!.node).toMatchObject({
       reason: 'expired',
       attempts: 2,
+      cardPosition: null,
       account: { name: 'Fixture Person', email: expect.any(String) },
     });
     const batches = await run(asUser(E), BATCHES);

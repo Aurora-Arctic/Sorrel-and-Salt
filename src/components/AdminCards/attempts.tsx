@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE } from '../../lib/graphql-failure';
+import { cardPlace } from '../../lib/invitation-cards/limits';
 import { inUtc } from '../../lib/utc';
 import StackTable from '../DataTable';
 import { ModalButton } from '../Modal';
@@ -27,6 +28,7 @@ const CardAttemptsDocument = graphql(`
           id
           reason
           attempts
+          cardPosition
           lastAttemptedAt
           account {
             id
@@ -74,6 +76,7 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
             id: node.id,
             reason: node.reason,
             attempts: node.attempts,
+            cardPosition: node.cardPosition ?? null,
             lastAttemptedAt: new Date(node.lastAttemptedAt),
             accountId: node.account?.id ?? null,
             accountName: node.account?.name ?? null,
@@ -118,6 +121,14 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
               ),
           },
           { heading: 'Email', cell: (a) => a.accountEmail ?? '' },
+          {
+            heading: 'Card',
+            cell: (a) => {
+              if (a.cardPosition === null) return 'Unknown';
+              const { sheet, card } = cardPlace(a.cardPosition);
+              return `Sheet ${sheet}, Card ${card}`;
+            },
+          },
           { heading: 'Reason', cell: (a) => REASON_LABEL[a.reason] },
           { heading: 'Times', cell: (a) => a.attempts },
           {

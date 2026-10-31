@@ -25,6 +25,8 @@ export interface CardAttemptEntry {
   reason: CardAttemptReason;
   attempts: number;
   lastAttemptedAt: Date;
+  /** The card's place in its batch from 1; null for a card minted before places were kept. */
+  cardPosition: number | null;
   /** Null once the account is gone. */
   accountId: string | null;
   accountName: string | null;

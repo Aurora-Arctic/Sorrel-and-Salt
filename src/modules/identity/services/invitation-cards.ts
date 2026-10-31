@@ -9,10 +9,11 @@ import {
   findCardBatchPage,
   findCardBatchTotals,
   findCardCount,
+  findCardPositions,
   findManyByIds,
   withAudit,
 } from '../../../db/repository';
-import type { CardAttemptRow, CardBatchTotal, CardRow } from '../../../db/repository';
+import type { CardAttemptRow, CardBatchTotal, CardPosition, CardRow } from '../../../db/repository';
 import { NotFound, ValidationError } from '../../../lib/errors';
 import { CARDS_PER_SHEET, MAX_SHEETS_PER_BATCH } from '../../../lib/invitation-cards/limits';
 import { newCardToken } from '../../../lib/invitation-token';
@@ -105,6 +106,19 @@ export async function countCardBatches(
 ): Promise<PageCount> {
   const admin = assertSiteAdmin(session, REFUSAL);
   return findCardBatchCount(admin, start);
+}
+
+/**
+ * The place in its batch of each named card, from 1; null for a card minted before places were kept. A card not named is absent.
+ *
+ * @throws {Forbidden} the session's role is not `admin`.
+ */
+export async function cardPositions(
+  session: Session,
+  invitationIds: readonly string[],
+): Promise<CardPosition[]> {
+  const admin = assertSiteAdmin(session, REFUSAL);
+  return findCardPositions(admin, invitationIds);
 }
 
 /**

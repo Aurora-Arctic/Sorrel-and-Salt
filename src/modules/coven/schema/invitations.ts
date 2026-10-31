@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { check, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { check, pgTable, smallint, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { namedWrites } from '../../../db/table-marks';
 import { auditColumns, userRole, users } from '../../identity/schema/users';
 import { workspaceRole, workspaces } from './workspaces';
@@ -45,6 +45,8 @@ export const invitations = namedWrites(
       kind: text('kind').notNull().default('address'),
       // The mint a card came from; null on an address row. Not a foreign key: a batch has no table, only its cards.
       batchId: uuid('batch_id'),
+      // A card's place in its batch from 1, in the order the PDF lays the fronts out; null on an address row and on a card minted before this was kept.
+      position: smallint('position'),
       ...auditColumns,
     },
     (table) => [
@@ -53,6 +55,14 @@ export const invitations = namedWrites(
       check(
         'invitations_tier',
         sql`${table.kind} = 'card' or (${table.workspaceId} is null) = (${table.role} is null)`,
+      ),
+      check(
+        'invitations_position_card_only',
+        sql`${table.position} is null or ${table.kind} = 'card'`,
+      ),
+      check(
+        'invitations_position_positive',
+        sql`${table.position} is null or ${table.position} >= 1`,
       ),
       check('invitations_kind_known', sql`${table.kind} in ('address', 'card')`),
       // An address row names its address; a card names none of address, coven, role or site role.

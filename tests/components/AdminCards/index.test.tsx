@@ -98,6 +98,7 @@ describe('AdminCards', () => {
                   id: 'a1',
                   reason: 'revoked',
                   attempts: 2,
+                  cardPosition: 14,
                   lastAttemptedAt: '2026-10-29T09:30:00.000Z',
                   account: { id: 'u1', name: 'Other Wort', email: 'other@example.test' },
                 },
@@ -120,6 +121,7 @@ describe('AdminCards', () => {
       'href',
       '/admin/users?user=u1',
     );
+    expect(within(row).getByText('Sheet 2, Card 5')).toBeInTheDocument();
     expect(within(row).getByText('Revoked')).toBeInTheDocument();
     expect(within(row).getByText('2')).toBeInTheDocument();
     expect(row.querySelector('time')).toHaveAttribute('datetime', '2026-10-29T09:30:00.000Z');
@@ -136,6 +138,7 @@ describe('AdminCards', () => {
                 id: 'a2',
                 reason: 'expired',
                 attempts: 1,
+                cardPosition: null,
                 lastAttemptedAt: '2026-10-29T09:30:00.000Z',
                 account: null,
               },
@@ -151,6 +154,7 @@ describe('AdminCards', () => {
 
     const list = await screen.findByRole('dialog', { name: 'Refused Opens' });
     expect(await within(list).findByText('Removed Account')).toBeInTheDocument();
+    expect(within(list).getByText('Unknown')).toBeInTheDocument();
     expect(within(list).queryByRole('link')).toBeNull();
   });
 
