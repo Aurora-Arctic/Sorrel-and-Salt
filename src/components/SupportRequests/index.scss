@@ -175,3 +175,12 @@
 .support-detail__side .field__busy {
   right: calc(#{space(3)} + 1.5em);
 }
+
+// The address field and its button stand a field's own gap apart, not a form's wider one.
+.support-detail__issue .form {
+  gap: space(2);
+
+  > .form__actions {
+    margin-block: 0;
+  }
+}

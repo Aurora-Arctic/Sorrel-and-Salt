@@ -5,6 +5,8 @@ import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import BusyButton from '../BusyButton';
 import { FieldShell, fieldDescription } from '../Field';
+import IconTip from '../IconTip';
+import { PencilIcon } from '../IconTip/icons';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { issueLabel } from './issue-link';
@@ -50,13 +52,16 @@ const IssuePanel = ({ request }: { request: SupportRequestDetailEntry }): ReactE
             {issueLabel(request.issueUrl)}
           </a>
           {!editing && (
-            <button
-              type="button"
-              className="btn btn--quiet btn--small"
-              onClick={() => setEditing(true)}
-            >
-              Change
-            </button>
+            <IconTip tip="Change Issue Address">
+              <button
+                type="button"
+                className="btn btn--quiet btn--icon"
+                onClick={() => setEditing(true)}
+              >
+                <PencilIcon />
+                <span className="visually-hidden">Change Issue Address</span>
+              </button>
+            </IconTip>
           )}
         </div>
       )}
@@ -79,7 +84,7 @@ const IssuePanel = ({ request }: { request: SupportRequestDetailEntry }): ReactE
           <div className="form__actions">
             <BusyButton
               type="submit"
-              className="btn btn--solid"
+              className="btn btn--solid btn--medium"
               disabled={!changed || busy}
               busy={busy}
               busyLabel="Saving Address"
