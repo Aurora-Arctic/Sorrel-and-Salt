@@ -2079,13 +2079,6 @@
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
-        },
-        "password_disabled": {
-          "name": "password_disabled",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
         }
       },
       "indexes": {},
