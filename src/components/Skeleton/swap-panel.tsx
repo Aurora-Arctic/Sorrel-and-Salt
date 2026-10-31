@@ -25,7 +25,6 @@ const SwapPanel = ({
       className={className}
       style={loadingMinHeight ? { minHeight: loadingMinHeight } : undefined}
     >
-      <TabPanelLoading filter={filter} shape={shape} count={count} />
       <TabPanelLoading filter={filter} shape={shape} count={count} density={density} />
     </div>
   ) : (
