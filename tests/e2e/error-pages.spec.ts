@@ -22,3 +22,22 @@ test('a coven that is not yours is a 404 inside the shell, with a way home', asy
   await page.getByRole('link', { name: /back to sorrel/i }).click();
   await expect(page).toHaveURL('/');
 });
+
+// Report This carries the address the visitor asked for, never the framework's /_not-found.
+for (const path of [
+  '/coven/no-such-coven/nothing-here',
+  '/compendium/nothing-here/at-all',
+  '/nothing-here',
+]) {
+  test(`Report This on a 404 at ${path} names that page`, async ({ page }) => {
+    await signInAs(page, 'reporter@error-pages.test');
+    const response = await page.goto(path);
+    expect(response?.status()).toBe(404);
+
+    await page.getByRole('link', { name: 'Report This' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Contact Support' });
+    await expect(dialog.getByRole('textbox', { name: 'Page' })).toHaveValue(path);
+    await expect(dialog.getByText('Error 404.')).toBeVisible();
+    await assertNoAccessibilityViolations(page);
+  });
+}

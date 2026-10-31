@@ -25,6 +25,7 @@ const REQUESTS: SupportRequestEntry[] = [
     assignee: CURATOR,
     curatorVisible: true,
     errorCode: 500,
+    errorReference: 'abc123',
   },
   {
     id: 'request-2',
@@ -35,6 +36,7 @@ const REQUESTS: SupportRequestEntry[] = [
     assignee: null,
     curatorVisible: false,
     errorCode: null,
+    errorReference: null,
   },
 ];
 

@@ -80,6 +80,21 @@ const DetailBody = ({ request, viewer, assignees }: SupportDetailProps): ReactEl
             <dd>{request.errorCode}</dd>
           </div>
         )}
+        {request.errorReference && (
+          <>
+            <dt>Error Reference</dt>
+            <dd>
+              {request.errorReference}{' '}
+              <button
+                type="button"
+                className="btn btn--quiet"
+                onClick={() => void navigator.clipboard?.writeText(request.errorReference ?? '')}
+              >
+                Copy
+              </button>
+            </dd>
+          </>
+        )}
         {request.path && (
           <div>
             <dt>Page</dt>

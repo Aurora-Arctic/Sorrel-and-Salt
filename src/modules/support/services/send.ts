@@ -69,6 +69,7 @@ export async function sendSupportRequest(
       path: redactPath(values.path),
       errorCode: values.errorCode ?? null,
       lastSenderActivityAt: new Date(),
+      errorReference: values.errorReference || null,
     });
     return row as SupportRequestRow;
   });

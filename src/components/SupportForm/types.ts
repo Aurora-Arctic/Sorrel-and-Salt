@@ -8,6 +8,8 @@ export interface SupportFormProps {
   about?: SupportAbout;
   /** The HTTP status of the error page the sender came from, stored with the request. */
   errorCode?: number;
+  /** The error page's digest, stored with the request so it can be matched to the server log. */
+  errorReference?: string;
   /** The page the request is about, stored with the request. */
   path: string;
   /** Closes the dialog the form sits in; left out on a page, where the form has no Cancel. */

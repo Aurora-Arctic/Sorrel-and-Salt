@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const search = vi.fn<() => string>();
@@ -28,6 +28,14 @@ describe('SupportDialog', () => {
     render(<SupportDialog verified />);
     const dialog = screen.getByRole('dialog', { name: 'Contact Support' });
     expect(within(dialog).getByRole('radio', { name: /^Question/ })).toBeChecked();
+  });
+
+  it('opens with the focus inside the form, not on Close or the Page field', async () => {
+    search.mockReturnValue('support=');
+    render(<SupportDialog verified />);
+    const dialog = screen.getByRole('dialog');
+    await waitFor(() => expect(dialog.contains(document.activeElement)).toBe(true));
+    expect(document.activeElement).toBe(within(dialog).getAllByRole('radio')[0]);
   });
 
   it('shows the error number and the page for a report from an error page', () => {

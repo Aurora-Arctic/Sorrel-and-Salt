@@ -88,33 +88,110 @@ describe('SupportForm', () => {
     expect(calls[0]?.input.about).toBe('privacy');
   });
 
-  it('keeps Send off until both a subject and a message are written', () => {
+  it('keeps Send enabled from the start', () => {
     render(<SupportForm path="/a" />);
-    expect(send()).toBeDisabled();
-
-    fireEvent.change(subject(), { target: { value: 'Hello' } });
-    expect(send()).toBeDisabled();
-
-    fireEvent.change(message(), { target: { value: '   ' } });
-    expect(send()).toBeDisabled();
-
-    fireEvent.change(message(), { target: { value: 'Body' } });
     expect(send()).toBeEnabled();
   });
 
-  it('states the limits and enforces them on the fields', () => {
+  it('shows a summary linking each problem to its field when sent with nothing filled in', async () => {
+    const calls = mockSending();
     render(<SupportForm path="/a" />);
-    expect(subject()).toHaveAttribute('maxlength', '120');
-    expect(message()).toHaveAttribute('maxlength', '4000');
+    fireEvent.click(send());
+
+    const summary = await screen.findByRole('alert');
+    expect(summary).toHaveFocus();
+    expect(calls).toHaveLength(0);
+    expect(
+      within(summary)
+        .getAllByRole('link')
+        .map((link) => link.textContent),
+    ).toEqual(['Choose what this is about.', 'Write a subject', 'Write a message']);
+    expect(subject()).toHaveAccessibleDescription(/Write a subject/);
+    expect(message()).toHaveAccessibleDescription(/Write a message/);
+    expect(subject()).toBeInvalid();
+
+    fireEvent.click(within(summary).getByRole('link', { name: 'Write a message' }));
+    expect(message()).toHaveFocus();
+    fireEvent.click(within(summary).getByRole('link', { name: 'Write a subject' }));
+    expect(subject()).toHaveFocus();
+    fireEvent.click(within(summary).getByRole('link', { name: 'Choose what this is about.' }));
+    expect(within(aboutGroup()).getAllByRole('radio')[0]).toHaveFocus();
+  });
+
+  it('lists only what is wrong, and drops the summary once a send goes through', async () => {
+    mockSending();
+    render(<SupportForm path="/a" about="bug" />);
+    fireEvent.change(subject(), { target: { value: 'Hello' } });
+    fireEvent.click(send());
+    const summary = await screen.findByRole('alert');
+    expect(within(summary).getAllByRole('link')).toHaveLength(1);
+    expect(subject()).not.toBeInvalid();
+
+    fireEvent.change(message(), { target: { value: 'Body' } });
+    fireEvent.click(send());
+    await screen.findByRole('status');
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
+  it('states the limits without blocking typing', () => {
+    render(<SupportForm path="/a" />);
+    expect(subject()).not.toHaveAttribute('maxlength');
+    expect(message()).not.toHaveAttribute('maxlength');
     expect(subject()).toHaveAccessibleDescription(/120/);
     expect(message()).toHaveAccessibleDescription(/4000/);
+  });
+
+  it('counts the characters left only once a field passes 75% of its limit', () => {
+    render(<SupportForm path="/a" />);
+    fireEvent.change(subject(), { target: { value: 'a'.repeat(90) } });
+    expect(screen.queryByText(/characters left/)).toBeNull();
+
+    fireEvent.change(subject(), { target: { value: 'a'.repeat(91) } });
+    expect(screen.getByText('29 characters left')).toBeInTheDocument();
+    expect(subject()).toHaveAccessibleDescription(/29 characters left/);
+
+    fireEvent.change(subject(), { target: { value: 'a'.repeat(119) } });
+    expect(screen.getByText('1 character left')).toBeInTheDocument();
+
+    fireEvent.change(message(), { target: { value: 'a'.repeat(3000) } });
+    fireEvent.change(message(), { target: { value: 'a'.repeat(3001) } });
+    expect(screen.getByText('999 characters left')).toBeInTheDocument();
+
+    fireEvent.change(page(), { target: { value: 'a'.repeat(376) } });
+    expect(screen.getByText('124 characters left')).toBeInTheDocument();
+  });
+
+  it('lets a field run past its limit, says so, and refuses the send', async () => {
+    const calls = mockSending();
+    render(<SupportForm path="/a" about="bug" />);
+    fireEvent.change(subject(), { target: { value: 'a'.repeat(125) } });
+    fireEvent.change(message(), { target: { value: 'Body' } });
+    expect(subject()).toHaveValue('a'.repeat(125));
+    expect(screen.getByText('5 characters over')).toBeInTheDocument();
+
+    fireEvent.click(send());
+    const summary = await screen.findByRole('alert');
+    expect(
+      within(summary).getByRole('link', { name: 'Keep the subject to 120 characters' }),
+    ).toBeInTheDocument();
+    expect(calls).toHaveLength(0);
+  });
+
+  it('refuses a page address past its limit before sending', async () => {
+    const calls = mockSending();
+    render(<SupportForm path="/a" about="bug" />);
+    fill();
+    fireEvent.change(page(), { target: { value: '/'.repeat(501) } });
+    fireEvent.click(send());
+    await screen.findByRole('alert');
+    expect(page()).toHaveAccessibleDescription(/too long/);
+    expect(calls).toHaveLength(0);
   });
 
   it('shows the error number, and the page it was opened from in a field', () => {
     render(<SupportForm path="/coven/x/missing" errorCode={404} about="bug" />);
     expect(screen.getByText(/Error 404/)).toBeInTheDocument();
     expect(page()).toHaveValue('/coven/x/missing');
-    expect(page()).toHaveAttribute('maxlength', '500');
     expect(page()).toHaveAccessibleDescription(/500/);
   });
 
@@ -147,7 +224,7 @@ describe('SupportForm', () => {
     render(<SupportForm path="/a" />);
     fill();
     fireEvent.click(send());
-    await screen.findByText('That page address is too long');
+    await screen.findByRole('alert');
     expect(page()).toHaveAccessibleDescription(/too long/);
     expect(page()).toBeInvalid();
   });
@@ -177,6 +254,31 @@ describe('SupportForm', () => {
       'href',
       '/account/support',
     );
+  });
+
+  it('shows the reference as fixed text and sends it as errorReference', async () => {
+    const calls = mockSending();
+    render(<SupportForm path="/x" errorCode={500} errorReference="abc123" about="bug" />);
+    expect(screen.getByText('Error 500, reference abc123.')).toBeInTheDocument();
+    fill();
+    fireEvent.click(send());
+    await screen.findByRole('status');
+    expect(calls[0]?.input).toMatchObject({ errorCode: 500, errorReference: 'abc123' });
+  });
+
+  it('names the request in the received notice, links it, and gives the promise', async () => {
+    mockSending();
+    render(<SupportForm path="/a" />);
+    fill();
+    fireEvent.click(send());
+    const notice = await screen.findByRole('status');
+    expect(within(notice).getByRole('link', { name: /Cannot read the menu/ })).toHaveAttribute(
+      'href',
+      '/account/support',
+    );
+    expect(notice).toHaveTextContent('within 5 working days');
+    expect(notice).toHaveTextContent('small team');
+    expect(notice).toHaveTextContent('we mail you when one arrives');
   });
 
   it('sends no error number when there is none', async () => {

@@ -26,6 +26,8 @@ export interface SupportRequestEntry {
   assignee: SupportPerson | null;
   curatorVisible: boolean;
   errorCode: number | null;
+  /** The error page's digest, to match the server log. */
+  errorReference: string | null;
 }
 
 export interface SupportReplyEntry {

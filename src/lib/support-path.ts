@@ -1,5 +1,8 @@
 // The addresses of the support screens and the parameters that open the Support dialog. Client-safe.
 
+/** The longest error reference a request keeps; a digest is a short number. */
+export const ERROR_REFERENCE_MAX_LENGTH = 100;
+
 /** The page with the request form, for a visitor with no shell round them. */
 export const SUPPORT_PATH = '/support';
 
@@ -11,6 +14,15 @@ export const SUPPORT_PARAM = 'support';
 
 /** The parameter carrying the HTTP status of the error page the sender came from. */
 export const SUPPORT_ERROR_PARAM = 'error';
+
+/** The parameter carrying the error page's digest, so a request can be matched to the server log. */
+export const SUPPORT_REF_PARAM = 'ref';
+
+/** A digest read from a parameter, or `undefined` when it is blank or too long to be one. */
+export function errorReferenceOf(value: string | null): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed && trimmed.length <= ERROR_REFERENCE_MAX_LENGTH ? trimmed : undefined;
+}
 
 /** The parameter carrying the page a request is about, where the address is not that page. */
 export const SUPPORT_FROM_PARAM = 'from';
@@ -86,6 +98,7 @@ export function supportClosedHref(pathname: string, params: URLSearchParams): st
   const rest = new URLSearchParams(params);
   rest.delete(SUPPORT_PARAM);
   rest.delete(SUPPORT_ERROR_PARAM);
+  rest.delete(SUPPORT_REF_PARAM);
   const lead = rest.toString();
   return lead ? `${pathname}?${lead}` : pathname;
 }

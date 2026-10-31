@@ -400,6 +400,8 @@ export type SupportRequestInput = {
   about: SupportAbout;
   /** The HTTP status of the error page, if any. */
   errorCode?: number | null | undefined;
+  /** The digest of the error page, if any. */
+  errorReference?: string | null | undefined;
   /** 1 to 4000 characters. */
   message: string;
   /** The page the sender was on, at most 500 characters; a coven's slug is replaced when it is stored. */

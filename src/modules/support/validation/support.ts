@@ -5,6 +5,7 @@ import { supportRequestAbout } from '../schema/support-requests';
 export const SUBJECT_MAX_LENGTH = 120;
 export const MESSAGE_MAX_LENGTH = 4000;
 export const PATH_MAX_LENGTH = 500;
+export const ERROR_REFERENCE_MAX_LENGTH = 100;
 
 /** The repository whose issues an admin may attach to a request. */
 export const ISSUE_REPOSITORY = 'Aurora-Arctic/Sorrel-and-Salt';
@@ -26,6 +27,11 @@ export const SupportRequestInput = z.object({
     .int()
     .min(100, { error: 'That is not an HTTP status' })
     .max(599, { error: 'That is not an HTTP status' })
+    .nullish(),
+  errorReference: z
+    .string()
+    .trim()
+    .max(ERROR_REFERENCE_MAX_LENGTH, { error: 'That error reference is too long' })
     .nullish(),
 });
 

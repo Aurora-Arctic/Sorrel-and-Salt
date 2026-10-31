@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   SUPPORT_ABOUTS,
   errorCodeOf,
+  errorReferenceOf,
   supportAboutOf,
   supportClosedHref,
   supportHref,
@@ -57,5 +58,20 @@ describe('supportHref and supportClosedHref', () => {
 describe('SUPPORT_ABOUTS', () => {
   it('offers exactly the values the database enum holds, in its order', () => {
     expect(SUPPORT_ABOUTS.map((about) => about.value)).toEqual(supportRequestAbout.enumValues);
+  });
+});
+
+describe('errorReferenceOf', () => {
+  it('reads a digest and refuses a blank or overlong one', () => {
+    expect(errorReferenceOf('abc123')).toBe('abc123');
+    expect(errorReferenceOf('  ')).toBeUndefined();
+    expect(errorReferenceOf(null)).toBeUndefined();
+    expect(errorReferenceOf('x'.repeat(101))).toBeUndefined();
+  });
+
+  it('is dropped with the other support parameters when the dialog closes', () => {
+    expect(supportClosedHref('/x', new URLSearchParams('support=bug&error=500&ref=abc'))).toBe(
+      '/x',
+    );
   });
 });

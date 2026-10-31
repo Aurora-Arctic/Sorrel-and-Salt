@@ -36,6 +36,7 @@ const ROW: SupportRequestEntry = {
   assignee: null,
   curatorVisible: false,
   errorCode: 500,
+  errorReference: null,
 };
 
 const DETAIL: SupportRequestDetailEntry = {
@@ -88,6 +89,22 @@ describe('SupportRequests list', () => {
       />,
     );
     expect(screen.getByText(/No support requests match/)).toBeInTheDocument();
+  });
+});
+
+describe('Error reference', () => {
+  it('is shown beside the error number with a Copy button that copies it', () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+    open(ADMIN, { errorReference: 'abc123' });
+    expect(within(dialog()).getByText('abc123')).toBeInTheDocument();
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Copy' }));
+    expect(writeText).toHaveBeenCalledWith('abc123');
+  });
+
+  it('is left out when the request has none', () => {
+    open(ADMIN);
+    expect(within(dialog()).queryByRole('button', { name: 'Copy' })).toBeNull();
   });
 });
 

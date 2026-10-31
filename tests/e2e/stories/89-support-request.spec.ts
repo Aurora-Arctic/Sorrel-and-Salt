@@ -30,13 +30,22 @@ test.describe('Story 89: Ask for Help and Read the Reply', { tag: '@story-89' },
 
     const dialog = page.getByRole('dialog');
 
-    await test.step('Send Request waits for a subject and message, then the request is received', async () => {
+    await test.step('Send Request names what is missing, then the request is received and named', async () => {
       await dialog.getByRole('radio', { name: /^Question/ }).check();
-      await expect(dialog.getByRole('button', { name: 'Send Request' })).toBeDisabled();
+      await dialog.getByRole('button', { name: 'Send Request' }).click();
+      const problem = dialog.getByRole('alert').filter({ hasText: 'There is a problem' });
+      await expect(problem).toBeFocused();
+      await expect(problem.getByRole('link', { name: 'Write a subject' })).toBeVisible();
+      await assertNoAccessibilityViolations(page);
       await dialog.getByLabel('Subject').fill('Where is the moon table?');
       await dialog.getByLabel('Message').fill('I cannot find the moon table in my coven.');
       await dialog.getByRole('button', { name: 'Send Request' }).click();
+      await expect(dialog.getByRole('link', { name: 'Where is the moon table?' })).toHaveAttribute(
+        'href',
+        '/account/support',
+      );
       await expect(dialog.getByRole('link', { name: 'Your Support Requests' })).toBeVisible();
+      await assertNoAccessibilityViolations(page);
       await dialog.getByRole('button', { name: 'Done' }).click();
       await expect(dialog).toBeHidden();
       await expect(page).not.toHaveURL(/support=/);

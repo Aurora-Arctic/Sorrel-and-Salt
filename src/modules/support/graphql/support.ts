@@ -91,6 +91,10 @@ const SupportRequestRef = builder.objectRef<SupportRequestRow>('SupportRequest')
       resolve: (row) => row.path || null,
     }),
     errorCode: t.exposeInt('errorCode', { nullable: true }),
+    errorReference: t.exposeString('errorReference', {
+      nullable: true,
+      description: 'The digest of the error page the sender came from, to match the server log.',
+    }),
     status: t.expose('status', { type: SupportStatusEnum }),
     sender: t.field({
       type: UserRef,
@@ -159,6 +163,10 @@ const SupportRequestInput = builder.inputType('SupportRequestInput', {
     errorCode: t.int({
       required: false,
       description: 'The HTTP status of the error page, if any.',
+    }),
+    errorReference: t.string({
+      required: false,
+      description: 'The digest of the error page, if any.',
     }),
   }),
 });

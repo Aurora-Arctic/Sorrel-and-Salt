@@ -37,6 +37,6 @@ export const ErrorScreen = ({
     <Link className="btn btn--quiet" href="/">
       Back to Sorrel &amp; Salt
     </Link>
-    <ReportThis code={500} inShell={inShell} />
+    <ReportThis code={500} reference={digest} inShell={inShell} />
   </ErrorPage>
 );

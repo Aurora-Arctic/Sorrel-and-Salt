@@ -51,6 +51,7 @@ function entryOf(row: SupportRequestRow, names: Names): SupportRequestEntry {
     assignee: personOf(names, row.assignedTo),
     curatorVisible: row.curatorVisible,
     errorCode: row.errorCode,
+    errorReference: row.errorReference,
   };
 }
 

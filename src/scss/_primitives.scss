@@ -268,12 +268,26 @@
     background-color: $surface-card;
     color: $text-primary;
     box-shadow: none;
+    // The surface behind the button, which an icon with a cut-out (the support bubble) shows through its mark.
+    --icon-ground: #{$surface-card};
 
     &:hover,
     &:focus-visible {
       border-color: $edge-highlight;
       background-color: $fill-highlight-field;
       color: $text-primary;
+      --icon-ground: #{$fill-highlight-field};
+    }
+  }
+
+  // An icon alone in a button: a square the height of a field, no side padding, the mark at 1.5rem.
+  .btn--icon {
+    width: $control-height;
+    padding: 0;
+
+    svg {
+      width: 1.5rem;
+      height: 1.5rem;
     }
   }
 
