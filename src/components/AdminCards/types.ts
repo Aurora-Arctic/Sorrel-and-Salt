@@ -1,26 +1,25 @@
 import type { Route } from 'next';
 import type { PagePosition, PagerHrefs } from '../../lib/types';
 
-/** Where a card stands now; an accepted card stays accepted whatever became of its date. */
-export type CardState = 'pending' | 'accepted' | 'expired' | 'revoked';
-
-/** One card, as `/admin/cards` lists it. It carries no token or hash: the row holds neither. */
-export interface CardEntry {
-  id: string;
-  /** The mint that made it, shared by the whole batch. */
+/** One batch, as `/admin/invitation-cards` lists it: the mint, with its cards counted. No token or hash is in it. */
+export interface BatchEntry {
   batchId: string;
-  state: CardState;
+  mintedAt: Date;
   expiresAt: Date;
-  /** The account that accepted it; null while unaccepted. */
-  accountName: string | null;
-  /** How many refused opens of the card are on record, over every account and reason. */
-  attemptCount: number;
+  /** How many cards the mint made. */
+  cards: number;
+  /** How many of them have been accepted. */
+  accepted: number;
+  /** How many can still be accepted, and so revoked. */
+  pending: number;
+  /** How many refused opens of its cards are on record, over every card, account and reason. */
+  attempts: number;
 }
 
 /** Why an open of a card link was refused and recorded. */
 export type CardAttemptReason = 'revoked' | 'expired' | 'accepted';
 
-/** One account's refused opens of one card for one reason. */
+/** One account's refused opens of one card of a batch for one reason. */
 export interface CardAttemptEntry {
   id: string;
   reason: CardAttemptReason;
@@ -37,8 +36,8 @@ export interface AdminCardsCursor {
 }
 
 export interface AdminCardsProps extends Partial<PagerHrefs<Route>> {
-  /** This page of the cards, newest first. */
-  cards: CardEntry[];
+  /** This page of the batches, newest first. */
+  batches: BatchEntry[];
   /** The page shown, which the mint form closes back to; the first when left out. */
   cursor?: AdminCardsCursor;
   /** Where this page stands, the pager's "Page X of Y". */
@@ -80,11 +79,4 @@ export interface AdminArrivalsProps extends Partial<PagerHrefs<Route>> {
   arrivals: ArrivalEntry[];
   /** Where this page stands, the pager's "Page X of Y". */
   position?: PagePosition;
-}
-
-/** The batches a page of cards shows: each with its cards on the page and how many of them can still be revoked. */
-export interface BatchSummary {
-  batchId: string;
-  cards: number;
-  pending: number;
 }

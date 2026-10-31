@@ -12,7 +12,7 @@ import DownloadCsv from './download-csv';
 import type { AdminArrivalsProps } from './types';
 import './index.scss';
 
-// The People page's Arrivals tab, `/admin/arrivals`: every account that accepted a card, with the date, the
+// The People page's Card Sign-Ups tab, `/admin/card-sign-ups`: every account that accepted a card, with the date, the
 // batch and the covens it owns, and a CSV of them (claude-docs/components/admin-cards.md).
 
 const ArrivalsCsvDocument = graphql(`
@@ -30,7 +30,7 @@ const AdminArrivals = ({
   nextHref,
   position,
 }: AdminArrivalsProps): ReactElement => (
-  <section className="admin-cards" aria-label="Arrivals">
+  <section className="admin-cards" aria-label="Card Sign-Ups">
     <ListFrame>
       <ListBody>
         <StackTable

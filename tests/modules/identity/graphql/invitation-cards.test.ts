@@ -3,6 +3,7 @@ import type postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { A, B, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
+import { CARDS_PER_SHEET, MAX_SHEETS_PER_BATCH } from '@/lib/invitation-cards/limits';
 import { run } from '../../../support/graphql/run';
 
 // The card operations' transport half: who may call each by direct request, the answer's shape, and that nothing but the
@@ -13,14 +14,13 @@ useTestDatabase((client) => {
   sql = client;
 });
 
-const MINT = `mutation($count: Int!, $expiresAt: DateTime!) {
-  createInvitationCards(count: $count, expiresAt: $expiresAt) { batchId expiresAt tokens }
+const MINT = `mutation($sheets: Int!, $expiresAt: DateTime!) {
+  createInvitationCards(sheets: $sheets, expiresAt: $expiresAt) { batchId expiresAt tokens }
 }`;
-const REVOKE = `mutation($id: ID!) { revokeInvitationCard(id: $id) { id state revokedAt } }`;
 const REVOKE_BATCH = `mutation($batchId: ID!) { revokeInvitationCardBatch(batchId: $batchId) { id state } }`;
-const LIST = `query($batchId: ID) {
-  invitationCards(first: 50, batchId: $batchId) {
-    edges { node { id batchId state expiresAt account { name } } }
+const BATCHES = `query {
+  invitationCardBatches(first: 50) {
+    edges { node { batchId mintedAt expiresAt cards accepted pending } }
   }
 }`;
 const ARRIVALS = `query {
@@ -42,18 +42,15 @@ beforeEach(async () => {
 
 describe('the card operations', () => {
   it('refuses a curator, a member and an owner each one by direct request, with a card to reach', async () => {
-    const minted = await run<Minted>(asUser(E), MINT, { count: 1, expiresAt: nextWeek() });
+    const minted = await run<Minted>(asUser(E), MINT, { sheets: 1, expiresAt: nextWeek() });
     const { batchId } = minted.data!.createInvitationCards;
-    const [card] = await sql`select id, revoked_at from invitations where kind = 'card'`;
-    expect(card!.revoked_at).toBeNull();
 
     for (const who of [F, B, A]) {
       const session = asUser(who);
       const answers = [
-        await run(session, MINT, { count: 1, expiresAt: nextWeek() }),
-        await run(session, REVOKE, { id: card!.id }),
+        await run(session, MINT, { sheets: 1, expiresAt: nextWeek() }),
         await run(session, REVOKE_BATCH, { batchId }),
-        await run(session, LIST),
+        await run(session, BATCHES),
         await run(session, ARRIVALS),
         await run(session, CSV),
       ];
@@ -63,20 +60,20 @@ describe('the card operations', () => {
     }
 
     const rows = await sql`select revoked_at from invitations where kind = 'card'`;
-    expect(rows).toHaveLength(1);
-    expect(rows[0]!.revoked_at).toBeNull();
+    expect(rows).toHaveLength(CARDS_PER_SHEET);
+    expect(rows.every((row) => row.revoked_at === null)).toBe(true);
   });
 
-  it('mints N pending cards sharing one batch and the chosen expiry', async () => {
+  it('mints nine pending cards a sheet sharing one batch and the chosen expiry', async () => {
     const expiresAt = nextWeek();
 
-    const minted = await run<Minted>(asUser(E), MINT, { count: 3, expiresAt });
+    const minted = await run<Minted>(asUser(E), MINT, { sheets: 2, expiresAt });
 
     const { batchId, tokens } = minted.data!.createInvitationCards;
-    expect(tokens).toHaveLength(3);
+    expect(tokens).toHaveLength(2 * CARDS_PER_SHEET);
     const rows =
       await sql`select batch_id, expires_at, accepted_at, revoked_at from invitations where kind = 'card'`;
-    expect(rows).toHaveLength(3);
+    expect(rows).toHaveLength(2 * CARDS_PER_SHEET);
     for (const row of rows) {
       expect(row.batch_id).toBe(batchId);
       expect(row.expires_at.toISOString()).toBe(expiresAt);
@@ -85,61 +82,62 @@ describe('the card operations', () => {
     }
   });
 
-  it('answers a batch over the cap with a validation error naming the count', async () => {
-    const answer = await run(asUser(E), MINT, { count: 501, expiresAt: nextWeek() });
+  it('answers a batch over the cap with a validation error naming the sheets', async () => {
+    const answer = await run(asUser(E), MINT, {
+      sheets: MAX_SHEETS_PER_BATCH + 1,
+      expiresAt: nextWeek(),
+    });
 
     expect(answer.errors?.[0]?.extensions?.code).toBe('VALIDATION');
-    expect(JSON.stringify(answer.errors)).toContain('count');
+    expect(JSON.stringify(answer.errors)).toContain('sheets');
     expect(await sql`select 1 from invitations where kind = 'card'`).toHaveLength(0);
   });
 
-  it('revokes by id and by batch', async () => {
-    const one = await run<Minted>(asUser(E), MINT, { count: 2, expiresAt: nextWeek() });
-    const other = await run<Minted>(asUser(E), MINT, { count: 2, expiresAt: nextWeek() });
-    const [first] = await sql`
-      select id from invitations where batch_id = ${one.data!.createInvitationCards.batchId} limit 1`;
+  it('revokes a batch, and no card by id', async () => {
+    const other = await run<Minted>(asUser(E), MINT, { sheets: 1, expiresAt: nextWeek() });
+    const kept = await run<Minted>(asUser(E), MINT, { sheets: 1, expiresAt: nextWeek() });
 
-    const byId = await run<{ revokeInvitationCard: { state: string } }>(asUser(E), REVOKE, {
-      id: first!.id,
-    });
     const byBatch = await run<{ revokeInvitationCardBatch: unknown[] }>(asUser(E), REVOKE_BATCH, {
       batchId: other.data!.createInvitationCards.batchId,
     });
+    const byId = await run(asUser(E), `mutation { revokeInvitationCard(id: "x") { id } }`);
 
-    expect(byId.data!.revokeInvitationCard.state).toBe('revoked');
-    expect(byBatch.data!.revokeInvitationCardBatch).toHaveLength(2);
-    const revoked =
-      await sql`select 1 from invitations where kind = 'card' and revoked_at is not null`;
-    expect(revoked).toHaveLength(3);
+    expect(byBatch.data!.revokeInvitationCardBatch).toHaveLength(CARDS_PER_SHEET);
+    expect(byId.errors?.[0]?.message).toMatch(/Cannot query field "revokeInvitationCard"/);
+    const live = await sql`
+      select 1 from invitations where batch_id = ${kept.data!.createInvitationCards.batchId} and revoked_at is null`;
+    expect(live).toHaveLength(CARDS_PER_SHEET);
   });
 
-  it('lists each state and names the accepting account, never a token', async () => {
-    const minted = await run<Minted>(asUser(E), MINT, { count: 4, expiresAt: nextWeek() });
+  it('lists one row per batch with its cards, accepted and pending counts, never a token', async () => {
+    const minted = await run<Minted>(asUser(E), MINT, { sheets: 2, expiresAt: nextWeek() });
     const rows = await sql`select id from invitations where kind = 'card' order by id`;
     await sql`update invitations set accepted_at = now(), accepted_by = ${B.id} where id = ${rows[0]!.id}`;
     await sql`update invitations set revoked_at = now() where id = ${rows[1]!.id}`;
     await sql`update invitations set expires_at = now() - interval '1 day' where id = ${rows[2]!.id}`;
 
     const listed = await run<{
-      invitationCards: {
-        edges: { node: { id: string; state: string; account: { name: string } | null } }[];
+      invitationCardBatches: {
+        edges: {
+          node: { batchId: string; cards: number; accepted: number; pending: number };
+        }[];
       };
-    }>(asUser(E), LIST, { batchId: minted.data!.createInvitationCards.batchId });
+    }>(asUser(E), BATCHES);
 
-    const byId = new Map(listed.data!.invitationCards.edges.map(({ node }) => [node.id, node]));
-    expect(byId.get(rows[0]!.id)!.state).toBe('accepted');
-    expect(byId.get(rows[0]!.id)!.account!.name).toBe(B.name);
-    expect(byId.get(rows[1]!.id)!.state).toBe('revoked');
-    expect(byId.get(rows[2]!.id)!.state).toBe('expired');
-    expect(byId.get(rows[3]!.id)!.state).toBe('pending');
-    expect(byId.get(rows[3]!.id)!.account).toBeNull();
-    expect(JSON.stringify(listed)).not.toMatch(
-      new RegExp(minted.data!.createInvitationCards.tokens[0]!),
-    );
+    expect(JSON.stringify(listed.errors)).toBeUndefined();
+    const edges = listed.data!.invitationCardBatches.edges;
+    expect(edges).toHaveLength(1);
+    expect(edges[0]!.node).toMatchObject({
+      batchId: minted.data!.createInvitationCards.batchId,
+      cards: 2 * CARDS_PER_SHEET,
+      accepted: 1,
+      pending: 2 * CARDS_PER_SHEET - 3,
+    });
+    expect(JSON.stringify(listed)).not.toContain(minted.data!.createInvitationCards.tokens[0]!);
   });
 
   it('lists an arrival with the covens its account owns, and not the covens it only belongs to', async () => {
-    await run<Minted>(asUser(E), MINT, { count: 2, expiresAt: nextWeek() });
+    await run<Minted>(asUser(E), MINT, { sheets: 2, expiresAt: nextWeek() });
     const [card] = await sql`select id from invitations where kind = 'card' limit 1`;
     await sql`update invitations set accepted_at = now(), accepted_by = ${A.id} where id = ${card!.id}`;
     const [owned] = await sql`

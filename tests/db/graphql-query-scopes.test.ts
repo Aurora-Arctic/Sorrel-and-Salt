@@ -79,12 +79,12 @@ const PROBES: Record<string, ScopeProbe> = {
     source: '{ privilegeChanges(first: 1) { edges { node { id } } } }',
     outcome: 'refuses',
   },
-  invitationCards: {
-    source: '{ invitationCards(first: 1) { edges { node { id } } } }',
+  invitationCardBatches: {
+    source: '{ invitationCardBatches(first: 1) { edges { node { batchId } } } }',
     outcome: 'refuses',
   },
   invitationCardAttempts: {
-    source: `{ invitationCardAttempts(invitationId: "${NOWHERE}", first: 1) { edges { node { id } } } }`,
+    source: `{ invitationCardAttempts(batchId: "${NOWHERE}", first: 1) { edges { node { id } } } }`,
     outcome: 'refuses',
   },
   cardArrivals: {
@@ -386,9 +386,8 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   ),
   revokeAdminInvitation: write(`mutation { revokeAdminInvitation(id: "${NOWHERE}") { id } }`),
   createInvitationCards: write(
-    'mutation { createInvitationCards(count: 1, expiresAt: "2099-01-01T00:00:00Z") { batchId } }',
+    'mutation { createInvitationCards(sheets: 1, expiresAt: "2099-01-01T00:00:00Z") { batchId } }',
   ),
-  revokeInvitationCard: write(`mutation { revokeInvitationCard(id: "${NOWHERE}") { id } }`),
   revokeInvitationCardBatch: write(
     `mutation { revokeInvitationCardBatch(batchId: "${NOWHERE}") { id } }`,
   ),
@@ -602,7 +601,6 @@ const ADMIN_WRITES: Record<string, AdminWrite> = {
   revokeAdminInvitation: { governs: 'site role' },
   // Printed invitation cards: minting, withdrawing one or a batch.
   createInvitationCards: { governs: 'site role' },
-  revokeInvitationCard: { governs: 'site role' },
   revokeInvitationCardBatch: { governs: 'site role' },
   createCategory: { governs: 'categories' },
   updateCategory: { governs: 'categories' },
