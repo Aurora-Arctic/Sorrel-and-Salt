@@ -48,9 +48,17 @@
   min-inline-size: 0;
 }
 
-// The thread column stands a step closer than the side column: facts to Thread, and Thread to the reply rule.
+// Every space in the thread column is one of its own rules, summed to a target, so no default adds to it:
+// facts to the Thread heading is the column gap (4); the Thread heading to the first entry is the
+// section's gap (2); the last entry to the reply's rule is the section's zero bottom margin plus the
+// column gap (4). The global `section` margin and the list's default margin are zeroed, not offset.
 .support-detail__main {
   gap: space(4);
+
+  > section {
+    gap: space(2);
+    margin-block: 0;
+  }
 }
 
 .support-detail__side {
@@ -98,11 +106,12 @@
 }
 
 .support-detail__main h3 {
-  margin-block-end: space(2);
+  margin-block-end: 0;
 }
 
 .support-detail__thread {
   @include stack(2);
+  margin: 0;
   padding: 0;
   list-style: none;
 }
@@ -135,8 +144,6 @@
 
 // The reply form sits under the thread behind a hairline; Reply on the left, Resolve opposite.
 .support-detail__reply {
-  // Pulls the rule one step toward the thread; the column's own gap would put it a step further off.
-  margin-block-start: calc(#{space(1)} * -1);
   padding-block-start: space(5);
   border-block-start: 1px solid $hairline;
 }
@@ -181,7 +188,8 @@
   right: calc(#{space(3)} + 1.5em);
 }
 
-// The address field and its button stand a field's own gap apart, not a form's wider one.
+// The address field and its button stand a field's own gap apart: the form's gap (2) and no margin on the
+// actions row (0), where the default form gap (5) and row margin (2) would sum to 7.
 .support-detail__issue .form {
   gap: space(2);
 
