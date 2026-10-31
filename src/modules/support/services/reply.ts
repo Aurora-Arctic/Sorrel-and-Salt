@@ -16,7 +16,7 @@ import { requestToAnswer } from './staff';
  * The notice carries no reply text: the reply is read on the sender's support page, behind their sign-in.
  *
  * @throws {Forbidden} the session is neither a curator nor an admin, or a curator and the request is not assigned to them, or
- * the reply is marked waiting on the sender and the request is not open (nothing is saved).
+ * the reply is marked waiting on the sender and the request is not open, or the request is closed (nothing is saved).
  * @throws {NotFound} the reader may not see a request with this id.
  * @throws {ValidationError} the body is empty or over 4,000 characters.
  */
@@ -28,6 +28,11 @@ export async function replyToSupportRequest(
   options: { waitingOnSender?: boolean } = {},
 ): Promise<SupportReplyRow> {
   const request = await requestToAnswer(session, requestId, 'reply to');
+  if (request.status === 'closed') {
+    throw new Forbidden(
+      'This request is closed and takes no more replies; the sender\u2019s next message opens a new request linked to it',
+    );
+  }
   const text = parseInput(SupportMessage, body);
   const reply = await withAudit(session, async (write) => {
     const [row] = await write.insert(supportReplies, {

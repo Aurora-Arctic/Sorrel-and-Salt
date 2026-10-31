@@ -200,6 +200,20 @@ describe('a sender’s message', () => {
     expect((await sendSenderMessage(asUser(C), request.id, 'Mine.')).status).toBe('open');
   });
 
+  it('refuses a staff reply to a closed request with an explaining error, and saves no reply', async () => {
+    const request = await send();
+    await closeSupportRequest(asUser(E), request.id);
+    expect(await statusOf(request.id)).toBe('closed');
+
+    const error = await failureOf(replyToSupportRequest(asUser(E), request.id, 'Too late.', mail));
+
+    expect(error).toBeInstanceOf(Forbidden);
+    expect((error as Error).message).toMatch(/closed/);
+    expect(await sql`select 1 from support_replies where request_id = ${request.id}`).toHaveLength(
+      0,
+    );
+  });
+
   it('opens a new request linked to a closed one, carrying topic and assignee, and leaves the closed one as it was', async () => {
     const request = await send();
     await assignSupportRequest(asUser(E), request.id, F.id);
