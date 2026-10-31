@@ -81,7 +81,7 @@ The account page's sections are panels; the coven index's are plain
 
 ## Where it stands
 
-`.page-with-nav` goes on the page's root. Its children are the head, the menu,
+`.page-with-nav` goes on the page's root. A page with no head of its own, such as a tab inside `TabbedPage` whose heading stands above it, adds `.page-with-nav--headless`, which starts the menu on the first row. Its children are the head, the menu,
 then the sections. From a tablet up it is a grid: the menu is a sticky column
 under the shell's bar, spanning the three rows after the head, with the
 sections (at `$narrow-column`) beside it. Where the window has room for a

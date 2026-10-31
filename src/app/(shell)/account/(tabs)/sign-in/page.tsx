@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import PageNav from '../../../../../components/PageNav';
 import Passkeys from '../../../../../components/Passkeys';
 import PasswordSection from '../../../../../components/PasswordSection';
 import TwoFactorSettings from '../../../../../components/PasswordSection/two-factor';
@@ -44,8 +45,18 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
       : undefined;
 
   return (
-    <div className="page-frame page-frame--narrow">
+    <div className="page-with-nav page-with-nav--headless">
+      <PageNav
+        label="On This Page"
+        entries={[
+          { href: '#sign-in-methods', label: 'Sign-In Methods' },
+          { href: '#password', label: 'Password' },
+          { href: '#two-factor', label: 'Two-Factor Sign-In' },
+          { href: '#passkeys', label: 'Passkeys' },
+        ]}
+      />
       <section
+        id="sign-in-methods"
         className="page-frame__section panel"
         aria-labelledby="account-sign-in-methods-heading"
       >

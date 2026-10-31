@@ -517,7 +517,7 @@ component docs are [`components/name-form.md`](../components/name-form.md),
   this email address to join them.", then `ReceivedInvitations`, M10.32). It
   carries no link to `/account/email`.
   Under the heading, a nav labelled "On This Page"
-  links to each section by its prefixed id (`#account-name`,
+  (the Sign-In tab has one too, to its four sections) links to each section by its prefixed id (`#account-name`,
   `#account-email`, `#account-invitations`).
   The Invitations section is always shown, with the table's empty state when
   none wait. It pages with `?after=` and `?before=`, and its pager links keep

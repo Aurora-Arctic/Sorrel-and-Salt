@@ -7,6 +7,7 @@ import type { TabPanelLoadingProps } from './types';
 const TabPanelLoading = ({
   filter = false,
   shape = 'table',
-}: TabPanelLoadingProps): ReactElement => <Skeleton shape={shape} filter={filter} />;
+  count,
+}: TabPanelLoadingProps): ReactElement => <Skeleton shape={shape} filter={filter} count={count} />;
 
 export default TabPanelLoading;

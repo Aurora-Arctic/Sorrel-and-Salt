@@ -40,7 +40,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
   const { hasPreviousPage, hasNextPage, startCursor, endCursor } = invitations.pageInfo;
 
   return (
-    <div className="page-frame page-frame--narrow page-with-nav">
+    <div className="page-with-nav page-with-nav--headless">
       <PageNav
         label="On This Page"
         entries={[
