@@ -14,4 +14,4 @@ CREATE TABLE "passkeys" (
 --> statement-breakpoint
 ALTER TABLE "passkeys" ADD CONSTRAINT "passkeys_user_id_users_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."users"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
 CREATE INDEX "passkeys_userId_idx" ON "passkeys" USING btree ("user_id");--> statement-breakpoint
-CREATE INDEX "passkeys_credentialId_idx" ON "passkeys" USING btree ("credential_id");
+CREATE UNIQUE INDEX "passkeys_credentialId_idx" ON "passkeys" USING btree ("credential_id");

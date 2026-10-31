@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import type { BetterAuthOptions } from 'better-auth';
@@ -105,7 +106,6 @@ describe('sign_in_failures schema', () => {
       'count',
       'first_failed_at',
       'locked_until',
-      'password_disabled',
       'user_id',
     ]);
   });
@@ -117,9 +117,8 @@ describe('sign_in_failures schema', () => {
     expect(signInFailures.userId.notNull).toBe(true);
   });
 
-  it('starts at zero and enabled, with no lock', () => {
+  it('starts at zero, with no lock', () => {
     expect(byName.count.default).toBe(0);
-    expect(byName.password_disabled.default).toBe(false);
     expect(byName.locked_until.notNull).toBe(false);
   });
 });
@@ -191,6 +190,24 @@ describe('passkeys in the migrated database', () => {
       where constraint_name = 'passkeys_user_id_users_id_fk'
     `;
     expect(rule).toBe('CASCADE');
+  });
+
+  it('holds a credential id once, as sign-in looks a passkey up by it alone', async () => {
+    const id = randomUUID();
+    await sql`
+      insert into users (id, name, email, email_verified, role, created_by, updated_by)
+      values (${id}, 'Fixture Keyholder', ${`${id}@passkey-schema.test`}, true, 'user', ${id}, ${id})
+    `;
+    const insertKey = () => sql`
+      insert into passkeys (public_key, user_id, credential_id, counter, device_type, backed_up)
+      values ('fixture-key', ${id}, 'fixture-credential', 0, 'singleDevice', false)
+    `;
+    // Precondition: the first row is accepted.
+    await insertKey();
+
+    const error = await failureOf(insertKey());
+
+    expect(error.constraint_name).toBe('passkeys_credentialId_idx');
   });
 });
 

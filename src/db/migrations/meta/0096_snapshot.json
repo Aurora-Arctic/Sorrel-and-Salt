@@ -1873,7 +1873,7 @@
               "nulls": "last"
             }
           ],
-          "isUnique": false,
+          "isUnique": true,
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -2079,13 +2079,6 @@
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
-        },
-        "password_disabled": {
-          "name": "password_disabled",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
         }
       },
       "indexes": {},
