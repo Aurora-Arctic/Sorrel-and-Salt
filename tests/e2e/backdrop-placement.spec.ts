@@ -17,10 +17,15 @@ interface Box {
   height: number;
 }
 
-/** Each drawing's box in window coordinates, at the top of the page. */
+/** Each drawing's box in window coordinates, at the top of a page made tall enough that the footer is out of view (the salt rises only with the footer). */
 async function drawings(page: Page): Promise<Record<'sorrel' | 'salt', Box>> {
-  await page.evaluate(() => window.scrollTo(0, 0));
-  return page.evaluate(() => {
+  return page.evaluate(async () => {
+    const spacer = document.createElement('div');
+    spacer.style.height = '4000px';
+    (document.querySelector('main') ?? document.body).append(spacer);
+    window.scrollTo(0, 0);
+    // Two frames let the scroll-driven animations settle.
+    await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
     const box = (corner: string): Box => {
       const element = document.querySelector(`.backdrop--${corner}`);
       if (!element) throw new Error(`No ${corner} drawing`);
