@@ -1,15 +1,15 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The switch for "shown in the public compendium": a native checkbox drawn as a 56 x 32px track
-// with a 24px thumb, and an eye in the thumb whose upper lid comes down when the entry is hidden.
+// The switch for "shown in the public compendium": a native checkbox drawn as a 3.115 x 1.78rem track
+// with a 1.335rem thumb, and an eye in the thumb whose upper lid comes down when the entry is hidden.
 // Taller than `.switch` so the eye can be read. Tokens only, before the section's design review.
 .shown-switch {
-  $track-width: 3.5rem;
-  $track-height: 2rem;
-  $thumb-size: 1.5rem;
-  $inset: 0.1875rem;
-  $travel: 1.5rem;
+  $track-width: 3.115rem;
+  $track-height: 1.78rem;
+  $thumb-size: 1.335rem;
+  $inset: 0.1669rem;
+  $travel: 1.335rem;
   // The open and shut lids of the Quick Look eye's 16-unit grid; the markup carries the same shapes
   // as attributes for a browser that cannot set `d` from CSS.
   $lid-open: 'M1 8C2.8 5 5.2 3.5 8 3.5S13.2 5 15 8';

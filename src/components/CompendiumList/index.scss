@@ -52,6 +52,11 @@
 // context, so no later pinned cell covers it.
 .compendium-list__edit {
   @include sticky-action-column($sticky-column-layer);
+
+  // The pencil and the switch stand side by side with no gap of their own; this one is theirs alone.
+  .shown-switch {
+    margin-inline-start: space(2);
+  }
 }
 
 // The Categories column's minimum width, 16.625rem plus the cell inset, so a wide table scrolls rather than squeezes the chips; unused when stacked as cards
