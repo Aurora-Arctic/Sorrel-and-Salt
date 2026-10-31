@@ -4,10 +4,10 @@ import { securityHeaders } from './src/lib/security-headers';
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   typedRoutes: true,
-  // `next dev` 403s `/_next/*` (the HMR socket) for any host but localhost, so the
-  // page never hydrates: `sorrel-app` is `make docker-codegen`'s host, the
-  // wildcards are a phone on the LAN (one label each, no port).
-  allowedDevOrigins: ['sorrel-app', '192.168.*.*', '10.*.*.*'],
+  // `make docker-codegen` loads the dev server as `http://sorrel-app:8000`, and
+  // `next dev` 403s cross-origin `/_next/*` for every host but localhost — a
+  // rejected HMR socket under Turbopack means the page never hydrates.
+  allowedDevOrigins: ['sorrel-app'],
   // `next dev` and the e2e webServer's production build would otherwise
   // share `.next/`, and a concurrent dev rebuild can corrupt what e2e is
   // serving; playwright.config.ts sets it.
