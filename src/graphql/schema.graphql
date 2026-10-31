@@ -1268,14 +1268,13 @@ type Query {
   """
   cardArrivals(
     after: String
-
-    """The start of the batch number, case-insensitively."""
-    batch: String
     before: String
     first: Int
     last: Int
 
-    """Part of the account's name or email, case-insensitively."""
+    """
+    Part of the account's name or email, or the start of the batch number, case-insensitively.
+    """
     query: String
   ): QueryCardArrivalsConnection!
 
@@ -1283,10 +1282,9 @@ type Query {
   Every arrival the filter keeps as CSV text: account name, email, accepted date and batch. Site admins only.
   """
   cardArrivalsCsv(
-    """The start of the batch number, case-insensitively."""
-    batch: String
-
-    """Part of the account's name or email, case-insensitively."""
+    """
+    Part of the account's name or email, or the start of the batch number, case-insensitively.
+    """
     query: String
   ): String!
 

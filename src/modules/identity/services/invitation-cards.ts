@@ -60,7 +60,7 @@ function parsedBatchFilter(filter: CardBatchFilter): CardBatchFilter {
 }
 
 function parsedArrivalFilter(filter: CardArrivalFilter): CardArrivalFilter {
-  return { query: filter.query?.trim() || undefined, batch: filter.batch?.trim() || undefined };
+  return { query: filter.query?.trim() || undefined };
 }
 
 const REFUSAL = 'Only a site admin may mint, list or revoke invitation cards';

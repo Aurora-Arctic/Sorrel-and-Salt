@@ -109,10 +109,9 @@ export interface CardsFilter {
   expiresTo: string;
 }
 
-/** The sign-ups filter the address holds, blank for none. */
+/** The sign-ups filter the address holds, blank for none: part of a name or email, or the start of a batch number. */
 export interface ArrivalsFilter {
   query: string;
-  batch: string;
 }
 
 export interface CardsFilterProps {

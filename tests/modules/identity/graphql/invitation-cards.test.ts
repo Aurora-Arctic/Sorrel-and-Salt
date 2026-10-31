@@ -36,9 +36,9 @@ const filteredBatches = (batchId: string) => `query {
 }`;
 const USED_UP_BATCHES = `query { invitationCardBatches(first: 50, status: usedUp) { edges { node { batchId } } } }`;
 const filteredArrivals = (batchId: string) =>
-  `query { cardArrivals(first: 50, query: "fixture", batch: "${batchId.slice(0, 4)}") { edges { node { id } } } }`;
+  `query { cardArrivals(first: 50, query: "${batchId.slice(0, 4)}") { edges { node { id } } } }`;
 const filteredCsv = (batchId: string) =>
-  `query { cardArrivalsCsv(query: "fixture", batch: "${batchId.slice(0, 4)}") }`;
+  `query { cardArrivalsCsv(query: "${batchId.slice(0, 4)}") }`;
 
 const nextWeek = () => new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString();
 
@@ -157,7 +157,7 @@ describe('the card operations', () => {
     expect(JSON.stringify(listed)).not.toContain(minted.data!.createInvitationCards.tokens[0]!);
   });
 
-  it('narrows the batches by status and the arrivals by account, in SQL', async () => {
+  it('narrows the batches by status and the arrivals by account or batch, in SQL', async () => {
     const minted = await run<Minted>(asUser(E), MINT, { sheets: 1, expiresAt: nextWeek() });
     const { batchId } = minted.data!.createInvitationCards;
     const [card] = await sql`select id from invitations where kind = 'card' limit 1`;
@@ -179,6 +179,10 @@ describe('the card operations', () => {
       asUser(E),
       `query { cardArrivals(first: 50, query: "${A.email}") { edges { node { id } } } }`,
     );
+    const byBatch = await run<{ cardArrivals: { edges: unknown[] } }>(
+      asUser(E),
+      `query { cardArrivals(first: 50, query: "${batchId.slice(0, 8)}") { edges { node { id } } } }`,
+    );
     const csv = await run<{ cardArrivalsCsv: string }>(
       asUser(E),
       `query { cardArrivalsCsv(query: "${A.email}") }`,
@@ -188,6 +192,7 @@ describe('the card operations', () => {
     expect(usedUp.data!.invitationCardBatches.edges).toHaveLength(0);
     expect(named.data!.cardArrivals.edges).toHaveLength(1);
     expect(other.data!.cardArrivals.edges).toHaveLength(0);
+    expect(byBatch.data!.cardArrivals.edges).toHaveLength(1);
     expect(csv.data!.cardArrivalsCsv.trimEnd().split('\r\n')).toHaveLength(1);
   });
 

@@ -376,19 +376,18 @@ function arrivedByCard(): SQL {
   ) as SQL;
 }
 
-// The arrivals a filter keeps: the account's name or address holds the query, and the batch number starts as given.
-function arrivalsWhere({ query, batch }: CardArrivalFilter): SQL | undefined {
-  return and(
-    query
-      ? existsIn(
-          users,
-          and(
-            eq(users.id, invitations.acceptedBy),
-            or(containsText(users.name, query), containsText(users.email, query)),
-          ),
-        )
-      : undefined,
-    batch ? startsWithText(invitations.batchId, batch) : undefined,
+// The arrivals a query keeps: the account's name or address holds it, or the batch number starts with it.
+function arrivalsWhere({ query }: CardArrivalFilter): SQL | undefined {
+  if (!query) return undefined;
+  return or(
+    existsIn(
+      users,
+      and(
+        eq(users.id, invitations.acceptedBy),
+        or(containsText(users.name, query), containsText(users.email, query)),
+      ),
+    ),
+    startsWithText(invitations.batchId, query),
   );
 }
 

@@ -20,28 +20,20 @@ import './index.scss';
 // batch and the covens it owns, and a CSV of them (claude-docs/components/admin-cards.md).
 
 const ArrivalsCsvDocument = graphql(`
-  query CardArrivalsCsv($query: String, $batch: String) {
-    cardArrivalsCsv(query: $query, batch: $batch)
+  query CardArrivalsCsv($query: String) {
+    cardArrivalsCsv(query: $query)
   }
 `);
 
-/** The CSV of the arrivals the filter shows: the same query and batch the list holds. */
+/** The CSV of the arrivals the filter shows: the same query the list holds. */
 export const readArrivalsCsv = async (
   filter: ArrivalsFilter = NO_ARRIVALS_FILTER,
 ): Promise<string> =>
-  (
-    await graphqlRequest(ArrivalsCsvDocument, {
-      query: filter.query || undefined,
-      batch: filter.batch || undefined,
-    })
-  ).cardArrivalsCsv;
+  (await graphqlRequest(ArrivalsCsvDocument, { query: filter.query || undefined })).cardArrivalsCsv;
 
-/** The empty list, naming the filters in use so an admin sees what to change. */
-function emptyText({ query, batch }: ArrivalsFilter): string {
-  const filters = [query && `“${query}”`, batch && `batch “${batch}”`].filter(
-    (part): part is string => Boolean(part),
-  );
-  return noMatchText('sign-ups', filters, 'No one has accepted a card yet.');
+/** The empty list, naming the search in use so an admin sees what to change. */
+function emptyText({ query }: ArrivalsFilter): string {
+  return noMatchText('sign-ups', query ? [`“${query}”`] : [], 'No one has accepted a card yet.');
 }
 
 const AdminArrivals = ({
