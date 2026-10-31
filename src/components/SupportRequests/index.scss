@@ -181,6 +181,11 @@
   gap: space(2);
 }
 
+// The date sits flush right on the head line, and stays right when the head wraps.
+.support-detail__meta > time {
+  margin-inline-start: auto;
+}
+
 .support-detail__tag {
   color: $text-muted;
   font-size: type-size('small');
