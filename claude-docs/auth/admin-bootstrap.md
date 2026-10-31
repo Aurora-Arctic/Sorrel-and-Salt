@@ -267,7 +267,7 @@ sentence. The link-only codes (`email_does_not_match`,
 An unverified account cannot hold an address against its owner past one
 verification window, and three hours at most. The argument is
 [`design-decisions/mb.61-email-verification-and-delivery.md`](../design-decisions/mb.61-email-verification-and-delivery.md),
-"Provisional accounts and the sweep"; this is the shape.
+"Provisional accounts and the sweep" (written when a callback hook did the removing; a job does it now); this is the shape.
 
 - **What is provisional.** A `users` row with `emailVerified` false that
   holds at least one provider `accounts` row. It has lapsed once its
@@ -293,27 +293,32 @@ verification window, and three hours at most. The argument is
   `/send-verification-email`, answers 401 unless the session holds the
   address posted, so nobody can mail someone else, or keep a row alive by
   posting its address.
-- **The sweep.** `hooks.before` on `/callback/:id` deletes every lapsed row
-  in one statement, before the code exchange, so a lapsed row holding the
-  arriving address is gone before Better Auth looks it up; `gateEmailChange`
-  runs it too ("The email page" below). The rows' `accounts` and `sessions`
-  go with them by `ON DELETE CASCADE`, so the squatter's cookie signs nobody
-  in and its provider account resolves to nothing. Two partial indexes,
+- **The expiry job.** Creating an unverified account starts one run of the
+  `provisionalAccountExpiry` job (`src/modules/identity/jobs/`), from the
+  `user.create.after` hook in `src/lib/auth.ts` through
+  `scheduleProvisionalExpiry`. The run sleeps one verification window and
+  then calls its step, which deletes the row if it has lapsed. If the row
+  has not (a resend moved the window), the step answers the seconds left
+  and the run sleeps again; it ends when the row is gone, verified, or
+  vouched for. The rows' `accounts` and `sessions` go with the delete by
+  `ON DELETE CASCADE`, so the squatter's cookie signs nobody in and its
+  provider account resolves to nothing. The step is idempotent: run again
+  after it succeeded it finds no row and changes nothing. No request sweeps
+  any more: the OAuth callback, `gateEmailChange` and the sign-up route
+  read the table as it is. Two partial indexes,
   `users_provisional_updated_at_idx` and `users_provisional_created_at_idx`,
-  hold only unverified rows, one for each half of the predicate, which
-  keeps the usual empty sweep cheap. The swept ids go to the server log at
-  `info`.
-- **A failed sweep never fails a sign-in.** It is logged at `error` and the
-  callback carries on. One lapsed row that another row references makes the
-  whole statement fail, because every audit foreign key is `NO ACTION`.
-  Nothing in v1 lets an unverified account write beyond its own row, so
-  this needs a bug or a hand edit; the one row others write about it, a
-  privilege change, the sweep steps around (next).
-- **An account an admin has vouched for is not swept** (MB.204). Approving
+  hold only unverified rows, one for each half of the predicate. The
+  mechanism is [`design-decisions/m15.49-job-mechanism.md`](../design-decisions/m15.49-job-mechanism.md).
+- **A run that is lost leaves its account in place.** A failed start is
+  logged at `error` and the sign-up carries on. That account then holds its
+  address until an admin removes it, as the callback sweep this job replaced would have removed it
+  at the next callback. The job runs the delete as its own step with
+  retries, so a step that fails is tried again rather than lost.
+- **An account an admin has vouched for is not removed** (MB.204). Approving
   an unverified account for coven creation (M5.8) or making it an admin
   (MB.59) writes a `user_privilege_changes` row naming it with a plain
-  foreign key, and the sweep skips any account holding one. Deleted, it
-  would fail the whole statement on that key, and so every sweep after, and
+  foreign key, and the job skips any account holding one. Deleted, it
+  would fail on that key, and
   the ledger keeps its history: `forbid_rewrite` refuses deleting the row,
   and letting the rows go with the user would erase what the ledger is for.
   Revoking the privilege adds a row rather than removing one, so the account
@@ -323,10 +328,10 @@ verification window, and three hours at most. The argument is
 - **Hard delete, outside `withAudit`.** A tombstone would go on blocking
   the owner, since Better Auth looks a user up by address without our
   `deleted_at` filter, and no row survives to carry a stamp. The delete is
-  the repository's one named `deleteProvisionalUsers`
+  the repository's one named `deleteLapsedProvisionalUser`
   ([`db/provisional-account-delete.md`](../db/provisional-account-delete.md)),
   since `write.delete` rejects a table carrying `deleted_at` by design.
-- **Seeded rows are never swept.** They hold no `accounts` row, so nobody
+- **Seeded rows are never removed.** They hold no `accounts` row, so nobody
   can sign in to them. The seeded bootstrap user stays unverified on
   purpose: verified, it would take an implicit link from any provider
   vouching for its address, into a row that is an admin until MB.58
@@ -339,7 +344,7 @@ verification window, and three hours at most. The argument is
 - **A change never unverifies a row.** An established account asking for a
   new address keeps its verified row until the new one is proven ("The
   email page" below); marked unverified, an account older than the cap
-  would go in the next sweep.
+  would go in the next run.
 
 ### The email page (MB.54)
 
@@ -435,7 +440,7 @@ the tests [`tests.md`](tests.md).
   `src/lib/auth.ts`, decodes the token's claims (not verified: it only ever
   refuses, and the endpoint verifies the signature after), refuses unless
   the session holds the row named by `email` (`?error=SIGN_IN_TO_VERIFY`,
-  or 403 with no `callbackURL`), runs the provisional sweep, refuses while
+  or 403 with no `callbackURL`), refuses while
   another live row holds `updateTo` (`?error=EMAIL_TAKEN`, which the unique
   index would otherwise 500 on), and records the acting user so the write
   is stamped and `afterEmailVerification` runs — so a change to the
