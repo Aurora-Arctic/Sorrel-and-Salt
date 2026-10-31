@@ -127,7 +127,7 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
       ) : (
         <>
           <div className="header sign-in-panel__header">
-            <h1 tabIndex={-1} data-view-heading>
+            <h1 className="auth-title" tabIndex={-1} data-view-heading>
               Sign In
             </h1>
             <p className="lede">Sign in or create an account.</p>

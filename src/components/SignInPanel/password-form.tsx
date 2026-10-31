@@ -151,7 +151,7 @@ const PasswordForm = ({
         Back
       </button>
       {/* The view's heading: focus lands here when the view opens (./index.tsx). */}
-      <h1 className="sign-in-panel__password-heading" tabIndex={-1} data-view-heading>
+      <h1 className="auth-title sign-in-panel__password-heading" tabIndex={-1} data-view-heading>
         {signingUp ? 'Create an Account with Email' : 'Sign In with Email'}
         {lastUsed && !signingUp && (
           <>

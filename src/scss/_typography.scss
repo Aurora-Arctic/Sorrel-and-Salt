@@ -30,6 +30,12 @@
     line-height: 1.15;
   }
 
+  // The title of a sign-in card page, an h1 set at the h2 size so a long title fits the narrow card.
+  .auth-title {
+    font-size: heading-size(2);
+    line-height: 1.15;
+  }
+
   h3 {
     font-size: heading-size(3);
     line-height: 1.2;
