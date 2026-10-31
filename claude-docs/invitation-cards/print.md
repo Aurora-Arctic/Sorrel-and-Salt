@@ -22,7 +22,8 @@ Every page is US Letter, portrait (8.5 × 11 in).
 - **Where the block sits.** It is centred on the page: 1/8 in from the top and bottom edges and 3/16 in from the left and right.
 - **Sixteen crop marks** sit outside the block, one on each end of the four cut lines in each direction. Each mark is on the cut line's extension, clear of the bleed: 1/32 in of gap and 1/12 in long at the page's top and bottom, where the margin is only 1/8 in; 1/16 in of gap and 5/48 in long at the sides.
 - **Two pages to a sheet.** For each sheet of nine, the PDF has a page of fronts and then a page of backs, so `N` links give `2 × ceil(N / 9)` pages.
-- **The backs are mirrored by row.** Back `i` takes position `(2 − floor(i / 3)) × 3 + i mod 3`: the rows swap top for bottom and each row keeps its order. Printed two-sided and flipped on the long edge, each back lands behind its own front.
+- **The card turns like a book page.** A cut card, turned over side to side (its left edge over to the right, as a book page turns), shows its back right way up. For that, the fronts' frame is turned a quarter clockwise onto the page and the backs' frame a quarter anticlockwise. On the paper, every front's top points to the page's right and every back's top to the page's left. Turned top over bottom instead, the back would be upside down.
+- **The backs are mirrored by column.** Back `i` takes position `floor(i / 3) × 3 + (2 − i mod 3)`: within each row of the frame the first and last cards swap places. With the backs' frame turned the other way, this puts each back at the same height on the page as its front, mirrored left to right. Printed two-sided and flipped on the long edge, each back lands behind its own front.
 - **A part-filled last sheet** keeps the full soot block, and the positions with no card stay plain soot, front and back. The block then prints and cuts exactly as a full one, with no bare paper showing at a cut.
 - **The crop marks need a printer that prints close to the edge.** The marks at the top and bottom sit in the 1/8 in margin; a printer with a wider unprintable margin crops them.
 
@@ -102,7 +103,7 @@ jsPDF's higher-level text and font calls were not tested against these four need
 - the page count is `2 × ceil(N / 9)` for 1, 9, 10, 18 and 19 cards, and the card count matches the batch;
 - the block's size and position;
 - the 16 crop marks, on the cut lines and outside the block;
-- the mirrored backs;
+- each back lands behind its own front under a long-edge flip, and stands right way up when the card is turned side over side;
 - every picture lies inside the block;
 - the expiry date and every tagline appear in order;
 - a 500-card batch builds 112 pages with each font and picture embedded once;

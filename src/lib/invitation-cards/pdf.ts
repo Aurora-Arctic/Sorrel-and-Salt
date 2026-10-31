@@ -95,14 +95,19 @@ function cardTrim(i: number): { x: number; y: number } {
   };
 }
 
-/** The position a card's back takes: the backs are mirrored by row, so a long-edge two-sided print puts each back behind its front. */
+/** The position a card's back takes: the backs are mirrored by column, so a long-edge two-sided print puts each back behind its front. */
 export function backPosition(i: number): number {
-  return (2 - Math.floor(i / 3)) * 3 + (i % 3);
+  return Math.floor(i / 3) * 3 + (2 - (i % 3));
 }
 
-/** Starts a page with the frame's axes: turned a quarter clockwise onto the portrait page, with y running down. */
-function frameOperators(): Operator[] {
-  return [concatTransformationMatrix(0, -1, -1, 0, PAGE.width, PAGE.height)];
+/**
+ * Starts a page with the frame's axes, y running down: the fronts' frame turned a quarter clockwise onto the portrait page,
+ * the backs' a quarter anticlockwise, so a cut card turned side over side, like a book page, shows its back right way up.
+ */
+function frameOperators(face: 'front' | 'back'): Operator[] {
+  return face === 'front'
+    ? [concatTransformationMatrix(0, -1, -1, 0, PAGE.width, PAGE.height)]
+    : [concatTransformationMatrix(0, 1, 1, 0, 0, 0)];
 }
 
 /** Moves the origin to card i's artboard, its trim on the card's cut, in the artboard's pixels. */
@@ -235,10 +240,11 @@ function cropMarkOperators(): Operator[] {
  */
 function drawPage(
   page: PDFPage,
+  face: 'front' | 'back',
   cards: { position: number; picture: PictureItem; text: TextItem[]; link?: string }[],
   embedded: Embedded,
 ) {
-  const ops: Operator[] = [pushGraphicsState(), ...frameOperators(), pushGraphicsState()];
+  const ops: Operator[] = [pushGraphicsState(), ...frameOperators(face), pushGraphicsState()];
   ops.push(rectangle(BLOCK.x, BLOCK.y, BLOCK.width, BLOCK.height), clip(), endPath());
   ops.push(
     setFillingRgbColor(...rgb(SOOT)),
@@ -302,11 +308,13 @@ export async function renderCardSheets(
     };
     drawPage(
       sheet.fronts,
+      'front',
       sheetLinks.map((link, i) => ({ position: i, picture: FRONT_PICTURE, text: fronts[i], link })),
       embedded,
     );
     drawPage(
       sheet.backs,
+      'back',
       sheetLinks.map((_, i) => ({ position: backPosition(i), picture: BACK_PICTURE, text: back })),
       embedded,
     );
