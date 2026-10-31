@@ -57,6 +57,7 @@ export const ADMIN_PAGES = {
   people: {
     label: 'People',
     icon: 'people',
+    adminOnly: true,
     description:
       'Every account and its role, the admin invitations waiting, the printed invitation cards and who arrived by them, and who changed which privilege.',
     tabs: [
@@ -88,14 +89,17 @@ export const ADMIN_SECTIONS: readonly AdminSection[] = [
       ADMIN_PAGES.astrology,
     ],
   },
-  { name: 'Support', pages: [ADMIN_PAGES.support] },
-  { name: 'People', pages: [ADMIN_PAGES.people], adminOnly: true },
+  { name: 'People & Support', pages: [ADMIN_PAGES.people, ADMIN_PAGES.support] },
 ];
 
 /**
- * The sections a viewer is shown: every one to an admin, and a curator all but
- * People. Only what the nav lists; each people page refuses a curator itself
- * (claude-docs/auth/admin-guard.md, "The curator guard").
+ * The sections a viewer is shown: every page to an admin, and a curator all but
+ * People, which leaves its section with Support alone. Only what the nav lists;
+ * each people page refuses a curator itself (claude-docs/auth/admin-guard.md,
+ * "The curator guard").
  */
 export const adminSections = (managesPeople: boolean): readonly AdminSection[] =>
-  ADMIN_SECTIONS.filter(({ adminOnly }) => managesPeople || !adminOnly);
+  ADMIN_SECTIONS.map((section) => ({
+    ...section,
+    pages: section.pages.filter(({ adminOnly }) => managesPeople || !adminOnly),
+  })).filter(({ pages }) => pages.length > 0);

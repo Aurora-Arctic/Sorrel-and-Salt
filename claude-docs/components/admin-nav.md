@@ -9,18 +9,19 @@ the tabs, the bar and the More button are [`SectionNav`](section-nav.md)'s. The 
 tabs, each tab at its own address, and the nav links a page at its first tab
 ([`tabbed-page.md`](tabbed-page.md)):
 
-| Section    | Page       | Tabs: label and route                                                                                  | Built by             |
-| ---------- | ---------- | ------------------------------------------------------------------------------------------------------ | -------------------- |
-| Compendium | Compendium | none: `/admin/compendium`                                                                              | M5.5                 |
-|            | Categories | Categories `/admin/categories` · Groups `/admin/category-groups`                                       | M5.6, M5.6b          |
-|            | Forms      | Forms `/admin/forms` · Groups `/admin/form-groups`                                                     | M5.6a, M5.6b         |
-|            | Deities    | Deities `/admin/deities` · Traditions `/admin/deity-traditions`                                        | MB.132               |
-|            | Astrology  | Celestial Bodies `/admin/celestial-bodies` · Zodiac Signs `/admin/zodiac-signs`                        | MB.95                |
-| People     | People     | Users `/admin/users` · Invitations `/admin/invitations` · Privilege Changes `/admin/privilege-changes` | MB.52, MB.70, MB.200 |
+| Section          | Page       | Tabs: label and route                                                                                  | Built by             |
+| ---------------- | ---------- | ------------------------------------------------------------------------------------------------------ | -------------------- |
+| Compendium       | Compendium | none: `/admin/compendium`                                                                              | M5.5                 |
+|                  | Categories | Categories `/admin/categories` · Groups `/admin/category-groups`                                       | M5.6, M5.6b          |
+|                  | Forms      | Forms `/admin/forms` · Groups `/admin/form-groups`                                                     | M5.6a, M5.6b         |
+|                  | Deities    | Deities `/admin/deities` · Traditions `/admin/deity-traditions`                                        | MB.132               |
+|                  | Astrology  | Celestial Bodies `/admin/celestial-bodies` · Zodiac Signs `/admin/zodiac-signs`                        | MB.95                |
+| People & Support | People     | Users `/admin/users` · Invitations `/admin/invitations` · Privilege Changes `/admin/privilege-changes` | MB.52, MB.70, MB.200 |
+|                  | Support    | none: `/admin/support`                                                                                 |                      |
 
-It takes one prop, `managesPeople` (M11.20): true for an admin, false for a curator, whom the People section leaves out. It is display only; the pages' guards refuse a curator whatever the nav shows ([`auth/admin-guard.md`](../auth/admin-guard.md), "The curator guard (M11.20)"). The list is in `sections.ts`: `ADMIN_PAGES`, each page
+It takes one prop, `managesPeople` (M11.20): true for an admin, false for a curator, whom the People page leaves out. It is display only; the pages' guards refuse a curator whatever the nav shows ([`auth/admin-guard.md`](../auth/admin-guard.md), "The curator guard (M11.20)"). The list is in `sections.ts`: `ADMIN_PAGES`, each page
 a label, its icon (`SectionNav/icons.tsx`), the one line the index says about it and its tabs, each a route and
-a short label; and `ADMIN_SECTIONS`, each section a name, its pages and, for People, `adminOnly: true`; `adminSections(managesPeople)` drops the `adminOnly` ones.
+a short label; and `ADMIN_SECTIONS`, each section a name and its pages, and People carrying `adminOnly: true`; `adminSections(managesPeople)` drops the `adminOnly` pages and any section left empty. Support follows People in the same section, so no hairline sits between them; a curator, with no People, sees Support open that section.
 Each tabbed page's layout reads its tabs from `ADMIN_PAGES` too, and a vocabulary's tabs take their address and label from its kind table (`GroupList/kinds.ts`, `GroupedValueList/kinds.ts`). `index.tsx`
 turns the sections into `SectionNav` items (a page at its first tab, its other
 tabs as `matches`, the first page of each later section `apart`) and stays a
@@ -42,7 +43,7 @@ only too.
   [`design-decisions/m5.6b-admin-groups.md`](../design-decisions/m5.6b-admin-groups.md)).
   Celestial Bodies and Zodiac Signs share Astrology; Users, the admin invitations and
   the privilege ledger, the history of what was done to them (MB.200), share
-  People. Two sections, Compendium and People. The grouping and the tabs are
+  People. Two sections, Compendium and People & Support. The grouping and the tabs are
   the owner's, at MB.115's design review.
 - **A link, now that every route exists.** `typedRoutes` refuses an `href`
   for a route the build does not contain, so the list was plain anchors until
