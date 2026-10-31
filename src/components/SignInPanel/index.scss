@@ -148,9 +148,19 @@
   }
 }
 
+// Wraps at the column's width rather than widening it, as the notices do: "Create an Account with
+// Email" is longer than the buttons above.
 .sign-in-panel__password-heading {
+  box-sizing: border-box;
+  width: 0;
+  min-width: 100%;
   margin: 0;
   text-align: center;
+}
+
+// Sign In and Create Account fill the form's column.
+.sign-in-panel__password .form__actions > .btn {
+  flex: 1 1 100%;
 }
 
 .sign-in-panel__switch {
