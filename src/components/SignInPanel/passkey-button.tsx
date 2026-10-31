@@ -36,7 +36,7 @@ const PasskeyButton = ({ next, lastUsed }: PasskeyButtonProps): ReactElement => 
         ref={anchorRef}
         busy={busy}
         busyLabel="Signing In"
-        className="btn btn--solid sign-in-panel__button"
+        className="btn sign-in-panel__button sign-in-panel__button--passkey"
         // Not `disabled` while busy, which would drop the focus a failure's callout is placed against.
         aria-disabled={busy || undefined}
         onClick={() => void press()}

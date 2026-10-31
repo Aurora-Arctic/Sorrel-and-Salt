@@ -209,7 +209,7 @@ Below the provider buttons, "Sign In with a Passkey" (`passkey-button.tsx`)
 asks the browser for a passkey saved for this site and signs in with the one
 chosen (`signIn.passkey()`, from the passkey client plugin;
 [`auth/plugins.md`](../auth/plugins.md), "Passkeys"). It is a `BusyButton`
-like the provider buttons, with the same busy state and its own click
+like the provider buttons, but the plain green-outline `.btn` with its label centred (`.sign-in-panel__button--passkey`), with the same busy state and its own click
 feedback. A cancelled prompt, a refused passkey or a dropped connection says
 `PASSKEY_SIGN_IN_ERROR` in a callout under the button and leaves the page
 where it was. A sign-in that succeeds leaves for `/sign-in` carrying `next`
