@@ -38,7 +38,7 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
   {
     id: '00000000-0000-0000-0005-000000000001',
     sender: A.id,
-    about: 'accessibility',
+    about: 'compendium',
     subject: 'Can I add an ingredient that is not in the compendium?',
     message:
       'I grow a few herbs that I cannot find in the compendium. Can I add my own to my coven, or do I have to ask someone to add them first?',
@@ -49,9 +49,9 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
     id: '00000000-0000-0000-0005-000000000002',
     sender: B.id,
     about: 'bug',
-    subject: 'Ingredients page will not load',
+    subject: 'Ingredients page shows an error and will not load',
     message:
-      'I opened our ingredients and got a blank page with an error. I tried again after a few minutes and it did the same thing. It worked fine yesterday.',
+      "I opened my coven's Ingredients page and got a blank page with a server error (500) instead of the list. I reloaded it several times over a few minutes and it fails every time. It worked yesterday.",
     path: '/coven/[coven]/ingredients',
     errorCode: 500,
     daysAgo: 0.9,
@@ -59,8 +59,8 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
   {
     id: '00000000-0000-0000-0005-000000000003',
     sender: C.id,
-    about: 'account',
-    subject: 'Cannot tell the spell status chips apart',
+    about: 'feedback',
+    subject: 'Suggestion: spell status chips could say more than colour',
     message:
       'I have trouble with colours, and the Draft and Complete chips on the grimoire look the same to me. Could they say more than colour does?',
     path: '/coven/[coven]/grimoire',
@@ -70,7 +70,7 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
   {
     id: '00000000-0000-0000-0005-000000000004',
     sender: D.id,
-    about: 'compendium',
+    about: 'account',
     subject: 'Why was my invitation not accepted?',
     message:
       'Someone sent me an invitation to their coven but the link says it cannot be used. I signed in with the same email address it was sent to.',
@@ -82,7 +82,7 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
   {
     id: '00000000-0000-0000-0005-000000000005',
     sender: A.id,
-    about: 'privacy',
+    about: 'bug',
     subject: 'Jar quantity goes back after I save it',
     message:
       'I change the amount in a jar from 40 g to 25 g and press Save. It says saved, but when I reload the page it shows 40 g again.',
@@ -94,10 +94,10 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
   {
     id: '00000000-0000-0000-0005-000000000006',
     sender: B.id,
-    about: 'feedback',
-    subject: 'Keyboard cannot reach the filter menu',
+    about: 'accessibility',
+    subject: 'Cannot reach the compendium filters with the keyboard',
     message:
-      'I use the keyboard only. On the compendium page I cannot tab into the filters, so I cannot narrow the list down.',
+      'I use the keyboard only. On the compendium page, pressing Tab skips past the filters and I cannot open them, so I cannot narrow the list down.',
     path: '/compendium',
     assignedTo: E.id,
     issueNumber: 1288,
@@ -120,9 +120,9 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
     id: '00000000-0000-0000-0005-000000000008',
     sender: D.id,
     about: 'bug',
-    subject: 'Not found when I open a coven link',
+    subject: 'Coven page shows not found although I am signed in',
     message:
-      'A friend sent me a link to their coven and I get a page saying not found. I am signed in.',
+      "I followed the link to my coven's home page from the My Covens list. I am signed in and a member, but the page says not found (404). Other pages in the coven open normally.",
     path: '/coven/[coven]',
     errorCode: 404,
     curatorVisible: true,
@@ -131,8 +131,8 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
   {
     id: '00000000-0000-0000-0005-000000000009',
     sender: C.id,
-    about: 'accessibility',
-    subject: 'Spell steps in the wrong order',
+    about: 'bug',
+    subject: 'Spell steps go back to their old order after saving',
     message:
       'I moved step 3 above step 2 and saved the spell. The page showed the new order, but when I opened the spell later the steps were back as before.',
     path: '/coven/[coven]/grimoire',
@@ -141,7 +141,7 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
   {
     id: '00000000-0000-0000-0005-000000000010',
     sender: B.id,
-    about: 'feedback',
+    about: 'privacy',
     subject: 'Can a viewer see a private spell?',
     message:
       'I made a spell private so that only I can read it. Can the viewers in our coven see it anyway?',
