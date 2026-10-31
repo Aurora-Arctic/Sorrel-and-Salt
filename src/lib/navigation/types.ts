@@ -1,6 +1,8 @@
 /** Where a navigation is headed, so the part of the page that will change can draw its own wait. */
 export type NavigationTarget = {
   region: 'coven' | 'admin' | 'main';
+  /** A coven switch names the coven it opens, so what belongs to the old coven can leave at once. */
+  coven?: string;
   shape: 'table' | 'cards' | 'form' | 'page' | 'contents';
   /** A `table` or `cards` wait draws the page's heading row above the list. */
   title?: boolean;
