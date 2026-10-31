@@ -715,6 +715,20 @@
       "when": 1793415305515,
       "tag": "0101_card-batch-note",
       "breakpoints": true
+    },
+    {
+      "idx": 102,
+      "version": "7",
+      "when": 1793420712893,
+      "tag": "0102_support-requests",
+      "breakpoints": true
+    },
+    {
+      "idx": 103,
+      "version": "7",
+      "when": 1793420782747,
+      "tag": "0103_support-replies-timeouts",
+      "breakpoints": true
     }
   ]
 }

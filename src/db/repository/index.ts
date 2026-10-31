@@ -144,6 +144,17 @@ export {
   findPendingSiteInvitationCount,
   findPendingSiteInvitationPage,
 } from './invitations';
+export {
+  findOwnSupportRequest,
+  findOwnSupportRequestCount,
+  findOwnSupportRequestPage,
+  findSupportRepliesFor,
+  findSupportRequestCount,
+  findSupportRequestForReader,
+  findSupportRequestPage,
+  findSupportTimeoutById,
+  findSupportTimeoutsFor,
+} from './support';
 export { findOpenAdminRoleChangePause } from './admin-roles';
 export { deleteProvisionalUsers } from './provisional-users';
 export type { PrivilegeDeclaration } from '../types';
@@ -199,6 +210,9 @@ export type {
   CompendiumSlugEntry,
   SortPart,
   StockRow,
+  SupportReader,
+  SupportRequestFilter,
+  SupportViewer,
   UserFilter,
   VocabularySuggestion,
   WorkspaceInvitationValues,

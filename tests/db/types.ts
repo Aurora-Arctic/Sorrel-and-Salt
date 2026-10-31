@@ -23,6 +23,7 @@ export interface ScopeProbe {
 
 /** What an admin write changes: the closed list of what a site admin governs (CLAUDE.md, "Admins curate …"), so a write outside it is a new entry a reviewer reads. A coven's contents are never on it. */
 export type Governed =
+  | 'support'
   | 'compendium'
   | 'references'
   | 'categories'
