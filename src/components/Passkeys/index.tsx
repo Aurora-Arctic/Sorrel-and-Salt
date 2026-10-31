@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { usePendingNavigation } from '../../lib/navigation';
 import { type ReactElement, useState } from 'react';
 import { passkey as passkeyActions } from '../../lib/auth-client';
 import type { AccountPasskey } from '../../lib/types';
@@ -33,7 +33,7 @@ const Passkeys = ({ passkeys }: PasskeysProps): ReactElement => {
   // Seeded from the server's list; each change answers in place, then refreshes the page's server-rendered sections.
   const [rows, setRows] = useState(passkeys);
   const [adding, setAdding] = useState(false);
-  const router = useRouter();
+  const { refresh } = usePendingNavigation();
   const announce = useAnnounce();
   const add = useClickFeedback({ name: ADD });
 
@@ -54,7 +54,7 @@ const Passkeys = ({ passkeys }: PasskeysProps): ReactElement => {
       return;
     }
     setRows(listed(fresh.data));
-    router.refresh();
+    refresh();
     announce('A passkey was added to your account.');
   };
 
@@ -64,7 +64,7 @@ const Passkeys = ({ passkeys }: PasskeysProps): ReactElement => {
       .catch(() => ({ error: { code: undefined } }));
     if (result?.error) return refusal(result.error.code);
     setRows((current) => current.map((row) => (row.id === target.id ? { ...row, name } : row)));
-    router.refresh();
+    refresh();
     announce(`${passkeyLabel(target.name)} was renamed ${name}.`);
     return undefined;
   };
@@ -76,7 +76,7 @@ const Passkeys = ({ passkeys }: PasskeysProps): ReactElement => {
       .catch(() => ({ error: { code: undefined } }));
     if (result?.error) throw new Error(refusal(result.error.code));
     setRows((current) => current.filter((row) => row.id !== target.id));
-    router.refresh();
+    refresh();
     announce(`${passkeyLabel(target.name)} was removed from your passkeys.`);
   };
 

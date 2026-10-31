@@ -311,7 +311,14 @@ describe('SignInMethods', () => {
   });
 
   it('asks before removing, naming the provider, and Cancel sends nothing', async () => {
-    renderOnPage(<SignInMethods linked={[DISCORD, MICROSOFT]} configured={ALL} />);
+    renderOnPage(
+      <SignInMethods
+        passwordHeld
+        passkeyCount={0}
+        linked={[DISCORD, MICROSOFT]}
+        configured={ALL}
+      />,
+    );
     const remove = screen.getByRole('button', { name: 'Remove Microsoft' });
     remove.focus();
 

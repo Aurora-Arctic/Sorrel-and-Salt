@@ -258,6 +258,11 @@ export const rules = {
           reason:
             'the focus going in, not back: the page Discard Changes dialog puts it on Keep Editing, the safe answer, as it opens; Modal has no initial-focus prop, and its own first-field focus keeps a focus its contents placed',
         },
+        'src/components/PasswordSection/two-factor.tsx': {
+          calls: 3,
+          reason:
+            'not a return to the opener: the print window takes the focus, the warning puts it on its safe answer as it opens, and after Stay, Go Back, Esc, Close or an outside click it goes to the two-factor section rather than to the button or link that opened the dialog',
+        },
         'src/components/UserList/confirmed-action.tsx': {
           calls: 1,
           reason:
@@ -310,8 +315,6 @@ export const rules = {
           'a new password, which the browser’s password manager offers to save: nothing typed is lost by leaving',
         'src/components/PasswordSection/index.tsx':
           'passwords, which the browser’s password manager holds: nothing typed is lost by leaving',
-        'src/components/PasswordSection/two-factor.tsx':
-          'a password the browser’s password manager holds, or a code that changes every 30 seconds: nothing typed is lost by leaving',
         'src/components/FilterForm/index.tsx':
           'a list filter that applies as it changes: nothing typed waits on a Save',
         'src/components/IngredientForm/reference-panel.tsx':

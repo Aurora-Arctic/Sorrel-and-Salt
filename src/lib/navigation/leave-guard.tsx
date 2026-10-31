@@ -49,10 +49,11 @@ export function holdTraversals(slot: LeaveGuardSlot): () => void {
   const onNavigate = (event: NavigateEvent) => {
     if (event.navigationType !== 'traverse' || !event.cancelable) return;
     if (event.info === RELEASED || !slot.held()) return;
+    const key = event.destination?.key;
+    if (key === undefined) return;
     event.preventDefault();
-    const { key } = event.destination;
     slot.leave(() => {
-      void nav.traverseTo(key, { info: RELEASED }).finished.catch(() => undefined);
+      void nav.traverseTo(key, { info: RELEASED }).finished?.catch(() => undefined);
     });
   };
   nav.addEventListener('navigate', onNavigate);

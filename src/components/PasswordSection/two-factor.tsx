@@ -68,10 +68,13 @@ function groupedKey(key: string): string {
   return key.replace(/(.{4})(?=.)/g, '$1 ');
 }
 
-
 type Warning = { title: string; yes: string; no: string; go: () => void };
 const LEAVE_WARNING = { title: 'Leave Without Saving Your Codes?', yes: 'Leave', no: 'Stay' };
-const TURN_ON_WARNING = { title: 'Turn On Without Saving Your Codes?', yes: 'Turn On', no: 'Go Back' };
+const TURN_ON_WARNING = {
+  title: 'Turn On Without Saving Your Codes?',
+  yes: 'Turn On',
+  no: 'Go Back',
+};
 
 const CODES_FILE = 'sorrel-and-salt-backup-codes.txt';
 
@@ -172,7 +175,7 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
   // Close, a click outside), the focus goes on to the section instead, so the page keeps it in view.
   const root = useRef<HTMLDivElement>(null);
   const acted = useRef(false);
-  const shown = useRef<Warning>();
+  const shown = useRef<Warning | undefined>(undefined);
   useEffect(() => {
     const was = shown.current;
     shown.current = warning;
