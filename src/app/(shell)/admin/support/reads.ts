@@ -130,7 +130,7 @@ export const readRequests = cache(
   },
 );
 
-/** How many requests each tab holds, under the About and Error Number filter. */
+/** How many requests each tab holds, under the About and Error # filter. */
 export const readViewCounts = cache(async (session: Session, filter: SupportRequestsFilter) =>
   countSupportViews(session, pick(serviceFilter(filter))),
 );

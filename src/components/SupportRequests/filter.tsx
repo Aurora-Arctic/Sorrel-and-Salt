@@ -2,6 +2,7 @@
 
 import { type ReactElement, useState } from 'react';
 import { FilterSelectField, SearchField } from '../Field';
+import { ChoiceChip } from '../FacetPanel/choice-chip';
 import FilterForm, { useApplyFilter } from '../FilterForm';
 import { SUPPORT_ABOUTS } from '../../lib/support-path';
 import { BETA_ONLY, SUPPORT_PATH, supportHref } from './href';
@@ -35,7 +36,7 @@ const SupportRequestsFilter = ({ filter }: SupportRequestsFilterProps): ReactEle
     >
       <input type="hidden" name="view" value={filter.view} />
       <SearchField
-        label="Error Number"
+        label="Error #"
         name="error"
         placeholder="Search error numbers"
         value={draftCode}
@@ -51,12 +52,14 @@ const SupportRequestsFilter = ({ filter }: SupportRequestsFilterProps): ReactEle
           apply(supportHref({ ...filter, errorCode: code, about: about as SupportAbout | '' }))
         }
       />
-      <FilterSelectField
-        label="Beta Testers"
+      <ChoiceChip
+        legend="Beta Testers"
         name="beta"
-        all="All"
-        options={[{ value: BETA_ONLY, label: 'Only' }]}
-        defaultValue={filter.betaOnly ? BETA_ONLY : ''}
+        options={[
+          { value: '', label: 'All' },
+          { value: BETA_ONLY, label: 'Only' },
+        ]}
+        value={filter.betaOnly ? BETA_ONLY : ''}
         onChange={(beta) =>
           apply(supportHref({ ...filter, errorCode: code, betaOnly: beta === BETA_ONLY }))
         }

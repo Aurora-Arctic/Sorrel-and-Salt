@@ -180,7 +180,7 @@ describe('SupportSenderRequest', () => {
     render(<SupportSenderRequest request={request({ about: 'bug' })} />);
     expect(screen.queryByRole('link')).toBeNull();
     expect(screen.queryByRole('complementary')).toBeNull();
-    expect(screen.queryByLabelText('Assigned To')).toBeNull();
+    expect(screen.queryByLabelText('Assignee')).toBeNull();
   });
 });
 
