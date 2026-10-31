@@ -38,6 +38,7 @@ async function run(variables: Record<string, unknown>) {
       requestChange,
       sessionIsFresh: async () => true,
       notifyChangeRequested: async () => {},
+      defer: (task) => void task(),
     },
   });
   return { result, requestChange };

@@ -76,12 +76,12 @@ export async function isEmailHeldByAnother(email: string, userId: string): Promi
  * written to `users.email`: it becomes the row's when the mailed link is
  * followed from this account's session. The row is stamped as mailed, which
  * also restarts a provisional caller's window so the link cannot outlive the
- * row. The row's own address, still unverified, is mailed again instead;
- * verified, there is nothing to do. Either link lands on the way to `next`,
+ * row. An address a live verified account holds is answered the same and
+ * mailed nothing. Both mails are sent after the answer. The row's own address, still unverified, is mailed again
+ * instead; verified, there is nothing to do. Either link lands on the way to `next`,
  * which the sender guards where it builds the link.
  *
- * @throws {ValidationError} on `email`: malformed, unmailable, held by a
- * live verified account, mailed within the last minute, or asked for from a
+ * @throws {ValidationError} on `email`: malformed, unmailable, mailed within the last minute, or asked for from a
  * session older than `EMAIL_CHANGE_WINDOW_SECONDS`.
  */
 export async function setEmail(
@@ -108,12 +108,6 @@ export async function setEmail(
     ]);
   }
 
-  if (!unchanged && (await isEmailHeldByVerifiedAccount(email))) {
-    throw new ValidationError([
-      { path: ['email'], message: 'That email address is already in use by another account' },
-    ]);
-  }
-
   const wait = verificationWaitSeconds(me.verificationSentAt);
   if (wait > 0) {
     throw new ValidationError([
@@ -128,7 +122,11 @@ export async function setEmail(
   }
 
   await recordVerificationSent(session);
-  await sender.notifyChangeRequested(me.email, email);
-  await sender.requestChange(me.email, email, next);
+  // Answered alike whether or not a verified account holds the address, so the form cannot be used to find out: the holder is mailed nothing, as a
+  // notice to it would be a mail anyone signed in could send to any account. Both mails go out after the answer, since waiting for one on only the
+  // free path would show in how long the answer takes.
+  const held = await isEmailHeldByVerifiedAccount(email);
+  sender.defer(() => sender.notifyChangeRequested(me.email, email));
+  if (!held) sender.defer(() => sender.requestChange(me.email, email, next));
   return me;
 }

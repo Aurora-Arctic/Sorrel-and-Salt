@@ -57,6 +57,8 @@ export interface EmailVerificationSender {
   sessionIsFresh(seconds: number): Promise<boolean>;
   /** Tells `current`, the address being left, that a change to `address` was asked for. Names the address's domain only; never throws on a failed send. */
   notifyChangeRequested(current: string, address: string): Promise<void>;
+  /** Runs `task` once the response is sent, so a mail adds nothing to how long the answer takes. */
+  defer(task: () => Promise<void>): void;
 }
 
 /** Whether admin changes are paused, and whether the asking admin may switch that. */
