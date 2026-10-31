@@ -191,9 +191,9 @@ describe('listCompendium', () => {
     await listCompendium({ categoryIds, categoryMode: null }, PAGE);
 
     expect(repository.findCompendiumPage.mock.calls.map(([filter]) => filter)).toEqual([
-      { categoryIds, categoryMode: 'any' },
-      { categoryIds },
-      { categoryIds },
+      { categoryIds, categoryMode: 'any', listing: 'shown' },
+      { categoryIds, listing: 'shown' },
+      { categoryIds, listing: 'shown' },
     ]);
 
     const attempt = listCompendium({ categoryIds, categoryMode: 'some' as 'any' }, PAGE);
@@ -293,11 +293,12 @@ describe('listCompendium, under the facets', () => {
     );
 
     const sent = repository.findCompendiumPage.mock.calls.map(([filter]) => filter);
-    expect(sent[0]).toEqual({});
+    expect(sent[0]).toEqual({ listing: 'shown' });
     expect(sent[sent.length - 1]).toEqual({
       forms: ['Fixture Herb'],
       deityIds: [hecate],
       toxic: 'toxic',
+      listing: 'shown',
     });
   });
 

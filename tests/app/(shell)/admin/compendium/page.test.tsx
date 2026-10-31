@@ -186,12 +186,16 @@ async function readPage(params: Record<string, string | string[]> = {}) {
 
 const lastRequest = (): PageRequest => listCompendium.mock.lastCall?.[1] as PageRequest;
 
-/** The filter the list and its count were last read under, which must agree. */
+/** The filter the list and its count were last read under, which must agree, without the `listing` every admin read carries. */
 function lastFilter(): unknown {
-  const listed: unknown = listCompendium.mock.lastCall?.[0];
+  const listed = (listCompendium.mock.lastCall?.[0] ?? {}) as { listing?: string };
   expect(countCompendium.mock.lastCall?.[0]).toEqual(listed);
-  return listed;
+  const { listing: _listing, ...rest } = listed;
+  return rest;
 }
+
+const lastListing = () =>
+  ((listCompendium.mock.lastCall?.[0] ?? {}) as { listing?: string }).listing;
 
 // A blank is left out of the variables, so no filter is no variables.
 const NO_FILTER = {};
@@ -306,6 +310,8 @@ describe('the /admin/compendium page', () => {
     expect(requireCuratorSession).toHaveBeenCalledOnce();
     expect(lastRequest()).toEqual({ limit: 26, inverted: false });
     expect(lastFilter()).toEqual(NO_FILTER);
+    // A curator sees hidden entries too, so the admin list reads every entry unless asked otherwise.
+    expect(lastListing()).toBe('all');
     // The page's forms, read in one batch for the entries it lists.
     expect(variantsOf).toHaveBeenCalledExactlyOnceWith(null, [
       { id: TESTWORT.id, workspaceId: null },
@@ -347,7 +353,10 @@ describe('the /admin/compendium filter', () => {
   it('counts the facets under the same filter as the list and its count', async () => {
     await readPage({ query: 'test', forms: 'Fixture Oil', toxic: 'toxic' });
 
-    expect(compendiumFacets).toHaveBeenCalledExactlyOnceWith(lastFilter(), ADMIN);
+    expect(compendiumFacets).toHaveBeenCalledExactlyOnceWith(
+      listCompendium.mock.lastCall?.[0],
+      ADMIN,
+    );
     expect(lastFilter()).toEqual({ query: 'test', forms: ['Fixture Oil'], toxic: 'toxic' });
   });
 
@@ -356,7 +365,10 @@ describe('the /admin/compendium filter', () => {
     await readPage({ reviewed: '1' });
     expect(lastFilter()).toEqual({ reviewed: true });
     expect(listCompendium.mock.lastCall?.[listCompendium.mock.lastCall.length - 1]).toEqual(ADMIN);
-    expect(compendiumFacets).toHaveBeenCalledExactlyOnceWith({ reviewed: true }, ADMIN);
+    expect(compendiumFacets).toHaveBeenCalledExactlyOnceWith(
+      { reviewed: true, listing: 'all' },
+      ADMIN,
+    );
   });
 
   it('turns ?categories= slugs into the ids of the live categories, for the list and its count', async () => {
@@ -481,7 +493,7 @@ describe('the /admin/compendium modal', () => {
   it("opens an entry's form on ?edit=, handed its values, in a dialog named by the entry", async () => {
     await renderPage({ edit: TESTWORT.slug });
 
-    expect(resolveCompendiumSlug).toHaveBeenCalledWith(TESTWORT.slug);
+    expect(resolveCompendiumSlug).toHaveBeenCalledWith(TESTWORT.slug, expect.anything());
     expect(entryValues).toHaveBeenCalledWith(TESTWORT, null);
     const dialog = screen.getByRole('dialog', { name: EDITING_TESTWORT });
     expect(within(dialog).getByRole('form', { name: 'Fixture Form' })).toBeInTheDocument();
@@ -499,7 +511,7 @@ describe('the /admin/compendium modal', () => {
 
     await expect(renderPage({ ...FILTERED, edit: 'testwort-herb' })).rejects.toThrow(REDIRECTED);
 
-    expect(resolveCompendiumSlug).toHaveBeenCalledWith('testwort-herb');
+    expect(resolveCompendiumSlug).toHaveBeenCalledWith('testwort-herb', expect.anything());
     expect(redirect).toHaveBeenCalledExactlyOnceWith(`${FILTERED_HREF}&edit=testwort-root`);
     expect(entryValues).not.toHaveBeenCalled();
   });
@@ -540,7 +552,7 @@ describe('the /admin/compendium details modal', () => {
   it("opens an entry's details on ?entry=, with its full page and an Edit over them", async () => {
     await renderPage({ ...FILTERED, entry: TESTWORT.slug });
 
-    expect(resolveCompendiumSlug).toHaveBeenCalledWith(TESTWORT.slug);
+    expect(resolveCompendiumSlug).toHaveBeenCalledWith(TESTWORT.slug, expect.anything());
     expect(screen.getAllByRole('dialog')).toHaveLength(1);
     expect(within(details()).getByRole('link', { name: 'See in Compendium' })).toHaveAttribute(
       'href',

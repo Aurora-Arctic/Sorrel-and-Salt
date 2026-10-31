@@ -317,7 +317,7 @@ describe('the public compendium page, for a curator', () => {
     viewerIfSignedIn.mockResolvedValue(curator());
     await renderPage({ ...SEARCH, edit: NODE.slug });
 
-    expect(resolveCompendiumSlug).toHaveBeenCalledWith(NODE.slug);
+    expect(resolveCompendiumSlug).toHaveBeenCalledWith(NODE.slug, expect.anything());
     expect(entryValues).toHaveBeenCalledWith(expect.objectContaining({ id: NODE.id }), null);
     expect(within(dialog()!).getByRole('form', { name: 'Fixture Form' })).toBeInTheDocument();
     // The search beneath is the one asked for.

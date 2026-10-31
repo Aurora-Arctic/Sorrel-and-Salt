@@ -17,14 +17,14 @@ export interface SlugReach {
 }
 
 /** The compendium arm that leaves a hidden entry out, unless `includeHidden`. */
-function shownOnly({ includeHidden }: SlugReach): SQL | undefined {
-  return includeHidden ? undefined : eq(ingredients.shown, true);
+function shownOnly(reach: SlugReach | undefined): SQL | undefined {
+  return reach?.includeHidden ? undefined : eq(ingredients.shown, true);
 }
 
 /** The live compendium entry at `slug`, or `undefined`. A hidden entry is `undefined` too, unless `includeHidden`. */
 export function findCompendiumEntryBySlug(
   slug: string,
-  reach: SlugReach = {},
+  reach?: SlugReach,
 ): Promise<IngredientRow | undefined> {
   return selectOne(
     ingredients,
@@ -45,7 +45,7 @@ export async function findCompendiumSlugRedirect(
   slug: string,
   at: Date,
   excluding?: string,
-  reach: SlugReach = {},
+  reach?: SlugReach,
 ): Promise<SlugRedirect | undefined> {
   const retirements = await selectFrom(
     retiredIngredientSlugs,
