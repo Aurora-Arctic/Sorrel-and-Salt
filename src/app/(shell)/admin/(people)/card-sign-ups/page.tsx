@@ -15,6 +15,8 @@ export const metadata: Metadata = {
   title: 'Card Sign-Ups',
 };
 
+const REMOVED_ACCOUNT = 'Removed account';
+
 const readArrivals = cache(
   async (session: Session, after: string | undefined, before: string | undefined) => {
     const page = await readNumberedPage(
@@ -27,22 +29,20 @@ const readArrivals = cache(
       usersForAdmin(session, ids),
       membershipsOf(session, ids),
     ]);
-    const arrivals = page.edges.flatMap(({ node }, index) => {
+    // An account that can no longer be read keeps its row, as a removed account: the card was still accepted.
+    const arrivals = page.edges.map(({ node }, index) => {
       const account = accounts[index];
-      if (!account || account instanceof Error) return [];
       const covens = memberships[index];
-      return [
-        {
-          id: node.id,
-          accountName: account.name,
-          accountEmail: account.email,
-          acceptedAt: node.acceptedAt,
-          batchId: node.batchId,
-          covens: Array.isArray(covens)
-            ? covens.filter(({ role }) => role === 'owner').map(({ workspace }) => workspace.name)
-            : [],
-        },
-      ];
+      return {
+        id: node.id,
+        accountName: !account || account instanceof Error ? REMOVED_ACCOUNT : account.name,
+        accountEmail: !account || account instanceof Error ? '' : account.email,
+        acceptedAt: node.acceptedAt,
+        batchId: node.batchId,
+        covens: Array.isArray(covens)
+          ? covens.filter(({ role }) => role === 'owner').map(({ workspace }) => workspace.name)
+          : [],
+      };
     });
     return { arrivals, pageInfo: page.pageInfo, position: page.position };
   },

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { cache } from 'react';
 import AdminCards from '../../../../../components/AdminCards';
+import { batchStatus } from '../../../../../components/AdminCards/batches';
 import { cardsHref } from '../../../../../components/AdminCards/href';
 import { pagerHrefs } from '../../../../../lib/list-href';
 import { requireAdminSession } from '../../../../../lib/request-session';
@@ -32,15 +33,23 @@ const readBatches = cache(
       ).map((total) => [total.batchId, total] as const),
     );
     // What the list shows of each: no token or hash leaves the page.
-    const batches = page.edges.map(({ node }) => ({
-      batchId: node.batchId,
-      mintedAt: node.createdAt,
-      expiresAt: node.expiresAt,
-      cards: totals.get(node.batchId)?.cards ?? 0,
-      accepted: totals.get(node.batchId)?.accepted ?? 0,
-      pending: totals.get(node.batchId)?.pending ?? 0,
-      attempts: totals.get(node.batchId)?.attempts ?? 0,
-    }));
+    const now = new Date();
+    const batches = page.edges.map(({ node }) => {
+      const total = totals.get(node.batchId);
+      const counts = {
+        cards: total?.cards ?? 0,
+        accepted: total?.accepted ?? 0,
+        pending: total?.pending ?? 0,
+      };
+      return {
+        batchId: node.batchId,
+        mintedAt: node.createdAt,
+        expiresAt: node.expiresAt,
+        ...counts,
+        attempts: total?.attempts ?? 0,
+        status: batchStatus(counts, node.expiresAt, now),
+      };
+    });
     return { batches, pageInfo: page.pageInfo, position: page.position };
   },
 );

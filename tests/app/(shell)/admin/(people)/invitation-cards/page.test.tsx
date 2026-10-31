@@ -55,6 +55,7 @@ describe('/admin/invitation-cards', () => {
     render(await CardsPage({ searchParams: Promise.resolve({}) }));
 
     expect(screen.getByText('27')).toBeInTheDocument();
+    expect(screen.getByText('Live')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /^Revoke Batch b1111111/ })).toBeInTheDocument();
     expect(screen.queryByText(/a-hash-that-must-not-render/)).toBeNull();
     expect(cardBatchTotals).toHaveBeenCalledWith(ADMIN, [BATCH]);

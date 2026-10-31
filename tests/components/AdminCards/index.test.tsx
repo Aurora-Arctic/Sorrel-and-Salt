@@ -36,6 +36,7 @@ const BATCHES = [
     accepted: 4,
     pending: 20,
     attempts: 3,
+    status: 'live' as const,
   },
   {
     batchId: 'b2222222-0000-4000-8000-000000000002',
@@ -45,6 +46,27 @@ const BATCHES = [
     accepted: 9,
     pending: 0,
     attempts: 0,
+    status: 'used-up' as const,
+  },
+  {
+    batchId: 'b3333333-0000-4000-8000-000000000003',
+    mintedAt: new Date('2026-08-01T00:00:00Z'),
+    expiresAt: new Date('2026-11-01T00:00:00Z'),
+    cards: 9,
+    accepted: 2,
+    pending: 0,
+    attempts: 0,
+    status: 'revoked' as const,
+  },
+  {
+    batchId: 'b4444444-0000-4000-8000-000000000004',
+    mintedAt: new Date('2026-03-01T00:00:00Z'),
+    expiresAt: new Date('2026-04-01T00:00:00Z'),
+    cards: 9,
+    accepted: 0,
+    pending: 0,
+    attempts: 0,
+    status: 'expired' as const,
   },
 ];
 
@@ -85,7 +107,7 @@ describe('AdminCards', () => {
     expect(within(second).queryByRole('button', { name: /^View Refused Opens/ })).toBeNull();
   });
 
-  it("lists the account, the reason, the count and the latest time of a batch's refused opens", async () => {
+  it("lists the account, the reason, the count and the first and latest times of a batch's refused opens", async () => {
     mockGraphQLQuery<InvitationCardAttemptsQuery, InvitationCardAttemptsQueryVariables>(
       'InvitationCardAttempts',
       ({ batchId }) => {
@@ -99,6 +121,7 @@ describe('AdminCards', () => {
                   reason: 'revoked',
                   attempts: 2,
                   cardPosition: 14,
+                  firstAttemptedAt: '2026-10-28T08:00:00.000Z',
                   lastAttemptedAt: '2026-10-29T09:30:00.000Z',
                   account: { id: 'u1', name: 'Other Wort', email: 'other@example.test' },
                 },
@@ -113,7 +136,7 @@ describe('AdminCards', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /^View Refused Opens/ }));
 
-    const list = await screen.findByRole('dialog', { name: 'Refused Opens' });
+    const list = await screen.findByRole('dialog', { name: 'Refused Opens, Batch b1111111' });
     expect(await within(list).findByText('Other Wort')).toBeInTheDocument();
     const row = within(list).getByText('Other Wort').closest('tr') as HTMLElement;
     expect(within(row).getByText('other@example.test')).toBeInTheDocument();
@@ -124,10 +147,18 @@ describe('AdminCards', () => {
     expect(within(row).getByText('Sheet 2, Card 5')).toBeInTheDocument();
     expect(within(row).getByText('Revoked')).toBeInTheDocument();
     expect(within(row).getByText('2')).toBeInTheDocument();
-    expect(row.querySelector('time')).toHaveAttribute('datetime', '2026-10-29T09:30:00.000Z');
+    const times = row.querySelectorAll('time');
+    expect(times[0]).toHaveAttribute('datetime', '2026-10-28T08:00:00.000Z');
+    expect(times[1]).toHaveAttribute('datetime', '2026-10-29T09:30:00.000Z');
+    expect(within(list).getByRole('columnheader', { name: 'First' })).toBeInTheDocument();
+    expect(within(list).queryByRole('columnheader', { name: 'Email' })).toBeNull();
+    // The email sits in the Account cell, under the name.
+    expect(
+      within(within(row).getAllByRole('cell')[0]).getByText('other@example.test'),
+    ).toBeInTheDocument();
   });
 
-  it('shows a removed account as Removed Account, with no link and no email', async () => {
+  it('shows a removed account as Removed account, with no link and no email', async () => {
     mockGraphQLQuery<InvitationCardAttemptsQuery, InvitationCardAttemptsQueryVariables>(
       'InvitationCardAttempts',
       () => ({
@@ -136,9 +167,10 @@ describe('AdminCards', () => {
             {
               node: {
                 id: 'a2',
-                reason: 'expired',
+                reason: 'accepted',
                 attempts: 1,
                 cardPosition: null,
+                firstAttemptedAt: '2026-10-28T08:00:00.000Z',
                 lastAttemptedAt: '2026-10-29T09:30:00.000Z',
                 account: null,
               },
@@ -152,8 +184,10 @@ describe('AdminCards', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /^View Refused Opens/ }));
 
-    const list = await screen.findByRole('dialog', { name: 'Refused Opens' });
-    expect(await within(list).findByText('Removed Account')).toBeInTheDocument();
+    const list = await screen.findByRole('dialog', { name: 'Refused Opens, Batch b1111111' });
+    expect(within(list).getByText('Loading…')).toBeInTheDocument();
+    expect(await within(list).findByText('Removed account')).toBeInTheDocument();
+    expect(within(list).getByText('Accepted by another account')).toBeInTheDocument();
     expect(within(list).getByText('Unknown')).toBeInTheDocument();
     expect(within(list).queryByRole('link')).toBeNull();
   });
@@ -161,8 +195,8 @@ describe('AdminCards', () => {
   it('lists a row per batch with its counts, and Revoke Batch only while a card is pending', () => {
     render(<AdminCards batches={BATCHES} />);
 
-    const [first, second] = screen.getAllByRole('row').slice(1);
-    expect(screen.getAllByRole('row')).toHaveLength(3);
+    const [first, second, third, fourth] = screen.getAllByRole('row').slice(1);
+    expect(screen.getAllByRole('row')).toHaveLength(5);
     expect(within(first).getByText('b1111111')).toBeInTheDocument();
     expect(within(first).getByText('27')).toBeInTheDocument();
     expect(within(first).getByText('4')).toBeInTheDocument();
@@ -170,6 +204,13 @@ describe('AdminCards', () => {
       within(first).getByRole('button', { name: /^Revoke Batch b1111111/ }),
     ).toBeInTheDocument();
     expect(within(second).queryByRole('button', { name: /^Revoke Batch/ })).toBeNull();
+    expect(within(first).getByText('Live')).toBeInTheDocument();
+    expect(within(second).getByText('Used up')).toBeInTheDocument();
+    expect(within(third).getByText('Revoked')).toBeInTheDocument();
+    expect(within(fourth).getByText('Expired')).toBeInTheDocument();
+    // Expires is a date; Minted On keeps the time.
+    expect(within(first).getByText('1 December 2026')).toBeInTheDocument();
+    expect(within(first).getByText('1 October 2026, 00:00 UTC')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^Revoke card/i })).toBeNull();
   });
 
@@ -200,7 +241,10 @@ describe('AdminCards', () => {
     render(<AdminCards batches={[]} minting />);
 
     expect(mint()).toBeDisabled();
-    fireEvent.change(within(dialog()).getByLabelText(/Number of Sheets/), {
+    expect(
+      within(dialog()).getByRole('spinbutton', { name: /Number of Sheets/ }),
+    ).toHaveAccessibleDescription('A Letter sheet holds 9 cards.');
+    fireEvent.change(within(dialog()).getByRole('spinbutton', { name: /Number of Sheets/ }), {
       target: { value: '3' },
     });
     expect(within(dialog()).getByText('3 sheets: 27 cards')).toBeInTheDocument();
@@ -210,7 +254,9 @@ describe('AdminCards', () => {
 
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0]).toEqual({ sheets: 3, expiresAt: '2027-02-01T00:00:00.000Z' });
-    expect(await within(dialog()).findByText(/cannot be shown again/)).toBeInTheDocument();
+    expect(
+      await within(dialog()).findByText(/only copy of these cards and cannot be made again/),
+    ).toBeInTheDocument();
     expect(within(dialog()).getByRole('button', { name: 'Download PDF' })).toBeEnabled();
     expect(within(dialog()).queryByRole('img')).toBeNull();
     expect(within(dialog()).queryByRole('button', { name: /Download Card/ })).toBeNull();
@@ -231,7 +277,13 @@ describe('AdminCards', () => {
       </StatusRegionProvider>,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /^Revoke Batch b1111111/ }));
+    const open = screen.getByRole('button', { name: /^Revoke Batch b1111111/ });
+    expect(open).toHaveClass('btn--quiet');
+    fireEvent.click(open);
+    expect(
+      within(screen.getByRole('dialog')).getByText(/minted 1 October 2026\?/),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/already accepted a card keep their access/)).toBeInTheDocument();
     fireEvent.click(
       within(screen.getByRole('dialog')).getByRole('button', { name: 'Revoke Batch' }),
     );
@@ -255,7 +307,7 @@ describe('AdminCards', () => {
     // The save is an anchor press; jsdom would otherwise try to open the blob address.
     vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
     render(<AdminCards batches={[]} minting />);
-    fireEvent.change(within(dialog()).getByLabelText(/Number of Sheets/), {
+    fireEvent.change(within(dialog()).getByRole('spinbutton', { name: /Number of Sheets/ }), {
       target: { value: '1' },
     });
     pickFirstOfFebruary();
@@ -272,8 +324,22 @@ describe('AdminCards', () => {
     expect(input.links).toEqual(['http://localhost:3000/i/ta', 'http://localhost:3000/i/tb']);
     expect(input.expiresAt).toEqual(new Date('2027-02-01T00:00:00.000Z'));
     await waitFor(() =>
-      expect(within(dialog()).getByRole('button', { name: 'Download PDF' })).toBeEnabled(),
+      expect(within(dialog()).getByRole('button', { name: 'Download Again' })).toBeEnabled(),
     );
+  });
+
+  it('says the file is saved once downloaded, offers Download Again, and keeps the object URL alive for a minute', async () => {
+    await mintTwo();
+    const timers = vi.spyOn(globalThis, 'setTimeout');
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Download PDF' }));
+
+    expect(await within(dialog()).findByText(/Saved as cards-b4444444\.pdf/)).toBeInTheDocument();
+    expect(
+      within(dialog()).queryByText(/only copy of these cards and cannot be made again/),
+    ).toBeNull();
+    expect(within(dialog()).getByRole('button', { name: 'Download Again' })).toBeInTheDocument();
+    expect(URL.revokeObjectURL).not.toHaveBeenCalled();
+    expect(timers.mock.calls.some(([, delay]) => delay === 60_000)).toBe(true);
   });
 
   it('asks before closing a minted batch whose PDF is not downloaded, and closes quietly after', async () => {
@@ -281,13 +347,14 @@ describe('AdminCards', () => {
 
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Close' }));
     expect(screen.getByText(/You haven't downloaded the PDF/)).toBeInTheDocument();
+    expect(screen.getByText(/revoke the batch from the list/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Keep Open' }));
     expect(screen.queryByText(/You haven't downloaded the PDF/)).toBeNull();
 
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Download PDF' }));
     await waitFor(() => expect(buildCardSheetsPdf).toHaveBeenCalled());
     await waitFor(() =>
-      expect(within(dialog()).getByRole('button', { name: 'Download PDF' })).toBeEnabled(),
+      expect(within(dialog()).getByRole('button', { name: 'Download Again' })).toBeEnabled(),
     );
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Close' }));
     expect(screen.queryByText(/You haven't downloaded the PDF/)).toBeNull();
@@ -316,7 +383,7 @@ describe('Mint Cards default expiry', () => {
     expect(within(dialog()).getByRole('button', { name: /Expires On/ })).toHaveTextContent(
       /28 January 2027/,
     );
-    fireEvent.change(within(dialog()).getByLabelText(/Number of Sheets/), {
+    fireEvent.change(within(dialog()).getByRole('spinbutton', { name: /Number of Sheets/ }), {
       target: { value: '1' },
     });
     expect(mint()).toBeEnabled();
@@ -352,7 +419,10 @@ describe('AdminArrivals', () => {
       />,
     );
 
-    const [, first, second] = screen.getAllByRole('row');
+    const [head, first, second] = screen.getAllByRole('row');
+    expect(within(head).queryByText('Email')).toBeNull();
+    expect(within(head).getByText('Accepted On')).toBeInTheDocument();
+    expect(within(head).getByText('Covens Owned')).toBeInTheDocument();
     expect(within(first).getByText('wort@example.test')).toBeInTheDocument();
     expect(within(first).getByText('Testwort Coven, Second Coven')).toBeInTheDocument();
     expect(within(second).getByText('None yet')).toBeInTheDocument();
