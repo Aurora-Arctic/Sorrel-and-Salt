@@ -57,7 +57,7 @@ describe('ResetPasswordForm', () => {
     await choose(` ${PASSWORD} `);
 
     expect(resetPassword).toHaveBeenCalledWith({ newPassword: ` ${PASSWORD} `, token: 'tok' });
-    expect(screen.getByRole('status')).toBeVisible();
+    expect(screen.getByRole('status')).toHaveFocus();
     expect(screen.queryByLabelText(/^New Password/)).toBeNull();
     expect(screen.getByRole('link', { name: 'Sign In' })).toHaveAttribute('href', '/sign-in');
   });
@@ -85,6 +85,7 @@ describe('ResetPasswordForm', () => {
     await choose();
 
     expect(newPassword()).toHaveAccessibleDescription(expect.stringContaining(said));
+    expect(newPassword()).toHaveFocus();
     expect(screen.queryByRole('alert')).toBeNull();
   });
 
@@ -109,5 +110,6 @@ describe('ResetPasswordForm', () => {
     await choose();
 
     expect(screen.getByRole('alert')).toHaveTextContent(said);
+    expect(screen.getByRole('alert')).toHaveFocus();
   });
 });

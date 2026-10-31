@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { resetPassword } from '../../lib/auth-client';
+import { useResultFocus } from '../../lib/use-result-focus';
 import { newPasswordRefusal, PASSWORD_CHECK_UNAVAILABLE } from '../../lib/password-refusals';
 import BusyButton from '../BusyButton';
 import Notice from '../Notice';
@@ -30,6 +31,7 @@ const ResetPasswordForm = ({ token }: ResetPasswordFormProps): ReactElement => {
   const [spent, setSpent] = useState(token === undefined);
   const [done, setDone] = useState(false);
 
+  const { ref, settle } = useResultFocus<HTMLDivElement>();
   const ready = password !== '' && !pending;
 
   const submit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
@@ -44,6 +46,7 @@ const ResetPasswordForm = ({ token }: ResetPasswordFormProps): ReactElement => {
       error: {} as Failure,
     }));
     setPending(false);
+    settle();
     if (!error) {
       setPassword('');
       setDone(true);
@@ -59,8 +62,8 @@ const ResetPasswordForm = ({ token }: ResetPasswordFormProps): ReactElement => {
 
   if (done) {
     return (
-      <div className="reset-password-form">
-        <Notice kind="success">
+      <div className="reset-password-form" ref={ref}>
+        <Notice kind="success" result>
           Your new password is set, and every device that was signed in to your account has been
           signed out.
         </Notice>
@@ -75,8 +78,8 @@ const ResetPasswordForm = ({ token }: ResetPasswordFormProps): ReactElement => {
 
   if (spent) {
     return (
-      <div className="reset-password-form">
-        <Notice kind="warn" quiet>
+      <div className="reset-password-form" ref={ref}>
+        <Notice kind="warn" quiet result>
           This link has expired or has already been used. A reset link works once, within 15
           minutes.
         </Notice>
@@ -90,8 +93,12 @@ const ResetPasswordForm = ({ token }: ResetPasswordFormProps): ReactElement => {
   }
 
   return (
-    <div className="reset-password-form">
-      {alert && <Notice kind="error">{alert}</Notice>}
+    <div className="reset-password-form" ref={ref}>
+      {alert && (
+        <Notice kind="error" result>
+          {alert}
+        </Notice>
+      )}
       {/* `noValidate`: every refusal is the server's, worded and placed like the rest. */}
       <form className="form" onSubmit={(event) => void submit(event)} noValidate>
         <PasswordField
