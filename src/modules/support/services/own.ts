@@ -1,5 +1,6 @@
 import 'server-only';
 import {
+  findActiveSupportTimeoutEnd,
   findOwnSupportRequest,
   findOwnSupportRequestCount,
   findOwnSupportRequestPage,
@@ -55,4 +56,14 @@ export async function getMySupportRequest(
   const row = await findOwnSupportRequest(session.userId, parseInput(RowId, id));
   if (!row) throw new NotFound('No such support request');
   return row;
+}
+
+/**
+ * When the signed-in sender's time-out ends, or `null` when none is in force: for `/support`, which shows the end instead of the form.
+ *
+ * @throws {Forbidden} the address is unverified.
+ */
+export async function getMySupportTimeoutEnd(session: Session): Promise<Date | null> {
+  requireVerified(session);
+  return (await findActiveSupportTimeoutEnd(session.userId)) ?? null;
 }
