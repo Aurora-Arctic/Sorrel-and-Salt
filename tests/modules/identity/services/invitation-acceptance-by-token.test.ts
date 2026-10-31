@@ -582,6 +582,21 @@ describe('acceptInvitation, on a card', () => {
     expect((await invitation()).accepted_by).toBe(STRANGER);
   });
 
+  it('tells the account that accepted the card so, apart from a stranger refused as already accepted', async () => {
+    await invite({ card: true });
+    await acceptInvitation(asUser(AS_STRANGER), TOKEN);
+
+    const own = await invitationStanding(asUser(AS_STRANGER), TOKEN);
+    expect(own).toMatchObject({ acceptable: false, reason: 'used-by-you' });
+    expect(JSON.stringify(own)).toContain("You've already used this card");
+    await expect(acceptInvitation(asUser(AS_STRANGER), TOKEN)).rejects.toThrow(Forbidden);
+    // The precondition: the card is accepted by this very account, and another account still sees the stranger's refusal.
+    expect((await invitation()).accepted_by).toBe(STRANGER);
+    expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toMatchObject({
+      reason: 'accepted',
+    });
+  });
+
   it.each([
     ['expired', { expired: true }, 'This card has expired.'],
     ['revoked', { revoked: true }, 'This card has been withdrawn.'],

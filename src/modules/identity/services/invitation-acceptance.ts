@@ -36,6 +36,7 @@ import type {
 const MESSAGES: Record<InvitationRefusal, string> = {
   invalid: "This invitation link isn't valid. Check that you opened the whole link from the email.",
   accepted: 'This invitation has already been accepted.',
+  'used-by-you': "You've already used this card. You can start a coven from your account.",
   declined:
     'This invitation was declined. If you change your mind, ask whoever sent it for a new one.',
   revoked: 'This invitation was withdrawn. Ask whoever sent it for a new one.',
@@ -100,6 +101,9 @@ async function checkInvitation(
   if (!invitation) return { refusal: 'invalid' };
   const card = invitation.kind === 'card';
   const dead = deadLink(invitation);
+  // The account that accepted a card is told so, in place of the stranger's refusal.
+  if (dead === 'accepted' && card && invitation.acceptedBy === session.userId)
+    return { refusal: 'used-by-you', card };
   if (dead) return { refusal: dead, card };
 
   const user = await findOneById(users, session.userId);

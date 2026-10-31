@@ -40,6 +40,7 @@ export default async function InvitationPanel({ token, here }: { token: string; 
         message: standing.message,
         token,
         emailHref: standing.reason === 'unverified' ? emailPagePath(here) : undefined,
+        startCovenHref: standing.reason === 'used-by-you' ? CARD_LANDING : undefined,
       };
     } else if (standing.tier === 'site') {
       panel = {

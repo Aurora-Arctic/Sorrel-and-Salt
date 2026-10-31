@@ -57,6 +57,27 @@ describe('InvitationAcceptance, for a card', () => {
   });
 });
 
+describe('InvitationAcceptance, for the account that already used a card', () => {
+  it('offers the way to start a coven, where a stranger refused gets none', () => {
+    const { rerender } = render(
+      <InvitationAcceptance
+        status="refused"
+        message="You've already used this card."
+        startCovenHref={'/coven/new' as Route}
+      />,
+    );
+
+    expect(screen.getByRole('link', { name: 'Start a Coven' })).toHaveAttribute(
+      'href',
+      '/coven/new',
+    );
+
+    rerender(<InvitationAcceptance status="refused" message="Already accepted." />);
+
+    expect(screen.queryByRole('link', { name: 'Start a Coven' })).toBeNull();
+  });
+});
+
 describe('InvitationAcceptance', () => {
   it('asks a signed-out visitor to sign in, and back to the link', () => {
     render(<InvitationAcceptance status="signed-out" signInHref="/sign-in?next=%2Finvite%2Fabc" />);

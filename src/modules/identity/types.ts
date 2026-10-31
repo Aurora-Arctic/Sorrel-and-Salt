@@ -110,6 +110,8 @@ export interface ReceivedInvitation {
 export type InvitationRefusal =
   | 'invalid'
   | 'accepted'
+  /** A card the signed-in account itself accepted. */
+  | 'used-by-you'
   | 'declined'
   | 'revoked'
   | 'expired'
