@@ -120,7 +120,8 @@ export default function DateRangeField({
         id={id}
         type="button"
         className="input date-range-field__button"
-        aria-labelledby={`${labelledBy} ${id}`}
+        // The label, then the range's words: the button itself would be named by its own <label>.
+        aria-labelledby={`${labelledBy} ${id}-text`}
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={open ? panelId : undefined}
@@ -133,7 +134,7 @@ export default function DateRangeField({
           setOpen(!open);
         }}
       >
-        <span className="date-range-field__text">
+        <span id={`${id}-text`} className="date-range-field__text">
           <RangeText from={from} to={to} placeholder={placeholder} />
         </span>
         <CalendarIcon />

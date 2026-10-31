@@ -25,7 +25,10 @@ function Harness({
   const [range, setRange] = useState(initial);
   return (
     <>
-      <span id="label">Minted</span>
+      {/* A label for the button, as the field shell draws it, which a self-reference would read instead of the range. */}
+      <label id="label" htmlFor="r">
+        Minted
+      </label>
       <DateRangeField
         id="r"
         labelledBy="label"
