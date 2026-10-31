@@ -26,4 +26,6 @@ export interface ArrivalsSearchParams {
   after?: string | string[];
   before?: string | string[];
   query?: string | string[];
+  /** The id of the account whose modal is open over the list. */
+  user?: string | string[];
 }

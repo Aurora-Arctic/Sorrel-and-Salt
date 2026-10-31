@@ -11,24 +11,16 @@ import { impersonationEnabled } from '../../../../../lib/impersonation';
 import { requireAdminSession } from '../../../../../lib/request-session';
 import { oneOf, single } from '../../../../../lib/search-params';
 import type { Session, UserRole } from '../../../../../lib/session';
-import { RowId } from '../../../../../lib/validation';
-import { membershipsOf } from '@/modules/coven';
-import {
-  countUsers,
-  isPrimaryAdmin,
-  listedOnUserList,
-  listUsers,
-  providersOf,
-  usersForAdmin,
-} from '@/modules/identity';
+import { countUsers, isPrimaryAdmin, listUsers, providersOf } from '@/modules/identity';
 import { pagerHrefs } from '../../../../../lib/list-href';
 import { readListPlace } from '../../list-page';
 import { readNumberedPage } from '@/lib/numbered-page';
 import MissingNotice from '../../missing-notice';
 import { readPauseState } from '../pause-state';
 import UserDialog from './user-dialog';
+import { readOpenedUser } from './opened-user';
 import { userHeading } from './user-heading';
-import type { AdminUsersPageProps, OpenedUser, UsersSearchParams } from './types';
+import type { AdminUsersPageProps, UsersSearchParams } from './types';
 
 export const metadata: Metadata = {
   title: 'Users',
@@ -75,52 +67,6 @@ const readUsers = cache(
     return { users, pageInfo: page.pageInfo, position: page.position };
   },
 );
-
-/**
- * The user `?user=` names, with their covens; none when the list does not show them (not live, or
- * the seed's bootstrap user). Read through the services GraphQL ends at (rule 1;
- * claude-docs/design-decisions/m9.19-admin-sees-user-covens.md). Cached as `readUsers` is.
- */
-const readOpenedUser = cache(async (session: Session, raw: string) => {
-  // A hand-edited address is a missing user, not an error: the list beneath
-  // is still the page asked for.
-  const parsed = RowId.safeParse(raw);
-  if (!parsed.success || !listedOnUserList(parsed.data)) return undefined;
-  const id = parsed.data;
-  const [[found], [memberships], [providers]] = await Promise.all([
-    usersForAdmin(session, [id]),
-    membershipsOf(session, [id]),
-    providersOf(session, [id]),
-  ]);
-  // An admin's batch answers every slot; a refusal here is the guard's bug.
-  if (found instanceof Error) throw found;
-  if (!found) return undefined;
-  if (!memberships || memberships instanceof Error)
-    throw memberships ?? new Error('No memberships read');
-  if (!providers || providers instanceof Error) throw providers ?? new Error('No providers read');
-  return {
-    heading: userHeading(found),
-    // Every fact the list's row shows, so the modal holds them all.
-    user: {
-      id: found.id,
-      name: found.name,
-      email: found.email,
-      emailVerified: found.emailVerified,
-      role: found.role,
-      primaryAdmin: isPrimaryAdmin(found),
-      canCreateWorkspace: found.canCreateWorkspace,
-      providers,
-      createdAt: found.createdAt,
-    },
-    memberships: memberships.map((row) => ({
-      workspaceId: row.workspaceId,
-      name: row.workspace.name,
-      slug: row.workspace.slug,
-      role: row.role,
-      joinedAt: row.joinedAt,
-    })),
-  } satisfies OpenedUser;
-});
 
 /** The cursor the page stands at, as the pager's and the modal's links keep it. */
 function cursorOf(after: string | undefined, before: string | undefined): PagerCursor | undefined {

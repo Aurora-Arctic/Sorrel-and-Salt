@@ -292,7 +292,6 @@ describe('the /admin/users page, the user modal', () => {
   // Opened from a cards screen, Close goes back to that screen; from the list, or a `from` outside the set, back to the list.
   it.each([
     ['invitation-cards', '/admin/invitation-cards'],
-    ['card-sign-ups', '/admin/card-sign-ups'],
     [undefined, '/admin/users?query=listed'],
     ['https://elsewhere.test', '/admin/users?query=listed'],
   ])('closes a modal opened from %s to %s', async (from, closeTo) => {
