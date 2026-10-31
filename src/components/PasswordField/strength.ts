@@ -10,7 +10,7 @@ type Warnings = typeof translations.warnings;
 // Typed against the library's keys, so a key it adds fails the type check.
 export const SHORT_WARNINGS: Warnings = {
   straightRow: 'A keyboard row.',
-  keyPattern: 'A keyboard pattern.',
+  keyPattern: 'A key pattern.',
   simpleRepeat: 'A repeat.',
   extendedRepeat: 'A repeat.',
   sequences: 'A sequence.',

@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
+import { usePendingNavigation } from '../../lib/navigation';
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '../../gql';
 import { changePassword, requestPasswordReset, useSession } from '../../lib/auth-client';
@@ -53,7 +53,7 @@ function changeRefusal(failure: Failure): Refusal {
 }
 
 const PasswordSection = ({ hasPassword }: PasswordSectionProps): ReactElement => {
-  const router = useRouter();
+  const { refresh } = usePendingNavigation();
   const email = useSession().data?.user.email;
   // Whether the account holds a password: the props' answer until a first one is set here.
   const [held, setHeld] = useState(hasPassword);
@@ -72,7 +72,7 @@ const PasswordSection = ({ hasPassword }: PasswordSectionProps): ReactElement =>
       setSaved('set');
       settle();
       // The page's own text and Sign-In Methods are server-rendered from the account as it was.
-      router.refresh();
+      refresh();
     },
     onError: (failure) => {
       const { field, alert } = readGraphqlFailure(failure, ['newPassword']);
@@ -133,7 +133,7 @@ const PasswordSection = ({ hasPassword }: PasswordSectionProps): ReactElement =>
     setChosen('');
     setSaved('changed');
     settle();
-    router.refresh();
+    refresh();
   };
 
   return (

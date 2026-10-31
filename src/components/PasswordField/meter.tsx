@@ -42,7 +42,7 @@ export function StrengthMeter({ password, id }: { password: string; id: string }
       <p className="field__hint password-field__strength-text" id={id} aria-live="polite">
         {shown && (
           <>
-            <span className="password-field__strength-label">Strength: </span>
+            <span className="password-field__strength-label">Strength:</span>{' '}
             {STRENGTH_WORDS[shown.score]}
             {shown.warning && `. ${shown.warning}`}
           </>
