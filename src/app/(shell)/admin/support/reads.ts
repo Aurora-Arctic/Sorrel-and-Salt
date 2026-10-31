@@ -56,7 +56,11 @@ function entryOf(row: SupportRequestRow, names: Names): SupportRequestEntry {
   };
 }
 
-/** Time-outs as the panel draws them, their setters named. */
+/** The accounts a time-out names: who set it and, once lifted, who lifted it. */
+const timeoutPeople = (row: SupportTimeoutRow): string[] =>
+  row.liftedAt ? [row.createdBy, row.updatedBy] : [row.createdBy];
+
+/** Time-outs as the panel draws them, their setters and lifters named. */
 function timeoutEntries(rows: readonly SupportTimeoutRow[], names: Names): SupportTimeoutEntry[] {
   return rows.map((row) => ({
     id: row.id,
@@ -65,6 +69,7 @@ function timeoutEntries(rows: readonly SupportTimeoutRow[], names: Names): Suppo
     liftedAt: row.liftedAt,
     createdAt: row.createdAt,
     setBy: personOf(names, row.createdBy),
+    liftedBy: row.liftedAt ? personOf(names, row.updatedBy) : null,
   }));
 }
 
@@ -115,7 +120,7 @@ export const readOpened = cache(
       row.assignedTo,
       row.resolvedBy,
       ...replies.map((reply) => reply.createdBy),
-      ...(Array.isArray(timeouts) ? timeouts.map((timeout) => timeout.createdBy) : []),
+      ...(Array.isArray(timeouts) ? timeouts.flatMap(timeoutPeople) : []),
     ]);
     return {
       ...entryOf(row, names),
@@ -153,10 +158,7 @@ export const readTimeoutsOf = cache(
     if (session.role !== 'admin') return [];
     const [timeouts] = await timeoutsForSenders(session, [userId]);
     if (!Array.isArray(timeouts)) return [];
-    const names = await namesOf(
-      session,
-      timeouts.map((timeout) => timeout.createdBy),
-    );
+    const names = await namesOf(session, timeouts.flatMap(timeoutPeople));
     return timeoutEntries(timeouts, names);
   },
 );

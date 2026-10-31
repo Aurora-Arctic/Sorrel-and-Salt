@@ -46,6 +46,8 @@ export interface SupportTimeoutEntry {
   createdAt: Date;
   /** The admin who set it; null if no live account holds the id. */
   setBy: SupportPerson | null;
+  /** The admin who lifted it; null while it stands, or if no live account holds the id. */
+  liftedBy: SupportPerson | null;
 }
 
 /** A request opened to its message, replies and, for an admin, the sender's time-outs. */

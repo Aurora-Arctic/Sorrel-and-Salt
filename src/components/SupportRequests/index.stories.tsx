@@ -64,6 +64,7 @@ const OPENED: SupportRequestDetailEntry = {
       liftedAt: null,
       createdAt: new Date('2026-08-25T09:00:00Z'),
       setBy: ADMIN,
+      liftedBy: null,
     },
   ],
 };

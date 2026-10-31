@@ -21,7 +21,7 @@ A `UserCoven` is `workspaceId`, `name`, `slug`, the user's `role` there and
 
 ## Contracts
 
-- **Support Time-Out** (2026-10-31): when the page passes `timeouts`, a section after Covens and before Impersonate holds the same `TimeoutPanel` as the support request dialog (card, ledger and form), keyed by the user. This is the one place the ledger of earlier time-outs is drawn: each line a date range with "Lifted {date}" where lifted and the note beneath, with no list marker. The request dialog links here instead. The page reads them with `readTimeoutsOf`, which returns nothing for a non-admin.
+- **Support Time-Out** (2026-10-31): when the page passes `timeouts`, a section after Covens and before Impersonate holds the same `TimeoutPanel` as the support request dialog (card, ledger and form), keyed by the user. This is the one place the ledger of earlier time-outs is drawn: each entry a date range with a "Lifted {date}" badge where lifted, the note, then "Set by {name}" and, where lifted, " · Lifted by {name}" (the lifter is the row's `updated_by`, the lift being the only write after insert), with no list marker. The request dialog links here instead. The page reads them with `readTimeoutsOf`, which returns nothing for a non-admin.
 
 - **Laid out as the ingredient modal is, not as a table** (the owner's call,
   2026-10-12): two sections, Account and Covens, each under a small title in

@@ -184,6 +184,7 @@ describe('Time-Out', () => {
           liftedAt: null,
           createdAt: new Date('2026-10-01T00:00:00Z'),
           setBy: { id: 'admin-1', name: 'Ash Warden' },
+          liftedBy: null,
         },
         {
           id: 't1',
@@ -192,6 +193,7 @@ describe('Time-Out', () => {
           liftedAt: null,
           createdAt: new Date('2001-01-03T00:00:00Z'),
           setBy: null,
+          liftedBy: null,
         },
       ],
     });

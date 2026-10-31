@@ -139,6 +139,10 @@ const Ledger = ({ timeouts }: { timeouts: SupportTimeoutEntry[] }): ReactElement
             )}
           </span>
           {timeout.note && <span className="timeout-panel__muted">{timeout.note}</span>}
+          <span className="timeout-panel__muted">
+            {timeout.setBy ? `Set by ${timeout.setBy.name}` : 'Set'}
+            {timeout.liftedAt && ` · Lifted by ${timeout.liftedBy?.name ?? 'a removed account'}`}
+          </span>
         </li>
       ))}
     </ul>
