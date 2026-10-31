@@ -28,6 +28,11 @@ export function refuseTimedOut(timedOutUntil: Date | undefined): void {
   }
 }
 
+/** Refuses a timed-out sender's reply to a request that is still theirs to answer, naming when it ends. */
+export function refuseTimedOutReply(timedOutUntil: Date | undefined): void {
+  if (timedOutUntil) throw new Forbidden(`You cannot reply until ${utcMinute(timedOutUntil)}.`);
+}
+
 /** Refuses a sender who has used the day's allowance of new requests. */
 export function refuseOverLimit(recent: number): void {
   if (recent >= SEND_LIMIT) {

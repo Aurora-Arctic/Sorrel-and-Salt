@@ -16,6 +16,7 @@ import {
   sendSenderMessage,
   sendSupportRequest,
   supportTiersForSenders,
+  liftSupportTimeout,
   timeOutSupportSender,
 } from '@/modules/support';
 import type { SupportNotifier } from '@/modules/support';
@@ -255,6 +256,36 @@ describe('a sender’s message', () => {
     const refused = await failureOf(sendSenderMessage(asUser(C), request.id, 'Hi.'));
     expect(refused).toBeInstanceOf(Forbidden);
     expect((refused as Error).message).toMatch(/until/);
+  });
+});
+
+describe('a timed-out sender’s reply', () => {
+  const until = new Date(Date.now() + 3_600_000);
+  const stamp = until.toISOString().slice(0, 16).replace('T', ' ');
+
+  it('is refused by direct request id with the reply wording, saves nothing, and works once the time-out is lifted', async () => {
+    const request = await waiting();
+    const timeout = await timeOutSupportSender(asUser(E), C.id, until, null);
+
+    const refused = await failureOf(sendSenderMessage(asUser(C), request.id, 'The red one.'));
+    expect(refused).toBeInstanceOf(Forbidden);
+    expect((refused as Error).message).toBe(`You cannot reply until ${stamp} UTC.`);
+    expect(await statusOf(request.id)).toBe('waiting_on_sender');
+    const [{ count }] =
+      await sql`select count(*)::int as count from support_replies where request_id = ${request.id} and author_role = 'sender'`;
+    expect(count).toBe(0);
+
+    await liftSupportTimeout(asUser(E), timeout.id);
+    expect((await sendSenderMessage(asUser(C), request.id, 'The red one.')).status).toBe('open');
+  });
+
+  it('keeps the new-request wording for a closed request', async () => {
+    const closed = await send();
+    await closeSupportRequest(asUser(E), closed.id);
+    await timeOutSupportSender(asUser(E), C.id, until, null);
+
+    const refused = await failureOf(sendSenderMessage(asUser(C), closed.id, 'Again.'));
+    expect((refused as Error).message).toContain('You cannot send support requests until');
   });
 });
 

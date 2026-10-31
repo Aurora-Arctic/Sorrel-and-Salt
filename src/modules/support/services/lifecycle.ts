@@ -8,7 +8,7 @@ import { supportRequests } from '../schema/support-requests';
 import type { SupportReplyRow, SupportRequestRow } from '../types';
 import { SupportMessage } from '../validation/support';
 import { readerOf, requireVerified } from './access';
-import { SEND_WINDOW_SECONDS, refuseOverLimit, refuseTimedOut } from './send';
+import { SEND_WINDOW_SECONDS, refuseOverLimit, refuseTimedOut, refuseTimedOutReply } from './send';
 import { getSupportRequest } from './staff';
 
 // The request lifecycle. The transitions, and who may make each:
@@ -53,7 +53,9 @@ export async function sendSenderMessage(
       session.userId,
       SEND_WINDOW_SECONDS,
     );
-    refuseTimedOut(timedOutUntil);
+    // A closed request's message opens a new request, so it is refused in the new-request wording.
+    if (request.status === 'closed') refuseTimedOut(timedOutUntil);
+    else refuseTimedOutReply(timedOutUntil);
 
     const [moved] = await write.moveSupportRequest(
       id,
