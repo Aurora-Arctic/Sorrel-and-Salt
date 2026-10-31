@@ -13,9 +13,12 @@ import type { SupportSender } from './types';
  */
 const SenderName = ({
   sender,
+  signedOut = false,
   userHref,
 }: {
   sender: SupportSender | null;
+  /** A signed-out visitor has no account of their own to open, so they are named by that and nothing more. */
+  signedOut?: boolean;
   /** The address that opens a user's modal here; none for a curator. */
   userHref?: (id: string) => Route;
 }): ReactElement => {
@@ -25,6 +28,7 @@ const SenderName = ({
     { title: sender?.name ?? '' },
     USER_MODAL_PLACE,
   );
+  if (signedOut) return <>Signed-out sender</>;
   if (!sender) return <>Deleted account</>;
   if (!href) return <>{sender.name}</>;
   return (

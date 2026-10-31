@@ -136,6 +136,13 @@ A visitor with no account may send a request about `accessibility`, `bug`, `acco
 
 ## Decided while building
 
+### A Curator Is Never Shown a Sender’s Email (the owner’s call of 2026-10-31)
+
+- **Where the address reached a curator.** The stored `sender_email` of a signed-out request on every staff read; the sender’s account email through `usersNamedOnRequests`, which fed the admin page’s From fact; and the dialog’s From fact itself. The list’s Sender column showed only a name. `User.email` in GraphQL was already self-or-admin, and `SupportRequest` exposes no address field.
+- **The service decides.** `asRead` in `services/staff.ts` returns `senderEmail` as null for a curator, beside the path redaction, so one place says what a curator sees. `usersNamedOnRequests` blanks other people’s addresses for a curator. The reply flow reads the stored address on its own unredacted read and mails it, so a curator answers without seeing it.
+- **Components.** An account sender is named alone; a signed-out request reads "Signed-out sender" with no address, to a curator, and to an admin with the address beside it.
+- **The issue link.** A curator reads the linked issue as a read-only link; only `setSupportRequestIssueUrl`, admin-only in the service, changes it.
+
 ### The Footer Is Drawn Once, by the Root Layout (the owner's call of 2026-10-31)
 
 - **One footer, in `src/app/layout.tsx`.** The footer sits under every page: both frames, the home page and the error screens. The copies in `AppShell`, `PublicFrame` and the home page are gone, and so is the `inShell` flag that chose a link. The cause of the missing footer on `/account/support` was not found by reading the code: no rule hides it there, and the page was one of those the per-frame copy did not reach. Drawing it once removes the class of fault.

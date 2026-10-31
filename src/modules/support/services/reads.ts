@@ -58,7 +58,12 @@ export async function usersNamedOnRequests(
 ): Promise<(UserRow | null)[]> {
   requireVerified(session);
   const rows = await findManyByIds(users, [...ids]);
-  return inIdOrder(ids, rows, () => null);
+  // A curator is named the people on a request but not their addresses, bar their own.
+  const named =
+    session.role === 'curator'
+      ? rows.map((row) => (row.id === session.userId ? row : { ...row, email: '' }))
+      : rows;
+  return inIdOrder(ids, named, () => null);
 }
 
 /** The tier of each sender, to staff alone: anyone else's batch is refused in every slot. */

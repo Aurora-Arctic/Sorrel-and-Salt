@@ -30,9 +30,14 @@ import { redactPathForCurator } from './redact-path';
 const READ_REFUSAL = 'Only a curator or a site admin may read support requests';
 const ADMIN_REFUSAL = 'Only a site admin may do this to a support request';
 
-/** The request as this session reads it: a curator sees no coven slug in its page, an admin sees it as stored. */
+/**
+ * The request as this session reads it: a curator sees no coven slug in its page and no signed-out sender’s address, an admin
+ * sees both as stored. The reply flow mails the stored address on its own read, so a curator need not see it to answer.
+ */
 function asRead(session: Session, row: SupportRequestRow): SupportRequestRow {
-  return session.role === 'curator' ? { ...row, path: redactPathForCurator(row.path) } : row;
+  return session.role === 'curator'
+    ? { ...row, path: redactPathForCurator(row.path), senderEmail: null }
+    : row;
 }
 
 /** An admin's or curator's page of requests under `filter`: open ahead of resolved, newest first within each. */

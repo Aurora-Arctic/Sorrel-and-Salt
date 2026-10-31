@@ -30,7 +30,14 @@ const SetIssueUrlDocument = graphql(`
   }
 `);
 
-const IssuePanel = ({ request }: { request: SupportRequestDetailEntry }): ReactElement => {
+const IssuePanel = ({
+  request,
+  canEdit = true,
+}: {
+  request: SupportRequestDetailEntry;
+  /** A curator reads the link and cannot change it, so the pencil and the address form are left out. */
+  canEdit?: boolean;
+}): ReactElement => {
   const [editing, setEditing] = useState(false);
   const [address, setAddress] = useState(request.issueUrl ?? '');
   const [refused, setRefused] = useState(false);
@@ -56,14 +63,14 @@ const IssuePanel = ({ request }: { request: SupportRequestDetailEntry }): ReactE
     );
   }
 
-  const showForm = !request.issueUrl || editing;
+  const showForm = canEdit && (!request.issueUrl || editing);
 
   return (
     <section className="support-detail__issue" aria-label="Issue">
       <h3>Issue</h3>
       {request.issueUrl && (
         <div className="support-detail__issue-line">
-          {!editing && (
+          {canEdit && !editing && (
             <IconTip tip="Change Issue Address">
               <button
                 type="button"

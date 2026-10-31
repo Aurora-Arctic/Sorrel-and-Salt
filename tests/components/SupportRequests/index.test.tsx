@@ -33,6 +33,7 @@ const ROW: SupportRequestEntry = {
   subject: 'The moon icon is missing',
   status: 'open',
   sender: { id: 'u1', name: 'Ada Wortley', email: 'ada@example.test' },
+  signedOut: false,
   assignee: null,
   curatorVisible: false,
   errorCode: 500,
@@ -300,6 +301,33 @@ describe('A linked issue', () => {
 });
 
 describe('What a viewer is shown', () => {
+  it('shows a curator the issue link without the control to change it', () => {
+    open(CURATOR, {
+      curatorVisible: true,
+      issueUrl: 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/12',
+    });
+    expect(within(dialog()).getByRole('link', { name: /12/ })).toHaveAttribute(
+      'href',
+      'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/12',
+    );
+    expect(within(dialog()).queryByRole('button', { name: 'Change Issue Address' })).toBeNull();
+    expect(within(dialog()).queryByLabelText('GitHub Issue')).toBeNull();
+  });
+
+  it('gives a curator the sender’s name alone, and a signed-out sender no name or address', () => {
+    open(CURATOR, { sender: { id: 'u1', name: 'Ada Wortley', email: null } });
+    expect(within(dialog()).getAllByText(/Ada Wortley/).length).toBeGreaterThan(0);
+    expect(within(dialog()).queryByText(/@/)).toBeNull();
+  });
+
+  it('calls a signed-out sender by that and shows an admin the address', () => {
+    const visitor = { id: 's0', name: 'Support, signed out', email: 'visitor@example.test' };
+    open(ADMIN, { sender: visitor, signedOut: true });
+    expect(within(dialog()).getAllByText(/Signed-out sender/).length).toBeGreaterThan(0);
+    expect(within(dialog()).getByText('visitor@example.test')).toBeInTheDocument();
+    expect(within(dialog()).queryByText(/Support, signed out/)).toBeNull();
+  });
+
   it('gives an admin every control', () => {
     open(ADMIN);
     for (const name of ['Assigned To', 'GitHub Issue', 'For', 'Your Reply']) {

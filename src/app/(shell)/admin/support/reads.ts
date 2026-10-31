@@ -11,6 +11,7 @@ import {
 } from '@/modules/support';
 import type { SupportRequestRow, SupportTimeoutRow } from '@/modules/support';
 import { NotFound } from '@/lib/errors';
+import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
 import type { Session } from '@/lib/session';
 import type {
   SupportPerson,
@@ -32,7 +33,7 @@ async function namesOf(session: Session, ids: readonly (string | null)[]): Promi
   const found = await usersNamedOnRequests(session, wanted);
   return new Map(
     found.flatMap((user) =>
-      user ? [[user.id, { id: user.id, name: user.name, email: user.email }] as const] : [],
+      user ? [[user.id, { id: user.id, name: user.name, email: user.email || null }] as const] : [],
     ),
   );
 }
@@ -42,13 +43,21 @@ function personOf(names: Names, id: string | null): SupportPerson | null {
   return found ? { id: found.id, name: found.name } : null;
 }
 
+/** The sender; for a signed-out request, with the visitor’s own address, which the service has already withheld from a curator. */
+function senderOf(row: SupportRequestRow, names: Names): SupportSender | null {
+  const found = names.get(row.createdBy);
+  if (!found) return null;
+  return row.createdBy === SIGNED_OUT_SENDER_ID ? { ...found, email: row.senderEmail } : found;
+}
+
 function entryOf(row: SupportRequestRow, names: Names): SupportRequestEntry {
   return {
     id: row.id,
     about: row.about,
     subject: row.subject,
     status: row.status,
-    sender: names.get(row.createdBy) ?? null,
+    sender: senderOf(row, names),
+    signedOut: row.createdBy === SIGNED_OUT_SENDER_ID,
     assignee: personOf(names, row.assignedTo),
     curatorVisible: row.curatorVisible,
     errorCode: row.errorCode,

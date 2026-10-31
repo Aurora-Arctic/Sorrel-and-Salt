@@ -70,8 +70,17 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
               <dd>
                 {request.sender ? (
                   <>
-                    <SenderName sender={request.sender} userHref={userHref} />{' '}
-                    <span className="support-detail__muted">{request.sender.email}</span>
+                    <SenderName
+                      sender={request.sender}
+                      signedOut={request.signedOut}
+                      userHref={userHref}
+                    />
+                    {request.sender.email && (
+                      <>
+                        {' '}
+                        <span className="support-detail__muted">{request.sender.email}</span>
+                      </>
+                    )}
                   </>
                 ) : (
                   'Deleted account'
@@ -98,7 +107,9 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
           entries={[
             {
               id: request.id,
-              name: request.sender?.name ?? 'Deleted account',
+              name: request.signedOut
+                ? 'Signed-out sender'
+                : (request.sender?.name ?? 'Deleted account'),
               tag: 'Sender',
               at: request.createdAt,
               body: request.message,
@@ -135,6 +146,7 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
             }
           />
         )}
+        {!isAdmin && request.issueUrl && <IssuePanel request={request} canEdit={false} />}
       </div>
 
       {isAdmin && (

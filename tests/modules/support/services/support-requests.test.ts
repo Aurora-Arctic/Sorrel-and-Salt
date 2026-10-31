@@ -14,11 +14,13 @@ import {
   repliesForRequests,
   replyToSupportRequest,
   resolveSupportRequest,
+  sendSignedOutSupportRequest,
   sendSupportRequest,
   setSupportRequestCuratorVisible,
   setSupportRequestIssueUrl,
   timeOutSupportSender,
   timeoutsForSenders,
+  usersNamedOnRequests,
 } from '@/modules/support';
 import type { SupportNotifier } from '@/modules/support';
 import { A, B, C, D, E, F, asUser } from '../../../support/as-user';
@@ -180,6 +182,9 @@ describe('mySupportRequests', () => {
     await setSupportRequestIssueUrl(asUser(E), request.id, issue);
     expect((await getSupportRequest(asUser(E), request.id)).issueUrl).toBe(issue);
 
+    await setSupportRequestCuratorVisible(asUser(E), request.id, true);
+    expect((await getSupportRequest(asUser(F), request.id)).issueUrl).toBe(issue);
+
     expect((await getMySupportRequest(asUser(C), request.id)).issueUrl).toBeNull();
     const entries = await listMySupportRequests(asUser(C), PAGE);
     expect(entries.map((entry) => entry.node.issueUrl)).toEqual([null]);
@@ -271,6 +276,46 @@ describe('supportRequests', () => {
       listSupportRequests(asUser(user), {}, PAGE).then((entries) => entries[0]?.node.path);
     expect(await listed(E)).toBe(REAL);
     expect(await listed(F)).toBe('/coven/[coven]/grimoire');
+  });
+
+  it('gives an admin a signed-out sender’s address and a curator none, in a list and by id', async () => {
+    const address = 'visitor@example.test';
+    await sql`delete from support_send_counts`;
+    await sendSignedOutSupportRequest(
+      { about: 'account', email: address, subject: 'No code', message: 'It never comes.' },
+      { clientIp: '203.0.113.7', notifier: notifier() },
+    );
+    const [sent] = await sql`select id from support_requests where sender_email = ${address}`;
+    await setSupportRequestCuratorVisible(asUser(E), sent.id, true);
+    // The curator can read this request, and the row holds the address.
+    expect((await getSupportRequest(asUser(F), sent.id)).id).toBe(sent.id);
+    const [{ sender_email: stored }] =
+      await sql`select sender_email from support_requests where id = ${sent.id}`;
+    expect(stored).toBe(address);
+
+    expect((await getSupportRequest(asUser(E), sent.id)).senderEmail).toBe(address);
+    expect((await getSupportRequest(asUser(F), sent.id)).senderEmail).toBeNull();
+    const listed = (user: SessionUser) =>
+      listSupportRequests(asUser(user), {}, PAGE).then((entries) => entries[0]?.node.senderEmail);
+    expect(await listed(E)).toBe(address);
+    expect(await listed(F)).toBeNull();
+  });
+
+  it('names an account sender to an admin with the address and to a curator without it', async () => {
+    const request = await send(C);
+    await setSupportRequestCuratorVisible(asUser(E), request.id, true);
+    // The curator can read this request, and the account holds an address.
+    expect((await getSupportRequest(asUser(F), request.id)).id).toBe(request.id);
+    const [{ email }] = await sql`select email from users where id = ${C.id}`;
+    expect(email).toBeTruthy();
+
+    const [forAdmin] = await usersNamedOnRequests(asUser(E), [C.id]);
+    const [forCurator] = await usersNamedOnRequests(asUser(F), [C.id]);
+    expect(forAdmin?.email).toBe(email);
+    expect(forCurator?.name).toBe(forAdmin?.name);
+    expect(forCurator?.email).toBe('');
+    const [self] = await usersNamedOnRequests(asUser(F), [F.id]);
+    expect(self?.email).toBeTruthy();
   });
 
   it('filters by about, status and error code', async () => {
@@ -390,6 +435,9 @@ describe('admin-only changes', () => {
   it('sets an issue on the project repository and refuses everything else', async () => {
     const request = await send(C);
     const issue = 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/1394';
+    await setSupportRequestCuratorVisible(asUser(E), request.id, true);
+    // The curator can read this request, so the refusal is the rule on the link and not on the request.
+    expect((await getSupportRequest(asUser(F), request.id)).id).toBe(request.id);
     expect(await failureOf(setSupportRequestIssueUrl(asUser(F), request.id, issue))).toBeInstanceOf(
       Forbidden,
     );

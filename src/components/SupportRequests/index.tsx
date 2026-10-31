@@ -60,7 +60,9 @@ const SubjectLink = ({
     <Link href={href} onClick={onClick} className="support-requests__subject">
       {request.subject}
       {/* Names the sender too, so two requests with one subject are told apart. */}{' '}
-      <span className="visually-hidden">from {request.sender?.name ?? 'Deleted account'}</span>
+      <span className="visually-hidden">
+        from {request.signedOut ? 'Signed-out sender' : (request.sender?.name ?? 'Deleted account')}
+      </span>
     </Link>
   );
 };
@@ -104,7 +106,13 @@ const SupportRequests = ({
               { heading: 'Status', cell: (request) => STATUS_LABELS[request.status] },
               {
                 heading: 'Sender',
-                cell: (request) => <SenderName sender={request.sender} userHref={userHref} />,
+                cell: (request) => (
+                  <SenderName
+                    sender={request.sender}
+                    signedOut={request.signedOut}
+                    userHref={userHref}
+                  />
+                ),
               },
               {
                 heading: 'Assigned To',

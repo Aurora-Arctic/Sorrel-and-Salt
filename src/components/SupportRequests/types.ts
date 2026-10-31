@@ -11,9 +11,9 @@ export interface SupportPerson {
   name: string;
 }
 
-/** The account that sent a request: named, with the address staff reply to. */
+/** The account that sent a request: named, with the address an admin replies to; a curator is given none. */
 export interface SupportSender extends SupportPerson {
-  email: string;
+  email: string | null;
 }
 
 /** One row of the list. */
@@ -23,6 +23,8 @@ export interface SupportRequestEntry {
   subject: string;
   status: SupportStatus;
   sender: SupportSender | null;
+  /** Sent by a visitor who was signed out: the sender is a shared stand-in account, and `sender.email` is the visitor’s own address. */
+  signedOut: boolean;
   assignee: SupportPerson | null;
   curatorVisible: boolean;
   errorCode: number | null;
