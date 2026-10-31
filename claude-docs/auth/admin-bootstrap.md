@@ -349,9 +349,6 @@ proved. Stories 58 and 59; the plan is
 component [`components/email-form.md`](../components/email-form.md), and
 the tests [`tests.md`](tests.md).
 
-- **`/support` sends an unverified account here.** The page is open to a signed-out visitor, who is offered Sign In, but an
-  account holding a session that is unverified is redirected to this page and shown no form
-  (`tests/app/(public)/support/page.test.tsx`).
 - **The API refuses an unverified account too.** The session built from the
   request headers carries `emailUnverified` while the address is unverified,
   and `assertMembership` refuses such a session with an explaining
