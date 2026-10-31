@@ -256,6 +256,16 @@ describe('SupportForm', () => {
     );
   });
 
+  it('shows the reference as fixed text and sends it as errorReference', async () => {
+    const calls = mockSending();
+    render(<SupportForm path="/x" errorCode={500} errorReference="abc123" about="bug" />);
+    expect(screen.getByText('Error 500, reference abc123.')).toBeInTheDocument();
+    fill();
+    fireEvent.click(send());
+    await screen.findByRole('status');
+    expect(calls[0]?.input).toMatchObject({ errorCode: 500, errorReference: 'abc123' });
+  });
+
   it('names the request in the received notice, links it, and gives the promise', async () => {
     mockSending();
     render(<SupportForm path="/a" />);

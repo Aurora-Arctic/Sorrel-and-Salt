@@ -6,7 +6,12 @@ import type { SupportPanelState } from '../../../components/SupportPanel/types';
 import { emailPagePath } from '../../../lib/account-email';
 import { getSession, sessionIsVerified } from '../../../lib/request-session';
 import { single } from '../../../lib/search-params';
-import { SUPPORT_PATH, errorCodeOf, supportAboutOf } from '../../../lib/support-path';
+import {
+  SUPPORT_PATH,
+  errorCodeOf,
+  errorReferenceOf,
+  supportAboutOf,
+} from '../../../lib/support-path';
 import { getMySupportTimeoutEnd } from '../../../modules/support';
 import type { SupportPageProps } from './types';
 
@@ -31,6 +36,7 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
           kind: 'form',
           support: supportAboutOf(asked ?? null),
           errorCode: errorCodeOf(single(params.error) ?? null),
+          errorReference: errorReferenceOf(single(params.ref) ?? null),
         };
   }
   return (

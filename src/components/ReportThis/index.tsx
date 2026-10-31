@@ -9,6 +9,7 @@ import {
   SUPPORT_FROM_PARAM,
   SUPPORT_PARAM,
   SUPPORT_PATH,
+  SUPPORT_REF_PARAM,
 } from '../../lib/support-path';
 import type { ReportThisProps } from './types';
 
@@ -16,12 +17,13 @@ import type { ReportThisProps } from './types';
 // (claude-docs/components/report-this.md). In the shell it opens the Support dialog over the page; with
 // no shell round it, it goes to `/support`, which takes the page as `from`.
 
-const ReportThis = ({ code, inShell = false }: ReportThisProps): ReactElement => {
+const ReportThis = ({ code, reference, inShell = false }: ReportThisProps): ReactElement => {
   const pathname = useActualPathname();
   const params = new URLSearchParams({
     [SUPPORT_PARAM]: 'bug',
     [SUPPORT_ERROR_PARAM]: String(code),
   });
+  if (reference) params.set(SUPPORT_REF_PARAM, reference);
   let href: string;
   if (inShell) {
     // With no path to name, a query on its own keeps the address the browser is at.

@@ -29,3 +29,8 @@ client component taking `path` (the page the request is about), and optionally `
   `useDiscardGuard`. Cancel and Done exist only when
   `onDone` is given, because a page has nothing to close.
 - A refusal is said in an alert above the form; a refused subject, message or page is said beside its field.
+
+- **`errorReference` is shown and sent.** With an error number it reads "Error 500, reference abc123." as fixed
+  text and goes as `errorReference`. The service trims it, refuses more than 100 characters, and stores it on
+  `support_requests.error_reference`, where the admin request dialog shows it as Error Reference beside the error
+  number, with a Copy button.

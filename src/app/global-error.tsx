@@ -3,6 +3,10 @@
 import ErrorPage from '../components/ErrorPage';
 import './globals.scss';
 
+// The sign-in-free address of the bug form for this error; the digest rides as `ref`.
+const reportHref = (digest?: string): string =>
+  `/support?support=bug&error=500${digest ? `&ref=${encodeURIComponent(digest)}` : ''}`;
+
 // The boundary for an error in the root layout itself, which `error.tsx` cannot catch. It replaces
 // that layout, so it draws its own document and imports the global styles. Plain anchors rather than
 // `next/link`, and no Report This (which reads the router): the router may be the thing that failed, and a
@@ -20,7 +24,7 @@ export default function GlobalError({ error }: { error: Error & { digest?: strin
           <a className="btn btn--solid" href="/">
             Back to Sorrel &amp; Salt
           </a>
-          <a className="btn btn--quiet" href="/support?support=bug&error=500">
+          <a className="btn btn--quiet" href={reportHref(error.digest)}>
             Report This
           </a>
         </ErrorPage>

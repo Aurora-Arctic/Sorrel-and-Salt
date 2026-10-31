@@ -92,6 +92,13 @@ describe('sendSupportRequest', () => {
     expect(row.subject).toHaveLength(120);
   });
 
+  it('stores the error reference, and none as null', async () => {
+    const withRef = await send(C, { ...INPUT, errorCode: 500, errorReference: ' abc123 ' });
+    expect(withRef.errorReference).toBe('abc123');
+    expect((await send(C)).errorReference).toBeNull();
+    await expect(send(C, { ...INPUT, errorReference: 'x'.repeat(101) })).rejects.toThrow();
+  });
+
   it('stores the path with the coven segment replaced, and no path as empty', async () => {
     const withPath = await send(C, {
       ...INPUT,

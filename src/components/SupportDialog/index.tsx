@@ -9,6 +9,8 @@ import Notice from '../Notice';
 import SupportForm from '../SupportForm';
 import {
   SUPPORT_ERROR_PARAM,
+  SUPPORT_REF_PARAM,
+  errorReferenceOf,
   SUPPORT_FROM_PARAM,
   SUPPORT_PARAM,
   errorCodeOf,
@@ -29,6 +31,7 @@ function Dialog({ verified }: SupportDialogProps): ReactElement | null {
   if (asked === null) return null;
   const closeHref = supportClosedHref(pathname, new URLSearchParams(params)) as Route;
   const errorCode = errorCodeOf(params.get(SUPPORT_ERROR_PARAM));
+  const errorReference = errorReferenceOf(params.get(SUPPORT_REF_PARAM));
   const path = params.get(SUPPORT_FROM_PARAM) ?? pathname;
   return (
     <RouteModal
@@ -40,6 +43,7 @@ function Dialog({ verified }: SupportDialogProps): ReactElement | null {
             <SupportForm
               about={supportAboutOf(asked)}
               errorCode={errorCode}
+              errorReference={errorReference}
               path={path}
               onDone={done}
             />

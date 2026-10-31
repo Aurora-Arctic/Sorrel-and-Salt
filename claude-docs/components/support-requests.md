@@ -14,7 +14,7 @@ same ones.
   curators can see it, and the error number. `href.ts`'s `supportHref(filter, cursor, request?)` builds every address,
   carrying `?about=`, `?status=`, `?error=`, one cursor and `?request=`.
 - **The filter** is [`FilterForm`](filter-form.md): an Error Number search, and Kind and Status selects.
-- **The opened request** shows From, Status, Error Number, Page, the message and the replies. The controls are:
+- **The opened request** shows From, Status, Error Number, Error Reference (with a Copy button, when the request has one), Page, the message and the replies. The controls are:
   - **Reply** (a "Your Reply" field; Reply is disabled until there is a body) and **Resolve** (open requests only), for an
     admin or a curator the request is assigned to.
   - **Assigned To**, **Curator-Visible**, the issue panel and the time-out panel, for an admin alone.

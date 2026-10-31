@@ -4,7 +4,7 @@ import type { SupportAboutParam } from '../../lib/support-path';
 export type SupportPanelState =
   | { kind: 'signed-out' }
   | { kind: 'timed-out'; until: Date }
-  | { kind: 'form'; support?: SupportAboutParam; errorCode?: number };
+  | { kind: 'form'; support?: SupportAboutParam; errorCode?: number; errorReference?: string };
 
 export interface SupportPanelProps {
   state: SupportPanelState;

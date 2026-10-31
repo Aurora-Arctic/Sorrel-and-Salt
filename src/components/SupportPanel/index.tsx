@@ -25,7 +25,14 @@ const SupportPanel = ({ state, path }: SupportPanelProps): ReactElement => {
       </Notice>
     );
   }
-  return <SupportForm about={state.support} errorCode={state.errorCode} path={path} />;
+  return (
+    <SupportForm
+      about={state.support}
+      errorCode={state.errorCode}
+      errorReference={state.errorReference}
+      path={path}
+    />
+  );
 };
 
 export default SupportPanel;

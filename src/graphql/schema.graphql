@@ -2376,6 +2376,11 @@ type SupportRequest {
   audit: AuditInfo!
   curatorVisible: Boolean!
   errorCode: Int
+
+  """
+  The digest of the error page the sender came from, to match the server log.
+  """
+  errorReference: String
   id: ID!
   issueUrl: String
   message: String!
@@ -2405,6 +2410,9 @@ input SupportRequestInput {
   """The HTTP status of the error page, if any."""
   errorCode: Int
 
+  """The digest of the error page, if any."""
+  errorReference: String
+
   """1 to 4000 characters."""
   message: String!
 
@@ -2418,8 +2426,10 @@ input SupportRequestInput {
 }
 
 enum SupportStatus {
+  closed
   open
   resolved
+  waiting_on_sender
 }
 
 """

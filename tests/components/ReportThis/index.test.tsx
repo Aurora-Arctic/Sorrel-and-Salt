@@ -21,6 +21,13 @@ describe('ReportThis', () => {
     expect(link()).toHaveAttribute('href', '/coven/x/spells?support=bug&error=404');
   });
 
+  it('carries the error page digest as the reference', () => {
+    pathname.mockReturnValue('/coven/x/spells');
+    browserAt('/coven/x/spells');
+    render(<ReportThis code={500} reference="abc123" inShell />);
+    expect(link()).toHaveAttribute('href', '/coven/x/spells?support=bug&error=500&ref=abc123');
+  });
+
   it('goes to the support page, naming the page, where there is no shell to open it over', () => {
     pathname.mockReturnValue('/gone');
     browserAt('/gone');

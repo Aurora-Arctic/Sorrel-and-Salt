@@ -54,6 +54,7 @@ const ABOUT_LABEL = 'What Is This About?';
 const SupportForm = ({
   about: initialAbout,
   errorCode,
+  errorReference,
   path,
   onDone,
 }: SupportFormProps): ReactElement => {
@@ -148,6 +149,7 @@ const SupportForm = ({
           message: message.trim(),
           ...(page.trim() !== '' && { path: page.trim() }),
           ...(errorCode !== undefined && { errorCode }),
+          ...(errorReference && { errorReference }),
         },
       });
       setSending(false);
@@ -200,7 +202,12 @@ const SupportForm = ({
           }}
         />
       </div>
-      {errorCode !== undefined && <p className="support-form__context">Error {errorCode}.</p>}
+      {errorCode !== undefined && (
+        <p className="support-form__context">
+          Error {errorCode}
+          {errorReference ? `, reference ${errorReference}` : ''}.
+        </p>
+      )}
       <FieldShell
         label="Page"
         note={`Up to ${PATH_LIMIT} characters.`}

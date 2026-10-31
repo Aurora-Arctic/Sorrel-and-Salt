@@ -58,6 +58,7 @@ export async function sendSupportRequest(
       message: values.message,
       path: redactPath(values.path),
       errorCode: values.errorCode ?? null,
+      errorReference: values.errorReference || null,
     });
     return row as SupportRequestRow;
   });
