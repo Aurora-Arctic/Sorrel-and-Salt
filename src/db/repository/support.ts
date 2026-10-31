@@ -6,7 +6,14 @@ import { findPage, findPageCount } from './finders';
 import { notSoftDeleted } from './predicates';
 import { existsIn, selectFrom, selectOne } from './select';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
-import type { SortPart, SupportReader, SupportRequestFilter, SupportViewer } from './types';
+import type {
+  AuditWriter,
+  SortPart,
+  SupportReader,
+  SupportRequestFilter,
+  SupportViewer,
+  WriterContext,
+} from './types';
 
 // The support finders. A request is the account's, not a coven's, so no `Membership` scopes it: what a reader may see is
 // spelled here in SQL, so a request outside it never reaches a resolver (claude-docs/design-decisions/m15.1-support-form.md, "The curator view").
@@ -120,36 +127,6 @@ export function findOwnSupportRequest(userId: string, id: string) {
   );
 }
 
-/** How many requests the sender has made since `windowSeconds` ago: the count the send limit reads. */
-export async function countSupportRequestsInWindow(
-  userId: string,
-  windowSeconds: number,
-): Promise<number> {
-  const rows = await selectFrom(
-    supportRequests,
-    and(
-      notSoftDeleted(supportRequests),
-      eq(supportRequests.createdBy, userId),
-      sql`${supportRequests.createdAt} > now() - make_interval(secs => ${windowSeconds})`,
-    ),
-  );
-  return rows.length;
-}
-
-/** The end of the sender's active time-out (not lifted, not yet passed), the latest if there are several, or `undefined`. */
-export async function findActiveSupportTimeoutEnd(userId: string): Promise<Date | undefined> {
-  const rows = await selectFrom(
-    supportTimeouts,
-    and(
-      notSoftDeleted(supportTimeouts),
-      eq(supportTimeouts.userId, userId),
-      isNull(supportTimeouts.liftedAt),
-      sql`${supportTimeouts.until} > now()`,
-    ),
-  );
-  return rows.map((row) => row.until).sort((a, b) => b.getTime() - a.getTime())[0];
-}
-
 /** A time-out by id, for an admin to lift. */
 export function findSupportTimeoutById(id: string) {
   return selectOne(
@@ -188,4 +165,50 @@ export function findSupportTimeoutsFor(userIds: readonly string[]) {
     supportTimeouts,
     and(notSoftDeleted(supportTimeouts), inArray(supportTimeouts.userId, [...userIds])),
   );
+}
+
+/**
+ * The first number of the two-number advisory lock a sender's support sends take (the second hashes the sender's id). A fixed
+ * namespace keeps it from meeting any other advisory lock.
+ */
+export const SUPPORT_SEND_LOCK_NAMESPACE = 0x53555031;
+
+export function supportWrites({ tx }: WriterContext): Pick<AuditWriter, 'lockSupportSender'> {
+  return {
+    // An advisory lock, not a row lock: the send limit counts rows that do not exist yet, so there is no row to lock. Taken
+    // first in the send's transaction, so a second send from the same account waits and then counts the first. Both reads are
+    // in that transaction, as its connection is the one the lock holds. Released at commit.
+    lockSupportSender: async (userId, windowSeconds) => {
+      await tx.execute(
+        sql`select pg_advisory_xact_lock(${SUPPORT_SEND_LOCK_NAMESPACE}, hashtext(${userId}))`,
+      );
+      const recent = await tx
+        .select({ id: supportRequests.id })
+        .from(supportRequests)
+        .where(
+          and(
+            notSoftDeleted(supportRequests),
+            eq(supportRequests.createdBy, userId),
+            sql`${supportRequests.createdAt} > now() - make_interval(secs => ${windowSeconds})`,
+          ),
+        );
+      const timeouts = await tx
+        .select({ until: supportTimeouts.until })
+        .from(supportTimeouts)
+        .where(
+          and(
+            notSoftDeleted(supportTimeouts),
+            eq(supportTimeouts.userId, userId),
+            isNull(supportTimeouts.liftedAt),
+            sql`${supportTimeouts.until} > now()`,
+          ),
+        );
+      return {
+        recent: recent.length,
+        timedOutUntil: timeouts
+          .map((row) => row.until)
+          .sort((x, y) => y.getTime() - x.getTime())[0],
+      };
+    },
+  };
 }

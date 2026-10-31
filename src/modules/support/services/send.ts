@@ -1,9 +1,5 @@
 import 'server-only';
-import {
-  countSupportRequestsInWindow,
-  findActiveSupportTimeoutEnd,
-  withAudit,
-} from '../../../db/repository';
+import { withAudit } from '../../../db/repository';
 import { Forbidden } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { parseInput } from '../../../lib/validation';
@@ -27,8 +23,8 @@ function utcMinute(date: Date): string {
  * Files a support request from the signed-in, verified account. Any such account may send, a viewer or one in no coven
  * included: the form is the site's, not a coven's. The page address is stored with the coven's slug replaced.
  *
- * The limit and the time-out are read just before the insert and not in its transaction, so two sends racing at the limit can
- * both land; one extra request costs nothing a lock would be worth.
+ * The limit and the time-out are read after a per-account lock taken in the insert's transaction, so two sends racing at the
+ * limit queue and the second counts the first.
  *
  * @throws {Forbidden} the address is unverified, the sender is timed out, or they have sent ten requests in 24 hours.
  * @throws {ValidationError} the subject, message, path or error code is not acceptable.
@@ -40,20 +36,22 @@ export async function sendSupportRequest(
   requireVerified(session);
   const values = parseInput(SupportRequestInput, input);
 
-  const timedOutUntil = await findActiveSupportTimeoutEnd(session.userId);
-  if (timedOutUntil) {
-    throw new Forbidden(
-      `You cannot send support requests until ${utcMinute(timedOutUntil)}. Your earlier requests are still on your support page.`,
-    );
-  }
-  const recent = await countSupportRequestsInWindow(session.userId, SEND_WINDOW_SECONDS);
-  if (recent >= SEND_LIMIT) {
-    throw new Forbidden(
-      `You have sent ${SEND_LIMIT} support requests in the last 24 hours, which is the most allowed. Try again later.`,
-    );
-  }
-
   return withAudit(session, async (write) => {
+    const { recent, timedOutUntil } = await write.lockSupportSender(
+      session.userId,
+      SEND_WINDOW_SECONDS,
+    );
+    if (timedOutUntil) {
+      throw new Forbidden(
+        `You cannot send support requests until ${utcMinute(timedOutUntil)}. Your earlier requests are still on your support page.`,
+      );
+    }
+    if (recent >= SEND_LIMIT) {
+      throw new Forbidden(
+        `You have sent ${SEND_LIMIT} support requests in the last 24 hours, which is the most allowed. Try again later.`,
+      );
+    }
+
     const [row] = await write.insert(supportRequests, {
       kind: values.kind,
       subject: values.subject,

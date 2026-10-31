@@ -145,8 +145,6 @@ export {
   findPendingSiteInvitationPage,
 } from './invitations';
 export {
-  countSupportRequestsInWindow,
-  findActiveSupportTimeoutEnd,
   findOwnSupportRequest,
   findOwnSupportRequestCount,
   findOwnSupportRequestPage,

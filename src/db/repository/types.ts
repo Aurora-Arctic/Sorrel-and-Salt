@@ -557,6 +557,15 @@ export interface AuditWriter {
    */
   lockCovenStock(membership: Membership): Promise<void>;
   /**
+   * Takes the account's support-send lock until the transaction ends, then reads what a send decides on: the account's requests
+   * in the last `windowSeconds` and the end of its active time-out. Taken first, so two sends from one account queue and the
+   * second counts the first; another account's send is not held up.
+   */
+  lockSupportSender(
+    userId: string,
+    windowSeconds: number,
+  ): Promise<{ recent: number; timedOutUntil: Date | undefined }>;
+  /**
    * The live forms of the proof's coven's ingredient `ingredientId`, locked in
    * form-id order, read in the transaction so they include the ones this write
    * has just made. None for an ingredient that is not the coven's.

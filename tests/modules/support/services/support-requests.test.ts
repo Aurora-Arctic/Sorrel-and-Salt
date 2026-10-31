@@ -19,7 +19,7 @@ import {
   timeoutsForSenders,
 } from '@/modules/support';
 import type { SupportNotifier } from '@/modules/support';
-import { A, C, D, E, F, asUser } from '../../../support/as-user';
+import { A, B, C, D, E, F, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import type { SessionUser } from '../../../support/types';
 import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
@@ -108,6 +108,20 @@ describe('sendSupportRequest', () => {
     expect(refusal).toBeInstanceOf(Forbidden);
     expect((refusal as Forbidden).message).toMatch(/10 support requests/);
     expect(await send(D)).toBeDefined();
+  });
+
+  it('lets only one of two simultaneous sends take the tenth place', async () => {
+    // Several senders at once open the pool's other connections, so the two sends below do not queue behind one connection.
+    await Promise.all([A, B, D, E].map((user) => send(user)));
+    for (let i = 0; i < 9; i += 1) await send(C);
+    const results = await Promise.allSettled([send(C), send(C)]);
+    expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+    const refused = results.find((r) => r.status === 'rejected') as PromiseRejectedResult;
+    expect(refused.reason).toBeInstanceOf(Forbidden);
+    expect((refused.reason as Forbidden).message).toMatch(/10 support requests/);
+    const [{ count }] =
+      await sql`select count(*)::int as count from support_requests where created_by = ${C.id}`;
+    expect(count).toBe(10);
   });
 
   it('does not count a request older than 24 hours', async () => {
