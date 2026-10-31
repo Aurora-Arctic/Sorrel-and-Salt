@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import {
+  type AnyPgColumn,
   boolean,
   index,
   integer,
@@ -21,7 +22,12 @@ export const supportRequestAbout = pgEnum('support_request_about', [
   'feedback',
   'question',
 ]);
-export const supportRequestStatus = pgEnum('support_request_status', ['open', 'resolved']);
+export const supportRequestStatus = pgEnum('support_request_status', [
+  'open',
+  'waiting_on_sender',
+  'resolved',
+  'closed',
+]);
 
 // A message a signed-in account sends to whoever runs the site. The sender is `created_by`, so no second sender column can drift from it,
 // and there is no workspace id: a request is the account's, not a coven's.
@@ -43,6 +49,14 @@ export const supportRequests = pgTable(
     issueUrl: text('issue_url'),
     resolvedBy: uuid('resolved_by').references(() => users.id),
     resolvedAt: timestamp('resolved_at'),
+    // When the sender last wrote, and when staff last replied or noted; the admin views sort on the first.
+    lastSenderActivityAt: timestamp('last_sender_activity_at'),
+    lastStaffActivityAt: timestamp('last_staff_activity_at'),
+    closedAt: timestamp('closed_at'),
+    // The closed request this one follows up, when a sender wrote on a closed one.
+    linkedFrom: uuid('linked_from').references((): AnyPgColumn => supportRequests.id),
+    // The digest Next gives an error page, so a request can be matched to the server log line.
+    errorReference: text('error_reference'),
     ...auditColumns,
   },
   (table) => [
@@ -50,5 +64,11 @@ export const supportRequests = pgTable(
     index('support_requests_status_created_idx')
       .on(table.status, table.createdAt)
       .where(sql`${table.deletedAt} is null`),
+    // The Needs Staff view: a status, oldest sender activity first.
+    index('support_requests_status_sender_activity_idx')
+      .on(table.status, table.lastSenderActivityAt)
+      .where(sql`${table.deletedAt} is null`),
+    // Retention reads closed requests by when they closed.
+    index('support_requests_closed_at_idx').on(table.closedAt),
   ],
 );

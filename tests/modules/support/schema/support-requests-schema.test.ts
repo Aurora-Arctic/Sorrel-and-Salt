@@ -22,9 +22,16 @@ const OWN_COLUMNS = [
   'issue_url',
   'resolved_by',
   'resolved_at',
+  'last_sender_activity_at',
+  'last_staff_activity_at',
+  'closed_at',
+  'linked_from',
+  'error_reference',
 ];
 
 const LIST_INDEX = 'support_requests_status_created_idx';
+const ACTIVITY_INDEX = 'support_requests_status_sender_activity_idx';
+const CLOSED_INDEX = 'support_requests_closed_at_idx';
 const SENDER = FIXTURE_USERS.A.id;
 
 describe('support_requests schema', () => {
@@ -38,10 +45,13 @@ describe('support_requests schema', () => {
     expect(byName).not.toHaveProperty('workspace_id');
   });
 
-  it('declares one index, partial on deleted_at and not unique', () => {
-    expect(Object.keys(byIndexName)).toEqual([LIST_INDEX]);
-    expect(byIndexName[LIST_INDEX].config.unique).toBe(false);
-    expect(byIndexName[LIST_INDEX].config.where).toBeDefined();
+  it('declares its three indexes, the first two partial on deleted_at and none unique', () => {
+    expect(Object.keys(byIndexName).sort()).toEqual([CLOSED_INDEX, LIST_INDEX, ACTIVITY_INDEX]);
+    for (const name of [LIST_INDEX, ACTIVITY_INDEX]) {
+      expect(byIndexName[name].config.unique).toBe(false);
+      expect(byIndexName[name].config.where).toBeDefined();
+    }
+    expect(byIndexName[CLOSED_INDEX].config.unique).toBe(false);
   });
 
   it('has foreign keys to the three accounts a request names', () => {
@@ -49,6 +59,7 @@ describe('support_requests schema', () => {
       nonAuditForeignKeys.map((fk) => [fk.column, getTableName(fk.foreignTable)]).sort(),
     ).toEqual([
       ['assigned_to', 'users'],
+      ['linked_from', 'support_requests'],
       ['resolved_by', 'users'],
     ]);
   });
@@ -96,12 +107,49 @@ describe('support_requests table', () => {
   });
 
   it('refuses a status outside its enum', async () => {
-    const error = await failureOf(insert({ status: 'closed' }));
+    const error = await failureOf(insert({ status: 'archived' }));
 
     expect(error.code).toBe('22P02');
   });
 
-  it('accepts the status resolved', async () => {
-    await expect(insert({ status: 'resolved' })).resolves.toBeDefined();
+  it.each(['open', 'waiting_on_sender', 'resolved', 'closed'])(
+    'accepts the status %s',
+    async (status) => {
+      await expect(insert({ status })).resolves.toBeDefined();
+    },
+  );
+
+  it('starts with no lifecycle stamps, reference or link', async () => {
+    const row = await insert();
+
+    expect(row.last_sender_activity_at).toBeNull();
+    expect(row.last_staff_activity_at).toBeNull();
+    expect(row.closed_at).toBeNull();
+    expect(row.linked_from).toBeNull();
+    expect(row.error_reference).toBeNull();
+  });
+
+  it('stores an error reference as given', async () => {
+    const [row] = await sql`
+      insert into support_requests (about, subject, message, path, error_reference, created_by, updated_by)
+      values ('bug', 'Subject', 'Message', '/', '1234567890', ${SENDER}, ${SENDER}) returning error_reference`;
+
+    expect(row.error_reference).toBe('1234567890');
+  });
+
+  it('links to an existing request and refuses one that does not exist', async () => {
+    const first = await insert({ status: 'closed' });
+    await expect(
+      sql`insert into support_requests (about, subject, message, path, linked_from, created_by, updated_by)
+          values ('bug', 'Subject', 'Message', '/', ${first.id}, ${SENDER}, ${SENDER}) returning id`,
+    ).resolves.toHaveLength(1);
+
+    const error = await failureOf(
+      sql`insert into support_requests (about, subject, message, path, linked_from, created_by, updated_by)
+          values ('bug', 'Subject', 'Message', '/', pg_catalog.gen_random_uuid(), ${SENDER}, ${SENDER})`,
+    );
+
+    // 23503 is foreign_key_violation.
+    expect(error.code).toBe('23503');
   });
 });

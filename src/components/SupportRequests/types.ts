@@ -3,7 +3,7 @@ import type { SupportAboutParam } from '../../lib/support-path';
 import type { PagePosition, PagerHrefs } from '../../lib/types';
 
 export type SupportAbout = SupportAboutParam;
-export type SupportStatus = 'open' | 'resolved';
+export type SupportStatus = 'open' | 'waiting_on_sender' | 'resolved' | 'closed';
 
 /** An account named on a request, as the page shows it. */
 export interface SupportPerson {
