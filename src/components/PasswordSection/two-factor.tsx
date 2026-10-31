@@ -141,7 +141,6 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
   const email = useSession().data?.user.email;
   const codeId = useId();
   const tipId = useId();
-  const keptId = useId();
   const [on, setOn] = useState(enabled);
   const [enrolment, setEnrolment] = useState<Enrolment>();
   // Whether Copy, Download or Print has been pressed for these codes, after which leaving needs no warning.
@@ -344,8 +343,7 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
               <BusyButton
                 type="submit"
                 className="btn btn--solid"
-                disabled={entered === '' || pending || !kept}
-                aria-describedby={kept ? undefined : keptId}
+                disabled={entered === '' || pending}
                 busy={pending}
                 busyLabel="Turning On"
               >
@@ -355,7 +353,6 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
                 Cancel
               </button>
             </div>
-            {!kept && <p id={keptId}>Copy, download or print your backup codes first.</p>}
           </form>
         </>
       ) : (
