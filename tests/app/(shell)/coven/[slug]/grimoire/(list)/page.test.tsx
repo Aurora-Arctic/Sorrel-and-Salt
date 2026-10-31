@@ -69,7 +69,11 @@ vi.mock('@/modules/grimoire', () => ({
   readSpell,
 }));
 
-// The coven roster a Record a Working button lists: nobody, by default.
+// The signed-in viewer, whom Record a Working names as its recorder.
+vi.mock('@/lib/viewer', () => ({
+  viewerOf: async () => ({ viewer: { id: 'fixture-user', name: 'Fixture Name' }, workspaces: [] }),
+}));
+// The coven roster, which the list leaves to the Record a Working dialog to search.
 const memberRoster = vi.fn(async () => []);
 vi.mock('@/modules/coven', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/modules/coven')>()),
@@ -269,10 +273,10 @@ describe('the Grimoire tabs', () => {
       { id: 's1', workspaceId: COVEN.id },
       { id: 's2', workspaceId: COVEN.id },
     ]);
-    const list = screen.getByRole('list', { name: 'Grimoire' });
-    const first = within(list).getByRole('listitem', { name: 'Fixture Working' });
+    const list = screen.getByRole('list', { name: 'Spells' });
+    const first = within(list).getByRole('article', { name: 'Fixture Working' });
     expect(within(first).getByText('Testwarding')).toBeInTheDocument();
-    expect(within(list).getByRole('listitem', { name: 'Testwort Charm' })).toBeInTheDocument();
+    expect(within(list).getByRole('article', { name: 'Testwort Charm' })).toBeInTheDocument();
   });
 
   // The service lists a private spell to its author alone, so the card
@@ -283,21 +287,21 @@ describe('the Grimoire tabs', () => {
       spell('s2', 'Testwort Charm'),
     ]);
     await renderTab(SpellsPage);
-    const list = screen.getByRole('list', { name: 'Grimoire' });
-    const card = (name: string) => within(within(list).getByRole('listitem', { name }));
+    const list = screen.getByRole('list', { name: 'Spells' });
+    const card = (name: string) => within(within(list).getByRole('article', { name }));
     expect(card('Fixture Working').getByText('Private')).toBeInTheDocument();
     expect(card('Testwort Charm').queryByText('Private')).not.toBeInTheDocument();
   });
 
   it('says on each card who last edited it and when, the editors named in one batch', async () => {
     await renderTab(SpellsPage);
-    // One batch for the page's editors, one for the members the Coven Member facet offers.
+    // One batch for the page's editors, one for the members the Coven Members facet offers.
     expect(displayNamesOf).toHaveBeenCalledTimes(2);
     expect(displayNamesOf).toHaveBeenCalledWith(session, ['editor-s1', 'editor-s2']);
     expect(displayNamesOf).toHaveBeenCalledWith(session, [MAKER]);
-    const list = screen.getByRole('list', { name: 'Grimoire' });
+    const list = screen.getByRole('list', { name: 'Spells' });
     const edited = (name: string) =>
-      within(within(list).getByRole('listitem', { name })).getByRole('button', {
+      within(within(list).getByRole('article', { name })).getByRole('button', {
         name: /^Edited/,
       });
     expect(edited('Fixture Working')).toHaveAccessibleDescription(
@@ -339,7 +343,7 @@ describe('the Grimoire tabs', () => {
       .getAllByRole('status')
       .find((region) => within(region).queryByText('Fixture Working') !== null);
     expect(notice).toBeDefined();
-    expect(notice!.compareDocumentPosition(screen.getByRole('list', { name: 'Grimoire' }))).toBe(
+    expect(notice!.compareDocumentPosition(screen.getByRole('list', { name: 'Spells' }))).toBe(
       Node.DOCUMENT_POSITION_FOLLOWING,
     );
   });
@@ -437,7 +441,7 @@ describe('the spell builder over a Grimoire tab', () => {
     ['owner', 1],
     ['member', 1],
     ['viewer', 0],
-  ] as const)('draws a Delete Spell bin on each card for a coven %s: %i', async (role, count) => {
+  ] as const)('offers Delete in each card’s More menu to a coven %s: %i', async (role, count) => {
     as(role);
     await renderTab(DraftsPage, { query: 'fixture' });
     expect(screen.getAllByRole('link', { name: /^Quick Look / }).length).toBeGreaterThan(0);
@@ -445,7 +449,7 @@ describe('the spell builder over a Grimoire tab', () => {
     expect(more).toHaveLength(count);
     if (count > 0) {
       press(more[0]!);
-      expect(await screen.findByRole('menuitem', { name: 'Delete Spell' })).toBeInTheDocument();
+      expect(await screen.findByRole('menuitem', { name: 'Delete' })).toBeInTheDocument();
     }
   });
 
@@ -455,6 +459,45 @@ describe('the spell builder over a Grimoire tab', () => {
     expect(screen.getAllByRole('heading', { name: 'Fixture Working' }).length).toBeGreaterThan(0);
     expect(screen.queryByRole('link', { name: /^Edit / })).not.toBeInTheDocument();
   });
+
+  it('draws Record a Working on a member’s complete spells yet reads no roster or steps for it, which the dialog reads once opened', async () => {
+    as('member');
+    await renderTab(SpellsPage);
+    // A member may record a working, and both spells are complete: the reads were owed if the list made them.
+    expect(
+      screen.getByRole('button', { name: 'Record a Working of Fixture Working' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Record a Working of Testwort Charm' }),
+    ).toBeInTheDocument();
+    expect(memberRoster).not.toHaveBeenCalled();
+    expect(stepsOfSpells).not.toHaveBeenCalled();
+  });
+
+  it('draws no Record a Working for a viewer, who may not record one', async () => {
+    as('viewer');
+    await renderTab(SpellsPage);
+    expect(screen.getAllByRole('heading', { name: 'Fixture Working' }).length).toBeGreaterThan(0);
+    expect(screen.queryByRole('button', { name: /^Record a Working/ })).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ['viewer', true],
+    ['member', false],
+  ] as const)(
+    'tells a coven %s on an empty Spells tab which roles can write a spell: %s',
+    async (role, named) => {
+      as(role);
+      listGrimoire.mockResolvedValue([]);
+      countGrimoire.mockResolvedValue({ totalCount: 0, countBefore: null });
+      assignedCategoriesOf.mockResolvedValue([]);
+      await renderTab(SpellsPage);
+      // The roles named are the state's data: a viewer has no New Spell and nothing else says who to ask.
+      const state = screen.getByRole('status', { name: 'No Spells' });
+      if (named) expect(state).toHaveTextContent(/\bmember\b.*\bowner\b|\bowner\b.*\bmember\b/i);
+      else expect(state).not.toHaveTextContent(/\bmember\b|\bowner\b/i);
+    },
+  );
 
   it('opens a saved draft under ?edit=<id> with its values, read for the signed-in member', async () => {
     as('member');
@@ -656,7 +699,7 @@ describe('Quick Look over a Grimoire tab', () => {
       'href',
       `/coven/fixture-coven/grimoire?query=fixture&spell=${SPELL_ID}&entry=ing-1`,
     );
-    // The page's side column (In Coven Inventory, Category Match) is the page's alone.
+    // The page's side column (In the Cupboard, Category Match) is the page's alone.
     expect(within(dialog).queryByRole('region', { name: /Inventory|Category Match/ })).toBeNull();
   });
 
@@ -758,28 +801,28 @@ describe('Quick Look over a Grimoire tab', () => {
   });
 
   it.each([
-    ['member', 2],
+    ['member', 1],
     ['viewer', 0],
   ] as const)(
-    'offers Delete Spell on a card and in the open Quick Look to a coven %s: %i',
+    'offers Delete in a card’s More menu to a coven %s, and none in the open Quick Look, which has Edit: %i',
     async (role, count) => {
       as(role);
       await renderTab(SpellsPage, { query: 'fixture', spell: SPELL_ID });
 
       const dialog = screen.getByRole('dialog', { name: 'Fixture Working' });
-      expect(
-        within(dialog).queryAllByRole('button', { name: 'Delete Spell Fixture Working' }),
-      ).toHaveLength(count / 2);
-      // The card’s own Delete Spell sits in its More menu.
+      expect(within(dialog).queryAllByRole('link', { name: 'Edit Fixture Working' })).toHaveLength(
+        count,
+      );
+      expect(within(dialog).queryByRole('button', { name: /^Delete/ })).not.toBeInTheDocument();
       const more = screen.queryAllByRole('button', {
         name: 'More for Fixture Working',
         hidden: true,
       });
-      expect(more).toHaveLength(count / 2);
+      expect(more).toHaveLength(count);
       if (count > 0) {
         press(more[0]!);
         expect(
-          (await screen.findAllByRole('menuitem', { name: 'Delete Spell', hidden: true })).length,
+          (await screen.findAllByRole('menuitem', { name: 'Delete', hidden: true })).length,
         ).toBeGreaterThan(0);
       }
     },

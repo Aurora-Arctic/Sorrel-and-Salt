@@ -1,5 +1,5 @@
 {
-  "id": "d5d0a5da-d18c-404c-8f7d-a403f74a5046",
+  "id": "aab9a4e4-0b44-40fc-97b2-f07c8812a1a5",
   "prevId": "c47e2bd6-c513-4f8b-9bf9-0cdc01ee3f9c",
   "version": "7",
   "dialect": "postgresql",
@@ -135,57 +135,57 @@
             }
           ],
           "isUnique": true,
-          "where": "\"invitations\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"invitations\".\"deleted_at\" is null",
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "invitations_workspace_id_workspaces_id_fk": {
           "name": "invitations_workspace_id_workspaces_id_fk",
           "tableFrom": "invitations",
-          "tableTo": "workspaces",
           "columnsFrom": ["workspace_id"],
+          "tableTo": "workspaces",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "invitations_accepted_by_users_id_fk": {
           "name": "invitations_accepted_by_users_id_fk",
           "tableFrom": "invitations",
-          "tableTo": "users",
           "columnsFrom": ["accepted_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "invitations_created_by_users_id_fk": {
           "name": "invitations_created_by_users_id_fk",
           "tableFrom": "invitations",
-          "tableTo": "users",
           "columnsFrom": ["created_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "invitations_updated_by_users_id_fk": {
           "name": "invitations_updated_by_users_id_fk",
           "tableFrom": "invitations",
-          "tableTo": "users",
           "columnsFrom": ["updated_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "invitations_deleted_by_users_id_fk": {
           "name": "invitations_deleted_by_users_id_fk",
           "tableFrom": "invitations",
-          "tableTo": "users",
           "columnsFrom": ["deleted_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -299,56 +299,56 @@
         "workspace_members_workspace_id_workspaces_id_fk": {
           "name": "workspace_members_workspace_id_workspaces_id_fk",
           "tableFrom": "workspace_members",
-          "tableTo": "workspaces",
           "columnsFrom": ["workspace_id"],
+          "tableTo": "workspaces",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "workspace_members_user_id_users_id_fk": {
           "name": "workspace_members_user_id_users_id_fk",
           "tableFrom": "workspace_members",
-          "tableTo": "users",
           "columnsFrom": ["user_id"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "workspace_members_invited_by_users_id_fk": {
           "name": "workspace_members_invited_by_users_id_fk",
           "tableFrom": "workspace_members",
-          "tableTo": "users",
           "columnsFrom": ["invited_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "workspace_members_created_by_users_id_fk": {
           "name": "workspace_members_created_by_users_id_fk",
           "tableFrom": "workspace_members",
-          "tableTo": "users",
           "columnsFrom": ["created_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "workspace_members_updated_by_users_id_fk": {
           "name": "workspace_members_updated_by_users_id_fk",
           "tableFrom": "workspace_members",
-          "tableTo": "users",
           "columnsFrom": ["updated_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "workspace_members_deleted_by_users_id_fk": {
           "name": "workspace_members_deleted_by_users_id_fk",
           "tableFrom": "workspace_members",
-          "tableTo": "users",
           "columnsFrom": ["deleted_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -443,10 +443,10 @@
             }
           ],
           "isUnique": true,
-          "where": "\"workspaces\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"workspaces\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "workspaces_demo_unique": {
           "name": "workspaces_demo_unique",
@@ -459,39 +459,39 @@
             }
           ],
           "isUnique": true,
-          "where": "\"workspaces\".\"demo\" and \"workspaces\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"workspaces\".\"demo\" and \"workspaces\".\"deleted_at\" is null",
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "workspaces_created_by_users_id_fk": {
           "name": "workspaces_created_by_users_id_fk",
           "tableFrom": "workspaces",
-          "tableTo": "users",
           "columnsFrom": ["created_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "workspaces_updated_by_users_id_fk": {
           "name": "workspaces_updated_by_users_id_fk",
           "tableFrom": "workspaces",
-          "tableTo": "users",
           "columnsFrom": ["updated_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "workspaces_deleted_by_users_id_fk": {
           "name": "workspaces_deleted_by_users_id_fk",
           "tableFrom": "workspaces",
-          "tableTo": "users",
           "columnsFrom": ["deleted_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -561,47 +561,47 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "spell_categories_spell_id_spells_id_fk": {
           "name": "spell_categories_spell_id_spells_id_fk",
           "tableFrom": "spell_categories",
-          "tableTo": "spells",
           "columnsFrom": ["spell_id"],
+          "tableTo": "spells",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "spell_categories_category_id_categories_id_fk": {
           "name": "spell_categories_category_id_categories_id_fk",
           "tableFrom": "spell_categories",
-          "tableTo": "categories",
           "columnsFrom": ["category_id"],
+          "tableTo": "categories",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "spell_categories_created_by_users_id_fk": {
           "name": "spell_categories_created_by_users_id_fk",
           "tableFrom": "spell_categories",
-          "tableTo": "users",
           "columnsFrom": ["created_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "spell_categories_updated_by_users_id_fk": {
           "name": "spell_categories_updated_by_users_id_fk",
           "tableFrom": "spell_categories",
-          "tableTo": "users",
           "columnsFrom": ["updated_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {
@@ -738,10 +738,10 @@
             }
           ],
           "isUnique": true,
-          "where": "\"spell_steps\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"spell_steps\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "spell_steps_spell_id_custom_name_unique": {
           "name": "spell_steps_spell_id_custom_name_unique",
@@ -754,72 +754,72 @@
             },
             {
               "expression": "lower(\"name\")",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": true,
-          "where": "\"spell_steps\".\"ingredient_id\" is null and \"spell_steps\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"spell_steps\".\"ingredient_id\" is null and \"spell_steps\".\"deleted_at\" is null",
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "spell_steps_spell_id_spells_id_fk": {
           "name": "spell_steps_spell_id_spells_id_fk",
           "tableFrom": "spell_steps",
-          "tableTo": "spells",
           "columnsFrom": ["spell_id"],
+          "tableTo": "spells",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "spell_steps_ingredient_id_ingredients_id_fk": {
           "name": "spell_steps_ingredient_id_ingredients_id_fk",
           "tableFrom": "spell_steps",
-          "tableTo": "ingredients",
           "columnsFrom": ["ingredient_id"],
+          "tableTo": "ingredients",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "spell_steps_created_by_users_id_fk": {
           "name": "spell_steps_created_by_users_id_fk",
           "tableFrom": "spell_steps",
-          "tableTo": "users",
           "columnsFrom": ["created_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "spell_steps_updated_by_users_id_fk": {
           "name": "spell_steps_updated_by_users_id_fk",
           "tableFrom": "spell_steps",
-          "tableTo": "users",
           "columnsFrom": ["updated_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "spell_steps_deleted_by_users_id_fk": {
           "name": "spell_steps_deleted_by_users_id_fk",
           "tableFrom": "spell_steps",
-          "tableTo": "users",
           "columnsFrom": ["deleted_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "spell_steps_variant_fk": {
           "name": "spell_steps_variant_fk",
           "tableFrom": "spell_steps",
-          "tableTo": "ingredient_variants",
           "columnsFrom": ["variant_id", "ingredient_id"],
+          "tableTo": "ingredient_variants",
           "columnsTo": ["id", "ingredient_id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -949,56 +949,56 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "spell_working_deductions_working_id_spell_workings_id_fk": {
           "name": "spell_working_deductions_working_id_spell_workings_id_fk",
           "tableFrom": "spell_working_deductions",
-          "tableTo": "spell_workings",
           "columnsFrom": ["working_id"],
+          "tableTo": "spell_workings",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "spell_working_deductions_spell_step_id_spell_steps_id_fk": {
           "name": "spell_working_deductions_spell_step_id_spell_steps_id_fk",
           "tableFrom": "spell_working_deductions",
-          "tableTo": "spell_steps",
           "columnsFrom": ["spell_step_id"],
+          "tableTo": "spell_steps",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "spell_working_deductions_created_by_users_id_fk": {
           "name": "spell_working_deductions_created_by_users_id_fk",
           "tableFrom": "spell_working_deductions",
-          "tableTo": "users",
           "columnsFrom": ["created_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "spell_working_deductions_updated_by_users_id_fk": {
           "name": "spell_working_deductions_updated_by_users_id_fk",
           "tableFrom": "spell_working_deductions",
-          "tableTo": "users",
           "columnsFrom": ["updated_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "spell_working_deductions_inventory_item_fk": {
           "name": "spell_working_deductions_inventory_item_fk",
           "tableFrom": "spell_working_deductions",
-          "tableTo": "inventory_items",
           "columnsFrom": ["inventory_item_id"],
+          "tableTo": "inventory_items",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -1087,9 +1087,9 @@
             }
           ],
           "isUnique": true,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         },
         "spell_working_participants_working_id_name_unique": {
           "name": "spell_working_participants_working_id_name_unique",
@@ -1102,53 +1102,53 @@
             },
             {
               "expression": "lower(\"name\")",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": true,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "spell_working_participants_working_id_spell_workings_id_fk": {
           "name": "spell_working_participants_working_id_spell_workings_id_fk",
           "tableFrom": "spell_working_participants",
-          "tableTo": "spell_workings",
           "columnsFrom": ["working_id"],
+          "tableTo": "spell_workings",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "spell_working_participants_user_id_users_id_fk": {
           "name": "spell_working_participants_user_id_users_id_fk",
           "tableFrom": "spell_working_participants",
-          "tableTo": "users",
           "columnsFrom": ["user_id"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "spell_working_participants_created_by_users_id_fk": {
           "name": "spell_working_participants_created_by_users_id_fk",
           "tableFrom": "spell_working_participants",
-          "tableTo": "users",
           "columnsFrom": ["created_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "spell_working_participants_updated_by_users_id_fk": {
           "name": "spell_working_participants_updated_by_users_id_fk",
           "tableFrom": "spell_working_participants",
-          "tableTo": "users",
           "columnsFrom": ["updated_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -1268,54 +1268,54 @@
             },
             {
               "expression": "\"worked_on\" desc",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": false,
-          "where": "\"spell_workings\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"spell_workings\".\"deleted_at\" is null",
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "spell_workings_spell_id_spells_id_fk": {
           "name": "spell_workings_spell_id_spells_id_fk",
           "tableFrom": "spell_workings",
-          "tableTo": "spells",
           "columnsFrom": ["spell_id"],
+          "tableTo": "spells",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "spell_workings_created_by_users_id_fk": {
           "name": "spell_workings_created_by_users_id_fk",
           "tableFrom": "spell_workings",
-          "tableTo": "users",
           "columnsFrom": ["created_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "spell_workings_updated_by_users_id_fk": {
           "name": "spell_workings_updated_by_users_id_fk",
           "tableFrom": "spell_workings",
-          "tableTo": "users",
           "columnsFrom": ["updated_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "spell_workings_deleted_by_users_id_fk": {
           "name": "spell_workings_deleted_by_users_id_fk",
           "tableFrom": "spell_workings",
-          "tableTo": "users",
           "columnsFrom": ["deleted_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -1460,59 +1460,59 @@
           "columns": [
             {
               "expression": "unaccent_immutable(\"title\") gin_trgm_ops",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             },
             {
               "expression": "unaccent_immutable(\"intent\") gin_trgm_ops",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "gin",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "spells_workspace_id_workspaces_id_fk": {
           "name": "spells_workspace_id_workspaces_id_fk",
           "tableFrom": "spells",
-          "tableTo": "workspaces",
           "columnsFrom": ["workspace_id"],
+          "tableTo": "workspaces",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "spells_created_by_users_id_fk": {
           "name": "spells_created_by_users_id_fk",
           "tableFrom": "spells",
-          "tableTo": "users",
           "columnsFrom": ["created_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "spells_updated_by_users_id_fk": {
           "name": "spells_updated_by_users_id_fk",
           "tableFrom": "spells",
-          "tableTo": "users",
           "columnsFrom": ["updated_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "spells_deleted_by_users_id_fk": {
           "name": "spells_deleted_by_users_id_fk",
           "tableFrom": "spells",
-          "tableTo": "users",
           "columnsFrom": ["deleted_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -1594,54 +1594,54 @@
           "columns": [
             {
               "expression": "(true)",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": true,
-          "where": "\"admin_role_change_pauses\".\"ended_at\" is null and \"admin_role_change_pauses\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"admin_role_change_pauses\".\"ended_at\" is null and \"admin_role_change_pauses\".\"deleted_at\" is null",
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "admin_role_change_pauses_ended_by_users_id_fk": {
           "name": "admin_role_change_pauses_ended_by_users_id_fk",
           "tableFrom": "admin_role_change_pauses",
-          "tableTo": "users",
           "columnsFrom": ["ended_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "admin_role_change_pauses_created_by_users_id_fk": {
           "name": "admin_role_change_pauses_created_by_users_id_fk",
           "tableFrom": "admin_role_change_pauses",
-          "tableTo": "users",
           "columnsFrom": ["created_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "admin_role_change_pauses_updated_by_users_id_fk": {
           "name": "admin_role_change_pauses_updated_by_users_id_fk",
           "tableFrom": "admin_role_change_pauses",
-          "tableTo": "users",
           "columnsFrom": ["updated_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "admin_role_change_pauses_deleted_by_users_id_fk": {
           "name": "admin_role_change_pauses_deleted_by_users_id_fk",
           "tableFrom": "admin_role_change_pauses",
-          "tableTo": "users",
           "columnsFrom": ["deleted_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -1752,20 +1752,20 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "accounts_user_id_users_id_fk": {
           "name": "accounts_user_id_users_id_fk",
           "tableFrom": "accounts",
-          "tableTo": "users",
           "columnsFrom": ["user_id"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         }
       },
       "compositePrimaryKeys": {},
@@ -1810,8 +1810,8 @@
       "uniqueConstraints": {
         "rate_limits_key_unique": {
           "name": "rate_limits_key_unique",
-          "nullsNotDistinct": false,
-          "columns": ["key"]
+          "columns": ["key"],
+          "nullsNotDistinct": false
         }
       },
       "policies": {},
@@ -1891,88 +1891,39 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "sessions_user_id_users_id_fk": {
           "name": "sessions_user_id_users_id_fk",
           "tableFrom": "sessions",
-          "tableTo": "users",
           "columnsFrom": ["user_id"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "cascade"
         },
         "sessions_impersonated_by_users_id_fk": {
           "name": "sessions_impersonated_by_users_id_fk",
           "tableFrom": "sessions",
-          "tableTo": "users",
           "columnsFrom": ["impersonated_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
         "sessions_token_unique": {
           "name": "sessions_token_unique",
-          "nullsNotDistinct": false,
-          "columns": ["token"]
+          "columns": ["token"],
+          "nullsNotDistinct": false
         }
       },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.sign_in_failures": {
-      "name": "sign_in_failures",
-      "schema": "",
-      "columns": {
-        "user_id": {
-          "name": "user_id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "count": {
-          "name": "count",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "first_failed_at": {
-          "name": "first_failed_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "locked_until": {
-          "name": "locked_until",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "sign_in_failures_user_id_users_id_fk": {
-          "name": "sign_in_failures_user_id_users_id_fk",
-          "tableFrom": "sign_in_failures",
-          "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -2033,9 +1984,9 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {},
@@ -2133,38 +2084,38 @@
         "user_privilege_changes_user_id_users_id_fk": {
           "name": "user_privilege_changes_user_id_users_id_fk",
           "tableFrom": "user_privilege_changes",
-          "tableTo": "users",
           "columnsFrom": ["user_id"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "user_privilege_changes_created_by_users_id_fk": {
           "name": "user_privilege_changes_created_by_users_id_fk",
           "tableFrom": "user_privilege_changes",
-          "tableTo": "users",
           "columnsFrom": ["created_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "user_privilege_changes_updated_by_users_id_fk": {
           "name": "user_privilege_changes_updated_by_users_id_fk",
           "tableFrom": "user_privilege_changes",
-          "tableTo": "users",
           "columnsFrom": ["updated_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "user_privilege_changes_deleted_by_users_id_fk": {
           "name": "user_privilege_changes_deleted_by_users_id_fk",
           "tableFrom": "user_privilege_changes",
-          "tableTo": "users",
           "columnsFrom": ["deleted_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -2281,10 +2232,10 @@
             }
           ],
           "isUnique": true,
-          "where": "\"users\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"users\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "users_provisional_updated_at_idx": {
           "name": "users_provisional_updated_at_idx",
@@ -2297,10 +2248,10 @@
             }
           ],
           "isUnique": false,
-          "where": "\"users\".\"email_verified\" = false",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"users\".\"email_verified\" = false",
+          "concurrently": false
         },
         "users_provisional_created_at_idx": {
           "name": "users_provisional_created_at_idx",
@@ -2313,39 +2264,39 @@
             }
           ],
           "isUnique": false,
-          "where": "\"users\".\"email_verified\" = false",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"users\".\"email_verified\" = false",
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "users_created_by_users_id_fk": {
           "name": "users_created_by_users_id_fk",
           "tableFrom": "users",
-          "tableTo": "users",
           "columnsFrom": ["created_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "users_updated_by_users_id_fk": {
           "name": "users_updated_by_users_id_fk",
           "tableFrom": "users",
-          "tableTo": "users",
           "columnsFrom": ["updated_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "users_deleted_by_users_id_fk": {
           "name": "users_deleted_by_users_id_fk",
           "tableFrom": "users",
-          "tableTo": "users",
           "columnsFrom": ["deleted_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -2430,10 +2381,10 @@
             }
           ],
           "isUnique": true,
-          "where": "\"ingredient_categories\".\"variant_id\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"ingredient_categories\".\"variant_id\" is null",
+          "concurrently": false
         },
         "ingredient_categories_variant_category_unique": {
           "name": "ingredient_categories_variant_category_unique",
@@ -2452,10 +2403,10 @@
             }
           ],
           "isUnique": true,
-          "where": "\"ingredient_categories\".\"variant_id\" is not null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"ingredient_categories\".\"variant_id\" is not null",
+          "concurrently": false
         },
         "ingredient_categories_category_id_idx": {
           "name": "ingredient_categories_category_id_idx",
@@ -2474,56 +2425,56 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "ingredient_categories_ingredient_id_ingredients_id_fk": {
           "name": "ingredient_categories_ingredient_id_ingredients_id_fk",
           "tableFrom": "ingredient_categories",
-          "tableTo": "ingredients",
           "columnsFrom": ["ingredient_id"],
+          "tableTo": "ingredients",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "ingredient_categories_category_id_categories_id_fk": {
           "name": "ingredient_categories_category_id_categories_id_fk",
           "tableFrom": "ingredient_categories",
-          "tableTo": "categories",
           "columnsFrom": ["category_id"],
+          "tableTo": "categories",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "ingredient_categories_created_by_users_id_fk": {
           "name": "ingredient_categories_created_by_users_id_fk",
           "tableFrom": "ingredient_categories",
-          "tableTo": "users",
           "columnsFrom": ["created_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "ingredient_categories_updated_by_users_id_fk": {
           "name": "ingredient_categories_updated_by_users_id_fk",
           "tableFrom": "ingredient_categories",
-          "tableTo": "users",
           "columnsFrom": ["updated_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "ingredient_categories_variant_fk": {
           "name": "ingredient_categories_variant_fk",
           "tableFrom": "ingredient_categories",
-          "tableTo": "ingredient_variants",
           "columnsFrom": ["variant_id", "ingredient_id"],
+          "tableTo": "ingredient_variants",
           "columnsTo": ["id", "ingredient_id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -2624,10 +2575,10 @@
             }
           ],
           "isUnique": true,
-          "where": "\"ingredient_deities\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"ingredient_deities\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "ingredient_deities_link_unique": {
           "name": "ingredient_deities_link_unique",
@@ -2646,10 +2597,10 @@
             }
           ],
           "isUnique": true,
-          "where": "\"ingredient_deities\".\"deity_id\" is not null and \"ingredient_deities\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"ingredient_deities\".\"deity_id\" is not null and \"ingredient_deities\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "ingredient_deities_name_unique": {
           "name": "ingredient_deities_name_unique",
@@ -2662,16 +2613,16 @@
             },
             {
               "expression": "lower(\"name\")",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": true,
-          "where": "\"ingredient_deities\".\"deity_id\" is null and \"ingredient_deities\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"ingredient_deities\".\"deity_id\" is null and \"ingredient_deities\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "ingredient_deities_deity_id_idx": {
           "name": "ingredient_deities_deity_id_idx",
@@ -2684,57 +2635,57 @@
             }
           ],
           "isUnique": false,
-          "where": "\"ingredient_deities\".\"deity_id\" is not null and \"ingredient_deities\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"ingredient_deities\".\"deity_id\" is not null and \"ingredient_deities\".\"deleted_at\" is null",
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "ingredient_deities_ingredient_id_ingredients_id_fk": {
           "name": "ingredient_deities_ingredient_id_ingredients_id_fk",
           "tableFrom": "ingredient_deities",
-          "tableTo": "ingredients",
           "columnsFrom": ["ingredient_id"],
+          "tableTo": "ingredients",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "ingredient_deities_deity_id_deities_id_fk": {
           "name": "ingredient_deities_deity_id_deities_id_fk",
           "tableFrom": "ingredient_deities",
-          "tableTo": "deities",
           "columnsFrom": ["deity_id"],
+          "tableTo": "deities",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "ingredient_deities_created_by_users_id_fk": {
           "name": "ingredient_deities_created_by_users_id_fk",
           "tableFrom": "ingredient_deities",
-          "tableTo": "users",
           "columnsFrom": ["created_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "ingredient_deities_updated_by_users_id_fk": {
           "name": "ingredient_deities_updated_by_users_id_fk",
           "tableFrom": "ingredient_deities",
-          "tableTo": "users",
           "columnsFrom": ["updated_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "ingredient_deities_deleted_by_users_id_fk": {
           "name": "ingredient_deities_deleted_by_users_id_fk",
           "tableFrom": "ingredient_deities",
-          "tableTo": "users",
           "columnsFrom": ["deleted_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -2822,84 +2773,84 @@
             },
             {
               "expression": "lower(\"name\")",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": true,
-          "where": "\"ingredient_folk_names\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"ingredient_folk_names\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "ingredient_folk_names_trgm": {
           "name": "ingredient_folk_names_trgm",
           "columns": [
             {
               "expression": "\"name\" gin_trgm_ops",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "gin",
-          "with": {}
+          "concurrently": false
         },
         "ingredient_folk_names_unaccent_trgm": {
           "name": "ingredient_folk_names_unaccent_trgm",
           "columns": [
             {
               "expression": "unaccent_immutable(\"name\") gin_trgm_ops",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "gin",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "ingredient_folk_names_ingredient_id_ingredients_id_fk": {
           "name": "ingredient_folk_names_ingredient_id_ingredients_id_fk",
           "tableFrom": "ingredient_folk_names",
-          "tableTo": "ingredients",
           "columnsFrom": ["ingredient_id"],
+          "tableTo": "ingredients",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "ingredient_folk_names_created_by_users_id_fk": {
           "name": "ingredient_folk_names_created_by_users_id_fk",
           "tableFrom": "ingredient_folk_names",
-          "tableTo": "users",
           "columnsFrom": ["created_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "ingredient_folk_names_updated_by_users_id_fk": {
           "name": "ingredient_folk_names_updated_by_users_id_fk",
           "tableFrom": "ingredient_folk_names",
-          "tableTo": "users",
           "columnsFrom": ["updated_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "ingredient_folk_names_deleted_by_users_id_fk": {
           "name": "ingredient_folk_names_deleted_by_users_id_fk",
           "tableFrom": "ingredient_folk_names",
-          "tableTo": "users",
           "columnsFrom": ["deleted_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -3000,10 +2951,10 @@
             }
           ],
           "isUnique": false,
-          "where": "\"ingredient_substitutes\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"ingredient_substitutes\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "ingredient_substitutes_variant_id": {
           "name": "ingredient_substitutes_variant_id",
@@ -3016,10 +2967,10 @@
             }
           ],
           "isUnique": false,
-          "where": "\"ingredient_substitutes\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"ingredient_substitutes\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "ingredient_substitutes_link_unique": {
           "name": "ingredient_substitutes_link_unique",
@@ -3038,10 +2989,10 @@
             }
           ],
           "isUnique": true,
-          "where": "\"ingredient_substitutes\".\"substitute_id\" is not null and \"ingredient_substitutes\".\"variant_id\" is null and \"ingredient_substitutes\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"ingredient_substitutes\".\"substitute_id\" is not null and \"ingredient_substitutes\".\"variant_id\" is null and \"ingredient_substitutes\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "ingredient_substitutes_name_unique": {
           "name": "ingredient_substitutes_name_unique",
@@ -3054,16 +3005,16 @@
             },
             {
               "expression": "lower(\"name\")",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": true,
-          "where": "\"ingredient_substitutes\".\"name\" is not null and \"ingredient_substitutes\".\"variant_id\" is null and \"ingredient_substitutes\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"ingredient_substitutes\".\"name\" is not null and \"ingredient_substitutes\".\"variant_id\" is null and \"ingredient_substitutes\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "ingredient_substitutes_variant_link_unique": {
           "name": "ingredient_substitutes_variant_link_unique",
@@ -3082,10 +3033,10 @@
             }
           ],
           "isUnique": true,
-          "where": "\"ingredient_substitutes\".\"substitute_id\" is not null and \"ingredient_substitutes\".\"variant_id\" is not null and \"ingredient_substitutes\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"ingredient_substitutes\".\"substitute_id\" is not null and \"ingredient_substitutes\".\"variant_id\" is not null and \"ingredient_substitutes\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "ingredient_substitutes_variant_name_unique": {
           "name": "ingredient_substitutes_variant_name_unique",
@@ -3098,81 +3049,81 @@
             },
             {
               "expression": "lower(\"name\")",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": true,
-          "where": "\"ingredient_substitutes\".\"name\" is not null and \"ingredient_substitutes\".\"variant_id\" is not null and \"ingredient_substitutes\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"ingredient_substitutes\".\"name\" is not null and \"ingredient_substitutes\".\"variant_id\" is not null and \"ingredient_substitutes\".\"deleted_at\" is null",
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "ingredient_substitutes_ingredient_id_ingredients_id_fk": {
           "name": "ingredient_substitutes_ingredient_id_ingredients_id_fk",
           "tableFrom": "ingredient_substitutes",
-          "tableTo": "ingredients",
           "columnsFrom": ["ingredient_id"],
+          "tableTo": "ingredients",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "ingredient_substitutes_substitute_id_ingredients_id_fk": {
           "name": "ingredient_substitutes_substitute_id_ingredients_id_fk",
           "tableFrom": "ingredient_substitutes",
-          "tableTo": "ingredients",
           "columnsFrom": ["substitute_id"],
+          "tableTo": "ingredients",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "ingredient_substitutes_created_by_users_id_fk": {
           "name": "ingredient_substitutes_created_by_users_id_fk",
           "tableFrom": "ingredient_substitutes",
-          "tableTo": "users",
           "columnsFrom": ["created_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "ingredient_substitutes_updated_by_users_id_fk": {
           "name": "ingredient_substitutes_updated_by_users_id_fk",
           "tableFrom": "ingredient_substitutes",
-          "tableTo": "users",
           "columnsFrom": ["updated_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "ingredient_substitutes_deleted_by_users_id_fk": {
           "name": "ingredient_substitutes_deleted_by_users_id_fk",
           "tableFrom": "ingredient_substitutes",
-          "tableTo": "users",
           "columnsFrom": ["deleted_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "ingredient_substitutes_variant_fk": {
           "name": "ingredient_substitutes_variant_fk",
           "tableFrom": "ingredient_substitutes",
-          "tableTo": "ingredient_variants",
           "columnsFrom": ["variant_id", "ingredient_id"],
+          "tableTo": "ingredient_variants",
           "columnsTo": ["id", "ingredient_id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "ingredient_substitutes_substitute_variant_fk": {
           "name": "ingredient_substitutes_substitute_variant_fk",
           "tableFrom": "ingredient_substitutes",
-          "tableTo": "ingredient_variants",
           "columnsFrom": ["substitute_variant_id", "substitute_id"],
+          "tableTo": "ingredient_variants",
           "columnsTo": ["id", "ingredient_id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -3322,16 +3273,16 @@
             },
             {
               "expression": "lower(btrim(\"form\"))",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": true,
-          "where": "\"ingredient_variants\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"ingredient_variants\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "ingredient_variants_id_ingredient_id_unique": {
           "name": "ingredient_variants_id_ingredient_id_unique",
@@ -3350,9 +3301,9 @@
             }
           ],
           "isUnique": true,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         },
         "ingredient_variants_form_id_idx": {
           "name": "ingredient_variants_form_id_idx",
@@ -3365,78 +3316,78 @@
             }
           ],
           "isUnique": false,
-          "where": "\"ingredient_variants\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"ingredient_variants\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "ingredient_variants_unaccent_trgm": {
           "name": "ingredient_variants_unaccent_trgm",
           "columns": [
             {
               "expression": "unaccent_immutable(\"form\") gin_trgm_ops",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             },
             {
               "expression": "unaccent_immutable(\"description\") gin_trgm_ops",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "gin",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "ingredient_variants_ingredient_id_ingredients_id_fk": {
           "name": "ingredient_variants_ingredient_id_ingredients_id_fk",
           "tableFrom": "ingredient_variants",
-          "tableTo": "ingredients",
           "columnsFrom": ["ingredient_id"],
+          "tableTo": "ingredients",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "ingredient_variants_form_id_ingredient_forms_id_fk": {
           "name": "ingredient_variants_form_id_ingredient_forms_id_fk",
           "tableFrom": "ingredient_variants",
-          "tableTo": "ingredient_forms",
           "columnsFrom": ["form_id"],
+          "tableTo": "ingredient_forms",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "ingredient_variants_created_by_users_id_fk": {
           "name": "ingredient_variants_created_by_users_id_fk",
           "tableFrom": "ingredient_variants",
-          "tableTo": "users",
           "columnsFrom": ["created_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "ingredient_variants_updated_by_users_id_fk": {
           "name": "ingredient_variants_updated_by_users_id_fk",
           "tableFrom": "ingredient_variants",
-          "tableTo": "users",
           "columnsFrom": ["updated_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "ingredient_variants_deleted_by_users_id_fk": {
           "name": "ingredient_variants_deleted_by_users_id_fk",
           "tableFrom": "ingredient_variants",
-          "tableTo": "users",
           "columnsFrom": ["deleted_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -3498,8 +3449,8 @@
           "primaryKey": false,
           "notNull": true,
           "generated": {
-            "as": "lower(coalesce(canonical_name, name))",
-            "type": "stored"
+            "type": "stored",
+            "as": "lower(coalesce(canonical_name, name))"
           }
         },
         "description": {
@@ -3628,10 +3579,10 @@
             }
           ],
           "isUnique": true,
-          "where": "\"ingredients\".\"workspace_id\" is null and \"ingredients\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"ingredients\".\"workspace_id\" is null and \"ingredients\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "ingredients_workspace_identity_key_unique": {
           "name": "ingredients_workspace_identity_key_unique",
@@ -3650,10 +3601,10 @@
             }
           ],
           "isUnique": true,
-          "where": "\"ingredients\".\"workspace_id\" is not null and \"ingredients\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"ingredients\".\"workspace_id\" is not null and \"ingredients\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "ingredients_workspace_label_unique": {
           "name": "ingredients_workspace_label_unique",
@@ -3666,16 +3617,16 @@
             },
             {
               "expression": "lower(\"name\")",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": true,
-          "where": "\"ingredients\".\"workspace_id\" is not null and \"ingredients\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"ingredients\".\"workspace_id\" is not null and \"ingredients\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "ingredients_compendium_slug_unique": {
           "name": "ingredients_compendium_slug_unique",
@@ -3688,10 +3639,10 @@
             }
           ],
           "isUnique": true,
-          "where": "\"ingredients\".\"workspace_id\" is null and \"ingredients\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"ingredients\".\"workspace_id\" is null and \"ingredients\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "ingredients_workspace_slug_unique": {
           "name": "ingredients_workspace_slug_unique",
@@ -3710,10 +3661,10 @@
             }
           ],
           "isUnique": true,
-          "where": "\"ingredients\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"ingredients\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "ingredients_seed_key_unique": {
           "name": "ingredients_seed_key_unique",
@@ -3726,99 +3677,99 @@
             }
           ],
           "isUnique": true,
-          "where": "\"ingredients\".\"seed_key\" is not null and \"ingredients\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"ingredients\".\"seed_key\" is not null and \"ingredients\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "ingredients_trgm": {
           "name": "ingredients_trgm",
           "columns": [
             {
               "expression": "\"name\" gin_trgm_ops",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             },
             {
               "expression": "\"canonical_name\" gin_trgm_ops",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "gin",
-          "with": {}
+          "concurrently": false
         },
         "ingredients_unaccent_trgm": {
           "name": "ingredients_unaccent_trgm",
           "columns": [
             {
               "expression": "unaccent_immutable(\"name\") gin_trgm_ops",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             },
             {
               "expression": "unaccent_immutable(\"canonical_name\") gin_trgm_ops",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "gin",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "ingredients_workspace_id_workspaces_id_fk": {
           "name": "ingredients_workspace_id_workspaces_id_fk",
           "tableFrom": "ingredients",
-          "tableTo": "workspaces",
           "columnsFrom": ["workspace_id"],
+          "tableTo": "workspaces",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "ingredients_curator_reviewed_by_users_id_fk": {
           "name": "ingredients_curator_reviewed_by_users_id_fk",
           "tableFrom": "ingredients",
-          "tableTo": "users",
           "columnsFrom": ["curator_reviewed_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "ingredients_created_by_users_id_fk": {
           "name": "ingredients_created_by_users_id_fk",
           "tableFrom": "ingredients",
-          "tableTo": "users",
           "columnsFrom": ["created_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "ingredients_updated_by_users_id_fk": {
           "name": "ingredients_updated_by_users_id_fk",
           "tableFrom": "ingredients",
-          "tableTo": "users",
           "columnsFrom": ["updated_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "ingredients_deleted_by_users_id_fk": {
           "name": "ingredients_deleted_by_users_id_fk",
           "tableFrom": "ingredients",
-          "tableTo": "users",
           "columnsFrom": ["deleted_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -3968,66 +3919,66 @@
             }
           ],
           "isUnique": true,
-          "where": "\"inventory_items\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"inventory_items\".\"deleted_at\" is null",
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "inventory_items_workspace_id_workspaces_id_fk": {
           "name": "inventory_items_workspace_id_workspaces_id_fk",
           "tableFrom": "inventory_items",
-          "tableTo": "workspaces",
           "columnsFrom": ["workspace_id"],
+          "tableTo": "workspaces",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "inventory_items_ingredient_id_ingredients_id_fk": {
           "name": "inventory_items_ingredient_id_ingredients_id_fk",
           "tableFrom": "inventory_items",
-          "tableTo": "ingredients",
           "columnsFrom": ["ingredient_id"],
+          "tableTo": "ingredients",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "inventory_items_created_by_users_id_fk": {
           "name": "inventory_items_created_by_users_id_fk",
           "tableFrom": "inventory_items",
-          "tableTo": "users",
           "columnsFrom": ["created_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "inventory_items_updated_by_users_id_fk": {
           "name": "inventory_items_updated_by_users_id_fk",
           "tableFrom": "inventory_items",
-          "tableTo": "users",
           "columnsFrom": ["updated_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "inventory_items_deleted_by_users_id_fk": {
           "name": "inventory_items_deleted_by_users_id_fk",
           "tableFrom": "inventory_items",
-          "tableTo": "users",
           "columnsFrom": ["deleted_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "inventory_items_variant_fk": {
           "name": "inventory_items_variant_fk",
           "tableFrom": "inventory_items",
-          "tableTo": "ingredient_variants",
           "columnsFrom": ["variant_id", "ingredient_id"],
+          "tableTo": "ingredient_variants",
           "columnsTo": ["id", "ingredient_id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -4157,10 +4108,10 @@
             }
           ],
           "isUnique": true,
-          "where": "\"reference_links\".\"ingredient_id\" is not null and \"reference_links\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"reference_links\".\"ingredient_id\" is not null and \"reference_links\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "reference_links_deity_unique": {
           "name": "reference_links_deity_unique",
@@ -4179,10 +4130,10 @@
             }
           ],
           "isUnique": true,
-          "where": "\"reference_links\".\"deity_id\" is not null and \"reference_links\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"reference_links\".\"deity_id\" is not null and \"reference_links\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "reference_links_deity_tradition_unique": {
           "name": "reference_links_deity_tradition_unique",
@@ -4201,10 +4152,10 @@
             }
           ],
           "isUnique": true,
-          "where": "\"reference_links\".\"deity_tradition_id\" is not null and \"reference_links\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"reference_links\".\"deity_tradition_id\" is not null and \"reference_links\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "reference_links_celestial_body_unique": {
           "name": "reference_links_celestial_body_unique",
@@ -4223,10 +4174,10 @@
             }
           ],
           "isUnique": true,
-          "where": "\"reference_links\".\"celestial_body_id\" is not null and \"reference_links\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"reference_links\".\"celestial_body_id\" is not null and \"reference_links\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "reference_links_zodiac_sign_unique": {
           "name": "reference_links_zodiac_sign_unique",
@@ -4245,10 +4196,10 @@
             }
           ],
           "isUnique": true,
-          "where": "\"reference_links\".\"zodiac_sign_id\" is not null and \"reference_links\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"reference_links\".\"zodiac_sign_id\" is not null and \"reference_links\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "reference_links_ingredient_variant_unique": {
           "name": "reference_links_ingredient_variant_unique",
@@ -4267,102 +4218,102 @@
             }
           ],
           "isUnique": true,
-          "where": "\"reference_links\".\"ingredient_variant_id\" is not null and \"reference_links\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"reference_links\".\"ingredient_variant_id\" is not null and \"reference_links\".\"deleted_at\" is null",
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "reference_links_reference_id_references_id_fk": {
           "name": "reference_links_reference_id_references_id_fk",
           "tableFrom": "reference_links",
-          "tableTo": "references",
           "columnsFrom": ["reference_id"],
+          "tableTo": "references",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "reference_links_ingredient_id_ingredients_id_fk": {
           "name": "reference_links_ingredient_id_ingredients_id_fk",
           "tableFrom": "reference_links",
-          "tableTo": "ingredients",
           "columnsFrom": ["ingredient_id"],
+          "tableTo": "ingredients",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "reference_links_deity_id_deities_id_fk": {
           "name": "reference_links_deity_id_deities_id_fk",
           "tableFrom": "reference_links",
-          "tableTo": "deities",
           "columnsFrom": ["deity_id"],
+          "tableTo": "deities",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "reference_links_deity_tradition_id_deity_traditions_id_fk": {
           "name": "reference_links_deity_tradition_id_deity_traditions_id_fk",
           "tableFrom": "reference_links",
-          "tableTo": "deity_traditions",
           "columnsFrom": ["deity_tradition_id"],
+          "tableTo": "deity_traditions",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "reference_links_celestial_body_id_celestial_bodies_id_fk": {
           "name": "reference_links_celestial_body_id_celestial_bodies_id_fk",
           "tableFrom": "reference_links",
-          "tableTo": "celestial_bodies",
           "columnsFrom": ["celestial_body_id"],
+          "tableTo": "celestial_bodies",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "reference_links_zodiac_sign_id_zodiac_signs_id_fk": {
           "name": "reference_links_zodiac_sign_id_zodiac_signs_id_fk",
           "tableFrom": "reference_links",
-          "tableTo": "zodiac_signs",
           "columnsFrom": ["zodiac_sign_id"],
+          "tableTo": "zodiac_signs",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "reference_links_ingredient_variant_id_ingredient_variants_id_fk": {
           "name": "reference_links_ingredient_variant_id_ingredient_variants_id_fk",
           "tableFrom": "reference_links",
-          "tableTo": "ingredient_variants",
           "columnsFrom": ["ingredient_variant_id"],
+          "tableTo": "ingredient_variants",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "reference_links_created_by_users_id_fk": {
           "name": "reference_links_created_by_users_id_fk",
           "tableFrom": "reference_links",
-          "tableTo": "users",
           "columnsFrom": ["created_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "reference_links_updated_by_users_id_fk": {
           "name": "reference_links_updated_by_users_id_fk",
           "tableFrom": "reference_links",
-          "tableTo": "users",
           "columnsFrom": ["updated_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "reference_links_deleted_by_users_id_fk": {
           "name": "reference_links_deleted_by_users_id_fk",
           "tableFrom": "reference_links",
-          "tableTo": "users",
           "columnsFrom": ["deleted_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -4563,48 +4514,48 @@
             }
           ],
           "isUnique": true,
-          "where": "\"references\".\"seed_key\" is not null and \"references\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"references\".\"seed_key\" is not null and \"references\".\"deleted_at\" is null",
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "references_workspace_id_workspaces_id_fk": {
           "name": "references_workspace_id_workspaces_id_fk",
           "tableFrom": "references",
-          "tableTo": "workspaces",
           "columnsFrom": ["workspace_id"],
+          "tableTo": "workspaces",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "references_created_by_users_id_fk": {
           "name": "references_created_by_users_id_fk",
           "tableFrom": "references",
-          "tableTo": "users",
           "columnsFrom": ["created_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "references_updated_by_users_id_fk": {
           "name": "references_updated_by_users_id_fk",
           "tableFrom": "references",
-          "tableTo": "users",
           "columnsFrom": ["updated_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "references_deleted_by_users_id_fk": {
           "name": "references_deleted_by_users_id_fk",
           "tableFrom": "references",
-          "tableTo": "users",
           "columnsFrom": ["deleted_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -4728,8 +4679,8 @@
           "primaryKey": false,
           "notNull": true,
           "generated": {
-            "as": "date_trunc('day', retired_at) + interval '180 days'",
-            "type": "stored"
+            "type": "stored",
+            "as": "date_trunc('day', retired_at) + interval '180 days'"
           }
         },
         "created_at": {
@@ -4783,56 +4734,56 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "retired_ingredient_slugs_ingredient_id_ingredients_id_fk": {
           "name": "retired_ingredient_slugs_ingredient_id_ingredients_id_fk",
           "tableFrom": "retired_ingredient_slugs",
-          "tableTo": "ingredients",
           "columnsFrom": ["ingredient_id"],
+          "tableTo": "ingredients",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "retired_ingredient_slugs_workspace_id_workspaces_id_fk": {
           "name": "retired_ingredient_slugs_workspace_id_workspaces_id_fk",
           "tableFrom": "retired_ingredient_slugs",
-          "tableTo": "workspaces",
           "columnsFrom": ["workspace_id"],
+          "tableTo": "workspaces",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "retired_ingredient_slugs_created_by_users_id_fk": {
           "name": "retired_ingredient_slugs_created_by_users_id_fk",
           "tableFrom": "retired_ingredient_slugs",
-          "tableTo": "users",
           "columnsFrom": ["created_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "retired_ingredient_slugs_updated_by_users_id_fk": {
           "name": "retired_ingredient_slugs_updated_by_users_id_fk",
           "tableFrom": "retired_ingredient_slugs",
-          "tableTo": "users",
           "columnsFrom": ["updated_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "retired_ingredient_slugs_deleted_by_users_id_fk": {
           "name": "retired_ingredient_slugs_deleted_by_users_id_fk",
           "tableFrom": "retired_ingredient_slugs",
-          "tableTo": "users",
           "columnsFrom": ["deleted_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -4971,10 +4922,10 @@
             }
           ],
           "isUnique": true,
-          "where": "\"workspace_compendium_entries\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"workspace_compendium_entries\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "workspace_compendium_entries_workspace_label_unique": {
           "name": "workspace_compendium_entries_workspace_label_unique",
@@ -4987,16 +4938,16 @@
             },
             {
               "expression": "lower(\"label\")",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": true,
-          "where": "\"workspace_compendium_entries\".\"label\" is not null and \"workspace_compendium_entries\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"workspace_compendium_entries\".\"label\" is not null and \"workspace_compendium_entries\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "workspace_compendium_entries_ingredient_id_idx": {
           "name": "workspace_compendium_entries_ingredient_id_idx",
@@ -5009,71 +4960,71 @@
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "concurrently": false
         },
         "workspace_compendium_entries_label_unaccent_trgm": {
           "name": "workspace_compendium_entries_label_unaccent_trgm",
           "columns": [
             {
               "expression": "unaccent_immutable(\"label\") gin_trgm_ops",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "gin",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "workspace_compendium_entries_workspace_id_workspaces_id_fk": {
           "name": "workspace_compendium_entries_workspace_id_workspaces_id_fk",
           "tableFrom": "workspace_compendium_entries",
-          "tableTo": "workspaces",
           "columnsFrom": ["workspace_id"],
+          "tableTo": "workspaces",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "workspace_compendium_entries_ingredient_id_ingredients_id_fk": {
           "name": "workspace_compendium_entries_ingredient_id_ingredients_id_fk",
           "tableFrom": "workspace_compendium_entries",
-          "tableTo": "ingredients",
           "columnsFrom": ["ingredient_id"],
+          "tableTo": "ingredients",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "workspace_compendium_entries_created_by_users_id_fk": {
           "name": "workspace_compendium_entries_created_by_users_id_fk",
           "tableFrom": "workspace_compendium_entries",
-          "tableTo": "users",
           "columnsFrom": ["created_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "workspace_compendium_entries_updated_by_users_id_fk": {
           "name": "workspace_compendium_entries_updated_by_users_id_fk",
           "tableFrom": "workspace_compendium_entries",
-          "tableTo": "users",
           "columnsFrom": ["updated_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "workspace_compendium_entries_deleted_by_users_id_fk": {
           "name": "workspace_compendium_entries_deleted_by_users_id_fk",
           "tableFrom": "workspace_compendium_entries",
-          "tableTo": "users",
           "columnsFrom": ["deleted_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -5174,10 +5125,10 @@
             }
           ],
           "isUnique": true,
-          "where": "\"celestial_bodies\".\"seed_key\" is not null and \"celestial_bodies\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"celestial_bodies\".\"seed_key\" is not null and \"celestial_bodies\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "celestial_bodies_slug_unique": {
           "name": "celestial_bodies_slug_unique",
@@ -5190,60 +5141,60 @@
             }
           ],
           "isUnique": true,
-          "where": "\"celestial_bodies\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"celestial_bodies\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "celestial_bodies_trgm": {
           "name": "celestial_bodies_trgm",
           "columns": [
             {
               "expression": "\"name\" gin_trgm_ops",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             },
             {
               "expression": "\"description\" gin_trgm_ops",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "gin",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "celestial_bodies_created_by_users_id_fk": {
           "name": "celestial_bodies_created_by_users_id_fk",
           "tableFrom": "celestial_bodies",
-          "tableTo": "users",
           "columnsFrom": ["created_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "celestial_bodies_updated_by_users_id_fk": {
           "name": "celestial_bodies_updated_by_users_id_fk",
           "tableFrom": "celestial_bodies",
-          "tableTo": "users",
           "columnsFrom": ["updated_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "celestial_bodies_deleted_by_users_id_fk": {
           "name": "celestial_bodies_deleted_by_users_id_fk",
           "tableFrom": "celestial_bodies",
-          "tableTo": "users",
           "columnsFrom": ["deleted_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -5349,10 +5300,10 @@
             }
           ],
           "isUnique": true,
-          "where": "\"zodiac_signs\".\"seed_key\" is not null and \"zodiac_signs\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"zodiac_signs\".\"seed_key\" is not null and \"zodiac_signs\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "zodiac_signs_slug_unique": {
           "name": "zodiac_signs_slug_unique",
@@ -5365,60 +5316,60 @@
             }
           ],
           "isUnique": true,
-          "where": "\"zodiac_signs\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"zodiac_signs\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "zodiac_signs_trgm": {
           "name": "zodiac_signs_trgm",
           "columns": [
             {
               "expression": "\"name\" gin_trgm_ops",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             },
             {
               "expression": "\"description\" gin_trgm_ops",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "gin",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "zodiac_signs_created_by_users_id_fk": {
           "name": "zodiac_signs_created_by_users_id_fk",
           "tableFrom": "zodiac_signs",
-          "tableTo": "users",
           "columnsFrom": ["created_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "zodiac_signs_updated_by_users_id_fk": {
           "name": "zodiac_signs_updated_by_users_id_fk",
           "tableFrom": "zodiac_signs",
-          "tableTo": "users",
           "columnsFrom": ["updated_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "zodiac_signs_deleted_by_users_id_fk": {
           "name": "zodiac_signs_deleted_by_users_id_fk",
           "tableFrom": "zodiac_signs",
-          "tableTo": "users",
           "columnsFrom": ["deleted_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -5524,10 +5475,10 @@
             }
           ],
           "isUnique": true,
-          "where": "\"categories\".\"seed_key\" is not null and \"categories\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"categories\".\"seed_key\" is not null and \"categories\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "categories_slug_unique": {
           "name": "categories_slug_unique",
@@ -5540,48 +5491,48 @@
             }
           ],
           "isUnique": true,
-          "where": "\"categories\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"categories\".\"deleted_at\" is null",
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "categories_group_id_category_groups_id_fk": {
           "name": "categories_group_id_category_groups_id_fk",
           "tableFrom": "categories",
-          "tableTo": "category_groups",
           "columnsFrom": ["group_id"],
+          "tableTo": "category_groups",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "categories_created_by_users_id_fk": {
           "name": "categories_created_by_users_id_fk",
           "tableFrom": "categories",
-          "tableTo": "users",
           "columnsFrom": ["created_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "categories_updated_by_users_id_fk": {
           "name": "categories_updated_by_users_id_fk",
           "tableFrom": "categories",
-          "tableTo": "users",
           "columnsFrom": ["updated_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "categories_deleted_by_users_id_fk": {
           "name": "categories_deleted_by_users_id_fk",
           "tableFrom": "categories",
-          "tableTo": "users",
           "columnsFrom": ["deleted_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -5693,10 +5644,10 @@
             }
           ],
           "isUnique": true,
-          "where": "\"category_groups\".\"seed_key\" is not null and \"category_groups\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"category_groups\".\"seed_key\" is not null and \"category_groups\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "category_groups_slug_unique": {
           "name": "category_groups_slug_unique",
@@ -5709,39 +5660,39 @@
             }
           ],
           "isUnique": true,
-          "where": "\"category_groups\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"category_groups\".\"deleted_at\" is null",
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "category_groups_created_by_users_id_fk": {
           "name": "category_groups_created_by_users_id_fk",
           "tableFrom": "category_groups",
-          "tableTo": "users",
           "columnsFrom": ["created_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "category_groups_updated_by_users_id_fk": {
           "name": "category_groups_updated_by_users_id_fk",
           "tableFrom": "category_groups",
-          "tableTo": "users",
           "columnsFrom": ["updated_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "category_groups_deleted_by_users_id_fk": {
           "name": "category_groups_deleted_by_users_id_fk",
           "tableFrom": "category_groups",
-          "tableTo": "users",
           "columnsFrom": ["deleted_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -5847,10 +5798,10 @@
             }
           ],
           "isUnique": true,
-          "where": "\"deities\".\"seed_key\" is not null and \"deities\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"deities\".\"seed_key\" is not null and \"deities\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "deities_slug_unique": {
           "name": "deities_slug_unique",
@@ -5863,69 +5814,69 @@
             }
           ],
           "isUnique": true,
-          "where": "\"deities\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"deities\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "deities_trgm": {
           "name": "deities_trgm",
           "columns": [
             {
               "expression": "\"name\" gin_trgm_ops",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             },
             {
               "expression": "\"description\" gin_trgm_ops",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "gin",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "deities_tradition_id_deity_traditions_id_fk": {
           "name": "deities_tradition_id_deity_traditions_id_fk",
           "tableFrom": "deities",
-          "tableTo": "deity_traditions",
           "columnsFrom": ["tradition_id"],
+          "tableTo": "deity_traditions",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "deities_created_by_users_id_fk": {
           "name": "deities_created_by_users_id_fk",
           "tableFrom": "deities",
-          "tableTo": "users",
           "columnsFrom": ["created_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "deities_updated_by_users_id_fk": {
           "name": "deities_updated_by_users_id_fk",
           "tableFrom": "deities",
-          "tableTo": "users",
           "columnsFrom": ["updated_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "deities_deleted_by_users_id_fk": {
           "name": "deities_deleted_by_users_id_fk",
           "tableFrom": "deities",
-          "tableTo": "users",
           "columnsFrom": ["deleted_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -6025,10 +5976,10 @@
             }
           ],
           "isUnique": true,
-          "where": "\"deity_traditions\".\"seed_key\" is not null and \"deity_traditions\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"deity_traditions\".\"seed_key\" is not null and \"deity_traditions\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "deity_traditions_slug_unique": {
           "name": "deity_traditions_slug_unique",
@@ -6041,39 +5992,39 @@
             }
           ],
           "isUnique": true,
-          "where": "\"deity_traditions\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"deity_traditions\".\"deleted_at\" is null",
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "deity_traditions_created_by_users_id_fk": {
           "name": "deity_traditions_created_by_users_id_fk",
           "tableFrom": "deity_traditions",
-          "tableTo": "users",
           "columnsFrom": ["created_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "deity_traditions_updated_by_users_id_fk": {
           "name": "deity_traditions_updated_by_users_id_fk",
           "tableFrom": "deity_traditions",
-          "tableTo": "users",
           "columnsFrom": ["updated_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "deity_traditions_deleted_by_users_id_fk": {
           "name": "deity_traditions_deleted_by_users_id_fk",
           "tableFrom": "deity_traditions",
-          "tableTo": "users",
           "columnsFrom": ["deleted_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -6161,69 +6112,69 @@
             },
             {
               "expression": "lower(\"name\")",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": true,
-          "where": "\"deity_other_names\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"deity_other_names\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "deity_other_names_trgm": {
           "name": "deity_other_names_trgm",
           "columns": [
             {
               "expression": "\"name\" gin_trgm_ops",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "gin",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "deity_other_names_deity_id_deities_id_fk": {
           "name": "deity_other_names_deity_id_deities_id_fk",
           "tableFrom": "deity_other_names",
-          "tableTo": "deities",
           "columnsFrom": ["deity_id"],
+          "tableTo": "deities",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "deity_other_names_created_by_users_id_fk": {
           "name": "deity_other_names_created_by_users_id_fk",
           "tableFrom": "deity_other_names",
-          "tableTo": "users",
           "columnsFrom": ["created_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "deity_other_names_updated_by_users_id_fk": {
           "name": "deity_other_names_updated_by_users_id_fk",
           "tableFrom": "deity_other_names",
-          "tableTo": "users",
           "columnsFrom": ["updated_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "deity_other_names_deleted_by_users_id_fk": {
           "name": "deity_other_names_deleted_by_users_id_fk",
           "tableFrom": "deity_other_names",
-          "tableTo": "users",
           "columnsFrom": ["deleted_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -6330,10 +6281,10 @@
             }
           ],
           "isUnique": true,
-          "where": "\"ingredient_form_groups\".\"seed_key\" is not null and \"ingredient_form_groups\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"ingredient_form_groups\".\"seed_key\" is not null and \"ingredient_form_groups\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "ingredient_form_groups_slug_unique": {
           "name": "ingredient_form_groups_slug_unique",
@@ -6346,39 +6297,39 @@
             }
           ],
           "isUnique": true,
-          "where": "\"ingredient_form_groups\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"ingredient_form_groups\".\"deleted_at\" is null",
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "ingredient_form_groups_created_by_users_id_fk": {
           "name": "ingredient_form_groups_created_by_users_id_fk",
           "tableFrom": "ingredient_form_groups",
-          "tableTo": "users",
           "columnsFrom": ["created_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "ingredient_form_groups_updated_by_users_id_fk": {
           "name": "ingredient_form_groups_updated_by_users_id_fk",
           "tableFrom": "ingredient_form_groups",
-          "tableTo": "users",
           "columnsFrom": ["updated_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "ingredient_form_groups_deleted_by_users_id_fk": {
           "name": "ingredient_form_groups_deleted_by_users_id_fk",
           "tableFrom": "ingredient_form_groups",
-          "tableTo": "users",
           "columnsFrom": ["deleted_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -6484,10 +6435,10 @@
             }
           ],
           "isUnique": true,
-          "where": "\"ingredient_forms\".\"seed_key\" is not null and \"ingredient_forms\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"ingredient_forms\".\"seed_key\" is not null and \"ingredient_forms\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "ingredient_forms_slug_unique": {
           "name": "ingredient_forms_slug_unique",
@@ -6500,69 +6451,69 @@
             }
           ],
           "isUnique": true,
-          "where": "\"ingredient_forms\".\"deleted_at\" is null",
-          "concurrently": false,
+          "with": {},
           "method": "btree",
-          "with": {}
+          "where": "\"ingredient_forms\".\"deleted_at\" is null",
+          "concurrently": false
         },
         "ingredient_forms_trgm": {
           "name": "ingredient_forms_trgm",
           "columns": [
             {
               "expression": "\"name\" gin_trgm_ops",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             },
             {
               "expression": "\"description\" gin_trgm_ops",
-              "asc": true,
               "isExpression": true,
+              "asc": true,
               "nulls": "last"
             }
           ],
           "isUnique": false,
-          "concurrently": false,
+          "with": {},
           "method": "gin",
-          "with": {}
+          "concurrently": false
         }
       },
       "foreignKeys": {
         "ingredient_forms_group_id_ingredient_form_groups_id_fk": {
           "name": "ingredient_forms_group_id_ingredient_form_groups_id_fk",
           "tableFrom": "ingredient_forms",
-          "tableTo": "ingredient_form_groups",
           "columnsFrom": ["group_id"],
+          "tableTo": "ingredient_form_groups",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "ingredient_forms_created_by_users_id_fk": {
           "name": "ingredient_forms_created_by_users_id_fk",
           "tableFrom": "ingredient_forms",
-          "tableTo": "users",
           "columnsFrom": ["created_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "ingredient_forms_updated_by_users_id_fk": {
           "name": "ingredient_forms_updated_by_users_id_fk",
           "tableFrom": "ingredient_forms",
-          "tableTo": "users",
           "columnsFrom": ["updated_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         },
         "ingredient_forms_deleted_by_users_id_fk": {
           "name": "ingredient_forms_deleted_by_users_id_fk",
           "tableFrom": "ingredient_forms",
-          "tableTo": "users",
           "columnsFrom": ["deleted_by"],
+          "tableTo": "users",
           "columnsTo": ["id"],
-          "onDelete": "no action",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "onDelete": "no action"
         }
       },
       "compositePrimaryKeys": {},
@@ -6666,10 +6617,10 @@
     }
   },
   "schemas": {},
+  "views": {},
   "sequences": {},
   "roles": {},
   "policies": {},
-  "views": {},
   "_meta": {
     "columns": {},
     "schemas": {},

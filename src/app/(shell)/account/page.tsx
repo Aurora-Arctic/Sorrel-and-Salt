@@ -9,6 +9,7 @@ import {
 } from '@/modules/identity';
 import EmailForm from '../../../components/EmailForm';
 import NameForm from '../../../components/NameForm';
+import PageHeader from '../../../components/PageHeader';
 import PageNav from '../../../components/PageNav';
 import PasswordSection from '../../../components/PasswordSection';
 import ReceivedInvitations from '../../../components/ReceivedInvitations';
@@ -29,7 +30,7 @@ import { configuredProviders } from '../../../lib/social-providers-config';
 import type { AccountPageProps } from './types';
 
 export const metadata: Metadata = {
-  title: 'Your Account — Sorrel & Salt',
+  title: 'Your Account',
 };
 
 // The one account page: name, address, ways in, password and waiting coven invitations, each its own section
@@ -64,7 +65,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
 
   return (
     <main className="page-frame page-frame--narrow page-with-nav">
-      <h1>Your Account</h1>
+      <PageHeader title="Your Account" />
       <PageNav
         label="On This Page"
         entries={[

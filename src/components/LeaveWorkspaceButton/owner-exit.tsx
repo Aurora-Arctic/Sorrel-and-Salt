@@ -161,7 +161,7 @@ const Options = ({
           },
           {
             value: 'delete',
-            label: 'Delete It',
+            label: 'Delete Coven',
             description:
               'Closes it for every other member as well. Only an administrator with database access can restore it.',
           },
@@ -179,7 +179,7 @@ const Options = ({
             required
             value={picked}
             onChange={(userId) => !sending && setPicked(userId)}
-            placeholder="Search Members"
+            placeholder="Search members"
             // Each with their role now, as a form's row shows its group:
             // "Fixture B (Member)", and what that role may do in the tooltip.
             choices={successors.map(({ userId, name: member, role }) => ({

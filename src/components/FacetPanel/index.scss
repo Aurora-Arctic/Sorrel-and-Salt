@@ -86,9 +86,7 @@
 }
 
 .facet-panel__pad {
-  display: flex;
-  flex-direction: column;
-  gap: space(4);
+  @include stack(4);
   padding: space(4);
   background-color: $surface-page;
   border: 1px solid $hairline;
@@ -109,9 +107,7 @@
 // beside it (the chips and switches, in `.facet-panel__quick`) keep their own. Below the
 // tablet width every control stacks, in the same order as the source.
 .facet-panel__line {
-  display: flex;
-  flex-direction: column;
-  gap: space(4);
+  @include stack(4);
 
   // Stacked, a combobox is as tall as it is, not the row-wise basis.
   > .facet-panel__grow {

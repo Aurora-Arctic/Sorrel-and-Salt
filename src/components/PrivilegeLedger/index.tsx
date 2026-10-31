@@ -1,9 +1,10 @@
 import type { ReactElement } from 'react';
 import ListFrame, { ListBody } from '../ListFrame';
+import LocalTime from '../LocalTime';
 import Pager from '../Pager';
 import StackTable from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
-import { noMatchText } from '../../lib/text';
+import { emptyList, noMatchText } from '../../lib/text';
 import LedgerFilterForm from './filter';
 import { privilegeLabel } from './privileges';
 import type {
@@ -26,6 +27,7 @@ const ROUTE_LABELS: Record<LedgerRoute, string> = {
   bootstrap: 'Seeded',
   admin: 'By an admin',
   invitation: 'Invitation accepted',
+  card: 'Card accepted',
   manual: 'Manual fix',
 };
 
@@ -38,12 +40,7 @@ function nothingToShow({ privilege, query }: PrivilegeLedgerFilter): string {
     query && `“${query}”`,
     privilege && `the privilege ${privilegeLabel(privilege)}`,
   ].filter((filter): filter is string => Boolean(filter));
-  return noMatchText('privilege changes', filters, 'No privilege changes yet.');
-}
-
-/** A time to the minute, in UTC and saying so, since the server renders it. */
-function when(at: Date): string {
-  return `${at.toISOString().slice(0, 16).replace('T', ' ')} UTC`;
+  return noMatchText('privilege changes', filters, emptyList('privilege changes'));
 }
 
 /** A named user, linked to their `/admin/users` row where the list has one. */
@@ -56,7 +53,8 @@ const Person = ({ person }: LedgerPersonProps): ReactElement => {
 const COLUMNS: readonly StackColumn<PrivilegeLedgerEntry>[] = [
   {
     heading: 'When',
-    cell: (change) => <time dateTime={change.at.toISOString()}>{when(change.at)}</time>,
+    className: 'privilege-ledger__fact',
+    cell: (change) => <LocalTime at={change.at} />,
   },
   { heading: 'User', cell: (change) => <Person person={change.subject} /> },
   { heading: 'Privilege', cell: (change) => privilegeLabel(change.privilege) },

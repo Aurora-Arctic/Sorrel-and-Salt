@@ -38,7 +38,7 @@ member, a viewer) gets the plain one, and the page reads nothing for them.
   the design review, 2026-10-12): the question "Leave _name_? It needs an owner, so choose what
   happens to it", then a radio pair, each with a line of explanation, and one row of buttons whose
   confirm follows the choice. "Hand It to Another Member" is chosen to start, and its confirm is the
-  green Promote and Leave; "Delete It", whose line says every other member loses access, swaps the
+  green Promote and Leave; "Delete Coven", whose line says every other member loses access, swaps the
   confirm for the red Delete Coven. Both ways out are always on screen together.
 - **The new owner is found by typing, with their role.** Under the hand-over choice, a type-ahead
   box (`ComboboxTypeahead`) in a `FieldShell`, labelled "New Owner" with the required mark, narrows the other members by name as the owner types; each row reads
@@ -88,7 +88,7 @@ is `.btn--destructive`; Cancel is `.btn--quiet`.
 
 `index.stories.tsx` (`Coven / Leave Coven Button`): `States`, a grid of Member (the plain Leave),
 Only Owner (several members to hand over to, so the type-ahead), Only Owner One Other (one member,
-offered by name) and Only Member (deletion alone); and `Open`, with a control that chooses the dialog open in each case (Member Asking, Member Refused, Only Owner Hand Over, Only Owner Delete Chosen, Only Owner One Other Hand Over Failed, Only Member Asking); and `Overview`, with a control that chooses the caller's role (Owner, Member, Viewer): the coven index page in the app shell, with the eyebrow, title, role sentence, Contents, Your Membership and, for an owner, Delete This Coven. In the
+offered by name) and Only Member (deletion alone); and `Open`, with a control that chooses the dialog open in each case (Member Asking, Member Refused, Only Owner Hand Over, Only Owner Delete Chosen, Only Owner One Other Hand Over Failed, Only Member Asking); and `Overview`, with a control that chooses the caller's role (Owner, Member, Viewer): the coven index page in the app shell, with the eyebrow, title, role sentence, Contents, Your Membership and, for an owner, Delete Coven. In the
 workshop the calls reach no server, so confirming shows the failure. The page itself reads the session, so `Overview` draws its markup with fixture props; it is walked in
 `tests/e2e/coven.spec.ts`.
 

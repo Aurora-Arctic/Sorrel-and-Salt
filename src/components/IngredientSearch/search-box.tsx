@@ -9,6 +9,7 @@ import { graphql } from '../../gql';
 import { useDebouncedValue } from '../../lib/debounce';
 import { graphqlQuery } from '../../lib/graphql-client';
 import Combobox from '../Combobox';
+import { UNTITLED_SPELL } from '../SpellCard';
 import { MagnifierIcon } from '../Field/icons';
 import { useApplyFilter } from '../FilterForm';
 import { useRouteModalOpener } from '../Modal/route-modal-provider';
@@ -94,10 +95,10 @@ const GrimoireSearchMatchesDocument = graphql(`
 const WORDING = {
   ingredient: {
     label: 'Name',
-    placeholder: 'Search names, forms & descriptions',
+    placeholder: 'Search',
     clear: 'Clear Name',
   },
-  spell: { label: 'Title', placeholder: 'Search titles & intents', clear: 'Clear Title' },
+  spell: { label: 'Title', placeholder: 'Search', clear: 'Clear Title' },
 } as const;
 
 /** The dropdown's rows: the first page of the ranked search, never a second. */
@@ -184,12 +185,12 @@ const IngredientSearchBox = ({
             hasNextPage: page.pageInfo.hasNextPage,
             rows: page.edges.map(({ node }) => ({
               key: node.id,
-              value: node.title ?? query,
-              label: node.title ?? 'Untitled Spell',
+              value: node.title?.trim() || query,
+              label: node.title?.trim() || UNTITLED_SPELL,
               match: {
                 id: node.id,
                 slug: node.id,
-                name: node.title ?? 'Untitled Spell',
+                name: node.title?.trim() || UNTITLED_SPELL,
                 canonicalName: null,
                 nomenclature: 'none',
               },
@@ -246,7 +247,7 @@ const IngredientSearchBox = ({
   }
 
   return (
-    // No visible label: the placeholder says what the search reads, and the combobox draws its
+    // No visible label: the placeholder says what the box is for, and the combobox draws its
     // own visually hidden one, so no FieldShell here.
     <Combobox<IngredientSearchOption>
       id={controlId}
@@ -264,10 +265,8 @@ const IngredientSearchBox = ({
       }}
       empty={belowFloor ? 'Keep typing to search' : searchesNow ? undefined : false}
       // The last row of the listbox, reached by the arrows like a result, in italics so it reads
-      // as a message, not a match.
-      action={
-        hasMore ? { label: 'See all results.', onSelect: () => apply(seeAllHref) } : undefined
-      }
+      // apart from the matches.
+      action={hasMore ? { label: 'See All Results', onSelect: () => apply(seeAllHref) } : undefined}
       offerTyped={false}
       noun="result"
       placeholder={wording.placeholder}

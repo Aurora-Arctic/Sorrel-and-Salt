@@ -3,21 +3,27 @@ import { getMe } from '@/modules/identity';
 import CreateWorkspaceForm from '../../../../components/CreateWorkspaceForm';
 import ContextRow from '../../../../components/ContextRow';
 import Notice from '../../../../components/Notice';
+import PageHeader from '../../../../components/PageHeader';
 import WorkspaceSwitcher from '../../../../components/WorkspaceSwitcher';
 import { requireSession } from '../../../../lib/request-session';
 import { viewerOf } from '../../../../lib/viewer';
 
 export const metadata: Metadata = {
-  title: 'Create Coven — Sorrel & Salt',
+  title: 'Create Coven',
 };
 
 // The create-workspace page. It belongs to no one coven, so the coven guard does not run;
 // `isReservedCovenSlug` keeps `new` from being a slug. The right is read from the row, not the session,
 // and showing the form only to a holder is presentation, as `createWorkspace` is the gate.
-export default async function NewCovenPage() {
+export default async function NewCovenPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ card?: string }>;
+}) {
   const session = await requireSession();
   const me = await getMe(session);
   const { viewer, workspaces } = await viewerOf();
+  const fromCard = (await searchParams)?.card === 'accepted';
 
   return (
     <>
@@ -30,10 +36,15 @@ export default async function NewCovenPage() {
           is. */}
       <main className="page-frame page-frame--narrow">
         <div className="page-frame__section panel">
-          <div className="header">
-            <h1>Create Coven</h1>
-            <p className="lede">Start a coven of your own. You will be its owner.</p>
-          </div>
+          <PageHeader
+            title="Create Coven"
+            lede="Start a coven of your own. You will be its owner."
+          />
+          {fromCard && me.canCreateWorkspace && (
+            <Notice kind="success" quiet>
+              Your card is accepted: you can now start a coven.
+            </Notice>
+          )}
           {me.canCreateWorkspace ? (
             <CreateWorkspaceForm />
           ) : (

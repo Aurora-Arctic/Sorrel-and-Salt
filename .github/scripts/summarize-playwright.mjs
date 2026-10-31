@@ -69,3 +69,5 @@ if (failures.length > 0) {
 
 setOutput('summary', summary);
 setOutput('details', details);
+// Read by the report upload: a test that failed and then passed on retry has a trace worth keeping.
+setOutput('flaky', flaky > 0 ? 'true' : 'false');

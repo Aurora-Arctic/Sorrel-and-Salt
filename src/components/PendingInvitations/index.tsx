@@ -3,7 +3,8 @@ import StackTable from '../DataTable';
 import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
 import { workspaceRoleLabel } from '../UserDetail/roles';
-import { inUtc } from '../../lib/utc';
+import { emptyList } from '../../lib/text';
+import LocalTime from '../LocalTime';
 import RemoveControl from './remove-control';
 import RevokeControl from './revoke-control';
 import type { PendingInvitationsProps } from './types';
@@ -34,11 +35,11 @@ const PendingInvitations = ({
               declinedAt ? (
                 <>
                   <span className="pending-invitations__declined">Declined</span>
-                  <time dateTime={declinedAt.toISOString()}>{inUtc(declinedAt)}</time>
+                  <LocalTime at={declinedAt} long />
                 </>
               ) : (
                 <>
-                  Expires <time dateTime={expiresAt.toISOString()}>{inUtc(expiresAt)}</time>
+                  Expires <LocalTime at={expiresAt} long />
                 </>
               ),
           },
@@ -55,7 +56,7 @@ const PendingInvitations = ({
         ]}
         rows={invitations}
         rowKey={(invitation) => invitation.id}
-        empty="No invitations are waiting."
+        empty={emptyList('invitations')}
         className="data-table--nowrap"
       />
       <Pager previousHref={previousHref} nextHref={nextHref} position={position} soft />

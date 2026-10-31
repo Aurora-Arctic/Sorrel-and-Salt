@@ -84,7 +84,9 @@ $account-menu-avatar: 2rem;
   @include truncate;
 }
 
-.account-menu__count {
+// The button's full name for assistive tech, named apart from the panel's count
+// badge so the hiding never reaches the badge.
+.account-menu__full-name {
   @include visually-hidden;
 }
 

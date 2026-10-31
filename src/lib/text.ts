@@ -30,6 +30,9 @@ export function capitalise(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
+/** What a list with no rows at all says: "There are no users yet." `things` is the plural. */
+export const emptyList = (things: string): string => `There are no ${things} yet.`;
+
 /** The start of a no-match sentence, before the filters. A list that draws its filters as nodes (CompendiumList) builds from the same two pieces, so the wording has one source. */
 export const noMatchLead = (noun: string): string => `No ${noun} match `;
 

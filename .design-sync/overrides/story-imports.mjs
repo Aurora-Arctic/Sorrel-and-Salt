@@ -1,6 +1,6 @@
 // Fork of lib/story-imports.mjs as a thin wrapper (reason in config.json libOverrides): everything
 // is the bundled module's, except that previews compile `msw/browser` to a fetch-wrapping fake
-// (.design-sync/mock-fetch/msw-browser.ts) and `msw` and `@mswjs/*` to the real packages, so
+// (.design-sync/mock-fetch/msw-browser.ts) and `msw`, its subpaths and `@mswjs/*` to the real packages, so
 // .storybook/mock-api.ts works in a preview page. Only stories that import mock-api reach msw at
 // all. The decorator bundle (source-storybook fork) still uses the bundled inert stub.
 import { resolve } from 'node:path';
@@ -33,7 +33,11 @@ export function storyImportPlugins(opts) {
       b.onResolve({ filter: /^msw\/browser$/ }, () => ({
         path: resolve('.design-sync', 'mock-fetch', 'msw-browser.ts'),
       }));
-      b.onResolve({ filter: /^(msw|@mswjs\/.*)$/ }, async (a) => {
+      // msw 3 splits its handlers into `msw/http` and `msw/graphql`; every msw path but the browser
+      // one above goes to the real package, or the stub would answer with inert handlers.
+      b.onResolve({ filter: /^(msw(\/.*)?|@mswjs\/.*)$/ }, async (a) => {
+        // esbuild filters are Go regular expressions, with no lookahead to exclude the browser path.
+        if (a.path === 'msw/browser') return null;
         const k = keyOf(a);
         if (active.has(k)) return null;
         active.add(k);

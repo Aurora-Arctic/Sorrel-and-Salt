@@ -145,6 +145,7 @@ jobs:
               - '.github/scripts/summarize-lint.sh'
               - 'Docker/Dockerfile.node'
               - '.oxlintrc.json'
+              - 'knip.jsonc'
               - '**/*.ts'
               - '**/*.tsx'
               - '**/*.js'

@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import type { ReactElement } from 'react';
+import PageHeader from '../PageHeader';
 import './index.scss';
 
 // The body of `src/app/(shell)/forbidden.tsx`: what a signed-in non-admin sees at
@@ -8,13 +9,15 @@ import './index.scss';
 
 const NotAuthorized = (): ReactElement => (
   <div className="not-authorized">
-    <div className="header">
-      <h1 className="not-authorized__title">Not Authorized</h1>
-      <p className="not-authorized__reason lede">
-        This part of Sorrel &amp; Salt is where the site&rsquo;s admins curate the shared
-        compendium. Your account does not have admin rights.
-      </p>
-    </div>
+    <PageHeader
+      title="Not Authorized"
+      lede={
+        <>
+          This part of Sorrel &amp; Salt is where the site&rsquo;s admins curate the shared
+          compendium. Your account does not have admin rights.
+        </>
+      }
+    />
     <p className="not-authorized__way-back">
       <Link className="btn btn--quiet" href="/">
         Back to Sorrel &amp; Salt

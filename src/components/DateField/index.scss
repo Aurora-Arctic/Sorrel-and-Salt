@@ -1,17 +1,23 @@
 @use '../../scss/variables' as *;
-@use '../../scss/mixins' as *;
 
-// The day button is a `.input` box. The calendar is a popover in the top layer, placed from the button's position, so the dialog's scrolling body
-// cannot clip it; a browser with no popover leaves it in flow beneath the button.
+// The day button is a `.input` box with the calendar mark at its end; the calendar's own look is
+// `calendar.scss`, shared with the day-range field.
 // As wide as the widest date it can show: the sizer and the text share one grid cell, and the sizer is
 // invisible, so the box never changes width with the day.
 .input.date-field__button {
   display: inline-grid;
+  grid-template-columns: auto auto;
+  column-gap: space(2);
+  align-items: center;
   inline-size: auto;
   max-inline-size: 100%;
   align-content: center;
   text-align: start;
   cursor: pointer;
+
+  .calendar-icon {
+    grid-area: 1 / 2;
+  }
 }
 
 .date-field__sizer,
@@ -31,215 +37,4 @@
   > span {
     grid-area: 1 / 1;
   }
-}
-
-.date-field__panel {
-  margin-block-start: space(2);
-  padding: space(3);
-  border: 1px solid $text-muted;
-  border-radius: radius('surface');
-  background-color: $surface-card;
-  inline-size: fit-content;
-  max-inline-size: 100%;
-}
-
-// A popover is in the top layer and fixed to the window; the component sets its place as two custom
-// properties. Only a popover gets this class, so the in-flow fallback keeps its margin.
-// A row under the grid, its one button at the end.
-.date-field__footer {
-  display: flex;
-  justify-content: flex-end;
-  margin-block-start: space(2);
-}
-
-.date-field__panel--floating {
-  position: fixed;
-  inset: auto;
-  inset-block-start: var(--date-field-top, 0);
-  inset-inline-start: var(--date-field-left, 0);
-  margin: 0;
-  max-inline-size: calc(100vw - #{space(4)});
-  overflow: visible;
-  color: inherit;
-}
-
-.day-picker {
-  color: $text-primary;
-  font-family: $font-body;
-}
-
-.day-picker__months {
-  position: relative;
-}
-
-.day-picker__caption {
-  display: flex;
-  align-items: center;
-  // Clear of the previous and next steps, which sit over the caption's end: the panel grows to hold both.
-  block-size: 2.5rem;
-  padding-inline-end: 4.5rem;
-}
-
-// The two selects are the month and year pickers; the library's own text label for them is spoken twice, so it stays hidden.
-.day-picker__dropdowns {
-  display: flex;
-  gap: space(2);
-}
-
-// The month and year pickers are the app's select-only boxes, shorter than a field to sit in the caption; the library's own text label for them is not drawn.
-// The month and year pickers are the app's select-only boxes in their compact form (`.field--compact`, as high as a step), as wide as their longest option and no wider.
-.day-picker__dropdown-root {
-  display: inline-grid;
-
-  > * {
-    grid-area: 1 / 1;
-  }
-
-  .combobox__control {
-    padding-inline: space(2) space(1);
-    gap: 0;
-  }
-
-  .combobox__indicator {
-    inline-size: 1.25rem;
-  }
-
-  .combobox__option {
-    padding: space(1) space(2);
-  }
-}
-
-.day-picker__dropdown-sizer {
-  display: inline-grid;
-  padding-inline: space(2) 1.75rem;
-  font-size: type-size('caption');
-  visibility: hidden;
-  pointer-events: none;
-
-  > * {
-    grid-area: 1 / 1;
-  }
-}
-
-// Previous and next sit at the caption's end, over the space its padding keeps clear (the nav is a sibling of the caption, so it is placed, not flowed).
-.day-picker__nav {
-  position: absolute;
-  inset-block-start: 0;
-  inset-inline-end: 0;
-  display: flex;
-  align-items: center;
-  gap: space(1);
-  block-size: 2.5rem;
-}
-
-.day-picker__step {
-  display: inline-grid;
-  place-items: center;
-  inline-size: 2rem;
-  block-size: 2rem;
-  padding: 0;
-  border: 0;
-  border-radius: radius('control');
-  background: transparent;
-  color: $text-primary;
-  cursor: pointer;
-
-  &:hover {
-    background-color: $surface-card-hover;
-  }
-
-  &:focus-visible {
-    @include focus-ring;
-  }
-
-  &[aria-disabled='true'] {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-}
-
-// The Combobox's stroked chevron, turned to point where the step or select does.
-.day-picker__chevron {
-  display: inline-grid;
-  inline-size: 1rem;
-  block-size: 1rem;
-
-  svg {
-    inline-size: 100%;
-    block-size: 100%;
-  }
-}
-
-.day-picker__chevron--left {
-  transform: rotate(90deg);
-}
-
-.day-picker__chevron--right {
-  transform: rotate(-90deg);
-}
-
-.day-picker__chevron--up {
-  transform: rotate(180deg);
-}
-
-.day-picker__grid {
-  inline-size: 100%;
-  border-collapse: collapse;
-}
-
-.day-picker__weekday {
-  padding-block: space(1);
-  color: $text-muted;
-  font-size: type-size('small');
-  font-weight: 400;
-  text-align: center;
-}
-
-.day-picker__day {
-  padding: 0;
-  text-align: center;
-}
-
-.day-picker__button {
-  inline-size: 2.25rem;
-  block-size: 2.25rem;
-  padding: 0;
-  border: 1px solid transparent;
-  border-radius: radius('control');
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  cursor: pointer;
-
-  &:hover:not(:disabled) {
-    background-color: $surface-card-hover;
-  }
-
-  &:focus-visible {
-    @include focus-ring;
-  }
-
-  &:disabled {
-    cursor: not-allowed;
-  }
-}
-
-// Today is told by its rule and the chosen day by its fill and weight, not colour alone.
-.day-picker__day--today .day-picker__button {
-  border-color: $text-primary;
-}
-
-.day-picker__day--selected .day-picker__button {
-  background-color: $accent;
-  color: $text-on-color;
-  font-weight: 600;
-}
-
-.day-picker__day--outside {
-  color: $text-muted;
-}
-
-.day-picker__day--disabled {
-  color: $text-muted;
-  opacity: 0.5;
 }

@@ -97,7 +97,7 @@ describe('the /coven/[slug] page', () => {
       const dialog = await screen.findByRole('dialog');
 
       expect(within(dialog).getByRole('radio', { name: /^Hand It/ })).toBeChecked();
-      expect(within(dialog).getByRole('radio', { name: /^Delete It/ })).toBeInTheDocument();
+      expect(within(dialog).getByRole('radio', { name: /^Delete Coven/ })).toBeInTheDocument();
       const box = await within(dialog).findByRole('combobox', { name: 'New Owner' });
       fireEvent.focus(box);
       fireEvent.change(box, { target: { value: 'Name of' } });
@@ -151,6 +151,29 @@ describe('the /coven/[slug] page', () => {
       );
     });
 
+    it('lists the grimoire in Contents for a viewer, who reads it', async () => {
+      await renderAs('viewer');
+
+      const contents = screen.getByRole('region', { name: 'Contents' });
+      const grimoire = within(contents).getByRole('link', { name: 'Grimoire' });
+      expect(grimoire).toHaveAttribute('href', '/coven/fixture-coven/grimoire');
+      expect(grimoire).toHaveAccessibleDescription(
+        'What the coven makes: its spells, and the workings it has recorded.',
+      );
+    });
+
+    it('lists Ingredients, Grimoire and Members in that order for a member', async () => {
+      await renderAs('member');
+
+      const contents = screen.getByRole('region', { name: 'Contents' });
+      const links = within(contents).getAllByRole('link');
+      expect(links.map((link) => [link.textContent, link.getAttribute('href')])).toEqual([
+        ['Ingredients', '/coven/fixture-coven/ingredients'],
+        ['Grimoire', '/coven/fixture-coven/grimoire'],
+        ['Members', '/coven/fixture-coven/members'],
+      ]);
+    });
+
     it('lists no Members for a viewer, who cannot read it', async () => {
       await renderAs('viewer');
 
@@ -163,14 +186,14 @@ describe('the /coven/[slug] page', () => {
       const membership = screen.getByRole('region', { name: 'Your Membership' });
       expect(within(membership).getByRole('button', { name: 'Leave Coven' })).toBeEnabled();
       expect(within(membership).queryByRole('button', { name: 'Delete Coven' })).toBeNull();
-      const owners = screen.getByRole('region', { name: 'Delete This Coven' });
+      const owners = screen.getByRole('region', { name: 'Delete Coven' });
       expect(within(owners).getByRole('button', { name: 'Delete Coven' })).toBeEnabled();
     });
 
     it('shows a viewer no Delete section', async () => {
       await renderAs('viewer');
 
-      expect(screen.queryByRole('region', { name: 'Delete This Coven' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('region', { name: 'Delete Coven' })).not.toBeInTheDocument();
     });
   });
 

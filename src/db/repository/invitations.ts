@@ -1,9 +1,12 @@
 import { and, eq, gt, inArray, isNotNull, isNull, lte, or, sql, type SQL } from 'drizzle-orm';
+import { alias, type AnyPgColumn } from 'drizzle-orm/pg-core';
+import { applyAudit } from '../audit';
 import { workspaces } from '../../modules/coven/schema/workspaces';
 import { invitations } from '../../modules/coven/schema/invitations';
+import { cardInvitationAttempts } from '../../modules/coven/schema/card-invitation-attempts';
 import { users } from '../../modules/identity/schema/users';
 import type { AuditSession } from '../types';
-import { containsText, notSoftDeleted, scopedTo } from './predicates';
+import { containsText, notSoftDeleted, scopedTo, startsWithText } from './predicates';
 import { findPageCountInScope, findPageInScope } from './finders';
 import { existsIn, selectFrom, selectOne } from './select';
 import { hashToken } from './tokens';
@@ -12,6 +15,17 @@ import type { SiteAdmin } from '@/modules/identity';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import type {
   AuditWriter,
+  AddressInvitationRow,
+  CardArrivalFilter,
+  CardArrivalRow,
+  CardAttemptReason,
+  CardAttemptRow,
+  CardInvitationValues,
+  CardBatchFilter,
+  CardBatchStatus,
+  CardBatchTotal,
+  CardPosition,
+  CardRow,
   InvitationRow,
   InvitedCoven,
   ReceivedInvitationCoven,
@@ -28,13 +42,23 @@ import type {
 // site-tier one under `SiteAdmin`, and the accept and token read under no proof
 // (claude-docs/db/invitations.md, "Invitations").
 
+/** An address invitation: the kind the lists, the received reads and the address match belong to. A card is the other kind. */
+function addressKind(): SQL {
+  return eq(invitations.kind, 'address');
+}
+
+/** A card: bound to no address, coven or site role. */
+function cardKind(): SQL {
+  return eq(invitations.kind, 'card');
+}
+
 /**
- * The site tier, `workspace_id IS NULL`, spelled for this table alone. Not
- * `inCompendium`: a site-tier invitation is no compendium row, and the tier
+ * The site tier, an address invitation with `workspace_id IS NULL`, spelled for this table alone: a card has no workspace
+ * either, and is not this tier's. Not `inCompendium`: a site-tier invitation is no compendium row, and the tier
  * seam counts the compendium's reads (claude-docs/modules.md, "The tier seam").
  */
 function onSiteTier(): SQL {
-  return isNull(invitations.workspaceId);
+  return and(addressKind(), isNull(invitations.workspaceId)) as SQL;
 }
 
 /** The workspace tier, `workspace_id IS NOT NULL`: a coven invitation, which the site tier's admin grant is not. */
@@ -95,6 +119,11 @@ function heldVerifiedBySession(session: AuditSession) {
       eq(sql`lower(${users.email})`, sql`lower(${invitations.email})`),
     ),
   );
+}
+
+// The session's user is verified. A card asks nothing more of the account: no address is matched.
+function verifiedBySession(session: AuditSession) {
+  return existsIn(users, and(eq(users.id, session.userId), eq(users.emailVerified, true)));
 }
 
 // What the finders by id and the accept by id share: a coven invitation, never
@@ -200,6 +229,26 @@ export function findPendingSiteInvitationCount(
 }
 
 /**
+ * When the session's account created each coven invitation it has made in the last `windowSeconds`, revoked or not: the rows
+ * a sender's mail limit counts. No proof, as the limit is on the sender across every coven they own.
+ */
+export async function findRecentCovenInvitationTimes(
+  session: AuditSession,
+  windowSeconds: number,
+): Promise<Date[]> {
+  const rows = await selectFrom(
+    invitations,
+    and(
+      notSoftDeleted(invitations),
+      onWorkspaceTier(),
+      eq(invitations.createdBy, session.userId),
+      gt(invitations.createdAt, sql`now() - make_interval(secs => ${windowSeconds})`),
+    ),
+  );
+  return rows.map((row) => row.createdAt);
+}
+
+/**
  * One page of the proof's workspace's open invitations, newest first, for
  * the members page: the site tier's pager under the `Membership` proof.
  * Open: pending, or declined and not yet removed.
@@ -207,14 +256,15 @@ export function findPendingSiteInvitationCount(
 export function findPendingWorkspaceInvitationPage(
   membership: Membership,
   page: PageRequest,
-): Promise<PageEntry<InvitationRow>[]> {
+): Promise<PageEntry<AddressInvitationRow>[]> {
+  // A coven's row names a workspace, which a card never does, so every row has an address.
   return findPageInScope(
     invitations,
     scopedTo(membership, invitations),
     PENDING_INVITATION_ORDER,
     page,
     openInvitation(),
-  );
+  ) as Promise<PageEntry<AddressInvitationRow>[]>;
 }
 
 /**
@@ -331,16 +381,257 @@ export async function findReceivedInvitationInviters(
 }
 
 /**
+ * The card arrivals' order, newest first: the key is ascending, so the instant is negated, as the pending lists' is.
+ */
+const CARD_ARRIVAL_ORDER: readonly SortPart[] = [
+  { expression: sql`-extract(epoch from ${invitations.acceptedAt})`, type: 'numeric' },
+];
+
+// A card some account accepted: the record of an arrival, kept for good.
+function arrivedByCard(): SQL {
+  return and(
+    cardKind(),
+    isNotNull(invitations.acceptedAt),
+    isNotNull(invitations.acceptedBy),
+  ) as SQL;
+}
+
+// The arrivals a query keeps: the account's name or address holds it, or the batch number starts with it.
+function arrivalsWhere({ query }: CardArrivalFilter): SQL | undefined {
+  if (!query) return undefined;
+  return or(
+    existsIn(
+      users,
+      and(
+        eq(users.id, invitations.acceptedBy),
+        or(containsText(users.name, query), containsText(users.email, query)),
+      ),
+    ),
+    startsWithText(invitations.batchId, query),
+  );
+}
+
+/**
+ * One page of the accounts that arrived by card, newest first: the card rows alone, each with the account that
+ * accepted it, when, and its batch. A site admin's read, as the admin Arrivals view is.
+ */
+export function findCardArrivalPage(
+  _admin: SiteAdmin,
+  filter: CardArrivalFilter,
+  page: PageRequest,
+): Promise<PageEntry<CardArrivalRow>[]> {
+  return findPageInScope(
+    invitations,
+    arrivedByCard(),
+    CARD_ARRIVAL_ORDER,
+    page,
+    arrivalsWhere(filter),
+  ) as Promise<PageEntry<CardArrivalRow>[]>;
+}
+
+/** How many arrivals `findCardArrivalPage` pages, and how many come before `start`, a page's first row. */
+export function findCardArrivalCount(
+  _admin: SiteAdmin,
+  filter: CardArrivalFilter,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  return findPageCountInScope(
+    invitations,
+    arrivedByCard(),
+    CARD_ARRIVAL_ORDER,
+    start,
+    arrivalsWhere(filter),
+  );
+}
+
+/** Every card, newest first, the key negated as the other lists' are. */
+const CARD_ORDER: readonly SortPart[] = [
+  { expression: sql`-extract(epoch from ${invitations.createdAt})`, type: 'numeric' },
+];
+
+// Every card, in any state; narrowed to one batch where a batch is named.
+function cardsOf(batchId: string | undefined): SQL {
+  return and(cardKind(), batchId ? eq(invitations.batchId, batchId) : undefined) as SQL;
+}
+
+/** How many cards there are under `batchId`, any state (every card where none is named), and how many come before `start`. */
+export function findCardCount(
+  _admin: SiteAdmin,
+  batchId: string | undefined,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  return findPageCountInScope(invitations, cardsOf(batchId), CARD_ORDER, start);
+}
+
+// One card stands for each batch: the first by id of those still live. Every card of a batch is minted in one statement
+// with one expiry, so any of them carries the batch's minted-on and expiry dates.
+function batchHeads(): SQL {
+  const earlier = alias(invitations, 'earlier_card');
+  return and(
+    cardKind(),
+    isNotNull(invitations.batchId),
+    sql`not exists (select 1 from ${invitations} as ${sql.identifier('earlier_card')} where ${earlier.kind} = 'card' and ${earlier.batchId} = ${invitations.batchId} and ${earlier.deletedAt} is null and ${earlier.id} < ${invitations.id})`,
+  ) as SQL;
+}
+
+// A day's first instant in UTC, as a timestamp.
+const dayStart = (day: string): SQL => sql`(${day}::date)::timestamp at time zone 'UTC'`;
+
+// A batch's standing worked out in SQL from its live cards, as the admin table's `batchStatus` does from their counts: a
+// card still pending is live; with none, every card accepted is used up, a passed expiry is expired, else revoked.
+function batchStatusIs(status: CardBatchStatus): SQL {
+  const mate = alias(invitations, 'status_card');
+  const mates = (extra: SQL) =>
+    sql`exists (select 1 from ${invitations} as ${sql.identifier('status_card')} where ${mate.kind} = 'card' and ${mate.batchId} = ${invitations.batchId} and ${mate.deletedAt} is null and ${extra})`;
+  const pending = mates(
+    sql`${mate.acceptedAt} is null and ${mate.declinedAt} is null and ${mate.revokedAt} is null and ${mate.expiresAt} > now()`,
+  );
+  if (status === 'live') return pending;
+  const unaccepted = mates(sql`${mate.acceptedAt} is null`);
+  if (status === 'used-up') return sql`not ${pending} and not ${unaccepted}`;
+  const lapsed =
+    status === 'expired'
+      ? sql`${invitations.expiresAt} <= now()`
+      : sql`${invitations.expiresAt} > now()`;
+  return sql`not ${pending} and ${unaccepted} and ${lapsed}`;
+}
+
+// The batches a filter keeps. The head card stands for its batch, so its dates are the batch's; the days are whole, UTC.
+function batchesWhere(filter: CardBatchFilter): SQL | undefined {
+  const { batch, status, mintedFrom, mintedTo, expiresFrom, expiresTo } = filter;
+  const through = (column: AnyPgColumn, from?: string, to?: string) => [
+    from ? sql`${column} >= ${dayStart(from)}` : undefined,
+    to ? sql`${column} < ${dayStart(to)} + interval '1 day'` : undefined,
+  ];
+  return and(
+    batch
+      ? or(startsWithText(invitations.batchId, batch), containsText(invitations.note, batch))
+      : undefined,
+    status ? batchStatusIs(status) : undefined,
+    ...through(invitations.createdAt, mintedFrom, mintedTo),
+    ...through(invitations.expiresAt, expiresFrom, expiresTo),
+  );
+}
+
+/**
+ * One page of the batches, newest first: each entry is the batch's first card, which holds its batch id and dates. A site
+ * admin's read; the counts per batch come from `findCardBatchTotals`.
+ */
+export function findCardBatchPage(
+  _admin: SiteAdmin,
+  filter: CardBatchFilter,
+  page: PageRequest,
+): Promise<PageEntry<CardRow>[]> {
+  return findPageInScope(
+    invitations,
+    batchHeads(),
+    CARD_ORDER,
+    page,
+    batchesWhere(filter),
+  ) as Promise<PageEntry<CardRow>[]>;
+}
+
+/** How many batches `findCardBatchPage` pages, and how many come before `start`, a page's first batch. */
+export function findCardBatchCount(
+  _admin: SiteAdmin,
+  filter: CardBatchFilter,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  return findPageCountInScope(invitations, batchHeads(), CARD_ORDER, start, batchesWhere(filter));
+}
+
+/** Each named batch's cards, accepted cards, cards still pending and refused opens, counted in SQL. */
+export function findCardBatchTotals(
+  _admin: SiteAdmin,
+  batchIds: readonly string[],
+): Promise<CardBatchTotal[]> {
+  if (batchIds.length === 0) return Promise.resolve([]);
+  return selectFrom(
+    invitations,
+    and(cardKind(), notSoftDeleted(invitations), inArray(invitations.batchId, [...batchIds])),
+    {
+      aggregate: {
+        batchId: sql<string>`${invitations.batchId}`,
+        cards: sql<number>`count(*)::int`,
+        accepted: sql<number>`(count(*) filter (where ${invitations.acceptedAt} is not null))::int`,
+        pending: sql<number>`(count(*) filter (where ${invitations.acceptedAt} is null and ${invitations.declinedAt} is null and ${invitations.revokedAt} is null and ${invitations.expiresAt} > now()))::int`,
+        // Refused opens of the batch's cards, summed per card in a correlated subquery so the join cannot repeat a card.
+        attempts: sql<number>`coalesce(sum((select coalesce(sum(${cardInvitationAttempts.attempts}), 0) from ${cardInvitationAttempts} where ${cardInvitationAttempts.invitationId} = ${invitations.id} and ${cardInvitationAttempts.deletedAt} is null)), 0)::int`,
+      },
+      over: {},
+      groupBy: [invitations.batchId],
+    },
+  );
+}
+
+/** Each named card's place in its batch, by invitation id; a card minted before places were kept has none. */
+export function findCardPositions(
+  _admin: SiteAdmin,
+  invitationIds: readonly string[],
+): Promise<CardPosition[]> {
+  if (invitationIds.length === 0) return Promise.resolve([]);
+  return selectFrom(
+    invitations,
+    and(cardKind(), notSoftDeleted(invitations), inArray(invitations.id, [...invitationIds])),
+  ).then((rows) => rows.map((row) => ({ id: row.id, position: row.position })));
+}
+
+/** A batch's attempts, latest first: the key is ascending, so the instant is negated, as the other lists' is. */
+const CARD_ATTEMPT_ORDER: readonly SortPart[] = [
+  {
+    expression: sql`-extract(epoch from ${cardInvitationAttempts.lastAttemptedAt})`,
+    type: 'numeric',
+  },
+];
+
+// The attempts at any live card of the batch, found in the same statement.
+function attemptsOnBatch(batchId: string): SQL {
+  return sql`${cardInvitationAttempts.invitationId} in (select ${invitations.id} from ${invitations} where ${invitations.batchId} = ${batchId} and ${invitations.deletedAt} is null)`;
+}
+
+/** One page of the refused opens of a batch's cards, latest first: a row per card, account and reason. A site admin's read. */
+export function findCardAttemptPage(
+  _admin: SiteAdmin,
+  batchId: string,
+  page: PageRequest,
+): Promise<PageEntry<CardAttemptRow>[]> {
+  return findPageInScope(
+    cardInvitationAttempts,
+    attemptsOnBatch(batchId),
+    CARD_ATTEMPT_ORDER,
+    page,
+  ) as Promise<PageEntry<CardAttemptRow>[]>;
+}
+
+/** How many rows `findCardAttemptPage` pages for the batch, and how many come before `start`, a page's first row. */
+export function findCardAttemptCount(
+  _admin: SiteAdmin,
+  batchId: string,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  return findPageCountInScope(
+    cardInvitationAttempts,
+    attemptsOnBatch(batchId),
+    CARD_ATTEMPT_ORDER,
+    start,
+  );
+}
+
+/**
  * The invitation's named writes, beside its finders: the table is marked `namedWrites`, so these are its only
  * writes. Each decides the tier from the proof it is handed, never from `values`.
  */
 export function invitationWrites({
+  tx,
   session,
   insert,
   update,
 }: WriterContext): Pick<
   AuditWriter,
   | 'insertInvitation'
+  | 'insertInvitationCards'
+  | 'revokeInvitationCardBatch'
+  | 'recordCardAttempt'
   | 'acceptInvitation'
   | 'acceptReceivedInvitation'
   | 'declineReceivedInvitation'
@@ -373,16 +664,80 @@ export function invitationWrites({
         ...tier,
       });
     },
-    // The address match in the statement, not only in the accept service:
-    // the service checks first to say why, and this is what holds if it forgot.
+    // A batch of cards in one statement: the tokens are hashed here, one row each, sharing the batch and the expiry,
+    // and bound to nothing. Not `insert`, which stamps one row.
+    insertInvitationCards: (
+      _admin: SiteAdmin,
+      { tokens, batchId, expiresAt, note }: CardInvitationValues,
+    ) =>
+      tokens.length === 0
+        ? Promise.resolve([])
+        : (tx
+            .insert(invitations)
+            .values(
+              tokens.map(
+                (token, index) =>
+                  applyAudit(
+                    'insert',
+                    {
+                      kind: 'card',
+                      batchId,
+                      note,
+                      expiresAt,
+                      tokenHash: hashToken(token),
+                      position: index + 1,
+                    },
+                    session,
+                  ) as never,
+              ),
+            )
+            .returning() as never),
+    // Only pending cards: an accepted one is the record of an arrival and is never touched.
+    revokeInvitationCardBatch: (_admin: SiteAdmin, batchId: string) =>
+      update(
+        invitations,
+        { revokedAt: sql`now()` },
+        pendingInvitation(cardKind(), eq(invitations.batchId, batchId)),
+      ),
+    // One row per card, account and reason: a repeat open adds to the count and moves the latest time, on the live
+    // row's partial unique index. The account is the session's, never an argument.
+    recordCardAttempt: (invitationId: string, reason: CardAttemptReason) =>
+      tx
+        .insert(cardInvitationAttempts)
+        .values(
+          applyAudit(
+            'insert',
+            { invitationId, userId: session.userId, reason, attempts: 1 },
+            session,
+          ) as never,
+        )
+        .onConflictDoUpdate({
+          target: [
+            cardInvitationAttempts.invitationId,
+            cardInvitationAttempts.userId,
+            cardInvitationAttempts.reason,
+          ],
+          targetWhere: isNull(cardInvitationAttempts.deletedAt),
+          set: {
+            attempts: sql`${cardInvitationAttempts.attempts} + 1`,
+            lastAttemptedAt: sql`now()`,
+            ...applyAudit('update', {}, session),
+          },
+        })
+        .returning() as never,
+    // The match in the statement, not only in the accept service: the service checks first to say why, and this is
+    // what holds if it forgot. An address invitation needs the invited address, verified; a card needs a verified
+    // account and no address.
     acceptInvitation: (token: string) =>
       update(
         invitations,
         { acceptedAt: sql`now()`, acceptedBy: session.userId },
         pendingInvitation(
           eq(invitations.tokenHash, hashToken(token)),
-          heldVerifiedBySession(session),
-          inLiveWorkspaceOrSite(),
+          or(
+            and(addressKind(), heldVerifiedBySession(session), inLiveWorkspaceOrSite()),
+            and(cardKind(), verifiedBySession(session)),
+          ),
         ),
       ),
     // The same stamp, found by id, for a coven invitation only: the site tier's

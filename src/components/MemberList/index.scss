@@ -48,8 +48,8 @@
   margin-inline-start: auto;
 }
 
-// The Remove column, the shared dangerous-action column Impersonate is
-// (`row-action-column`).
+// The Remove column, pinned right on the neutral rule (`sticky-action-column`): the red is the
+// confirm's own, so the column is drawn as Edit's is.
 .member-list__remove {
-  @include row-action-column;
+  @include sticky-action-column;
 }

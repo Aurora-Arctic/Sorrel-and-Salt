@@ -108,7 +108,7 @@ shimmer becomes the loading standard's slow opacity pulse, not a still shape.
 [`index.stories.tsx`](../../src/components/ListFrame/index.stories.tsx),
 `Layout / List Frame`: `States`, with a control that chooses Default (a small table and its pager), Pending (the same with a page on its way) and Pending Cards (the card skeleton). A whole list on its way, filter
 row and all, inside its tabbed page, is GroupedValueList's
-`CategoriesPending`
+`Pending`
 ([`grouped-value-list.md`](grouped-value-list.md)).
 
 ## Testing

@@ -2,6 +2,7 @@ import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
 import { seedCoven, withSql } from './stories/coven-ingredients';
+import { VISIBILITY_LABELS } from '@/components/GrimoireList/params';
 
 // The spell builder's Visibility control (DESIGN.md §5): a draft is shared and made private again freely,
 // and once the spell is marked complete the control shuts with its reason. What was stored is read from the
@@ -21,8 +22,8 @@ test('a new spell starts private, a draft moves between private and shared freel
   await signInAgainAs(page, coven.users.B);
   await page.goto(`/coven/${coven.slug}/grimoire?new=spell-${coven.slug}`);
 
-  // A switch: on is the coven, off is private; a new spell starts off.
-  const visibility = page.getByRole('switch', { name: 'Share With the Coven', exact: true });
+  // A switch in the footer: on is the coven, off is private; a new spell starts off.
+  const visibility = page.getByRole('switch', { name: VISIBILITY_LABELS.workspace, exact: true });
   const save = page.getByRole('button', { name: 'Save Spell' });
   await expect(visibility).not.toBeChecked();
 
@@ -43,7 +44,7 @@ test('a new spell starts private, a draft moves between private and shared freel
   await expect(visibility).toBeEnabled();
 
   await visibility.check();
-  await expect(page.getByRole('group', { name: /Share With the Coven/ })).toBeHidden();
+  await expect(page.getByRole('group', { name: /^Share Fixture Hidden Working\?/ })).toBeHidden();
   await save.click();
   await expect(save).toBeDisabled();
   expect(await stored()).toEqual([{ visibility: 'workspace' }]);
@@ -54,9 +55,13 @@ test('a new spell starts private, a draft moves between private and shared freel
   await expect(save).toBeDisabled();
   expect(await stored()).toEqual([{ visibility: 'private' }]);
 
-  // Share it, and mark it complete: that save starts the lock.
+  // Share it, and mark it complete: that save starts the lock, so Mark Complete asks first.
   await visibility.check();
   await page.getByRole('button', { name: 'Mark Complete' }).click();
+  await page
+    .getByRole('group', { name: /^Mark Fixture Hidden Working Complete\?/ })
+    .getByRole('button', { name: 'Mark Complete' })
+    .click();
   await expect(page.getByRole('button', { name: 'Mark Complete' })).toHaveCount(0);
   await expect(visibility).toBeChecked();
   await expect(visibility).toBeDisabled();

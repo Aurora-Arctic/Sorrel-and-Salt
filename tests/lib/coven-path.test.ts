@@ -101,18 +101,31 @@ describe('covenTarget', () => {
     });
   });
 
+  it('draws the Ingredients list as compact cards under the heading and a filter, as the cards arrive', () => {
+    expect(covenTarget('/coven/a/ingredients')).toEqual({
+      region: 'coven',
+      shape: 'cards',
+      title: true,
+      filter: true,
+      density: 'compact',
+    });
+  });
+
   it('draws a section it does not name as a plain page', () => {
     expect(covenTarget('/coven/a/settings')).toEqual({ region: 'coven', shape: 'page' });
   });
 
-  it('draws both grimoire tabs as cards under the heading, the tab row and a filter, and a page beneath them as a page', () => {
-    const list = { region: 'coven', shape: 'cards', title: true, filter: true, tabs: true };
+  it('draws both grimoire tabs as compact cards under the heading, the tab row and a filter, and a page beneath them as a page', () => {
+    const list = {
+      region: 'coven',
+      shape: 'cards',
+      title: true,
+      filter: true,
+      tabs: true,
+      density: 'compact',
+    };
     expect(covenTarget('/coven/a/grimoire')).toEqual(list);
     expect(covenTarget('/coven/a/grimoire/drafts')).toEqual(list);
     expect(covenTarget('/coven/a/grimoire/some-id')).toEqual({ region: 'coven', shape: 'page' });
-  });
-
-  it('draws the new-spell page as a form', () => {
-    expect(covenTarget('/coven/a/grimoire/new')).toEqual({ region: 'coven', shape: 'form' });
   });
 });

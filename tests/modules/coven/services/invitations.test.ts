@@ -5,7 +5,11 @@ import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden, ValidationError } from '@/lib/errors';
 import { invitationSender } from '@/lib/invitation-mail';
 import type { Message } from '@/lib/types';
-import { createInvitation } from '@/modules/coven';
+import {
+  createInvitation,
+  INVITATION_MAIL_LIMIT,
+  INVITATION_MAIL_WINDOW_MINUTES,
+} from '@/modules/coven';
 import { acceptInvitation, acceptInvitationById } from '@/modules/identity';
 import { A, B, C, D, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
@@ -71,7 +75,7 @@ async function insertCoven(
 beforeEach(async () => {
   send.mockClear();
   mail.real = false;
-  await sql`truncate invitations`;
+  await sql`truncate card_invitation_attempts, invitations`;
 });
 
 afterEach(() => {
@@ -351,5 +355,74 @@ describe('createInvitation', () => {
     expect(logged).toHaveBeenCalled();
     expect(row.id).toBe((await invitations())[0].id);
     expect((await invitations())[0]).toMatchObject({ accepted_at: null, revoked_at: null });
+  });
+});
+
+describe('createInvitation mail limit', () => {
+  const LIMIT = INVITATION_MAIL_LIMIT;
+
+  /** `count` invitations A sent `ageMinutes` ago, through the raw client. */
+  async function sentBy(userId: string, count: number, ageMinutes: number) {
+    for (let i = 0; i < count; i += 1) {
+      await sql`
+        insert into invitations (workspace_id, email, role, token_hash, created_by, updated_by, created_at)
+        values (${WORKSPACE_W_ID}, ${`old${i}-${userId}${DOMAIN}`}, 'viewer', ${`hash-${userId}-${ageMinutes}-${i}`},
+          ${userId}, ${userId}, now() - make_interval(mins => ${ageMinutes}))`;
+    }
+  }
+
+  const invite = (as: typeof A, email: string) =>
+    createInvitation(asUser(as), WORKSPACE_W_ID, { email, role: 'viewer' }, sender());
+
+  it('refuses the next invitation at the limit, says when to try again, and sends and writes nothing', async () => {
+    await sentBy(A.id, LIMIT, 10);
+    const before = await invitations();
+
+    const refusal = await invite(A, INVITED).catch((error: unknown) => error);
+
+    expect(refusal).toBeInstanceOf(ValidationError);
+    expect((refusal as ValidationError).issues[0].message).toMatch(/try again/i);
+    expect(await invitations()).toEqual(before);
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  // A resend is a repeat invitation to an address that already has one pending.
+  it('refuses a resend at the limit too', async () => {
+    await invite(A, INVITED);
+    await sentBy(A.id, LIMIT - 1, 10);
+    send.mockClear();
+
+    await expect(invite(A, INVITED)).rejects.toBeInstanceOf(ValidationError);
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  // The preconditions: the same sender, one invitation under the limit, succeeds; a second sender is unaffected.
+  it('lets a sender under the limit invite, and does not count another sender', async () => {
+    await sentBy(A.id, LIMIT - 1, 10);
+    await expect(invite(A, INVITED)).resolves.toMatchObject({ email: INVITED });
+
+    await expect(
+      createInvitation(
+        asUser(A),
+        WORKSPACE_W_ID,
+        { email: `second${DOMAIN}`, role: 'viewer' },
+        sender(),
+      ),
+    ).rejects.toBeInstanceOf(ValidationError);
+
+    const otherCoven = await insertCoven('Mail Limit Other', [[D.id, 'owner']]);
+    await expect(
+      createInvitation(
+        asUser(D),
+        otherCoven,
+        { email: `third${DOMAIN}`, role: 'viewer' },
+        sender(),
+      ),
+    ).resolves.toMatchObject({ workspaceId: otherCoven });
+  });
+
+  it('forgets invitations older than the window', async () => {
+    await sentBy(A.id, LIMIT, INVITATION_MAIL_WINDOW_MINUTES + 1);
+    await expect(invite(A, INVITED)).resolves.toMatchObject({ email: INVITED });
   });
 });

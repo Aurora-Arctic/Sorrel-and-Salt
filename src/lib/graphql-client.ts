@@ -1,6 +1,7 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { type Query, QueryClient, queryOptions } from '@tanstack/react-query';
 import { type GraphQLFormattedError, getOperationAST, print } from 'graphql';
+import { CLIENT_HEADER, CLIENT_HEADER_VALUE } from '../graphql/csrf';
 import { apiPath } from './api-path';
 import { GraphQLClientError, StaleWriteError } from './graphql-client-error';
 import type { VariablesArg } from './types';
@@ -40,6 +41,7 @@ async function send<TResult, TVariables extends object>(
       method: 'POST',
       headers: {
         'content-type': 'application/json',
+        [CLIENT_HEADER]: CLIENT_HEADER_VALUE,
         // Asks for the GraphQL-over-HTTP media type first, which is what keeps
         // Yoga's status codes as they were under graphql-request.
         accept: 'application/graphql-response+json, application/json',

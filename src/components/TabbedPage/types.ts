@@ -9,6 +9,8 @@ export interface PageTab {
   filtered?: boolean;
   /** What the tab's loading skeleton stands in for: a table (the default), or cards, as the grimoire's tabs. */
   shape?: 'table' | 'cards';
+  /** With `cards`: the tab's list opens compact, so its loading skeleton does too. */
+  density?: 'compact';
 }
 
 export interface TabbedPageProps {
@@ -50,6 +52,8 @@ export interface TabPanelLoadingProps {
   filter?: boolean;
   /** What the skeleton stands in for: `table` (the default), or `cards`, the grid of ingredient cards. */
   shape?: 'table' | 'cards';
+  /** The density of a `cards` skeleton: the pressed tab's `density`. */
+  density?: 'compact';
 }
 
 export interface TabPanelProps {

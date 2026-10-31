@@ -235,6 +235,8 @@ export interface SearchFieldProps {
   name: string;
   /** A short action shown, muted, while the box is empty: "Search names". */
   placeholder?: string;
+  /** What the box matches, behind an info tip beside the label. */
+  hint?: string;
   value: string;
   onChange: (value: string) => void;
 }

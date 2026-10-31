@@ -32,7 +32,7 @@ export interface ChipColorFieldProps {
   label: string;
   /** Which of the group's two colours, so which ground the sample, the ratio and the line are on. */
   column: GroupColorColumn;
-  /** Shown, muted, in the empty hex box: a short action, "Add hex". */
+  /** Shown, muted, in the empty hex box: a short action, "Add a hex". */
   placeholder?: string;
   /** The hex as typed: whole or not, it is shown as it is. */
   value: string;

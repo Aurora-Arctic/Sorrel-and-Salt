@@ -7,12 +7,17 @@ import type { MembershipWithWorkspace } from '../types';
 
 /**
  * The live memberships of each user named, in order: a DataLoader's batch. A caller lists their own covens and a site admin anyone's, by workspace and role alone;
- * any other id is a `Forbidden` in its own slot. The admin read yields no `Membership` proof (claude-docs/design-decisions/m9.19-admin-sees-user-covens.md).
+ * any other id is a `Forbidden` in its own slot. A session whose address is unverified is told of no covens, an empty list in every slot, not a refusal:
+ * the shell draws the email page and the public pages from this same call, so a refusal would break them. The admin read yields no `Membership` proof (claude-docs/design-decisions/m9.19-admin-sees-user-covens.md).
  */
 export async function membershipsOf(
   session: Session,
   userIds: readonly string[],
 ): Promise<(MembershipWithWorkspace[] | Forbidden)[]> {
+  if (session.emailUnverified)
+    return userIds.map((id) =>
+      id === session.userId || session.role === 'admin' ? [] : new Forbidden(),
+    );
   const isAdmin = session.role === 'admin';
   const mayList = (id: string) => isAdmin || id === session.userId;
   const permitted = userIds.filter(mayList);

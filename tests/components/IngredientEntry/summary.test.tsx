@@ -238,7 +238,7 @@ describe('IngredientSummary', () => {
     expect(rowOf('Celestial Bodies')).toBe('Fixture Sun');
   });
 
-  it("draws no caution and no empty block for a sparse entry: no 'None recorded', no empty heading", () => {
+  it('draws no caution and no empty block for a sparse entry: no empty correspondence row, no empty heading', () => {
     render(
       <IngredientSummary
         detail={full({
@@ -257,13 +257,17 @@ describe('IngredientSummary', () => {
     expect(screen.queryByRole('heading', { name: 'Folk Names' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Categories' })).not.toBeInTheDocument();
     // One line says so, so the body is not left blank.
-    expect(screen.getByText('Nothing recorded yet.')).toBeInTheDocument();
-    expect(screen.queryByText('None recorded')).not.toBeInTheDocument();
+    expect(screen.getByText('No details recorded.')).toBeInTheDocument();
+    expect(
+      screen.queryByText(
+        /^No (elements|celestial bodies|zodiac signs|colours|deities) recorded\.$/,
+      ),
+    ).not.toBeInTheDocument();
   });
 
   it('says nothing is recorded only when every section is empty', () => {
     const { unmount } = render(<IngredientSummary detail={full()} />);
-    expect(screen.queryByText('Nothing recorded yet.')).not.toBeInTheDocument();
+    expect(screen.queryByText('No details recorded.')).not.toBeInTheDocument();
     unmount();
 
     // A caution alone is something recorded.
@@ -279,7 +283,7 @@ describe('IngredientSummary', () => {
       />,
     );
     expect(screen.getByRole('region', { name: 'Caution' })).toBeInTheDocument();
-    expect(screen.queryByText('Nothing recorded yet.')).not.toBeInTheDocument();
+    expect(screen.queryByText('No details recorded.')).not.toBeInTheDocument();
     unmount2();
 
     // So is a description alone.
@@ -295,7 +299,7 @@ describe('IngredientSummary', () => {
       />,
     );
     expect(screen.getByText('Fixture lone description.')).toBeInTheDocument();
-    expect(screen.queryByText('Nothing recorded yet.')).not.toBeInTheDocument();
+    expect(screen.queryByText('No details recorded.')).not.toBeInTheDocument();
   });
 
   it("keeps a block's filled rows and drops its empty ones", () => {
@@ -457,7 +461,7 @@ describe('IngredientSummary', () => {
         />,
       );
       // The links are where the entry is held, not something recorded of it.
-      expect(screen.getByText('Nothing recorded yet.')).toBeInTheDocument();
+      expect(screen.getByText('No details recorded.')).toBeInTheDocument();
       expect(
         within(screen.getByRole('list', { name: 'In Your Cupboards' })).getAllByRole('link'),
       ).toHaveLength(2);
@@ -540,7 +544,7 @@ describe('IngredientSummary', () => {
         <IngredientSummary detail={full({ ...bare, variants: [variant('testroot', null)] })} />,
       );
       expect(screen.getByRole('list', { name: 'Forms' })).toHaveTextContent(formLabel('testroot'));
-      expect(screen.queryByText('Nothing recorded yet.')).not.toBeInTheDocument();
+      expect(screen.queryByText('No details recorded.')).not.toBeInTheDocument();
     });
   });
 });

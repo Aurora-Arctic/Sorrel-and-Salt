@@ -129,7 +129,7 @@ export default function IngredientSummary({
   ) {
     return (
       <div className="ingredient-summary">
-        <p className="ingredient-entry__empty">Nothing recorded yet.</p>
+        <p className="ingredient-entry__empty">No details recorded.</p>
         {inYourCovens && <div className="ingredient-entry__side">{inYourCovens}</div>}
       </div>
     );

@@ -62,6 +62,7 @@ owner, 2026-10-20).
 | `SelectField`       | A closed set on Combobox's select-only box, or its type-ahead box, in a react-hook-form form                  |
 | `RadioGroupField`   | One choice from a few, each radio with a line saying what it means, in a `.fieldset`                          |
 | `SwitchField`       | An on-or-off choice as a slide toggle, its label above, in a plain-state form                                 |
+| `VisibilitySwitch`  | Who can see a spell or a working, on `SwitchField`; `brief` gives a short line and a tip, for a footer row    |
 | `FormActions`       | A form's row of actions: Save, any further saves, Cancel and Delete                                           |
 | `ReasonField`       | An admin change's optional Reason, in a plain-state form                                                      |
 | `SearchField`       | A list filter's search box, its submit a magnifier at the box's end                                           |
@@ -78,7 +79,7 @@ several saves passes `busy` for the one pressed, its `saveValue`, and the
 others as children, between Save and Cancel, as the ingredient form's Save &
 Add Another is. Save is the form's submit, or with `onSave` a plain button,
 for the reference panel, which sits inside the ingredient form's own `<form>`.
-Cancel, quiet, is drawn only when `onCancel` is given and calls it; a form that closes through its modal's Close alone, such as the Annotate and Add Ingredient dialogs, leaves it out: each form
+Save names its thing (`Save ${noun}`: Save Spell, Save Working, Save Stock, Save Ingredient). Cancel, quiet, is drawn only when `onCancel` is given and calls it, and only a dialog that does not save on close passes it: a form that saves on close (the ingredient form, the Annotate dialog, the spell builder) leaves it out, since Cancel would only close as Close does, while Record a Working and Edit Stock, which throw changes away on close, keep it: each such form
 passes its discard guard's `request` (claude-docs/components/modal.md,
 "Unsaved changes"), and `holdCancel` makes it wait while a save is in flight,
 as the panel's does. Delete, `.btn--destructive` and `.form__aside` at the far
@@ -234,11 +235,11 @@ block of its own rather than `FieldShell`, since it has no error and its
 label takes the press feedback. A `note` (M10.13) is a line under the
 toggle saying what its state means, in `.field__hint` and named in the
 toggle's `aria-describedby`, as `RadioGroupField`'s note is: the spell
-builder's Share With the Coven switch says by it who can see the spell. A `hint` puts the label in a
+builder's Shared switch says by it who can see the spell. A `hint` puts the label in a
 `.field__label-row` beside an InfoTip, as `FieldShell` does, and names the
 tip in the toggle's `aria-describedby`; a filter switch takes none. The rest: the label above, tied to the
 toggle by `htmlFor`, and the toggle, a native checkbox with
-`role="switch"`, beneath it in `.switch__control`, centred under the label, which lines a filter bar's switch up among its boxes; the ingredient form sets its Toxic switches and their labels at the start of the column instead ([`ingredient-form.md`](ingredient-form.md), "Styling"), and the spell builder its Share With the Coven switch ([`spell-builder.md`](spell-builder.md), "Visibility"). The label is its
+`role="switch"`, beneath it in `.switch__control`, centred under the label, which lines a filter bar's switch up among its boxes; the ingredient form sets its Toxic switches and their labels at the start of the column instead ([`ingredient-form.md`](ingredient-form.md), "Styling"), and the spell builder sets its Shared switch in the footer's row, the toggle before its label ([`spell-builder.md`](spell-builder.md), "Visibility"). The label is its
 accessible name and a click on it turns it; the label and the toggle are
 each marked `data-pressed` while a pointer holds them
 (`src/lib/press-feedback.ts`). It writes no `aria-checked`: the native
@@ -443,7 +444,9 @@ Field`: `States`, a grid of the text field in each shape (Plain, Required, Pendi
 `RadioStrip`, the radio group as a strip of icons, with `RadioGroup`, `RadioSegmented` and `RadioSegmentedDisabled`; `PlainShell`, the shell around a native input with an error; `Switch`,
 `SwitchField` off, on, and disabled off and on; `Actions`, `FormActions` with
 nothing to save, with something to save and Delete, saving, and renamed to
-Send Invitation; `HistoryButtons`; `Reason`,
+Send Invitation; `ActionsInUse`, the row at work in a form of one field (Save wakes when the field
+changes, holds busy, then settles; Cancel restores the field; Delete removes the form), its
+`status` set from the controls panel; `HistoryButtons`; `Reason`,
 `ReasonField`; `SearchBox`, `SearchField` in a form that goes nowhere; and
 `FilterSelect`, `FilterSelectField` as a select and as a type-ahead in a
 filter row.

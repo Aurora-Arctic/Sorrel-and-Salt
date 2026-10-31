@@ -266,7 +266,7 @@ export function SkippedNotice({
           <div className="ingredient-form__copy-skipped-actions">
             <button
               type="button"
-              className="btn btn--small btn--quiet"
+              className="btn btn--quiet btn--small"
               aria-describedby={textId}
               onClick={copyAnyway}
             >

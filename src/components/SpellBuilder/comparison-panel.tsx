@@ -1,11 +1,8 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
 import { type ReactElement, useId, useMemo } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { CategoriesDocument } from '../IngredientForm/categories';
-import { graphqlQuery } from '../../lib/graphql-client';
-import { useCategoryColors } from './category-colors';
+import { useCategoryIndex } from './category-index';
 import CategoryChips, { type CardCategory } from '../CategoryChips';
 import type { GroupColors } from '../../lib/types';
 import type { SpellBuilderValues } from './types';
@@ -23,8 +20,8 @@ export interface ComparisonPanelProps {
   steps: readonly SpellStepValue[];
   /** Each category's group colours by id, so a chip is drawn as the site draws one; a category not in it is left out. */
   groups: ReadonlyMap<string, GroupColors>;
-  /** The heading's level: h5 under the builder's Jar heading, h2 on the recipe page. */
-  heading?: 'h2' | 'h5';
+  /** The heading's level: h4 beside Steps under the builder's Jar heading, h2 on the recipe page. */
+  heading?: 'h2' | 'h4';
   /** The section's id, for a jump link; the recipe page gives one. */
   id?: string;
 }
@@ -85,7 +82,7 @@ export function ComparisonPanel({
   intended,
   steps,
   groups,
-  heading: Heading = 'h5',
+  heading: Heading = 'h4',
   id,
 }: ComparisonPanelProps): ReactElement {
   const headingId = useId();
@@ -106,7 +103,7 @@ export function ComparisonPanel({
       .filter((step) => step.categories.some((c) => c.id === id))
       .map(stepNameOf)
       .join(', ')}`;
-  const missingTip = (): string => 'Assigned to this spell, and nothing in the jar carries it';
+  const missingTip = (): string => 'Assigned to this spell, and nothing in the jar carries it.';
   // Each extra category, once, named by the first ingredient that carries it.
   const extras = gaps.presentNotIntended.flatMap((id) => {
     const name = ingredientSteps.flatMap((step) => step.categories).find((c) => c.id === id)?.name;
@@ -145,15 +142,15 @@ export function SpellComparison(): ReactElement {
   const { control } = useFormContext<SpellBuilderValues>();
   const watchedPicks = useWatch({ control, name: 'categoryIds' });
   const steps = useWatch({ control, name: 'steps' }) ?? [];
-  const { data } = useQuery({ ...graphqlQuery(CategoriesDocument), throwOnError: false });
-  const groups = useCategoryColors();
-  const intended = useMemo(() => {
-    const byId = new Map(data?.categories.edges.map(({ node }) => [node.id, node]));
-    // A pick whose name has not landed yet is left out until it does.
-    return (watchedPicks ?? []).flatMap((id) => {
-      const found = byId.get(id);
-      return found ? [{ id, name: found.name }] : [];
-    });
-  }, [data, watchedPicks]);
-  return <ComparisonPanel intended={intended} steps={steps} groups={groups} />;
+  const { names, colors } = useCategoryIndex();
+  const intended = useMemo(
+    () =>
+      // A pick whose name has not landed yet is left out until it does.
+      (watchedPicks ?? []).flatMap((id) => {
+        const name = names.get(id);
+        return name === undefined ? [] : [{ id, name }];
+      }),
+    [names, watchedPicks],
+  );
+  return <ComparisonPanel intended={intended} steps={steps} groups={colors} />;
 }

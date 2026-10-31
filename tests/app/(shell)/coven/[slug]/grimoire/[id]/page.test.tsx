@@ -65,11 +65,9 @@ vi.mock('@/modules/ingredients', async (importOriginal) => ({
   stockOf,
   variantsOf,
 }));
-// The coven roster Record a Working lists: nobody, by default.
-const memberRoster = vi.fn(async () => []);
-vi.mock('@/modules/coven', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/modules/coven')>()),
-  memberRoster,
+// The signed-in viewer, whom Record a Working names as its recorder.
+vi.mock('@/lib/viewer', () => ({
+  viewerOf: async () => ({ viewer: { id: 'fixture-user', name: 'Fixture Name' }, workspaces: [] }),
 }));
 const displayNamesOf = vi.fn();
 vi.mock('@/modules/identity', async (importOriginal) => ({
@@ -176,24 +174,25 @@ describe('the spell recipe page', () => {
     expect(screen.getAllByText(/Fixture Author/).length).toBeGreaterThan(0);
   });
 
-  it("gives an ingredient step a Quick Look eye to this page's own address with ?entry=<id>, so the details open over the recipe", async () => {
+  it("gives the side column's ingredient line the Quick Look eye, to this page's own address with ?entry=<id>, and the step none", async () => {
     await draw();
-    // The step's own eye, in the recipe's list: the inventory line carries another.
     const steps = within(screen.getByRole('list', { name: 'Steps' }));
-    expect(steps.getByRole('link', { name: 'Quick Look Testwort' })).toHaveAttribute(
+    expect(steps.queryByRole('link', { name: 'Quick Look Testwort' })).toBeNull();
+    const inventory = within(screen.getByRole('region', { name: 'In the Cupboard' }));
+    expect(inventory.getByRole('link', { name: 'Quick Look Testwort' })).toHaveAttribute(
       'href',
       `/coven/fixture-coven/grimoire/${SPELL_ID}?entry=ing-1`,
     );
   });
 
-  it('draws In Coven Inventory and Category Match beside the recipe, read for this coven (the owner, 2026-10-29)', async () => {
+  it('draws In the Cupboard and Category Match beside the recipe, read for this coven (the owner, 2026-10-29)', async () => {
     categoriesOf.mockResolvedValueOnce([[{ id: 'cat-1', name: 'Testwarding' }]]);
     stockOf.mockResolvedValueOnce([
       [{ variantId: 'v-1', unit: 'tsp', quantityOnHand: '1', lowStockThreshold: null }],
     ]);
     await draw();
     const aside = screen.getByRole('complementary');
-    const inventory = within(aside).getByRole('region', { name: 'In Coven Inventory' });
+    const inventory = within(aside).getByRole('region', { name: 'In the Cupboard' });
     expect(within(inventory).getByText('Testwort (Dried Leaf)')).toBeInTheDocument();
     expect(within(inventory).getByText('need 2 tsp · have 1 tsp')).toBeInTheDocument();
     expect(within(inventory).getByRole('button', { name: 'Not Enough' })).toBeInTheDocument();
@@ -321,7 +320,7 @@ describe('the spell recipe page', () => {
       await draw();
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
       fireEvent.click(screen.getByRole('button', { name: 'More for Fixture Working' }));
-      fireEvent.click(await screen.findByRole('menuitem', { name: 'Delete Spell' }));
+      fireEvent.click(await screen.findByRole('menuitem', { name: 'Delete' }));
       expect(screen.getByRole('dialog', { name: 'Delete Spell' })).toHaveTextContent(
         'Fixture Working',
       );
@@ -333,9 +332,12 @@ describe('the spell recipe page', () => {
       expect(
         screen.getByRole('heading', { level: 1, name: 'Fixture Working' }),
       ).toBeInTheDocument();
-      fireEvent.click(screen.getByRole('button', { name: 'More for Fixture Working' }));
-      expect(await screen.findByRole('menuitem', { name: 'Print' })).toBeInTheDocument();
-      expect(screen.queryByRole('menuitem', { name: 'Delete Spell' })).not.toBeInTheDocument();
+      // Print is the viewer's one choice, so it is a button and there is no menu to hold a Delete.
+      expect(screen.getByRole('button', { name: 'Print Fixture Working' })).toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: 'More for Fixture Working' }),
+      ).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /Delete/ })).not.toBeInTheDocument();
     });
   });
 

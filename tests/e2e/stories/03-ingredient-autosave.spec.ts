@@ -46,7 +46,7 @@ test(
     await reopened.getByRole('textbox', { name: 'Name' }).first().fill('Autosavewort Offline');
     const dropSaves = (route: Route) => route.abort('internetdisconnected');
     await page.route('**/api/graphql', dropSaves);
-    await expect(reopened.getByText(/Couldn.t save/)).toBeVisible({ timeout: 45_000 });
+    await expect(reopened.getByText(/Could not save/)).toBeVisible({ timeout: 45_000 });
     await assertNoAccessibilityViolations(page);
     await page.unroute('**/api/graphql', dropSaves);
     await reopened.getByRole('button', { name: 'Retry' }).click();

@@ -73,6 +73,7 @@ const Modal = ({
   formalName,
   topEnd,
   formalActions,
+  actionsUnderClose,
   under,
   aboveName,
   onClose,
@@ -296,7 +297,9 @@ const Modal = ({
       >
         {/* An edit dialog's head: what it does to what kind, then which entry. The hidden commas
             are for the dialog's name alone, which a screen reader would otherwise run together. */}
-        <div className="header modal-dialog__heading">
+        <div
+          className={`header modal-dialog__heading${actionsUnderClose && formalActions !== undefined ? ' modal-dialog__heading--under-close' : ''}`}
+        >
           {/* The top line, with Close on it, first in the head as it is on screen. */}
           {topEnd !== undefined && (
             <div className="modal-dialog__top">

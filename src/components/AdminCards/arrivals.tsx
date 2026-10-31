@@ -1,0 +1,98 @@
+'use client';
+
+import type { ReactElement } from 'react';
+import { graphql } from '../../gql';
+import { graphqlRequest } from '../../lib/graphql-client';
+import { noMatchText } from '../../lib/text';
+import StackTable from '../DataTable';
+import LocalTime from '../LocalTime';
+import ListFrame, { ListBody } from '../ListFrame';
+import Pager from '../Pager';
+import { batchName } from './batches';
+import UserLink from '../UserList/user-link';
+import ArrivalsFilterForm from './arrivals-filter';
+import DownloadCsv from './download-csv';
+import { NO_ARRIVALS_FILTER } from './href';
+import type { AdminArrivalsProps, ArrivalsActionsProps, ArrivalsFilter } from './types';
+import './index.scss';
+
+// The People page's Card Sign-Ups tab, `/admin/card-sign-ups`: every account that accepted a card, with the date, the
+// batch and the covens it owns, and a CSV of them (claude-docs/components/admin-cards.md).
+
+const ArrivalsCsvDocument = graphql(`
+  query CardArrivalsCsv($query: String) {
+    cardArrivalsCsv(query: $query)
+  }
+`);
+
+/** The CSV of the arrivals the filter shows: the same query the list holds. */
+export const readArrivalsCsv = async (
+  filter: ArrivalsFilter = NO_ARRIVALS_FILTER,
+): Promise<string> =>
+  (await graphqlRequest(ArrivalsCsvDocument, { query: filter.query || undefined })).cardArrivalsCsv;
+
+/** The empty list, naming the search in use so an admin sees what to change. */
+function emptyText({ query }: ArrivalsFilter): string {
+  return noMatchText('sign-ups', query ? [`“${query}”`] : [], 'No one has accepted a card yet.');
+}
+
+const AdminArrivals = ({
+  arrivals,
+  previousHref,
+  nextHref,
+  position,
+  filter = NO_ARRIVALS_FILTER,
+}: AdminArrivalsProps): ReactElement => (
+  <section className="admin-cards" aria-label="Card Sign-Ups">
+    <ListFrame>
+      {/* Keyed by the filter shown, so another one starts the form again from it. */}
+      <ArrivalsFilterForm key={JSON.stringify(filter)} filter={filter} />
+      <ListBody>
+        <StackTable
+          columns={[
+            {
+              heading: 'Name',
+              cell: (arrival) =>
+                arrival.account ? (
+                  <UserLink
+                    href={arrival.account.openHref}
+                    heading={arrival.account.heading}
+                    name={arrival.accountName}
+                  />
+                ) : (
+                  arrival.accountName
+                ),
+            },
+            { heading: 'Email', cell: (arrival) => arrival.accountEmail },
+            {
+              heading: 'Accepted On',
+              className: 'admin-cards__fact',
+              cell: (arrival) => <LocalTime at={arrival.acceptedAt} />,
+            },
+            { heading: 'Batch', cell: (arrival) => batchName(arrival.batchId) },
+            {
+              heading: 'Covens Owned',
+              cell: (arrival) =>
+                arrival.covens.length > 0 ? (
+                  arrival.covens.join(', ')
+                ) : (
+                  <span className="admin-cards__none">None yet</span>
+                ),
+            },
+          ]}
+          rows={arrivals}
+          rowKey={(arrival) => arrival.id}
+          empty={emptyText(filter)}
+          className="data-table--nowrap"
+        />
+        <Pager previousHref={previousHref} nextHref={nextHref} position={position} />
+      </ListBody>
+    </ListFrame>
+  </section>
+);
+
+export const ArrivalsActions = ({ filter }: ArrivalsActionsProps): ReactElement => (
+  <DownloadCsv read={() => readArrivalsCsv(filter)} />
+);
+
+export default AdminArrivals;

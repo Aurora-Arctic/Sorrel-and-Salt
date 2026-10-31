@@ -9,7 +9,9 @@ import type { MemberEmail, MemberKey, MembershipWithWorkspace, WorkspaceRow } fr
 
 /**
  * One page of a coven's live members, in the order they joined, each carrying
- * the coven: `Workspace.members`, and the members page. One read for
+ * the coven: `Workspace.members`, and the members page. `query` narrows it
+ * to the members whose name holds the text, in any case, for the participant
+ * box of Record a Working. One read for
  * the check and one for the page. A coven at a time rather than batched across
  * covens, since no page lists two covens' members at once
  * (claude-docs/design-decisions/m6.11-members-without-a-loader.md).
@@ -21,9 +23,10 @@ export async function listMembers(
   session: Session,
   workspace: WorkspaceRow,
   page: PageRequest,
+  query?: string,
 ): Promise<PageEntry<MembershipWithWorkspace>[]> {
   const membership = await assertMembership(session, workspace.id, { member: ['read'] });
-  const entries = await findMemberPage(membership, page);
+  const entries = await findMemberPage(membership, page, query?.trim() || undefined);
   return entries.map(({ node, ...entry }) => ({ ...entry, node: { ...node, workspace } }));
 }
 

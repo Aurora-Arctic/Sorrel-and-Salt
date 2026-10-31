@@ -495,7 +495,7 @@ export function stockEditor(row: Locator, name: string, coven?: string) {
       await page.getByRole('option', { name: form, exact: true }).click();
       await dialog.getByRole('button', { name: 'Add', exact: true }).click();
     },
-    save: dialog.getByRole('button', { name: 'Save', exact: true }),
+    save: dialog.getByRole('button', { name: 'Save Stock' }),
     cancel: dialog.getByRole('button', { name: 'Cancel' }),
   };
 }

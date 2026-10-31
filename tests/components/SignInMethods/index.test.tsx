@@ -43,6 +43,16 @@ async function expectCalloutUnder(control: HTMLElement, sentence: string) {
   expect(control).toHaveAccessibleDescription(expect.stringContaining(sentence));
 }
 
+/** Presses a row's Remove, then the Remove in the dialog it opens. */
+async function removeAndConfirm(control: HTMLElement) {
+  await press(control);
+  await press(
+    within(screen.getByRole('dialog', { name: 'Remove Sign-In Method' })).getByRole('button', {
+      name: 'Remove',
+    }),
+  );
+}
+
 /** The list item naming a provider. */
 function row(label: string): HTMLElement {
   const item = screen
@@ -233,6 +243,26 @@ describe('SignInMethods', () => {
     await expectCalloutUnder(again, GENERIC_FAILURE);
   });
 
+  it('asks before removing, naming the provider, and Cancel sends nothing', async () => {
+    renderOnPage(<SignInMethods linked={[DISCORD, MICROSOFT]} configured={ALL} />);
+    const remove = screen.getByRole('button', { name: 'Remove Microsoft' });
+    remove.focus();
+
+    await press(remove);
+
+    const dialog = screen.getByRole('dialog', { name: 'Remove Sign-In Method' });
+    expect(dialog).toHaveTextContent('Microsoft');
+    expect(dialog).not.toHaveTextContent('Discord');
+    expect(unlinkAccountMock).not.toHaveBeenCalled();
+    await press(within(dialog).getByRole('button', { name: 'Cancel' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(unlinkAccountMock).not.toHaveBeenCalled();
+    expect(
+      within(row('Microsoft')).getByRole('button', { name: 'Remove Microsoft' }),
+    ).toHaveFocus();
+  });
+
   it('offers Remove on each once two are linked, and removes by the account row id', async () => {
     unlinkAccountMock.mockResolvedValue({ data: { status: true }, error: null });
     renderOnPage(<SignInMethods linked={[DISCORD, MICROSOFT]} configured={ALL} />);
@@ -240,14 +270,15 @@ describe('SignInMethods', () => {
     expect(status).toBeEmptyDOMElement();
 
     expect(screen.getByRole('button', { name: 'Remove Discord' })).toBeInTheDocument();
-    await press(screen.getByRole('button', { name: 'Remove Microsoft' }));
+    await removeAndConfirm(screen.getByRole('button', { name: 'Remove Microsoft' }));
 
     expect(unlinkAccountMock).toHaveBeenCalledWith({ accountId: 'a-microsoft' });
+    expect(screen.queryByRole('dialog')).toBeNull();
     // Said in the page's status region, and seen in the row that turned to Add.
     await waitFor(() => expect(status).not.toBeEmptyDOMElement());
     expect(screen.getAllByRole('status')).toHaveLength(1);
     expect(screen.queryByRole('alert')).toBeNull();
-    expect(within(row('Microsoft')).getByRole('button', { name: 'Add Microsoft' })).toBeVisible();
+    expect(within(row('Microsoft')).getByRole('button', { name: 'Add Microsoft' })).toHaveFocus();
     // Back to one: the survivor's Remove is greyed.
     expect(screen.getByRole('button', { name: 'Remove Discord' })).toHaveAttribute(
       'aria-disabled',
@@ -262,15 +293,17 @@ describe('SignInMethods', () => {
     const remove = screen.getByRole('button', { name: 'Remove Microsoft' });
     remove.focus();
 
-    await press(remove);
+    await removeAndConfirm(remove);
 
-    expect(remove).toHaveAttribute('aria-busy', 'true');
-    // The pressed one keeps the focus, so `aria-disabled`; the others wait, disabled.
-    expect(remove).toHaveAttribute('aria-disabled', 'true');
-    expect(remove).toHaveFocus();
-    expect(screen.getByRole('button', { name: 'Remove Discord' })).toBeDisabled();
-    await press(remove);
+    // The dialog's Remove is busy until the answer, and a second press sends nothing.
+    const dialog = screen.getByRole('dialog', { name: 'Remove Sign-In Method' });
+    const confirm = within(dialog).getByRole('button', { name: /^Remov/ });
+    expect(confirm).toHaveAttribute('aria-busy', 'true');
+    await press(confirm);
     expect(unlinkAccountMock).toHaveBeenCalledTimes(1);
+    // Behind it, the pressed row is busy and the others wait, disabled.
+    expect(remove).toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByRole('button', { name: 'Remove Discord', hidden: true })).toBeDisabled();
     await act(async () => finish({ data: { status: true }, error: null }));
     await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('Microsoft'));
     expect(screen.getByRole('button', { name: 'Add Microsoft' })).not.toHaveAttribute('aria-busy');
@@ -285,8 +318,9 @@ describe('SignInMethods', () => {
     const remove = screen.getByRole('button', { name: 'Remove Microsoft' });
     remove.focus();
 
-    await press(remove);
+    await removeAndConfirm(remove);
 
+    expect(screen.queryByRole('dialog')).toBeNull();
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent(/\S/);
     expect(alert).not.toHaveTextContent(GENERIC_UNLINK_ERROR);
@@ -299,7 +333,7 @@ describe('SignInMethods', () => {
     unlinkAccountMock.mockResolvedValue({ data: null, error: { status: 500 } });
     render(<SignInMethods linked={[DISCORD, MICROSOFT]} configured={ALL} />);
 
-    await press(screen.getByRole('button', { name: 'Remove Discord' }));
+    await removeAndConfirm(screen.getByRole('button', { name: 'Remove Discord' }));
 
     await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(GENERIC_UNLINK_ERROR));
   });
@@ -311,7 +345,7 @@ describe('SignInMethods', () => {
     const remove = screen.getByRole('button', { name: 'Remove Discord' });
     remove.focus();
 
-    await press(remove);
+    await removeAndConfirm(remove);
     expect(await screen.findByRole('alert')).toHaveTextContent(GENERIC_UNLINK_ERROR);
     expect(remove).toHaveFocus();
 
