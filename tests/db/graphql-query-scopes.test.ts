@@ -394,6 +394,13 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   replyToSupportRequest: write(
     `mutation { replyToSupportRequest(requestId: "${NOWHERE}", body: "Fixture") { id } }`,
   ),
+  sendSupportMessage: write(
+    `mutation { sendSupportMessage(requestId: "${NOWHERE}", body: "Fixture") { id } }`,
+  ),
+  addSupportInternalNote: write(
+    `mutation { addSupportInternalNote(requestId: "${NOWHERE}", body: "Fixture") { id } }`,
+  ),
+  closeSupportRequest: write(`mutation { closeSupportRequest(id: "${NOWHERE}") { id } }`),
   assignSupportRequest: write(`mutation { assignSupportRequest(id: "${NOWHERE}") { id } }`),
   setSupportRequestCuratorVisible: write(
     `mutation { setSupportRequestCuratorVisible(id: "${NOWHERE}", visible: true) { id } }`,
@@ -725,9 +732,13 @@ const OPEN_WRITES = [
   'recordCardAttempt',
   // Any verified session may send; the service reads the limit and any time-out.
   'sendSupportRequest',
+  // Any verified session may write on a request; the service finds only the sender's own.
+  'sendSupportMessage',
   // A curator's scope admits; the service decides which requests (an admin any, a curator one assigned to them).
   'replyToSupportRequest',
   'resolveSupportRequest',
+  'addSupportInternalNote',
+  'closeSupportRequest',
   'recordWorking',
   'updateWorking',
   'completeWorking',

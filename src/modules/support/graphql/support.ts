@@ -2,9 +2,12 @@ import { builder } from '../../../graphql/builder';
 import { AuditInfo } from '../../../graphql/schema/audit';
 import { definedArgs, sessionOf } from '../../../graphql/context-helpers';
 import { UserRef } from '../../identity';
+import { supportReplyAuthorRole, supportReplyVisibility } from '../schema/support-replies';
 import { supportRequestAbout, supportRequestStatus } from '../schema/support-requests';
+import { addSupportInternalNote, sendSenderMessage } from '../services/lifecycle';
 import {
   assignSupportRequest,
+  closeSupportRequest,
   getSupportRequest,
   listSupportRequests,
   resolveSupportRequest,
@@ -27,11 +30,29 @@ const SupportStatusEnum = builder.enumType('SupportStatus', {
   values: supportRequestStatus.enumValues,
 });
 
+const SupportReplyAuthorRoleEnum = builder.enumType('SupportReplyAuthorRole', {
+  description: 'Whether the sender or staff wrote a message.',
+  values: supportReplyAuthorRole.enumValues,
+});
+
+const SupportReplyVisibilityEnum = builder.enumType('SupportReplyVisibility', {
+  description: 'Whether the sender reads a message (`public`) or only staff do (`internal`).',
+  values: supportReplyVisibility.enumValues,
+});
+
+const SupportSenderTierEnum = builder.enumType('SupportSenderTier', {
+  description: 'Derived from the invitation the sender accepted; never stored.',
+  values: ['beta_tester', 'standard'] as const,
+});
+
 const SupportReplyRef = builder.objectRef<SupportReplyRow>('SupportReply').implement({
-  description: 'A reply from staff to a support request.',
+  description:
+    'A message on a support request: a reply from staff, a note only staff read, or a message from the sender.',
   fields: (t) => ({
     id: t.exposeID('id'),
     body: t.exposeString('body'),
+    authorRole: t.expose('authorRole', { type: SupportReplyAuthorRoleEnum }),
+    visibility: t.expose('visibility', { type: SupportReplyVisibilityEnum }),
     author: t.field({
       type: UserRef,
       nullable: true,
@@ -90,6 +111,20 @@ const SupportRequestRef = builder.objectRef<SupportRequestRow>('SupportRequest')
         row.resolvedBy ? loaders.usersOnRequests.load(row.resolvedBy) : null,
     }),
     resolvedAt: t.expose('resolvedAt', { type: 'DateTime', nullable: true }),
+    closedAt: t.expose('closedAt', { type: 'DateTime', nullable: true }),
+    lastSenderActivityAt: t.expose('lastSenderActivityAt', { type: 'DateTime', nullable: true }),
+    lastStaffActivityAt: t.expose('lastStaffActivityAt', { type: 'DateTime', nullable: true }),
+    linkedFromId: t.exposeID('linkedFrom', {
+      nullable: true,
+      description:
+        'The closed request this one follows on from, when the sender wrote on a closed request.',
+    }),
+    senderTier: t.field({
+      type: SupportSenderTierEnum,
+      description: 'The sender’s tier. Staff only.',
+      authScopes: { curator: true },
+      resolve: (row, _args, { loaders }) => loaders.tierBySender.load(row.createdBy),
+    }),
     replies: t.field({
       type: [SupportReplyRef],
       description: 'Oldest first.',
@@ -189,10 +224,54 @@ builder.mutationField('replyToSupportRequest', (t) =>
     type: SupportReplyRef,
     description:
       'Replies to a request and mails its sender that a reply is waiting. An admin may reply to any request, a curator to one assigned to them.',
+    args: {
+      requestId: t.arg.id({ required: true }),
+      body: t.arg.string({ required: true }),
+      waitingOnSender: t.arg.boolean({
+        required: false,
+        description: 'Moves an open request to waiting on the sender; refused on any other status.',
+      }),
+    },
+    authScopes: { curator: true },
+    resolve: (_root, { requestId, body, waitingOnSender }, context) =>
+      replyToSupportRequest(sessionOf(context), requestId, body, context.support, {
+        waitingOnSender: waitingOnSender ?? false,
+      }),
+  }),
+);
+
+builder.mutationField('sendSupportMessage', (t) =>
+  t.field({
+    type: SupportRequestRef,
+    description:
+      'The sender’s message on their own request. It reopens a waiting or resolved request; on a closed one it opens a new request linked to it, which is what is returned.',
+    args: { requestId: t.arg.id({ required: true }), body: t.arg.string({ required: true }) },
+    authScopes: { signedIn: true },
+    resolve: (_root, { requestId, body }, context) =>
+      sendSenderMessage(sessionOf(context), requestId, body),
+  }),
+);
+
+builder.mutationField('addSupportInternalNote', (t) =>
+  t.field({
+    type: SupportReplyRef,
+    description:
+      'Adds a note only staff read. Changes no status and mails no one. An admin may on any request, a curator on one assigned to them.',
     args: { requestId: t.arg.id({ required: true }), body: t.arg.string({ required: true }) },
     authScopes: { curator: true },
     resolve: (_root, { requestId, body }, context) =>
-      replyToSupportRequest(sessionOf(context), requestId, body, context.support),
+      addSupportInternalNote(sessionOf(context), requestId, body),
+  }),
+);
+
+builder.mutationField('closeSupportRequest', (t) =>
+  t.field({
+    type: SupportRequestRef,
+    description:
+      'Closes an open, waiting or resolved request. An admin may on any request, a curator on one assigned to them.',
+    args: { id: t.arg.id({ required: true }) },
+    authScopes: { curator: true },
+    resolve: (_root, { id }, context) => closeSupportRequest(sessionOf(context), id),
   }),
 );
 

@@ -962,7 +962,10 @@ type Mutation {
   updateDeityTradition(id: ID!, input: DeityTraditionInput!): DeityTradition! # touches no deity
   deleteDeityTradition(id: ID!, moveTo: ID): ID! # its live deities move to moveTo first; needed only when it has some
   sendSupportRequest(input: SupportRequestInput!): SupportRequest! # a verified session; refuses the eleventh in 24 hours and a send during a time-out, each with an explaining error (M15.1)
-  replyToSupportRequest(requestId: ID!, body: String!): SupportReply! # an admin on any request, a curator on one assigned to them; mails a notice with no reply text
+  replyToSupportRequest(requestId: ID!, body: String!, waitingOnSender: Boolean): SupportReply! # an admin on any request, a curator on one assigned to them; mails a notice with no reply text; waitingOnSender moves an open request to waiting_on_sender and is refused on any other status (M15.42)
+  sendSupportMessage(requestId: ID!, body: String!): SupportRequest! # the sender's own request: reopens a waiting or resolved one; on a closed one opens a new request linked to it, returned (M15.42)
+  addSupportInternalNote(requestId: ID!, body: String!): SupportReply! # staff-only note; changes no status, mails no one (M15.42)
+  closeSupportRequest(id: ID!): SupportRequest! # an open, waiting or resolved request; an admin on any, a curator on one assigned to them (M15.42)
   assignSupportRequest(id: ID!, assigneeId: ID): SupportRequest! # admin only; null unassigns
   setSupportRequestCuratorVisible(id: ID!, visible: Boolean!): SupportRequest! # admin only
   resolveSupportRequest(id: ID!): SupportRequest! # an admin on any request, a curator on one assigned to them
@@ -1327,7 +1330,21 @@ enum SupportAbout {
 } # listed in this order (M15.1)
 enum SupportStatus {
   open
+  waiting_on_sender
   resolved
+  closed
+}
+enum SupportReplyAuthorRole {
+  sender
+  staff
+}
+enum SupportReplyVisibility {
+  public
+  internal
+}
+enum SupportSenderTier {
+  beta_tester # accepted a printed card (invitations.kind = 'card'); derived on read, never stored
+  standard
 }
 input SupportRequestInput {
   about: SupportAbout!
@@ -1350,13 +1367,20 @@ type SupportRequest {
   issueUrl: String
   resolvedBy: User
   resolvedAt: DateTime
-  replies: [SupportReply!]! # through a loader
+  closedAt: DateTime
+  lastSenderActivityAt: DateTime
+  lastStaffActivityAt: DateTime
+  linkedFromId: ID # the closed request this one follows up
+  senderTier: SupportSenderTier! # curator or admin only
+  replies: [SupportReply!]! # through a loader; an internal note reaches staff only, filtered in SQL
   timeouts: [SupportTimeout!]! # the sender's, past and active; admin only
   audit: AuditInfo!
 }
 type SupportReply {
   id: ID!
   body: String!
+  authorRole: SupportReplyAuthorRole!
+  visibility: SupportReplyVisibility!
   author: User # created_by; null once the account is gone
   audit: AuditInfo!
 }
