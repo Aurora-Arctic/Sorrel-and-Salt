@@ -447,20 +447,43 @@ describe('What a viewer is shown', () => {
     expect(within(dialog()).queryByRole('button', { name: 'Lift' })).toBeNull();
   });
 
-  it('gives a curator reading a request only shared with them no control at all', () => {
+  it('gives a curator reading a request not theirs a note form alone: no Reply, mode choice, waiting switch or Resolve', () => {
     open(CURATOR, { curatorVisible: true, assignee: null });
     expect(within(dialog()).getByText(DETAIL.message)).toBeInTheDocument();
     expect(within(dialog()).queryByLabelText('Your Reply')).toBeNull();
+    expect(within(dialog()).queryByRole('radio')).toBeNull();
+    expect(within(dialog()).queryByRole('switch', { name: /Waiting on Sender/ })).toBeNull();
     expect(within(dialog()).queryByRole('button', { name: 'Resolve' })).toBeNull();
+    expect(within(dialog()).queryByRole('button', { name: 'Reply' })).toBeNull();
+    expect(within(dialog()).getByLabelText('Your Note')).toBeInTheDocument();
+    expect(within(dialog()).getByRole('button', { name: 'Add Note' })).toBeInTheDocument();
     for (const name of ADMIN_ONLY) {
       expect(within(dialog()).queryByLabelText(name)).not.toBeInTheDocument();
     }
   });
 
-  it('gives a curator no reply on a request assigned to someone else', () => {
-    open(CURATOR, { assignee: { id: 'admin-1', name: 'Ada' } });
+  it('gives a curator the note form alone on a request assigned to someone else', () => {
+    open(CURATOR, { curatorVisible: true, assignee: { id: 'admin-1', name: 'Ada' } });
     expect(within(dialog()).queryByLabelText('Your Reply')).toBeNull();
     expect(within(dialog()).queryByRole('button', { name: 'Resolve' })).toBeNull();
+    expect(within(dialog()).getByLabelText('Your Note')).toBeInTheDocument();
+  });
+
+  it('sends a curator’s note through the note mutation', async () => {
+    const notes: { requestId: string; body: string }[] = [];
+    mockGraphQLMutation(
+      'AddSupportInternalNote',
+      (variables: { requestId: string; body: string }) => {
+        notes.push(variables);
+        return { addSupportInternalNote: { __typename: 'SupportReply', id: 'n1' } };
+      },
+    );
+    open(CURATOR, { curatorVisible: true, assignee: null });
+    fireEvent.change(within(dialog()).getByLabelText('Your Note'), {
+      target: { value: 'Seen it too' },
+    });
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Add Note' }));
+    await waitFor(() => expect(notes).toEqual([{ requestId: 'r1', body: 'Seen it too' }]));
   });
 });
 

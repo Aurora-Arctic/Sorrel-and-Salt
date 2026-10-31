@@ -127,29 +127,29 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
           ]}
         />
 
-        {answers && (
-          <ReplyForm
-            requestId={request.id}
-            canWait={open}
-            senderTimedOutUntil={standingTimeoutEnd(request.timeouts)}
-            resolve={
-              open && (
-                <ConfirmedAction
-                  label="Resolve"
-                  accessibleName="Resolve"
-                  openClass="btn btn--quiet"
-                  title="Resolve This Request?"
-                  question="The sender sees it as resolved on their support page, and can reopen it by replying. It closes by itself after seven days without a reply."
-                  busy="Resolving"
-                  confirmClass="btn btn--solid"
-                  announcement="Request resolved."
-                  inModal
-                  send={() => graphqlRequest(ResolveDocument, { id: request.id })}
-                />
-              )
-            }
-          />
-        )}
+        <ReplyForm
+          noteOnly={!answers}
+          requestId={request.id}
+          canWait={open && answers}
+          senderTimedOutUntil={standingTimeoutEnd(request.timeouts)}
+          resolve={
+            open &&
+            answers && (
+              <ConfirmedAction
+                label="Resolve"
+                accessibleName="Resolve"
+                openClass="btn btn--quiet"
+                title="Resolve This Request?"
+                question="The sender sees it as resolved on their support page, and can reopen it by replying. It closes by itself after seven days without a reply."
+                busy="Resolving"
+                confirmClass="btn btn--solid"
+                announcement="Request resolved."
+                inModal
+                send={() => graphqlRequest(ResolveDocument, { id: request.id })}
+              />
+            )
+          }
+        />
       </div>
 
       {isAdmin && (
