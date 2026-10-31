@@ -61,6 +61,14 @@
   border-color: transparent;
 }
 
+// The passkey button is the plain green-outline `.btn`, centred: it keeps the `.btn` edge the rule
+// above takes off and has no brand icon to leave room for.
+.sign-in-panel__button--passkey.btn {
+  justify-content: center;
+  border-width: 1.6px;
+  border-color: $accent;
+}
+
 // One brand's button colours from `$brand-palettes` (_variables.scss), not our tokens; a white
 // button takes its brand's `edge`, one with none keeps the transparent edge above. The hover/focus
 // block restates `color`, since `.btn` changes text colour there and an omitted `color` would tie
