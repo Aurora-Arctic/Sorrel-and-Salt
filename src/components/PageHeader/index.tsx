@@ -17,14 +17,21 @@ const PageHeader = ({
   tag,
   action,
   className,
+  headingClassName,
+  focusable,
+  suffix,
 }: PageHeaderProps): ReactElement => {
   // A tag makes the h1 a two-column grid, so it stays beside the title's first line when the title wraps.
+  const focus = focusable ? { tabIndex: -1, 'data-view-heading': true } : {};
   const heading = tag ? (
-    <h1 id={id} className="page-title--tagged">
+    <h1 id={id} className={classes('page-title--tagged', headingClassName)} {...focus}>
       <span>{title}</span> {tag}
     </h1>
   ) : (
-    <h1 id={id}>{title}</h1>
+    <h1 id={id} className={headingClassName} {...focus}>
+      {title}
+      {suffix && <> {suffix}</>}
+    </h1>
   );
   const column = Boolean(eyebrow) || Boolean(lede);
   const line =

@@ -1121,6 +1121,7 @@ type Mutation {
   setCompendiumEntryReviewed(id: ID!, reviewed: Boolean!): Ingredient!
   setEmail(email: String!, next: String): User!
   setName(name: String!): User!
+  setPassword(newPassword: String!): Boolean!
 
   """Shows a request to curators, or hides it from them. Site admins only."""
   setSupportRequestCuratorVisible(id: ID!, visible: Boolean!): SupportRequest!

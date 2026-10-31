@@ -1,0 +1,64 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The input with the eye toggle inside its right-hand end; the input's padding keeps the text clear of it.
+.password-field__control {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+
+  > .input {
+    padding-inline-end: $control-height;
+  }
+}
+
+.password-field__toggle {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: $control-height;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: $text-muted;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible,
+  &[aria-pressed='true'] {
+    color: $accent;
+  }
+
+  svg {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+}
+
+// The meter and its text under a new password: the bar spans the input, the text sits below it and
+// holds one line (the warnings are short enough never to wrap) so the page does not move as the verdict
+// changes. "Strength: " is read by a screen reader and not drawn, to leave the line room.
+.password-field__strength {
+  display: flex;
+  flex-direction: column;
+  gap: space(1);
+}
+
+.password-field__bar {
+  display: block;
+  width: 100%;
+  height: space(2);
+}
+
+.password-field__strength-text {
+  margin: 0;
+  line-height: 1.4;
+  min-block-size: 1.4em;
+}
+
+.password-field__strength-label {
+  @include visually-hidden;
+}

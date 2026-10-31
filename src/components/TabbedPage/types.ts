@@ -8,7 +8,9 @@ export interface PageTab {
   /** Whether the tab's list opens with a filter, so its loading skeleton draws a filter row; left out, none. */
   filtered?: boolean;
   /** What the tab's loading skeleton stands in for: a table (the default), or cards, as the grimoire's tabs. */
-  shape?: 'table' | 'cards';
+  shape?: 'table' | 'cards' | 'sections';
+  /** With the `sections` shape: how many panels the skeleton draws, to match the tab's own. */
+  sections?: number;
   /** With `cards`: the tab's list opens compact, so its loading skeleton does too. */
   density?: 'compact';
 }
@@ -20,6 +22,8 @@ export interface TabbedPageProps {
   tabs: readonly PageTab[];
   /** The open tab's one action at the end of the heading's line, from the route group's `@action` slot; nothing for a tab with none. */
   action?: ReactNode;
+  /** The page's tabs hold a `.page-with-nav` column (the account): the head stands over the sections' column and the tabs sit beneath it at every width. */
+  framed?: boolean;
   /** The open tab's content. */
   children: ReactNode;
 }
@@ -50,8 +54,10 @@ export interface TabActionProps {
 export interface TabPanelLoadingProps {
   /** Whether to draw a filter row above the table: the pressed tab's `filtered`. */
   filter?: boolean;
-  /** What the skeleton stands in for: `table` (the default), or `cards`, the grid of ingredient cards. */
-  shape?: 'table' | 'cards';
+  /** What the skeleton stands in for: `table` (the default), or `cards`, the grid of ingredient cards, or `sections`, an account tab's menu and panels. */
+  shape?: 'table' | 'cards' | 'sections';
+  /** With `sections`: how many panels it draws. */
+  count?: number;
   /** The density of a `cards` skeleton: the pressed tab's `density`. */
   density?: 'compact';
 }

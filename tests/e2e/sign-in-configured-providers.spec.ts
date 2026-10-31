@@ -5,7 +5,7 @@ import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 // Runs only in the `chromium-configured-providers` project, against a server whose four providers carry
 // placeholder credentials, so the brand-coloured state shows that the gate project's greyed server never
 // renders. claude-docs/components/sign-in-panel.md, "Testing".
-const PROVIDER_NAMES = ['Discord', 'Google', 'Facebook', 'Microsoft'];
+const PROVIDER_NAMES = ['Discord', 'Google', 'Microsoft'];
 
 // The placeholder ids are useless to a real authorization endpoint, so
 // nothing here may start a sign-in. Hovering is the whole interaction; this

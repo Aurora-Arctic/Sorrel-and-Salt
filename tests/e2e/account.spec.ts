@@ -26,6 +26,8 @@ test('shows the account’s name, address and one greyed method, jumps to a sect
   );
   // No way across to the email page; the nav's Email link stays on this one.
   await expect(main.locator('a[href^="/account/email"]')).toHaveCount(0);
+  // The sign-in sections live on the Sign-In tab.
+  await page.goto('/account/sign-in');
   // The only method's Remove is greyed, not gone, with its reason as its description.
   await expect(main.getByRole('button', { name: /^Remove/ })).toHaveAttribute(
     'aria-disabled',
@@ -40,7 +42,7 @@ test('shows the account’s name, address and one greyed method, jumps to a sect
   // The on-page nav jumps to a section.
   const nav = main.getByRole('navigation', { name: 'On This Page' });
   await nav.getByRole('link', { name: 'Sign-In Methods' }).click();
-  await expect(page).toHaveURL(/#account-sign-in-methods$/);
+  await expect(page).toHaveURL(/#sign-in-methods$/);
   await expect(main.getByRole('heading', { level: 2, name: 'Sign-In Methods' })).toBeInViewport();
 
   // Both themes, since a Playwright page is in the light theme unless told otherwise.
@@ -57,7 +59,7 @@ test('shows the account’s name, address and one greyed method, jumps to a sect
 test('two linked and a failed link have no accessibility violations', async ({ page }) => {
   await signInAs(page, 'two-methods@account-page.test', ['discord', 'microsoft']);
 
-  await page.goto('/account?error=access_denied&provider=microsoft');
+  await page.goto('/account/sign-in?error=access_denied&provider=microsoft');
 
   const main = page.getByRole('main');
   await expect(main.getByRole('button', { name: 'Remove Microsoft' })).toBeVisible();

@@ -37,6 +37,7 @@ vi.mock('@/modules/coven', () => ({ membershipBySlug: membershipBySlugMock }));
 
 const {
   getSession,
+  hasPassword,
   linkedAccounts,
   requireAdminSession,
   requireCuratorSession,
@@ -239,17 +240,17 @@ describe('requireCuratorSession', () => {
 
 // What the account page lists: Better Auth's own account rows, by the row id
 // /unlink-account takes and the provider they sign in through.
-describe('linkedAccounts', () => {
-  const row = (id: string, providerId: string) => ({
-    id,
-    providerId,
-    accountId: `${providerId}-account`,
-    userId: USER_ID,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-    scopes: [],
-  });
+const row = (id: string, providerId: string) => ({
+  id,
+  providerId,
+  accountId: `${providerId}-account`,
+  userId: USER_ID,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  scopes: [],
+});
 
+describe('linkedAccounts', () => {
   it('asks Better Auth with the request headers and keeps the row id and provider', async () => {
     listUserAccountsMock.mockResolvedValue([row('a-1', 'discord'), row('a-2', 'microsoft')]);
 
@@ -260,11 +261,27 @@ describe('linkedAccounts', () => {
     expect(listUserAccountsMock).toHaveBeenCalledWith({ headers: requestHeaders });
   });
 
-  // Nothing registers one today; a row the roster cannot name has no line on the page.
-  it('leaves out a provider outside the roster', async () => {
+  // A password has its own section, and a provider the roster cannot name no line on the page.
+  it('leaves out the password and a provider outside the roster', async () => {
     listUserAccountsMock.mockResolvedValue([row('a-1', 'google'), row('a-2', 'credential')]);
 
     await expect(linkedAccounts()).resolves.toEqual([{ id: 'a-1', providerId: 'google' }]);
+  });
+});
+
+// The account page changes a password the account holds and sets one it does not.
+describe('hasPassword', () => {
+  it('is true when Better Auth holds a password row for the account', async () => {
+    listUserAccountsMock.mockResolvedValue([row('a-1', 'google'), row('a-2', 'credential')]);
+
+    await expect(hasPassword()).resolves.toBe(true);
+    expect(listUserAccountsMock).toHaveBeenCalledWith({ headers: requestHeaders });
+  });
+
+  it('is false for an account with providers alone', async () => {
+    listUserAccountsMock.mockResolvedValue([row('a-1', 'google'), row('a-2', 'discord')]);
+
+    await expect(hasPassword()).resolves.toBe(false);
   });
 });
 

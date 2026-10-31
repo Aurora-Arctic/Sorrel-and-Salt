@@ -158,7 +158,16 @@ export {
 } from './support';
 export { findOpenAdminRoleChangePause } from './admin-roles';
 export { deleteProvisionalUsers } from './provisional-users';
-export type { PrivilegeDeclaration } from '../types';
+export { removePasskeyKeepingAWayIn } from './passkeys';
+export type { PasskeyRemoval } from './passkeys';
+export {
+  clearSignInFailures,
+  lockPasswordSignIn,
+  readSignInFailure,
+  recordSignInFailure,
+} from './sign-in-failures';
+export type { SignInFailureRow } from './sign-in-failures';
+export type { PrivilegeDeclaration, PrivilegeRoute } from '../types';
 export type {
   WorkingDeductionRow,
   WorkingParticipantRow,

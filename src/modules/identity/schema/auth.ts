@@ -1,4 +1,14 @@
-import { bigint, index, integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import {
+  bigint,
+  boolean,
+  index,
+  integer,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { users } from './users';
 import { idColumn } from '../../../db/schema-parts';
 
@@ -78,3 +88,61 @@ export const rateLimits = pgTable('rate_limits', {
   count: integer('count').notNull(),
   lastRequest: bigint('last_request', { mode: 'number' }).notNull(),
 });
+
+// One row per account with a failed password sign-in, and none otherwise. No
+// audit columns: nobody writes it by hand and a failed sign-in has no session.
+// `last_failed_at` is when the last failure came, which the quiet period runs
+// from, and `locked_until` the end of the current lock; the schedule that
+// sets them is the lockout's, not the table's.
+export const signInFailures = pgTable('sign_in_failures', {
+  userId: uuid('user_id')
+    .primaryKey()
+    .references(() => users.id, { onDelete: 'cascade' }),
+  count: integer('count').notNull().default(0),
+  firstFailedAt: timestamp('first_failed_at').defaultNow().notNull(),
+  lastFailedAt: timestamp('last_failed_at').defaultNow().notNull(),
+  lockedUntil: timestamp('locked_until'),
+});
+
+// The `passkey` plugin's model, named `passkeys` by `usePlural`. Its field `credentialID` is `credentialId` here, and the
+// plugin's `schema` option in src/lib/auth.ts maps one to the other.
+export const passkeys = pgTable(
+  'passkeys',
+  {
+    id: idColumn(),
+    name: text('name'),
+    publicKey: text('public_key').notNull(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    credentialId: text('credential_id').notNull(),
+    counter: integer('counter').notNull(),
+    deviceType: text('device_type').notNull(),
+    backedUp: boolean('backed_up').notNull(),
+    transports: text('transports'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
+    aaguid: text('aaguid'),
+  },
+  (table) => [
+    index('passkeys_userId_idx').on(table.userId),
+    uniqueIndex('passkeys_credentialId_idx').on(table.credentialId),
+  ],
+);
+
+// The `twoFactor` plugin's model, named `two_factors` by `usePlural`. `secret` and `backup_codes` hold the
+// plugin's encrypted text. The last three columns are its lockout after repeated wrong codes: the count, and until when the account is refused.
+export const twoFactors = pgTable(
+  'two_factors',
+  {
+    id: idColumn(),
+    secret: text('secret').notNull(),
+    backupCodes: text('backup_codes').notNull(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    verified: boolean('verified').default(true).notNull(),
+    failedVerificationCount: integer('failed_verification_count').default(0).notNull(),
+    lockedUntil: timestamp('locked_until'),
+  },
+  (table) => [index('two_factors_userId_idx').on(table.userId)],
+);

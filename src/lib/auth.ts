@@ -1,13 +1,23 @@
+import { randomBytes } from 'node:crypto';
 import { betterAuth, type BetterAuthOptions } from 'better-auth';
 import type { AuthContext } from '@better-auth/core';
-import { APIError, createAuthMiddleware, getOAuthState, getSessionFromCtx } from 'better-auth/api';
+import {
+  isAPIError,
+  APIError,
+  createAuthMiddleware,
+  getOAuthState,
+  getSessionFromCtx,
+} from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { lastLoginMethod } from 'better-auth/plugins';
+import { twoFactor } from 'better-auth/plugins/two-factor';
+import { passkey } from '@better-auth/passkey';
 import {
   defineRequestState,
   getCurrentAuthEndpointContext,
   hasRequestState,
 } from '@better-auth/core/context';
+import { BASE_ERROR_CODES } from '@better-auth/core/error';
 import { appendQueryParams } from '@better-auth/core/utils/url';
 // Better Auth's drizzleAdapter takes the client itself rather than a writer, so
 // this cannot go through withAudit — claude-docs/db/client-imports.md, "Who may import the client".
@@ -15,8 +25,16 @@ import { appendQueryParams } from '@better-auth/core/utils/url';
 import { db } from '../db/connection';
 import { workspaceMembers } from '../modules/coven/schema/workspaces';
 import { users } from '../modules/identity/schema/users';
-import { findDemoWorkspace } from '../db/repository';
-import { sessions, accounts, verifications, rateLimits } from '../modules/identity/schema/auth';
+import { defaultPasskeyName } from './passkey-name';
+import { findDemoWorkspace, removePasskeyKeepingAWayIn } from '../db/repository';
+import {
+  sessions,
+  accounts,
+  verifications,
+  rateLimits,
+  passkeys,
+  twoFactors,
+} from '../modules/identity/schema/auth';
 import { SOCIAL_PROVIDERS, isRosterProvider } from './social-providers';
 // Server-only — see social-providers-config.ts's own header.
 // oxlint-disable-next-line no-restricted-imports
@@ -24,15 +42,25 @@ import { PROFILE, clientCredentials } from './social-providers-config';
 import type { HookContext } from './session';
 import { toUserRole } from './session-role';
 import { requiredInProduction } from './env';
+import { authSecrets } from './auth-secrets';
+import { SITE_NAME } from './site';
 import { send } from './mail';
+import { runInBackground } from './background-tasks';
 import { emailPagePath, returnPathOf, verifiedLanding } from './account-email';
 import { LAST_USED_PROVIDER_COOKIE, SIGN_IN_TO_VERIFY_PATH } from './sign-in';
 import { sendEmailChangeNotice } from './email-change-notice';
 import { signedInLanding } from './landing';
-import { plainSessionCookie } from './e2e-session-cookie';
+import { e2eTrustedOrigins, plainSessionCookie } from './e2e-session-cookie';
 import { impersonation, impersonationEnabled } from './impersonation';
+import { breachedPasswordCheck } from './breached-password';
+import { HELD_PASSWORD_FIELDS } from './held-password-paths';
+import { isFreshSession } from './session-fresh';
 import { primaryAdminEmail } from './primary-admin';
 import { verifyEmailMessage } from '../emails/verify-email';
+import { accountExistsMessage } from '../emails/account-exists';
+import { resetPasswordMessage } from '../emails/reset-password';
+import { passwordLockedMessage } from '../emails/password-locked';
+import { mailPasswordChanged } from './password-notice';
 import {
   promotePrimaryAdmin,
   promotePrimaryAdminAtVerification,
@@ -47,6 +75,9 @@ import {
   isPlaceholderEmail,
   placeholderEmail,
   sweepProvisionalAccounts,
+  clearFailedPasswordSignIns,
+  isPasswordSignInLocked,
+  recordFailedPasswordSignIn,
 } from '@/modules/identity';
 import type { ProviderId } from './types';
 
@@ -118,9 +149,11 @@ function socialProviders(): BetterAuthOptions['socialProviders'] {
 
 // Per request, not a `BETTER_AUTH_URL` variable: production spans three origins. Outside production the host is fixed
 // (`next dev --hostname 0.0.0.0` would make every `redirect_uri` `0.0.0.0:8000`) and the port is the server's own
-// (Next sets `PORT`), so a second dev server or an e2e slot is not refused as an invalid origin.
+// (Next sets `PORT`), so a second dev server or an e2e slot is not refused as an invalid origin. The e2e servers are
+// production builds that answer the browser at localhost, the one plain-http host it lets use a passkey, so they take the
+// fixed host too, under the gate that keeps every deploy off it (claude-docs/testing/e2e.md, "Passkeys").
 function baseURL(): BetterAuthOptions['baseURL'] {
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === 'production' && !plainSessionCookie()) {
     return {
       allowedHosts: [
         'sorrelandsalt.com',
@@ -248,6 +281,52 @@ async function requireOwnResend(ctx: HookContext): Promise<void> {
   }
 }
 
+/** The passkey endpoints that verify a ceremony and act on it. */
+const PASSKEY_VERIFY_PATHS = new Set([
+  '/passkey/verify-authentication',
+  '/passkey/verify-registration',
+]);
+
+/**
+ * A passkey ceremony is verified only from a page on the host it is posted to. The plugin expects the request's own
+ * Origin header, which any trusted origin passes, so a subdomain page could otherwise sign in to its parent domain.
+ */
+function pinPasskeyOrigin(ctx: HookContext): void {
+  const origin = ctx.headers?.get('origin');
+  if (origin !== new URL(ctx.context.baseURL).origin) {
+    throw new APIError('FORBIDDEN', {
+      code: 'PASSKEY_ORIGIN_MISMATCH',
+      message: 'Use a passkey from a page on this site.',
+    });
+  }
+}
+
+/**
+ * Removes the account's own passkey here rather than in the plugin, refusing the last one when the account has no other
+ * way to sign in: no other passkey, no account for a roster provider and no password. The repository checks and deletes
+ * under one lock, so two removals at once cannot each see the other passkey and leave none; the plugin's own delete
+ * would run apart from the check.
+ */
+async function keepAWayIn(ctx: HookContext) {
+  const session = await sessionOf(ctx);
+  const id = ctx.body?.id;
+  if (!session || typeof id !== 'string') return;
+  const outcome = await removePasskeyKeepingAWayIn(
+    session.user.id,
+    id,
+    SOCIAL_PROVIDERS.map((provider) => provider.id),
+  );
+  // Another account's id falls through to the plugin, which refuses it as not this account's.
+  if (outcome === 'not-held') return;
+  if (outcome === 'last-way-in') {
+    throw new APIError('BAD_REQUEST', {
+      code: 'LAST_SIGN_IN_METHOD',
+      message: 'This passkey is the only way to sign in to this account, so it cannot be removed.',
+    });
+  }
+  return ctx.json({ status: true });
+}
+
 /** The verification token's claims, decoded and not verified: a caller may only refuse on them. */
 function tokenClaims(token: unknown): { email?: string; updateTo?: string } | undefined {
   const payload = typeof token === 'string' ? token.split('.')[1] : undefined;
@@ -279,6 +358,244 @@ async function gateEmailChange(ctx: HookContext): Promise<void> {
   await actingUser.set(session.user.id);
 }
 
+// Email and password: the policy is DESIGN.md §8, "Passwords", and the wiring claude-docs/auth/passwords.md.
+
+/** Why a breached password is refused, rather than only that it is. */
+const PASSWORD_BREACHED_MESSAGE =
+  'This password appears in a known data breach, so someone could guess it. Choose another.';
+
+/**
+ * Mails the holder of an address a sign-up arrived with, in place of the second account Better Auth does not
+ * make. The sign-up answers as a new one does, so only the mailbox learns the address is taken.
+ */
+async function mailExistingHolder({ user }: { user: { id: string; email: string } }) {
+  if (isPlaceholderEmail(user.email)) return;
+  const ctx = getCurrentAuthEndpointContext();
+  const accounts = await ctx.context.internalAdapter.findAccounts(user.id);
+  await send(
+    await accountExistsMessage({
+      to: user.email,
+      url: `${new URL(ctx.context.baseURL).origin}/sign-in`,
+      providers: accounts.map((account) => account.providerId).filter(isRosterProvider),
+      hasPassword: accounts.some((account) => account.providerId === 'credential'),
+    }),
+  );
+}
+
+/** The page a reset link opens, whatever page the request for it named. */
+const RESET_PASSWORD_PAGE = '/reset-password';
+
+/** How long a reset link lasts. Short, because Better Auth stores the reset token unhashed in `verifications`. */
+const RESET_TOKEN_SECONDS = 15 * 60;
+
+/** This request's site origin, for a link in a mail sent from inside one of Better Auth's endpoints. */
+function endpointOrigin(): string {
+  return new URL(getCurrentAuthEndpointContext().context.baseURL).origin;
+}
+
+/**
+ * Mails a reset link to a verified address. An unverified one gets nothing, so a reset never reaches an
+ * inbox the account has not proved; the request answers the same either way. The link always opens the
+ * reset page, so a request cannot point it anywhere else.
+ */
+async function mailResetLink({
+  user,
+  url,
+}: {
+  user: { email: string; emailVerified: boolean };
+  url: string;
+}) {
+  if (!user.emailVerified || isPlaceholderEmail(user.email)) return;
+  const link = new URL(url);
+  link.searchParams.set('callbackURL', RESET_PASSWORD_PAGE);
+  await send(await resetPasswordMessage({ to: user.email, url: link.toString() }));
+}
+
+const PASSWORD_SIGN_IN_PAUSED = {
+  code: 'PASSWORD_SIGN_IN_PAUSED',
+  message: 'Password sign-in is paused for this account.',
+};
+
+// The account a password sign-in, or an endpoint checking a held password, names, and whether its lock was on when the
+// attempt arrived, carried from the before hook to the after hook so the after hook does no second lookup.
+const passwordAttempt = defineRequestState<{ userId?: string; locked: boolean }>(() => ({
+  locked: false,
+}));
+
+/** Whether the signed-in account has a password to guess at: a credential row of its own holding one. */
+async function holdsPassword(ctx: HookContext, userId: string): Promise<boolean> {
+  const accounts = await ctx.context.internalAdapter.findAccounts(userId);
+  return accounts.some(
+    (account) =>
+      account.providerId === 'credential' && account.accountId === userId && !!account.password,
+  );
+}
+
+/**
+ * Holds an endpoint that checks the signed-in account's own password: while the account's password lock is on, it
+ * swaps the password for one no hash can match, so the request is refused as a wrong password; a two-factor path
+ * instead refuses with a paused code. `/change-password` also
+ * signs out every other session whatever the request asks, so a change always shuts out whoever else held the old
+ * password, and `/two-factor/disable` needs a fresh session, so a stolen old cookie and the password cannot turn the
+ * second factor off.
+ */
+async function holdHeldPassword(ctx: HookContext, field: string) {
+  const session = await sessionOf(ctx);
+  if (ctx.path === '/two-factor/disable' && session) {
+    if (!isFreshSession(session.session.createdAt, ctx.context.sessionConfig.freshAge)) {
+      throw APIError.from('FORBIDDEN', BASE_ERROR_CODES.SESSION_NOT_FRESH);
+    }
+  }
+  const userId =
+    session && (await holdsPassword(ctx, session.user.id)) ? session.user.id : undefined;
+  const locked = userId !== undefined && (await isPasswordSignInLocked(userId));
+  await passwordAttempt.set({ userId, locked });
+  const body = { ...ctx.body };
+  if (ctx.path === '/change-password') body.revokeOtherSessions = true;
+  // The two-factor paths are the account page's own, so the signed-in owner is told the lock is why a right password
+  // is refused; the other paths keep answering as a wrong password.
+  if (locked && ctx.path.startsWith('/two-factor/')) {
+    throw APIError.from('BAD_REQUEST', PASSWORD_SIGN_IN_PAUSED);
+  }
+  if (locked && typeof body[field] === 'string') body[field] = randomBytes(32).toString('hex');
+  return { context: { body } };
+}
+
+/**
+ * Counts a wrong password against an unlocked account as a failed sign-in, since it is a guess at the same password,
+ * and clears the count once the endpoint accepts a password it was given.
+ */
+async function countHeldPassword(ctx: HookContext, field: string) {
+  const { userId, locked } = await passwordAttempt.get();
+  if (!userId || typeof ctx.body?.[field] !== 'string') return;
+  const returned = ctx.context.returned;
+  if (!isAPIError(returned)) return clearFailedPasswordSignIns(userId);
+  if (returned.body?.code !== BASE_ERROR_CODES.INVALID_PASSWORD.code) return;
+  if (!locked) await countFailure(ctx, userId);
+}
+
+/**
+ * Counts one failure and, when it starts the first lock of a series, mails the account's owner; a later lock in the same
+ * series sends nothing, so guessing on cannot mail the owner every hour. The mail carries a reset link made the way
+ * Better Auth makes its own, so the owner can choose a new password at once rather than wait out the lock. Like the
+ * reset mail, it goes only to a verified address, and runs after the answer, so the answer shows nothing.
+ */
+async function countFailure(ctx: HookContext, userId: string) {
+  const lock = await recordFailedPasswordSignIn(userId);
+  if (!lock?.firstOfSeries) return;
+  await ctx.context.runInBackgroundOrAwait(mailLockNotice(ctx, userId, lock.length));
+}
+
+async function mailLockNotice(ctx: HookContext, userId: string, length: number) {
+  const user = await ctx.context.internalAdapter.findUserById(userId);
+  if (!user?.emailVerified || isPlaceholderEmail(user.email)) return;
+  const token = randomBytes(18).toString('base64url');
+  await ctx.context.internalAdapter.createVerificationValue({
+    value: user.id,
+    identifier: `reset-password:${token}`,
+    expiresAt: new Date(Date.now() + RESET_TOKEN_SECONDS * 1000),
+  });
+  const accounts = await ctx.context.internalAdapter.findAccounts(user.id);
+  const passkeys = await ctx.context.adapter.findMany({
+    model: 'passkey',
+    where: [{ field: 'userId', value: user.id }],
+    limit: 1,
+  });
+  const link = new URL(`${ctx.context.baseURL}/reset-password/${token}`);
+  link.searchParams.set('callbackURL', RESET_PASSWORD_PAGE);
+  await send(
+    await passwordLockedMessage({
+      to: user.email,
+      url: link.toString(),
+      minutes: length / 60_000,
+      providers: accounts.map((account) => account.providerId).filter(isRosterProvider),
+      hasPasskey: passkeys.length > 0,
+    }),
+  );
+}
+
+/** Tells the account a change on its account page replaced its password. */
+async function mailChangeNotice(ctx: HookContext) {
+  const returned = ctx.context.returned;
+  if (isAPIError(returned) || returned instanceof Response) return;
+  const email = ctx.context.session?.user.email;
+  if (email) await mailPasswordChanged(email, new URL(ctx.context.baseURL).origin, 'change');
+}
+
+function emailAndPassword(): BetterAuthOptions['emailAndPassword'] {
+  return {
+    enabled: true,
+    minPasswordLength: 15,
+    maxPasswordLength: 128,
+    // Off: on, an unverified account gets no session, and the link verifies only from the row's own session, so it
+    // could never be followed. The unverified account signs in and `requireSession()` holds it at the email page.
+    requireEmailVerification: false,
+    // On: a new account lands signed in, and `requireSession()` holds it at the email page until the address is proven.
+    // Better Auth then refuses a held address outright, so the before hook mails the holder and answers it first.
+    autoSignIn: true,
+    resetPasswordTokenExpiresIn: RESET_TOKEN_SECONDS,
+    revokeSessionsOnPasswordReset: true,
+    sendResetPassword: mailResetLink,
+    onPasswordReset: async ({ user }) => {
+      await clearFailedPasswordSignIns(user.id);
+      await mailPasswordChanged(user.email, endpointOrigin(), 'reset');
+    },
+  };
+}
+
+/**
+ * A sign-up for an address already held mails the holder and answers 200 as a new account would, without making a
+ * second row. Better Auth would refuse it with a 422 that names the address as taken.
+ */
+async function answerHeldSignUp(ctx: HookContext) {
+  const email = typeof ctx.body?.email === 'string' ? ctx.body.email.toLowerCase() : undefined;
+  const holder = email ? await ctx.context.internalAdapter.findUserByEmail(email) : null;
+  if (!holder) return;
+  await mailExistingHolder({ user: holder.user });
+  return ctx.json({ status: true });
+}
+
+/**
+ * The id of the account at this address when it holds a password, found as Better Auth's own sign-in finds it. An
+ * account with none has nothing to guess, so its wrong passwords are not counted.
+ */
+async function passwordHolderId(ctx: HookContext, email: string): Promise<string | undefined> {
+  const found = await ctx.context.internalAdapter.findUserByEmail(email.toLowerCase(), {
+    includeAccounts: true,
+  });
+  const credential = found?.accounts.find(
+    (account) => account.providerId === 'credential' && account.accountId === found.user.id,
+  );
+  return credential?.password ? found?.user.id : undefined;
+}
+
+/**
+ * While the account is locked, swaps the submitted password for a random one no hash can match. Better Auth then
+ * runs its own lookup and verify and refuses with its own wrong-password error, so a locked attempt answers and
+ * takes as long as a wrong password, where a refusal here would skip the verify and show the lock.
+ */
+async function holdLockedSignIn(ctx: HookContext) {
+  const email = (ctx.body as { email?: unknown } | undefined)?.email;
+  if (typeof email !== 'string') return;
+  const userId = await passwordHolderId(ctx, email);
+  const locked = userId !== undefined && (await isPasswordSignInLocked(userId));
+  await passwordAttempt.set({ userId, locked });
+  if (locked) {
+    return { context: { body: { ...ctx.body, password: randomBytes(32).toString('hex') } } };
+  }
+}
+
+/** Counts a wrong password against an unlocked account, and clears the count on a successful sign-in. */
+async function countPasswordSignIn(ctx: HookContext) {
+  const newSession = ctx.context.newSession;
+  if (newSession) return clearFailedPasswordSignIns(newSession.user.id);
+  const returned = ctx.context.returned;
+  if (!isAPIError(returned)) return;
+  if (returned.body?.code !== BASE_ERROR_CODES.INVALID_EMAIL_OR_PASSWORD.code) return;
+  const { userId, locked } = await passwordAttempt.get();
+  if (userId && !locked) await countFailure(ctx, userId);
+}
+
 // The change link's token names the address being left and the one taken; the left one is told once the swap is written.
 async function noticeCompletedChange(request: Request | undefined): Promise<void> {
   const claims = tokenClaims(request && new URL(request.url).searchParams.get('token'));
@@ -291,12 +608,17 @@ export const auth = betterAuth({
   // Better Auth's own `validateSecret` is swallowed — with the secret unset it
   // logs and still answers 200 on the well-known default (claude-docs/auth/config.md, "Config").
   secret: requiredInProduction('BETTER_AUTH_SECRET'),
+  // Versioned, so a new key leaves what the old one encrypted readable; `secret` above is read only for values written
+  // before versions existed (claude-docs/auth/config.md, "Rotating the secret").
+  secrets: authSecrets(),
   baseURL: baseURL(),
+  // Empty but on the e2e servers, whose browsers post from localhost or devcontainer (claude-docs/testing/e2e.md).
+  trustedOrigins: e2eTrustedOrigins(),
   socialProviders: socialProviders(),
   database: drizzleAdapter(db, {
     provider: 'pg',
     usePlural: true,
-    schema: { users, sessions, accounts, verifications, rateLimits },
+    schema: { users, sessions, accounts, verifications, rateLimits, passkeys, twoFactors },
   }),
   // Better Auth's own default, stated so a bump cannot move it: on in every
   // deploy, off under `next dev` and the test suites. In the database because
@@ -305,12 +627,35 @@ export const auth = betterAuth({
   rateLimit: {
     enabled: process.env.NODE_ENV === 'production',
     storage: 'database',
+    // Sign-in's own rule, for the passkey ceremonies, which ship none. A custom rule replaces every other on its paths,
+    // so the passkey list, rename and remove are held to it too (claude-docs/auth/rate-limiting.md, "Rate limiting").
+    customRules: {
+      '/passkey/*': { window: 10, max: 3 },
+    },
   },
   // Cookie only: `storeInDatabase` would add a users column nothing reads (claude-docs/auth/plugins.md, "Plugins").
   // Impersonation is never constructed at production, nor where the flag is unset, so its endpoints are absent.
   plugins: [
     lastLoginMethod({ cookieName: LAST_USED_PROVIDER_COOKIE }),
+    // Fails closed: an unreachable or silent service refuses the password, never waves it through.
+    breachedPasswordCheck({ message: PASSWORD_BREACHED_MESSAGE }),
     ...(impersonationEnabled() ? [impersonation()] : []),
+    // rpID and origin are left to the plugin, which reads them from the request's own base URL and Origin header,
+    // so a passkey belongs to the host it was made on (claude-docs/auth/plugins.md, "Passkeys").
+    passkey({
+      rpName: 'Sorrel & Salt',
+      schema: { passkey: { fields: { credentialID: 'credentialId' } } },
+      // A passkey the person did not name is called after the browser and platform that made it, read from this
+      // request's own header; a name the client sends wins.
+      registration: {
+        afterVerification: ({ ctx }) => ({
+          name: defaultPasskeyName(ctx.headers?.get('user-agent')),
+        }),
+      },
+    }),
+    // An authenticator-app step after a right password, offered, never required. It answers only the password sign-in,
+    // so a provider or passkey sign-in is never asked (claude-docs/auth/two-factor.md).
+    twoFactor({ issuer: SITE_NAME }),
   ],
   advanced: {
     // Absent leaves Better Auth's own rule: `__Secure-` names wherever the base
@@ -327,6 +672,8 @@ export const auth = betterAuth({
     ipAddress: {
       ipAddressHeaders: ['x-vercel-forwarded-for'],
     },
+    // Mails, and the rate limiter's sweep, run after the response, so no answer waits on them.
+    backgroundTasks: { handler: runInBackground },
   },
   // Offered at sign-up, never required for a session: what needs a verified
   // address checks the column. claude-docs/auth/admin-bootstrap.md, "First-party verification".
@@ -392,6 +739,7 @@ export const auth = betterAuth({
       allowDifferentEmails: true,
     },
   },
+  emailAndPassword: emailAndPassword(),
   // `/update-user` writes `name` and `image` outside `withAudit`; the name
   // is `setName`'s, the audited write. Refused at the router, before
   // the endpoint or any hook runs, with a 404 (claude-docs/auth/admin-bootstrap.md,
@@ -430,18 +778,37 @@ export const auth = betterAuth({
     },
   },
   hooks: {
-    // Before the code exchange, so a lapsed account holding the arriving
-    // address is gone before Better Auth looks it up. Nothing yet knows which
-    // address that is, so it sweeps every lapsed row. A failure is logged and
+    // Before the code exchange or a password sign-up, so a lapsed account
+    // holding the arriving address is gone before Better Auth looks it up. A
+    // callback does not yet know which address that is, so it sweeps every lapsed row. A failure is logged and
     // never fails the sign-in: the sweep is housekeeping.
     before: createAuthMiddleware(async (ctx) => {
       if (ctx.path === '/verify-email') return gateEmailChange(ctx);
       if (ctx.path === '/send-verification-email') return requireOwnResend(ctx);
-      if (ctx.path !== '/callback/:id') return;
+      if (ctx.path in HELD_PASSWORD_FIELDS)
+        return holdHeldPassword(ctx, HELD_PASSWORD_FIELDS[ctx.path]);
+      if (ctx.path === '/sign-in/email') return holdLockedSignIn(ctx);
+      if (PASSKEY_VERIFY_PATHS.has(ctx.path)) return pinPasskeyOrigin(ctx);
+      if (ctx.path === '/passkey/delete-passkey') return keepAWayIn(ctx);
+      if (ctx.path !== '/callback/:id' && ctx.path !== '/sign-up/email') return;
       await sweepQuietly(ctx);
+      if (ctx.path === '/sign-up/email') return answerHeldSignUp(ctx);
     }),
     after: createAuthMiddleware(async (ctx) => {
+      // A new account answers with the same body a held address does; only its session cookie differs.
+      if (ctx.path === '/sign-up/email' && !isAPIError(ctx.context.returned))
+        return ctx.json({ status: true });
+      if (ctx.path in HELD_PASSWORD_FIELDS) {
+        await countHeldPassword(ctx, HELD_PASSWORD_FIELDS[ctx.path]);
+        if (ctx.path === '/change-password') return mailChangeNotice(ctx);
+        return;
+      }
+      if (ctx.path === '/sign-in/email') return countPasswordSignIn(ctx);
       const newSession = ctx.context.newSession;
+      // A passkey proves the account's owner as a password would, so it forgets the failures too.
+      if (ctx.path === '/passkey/verify-authentication' && newSession) {
+        return clearFailedPasswordSignIns(newSession.user.id);
+      }
       if (ctx.path !== '/callback/:id' || !newSession) return;
 
       const { user } = newSession;

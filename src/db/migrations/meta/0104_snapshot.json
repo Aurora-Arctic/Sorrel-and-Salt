@@ -1,5 +1,5 @@
 {
-  "id": "d3d5c104-0e76-4786-b65f-ef2284d8f108",
+  "id": "15a76cae-4465-4c54-869f-50efcffb536d",
   "prevId": "b3be88a3-9bc5-431b-8eae-e53ac98e5a0c",
   "version": "7",
   "dialect": "postgresql",
@@ -2153,6 +2153,55 @@
           "columns": ["token"]
         }
       },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.sign_in_failures": {
+      "name": "sign_in_failures",
+      "schema": "",
+      "columns": {
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "count": {
+          "name": "count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "first_failed_at": {
+          "name": "first_failed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "locked_until": {
+          "name": "locked_until",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "sign_in_failures_user_id_users_id_fk": {
+          "name": "sign_in_failures_user_id_users_id_fk",
+          "tableFrom": "sign_in_failures",
+          "tableTo": "users",
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": false
@@ -5403,9 +5452,9 @@
           "notNull": true,
           "default": "pg_catalog.gen_random_uuid()"
         },
-        "about": {
-          "name": "about",
-          "type": "support_request_about",
+        "kind": {
+          "name": "kind",
+          "type": "support_request_kind",
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
@@ -7308,10 +7357,10 @@
       "schema": "public",
       "values": ["book", "chapter", "article", "entry", "web_page"]
     },
-    "public.support_request_about": {
-      "name": "support_request_about",
+    "public.support_request_kind": {
+      "name": "support_request_kind",
       "schema": "public",
-      "values": ["accessibility", "bug", "account", "compendium", "privacy", "feedback", "question"]
+      "values": ["accessibility", "bug", "question"]
     },
     "public.support_request_status": {
       "name": "support_request_status",

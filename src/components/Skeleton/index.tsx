@@ -10,6 +10,7 @@ const DEFAULT_COUNT: Record<SkeletonShape, number> = {
   cards: 6,
   form: 4,
   page: 3,
+  sections: 3,
   contents: 2,
   line: 1,
 };
@@ -153,9 +154,9 @@ const CovenSections = (): ReactElement => (
 
 // The account page below its title: four panels as the page draws them, each
 // a heading and a line over a field and its button.
-const AccountPanels = (): ReactElement => (
+const AccountPanels = ({ count = 4 }: { count?: number }): ReactElement => (
   <>
-    {Array.from({ length: 4 }, (_, at) => (
+    {Array.from({ length: count }, (_, at) => (
       <div key={at} className="page-frame__section panel">
         <div className="header">
           <span className="skeleton__heading" />
@@ -244,6 +245,18 @@ const Skeleton = ({
               <span />
             </div>
           </>
+        )}
+        {shape === 'sections' && (
+          // A tab of the account: the jump menu and the panels, the heading above being the tabbed page's own.
+          <div className="page-with-nav page-with-nav--headless">
+            <div className="page-nav skeleton__menu">
+              <span />
+              <span />
+              <span />
+              <span />
+            </div>
+            <AccountPanels count={many} />
+          </div>
         )}
         {shape === 'line' &&
           Array.from({ length: many }, (_, line) => <span key={line} className="skeleton__line" />)}

@@ -801,6 +801,11 @@
       align-self: start;
       width: auto;
     }
+
+    // A page with no head of its own, such as a tab inside `TabbedPage` whose heading stands above: the menu starts on the first row.
+    .page-with-nav--headless > .page-nav {
+      grid-row: 1 / span 3;
+    }
   }
 
   // On a wide screen the sections sit at the window's centre, the menu hanging to their left: an empty

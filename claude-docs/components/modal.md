@@ -329,9 +329,18 @@ the tab, reloading, and on a page form a link (see the last point below).
     ask after a save, or ask again after Discard.
   - **A page form busy saving does not ask.** `CreateWorkspaceForm` passes
     `!empty && !busy`, so its own navigation to the new coven goes unheld.
-  - **Back, Forward and an address-bar edit are not covered.** Next 16 gives
-    no way to cancel a history move, and patching `history.pushState` is
-    fragile; autosave (M13.16, M13.17) protects the spell builder there.
+  - **Back and Forward are held where the browser has the Navigation API**
+    (`holdTraversals` in `leave-guard.tsx`, mounted by `NavigationProvider`;
+    Chrome and Edge 102, Firefox 147, Safari 26.2). While any guard has changes,
+    a `traverse` `navigate` event is cancelled and the guards ask as a link
+    does; on yes it calls `navigation.traverseTo` with an `info` marker, so the
+    release is not asked about again. Per the HTML standard the event is
+    cancelable only in a top-level document, for a same-document move, and, for
+    the browser's own Back and Forward buttons, only after the person has used
+    the page (history-action activation, spent by each cancel); the hook reads
+    `event.cancelable` and lets anything else through. Other browsers keep the
+    old behaviour. An address-bar edit is a document load, so only
+    `beforeunload` asks. Autosave (M13.16, M13.17) protects the spell builder.
   - **`onHide`**, an option of `useLeaveGuard`, is called when the tab
     becomes hidden (`visibilitychange` to `hidden`), the one moment phones
     report reliably, where `beforeunload` often never fires. Nothing passes it

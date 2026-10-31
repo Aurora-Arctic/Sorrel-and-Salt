@@ -1,5 +1,6 @@
 import type { Route } from 'next';
 import type { UserRole } from './session';
+import type { PageTab } from '../components/TabbedPage/types';
 import { curates } from './site-roles';
 
 // Pure helpers for /sign-in?next=&error=, shared by the sign-in page and route
@@ -127,7 +128,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   account_not_linked:
     "We couldn't sign you in this way. Use the sign-in method you used before, then add this one on your account page.",
   // At a sign-in, only a failed write of the account row. The link flow's
-  // own codes land on /account instead (`linkErrorMessage`).
+  // own codes land on /account/sign-in instead (`linkErrorMessage`).
   unable_to_link_account: GENERIC_SIGN_IN_ERROR,
   // No `email_not_found`: a provider that shares no address gets a placeholder
   // and the email page asks (src/lib/auth.ts, `orPlaceholder`).
@@ -144,14 +145,28 @@ const ERROR_MESSAGES: Record<string, string> = {
 /** One readable sentence for a callback `?error=` code; `undefined` for none. */
 export const signInErrorMessage = messageLookup(ERROR_MESSAGES, GENERIC_SIGN_IN_ERROR);
 
-/** The account page, where a link starts and lands again, with `?error=` when it failed. */
+/** The account page: name, address and waiting coven invitations. */
 export const ACCOUNT_PATH = '/account';
+
+/** The Sign-In tab, where a provider link starts and lands again, with `?error=` when it failed. */
+export const ACCOUNT_SIGN_IN_PATH = '/account/sign-in';
+
+/** The Sign-In tab's sections, by their ids: the sign-in methods' rows and the two-factor note link to them. */
+export const ACCOUNT_PASSWORD_PATH = `${ACCOUNT_SIGN_IN_PATH}#password` as Route;
+export const ACCOUNT_TWO_FACTOR_PATH = `${ACCOUNT_SIGN_IN_PATH}#two-factor` as Route;
+export const ACCOUNT_PASSKEYS_PATH = `${ACCOUNT_SIGN_IN_PATH}#passkeys` as Route;
+
+/** The account page's tabs, in their order along the row. */
+export const ACCOUNT_TABS: readonly PageTab[] = [
+  { href: ACCOUNT_PATH as Route, label: 'Account', shape: 'sections', sections: 3 },
+  { href: ACCOUNT_SIGN_IN_PATH as Route, label: 'Sign-In', shape: 'sections', sections: 4 },
+];
 
 /** The account page's Invitations section, by its id; the landing and the account menu link to it. */
 export const ACCOUNT_INVITATIONS_ID = 'account-invitations';
 export const ACCOUNT_INVITATIONS_PATH = `${ACCOUNT_PATH}#${ACCOUNT_INVITATIONS_ID}` as const;
 
-// The codes a link from /account lands back there with. With every provider
+// The codes a link from /account/sign-in lands back there with. With every provider
 // vouching inside a link and different addresses allowed, the rest are a
 // failed write or a misconfiguration, and share the generic sentence.
 const LINK_ERROR_MESSAGES: Record<string, string> = {
@@ -169,7 +184,7 @@ const LINK_ERROR_MESSAGES: Record<string, string> = {
 /** Also what SignInMethods shows when `/link-social` itself fails, before any redirect. */
 export const GENERIC_LINK_ERROR = "That sign-in method couldn't be added. Please try again.";
 
-/** One readable sentence for a link callback's `?error=` code on /account; `undefined` for none. */
+/** One readable sentence for a link callback's `?error=` code on /account/sign-in; `undefined` for none. */
 export const linkErrorMessage = messageLookup(LINK_ERROR_MESSAGES, GENERIC_LINK_ERROR);
 
 // Better Auth's /unlink-account refusals, by the `code` in its JSON body.

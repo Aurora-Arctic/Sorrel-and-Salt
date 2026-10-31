@@ -1,0 +1,87 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// A column inside its section of the account page; the field, the notices and the button are the form
+// primitives' (_primitives.scss).
+.password-section {
+  display: flex;
+  flex-direction: column;
+  gap: space(3);
+}
+
+// Two-factor is its own tab. The QR code is always light modules on $soot, as the printed invitation
+// card is, in either theme; its quiet zone is the tile's padding.
+.two-factor {
+  display: flex;
+  flex-direction: column;
+  gap: space(3);
+
+  // Taken by script after a dialog is dismissed (two-factor.tsx), so it shows no ring.
+  &:focus {
+    outline: none;
+  }
+}
+
+// The off/on line: no margin of its own, so the column gap is the only space around it.
+.two-factor__status {
+  margin: 0;
+}
+
+.two-factor__steps {
+  display: flex;
+  flex-direction: column;
+  gap: space(3);
+  padding-inline-start: space(4);
+}
+
+.two-factor__qr {
+  inline-size: 12rem;
+  padding: space(3);
+  margin: space(3) auto;
+  color: $chalk-muted; // the printed card's QR tone (QR_TONE in src/lib/invitation-cards/qr.ts)
+  background: $soot;
+  display: block;
+  box-sizing: content-box;
+}
+
+.two-factor__key {
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.two-factor__code-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: space(2);
+  margin-block-start: space(2);
+}
+
+// Two equal columns with each code centred in its own. list-reset also drops the ◆ marker that
+// typography-base draws on every list item.
+.two-factor__codes {
+  @include list-reset;
+
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: space(1) space(4);
+  text-align: center;
+}
+
+// The setup key and the backup codes each sit in one of these: darker than the card around them
+// ($surface-page is below $surface-card in both themes), with the surface radius. After `.two-factor__codes` so its list reset does not zero the padding.
+.two-factor__well {
+  padding: space(3);
+  margin-block: space(2);
+  background-color: $surface-page;
+  border-radius: radius('surface');
+}
+
+// The codes' panel stands a step further from the sentence above and the buttons below.
+.two-factor__codes.two-factor__well {
+  margin-block: space(3);
+}
+
+.password-section__username {
+  @include visually-hidden;
+}
