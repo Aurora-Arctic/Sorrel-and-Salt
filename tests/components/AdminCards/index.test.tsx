@@ -162,7 +162,7 @@ describe('AdminCards', () => {
     expect(within(dialog()).queryByRole('button', { name: /Download Card/ })).toBeNull();
   });
 
-  it('revokes a batch after asking, naming the batch', async () => {
+  it('sends nothing for Revoke Batch until the question is confirmed, then revokes the batch', async () => {
     const calls: RevokeInvitationCardBatchMutationVariables[] = [];
     mockGraphQLMutation<
       RevokeInvitationCardBatchMutation,
@@ -178,15 +178,20 @@ describe('AdminCards', () => {
     );
 
     const open = screen.getByRole('button', { name: /^Revoke Batch b1111111/ });
-    expect(open).toHaveClass('btn--quiet');
+    expect(open).toHaveClass('btn--destructive');
     fireEvent.click(open);
+    // Asking comes first: the open alone sends nothing.
+    expect(calls).toEqual([]);
     expect(
       within(screen.getByRole('dialog')).getByText(/minted 1 October 2026\?/),
     ).toBeInTheDocument();
     expect(screen.getByText(/already accepted a card keep their access/)).toBeInTheDocument();
-    fireEvent.click(
-      within(screen.getByRole('dialog')).getByRole('button', { name: 'Revoke Batch' }),
-    );
+    const confirm = within(screen.getByRole('dialog')).getByRole('button', {
+      name: 'Revoke Batch',
+    });
+    expect(confirm).toHaveClass('btn--destructive');
+    expect(calls).toEqual([]);
+    fireEvent.click(confirm);
 
     await waitFor(() => expect(calls).toEqual([{ batchId: BATCH_ONE }]));
   });

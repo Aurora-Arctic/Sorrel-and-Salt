@@ -12,7 +12,7 @@ yields one. The rules are [`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md
   first block of the batch id, `batchName`), minted on (date and time, UTC), expires (the date alone: it is
   midnight UTC), cards, **status**, accepted, and **Revoke Batch** while a card of the batch is pending
   (`ConfirmedAction` asks first, naming the batch and its mint date, and says accounts that already accepted
-  keep their access). The row button is plain (`btn btn--quiet btn--small`); only the confirm is red.
+  keep their access). The Revoke column is red like the People table's Impersonate column (`row-action-column`, `.admin-cards__revoke`), with a red row button and a red confirm; the question always comes first.
   Revoking is by batch only. Counts come from SQL. Status is `batchStatus()` in `batches.ts`, read from the
   counts, not from one card's `revokedAt` (the head card may have been accepted): any card pending is Live;
   else every card accepted is Used up; else a passed expiry is Expired; else Revoked. Table cell values are
