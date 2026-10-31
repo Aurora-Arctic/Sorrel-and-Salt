@@ -3,13 +3,15 @@ import { readNumberedPage } from '@/lib/numbered-page';
 import { listUsers } from '@/modules/identity';
 import {
   countSupportRequests,
+  countSupportViews,
   getSupportRequest,
   listSupportRequests,
   repliesForRequests,
+  tiersForSenders,
   timeoutsForSenders,
   usersNamedOnRequests,
 } from '@/modules/support';
-import type { SupportRequestRow, SupportTimeoutRow } from '@/modules/support';
+import type { SupportRequestFilter, SupportRequestRow, SupportTimeoutRow } from '@/modules/support';
 import { NotFound } from '@/lib/errors';
 import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
 import type { Session } from '@/lib/session';
@@ -22,6 +24,8 @@ import type {
   SupportTimeoutEntry,
 } from '@/components/SupportRequests/types';
 import { serviceFilter } from './filter';
+
+const pick = ({ about, errorCode }: SupportRequestFilter) => ({ about, errorCode });
 
 // What the page reads, through the support services, which are the guard. Each read is cached so a
 // second render in the request reads once.
@@ -50,7 +54,13 @@ function senderOf(row: SupportRequestRow, names: Names): SupportSender | null {
   return row.createdBy === SIGNED_OUT_SENDER_ID ? { ...found, email: row.senderEmail } : found;
 }
 
-function entryOf(row: SupportRequestRow, names: Names): SupportRequestEntry {
+/** The sender wrote last: staff have answered and the sender's activity is later than theirs. */
+const senderRepliedOn = (row: SupportRequestRow): boolean =>
+  row.lastStaffActivityAt !== null &&
+  row.lastSenderActivityAt !== null &&
+  row.lastSenderActivityAt > row.lastStaffActivityAt;
+
+function entryOf(row: SupportRequestRow, names: Names, betaTester: boolean): SupportRequestEntry {
   return {
     id: row.id,
     about: row.about,
@@ -62,6 +72,8 @@ function entryOf(row: SupportRequestRow, names: Names): SupportRequestEntry {
     curatorVisible: row.curatorVisible,
     errorCode: row.errorCode,
     errorReference: row.errorReference,
+    senderReplied: senderRepliedOn(row),
+    betaTester,
   };
 }
 
@@ -100,12 +112,23 @@ export const readRequests = cache(
       session,
       page.edges.flatMap(({ node }) => [node.createdBy, node.assignedTo]),
     );
+    const tiers = await tiersForSenders(
+      session,
+      page.edges.map(({ node }) => node.createdBy),
+    );
     return {
-      requests: page.edges.map(({ node }) => entryOf(node, names)),
+      requests: page.edges.map(({ node }, index) =>
+        entryOf(node, names, tiers[index] === 'beta_tester'),
+      ),
       pageInfo: page.pageInfo,
       position: page.position,
     };
   },
+);
+
+/** How many requests each tab holds, under the About and Error Number filter. */
+export const readViewCounts = cache(async (session: Session, filter: SupportRequestsFilter) =>
+  countSupportViews(session, pick(serviceFilter(filter))),
 );
 
 /**
@@ -122,6 +145,7 @@ export const readOpened = cache(
       throw error;
     }
     const [replies] = await repliesForRequests(session, [row.id]);
+    const [tier] = await tiersForSenders(session, [row.createdBy]);
     const [timeouts] =
       session.role === 'admin' ? await timeoutsForSenders(session, [row.createdBy]) : [];
     const names = await namesOf(session, [
@@ -132,7 +156,7 @@ export const readOpened = cache(
       ...(Array.isArray(timeouts) ? timeouts.flatMap(timeoutPeople) : []),
     ]);
     return {
-      ...entryOf(row, names),
+      ...entryOf(row, names, tier === 'beta_tester'),
       message: row.message,
       createdAt: row.createdAt,
       path: row.path || null,
@@ -144,6 +168,7 @@ export const readOpened = cache(
         body: reply.body,
         author: personOf(names, reply.createdBy),
         createdAt: reply.createdAt,
+        internal: reply.visibility === 'internal',
       })),
       timeouts: Array.isArray(timeouts) ? timeoutEntries(timeouts, names) : [],
     };

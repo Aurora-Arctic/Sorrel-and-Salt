@@ -11,7 +11,7 @@ import { readPauseState } from '../(people)/pause-state';
 import { readOpenedUser } from '../(people)/users/opened-user';
 import UserDialog from '../(people)/users/user-dialog';
 import { readSupportPlace } from './filter';
-import { readAssignees, readOpened, readRequests } from './reads';
+import { readAssignees, readOpened, readRequests, readViewCounts } from './reads';
 import type { SupportRequestsCursor } from '@/components/SupportRequests/types';
 import type { SupportPageProps } from './types';
 
@@ -26,9 +26,10 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
   const { filter, cursor, request, user } = readSupportPlace(await searchParams);
   // The user modal is the Users page's own, for an admin; a curator reaches nothing on the People pages.
   const userId = session.role === 'admin' ? user : undefined;
-  const [{ requests, pageInfo, position }, opened, assignees, openedUser, adminChanges] =
+  const [{ requests, pageInfo, position }, counts, opened, assignees, openedUser, adminChanges] =
     await Promise.all([
       readRequests(session, filter, cursor.after, cursor.before),
+      readViewCounts(session, filter),
       request ? readOpened(session, request) : undefined,
       readAssignees(session),
       userId ? readOpenedUser(session, userId) : undefined,
@@ -42,6 +43,7 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
       {request && !opened && <MissingNotice noun="support request" />}
       <SupportRequests
         requests={requests}
+        counts={counts}
         viewer={{ id: session.userId, role: session.role === 'admin' ? 'admin' : 'curator' }}
         filter={filter}
         cursor={cursor}

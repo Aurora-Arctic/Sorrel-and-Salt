@@ -1,5 +1,5 @@
 import type { Route } from 'next';
-import type { SupportAboutParam } from '../../lib/support-path';
+import type { SupportAboutParam, SupportView } from '../../lib/support-path';
 import type { PagePosition, PagerHrefs } from '../../lib/types';
 
 export type SupportAbout = SupportAboutParam;
@@ -30,6 +30,10 @@ export interface SupportRequestEntry {
   errorCode: number | null;
   /** The error page's digest, to match the server log. */
   errorReference: string | null;
+  /** The sender wrote last: their activity is later than staff's. */
+  senderReplied: boolean;
+  /** The sender accepted a printed card. */
+  betaTester: boolean;
 }
 
 export interface SupportReplyEntry {
@@ -37,6 +41,8 @@ export interface SupportReplyEntry {
   body: string;
   author: SupportPerson | null;
   createdAt: Date;
+  /** A staff-only note: never sent to the sender. */
+  internal: boolean;
 }
 
 export interface SupportTimeoutEntry {
@@ -70,8 +76,8 @@ export interface SupportRequestDetailEntry extends SupportRequestEntry {
 export interface SupportRequestsFilter {
   /** Blank is everything. */
   about: SupportAbout | '';
-  /** Blank is every status. */
-  status: SupportStatus | '';
+  /** The tab: which statuses and assignment the list shows. */
+  view: SupportView;
   /** An HTTP status, as typed; blank is none. */
   errorCode: string;
 }
@@ -89,6 +95,8 @@ export interface SupportViewer {
 
 export interface SupportRequestsProps extends Partial<PagerHrefs<Route>> {
   requests: SupportRequestEntry[];
+  /** How many requests each tab holds, under the About and Error Number filter. */
+  counts?: Record<SupportView, number>;
   viewer: SupportViewer;
   filter?: SupportRequestsFilter;
   cursor?: SupportRequestsCursor;

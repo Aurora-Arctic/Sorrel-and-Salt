@@ -27,6 +27,8 @@ const REQUESTS: SupportRequestEntry[] = [
     curatorVisible: true,
     errorCode: 500,
     errorReference: 'abc123',
+    senderReplied: true,
+    betaTester: false,
   },
   {
     id: 'request-2',
@@ -39,6 +41,8 @@ const REQUESTS: SupportRequestEntry[] = [
     curatorVisible: false,
     errorCode: null,
     errorReference: null,
+    senderReplied: false,
+    betaTester: true,
   },
 ];
 
@@ -56,6 +60,7 @@ const OPENED: SupportRequestDetailEntry = {
       body: 'Thank you, we are looking at it.',
       author: ADMIN,
       createdAt: new Date('2026-10-30T09:00:00Z'),
+      internal: false,
     },
   ],
   timeouts: [

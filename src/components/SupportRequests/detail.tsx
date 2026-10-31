@@ -120,7 +120,7 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
             ...request.replies.map((reply) => ({
               id: reply.id,
               name: reply.author?.name ?? 'Deleted account',
-              tag: 'Staff',
+              tag: reply.internal ? 'Staff · Internal' : 'Staff',
               at: reply.createdAt,
               body: reply.body,
             })),

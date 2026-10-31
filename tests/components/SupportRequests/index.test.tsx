@@ -39,6 +39,8 @@ const ROW: SupportRequestEntry = {
   curatorVisible: false,
   errorCode: 500,
   errorReference: null,
+  senderReplied: false,
+  betaTester: false,
 };
 
 const DETAIL: SupportRequestDetailEntry = {
@@ -99,7 +101,7 @@ describe('SupportRequests list', () => {
       <SupportRequests
         requests={[]}
         viewer={ADMIN}
-        filter={{ about: 'bug', status: '', errorCode: '' }}
+        filter={{ about: 'bug', view: 'needs_staff', errorCode: '' }}
       />,
     );
     expect(screen.getByText(/No support requests match/)).toBeInTheDocument();
@@ -440,7 +442,13 @@ describe('Dates', () => {
       resolvedBy: { id: 'admin-1', name: 'Ada' },
       resolvedAt: new Date('2026-10-27T11:05:00Z'),
       replies: [
-        { id: 'p1', body: 'Seen.', author: null, createdAt: new Date('2026-10-27T11:05:00Z') },
+        {
+          id: 'p1',
+          body: 'Seen.',
+          author: null,
+          createdAt: new Date('2026-10-27T11:05:00Z'),
+          internal: false,
+        },
       ],
     });
     const d = within(dialog());
@@ -527,5 +535,110 @@ describe('Status line in the dialog', () => {
         screen.getAllByRole('status').some((o) => /Request resolved./.test(o.textContent ?? '')),
       ).toBe(true),
     );
+  });
+});
+
+describe('The views', () => {
+  const COUNTS = { needs_staff: 4, mine: 1, unassigned: 2, waiting: 0, resolved: 7, closed: 3 };
+
+  it('are six tabs, each with its count, the chosen one selected and alone in the tab order', () => {
+    render(
+      <SupportRequests
+        requests={[ROW]}
+        viewer={ADMIN}
+        counts={COUNTS}
+        filter={{ about: '', view: 'mine', errorCode: '' }}
+      />,
+    );
+    const tabs = screen.getAllByRole('tab');
+    expect(tabs.map((tab) => tab.textContent)).toEqual([
+      'Needs Staff (4)',
+      'Mine (1)',
+      'Unassigned (2)',
+      'Waiting on Sender (0)',
+      'Resolved (7)',
+      'Closed (3)',
+    ]);
+    expect(screen.getByRole('tab', { name: 'Mine (1)' })).toHaveAttribute('aria-selected', 'true');
+    expect(tabs.filter((tab) => tab.tabIndex === 0)).toHaveLength(1);
+    expect(screen.getByRole('tabpanel')).toHaveAccessibleName('Mine (1)');
+  });
+
+  it('move with the arrow keys, Home and End, opening the tab they land on', async () => {
+    router.push.mockClear();
+    const user = userEvent.setup();
+    render(<SupportRequests requests={[ROW]} viewer={ADMIN} counts={COUNTS} />);
+    screen.getByRole('tab', { name: /Needs Staff/ }).focus();
+    await user.keyboard('{ArrowRight}');
+    expect(router.push).toHaveBeenLastCalledWith('/admin/support?view=mine');
+    expect(screen.getByRole('tab', { name: /Mine/ })).toHaveFocus();
+    await user.keyboard('{End}');
+    expect(router.push).toHaveBeenLastCalledWith('/admin/support?view=closed');
+    await user.keyboard('{ArrowRight}');
+    expect(router.push).toHaveBeenLastCalledWith('/admin/support');
+  });
+
+  it('say in text when the sender wrote last and when the sender is a beta tester', () => {
+    render(
+      <SupportRequests
+        requests={[
+          { ...ROW, id: 'a', subject: 'First', senderReplied: true, betaTester: true },
+          { ...ROW, id: 'b', subject: 'Second' },
+        ]}
+        viewer={ADMIN}
+      />,
+    );
+    const first = screen.getByRole('row', { name: /First/ });
+    expect(within(first).getByText('Sender Replied')).toBeInTheDocument();
+    expect(within(first).getByText('Beta Tester')).toBeInTheDocument();
+    const second = screen.getByRole('row', { name: /Second/ });
+    expect(within(second).queryByText('Sender Replied')).toBeNull();
+    expect(within(second).queryByText('Beta Tester')).toBeNull();
+  });
+});
+
+describe('The composer', () => {
+  const reply = () => within(dialog()).getByLabelText('Your Reply');
+
+  it('opens in reply mode, and a note must be chosen', () => {
+    open(ADMIN);
+    expect(within(dialog()).getByRole('radio', { name: /^Reply/ })).toBeChecked();
+    expect(within(dialog()).getByRole('radio', { name: /^Internal Note/ })).not.toBeChecked();
+    expect(reply()).toBeInTheDocument();
+  });
+
+  it('sends a note through the note mutation, not the reply one', async () => {
+    const notes: { requestId: string; body: string }[] = [];
+    mockGraphQLMutation(
+      'AddSupportInternalNote',
+      (variables: { requestId: string; body: string }) => {
+        notes.push(variables);
+        return { addSupportInternalNote: { __typename: 'SupportReply', id: 'n1' } };
+      },
+    );
+    open(ADMIN);
+    fireEvent.click(within(dialog()).getByRole('radio', { name: /^Internal Note/ }));
+    fireEvent.change(within(dialog()).getByLabelText('Your Note'), {
+      target: { value: 'Check the log' },
+    });
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Add Note' }));
+    await waitFor(() => expect(notes).toEqual([{ requestId: 'r1', body: 'Check the log' }]));
+    await waitFor(() =>
+      expect(within(dialog()).getByRole('status')).toHaveTextContent('Note added.'),
+    );
+  });
+
+  it('shows a note on the thread with an Internal tag and a public reply without one', () => {
+    open(ADMIN, {
+      replies: [
+        { id: 'p1', body: 'Out loud.', author: null, createdAt: new Date(), internal: false },
+        { id: 'p2', body: 'Quietly.', author: null, createdAt: new Date(), internal: true },
+      ],
+    });
+    const entries = within(dialog()).getAllByRole('listitem');
+    const note = entries.find((entry) => within(entry).queryByText('Quietly.'));
+    const spoken = entries.find((entry) => within(entry).queryByText('Out loud.'));
+    expect(within(note as HTMLElement).getByText(/Internal/)).toBeInTheDocument();
+    expect(within(spoken as HTMLElement).queryByText(/Internal/)).toBeNull();
   });
 });

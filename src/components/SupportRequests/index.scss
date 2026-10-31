@@ -240,3 +240,34 @@
     margin-block: 0;
   }
 }
+
+// The queue's views as a row of tabs; the selected one is underlined and the count follows each name.
+.support-views {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  border-block-end: 1px solid $hairline;
+}
+
+.support-views__tab {
+  padding-block: 0.5rem;
+  border-block-end: 2px solid transparent;
+  color: $text-muted;
+  text-decoration: none;
+
+  &[aria-selected='true'] {
+    border-block-end-color: currentcolor;
+    color: inherit;
+  }
+}
+
+.support-views__count {
+  color: $text-muted;
+}
+
+.support-requests__labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-block-start: 0.25rem;
+}
