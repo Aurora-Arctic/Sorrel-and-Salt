@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import SignInPanel from '@/components/SignInPanel';
 import {
@@ -55,9 +55,10 @@ async function openSignUp() {
 }
 
 describe('SignInPanel, email and password', () => {
+  let history: ReturnType<typeof installHistory>;
   beforeEach(async () => {
     vi.stubGlobal('location', { assign });
-    installHistory();
+    history = installHistory();
     render(<SignInPanel next="/coven/hearth" configured={['google']} />);
     await press(screen.getByRole('button', { name: 'Continue with Email' }));
   });
@@ -260,6 +261,8 @@ describe('SignInPanel, email and password', () => {
     type('Email Address', 'someone@password-form.test');
 
     await press(screen.getByRole('button', { name: 'Back' }));
+    expect(history.back).toHaveBeenCalledTimes(1);
+    expect(history.push).toHaveBeenCalledTimes(1);
     expect(screen.getByRole('heading', { name: 'Sign In' })).toHaveFocus();
     expect(screen.getByRole('button', { name: 'Continue with Google' })).toBeInTheDocument();
     expect(screen.queryByLabelText(/^Email Address/)).toBeNull();
@@ -270,5 +273,18 @@ describe('SignInPanel, email and password', () => {
 
   it('offers no password hint and no security question', () => {
     expect(screen.queryByLabelText(/hint|question/i)).toBeNull();
+  });
+
+  it('replaces the entry instead of adding one when the form was opened directly', async () => {
+    cleanup();
+    vi.restoreAllMocks();
+    setQuery('method=email');
+    history = installHistory();
+    render(<SignInPanel next="/coven/hearth" configured={['google']} />);
+    await press(screen.getByRole('button', { name: 'Back' }));
+    expect(history.replace).toHaveBeenCalledTimes(1);
+    expect(history.back).not.toHaveBeenCalled();
+    expect(history.push).not.toHaveBeenCalled();
+    expect(screen.getByRole('heading', { name: 'Sign In' })).toHaveFocus();
   });
 });
