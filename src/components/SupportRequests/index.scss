@@ -113,7 +113,7 @@
   vertical-align: middle;
 }
 
-// The pencil after the issue link: bare too, with the standard icon glyph (`.btn--icon`'s 1.5rem).
+// The pencil beside the issue link: bare too, with the standard icon glyph (`.btn--icon`'s 1.5rem).
 .support-detail__icon--standard {
   @include icon-button(2rem, 1.5rem);
 }
