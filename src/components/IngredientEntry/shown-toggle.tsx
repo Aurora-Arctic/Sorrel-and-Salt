@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactElement, useId, useState } from 'react';
+import { type ReactElement, useId, useRef, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
@@ -14,6 +14,11 @@ import './shown-switch.scss';
 
 // The curator's switch for an entry's place in the public compendium, on each admin list row and in
 // the entry's details: on is shown, off is hidden. The service is the guard; this is only the control.
+
+// The cross-fade between the thumb and the ring (`$fade` in shown-switch.scss).
+const RING_FADE_MS = 150;
+// How long a save runs before the ring shows (`$loading-delay` in _variables.scss).
+const RING_DELAY_MS = 100;
 
 const LID_OPEN = 'M1 8C2.8 5 5.2 3.5 8 3.5S13.2 5 15 8';
 const LID_SHUT = 'M1 8C2.8 11 5.2 12.5 8 12.5S13.2 11 15 8';
@@ -45,22 +50,37 @@ export default function ShownToggle({
     setOn(shown);
   }
   const [busy, setBusy] = useState(false);
+  // The ring stays mounted through its fade out.
+  const [ring, setRing] = useState(false);
+  // Presses are ignored from the press until the fade is done and the switch has moved.
+  const locked = useRef(false);
   const [refusal, setRefusal] = useState<string>();
 
   async function change(next: boolean) {
-    if (busy) return;
+    if (locked.current) return;
+    locked.current = true;
     setBusy(true);
+    setRing(true);
     setRefusal(undefined);
+    const started = Date.now();
+    let saved = false;
     try {
       await graphqlRequest(SetCompendiumEntryShownDocument, { id: ingredientId, shown: next });
+      saved = true;
+    } catch (error) {
+      setRefusal(readGraphqlFailure(error).alert);
+    }
+    // The ring fades out and the thumb back in, in place, and only then does the switch move.
+    const ringed = Date.now() - started >= RING_DELAY_MS;
+    setBusy(false);
+    if (ringed) await new Promise((resolve) => setTimeout(resolve, RING_FADE_MS));
+    setRing(false);
+    if (saved) {
       setOn(next);
       announce(next ? 'Shown in the public compendium.' : 'Hidden from the public compendium.');
       refresh();
-    } catch (error) {
-      setRefusal(readGraphqlFailure(error).alert);
-    } finally {
-      setBusy(false);
     }
+    locked.current = false;
   }
 
   const lid = on ? LID_OPEN : LID_SHUT;
@@ -78,7 +98,7 @@ export default function ShownToggle({
               aria-busy={busy}
               onChange={(event) => void change(event.target.checked)}
             />
-            <span className="shown-switch__thumb" data-busy={busy || undefined}>
+            <span className="shown-switch__thumb">
               <svg
                 className="shown-switch__eye"
                 viewBox="0 0 16 16"
@@ -113,7 +133,9 @@ export default function ShownToggle({
                 </g>
               </svg>
             </span>
-            {busy && <Spinner className="shown-switch__spinner" />}
+            <span className="shown-switch__ring">
+              {ring && <Spinner className="shown-switch__spinner" />}
+            </span>
           </span>
         </label>
       </IconTip>

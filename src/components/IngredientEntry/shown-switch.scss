@@ -13,7 +13,9 @@
   $inset: calc((#{$track-height} - #{$thumb-size}) / 2);
   $travel: calc(#{$track-width} - #{$thumb-size} - 2 * #{$inset});
   // One duration and easing for the track, the thumb and the eye, so they arrive together.
-  $slide: 260ms cubic-bezier(0.3, 0.7, 0.3, 1);
+  $slide: 260ms cubic-bezier(0.45, 0, 0.25, 1);
+  // The cross-fade between the thumb and the ring; `RING_FADE_MS` in shown-toggle.tsx waits for it.
+  $fade: 150ms ease-out;
   // The open and shut lids of the Quick Look eye's 16-unit grid; the markup carries the same shapes
   // as attributes for a browser that cannot set `d` from CSS.
   $lid-open: 'M1 8C2.8 5 5.2 3.5 8 3.5S13.2 5 15 8';
@@ -79,7 +81,7 @@
       translate $slide,
       background-color $slide,
       color $slide,
-      opacity $motion-short ease-out;
+      opacity $fade;
   }
 
   input:checked ~ .shown-switch__thumb {
@@ -88,35 +90,47 @@
     translate: $travel 0;
   }
 
-  // Busy (claude-docs/loading.md, "Control"): the thumb gives way, after `$loading-delay`, to the
-  // spinner's ring at the thumb's size, where the thumb stands, in its colour for the state; the
-  // thumb moves when the save returns. Until then the thumb stays, so a quick save shows no ring and no gap.
-  .shown-switch__thumb[data-busy] {
-    visibility: hidden;
+  // Busy (claude-docs/loading.md, "Control"): after `$loading-delay` the thumb fades out and the
+  // spinner's ring fades in over it, at the thumb's size, where the thumb stands and in its colour
+  // for the state; the thumb moves when the save returns. A quick save shows no ring.
+  input[aria-busy='true'] ~ .shown-switch__thumb {
+    opacity: 0;
     transition:
       translate $slide,
       background-color $slide,
       color $slide,
-      visibility 0s linear $loading-delay;
+      opacity 150ms ease-out $loading-delay;
   }
 
-  .shown-switch__spinner {
+  .shown-switch__ring {
     position: absolute;
     inset-block-start: $inset;
     inset-inline-start: $inset;
-    // Border-box, so the ring's 2px border sits inside the thumb's size.
-    box-sizing: border-box;
     inline-size: $thumb-size;
     block-size: $thumb-size;
-    margin: 0;
-    padding: 0;
     color: $text-muted;
+    opacity: 0;
     pointer-events: none;
+    transition: opacity $fade;
   }
 
-  input:checked ~ .shown-switch__spinner {
+  input[aria-busy='true'] ~ .shown-switch__ring {
+    opacity: 1;
+    transition: opacity 150ms ease-out $loading-delay;
+  }
+
+  input:checked ~ .shown-switch__ring {
     color: $text-on-color;
     translate: $travel 0;
+  }
+
+  .shown-switch__spinner {
+    // Border-box, so the ring's 2px border sits inside the thumb's size.
+    box-sizing: border-box;
+    inline-size: 100%;
+    block-size: 100%;
+    margin: 0;
+    padding: 0;
   }
 
   input:disabled ~ .shown-switch__thumb {
@@ -172,6 +186,7 @@
   @include reduced-motion {
     input,
     .shown-switch__thumb,
+    .shown-switch__ring,
     .shown-switch__lashes,
     .shown-switch__lid,
     .shown-switch__gap {
