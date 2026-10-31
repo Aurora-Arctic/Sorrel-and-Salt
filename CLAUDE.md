@@ -37,7 +37,7 @@ The devcontainer has no `make`, no `docker` and **no Python**: run the npm scrip
 | `npm run db:seed` / `db:reset`  | Seeds `SEED_SCENARIO`; reset drops first         |
 | `npm run check:destructive-ddl` | Flags destructive DDL in new migrations          |
 
-**Verify with `test:coverage`, not `test`**: a plain pass can still fail CI on the 80% threshold alone. **Deploys are CI-only** (M0.26), through `.github/workflows/deploy.yml`.
+**While working, run the individual test files and specs a change touches.** `test:coverage`, `test:stories` and the full e2e suite run only when the owner says so. When they do, run `test:coverage`, not `test`: a plain pass can still fail CI on the 80% threshold alone. **Deploys are CI-only** (M0.26), through `.github/workflows/deploy.yml`.
 
 ## Non-negotiable architecture rules
 
@@ -128,7 +128,7 @@ The issues of `Aurora-Arctic/Sorrel-and-Salt`, under the org Project **Sorrel & 
 
 - A passing run prints only its verdict; on a failure read the failing part (`tail`, `grep`, `jq`). Read a file over ~300 lines by section.
 - Never mask an exit code with a pipe: log to `.reports/<name>.log`, print `exit $?`, then tail the log.
-- Verify once: one spec while iterating, the full suites at task end.
+- Verify once: one spec at a time while working; the full suites only when the owner says so.
 - At a task boundary, suggest `/clear` to the owner.
 - Each rule gives way when the owner asks otherwise, or when following it would thin a test.
 
