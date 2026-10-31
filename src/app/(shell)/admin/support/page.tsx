@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
-import PageHeader from '@/components/PageHeader';
+import TabbedPage from '@/components/TabbedPage';
 import SupportRequests from '@/components/SupportRequests';
-import { USER_MODAL_PLACE, supportHref } from '@/components/SupportRequests/href';
+import { USER_MODAL_PLACE, supportHref, supportViewTabs } from '@/components/SupportRequests/href';
 import { pagerHrefs } from '@/lib/list-href';
 import { impersonationEnabled } from '@/lib/impersonation';
 import { requireCuratorSession } from '@/lib/request-session';
@@ -37,13 +37,16 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
     ]);
 
   return (
-    <main>
-      <PageHeader title="Support" />
+    <TabbedPage
+      title="Support"
+      tabs={supportViewTabs(filter, counts)}
+      open={supportHref(filter)}
+      tabsBelow
+    >
       {userId && !openedUser && <MissingNotice noun="user" />}
       {request && !opened && <MissingNotice noun="support request" />}
       <SupportRequests
         requests={requests}
-        counts={counts}
         viewer={{ id: session.userId, role: session.role === 'admin' ? 'admin' : 'curator' }}
         filter={filter}
         cursor={cursor}
@@ -61,6 +64,6 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
         canImpersonate={impersonationEnabled()}
         changesPaused={Boolean(adminChanges && changesLocked(adminChanges))}
       />
-    </main>
+    </TabbedPage>
   );
 }

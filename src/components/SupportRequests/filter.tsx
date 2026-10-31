@@ -4,7 +4,7 @@ import { type ReactElement, useState } from 'react';
 import { FilterSelectField, SearchField } from '../Field';
 import FilterForm, { useApplyFilter } from '../FilterForm';
 import { SUPPORT_ABOUTS } from '../../lib/support-path';
-import { SUPPORT_PATH, supportHref } from './href';
+import { BETA_ONLY, SUPPORT_PATH, supportHref } from './href';
 import type { SupportAbout, SupportRequestsFilterProps, SupportStatus } from './types';
 
 // The list's filter on the shared FilterForm: About applies as it changes, the error number is
@@ -31,7 +31,7 @@ const SupportRequestsFilter = ({ filter }: SupportRequestsFilterProps): ReactEle
       label="Filter Support Requests"
       action={SUPPORT_PATH}
       searchHref={() => supportHref({ ...filter, errorCode: code })}
-      shown={[filter.about, filter.view, filter.errorCode]}
+      shown={[filter.about, filter.view, filter.errorCode, filter.betaOnly]}
     >
       <input type="hidden" name="view" value={filter.view} />
       <SearchField
@@ -49,6 +49,16 @@ const SupportRequestsFilter = ({ filter }: SupportRequestsFilterProps): ReactEle
         defaultValue={filter.about}
         onChange={(about) =>
           apply(supportHref({ ...filter, errorCode: code, about: about as SupportAbout | '' }))
+        }
+      />
+      <FilterSelectField
+        label="Beta Testers"
+        name="beta"
+        all="All"
+        options={[{ value: BETA_ONLY, label: 'Only' }]}
+        defaultValue={filter.betaOnly ? BETA_ONLY : ''}
+        onChange={(beta) =>
+          apply(supportHref({ ...filter, errorCode: code, betaOnly: beta === BETA_ONLY }))
         }
       />
     </FilterForm>

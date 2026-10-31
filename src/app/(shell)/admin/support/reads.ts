@@ -25,7 +25,11 @@ import type {
 } from '@/components/SupportRequests/types';
 import { serviceFilter } from './filter';
 
-const pick = ({ about, errorCode }: SupportRequestFilter) => ({ about, errorCode });
+const pick = ({ about, errorCode, betaTester }: SupportRequestFilter) => ({
+  about,
+  errorCode,
+  betaTester,
+});
 
 // What the page reads, through the support services, which are the guard. Each read is cached so a
 // second render in the request reads once.

@@ -1373,8 +1373,10 @@ export interface SupportRequestFilter {
   about?: 'accessibility' | 'bug' | 'account' | 'compendium' | 'privacy' | 'feedback' | 'question';
   status?: 'open' | 'waiting_on_sender' | 'resolved' | 'closed';
   errorCode?: number;
-  /** One of the admin page’s views; it narrows by status and assignment, and orders the queue views by tier. */
+  /** One of the admin page’s views; it narrows by status and assignment, and orders the queue views by oldest sender activity. */
   view?: SupportView;
+  /** Only requests whose sender is a beta tester; left out or false, every sender. */
+  betaTester?: boolean;
 }
 
 /** How many requests each view holds. */

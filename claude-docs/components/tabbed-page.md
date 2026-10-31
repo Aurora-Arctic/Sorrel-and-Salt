@@ -13,13 +13,15 @@ has a Categories tab at `/admin/categories` and a Groups tab at
 
 `TabbedPageProps` (`types.ts`):
 
-| Prop       | What it is                                                                                               |
-| ---------- | -------------------------------------------------------------------------------------------------------- |
-| `title`    | The page's `h1`, title case, which names the tabs' nav too: "Categories"                                 |
-| `tabs`     | Each tab's `href`, short label ("Groups", "Traditions"), `filtered`, `shape` and `density`, in row order |
-| `action`   | Optional: the open tab's one action, at the end of the heading's line                                    |
-| `framed`   | Optional: the tabs hold a `.page-with-nav` column (the account). See "The header at narrow widths"       |
-| `children` | The open tab's content                                                                                   |
+| Prop        | What it is                                                                                                                                             |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `title`     | The page's `h1`, title case, which names the tabs' nav too: "Categories"                                                                               |
+| `open`      | Optional: the open tab's `href`, for tabs told apart by query rather than path                                                                         |
+| `tabs`      | Each tab's `href`, short label ("Groups", "Traditions"), optional `count` (shown after the label), `filtered`, `shape` and `density`, in row order     |
+| `action`    | Optional: the open tab's one action, at the end of the heading's line                                                                                  |
+| `tabsBelow` | Optional: the row sits on a line of its own beneath the heading at every width (the admin support page), by the same forced break the framed page uses |
+| `framed`    | Optional: the tabs hold a `.page-with-nav` column (the account). See "The header at narrow widths"                                                     |
+| `children`  | The open tab's content                                                                                                                                 |
 
 Inside, `tab-switch.tsx` holds the client parts the tab row, the action and
 the content area share: `TabSwitchProvider`, `TabAction` (the action's
@@ -350,3 +352,7 @@ From `$tabbed-reflow-width-labelled` down the wide line is too short for the hea
 A header whose action keeps its label (People's Pause Admin Changes) works differently from the same width down: the heading and the action keep the line and the pills drop beneath at their own size. A flex box cannot put an item on a line of its own at its own width, so a line break is forced by a pseudo-element the width of the line and no height, ordered between the action and the pills. The line it makes would take a row gap above and below (a flex line is never shorter than nothing), so the pills give one back. Under the forms' column the primitive gives the heading the line to itself; a tabbed page with a labelled action keeps the two on one line down to `$tabbed-action-below-width`, where the action goes beneath the heading at the line's start, the auto margin cancelled.
 
 From `$tabbed-reflow-width` down the pills drop beneath the heading and its plus: the heading takes the line less the plus, and the pills, first in the markup, are ordered after the action. This is apart from the plus's own switch at `$tabbed-plus-width`, on purpose. At `$add-below-width` and under, the Add is the labelled button again and goes beneath the heading, which has the line to itself (the reflow rule gave it the line less the plus), and the pills follow. The labelled Add and the pills would share a line, so the same forced break as under a labelled action keeps the pills on their own, and the pills give back the row gap it takes twice.
+
+## Tabs told apart by query
+
+The admin support page's views share one path and differ by query, so the pathname match cannot find the open one. `TabbedPage` takes `open`, the open tab's `href`, which replaces the pathname match, and a tab's `count` shows after its label. That page also sets `tabsBelow`, so its row sits beneath the Support heading rather than on its line.

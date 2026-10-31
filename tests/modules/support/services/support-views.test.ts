@@ -123,19 +123,58 @@ describe('the six views', () => {
 });
 
 describe('the Needs Staff order', () => {
-  it('puts a beta tester’s newer request ahead of an ordinary older one, then the oldest activity within a tier', async () => {
+  it('is the oldest sender activity first, whatever the sender’s tier', async () => {
     await card(D.id);
     await seed('ordinary-old', { by: C.id, activity: ago(10) });
     await seed('ordinary-older', { by: C.id, activity: ago(20) });
     await seed('beta-new', { by: D.id, activity: ago(1) });
-    await seed('beta-old', { by: D.id, activity: ago(5) });
+    await seed('beta-old', { by: D.id, activity: ago(15) });
 
     expect(await subjectsIn('needs_staff')).toEqual([
-      'beta-old',
-      'beta-new',
       'ordinary-older',
+      'beta-old',
       'ordinary-old',
+      'beta-new',
     ]);
+  });
+});
+
+describe('the beta-tester filter', () => {
+  it('narrows a view to requests from beta testers, and the counts follow it', async () => {
+    await card(D.id);
+    await seed('beta-open', { by: D.id });
+    await seed('beta-closed', { by: D.id, status: 'closed' });
+    await seed('ordinary-open', { by: C.id });
+    // The preconditions: both senders have requests in the view before the filter.
+    expect(await subjectsIn('needs_staff')).toEqual(
+      expect.arrayContaining(['beta-open', 'ordinary-open']),
+    );
+
+    const only = await listSupportRequests(
+      asUser(E),
+      { view: 'needs_staff', betaTester: true },
+      PAGE,
+    );
+    expect(only.map(({ node }) => node.subject)).toEqual(['beta-open']);
+
+    const counts = await countSupportViews(asUser(E), { betaTester: true });
+    expect(counts.needs_staff).toBe(1);
+    expect(counts.closed).toBe(1);
+    expect((await countSupportViews(asUser(E), {})).needs_staff).toBe(2);
+  });
+
+  it('applies inside a curator’s scope', async () => {
+    await card(D.id);
+    await seed('beta-shared', { by: D.id, curatorVisible: true });
+    await seed('beta-hidden', { by: D.id });
+    await seed('ordinary-shared', { by: C.id, curatorVisible: true });
+
+    const rows = await listSupportRequests(
+      asUser(F),
+      { view: 'needs_staff', betaTester: true },
+      PAGE,
+    );
+    expect(rows.map(({ node }) => node.subject)).toEqual(['beta-shared']);
   });
 });
 

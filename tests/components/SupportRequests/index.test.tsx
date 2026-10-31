@@ -3,6 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
 import SupportRequests from '@/components/SupportRequests';
+import { supportHref, supportViewTabs } from '@/components/SupportRequests/href';
+import TabbedPage from '@/components/TabbedPage';
 import type {
   SupportRequestDetailEntry,
   SupportRequestEntry,
@@ -22,7 +24,10 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 // request and sends from it (claude-docs/components/support-requests.md).
 
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+vi.mock('next/navigation', () => ({
+  useRouter: () => router,
+  usePathname: () => '/admin/support',
+}));
 
 const ADMIN: SupportViewer = { id: 'admin-1', role: 'admin' };
 const CURATOR: SupportViewer = { id: 'curator-1', role: 'curator' };
@@ -101,7 +106,7 @@ describe('SupportRequests list', () => {
       <SupportRequests
         requests={[]}
         viewer={ADMIN}
-        filter={{ about: 'bug', view: 'needs_staff', errorCode: '' }}
+        filter={{ about: 'bug', view: 'needs_staff', errorCode: '', betaOnly: false }}
       />,
     );
     expect(screen.getByText(/No support requests match/)).toBeInTheDocument();
@@ -636,18 +641,20 @@ describe('Status line in the dialog', () => {
 
 describe('The views', () => {
   const COUNTS = { needs_staff: 4, mine: 1, unassigned: 2, waiting: 0, resolved: 7, closed: 3 };
+  const FILTER = { about: 'bug', view: 'mine', errorCode: '500', betaOnly: true } as const;
 
-  it('are six tabs, each with its count, the chosen one selected and alone in the tab order', () => {
+  const views = () =>
+    within(screen.getByRole('navigation', { name: 'Support' })).getAllByRole('link');
+  const renderTabs = () =>
     render(
-      <SupportRequests
-        requests={[ROW]}
-        viewer={ADMIN}
-        counts={COUNTS}
-        filter={{ about: '', view: 'mine', errorCode: '' }}
-      />,
+      <TabbedPage title="Support" tabs={supportViewTabs(FILTER, COUNTS)} open={supportHref(FILTER)}>
+        <p>List</p>
+      </TabbedPage>,
     );
-    const tabs = screen.getAllByRole('tab');
-    expect(tabs.map((tab) => tab.textContent)).toEqual([
+
+  it('are six links in the shared tab row, each with its count, the chosen one the current page', () => {
+    renderTabs();
+    expect(views().map((link) => link.textContent)).toEqual([
       'Needs Staff (4)',
       'Mine (1)',
       'Unassigned (2)',
@@ -655,32 +662,48 @@ describe('The views', () => {
       'Resolved (7)',
       'Closed (3)',
     ]);
-    expect(screen.getByRole('tab', { name: 'Mine (1)' })).toHaveAttribute('aria-selected', 'true');
-    expect(tabs.filter((tab) => tab.tabIndex === 0)).toHaveLength(1);
-    expect(screen.getByRole('tabpanel')).toHaveAccessibleName('Mine (1)');
+    expect(views().filter((link) => link.getAttribute('aria-current') === 'page')).toEqual([
+      screen.getByRole('link', { name: 'Mine (1)' }),
+    ]);
   });
 
-  it('move with the arrow keys, Home and End, opening the tab they land on', async () => {
-    router.push.mockClear();
-    const user = userEvent.setup();
-    render(<SupportRequests requests={[ROW]} viewer={ADMIN} counts={COUNTS} />);
-    screen.getByRole('tab', { name: /Needs Staff/ }).focus();
-    await user.keyboard('{ArrowRight}');
-    expect(router.push).toHaveBeenLastCalledWith('/admin/support?view=mine');
-    expect(screen.getByRole('tab', { name: /Mine/ })).toHaveFocus();
-    await user.keyboard('{End}');
-    expect(router.push).toHaveBeenLastCalledWith('/admin/support?view=closed');
-    await user.keyboard('{ArrowRight}');
-    expect(router.push).toHaveBeenLastCalledWith('/admin/support');
+  it('keep the other filters in each view address', () => {
+    renderTabs();
+    expect(screen.getByRole('link', { name: /Closed/ })).toHaveAttribute(
+      'href',
+      '/admin/support?about=bug&view=closed&error=500&beta=only',
+    );
   });
 
   it('open through the shared navigation hook on a plain click, so the wait shows', async () => {
     router.push.mockClear();
     const user = userEvent.setup();
-    render(<SupportRequests requests={[ROW]} viewer={ADMIN} counts={COUNTS} />);
-    await user.click(screen.getByRole('tab', { name: /Mine/ }));
+    renderTabs();
+    await user.click(screen.getByRole('link', { name: /Closed/ }));
     expect(router.push).toHaveBeenCalledTimes(1);
-    expect(router.push).toHaveBeenLastCalledWith('/admin/support?view=mine');
+    expect(router.push).toHaveBeenLastCalledWith(
+      '/admin/support?about=bug&view=closed&error=500&beta=only',
+    );
+  });
+
+  it('are given a Beta Testers filter that shows its choice and keeps the view when changed', async () => {
+    router.push.mockClear();
+    const user = userEvent.setup();
+    render(
+      <SupportRequests requests={[ROW]} viewer={ADMIN} filter={{ ...FILTER, betaOnly: false }} />,
+    );
+    const field = screen.getByRole('combobox', { name: 'Beta Testers' });
+    expect(field).toHaveTextContent('All');
+    await user.click(field);
+    await user.click(screen.getByRole('option', { name: 'Only' }));
+    expect(router.push).toHaveBeenLastCalledWith(
+      '/admin/support?about=bug&view=mine&error=500&beta=only',
+    );
+  });
+
+  it('show the Beta Testers filter as chosen when the address names it', () => {
+    render(<SupportRequests requests={[ROW]} viewer={ADMIN} filter={FILTER} />);
+    expect(screen.getByRole('combobox', { name: 'Beta Testers' })).toHaveTextContent('Only');
   });
 
   it('say in text when the sender wrote last and when the sender is a beta tester', () => {

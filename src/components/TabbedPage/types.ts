@@ -5,6 +5,8 @@ import type { ReactNode } from 'react';
 export interface PageTab {
   href: Route;
   label: string;
+  /** A number shown after the label, "Mine (3)"; left out, none. */
+  count?: number;
   /** Whether the tab's list opens with a filter, so its loading skeleton draws a filter row; left out, none. */
   filtered?: boolean;
   /** What the tab's loading skeleton stands in for: a table (the default), or cards, as the grimoire's tabs. */
@@ -24,12 +26,18 @@ export interface TabbedPageProps {
   action?: ReactNode;
   /** The page's tabs hold a `.page-with-nav` column (the account): the head stands over the sections' column and the tabs sit beneath it at every width. */
   framed?: boolean;
+  /** Puts the row on a line of its own beneath the heading at every width, instead of on the heading's line. */
+  tabsBelow?: boolean;
+  /** The open tab's `href`, for tabs told apart by their query rather than their path; left out, it is found from the pathname. */
+  open?: string;
   /** The open tab's content. */
   children: ReactNode;
 }
 
 export interface TabLinksProps {
   tabs: readonly PageTab[];
+  /** The open tab's `href`, for tabs told apart by their query rather than their path; left out, the open tab is found from the pathname. */
+  open?: string;
 }
 
 /** A tab on its way, shared by the tab row and the panel (`tab-switch.tsx`). */

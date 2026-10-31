@@ -10,7 +10,6 @@ import Pager from '../Pager';
 import { Mark } from '../UserList/marks';
 import SupportDetail from './detail';
 import SupportRequestsFilter, { ABOUT_OPTIONS, STATUS_LABELS } from './filter';
-import SupportViews from './views';
 import { DEFAULT_SUPPORT_VIEW } from '../../lib/support-path';
 import { supportHref } from './href';
 import SenderName from './sender-name';
@@ -27,7 +26,7 @@ import './index.scss';
 // assignee, curator visibility, error number), the pager, and the request `?request=` opens over them
 // (claude-docs/components/support-requests.md).
 
-const NO_FILTER: Filter = { about: '', view: DEFAULT_SUPPORT_VIEW, errorCode: '' };
+const NO_FILTER: Filter = { about: '', view: DEFAULT_SUPPORT_VIEW, errorCode: '', betaOnly: false };
 
 const labelOf = (options: readonly { value: string; label: string }[], value: string): string =>
   options.find((option) => option.value === value)?.label ?? value;
@@ -70,7 +69,6 @@ const SubjectLink = ({
 
 const SupportRequests = ({
   requests,
-  counts,
   viewer,
   filter = NO_FILTER,
   cursor,
@@ -87,80 +85,78 @@ const SupportRequests = ({
       : undefined;
   return (
     <section className="support-requests" aria-label="Support Requests">
-      <SupportViews filter={filter} counts={counts}>
-        <ListFrame>
-          <SupportRequestsFilter
-            key={`${filter.about}\n${filter.view}\n${filter.errorCode}`}
-            filter={filter}
+      <ListFrame>
+        <SupportRequestsFilter
+          key={`${filter.about}\n${filter.view}\n${filter.errorCode}`}
+          filter={filter}
+        />
+        <ListBody>
+          <output className="visually-hidden">
+            {requests.length} {requests.length === 1 ? 'Request' : 'Requests'}
+          </output>
+          <StackTable
+            columns={[
+              { heading: 'About', cell: (request) => labelOf(ABOUT_OPTIONS, request.about) },
+              {
+                heading: 'Subject',
+                cell: (request) => (
+                  <SubjectLink request={request} filter={filter} cursor={cursor} />
+                ),
+              },
+              {
+                heading: 'Status',
+                cell: (request) => (
+                  <>
+                    {STATUS_LABELS[request.status]}
+                    {(request.senderReplied || request.betaTester) && (
+                      <span className="support-requests__labels">
+                        {request.senderReplied && (
+                          <span className="badge badge--local">Sender Replied</span>
+                        )}
+                        {request.betaTester && (
+                          <span className="badge badge--muted">Beta Tester</span>
+                        )}
+                      </span>
+                    )}
+                  </>
+                ),
+              },
+              {
+                heading: 'Sender',
+                cell: (request) => (
+                  <SenderName
+                    sender={request.sender}
+                    signedOut={request.signedOut}
+                    userHref={userHref}
+                  />
+                ),
+              },
+              {
+                heading: 'Assigned To',
+                cell: (request) =>
+                  request.assignee?.name ?? (
+                    <span className="support-requests__none">Unassigned</span>
+                  ),
+              },
+              {
+                heading: 'Shared With Curators',
+                cell: (request) => (
+                  <Mark
+                    value={request.curatorVisible}
+                    label={request.curatorVisible ? 'Shared' : 'Not Shared'}
+                  />
+                ),
+              },
+              { heading: 'Error Number', cell: (request) => request.errorCode ?? '' },
+            ]}
+            rows={requests}
+            rowKey={(request) => request.id}
+            empty={emptyText(filter)}
+            className="data-table--nowrap"
           />
-          <ListBody>
-            <output className="visually-hidden">
-              {requests.length} {requests.length === 1 ? 'Request' : 'Requests'}
-            </output>
-            <StackTable
-              columns={[
-                { heading: 'About', cell: (request) => labelOf(ABOUT_OPTIONS, request.about) },
-                {
-                  heading: 'Subject',
-                  cell: (request) => (
-                    <SubjectLink request={request} filter={filter} cursor={cursor} />
-                  ),
-                },
-                {
-                  heading: 'Status',
-                  cell: (request) => (
-                    <>
-                      {STATUS_LABELS[request.status]}
-                      {(request.senderReplied || request.betaTester) && (
-                        <span className="support-requests__labels">
-                          {request.senderReplied && (
-                            <span className="badge badge--local">Sender Replied</span>
-                          )}
-                          {request.betaTester && (
-                            <span className="badge badge--muted">Beta Tester</span>
-                          )}
-                        </span>
-                      )}
-                    </>
-                  ),
-                },
-                {
-                  heading: 'Sender',
-                  cell: (request) => (
-                    <SenderName
-                      sender={request.sender}
-                      signedOut={request.signedOut}
-                      userHref={userHref}
-                    />
-                  ),
-                },
-                {
-                  heading: 'Assigned To',
-                  cell: (request) =>
-                    request.assignee?.name ?? (
-                      <span className="support-requests__none">Unassigned</span>
-                    ),
-                },
-                {
-                  heading: 'Shared With Curators',
-                  cell: (request) => (
-                    <Mark
-                      value={request.curatorVisible}
-                      label={request.curatorVisible ? 'Shared' : 'Not Shared'}
-                    />
-                  ),
-                },
-                { heading: 'Error Number', cell: (request) => request.errorCode ?? '' },
-              ]}
-              rows={requests}
-              rowKey={(request) => request.id}
-              empty={emptyText(filter)}
-              className="data-table--nowrap"
-            />
-            <Pager previousHref={previousHref} nextHref={nextHref} position={position} />
-          </ListBody>
-        </ListFrame>
-      </SupportViews>
+          <Pager previousHref={previousHref} nextHref={nextHref} position={position} />
+        </ListBody>
+      </ListFrame>
       {/* Rendered whatever the address opens, so a press shows the dialog at once. */}
       <RouteModal
         closeHref={supportHref(filter, cursor)}
