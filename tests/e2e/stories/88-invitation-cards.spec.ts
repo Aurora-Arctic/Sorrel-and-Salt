@@ -104,6 +104,15 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
 
       await page.goto('/admin/card-sign-ups');
       await expect(page.getByRole('row').filter({ hasText: 'Fixture Person' })).toHaveCount(1);
+
+      // The name opens the account's modal on this page, and Close returns to the list.
+      await page.getByRole('link', { name: 'Fixture Person' }).click();
+      const account = page.getByRole('dialog', { name: /Fixture Person/ });
+      await expect(account).toBeVisible();
+      await expect(page).toHaveURL(/\/admin\/card-sign-ups\?user=/);
+      await account.getByRole('button', { name: 'Close' }).click();
+      await expect(account).toBeHidden();
+      await expect(page).toHaveURL(/\/admin\/card-sign-ups$/);
     });
 
     await test.step('the revoked card’s link is refused as withdrawn', async () => {

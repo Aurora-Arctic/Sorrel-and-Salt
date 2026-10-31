@@ -5,11 +5,13 @@ import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE } from '../../lib/graphql-failure';
 import { cardPlace } from '../../lib/invitation-cards/limits';
+import BusyButton from '../BusyButton';
 import StackTable from '../DataTable';
 import { MysticEyeIcon } from '../IconTip/icons';
 import { ModalButton } from '../Modal';
 import LocalTime from '../LocalTime';
 import Notice from '../Notice';
+import Skeleton from '../Skeleton';
 import { userListHref } from '../UserList/href';
 import UserLink from '../UserList/user-link';
 import { batchName } from './batches';
@@ -105,18 +107,23 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
   }, [batchId, asked]);
 
   if (failed) return <Notice kind="error">{GENERIC_FAILURE}</Notice>;
+  // The first read has no rows to keep on screen, so the table's own skeleton stands in; a later page keeps its rows and
+  // busies the Show More button instead (claude-docs/loading.md).
+  const reading = loading && attempts.length === 0;
   return (
     <>
       <p>
         Every card listed here already admits nobody. Further tries are refused and counted here.
       </p>
-      <StackTable
-        columns={[
-          {
-            heading: 'Account',
-            cell: (a) =>
-              a.accountId && a.accountName ? (
-                <>
+      {reading ? (
+        <Skeleton shape="table" count={3} />
+      ) : (
+        <StackTable
+          columns={[
+            {
+              heading: 'Name',
+              cell: (a) =>
+                a.accountId && a.accountName ? (
                   <UserLink
                     href={userListHref(NO_FILTER, undefined, a.accountId, 'invitation-cards')}
                     heading={{
@@ -126,46 +133,42 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
                     }}
                     name={a.accountName}
                   />
-                  {a.accountEmail && (
-                    <>
-                      <br />
-                      <span className="admin-cards__none">{a.accountEmail}</span>
-                    </>
-                  )}
-                </>
-              ) : (
-                'Removed account'
-              ),
-          },
-          {
-            heading: 'Card',
-            cell: (a) => {
-              if (a.cardPosition === null) return 'Unknown';
-              const { sheet, card } = cardPlace(a.cardPosition);
-              return `Sheet ${sheet}, Card ${card}`;
+                ) : (
+                  'Removed account'
+                ),
             },
-          },
-          { heading: 'Reason', cell: (a) => REASON_LABEL[a.reason] },
-          { heading: 'Times', cell: (a) => a.attempts },
-          {
-            heading: 'First',
-            className: 'admin-cards__fact',
-            cell: (a) => <LocalTime at={a.firstAttemptedAt} />,
-          },
-          {
-            heading: 'Latest',
-            className: 'admin-cards__fact',
-            cell: (a) => <LocalTime at={a.lastAttemptedAt} />,
-          },
-        ]}
-        rows={attempts}
-        rowKey={(a) => a.id}
-        empty={loading ? 'Loading…' : 'No refused opens.'}
-      />
+            { heading: 'Email', cell: (a) => (a.accountId && a.accountName ? a.accountEmail : '') },
+            {
+              heading: 'Card',
+              cell: (a) => {
+                if (a.cardPosition === null) return 'Unknown';
+                const { sheet, card } = cardPlace(a.cardPosition);
+                return `Sheet ${sheet}, Card ${card}`;
+              },
+            },
+            { heading: 'Reason', cell: (a) => REASON_LABEL[a.reason] },
+            { heading: 'Times', cell: (a) => a.attempts },
+            {
+              heading: 'First',
+              className: 'admin-cards__fact',
+              cell: (a) => <LocalTime at={a.firstAttemptedAt} />,
+            },
+            {
+              heading: 'Latest',
+              className: 'admin-cards__fact',
+              cell: (a) => <LocalTime at={a.lastAttemptedAt} />,
+            },
+          ]}
+          rows={attempts}
+          rowKey={(a) => a.id}
+          empty="No refused opens."
+        />
+      )}
       {more && after && (
-        <button
-          type="button"
+        <BusyButton
           className="icon-tip__edit"
+          busy={loading}
+          busyLabel="Showing More"
           disabled={loading}
           onClick={() => {
             setLoading(true);
@@ -173,7 +176,7 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
           }}
         >
           Show More
-        </button>
+        </BusyButton>
       )}
     </>
   );
