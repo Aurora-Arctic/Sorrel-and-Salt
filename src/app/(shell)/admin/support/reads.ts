@@ -169,6 +169,7 @@ export const readOpened = cache(
         author: personOf(names, reply.createdBy),
         createdAt: reply.createdAt,
         internal: reply.visibility === 'internal',
+        fromSender: reply.authorRole === 'sender',
       })),
       timeouts: Array.isArray(timeouts) ? timeoutEntries(timeouts, names) : [],
     };

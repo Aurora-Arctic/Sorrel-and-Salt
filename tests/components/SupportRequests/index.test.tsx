@@ -145,7 +145,79 @@ describe('Reply', () => {
     fireEvent.click(reply);
 
     await waitFor(() => expect(router.refresh).toHaveBeenCalled());
-    expect(sent).toEqual([{ requestId: 'r1', body: 'Thank you, we are looking.' }]);
+    expect(sent).toEqual([
+      { requestId: 'r1', body: 'Thank you, we are looking.', waitingOnSender: false },
+    ]);
+  });
+
+  it('marks the reply waiting on the sender when that choice is on', async () => {
+    const sent: ReplyToSupportRequestMutationVariables[] = [];
+    mockGraphQLMutation<ReplyToSupportRequestMutation, ReplyToSupportRequestMutationVariables>(
+      'ReplyToSupportRequest',
+      (variables) => {
+        sent.push(variables);
+        return { replyToSupportRequest: { __typename: 'SupportReply', id: 'x' } };
+      },
+    );
+    open(ADMIN);
+    fireEvent.click(within(dialog()).getByRole('switch', { name: /Waiting on Sender/ }));
+    fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Your Reply' }), {
+      target: { value: 'Which jar?' },
+    });
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Reply' }));
+    await waitFor(() => expect(sent).toHaveLength(1));
+    expect(sent[0]?.waitingOnSender).toBe(true);
+  });
+});
+
+describe('A timed-out sender', () => {
+  const standing = (until: Date, liftedAt: Date | null = null) => ({
+    id: 't1',
+    until,
+    note: null,
+    liftedAt,
+    createdAt: new Date('2026-10-01T00:00:00Z'),
+    setBy: { id: 'admin-1', name: 'Ash Warden' },
+    liftedBy: null,
+  });
+  const NOTICE = 'The sender cannot answer until 2999-01-01 00:00 UTC.';
+
+  it('is told to staff replying, with the end time, and the reply still sends', async () => {
+    const sent: ReplyToSupportRequestMutationVariables[] = [];
+    mockGraphQLMutation<ReplyToSupportRequestMutation, ReplyToSupportRequestMutationVariables>(
+      'ReplyToSupportRequest',
+      (variables) => {
+        sent.push(variables);
+        return { replyToSupportRequest: { __typename: 'SupportReply', id: 'x' } };
+      },
+    );
+    open(ADMIN, { timeouts: [standing(new Date('2999-01-01T00:00:00Z'))] });
+    expect(within(dialog()).getByText(NOTICE)).toBeInTheDocument();
+
+    fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Your Reply' }), {
+      target: { value: 'Noted.' },
+    });
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Reply' }));
+    await waitFor(() => expect(sent).toHaveLength(1));
+  });
+
+  it('is not told to staff when no time-out stands: none, lifted or past', () => {
+    open(ADMIN);
+    expect(within(dialog()).queryByText(/cannot answer until/)).toBeNull();
+    cleanup();
+    open(ADMIN, {
+      timeouts: [
+        standing(new Date('2999-01-01T00:00:00Z'), new Date('2026-10-02T00:00:00Z')),
+        { ...standing(new Date('2001-01-01T00:00:00Z')), id: 't0' },
+      ],
+    });
+    expect(within(dialog()).queryByText(/cannot answer until/)).toBeNull();
+  });
+
+  it('is not told to staff writing an internal note', () => {
+    open(ADMIN, { timeouts: [standing(new Date('2999-01-01T00:00:00Z'))] });
+    fireEvent.click(within(dialog()).getByRole('radio', { name: /^Internal Note/ }));
+    expect(within(dialog()).queryByText(NOTICE)).toBeNull();
   });
 });
 
@@ -448,6 +520,7 @@ describe('Dates', () => {
           author: null,
           createdAt: new Date('2026-10-27T11:05:00Z'),
           internal: false,
+          fromSender: false,
         },
       ],
     });
@@ -631,8 +704,22 @@ describe('The composer', () => {
   it('shows a note on the thread with an Internal tag and a public reply without one', () => {
     open(ADMIN, {
       replies: [
-        { id: 'p1', body: 'Out loud.', author: null, createdAt: new Date(), internal: false },
-        { id: 'p2', body: 'Quietly.', author: null, createdAt: new Date(), internal: true },
+        {
+          id: 'p1',
+          body: 'Out loud.',
+          author: null,
+          createdAt: new Date(),
+          internal: false,
+          fromSender: false,
+        },
+        {
+          id: 'p2',
+          body: 'Quietly.',
+          author: null,
+          createdAt: new Date(),
+          internal: true,
+          fromSender: false,
+        },
       ],
     });
     const entries = within(dialog()).getAllByRole('listitem');

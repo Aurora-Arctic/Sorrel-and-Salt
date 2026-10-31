@@ -43,6 +43,8 @@ export interface SupportReplyEntry {
   createdAt: Date;
   /** A staff-only note: never sent to the sender. */
   internal: boolean;
+  /** The sender wrote it, as a follow-up on their request. */
+  fromSender: boolean;
 }
 
 export interface SupportTimeoutEntry {

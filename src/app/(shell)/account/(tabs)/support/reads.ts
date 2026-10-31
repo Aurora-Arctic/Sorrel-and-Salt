@@ -2,7 +2,12 @@ import { cache } from 'react';
 import type { SupportSenderRequestEntry } from '@/components/SupportSenderRequest/types';
 import { NotFound } from '@/lib/errors';
 import type { Session } from '@/lib/session';
-import { getMySupportRequest, repliesForRequests } from '@/modules/support';
+import {
+  getMySupportFollowUpId,
+  getMySupportRequest,
+  getMySupportTimeoutEnd,
+  repliesForRequests,
+} from '@/modules/support';
 
 // The request `?request=` opens on the sender's list, through the sender's own read: another sender's id
 // is absent. Cached so a second render in the request reads once. No staff name is read or carried.
@@ -17,7 +22,11 @@ export const readOpenedRequest = cache(
       if (error instanceof NotFound) return undefined;
       throw error;
     }
-    const [replies] = await repliesForRequests(session, [row.id]);
+    const [[replies], followUpId, timedOutUntil] = await Promise.all([
+      repliesForRequests(session, [row.id]),
+      row.status === 'closed' ? getMySupportFollowUpId(session, row.id) : null,
+      getMySupportTimeoutEnd(session),
+    ]);
     return {
       id: row.id,
       about: row.about,
@@ -27,11 +36,14 @@ export const readOpenedRequest = cache(
       createdAt: row.createdAt,
       path: row.path || null,
       errorCode: row.errorCode,
-      replies: (replies ?? []).map(({ id: replyId, body, createdAt }) => ({
+      replies: (replies ?? []).map(({ id: replyId, body, createdAt, authorRole }) => ({
         id: replyId,
         body,
         createdAt,
+        fromSender: authorRole === 'sender',
       })),
+      followUpId,
+      timedOutUntil,
     };
   },
 );

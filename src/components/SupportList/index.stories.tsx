@@ -22,6 +22,7 @@ export const Rows: Story = {
         status: 'open',
         createdAt: AT,
         replyCount: 0,
+        staffWroteLast: false,
       },
       {
         id: 'r2',
@@ -30,6 +31,7 @@ export const Rows: Story = {
         status: 'waiting_on_sender',
         createdAt: AT,
         replyCount: 2,
+        staffWroteLast: true,
       },
     ],
   },

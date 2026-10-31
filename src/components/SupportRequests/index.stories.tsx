@@ -61,6 +61,7 @@ const OPENED: SupportRequestDetailEntry = {
       author: ADMIN,
       createdAt: new Date('2026-10-30T09:00:00Z'),
       internal: false,
+      fromSender: false,
     },
   ],
   timeouts: [

@@ -11,7 +11,7 @@ import Notice from '../Notice';
 import IssuePanel from './issue-panel';
 import ReplyForm from './reply-form';
 import TimeoutPanel from './timeout-panel';
-import type { SupportDetailProps } from './types';
+import type { SupportDetailProps, SupportTimeoutEntry } from './types';
 import { AnnounceContext, useSupportAction } from './use-support-action';
 import SenderName from './sender-name';
 import SupportFacts from './facts';
@@ -120,7 +120,7 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
             ...request.replies.map((reply) => ({
               id: reply.id,
               name: reply.author?.name ?? 'Deleted account',
-              tag: reply.internal ? 'Staff · Internal' : 'Staff',
+              tag: reply.fromSender ? 'Sender' : reply.internal ? 'Staff · Internal' : 'Staff',
               at: reply.createdAt,
               body: reply.body,
             })),
@@ -130,6 +130,8 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
         {answers && (
           <ReplyForm
             requestId={request.id}
+            canWait={open}
+            senderTimedOutUntil={standingTimeoutEnd(request.timeouts)}
             resolve={
               open && (
                 <ConfirmedAction
@@ -212,6 +214,10 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
     </div>
   );
 };
+
+/** When the sender's standing time-out ends: not lifted and still in the future, or none. */
+const standingTimeoutEnd = (timeouts: SupportTimeoutEntry[]): Date | undefined =>
+  timeouts.find((timeout) => !timeout.liftedAt && timeout.until.getTime() > Date.now())?.until;
 
 const SupportDetail = (props: SupportDetailProps): ReactElement => {
   // The last write's outcome. A trailing no-break space on every other call lets a repeat be spoken,

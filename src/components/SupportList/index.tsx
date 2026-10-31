@@ -9,10 +9,11 @@ import LocalTime from '../LocalTime';
 import { RouteModal, useOpenModalClick } from '../Modal';
 import { SupportIcon } from '../IconTip/icons';
 import Pager from '../Pager';
-import { ABOUT_OPTIONS, STATUS_LABELS } from '../SupportRequests/filter';
+import { ABOUT_OPTIONS } from '../SupportRequests/filter';
 import { statusBadgeClass } from '../SupportRequests/status-badge';
 import SupportLink from '../SupportLink';
 import SupportSenderRequest from '../SupportSenderRequest';
+import { senderStatusLabel } from '../SupportSenderRequest/status';
 import type { SupportListEntry, SupportListProps } from './types';
 import './index.scss';
 
@@ -76,7 +77,7 @@ const SupportList = ({
               <RowLink request={request} href={hrefOf(request.id)} />
               <div className="support-list__meta">
                 <span className={statusBadgeClass(request.status)}>
-                  {STATUS_LABELS[request.status]}
+                  {senderStatusLabel(request.status, request.staffWroteLast)}
                 </span>
                 <span>{labelOfAbout(request.about)}</span>
                 <LocalTime at={request.createdAt} short="day" />
@@ -100,7 +101,10 @@ const SupportList = ({
               under: (
                 <div className="badges">
                   <span className={statusBadgeClass(opened.status)}>
-                    {STATUS_LABELS[opened.status]}
+                    {senderStatusLabel(
+                      opened.status,
+                      opened.replies[opened.replies.length - 1]?.fromSender === false,
+                    )}
                   </span>
                 </div>
               ),

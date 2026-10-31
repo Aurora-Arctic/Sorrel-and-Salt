@@ -2,6 +2,7 @@ import 'server-only';
 import { withAudit } from '../../../db/repository';
 import { Forbidden } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
+import { utcMinute } from '../../../lib/utc';
 import { parseInput } from '../../../lib/validation';
 import { supportRequests } from '../schema/support-requests';
 import type { SupportRequestRow } from '../types';
@@ -13,11 +14,6 @@ import { redactPath } from './redact-path';
 export const SEND_LIMIT = 10;
 /** The window the limit counts over, in seconds: 24 hours. */
 export const SEND_WINDOW_SECONDS = 24 * 60 * 60;
-
-/** A time-out's end as a refusal names it: the instant in UTC, so the same words read the same everywhere. */
-function utcMinute(date: Date): string {
-  return `${date.toISOString().slice(0, 16).replace('T', ' ')} UTC`;
-}
 
 /** Refuses a sender who is timed out, naming when it ends. */
 export function refuseTimedOut(timedOutUntil: Date | undefined): void {

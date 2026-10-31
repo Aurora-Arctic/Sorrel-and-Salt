@@ -4,7 +4,8 @@ import { type FormEvent, type ReactElement, type ReactNode, useId, useState } fr
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import BusyButton from '../BusyButton';
-import { FieldShell, RadioGroupField, fieldDescription } from '../Field';
+import { FieldShell, RadioGroupField, SwitchField, fieldDescription } from '../Field';
+import { utcMinute } from '../../lib/utc';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { useSupportAction } from './use-support-action';
@@ -21,8 +22,8 @@ const MODES = [
 ] as const;
 
 const ReplyDocument = graphql(`
-  mutation ReplyToSupportRequest($requestId: ID!, $body: String!) {
-    replyToSupportRequest(requestId: $requestId, body: $body) {
+  mutation ReplyToSupportRequest($requestId: ID!, $body: String!, $waitingOnSender: Boolean) {
+    replyToSupportRequest(requestId: $requestId, body: $body, waitingOnSender: $waitingOnSender) {
       id
     }
   }
@@ -39,12 +40,19 @@ const NoteDocument = graphql(`
 const ReplyForm = ({
   requestId,
   resolve,
+  canWait = false,
+  senderTimedOutUntil,
 }: {
   requestId: string;
+  /** The request is open, so the reply may be marked waiting on the sender. */
+  canWait?: boolean;
+  /** When the sender's standing time-out ends; the form says they cannot answer until then. */
+  senderTimedOutUntil?: Date;
   resolve?: ReactNode;
 }): ReactElement => {
   const [body, setBody] = useState('');
   const [mode, setMode] = useState<Mode>('reply');
+  const [waiting, setWaiting] = useState(false);
   const note = mode === 'note';
   const { busy, failure, run } = useSupportAction('body');
   const discard = useDiscardGuard(body.trim() !== '');
@@ -57,11 +65,16 @@ const ReplyForm = ({
         () =>
           note
             ? graphqlRequest(NoteDocument, { requestId, body: body.trim() })
-            : graphqlRequest(ReplyDocument, { requestId, body: body.trim() }),
+            : graphqlRequest(ReplyDocument, {
+                requestId,
+                body: body.trim(),
+                waitingOnSender: canWait && waiting,
+              }),
         note ? 'Note added.' : 'Reply sent.',
       )
     ) {
       setBody('');
+      setWaiting(false);
     }
   }
 
@@ -97,6 +110,22 @@ const ReplyForm = ({
           onChange={(event) => setBody(event.target.value)}
         />
       </FieldShell>
+      {!note && canWait && (
+        <SwitchField
+          label="Waiting on Sender"
+          name="waitingOnSender"
+          value="1"
+          checked={waiting}
+          busy={busy}
+          hint="Marks the request as waiting for the sender's answer."
+          onChange={setWaiting}
+        />
+      )}
+      {!note && senderTimedOutUntil && (
+        <Notice kind="caution" quiet>
+          The sender cannot answer until {utcMinute(senderTimedOutUntil)}.
+        </Notice>
+      )}
       <div className="support-detail__actions">
         <BusyButton
           type="submit"
