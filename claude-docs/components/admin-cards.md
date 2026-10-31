@@ -18,7 +18,7 @@ yields one. The rules are [`auth/admin-bootstrap.md`](../auth/admin-bootstrap.md
   else every card accepted is Used up; else a passed expiry is Expired; else Revoked. Table cell values are
   sentence case.
 - **Refused Opens** (`attempts.tsx`): each batch shows its count of refused opens across all its cards;
-  where the count is above zero an eye icon button (tip **View Refused Opens**, right-aligned in the cell) opens a "Refused Opens, Batch 7c2d0000" dialog that reads
+  where the count is above zero an eye icon button (tip **View Refused Opens**, right-aligned in the cell) opens a dialog headed by the eyebrow "Refused Opens" over the title "Batch 7c2d0000" (its name, "Refused Opens, Batch 7c2d0000") that reads
   `invitationCardAttempts` for that batch and lists the account (its name links to that account's modal on the People page, and its email sits under it; a removed account is "Removed account" with neither), the **Card** ("Sheet 2, Card 5", from the card's `position`; "Unknown" for a card minted before positions were kept), the reason, how many times, and the **First** and **Latest** times (the row's creation and its last refusal),
   twenty at a time with **Show More**.
 - **Mint Cards** (`mint-form.tsx`) is a link to `?mint`, which opens a modal: **Number of Sheets** (1 to

@@ -182,7 +182,8 @@ const CardAttempts = ({ batchId }: { batchId: string }): ReactElement => (
     label={<MysticEyeIcon />}
     ariaLabel={`View Refused Opens, batch ${batchName(batchId)}`}
     className="icon-tip__edit"
-    title={`Refused Opens, Batch ${batchName(batchId)}`}
+    eyebrow="Refused Opens"
+    title={`Batch ${batchName(batchId)}`}
   >
     {() => <AttemptList batchId={batchId} />}
   </ModalButton>
