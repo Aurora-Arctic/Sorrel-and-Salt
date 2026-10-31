@@ -194,6 +194,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
                     ingredientId={detailed.id}
                     shown={detailed.shown}
                     name={cardName(detailed.name, detailed.canonicalName)}
+                    label="Shown in Compendium"
                   />
                 </>
               ),

@@ -54,7 +54,6 @@ const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
           {entry.name}
           <LinkIconHint />
         </PendingLink>
-        {!entry.shown && <strong> Hidden</strong>}
       </>
     ),
   },

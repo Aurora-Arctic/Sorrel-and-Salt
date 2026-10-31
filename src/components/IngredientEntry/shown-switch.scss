@@ -1,0 +1,154 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The switch for "shown in the public compendium": a native checkbox drawn as a 56 x 32px track
+// with a 24px thumb, and an eye in the thumb whose upper lid comes down when the entry is hidden.
+// Taller than `.switch` so the eye can be read. Tokens only, before the section's design review.
+.shown-switch {
+  $track-width: 3.5rem;
+  $track-height: 2rem;
+  $thumb-size: 1.5rem;
+  $inset: 0.1875rem;
+  $travel: 1.5rem;
+  // The open and shut lids of the Quick Look eye's 16-unit grid; the markup carries the same shapes
+  // as attributes for a browser that cannot set `d` from CSS.
+  $lid-open: 'M1 8C2.8 5 5.2 3.5 8 3.5S13.2 5 15 8';
+  $lid-shut: 'M1 8C2.8 11 5.2 12.5 8 12.5S13.2 11 15 8';
+  $gap-open: 'M1 8C2.8 5 5.2 3.5 8 3.5S13.2 5 15 8C13.2 11 10.8 12.5 8 12.5S2.8 11 1 8z';
+  $gap-shut: 'M1 8C2.8 11 5.2 12.5 8 12.5S13.2 11 15 8C13.2 11 10.8 12.5 8 12.5S2.8 11 1 8z';
+
+  display: inline-flex;
+  align-items: center;
+  gap: space(2);
+  cursor: pointer;
+
+  .shown-switch__control {
+    position: relative;
+    display: inline-flex;
+    flex: none;
+  }
+
+  input {
+    position: relative;
+    flex: none;
+    box-sizing: border-box;
+    inline-size: $track-width;
+    block-size: $track-height;
+    margin: 0;
+    border: 1px solid $text-muted;
+    border-radius: radius('pill');
+    background-color: $surface-card;
+    appearance: none;
+    cursor: pointer;
+    transition:
+      background-color $motion-short ease-out,
+      border-color $motion-short ease-out;
+
+    &:checked {
+      border-color: $accent;
+      background-color: $accent;
+    }
+
+    &:focus-visible {
+      @include focus-ring;
+    }
+
+    &[aria-busy='true'] {
+      cursor: progress;
+    }
+  }
+
+  // The thumb sits over the track and takes no pointer, so a press lands on the checkbox.
+  .shown-switch__thumb {
+    position: absolute;
+    inset-block-start: $inset;
+    inset-inline-start: $inset;
+    display: grid;
+    place-items: center;
+    inline-size: $thumb-size;
+    block-size: $thumb-size;
+    border-radius: radius('pill');
+    background-color: $text-muted;
+    color: $surface-card;
+    pointer-events: none;
+    transition:
+      translate 260ms cubic-bezier(0.3, 0.7, 0.3, 1),
+      background-color $motion-short ease-out,
+      color $motion-short ease-out,
+      opacity $motion-short ease-out;
+  }
+
+  input:checked ~ .shown-switch__thumb {
+    background-color: $text-on-color;
+    color: $accent;
+    translate: $travel 0;
+  }
+
+  input[aria-busy='true'] ~ .shown-switch__thumb {
+    opacity: 0.6;
+  }
+
+  input:disabled ~ .shown-switch__thumb {
+    opacity: 0.7;
+  }
+
+  .shown-switch__eye {
+    display: block;
+    inline-size: 80%;
+    block-size: 80%;
+    overflow: visible;
+  }
+
+  .shown-switch__lashes {
+    opacity: 1;
+    transition: opacity 120ms ease-out 140ms;
+  }
+
+  input:checked ~ .shown-switch__thumb .shown-switch__lashes {
+    opacity: 0;
+    transition-delay: 0s;
+  }
+
+  // Setting `d` from CSS is not Baseline (Safari cannot), so it sits in @supports: the lid then
+  // moves with the thumb. Without it the shapes come from the markup's `d` and change at once.
+  @supports (d: path('M0 0')) {
+    .shown-switch__lid,
+    .shown-switch__gap {
+      transition: d 260ms ease-out;
+    }
+
+    .shown-switch__lid {
+      // stylelint-disable-next-line plugin/use-baseline -- enhancement: inside the @supports above
+      d: path($lid-shut);
+    }
+
+    .shown-switch__gap {
+      // stylelint-disable-next-line plugin/use-baseline -- enhancement: inside the @supports above
+      d: path($gap-shut);
+    }
+
+    input:checked ~ .shown-switch__thumb .shown-switch__lid {
+      // stylelint-disable-next-line plugin/use-baseline -- enhancement: inside the @supports above
+      d: path($lid-open);
+    }
+
+    input:checked ~ .shown-switch__thumb .shown-switch__gap {
+      // stylelint-disable-next-line plugin/use-baseline -- enhancement: inside the @supports above
+      d: path($gap-open);
+    }
+  }
+
+  @include reduced-motion {
+    input,
+    .shown-switch__thumb,
+    .shown-switch__lashes,
+    .shown-switch__lid,
+    .shown-switch__gap {
+      transition: none;
+    }
+  }
+}
+
+.shown-switch__label {
+  font-weight: 600;
+}
