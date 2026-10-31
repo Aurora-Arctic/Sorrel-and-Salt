@@ -203,9 +203,15 @@ A failure before the redirect always says `GENERIC_SIGN_IN_ERROR`
 provider- or Better-Auth-internal and unreviewed, the same reasoning
 `signInErrorMessage()` applies to `error_description`.
 
+## Two views
+
+The card shows one of two views. The first holds the provider buttons and a "Continue with Email" button, and no text field. The second holds the email and password form, with a quiet "Back" button above it. Pressing either button adds a browser-history entry with `window.history.pushState`, which Next ties to `useSearchParams`: the email view is `/sign-in?method=email`, the buttons are `/sign-in`, and `next` and `error` are carried along. So the browser's Back button returns from the form to the buttons, and a link to `?method=email` opens the form. The panel holds the typed email address, so it is still there after a trip back and forth; the name and password are not kept.
+
+When the view changes, focus moves to its heading: the `h1` of each view carries `tabIndex={-1}` and `data-view-heading`. The first render leaves focus alone. The two-factor code step is not a view of this kind and is unchanged.
+
 ## Email and password
 
-`password-form.tsx` sits below the provider buttons: "Sign In With Email",
+`password-form.tsx` is the second view: "Sign In With Email",
 with a quiet "Create an Account" button that switches the same form to
 sign-up and back ("Sign In Instead"). Sign-up adds a Name field; both have
 Email Address and a [`PasswordField`](password-field.md), `current` for
@@ -234,7 +240,7 @@ is [`auth/passwords.md`](../auth/passwords.md).
 - **A submit clears the panel's callback error**, through `onStart`, as a
   provider press does.
 
-`tests/components/SignInPanel/password-form.test.tsx` covers the disabled and busy submit, each refusal, the sign-up notice, the full load carrying `next`, the last-used mark, and that no password hint or security question exists; story 70 walks it in the browser.
+`tests/components/SignInPanel/password-form.test.tsx` (which stands in for the address bar with `search-params.ts`) covers the two views, the disabled and busy submit, each refusal, the sign-up notice, the full load carrying `next`, the last-used mark, and that no password hint or security question exists; story 70 walks it in the browser.
 
 ## Passkey
 
@@ -253,7 +259,7 @@ providers or not, because a passkey needs no provider.
 
 **Autofill.** Where the browser can offer saved passkeys among a field's
 suggestions (WebAuthn conditional mediation), `usePasskeyAutofill`
-(`passkey-autofill.ts`) starts that ceremony as the page loads, and the
+(`passkey-autofill.ts`) starts that ceremony when the email view mounts (never on the view of buttons), and the
 passkey picked from the suggestions signs in. Conditional mediation is past
 the browser floor, so it is an enhancement behind
 `PublicKeyCredential.isConditionalMediationAvailable`, and the button is the
@@ -263,7 +269,7 @@ the hook starts only when the page has a field marked
 `PASSKEY_AUTOCOMPLETE` (`username webauthn`). The panel's own email field, in
 the email-and-password sign-in, carries it while the form signs in; while it
 signs up the field asks for `email`, and a panel with no marked field starts
-no autofill. An autofill that
+no autofill. Leaving the view ignores the ceremony's result, and the next ceremony the Better Auth client starts, a remount's or the passkey button's, cancels the pending one. An autofill that
 ends unpicked says nothing, since the visitor did not ask for it.
 
 ## Styling

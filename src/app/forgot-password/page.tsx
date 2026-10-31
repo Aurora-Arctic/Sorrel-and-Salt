@@ -15,7 +15,7 @@ export default function ForgotPasswordPage() {
     <main className="page-frame page-frame--narrow">
       <div className="panel">
         <div className="header">
-          <h1>Forgot Your Password?</h1>
+          <h1 className="forgot-password-form__heading">Forgot Your Password?</h1>
           <p className="lede">
             Enter your email address and we&apos;ll send you a link to choose a new password.
           </p>
