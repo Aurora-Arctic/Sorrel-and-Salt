@@ -6,6 +6,7 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import BusyButton from '../BusyButton';
 import { FieldShell, fieldDescription } from '../Field';
 import LocalTime from '../LocalTime';
+import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import type { SupportRequestDetailEntry, SupportTimeoutEntry } from './types';
 import { useSupportAction } from './use-support-action';
@@ -41,7 +42,9 @@ const LiftButton = ({ timeout }: { timeout: SupportTimeoutEntry }): ReactElement
         className="btn btn--quiet btn--small"
         busy={busy}
         busyLabel="Lifting"
-        onClick={() => void run(() => graphqlRequest(LiftDocument, { id: timeout.id }))}
+        onClick={() =>
+          void run(() => graphqlRequest(LiftDocument, { id: timeout.id }), 'Time-out lifted.')
+        }
       >
         Lift
       </BusyButton>
@@ -56,6 +59,7 @@ const TimeoutPanel = ({ request }: { request: SupportRequestDetailEntry }): Reac
   // Read once per render of the panel: a time-out that lapses while it is open shows as past on the next.
   const [now] = useState(() => Date.now());
   const { busy, failure, run } = useSupportAction('until');
+  const discard = useDiscardGuard(until !== '' || note.trim() !== '');
   const untilId = useId();
   const noteId = useId();
   const { aria: untilAria, ...untilField } = fieldDescription({
@@ -72,12 +76,14 @@ const TimeoutPanel = ({ request }: { request: SupportRequestDetailEntry }): Reac
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!end || !sender) return;
-    const sent = await run(() =>
-      graphqlRequest(TimeOutDocument, {
-        userId: sender.id,
-        until: end.toISOString(),
-        note: note.trim() || undefined,
-      }),
+    const sent = await run(
+      () =>
+        graphqlRequest(TimeOutDocument, {
+          userId: sender.id,
+          until: end.toISOString(),
+          note: note.trim() || undefined,
+        }),
+      'Sender timed out.',
     );
     if (sent) {
       setUntil('');
@@ -105,7 +111,7 @@ const TimeoutPanel = ({ request }: { request: SupportRequestDetailEntry }): Reac
       )}
       <form className="form" noValidate onSubmit={(event) => void submit(event)}>
         {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
-        <FieldShell label="Time Out Until" {...untilField}>
+        <FieldShell label="Time-Out Until" {...untilField}>
           <input
             id={untilField.controlId}
             className="input"
@@ -137,9 +143,10 @@ const TimeoutPanel = ({ request }: { request: SupportRequestDetailEntry }): Reac
             busy={busy}
             busyLabel="Timing Out"
           >
-            Time Out
+            Time-Out
           </BusyButton>
         </div>
+        {discard.asking && <DiscardQuestion guard={discard} />}
       </form>
     </section>
   );

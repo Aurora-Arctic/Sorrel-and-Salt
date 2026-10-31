@@ -5,6 +5,7 @@ import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import BusyButton from '../BusyButton';
 import { FieldShell, fieldDescription } from '../Field';
+import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { createIssueHref } from './issue-link';
 import type { SupportRequestDetailEntry } from './types';
@@ -26,11 +27,14 @@ const IssuePanel = ({ request }: { request: SupportRequestDetailEntry }): ReactE
   const { busy, failure, run } = useSupportAction('issueUrl');
   const { aria, ...field } = fieldDescription({ id: useId(), error: failure.field?.message });
   const changed = address.trim() !== (request.issueUrl ?? '');
+  const discard = useDiscardGuard(changed);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    void run(() =>
-      graphqlRequest(SetIssueUrlDocument, { id: request.id, issueUrl: address.trim() || null }),
+    void run(
+      () =>
+        graphqlRequest(SetIssueUrlDocument, { id: request.id, issueUrl: address.trim() || null }),
+      address.trim() ? 'Issue address saved.' : 'Issue address removed.',
     );
   }
 
@@ -65,6 +69,7 @@ const IssuePanel = ({ request }: { request: SupportRequestDetailEntry }): ReactE
             Save Address
           </BusyButton>
         </div>
+        {discard.asking && <DiscardQuestion guard={discard} />}
       </form>
     </section>
   );

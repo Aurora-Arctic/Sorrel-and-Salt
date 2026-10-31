@@ -28,7 +28,12 @@ const ReplyForm = ({ requestId }: { requestId: string }): ReactElement => {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (await run(() => graphqlRequest(ReplyDocument, { requestId, body: body.trim() }))) {
+    if (
+      await run(
+        () => graphqlRequest(ReplyDocument, { requestId, body: body.trim() }),
+        'Reply sent.',
+      )
+    ) {
       setBody('');
     }
   }
