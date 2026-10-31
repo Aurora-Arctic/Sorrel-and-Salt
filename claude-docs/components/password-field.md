@@ -28,8 +28,10 @@ Its user is the sign-in panel's form
   rules, and their refusals come back through `error`.
 - **The toggle has a fixed name and a pressed state.** It is "Show <label>"
   with `aria-pressed`, rather than a name that flips between Show and Hide,
-  so a screen reader hears one control that is on or off; its visible text
-  says Show or Hide. Showing switches the input to `type="text"` with
+  so a screen reader hears one control that is on or off; it is drawn as an
+  eye icon (`eye-icon.tsx`) inside the right-hand end of the input, struck
+  through once the password is shown, with the input's end padding keeping the
+  text clear of it. Showing switches the input to `type="text"` with
   spelling, capital and correction fix-ups off.
 - **A new password states its rules before any refusal**, as an InfoTip hint (`rules.ts`) the input also names in its description.
 - **The meter advises and never refuses.** For `new` only, while the field shows no error (a refused password is never rated Strong), `meter.tsx` shows
@@ -41,8 +43,8 @@ Its user is the sign-in panel's form
 ## Styling
 
 Built from [`Field`](field.md)'s `FieldShell` and the existing `.input` and
-`.btn` classes; `index.scss` places the toggle and adds no colour or size of
-its own.
+`.btn` classes; `index.scss` places the eye toggle inside the input's end and sets its size and
+ink from the tokens.
 
 ## Testing
 
