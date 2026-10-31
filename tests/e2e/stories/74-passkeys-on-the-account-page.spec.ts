@@ -32,7 +32,7 @@ test.describe('passkeys on the account page', () => {
         authenticatorId: authenticator.id,
       });
 
-      await page.goto('/account');
+      await page.goto('/account/sign-in');
       const section = page.getByRole('region', { name: 'Passkeys' });
       const list = section.getByRole('list', { name: 'Passkeys' });
       await expect(list.getByRole('listitem')).toHaveCount(1);

@@ -43,7 +43,7 @@ test(
     await signInWithPassword(page, email);
     await expect(page).not.toHaveURL(/\/sign-in/);
 
-    await page.goto('/account');
+    await page.goto('/account/sign-in');
     const section = page.getByRole('region', { name: 'Two-Factor Sign-In' });
     await field(section, 'Confirm Your Password').fill(PASSWORD);
     await section.getByRole('button', { name: 'Turn On Two-Factor' }).click();
@@ -60,14 +60,16 @@ test(
     );
     expect(before.two_factor_enabled).toBe(false);
 
-    const key = await section
-      .locator('p', { hasText: 'enter this key' })
-      .locator('code')
-      .textContent();
+    const key = await section.locator('code.two-factor__key').textContent();
     // The shown key is grouped for reading; the authenticator URI wants the bare base32.
     const appUri = `otpauth://totp/e2e?secret=${(key ?? '').replace(/[^A-Z2-7]/gi, '')}`;
     await field(section, 'Code From Your App').fill(await totpCode(appUri));
     await section.getByRole('button', { name: 'Confirm and Turn On' }).click();
+    // None of the codes was saved, so turning on asks first.
+    await page
+      .getByRole('dialog', { name: 'Turn On Without Saving Your Codes?' })
+      .getByRole('button', { name: 'Turn On' })
+      .click();
     await expect(section.getByRole('button', { name: 'Turn Off Two-Factor' })).toBeVisible();
 
     const [after] = await withSql(
@@ -95,7 +97,7 @@ test(
     await main.getByRole('button', { name: 'Verify' }).click();
     await expect(page).not.toHaveURL(/\/sign-in/);
 
-    await page.goto('/account');
-    await expect(page).toHaveURL('/account');
+    await page.goto('/account/sign-in');
+    await expect(page).toHaveURL('/account/sign-in');
   },
 );

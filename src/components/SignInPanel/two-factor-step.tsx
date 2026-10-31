@@ -86,7 +86,7 @@ const TwoFactorStep = ({ next, onRestart }: TwoFactorStepProps): ReactElement =>
 
   return (
     <div className="sign-in-panel__password">
-      <h2 className="sign-in-panel__password-heading">Enter Your Code</h2>
+      <h1 className="auth-title sign-in-panel__password-heading">Enter Your Code</h1>
       {problem.alert && <Notice kind="error">{problem.alert}</Notice>}
       <p>
         {method === 'app'

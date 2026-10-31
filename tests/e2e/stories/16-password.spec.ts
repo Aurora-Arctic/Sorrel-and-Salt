@@ -120,6 +120,7 @@ test(
     // From the notice to sign-in. The old password no longer signs in, and the new one does.
     await page.getByRole('link', { name: 'Sign In', exact: true }).click();
     await expect(page).toHaveURL('/sign-in');
+    await page.getByRole('button', { name: 'Continue with Email' }).click();
     await field(page, 'Email Address').fill(email);
     await field(page, 'Password').fill(PASSWORD);
     await page.getByRole('button', { name: 'Sign In', exact: true }).click();
@@ -170,7 +171,7 @@ test(
     const refused = page.waitForResponse('**/api/auth/sign-in/email');
     await page.getByRole('button', { name: 'Sign In', exact: true }).click();
     expect((await refused).status()).toBe(401);
-    await expect(page).toHaveURL('/sign-in');
+    await expect(page).toHaveURL(/\/sign-in\?method=email$/);
     await expect(alert).toHaveText(wrongPassword!);
 
     // The lock is what refused it: with the row gone, the same password signs in.
