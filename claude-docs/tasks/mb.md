@@ -279,6 +279,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.275 | Lint Warnings Pile Up Because Nothing Fails on Them                                                                      | Bugfixes | —                      |
 | MB.276 | An Admin's Compendium Edit Saves Whatever the Autosave Timing                                                            | Bugfixes | —                      |
 | MB.277 | The Unused Code Check Finds Nothing Left to Clear                                                                        | Bugfixes | —                      |
+| MB.285 | Compendium Entries Stay Pending After the Citation Wording Changed                                                       | Bugfixes | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -5642,3 +5643,29 @@ _Acceptance criteria:_
 - Each genuinely unused file, export, type and dependency is removed, after a search for dynamic and string references; each false positive is recorded in `knip.json` with a narrow entry and a reason, and no blanket ignore is added
 - The tests for what changed pass, and `npm run typecheck` and `npm run lint` are clean
 - `claude-docs/commands.md` names the false positives `knip.json` skips and drops the sentence saying the repo still has findings
+
+**MB.285 — Compendium Entries Stay Pending After the Citation Wording Changed** · 4h
+
+_Story:_ As a curator, I want each Wikipedia source in the compendium stored once, under the key the seed builds today, so that the deploy's seed run reports only real changes and no entry cites the same source twice.
+
+The compendium seed finds an existing source by its `seed_key`: the source's citation rendered as text by `citationText` (`src/lib/citation.ts`). Commit 2aa282b51 changed a Wikipedia citation's wording from `Wikipedia, s.v. "X."` to `Wikipedia, under "X."`, and no migration rewrote the stored keys. Since then every seed run fails to find a source stored under the old wording and treats it as missing. On staging, 25 approved entry files that nobody marked for update (`seedUpdate`) show `differs: references` and are reported as pending on every run. Wherever an entry was marked for update, and wherever the vocabulary sources seed (`src/db/seed/sources.ts`) ran, a second "under" copy of the source was inserted beside the old one. That leaves old `s.v.` rows with no links, sources whose links are split across both rows (Asafoetida, Beryl), and deities whose sources (Agwu Nsi, for example) have two linked rows, so each such deity cites the same source twice. The commit is on `main`, so production very likely holds the same rows.
+
+The fix is a forward data migration over compendium `references` rows (those with no workspace) whose `seed_key` holds the old wording. Where no live row already has the new key, it rewrites the key in place. Where one does (a twin), it moves the old row's live links to the twin, soft-deletes (marks deleted rather than removes) any link that would then be a duplicate, and soft-deletes the old row.
+
+Found on 2026-10-30, in the staging Deploy workflow's seed output and with read-only queries on staging; wrong result, every run. Steps to reproduce:
+
+1. Push any change to `staging`.
+2. The Deploy workflow's `migrate` job runs the reference seed.
+3. Read the seed's output.
+
+Actual: 25 entries are reported as pending with `differs: references` on every run.
+Expected: an unchanged entry file is skipped.
+
+_Acceptance criteria:_
+
+- Regression tests in `tests/db/`, written first and failing before the fix, cover the three cases the migration handles for a compendium source whose `seed_key` has the old wording: with no twin, the key is rewritten in place and the row keeps its id and links; with a twin and no links on the old row, the old row is soft-deleted; with links on both rows, the old row's links move to the twin, a link that would duplicate one already there is soft-deleted, and the old row is soft-deleted.
+- After the migration, the seed decides `skip`, not `pending`, for an approved, unmarked entry whose only difference was the old wording.
+- No live compendium source has `, s.v. ` in its `seed_key`, and the partial unique index on `seed_key` holds.
+- Links from `needs-review` entries follow the source they point to.
+- Workspace references are not touched.
+- Docs: `claude-docs/db/references.md` says that a change to the citation wording needs a migration that rewrites the stored keys.
