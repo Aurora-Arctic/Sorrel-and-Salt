@@ -1,5 +1,6 @@
 import type { Metadata, Route } from 'next';
 import type { Session } from '../lib/session';
+import SiteFooter from '../components/SiteFooter';
 import Welcome from '../components/Welcome';
 import { getSession, sessionIsVerified } from '../lib/request-session';
 import { websiteJsonLd } from '../lib/json-ld';
@@ -36,19 +37,24 @@ async function continueTarget(session: Session): Promise<Route> {
 export default async function HomePage() {
   const session = await getSession();
 
+  // A signed-in visitor gets the footer too, as this page sits in neither frame; its Support link goes
+  // to the support page, since no dialog is drawn here. A signed-out visitor sees the site name only.
   return (
-    // `page-frame` is the layout. `welcome-page` styles nothing: it stays as
-    // the hook Backdrop's `body:has(.welcome-page)` reads to draw its larger
-    // front-door art, so the root layout needs no route awareness.
-    <main className="page-frame welcome-page">
-      {!session && (
-        <script
-          type="application/ld+json"
-          // Our own serialiser's output, with `<` escaped (src/lib/json-ld.ts).
-          dangerouslySetInnerHTML={{ __html: websiteJsonLd() }}
-        />
-      )}
-      <Welcome landing={session ? await continueTarget(session) : undefined} />
-    </main>
+    <>
+      {/* `page-frame` is the layout. `welcome-page` styles nothing: it stays as the hook Backdrop's
+          `body:has(.welcome-page)` reads to draw its larger front-door art, so the root layout needs no
+          route awareness. */}
+      <main className="page-frame welcome-page">
+        {!session && (
+          <script
+            type="application/ld+json"
+            // Our own serialiser's output, with `<` escaped (src/lib/json-ld.ts).
+            dangerouslySetInnerHTML={{ __html: websiteJsonLd() }}
+          />
+        )}
+        <Welcome landing={session ? await continueTarget(session) : undefined} />
+      </main>
+      {session && <SiteFooter />}
+    </>
   );
 }

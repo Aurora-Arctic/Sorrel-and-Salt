@@ -51,6 +51,15 @@ describe('the / page metadata', () => {
 });
 
 describe('the / page', () => {
+  it('shows a signed-in visitor the footer with its Support link', async () => {
+    getSession.mockResolvedValue({ userId: USER_ID, role: 'user' });
+
+    render(await HomePage());
+
+    expect(screen.getByRole('contentinfo')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Support' })).toHaveAttribute('href', '/support');
+  });
+
   it('offers a signed-out visitor the sign-in page', async () => {
     getSession.mockResolvedValue(null);
 

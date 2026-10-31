@@ -15,3 +15,11 @@
   display: flex;
   gap: space(4);
 }
+
+// The phone's section bar is fixed along the bottom of a shell page and would cover the link; the
+// footer clears it by the bar's own height, as the page's body does (_primitives.scss).
+@media (max-width: $shell-phone-width) {
+  .app-shell:has(.section-nav) > .site-footer {
+    padding-bottom: calc(#{space(4)} + #{$bottom-bar-height} + env(safe-area-inset-bottom, 0px));
+  }
+}
