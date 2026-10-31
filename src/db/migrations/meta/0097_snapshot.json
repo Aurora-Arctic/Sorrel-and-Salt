@@ -1,6 +1,6 @@
 {
-  "id": "3fcd3c00-8560-449c-8079-709fa91ffc11",
-  "prevId": "c47e2bd6-c513-4f8b-9bf9-0cdc01ee3f9c",
+  "id": "304642d6-0f23-4ed8-8857-17e894eb37a1",
+  "prevId": "3fcd3c00-8560-449c-8079-709fa91ffc11",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -6583,7 +6583,7 @@
     "public.user_privilege_route": {
       "name": "user_privilege_route",
       "schema": "public",
-      "values": ["bootstrap", "admin", "invitation", "manual"]
+      "values": ["bootstrap", "admin", "invitation", "manual", "card"]
     },
     "public.user_role": {
       "name": "user_role",
