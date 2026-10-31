@@ -20,3 +20,33 @@ export interface ProviderButtonProps {
   /** Starts the sign-in; resolves to the failure's sentence, or nothing once the redirect starts. */
   onSignIn: (providerId: ProviderId) => Promise<string | undefined>;
 }
+
+export interface PasswordFormProps {
+  /** Where a successful sign-in returns to, as the panel's `next`. */
+  next?: string;
+  /** Whether this browser last signed in with a password. */
+  lastUsed: boolean;
+  /** The address typed, held by the panel so it survives a trip back to the provider buttons. */
+  email: string;
+  onEmailChange: (email: string) => void;
+  /** Returns to the provider buttons. */
+  onBack: () => void;
+  /** Called at each submit, so the panel clears its own error. */
+  onStart?: () => void;
+  /** Called when the code step opens (true) or closes (false), so the panel can show it alone. */
+  onCodeStep?: (open: boolean) => void;
+}
+
+export interface PasskeyButtonProps {
+  /** Where a successful sign-in returns to, as SignInPanelProps' `next`. */
+  next?: string;
+  /** Whether this browser last signed in with a passkey. */
+  lastUsed: boolean;
+}
+
+export interface TwoFactorStepProps {
+  /** Where a successful sign-in returns to, as the panel's `next`. */
+  next?: string;
+  /** Back to the password, with the reason when the server ended the attempt. */
+  onRestart: (reason?: string) => void;
+}

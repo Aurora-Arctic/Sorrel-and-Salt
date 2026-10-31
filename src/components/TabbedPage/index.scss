@@ -33,6 +33,43 @@ $track-inset: calc(1px + 0.125rem);
   background-color: $segment-track;
 }
 
+// A framed page (the account): its tabs hold a `.page-with-nav`, which centres a menu and a column of sections (_primitives.scss). The head
+// stands over that column of sections, and its tabs sit on a line of their own beneath the heading at every width, as the reflow below does for a narrow one.
+@media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+  // The pair of menu and sections is centred: the sections start half the menu and its gap right of the middle, less half their column.
+  .tabbed-page--framed > .page-header {
+    max-width: $narrow-column;
+    margin-inline-start: calc(50% + (#{space(8)} * 3 + #{space(6)} - #{$narrow-column}) / 2);
+  }
+}
+
+// From the width where the page-with-nav gains its third column the sections sit at the middle.
+@media (min-width: calc(#{space(8)} * 6 + #{$narrow-column} + #{space(6)} * 2 + #{space(4)} * 2)) {
+  .tabbed-page--framed > .page-header {
+    margin-inline-start: calc(50% - #{$narrow-column} / 2);
+  }
+}
+
+// No space() step is 2.5rem, so the head's gaps above and below are written out; the below replaces the primitive's.
+.tabbed-page--framed > .page-header {
+  margin-top: 2.5rem;
+  margin-bottom: 2.5rem;
+}
+
+.tabbed-page--framed > .page-header:not(:has(.add-action)) {
+  &::after {
+    content: '';
+    flex-basis: 100%;
+    order: 1;
+    height: 0;
+  }
+
+  > .tabbed-page__tabs.tabbed-page__tabs {
+    order: 2;
+    margin-top: calc(-1 * #{space(3)});
+  }
+}
+
 // The open tab's action, `.page-header`'s last item; a tab with none leaves it empty, which would still take a gap or a line.
 .tabbed-page__action {
   display: flex;

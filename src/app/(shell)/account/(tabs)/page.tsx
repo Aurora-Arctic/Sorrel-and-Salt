@@ -8,37 +8,27 @@ import {
   listReceivedInvitations,
   verificationWaitSeconds,
 } from '@/modules/identity';
-import EmailForm from '../../../components/EmailForm';
-import NameForm from '../../../components/NameForm';
-import PageHeader from '../../../components/PageHeader';
-import PageNav from '../../../components/PageNav';
-import ReceivedInvitations from '../../../components/ReceivedInvitations';
-import SignInMethods from '../../../components/SignInMethods';
-import { linkedAccounts, requireSession, sessionIsFresh } from '../../../lib/request-session';
-import { ACCOUNT_INVITATIONS_ID, ACCOUNT_PATH, linkErrorMessage } from '../../../lib/sign-in';
-import { SUPPORT_LIST_PATH } from '../../../lib/support-path';
-import { signedInLanding } from '../../../lib/landing';
-import { isRosterProvider } from '../../../lib/social-providers';
-// Server-only — see social-providers-config.ts's own header. Only the
-// resulting `configured` ids reach the client component.
-// oxlint-disable-next-line no-restricted-imports
-import { configuredProviders } from '../../../lib/social-providers-config';
+import EmailForm from '../../../../components/EmailForm';
+import NameForm from '../../../../components/NameForm';
+import PageNav from '../../../../components/PageNav';
+import ReceivedInvitations from '../../../../components/ReceivedInvitations';
+import { requireSession } from '../../../../lib/request-session';
+import { ACCOUNT_INVITATIONS_ID, ACCOUNT_PATH } from '../../../../lib/sign-in';
+import { SUPPORT_LIST_PATH } from '../../../../lib/support-path';
+import { signedInLanding } from '../../../../lib/landing';
 import type { AccountPageProps } from './types';
 
 export const metadata: Metadata = {
   title: 'Your Account',
 };
 
-// The one account page: name, address, ways in and waiting coven invitations, each its own section
-// under its own heading, with ids prefixed so no form's id meets them. A failed provider link returns
-// with `?error=` and `?provider=` (claude-docs/auth/admin-bootstrap.md, "The account page").
+// The account page: name, address and waiting coven invitations, each its own section under its own heading, with ids
+// prefixed so no form's id meets them.
 export default async function AccountPage({ searchParams }: AccountPageProps) {
   const [session, params] = await Promise.all([requireSession(), searchParams]);
   const { after, before } = readPageCursors(params);
-  const [me, linked, fresh, landing, invitations] = await Promise.all([
+  const [me, landing, invitations] = await Promise.all([
     getMe(session),
-    linkedAccounts(),
-    sessionIsFresh(),
     signedInLanding(session),
     readNumberedPage(
       { after, before },
@@ -50,23 +40,14 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
   const invitationsHref = (cursor: Record<string, string>) =>
     `${ACCOUNT_PATH}?${new URLSearchParams(cursor).toString()}#${ACCOUNT_INVITATIONS_ID}` as Route;
   const { hasPreviousPage, hasNextPage, startCursor, endCursor } = invitations.pageInfo;
-  const linkError = linkErrorMessage(params.error);
-  // Which row the failure belongs in; anything not on the roster leaves it
-  // at the head of the section.
-  const failedProvider =
-    typeof params.provider === 'string' && isRosterProvider(params.provider)
-      ? params.provider
-      : undefined;
 
   return (
-    <main className="page-frame page-frame--narrow page-with-nav">
-      <PageHeader title="Your Account" />
+    <div className="page-with-nav page-with-nav--headless">
       <PageNav
         label="On This Page"
         entries={[
           { href: '#account-name', label: 'Name' },
           { href: '#account-email', label: 'Email' },
-          { href: '#account-sign-in-methods', label: 'Sign-In Methods' },
           { href: `#${ACCOUNT_INVITATIONS_ID}`, label: 'Invitations' },
         ]}
       />
@@ -102,24 +83,6 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
         />
       </section>
       <section
-        id="account-sign-in-methods"
-        className="page-frame__section panel"
-        aria-labelledby="account-sign-in-methods-heading"
-      >
-        <div className="header">
-          <h2 id="account-sign-in-methods-heading">Sign-In Methods</h2>
-          <p className="lede">You can sign in to this account with any of these.</p>
-        </div>
-        <SignInMethods
-          linked={linked}
-          configured={configuredProviders()}
-          // Better Auth refuses a removal from a session older than a day,
-          // so a stale one is offered a fresh sign-in instead of Remove.
-          fresh={fresh}
-          error={linkError ? { providerId: failedProvider, message: linkError } : undefined}
-        />
-      </section>
-      <section
         id={ACCOUNT_INVITATIONS_ID}
         className="page-frame__section panel"
         aria-labelledby="account-invitations-heading"
@@ -152,6 +115,6 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           </p>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

@@ -18,6 +18,7 @@ has a Categories tab at `/admin/categories` and a Groups tab at
 | `title`    | The page's `h1`, title case, which names the tabs' nav too: "Categories"                                 |
 | `tabs`     | Each tab's `href`, short label ("Groups", "Traditions"), `filtered`, `shape` and `density`, in row order |
 | `action`   | Optional: the open tab's one action, at the end of the heading's line                                    |
+| `framed`   | Optional: the tabs hold a `.page-with-nav` column (the account). See "The header at narrow widths"       |
 | `children` | The open tab's content                                                                                   |
 
 Inside, `tab-switch.tsx` holds the client parts the tab row, the action and
@@ -304,7 +305,7 @@ The row is a `nav` named for the page, not a `role="tablist"`. Each tab is a nav
 
 There is no client directive on the page. The links, which must know which tab is open, and the switch they share with the action and the panel are the client parts, and the action and the content pass through them from the server. The open tab is the longest matching address: the grimoire's Drafts lies beneath Spells, so on Drafts both match, and the first would mark Spells.
 
-`filtered` on a tab says its list opens with a filter, so its loading skeleton draws a filter row above the table. `cards` is for the grimoire's tabs.
+`filtered` on a tab says its list opens with a filter, so its loading skeleton draws a filter row above the table. `cards` is for the grimoire's tabs. `sections` is for the account's tabs, whose content is a jump menu beside stacked panels rather than a list: the skeleton draws the menu and `sections` panels (3 on Account, 4 on Sign-In) in the page's own `.page-with-nav` grid, with no head of its own, as the heading above stays put.
 
 ## Pressing a tab
 
@@ -337,6 +338,8 @@ Pressed, for as long as the pointer is down (`src/lib/press-feedback.ts` marks a
 While a tab is on its way every tab takes the muted, faded look a disabled control has, without a button's edge to dash, and hover changes nothing. The pill, on the pressed tab by then, fades with them with its colour taken out. `tab-links.tsx` ignores a press meanwhile.
 
 ## The header at narrow widths
+
+A `framed` page (the account) differs at every width. Its tabs hold a `.page-with-nav`, which centres a menu and a column of sections, so the head stands over the sections' column: its start is offset by the same arithmetic as the grid (half the menu and its gap right of the middle, less half the column; at the three-column width the column is simply centred), up to `$narrow-column` wide. Its pills sit on a line of their own beneath the heading at every width, by the forced break described below for a labelled action. Phone widths need no offset, as the page-with-nav is then a single column.
 
 The primitives' `.page-header` spreads its children to the two ends and nudges every non-heading item down to the heading's baseline. Here the heading is followed by its tabs, only the action is pushed to the end, and the tabs are centred on the line. The selector is doubled to outweigh the primitives' narrow-width rules, which would stretch the row across its line as they do an action. A row at a phone's width drops under the heading at its own size instead. The track sits 0.125rem lower than the nudge's cancelling, where it was found level with the heading's text, and it shrinks below its pills' width rather than overflow the line, so the row inside scrolls.
 

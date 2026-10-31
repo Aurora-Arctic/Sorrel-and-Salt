@@ -49,9 +49,10 @@ import {
   type TextItem,
 } from './layout';
 import { CARDS_PER_SHEET } from './limits';
-import { qrShapes } from './qr';
+import { qrShapes } from '../qr';
 import { glyphAdvances } from './text';
-import type { CardAssets, CardSheetsInput, RoundedSquare } from './types';
+import type { RoundedSquare } from '../qr/types';
+import type { CardAssets, CardSheetsInput } from './types';
 
 // Every length below is in points (72 to the inch) on the landscape frame the canvas turns onto the page,
 // measured from the frame's top left with y running down.

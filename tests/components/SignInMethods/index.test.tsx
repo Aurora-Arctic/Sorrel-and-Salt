@@ -71,32 +71,59 @@ describe('SignInMethods', () => {
     vi.unstubAllGlobals();
   });
 
-  it('lists every roster provider, offering the ones not linked', () => {
-    render(<SignInMethods linked={[DISCORD]} configured={ALL} />);
+  it('lists every shown roster provider, offering the ones not linked', () => {
+    render(<SignInMethods passwordHeld passkeyCount={0} linked={[DISCORD]} configured={ALL} />);
 
-    expect(screen.getAllByRole('listitem')).toHaveLength(4);
+    expect(screen.getAllByRole('listitem')).toHaveLength(5);
     // A linked row is the one without an Add.
     expect(within(row('Discord')).queryByRole('button', { name: /^Add/ })).not.toBeInTheDocument();
-    for (const label of ['Google', 'Facebook', 'Microsoft']) {
+    for (const label of ['Google', 'Microsoft']) {
       expect(within(row(label)).getByRole('button', { name: `Add ${label}` })).toBeInTheDocument();
     }
   });
 
-  it('starts a link with the provider, landing back on the account page either way', async () => {
-    render(<SignInMethods linked={[DISCORD]} configured={ALL} />);
+  it('lists a held password and the passkeys, each linking to its section', () => {
+    render(<SignInMethods passwordHeld passkeyCount={2} linked={[DISCORD]} configured={ALL} />);
+
+    expect(within(row('Password')).getByText('Set')).toBeInTheDocument();
+    expect(within(row('Password')).getByRole('link', { name: 'Manage Password' })).toHaveAttribute(
+      'href',
+      '/account/sign-in#password',
+    );
+    expect(within(row('Passkeys')).getByText('2 passkeys')).toBeInTheDocument();
+    expect(within(row('Passkeys')).getByRole('link', { name: 'Manage Passkeys' })).toHaveAttribute(
+      'href',
+      '/account/sign-in#passkeys',
+    );
+  });
+
+  it('says when no password is set and no passkey is added', () => {
+    render(
+      <SignInMethods passwordHeld={false} passkeyCount={0} linked={[DISCORD]} configured={ALL} />,
+    );
+
+    expect(within(row('Password')).getByText('Not Set')).toBeInTheDocument();
+    expect(within(row('Password')).getByRole('link', { name: 'Set Password' })).toBeInTheDocument();
+    expect(within(row('Passkeys')).getByText('None Added')).toBeInTheDocument();
+  });
+
+  it('starts a link with the provider, landing back on the Sign-In tab either way', async () => {
+    render(<SignInMethods passwordHeld passkeyCount={0} linked={[DISCORD]} configured={ALL} />);
 
     await press(screen.getByRole('button', { name: 'Add Microsoft' }));
 
     expect(linkSocialMock).toHaveBeenCalledWith({
       provider: 'microsoft',
-      callbackURL: '/account',
-      errorCallbackURL: '/account?provider=microsoft',
+      callbackURL: '/account/sign-in',
+      errorCallbackURL: '/account/sign-in?provider=microsoft',
     });
   });
 
   it("a failed link's error is in its provider's row", () => {
     render(
       <SignInMethods
+        passwordHeld
+        passkeyCount={0}
         linked={[DISCORD]}
         configured={ALL}
         error={{ providerId: 'microsoft', message: GENERIC_LINK_ERROR }}
@@ -114,7 +141,7 @@ describe('SignInMethods', () => {
     'says the generic link sentence under Add when the link %s, freeing the button with the focus kept',
     async (_how, answer) => {
       linkSocialMock.mockImplementation(answer);
-      render(<SignInMethods linked={[DISCORD]} configured={ALL} />);
+      render(<SignInMethods passwordHeld passkeyCount={0} linked={[DISCORD]} configured={ALL} />);
       const add = screen.getByRole('button', { name: 'Add Google' });
       add.focus();
 
@@ -130,6 +157,8 @@ describe('SignInMethods', () => {
     linkSocialMock.mockReturnValueOnce(new Promise(() => {}));
     render(
       <SignInMethods
+        passwordHeld
+        passkeyCount={0}
         linked={[DISCORD]}
         configured={ALL}
         error={{ providerId: 'microsoft', message: GENERIC_LINK_ERROR }}
@@ -150,7 +179,7 @@ describe('SignInMethods', () => {
 
   it('frees a link whose page is restored from the back-forward cache', async () => {
     linkSocialMock.mockResolvedValue({});
-    render(<SignInMethods linked={[DISCORD]} configured={ALL} />);
+    render(<SignInMethods passwordHeld passkeyCount={0} linked={[DISCORD]} configured={ALL} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Add Google' }));
     await waitFor(() =>
@@ -169,7 +198,14 @@ describe('SignInMethods', () => {
 
   // aria-disabled rather than disabled keeps it in the tab order, as on /sign-in.
   it('greys out an unconfigured provider, keeping it reachable, and starts nothing', () => {
-    render(<SignInMethods linked={[DISCORD]} configured={['discord', 'google']} />);
+    render(
+      <SignInMethods
+        passwordHeld
+        passkeyCount={0}
+        linked={[DISCORD]}
+        configured={['discord', 'google']}
+      />,
+    );
 
     const button = screen.getByRole('button', { name: 'Add Microsoft' });
     expect(button).toHaveAttribute('aria-disabled', 'true');
@@ -183,7 +219,7 @@ describe('SignInMethods', () => {
   // Greyed rather than gone, so the reason sits under the control it explains.
   it('with one method left, its Remove is greyed and says why', () => {
     unlinkAccountMock.mockResolvedValue({ data: { status: true }, error: null });
-    render(<SignInMethods linked={[DISCORD]} configured={ALL} />);
+    render(<SignInMethods passwordHeld passkeyCount={0} linked={[DISCORD]} configured={ALL} />);
 
     const remove = screen.getByRole('button', { name: 'Remove Discord' });
     expect(remove).toHaveAttribute('aria-disabled', 'true');
@@ -195,11 +231,26 @@ describe('SignInMethods', () => {
   // Better Auth would refuse every removal from a session older than its
   // `freshAge`, so none is offered; the same two linked offer Remove fresh.
   it('with a stale session and two methods linked, Remove is withheld and Sign In Again is offered', () => {
-    const { unmount } = render(<SignInMethods linked={[DISCORD, MICROSOFT]} configured={ALL} />);
+    const { unmount } = render(
+      <SignInMethods
+        passwordHeld
+        passkeyCount={0}
+        linked={[DISCORD, MICROSOFT]}
+        configured={ALL}
+      />,
+    );
     expect(screen.getAllByRole('button', { name: /^Remove/ })).toHaveLength(2);
     unmount();
 
-    render(<SignInMethods linked={[DISCORD, MICROSOFT]} configured={ALL} fresh={false} />);
+    render(
+      <SignInMethods
+        passwordHeld
+        passkeyCount={0}
+        linked={[DISCORD, MICROSOFT]}
+        configured={ALL}
+        fresh={false}
+      />,
+    );
 
     expect(screen.queryByRole('button', { name: /^Remove/ })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Sign In Again' })).toHaveAccessibleDescription(/\S/);
@@ -207,10 +258,18 @@ describe('SignInMethods', () => {
     expect(within(row('Discord')).queryByRole('paragraph')).not.toBeInTheDocument();
   });
 
-  it('Sign In Again signs out and sends the browser to sign-in with the account page as the return path', async () => {
+  it('Sign In Again signs out and sends the browser to sign-in with the Sign-In tab as the return path', async () => {
     signOutMock.mockResolvedValue({ error: null });
     vi.stubGlobal('location', { assign: assignMock });
-    render(<SignInMethods linked={[DISCORD, MICROSOFT]} configured={ALL} fresh={false} />);
+    render(
+      <SignInMethods
+        passwordHeld
+        passkeyCount={0}
+        linked={[DISCORD, MICROSOFT]}
+        configured={ALL}
+        fresh={false}
+      />,
+    );
 
     fireEvent.click(screen.getByRole('button', { name: 'Sign In Again' }));
 
@@ -218,13 +277,21 @@ describe('SignInMethods', () => {
     expect(signOutMock).toHaveBeenCalledTimes(1);
     const target = new URL(assignMock.mock.calls[0][0] as string, 'http://relative.invalid');
     expect(target.pathname).toBe('/sign-in');
-    expect(target.searchParams.get('next')).toBe('/account');
+    expect(target.searchParams.get('next')).toBe('/account/sign-in');
   });
 
   it('Sign In Again stays focused while busy and says a failed sign-out under itself', async () => {
     let fail: (reason: unknown) => void = () => {};
     signOutMock.mockReturnValue(new Promise((_resolve, reject) => (fail = reject)));
-    render(<SignInMethods linked={[DISCORD, MICROSOFT]} configured={ALL} fresh={false} />);
+    render(
+      <SignInMethods
+        passwordHeld
+        passkeyCount={0}
+        linked={[DISCORD, MICROSOFT]}
+        configured={ALL}
+        fresh={false}
+      />,
+    );
     const again = screen.getByRole('button', { name: 'Sign In Again' });
     again.focus();
 
@@ -244,7 +311,14 @@ describe('SignInMethods', () => {
   });
 
   it('asks before removing, naming the provider, and Cancel sends nothing', async () => {
-    renderOnPage(<SignInMethods linked={[DISCORD, MICROSOFT]} configured={ALL} />);
+    renderOnPage(
+      <SignInMethods
+        passwordHeld
+        passkeyCount={0}
+        linked={[DISCORD, MICROSOFT]}
+        configured={ALL}
+      />,
+    );
     const remove = screen.getByRole('button', { name: 'Remove Microsoft' });
     remove.focus();
 
@@ -265,7 +339,14 @@ describe('SignInMethods', () => {
 
   it('offers Remove on each once two are linked, and removes by the account row id', async () => {
     unlinkAccountMock.mockResolvedValue({ data: { status: true }, error: null });
-    renderOnPage(<SignInMethods linked={[DISCORD, MICROSOFT]} configured={ALL} />);
+    renderOnPage(
+      <SignInMethods
+        passwordHeld
+        passkeyCount={0}
+        linked={[DISCORD, MICROSOFT]}
+        configured={ALL}
+      />,
+    );
     const status = screen.getByRole('status');
     expect(status).toBeEmptyDOMElement();
 
@@ -289,7 +370,14 @@ describe('SignInMethods', () => {
   it('marks a removal busy while it is in flight, then frees the list', async () => {
     let finish: (value: unknown) => void = () => {};
     unlinkAccountMock.mockReturnValue(new Promise((resolve) => (finish = resolve)));
-    renderOnPage(<SignInMethods linked={[DISCORD, MICROSOFT]} configured={ALL} />);
+    renderOnPage(
+      <SignInMethods
+        passwordHeld
+        passkeyCount={0}
+        linked={[DISCORD, MICROSOFT]}
+        configured={ALL}
+      />,
+    );
     const remove = screen.getByRole('button', { name: 'Remove Microsoft' });
     remove.focus();
 
@@ -314,7 +402,14 @@ describe('SignInMethods', () => {
       data: null,
       error: { status: 403, code: 'SESSION_NOT_FRESH' },
     });
-    renderOnPage(<SignInMethods linked={[DISCORD, MICROSOFT]} configured={ALL} />);
+    renderOnPage(
+      <SignInMethods
+        passwordHeld
+        passkeyCount={0}
+        linked={[DISCORD, MICROSOFT]}
+        configured={ALL}
+      />,
+    );
     const remove = screen.getByRole('button', { name: 'Remove Microsoft' });
     remove.focus();
 
@@ -331,7 +426,14 @@ describe('SignInMethods', () => {
 
   it('falls back to the generic removal sentence for a refusal with no known code', async () => {
     unlinkAccountMock.mockResolvedValue({ data: null, error: { status: 500 } });
-    render(<SignInMethods linked={[DISCORD, MICROSOFT]} configured={ALL} />);
+    render(
+      <SignInMethods
+        passwordHeld
+        passkeyCount={0}
+        linked={[DISCORD, MICROSOFT]}
+        configured={ALL}
+      />,
+    );
 
     await removeAndConfirm(screen.getByRole('button', { name: 'Remove Discord' }));
 
@@ -341,7 +443,14 @@ describe('SignInMethods', () => {
   it('says the generic removal sentence when the removal cannot be reached, and clears it at the next press', async () => {
     unlinkAccountMock.mockRejectedValueOnce(new Error('offline'));
     unlinkAccountMock.mockReturnValueOnce(new Promise(() => {}));
-    render(<SignInMethods linked={[DISCORD, MICROSOFT]} configured={ALL} />);
+    render(
+      <SignInMethods
+        passwordHeld
+        passkeyCount={0}
+        linked={[DISCORD, MICROSOFT]}
+        configured={ALL}
+      />,
+    );
     const remove = screen.getByRole('button', { name: 'Remove Discord' });
     remove.focus();
 
@@ -356,12 +465,16 @@ describe('SignInMethods', () => {
   });
 
   it('shows a passed-in callback error as an alert, and none without one', () => {
-    const { unmount } = render(<SignInMethods linked={[DISCORD]} configured={ALL} />);
+    const { unmount } = render(
+      <SignInMethods passwordHeld passkeyCount={0} linked={[DISCORD]} configured={ALL} />,
+    );
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     unmount();
 
     render(
       <SignInMethods
+        passwordHeld
+        passkeyCount={0}
         linked={[DISCORD]}
         configured={ALL}
         error={{ message: 'That expired. Start again here.' }}

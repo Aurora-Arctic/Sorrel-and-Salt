@@ -67,6 +67,21 @@ export interface EmailVerificationSender {
   defer(task: () => Promise<void>): void;
 }
 
+/**
+ * How a password is added to an account that has none. Built per request by the GraphQL context, as
+ * `EmailVerificationSender` is, because Better Auth's set-password endpoint is reachable only on the server.
+ */
+export interface PasswordSetter {
+  /**
+   * Gives the request's signed-in account `newPassword`, under every rule a sign-up's password obeys, and
+   * mails the account a notice. @throws {ValidationError} on `newPassword` when a rule refuses it, the
+   * breached-password check cannot answer, or the account already has a password.
+   */
+  set(newPassword: string): Promise<void>;
+  /** Whether the request's session is younger than Better Auth's `freshAge`; `false` with no session. */
+  sessionIsFresh(): Promise<boolean>;
+}
+
 /** Whether admin changes are paused, and whether the asking admin may switch that. */
 export interface AdminRoleChangePauseState {
   paused: boolean;

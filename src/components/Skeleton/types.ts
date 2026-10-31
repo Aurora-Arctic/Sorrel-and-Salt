@@ -1,13 +1,13 @@
 import type { ReactNode } from 'react';
 
 /** What a skeleton stands in for. */
-export type SkeletonShape = 'table' | 'cards' | 'form' | 'page' | 'contents' | 'line';
+export type SkeletonShape = 'table' | 'cards' | 'form' | 'page' | 'sections' | 'contents' | 'line';
 
 /** A page's head: a title and a lede (the default), with an `eyebrow` above them, or the `title` alone. */
 export type SkeletonHead = 'eyebrow' | 'title' | undefined;
 
 export interface SkeletonProps {
-  /** `table` (a tabbed list), `cards` (the Ingredients cards), `form` (a form's fields and buttons) `page` (a heading and blocks), `contents` (a heading and titled lists of links, the admin index) or `line` (a line of text each, for a sentence or a short list that loads in place). */
+  /** `table` (a tabbed list), `cards` (the Ingredients cards), `form` (a form's fields and buttons) `page` (a heading and blocks), `sections` (a tab's menu and stacked panels, under a heading that stays put), `contents` (a heading and titled lists of links, the admin index) or `line` (a line of text each, for a sentence or a short list that loads in place). */
   shape: SkeletonShape;
   /** Whether a `table` or `cards` skeleton draws a filter row above the list. */
   filter?: boolean;
@@ -37,7 +37,9 @@ export interface SwapPanelProps {
   /** Whether the skeleton draws a filter row, as `TabPanelLoading`'s. */
   filter?: boolean;
   /** Which skeleton, as `TabPanelLoading`'s. */
-  shape?: 'table' | 'cards';
+  shape?: 'table' | 'cards' | 'sections';
+  /** With `sections`: how many panels, as `TabPanelLoading`'s. */
+  count?: number;
   /** The density of a `cards` skeleton, as `TabPanelLoading`'s. */
   density?: 'compact';
   /** A minimum height for the skeleton's wrapper only, so the content it replaces keeps its room; the new content takes none. */

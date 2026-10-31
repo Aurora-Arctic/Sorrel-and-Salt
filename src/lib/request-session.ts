@@ -10,7 +10,8 @@ import { emailPagePath, isEmailPage } from './account-email';
 import { RETURN_PATH_HEADER, safeReturnPath, signInPath } from './sign-in';
 import { isRosterProvider } from './social-providers';
 import { toUserRole } from './session-role';
-import type { LinkedAccount } from './types';
+import { isFreshSession } from './session-fresh';
+import type { AccountPasskey, LinkedAccount } from './types';
 
 // Where the request becomes a service-level `Session`: server components and
 // the GraphQL context call this, then hand the result to a service. A service
@@ -23,9 +24,7 @@ import type { LinkedAccount } from './types';
  * tests/lib/auth.test.ts); 0 turns the check off, as there.
  */
 async function isFresh(createdAt: Date | string): Promise<boolean> {
-  const { freshAge } = (await auth.$context).sessionConfig;
-  if (freshAge === 0) return true;
-  return Date.now() - new Date(createdAt).getTime() < freshAge * 1000;
+  return isFreshSession(createdAt, (await auth.$context).sessionConfig.freshAge);
 }
 
 async function stateFromHeaders(requestHeaders: Headers): Promise<SessionState> {
@@ -159,14 +158,36 @@ export async function requireCovenMembership(slug: string): Promise<CovenMembers
   }
 }
 
+/** Every account row Better Auth holds for the signed-in user, provider and password alike. */
+const userAccounts = cache(async () => auth.api.listUserAccounts({ headers: await headers() }));
+
 /**
  * The signed-in user's provider accounts, asked of Better Auth, whose table
  * they are. For the account page, after `requireSession()`; Better Auth
  * refuses a request with no session.
  */
 export const linkedAccounts = cache(async (): Promise<LinkedAccount[]> => {
-  const accounts = await auth.api.listUserAccounts({ headers: await headers() });
+  const accounts = await userAccounts();
   return accounts.flatMap(({ id, providerId }) =>
     isRosterProvider(providerId) ? [{ id, providerId }] : [],
   );
+});
+
+/** Whether the signed-in account has a password, which the account page then changes rather than sets. */
+export const hasPassword = cache(async (): Promise<boolean> => {
+  const accounts = await userAccounts();
+  return accounts.some(({ providerId }) => providerId === 'credential');
+});
+
+/**
+ * The signed-in user's passkeys, asked of the passkey plugin, whose table they are, and cut to what the account page
+ * shows. For the account page, after `requireSession()`.
+ */
+export const accountPasskeys = cache(async (): Promise<AccountPasskey[]> => {
+  const passkeys = await auth.api.listPasskeys({ headers: await headers() });
+  return passkeys.map(({ id, name, createdAt }) => ({
+    id,
+    name: name ?? null,
+    createdAt: new Date(createdAt).toISOString(),
+  }));
 });

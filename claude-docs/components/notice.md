@@ -11,15 +11,16 @@ _See also_ [`m12.31-click-feedback-outside-forms.md`](../design-decisions/m12.31
 
 `NoticeProps` (`types.ts`):
 
-| Prop        | What it is                                                                                            |
-| ----------- | ----------------------------------------------------------------------------------------------------- |
-| `kind`      | `error`, `warn`, `caution`, `success` or `plain`: the look and the role                               |
-| `quiet`     | Optional: an error, warning or caution on the page from the start, as a status                        |
-| `block`     | Optional: block content, a sentence with a list or buttons beneath it, in a `<div>`                   |
-| `inRegion`  | Optional: inside a live region always in the page, so the notice takes no role                        |
-| `id`        | Optional, for a control that names the notice in its `aria-describedby`                               |
-| `className` | Optional layout class from the caller, added after the notice's own                                   |
-| `children`  | The sentence, or with `block` the block content; a link stays in the notice's text colour, underlined |
+| Prop        | What it is                                                                                                              |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `kind`      | `error`, `warn`, `caution`, `success` or `plain`: the look and the role                                                 |
+| `quiet`     | Optional: an error, warning or caution on the page from the start, as a status                                          |
+| `block`     | Optional: block content, a sentence with a list or buttons beneath it, in a `<div>`                                     |
+| `inRegion`  | Optional: inside a live region always in the page, so the notice takes no role                                          |
+| `result`    | Optional: the notice reports a form's result, so it takes `tabIndex=-1` and `data-result` for `useResultFocus` to focus |
+| `id`        | Optional, for a control that names the notice in its `aria-describedby`                                                 |
+| `className` | Optional layout class from the caller, added after the notice's own                                                     |
+| `children`  | The sentence, or with `block` the block content; a link stays in the notice's text colour, underlined                   |
 
 ## Contracts
 
