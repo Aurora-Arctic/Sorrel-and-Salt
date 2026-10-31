@@ -512,20 +512,21 @@ describe('IngredientForm on the compendium', () => {
       });
     });
 
-    // Shown in Compendium is a field of the form beside Reviewed: a flip changes the form,
-    // Save writes it after the entry, and an add starts from its categories until the curator flips it.
+    // Shown in Compendium is a field of the form after Reviewed: a flip changes the form and writes
+    // nothing, and Save sends it in the entry's own create or update. An add starts from its categories
+    // until the curator flips it.
     describe('the Shown in Compendium switch', () => {
       const shownSwitch = () => screen.getByRole('switch', { name: 'Shown in Compendium' });
 
-      function acceptShown() {
+      function refuseAnyShownWrite() {
         const calls: SetCompendiumEntryShownMutationVariables[] = [];
-        mockGraphQLMutation<SetCompendiumEntryShownMutation, SetCompendiumEntryShownMutationVariables>(
-          'SetCompendiumEntryShown',
-          (variables) => {
-            calls.push(variables);
-            return { setCompendiumEntryShown: { id: String(variables.id) } };
-          },
-        );
+        mockGraphQLMutation<
+          SetCompendiumEntryShownMutation,
+          SetCompendiumEntryShownMutationVariables
+        >('SetCompendiumEntryShown', (variables) => {
+          calls.push(variables);
+          return { setCompendiumEntryShown: { id: String(variables.id) } };
+        });
         return calls;
       }
 
@@ -550,7 +551,7 @@ describe('IngredientForm on the compendium', () => {
       });
 
       it('changes the form when flipped and writes nothing until Save', async () => {
-        const shown = acceptShown();
+        const separate = refuseAnyShownWrite();
         const saves = acceptUpdate();
         renderForm({
           entry: { id: ENTRY_ID, values: TESTWORT },
@@ -563,13 +564,13 @@ describe('IngredientForm on the compendium', () => {
         expect(shownSwitch()).not.toBeChecked();
         expect(button('Save Ingredient')).toBeEnabled();
         await act(async () => {});
-        expect(shown).toHaveLength(0);
+        expect(separate).toHaveLength(0);
         expect(saves).toHaveLength(0);
       });
 
-      it('is sent with Save for the entry it edited', async () => {
-        const shown = acceptShown();
-        acceptUpdate();
+      it('is sent in the update itself, with no second request', async () => {
+        const separate = refuseAnyShownWrite();
+        const saves = acceptUpdate();
         renderForm({
           entry: { id: ENTRY_ID, values: TESTWORT },
           review: { reviewed: false, shown: true },
@@ -578,14 +579,14 @@ describe('IngredientForm on the compendium', () => {
         fireEvent.click(shownSwitch());
         press('Save Ingredient');
 
-        await waitFor(() => expect(shown).toHaveLength(1));
-        expect(shown[0]).toEqual({ id: ENTRY_ID, shown: false });
+        await waitFor(() => expect(saves).toHaveLength(1));
+        expect(saves[0].input).toMatchObject({ shown: false });
+        expect(separate).toHaveLength(0);
         await waitFor(() => expect(button('Save Ingredient')).toBeDisabled());
       });
 
-      it('is not sent when left as the entry had it', async () => {
-        const shown = acceptShown();
-        acceptUpdate();
+      it('is sent unchanged with an update that did not touch it', async () => {
+        const saves = acceptUpdate();
         const { onSaved } = renderForm({
           entry: { id: ENTRY_ID, values: TESTWORT },
           review: { reviewed: false, shown: false },
@@ -595,11 +596,11 @@ describe('IngredientForm on the compendium', () => {
         press('Save Ingredient');
 
         await waitFor(() => expect(onSaved).toHaveBeenCalled());
-        expect(shown).toHaveLength(0);
+        expect(saves[0].input).toMatchObject({ shown: false });
       });
 
-      it('lets the curator turn an add on, and sends it after the create', async () => {
-        const shown = acceptShown();
+      it("is sent in the create of an add, the curator's flip winning over the categories rule", async () => {
+        const separate = refuseAnyShownWrite();
         const creates = acceptCompendiumCreate();
         renderForm({ review: { reviewed: false } });
 
@@ -609,25 +610,21 @@ describe('IngredientForm on the compendium', () => {
         expect(shownSwitch()).toBeChecked();
         press('Save Ingredient');
 
-        await waitFor(() => expect(shown).toHaveLength(1));
-        expect(creates).toHaveLength(1);
-        expect(shown[0]).toEqual({ id: ENTRY_ID, shown: true });
+        await waitFor(() => expect(creates).toHaveLength(1));
+        expect(creates[0].input).toMatchObject({ shown: true });
+        expect(separate).toHaveLength(0);
       });
 
-      it('says the entry saved when only the shown write was refused', async () => {
-        acceptUpdate();
-        mockGraphQLError('SetCompendiumEntryShown', { code: 'FORBIDDEN', message: 'Forbidden' });
-        renderForm({
-          entry: { id: ENTRY_ID, values: TESTWORT },
-          review: { reviewed: false, shown: true },
-        });
+      it('is sent hidden in the create of an add left as its categories put it', async () => {
+        const creates = acceptCompendiumCreate();
+        renderForm({ review: { reviewed: false } });
 
-        fireEvent.click(shownSwitch());
+        type('Name', 'Testwort');
+        choose('Classification', 'None');
         press('Save Ingredient');
 
-        expect(
-          await screen.findByText(/Saved, but whether it is shown was not/),
-        ).toBeInTheDocument();
+        await waitFor(() => expect(creates).toHaveLength(1));
+        expect(creates[0].input).toMatchObject({ shown: false });
       });
     });
 

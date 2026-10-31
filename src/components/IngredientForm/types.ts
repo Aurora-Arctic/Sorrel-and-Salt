@@ -345,6 +345,8 @@ export interface IngredientSend {
   input: IngredientFormInput;
   endRedirect: boolean;
   revision?: number;
+  /** The compendium's Shown in Compendium switch, written with the entry; left out where the form has none. */
+  shown?: boolean;
 }
 
 /** A save the server asked to confirm: what it said, and the input to send again. */
