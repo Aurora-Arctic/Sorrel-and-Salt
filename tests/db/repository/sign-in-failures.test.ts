@@ -29,7 +29,6 @@ describe('sign_in_failures', () => {
     expect(second.count).toBe(2);
     expect(second.firstFailedAt).toEqual(first.firstFailedAt);
     expect(second.lockedUntil).toBeNull();
-    expect(second.passwordDisabled).toBe(false);
   });
 
   it('counts one account without touching another', async () => {
@@ -41,19 +40,12 @@ describe('sign_in_failures', () => {
     expect((await readSignInFailure(A.id))?.count).toBe(2);
   });
 
-  it('locks until a time, or disables the password, keeping the count', async () => {
+  it('locks until a time, keeping the count', async () => {
     await recordSignInFailure(A.id);
     const until = new Date(Date.now() + 60_000);
 
-    await lockPasswordSignIn(A.id, { lockedUntil: until });
+    await lockPasswordSignIn(A.id, until);
     expect(await readSignInFailure(A.id)).toMatchObject({ count: 1, lockedUntil: until });
-
-    await lockPasswordSignIn(A.id, { passwordDisabled: true });
-    expect(await readSignInFailure(A.id)).toMatchObject({
-      count: 1,
-      lockedUntil: until,
-      passwordDisabled: true,
-    });
   });
 
   it('clears the row, and a later failure counts from one again', async () => {

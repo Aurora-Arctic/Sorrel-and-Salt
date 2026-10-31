@@ -29,12 +29,9 @@ export async function recordSignInFailure(userId: string): Promise<SignInFailure
   return row;
 }
 
-/** Sets the end of a timed lock or the stop only a reset lifts, leaving the count; a field left out keeps its value. */
-export async function lockPasswordSignIn(
-  userId: string,
-  lock: { lockedUntil?: Date; passwordDisabled?: boolean },
-): Promise<void> {
-  await db.update(signInFailures).set(lock).where(eq(signInFailures.userId, userId));
+/** Sets the end of a timed lock, leaving the count. */
+export async function lockPasswordSignIn(userId: string, lockedUntil: Date): Promise<void> {
+  await db.update(signInFailures).set({ lockedUntil }).where(eq(signInFailures.userId, userId));
 }
 
 /** Removes the row, on a successful sign-in or a reset. */
