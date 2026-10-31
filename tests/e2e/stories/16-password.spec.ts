@@ -28,6 +28,8 @@ test(
     await page.goto('/sign-in?next=%2Fcoven');
     await assertNoAccessibilityViolations(page);
 
+    await page.getByRole('button', { name: 'Continue with Email' }).click();
+    await expect(page).toHaveURL(/method=email/);
     await page.getByRole('button', { name: 'Create an Account' }).click();
     await expect(page.getByRole('heading', { name: 'Create an Account' })).toBeVisible();
     await field(page, 'Name').fill('Testwort Holder');

@@ -8,6 +8,7 @@ import {
   WRONG_CREDENTIALS,
 } from '@/components/SignInPanel/password-form';
 import { LAST_USED_PROVIDER_COOKIE } from '@/lib/sign-in';
+import { installHistory, setQuery } from './search-params';
 
 // Story 70's form. Better Auth's client is mocked at the two calls it makes, so each test sets the
 // answer the server gives; tests/db/password-sign-in.test.ts proves the server gives it.
@@ -19,6 +20,10 @@ vi.mock('@/lib/auth-client', async (importOriginal) => ({
   signIn: { social: vi.fn(), email: (...args: unknown[]) => signInEmail(...args) },
   signUp: { email: (...args: unknown[]) => signUpEmail(...args) },
   getSession: (...args: unknown[]) => getSession(...args),
+}));
+
+vi.mock('next/navigation', async () => ({
+  useSearchParams: (await import('./search-params')).useSearchParams,
 }));
 
 const assign = vi.fn();
@@ -50,13 +55,17 @@ async function openSignUp() {
 }
 
 describe('SignInPanel, email and password', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.stubGlobal('location', { assign });
+    installHistory();
     render(<SignInPanel next="/coven/hearth" configured={['google']} />);
+    await press(screen.getByRole('button', { name: 'Continue with Email' }));
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+    setQuery('');
     signInEmail.mockReset();
     signUpEmail.mockReset();
     getSession.mockReset();
@@ -242,7 +251,21 @@ describe('SignInPanel, email and password', () => {
 
     const heading = screen.getAllByRole('heading', { name: /Sign In with Email/ }).slice(-1)[0];
     expect(within(heading).getByText('Last Used')).toBeInTheDocument();
-    expect(screen.getAllByRole('button', { name: /^Continue with Google$/ })).toHaveLength(2);
+    expect(screen.queryByRole('button', { name: /^Continue with Google/ })).toBeNull();
+  });
+
+  it('holds the buttons and the email form as two views, each its own history entry, and keeps the typed address between them', async () => {
+    expect(screen.getByRole('heading', { name: /Sign In with Email/ })).toHaveFocus();
+    expect(screen.queryByRole('button', { name: 'Continue with Google' })).toBeNull();
+    type('Email Address', 'someone@password-form.test');
+
+    await press(screen.getByRole('button', { name: 'Back' }));
+    expect(screen.getByRole('heading', { name: 'Sign In' })).toHaveFocus();
+    expect(screen.getByRole('button', { name: 'Continue with Google' })).toBeInTheDocument();
+    expect(screen.queryByLabelText(/^Email Address/)).toBeNull();
+
+    await press(screen.getByRole('button', { name: 'Continue with Email' }));
+    expect(field('Email Address')).toHaveValue('someone@password-form.test');
   });
 
   it('offers no password hint and no security question', () => {
