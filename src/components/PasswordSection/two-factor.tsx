@@ -205,8 +205,8 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
                   <QrCode.Pattern />
                 </QrCode.Frame>
               </QrCode.Root>
-              <p>
-                If you can&apos;t scan it, enter this key in the app instead:{' '}
+              <p>If you can&apos;t scan it, enter this key in the app instead:</p>
+              <p className="two-factor__well">
                 <code className="two-factor__key">{groupedKey(keyOf(enrolment.totpURI))}</code>
               </p>
             </li>
@@ -215,7 +215,7 @@ const TwoFactorSettings = ({ enabled }: TwoFactorSettingsProps): ReactElement =>
                 Save these backup codes somewhere safe. Each one signs you in once if you lose your
                 app. They won&apos;t be shown again.
               </p>
-              <ul className="two-factor__codes" aria-label="Backup Codes">
+              <ul className="two-factor__codes two-factor__well" aria-label="Backup Codes">
                 {enrolment.backupCodes.map((backupCode) => (
                   <li key={backupCode}>
                     <code>{backupCode}</code>

@@ -48,6 +48,7 @@
 }
 
 .two-factor__key {
+  text-align: center;
   overflow-wrap: anywhere;
 }
 
@@ -67,6 +68,15 @@
   grid-template-columns: repeat(2, 1fr);
   gap: space(1) space(4);
   text-align: center;
+}
+
+// The setup key and the backup codes each sit in one of these: darker than the card around them
+// ($surface-page is below $surface-card in both themes), with the surface radius. After `.two-factor__codes` so its list reset does not zero the padding.
+.two-factor__well {
+  padding: space(3);
+  margin-block: space(2);
+  background-color: $surface-page;
+  border-radius: radius('surface');
 }
 
 .password-section__username {

@@ -99,7 +99,9 @@ Each submit is disabled until its field has something in it, and is a
 tokens. `.two-factor` draws the QR code in `$text-primary` on `$surface-card`,
 so it is light on dark in the dark theme; the design review should check that
 common authenticator apps scan the inverted code. The backup codes sit in two equal columns,
-each code centred in its column, with no list marker.
+each code centred in its column, with no list marker. The setup key and the backup codes each sit
+on their own in a `.two-factor__well`: `$surface-page` (darker than the card in both themes) with
+`radius('surface')` and `space(3)` padding.
 
 ## Stories
 
