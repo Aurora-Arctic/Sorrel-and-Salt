@@ -7,7 +7,14 @@ import type { NavigationTarget } from '../../lib/navigation';
  */
 export const siteLinkTarget = (base: string, href: string = base): NavigationTarget => {
   if (base === '/compendium') {
-    return { region: 'main', shape: 'cards', frame: 'wide', title: true, filter: true };
+    return {
+      region: 'main',
+      shape: 'cards',
+      frame: 'wide',
+      head: 'eyebrow',
+      title: true,
+      filter: true,
+    };
   }
   if (base === '/coven') {
     return href === base

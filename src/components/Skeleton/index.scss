@@ -36,7 +36,18 @@
 // own: the heading bar, and where the page has an Add a button-sized block at
 // the end (the title bar is the page shape's). `.page-header` brings every
 // child but the h1 down 0.25rem for a button; the heading bar sits level.
-.skeleton__shapes .skeleton__header > .skeleton__title {
+// The column's gap spaces the heading from the filter row, so the heading's own bottom margin (the
+// space the page lays out with) would be a second gap on top of it.
+.skeleton__shapes .skeleton__header {
+  margin-bottom: 0;
+}
+
+// The heading bar sits in a row of its own that takes no box until the header narrows (below).
+.skeleton__title-row {
+  display: contents;
+}
+
+.skeleton__shapes .skeleton__header .skeleton__title {
   top: 0;
   height: calc(heading-size(1) * 1.1);
 }
@@ -55,6 +66,30 @@
 
   > .skeleton__action {
     margin-inline-start: auto;
+  }
+}
+
+// Narrow, the page header (a size container, so only what is inside it can change) puts the heading on a
+// line of its own, the action beneath it at the line's start and, on a tabbed page, the tab track last, as
+// the pages do under the labelled Add's width (primitives, `.tabbed-page`). The line gap alone spaces them.
+@container page-header (max-width: #{$add-below-width}) {
+  .skeleton__header > .skeleton__title-row {
+    display: block;
+    flex-basis: 100%;
+  }
+
+  .skeleton__shapes .skeleton__header > .skeleton__action {
+    top: 0;
+    margin-inline-start: 0;
+  }
+
+  .skeleton__shapes .skeleton__header:has(> .skeleton__tabs) > .skeleton__action {
+    margin-inline-start: 0;
+  }
+
+  .skeleton__shapes .skeleton__header > .skeleton__tabs {
+    flex-basis: 100%;
+    order: 1;
   }
 }
 
@@ -347,6 +382,24 @@
 
   > span:nth-child(2) {
     width: 60%;
+  }
+}
+
+// A list page's lede is longer than the line on a phone, so it takes a third line there.
+.skeleton__shapes .skeleton__lede-more {
+  display: none;
+}
+
+@media (max-width: $shell-phone-width) {
+  .skeleton__shapes .skeleton__lede:has(> .skeleton__lede-more) {
+    > span:nth-child(2) {
+      width: auto;
+    }
+
+    > .skeleton__lede-more {
+      display: block;
+      width: 40%;
+    }
   }
 }
 

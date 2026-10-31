@@ -1,7 +1,7 @@
 import type { Page, Route } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { recreateE2eDatabase } from './database';
-import { signInAgainAs } from './session';
+import { signInAgainAs, signInAs } from './session';
 import { insertSpell, seedCoven, withSql } from './stories/coven-ingredients';
 import type { Coven } from './stories/coven-ingredients';
 
@@ -265,4 +265,125 @@ for (const width of [1280, 375]) {
     expect(Math.abs(waiting!.y - loaded!.y)).toBeLessThanOrEqual(REGION_TOLERANCE);
     expect(Math.abs(waiting!.rowHeight - loaded!.rowHeight)).toBeLessThanOrEqual(REGION_TOLERANCE);
   });
+}
+
+// Every list page whose wait draws a filter row draws it where the loaded page's row is: measured from the
+// window's top edge, in the wait (pinned there) and on the page that arrives, at a desktop and a phone width.
+
+let adminId = '';
+
+test.beforeAll(async ({ browser }) => {
+  const setup = await browser.newPage();
+  try {
+    adminId = (await signInAs(setup, 'admin@grimoire-skeleton.test', ['discord'], 'admin')).userId;
+  } finally {
+    await setup.close();
+  }
+});
+
+/** The top edge of the filter row: the wait's, or the loaded page's (`.filter-row`). */
+const filterRowTop = (page: Page, waiting: boolean) =>
+  page.evaluate((inSkeleton) => {
+    if (inSkeleton) {
+      const root = document.querySelector('.skeleton:has(.skeleton__filter)');
+      return root?.querySelector('.skeleton__filter')?.getBoundingClientRect().top ?? null;
+    }
+    return document.querySelector('main .filter-row')?.getBoundingClientRect().top ?? null;
+  }, waiting);
+
+const adminLink = (page: Page, name: string) =>
+  page
+    .getByRole('navigation', { name: 'Admin', exact: true })
+    .getByRole('link', { name, exact: true })
+    .click();
+
+const listPages: {
+  name: string;
+  admin?: boolean;
+  start: (c: Coven) => string;
+  press: (page: Page) => Promise<void>;
+  arrived: (page: Page) => Promise<void>;
+}[] = [
+  {
+    name: 'the Grimoire',
+    start: (c) => `/coven/${c.slug}/members`,
+    press: (page) =>
+      page
+        .getByRole('navigation', { name: 'Coven' })
+        .getByRole('link', { name: 'Grimoire', exact: true })
+        .click(),
+    arrived: (page) => expect(page.getByRole('list', { name: 'Spells' })).toBeVisible(),
+  },
+  {
+    name: 'the Drafts tab',
+    start: (c) => `/coven/${c.slug}/grimoire`,
+    press: (page) => page.getByRole('link', { name: 'Drafts', exact: true }).click(),
+    arrived: (page) => expect(page.getByRole('list', { name: 'Drafts' })).toBeVisible(),
+  },
+  {
+    name: 'the coven Ingredients list',
+    start: (c) => `/coven/${c.slug}/members`,
+    press: (page) =>
+      page
+        .getByRole('navigation', { name: 'Coven' })
+        .getByRole('link', { name: 'Ingredients', exact: true })
+        .click(),
+    arrived: (page) => expect(page).toHaveURL(/\/ingredients$/),
+  },
+  {
+    name: 'the Compendium',
+    start: (c) => `/coven/${c.slug}/members`,
+    // Under the tablet width the site links sit in the account menu, opened first.
+    press: async (page) => {
+      const link = page.getByRole('link', { name: 'Compendium', exact: true });
+      if (!(await link.isVisible())) {
+        await page.getByRole('button', { name: 'Fixture A', exact: true }).click();
+      }
+      await link.click();
+    },
+    arrived: (page) => expect(page).toHaveURL(/\/compendium$/),
+  },
+  {
+    name: 'the admin Compendium',
+    admin: true,
+    start: () => '/admin/categories',
+    press: (page) => adminLink(page, 'Compendium'),
+    arrived: (page) => expect(page).toHaveURL(/\/admin\/compendium$/),
+  },
+  {
+    name: 'an admin table list',
+    admin: true,
+    start: () => '/admin/compendium',
+    press: (page) => adminLink(page, 'Categories'),
+    arrived: (page) => expect(page).toHaveURL(/\/admin\/categories$/),
+  },
+];
+
+for (const width of [1280, 375]) {
+  for (const list of listPages) {
+    test(`at ${width}px the wait on ${list.name} holds the filter row where the loaded page does`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 900 });
+      await signInAgainAs(page, list.admin ? adminId : coven.users.A);
+      await page.goto(list.start(coven));
+      const server = await holdServerAnswers(page);
+      server.hold();
+      await list.press(page);
+      await expect.poll(server.held).toBeGreaterThan(0);
+      await expect.poll(() => filterRowTop(page, true)).not.toBeNull();
+      await page.evaluate(() => window.scrollTo(0, 0));
+      const waiting = await filterRowTop(page, true);
+      await server.release();
+      await list.arrived(page);
+      await expect.poll(() => filterRowTop(page, false)).not.toBeNull();
+      await page.evaluate(() => window.scrollTo(0, 0));
+      const loaded = await filterRowTop(page, false);
+      // Why the comparison means something: both have a row, and it is not at the very top.
+      expect(loaded!).toBeGreaterThan(0);
+      expect(Math.abs(waiting! - loaded!), `wait ${waiting}, loaded ${loaded}`).toBeLessThanOrEqual(
+        REGION_TOLERANCE,
+      );
+    });
+  }
 }
