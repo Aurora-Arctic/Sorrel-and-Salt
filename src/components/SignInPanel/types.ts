@@ -26,6 +26,11 @@ export interface PasswordFormProps {
   next?: string;
   /** Whether this browser last signed in with a password. */
   lastUsed: boolean;
+  /** The address typed, held by the panel so it survives a trip back to the provider buttons. */
+  email: string;
+  onEmailChange: (email: string) => void;
+  /** Returns to the provider buttons. */
+  onBack: () => void;
   /** Called at each submit, so the panel clears its own error. */
   onStart?: () => void;
 }

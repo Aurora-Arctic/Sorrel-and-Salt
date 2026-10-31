@@ -17,6 +17,10 @@ vi.mock('@/lib/auth-client', async (importOriginal) => ({
   signIn: { social: (...args: unknown[]) => socialMock(...args) },
 }));
 
+vi.mock('next/navigation', async () => ({
+  useSearchParams: (await import('./search-params')).useSearchParams,
+}));
+
 // Each press awaited inside act: the refusal lands in a promise, and the
 // callout is placed in another (claude-docs/components/click-feedback.md).
 const press = (element: Element) =>
