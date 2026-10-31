@@ -253,7 +253,7 @@ describe('AdminCards', () => {
     fireEvent.change(within(dialog()).getByRole('spinbutton', { name: /Number of Sheets/ }), {
       target: { value: '3' },
     });
-    expect(within(dialog()).getByText('3 sheets: 27 cards')).toBeInTheDocument();
+    expect(within(dialog()).getByText('27 cards')).toBeInTheDocument();
     pickFirstOfFebruary();
     expect(mint()).toBeEnabled();
     fireEvent.click(mint());

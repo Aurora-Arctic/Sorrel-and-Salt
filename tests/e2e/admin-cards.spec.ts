@@ -19,7 +19,7 @@ test('an admin mints a sheet of cards and the Invitation Cards tab lists the bat
   await page.getByRole('link', { name: 'Mint Cards' }).click();
   const dialog = page.getByRole('dialog', { name: 'Mint Cards' });
   await dialog.getByRole('spinbutton', { name: 'Number of Sheets' }).fill('1');
-  await expect(dialog.getByText('1 sheet: 9 cards')).toBeVisible();
+  await expect(dialog.getByText('9 cards', { exact: true })).toBeVisible();
   await dialog.getByRole('button', { name: 'Mint Cards' }).click();
   await expect(dialog.getByText(/9 cards on 1 sheet/)).toBeVisible();
 

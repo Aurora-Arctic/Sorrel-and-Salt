@@ -26,12 +26,12 @@ Expires is a UTC day, `2026-10-30`. Minted On, Refused Opens First and Latest an
   `invitationCardAttempts` for that batch and lists the account (its name links to that account's modal on the People page, and its email sits under it; a removed account is "Removed account" with neither), the **Card** ("Sheet 2, Card 5", from the card's `position`; "Unknown" for a card minted before positions were kept), the reason, how many times, and the **First** and **Latest** times (the row's creation and its last refusal),
   twenty at a time with **Show More**. A plain paragraph under the head says "Every card listed here already admits nobody. Further tries are refused and counted here.": the list is a record, and no card in it can be opened or revoked from here.
 - **Mint Cards** (`mint-form.tsx`) is a link to `?mint`, which opens a modal: **Number of Sheets** (1 to
-  55; a Letter sheet holds nine cards) with the total shown as typed ("3 sheets: 27 cards"), and
+  55; a Letter sheet holds nine cards) with the total shown as typed ("27 cards"), and
   **Expires On** (a `DateField` whose earliest day is tomorrow in UTC, sent as midnight UTC; with no `max`
   it ends at the end of next year). Expires On opens on today plus 90 days (`DEFAULT_EXPIRY_DAYS`), a
   calendar day. The submit stays disabled until both are given. The answer carries each token once, and the
   tokens live only in that dialog's state. The sheet hint ("A Letter sheet holds 9 cards.") is the field's hint, so it joins the input's description;
-  only the live total sits below it. After minting, the dialog recaps "27 cards on 3 sheets, batch
+  only the live total sits below it, in the field's `after` slot, directly under the input and beneath any error, with one line reserved. After minting, the dialog recaps "27 cards on 3 sheets, batch
   7c2d0000, expiring 29 January 2027." with **Download PDF** (solid) and **Done** (quiet) in the modal's
   action row, and nothing per card. A warn notice says the PDF is the only copy; once a download has been
   made it becomes a success notice in a polite live region ("Saved as cards-<batch>.pdf. Keep that
