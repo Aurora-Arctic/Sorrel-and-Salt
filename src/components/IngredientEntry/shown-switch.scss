@@ -8,8 +8,10 @@
   $track-width: 2.772rem;
   $track-height: 1.584rem;
   $thumb-size: 1.188rem;
-  $inset: 0.1486rem;
-  $travel: 1.188rem;
+  // Centres the thumb in the track both ways, so the gap is the same at either end and the thumb
+  // travels the track's width less itself and two insets.
+  $inset: calc((#{$track-height} - #{$thumb-size}) / 2);
+  $travel: calc(#{$track-width} - #{$thumb-size} - 2 * #{$inset});
   // One duration and easing for the track, the thumb and the eye, so they arrive together.
   $slide: 260ms cubic-bezier(0.3, 0.7, 0.3, 1);
   // The open and shut lids of the Quick Look eye's 16-unit grid; the markup carries the same shapes
