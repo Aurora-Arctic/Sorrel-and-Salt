@@ -318,4 +318,6 @@ export interface ShownToggleProps {
   onChange?: (next: boolean) => void;
   name: string;
   label?: string;
+  /** The switch's name where there is no visible label; left out, "Shown in Compendium: <name>". */
+  accessibleName?: string;
 }

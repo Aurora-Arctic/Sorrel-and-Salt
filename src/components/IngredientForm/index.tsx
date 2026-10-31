@@ -1144,7 +1144,7 @@ const IngredientForm = ({
                           shown={shownNow}
                           onChange={setShownChoice}
                           name={entry?.values.name ?? ''}
-                          label="Shown in Compendium"
+                          accessibleName="Shown in Compendium"
                         />
                       }
                     />

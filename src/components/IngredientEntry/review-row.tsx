@@ -19,7 +19,7 @@ export interface ReviewRowProps {
   onChange: (next: boolean) => void;
   /** A change is in flight: the switch is `aria-busy` and a spinner takes the thumb's place. */
   busy?: boolean;
-  /** Drawn at the end of the row, before the Reviewed switch: the form's Shown in Compendium switch. */
+  /** Drawn at the end of the row, after the Reviewed switch: the form's Shown in Compendium switch. */
   alongside?: ReactNode;
   /** Drawn under the row, such as a refusal. */
   children?: ReactNode;
@@ -52,7 +52,6 @@ export default function ReviewRow({
           )}
         </span>
         <span className="review-row__switches">
-          {alongside}
           <span className="review-mark">
             <SwitchField
               label="Reviewed"
@@ -63,6 +62,7 @@ export default function ReviewRow({
               busy={busy}
             />
           </span>
+          {alongside}
         </span>
       </div>
       {children}

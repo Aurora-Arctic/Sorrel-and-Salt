@@ -38,6 +38,7 @@ export default function ShownToggle({
   onChange,
   name,
   label,
+  accessibleName,
 }: ShownToggleProps): ReactElement {
   const { refresh } = usePendingNavigation();
   const announce = useAnnounce();
@@ -100,7 +101,7 @@ export default function ShownToggle({
               type="checkbox"
               role="switch"
               checked={on}
-              aria-label={label ? undefined : `Shown in Compendium: ${name}`}
+              aria-label={label ? undefined : (accessibleName ?? `Shown in Compendium: ${name}`)}
               aria-busy={busy}
               onChange={(event) => void change(event.target.checked)}
             />
