@@ -25,14 +25,18 @@ Expires is a UTC day, `2026-10-30`. Minted On, Refused Opens First and Latest an
   and combined, every field optional. Six fields is more than three, so only the **Batch** search stays in the row and
   the rest sit in the [`FacetShell`](facet-panel.md) Filters drawer beside it, which counts them as Filters (n). **Batch**
   matches the start of the batch number (the batch id's first block, hex and case-folded, with `%` and `_` taken
-  literally) and applies from the magnifier or Enter. In the drawer, **Status** is a choice chip (Any, Live, Revoked,
-  Expired or Used up), and **Minted From**, **Minted To**, **Expires From** and **Expires To** are `DateField`s, UTC days
-  and inclusive at both ends (`mintedFrom=2026-10-01&mintedTo=2026-10-31` holds the 1st and the 31st). The drawer holds
+  literally) and applies from the magnifier or Enter. The drawer holds one line, which stacks below the tablet width:
+  **Status**, a select-only `ComboboxSelect` (Any, Live, Revoked, Expired or Used Up; the options are labels, so title
+  case, while the table's cells keep sentence case), then **Minted** and **Expires**, each a
+  [`DateRangeField`](date-range-field.md) with quick picks (Minted: Today, Last 7 Days, Last 30 Days, This Month, Last
+  Month; Expires: Today, Next 7 Days, Next 30 Days, This Month, Next Month). Days are UTC days and inclusive at both
+  ends (`mintedFrom=2026-10-01&mintedTo=2026-10-31` holds the 1st and the 31st). The Filters count counts the status
+  and each end of a range given, so a full range counts two. The drawer holds
   what is picked in it until Apply Filters, which applies it with the batch typed, or until it shuts another way,
   which applies it under the batch shown when something changed. The URL names are `batch`, `status` (`live`,
-  `revoked`, `expired`, `used-up`), `mintedFrom`, `mintedTo`, `expiresFrom` and `expiresTo`. A `DateField` has no
-  name, so each day is also sent by a hidden input and the form works as a GET before hydration. A day has no clear of
-  its own. While the URL holds only a batch the row's Clear empties it; once a drawer field is in use the drawer's
+  `revoked`, `expired`, `used-up`), `mintedFrom`, `mintedTo`, `expiresFrom` and `expiresTo`. Neither the select nor a
+  range field has a form name, so the status is sent by one hidden input and each range by two, and the form works as
+  a GET before hydration. A range has its own clear, which empties both its ends. While the URL holds only a batch the row's Clear empties it; once a drawer field is in use the drawer's
   Clear All takes Clear's place and empties every field, so one clear control shows at a time. `invitationCardBatches` takes the same arguments and filters in SQL, status included
   (`batchStatusIs` in `db/repository/invitations.ts` mirrors `batchStatus()`), then pages through `findPage`. A value
   the page cannot read (an unknown status, a day that is not a day) is dropped; the service rejects one sent directly.
