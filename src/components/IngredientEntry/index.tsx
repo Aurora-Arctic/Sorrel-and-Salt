@@ -353,7 +353,7 @@ const IngredientEntry = ({
           </div>
         )}
         {hiddenFromPublic && (
-          <Notice kind="plain" block>
+          <Notice kind="warn" quiet block>
             Hidden in the Compendium. Only curators and admins can see this page.
           </Notice>
         )}
