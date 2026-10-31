@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { test, expect } from '../fixtures';
-import { decodePdfLinks, defaultExpiry } from '../cards';
+import { decodePdfLinks, defaultExpiryDay } from '../cards';
 import { recreateE2eDatabase } from '../database';
 import { signInAgainAs, signInAs } from '../session';
 
@@ -48,7 +48,7 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
         .filter({ has: page.getByRole('button', { name: /^Revoke Batch / }) });
       await expect(batch).toHaveCount(1);
       // The day on screen is the day printed on the card: UTC, en-GB.
-      await expect(batch).toContainText(defaultExpiry());
+      await expect(batch).toContainText(defaultExpiryDay());
 
       const printed = await decodePdfLinks(page, path);
       expect(printed, 'the nine codes on the sheet decode').toHaveLength(9);

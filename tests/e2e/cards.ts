@@ -13,6 +13,13 @@ export function defaultExpiry(now = new Date()): string {
   });
 }
 
+/** The same day as `defaultExpiry`, as the batch table's Expires column prints it: "2027-01-28". */
+export function defaultExpiryDay(now = new Date()): string {
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 90))
+    .toISOString()
+    .slice(0, 10);
+}
+
 /**
  * Reads every code on the PDF's first page as a phone camera sees it: the page drawn by pdf.js in the browser, then
  * decoded with jsQR, blanking each code found so the next can be read. The two libraries are served from node_modules
