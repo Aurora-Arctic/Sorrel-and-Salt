@@ -64,7 +64,7 @@ test.describe('Story 89: Ask for Help and Read the Reply', { tag: '@story-89' },
     await test.step('the asker reads the reply on their own list', async () => {
       await page.goto('/account/support');
       const entry = page.getByRole('listitem').filter({ hasText: 'Where is the moon table?' });
-      await expect(entry.getByText('Open')).toBeVisible();
+      await expect(entry.getByText('Replied')).toBeVisible();
       await entry.getByRole('link', { name: 'Where is the moon table?' }).click();
       const request = page.getByRole('dialog', { name: 'Where is the moon table?' });
       await expect(page).toHaveURL(/\/account\/support\?request=/);
@@ -72,8 +72,7 @@ test.describe('Story 89: Ask for Help and Read the Reply', { tag: '@story-89' },
       await expect(thread).toContainText('It lives under Ingredients, then Tables.');
       await expect(thread).toContainText('You');
       await expect(thread).toContainText('Staff');
-      await expect(request.getByLabel('Your Reply')).toBeDisabled();
-      await expect(request.getByRole('button', { name: 'Reply', exact: true })).toBeDisabled();
+      await expect(request.getByLabel('Your Reply')).toBeEnabled();
       await assertNoAccessibilityViolations(page);
       await request.getByRole('button', { name: 'Close', exact: true }).click();
       await expect(request).toBeHidden();

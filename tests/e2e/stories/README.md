@@ -72,6 +72,7 @@ Going green is `test.fixme` → `test` and deleting the annotation.
 | `88-invitation-cards.spec.ts`             | 88           | M15.20                                    |
 | `89-support-request.spec.ts`              | 89           | M15.29                                    |
 | `90-admin-support.spec.ts`                | 90           | M15.30                                    |
+| `91-sender-thread.spec.ts`                | 91           | M15.43                                    |
 
 In `06-grimoire.spec.ts`, each story waits on: 47 M10.12, 48 M10.14, 49 M10.15, 50 M10.15, 51 M10.16, 52 M10.17, 53 M10.18, 54 M10.19, 55 M10.20, 56 M10.11, 57 M10.15, 77 M10.15, 79 M13.8, 80 M13.3, 83 M13.21, 84 M13.22.
 
