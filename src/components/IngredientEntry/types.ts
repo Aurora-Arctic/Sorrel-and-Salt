@@ -47,6 +47,8 @@ export interface IngredientEntryEdit {
 export type LinkedIngredient = Pick<IngredientRow, 'id' | 'slug' | 'workspaceId'>;
 
 export interface IngredientEntryProps {
+  /** Set on the public entry page when a curator or admin is reading an entry hidden from the compendium: a notice under the heading says so. */
+  hiddenFromPublic?: boolean;
   /** The Reviewed switch as the last row of the page's head, built for a curator or admin from the uncached review read; it saves on flip. */
   reviewControl?: ReactNode;
   /** Who last edited the entry in this coven and when, from `lastEditsOf`; none draws no line. */
@@ -307,4 +309,19 @@ export interface SummaryJar {
 export interface ReviewMarkProps {
   ingredientId: string;
   reviewedAt: string | null;
+  /** Drawn beside the Reviewed switch at the row's end: the Shown in Compendium switch. */
+  alongside?: ReactNode;
+}
+
+/** The shown-in-the-compendium switch on an entry (`shown-toggle.tsx`): the entry, whether the public compendium lists it now, its name for the switch's name, and a visible label where the switch has room for one. */
+export interface ShownToggleProps {
+  /** The entry whose flag the switch writes; left out where the switch is a field of a form, which saves it. */
+  ingredientId?: string;
+  shown: boolean;
+  /** Given where the switch is a form field: a flip reports here and writes nothing, and `shown` is the form's own value. */
+  onChange?: (next: boolean) => void;
+  name: string;
+  label?: string;
+  /** The switch's name where there is no visible label; left out, "Shown in Compendium: <name>". */
+  accessibleName?: string;
 }

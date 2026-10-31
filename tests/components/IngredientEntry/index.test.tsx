@@ -104,6 +104,7 @@ function entryRow(overrides: Partial<IngredientRow> = {}): IngredientRow {
     seedKey: null,
     revision: 1,
     seedContentHash: null,
+    shown: true,
     ...STAMPS,
     ...overrides,
   };

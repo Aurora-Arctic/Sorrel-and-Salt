@@ -1,5 +1,6 @@
 import 'server-only';
 import { resolveCompendiumSlug } from '@/modules/ingredients';
+import type { Session } from '@/lib/session';
 import { entryValues } from '@/app/entry-values';
 
 // What a compendium list's `?edit=` names, read once for the two lists that open the compendium's
@@ -9,8 +10,8 @@ import { entryValues } from '@/app/entry-values';
  * What `?edit=` names: the entry, its form values, or the address it moved to. A slug naming
  * nothing throws `NotFound`, which `readEditPlace` turns into a notice.
  */
-export const readCompendiumEntry = async (slug: string) => {
-  const address = await resolveCompendiumSlug(slug);
+export const readCompendiumEntry = async (slug: string, session: Session) => {
+  const address = await resolveCompendiumSlug(slug, session);
   if (address.kind === 'moved') return address;
   return {
     kind: 'entry' as const,

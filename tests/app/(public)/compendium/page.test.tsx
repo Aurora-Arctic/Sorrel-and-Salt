@@ -52,8 +52,11 @@ vi.mock('@/lib/request-session', () => ({ getSession }));
 const covensHoldingEntry = vi.fn();
 // The review switch's read, per viewer, made for a curator or admin only.
 const readCompendiumReview = vi.fn();
+// The curator's read of the row itself, for the form's shown switch.
+const getIngredient = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
   readCompendiumReview,
+  getIngredient,
   resolveCompendiumSlug,
   covensHoldingEntry,
   heldCompendiumEntryIdsIn: async () => new Map<string, ReadonlySet<string>>(),
@@ -160,6 +163,8 @@ beforeEach(() => {
   covensHoldingEntry.mockResolvedValue([]);
   readCompendiumReview.mockReset();
   readCompendiumReview.mockResolvedValue(null);
+  getIngredient.mockReset();
+  getIngredient.mockResolvedValue({ shown: true });
 });
 
 describe('the public compendium page', () => {
@@ -317,7 +322,7 @@ describe('the public compendium page, for a curator', () => {
     viewerIfSignedIn.mockResolvedValue(curator());
     await renderPage({ ...SEARCH, edit: NODE.slug });
 
-    expect(resolveCompendiumSlug).toHaveBeenCalledWith(NODE.slug);
+    expect(resolveCompendiumSlug).toHaveBeenCalledWith(NODE.slug, expect.anything());
     expect(entryValues).toHaveBeenCalledWith(expect.objectContaining({ id: NODE.id }), null);
     expect(within(dialog()!).getByRole('form', { name: 'Fixture Form' })).toBeInTheDocument();
     // The search beneath is the one asked for.

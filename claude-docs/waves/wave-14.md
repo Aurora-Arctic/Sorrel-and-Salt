@@ -30,6 +30,8 @@
 
 **M14.34 and M14.35 joined on 2026-10-30**, the owner's call: a compendium entry with no sourced magical use is kept but not shown. M14.34 adds the hidden flag's column, and M14.35 the behaviour: the seed starts an entry with no categories hidden, a curator shows or hides any entry by hand from the admin screens, and every public surface filters hidden rows in SQL. They sit **after M14.33 and ahead of M14.13**, so the review queue sees the hidden count from the start ([`tasks/m14.md`](../tasks/m14.md)).
 
+**M14.38 joined on 2026-10-31**, the owner's call: once M14.35 counts a form's categories toward showing an entry, search has to settle how it shows and filters on them. It is a discussion that ends in a design decision, and sits **right after M14.35** ([`tasks/m14.md`](../tasks/m14.md)).
+
 **M14.26 joined on 2026-10-24**, the owner's call: a workflow started by hand runs the reference seeds on the environment chosen, as a dry run unless that is turned off, with an option to force the compendium update past refusals 1 to 4. It sits **after M14.14 and ahead of M14.22**.
 
 **M14.27 joined on 2026-10-27**, the owner's call, from the second test-bloat audit ([`design-decisions/m14.27-test-audit.md`](../design-decisions/m14.27-test-audit.md)): the test suites are cut back to one proof per requirement at the owning layer, the five files over the 10 s budget are split or re-set-up, the timeouts are fixed at their cause, and the one Vitest CI job becomes three project jobs with a coverage-merge job as the required check. It sits **first among the wave's unstarted items**, because every pull request pays the gate's time, and nothing in the wave depends on it ([`tasks/m14.md`](../tasks/m14.md)).

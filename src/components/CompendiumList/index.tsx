@@ -3,6 +3,7 @@ import { PendingLink } from '../../lib/navigation';
 import { ingredientLinkTarget } from '../AppShell/site-target';
 import DetailsLink from '../IngredientEntry/details-link';
 import { EditLink } from '../IconTip';
+import ShownToggle from '../IngredientEntry/shown-toggle';
 import { cardName } from '../IngredientCard/card-name';
 import { LinkIconHint } from '../LinkHint';
 import { Fragment, type ReactElement, type ReactNode } from 'react';
@@ -110,7 +111,10 @@ const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
     className: 'compendium-list__edit',
     headingClassName: 'compendium-list__edit',
     cell: (entry) => (
-      <EditLink href={entry.editHref} heading={entry.editHeading} name={nameOf(entry)} />
+      <>
+        <EditLink href={entry.editHref} heading={entry.editHeading} name={nameOf(entry)} />
+        <ShownToggle ingredientId={entry.id} shown={entry.shown} name={nameOf(entry)} />
+      </>
     ),
   },
 ];
@@ -159,6 +163,7 @@ export function emptyText(
     toxic,
     withoutReferences,
     withoutForms,
+    hidden,
     elements,
     categories,
     categoryMode,
@@ -202,6 +207,7 @@ export function emptyText(
     toxicLabel && <>the toxic setting {value(toxicLabel)}</>,
     withoutReferences && value('No Refs'),
     withoutForms && value('No Form'),
+    hidden && value('Hidden'),
     elements.length > 0 && (
       <>
         the {elements.length === 1 ? 'element' : 'elements'}{' '}

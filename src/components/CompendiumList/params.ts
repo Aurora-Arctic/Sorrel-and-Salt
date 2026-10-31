@@ -44,6 +44,15 @@ export const COMPENDIUM_PARAMS = defineSearchParams({
     write: (on: boolean) => (on ? '1' : undefined),
     toVariable: (on) => on || undefined,
   }),
+  // Only the hidden entries, `?hidden=1`; the admin list otherwise shows hidden and shown together.
+  // The compendium read takes it as its `listing` and refuses it to anyone but a curator.
+  hidden: searchParam({
+    name: 'hidden',
+    variable: 'listing',
+    read: (raw) => single(raw) === '1',
+    write: (on: boolean) => (on ? '1' : undefined),
+    toVariable: (on) => (on ? ('hidden' as const) : undefined),
+  }),
   // Entries with no live form, `?withoutForms=1`, as withoutReferences is written.
   // Only the admin list offers it.
   withoutForms: searchParam({

@@ -24,7 +24,11 @@ export const SetCompendiumEntryReviewedDocument = graphql(`
   }
 `);
 
-export default function ReviewMark({ ingredientId, reviewedAt }: ReviewMarkProps): ReactElement {
+export default function ReviewMark({
+  ingredientId,
+  reviewedAt,
+  alongside,
+}: ReviewMarkProps): ReactElement {
   const { refresh, pending } = usePendingNavigation();
   const announce = useAnnounce();
   // The switch's state from the flip until the page is read again and brings its own: kept past the
@@ -70,6 +74,7 @@ export default function ReviewMark({ ingredientId, reviewedAt }: ReviewMarkProps
       reviewedAt={reviewedAt}
       checked={reviewed}
       busy={waiting}
+      alongside={alongside}
       onChange={(next) => void change(next)}
     >
       {refusal && <Notice kind="error">{refusal}</Notice>}

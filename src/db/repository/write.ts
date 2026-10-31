@@ -151,6 +151,8 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
           : { curatorReviewedAt: null, curatorReviewedBy: null },
         inCompendiumById(ingredients, id),
       ),
+    setShownInCompendium: (_curator, id, shown) =>
+      update(ingredients, { shown }, inCompendiumById(ingredients, id)),
     touchByIdInCompendium: (_curator, table, id) =>
       touch(table, inCompendiumById(table, id)) as never,
     touchByIdInWorkspace: (membership, table, id) =>

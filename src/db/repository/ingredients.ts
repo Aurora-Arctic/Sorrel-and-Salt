@@ -441,7 +441,10 @@ export async function findIngredientSuggestions(
       )
     ).map(({ node }) => node.id);
   const ids = (
-    await Promise.all([top(yours), top(and(inCompendium(ingredients), not(held)) as SQL)])
+    await Promise.all([
+      top(yours),
+      top(and(inCompendium(ingredients), eq(ingredients.shown, true), not(held)) as SQL),
+    ])
   ).flat();
   if (ids.length === 0) return [];
   return findPageInTiers(
@@ -622,6 +625,8 @@ export function compendiumList(
       filter.withoutForms ? hasNoForm() : undefined,
       filter.nomenclature ? eq(ingredients.nomenclature, filter.nomenclature) : undefined,
       reviewArm(filter.reviewed),
+      // A coven's read keeps a hidden entry it names.
+      cupboardOf ? undefined : listingArm(filter.listing),
       filter.heldIn?.length ? heldInAnyOf(filter.heldIn) : undefined,
       filter.notHeldIn?.length ? heldInNoneOf(filter.notHeldIn) : undefined,
     ),
@@ -942,6 +947,12 @@ export function toxicArm(toxic: IngredientFilter['toxic']): SQL | undefined {
     ),
   ) as SQL;
   return toxic === 'toxic' ? flagged : not(flagged);
+}
+
+/** The shown flag: the shown entries unless the filter asks for the hidden ones or both. */
+export function listingArm(listing: IngredientFilter['listing']): SQL | undefined {
+  if (listing === 'all') return undefined;
+  return eq(ingredients.shown, listing !== 'hidden');
 }
 
 /**

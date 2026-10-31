@@ -36,6 +36,7 @@ const CompendiumFacetCountsDocument = graphql(`
     $celestialBodies: [String!]
     $toxic: ToxicFilter
     $reviewed: Boolean
+    $listing: CompendiumListing
     $covenIds: [ID!]
     $covensNot: Boolean
   ) {
@@ -52,6 +53,7 @@ const CompendiumFacetCountsDocument = graphql(`
       celestialBodies: $celestialBodies
       toxic: $toxic
       reviewed: $reviewed
+      listing: $listing
       covenIds: $covenIds
       covensNot: $covensNot
     ) {
@@ -169,12 +171,18 @@ const CovenFacetCountsDocument = graphql(`
  * undefined until the first answer, and after a failed ask: the caller keeps the counts the
  * page drew. Never throws, since a count that cannot be read is not worth an error page.
  */
+/** The admin's variables with hidden entries counted in unless the Hidden switch narrows to them; anyone else's are left as they are. */
+function withListing<T extends { listing?: string }>(variables: T, admin: boolean): T {
+  return admin ? { ...variables, listing: variables.listing ?? 'all' } : variables;
+}
+
 export function useLiveFacets({
   held,
   enabled,
   categories,
   vocabulary,
   workspaceId,
+  admin = false,
 }: {
   held: CompendiumListFilterProps['filter'];
   enabled: boolean;
@@ -182,6 +190,8 @@ export function useLiveFacets({
   vocabulary: CompendiumFacetVocabulary;
   /** A coven's id: given, the counts are the coven cupboard's and carry its Source and stock counts. */
   workspaceId?: string;
+  /** The admin list: hidden entries are counted in, as the list shows them. */
+  admin?: boolean;
 }): { facets: CompendiumFacetCounts | undefined; loading: boolean } {
   const lookups = {
     categories: new Map(categories.map(({ slug, id }) => [slug, id])),
@@ -189,7 +199,10 @@ export function useLiveFacets({
   };
   const variables = JSON.stringify(
     workspaceId === undefined
-      ? COMPENDIUM_PARAMS.variables({ reviewed: '', ...held }, lookups)
+      ? withListing(
+          COMPENDIUM_PARAMS.variables({ reviewed: '', hidden: false, ...held }, lookups),
+          admin,
+        )
       : {
           // The coven table needs the three choices only a coven has; a panel that left them out
           // holds none.

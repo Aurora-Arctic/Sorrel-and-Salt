@@ -26,7 +26,11 @@ import PageHeader from '../../../components/PageHeader';
 import ReviewMark from '../../../components/IngredientEntry/review-mark';
 import { getSession } from '../../../lib/request-session';
 import { viewerIfSignedIn } from '../../../lib/viewer';
-import { heldCompendiumEntryIdsIn, readCompendiumReview } from '../../../modules/ingredients';
+import {
+  getIngredient,
+  heldCompendiumEntryIdsIn,
+  readCompendiumReview,
+} from '../../../modules/ingredients';
 import { covensHolding, plusCovensOf } from '../../plus-covens';
 import CompendiumDialog from '../../(shell)/admin/compendium/compendium-dialog';
 import { readEntryStock, stockKey } from '../../entry-stock';
@@ -53,7 +57,13 @@ import type { PublicCompendiumPageProps, PublicCompendiumSearchParams } from './
 
 /** The address as the table reads it: with the curators' own filter taken out. */
 const publicParams = (params: PublicCompendiumSearchParams): PublicCompendiumSearchParams => {
-  const { withoutReferences: _refs, withoutForms: _forms, reviewed: _reviewed, ...rest } = params;
+  const {
+    withoutReferences: _refs,
+    withoutForms: _forms,
+    reviewed: _reviewed,
+    hidden: _hidden,
+    ...rest
+  } = params;
   return rest;
 };
 
@@ -117,8 +127,11 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
   ]);
   // After the viewer, so an address with `?edit=` reads nothing for anyone who cannot curate.
   const canEdit = viewer?.viewer.canCurate === true;
-  const { edited, missing } = canEdit
-    ? await readEditPlace({ adding: false, editSlug: single(params.edit) }, readCompendiumEntry)
+  const editor = canEdit ? await getSession() : null;
+  const { edited, missing } = editor
+    ? await readEditPlace({ adding: false, editSlug: single(params.edit) }, (slug) =>
+        readCompendiumEntry(slug, editor),
+      )
     : { edited: undefined, missing: false };
   // The search as it stands, no modal over it: where the details close to, and what each
   // card's Edit and Quick Look open over.
@@ -143,7 +156,9 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
     if (!curator) return undefined;
     try {
       const review = await readCompendiumReview(curator, id);
-      return { reviewedAt: review?.reviewedAt.toISOString() ?? null };
+      // A curator reads a hidden entry too, so the form's shown switch starts from the row's own flag.
+      const row = await getIngredient(curator, id);
+      return { reviewedAt: review?.reviewedAt.toISOString() ?? null, shown: row.shown };
     } catch (error) {
       if (error instanceof Forbidden || error instanceof NotFound) return undefined;
       throw error;
@@ -332,6 +347,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
                 review: {
                   reviewed: editReview.reviewedAt !== null,
                   reviewedAt: editReview.reviewedAt,
+                  shown: editReview.shown,
                 },
               }),
             }

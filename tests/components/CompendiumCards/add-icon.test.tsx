@@ -54,6 +54,7 @@ const props = (
     forms: [],
     withoutReferences: false,
     withoutForms: false,
+    hidden: false,
     elements: [],
     categories: [],
     categoryMode: 'all',

@@ -10,9 +10,10 @@ the host equivalent. **There is no Python in the devcontainer** either: neither
 `python3` nor `python` exists, so quick scripting, JSON munging or arithmetic
 goes through Node (`node -e`), the npm scripts, or `jq`, `grep` and `sed`.
 
-**Verify with `test:coverage`, not `test`.** A plain `npm run test` pass can
-still fail CI on the 80% threshold (lines, branches, functions, statements)
-alone.
+**While working, run the individual test files and specs a change touches.**
+The full suites run only when the owner says so. When they do, run
+`test:coverage`, not `test`: a plain `npm run test` pass can still fail CI on
+the 80% threshold (lines, branches, functions, statements) alone.
 
 **`npm run test` and `npm run test:coverage` take the Vitest lock themselves.**
 Each runs under `flock /tmp/sorrel-vitest.lock`, so two runs from different

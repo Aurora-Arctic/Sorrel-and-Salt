@@ -23,6 +23,8 @@ import type {
   DeleteCompendiumIngredientMutationVariables,
   SetCompendiumEntryReviewedMutation,
   SetCompendiumEntryReviewedMutationVariables,
+  SetCompendiumEntryShownMutation,
+  SetCompendiumEntryShownMutationVariables,
 } from '@/gql/graphql';
 import { DEBOUNCE_MS } from '@/lib/debounce';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
@@ -57,6 +59,10 @@ import {
 // The form on the compendium, and only what the mode changes: written with no coven, so every lookup asks with a null `workspaceId`, the vocabulary boxes are picked from the curated rows,
 // a substitute is picked from the compendium, the classification is required, and an entry given to it is edited, saved over and deleted.
 // A pick-only list box on its own is list-field.test.tsx's, and what the form does in either mode is index.test.tsx's (claude-docs/components/ingredient-form.md, "Testing").
+
+const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
+// The Reviewed and Shown switches read the router to refresh the page after a save.
+vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 const OTHER_ID = '9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d';
 const CATEGORY_ID = 'c4a8e2f1-7b3d-4c9e-a6f5-1d2e3f4a5b6c';
@@ -507,6 +513,122 @@ describe('IngredientForm on the compendium', () => {
         await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
         expect(screen.queryByRole('button', { name: 'Discard Changes' })).not.toBeInTheDocument();
         expect(review).toHaveLength(1);
+      });
+    });
+
+    // Shown in Compendium is a field of the form after Reviewed: a flip changes the form and writes
+    // nothing, and Save sends it in the entry's own create or update. An add starts from its categories
+    // until the curator flips it.
+    describe('the Shown in Compendium switch', () => {
+      const shownSwitch = () => screen.getByRole('switch', { name: 'Shown in Compendium' });
+
+      function refuseAnyShownWrite() {
+        const calls: SetCompendiumEntryShownMutationVariables[] = [];
+        mockGraphQLMutation<
+          SetCompendiumEntryShownMutation,
+          SetCompendiumEntryShownMutationVariables
+        >('SetCompendiumEntryShown', (variables) => {
+          calls.push(variables);
+          return { setCompendiumEntryShown: { id: String(variables.id) } };
+        });
+        return calls;
+      }
+
+      it('starts from the entry on an edit', () => {
+        renderForm({
+          entry: { id: ENTRY_ID, values: TESTWORT },
+          review: { reviewed: false, shown: false },
+        });
+        expect(shownSwitch()).not.toBeChecked();
+        cleanup();
+
+        renderForm({
+          entry: { id: ENTRY_ID, values: TESTWORT },
+          review: { reviewed: false, shown: true },
+        });
+        expect(shownSwitch()).toBeChecked();
+      });
+
+      it('starts hidden on an add with no categories', () => {
+        renderForm({ review: { reviewed: false } });
+        expect(shownSwitch()).not.toBeChecked();
+      });
+
+      it('changes the form when flipped and writes nothing until Save', async () => {
+        const separate = refuseAnyShownWrite();
+        const saves = acceptUpdate();
+        renderForm({
+          entry: { id: ENTRY_ID, values: TESTWORT },
+          review: { reviewed: false, shown: true },
+        });
+        expect(button('Save Ingredient')).toBeDisabled();
+
+        fireEvent.click(shownSwitch());
+
+        expect(shownSwitch()).not.toBeChecked();
+        expect(button('Save Ingredient')).toBeEnabled();
+        await act(async () => {});
+        expect(separate).toHaveLength(0);
+        expect(saves).toHaveLength(0);
+      });
+
+      it('is sent in the update itself, with no second request', async () => {
+        const separate = refuseAnyShownWrite();
+        const saves = acceptUpdate();
+        renderForm({
+          entry: { id: ENTRY_ID, values: TESTWORT },
+          review: { reviewed: false, shown: true },
+        });
+
+        fireEvent.click(shownSwitch());
+        press('Save Ingredient');
+
+        await waitFor(() => expect(saves).toHaveLength(1));
+        expect(saves[0].input).toMatchObject({ shown: false });
+        expect(separate).toHaveLength(0);
+        await waitFor(() => expect(button('Save Ingredient')).toBeDisabled());
+      });
+
+      it('is sent unchanged with an update that did not touch it', async () => {
+        const saves = acceptUpdate();
+        const { onSaved } = renderForm({
+          entry: { id: ENTRY_ID, values: TESTWORT },
+          review: { reviewed: false, shown: false },
+        });
+
+        type('Name', 'Mockwort');
+        press('Save Ingredient');
+
+        await waitFor(() => expect(onSaved).toHaveBeenCalled());
+        expect(saves[0].input).toMatchObject({ shown: false });
+      });
+
+      it("is sent in the create of an add, the curator's flip winning over the categories rule", async () => {
+        const separate = refuseAnyShownWrite();
+        const creates = acceptCompendiumCreate();
+        renderForm({ review: { reviewed: false } });
+
+        type('Name', 'Testwort');
+        choose('Classification', 'None');
+        fireEvent.click(shownSwitch());
+        expect(shownSwitch()).toBeChecked();
+        press('Save Ingredient');
+
+        await waitFor(() => expect(creates).toHaveLength(1));
+        expect(creates[0].input).toMatchObject({ shown: true });
+        expect(separate).toHaveLength(0);
+      });
+
+      it('is sent hidden in the create of an add left as its categories put it', async () => {
+        const creates = acceptCompendiumCreate();
+        renderForm({ review: { reviewed: false } });
+
+        type('Name', 'Testwort');
+        choose('Classification', 'None');
+        press('Save Ingredient');
+
+        await waitFor(() => expect(creates).toHaveLength(1));
+        expect(creates[0].input).toMatchObject({ shown: false });
       });
     });
 

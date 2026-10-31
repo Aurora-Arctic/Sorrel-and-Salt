@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { RowId, optionalText } from '../../../lib/validation';
 import {
   CATEGORY_MODES,
+  COMPENDIUM_LISTINGS,
   INGREDIENT_ELEMENTS,
   INGREDIENT_SOURCES,
   NOMENCLATURE_KINDS,
@@ -87,6 +88,12 @@ export const CompendiumFilter = z.object({
     .boolean()
     .nullish()
     .transform((reviewed) => reviewed ?? undefined),
+  // Which entries a curator's list reads: shown (the default, and the public's only view), hidden or all. The service refuses any other
+  // setting without a curator's session, so the coven list never picks it.
+  listing: z
+    .enum(COMPENDIUM_LISTINGS)
+    .nullish()
+    .transform((listing) => listing ?? 'shown'),
   // How the entries are classified; `unknown` is the formal names still to look up.
   nomenclature: z
     .enum(NOMENCLATURE_KINDS)

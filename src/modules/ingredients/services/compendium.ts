@@ -18,7 +18,7 @@ import { ingredientSlug } from '../../../lib/slugify';
 import { addressTaken } from '../../../lib/text';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { RowId, parseInput } from '../../../lib/validation';
-import { compendiumFilterFor } from './compendium-filter';
+import { compendiumFilterFor, seesReview } from './compendium-filter';
 import { heldCompendiumEntry } from './cupboard-entries';
 import { ingredientDetailOf } from './ingredient-detail';
 import { ingredients } from '../schema/ingredients';
@@ -116,7 +116,8 @@ export async function getIngredient(
 
   // An id that is not a uuid names nothing and would be a driver error at the comparison.
   const row = RowId.safeParse(id).success ? await findOneIngredient(memberships, id) : undefined;
-  if (row) return row;
+  // A hidden compendium entry is a curator's to read; a coven that holds it still has it through its cupboard below.
+  if (row && (row.workspaceId !== null || row.shown || seesReview(session))) return row;
   const [membership] = memberships;
   const held = membership && (await heldCompendiumEntry(membership, id));
   if (!held) throw new NotFound('No such ingredient');
@@ -144,7 +145,10 @@ export async function createCompendiumEntry(
   const curated = await inCuratedValues(input, parsed, picked, []);
   const { fields } = curated;
 
-  const columns = ingredientColumns(fields);
+  const columns = {
+    ...ingredientColumns(fields),
+    ...(input.shown != null && { shown: input.shown }),
+  };
   const { slug } = columns;
   const at = new Date();
   await refuseEndingARedirect(slug, at, input.endRedirect);
@@ -190,7 +194,10 @@ export async function updateCompendiumEntry(
   const current = await findOneIngredient([], id);
   if (!current) throw new NotFound('No such compendium entry');
 
-  const columns = ingredientColumns(fields);
+  const columns = {
+    ...ingredientColumns(fields),
+    ...(input.shown != null && { shown: input.shown }),
+  };
   const { slug } = columns;
   const at = new Date();
   const moves = slug !== current.slug;
@@ -297,6 +304,28 @@ export async function setCompendiumEntryReviewed(
 }
 
 /**
+ * Hides a compendium entry from the public compendium, or shows it again. Admin screens, the audit queue and a coven's cupboard still see a hidden entry.
+ *
+ * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {NotFound} no live compendium entry has this id.
+ */
+export async function setCompendiumEntryShown(
+  session: Session,
+  id: string,
+  shown: boolean,
+): Promise<IngredientRow> {
+  const curator = assertCurator(session);
+  if (!RowId.safeParse(id).success) throw new NotFound('No such compendium entry');
+  const written = await withAudit(session, async (write) => {
+    const [row] = await write.setShownInCompendium(curator, id, shown);
+    if (!row) throw new NotFound('No such compendium entry');
+    return row;
+  });
+  expireCompendium();
+  return written;
+}
+
+/**
  * When a curator last marked a compendium entry reviewed, `null` while it needs review; uncached.
  *
  * @throws {Forbidden} the caller is neither a curator nor an admin.
@@ -313,19 +342,24 @@ export async function readCompendiumReview(
 }
 
 /**
- * The public route's one read of an address, taking no session: the live entry holding `slug`, or the current slug of
+ * The public route's one read of an address, taking no session unless a curator's: the live entry holding `slug`, or the current slug of
  * the entry whose redirect from `slug` is still running, for a 308.
  *
  * @throws {NotFound} nothing is at `slug` and nothing redirects from it.
  */
-export async function resolveCompendiumSlug(slug: string): Promise<CompendiumAddress> {
+export async function resolveCompendiumSlug(
+  slug: string,
+  viewer?: Session | null,
+): Promise<CompendiumAddress> {
   const at = new Date();
-  const entry = await findCompendiumEntryBySlug(slug);
+  // Only a curator's read reaches a hidden entry; the public route passes no viewer.
+  const reach = { includeHidden: seesReview(viewer ?? null) };
+  const entry = await findCompendiumEntryBySlug(slug, reach);
   if (entry) {
-    const previous = await findCompendiumSlugRedirect(slug, at, entry.id);
+    const previous = await findCompendiumSlugRedirect(slug, at, entry.id, reach);
     return { kind: 'entry', entry, movedAway: previous?.entry ?? null };
   }
-  const redirect = await findCompendiumSlugRedirect(slug, at);
+  const redirect = await findCompendiumSlugRedirect(slug, at, undefined, reach);
   if (redirect) return { kind: 'moved', slug: redirect.entry.slug };
   throw new NotFound('No such compendium entry');
 }
@@ -350,6 +384,28 @@ const cachedEntry = cachedCompendiumRead('compendium-entry', async (slug: string
  */
 export function readCompendiumEntry(slug: string): Promise<CompendiumEntryPage> {
   return cachedEntry(slug);
+}
+
+/**
+ * A curator's read of the entry page, for the address the public read found nothing at: the entry whether it is shown or hidden.
+ * Not cached, since what it returns depends on who asks (claude-docs/design-decisions/m14.35-curators-see-hidden-entry-pages.md).
+ *
+ * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {NotFound} nothing live is at `slug` and nothing redirects from it.
+ */
+export async function readCompendiumEntryAsCurator(
+  session: Session,
+  slug: string,
+): Promise<CompendiumEntryPage> {
+  assertCurator(session);
+  const address = await resolveCompendiumSlug(slug, session);
+  if (address.kind === 'moved') return address satisfies CompendiumEntryPage;
+  const { entry, movedAway } = address;
+  return {
+    kind: 'entry',
+    detail: await ingredientDetailOf(null, entry),
+    movedAway: movedAway ? { name: movedAway.name, slug: movedAway.slug } : null,
+  } satisfies CompendiumEntryPage;
 }
 
 /** What each field named by spelling is called in a refusal. */
@@ -506,7 +562,7 @@ async function refuseCollision(
     case 'ingredients_compendium_slug_unique': {
       const twin = await findCompendiumEntryByIdentity(fields);
       if (twin && twin.id !== id) identity(twin);
-      const holder = await findCompendiumEntryBySlug(slug);
+      const holder = await findCompendiumEntryBySlug(slug, { includeHidden: true });
       refuse(
         'name',
         addressTaken(

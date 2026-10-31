@@ -12,6 +12,7 @@ import {
   entryRow,
   foldForm,
   folkNameRows,
+  namesCategory,
   pickedVariants,
   readPicks,
   substituteRows,
@@ -130,6 +131,7 @@ export async function seedCompendiumContent(
   const picks = await readPicks(tx);
   await insertEntries(tx, missing, picks);
   report.inserted = missing.length;
+  report.hidden = missing.filter(({ entry }) => !namesCategory(entry)).length;
   if (met.length === 0) return report;
 
   const rows = await tx.select().from(ingredients).where(isNull(ingredients.workspaceId));

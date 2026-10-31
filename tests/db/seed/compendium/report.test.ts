@@ -15,6 +15,7 @@ const REFUSED = 'ingredients/botanical/refused-wort.md';
 function fullReport(): SeedCompendiumReport {
   return {
     inserted: 3,
+    hidden: 2,
     skipped: 4,
     updated: [UPDATED],
     pending: [{ where: PENDING, differs: ['toxic'] }],
@@ -86,13 +87,13 @@ describe('formatReport', () => {
     const lines = formatReport(fullReport()).split('\n');
 
     expect(lines[lines.length - 1]).toBe(
-      'inserted 3, skipped 4, updated 1, pending 1, retired 1, adopted 1, refused 1',
+      'inserted 3, hidden 2, skipped 4, updated 1, pending 1, retired 1, adopted 1, refused 1',
     );
   });
 
   it('prints only the counts for a run that did nothing', () => {
     expect(formatReport(emptyReport())).toBe(
-      'inserted 0, skipped 0, updated 0, pending 0, retired 0, adopted 0, refused 0',
+      'inserted 0, hidden 0, skipped 0, updated 0, pending 0, retired 0, adopted 0, refused 0',
     );
   });
 });
