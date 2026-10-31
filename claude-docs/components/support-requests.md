@@ -14,10 +14,15 @@ same ones.
   curators can see it, and the error number. `href.ts`'s `supportHref(filter, cursor, request?)` builds every address,
   carrying `?about=`, `?status=`, `?error=`, one cursor and `?request=`.
 - **The filter** is [`FilterForm`](filter-form.md): an Error Number search, and Kind and Status selects.
-- **The opened request** shows From, Status, Error Number, Error Reference (with a Copy button, when the request has one), Page, the message and the replies. The controls are:
-  - **Reply** (a "Your Reply" field; Reply is disabled until there is a body) and **Resolve** (open requests only), for an
-    admin or a curator the request is assigned to.
-  - **Assigned To**, **Shared With Curators**, the issue panel and the time-out panel, for an admin alone.
+- **The opened request** is a wide dialog of two columns, stacked on a phone with the settings after the reply. Its head is
+  an eyebrow ("Support · " and the kind), the subject and a status badge. The left column holds the facts (From, Sent, Page,
+  and one Error line with the reference in monospace and an icon-only copy button, when the request has one), then the
+  thread (the sender's message first, tagged Sender, then each reply, tagged Staff) and the reply form. The controls are:
+  - **Reply** (a "Your Reply" field; Reply is disabled until there is a body) with **Resolve** opposite it (open requests
+    only), for an admin or a curator the request is assigned to.
+  - A right column for an admin alone: **Assigned To**, **Shared With Curators**, the Issue section (the linked issue as
+    repository and number with a Change button, or the address field at once while none is linked) and **Time-Out**, a
+    fold closed by default that says "none" or "until" the end of the standing time-out.
 - **Create Issue** is a link to GitHub's new-issue page on `Aurora-Arctic/Sorrel-and-Salt` with `?title=` and `?body=`
   filled from the subject, message, redacted path and request id (`issue-link.ts`). No token, no API call, and the
   sender's name and address are never read. The "Issue Address" field takes the issue's address back; one that is not an

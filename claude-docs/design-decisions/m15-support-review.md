@@ -50,6 +50,11 @@ the sixteen tasks that carry them are in [`tasks/m15.md`](../tasks/m15.md),
   view of its own. The tier is derived, never stored, so paying users can join
   it later.
 
+- **The opened request's layout is the owner's call of 2026-10-31:** two columns, a thread of the sender's message and
+  the replies, one composer with Resolve opposite Reply, a settings column beside it, and Time-Out folded. The Internal
+  note mode and tag, the "Sender Replied" and "Beta Tester" badges and the sender's later messages in the thread are
+  drawn in the design but not built; they wait for M15.43 and M15.44.
+
 ## What the sender is told
 
 - **The promise is "within 5 working days"**, with a note that a small team

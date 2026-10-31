@@ -78,7 +78,7 @@ test.describe('Story 90: An Admin Works Through a Support Request', { tag: '@sto
       await expect(reply).toBeDisabled();
       await dialog.getByLabel('Your Reply').fill('Thank you, we are looking at it.');
       await reply.click();
-      await expect(dialog.getByRole('region', { name: 'Replies' })).toContainText(
+      await expect(dialog.getByRole('region', { name: 'Thread' })).toContainText(
         'Thank you, we are looking at it.',
       );
       await expect(dialog.getByRole('status')).toHaveText(/Reply sent\./);
@@ -110,8 +110,9 @@ test.describe('Story 90: An Admin Works Through a Support Request', { tag: '@sto
 
       await address.fill(`${ISSUES}/4242`);
       await dialog.getByRole('button', { name: 'Save Address' }).click();
-      await expect(dialog.getByRole('button', { name: 'Save Address' })).toBeDisabled();
-      await expect(address).toHaveValue(`${ISSUES}/4242`);
+      await expect(
+        dialog.getByRole('link', { name: 'Aurora-Arctic/Sorrel-and-Salt#4242' }),
+      ).toBeVisible();
     });
 
     await test.step('the admin resolves it', async () => {
@@ -120,13 +121,13 @@ test.describe('Story 90: An Admin Works Through a Support Request', { tag: '@sto
     });
 
     await test.step('the admin times the sender out, and their send is refused with the end time', async () => {
-      const timeOut = dialog.getByRole('button', { name: 'Time-Out', exact: true });
+      await dialog.getByRole('button', { name: 'Time-Out', expanded: false }).click();
+      const timeOut = dialog.locator('button[type=submit]', { hasText: 'Time-Out' });
       await expect(timeOut).toBeDisabled();
       await dialog.getByLabel('Time-Out Until').fill(inOneHour());
       await dialog.getByLabel('Time-Out Note').fill('Repeated test messages');
       await timeOut.click();
-      const timeouts = dialog.getByRole('region', { name: 'Time-Outs' });
-      await expect(timeouts.getByRole('button', { name: 'Lift' })).toBeVisible();
+      await expect(dialog.getByRole('button', { name: 'Lift' })).toBeVisible();
 
       const response = await send();
       const { errors } = (await response.json()) as { errors?: { message: string }[] };

@@ -57,7 +57,7 @@ test.describe('Story 89: Ask for Help and Read the Reply', { tag: '@story-89' },
       const adminDialog = adminPage.getByRole('dialog', { name: 'Where is the moon table?' });
       await adminDialog.getByLabel('Your Reply').fill('It lives under Ingredients, then Tables.');
       await adminDialog.getByRole('button', { name: 'Reply', exact: true }).click();
-      await expect(adminDialog.getByRole('region', { name: 'Replies' })).toContainText(
+      await expect(adminDialog.getByRole('region', { name: 'Thread' })).toContainText(
         'It lives under Ingredients, then Tables.',
       );
     });

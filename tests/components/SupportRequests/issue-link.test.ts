@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { ISSUE_REPOSITORY } from '@/modules/support/validation/support';
-import { createIssueHref, ISSUE_REPOSITORY_NAME } from '@/components/SupportRequests/issue-link';
+import {
+  createIssueHref,
+  ISSUE_REPOSITORY_NAME,
+  issueLabel,
+} from '@/components/SupportRequests/issue-link';
 
 // Create Issue opens GitHub's new-issue page with the request written in: no token, no API call.
 
@@ -43,5 +47,17 @@ describe('createIssueHref', () => {
     const href = decodeURIComponent(createIssueHref(request).replace(/\+/g, ' '));
     expect(href).not.toContain('Ada Wortley');
     expect(href).not.toContain('ada@example.test');
+  });
+});
+
+describe('issueLabel', () => {
+  it('writes an issue address as repository and number', () => {
+    expect(issueLabel('https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/1448')).toBe(
+      'Aurora-Arctic/Sorrel-and-Salt#1448',
+    );
+  });
+
+  it('gives back what it cannot read as an address', () => {
+    expect(issueLabel('not an address')).toBe('not an address');
   });
 });

@@ -61,7 +61,16 @@ const open = (viewer: SupportViewer, detail: Partial<SupportRequestDetailEntry> 
     />,
   );
 
-const dialog = () => screen.getByRole('dialog', { name: ROW.subject });
+const dialog = () => screen.getByRole('dialog', { name: new RegExp(ROW.subject) });
+
+// The Time-Out fold starts closed; its toggle is the one Time-Out button that says whether it is open.
+const openTimeOut = () =>
+  fireEvent.click(within(dialog()).getByRole('button', { name: 'Time-Out', expanded: false }));
+
+const timeOutSubmit = () =>
+  within(dialog())
+    .getAllByRole('button', { name: 'Time-Out' })
+    .find((button) => button.getAttribute('type') === 'submit')!;
 const BASE = { id: 'u0', name: 'Bea Hollis', email: 'bea@example.test' };
 const FAR = '2999-01-01T00:00';
 
@@ -94,18 +103,18 @@ describe('SupportRequests list', () => {
 });
 
 describe('Error reference', () => {
-  it('is shown beside the error number with a Copy button that copies it', () => {
+  it('is shown beside the error number with an icon button that copies it', () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
     open(ADMIN, { errorReference: 'abc123' });
     expect(within(dialog()).getByText('abc123')).toBeInTheDocument();
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Copy' }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Copy Error Reference' }));
     expect(writeText).toHaveBeenCalledWith('abc123');
   });
 
   it('is left out when the request has none', () => {
     open(ADMIN);
-    expect(within(dialog()).queryByRole('button', { name: 'Copy' })).toBeNull();
+    expect(within(dialog()).queryByRole('button', { name: 'Copy Error Reference' })).toBeNull();
   });
 });
 
@@ -137,7 +146,8 @@ describe('Reply', () => {
 describe('Time-Out', () => {
   it('is disabled until a future end is given', () => {
     open(ADMIN);
-    const timeOut = within(dialog()).getByRole('button', { name: 'Time-Out' });
+    openTimeOut();
+    const timeOut = timeOutSubmit();
     const until = within(dialog()).getByLabelText('Time-Out Until');
     expect(timeOut).toBeDisabled();
 
@@ -158,10 +168,11 @@ describe('Time-Out', () => {
       },
     );
     open(ADMIN);
+    openTimeOut();
     fireEvent.change(within(dialog()).getByLabelText('Time-Out Until'), {
       target: { value: '2999-01-01T00:00' },
     });
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Time-Out' }));
+    fireEvent.click(timeOutSubmit());
 
     await waitFor(() => expect(router.refresh).toHaveBeenCalled());
     expect(sent[0]?.userId).toBe('u1');
@@ -185,11 +196,12 @@ describe('Time-Out', () => {
         },
       ],
     });
-    const panel = within(dialog()).getByRole('region', { name: 'Time-Outs' });
-    expect(within(panel).getByText(/Ada Wortley/)).toBeInTheDocument();
-    expect(within(panel).getByText(/First warning/)).toBeInTheDocument();
-    expect(within(panel).getByText(/Repeated sends/)).toBeInTheDocument();
-    expect(within(panel).getAllByRole('button', { name: 'Lift' })).toHaveLength(1);
+    openTimeOut();
+    const panel = within(dialog());
+    expect(panel.getByText(/Ada Wortley/)).toBeInTheDocument();
+    expect(panel.getByText(/First warning/)).toBeInTheDocument();
+    expect(panel.getByText(/Repeated sends/)).toBeInTheDocument();
+    expect(panel.getAllByRole('button', { name: 'Lift' })).toHaveLength(1);
   });
 });
 
@@ -391,6 +403,7 @@ describe('Status line in the dialog', () => {
     mockGraphQLMutation(operation, () => ({ saved: { __typename: 'Saved', id: 'r1' } }));
     open(ADMIN);
     const d = within(dialog());
+    if (action === 'time-out') openTimeOut();
     if (action === 'assign')
       await userEvent.selectOptions(d.getByLabelText('Assigned To'), 'Curtis');
     if (action === 'share')
@@ -404,7 +417,7 @@ describe('Status line in the dialog', () => {
     }
     if (action === 'time-out') {
       fireEvent.change(d.getByLabelText('Time-Out Until'), { target: { value: FAR } });
-      fireEvent.click(d.getByRole('button', { name: 'Time-Out' }));
+      fireEvent.click(timeOutSubmit());
     }
     await waitFor(() => expect(status()).toHaveTextContent(message));
   });

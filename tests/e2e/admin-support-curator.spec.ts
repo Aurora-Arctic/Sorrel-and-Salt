@@ -68,7 +68,7 @@ test('a curator reads the marked and the assigned requests, answers the assigned
       await expect(dialog.getByLabel('Time-Out Until')).toHaveCount(0);
       await dialog.getByLabel('Your Reply').fill('We have it in hand.');
       await dialog.getByRole('button', { name: 'Reply', exact: true }).click();
-      await expect(dialog.getByRole('region', { name: 'Replies' })).toContainText(
+      await expect(dialog.getByRole('region', { name: 'Thread' })).toContainText(
         'We have it in hand.',
       );
       await dialog.getByRole('button', { name: 'Resolve' }).click();
