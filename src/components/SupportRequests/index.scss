@@ -107,10 +107,15 @@
   vertical-align: middle;
 }
 
-// A bare icon beside a heading or a link (the history link, the issue's pencil) at the text's own size, as Copy is.
+// A bare icon beside a heading at the text's own size, as Copy is.
 .support-detail__icon {
   @include icon-button(1.5em, 1em);
   vertical-align: middle;
+}
+
+// The pencil after the issue link: bare too, with the standard icon glyph (`.btn--icon`'s 1.5rem).
+.support-detail__icon--standard {
+  @include icon-button(2rem, 1.5rem);
 }
 
 .support-detail__main h3 {

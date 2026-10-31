@@ -70,7 +70,7 @@ const IssuePanel = ({ request }: { request: SupportRequestDetailEntry }): ReactE
             <IconTip tip="Change Issue Address">
               <button
                 type="button"
-                className="support-detail__icon"
+                className="support-detail__icon support-detail__icon--standard"
                 onClick={() => setEditing(true)}
               >
                 <PencilIcon />
