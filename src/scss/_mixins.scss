@@ -524,7 +524,7 @@
 
     > .page-nav {
       position: sticky;
-      top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
+      top: calc(#{$shell-bar-height} + #{space(4)});
       grid-column: 1;
       grid-row: 2;
       align-self: start;

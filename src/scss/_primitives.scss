@@ -659,7 +659,7 @@
 
   // A jump to a section lands below the sticky bar, not under it.
   :is(.app-shell, .public-frame) .page-frame__section {
-    scroll-margin-top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
+    scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
   }
 
   // At a phone's width the section nav is a bar fixed along the bottom; the
@@ -698,7 +698,7 @@
   // the top inset when the page's own nav jumps to it.
   .page-frame__section {
     @include stack(3);
-    scroll-margin-top: calc(#{$top-inset} + #{space(4)});
+    scroll-margin-top: #{space(4)};
 
     > h2 {
       margin: 0;
@@ -834,7 +834,7 @@
 
     .page-with-nav > .page-nav {
       position: sticky;
-      top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
+      top: calc(#{$shell-bar-height} + #{space(4)});
       grid-column: 1;
       grid-row: 2 / span 3;
       align-self: start;

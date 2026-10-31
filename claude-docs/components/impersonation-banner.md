@@ -50,16 +50,15 @@ screenshots. The button is
 badge ([`click-feedback.md`](click-feedback.md)).
 
 - **Full width, and never adding to a page's height.**
-- **On a touch screen it sits in the page's flow at the very top and stays
-  pinned there** (`position: sticky; top: 0`, at `layer('banner')`), shown in
-  full, since nothing can hover to bring it back. The shell's bar sticks at the
-  inset, so the banner must not scroll away and leave the bar a gap above it. Everything that measures from
-  the top of the window starts below it: the component publishes its height as
-  `--impersonation-banner-height` on the root while mounted (a
-  `ResizeObserver`), and its stylesheet maps that to the top inset under
-  `@media (hover: none)`. ThemeToggle, the backdrop and the full-height pages
-  offset by the inset, so nothing overlaps the banner and no page scrolls by
-  its height ([`styling.md`](../styling.md), "The top inset"). Its bottom
+- **On a touch screen it sits in the page's flow at the very top and scrolls
+  away with the page**, shown in full, since nothing can hover to bring it
+  back. The component publishes its height as `--impersonation-banner-height`
+  on the root while mounted (a `ResizeObserver`), and its stylesheet maps that
+  to the top inset under `@media (hover: none)`. Only the heights that fit the
+  window (the page frames' and the site frame's `min-height`) subtract it. The
+  shell's bar, ThemeToggle, the backdrop and every scroll offset start from the
+  window's top, so the bar rides up under the banner and holds at the top once
+  it has gone ([`styling.md`](../styling.md), "The top inset"). Its bottom
   padding is `space(3)`, one step more than its top, so Stop is not crowded
   by the rule when it wraps to a row of its own.
 - **Where a pointer can hover, it is fixed over the top of the page and sits

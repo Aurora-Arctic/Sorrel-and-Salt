@@ -220,11 +220,11 @@ $formal-line: $icon-size;
 .ingredient-entry__section {
   // A jump from the menu lands clear of the top inset, and of the shell's
   // sticky bar where there is one, as `.page-frame__section` does.
-  scroll-margin-top: calc(#{$top-inset} + #{space(4)});
+  scroll-margin-top: #{space(4)};
 }
 
 :is(.app-shell, .public-frame) .ingredient-entry__section {
-  scroll-margin-top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
+  scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
 }
 
 // Details' h2, or a form's h3.
@@ -400,7 +400,7 @@ $formal-line: $icon-size;
 .ingredient-entry__references {
   @include stack(4);
 
-  scroll-margin-top: calc(#{$top-inset} + #{space(4)});
+  scroll-margin-top: #{space(4)};
 
   > h2 {
     @include entry-heading-rule;
@@ -410,7 +410,7 @@ $formal-line: $icon-size;
 }
 
 :is(.app-shell, .public-frame) .ingredient-entry__references {
-  scroll-margin-top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
+  scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
 }
 
 // Bibliography entries run to two or three lines, so they stand a clear step
@@ -457,7 +457,7 @@ $formal-line: $icon-size;
 .ingredient-entry__marks a,
 .ingredient-entry__note,
 .ingredient-entry__reference {
-  scroll-margin-top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(8)});
+  scroll-margin-top: calc(#{$shell-bar-height} + #{space(8)});
 }
 
 .ingredient-entry__chips {

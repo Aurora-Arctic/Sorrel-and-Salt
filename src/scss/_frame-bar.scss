@@ -12,13 +12,13 @@
   // The top edge a sticky row of a page (IngredientSearch’s search row) holds at: just under
   // this bar.
   .#{$block} {
-    --sticky-top: calc(#{$top-inset} + #{$shell-bar-height});
+    --sticky-top: #{$shell-bar-height};
   }
 
   .#{$block}__bar {
     position: sticky;
-    // Below the impersonation banner where it takes room in the flow (touch).
-    top: $top-inset;
+    // At the window's top: on touch the banner above it scrolls away and the bar then holds here.
+    top: 0;
     z-index: layer('shell');
     box-sizing: border-box;
     height: $shell-bar-height;

@@ -1,7 +1,7 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The impersonation banner: the sentence and Stop over a heavy red rule, pinned at the top of the page's flow on touch
+// The impersonation banner: the sentence and Stop over a heavy red rule, in the page's flow on touch
 // and tucked above the page where a pointer can hover, sliding down near the top; while tucked, the
 // rule and a sliver show (claude-docs/components/impersonation-banner.md, "Styling").
 $impersonation-banner-peek: space(2);
@@ -9,8 +9,8 @@ $impersonation-banner-peek: space(2);
 $impersonation-banner-reach: space(4);
 
 // A wrapping row of the sentence and Stop. On touch, with nothing to hover it back, it stays in the flow
-// at the top, shown in full, and everything measured from the window's top starts below it: its height,
-// published by index.tsx, is the top inset there.
+// at the top, shown in full, and scrolls away with the page; its height, published by index.tsx, is the top inset there,
+// which only the page frames' heights read (the bars and scroll offsets stand at the window's top once it has gone).
 .impersonation-banner {
   display: flex;
   flex-wrap: wrap;
@@ -30,13 +30,6 @@ $impersonation-banner-reach: space(4);
 @media (hover: none) {
   :root {
     --top-inset: var(--impersonation-banner-height, 0px);
-  }
-
-  // Pinned at the top, as the inset assumes: scrolled away, the bar below would still hold its place beneath a gap.
-  .impersonation-banner {
-    position: sticky;
-    top: 0;
-    z-index: layer('banner');
   }
 }
 

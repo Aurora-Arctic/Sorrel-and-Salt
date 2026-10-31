@@ -678,20 +678,26 @@ else. The banner publishes its measured height as
 `--impersonation-banner-height`, and its own stylesheet maps it to
 `--top-inset` under `@media (hover: none)`.
 
-What pins itself to the top of the window or sizes itself to it offsets by
-the inset, so it starts below the banner and the page does not scroll by the
-banner's height:
+The banner scrolls away with the page on a touch screen, so the inset is room
+above the viewport only until the first scroll. It is therefore read by what
+sizes itself to the window, never by what pins or jumps to its top:
 
-- The shell's bar (`position: sticky`), `ThemeToggle`'s corner variant and the
-  sorrel corner of `Backdrop` take `top: $top-inset`; inside the shell the
-  sorrel starts below the bar and the context row as well.
+- Every page a full screen high sits in `.page-frame`, which takes
+  `min-height: calc(100dvh - #{$top-inset})` ("The page frame", below), less
+  `$shell-bar-height` inside the shell: `/`, `/sign-in`, `/account`,
+  `/account/email`, the not-authorized page and the invitation page. The site
+  frame (`.site-frame`) does the same.
+- The shell's bar (`position: sticky`), `ThemeToggle`'s corner variant, the sorrel
+  corner of `Backdrop`, the navigation bar, `.page-nav` and every scroll margin
+  and `scroll-padding-top` start from the window's top (`0`) with no inset. On touch the
+  bar sits under the banner at first, scrolls up with it, then holds at the top.
 - Every page a full screen high sits in `.page-frame`, which takes
   `min-height: calc(100dvh - #{$top-inset})` ("The page frame", below), less
   `$shell-bar-height` inside the shell: `/`, `/sign-in`, `/account`,
   `/account/email`, the not-authorized page and the invitation page. A page
   that needs the full height takes the frame rather than restating the rule.
 
-Anything new fixed to the top offsets by the inset the same way.
+Anything new that pins to the top or jumps to it starts from `0`; only a height that must fit the window less the banner reads the inset.
 
 ## Corner radius
 
@@ -999,8 +1005,8 @@ height also subtracts `$shell-bar-height`, and a `.page-frame__section`'s
   component class loses to `body .panel` in the app while the workshop
   shows it winning.
 - **`.page-frame__section`** is a titled section of a framed page, a
-  `space(3)` column whose `h2` takes no margin, held `$top-inset` plus
-  `space(4)` clear of the top when the page's own nav jumps to it.
+  `space(3)` column whose `h2` takes no margin, held `space(4)`
+  clear of the top when the page's own nav jumps to it.
   **`.page-frame__rule`** is the 1px `$text-muted` hairline between two.
 - **`.page-with-nav`** is a page with a jump menu (`PageNav`,
   [`components/page-nav.md`](components/page-nav.md)): the account page's, and
@@ -1384,10 +1390,14 @@ declaration at computed-value time, rest of the stack included.
 
 ## The top inset
 
-`$top-inset` (`var(--top-inset, 0px)`) is how far chrome above everything else takes the top of the
-window. It is `0px` except on a touch screen (`hover: none`) while an admin impersonates, where the
-impersonation banner stays pinned and `ImpersonationBanner` sets `--top-inset` to its height.
-Anything that pins to the top of the window, or sizes to its height, adds the inset:
-`top: calc(#{$x} + #{$top-inset})`. The fallback is `0px`, not `0`, because it is used inside
-`calc()` and a unitless zero there is invalid. With a pointer the banner tucks away and hovering
-brings it back over the page, so it takes no room and the inset stays `0px`.
+`$top-inset` (`var(--top-inset, 0px)`) is how much of the window's height the impersonation banner takes
+while it is in the page's flow. It is a size, not a scroll offset.
+
+- **Touch (`hover: none`):** the banner is in the flow at the top and scrolls away with the page.
+  `ImpersonationBanner` sets `--top-inset` to its height. Only heights read it (`min-height: calc(100dvh - #{$top-inset})`
+  of the page frames and the site frame); the sticky bar and every other pin or scroll offset use `0`, so the
+  bar rides up with the banner and then holds at the top edge.
+- **Pointer (`hover: hover`):** the banner is fixed and tucked over the top of the page and takes no room, so the
+  inset stays `0px`.
+
+The fallback is `0px`, not `0`, because it is used inside `calc()` and a unitless zero there is invalid.
