@@ -2,7 +2,7 @@
 @use '../../scss/mixins' as *;
 
 // Every space on the page, summed to a target. The tab frame ends at its own margin; below it the list's column is
-// one gap (4) between the heading line, the rows' list and the pager, and the rows are 3 apart, that gap the one
+// one gap (4) between the count line, the rows' list and the pager, and the rows are 3 apart, that gap the one
 // contributor. Zeroed, not offset: the `ul` default margin, the empty message's `p` margin and the row's own
 // margin. The dialog is outside the flow, so it adds nothing. A row is 3 above and below its two lines, 2 apart,
 // and 4 either side.
@@ -10,7 +10,7 @@
   @include stack(4);
 }
 
-// The heading at the left and New Request at the right, centred on one line; the heading wraps beneath the
+// The count line at the left and New Request at the right, centred on one line; the count wraps beneath the
 // button only when they cannot share it. The icon's cut-out takes the button's own ground: the page at rest, the
 // accent fill on hover and focus.
 .support-list__head {
@@ -19,6 +19,12 @@
   align-items: center;
   justify-content: space-between;
   gap: space(2) space(3);
+}
+
+.support-list__counts {
+  margin: 0;
+  color: $text-muted;
+  font-size: type-size('small');
 }
 
 .support-list__new {

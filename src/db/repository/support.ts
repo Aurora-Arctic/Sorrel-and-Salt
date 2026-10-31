@@ -117,6 +117,24 @@ export function findOwnSupportRequestCount(
   return findPageCount(supportRequests, NEWEST_FIRST, start, eq(supportRequests.createdBy, userId));
 }
 
+/** How many of the sender's requests are still open (open, waiting on the sender) and how many are done (resolved, closed). */
+export async function findOwnSupportStatusCounts(
+  userId: string,
+): Promise<{ open: number; closed: number }> {
+  const [row] = await selectFrom(
+    supportRequests,
+    and(notSoftDeleted(supportRequests), eq(supportRequests.createdBy, userId)),
+    {
+      aggregate: {
+        open: sql<number>`count(*) filter (where ${supportRequests.status} in ('open', 'waiting_on_sender'))::int`,
+        closed: sql<number>`count(*) filter (where ${supportRequests.status} in ('resolved', 'closed'))::int`,
+      },
+      over: {},
+    },
+  );
+  return { open: row?.open ?? 0, closed: row?.closed ?? 0 };
+}
+
 /** The sender's own request, or `undefined` for one that is absent or another sender's. */
 export function findOwnSupportRequest(userId: string, id: string) {
   return selectOne(

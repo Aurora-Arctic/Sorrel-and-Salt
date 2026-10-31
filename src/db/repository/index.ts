@@ -148,6 +148,7 @@ export {
   findActiveSupportTimeoutEnd,
   findOwnSupportRequest,
   findOwnSupportRequestCount,
+  findOwnSupportStatusCounts,
   findOwnSupportRequestPage,
   findCardAcceptorIds,
   findSupportRepliesFor,

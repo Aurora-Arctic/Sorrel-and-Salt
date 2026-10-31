@@ -27,6 +27,12 @@ const repliesText = (count: number): string => {
   return count === 1 ? '1 reply' : `${count} replies`;
 };
 
+const countsText = ({ open, closed }: SupportListProps['counts']): string => {
+  if (open === 0 && closed === 0) return 'No Requests Yet';
+  const part = (n: number, word: string) => `${n} ${word} Request${n === 1 ? '' : 's'}`;
+  return `${part(open, 'Open')} / ${part(closed, 'Closed')}`;
+};
+
 const RowLink = ({
   request,
   href,
@@ -45,6 +51,7 @@ const RowLink = ({
 const SupportList = ({
   requests,
   opened,
+  counts,
   cursor,
   previousHref,
   nextHref,
@@ -54,9 +61,7 @@ const SupportList = ({
   return (
     <div className="support-list">
       <div className="support-list__head">
-        <div className="header">
-          <h2>Your Support Requests</h2>
-        </div>
+        <p className="support-list__counts">{countsText(counts)}</p>
         <SupportLink className="btn btn--small support-list__new">
           <SupportIcon />
           New Request

@@ -15,6 +15,8 @@ export interface SupportListEntry {
 
 export interface SupportListProps {
   requests: readonly SupportListEntry[];
+  /** How many of all the sender's requests are open and how many closed, not just this page's. */
+  counts: { open: number; closed: number };
   /** The request `?request=` opens; none when the address names none. */
   opened?: SupportSenderRequestEntry;
   /** The page's cursor, kept in every address the list builds. */

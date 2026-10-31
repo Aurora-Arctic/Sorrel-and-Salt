@@ -10,9 +10,10 @@ type Story = StoryObj<typeof meta>;
 
 const AT = new Date('2030-01-02T03:04:00Z');
 
-export const Empty: Story = { args: { requests: [] } };
+export const Empty: Story = { args: { requests: [], counts: { open: 0, closed: 0 } } };
 export const Rows: Story = {
   args: {
+    counts: { open: 2, closed: 0 },
     requests: [
       {
         id: 'r1',

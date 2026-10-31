@@ -2,6 +2,7 @@ import type { Metadata, Route } from 'next';
 import { readNumberedPage, readPageCursors } from '@/lib/numbered-page';
 import {
   countMySupportRequests,
+  countMySupportRequestsByStatus,
   listMySupportRequests,
   repliesForRequests,
 } from '@/modules/support';
@@ -21,13 +22,14 @@ export default async function SupportListPage({ searchParams }: SupportListPageP
   const [session, params] = await Promise.all([requireSession(), searchParams]);
   const { after, before } = readPageCursors(params);
   const requestParam = Array.isArray(params.request) ? params.request[0] : params.request;
-  const [page, opened] = await Promise.all([
+  const [page, opened, counts] = await Promise.all([
     readNumberedPage(
       { after, before },
       (request) => listMySupportRequests(session, request),
       (start) => countMySupportRequests(session, start),
     ),
     requestParam ? readOpenedRequest(session, requestParam) : undefined,
+    countMySupportRequestsByStatus(session),
   ]);
   const rows = page.edges.map(({ node }) => node);
   const replies = await repliesForRequests(
@@ -49,6 +51,7 @@ export default async function SupportListPage({ searchParams }: SupportListPageP
           replyCount: replies[index]?.length ?? 0,
         }))}
         opened={opened}
+        counts={counts}
         cursor={{ after, before }}
         position={page.position}
         previousHref={hasPreviousPage && startCursor ? href({ before: startCursor }) : undefined}

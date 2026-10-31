@@ -4,6 +4,7 @@ import {
   findOwnSupportRequest,
   findOwnSupportRequestCount,
   findOwnSupportRequestPage,
+  findOwnSupportStatusCounts,
 } from '../../../db/repository';
 import { NotFound } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
@@ -44,6 +45,19 @@ export async function countMySupportRequests(
 ): Promise<PageCount> {
   requireVerified(session);
   return findOwnSupportRequestCount(session.userId, start);
+}
+
+/**
+ * How many of the signed-in sender's requests are open (open, waiting on the sender) and how many are closed
+ * (resolved, closed), over all of them and not one page.
+ *
+ * @throws {Forbidden} the address is unverified.
+ */
+export async function countMySupportRequestsByStatus(
+  session: Session,
+): Promise<{ open: number; closed: number }> {
+  requireVerified(session);
+  return findOwnSupportStatusCounts(session.userId);
 }
 
 /**
