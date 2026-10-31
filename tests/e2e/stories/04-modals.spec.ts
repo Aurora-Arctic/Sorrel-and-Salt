@@ -377,11 +377,13 @@ test(
         await pickCategoryIn(dialog, category);
         await expect(categoryChip(dialog, category)).toBeVisible();
       }
+      // Scanned before the × and not after: the form autosaves 3 s after its last change, and a scan between
+      // the × and Save would let the autosave file the picks and leave Save disabled with nothing to save.
+      await assertNoAccessibilityViolations(page);
       await categoryChip(dialog, 'Love').click();
       await expect(categoryChip(dialog, 'Love')).toHaveCount(0);
       await expect(categoryChip(dialog, 'Protection')).toBeVisible();
       await expect(categoryChip(dialog, 'Prosperity')).toBeVisible();
-      await assertNoAccessibilityViolations(page);
     });
 
     await test.step('the save files the ingredient under the picks left', async () => {
