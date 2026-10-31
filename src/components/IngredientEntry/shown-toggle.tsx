@@ -33,10 +33,11 @@ export default function ShownToggle({
   name,
   label,
 }: ShownToggleProps): ReactElement {
-  const { refresh, pending } = usePendingNavigation();
+  const { refresh } = usePendingNavigation();
   const announce = useAnnounce();
   const clipId = useId();
-  // The state shown now: it turns at the press, and the page's own value follows at the refresh.
+  // The state shown now: it turns when the save returns, not at the press, so the switch waits in place
+  // under its ring and then slides; the page's own value follows at the refresh.
   const [on, setOn] = useState(shown);
   const [seen, setSeen] = useState(shown);
   if (shown !== seen) {
@@ -50,13 +51,12 @@ export default function ShownToggle({
     if (busy) return;
     setBusy(true);
     setRefusal(undefined);
-    setOn(next);
     try {
       await graphqlRequest(SetCompendiumEntryShownDocument, { id: ingredientId, shown: next });
+      setOn(next);
       announce(next ? 'Shown in the public compendium.' : 'Hidden from the public compendium.');
       refresh();
     } catch (error) {
-      setOn(!next);
       setRefusal(readGraphqlFailure(error).alert);
     } finally {
       setBusy(false);
@@ -75,10 +75,10 @@ export default function ShownToggle({
               role="switch"
               checked={on}
               aria-label={label ? undefined : `Shown in Compendium: ${name}`}
-              aria-busy={busy || pending}
+              aria-busy={busy}
               onChange={(event) => void change(event.target.checked)}
             />
-            <span className="shown-switch__thumb" data-busy={busy || pending || undefined}>
+            <span className="shown-switch__thumb" data-busy={busy || undefined}>
               <svg
                 className="shown-switch__eye"
                 viewBox="0 0 16 16"
@@ -113,7 +113,7 @@ export default function ShownToggle({
                 </g>
               </svg>
             </span>
-            {(busy || pending) && <Spinner className="shown-switch__spinner" />}
+            {busy && <Spinner className="shown-switch__spinner" />}
           </span>
         </label>
       </IconTip>

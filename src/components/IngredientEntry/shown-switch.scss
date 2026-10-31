@@ -87,8 +87,8 @@
   }
 
   // Busy (claude-docs/loading.md, "Control"): the thumb gives way, after `$loading-delay`, to the
-  // spinner's ring at the thumb's size, at the end of the track the thumb is moving to and in its
-  // colour for the state. Until then the thumb stays, so a quick save shows no ring and no gap.
+  // spinner's ring at the thumb's size, where the thumb stands, in its colour for the state; the
+  // thumb moves when the save returns. Until then the thumb stays, so a quick save shows no ring and no gap.
   .shown-switch__thumb[data-busy] {
     visibility: hidden;
     transition:
