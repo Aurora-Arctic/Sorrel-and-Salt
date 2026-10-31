@@ -28,4 +28,25 @@ describe('supportNotifier', () => {
     expect(sent[0]!.text).toContain('/account/support');
     expect(sent[0]!.html).toContain('/account/support');
   });
+
+  it('mails a signed-out visitor a receipt that names the answer time', async () => {
+    await supportNotifier(new Request('http://localhost:8000/api/graphql')).signedOutReceived(
+      'visitor@example.test',
+    );
+
+    expect(sent).toHaveLength(1);
+    expect(sent[0]!.to).toBe('visitor@example.test');
+    expect(sent[0]!.text).toContain('5 working days');
+  });
+
+  it('mails a signed-out visitor the reply itself', async () => {
+    await supportNotifier(new Request('http://localhost:8000/api/graphql')).signedOutReply(
+      'visitor@example.test',
+      'Use the code on the card.',
+    );
+
+    expect(sent).toHaveLength(1);
+    expect(sent[0]!.to).toBe('visitor@example.test');
+    expect(sent[0]!.text).toContain('Use the code on the card.');
+  });
 });

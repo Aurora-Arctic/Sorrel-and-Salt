@@ -51,6 +51,8 @@ function notifier(): SupportNotifier & { sent: string[]; subjects: string[] } {
       sent.push(to);
       subjects.push(subject);
     },
+    signedOutReceived: async () => undefined,
+    signedOutReply: async () => undefined,
   };
 }
 

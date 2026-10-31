@@ -18,4 +18,8 @@ export type SupportStatus = SupportRequestRow['status'];
 export interface SupportNotifier {
   /** Mails `to` that a reply to the request headed `subject` is waiting on `/account/support`. Carries no reply text; never throws on a failed send. */
   replyWaiting(to: string, subject: string): Promise<void>;
+  /** Mails a signed-out visitor that their request arrived, with the 5-working-day promise. Never throws on a failed send. */
+  signedOutReceived(to: string): Promise<void>;
+  /** Mails a signed-out visitor a staff reply in full, since they have no page to read it on. Never throws on a failed send. */
+  signedOutReply(to: string, body: string): Promise<void>;
 }

@@ -1153,6 +1153,11 @@ type Mutation {
   saveStock(ingredientId: ID!, input: SaveStockInput!, workspaceId: ID!): [InventoryItem!]!
 
   """
+  Sends a support request without an account, about accessibility or signing in. Open to anyone; refused after ten sends from one address or thirty from one client in 24 hours. Nothing is returned: replies come by email.
+  """
+  sendSignedOutSupportRequest(input: SignedOutSupportRequestInput!): Boolean!
+
+  """
   The sender’s message on their own request. It reopens a waiting or resolved request; on a closed one it opens a new request linked to it, which is what is returned.
   """
   sendSupportMessage(body: String!, requestId: ID!): SupportRequest!
@@ -2171,6 +2176,29 @@ input SaveStockInput {
   create: [CreateJarInput!]!
   delete: [ID!]!
   update: [UpdateJarInput!]!
+}
+
+"""A support request from a visitor who is not signed in."""
+input SignedOutSupportRequestInput {
+  """Only ACCESSIBILITY and ACCOUNT are accepted."""
+  about: SupportAbout!
+
+  """Where the reply is mailed."""
+  email: String!
+  errorCode: Int
+  errorReference: String
+
+  """1 to 4000 characters."""
+  message: String!
+  path: String
+
+  """1 to 120 characters."""
+  subject: String!
+
+  """
+  A trap for bots: the form hides it, so any value means the send is dropped.
+  """
+  website: String
 }
 
 """A source, local or compendium, and how many entries it would list."""

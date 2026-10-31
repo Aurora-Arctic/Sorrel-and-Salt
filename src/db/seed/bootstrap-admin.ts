@@ -1,5 +1,6 @@
 import { users } from '../../modules/identity/schema/users';
 import { applyAudit } from '../audit';
+import { SIGNED_OUT_SENDER_ID } from '../../lib/support-sender';
 import { BOOTSTRAP_USER_ID } from '../bootstrap';
 import type { AuditSession } from '../types';
 import type { SeedTransaction, SeedUser } from './types';
@@ -12,6 +13,17 @@ export const BOOTSTRAP_ADMIN: SeedUser = {
   id: BOOTSTRAP_USER_ID,
   name: 'Seed System User',
   email: 'admin@seed.sorrelandsalt.com',
+  role: 'user',
+};
+
+/**
+ * The account a signed-out support request is written as. Seeded on every environment with no seat and no way in: no OAuth account,
+ * no password and `canCreateWorkspace` false.
+ */
+export const SIGNED_OUT_SENDER: SeedUser = {
+  id: SIGNED_OUT_SENDER_ID,
+  name: 'Support, signed out',
+  email: 'signed-out@seed.sorrelandsalt.com',
   role: 'user',
 };
 
@@ -32,4 +44,5 @@ export async function insertSeedUser(tx: SeedTransaction, user: SeedUser): Promi
 
 export async function insertBootstrapAdmin(tx: SeedTransaction): Promise<void> {
   await insertSeedUser(tx, BOOTSTRAP_ADMIN);
+  await insertSeedUser(tx, SIGNED_OUT_SENDER);
 }

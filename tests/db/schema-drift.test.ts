@@ -9,6 +9,7 @@ import * as invitations from '@/modules/coven/schema/invitations';
 import * as workspaces from '@/modules/coven/schema/workspaces';
 import * as supportRequests from '@/modules/support/schema/support-requests';
 import * as supportReplies from '@/modules/support/schema/support-replies';
+import * as supportSendCounts from '@/modules/support/schema/support-send-counts';
 import * as supportTimeouts from '@/modules/support/schema/support-timeouts';
 import * as spellCategories from '@/modules/grimoire/schema/spell-categories';
 import * as spellSteps from '@/modules/grimoire/schema/spell-steps';
@@ -63,6 +64,7 @@ const MODULES = [
   workspaces,
   supportRequests,
   supportReplies,
+  supportSendCounts,
   supportTimeouts,
   spellCategories,
   spellSteps,

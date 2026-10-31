@@ -388,6 +388,12 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   setEmail: write('mutation { setEmail(email: "fixture@example.org") { id } }'),
   setName: write('mutation { setName(name: "Fixture") { id } }'),
   setPassword: write('mutation { setPassword(newPassword: "fixture password") }'),
+  // Open to anyone by design. The honeypot field is filled, so the send is dropped and the probe stores and mails nothing.
+  sendSignedOutSupportRequest: {
+    source:
+      'mutation { sendSignedOutSupportRequest(input: { about: account, email: "fixture@example.org", subject: "Fixture", message: "Fixture", website: "filled" }) }',
+    outcome: 'answers',
+  },
   sendSupportRequest: write(
     'mutation { sendSupportRequest(input: { about: bug, subject: "Fixture", message: "Fixture" }) { id } }',
   ),
@@ -730,6 +736,8 @@ const OPEN_WRITES = [
   // also needs the recorder, or for a change someone named on the working.
   // Any signed-in account may report a refused card open; the service records it only against a real card.
   'recordCardAttempt',
+  // Open to anyone, signed in or not: the service allows two topics and counts the sends.
+  'sendSignedOutSupportRequest',
   // Any verified session may send; the service reads the limit and any time-out.
   'sendSupportRequest',
   // Any verified session may write on a request; the service finds only the sender's own.

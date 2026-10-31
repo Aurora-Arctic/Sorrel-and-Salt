@@ -3,6 +3,7 @@ import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { useTestDatabase } from '../../support/db/database';
 import { BOOTSTRAP_USER_ID, DEMO_WORKSPACE_ID } from '@/db/bootstrap';
+import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
 import { seedDemoCoven } from '@/db/seed/demo-coven';
 import {
   DEMO_COVEN_CONTENT,
@@ -67,11 +68,14 @@ describe('the demo coven seed', () => {
     ]);
   });
 
-  it('seats the system user and every admin as owner and everyone else as viewer', async () => {
+  it('seats the system user and every admin as owner and everyone but the signed-out sender as viewer', async () => {
     // Preconditions: an admin, a curator and plain users exist to be told apart.
-    const roles = await sql<{ id: string; role: string }[]>`
+    const everyone = await sql<{ id: string; role: string }[]>`
       select id, role from users where deleted_at is null
     `;
+    // The signed-out support sender is a user with no seat: it is the one account the seats skip.
+    expect(everyone.map(({ id }) => id)).toContain(SIGNED_OUT_SENDER_ID);
+    const roles = everyone.filter(({ id }) => id !== SIGNED_OUT_SENDER_ID);
     expect(new Set(roles.map(({ role }) => role))).toEqual(new Set(['user', 'curator', 'admin']));
 
     await run();
@@ -83,6 +87,7 @@ describe('the demo coven seed', () => {
       ]),
     );
     expect(await seats()).toEqual(expected);
+    expect(await seats()).not.toHaveProperty(SIGNED_OUT_SENDER_ID);
     expect(expected[BOOTSTRAP_USER_ID]).toBe('owner');
     expect(expected[FIXTURE_USERS.E.id]).toBe('owner');
     expect(expected[FIXTURE_USERS.F.id]).toBe('viewer');

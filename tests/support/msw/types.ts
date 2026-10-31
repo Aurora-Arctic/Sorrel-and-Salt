@@ -7,6 +7,8 @@ export interface MockedError {
   fieldErrors?: ValidationIssue[];
   /** STALE_WRITE only; the revision the row is at now, 1 when omitted. */
   currentRevision?: number;
+  /** RATE_LIMITED only; the seconds a Retry-After header names, 60 when omitted. */
+  retryAfterSeconds?: number;
   /** The service's message; the thrown type's default when omitted. */
   message?: string;
 }

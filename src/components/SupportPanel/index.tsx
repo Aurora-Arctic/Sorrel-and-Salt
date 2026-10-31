@@ -4,6 +4,7 @@ import { signInPath } from '../../lib/sign-in';
 import { SUPPORT_PATH } from '../../lib/support-path';
 import LocalTime from '../LocalTime';
 import Notice from '../Notice';
+import SignedOutSupportForm from '../SignedOutSupportForm';
 import SupportForm from '../SupportForm';
 import type { SupportPanelProps } from './types';
 
@@ -13,9 +14,13 @@ import type { SupportPanelProps } from './types';
 const SupportPanel = ({ state, path }: SupportPanelProps): ReactElement => {
   if (state.kind === 'signed-out') {
     return (
-      <Notice kind="plain">
-        Sign in to write to us. <Link href={signInPath(SUPPORT_PATH)}>Sign In</Link>
-      </Notice>
+      <>
+        <Notice kind="plain">
+          Have an account? <Link href={signInPath(SUPPORT_PATH)}>Sign In</Link> to write about
+          anything. Without one, you can write to us about accessibility or signing in.
+        </Notice>
+        <SignedOutSupportForm path={path} />
+      </>
     );
   }
   if (state.kind === 'timed-out') {

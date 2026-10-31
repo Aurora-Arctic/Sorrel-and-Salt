@@ -792,6 +792,13 @@
       "when": 1793460309221,
       "tag": "0110_support-sender-email",
       "breakpoints": true
+    },
+    {
+      "idx": 111,
+      "version": "7",
+      "when": 1793461606897,
+      "tag": "0111_support-send-counts",
+      "breakpoints": true
     }
   ]
 }
