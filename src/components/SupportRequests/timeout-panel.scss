@@ -66,6 +66,7 @@
 .timeout-panel__ledger-line {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   column-gap: space(2);
   overflow-wrap: anywhere;
 }
