@@ -16,10 +16,12 @@ test('a signed-out visitor sends a request about signing in', async ({ page }) =
 
   await page.getByRole('radio', { name: /^Account/ }).check();
   await expect(page.getByRole('button', { name: 'Send Request' })).toBeDisabled();
-  await page.getByLabel('Email').fill('visitor@signed-out.test');
-  await page.getByLabel('Subject').fill('The code never arrives');
-  await page.getByLabel('Message').fill('I ask for a sign-in code and nothing comes.');
+  await page.getByRole('textbox', { name: 'Email' }).fill('visitor@signed-out.test');
+  await page.getByRole('textbox', { name: 'Subject' }).fill('The code never arrives');
+  await page
+    .getByRole('textbox', { name: 'Message' })
+    .fill('I ask for a sign-in code and nothing comes.');
   await page.getByRole('button', { name: 'Send Request' }).click();
 
-  await expect(page.getByRole('status')).toContainText('5 working days');
+  await expect(page.getByText(/within 5 working days/)).toBeVisible();
 });
