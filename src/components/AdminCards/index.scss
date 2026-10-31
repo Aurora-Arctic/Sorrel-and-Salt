@@ -38,3 +38,9 @@
   font-size: type-size('caption');
   line-height: 1.5;
 }
+
+// The filter row is the positioned ancestor the Filters drawer opens under
+// (claude-docs/components/facet-panel.md).
+.admin-cards__filter {
+  position: relative;
+}

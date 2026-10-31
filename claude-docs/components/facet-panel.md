@@ -16,6 +16,8 @@ The panel is two parts, so a list with other facets can reuse them:
 
 `FacetPanel` itself is the ingredient content inside `FacetShell`: the Categories line and every facet after it. The grimoire's filter is `FacetShell` holding `CategoryLine` alone, without counts ([`grimoire-list.md`](grimoire-list.md)).
 
+A list takes `FacetShell` once it has more than three filter fields, its search counted, and keeps three or fewer inline in [`FilterForm`](filter-form.md), because the drawer keeps the row to a search box and one button however many fields the list adds (the owner's rule, 2026-10-31). The admin Invitation Cards list is one: its Status and four days sit in the drawer ([`admin-cards.md`](admin-cards.md)).
+
 ## Props
 
 `FacetPanelProps` (`types.ts`):

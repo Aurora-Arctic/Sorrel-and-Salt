@@ -2,18 +2,39 @@
 
 import { type ReactElement, useId, useState } from 'react';
 import DateField from '../DateField';
-import { FieldShell, FilterSelectField, SearchField, fieldDescription } from '../Field';
+import { FieldShell, SearchField, fieldDescription } from '../Field';
 import FilterForm, { useApplyFilter } from '../FilterForm';
-import { oneOf } from '../../lib/search-params';
+import { ChoiceChip } from '../FacetPanel/choice-chip';
+import { FacetShell } from '../FacetPanel/shell';
 import { BATCH_STATUSES, STATUS_LABEL } from './batches';
 import { CARDS_PATH, cardsHref } from './href';
 import type { CardsFilter, CardsFilterProps } from './types';
 
-// The Cards tab's filter, on the shared FilterForm: the batch is held until the magnifier or Enter sends it; the
-// status and each day apply as they change, from the first page. A day field has no name, so a hidden input carries
-// it for the native submit before hydration; Clear empties the days.
+// The Cards tab's filter: the batch search in the row and the Filters (n) drawer holding the
+// status and the four days, as the grimoire's filter holds its facets. What the drawer holds
+// applies in one navigation when it shuts; a day field has no name, so a hidden input carries it
+// for the native submit before hydration (claude-docs/components/admin-cards.md).
 
-const STATUS_OPTIONS = BATCH_STATUSES.map((value) => ({ value, label: STATUS_LABEL[value] }));
+const STATUS_OPTIONS = [
+  { value: '' as const, label: 'Any' },
+  ...BATCH_STATUSES.map((value) => ({ value, label: STATUS_LABEL[value] })),
+];
+
+/** What the drawer holds: every part of the filter but the batch. */
+type Held = Omit<CardsFilter, 'batch'>;
+
+const heldOf = ({ status, mintedFrom, mintedTo, expiresFrom, expiresTo }: CardsFilter): Held => ({
+  status,
+  mintedFrom,
+  mintedTo,
+  expiresFrom,
+  expiresTo,
+});
+
+const NONE: Held = { status: '', mintedFrom: '', mintedTo: '', expiresFrom: '', expiresTo: '' };
+
+/** How many filters the drawer holds: the status and each day given count one each. */
+const countOf = (held: Held): number => Object.values(held).filter(Boolean).length;
 
 type DayName = 'mintedFrom' | 'mintedTo' | 'expiresFrom' | 'expiresTo';
 
@@ -51,24 +72,22 @@ const DayFilter = ({
 
 const CardsFilterForm = ({ filter }: CardsFilterProps): ReactElement => {
   const [draftBatch, setDraftBatch] = useState(filter.batch);
+  // Started from the filter shown; the tab keys this form by it, so a new list starts it again.
+  const [held, setHeld] = useState(() => heldOf(filter));
   const apply = useApplyFilter();
-  /** The filter shown with `change` given, the batch typed carried, from the first page. */
-  const hrefWith = (change: Partial<CardsFilter>) =>
-    cardsHref({}, false, { ...filter, batch: draftBatch.trim(), ...change });
+  const changed = JSON.stringify(held) !== JSON.stringify(heldOf(filter));
+  const hold = (patch: Partial<Held>) => setHeld({ ...held, ...patch });
 
   return (
     <FilterForm
       label="Filter Invitation Cards"
       action={CARDS_PATH}
-      searchHref={() => hrefWith({})}
-      shown={[
-        filter.batch,
-        filter.status,
-        filter.mintedFrom,
-        filter.mintedTo,
-        filter.expiresFrom,
-        filter.expiresTo,
-      ]}
+      className="admin-cards__filter"
+      // The search and Apply Filters: the batch typed and everything the drawer holds.
+      searchHref={() => cardsHref({}, false, { batch: draftBatch.trim(), ...held })}
+      shown={[filter.batch]}
+      // The drawer's Clear All stands in for Clear while it shows a filter, so one is drawn at a time.
+      clear={countOf(heldOf(filter)) === 0}
     >
       <SearchField
         label="Batch"
@@ -77,42 +96,71 @@ const CardsFilterForm = ({ filter }: CardsFilterProps): ReactElement => {
         value={draftBatch}
         onChange={setDraftBatch}
       />
-      <FilterSelectField
-        label="Status"
-        name="status"
-        all="All Statuses"
-        options={STATUS_OPTIONS}
-        defaultValue={filter.status}
-        onChange={(chosen) => apply(hrefWith({ status: oneOf(BATCH_STATUSES, chosen) ?? '' }))}
-      />
-      <DayFilter
-        label="Minted From"
-        name="mintedFrom"
-        value={filter.mintedFrom}
-        max={filter.mintedTo}
-        onChange={(day) => apply(hrefWith({ mintedFrom: day }))}
-      />
-      <DayFilter
-        label="Minted To"
-        name="mintedTo"
-        value={filter.mintedTo}
-        min={filter.mintedFrom}
-        onChange={(day) => apply(hrefWith({ mintedTo: day }))}
-      />
-      <DayFilter
-        label="Expires From"
-        name="expiresFrom"
-        value={filter.expiresFrom}
-        max={filter.expiresTo}
-        onChange={(day) => apply(hrefWith({ expiresFrom: day }))}
-      />
-      <DayFilter
-        label="Expires To"
-        name="expiresTo"
-        value={filter.expiresTo}
-        min={filter.expiresFrom}
-        onChange={(day) => apply(hrefWith({ expiresTo: day }))}
-      />
+      <FacetShell
+        count={countOf(held)}
+        clearHref={CARDS_PATH}
+        // Shut any other way than Apply Filters: what the drawer holds, under the batch the page
+        // shows, and nothing at all when none of it changed.
+        onApply={() => {
+          if (changed) apply(cardsHref({}, false, { batch: filter.batch, ...held }));
+        }}
+        onClear={() => {
+          setHeld(NONE);
+          apply(CARDS_PATH);
+        }}
+      >
+        <div className="facet-panel__line">
+          <div className="facet-panel__quick">
+            <ChoiceChip
+              legend="Status"
+              name="status"
+              options={STATUS_OPTIONS}
+              value={held.status}
+              onChange={(status) => hold({ status })}
+            />
+          </div>
+        </div>
+        <div className="facet-panel__line">
+          <div className="facet-panel__grow">
+            <DayFilter
+              label="Minted From"
+              name="mintedFrom"
+              value={held.mintedFrom}
+              max={held.mintedTo}
+              onChange={(mintedFrom) => hold({ mintedFrom })}
+            />
+          </div>
+          <div className="facet-panel__grow">
+            <DayFilter
+              label="Minted To"
+              name="mintedTo"
+              value={held.mintedTo}
+              min={held.mintedFrom}
+              onChange={(mintedTo) => hold({ mintedTo })}
+            />
+          </div>
+        </div>
+        <div className="facet-panel__line">
+          <div className="facet-panel__grow">
+            <DayFilter
+              label="Expires From"
+              name="expiresFrom"
+              value={held.expiresFrom}
+              max={held.expiresTo}
+              onChange={(expiresFrom) => hold({ expiresFrom })}
+            />
+          </div>
+          <div className="facet-panel__grow">
+            <DayFilter
+              label="Expires To"
+              name="expiresTo"
+              value={held.expiresTo}
+              min={held.expiresFrom}
+              onChange={(expiresTo) => hold({ expiresTo })}
+            />
+          </div>
+        </div>
+      </FacetShell>
     </FilterForm>
   );
 };

@@ -15,7 +15,7 @@ import type {
 import { RouteModalContext } from '@/components/Modal/route-modal-provider';
 import type { RouteModalOpener } from '@/components/Modal/types';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
-import { FILTER_ROWS } from '../../support/filter-form';
+import { FILTER_ROWS, filterForm, sent } from '../../support/filter-form';
 import { Navigating } from '../../support/navigating';
 import type { FilterFormSubject } from '../../support/types';
 import { mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
@@ -524,36 +524,84 @@ describe('AdminCards filter', () => {
       list: <AdminCards batches={BATCHES} filter={FILTER} cursor={{ after: 'c25' }} />,
       sends: send('b11', 'live', '2026-10-01', '2026-10-31', '2026-11-01', '2026-12-31'),
     },
+    // The batch alone draws Clear; a part the drawer holds draws its Clear All instead, below.
     alone: [
-      [{ ...NONE, batch: 'b11' }, send('b11', '', '', '', '', '')],
-      [{ ...NONE, status: 'revoked' as const }, send('', 'revoked', '', '', '', '')],
-      [{ ...NONE, mintedFrom: '2026-10-01' }, send('', '', '2026-10-01', '', '', '')],
-      [{ ...NONE, mintedTo: '2026-10-31' }, send('', '', '', '2026-10-31', '', '')],
-      [{ ...NONE, expiresFrom: '2026-11-01' }, send('', '', '', '', '2026-11-01', '')],
-      [{ ...NONE, expiresTo: '2026-12-31' }, send('', '', '', '', '', '2026-12-31')],
-    ].map(([filter, sends]) => ({
-      list: <AdminCards batches={[]} filter={filter as typeof NONE} />,
-      sends: sends as string,
-    })),
+      {
+        list: <AdminCards batches={[]} filter={{ ...NONE, batch: 'b11' }} />,
+        sends: send('b11', '', '', '', '', ''),
+      },
+    ],
     searched: `${PATH}?batch=Two+words&status=live&mintedFrom=2026-10-01&mintedTo=2026-10-31&expiresFrom=2026-11-01&expiresTo=2026-12-31`,
   };
 
   const inFlight = (ui: ReactNode) => render(<Navigating push={router.push}>{ui}</Navigating>);
+  const openFilters = () => fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
+  const status = (name: string) =>
+    within(screen.getByRole('group', { name: 'Status' })).getByRole('radio', { name });
+
+  // The drawer is the non-modal panel at the tablet width and up.
+  beforeEach(() => {
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: query.includes('min-width'),
+      media: query,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+    }));
+  });
+  afterEach(() => vi.unstubAllGlobals());
 
   it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));
 
-  it('writes the status picked to the URL from the first page, carrying the batch typed', async () => {
+  it.each([
+    [{ status: 'revoked' as const }, send('', 'revoked', '', '', '', '')],
+    [{ mintedFrom: '2026-10-01' }, send('', '', '2026-10-01', '', '', '')],
+    [{ mintedTo: '2026-10-31' }, send('', '', '', '2026-10-31', '', '')],
+    [{ expiresFrom: '2026-11-01' }, send('', '', '', '', '2026-11-01', '')],
+    [{ expiresTo: '2026-12-31' }, send('', '', '', '', '', '2026-12-31')],
+  ])(
+    'counts %o in Filters and draws Clear All to every batch in place of Clear',
+    async (part, sends) => {
+      inFlight(<AdminCards batches={[]} filter={{ ...NONE, ...part }} />);
+
+      expect(sent(filterForm('Filter Invitation Cards'))).toBe(sends);
+      expect(screen.getByRole('button', { name: /^Filters\D*1/ })).toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: 'Clear' })).not.toBeInTheDocument();
+      const [clearAll] = screen.getAllByRole('link', { name: 'Clear All' });
+      expect(clearAll).toHaveAttribute('href', PATH);
+      await act(async () => fireEvent.click(clearAll));
+      expect(router.push).toHaveBeenLastCalledWith(PATH);
+    },
+  );
+
+  it('holds a status picked in the drawer until it shuts, then applies it under the batch shown', async () => {
+    inFlight(
+      <AdminCards batches={BATCHES} filter={{ ...NONE, batch: 'b11' }} cursor={{ after: 'c25' }} />,
+    );
+
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Batch' }), {
+      target: { value: ' b22 ' },
+    });
+    openFilters();
+    fireEvent.click(status('Used up'));
+    expect(router.push).not.toHaveBeenCalled();
+    await act(async () => openFilters());
+
+    expect(router.push).toHaveBeenCalledExactlyOnceWith(`${PATH}?batch=b11&status=used-up`);
+  });
+
+  it('applies the batch typed and everything the drawer holds on Apply Filters, from the first page', async () => {
     inFlight(<AdminCards batches={BATCHES} cursor={{ after: 'c25' }} />);
 
     fireEvent.change(screen.getByRole('searchbox', { name: 'Batch' }), {
       target: { value: ' b22 ' },
     });
-    fireEvent.click(screen.getByRole('combobox', { name: 'Status' }));
+    openFilters();
+    fireEvent.click(status('Revoked'));
     await act(async () => {
-      fireEvent.click(screen.getByRole('option', { name: 'Used up' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Apply Filters' }));
     });
 
-    expect(router.push).toHaveBeenCalledExactlyOnceWith(`${PATH}?batch=b22&status=used-up`);
+    expect(router.push).toHaveBeenCalledExactlyOnceWith(`${PATH}?batch=b22&status=revoked`);
   });
 
   it.each([
@@ -561,14 +609,19 @@ describe('AdminCards filter', () => {
     ['Minted To', 'mintedTo'],
     ['Expires From', 'expiresFrom'],
     ['Expires To', 'expiresTo'],
-  ])('writes the day picked in %s to the URL from the first page', async (label, name) => {
+  ])('holds the day picked in %s until Apply Filters writes it to the URL', async (label, name) => {
     inFlight(<AdminCards batches={BATCHES} cursor={{ after: 'c25' }} />);
 
+    openFilters();
     fireEvent.click(screen.getByRole('button', { name: new RegExp(label) }));
     await act(async () => {
       fireEvent.click(
         within(screen.getByRole('grid')).getByRole('button', { name: /, 15 October 2026/ }),
       );
+    });
+    expect(router.push).not.toHaveBeenCalled();
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Apply Filters' }));
     });
 
     expect(router.push).toHaveBeenCalledExactlyOnceWith(`${PATH}?${name}=2026-10-15`);
@@ -578,7 +631,9 @@ describe('AdminCards filter', () => {
     render(<AdminCards batches={[BATCHES[0]]} filter={FILTER} />);
 
     expect(screen.getByRole('searchbox', { name: 'Batch' })).toHaveValue('b11');
-    expect(screen.getByRole('combobox', { name: 'Status' })).toHaveTextContent('Live');
+    expect(screen.getByRole('button', { name: /^Filters\D*5/ })).toBeInTheDocument();
+    openFilters();
+    expect(status('Live')).toBeChecked();
     expect(screen.getByRole('button', { name: /Minted From/ })).toHaveTextContent('2026');
     expect(screen.getAllByRole('row')).toHaveLength(2);
   });
