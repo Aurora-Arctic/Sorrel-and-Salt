@@ -175,6 +175,21 @@ describe('SupportForm', () => {
     expect(calls).toHaveLength(0);
   });
 
+  it('refuses a page that is not on this site before sending, and accepts the site address', async () => {
+    const calls = mockSending();
+    render(<SupportForm path="/a" about="bug" />);
+    fill();
+    fireEvent.change(page(), { target: { value: 'https://example.test/a' } });
+    fireEvent.click(send());
+    await waitFor(() => expect(page()).toHaveFocus());
+    expect(page()).toHaveAccessibleDescription(/Start with \/ or the site's address/);
+    expect(calls).toHaveLength(0);
+    fireEvent.change(page(), { target: { value: 'https://sorrelandsalt.com/a' } });
+    fireEvent.click(send());
+    await screen.findByRole('status');
+    expect(calls).toHaveLength(1);
+  });
+
   it('shows the error number, and the page it was opened from in a field', () => {
     render(<SupportForm path="/coven/x/missing" errorCode={404} about="bug" />);
     expect(page()).toHaveAccessibleDescription(/Opened from the Error 404 page/);

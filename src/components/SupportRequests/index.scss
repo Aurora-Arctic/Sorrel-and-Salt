@@ -91,8 +91,12 @@
   vertical-align: middle;
 }
 
+.support-detail__main h3 {
+  margin-block-end: space(3);
+}
+
 .support-detail__thread {
-  @include stack(3);
+  @include stack(2);
   padding: 0;
   list-style: none;
 }
@@ -125,6 +129,8 @@
 
 // The reply form sits under the thread behind a hairline; Reply on the left, Resolve opposite.
 .support-detail__reply {
+  // Pulls the rule one step toward the thread; the column's own gap would put it a step further off.
+  margin-block-start: calc(#{space(1)} * -1);
   padding-block-start: space(5);
   border-block-start: 1px solid $hairline;
 }

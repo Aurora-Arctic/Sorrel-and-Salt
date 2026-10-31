@@ -88,6 +88,8 @@ describe('sendSupportRequest', () => {
     ['a subject of 121 characters', { ...INPUT, subject: 'x'.repeat(121) }],
     ['an empty message', { ...INPUT, message: '' }],
     ['a message of 4,001 characters', { ...INPUT, message: 'x'.repeat(4001) }],
+    ['a page that is not on this site', { ...INPUT, path: 'https://example.test/a' }],
+    ['a page on another host written with //', { ...INPUT, path: '//example.test/a' }],
   ])('refuses %s', async (_name, input) => {
     expect(await failureOf(send(C, input))).toBeInstanceOf(ValidationError);
   });
