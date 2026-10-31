@@ -104,8 +104,8 @@ test.describe('Story 90: An Admin Works Through a Support Request', { tag: '@sto
 
     await test.step('the admin resolves it', async () => {
       await dialog.getByRole('button', { name: 'Resolve' }).click();
-      await page
-        .getByRole('dialog', { name: 'Resolve This Request?' })
+      await dialog
+        .getByRole('group', { name: /sees it as resolved/ })
         .getByRole('button', { name: 'Resolve' })
         .click();
       await expect(dialog.getByRole('button', { name: 'Resolve' })).toBeHidden();
@@ -113,9 +113,9 @@ test.describe('Story 90: An Admin Works Through a Support Request', { tag: '@sto
 
     await test.step('the admin times the sender out, and their send is refused with the end time', async () => {
       await dialog.getByRole('button', { name: 'Time-Out', expanded: false }).click();
-      await dialog.getByLabel('Note').fill('Repeated test messages');
+      await dialog.getByRole('textbox', { name: 'Note' }).fill('Repeated test messages');
       await dialog.getByRole('button', { name: 'Time Out Sender' }).click();
-      await page.getByRole('button', { name: 'Time Out' }).click();
+      await page.getByRole('button', { name: 'Time Out', exact: true }).click();
       await expect(dialog.getByRole('button', { name: 'Lift' })).toBeVisible();
 
       const response = await send();

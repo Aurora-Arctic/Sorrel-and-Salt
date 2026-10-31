@@ -91,6 +91,7 @@ const SupportList = ({
       <RouteModal
         closeHref={hrefOf()}
         size="listed"
+        readingBody
         content={
           opened && {
             heading: {

@@ -72,6 +72,10 @@ test('a curator reads the marked and the assigned requests, answers the assigned
         'We have it in hand.',
       );
       await dialog.getByRole('button', { name: 'Resolve' }).click();
+      await dialog
+        .getByRole('group', { name: /sees it as resolved/ })
+        .getByRole('button', { name: 'Resolve' })
+        .click();
       await expect(dialog.getByRole('button', { name: 'Resolve' })).toBeHidden();
       await assertNoAccessibilityViolations(page);
     });

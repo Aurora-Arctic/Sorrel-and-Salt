@@ -10,7 +10,7 @@ test.beforeAll(async () => {
 
 test('a signed-out visitor sends a request about signing in', async ({ page }) => {
   await page.goto('/support');
-  await expect(page.getByRole('radio')).toHaveCount(2);
+  await expect(page.getByRole('radio')).toHaveCount(5);
   await assertNoSidewaysScroll(page);
   await assertNoAccessibilityViolations(page);
 
