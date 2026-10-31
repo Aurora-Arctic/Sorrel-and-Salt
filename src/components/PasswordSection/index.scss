@@ -1,6 +1,9 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
+// The modules of the printed invitation card's QR code (QR_TONE in src/lib/invitation-cards/qr.ts); no palette token has it.
+$qr-dot: #c0baac;
+
 // A column inside its section of the account page; the field, the notices and the button are the form
 // primitives' (_primitives.scss).
 .password-section {
@@ -9,8 +12,8 @@
   gap: space(3);
 }
 
-// Two-factor is its own tab. The QR code draws in the text colour on
-// the card, so it reads in either theme; its quiet zone is the card's padding.
+// Two-factor is its own tab. The QR code is always light modules on $soot, as the printed invitation
+// card is, in either theme; its quiet zone is the tile's padding.
 .two-factor {
   display: flex;
   flex-direction: column;
@@ -33,8 +36,8 @@
   inline-size: 12rem;
   padding: space(3);
   margin: space(2) auto;
-  color: $text-primary;
-  background: $surface-card;
+  color: $qr-dot;
+  background: $soot;
 
   svg {
     display: block;

@@ -96,9 +96,10 @@ Each submit is disabled until its field has something in it, and is a
 
 `.password-section` is a column with the standard gap, on the section's
 `.panel` inside the account page's `.page-frame--narrow`. Nothing past the
-tokens. `.two-factor` draws the QR code in `$text-primary` on `$surface-card`,
-so it is light on dark in the dark theme; the design review should check that
-common authenticator apps scan the inverted code. The backup codes sit in two equal columns,
+tokens. `.two-factor` draws the QR code as light modules (`#c0baac`, the invitation card's dot tone, a
+variable in the component's SCSS) on `$soot`, in both themes, so it matches the printed card. The code
+is therefore always inverted (light on dark): the design review must scan-test it in at least two
+authenticator apps, in both themes. The backup codes sit in two equal columns,
 each code centred in its column, with no list marker. The setup key and the backup codes each sit
 on their own in a `.two-factor__well`: `$surface-page` (darker than the card in both themes) with
 `radius('surface')` and `space(3)` padding.
