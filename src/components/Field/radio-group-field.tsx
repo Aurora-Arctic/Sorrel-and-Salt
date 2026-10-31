@@ -4,7 +4,7 @@ import { type ReactElement, type ReactNode, useId } from 'react';
 import { pressFeedback } from '../../lib/press-feedback';
 import IconTip from '../IconTip';
 import InfoTip from '../InfoTip';
-import { FieldError } from './shell';
+import { FieldError, Required } from './shell';
 import type { RadioGroupFieldProps } from './types';
 
 /**
@@ -23,6 +23,7 @@ export function RadioGroupField<T extends string>({
   layout = 'list',
   hint,
   error,
+  required = false,
 }: RadioGroupFieldProps<T>): ReactElement {
   const id = useId();
   const strip = layout === 'strip';
@@ -43,12 +44,16 @@ export function RadioGroupField<T extends string>({
         {hint ? (
           <span className="field__label-row">
             {legend}
+            {required && <Required />}
             <InfoTip id={hintId} label={legend}>
               {hint}
             </InfoTip>
           </span>
         ) : (
-          legend
+          <>
+            {legend}
+            {required && <Required />}
+          </>
         )}
       </legend>
       {strip && (
@@ -63,6 +68,7 @@ export function RadioGroupField<T extends string>({
                   <input
                     type="radio"
                     name={name}
+                    aria-required={required || undefined}
                     value={option.value}
                     checked={value === option.value}
                     onChange={() => onChange(option.value)}
@@ -93,6 +99,7 @@ export function RadioGroupField<T extends string>({
               <input
                 type="radio"
                 name={name}
+                aria-required={required || undefined}
                 value={option.value}
                 checked={value === option.value}
                 onChange={() => onChange(option.value)}
@@ -124,6 +131,7 @@ export function RadioGroupField<T extends string>({
                 <input
                   type="radio"
                   name={name}
+                  aria-required={required || undefined}
                   value={option.value}
                   checked={value === option.value}
                   aria-describedby={option.description ? descriptionId : undefined}

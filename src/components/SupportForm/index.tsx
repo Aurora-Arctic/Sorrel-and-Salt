@@ -206,6 +206,7 @@ const SupportForm = ({
       <div id={aboutBoxId}>
         <RadioGroupField
           legend={ABOUT_LABEL}
+          required
           name={aboutId}
           layout="cards"
           options={SUPPORT_ABOUTS}

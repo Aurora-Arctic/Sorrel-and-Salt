@@ -182,7 +182,7 @@ the chosen `value` held by the caller, and `onChange(value)`. A native radio
 group in a `.fieldset.radio-group`: each radio is a small ring whose centre dot, in the
 accent green, grows in with only a thin gap to the ring over the switch's `$motion-short` ease
 (none under reduced motion), the dot as well as the colour carrying the
-choice. The description is `aria-describedby`. An optional `note` (M7.4) is a line
+choice. The description is `aria-describedby`. `required` draws the `*` after the legend and sets `aria-required` on every radio, since a group has no one control to carry it. An optional `note` (M7.4) is a line
 for the whole group, such as the invite dialog's "an owner is made afterwards", set as the
 fieldset's own `aria-describedby` so it is read with the group. The group carries
 `margin-block: space(5)`, which is 1.5rem, where nothing else spaces it, as in

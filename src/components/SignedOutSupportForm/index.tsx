@@ -108,6 +108,7 @@ const SignedOutSupportForm = ({ path }: SignedOutSupportFormProps): ReactElement
       {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
       <RadioGroupField
         legend="What Is This About?"
+        required
         name={aboutId}
         layout="cards"
         options={SIGNED_OUT_TOPICS}

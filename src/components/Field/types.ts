@@ -182,6 +182,8 @@ export interface RadioGroupFieldProps<T extends string> {
   hint?: string;
   /** Why the group cannot be sent as it stands, under the choices and read with the group. */
   error?: string;
+  /** Marked required beside the legend, and on every radio to assistive technology. */
+  required?: boolean;
 }
 
 /** A form's row of actions: Save, any further saves, Cancel and Delete. */
