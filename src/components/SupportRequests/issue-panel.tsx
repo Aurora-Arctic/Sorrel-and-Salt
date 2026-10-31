@@ -44,22 +44,22 @@ const IssuePanel = ({ request }: { request: SupportRequestDetailEntry }): ReactE
   return (
     <section className="support-detail__issue" aria-label="Issue">
       <h3>Issue</h3>
-      <div className="support-detail__issue-line">
-        {request.issueUrl && (
+      {request.issueUrl && (
+        <div className="support-detail__issue-line">
           <a href={request.issueUrl} target="_blank" rel="noopener noreferrer">
             {issueLabel(request.issueUrl)}
           </a>
-        )}
-        {request.issueUrl && !editing && (
-          <button
-            type="button"
-            className="btn btn--quiet btn--small"
-            onClick={() => setEditing(true)}
-          >
-            Change
-          </button>
-        )}
-      </div>
+          {!editing && (
+            <button
+              type="button"
+              className="btn btn--quiet btn--small"
+              onClick={() => setEditing(true)}
+            >
+              Change
+            </button>
+          )}
+        </div>
+      )}
       {showForm && (
         <form className="form" noValidate onSubmit={submit}>
           {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
