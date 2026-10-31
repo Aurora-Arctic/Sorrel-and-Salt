@@ -484,7 +484,9 @@ function batchesWhere(filter: CardBatchFilter): SQL | undefined {
     to ? sql`${column} < ${dayStart(to)} + interval '1 day'` : undefined,
   ];
   return and(
-    batch ? startsWithText(invitations.batchId, batch) : undefined,
+    batch
+      ? or(startsWithText(invitations.batchId, batch), containsText(invitations.batchNote, batch))
+      : undefined,
     status ? batchStatusIs(status) : undefined,
     ...through(invitations.createdAt, mintedFrom, mintedTo),
     ...through(invitations.expiresAt, expiresFrom, expiresTo),
@@ -646,7 +648,7 @@ export function invitationWrites({
     // and bound to nothing. Not `insert`, which stamps one row.
     insertInvitationCards: (
       _admin: SiteAdmin,
-      { tokens, batchId, expiresAt }: CardInvitationValues,
+      { tokens, batchId, expiresAt, note }: CardInvitationValues,
     ) =>
       tokens.length === 0
         ? Promise.resolve([])
@@ -660,6 +662,7 @@ export function invitationWrites({
                     {
                       kind: 'card',
                       batchId,
+                      batchNote: note,
                       expiresAt,
                       tokenHash: hashToken(token),
                       position: index + 1,

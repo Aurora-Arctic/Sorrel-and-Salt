@@ -1082,6 +1082,8 @@ export interface CardInvitationValues {
   tokens: string[];
   batchId: string;
   expiresAt: Date;
+  /** Written on every card of the batch; null for none. */
+  note: string | null;
 }
 
 /** A card's place in its batch, from 1; null for a card minted before places were kept. */
@@ -1102,7 +1104,7 @@ export type CardBatchStatus = 'live' | 'revoked' | 'expired' | 'used-up';
 
 /** What the admin batch list is narrowed by. Each part is optional, and absent means no filter. */
 export interface CardBatchFilter {
-  /** The start of the batch number, case-insensitive. */
+  /** The start of the batch number, or text anywhere in its note; case-insensitive. */
   batch?: string;
   status?: CardBatchStatus;
   /** Days as `YYYY-MM-DD` in UTC, both ends included. */

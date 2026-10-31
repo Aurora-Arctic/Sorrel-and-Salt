@@ -100,3 +100,23 @@
     min-inline-size: 10rem;
   }
 }
+
+// A batch's note under its name, muted at caption size and wrapping to two lines at most in a column no wider than a
+// readable measure, so a long note never widens the nowrap table. The height cap holds it to two lines where line-clamp
+// is not drawn.
+.admin-cards__note {
+  display: -webkit-box;
+  overflow: hidden;
+  max-inline-size: 24rem;
+  max-block-size: 3em;
+  color: $text-muted;
+  font-size: type-size('caption');
+  line-height: 1.5;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: -webkit-line-clamp above
+  // already clamps, the unprefixed form is for engines that drop the prefix, not yet Baseline
+  line-clamp: 2;
+}

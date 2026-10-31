@@ -812,6 +812,9 @@ type InvitationCardBatch {
   expiresAt: DateTime!
   mintedAt: DateTime!
 
+  """The admin's note written when the batch was minted; null for none."""
+  note: String
+
   """
   How many of its cards can still be accepted: not accepted, revoked or expired.
   """
@@ -930,7 +933,15 @@ type Mutation {
   """
   Mints `sheets` sheets of nine cards sharing one batch and one expiry, and answers each token once. Site admins only; a batch is at most 55 sheets.
   """
-  createInvitationCards(expiresAt: DateTime!, sheets: Int!): MintedInvitationCards!
+  createInvitationCards(
+    expiresAt: DateTime!
+
+    """
+    Plain text for the admins to track the batch by, at most 500 characters; blank is none.
+    """
+    note: String
+    sheets: Int!
+  ): MintedInvitationCards!
 
   """A null workspaceId writes the compendium's, under the admin proof."""
   createReference(input: ReferenceInput!, workspaceId: ID): Reference!
@@ -1465,7 +1476,9 @@ type Query {
   invitationCardBatches(
     after: String
 
-    """The start of the batch number, case-insensitively."""
+    """
+    The start of the batch number, or text anywhere in its note, case-insensitively.
+    """
     batch: String
     before: String
 

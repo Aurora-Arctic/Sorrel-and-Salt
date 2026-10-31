@@ -79,7 +79,15 @@ const AdminCards = ({
       <ListBody>
         <StackTable
           columns={[
-            { heading: 'Batch', cell: (batch) => batchName(batch.batchId) },
+            {
+              heading: 'Batch',
+              cell: (batch) => (
+                <>
+                  {batchName(batch.batchId)}
+                  {batch.note && <span className="admin-cards__note">{batch.note}</span>}
+                </>
+              ),
+            },
             { heading: 'Status', cell: (batch) => STATUS_LABEL[batch.status] },
             { heading: 'Cards', cell: (batch) => batch.cards },
             { heading: 'Accepted', cell: (batch) => batch.accepted },

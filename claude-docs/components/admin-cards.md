@@ -24,8 +24,9 @@ Expires is the day the card was chosen to last through, `2026-10-30`, read back 
 - **Invitation Cards filter** (`filter.tsx`, `filter-params.ts`): the shared `FilterForm` ("Filter Invitation Cards"), held in the URL
   and combined, every field optional. Six fields is more than three, so only the **Batch** search stays in the row and
   the rest sit in the [`FacetShell`](facet-panel.md) Filters drawer beside it, which counts them as Filters (n). **Batch**
-  matches the start of the batch number (the batch id's first block, hex and case-folded, with `%` and `_` taken
-  literally) and applies from the magnifier or Enter. The drawer holds one line, which stacks below the tablet width:
+  matches the start of the batch number (the batch id's first block, hex and case-folded) or text anywhere in the
+  batch's note (case-folded), with `%` and `_` taken literally in both; the table shows a batch's note beneath its
+  name, clamped to two lines (`admin-cards__note`). It applies from the magnifier or Enter. The drawer holds one line, which stacks below the tablet width:
   **Status**, a select-only `ComboboxSelect` (Any, Live, Revoked, Expired or Used Up; the options are labels, so title
   case, while the table's cells keep sentence case), then **Minted** and **Expires**, each a
   [`DateRangeField`](date-range-field.md) with quick picks (Minted: Today, Last 7 Days, Last 30 Days, This Month, Last
@@ -48,7 +49,7 @@ Expires is the day the card was chosen to last through, `2026-10-30`, read back 
   55; a Letter sheet holds nine cards) with the total shown as typed ("27 cards"), and
   **Expires On** (a `DateField` whose earliest day is tomorrow in UTC, sent as the end of that day in UTC-12 (`expiryOfDay`: the next day at 12:00 UTC), so a card works through its printed day in every zone; with no `max`
   it ends at the end of next year). Expires On opens on today plus 90 days (`DEFAULT_EXPIRY_DAYS`), a
-  calendar day. A **Print Backs** toggle (`SwitchField`), on, sits directly beside Expires On, one gap from the date's own width and level with its control (wrapping below it only when the dialog is too narrow): off, the PDF holds the fronts alone (`backs: false` in `CardSheetsInput`, a choice of the build and not stored, as the PDF is built once, in the dialog). The sheet count counts sheets of nine cards, which the choice does not change. The submit stays disabled until both are given. The answer carries each token once, and the
+  calendar day. A **Print Backs** toggle (`SwitchField`), on, sits directly beside Expires On, one gap from the date's own width and level with its control (wrapping below it only when the dialog is too narrow): off, the PDF holds the fronts alone (`backs: false` in `CardSheetsInput`, a choice of the build and not stored, as the PDF is built once, in the dialog). The sheet count counts sheets of nine cards, which the choice does not change. A **Note** textarea (at most 500 characters, `MAX_NOTE_LENGTH`; trimmed, blank stored as nothing) records what the batch is for. It is set at minting and cannot be edited afterwards, and the Batch search finds it. The submit stays disabled until both dates are given. The answer carries each token once, and the
   tokens live only in that dialog's state. The sheet hint ("A Letter sheet holds 9 cards.") is the field's hint, so it joins the input's description;
   only the live total sits below it, in the field's `after` slot, directly under the input and beneath any error, with one line reserved. After minting, the dialog says "Batch 7c2d0000: 27 cards minted." and moves focus to that sentence
   (the form that minted has gone, so focus would otherwise fall to the page), then "3 sheets, expiring 29 January 2027.". The PDF prints the batch name small on each back and,

@@ -708,6 +708,13 @@
       "when": 1793411379488,
       "tag": "0100_card-expiry-end-of-day",
       "breakpoints": true
+    },
+    {
+      "idx": 101,
+      "version": "7",
+      "when": 1793415305515,
+      "tag": "0101_card-batch-note",
+      "breakpoints": true
     }
   ]
 }

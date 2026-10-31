@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { check, pgTable, smallint, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { MAX_NOTE_LENGTH } from '../../../lib/invitation-cards/limits';
 import { namedWrites } from '../../../db/table-marks';
 import { auditColumns, userRole, users } from '../../identity/schema/users';
 import { workspaceRole, workspaces } from './workspaces';
@@ -47,6 +48,8 @@ export const invitations = namedWrites(
       batchId: uuid('batch_id'),
       // A card's place in its batch from 1, in the order the PDF lays the fronts out; null on an address row and on a card minted before this was kept.
       position: smallint('position'),
+      // The admin's note on the mint a card came from, copied onto every card of its batch as the expiry is; null on an address row and when none was written.
+      batchNote: text('batch_note'),
       ...auditColumns,
     },
     (table) => [
@@ -63,6 +66,14 @@ export const invitations = namedWrites(
       check(
         'invitations_position_positive',
         sql`${table.position} is null or ${table.position} >= 1`,
+      ),
+      check(
+        'invitations_batch_note_card_only',
+        sql`${table.batchNote} is null or ${table.kind} = 'card'`,
+      ),
+      check(
+        'invitations_batch_note_length',
+        sql`char_length(${table.batchNote}) <= ${sql.raw(String(MAX_NOTE_LENGTH))}`,
       ),
       check('invitations_kind_known', sql`${table.kind} in ('address', 'card')`),
       // An address row names its address; a card names none of address, coven, role or site role.

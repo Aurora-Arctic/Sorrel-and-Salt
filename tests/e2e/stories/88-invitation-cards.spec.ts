@@ -30,6 +30,7 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
       await page.getByRole('link', { name: 'Mint Cards' }).click();
       const dialog = page.getByRole('dialog', { name: 'Mint Cards' });
       await dialog.getByRole('spinbutton', { name: 'Number of Sheets' }).fill('1');
+      await dialog.getByRole('textbox', { name: 'Note' }).fill('Harvest fair stall');
       await dialog.getByRole('button', { name: 'Mint Cards' }).click();
       await expect(dialog.getByText(/9 cards minted/)).toBeVisible();
 
@@ -49,6 +50,7 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
       await expect(batch).toHaveCount(1);
       // The day on screen is the day printed on the card: UTC, en-GB.
       await expect(batch).toContainText(defaultExpiryDay());
+      await expect(batch).toContainText('Harvest fair stall');
 
       const printed = await decodePdfLinks(page, path);
       expect(printed, 'the nine codes on the sheet decode').toHaveLength(9);

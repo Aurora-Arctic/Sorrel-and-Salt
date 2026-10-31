@@ -2,7 +2,11 @@ import { createHash } from 'node:crypto';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
-import { CARDS_PER_SHEET, MAX_SHEETS_PER_BATCH } from '@/lib/invitation-cards/limits';
+import {
+  CARDS_PER_SHEET,
+  MAX_NOTE_LENGTH,
+  MAX_SHEETS_PER_BATCH,
+} from '@/lib/invitation-cards/limits';
 import type { PageRequest } from '@/lib/types';
 import {
   cardArrivalsCsv,
@@ -92,6 +96,45 @@ describe('mintInvitationCards', () => {
     // Only the hash is stored: no column holds a token.
     expect(rows.map((row) => row.token_hash).sort()).toEqual(minted.tokens.map(sha256).sort());
     expect(JSON.stringify(rows)).not.toContain(minted.tokens[0]);
+  });
+
+  it('stores the note trimmed on every card of the batch, and null when none or blank is given', async () => {
+    const noted = await mintInvitationCards(asUser(E), 1, NEXT_WEEK(), '  For the autumn fair  ');
+    const plain = await mintInvitationCards(asUser(E), 1, NEXT_WEEK());
+    const blank = await mintInvitationCards(asUser(E), 1, NEXT_WEEK(), '   ');
+
+    const notes = async (batchId: string) =>
+      (await sql`select batch_note from invitations where batch_id = ${batchId}`).map(
+        (row) => row.batch_note,
+      );
+    expect(await notes(noted.batchId)).toEqual(Array(CARDS_PER_SHEET).fill('For the autumn fair'));
+    expect(await notes(plain.batchId)).toEqual(Array(CARDS_PER_SHEET).fill(null));
+    expect(await notes(blank.batchId)).toEqual(Array(CARDS_PER_SHEET).fill(null));
+  });
+
+  it('takes a note of the longest length and refuses one a character over, writing nothing', async () => {
+    await mintInvitationCards(asUser(E), 1, NEXT_WEEK(), 'x'.repeat(MAX_NOTE_LENGTH));
+    expect(await cards()).toHaveLength(CARDS_PER_SHEET);
+
+    const refused = await mintInvitationCards(
+      asUser(E),
+      1,
+      NEXT_WEEK(),
+      'x'.repeat(MAX_NOTE_LENGTH + 1),
+    ).catch((error: unknown) => error);
+    expect(refused).toBeInstanceOf(ValidationError);
+    expect((refused as ValidationError).issues[0]?.path).toEqual(['note']);
+    expect(await cards()).toHaveLength(CARDS_PER_SHEET);
+  });
+
+  it('refuses a note over the length in the database too, and a note on an address invitation’s batch column', async () => {
+    await mintInvitationCards(asUser(E), 1, NEXT_WEEK());
+    await expect(
+      sql`update invitations set batch_note = ${'x'.repeat(MAX_NOTE_LENGTH + 1)} where kind = 'card'`,
+    ).rejects.toThrow(/invitations_batch_note_length/);
+    await expect(
+      sql`insert into invitations (email, token_hash, kind, site_role, batch_note, created_by, updated_by) values ('x@example.test', 'h', 'address', 'curator', 'a note', ${E.id}, ${E.id})`,
+    ).rejects.toThrow(/invitations_batch_note_card_only/);
   });
 
   it('numbers each card by its place in the token list, which is the order the PDF lays the fronts out', async () => {
