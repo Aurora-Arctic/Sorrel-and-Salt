@@ -180,7 +180,10 @@ export default function SpellPreview(props: SpellPreviewProps): ReactElement {
         <div className="spell-preview__bar">
           {/* The tip says what a press does; the name stays Screen Awake, and `aria-pressed` holds the state. */}
           {wake.shown && (
-            <IconTip tip={wake.held ? 'Let the Screen Sleep' : 'Keep the Screen from Sleeping'}>
+            <IconTip
+              tip={wake.held ? 'Let the Screen Sleep' : 'Keep the Screen from Sleeping'}
+              placement="below"
+            >
               <button
                 type="button"
                 className="icon-tip__edit icon-tip__edit--plain spell-preview__awake"
