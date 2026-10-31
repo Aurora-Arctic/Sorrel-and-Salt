@@ -1,4 +1,5 @@
 import { and, eq, gt, inArray, isNotNull, isNull, lte, or, sql, type SQL } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
 import { applyAudit } from '../audit';
 import { workspaces } from '../../modules/coven/schema/workspaces';
 import { invitations } from '../../modules/coven/schema/invitations';
@@ -16,6 +17,7 @@ import type {
   AddressInvitationRow,
   CardArrivalRow,
   CardInvitationValues,
+  CardBatchTotal,
   CardRow,
   InvitationRow,
   InvitedCoven,
@@ -398,27 +400,67 @@ function cardsOf(batchId: string | undefined): SQL {
   return and(cardKind(), batchId ? eq(invitations.batchId, batchId) : undefined) as SQL;
 }
 
-/**
- * One page of the cards in any state (pending, accepted, expired or revoked), newest first, narrowed to one batch
- * where `batchId` names it. A site admin's read; the rows hold only a hash, never a token.
- */
-export function findCardPage(
-  _admin: SiteAdmin,
-  batchId: string | undefined,
-  page: PageRequest,
-): Promise<PageEntry<CardRow>[]> {
-  return findPageInScope(invitations, cardsOf(batchId), CARD_ORDER, page) as Promise<
-    PageEntry<CardRow>[]
-  >;
-}
-
-/** How many cards `findCardPage` pages under `batchId`, and how many come before `start`, a page's first row. */
+/** How many cards there are under `batchId`, any state (every card where none is named), and how many come before `start`. */
 export function findCardCount(
   _admin: SiteAdmin,
   batchId: string | undefined,
   start: Cursor | undefined,
 ): Promise<PageCount> {
   return findPageCountInScope(invitations, cardsOf(batchId), CARD_ORDER, start);
+}
+
+// One card stands for each batch: the first by id of those still live. Every card of a batch is minted in one statement
+// with one expiry, so any of them carries the batch's minted-on and expiry dates.
+function batchHeads(): SQL {
+  const earlier = alias(invitations, 'earlier_card');
+  return and(
+    cardKind(),
+    isNotNull(invitations.batchId),
+    sql`not exists (select 1 from ${invitations} as ${sql.identifier('earlier_card')} where ${earlier.kind} = 'card' and ${earlier.batchId} = ${invitations.batchId} and ${earlier.deletedAt} is null and ${earlier.id} < ${invitations.id})`,
+  ) as SQL;
+}
+
+/**
+ * One page of the batches, newest first: each entry is the batch's first card, which holds its batch id and dates. A site
+ * admin's read; the counts per batch come from `findCardBatchTotals`.
+ */
+export function findCardBatchPage(
+  _admin: SiteAdmin,
+  page: PageRequest,
+): Promise<PageEntry<CardRow>[]> {
+  return findPageInScope(invitations, batchHeads(), CARD_ORDER, page) as Promise<
+    PageEntry<CardRow>[]
+  >;
+}
+
+/** How many batches `findCardBatchPage` pages, and how many come before `start`, a page's first batch. */
+export function findCardBatchCount(
+  _admin: SiteAdmin,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  return findPageCountInScope(invitations, batchHeads(), CARD_ORDER, start);
+}
+
+/** Each named batch's cards, accepted cards and cards still pending, counted in SQL. */
+export function findCardBatchTotals(
+  _admin: SiteAdmin,
+  batchIds: readonly string[],
+): Promise<CardBatchTotal[]> {
+  if (batchIds.length === 0) return Promise.resolve([]);
+  return selectFrom(
+    invitations,
+    and(cardKind(), notSoftDeleted(invitations), inArray(invitations.batchId, [...batchIds])),
+    {
+      aggregate: {
+        batchId: sql<string>`${invitations.batchId}`,
+        cards: sql<number>`count(*)::int`,
+        accepted: sql<number>`(count(*) filter (where ${invitations.acceptedAt} is not null))::int`,
+        pending: sql<number>`(count(*) filter (where ${invitations.acceptedAt} is null and ${invitations.declinedAt} is null and ${invitations.revokedAt} is null and ${invitations.expiresAt} > now()))::int`,
+      },
+      over: {},
+      groupBy: [invitations.batchId],
+    },
+  );
 }
 
 /**
@@ -434,7 +476,6 @@ export function invitationWrites({
   AuditWriter,
   | 'insertInvitation'
   | 'insertInvitationCards'
-  | 'revokeInvitationCard'
   | 'revokeInvitationCardBatch'
   | 'acceptInvitation'
   | 'acceptReceivedInvitation'
@@ -490,12 +531,6 @@ export function invitationWrites({
             )
             .returning() as never),
     // Only pending cards: an accepted one is the record of an arrival and is never touched.
-    revokeInvitationCard: (_admin: SiteAdmin, id: string) =>
-      update(
-        invitations,
-        { revokedAt: sql`now()` },
-        pendingInvitation(cardKind(), eq(invitations.id, id)),
-      ),
     revokeInvitationCardBatch: (_admin: SiteAdmin, batchId: string) =>
       update(
         invitations,

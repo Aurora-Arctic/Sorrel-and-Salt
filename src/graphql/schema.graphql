@@ -773,6 +773,25 @@ type InvitationCard {
 }
 
 """
+The cards minted together: one sheet count, one expiry. Counts are summed in SQL.
+"""
+type InvitationCardBatch {
+  """How many of its cards were accepted."""
+  accepted: Int!
+  batchId: ID!
+
+  """How many cards the batch holds."""
+  cards: Int!
+  expiresAt: DateTime!
+  mintedAt: DateTime!
+
+  """
+  How many of its cards can still be accepted: not accepted, revoked or expired.
+  """
+  pending: Int!
+}
+
+"""
 Where a card stands now: an accepted card stays accepted whatever became of its date.
 """
 enum InvitationCardState {
@@ -867,9 +886,9 @@ type Mutation {
   createInvitation(email: String!, role: InvitableRole!, workspaceId: ID!): Invitation!
 
   """
-  Mints `count` cards sharing one batch and one expiry, and answers each token once. Site admins only; a batch holds at most 500.
+  Mints `sheets` sheets of nine cards sharing one batch and one expiry, and answers each token once. Site admins only; a batch is at most 55 sheets.
   """
-  createInvitationCards(count: Int!, expiresAt: DateTime!): MintedInvitationCards!
+  createInvitationCards(expiresAt: DateTime!, sheets: Int!): MintedInvitationCards!
 
   """A null workspaceId writes the compendium's, under the admin proof."""
   createReference(input: ReferenceInput!, workspaceId: ID): Reference!
@@ -999,9 +1018,6 @@ type Mutation {
   Withdraws a pending invitation of a coven, so its link says so; the row is kept. Refused for an invitation already accepted, which is a member to remove. Owners only.
   """
   revokeInvitation(id: ID!, workspaceId: ID!): Invitation!
-
-  """Withdraws one pending card. Site admins only."""
-  revokeInvitationCard(id: ID!): InvitationCard!
 
   """
   Withdraws every pending card of a batch, answering the cards it withdrew. Site admins only.
@@ -1378,10 +1394,8 @@ type Query {
     workspaceId: ID!
   ): QueryIngredientSuggestionsConnection!
 
-  """
-  Every card in any state, newest first, optionally one batch. Site admins only.
-  """
-  invitationCards(after: String, batchId: ID, before: String, first: Int, last: Int): QueryInvitationCardsConnection!
+  """The batches of cards, newest first. Site admins only."""
+  invitationCardBatches(after: String, before: String, first: Int, last: Int): QueryInvitationCardBatchesConnection!
   me: User!
   ok: Boolean!
   possibleDuplicates(after: String, before: String, first: Int, last: Int, name: String!, workspaceId: ID): QueryPossibleDuplicatesConnection!
@@ -1726,14 +1740,14 @@ type QueryIngredientSuggestionsConnectionEdge {
   node: Ingredient!
 }
 
-type QueryInvitationCardsConnection {
-  edges: [QueryInvitationCardsConnectionEdge!]!
+type QueryInvitationCardBatchesConnection {
+  edges: [QueryInvitationCardBatchesConnectionEdge!]!
   pageInfo: PageInfo!
 }
 
-type QueryInvitationCardsConnectionEdge {
+type QueryInvitationCardBatchesConnectionEdge {
   cursor: String!
-  node: InvitationCard!
+  node: InvitationCardBatch!
 }
 
 type QueryPossibleDuplicatesConnection {

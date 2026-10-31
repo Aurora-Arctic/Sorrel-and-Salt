@@ -8,11 +8,11 @@ import { readNumberedPage } from '@/lib/numbered-page';
 import { membershipsOf } from '@/modules/coven';
 import { countCardArrivals, listCardArrivals, usersForAdmin } from '@/modules/identity';
 import { readListPlace } from '../../list-page';
-import type { CardsPageProps } from '../cards/types';
+import type { CardsPageProps } from '../invitation-cards/types';
 import type { Route } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Arrivals',
+  title: 'Card Sign-Ups',
 };
 
 const readArrivals = cache(
@@ -50,10 +50,10 @@ const readArrivals = cache(
 
 const arrivalsHref = ({ after, before }: { after?: string; before?: string }): Route =>
   (after
-    ? `/admin/arrivals?after=${encodeURIComponent(after)}`
+    ? `/admin/card-sign-ups?after=${encodeURIComponent(after)}`
     : before
-      ? `/admin/arrivals?before=${encodeURIComponent(before)}`
-      : '/admin/arrivals') as Route;
+      ? `/admin/card-sign-ups?before=${encodeURIComponent(before)}`
+      : '/admin/card-sign-ups') as Route;
 
 // Every account that arrived by a card, with the covens it owns. Services are the guard.
 export default async function ArrivalsPage({ searchParams }: CardsPageProps) {

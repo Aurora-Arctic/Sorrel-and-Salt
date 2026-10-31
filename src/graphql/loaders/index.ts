@@ -5,7 +5,12 @@ import {
   stepsBySpell,
   workingCountBySpell,
 } from '@/modules/grimoire';
-import { providersByUser, usersById, usersByIdForAdmin } from '@/modules/identity';
+import {
+  cardTotalsByBatch,
+  providersByUser,
+  usersById,
+  usersByIdForAdmin,
+} from '@/modules/identity';
 import {
   categoriesByIngredient,
   categoriesByVariant,
@@ -39,6 +44,7 @@ const LOADERS = {
   providersByUser,
   usersById,
   usersByIdForAdmin,
+  cardTotalsByBatch,
   categoriesByIngredient,
   folkNamesByIngredient,
   ingredientsById,

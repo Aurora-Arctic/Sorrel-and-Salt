@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { test, expect } from '../fixtures';
-import { decodeQr, pickExpiry } from '../cards';
+import { decodePdfLinks, defaultExpiry } from '../cards';
 import { recreateE2eDatabase } from '../database';
 import { signInAgainAs, signInAs } from '../session';
 
@@ -25,29 +25,13 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
     );
     const links: string[] = [];
 
-    await test.step('the admin mints a batch of two, downloads a code and the PDF, and sees two pending', async () => {
-      await page.goto('/admin/cards');
+    await test.step('the admin mints a sheet of nine, downloads the PDF and sees one batch', async () => {
+      await page.goto('/admin/invitation-cards');
       await page.getByRole('link', { name: 'Mint Cards' }).click();
       const dialog = page.getByRole('dialog', { name: 'Mint Cards' });
-      await dialog.getByLabel(/Number of Cards/).fill('2');
-      const expiry = await pickExpiry(dialog);
+      await dialog.getByLabel(/Number of Sheets/).fill('1');
       await dialog.getByRole('button', { name: 'Mint Cards' }).click();
-      await expect(dialog.getByText(/cannot be shown again/)).toBeVisible();
-
-      for (const n of [1, 2]) {
-        const link = await decodeQr(dialog.getByRole('img', { name: `Code for Card ${n}` }));
-        expect(link, `card ${n}'s code decodes`).not.toBeNull();
-        // The short form, on this site: the token is the last path segment.
-        expect(link).toMatch(
-          new RegExp(`^${origin.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/i/[\\w-]{12,}$`),
-        );
-        links.push(link as string);
-      }
-      expect(links[0]).not.toBe(links[1]);
-
-      const svgDownload = page.waitForEvent('download');
-      await dialog.getByRole('button', { name: 'Download Card 1' }).click();
-      expect((await svgDownload).suggestedFilename()).toMatch(/\.svg$/);
+      await expect(dialog.getByText(/9 cards minted/)).toBeVisible();
 
       const pdfDownload = page.waitForEvent('download');
       await dialog.getByRole('button', { name: 'Download PDF' }).click();
@@ -59,10 +43,23 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
 
       await dialog.getByRole('button', { name: 'Done' }).click();
       await expect(dialog).toBeHidden();
-      const pending = page.getByRole('row', { name: /^Pending / });
-      await expect(pending).toHaveCount(2);
+      const batch = page
+        .getByRole('row')
+        .filter({ has: page.getByRole('button', { name: /^Revoke Batch / }) });
+      await expect(batch).toHaveCount(1);
       // The day on screen is the day printed on the card: UTC, en-GB.
-      await expect(pending.first()).toContainText(expiry);
+      await expect(batch).toContainText(defaultExpiry());
+
+      const printed = await decodePdfLinks(page, path);
+      expect(printed, 'the nine codes on the sheet decode').toHaveLength(9);
+      for (const link of printed) {
+        // The short form, on this site: the token is the last path segment.
+        expect(link).toMatch(
+          new RegExp(`^${origin.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/i/[\\w-]{12,}$`),
+        );
+      }
+      expect(new Set(printed).size).toBe(9);
+      links.push(...printed);
     });
 
     await test.step('an unverified account opening the other card is sent to confirm its email', async () => {
@@ -90,18 +87,22 @@ test.describe('Story 88: A Card Invites a Stranger In', { tag: '@story-88' }, ()
       await expect(page.getByRole('button', { name: 'Accept Invitation' })).toHaveCount(0);
     });
 
-    await test.step('the list shows the card accepted with the account, and the admin revokes the other', async () => {
+    await test.step('the batch counts one accepted, and the admin revokes the rest', async () => {
       await signInAgainAs(page, adminId);
-      await page.goto('/admin/cards');
-      await expect(page.getByRole('row', { name: /^Accepted / })).toContainText('Fixture Person');
-      await page.getByRole('button', { name: /^Revoke card / }).click();
+      await page.goto('/admin/invitation-cards');
+      const batch = page
+        .getByRole('row')
+        .filter({ has: page.getByRole('button', { name: /^Revoke Batch / }) });
+      await expect(batch).toContainText('9');
+      await expect(batch).toContainText('1');
+      await page.getByRole('button', { name: /^Revoke Batch / }).click();
       await page
-        .getByRole('dialog', { name: 'Revoke Card' })
-        .getByRole('button', { name: 'Revoke', exact: true })
+        .getByRole('dialog', { name: 'Revoke Batch' })
+        .getByRole('button', { name: 'Revoke Batch' })
         .click();
-      await expect(page.getByRole('row', { name: /^Revoked / })).toHaveCount(1);
+      await expect(page.getByRole('button', { name: /^Revoke Batch / })).toHaveCount(0);
 
-      await page.goto('/admin/arrivals');
+      await page.goto('/admin/card-sign-ups');
       await expect(page.getByRole('row').filter({ hasText: 'Fixture Person' })).toHaveCount(1);
     });
 
