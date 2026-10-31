@@ -1329,7 +1329,7 @@ export interface SupportViewer {
 
 /** The admin list's narrowing; an absent part is no narrowing. */
 export interface SupportRequestFilter {
-  kind?: 'accessibility' | 'bug' | 'question';
+  about?: 'accessibility' | 'bug' | 'account' | 'compendium' | 'privacy' | 'feedback' | 'question';
   status?: 'open' | 'resolved';
   errorCode?: number;
 }

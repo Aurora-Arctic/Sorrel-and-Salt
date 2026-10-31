@@ -16,7 +16,7 @@ export const WithRepliesAndAnIssue: Story = {
     requests: [
       {
         id: 'r1',
-        kind: 'bug',
+        about: 'bug',
         subject: 'The grimoire list will not load',
         message: 'It shows a blank page.',
         status: 'open',
@@ -26,7 +26,7 @@ export const WithRepliesAndAnIssue: Story = {
       },
       {
         id: 'r2',
-        kind: 'question',
+        about: 'question',
         subject: 'How do I join a coven?',
         message: 'I was sent a card.',
         status: 'resolved',

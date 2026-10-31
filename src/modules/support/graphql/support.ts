@@ -2,7 +2,7 @@ import { builder } from '../../../graphql/builder';
 import { AuditInfo } from '../../../graphql/schema/audit';
 import { definedArgs, sessionOf } from '../../../graphql/context-helpers';
 import { UserRef } from '../../identity';
-import { supportRequestKind, supportRequestStatus } from '../schema/support-requests';
+import { supportRequestAbout, supportRequestStatus } from '../schema/support-requests';
 import {
   assignSupportRequest,
   getSupportRequest,
@@ -18,9 +18,9 @@ import { liftSupportTimeout, timeOutSupportSender } from '../services/timeouts';
 import type { SupportReplyRow, SupportRequestRow, SupportTimeoutRow } from '../types';
 import { MESSAGE_MAX_LENGTH, PATH_MAX_LENGTH, SUBJECT_MAX_LENGTH } from '../validation/support';
 
-const SupportKindEnum = builder.enumType('SupportKind', {
+const SupportAboutEnum = builder.enumType('SupportAbout', {
   description: 'What a support request is about.',
-  values: supportRequestKind.enumValues,
+  values: supportRequestAbout.enumValues,
 });
 
 const SupportStatusEnum = builder.enumType('SupportStatus', {
@@ -59,7 +59,7 @@ const SupportRequestRef = builder.objectRef<SupportRequestRow>('SupportRequest')
     'A request for help from the support form. A sender reads their own; a curator reads those marked for curators or assigned to them; an admin reads all.',
   fields: (t) => ({
     id: t.exposeID('id'),
-    kind: t.expose('kind', { type: SupportKindEnum }),
+    about: t.expose('about', { type: SupportAboutEnum }),
     subject: t.exposeString('subject'),
     message: t.exposeString('message'),
     path: t.string({
@@ -107,7 +107,7 @@ const SupportRequestRef = builder.objectRef<SupportRequestRow>('SupportRequest')
 
 const SupportRequestInput = builder.inputType('SupportRequestInput', {
   fields: (t) => ({
-    kind: t.field({ type: SupportKindEnum, required: true }),
+    about: t.field({ type: SupportAboutEnum, required: true }),
     subject: t.string({
       required: true,
       description: `1 to ${SUBJECT_MAX_LENGTH} characters.`,
@@ -142,13 +142,13 @@ builder.queryField('supportRequests', (t) =>
     description:
       'The support requests the viewer may read, open ahead of resolved and newest first within each. A curator reads those marked for curators or assigned to them; an admin reads all.',
     args: {
-      kind: t.arg({ type: SupportKindEnum, required: false }),
+      about: t.arg({ type: SupportAboutEnum, required: false }),
       status: t.arg({ type: SupportStatusEnum, required: false }),
       errorCode: t.arg.int({ required: false }),
     },
     authScopes: { curator: true },
-    resolve: (_root, { kind, status, errorCode }, page, context) =>
-      listSupportRequests(sessionOf(context), definedArgs({ kind, status, errorCode }), page),
+    resolve: (_root, { about, status, errorCode }, page, context) =>
+      listSupportRequests(sessionOf(context), definedArgs({ about, status, errorCode }), page),
   }),
 );
 

@@ -55,9 +55,9 @@ const NEWEST_FIRST: readonly SortPart[] = [
   { expression: sql`-extract(epoch from ${supportRequests.createdAt})`, type: 'numeric' },
 ];
 
-function filterArms({ kind, status, errorCode }: SupportRequestFilter): (SQL | undefined)[] {
+function filterArms({ about, status, errorCode }: SupportRequestFilter): (SQL | undefined)[] {
   return [
-    kind ? eq(supportRequests.kind, kind) : undefined,
+    about ? eq(supportRequests.about, about) : undefined,
     status ? eq(supportRequests.status, status) : undefined,
     errorCode === undefined ? undefined : eq(supportRequests.errorCode, errorCode),
   ];

@@ -4,9 +4,9 @@ export interface SupportPageProps {
   searchParams: Promise<SupportSearchParams>;
 }
 
-/** The page's address: its filter (`kind`, `status`, `error`), at most one cursor, and `?request=<id>` for one opened. */
+/** The page's address: its filter (`about`, `status`, `error`), at most one cursor, and `?request=<id>` for one opened. */
 export interface SupportSearchParams {
-  kind?: string | string[];
+  about?: string | string[];
   status?: string | string[];
   error?: string | string[];
   after?: string | string[];

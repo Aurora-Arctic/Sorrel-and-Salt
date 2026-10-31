@@ -45,7 +45,7 @@ describe('support_replies table', () => {
 
   it('accepts a reply for a request', async () => {
     const [request] = await sql`
-      insert into support_requests (kind, subject, message, path, created_by, updated_by)
+      insert into support_requests (about, subject, message, path, created_by, updated_by)
       values ('question', 'Subject', 'Message', '/', ${AUTHOR}, ${AUTHOR}) returning id`;
 
     await expect(

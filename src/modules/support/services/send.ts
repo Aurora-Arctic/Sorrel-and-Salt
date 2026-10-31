@@ -53,7 +53,7 @@ export async function sendSupportRequest(
     }
 
     const [row] = await write.insert(supportRequests, {
-      kind: values.kind,
+      about: values.about,
       subject: values.subject,
       message: values.message,
       path: redactPath(values.path),

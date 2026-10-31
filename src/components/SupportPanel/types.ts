@@ -1,10 +1,10 @@
-import type { SupportKindParam } from '../../lib/support-path';
+import type { SupportAboutParam } from '../../lib/support-path';
 
 /** What the support page can offer this visitor. */
 export type SupportPanelState =
   | { kind: 'signed-out' }
   | { kind: 'timed-out'; until: Date }
-  | { kind: 'form'; support?: SupportKindParam; errorCode?: number };
+  | { kind: 'form'; support?: SupportAboutParam; errorCode?: number };
 
 export interface SupportPanelProps {
   state: SupportPanelState;

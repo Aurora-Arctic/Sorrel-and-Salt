@@ -8,7 +8,7 @@ import ListFrame, { ListBody } from '../ListFrame';
 import { RouteModal, useOpenModalClick } from '../Modal';
 import Pager from '../Pager';
 import SupportDetail from './detail';
-import SupportRequestsFilter, { KIND_OPTIONS, STATUS_OPTIONS } from './filter';
+import SupportRequestsFilter, { ABOUT_OPTIONS, STATUS_OPTIONS } from './filter';
 import { supportHref } from './href';
 import type {
   SupportRequestEntry,
@@ -17,19 +17,19 @@ import type {
 } from './types';
 import './index.scss';
 
-// The Support page, `/admin/support`: a filter, a page of requests (kind, subject, status, sender,
+// The Support page, `/admin/support`: a filter, a page of requests (about, subject, status, sender,
 // assignee, curator visibility, error number), the pager, and the request `?request=` opens over them
 // (claude-docs/components/support-requests.md).
 
-const NO_FILTER: Filter = { kind: '', status: '', errorCode: '' };
+const NO_FILTER: Filter = { about: '', status: '', errorCode: '' };
 
 const labelOf = (options: readonly { value: string; label: string }[], value: string): string =>
   options.find((option) => option.value === value)?.label ?? value;
 
 /** "No support requests match “Bug” and 500. …", naming the filters in use. */
-function emptyText({ kind, status, errorCode }: Filter): string {
+function emptyText({ about, status, errorCode }: Filter): string {
   const filters = [
-    kind && `“${labelOf(KIND_OPTIONS, kind)}”`,
+    about && `“${labelOf(ABOUT_OPTIONS, about)}”`,
     status && `“${labelOf(STATUS_OPTIONS, status)}”`,
     errorCode && `error ${errorCode}`,
   ].filter((filter): filter is string => Boolean(filter));
@@ -66,13 +66,13 @@ const SupportRequests = ({
   <section className="support-requests" aria-label="Support Requests">
     <ListFrame>
       <SupportRequestsFilter
-        key={`${filter.kind}\n${filter.status}\n${filter.errorCode}`}
+        key={`${filter.about}\n${filter.status}\n${filter.errorCode}`}
         filter={filter}
       />
       <ListBody>
         <StackTable
           columns={[
-            { heading: 'Kind', cell: (request) => labelOf(KIND_OPTIONS, request.kind) },
+            { heading: 'About', cell: (request) => labelOf(ABOUT_OPTIONS, request.about) },
             {
               heading: 'Subject',
               cell: (request) => <SubjectLink request={request} filter={filter} cursor={cursor} />,

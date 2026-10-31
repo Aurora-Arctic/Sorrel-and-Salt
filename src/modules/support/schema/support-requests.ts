@@ -12,9 +12,13 @@ import {
 import { idColumn } from '../../../db/schema-parts';
 import { auditColumns, users } from '../../identity/schema/users';
 
-export const supportRequestKind = pgEnum('support_request_kind', [
+export const supportRequestAbout = pgEnum('support_request_about', [
   'accessibility',
   'bug',
+  'account',
+  'compendium',
+  'privacy',
+  'feedback',
   'question',
 ]);
 export const supportRequestStatus = pgEnum('support_request_status', ['open', 'resolved']);
@@ -25,7 +29,7 @@ export const supportRequests = pgTable(
   'support_requests',
   {
     id: idColumn(),
-    kind: supportRequestKind('kind').notNull(),
+    about: supportRequestAbout('about').notNull(),
     subject: text('subject').notNull(),
     message: text('message').notNull(),
     // The page it was sent from, with the segment after `/coven/` redacted.

@@ -171,7 +171,7 @@ describe('AccountMenu support link', () => {
     fireEvent.click(button());
     expect(screen.getByRole('link', { name: 'Support' })).toHaveAttribute(
       'href',
-      expect.stringMatching(/\?support=accessibility$/),
+      expect.stringMatching(/\?support=$/),
     );
   });
 });

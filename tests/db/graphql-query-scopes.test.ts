@@ -389,7 +389,7 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   setName: write('mutation { setName(name: "Fixture") { id } }'),
   setPassword: write('mutation { setPassword(newPassword: "fixture password") }'),
   sendSupportRequest: write(
-    'mutation { sendSupportRequest(input: { kind: bug, subject: "Fixture", message: "Fixture" }) { id } }',
+    'mutation { sendSupportRequest(input: { about: bug, subject: "Fixture", message: "Fixture" }) { id } }',
   ),
   replyToSupportRequest: write(
     `mutation { replyToSupportRequest(requestId: "${NOWHERE}", body: "Fixture") { id } }`,

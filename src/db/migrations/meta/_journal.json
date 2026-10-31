@@ -771,6 +771,13 @@
       "when": 1793461415216,
       "tag": "0109_compendium-hide-uncategorised",
       "breakpoints": true
+    },
+    {
+      "idx": 108,
+      "version": "7",
+      "when": 1793424700000,
+      "tag": "0108_support-about",
+      "breakpoints": true
     }
   ]
 }

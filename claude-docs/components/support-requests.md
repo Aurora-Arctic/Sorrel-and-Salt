@@ -10,9 +10,9 @@ same ones.
 
 ## Contracts
 
-- **A row shows** the kind, subject (a link that opens the request), status, sender, who it is assigned to, whether
+- **A row shows** what it is about, subject (a link that opens the request), status, sender, who it is assigned to, whether
   curators can see it, and the error number. `href.ts`'s `supportHref(filter, cursor, request?)` builds every address,
-  carrying `?kind=`, `?status=`, `?error=`, one cursor and `?request=`.
+  carrying `?about=`, `?status=`, `?error=`, one cursor and `?request=`.
 - **The filter** is [`FilterForm`](filter-form.md): an Error Number search, and Kind and Status selects.
 - **The opened request** shows From, Status, Error Number, Page, the message and the replies. The controls are:
   - **Reply** (a "Your Reply" field; Reply is disabled until there is a body) and **Resolve** (open requests only), for an

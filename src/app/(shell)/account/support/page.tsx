@@ -39,7 +39,7 @@ export default async function SupportListPage({ searchParams }: SupportListPageP
       <SupportList
         requests={rows.map((row, index) => ({
           id: row.id,
-          kind: row.kind,
+          about: row.about,
           subject: row.subject,
           message: row.message,
           status: row.status,

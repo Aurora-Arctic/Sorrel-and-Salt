@@ -110,3 +110,51 @@ describe('RadioGroupField, segmented', () => {
     expect(screen.getByRole('radio', { name: 'Toxic' })).toBeInTheDocument();
   });
 });
+
+// The cards layout: the same native radios, each inside a card that is the whole label, with the
+// description visible; nothing is chosen until the caller says so.
+describe('RadioGroupField, cards', () => {
+  function Cards({ error }: { error?: string }) {
+    const [value, setValue] = useState<string | null>(null);
+    return (
+      <>
+        <RadioGroupField<string>
+          legend="About"
+          name="about"
+          layout="cards"
+          value={value}
+          onChange={setValue}
+          error={error}
+          options={[
+            { value: 'bug', label: 'Bug', description: 'Something is broken.' },
+            { value: 'idea', label: 'Idea', description: 'Something to add.' },
+          ]}
+        />
+        <output>{value ?? 'none'}</output>
+      </>
+    );
+  }
+
+  it('checks nothing while the value is null, and shows every description', () => {
+    render(<Cards />);
+    const group = screen.getByRole('group', { name: 'About' });
+    const radios = within(group).getAllByRole('radio');
+    expect(radios).toHaveLength(2);
+    for (const radio of radios) expect(radio).not.toBeChecked();
+    expect(within(group).getByText('Something is broken.')).toBeVisible();
+    expect(within(group).getByText('Something to add.')).toBeVisible();
+  });
+
+  it('takes the choice when anywhere on the card is clicked', () => {
+    render(<Cards />);
+    fireEvent.click(screen.getByText('Something to add.'));
+    expect(screen.getByRole('radio', { name: /^Idea/ })).toBeChecked();
+    expect(screen.getByRole('status')).toHaveTextContent('idea');
+  });
+
+  it('reads an error with the group', () => {
+    render(<Cards error="Choose one." />);
+    const group = screen.getByRole('group', { name: 'About' });
+    expect(group).toHaveAccessibleDescription('Choose one.');
+  });
+});

@@ -4,13 +4,14 @@ import { getTableName } from 'drizzle-orm';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import { FIXTURE_USERS } from '@/db/seed/standard';
+import { SUPPORT_ABOUTS } from '@/lib/support-path';
 import { supportRequests } from '@/modules/support/schema/support-requests';
 
 // A message an account sends to whoever runs the site; the sender is `created_by`.
 
 const OWN_COLUMNS = [
   'id',
-  'kind',
+  'about',
   'subject',
   'message',
   'path',
@@ -56,16 +57,16 @@ describe('support_requests schema', () => {
 let sql: ReturnType<typeof postgres>;
 useTestDatabase((client) => (sql = client));
 
-async function insert(fields: { kind?: string; status?: string } = {}) {
-  const kind = fields.kind ?? 'question';
+async function insert(fields: { about?: string; status?: string } = {}) {
+  const about = fields.about ?? 'question';
   const [row] = fields.status
     ? await sql`
-        insert into support_requests (kind, subject, message, path, status, created_by, updated_by)
-        values (${kind}::support_request_kind, 'Subject', 'Message', '/', ${fields.status}::support_request_status, ${SENDER}, ${SENDER})
+        insert into support_requests (about, subject, message, path, status, created_by, updated_by)
+        values (${about}::support_request_about, 'Subject', 'Message', '/', ${fields.status}::support_request_status, ${SENDER}, ${SENDER})
         returning *`
     : await sql`
-        insert into support_requests (kind, subject, message, path, created_by, updated_by)
-        values (${kind}::support_request_kind, 'Subject', 'Message', '/', ${SENDER}, ${SENDER})
+        insert into support_requests (about, subject, message, path, created_by, updated_by)
+        values (${about}::support_request_about, 'Subject', 'Message', '/', ${SENDER}, ${SENDER})
         returning *`;
   return row;
 }
@@ -83,12 +84,12 @@ describe('support_requests table', () => {
     expect(row.resolved_at).toBeNull();
   });
 
-  it.each(['accessibility', 'bug', 'question'])('accepts the kind %s', async (kind) => {
-    await expect(insert({ kind })).resolves.toBeDefined();
+  it.each(SUPPORT_ABOUTS.map((about) => about.value))('accepts the about %s', async (about) => {
+    await expect(insert({ about })).resolves.toBeDefined();
   });
 
-  it('refuses a kind outside its enum', async () => {
-    const error = await failureOf(insert({ kind: 'complaint' }));
+  it('refuses an about outside its enum', async () => {
+    const error = await failureOf(insert({ about: 'complaint' }));
 
     // 22P02 is invalid_text_representation, which is what an enum refuses with.
     expect(error.code).toBe('22P02');

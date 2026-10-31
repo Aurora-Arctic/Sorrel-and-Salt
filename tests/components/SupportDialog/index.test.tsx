@@ -23,26 +23,30 @@ describe('SupportDialog', () => {
     expect(screen.queryByRole('dialog')).toBeNull();
   });
 
-  it('opens with the kind the address names', () => {
+  it('opens with what the address names', () => {
     search.mockReturnValue('support=question');
     render(<SupportDialog verified />);
     const dialog = screen.getByRole('dialog', { name: 'Contact Support' });
-    expect(within(dialog).getByRole('radio', { name: /Question/ })).toBeChecked();
+    expect(within(dialog).getByRole('radio', { name: /^Question/ })).toBeChecked();
   });
 
   it('shows the error number and the page for a report from an error page', () => {
     search.mockReturnValue('support=bug&error=404');
     render(<SupportDialog verified />);
     const dialog = screen.getByRole('dialog');
-    expect(within(dialog).getByRole('radio', { name: /Bug/ })).toBeChecked();
+    expect(within(dialog).getByRole('radio', { name: /^Bug/ })).toBeChecked();
     expect(within(dialog).getByText(/Error 404/)).toBeInTheDocument();
-    expect(within(dialog).getByText('/coven/fixture-coven')).toBeInTheDocument();
+    expect(within(dialog).getByRole('textbox', { name: 'Page' })).toHaveValue(
+      '/coven/fixture-coven',
+    );
   });
 
   it('reports the page named by from over the address it sits on', () => {
     search.mockReturnValue('support=bug&error=500&from=%2Fcoven%2Fx%2Fbroken');
     render(<SupportDialog verified />);
-    expect(within(screen.getByRole('dialog')).getByText('/coven/x/broken')).toBeInTheDocument();
+    expect(within(screen.getByRole('dialog')).getByRole('textbox', { name: 'Page' })).toHaveValue(
+      '/coven/x/broken',
+    );
   });
 
   it('sends an unverified account to confirm its address instead of showing the form', () => {

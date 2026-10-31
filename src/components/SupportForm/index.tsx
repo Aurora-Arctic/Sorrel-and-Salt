@@ -10,9 +10,10 @@ import type { Failure } from '../../lib/types';
 import { FieldShell, FormActions, RadioGroupField, fieldDescription } from '../Field';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
-import type { SupportFormProps, SupportKind } from './types';
+import { SUPPORT_ABOUTS } from '../../lib/support-path';
+import type { SupportAbout, SupportFormProps } from './types';
 
-// The support request form, in the Support dialog and on `/support`: a kind, a subject and a message,
+// The support request form, in the Support dialog and on `/support`: an about, a subject and a message,
 // sent as `sendSupportRequest`. The limits are the service's, said here so they are met before sending
 // (claude-docs/components/support-form.md).
 
@@ -26,30 +27,30 @@ const SendSupportRequestDocument = graphql(`
 
 const SUBJECT_LIMIT = 120;
 const MESSAGE_LIMIT = 4000;
+const PATH_LIMIT = 500;
 
-/** The kinds on offer, accessibility first. */
-const KINDS: readonly { value: SupportKind; label: string; description: string }[] = [
-  {
-    value: 'accessibility',
-    label: 'Accessibility',
-    description: 'Something on the site you cannot use or read.',
-  },
-  { value: 'bug', label: 'Bug', description: 'Something is broken or does not do what it says.' },
-  { value: 'question', label: 'Question', description: 'Something you would like to ask us.' },
-];
+/** Said under the choices when Send is pressed with none chosen. */
+const ABOUT_REQUIRED = 'Choose what this is about.';
+
+/** What the about field is called. */
+const ABOUT_LABEL = 'What Is This About?';
 
 const SupportForm = ({
-  kind: initialKind = 'accessibility',
+  about: initialAbout,
   errorCode,
   path,
   onDone,
 }: SupportFormProps): ReactElement => {
+  const aboutId = useId();
   const subjectId = useId();
   const messageId = useId();
-  const [kind, setKind] = useState<SupportKind>(initialKind);
+  const pageId = useId();
+  const [about, setAbout] = useState<SupportAbout | null>(initialAbout ?? null);
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
+  const [page, setPage] = useState(path);
   const [sending, setSending] = useState(false);
+  const [aboutMissing, setAboutMissing] = useState(false);
   const [failure, setFailure] = useState<Failure>({});
   const [sent, setSent] = useState(false);
 
@@ -64,20 +65,30 @@ const SupportForm = ({
     error: failure.field?.name === 'message' ? failure.field.message : undefined,
   });
 
+  const pageField = fieldDescription({
+    id: pageId,
+    note: `Up to ${PATH_LIMIT} characters.`,
+    error: failure.field?.name === 'path' ? failure.field.message : undefined,
+  });
+
   const ready = subject.trim() !== '' && message.trim() !== '';
-  const discard = useDiscardGuard(!sent && (subject !== '' || message !== ''));
+  const discard = useDiscardGuard(!sent && (subject !== '' || message !== '' || page !== path));
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (about === null) {
+      setAboutMissing(true);
+      return;
+    }
     setSending(true);
     setFailure({});
     try {
       await graphqlRequest(SendSupportRequestDocument, {
         input: {
-          kind,
+          about,
           subject: subject.trim(),
           message: message.trim(),
-          path,
+          ...(page.trim() !== '' && { path: page.trim() }),
           ...(errorCode !== undefined && { errorCode }),
         },
       });
@@ -85,7 +96,7 @@ const SupportForm = ({
       setSent(true);
     } catch (error) {
       setSending(false);
-      setFailure(readGraphqlFailure(error, ['subject', 'message']));
+      setFailure(readGraphqlFailure(error, ['about', 'subject', 'message', 'path']));
     }
   }
 
@@ -112,21 +123,35 @@ const SupportForm = ({
     <form className="form" noValidate onSubmit={(event) => void submit(event)}>
       {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
       <RadioGroupField
-        legend="Kind"
-        name="support-kind"
-        options={KINDS}
-        value={kind}
-        onChange={setKind}
+        legend={ABOUT_LABEL}
+        name={aboutId}
+        layout="cards"
+        options={SUPPORT_ABOUTS}
+        value={about}
         disabled={sending}
+        error={
+          aboutMissing && about === null
+            ? ABOUT_REQUIRED
+            : failure.field?.name === 'about'
+              ? failure.field.message
+              : undefined
+        }
+        onChange={setAbout}
       />
-      {(errorCode !== undefined || path) && (
-        <p className="support-form__context">
-          {errorCode !== undefined && <span>Error {errorCode}. </span>}
-          <span>
-            Page: <code>{path}</code>
-          </span>
-        </p>
-      )}
+      {errorCode !== undefined && <p className="support-form__context">Error {errorCode}.</p>}
+      <FieldShell label="Page" note={`Up to ${PATH_LIMIT} characters.`} {...pageField}>
+        <input
+          id={pageField.controlId}
+          className="input"
+          type="text"
+          autoComplete="off"
+          maxLength={PATH_LIMIT}
+          {...pageField.aria}
+          value={page}
+          disabled={sending}
+          onChange={(event) => setPage(event.target.value)}
+        />
+      </FieldShell>
       <FieldShell
         label="Subject"
         required
