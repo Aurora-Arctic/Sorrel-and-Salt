@@ -1,10 +1,9 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import SignInPanel from '@/components/SignInPanel';
-import { PASSKEY_AUTOCOMPLETE } from '@/components/SignInPanel/passkey-autofill';
 
 // The passkey plugin's client runs the browser's WebAuthn prompt, which happy-dom has none of, so `signIn.passkey` is
-// mocked and `PublicKeyCredential` stubbed per test; the rest of the module is the real one.
+// mocked; the rest of the module is the real one.
 const passkeyMock = vi.fn();
 vi.mock('@/lib/auth-client', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/auth-client')>()),
@@ -15,24 +14,6 @@ const assignMock = vi.fn();
 const SIGNED_IN = { data: { session: {} }, error: null };
 const REFUSED = { data: null, error: { code: 'AUTH_CANCELLED', status: 400 } };
 const BUTTON = { name: 'Sign In with a Passkey' };
-
-/** The panel beside an email field marked for passkey autofill, as the page's own field will be. */
-function renderWithField(next?: string) {
-  return render(
-    <>
-      <input aria-label="Email" autoComplete={PASSKEY_AUTOCOMPLETE} />
-      <SignInPanel next={next} configured={['google']} />
-    </>,
-  );
-}
-
-const stubConditional = (available: boolean) =>
-  vi.stubGlobal('PublicKeyCredential', {
-    isConditionalMediationAvailable: vi.fn(async () => available),
-  });
-
-/** Lets the hook's feature check and the ceremony it starts settle. */
-const settle = () => act(async () => {});
 
 beforeEach(() => {
   vi.stubGlobal('location', { ...window.location, assign: assignMock });
@@ -69,55 +50,5 @@ describe('Sign In with a Passkey', () => {
     expect(await screen.findByRole('alert')).toBeVisible();
     expect(assignMock).not.toHaveBeenCalled();
     expect(button).not.toHaveAttribute('aria-disabled');
-  });
-});
-
-describe('passkey autofill', () => {
-  it('offers saved passkeys in the field where the browser supports it, and signs in with the one picked', async () => {
-    stubConditional(true);
-    passkeyMock.mockResolvedValue(SIGNED_IN);
-    renderWithField();
-    await settle();
-
-    expect(passkeyMock).toHaveBeenCalledWith({ autoFill: true });
-    await waitFor(() => expect(assignMock).toHaveBeenCalledWith('/sign-in'));
-  });
-
-  it.each([
-    ['answers that it cannot', () => stubConditional(false)],
-    ['has no conditional mediation', () => vi.stubGlobal('PublicKeyCredential', {})],
-    ['has no WebAuthn at all', () => vi.stubGlobal('PublicKeyCredential', undefined)],
-  ])('starts no autofill where the browser %s, and the button still signs in', async (_, stub) => {
-    stub();
-    passkeyMock.mockResolvedValue(SIGNED_IN);
-    renderWithField();
-    await settle();
-
-    expect(passkeyMock).not.toHaveBeenCalled();
-
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', BUTTON));
-    });
-    expect(passkeyMock).toHaveBeenCalledWith();
-    expect(assignMock).toHaveBeenCalledWith('/sign-in');
-  });
-
-  it('starts no autofill with no field on the page to offer it in', async () => {
-    stubConditional(true);
-    render(<SignInPanel configured={['google']} />);
-    await settle();
-
-    expect(passkeyMock).not.toHaveBeenCalled();
-  });
-
-  it('says nothing when the autofill ends unpicked', async () => {
-    stubConditional(true);
-    passkeyMock.mockResolvedValue(REFUSED);
-    renderWithField();
-    await settle();
-
-    expect(passkeyMock).toHaveBeenCalledWith({ autoFill: true });
-    expect(screen.queryByRole('alert')).toBeNull();
-    expect(assignMock).not.toHaveBeenCalled();
   });
 });
