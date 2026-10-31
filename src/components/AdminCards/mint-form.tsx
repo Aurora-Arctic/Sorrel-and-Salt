@@ -150,25 +150,27 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
           onChange={(event) => setSheets(event.target.value)}
         />
       </FieldShell>
-      <FieldShell label="Expires On" required {...dayShell}>
-        <DateField
-          id={dayShell.controlId}
-          labelledBy={dayShell.labelId}
-          value={day}
-          min={earliestDay()}
+      <div className="admin-cards__when">
+        <FieldShell label="Expires On" required {...dayShell}>
+          <DateField
+            id={dayShell.controlId}
+            labelledBy={dayShell.labelId}
+            value={day}
+            min={earliestDay()}
+            disabled={minting}
+            onChange={setDay}
+            {...dayAria}
+          />
+        </FieldShell>
+        <SwitchField
+          label="Print Backs"
+          name="backs"
+          value="1"
+          checked={printBacks}
           disabled={minting}
-          onChange={setDay}
-          {...dayAria}
+          onChange={setPrintBacks}
         />
-      </FieldShell>
-      <SwitchField
-        label="Print Backs"
-        name="backs"
-        value="1"
-        checked={printBacks}
-        disabled={minting}
-        onChange={setPrintBacks}
-      />
+      </div>
       <FormActions
         noun="Cards"
         label="Mint Cards"
