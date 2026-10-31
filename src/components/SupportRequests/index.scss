@@ -30,7 +30,8 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) 15rem;
   gap: space(5);
-  align-items: start;
+  // Stretch, so the side column's rule runs the height of the taller column.
+  align-items: stretch;
 
   @media (width <= #{$shell-phone-width}) {
     grid-template-columns: minmax(0, 1fr);
