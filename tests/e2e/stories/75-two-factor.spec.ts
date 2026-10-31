@@ -19,7 +19,7 @@ const field = (scope: ReturnType<Page['getByRole']>, label: string) =>
   scope.getByLabel(new RegExp(`^${label}`));
 
 async function signInWithPassword(page: Page, email: string) {
-  await page.goto('/sign-in');
+  await page.goto('/sign-in?method=email');
   const main = page.getByRole('main');
   await field(main, 'Email Address').fill(email);
   await field(main, 'Password').fill(PASSWORD);

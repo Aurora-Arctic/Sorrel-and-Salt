@@ -6,9 +6,14 @@ import {
   CODE_LOCKED,
   WRONG_CODE,
 } from '@/components/SignInPanel/two-factor-step';
+import { setQuery } from './search-params';
 
 // Story 75's second step. Better Auth's client is mocked at the calls the step makes, so each test sets
 // the answer the server gives; tests/db/two-factor.test.ts proves the server gives it.
+vi.mock('next/navigation', async () => ({
+  useSearchParams: (await import('./search-params')).useSearchParams,
+}));
+
 const signInEmail = vi.fn();
 const verifyTotp = vi.fn();
 const verifyBackupCode = vi.fn();
@@ -47,11 +52,14 @@ async function passPassword() {
 describe('SignInPanel, the two-factor step', () => {
   beforeEach(() => {
     vi.stubGlobal('location', { assign });
+    // The panel opened on its email view, as a link to `?method=email` does.
+    setQuery('method=email');
     render(<SignInPanel next="/coven/hearth" configured={['google']} />);
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    setQuery('');
     signInEmail.mockReset();
     verifyTotp.mockReset();
     verifyBackupCode.mockReset();

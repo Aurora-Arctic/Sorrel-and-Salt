@@ -90,7 +90,7 @@ test(
     // Sign-up leaves a session cookie; the story starts signed out.
     await page.context().clearCookies();
 
-    await page.goto('/sign-in');
+    await page.goto('/sign-in?method=email');
     await page.getByRole('link', { name: 'Forgot Password?' }).click();
     await expect(page).toHaveURL('/forgot-password');
     await assertNoAccessibilityViolations(page);
@@ -157,7 +157,7 @@ test(
         insert into sign_in_failures (user_id, count) select id, 4 from users where email = ${email}`,
     );
 
-    await page.goto('/sign-in');
+    await page.goto('/sign-in?method=email');
     await field(page, 'Email Address').fill(email);
     await field(page, 'Password').fill('not the password at all, sadly');
     await page.getByRole('button', { name: 'Sign In', exact: true }).click();
