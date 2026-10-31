@@ -1330,6 +1330,6 @@ export interface SupportViewer {
 /** The admin list's narrowing; an absent part is no narrowing. */
 export interface SupportRequestFilter {
   about?: 'accessibility' | 'bug' | 'account' | 'compendium' | 'privacy' | 'feedback' | 'question';
-  status?: 'open' | 'resolved';
+  status?: 'open' | 'waiting_on_sender' | 'resolved' | 'closed';
   errorCode?: number;
 }

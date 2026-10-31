@@ -6,7 +6,7 @@ import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 import { supportReplies } from '@/modules/support/schema/support-replies';
 
-const OWN_COLUMNS = ['id', 'request_id', 'body'];
+const OWN_COLUMNS = ['id', 'request_id', 'body', 'author_role', 'visibility'];
 const REQUEST_INDEX = 'support_replies_request_idx';
 const AUTHOR = FIXTURE_USERS.E.id;
 
@@ -52,5 +52,33 @@ describe('support_replies table', () => {
       sql`insert into support_replies (request_id, body, created_by, updated_by)
           values (${request.id}, 'Hello', ${AUTHOR}, ${AUTHOR}) returning id`,
     ).resolves.toHaveLength(1);
+  });
+
+  it('reads an unmarked reply as staff and public, as the replies from before the columns do', async () => {
+    const [request] = await sql`
+      insert into support_requests (about, subject, message, path, created_by, updated_by)
+      values ('question', 'Subject', 'Message', '/', ${AUTHOR}, ${AUTHOR}) returning id`;
+    const [reply] = await sql`
+      insert into support_replies (request_id, body, created_by, updated_by)
+      values (${request.id}, 'Hello', ${AUTHOR}, ${AUTHOR}) returning author_role, visibility`;
+
+    expect(reply).toMatchObject({ author_role: 'staff', visibility: 'public' });
+  });
+
+  it('refuses an author role or visibility outside its enum', async () => {
+    const [request] = await sql`
+      insert into support_requests (about, subject, message, path, created_by, updated_by)
+      values ('question', 'Subject', 'Message', '/', ${AUTHOR}, ${AUTHOR}) returning id`;
+
+    for (const [role, visibility] of [
+      ['admin', 'public'],
+      ['staff', 'secret'],
+    ]) {
+      const error = await failureOf(
+        sql`insert into support_replies (request_id, body, author_role, visibility, created_by, updated_by)
+            values (${request.id}, 'Hello', ${role}::support_reply_author_role, ${visibility}::support_reply_visibility, ${AUTHOR}, ${AUTHOR})`,
+      );
+      expect(error.code).toBe('22P02');
+    }
   });
 });
