@@ -7,7 +7,7 @@ import { readGraphqlFailure } from '../../lib/graphql-failure';
 import type { Failure } from '../../lib/types';
 import { expiryOfDay } from '../../lib/utc';
 import DateField from '../DateField';
-import { FieldShell, FormActions, SwitchField, fieldDescription } from '../Field';
+import { FieldError, FieldShell, FormActions, SwitchField, fieldDescription } from '../Field';
 import { DiscardQuestion, RouteModal, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import MintedCards from './minted';
@@ -57,6 +57,14 @@ const sheetsOf = (text: string): number | undefined => {
   return text.trim() !== '' && Number.isInteger(sheets) ? sheets : undefined;
 };
 
+/** The sentence for a sheet count the service would refuse (the same one it sends), or undefined while the field is empty or in range. */
+const sheetsRefusal = (text: string): string | undefined => {
+  if (text.trim() === '') return undefined;
+  const sheets = sheetsOf(text);
+  const inRange = sheets !== undefined && sheets >= 1 && sheets <= MAX_SHEETS_PER_BATCH;
+  return inRange ? undefined : `A batch is from 1 to ${MAX_SHEETS_PER_BATCH} sheets`;
+};
+
 /** What the sheets come to, as typed: "27 cards"; empty while the field holds no whole number. */
 const totalOf = (text: string): string | undefined => {
   const sheets = sheetsOf(text);
@@ -80,7 +88,9 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
   const sheetsField = fieldDescription({
     id: sheetsId,
     hint: `A Letter sheet holds ${CARDS_PER_SHEET} cards.`,
-    error: failure.field?.name === 'sheets' ? failure.field.message : undefined,
+    error:
+      sheetsRefusal(sheets) ??
+      (failure.field?.name === 'sheets' ? failure.field.message : undefined),
   });
   const dayField = fieldDescription({
     id: dayId,
@@ -104,6 +114,11 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
     event.preventDefault();
     const wanted = sheetsOf(sheets);
     if (wanted === undefined || !day) return;
+    if (sheetsRefusal(sheets)) {
+      // The browser's own check moves the focus to the field, as it does for a form that is not noValidate.
+      (event.currentTarget.elements.namedItem('sheets') as HTMLInputElement).reportValidity();
+      return;
+    }
     setMinting(true);
     setFailure({});
     try {
@@ -145,10 +160,18 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
           required
           hint={`A Letter sheet holds ${CARDS_PER_SHEET} cards.`}
           {...sheetsShell}
+          error={undefined}
           after={
-            <p className="admin-cards__total" aria-live="polite">
-              {totalOf(sheets)}
-            </p>
+            // The refusal takes the total line's place, so the row keeps its height.
+            sheetsShell.error ? (
+              <div className="admin-cards__total admin-cards__total--error">
+                <FieldError id={sheetsShell.errorId} message={sheetsShell.error} />
+              </div>
+            ) : (
+              <p className="admin-cards__total" aria-live="polite">
+                {totalOf(sheets)}
+              </p>
+            )
           }
         >
           <input
@@ -158,6 +181,7 @@ const MintFields = ({ close }: MintFieldsProps): ReactElement => {
             inputMode="numeric"
             min={1}
             max={MAX_SHEETS_PER_BATCH}
+            name="sheets"
             step={1}
             placeholder={`1 to ${MAX_SHEETS_PER_BATCH}`}
             aria-required

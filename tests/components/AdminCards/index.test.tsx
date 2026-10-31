@@ -379,6 +379,41 @@ describe('AdminCards', () => {
     expect(within(dialog()).queryByRole('button', { name: /Download Card/ })).toBeNull();
   });
 
+  it('says a sheet count out of range while it is typed, before any submit, and clears it when it is back in range', () => {
+    const calls: CreateInvitationCardsMutationVariables[] = [];
+    mockGraphQLMutation<CreateInvitationCardsMutation, CreateInvitationCardsMutationVariables>(
+      'CreateInvitationCards',
+      (variables) => {
+        calls.push(variables);
+        throw new Error('the form must refuse this itself');
+      },
+    );
+    render(<AdminCards batches={[]} minting />);
+    const sheets = within(dialog()).getByRole('spinbutton', { name: /Number of Sheets/ });
+    const refusal = 'A batch is from 1 to 55 sheets';
+
+    expect(within(dialog()).queryByText(refusal)).not.toBeInTheDocument();
+    fireEvent.change(sheets, { target: { value: '56' } });
+    expect(within(dialog()).getByText(refusal)).toBeInTheDocument();
+    expect(sheets).toBeInvalid();
+    fireEvent.change(sheets, { target: { value: '55' } });
+    expect(within(dialog()).queryByText(refusal)).not.toBeInTheDocument();
+    fireEvent.change(sheets, { target: { value: '0' } });
+    expect(within(dialog()).getByText(refusal)).toBeInTheDocument();
+    fireEvent.change(sheets, { target: { value: '' } });
+    expect(within(dialog()).queryByText(refusal)).not.toBeInTheDocument();
+
+    // jsdom does not move the focus; the browser does, from its own report of the invalid field.
+    const report = vi.spyOn(sheets as HTMLInputElement, 'reportValidity');
+    fireEvent.change(sheets, { target: { value: '56' } });
+    pickFirstOfFebruary();
+    expect(mint()).toBeEnabled();
+    fireEvent.click(mint());
+    expect(calls).toHaveLength(0);
+    expect(report).toHaveBeenCalled();
+    expect(sheets).toHaveValue(56);
+  });
+
   it('sends nothing for Revoke Batch until the question is confirmed, then revokes the batch', async () => {
     const calls: RevokeInvitationCardBatchMutationVariables[] = [];
     mockGraphQLMutation<
