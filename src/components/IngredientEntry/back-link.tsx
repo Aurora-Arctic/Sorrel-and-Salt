@@ -18,6 +18,22 @@ interface BackLinkProps {
   children: ReactNode;
 }
 
+/** The chevron before a back control's words; the sign-in card's Back button draws it too, under the same `.back-link` look. */
+export function BackChevron(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" width="1em" height="1em" aria-hidden="true" focusable="false">
+      <path
+        d="M10 3.5L5.5 8l4.5 4.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 /** The page before this one, when it is one of `listPaths` itself: its path and query. */
 function previousListHref(listPaths: readonly string[]): string | undefined {
   // An enhancement past the floor, behind the `in` check: without it the link stays bare.
@@ -76,16 +92,7 @@ export default function BackLink({
       navigationTarget={ingredientLinkTarget(href)}
       onClick={goBack}
     >
-      <svg viewBox="0 0 16 16" width="1em" height="1em" aria-hidden="true" focusable="false">
-        <path
-          d="M10 3.5L5.5 8l4.5 4.5"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
+      <BackChevron />
       {children}
     </PendingLink>
   );

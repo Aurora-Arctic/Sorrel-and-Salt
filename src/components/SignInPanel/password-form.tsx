@@ -5,6 +5,7 @@ import { getSession, signIn, signUp } from '../../lib/auth-client';
 import { reportLeaving } from '../../lib/navigation';
 import { signInPath } from '../../lib/sign-in';
 import { useResultFocus } from '../../lib/use-result-focus';
+import { BackChevron } from '../IngredientEntry/back-link';
 import BusyButton from '../BusyButton';
 import { FieldShell, fieldDescription } from '../Field';
 import Notice from '../Notice';
@@ -143,9 +144,10 @@ const PasswordForm = ({
     <div className="sign-in-panel__password" ref={ref}>
       <button
         type="button"
-        className="btn btn--quiet btn--small sign-in-panel__back"
+        className="back-link sign-in-panel__back"
         onClick={onBack}
       >
+        <BackChevron />
         Back
       </button>
       {/* The view's heading: focus lands here when the view opens (./index.tsx). */}
