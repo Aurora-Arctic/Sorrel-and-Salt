@@ -5,4 +5,9 @@ import SiteFooter from '.';
 const meta = { title: 'Shell / Site Footer' } satisfies Meta;
 export default meta;
 
-export const Default: StoryObj = { render: () => <SiteFooter /> };
+export const Default: StoryObj = {
+  render: () => <SiteFooter />,
+};
+export const InShell: StoryObj = {
+  render: () => <SiteFooter inShell />,
+};

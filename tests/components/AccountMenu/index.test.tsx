@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 const pathname = vi.fn<() => string>();
 vi.mock('next/navigation', () => ({
   usePathname: () => pathname(),
+  useSearchParams: () => new URLSearchParams(),
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }),
 }));
 vi.mock('@/lib/auth-client', () => ({ signOut: vi.fn() }));
@@ -164,10 +165,13 @@ describe('initialsOf', () => {
 });
 
 describe('AccountMenu support link', () => {
-  it('offers Support in the panel, going to the support page', () => {
+  it('offers Support in the panel, opening the dialog over the current page', () => {
     render(<AccountMenu name="Fixture Owner" verified />);
     expect(screen.queryByRole('link', { name: 'Support' })).not.toBeInTheDocument();
     fireEvent.click(button());
-    expect(screen.getByRole('link', { name: 'Support' })).toHaveAttribute('href', '/support');
+    expect(screen.getByRole('link', { name: 'Support' })).toHaveAttribute(
+      'href',
+      expect.stringMatching(/\?support=accessibility$/),
+    );
   });
 });

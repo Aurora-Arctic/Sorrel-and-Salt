@@ -84,7 +84,7 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
         </ViewerIdProvider>
       </div>
       <SupportDialog verified={viewer.verified} />
-      <SiteFooter />
+      <SiteFooter inShell />
     </div>
   );
 };

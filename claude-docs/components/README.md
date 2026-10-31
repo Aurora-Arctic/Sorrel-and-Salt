@@ -36,6 +36,7 @@ design is in [`../design-decisions/mb.7-navigation.md`](../design-decisions/mb.7
 | [`section-nav.md`](section-nav.md)   | The one section nav for the coven and admin areas: icon tabs in the context row, a bottom bar on a phone                                     |
 | [`page-nav.md`](page-nav.md)         | A page's own menu of jump links to its sections, marking the one in view                                                                     |
 | [`link-hint.md`](link-hint.md)       | A dot inside a link that shows the click took while the next page loads                                                                      |
+| [`support-link.md`](support-link.md) | A link that opens the Support dialog over the current page                                                                                   |
 | [`site-footer.md`](site-footer.md)   | The line under every page in both frames, holding the Support link                                                                           |
 
 ## Lists

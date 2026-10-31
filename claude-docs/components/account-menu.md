@@ -60,6 +60,7 @@ panel it opens (MB.7). It is a client component.
     It wears an `IconTip` (`placement="below"`) reading "You have N Coven
     Invitations".
 
+- **Support is a `SupportLink`** ([`support-link.md`](support-link.md)) for a verified account: it opens the Support dialog over the current page.
 - **Sign Out is the panel's last row**, `SignOutButton` in
   `src/components/AccountMenu/sign-out-button.tsx`: a client component with no
   props, and drawn nowhere else (it sat beside the account page's heading until
