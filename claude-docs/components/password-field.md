@@ -42,8 +42,14 @@ Its users are the sign-in panel's form
   the dictionaries and most of the weight, is imported on the first
   keystroke, never with the page. The bar (full width of the input, hidden from
   assistive technology) and the text line below it are drawn from the first
-  render, the line holding two lines of height for a wrapping warning, so
-  nothing below them moves; the live region is empty until there is a verdict,
+  render, the line holding one line of height, so nothing below them moves;
+  the warnings are our own short ones (`SHORT_WARNINGS` in `strength.ts`, one
+  per key of zxcvbn's English `warnings`, typed so a missing key fails the
+  type check) in place of zxcvbn's, which run to 63 characters and wrapped.
+  The longest line, "Very Weak. A common password.", measures 204px in Lexend 300
+  at 13px, against the 224px of the narrowest card (320px viewport, 16px page
+  gutters, 32px card padding). "Strength: " is in a visually hidden span: read
+  aloud, not drawn, because drawn it did not fit; the live region is empty until there is a verdict,
   so nothing is announced before one. The sign-up form, the reset-password form
   and the account page's change-password form all use this one component.
 
