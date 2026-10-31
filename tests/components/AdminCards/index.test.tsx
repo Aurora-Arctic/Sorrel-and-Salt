@@ -107,7 +107,7 @@ describe('AdminCards', () => {
     expect(within(second).queryByRole('button', { name: /^View Refused Opens/ })).toBeNull();
   });
 
-  it("lists the account, the reason, the count and the latest time of a batch's refused opens", async () => {
+  it("lists the account, the reason, the count and the first and latest times of a batch's refused opens", async () => {
     mockGraphQLQuery<InvitationCardAttemptsQuery, InvitationCardAttemptsQueryVariables>(
       'InvitationCardAttempts',
       ({ batchId }) => {
@@ -121,6 +121,7 @@ describe('AdminCards', () => {
                   reason: 'revoked',
                   attempts: 2,
                   cardPosition: 14,
+                  firstAttemptedAt: '2026-10-28T08:00:00.000Z',
                   lastAttemptedAt: '2026-10-29T09:30:00.000Z',
                   account: { id: 'u1', name: 'Other Wort', email: 'other@example.test' },
                 },
@@ -135,7 +136,7 @@ describe('AdminCards', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /^View Refused Opens/ }));
 
-    const list = await screen.findByRole('dialog', { name: 'Refused Opens' });
+    const list = await screen.findByRole('dialog', { name: 'Refused Opens, Batch b1111111' });
     expect(await within(list).findByText('Other Wort')).toBeInTheDocument();
     const row = within(list).getByText('Other Wort').closest('tr') as HTMLElement;
     expect(within(row).getByText('other@example.test')).toBeInTheDocument();
@@ -146,10 +147,18 @@ describe('AdminCards', () => {
     expect(within(row).getByText('Sheet 2, Card 5')).toBeInTheDocument();
     expect(within(row).getByText('Revoked')).toBeInTheDocument();
     expect(within(row).getByText('2')).toBeInTheDocument();
-    expect(row.querySelector('time')).toHaveAttribute('datetime', '2026-10-29T09:30:00.000Z');
+    const times = row.querySelectorAll('time');
+    expect(times[0]).toHaveAttribute('datetime', '2026-10-28T08:00:00.000Z');
+    expect(times[1]).toHaveAttribute('datetime', '2026-10-29T09:30:00.000Z');
+    expect(within(list).getByRole('columnheader', { name: 'First' })).toBeInTheDocument();
+    expect(within(list).queryByRole('columnheader', { name: 'Email' })).toBeNull();
+    // The email sits in the Account cell, under the name.
+    expect(
+      within(within(row).getAllByRole('cell')[0]).getByText('other@example.test'),
+    ).toBeInTheDocument();
   });
 
-  it('shows a removed account as Removed Account, with no link and no email', async () => {
+  it('shows a removed account as Removed account, with no link and no email', async () => {
     mockGraphQLQuery<InvitationCardAttemptsQuery, InvitationCardAttemptsQueryVariables>(
       'InvitationCardAttempts',
       () => ({
@@ -158,9 +167,10 @@ describe('AdminCards', () => {
             {
               node: {
                 id: 'a2',
-                reason: 'expired',
+                reason: 'accepted',
                 attempts: 1,
                 cardPosition: null,
+                firstAttemptedAt: '2026-10-28T08:00:00.000Z',
                 lastAttemptedAt: '2026-10-29T09:30:00.000Z',
                 account: null,
               },
@@ -174,8 +184,10 @@ describe('AdminCards', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /^View Refused Opens/ }));
 
-    const list = await screen.findByRole('dialog', { name: 'Refused Opens' });
-    expect(await within(list).findByText('Removed Account')).toBeInTheDocument();
+    const list = await screen.findByRole('dialog', { name: 'Refused Opens, Batch b1111111' });
+    expect(within(list).getByText('Loading…')).toBeInTheDocument();
+    expect(await within(list).findByText('Removed account')).toBeInTheDocument();
+    expect(within(list).getByText('Accepted by another account')).toBeInTheDocument();
     expect(within(list).getByText('Unknown')).toBeInTheDocument();
     expect(within(list).queryByRole('link')).toBeNull();
   });

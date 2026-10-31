@@ -29,6 +29,7 @@ const CardAttemptsDocument = graphql(`
           reason
           attempts
           cardPosition
+          firstAttemptedAt
           lastAttemptedAt
           account {
             id
@@ -48,7 +49,7 @@ const CardAttemptsDocument = graphql(`
 const REASON_LABEL: Record<CardAttemptReason, string> = {
   revoked: 'Revoked',
   expired: 'Expired',
-  accepted: 'Accepted By Another Account',
+  accepted: 'Accepted by another account',
 };
 
 const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
@@ -77,6 +78,7 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
             reason: node.reason,
             attempts: node.attempts,
             cardPosition: node.cardPosition ?? null,
+            firstAttemptedAt: new Date(node.firstAttemptedAt),
             lastAttemptedAt: new Date(node.lastAttemptedAt),
             accountId: node.account?.id ?? null,
             accountName: node.account?.name ?? null,
@@ -107,20 +109,27 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
             heading: 'Account',
             cell: (a) =>
               a.accountId && a.accountName ? (
-                <Link
-                  href={userListHref(
-                    { query: '', awaitingApproval: false },
-                    undefined,
-                    a.accountId,
+                <>
+                  <Link
+                    href={userListHref(
+                      { query: '', awaitingApproval: false },
+                      undefined,
+                      a.accountId,
+                    )}
+                  >
+                    {a.accountName}
+                  </Link>
+                  {a.accountEmail && (
+                    <>
+                      <br />
+                      <span className="admin-cards__none">{a.accountEmail}</span>
+                    </>
                   )}
-                >
-                  {a.accountName}
-                </Link>
+                </>
               ) : (
-                'Removed Account'
+                'Removed account'
               ),
           },
-          { heading: 'Email', cell: (a) => a.accountEmail ?? '' },
           {
             heading: 'Card',
             cell: (a) => {
@@ -132,6 +141,12 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
           { heading: 'Reason', cell: (a) => REASON_LABEL[a.reason] },
           { heading: 'Times', cell: (a) => a.attempts },
           {
+            heading: 'First',
+            cell: (a) => (
+              <time dateTime={a.firstAttemptedAt.toISOString()}>{inUtc(a.firstAttemptedAt)}</time>
+            ),
+          },
+          {
             heading: 'Latest',
             cell: (a) => (
               <time dateTime={a.lastAttemptedAt.toISOString()}>{inUtc(a.lastAttemptedAt)}</time>
@@ -140,7 +155,7 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
         ]}
         rows={attempts}
         rowKey={(a) => a.id}
-        empty={loading ? 'Loading Attempts' : 'No refused opens.'}
+        empty={loading ? 'Loading…' : 'No refused opens.'}
       />
       {more && after && (
         <button
@@ -165,7 +180,7 @@ const CardAttempts = ({ batchId }: { batchId: string }): ReactElement => (
     label="View"
     ariaLabel={`View Refused Opens, batch ${batchName(batchId)}`}
     className="btn btn--small"
-    title="Refused Opens"
+    title={`Refused Opens, Batch ${batchName(batchId)}`}
   >
     {() => <AttemptList batchId={batchId} />}
   </ModalButton>
