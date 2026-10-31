@@ -388,6 +388,9 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await editing.getByRole('button', { name: 'Open All' }).click();
       const save = editing.getByRole('button', { name: 'Save Ingredient' });
       await expect(save).toBeDisabled();
+      // Scanned before the edits and not between them and Save: the form autosaves 3 s after its last change,
+      // and a scan in that gap lets the autosave file the edits and leaves Save disabled with nothing to save.
+      await assertNoAccessibilityViolations(page);
       await editing
         .getByRole('textbox', { name: 'Name', exact: true })
         .fill('Aaa Testwort Renamed');
@@ -396,7 +399,6 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       const oil = editing.getByRole('group', { name: 'Oil', exact: true });
       await oil.getByRole('textbox', { name: 'Safety Notes' }).fill('Dilute before use.');
       await expect(save).toBeEnabled();
-      await assertNoAccessibilityViolations(page);
       await save.click();
       const renamed = page.getByRole('dialog', {
         name: 'Edit Ingredient, Aaa Testwort Renamed',
