@@ -3,7 +3,7 @@ import InvitationPanel from '../../invite/[token]/invitation-panel';
 import type { InvitePageProps } from '../../invite/[token]/types';
 
 export const metadata: Metadata = {
-  title: 'Your Invitation — Sorrel & Salt',
+  title: 'Your Invitation',
 };
 
 // A card's short link, printed small: the same panel as `/invite/[token]`.
