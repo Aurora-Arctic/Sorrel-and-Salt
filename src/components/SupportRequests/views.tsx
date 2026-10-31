@@ -1,8 +1,7 @@
 'use client';
 
 import { type KeyboardEvent, type ReactElement, type ReactNode, useId, useRef } from 'react';
-import Link from 'next/link';
-import { usePendingNavigation } from '../../lib/navigation';
+import { PendingLink, usePendingNavigation } from '../../lib/navigation';
 import { SUPPORT_VIEWS, type SupportView } from '../../lib/support-path';
 import { supportHref } from './href';
 import type { SupportRequestsFilter } from './types';
@@ -48,7 +47,7 @@ const SupportViews = ({
     <>
       <div role="tablist" aria-label="Support Views" className="support-views">
         {SUPPORT_VIEWS.map(({ value, label }, index) => (
-          <Link
+          <PendingLink
             key={value}
             ref={(node) => {
               tabs.current[index] = node;
@@ -69,7 +68,7 @@ const SupportViews = ({
                 <span className="support-views__count">({counts[value]})</span>
               </>
             )}
-          </Link>
+          </PendingLink>
         ))}
       </div>
       <div role="tabpanel" id={`${id}-panel`} aria-labelledby={tabId(filter.view)}>
