@@ -58,7 +58,7 @@ export const ADMIN_PAGES = {
     label: 'People',
     icon: 'people',
     description:
-      'Every account and its role, the admin invitations waiting, and who changed which privilege.',
+      'Every account and its role, the admin invitations waiting, the printed invitation cards and who arrived by them, and who changed which privilege.',
     tabs: [
       { href: '/admin/users', label: 'Users', filtered: true },
       { href: '/admin/invitations', label: 'Invitations' },

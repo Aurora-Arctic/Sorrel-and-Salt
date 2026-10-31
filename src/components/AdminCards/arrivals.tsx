@@ -35,17 +35,29 @@ const AdminArrivals = ({
       <ListBody>
         <StackTable
           columns={[
-            { heading: 'Account', cell: (arrival) => arrival.accountName },
-            { heading: 'Email', cell: (arrival) => arrival.accountEmail },
             {
-              heading: 'Accepted',
+              heading: 'Account',
+              cell: (arrival) => (
+                <>
+                  {arrival.accountName}
+                  {arrival.accountEmail && (
+                    <>
+                      <br />
+                      <span className="admin-cards__none">{arrival.accountEmail}</span>
+                    </>
+                  )}
+                </>
+              ),
+            },
+            {
+              heading: 'Accepted On',
               cell: (arrival) => (
                 <time dateTime={arrival.acceptedAt.toISOString()}>{inUtc(arrival.acceptedAt)}</time>
               ),
             },
             { heading: 'Batch', cell: (arrival) => batchName(arrival.batchId) },
             {
-              heading: 'Covens',
+              heading: 'Covens Owned',
               cell: (arrival) =>
                 arrival.covens.length > 0 ? (
                   arrival.covens.join(', ')
