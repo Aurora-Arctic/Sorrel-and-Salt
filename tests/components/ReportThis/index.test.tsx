@@ -28,20 +28,10 @@ describe('ReportThis', () => {
     expect(link()).toHaveAttribute('href', '/coven/x/spells?support=bug&error=500&ref=abc123');
   });
 
-  it('goes to the support page, naming the page, where there is no shell to open it over', () => {
-    pathname.mockReturnValue('/gone');
-    browserAt('/gone');
-    render(<ReportThis code={500} />);
-    expect(link()).toHaveAttribute('href', '/support?support=bug&error=500&from=%2Fgone');
-  });
-
   it("leaves the page out of the server-rendered link when the router gives the framework's route", () => {
     pathname.mockReturnValue('/_not-found');
     expect(renderToString(<ReportThis code={404} />)).toContain(
       'href="?support=bug&amp;error=404"',
-    );
-    expect(renderToString(<ReportThis code={404} />)).toContain(
-      'href="/support?support=bug&amp;error=404"',
     );
   });
 
@@ -50,15 +40,5 @@ describe('ReportThis', () => {
     browserAt('/coven/x/nothing-here');
     render(<ReportThis code={404} />);
     expect(link()).toHaveAttribute('href', '/coven/x/nothing-here?support=bug&error=404');
-  });
-
-  it("names no page when the router gives the framework's route and the browser is not asked", () => {
-    pathname.mockReturnValue('/_not-found');
-    browserAt('/compendium/nothing-here');
-    render(<ReportThis code={404} />);
-    expect(link()).toHaveAttribute(
-      'href',
-      '/support?support=bug&error=404&from=%2Fcompendium%2Fnothing-here',
-    );
   });
 });

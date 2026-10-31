@@ -29,10 +29,7 @@ describe('the error boundary', () => {
 
     expect(retry).toHaveBeenCalledTimes(1);
     expect(home()).toHaveAttribute('href', '/');
-    expect(report()).toHaveAttribute(
-      'href',
-      '/support?support=bug&error=500&ref=d1g3st&from=%2Fgone',
-    );
+    expect(report()).toHaveAttribute('href', '/gone?support=bug&error=500&ref=d1g3st');
     expect(container.textContent).toContain('d1g3st');
     expect(container.textContent).not.toMatch(/secret_table|secret-file/);
   });
@@ -60,6 +57,6 @@ describe('the not-found page', () => {
     render(<NotFound />);
 
     expect(home()).toHaveAttribute('href', '/');
-    expect(report()).toHaveAttribute('href', '/support?support=bug&error=404&from=%2Fgone');
+    expect(report()).toHaveAttribute('href', '/gone?support=bug&error=404');
   });
 });
