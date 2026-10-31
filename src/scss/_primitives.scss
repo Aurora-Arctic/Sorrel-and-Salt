@@ -367,6 +367,11 @@
     }
   }
 
+  // Inside a head's `.header` column the column's gap spaces it, as it spaces the eyebrow and the lede.
+  .header > .page-header {
+    margin-bottom: 0;
+  }
+
   // A mark before the heading (`lead`), kept on the heading's line.
   .page-header__title {
     display: flex;
@@ -389,8 +394,8 @@
 
   .add-action__plus svg {
     display: block;
-    width: 1.25rem;
-    height: 1.25rem;
+    width: $glyph-size-large;
+    height: $glyph-size-large;
   }
 
   // Under the forms' column, 28rem of its own width, an action goes beneath the heading rather than
@@ -534,8 +539,15 @@
     @include arrived;
   }
 
-  @keyframes list-frame-fade-in {
+  // The site's one fade in and one fade out, emitted once: a list's arrival, a callout, a mark leaving.
+  @keyframes fade-in {
     from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes fade-out {
+    to {
       opacity: 0;
     }
   }
@@ -646,9 +658,7 @@
   // A titled section of a framed page: its head, then its content. Clear of
   // the top inset when the page's own nav jumps to it.
   .page-frame__section {
-    display: flex;
-    flex-direction: column;
-    gap: space(3);
+    @include stack(3);
     scroll-margin-top: calc(#{$top-inset} + #{space(4)});
 
     > h2 {
@@ -679,9 +689,7 @@
   .page-column,
   .coven-layout {
     box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    gap: space(5);
+    @include stack(5);
     margin-inline: auto;
     padding: space(6) space(4);
   }
@@ -724,16 +732,24 @@
   }
 
   .admin-contents__list {
-    display: flex;
-    flex-direction: column;
-    gap: space(3);
+    @include stack(3);
 
     @include list-reset;
 
     > li {
-      display: flex;
-      flex-direction: column;
-      gap: space(1);
+      @include stack(1);
+    }
+
+    // The links in the body ink, followed or not: the list reads as a table of contents, and the
+    // default unvisited accent would make the admin and coven overviews differ by browser history.
+    // Hover is every link's; this rule matches the global hover's weight and follows it, so it
+    // restates it.
+    a {
+      color: $text-primary;
+
+      &:hover {
+        color: $accent-hover;
+      }
     }
   }
 
@@ -758,9 +774,7 @@
   // claude-docs/components/page-nav.md, "Where it stands";
   // claude-docs/auth/admin-bootstrap.md, "The account page".
   .page-with-nav {
-    display: flex;
-    flex-direction: column;
-    gap: space(6);
+    @include stack(6);
   }
 
   .page-with-nav > * {
@@ -818,7 +832,7 @@
     border-radius: 50%;
 
     > svg {
-      width: 0.875rem;
+      width: $glyph-size-small;
       height: auto;
     }
   }
@@ -903,9 +917,7 @@
       }
 
       > tbody {
-        display: flex;
-        flex-direction: column;
-        gap: space(3);
+        @include stack(3);
       }
 
       // Every card on the card surface, so the bands give way: each row is already its own box. Room around
@@ -967,6 +979,15 @@
         }
       }
     }
+  }
+
+  // The row a detail page opens with: the way back at the left, anything the page adds at the
+  // right, on one centre line. The ingredient entry page and the spell recipe page both draw it.
+  .back-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: space(3);
   }
 
   // A sentence about the whole view rather than one field: a form's root error, a sent confirmation.
@@ -1073,16 +1094,16 @@
   .notice--warn,
   .notice--caution {
     position: relative;
-    padding-inline-start: calc(#{space(3)} + 1.0125rem + #{space(2)});
+    padding-inline-start: calc(#{space(3)} + #{$notice-mark-size} + #{space(2)});
 
     &::before {
       content: '';
       position: absolute;
       // On the first line of text: the top padding and half the line's room over the triangle.
-      inset-block-start: calc(#{space(2)} + 0.05rem);
+      inset-block-start: calc(#{space(2)} + #{$notice-mark-drop});
       inset-inline-start: space(3);
-      inline-size: 1.0125rem;
-      block-size: 1.0125rem;
+      inline-size: $notice-mark-size;
+      block-size: $notice-mark-size;
       @include warning-mark(var(--notice-icon));
     }
   }
@@ -1187,9 +1208,7 @@
   }
 
   .field {
-    display: flex;
-    flex-direction: column;
-    gap: space(2);
+    @include stack(2);
   }
 
   // A size, not a look, as `.btn--small` is, so it composes with every
@@ -1853,11 +1872,10 @@
       pointer-events: none;
     }
 
-    // Half the segment: the icons are a line drawing, so they need the room to read. A form icon is 1.25em
-    // of its line, so this line's size is set to bring it to 1.5rem.
+    // Half the segment: the icons are a line drawing, so they need the room to read.
     .radio__segment-icon {
       display: flex;
-      font-size: 1.2rem;
+      font-size: $form-icon-line;
       line-height: 1;
     }
 
@@ -1973,9 +1991,7 @@
 
   // Groups rows under one name — checkboxes, or a list of entries.
   .fieldset {
-    display: flex;
-    flex-direction: column;
-    gap: space(2);
+    @include stack(2);
     min-width: 0;
     margin: 0;
     padding: 0;
@@ -2004,9 +2020,7 @@
 
   // Chips and badges laid out as an IngredientCard will need; composes with `.modal`.
   .specimen {
-    display: flex;
-    flex-direction: column;
-    gap: space(3);
+    @include stack(3);
   }
 
   // The name block and the badges side by side while they fit; when they do not

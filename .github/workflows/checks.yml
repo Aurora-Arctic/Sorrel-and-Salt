@@ -1,7 +1,7 @@
 name: Checks
 
-# One plain job each for lint, format, typecheck, codegen, build, destructive-ddl,
-# migration-order and audit, reporting as `checks / <name>`. workflow_call only, from
+# One plain job each for lint, unused, format, typecheck, codegen, build,
+# destructive-ddl, migration-order and audit, reporting as `checks / <name>`. workflow_call only, from
 # pr-gate.yml. claude-docs/ci/reusable-checks.md, "Reusable checks" is the walkthrough.
 #
 # The jobs share their steps through .github/actions/run-check. A path-filtered
@@ -121,6 +121,40 @@ jobs:
           slug: lint
           command: npm run lint
           summarize: .github/scripts/summarize-lint.sh
+          comment: minimize
+          pr-number: ${{ inputs.pr-number }}
+          merge-queue: ${{ inputs.merge-queue }}
+
+  # Non-blocking and never a required check: the run-check step continues on
+  # error, so knip's findings reach the PR comment without failing the job.
+  # It shares lint's path filter.
+  unused:
+    name: unused
+    if: ${{ format('{0}', inputs.run-lint) != 'false' }}
+    runs-on: ubuntu-26.04
+    container:
+      image: ${{ inputs.image }}
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+      # The image's default user cannot write the runner's bind-mounted
+      # _temp/_runner_file_commands; actions/checkout fails EACCES without it.
+      options: --user root
+    defaults:
+      run:
+        working-directory: /app
+        # A `container:` job defaults to sh, which has no `set -o pipefail`.
+        shell: bash
+    steps:
+      - name: Checkout into /app
+        uses: Aurora-Arctic/Sorrel-and-Salt/.github/actions/checkout-to-app@main
+
+      - uses: ./.github/actions/run-check
+        continue-on-error: true
+        with:
+          label: Unused Code (Non-Blocking)
+          slug: unused
+          command: npm run lint:unused
           comment: minimize
           pr-number: ${{ inputs.pr-number }}
           merge-queue: ${{ inputs.merge-queue }}

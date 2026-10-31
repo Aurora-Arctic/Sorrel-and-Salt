@@ -36,7 +36,7 @@ export interface CompleteWorkingActionProps extends Omit<
   workedOn?: string;
 }
 
-/** A coven member the participants box suggests. */
+/** A coven member, by id and the name their row holds. */
 export interface WorkingMember {
   userId: string;
   name: string;
@@ -65,9 +65,8 @@ export interface RecordWorkingDialogProps {
   spellId: string;
   /** A working is never visible to more people than its spell. */
   spellVisibility: 'private' | 'workspace';
-  members: readonly WorkingMember[];
   /** The signed-in member recording: a new working starts with them as a participant, who may remove themselves. */
-  recorderId?: string;
+  recorder?: WorkingMember;
   steps: readonly WorkingStep[];
   /** Present: the dialog changes this working (`updateWorking`) rather than recording a new one. Only its recorder may. */
   working?: EditableWorking;
@@ -81,4 +80,7 @@ export interface RecordWorkingDialogProps {
 export type RecordWorkingButtonProps = Omit<
   RecordWorkingDialogProps,
   'working' | 'onClose' | 'returnTo'
->;
+> & {
+  /** The spell's name as shown, which the button's name ends with, as Preview's and More's do. */
+  spellName: string;
+};

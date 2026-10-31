@@ -381,7 +381,11 @@ describe('IngredientEntry', () => {
     const body = details.parentElement!;
 
     expect(within(body).getByRole('heading', { name: 'Correspondences' })).toBeInTheDocument();
-    expect(within(body).getAllByText('None recorded')).toHaveLength(5);
+    expect(
+      within(body).getAllByText(
+        /^No (elements|celestial bodies|zodiac signs|colours|deities) recorded\.$/,
+      ),
+    ).toHaveLength(5);
     expect(within(body).getByText('No folk names recorded.')).toBeInTheDocument();
     expect(within(body).getByText('No categories recorded.')).toBeInTheDocument();
   });
@@ -1028,19 +1032,20 @@ describe('IngredientEntry edit', () => {
     const renderOwn = (ui: ReactElement) =>
       render(<QueryClientProvider client={makeQueryClient()}>{ui}</QueryClientProvider>);
 
-    // The icons the list card has: the pencil and the bin.
-    it("draws the page's Edit as the pencil beside the name, named for the entry, with the bin and no menu", () => {
+    // The pencil, then the three dots holding Delete Ingredient: no bin beside them.
+    it("draws the page's Edit as the pencil beside the name, named for the entry, then the three dots and no bin", () => {
       renderOwn(<IngredientEntry detail={own()} hrefOf={hrefOf} edit={covenEdit()} />);
 
       expect(screen.getByRole('link', { name: 'Edit Testwort' })).toHaveAttribute(
         'href',
         `${OWN}?edit`,
       );
-      expect(
-        screen.getByRole('button', { name: 'Delete Ingredient Testwort' }),
-      ).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /^Delete/ })).not.toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
-      expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'More for Testwort' })).toHaveAttribute(
+        'aria-haspopup',
+        'menu',
+      );
     });
 
     it("heads the dialog the page's Edit opens as an ingredient's, writing to the coven", () => {
@@ -1399,7 +1404,7 @@ describe('IngredientEntry stock', () => {
     );
     expect(open.getByRole('spinbutton', { name: 'Quantity, Testoil' })).toHaveValue(null);
     // The new row is a place to fill, not a change, so Save is off.
-    expect(open.getByRole('button', { name: 'Save' })).toBeDisabled();
+    expect(open.getByRole('button', { name: 'Save Stock' })).toBeDisabled();
   });
 
   it('gives a role that may not edit plain jars with no button', () => {

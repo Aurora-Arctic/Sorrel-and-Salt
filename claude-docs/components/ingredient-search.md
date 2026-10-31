@@ -53,16 +53,16 @@ in the filter slot to carry.
   name, and the other filters the consumer carries in `searchHref` stay.
 - **The magnifier Search button is the form's one submit.** It sits inside
   the box at its start (Combobox's `leading` slot), with the clear alone at the
-  end: `[magnifier  Search names, forms & descriptions  x]`. There is no chevron (`toggle={false}`),
+  end: `[magnifier  Search  x]`. There is no chevron (`toggle={false}`),
   since typing opens the dropdown already. This is the owner's call of
   2026-10-16, after a survey of design systems; Nielsen Norman Group's
   [magnifying-glass article](https://www.nngroup.com/articles/magnifying-glass-icon/)
   says a magnifier must submit when clicked. Without JavaScript the box is a
   plain GET form to `action`, sending its text as `query`.
-- **The box has no visible label, and its placeholder says what the search reads**
-  (the owner, 2026-10-19): "Search names, forms & descriptions", the fields the
-  ranked search matches (label, formal name, folk names, forms and descriptions;
-  [`compendium-read.md`](../db/compendium-read.md)). The accessible name is still
+- **The box has no visible label, and its placeholder is "Search"**, the site's
+  one placeholder for a search box (placeholders are one or two words). The fields
+  the ranked search matches (label, formal name, folk names, forms and descriptions)
+  are in [`compendium-read.md`](../db/compendium-read.md). The accessible name is still
   "Name": the box is drawn without `FieldShell`, and Combobox draws its own
   visually hidden label, so no second hide mechanism exists. The clear keeps its
   name, "Clear Name", and the status region "Name results".
@@ -134,7 +134,7 @@ in the filter slot to carry.
   (the `IngredientSearchCupboardMatches` document). Both answers become the same
   `IngredientSearchMatch`, and where the coven's cupboard entry sets a label
   (`cupboardEntry(workspaceId:)`), the label is the row's name. Everything
-  else about the box, the floor, the 25 rows and See all results., is the same.
+  else about the box, the floor, the 25 rows and See All Results, is the same.
 - **A grimoire source suggests spells by title.** The box asks
   `grimoire(workspaceId:, query:, status:, first: 25)` (the
   `GrimoireSearchMatches` document), so a tab suggests only its own status,
@@ -145,9 +145,9 @@ in the filter slot to carry.
   "Untitled Spell". A spell's row carries a `match` whose `id` and `slug` are the spell id, so with a
   `pickHref` a pick opens what it names: the Grimoire list's opens the spell's Quick Look (M13.21); without one a pick applies the row's
   title as the search, and an untitled row the text typed. The floor,
-  the 25 rows and See all results. are as for an ingredient.
+  the 25 rows and See All Results are as for an ingredient.
 - **The dropdown shows at most 25 rows, the first page, in the server's
-  order.** It never asks for a second. When there is another page, a last row, See all results., ends the
+  order.** It never asks for a second. When there is another page, a last row, See All Results, ends the
   listbox and applies the debounced text to the list. It is selectable like
   any result (arrow keys, then Enter or a click), set in italics, and
   sentence case with a full stop because it is a message, not a label (the

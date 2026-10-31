@@ -4,7 +4,17 @@ import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { press } from '../../support/interact';
-import SpellCard, { SpellCardFilters, spellTitleId } from '@/components/SpellCard';
+import SpellCard from '@/components/SpellCard';
+import type {
+  RecordWorkingMutation,
+  RecordWorkingMutationVariables,
+  RecordWorkingSetupQuery,
+  RecordWorkingSetupQueryVariables,
+  WorkingDeductionPreviewQuery,
+} from '@/gql/graphql';
+import { HttpResponse } from 'msw/http';
+import { graphqlLink, mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
+import { server } from '../../support/msw/server';
 
 // The title link navigates through the shared hook, so the App Router is mocked.
 vi.mock('next/navigation', () => ({
@@ -34,33 +44,111 @@ const MORE = {
 };
 
 describe('SpellCard', () => {
-  it('says how many times a spell has been made, in the singular for one and nothing for none', () => {
-    const { rerender } = render(<SpellCard {...BASE} workingCount={2} />);
-    expect(screen.getByText('Made 2 Times')).toBeInTheDocument();
+  it('says how many times a spell has been made, once for one and nothing for none', () => {
+    const { rerender } = render(<SpellCard {...BASE} workingCount={3} />);
+    expect(screen.getByText('Made 3 times')).toBeInTheDocument();
     rerender(<SpellCard {...BASE} workingCount={1} />);
-    expect(screen.getByText('Made 1 Time')).toBeInTheDocument();
+    expect(screen.getByText('Made once')).toBeInTheDocument();
     rerender(<SpellCard {...BASE} workingCount={0} />);
-    expect(screen.queryByText(/^Made /)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^made /i)).not.toBeInTheDocument();
     rerender(<SpellCard {...BASE} />);
-    expect(screen.queryByText(/^Made /)).not.toBeInTheDocument();
+    expect(screen.queryByText(/^made /i)).not.toBeInTheDocument();
   });
 
-  it('draws a Record a Working button only when given what recording needs, and it opens the dialog that records one', async () => {
+  // The count is read with the edit line, after it and before the actions, as one line of the foot.
+  it('reads the made count after the edit line and before the actions', () => {
+    render(
+      <SpellCard
+        {...BASE}
+        workingCount={3}
+        lastEdit={{ by: 'Fixture A', at: '2026-09-01T12:00:00.000Z' }}
+        editHref={'/edit' as Route}
+      />,
+    );
+    const made = screen.getByText('Made 3 times');
+    const edited = screen.getByRole('button', { name: /^Edited/ });
+    const edit = screen.getByRole('link', { name: /^Edit Fixture Working/ });
+    expect(edited.compareDocumentPosition(made) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(made.compareDocumentPosition(edit) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('draws a Record a Working button only when given what recording needs, and reads the spell’s steps, and no members, only once its dialog opens', async () => {
+    const asked: RecordWorkingSetupQueryVariables[] = [];
+    const sent: string[] = [];
+    server.use(
+      graphqlLink.query<RecordWorkingSetupQuery, RecordWorkingSetupQueryVariables>(
+        'RecordWorkingSetup',
+        ({ query, variables }) => {
+          asked.push(variables);
+          sent.push(query);
+          return HttpResponse.json({
+            data: {
+              spell: {
+                id: 'spell-1',
+                steps: [
+                  { id: 's0', name: null, form: null, ingredient: null, variant: null },
+                  {
+                    id: 's1',
+                    name: 'Testwort',
+                    form: 'Dried Leaf',
+                    ingredient: { id: 'i1' },
+                    variant: { id: 'v1' },
+                  },
+                ],
+              },
+            } as RecordWorkingSetupQuery,
+          });
+        },
+      ),
+    );
+    mockGraphQLMutation<RecordWorkingMutation, RecordWorkingMutationVariables>(
+      'RecordWorking',
+      (variables) =>
+        ({
+          recordWorking: {
+            id: 'w1',
+            status: 'draft',
+            note: null,
+            workedOn: variables.input.workedOn,
+            visibility: 'workspace',
+            participants: [{ id: 'p1', name: 'Testa Owner', userId: 'u1' }],
+          },
+        }) as RecordWorkingMutation,
+    );
+    mockGraphQLQuery<WorkingDeductionPreviewQuery>('WorkingDeductionPreview', () => ({
+      workingDeductionPreview: {
+        deductions: [],
+        warnings: [{ position: 2, reason: 'UNSTOCKED', stepId: 's1', stepName: 'Testwort' }],
+      },
+    }));
     const recordWorking = {
       workspaceId: 'workspace-1',
-      members: [{ userId: 'u1', name: 'Testa Owner' }],
-      recorderId: 'u1',
-      steps: [{ id: 's1', name: 'Testwort' }],
+      recorder: { userId: 'u1', name: 'Testa Owner' },
     };
     const { rerender } = render(<SpellCard {...BASE} />);
-    expect(screen.queryByRole('button', { name: 'Record a Working' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Record a Working/ })).not.toBeInTheDocument();
     rerender(
       <QueryClientProvider client={makeQueryClient()}>
         <SpellCard {...BASE} recordWorking={recordWorking} />
       </QueryClientProvider>,
     );
-    press(screen.getByRole('button', { name: 'Record a Working' }));
-    expect(await screen.findByRole('dialog', { name: 'Record a Working' })).toBeInTheDocument();
+    // A list draws many cards, so nothing is read for a card until its dialog opens.
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(asked).toEqual([]);
+
+    press(screen.getByRole('button', { name: 'Record a Working of Fixture Working' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Record a Working' });
+    expect(within(dialog).getByRole('status')).toHaveTextContent('Loading');
+    // The recorder starts as a participant, named by the page rather than a roster read on opening.
+    expect(
+      await within(dialog).findByRole('button', { name: /Remove.*Testa Owner/ }),
+    ).toBeInTheDocument();
+    expect(asked).toEqual([{ workspaceId: 'workspace-1', spellId: 'spell-1' }]);
+    // The participant box searches the members as the user types, so the setup reads none.
+    expect(sent[0]).not.toMatch(/\bmembers\b/);
+    // The ingredient step read on opening is the one the completion preview names.
+    press(within(dialog).getByRole('button', { name: 'Complete' }));
+    expect(await screen.findByRole('list', { name: 'Deductions' })).toHaveTextContent('Testwort');
   });
 
   it('draws the foot in the order Record a Working, Edit, then the More menu', () => {
@@ -69,7 +157,10 @@ describe('SpellCard', () => {
         <SpellCard
           {...BASE}
           editHref={'/here?edit=spell-1' as Route}
-          recordWorking={{ workspaceId: 'workspace-1', members: [], recorderId: 'u1', steps: [] }}
+          recordWorking={{
+            workspaceId: 'workspace-1',
+            recorder: { userId: 'u1', name: 'Testa Owner' },
+          }}
           more={MORE}
         />
       </QueryClientProvider>,
@@ -95,9 +186,9 @@ describe('SpellCard', () => {
     press(screen.getByRole('button', { name: 'More for Fixture Working' }));
     expect((await screen.findAllByRole('menuitem')).map((item) => item.textContent)).toEqual([
       'Duplicate',
-      'Delete Spell',
+      'Delete',
     ]);
-    press(screen.getByRole('menuitem', { name: 'Delete Spell' }));
+    press(screen.getByRole('menuitem', { name: 'Delete' }));
     expect(
       within(await screen.findByRole('dialog', { name: 'Delete Spell' })).getByText(
         'Fixture Working',
@@ -129,13 +220,18 @@ describe('SpellCard', () => {
         <SpellCard
           {...BASE}
           href={'/coven/x/grimoire/spell-1' as Route}
-          recordWorking={{ workspaceId: 'workspace-1', members: [], recorderId: 'u1', steps: [] }}
+          recordWorking={{
+            workspaceId: 'workspace-1',
+            recorder: { userId: 'u1', name: 'Testa Owner' },
+          }}
           more={MORE}
         />
       </QueryClientProvider>,
     );
     const title = screen.getByRole('link', { name: /^Fixture Working/ });
-    expect(title.contains(screen.getByRole('button', { name: 'Record a Working' }))).toBe(false);
+    expect(title.contains(screen.getByRole('button', { name: /^Record a Working of / }))).toBe(
+      false,
+    );
     expect(title.contains(screen.getByRole('button', { name: /^More for / }))).toBe(false);
   });
 
@@ -182,11 +278,10 @@ describe('SpellCard', () => {
     expect(edit.contains(title)).toBe(false);
   });
 
-  it('names the card by its title, under the id a list item points at', () => {
+  it('names the card by its title heading', () => {
     render(<SpellCard {...BASE} />);
     const card = screen.getByRole('article', { name: 'Fixture Working' });
-    const heading = within(card).getByRole('heading', { name: 'Fixture Working' });
-    expect(heading.id).toBe(spellTitleId('spell-1'));
+    expect(within(card).getByRole('heading', { name: 'Fixture Working' })).toBeInTheDocument();
   });
 
   it('calls a spell with no title Untitled Spell', () => {
@@ -261,21 +356,14 @@ describe('SpellCard', () => {
     render(<SpellCard {...BASE} />);
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
-  // The smouldering edge (spell-card.md): layers drawn on hover, which a screen reader must
-  // not meet. Hidden layers have no role, so they are found by the attribute that hides them.
-  it('draws the smoulder as hidden decoration, leaving the card named by its title alone', () => {
+  // The smouldering edge (spell-card.md) is decoration: a screen reader meets the card's title
+  // and nothing the hover draws.
+  it('exposes the card as its title alone, with no description and no image from the smoulder', () => {
     render(<SpellCard {...BASE} />);
     const card = screen.getByRole('article', { name: 'Fixture Working' });
-    const layers = card.querySelectorAll(':scope > [aria-hidden="true"]');
-    expect(layers).toHaveLength(3);
-    layers.forEach((layer) => expect(layer).toHaveTextContent(/^$/));
-  });
-
-  it('renders the burn filter the stylesheet names, hidden from assistive technology', () => {
-    const { container } = render(<SpellCardFilters />);
-    const svg = container.querySelector('svg');
-    expect(svg).toHaveAttribute('aria-hidden', 'true');
-    expect(svg?.querySelector('filter#spell-card-burn')).not.toBeNull();
+    expect(card).toHaveAccessibleName('Fixture Working');
+    expect(card).toHaveAccessibleDescription('');
+    expect(within(card).queryAllByRole('img')).toHaveLength(0);
   });
 });
 

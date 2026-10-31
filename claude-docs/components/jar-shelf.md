@@ -75,13 +75,16 @@ The owner's call (2026-10-21): when the pointer is over a jar the coven can edit
 - **Reduced motion.** No shake, from hover or from focus, and the name changes size with no transition.
 - The angles, the 500ms and the 1.15 have no token (no token holds an angle or a scale), so the keyframe list is in `_jar-motion.scss`, with a comment saying so.
 
+## Stories
+
+`src/components/JarShelf/index.stories.tsx`, titled "Ingredients / Jar Shelf": `States`, with the states Default (a role that may edit, so each jar, the empty one too, opens Edit Stock), Viewer (six forms, full, low, out, unmeasured, no threshold and empty, as plain figures with no buttons) and One Form. `EveryShape`, named "Every Shape", draws each vessel in `SHAPES`, empty and part-full, grouped as Jars, Bottles and Add Stock.
+
 ## Tests
 
 - `tests/components/JarShelf/`: the pick (same result for the same name and form whatever the case, a bottle for a liquid and a jar otherwise, the name and form both moving it), `fillOf` for every row of the table above, and the shelf: one jar per form in order, each amount, Unmeasured and No Jar, the amount buttons of a Low and an Out jar (their names and descriptions, and none on any other jar, a viewer's included), `aria-hidden` drawings with unique clips, plain figures with no `edit`, and a button for every jar, an empty one too, with the amount button outside it.
 - `tests/components/IngredientEntry/`: a press on a jar opens the dialog with that form chosen, a press on an empty jar adds the form, and a viewer gets no jar buttons.
 - `tests/components/StockDialog/`: `openOn` and `StockJarButton`.
 - `tests/e2e/entry-stock.spec.ts` presses a jar by keyboard.
-- Storybook (`Ingredients / Jar Shelf`): a viewer's shelf of six forms (full, low, out, unmeasured, no threshold and empty), the editable shelf, and a single form. Every Shape draws each vessel in `SHAPES`, empty and part-full, grouped as Jars, Bottles and Add Stock.
 
 ## What the shelf shows
 

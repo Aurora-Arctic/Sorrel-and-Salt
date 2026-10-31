@@ -50,7 +50,7 @@ export const MAKE_IT_OURS_DETAILS =
   "You get a copy with your annotations. Your jars and spells move to the copy. Updates in the Compendium won't affect it.";
 
 /** Remove's confirmation, which says what goes with the entry. */
-export function RemoveQuestion({ name }: { name: string }): ReactElement {
+export function RemoveFromCupboardQuestion({ name }: { name: string }): ReactElement {
   return (
     <>
       Remove <strong>{name}</strong> from your cupboard? Your annotations get deleted too.
@@ -114,7 +114,7 @@ export function RemoveDialog({
         <div className={covens ? 'form' : undefined}>
           {covens && <CovenChoice {...covens} />}
           <p>
-            <RemoveQuestion name={name} />
+            <RemoveFromCupboardQuestion name={name} />
           </p>
           <div className="modal__actions">
             <BusyButton

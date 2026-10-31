@@ -1,61 +1,46 @@
 import type { ReactElement } from 'react';
-import { WORKINGS_ID } from '../SpellRecipe/sections';
-import DeleteWorkingAction from './delete-working';
+import { dayWords } from '../DateField/day';
+import Notice from '../Notice';
+import SpellMarks from '../SpellMarks';
+import { WORKINGS_ID, WORKINGS_TITLE_ID } from '../SpellRecipe/sections';
 import type { SpellWorkingsProps, WorkingView } from './types';
 import './index.scss';
 
 // A spell's history on its recipe page: one row per working, newest day first. A working is not a
-// step, so the row is its own; only a complete working's deduction lines are `StepRow`s. Complete
-// on a draft row is the page's to give (`completeAction`).
-
-/** The day as people say it: "4 March 2026". The date is a calendar day, so no zone shifts it. */
-const dayOf = (workedOn: string): string =>
-  new Date(`${workedOn}T00:00:00Z`).toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC',
-  });
+// step, so the row is its own, and a complete working's deduction lines are plain lines beneath it.
+// Complete on a draft row is the page's to give (`completeAction`); a row carries no bin, since the
+// Edit dialog holds Delete Working beside the working it shows.
 
 const Working = ({
   working,
-  workspaceId,
   completeAction,
   editAction,
 }: {
   working: WorkingView;
-  workspaceId: string;
   completeAction: SpellWorkingsProps['completeAction'];
   editAction: SpellWorkingsProps['editAction'];
 }): ReactElement => {
-  const day = dayOf(working.workedOn);
+  const day = dayWords(working.workedOn);
+  const takenId = `working-${working.id}-taken`;
   const showsComplete = working.status === 'draft' && Boolean(working.editable);
   return (
-    <li className="spell-workings__row">
+    <li>
       <div className="spell-workings__head">
         <h3>
           <time dateTime={working.workedOn}>{day}</time>
         </h3>
-        <div className="specimen__badges">
-          {working.status === 'draft' && <span className="badge badge--draft">Draft</span>}
-          {working.visibility === 'private' && (
-            <span className="badge badge--private">Private</span>
-          )}
-        </div>
+        <SpellMarks status={working.status} visibility={working.visibility} />
         <div className="spell-workings__actions">
-          {showsComplete && completeAction?.(working.id, working.workedOn)}
+          {showsComplete && completeAction?.(working.id, working.workedOn, day)}
           {working.editable &&
             editAction?.(working.editable, day, showsComplete, working.canChange)}
-          {working.canChange && (
-            <DeleteWorkingAction workspaceId={workspaceId} workingId={working.id} name={day} />
-          )}
         </div>
       </div>
       {working.status === 'draft' &&
         working.warnings?.map((line) => (
-          <p key={line} className="meta spell-workings__warning">
+          <Notice key={line} kind="warn" quiet className="spell-workings__warning">
             {line}
-          </p>
+          </Notice>
         ))}
       <p className="meta">
         {working.recordedBy ? `Recorded by ${working.recordedBy}` : 'Recorded'}
@@ -63,42 +48,49 @@ const Working = ({
       </p>
       {working.note && <p className="spell-workings__note">{working.note}</p>}
       {working.deductions.length > 0 && (
-        <ol className="spell-workings__deductions" aria-label="Deductions">
-          {working.deductions.map((line) => (
-            <li key={line.id} className="spell-workings__deduction">
-              <span>{line.name}</span>
-              <span>
-                {line.quantity} {line.unit}
-              </span>
-            </li>
-          ))}
-        </ol>
+        <>
+          <p id={takenId} className="spell-workings__taken">
+            Taken From the Jars
+          </p>
+          <ol className="spell-workings__deductions" aria-labelledby={takenId}>
+            {working.deductions.map((line) => (
+              <li key={line.id} className="spell-workings__deduction">
+                <span>{line.name}</span>
+                <span>
+                  {line.quantity} {line.unit}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </>
       )}
     </li>
   );
 };
 
 const SpellWorkings = ({
-  workspaceId,
   workings,
   completeAction,
   editAction,
   headingAction,
 }: SpellWorkingsProps): ReactElement => (
-  <section id={WORKINGS_ID} className="spell-workings" aria-labelledby="spell-workings-title">
+  <section
+    id={WORKINGS_ID}
+    className="spell-workings page-frame__section"
+    aria-labelledby={WORKINGS_TITLE_ID}
+  >
     <div className="spell-workings__title">
-      <h2 id="spell-workings-title">Workings</h2>
+      <h2 id={WORKINGS_TITLE_ID}>Workings</h2>
       {headingAction}
     </div>
     {workings.length === 0 ? (
       <p className="meta">This spell has not been worked yet.</p>
     ) : (
-      <ul className="spell-workings__list" aria-label="Workings">
+      <ul className="spell-workings__list" aria-labelledby={WORKINGS_TITLE_ID}>
         {workings.map((working) => (
           <Working
             key={working.id}
             working={working}
-            workspaceId={workspaceId}
             completeAction={completeAction}
             editAction={editAction}
           />

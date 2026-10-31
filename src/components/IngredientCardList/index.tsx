@@ -2,8 +2,8 @@ import { Children, type ReactElement } from 'react';
 import type { IngredientCardListProps } from './types';
 import './index.scss';
 
-// The grid of ingredient cards the public compendium and the coven's Ingredients page share, each in an
-// `li`. Presentational: it decides nothing about what is listed and does not page
+// The grid of cards the public compendium, the coven's Ingredients page and its grimoire share, each in
+// an `li`. Presentational: it decides nothing about what is listed and does not page
 // (claude-docs/components/ingredient-card-list.md).
 const IngredientCardList = ({
   label,

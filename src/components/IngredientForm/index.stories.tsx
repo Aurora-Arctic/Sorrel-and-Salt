@@ -678,14 +678,7 @@ type CompendiumFormProps =
 
 /** The form as the admin draws it over a compendium entry: lookups ask the compendium alone. */
 function CompendiumForm(props: CompendiumFormProps) {
-  return (
-    <IngredientForm
-      workspaceId={null}
-      duplicateHref={compendiumDuplicateHref}
-      onCancel={() => undefined}
-      {...props}
-    />
-  );
+  return <IngredientForm workspaceId={null} duplicateHref={compendiumDuplicateHref} {...props} />;
 }
 
 /** What to type for each state the form can be in, beside it in the workshop. */
@@ -974,8 +967,8 @@ function WhatToTryOnTheCompendium({ editing }: { editing: boolean }) {
         </li>
         <li>
           <strong>Another entry&rsquo;s redirect:</strong> a Name with &ldquo;redirect&rdquo; in it
-          is asked about in place of the saves; End Redirect &amp; Save sends it again, Keep It
-          drops the question.
+          is asked about in place of the saves; End Redirect &amp; Save sends it again, Cancel drops
+          the question.
         </li>
         {editing && (
           <li>
@@ -1236,29 +1229,6 @@ export const AskingToDeleteInModal: Story = {
   },
 };
 
-/**
- * The edit in its modal with a change typed, every section open and scrolled half
- * way, then Close pressed: the unsaved-changes question appears over the form,
- * centred where the person had scrolled. Close again flashes it.
- */
-export const AskingToDiscardInModal: Story = {
-  render: () => {
-    useEffect(() => {
-      const name = document.querySelector<HTMLInputElement>('input[name="name"]');
-      if (name) {
-        setInputValue(name, `${name.value} Renamed`);
-      }
-      press('Open All');
-      const later = requestAnimationFrame(() => {
-        scrollBody(0.5);
-        press('Close');
-      });
-      return () => cancelAnimationFrame(later);
-    }, []);
-    return <CompendiumEntryInModalForm />;
-  },
-};
-
 // Promoting a folk name: the arrow on a saved folk name's chip, and the
 // question it always asks.
 
@@ -1434,5 +1404,5 @@ export const States: Story = {
   argTypes: {
     state: { control: 'select', options: Object.keys(STATES_STATES), mapping: STATES_STATES },
   },
-  render: ({ state }) => <div key={String(state)}>{state}</div>,
+  render: ({ state }) => <div>{state}</div>,
 };

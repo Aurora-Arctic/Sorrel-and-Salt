@@ -4,7 +4,7 @@ import type { Route } from 'next';
 import { type ReactElement, useCallback, useLayoutEffect, useRef, useState } from 'react';
 import { useClickFeedback } from '../ClickFeedback';
 import { editHeading } from '../CompendiumList/heading';
-import { AnnotateButton, AnnotateLink, BinButton, CompendiumEditLink, MoreMenu } from '../IconTip';
+import { AnnotateButton, AnnotateLink, CompendiumEditLink, MoreMenu } from '../IconTip';
 import { choicesFor } from '../MenuButton/sections';
 import type { MenuButtonItem } from '../MenuButton/types';
 import { useOpenModalClick } from '../Modal';
@@ -23,7 +23,7 @@ import type {
   PublicCupboardActionsProps,
 } from './types';
 
-// The icons beside a compendium entry's title: a main icon, More, or the bin, after the plus
+// The icons beside a compendium entry's title: a main icon and More, after the plus
 // (claude-docs/components/ingredient-entry.md, "What the cupboard actions draw").
 
 /** The public page's plus, from its covens: those that may add, and which hold the entry. */
@@ -118,22 +118,9 @@ export default function CupboardActions(
   // (claude-docs/components/ingredient-entry.md, "What the cupboard actions draw").
   const annotateControl = useRef<HTMLAnchorElement & HTMLButtonElement>(null);
   const moreControl = useRef<HTMLButtonElement | null>(null);
-  const binControl = useRef<HTMLButtonElement | null>(null);
-  // A refusal is a callout under the control the write came from: the three dots, or the bin when
-  // `binOnly`.
-  const binOnly = useRef(false);
-  const binFeedback = useClickFeedback({ name: `Remove ${name}` });
+  // A refusal is a callout under the three dots, where every write is chosen.
   const moreFeedback = useClickFeedback({ name: `More for ${name}` });
-  const lastAsked = useRef<Asking>(undefined);
-  const binAnchor = binFeedback.anchorRef;
   const moreAnchor = moreFeedback.anchorRef;
-  const binRef = useCallback(
-    (node: HTMLButtonElement | null) => {
-      binControl.current = node;
-      binAnchor(node);
-    },
-    [binAnchor],
-  );
   const moreRef = useCallback(
     (node: HTMLButtonElement | null) => {
       moreControl.current = node;
@@ -149,10 +136,7 @@ export default function CupboardActions(
     if (!heldNow.current) return null;
     return controls.map(({ current }) => current).find((node) => node?.isConnected) ?? null;
   };
-  const reportRefusal = (message: string | undefined): void =>
-    (lastAsked.current === 'remove' && binOnly.current ? binFeedback : moreFeedback).report(
-      message,
-    );
+  const reportRefusal = (message: string | undefined): void => moreFeedback.report(message);
   // The remove's confirmation stays busy until the re-read drops the entry; the choice is then
   // forgotten.
   const targetHeld = targetPlace.held;
@@ -188,8 +172,6 @@ export default function CupboardActions(
   });
 
   const ask = (what: Asking, among: readonly CupboardPlace[], write?: CupboardWrite) => {
-    lastAsked.current = what;
-    binFeedback.report(undefined);
     moreFeedback.report(undefined);
     write?.reset?.();
     setTarget(startOn(among, defaultWorkspaceId));
@@ -220,7 +202,6 @@ export default function CupboardActions(
           : undefined;
 
   const askStock = (): void => {
-    lastAsked.current = 'stock';
     moreFeedback.report(undefined);
     setAsking('stock');
   };
@@ -253,22 +234,16 @@ export default function CupboardActions(
   const covenItems = [stockItem, annotateItem, ownItem, removeItem].filter(
     (item): item is MenuButtonItem => item !== undefined,
   );
-  // Remove is the one choice left in More: a lone choice is its own icon, so it is the bin.
-  // oxlint-disable-next-line react/refs -- the callback ref and handlers come from a hook and are only handed to the DOM, never read while rendering
-  const bin = removeItem !== undefined && covenItems.length === 1 && editItem === undefined;
-  useLayoutEffect(() => {
-    binOnly.current = bin;
-  }, [bin]);
   // Always labelled sections, the Coven one alone for a member (`choicesFor`).
   const moreChoices = choicesFor(
-    { compendium: editItem ? [editItem] : [], coven: bin ? [] : covenItems },
+    { compendium: editItem ? [editItem] : [], coven: covenItems },
     viewing,
   );
   const more = moreChoices.sections.length > 0;
   // The plus while some coven that may add lacks the entry, and the check once all hold it
   // (PlusMark), where Add is not one of the choices.
   const plusMark = plus ? <PlusMark plus={plus} ingredientId={ingredientId} name={name} /> : null;
-  const icons = (plusMark ? 1 : 0) + (main ? 1 : 0) + (more ? 1 : 0) + (bin ? 1 : 0);
+  const icons = (plusMark ? 1 : 0) + (main ? 1 : 0) + (more ? 1 : 0);
   if (icons === 0) return null;
   const openedPlace =
     opened && places.find(({ workspaceId }) => workspaceId === opened.workspaceId);
@@ -302,15 +277,6 @@ export default function CupboardActions(
           />
         ))}
       {more && <MoreMenu ref={moreRef} name={name} {...moreChoices} />}
-      {bin && (
-        <BinButton
-          ref={binRef}
-          verb="Remove"
-          name={name}
-          onClick={() => ask('remove', removers, writes.remove)}
-        />
-      )}
-      {binFeedback.feedback}
       {moreFeedback.feedback}
       {/* Asked in a dialog over the page, as Leave Coven asks, rather than in the title's row. */}
       {asking === 'stock' && (
@@ -346,7 +312,7 @@ export default function CupboardActions(
           name={name}
           write={writes.remove}
           onClose={settle}
-          returnTo={() => back(binControl, moreControl)}
+          returnTo={() => back(moreControl)}
           covens={choiceOf(removers)}
         />
       )}

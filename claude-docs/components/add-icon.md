@@ -6,13 +6,14 @@
 
 `NamedAddIconProps` (`types.ts`), which is `AddIconProps` with the entry's name:
 
-| Prop           | What it is                                                                                               |
-| -------------- | -------------------------------------------------------------------------------------------------------- |
-| `name`         | The entry as the card names it (`cardName`): "Testwort, Formalis testis". The accessible name carries it |
-| `workspaceId`  | The default coven, added to at once where `covens` is empty                                              |
-| `ingredientId` | The compendium entry's id                                                                                |
-| `covens`       | Every coven the viewer may write in                                                                      |
-| `heldIn`       | The ids of those that already hold the entry                                                             |
+| Prop           | What it is                                                                                                                                          |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`         | The entry as the card names it (`cardName`): "Testwort, Formalis testis". The accessible name carries it                                            |
+| `workspaceId`  | The default coven, added to at once where `covens` is empty                                                                                         |
+| `ingredientId` | The compendium entry's id                                                                                                                           |
+| `covens`       | Every coven the viewer may write in                                                                                                                 |
+| `heldIn`       | The ids of those that already hold the entry                                                                                                        |
+| `holding`      | The names of every coven of the viewer's that holds the entry, any role: counted on the plus and named in its tip. Left out or empty, neither shows |
 
 `AddIconProps` stays apart because a page reads the covens (`CupboardPlus`) and the name from different places.
 

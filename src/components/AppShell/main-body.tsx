@@ -37,6 +37,7 @@ const MainBody = ({ children }: { children: ReactNode }): ReactElement => {
         menu={waiting.frame === 'with-nav' || waiting.frame === 'entry'}
         entry={waiting.frame === 'entry'}
         head={waiting.head}
+        density={waiting.density}
       />
     );
     className = waiting.frame ? FRAME_CLASS[waiting.frame] : 'page-frame skeleton-frame';
