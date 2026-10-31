@@ -13,8 +13,8 @@ Expires is a UTC day, `2026-10-30`. Minted On, Refused Opens First and Latest an
 ## Contracts
 
 - **Invitation Cards** (`index.tsx`): a region named "Invitation Cards" with one row per batch: batch (the
-  first block of the batch id, `batchName`), minted on (date and time, local), expires (the date alone: it is
-  midnight UTC), cards, **status**, accepted, and **Revoke Batch** while a card of the batch is pending
+  first block of the batch id, `batchName`), **status**, cards, accepted, refused opens, minted on (date and
+  time, local), expires (the date alone: it is midnight UTC), and **Revoke Batch** while a card of the batch is pending
   (`ConfirmedAction` asks first, naming the batch and its mint date, and says accounts that already accepted
   keep their access). The Revoke column is red like the People table's Impersonate column (`row-action-column`, `.admin-cards__revoke`), with a red row button and a red confirm; the question always comes first.
   Revoking is by batch only. Counts come from SQL. Status is `batchStatus()` in `batches.ts`, read from the
