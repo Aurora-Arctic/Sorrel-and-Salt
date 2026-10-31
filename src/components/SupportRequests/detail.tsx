@@ -3,7 +3,7 @@
 import { type ReactElement, useId, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
-import BusyButton from '../BusyButton';
+import ConfirmedAction from '../UserList/confirmed-action';
 import { FieldShell, SwitchField, fieldDescription } from '../Field';
 import Spinner from '../Spinner';
 import LocalTime from '../LocalTime';
@@ -52,9 +52,8 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
   const open = request.status === 'open';
   const assign = useSupportAction();
   const visible = useSupportAction();
-  const resolve = useSupportAction();
   const { aria, ...assignField } = fieldDescription({ id: useId() });
-  const failure = assign.failure.alert ?? visible.failure.alert ?? resolve.failure.alert;
+  const failure = assign.failure.alert ?? visible.failure.alert;
 
   return (
     <div className={isAdmin ? 'support-detail' : 'support-detail support-detail--single'}>
@@ -133,19 +132,18 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
             requestId={request.id}
             resolve={
               open && (
-                <BusyButton
-                  className="btn btn--quiet"
-                  busy={resolve.busy}
-                  busyLabel="Resolving"
-                  onClick={() =>
-                    void resolve.run(
-                      () => graphqlRequest(ResolveDocument, { id: request.id }),
-                      'Request resolved.',
-                    )
-                  }
-                >
-                  Resolve
-                </BusyButton>
+                <ConfirmedAction
+                  label="Resolve"
+                  accessibleName="Resolve"
+                  openClass="btn btn--quiet"
+                  title="Resolve This Request?"
+                  question="The sender sees it as resolved on their support page, and can reopen it by replying. It closes by itself after seven days without a reply."
+                  busy="Resolving"
+                  confirmClass="btn btn--solid"
+                  announcement="Request resolved."
+                  inModal
+                  send={() => graphqlRequest(ResolveDocument, { id: request.id })}
+                />
               )
             }
           />

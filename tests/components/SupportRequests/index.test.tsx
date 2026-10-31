@@ -300,6 +300,29 @@ describe('A linked issue', () => {
   });
 });
 
+describe('Resolve', () => {
+  it('asks first, and sends the write only on the confirm', async () => {
+    const sent = vi.fn(() => ({ saved: { __typename: 'Saved', id: 'r1' } }));
+    mockGraphQLMutation('ResolveSupportRequest', sent);
+    open(ADMIN);
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Resolve' }));
+    const question = await screen.findByRole('dialog', { name: 'Resolve This Request?' });
+    expect(sent).not.toHaveBeenCalled();
+
+    fireEvent.click(within(question).getByRole('button', { name: 'Cancel' }));
+    expect(sent).not.toHaveBeenCalled();
+
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Resolve' }));
+    fireEvent.click(
+      within(await screen.findByRole('dialog', { name: 'Resolve This Request?' })).getByRole(
+        'button',
+        { name: 'Resolve' },
+      ),
+    );
+    await waitFor(() => expect(sent).toHaveBeenCalledTimes(1));
+  });
+});
+
 describe('What a viewer is shown', () => {
   it('shows a curator the issue link without the control to change it', () => {
     open(CURATOR, {
@@ -471,7 +494,15 @@ describe('Status line in the dialog', () => {
       await userEvent.selectOptions(d.getByLabelText('Assigned To'), 'Curtis');
     if (action === 'share')
       fireEvent.click(d.getByRole('switch', { name: 'Shared With Curators' }));
-    if (action === 'resolve') fireEvent.click(d.getByRole('button', { name: 'Resolve' }));
+    if (action === 'resolve') {
+      fireEvent.click(d.getByRole('button', { name: 'Resolve' }));
+      fireEvent.click(
+        within(await screen.findByRole('dialog', { name: 'Resolve This Request?' })).getByRole(
+          'button',
+          { name: 'Resolve' },
+        ),
+      );
+    }
     if (action === 'link') {
       fireEvent.change(d.getByLabelText('GitHub Issue'), {
         target: { value: 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/9' },

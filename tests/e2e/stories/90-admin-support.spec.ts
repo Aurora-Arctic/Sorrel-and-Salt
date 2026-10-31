@@ -104,6 +104,10 @@ test.describe('Story 90: An Admin Works Through a Support Request', { tag: '@sto
 
     await test.step('the admin resolves it', async () => {
       await dialog.getByRole('button', { name: 'Resolve' }).click();
+      await page
+        .getByRole('dialog', { name: 'Resolve This Request?' })
+        .getByRole('button', { name: 'Resolve' })
+        .click();
       await expect(dialog.getByRole('button', { name: 'Resolve' })).toBeHidden();
     });
 
