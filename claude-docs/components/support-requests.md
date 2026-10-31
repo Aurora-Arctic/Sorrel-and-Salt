@@ -22,7 +22,7 @@ same ones.
   - **Reply** (a "Your Reply" field; Reply is disabled until there is a body) with **Resolve** opposite it (open requests
     only), for an admin or a curator the request is assigned to.
   - A right column for an admin alone: **Assigned To**, **Shared With Curators**, the Issue section (the linked issue as
-    repository and number, then a pencil icon button named "Change Issue Address", or the address field at once while none is linked) and **Time-Out**, a
+    repository and number, preceded by a pencil icon button named "Change Issue Address", or the address field at once while none is linked) and **Time-Out**, a
     fold closed by default that says "none" or "until" the end of the standing time-out.
 - **There is no Create Issue link.** The admin makes the GitHub issue by hand, so nothing from the request is copied
   into GitHub: the message could hold private information (the owner, 2026-10-31). The "GitHub Issue" field takes either of two
