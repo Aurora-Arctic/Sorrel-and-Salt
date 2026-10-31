@@ -149,3 +149,40 @@ describe('the daily provisional cleanup, run end to end', () => {
     expect((await getHookByToken(PROVISIONAL_CLEANUP_TOKEN)).runId).toBe(second);
   });
 });
+
+describe('a failed cleanup run', () => {
+  it('lets go of the token, so a start point begins a new chain', async () => {
+    // A lapsed account whose removal the database refuses: the sweep step throws and, after the
+    // SDK's retries, the run fails.
+    const doomed = await signUp('doomed', false, '2 days');
+    await sql`
+      create or replace function refuse_cleanup_delete() returns trigger language plpgsql as $$
+      begin
+        if old.email like '%${sql.unsafe(DOMAIN)}' then raise exception 'removal refused'; end if;
+        return old;
+      end $$
+    `;
+    await sql`create trigger refuse_cleanup_delete before delete on users for each row execute function refuse_cleanup_delete()`;
+    try {
+      const failing = await startChain();
+      // The precondition: the run owns the token while its sweep retries, so a new start could not have taken it.
+      await expect
+        .poll(async () => (await getHookByToken(PROVISIONAL_CLEANUP_TOKEN)).runId, { interval: 50 })
+        .toBe(failing.runId);
+      await expect(failing.returnValue).rejects.toThrow();
+      await expect(getRun(failing.runId).status).resolves.toBe('failed');
+      expect(await exists(doomed)).toBe(true);
+    } finally {
+      await sql`drop trigger refuse_cleanup_delete on users`;
+      await sql`drop function refuse_cleanup_delete()`;
+    }
+
+    const next = await ensureProvisionalCleanup();
+    expect(next).toEqual(expect.any(String));
+    started.push(next as string);
+    await waitForSleep(getRun(next as string));
+    expect((await getHookByToken(PROVISIONAL_CLEANUP_TOKEN)).runId).toBe(next);
+    // Removal now works, so the new chain's first sweep removed the account.
+    expect(await exists(doomed)).toBe(false);
+  });
+});
