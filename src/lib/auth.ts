@@ -1,11 +1,11 @@
 import { betterAuth, type BetterAuthOptions } from 'better-auth';
 import type { AuthContext } from '@better-auth/core';
 import {
+  isAPIError,
   APIError,
   createAuthMiddleware,
   getOAuthState,
   getSessionFromCtx,
-  isAPIError,
 } from 'better-auth/api';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { lastLoginMethod } from 'better-auth/plugins';
@@ -363,9 +363,9 @@ function emailAndPassword(): BetterAuthOptions['emailAndPassword'] {
     // Off: on, an unverified account gets no session, and the link verifies only from the row's own session, so it
     // could never be followed. The unverified account signs in and `requireSession()` holds it at the email page.
     requireEmailVerification: false,
-    // Off, which is what makes a sign-up to a held address answer as a new one and call the hook below.
-    autoSignIn: false,
-    onExistingUserSignUp: mailExistingHolder,
+    // On: a new account lands signed in, and `requireSession()` holds it at the email page until the address is proven.
+    // Better Auth then refuses a held address outright, so the before hook mails the holder and answers it first.
+    autoSignIn: true,
     // Short, because Better Auth stores the reset token unhashed in `verifications`.
     resetPasswordTokenExpiresIn: 15 * 60,
     revokeSessionsOnPasswordReset: true,
@@ -375,12 +375,14 @@ function emailAndPassword(): BetterAuthOptions['emailAndPassword'] {
 }
 
 /**
- * The one answer every accepted sign-up gets. Better Auth's own carries the row, real or synthetic, and the two
- * differ in the fields the database fills, which would tell a stranger the address is held.
+ * A sign-up for an address already held mails the holder and answers 200 as a new account would, without making a
+ * second row. Better Auth would refuse it with a 422 that names the address as taken.
  */
-function sameSignUpAnswer(ctx: HookContext) {
-  const returned = ctx.context.returned;
-  if (isAPIError(returned) || returned instanceof Response) return;
+async function answerHeldSignUp(ctx: HookContext) {
+  const email = typeof ctx.body?.email === 'string' ? ctx.body.email.toLowerCase() : undefined;
+  const holder = email ? await ctx.context.internalAdapter.findUserByEmail(email) : null;
+  if (!holder) return;
+  await mailExistingHolder({ user: holder.user });
   return ctx.json({ status: true });
 }
 
@@ -544,9 +546,12 @@ export const auth = betterAuth({
       if (ctx.path === '/change-password') return revokeOtherSessions(ctx);
       if (ctx.path !== '/callback/:id' && ctx.path !== '/sign-up/email') return;
       await sweepQuietly(ctx);
+      if (ctx.path === '/sign-up/email') return answerHeldSignUp(ctx);
     }),
     after: createAuthMiddleware(async (ctx) => {
-      if (ctx.path === '/sign-up/email') return sameSignUpAnswer(ctx);
+      // A new account answers with the same body a held address does; only its session cookie differs.
+      if (ctx.path === '/sign-up/email' && !isAPIError(ctx.context.returned))
+        return ctx.json({ status: true });
       if (ctx.path === '/change-password') return mailChangeNotice(ctx);
       const newSession = ctx.context.newSession;
       if (ctx.path !== '/callback/:id' || !newSession) return;

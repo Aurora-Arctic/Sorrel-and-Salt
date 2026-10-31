@@ -13,8 +13,15 @@ export const authClient = createAuthClient({
   plugins: [lastLoginMethodClient({ cookieName: LAST_USED_PROVIDER_COOKIE }), adminClient()],
 });
 
-export const { signIn, signOut, linkSocial, unlinkAccount, getLastUsedLoginMethod, useSession } =
-  authClient;
+export const {
+  signIn,
+  signOut,
+  linkSocial,
+  unlinkAccount,
+  getLastUsedLoginMethod,
+  useSession,
+  getSession,
+} = authClient;
 export const { impersonateUser, stopImpersonating } = authClient.admin;
 
 // Email and password sign-up; its sign-in is `signIn.email` above.
