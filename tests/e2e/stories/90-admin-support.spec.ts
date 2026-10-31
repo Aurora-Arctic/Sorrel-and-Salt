@@ -69,6 +69,10 @@ test.describe('Story 90: An Admin Works Through a Support Request', { tag: '@sto
 
     const dialog = page.getByRole('dialog', { name: 'Wobbling Cauldron' });
 
+    await test.step('the dialog opens with the focus on its title', async () => {
+      await expect(dialog.getByRole('heading', { name: 'Wobbling Cauldron' })).toBeFocused();
+    });
+
     await test.step('Reply stays disabled until there is a body, then the reply shows', async () => {
       const reply = dialog.getByRole('button', { name: 'Reply', exact: true });
       await expect(reply).toBeDisabled();
@@ -77,13 +81,14 @@ test.describe('Story 90: An Admin Works Through a Support Request', { tag: '@sto
       await expect(dialog.getByRole('region', { name: 'Replies' })).toContainText(
         'Thank you, we are looking at it.',
       );
+      await expect(dialog.getByRole('status')).toHaveText(/Reply sent\./);
     });
 
     await test.step('the admin assigns it and shares it with curators', async () => {
       await dialog.getByLabel('Assigned To').selectOption(curatorId);
       await expect(dialog.getByLabel('Assigned To')).toHaveValue(curatorId);
-      await dialog.getByRole('switch', { name: 'Curator-Visible' }).click();
-      await expect(dialog.getByRole('switch', { name: 'Curator-Visible' })).toBeChecked();
+      await dialog.getByRole('switch', { name: 'Shared With Curators' }).click();
+      await expect(dialog.getByRole('switch', { name: 'Shared With Curators' })).toBeChecked();
     });
 
     await test.step('Create Issue opens the new-issue page, and a pasted address is checked', async () => {
@@ -115,9 +120,9 @@ test.describe('Story 90: An Admin Works Through a Support Request', { tag: '@sto
     });
 
     await test.step('the admin times the sender out, and their send is refused with the end time', async () => {
-      const timeOut = dialog.getByRole('button', { name: 'Time Out', exact: true });
+      const timeOut = dialog.getByRole('button', { name: 'Time-Out', exact: true });
       await expect(timeOut).toBeDisabled();
-      await dialog.getByLabel('Time Out Until').fill(inOneHour());
+      await dialog.getByLabel('Time-Out Until').fill(inOneHour());
       await dialog.getByLabel('Time-Out Note').fill('Repeated test messages');
       await timeOut.click();
       const timeouts = dialog.getByRole('region', { name: 'Time-Outs' });

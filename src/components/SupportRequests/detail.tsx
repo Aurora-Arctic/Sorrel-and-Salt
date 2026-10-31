@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactElement, useId } from 'react';
+import { type ReactElement, useId, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import BusyButton from '../BusyButton';
@@ -11,10 +11,10 @@ import IssuePanel from './issue-panel';
 import ReplyForm from './reply-form';
 import TimeoutPanel from './timeout-panel';
 import type { SupportDetailProps } from './types';
-import { useSupportAction } from './use-support-action';
+import { AnnounceContext, useSupportAction } from './use-support-action';
 
 // A request opened: the message and replies for anyone who may read it, Reply and Resolve for an admin or
-// the curator it is assigned to, and for an admin alone Assign, Curator-Visible, the issue link and the
+// the curator it is assigned to, and for an admin alone Assign, Shared With Curators, the issue link and the
 // sender's time-outs. The service is the guard; what a viewer may not do is not drawn.
 
 const AssignDocument = graphql(`
@@ -41,7 +41,7 @@ const ResolveDocument = graphql(`
   }
 `);
 
-const SupportDetail = ({ request, viewer, assignees }: SupportDetailProps): ReactElement => {
+const DetailBody = ({ request, viewer, assignees }: SupportDetailProps): ReactElement => {
   const isAdmin = viewer.role === 'admin';
   const answers = isAdmin || request.assignee?.id === viewer.id;
   const open = request.status === 'open';
@@ -54,31 +54,37 @@ const SupportDetail = ({ request, viewer, assignees }: SupportDetailProps): Reac
   return (
     <div className="support-detail">
       <dl className="support-detail__facts">
-        <dt>From</dt>
-        <dd>
-          {request.sender ? `${request.sender.name} (${request.sender.email})` : 'Deleted account'}
-        </dd>
-        <dt>Status</dt>
-        <dd>
-          {request.status === 'open' ? 'Open' : 'Resolved'}
-          {request.resolvedBy && request.resolvedAt && (
-            <>
-              {' '}
-              by {request.resolvedBy.name} at <LocalTime at={request.resolvedAt} />
-            </>
-          )}
-        </dd>
+        <div>
+          <dt>From</dt>
+          <dd>
+            {request.sender
+              ? `${request.sender.name} (${request.sender.email})`
+              : 'Deleted account'}
+          </dd>
+        </div>
+        <div>
+          <dt>Status</dt>
+          <dd>
+            {request.status === 'open' ? 'Open' : 'Resolved'}
+            {request.resolvedBy && request.resolvedAt && (
+              <>
+                {' '}
+                by {request.resolvedBy.name} at <LocalTime at={request.resolvedAt} long />
+              </>
+            )}
+          </dd>
+        </div>
         {request.errorCode !== null && (
-          <>
+          <div>
             <dt>Error Number</dt>
             <dd>{request.errorCode}</dd>
-          </>
+          </div>
         )}
         {request.path && (
-          <>
+          <div>
             <dt>Page</dt>
             <dd>{request.path}</dd>
-          </>
+          </div>
         )}
       </dl>
       <p className="support-detail__message">{request.message}</p>
@@ -94,7 +100,7 @@ const SupportDetail = ({ request, viewer, assignees }: SupportDetailProps): Reac
             {request.replies.map((reply) => (
               <li key={reply.id}>
                 <strong>{reply.author?.name ?? 'Deleted account'}</strong> at{' '}
-                <LocalTime at={reply.createdAt} />
+                <LocalTime at={reply.createdAt} long />
                 <p>{reply.body}</p>
               </li>
             ))}
@@ -114,11 +120,13 @@ const SupportDetail = ({ request, viewer, assignees }: SupportDetailProps): Reac
               value={request.assignee?.id ?? ''}
               disabled={assign.busy}
               onChange={(event) =>
-                void assign.run(() =>
-                  graphqlRequest(AssignDocument, {
-                    id: request.id,
-                    assigneeId: event.target.value || null,
-                  }),
+                void assign.run(
+                  () =>
+                    graphqlRequest(AssignDocument, {
+                      id: request.id,
+                      assigneeId: event.target.value || null,
+                    }),
+                  event.target.value ? 'Request assigned.' : 'Request unassigned.',
                 )
               }
             >
@@ -131,15 +139,18 @@ const SupportDetail = ({ request, viewer, assignees }: SupportDetailProps): Reac
             </select>
           </FieldShell>
           <SwitchField
-            label="Curator-Visible"
+            label="Shared With Curators"
             name="curatorVisible"
             value="1"
             checked={request.curatorVisible}
             busy={visible.busy}
             hint="Lets any curator read this request, not only the one it is assigned to."
             onChange={(checked) =>
-              void visible.run(() =>
-                graphqlRequest(CuratorVisibleDocument, { id: request.id, visible: checked }),
+              void visible.run(
+                () => graphqlRequest(CuratorVisibleDocument, { id: request.id, visible: checked }),
+                checked
+                  ? 'Request shared with curators.'
+                  : 'Request no longer shared with curators.',
               )
             }
           />
@@ -154,7 +165,10 @@ const SupportDetail = ({ request, viewer, assignees }: SupportDetailProps): Reac
             busy={resolve.busy}
             busyLabel="Resolving"
             onClick={() =>
-              void resolve.run(() => graphqlRequest(ResolveDocument, { id: request.id }))
+              void resolve.run(
+                () => graphqlRequest(ResolveDocument, { id: request.id }),
+                'Request resolved.',
+              )
             }
           >
             Resolve
@@ -164,6 +178,22 @@ const SupportDetail = ({ request, viewer, assignees }: SupportDetailProps): Reac
 
       {isAdmin && <TimeoutPanel request={request} />}
     </div>
+  );
+};
+
+const SupportDetail = (props: SupportDetailProps): ReactElement => {
+  // The last write's outcome. A trailing no-break space on every other call lets a repeat be spoken,
+  // since a live region speaks only a change.
+  const [said, setSaid] = useState({ text: '', count: 0 });
+  const announce = (text: string): void => setSaid(({ count }) => ({ text, count: count + 1 }));
+  return (
+    <AnnounceContext value={announce}>
+      <output className="visually-hidden">
+        {said.text}
+        {said.count % 2 === 0 && said.count > 0 ? '\u00a0' : ''}
+      </output>
+      <DetailBody {...props} />
+    </AnnounceContext>
   );
 };
 

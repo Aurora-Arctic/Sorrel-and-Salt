@@ -8,14 +8,15 @@ export const CloseGuardContext = createContext<CloseGuardSlot | null>(null);
 
 /** An empty slot, for a modal to provide and consult. */
 export function closeGuardSlot(): CloseGuardSlot {
-  let current: CloseGuard | null = null;
+  // Several forms in one modal each put a guard; the first that holds the close back asks.
+  const guards = new Set<CloseGuard>();
   return {
     put: (guard) => {
-      current = guard;
+      guards.add(guard);
       return () => {
-        if (current === guard) current = null;
+        guards.delete(guard);
       };
     },
-    consult: (close) => current?.(close) ?? true,
+    consult: (close) => [...guards].every((guard) => guard(close)),
   };
 }

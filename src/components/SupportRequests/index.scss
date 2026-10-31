@@ -13,12 +13,42 @@
   }
 }
 
+// A long unbroken subject wraps inside a capped cell, so the other columns stay on screen.
+.support-requests .data-table td:has(.support-requests__subject) {
+  max-inline-size: 28rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
 .support-requests__none {
   color: $text-muted;
 }
 
 .support-detail {
   @include stack;
+}
+
+// From, Status, Error Number and Page: the term in the muted ink, its value beside it, as the user
+// modal lays out its facts.
+.support-detail__facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: space(2) space(4);
+  align-items: baseline;
+  margin: 0;
+  overflow-wrap: anywhere;
+
+  > div {
+    display: contents;
+  }
+
+  dt {
+    color: $text-muted;
+  }
+
+  dd {
+    margin: 0;
+  }
 }
 
 .support-detail__message {

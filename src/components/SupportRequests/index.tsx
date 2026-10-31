@@ -7,6 +7,7 @@ import StackTable from '../DataTable';
 import ListFrame, { ListBody } from '../ListFrame';
 import { RouteModal, useOpenModalClick } from '../Modal';
 import Pager from '../Pager';
+import { Mark } from '../UserList/marks';
 import SupportDetail from './detail';
 import SupportRequestsFilter, { ABOUT_OPTIONS, STATUS_OPTIONS } from './filter';
 import { supportHref } from './href';
@@ -44,10 +45,12 @@ const SubjectLink = ({
   request: SupportRequestEntry;
 } & Pick<SupportRequestsProps, 'filter' | 'cursor'>): ReactElement => {
   const href = supportHref(filter, cursor, request.id);
-  const onClick = useOpenModalClick(href, { title: request.subject });
+  const onClick = useOpenModalClick(href, { title: request.subject, focusTitle: true });
   return (
-    <Link href={href} onClick={onClick}>
+    <Link href={href} onClick={onClick} className="support-requests__subject">
       {request.subject}
+      {/* Names the sender too, so two requests with one subject are told apart. */}{' '}
+      <span className="visually-hidden">from {request.sender?.name ?? 'Deleted account'}</span>
     </Link>
   );
 };
@@ -70,6 +73,9 @@ const SupportRequests = ({
         filter={filter}
       />
       <ListBody>
+        <output className="visually-hidden">
+          {requests.length} {requests.length === 1 ? 'Request' : 'Requests'}
+        </output>
         <StackTable
           columns={[
             { heading: 'About', cell: (request) => labelOf(ABOUT_OPTIONS, request.about) },
@@ -87,8 +93,13 @@ const SupportRequests = ({
                 ),
             },
             {
-              heading: 'Curators',
-              cell: (request) => (request.curatorVisible ? 'Can See' : 'Hidden'),
+              heading: 'Shared With Curators',
+              cell: (request) => (
+                <Mark
+                  value={request.curatorVisible}
+                  label={request.curatorVisible ? 'Shared' : 'Not Shared'}
+                />
+              ),
             },
             { heading: 'Error Number', cell: (request) => request.errorCode ?? '' },
           ]}
@@ -105,7 +116,7 @@ const SupportRequests = ({
       closeHref={supportHref(filter, cursor)}
       content={
         opened && {
-          heading: { title: opened.subject },
+          heading: { title: opened.subject, focusTitle: true },
           body: () => (
             <SupportDetail key={opened.id} request={opened} viewer={viewer} assignees={assignees} />
           ),
