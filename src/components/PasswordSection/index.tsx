@@ -1,9 +1,10 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
+import { useRouter } from 'next/navigation';
 import { type FormEvent, type ReactElement, useState } from 'react';
 import { graphql } from '../../gql';
-import { changePassword } from '../../lib/auth-client';
+import { changePassword, requestPasswordReset, useSession } from '../../lib/auth-client';
 import { useResultFocus } from '../../lib/use-result-focus';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
@@ -12,6 +13,7 @@ import BusyButton from '../BusyButton';
 import Notice from '../Notice';
 import PasswordField from '../PasswordField';
 import { TOO_MANY_ATTEMPTS } from '../SignInPanel/password-form';
+import { GENERIC_RESET_REQUEST_ERROR } from '../ForgotPasswordForm';
 import type { PasswordSectionProps } from './types';
 import './index.scss';
 
@@ -51,13 +53,16 @@ function changeRefusal(failure: Failure): Refusal {
 }
 
 const PasswordSection = ({ hasPassword }: PasswordSectionProps): ReactElement => {
+  const router = useRouter();
+  const email = useSession().data?.user.email;
   // Whether the account holds a password: the props' answer until a first one is set here.
   const [held, setHeld] = useState(hasPassword);
   const [current, setCurrent] = useState('');
   const [chosen, setChosen] = useState('');
   const [changing, setChanging] = useState(false);
   const [problem, setProblem] = useState<Refusal>({});
-  const [saved, setSaved] = useState<'changed' | 'set'>();
+  const [sending, setSending] = useState(false);
+  const [saved, setSaved] = useState<'changed' | 'set' | 'link'>();
 
   const setFirst = useMutation({
     mutationFn: (newPassword: string) => graphqlRequest(SetPasswordDocument, { newPassword }),
@@ -66,6 +71,8 @@ const PasswordSection = ({ hasPassword }: PasswordSectionProps): ReactElement =>
       setHeld(true);
       setSaved('set');
       settle();
+      // The page's own text and Sign-In Methods are server-rendered from the account as it was.
+      router.refresh();
     },
     onError: (failure) => {
       const { field, alert } = readGraphqlFailure(failure, ['newPassword']);
@@ -75,8 +82,28 @@ const PasswordSection = ({ hasPassword }: PasswordSectionProps): ReactElement =>
   });
 
   const { ref, settle } = useResultFocus<HTMLDivElement>();
-  const pending = changing || setFirst.isPending;
+  const pending = changing || setFirst.isPending || sending;
   const ready = chosen !== '' && (!held || current !== '') && !pending;
+
+  // The reset link goes to the account's own address and is what proves the owner: this session sets
+  // no new password without it.
+  const sendResetLink = async (): Promise<void> => {
+    if (!email || sending) return;
+    setSending(true);
+    setProblem({});
+    setSaved(undefined);
+    const { error } = await requestPasswordReset({
+      email,
+      redirectTo: '/reset-password',
+    }).catch(() => ({ error: {} as { status?: number } }));
+    setSending(false);
+    if (error) {
+      setProblem({ alert: error.status === 429 ? TOO_MANY_ATTEMPTS : GENERIC_RESET_REQUEST_ERROR });
+    } else {
+      setSaved('link');
+    }
+    settle();
+  };
 
   const submit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
@@ -106,6 +133,7 @@ const PasswordSection = ({ hasPassword }: PasswordSectionProps): ReactElement =>
     setChosen('');
     setSaved('changed');
     settle();
+    router.refresh();
   };
 
   return (
@@ -127,11 +155,33 @@ const PasswordSection = ({ hasPassword }: PasswordSectionProps): ReactElement =>
           your providers.
         </Notice>
       )}
+      {saved === 'link' && (
+        <Notice kind="success" result>
+          We've sent a link to your email address to choose a new password. The link works once,
+          within 15 minutes.
+        </Notice>
+      )}
       {/* `noValidate`: every refusal is the server's, worded and placed like the rest. */}
       <form className="form" onSubmit={(event) => void submit(event)} noValidate>
+        {/* A password manager saves a password against the username in the same form, so the account's
+            address rides along, read-only and visually hidden (not `display: none`, which managers skip). A placeholder address is no username. */}
+        {email && !email.endsWith('.invalid') && (
+          <input
+            type="email"
+            name="username"
+            id="password-section-username"
+            autoComplete="username"
+            value={email}
+            readOnly
+            tabIndex={-1}
+            aria-hidden
+            className="password-section__username"
+          />
+        )}
         {held && (
           <PasswordField
             label="Current Password"
+            name="current-password"
             purpose="current"
             value={current}
             onChange={setCurrent}
@@ -141,6 +191,7 @@ const PasswordSection = ({ hasPassword }: PasswordSectionProps): ReactElement =>
         )}
         <PasswordField
           label="New Password"
+          name="new-password"
           purpose="new"
           value={chosen}
           onChange={setChosen}
@@ -157,6 +208,18 @@ const PasswordSection = ({ hasPassword }: PasswordSectionProps): ReactElement =>
           >
             {held ? 'Change Password' : 'Set Password'}
           </BusyButton>
+          {held && email && !email.endsWith('.invalid') && (
+            <BusyButton
+              type="button"
+              className="btn"
+              busy={sending}
+              busyLabel="Sending Link"
+              disabled={pending}
+              onClick={() => void sendResetLink()}
+            >
+              Forgot Your Password?
+            </BusyButton>
+          )}
         </div>
       </form>
     </div>

@@ -17,6 +17,7 @@ const PasswordField = ({
   onChange,
   purpose,
   error,
+  name,
   required,
 }: PasswordFieldProps): ReactElement => {
   const id = useId();
@@ -42,6 +43,7 @@ const PasswordField = ({
       <div className="password-field__control">
         <input
           id={field.controlId}
+          name={name}
           className="input"
           type={shown ? 'text' : 'password'}
           autoComplete={purpose === 'new' ? 'new-password' : 'current-password'}
