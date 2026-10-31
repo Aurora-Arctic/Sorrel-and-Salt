@@ -102,6 +102,10 @@ Sources: <https://vercel.com/docs/workflow>, <https://vercel.com/docs/workflows/
 
 ## Decided while building (lane D)
 
+### The Time-Out Panel (2026-10-31)
+
+The owner approved a redraw on reviewing the PR. The form asks "For" first, with a day-only "Until" for a date. It asks before it acts. A standing time-out is a card with Lift and the setter, and earlier ones are a ledger. The setter is `created_by` from the audit columns, so no migration was needed. The same panel sits in the admin user modal.
+
 ### A Signed-Out Sender Has a System Actor (M15.39)
 
 A request can belong to an email address instead of an account, so a signed-out visitor can write in (M15.40 builds the send).

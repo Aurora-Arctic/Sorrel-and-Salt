@@ -21,6 +21,8 @@ A `UserCoven` is `workspaceId`, `name`, `slug`, the user's `role` there and
 
 ## Contracts
 
+- **Support Time-Out** (2026-10-31): when the page passes `timeouts`, a section after Covens and before Impersonate holds the same `TimeoutPanel` as the support request dialog (card, ledger and form), keyed by the user. The page reads them with `readTimeoutsOf`, which returns nothing for a non-admin.
+
 - **Laid out as the ingredient modal is, not as a table** (the owner's call,
   2026-10-12): two sections, Account and Covens, each under a small title in
   the heading face and parted by hairlines, with Impersonate under the last
