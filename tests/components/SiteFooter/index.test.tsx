@@ -9,7 +9,7 @@ vi.mock('next/navigation', () => ({
 const { default: SiteFooter } = await import('@/components/SiteFooter');
 
 describe('SiteFooter', () => {
-  it('carries the Support link that opens the dialog over the page over the page', () => {
+  it('carries the Support icon link that opens the dialog over the page', () => {
     render(<SiteFooter />);
     expect(screen.getByRole('contentinfo')).toBeInTheDocument();
     expect(screen.getByRole('navigation', { name: 'Footer' })).toBeInTheDocument();

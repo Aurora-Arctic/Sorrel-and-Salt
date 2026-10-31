@@ -906,8 +906,8 @@ $shell-bar-height: 3.25rem;
 $bottom-bar-height: 4rem;
 
 // The footer row's height, fixed so the salt can rise by exactly it as the footer comes into view
-// (Backdrop/index.scss); it stacks to two lines at a phone's width.
-$footer-height: 4.5rem;
+// (Backdrop/index.scss): the icon button plus the row's padding. It stacks to two lines at a phone's width.
+$footer-height: 2rem + $control-height;
 $footer-height-phone: 7rem;
 // What the footer takes under a centred page frame: its row plus the step of air above it.
 // The step of air is space(8), spelled in rem because the steps are defined further down.

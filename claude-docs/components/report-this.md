@@ -7,7 +7,7 @@ over the same page, which the root layout draws everywhere. Only `global-error.t
 It is an icon-only button, `btn btn--quiet btn--icon`: `SupportIcon` (a solid speech bubble with a question mark cut out of it)
 in a square the height of a field, wrapped in `IconTip` with the tip "Report This". The link is still named "Report This", by a
 `visually-hidden` span. The bubble takes the button's ink and the cut-out takes `--icon-ground`, which `.btn--quiet` sets to its
-own background, resting and pointed at. The icon appears nowhere else.
+own background, resting and pointed at. The same icon and button are the footer's Support link.
 
 ## The path it names
 
