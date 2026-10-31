@@ -29,6 +29,16 @@ const ARRIVALS = `query {
   }
 }`;
 const CSV = `query { cardArrivalsCsv }`;
+const filteredBatches = (batchId: string) => `query {
+  invitationCardBatches(first: 50, batch: "${batchId.slice(0, 4)}", status: live, mintedFrom: "2020-01-01", expiresTo: "2099-12-31") {
+    edges { node { batchId } }
+  }
+}`;
+const USED_UP_BATCHES = `query { invitationCardBatches(first: 50, status: usedUp) { edges { node { batchId } } } }`;
+const filteredArrivals = (batchId: string) =>
+  `query { cardArrivals(first: 50, query: "fixture", batch: "${batchId.slice(0, 4)}") { edges { node { id } } } }`;
+const filteredCsv = (batchId: string) =>
+  `query { cardArrivalsCsv(query: "fixture", batch: "${batchId.slice(0, 4)}") }`;
 
 const nextWeek = () => new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString();
 
@@ -44,6 +54,14 @@ describe('the card operations', () => {
   it('refuses a curator, a member and an owner each one by direct request, with a card to reach', async () => {
     const minted = await run<Minted>(asUser(E), MINT, { sheets: 1, expiresAt: nextWeek() });
     const { batchId } = minted.data!.createInvitationCards;
+    // An arrival the filters reach, so an admin's request answers a row.
+    await sql`update invitations set accepted_at = now(), accepted_by = ${B.id} where id = (select id from invitations where kind = 'card' limit 1)`;
+    const reached = await run<{ invitationCardBatches: { edges: unknown[] } }>(
+      asUser(E),
+      filteredBatches(batchId),
+    );
+    expect(JSON.stringify(reached.errors)).toBeUndefined();
+    expect(reached.data!.invitationCardBatches.edges).toHaveLength(1);
 
     for (const who of [F, B, A]) {
       const session = asUser(who);
@@ -53,6 +71,9 @@ describe('the card operations', () => {
         await run(session, BATCHES),
         await run(session, ARRIVALS),
         await run(session, CSV),
+        await run(session, filteredBatches(batchId)),
+        await run(session, filteredArrivals(batchId)),
+        await run(session, filteredCsv(batchId)),
       ];
       for (const answer of answers) {
         expect(answer.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
@@ -134,6 +155,40 @@ describe('the card operations', () => {
       pending: 2 * CARDS_PER_SHEET - 3,
     });
     expect(JSON.stringify(listed)).not.toContain(minted.data!.createInvitationCards.tokens[0]!);
+  });
+
+  it('narrows the batches by status and the arrivals by account, in SQL', async () => {
+    const minted = await run<Minted>(asUser(E), MINT, { sheets: 1, expiresAt: nextWeek() });
+    const { batchId } = minted.data!.createInvitationCards;
+    const [card] = await sql`select id from invitations where kind = 'card' limit 1`;
+    await sql`update invitations set accepted_at = now(), accepted_by = ${B.id} where id = ${card!.id}`;
+
+    const live = await run<{ invitationCardBatches: { edges: unknown[] } }>(
+      asUser(E),
+      `query { invitationCardBatches(first: 50, status: live, batch: "${batchId.slice(0, 4)}") { edges { node { batchId } } } }`,
+    );
+    const usedUp = await run<{ invitationCardBatches: { edges: unknown[] } }>(
+      asUser(E),
+      USED_UP_BATCHES,
+    );
+    const named = await run<{ cardArrivals: { edges: unknown[] } }>(
+      asUser(E),
+      `query { cardArrivals(first: 50, query: "${B.email}") { edges { node { id } } } }`,
+    );
+    const other = await run<{ cardArrivals: { edges: unknown[] } }>(
+      asUser(E),
+      `query { cardArrivals(first: 50, query: "${A.email}") { edges { node { id } } } }`,
+    );
+    const csv = await run<{ cardArrivalsCsv: string }>(
+      asUser(E),
+      `query { cardArrivalsCsv(query: "${A.email}") }`,
+    );
+
+    expect(live.data!.invitationCardBatches.edges).toHaveLength(1);
+    expect(usedUp.data!.invitationCardBatches.edges).toHaveLength(0);
+    expect(named.data!.cardArrivals.edges).toHaveLength(1);
+    expect(other.data!.cardArrivals.edges).toHaveLength(0);
+    expect(csv.data!.cardArrivalsCsv.trimEnd().split('\r\n')).toHaveLength(1);
   });
 
   it('lists an arrival with the covens its account owns, and not the covens it only belongs to', async () => {

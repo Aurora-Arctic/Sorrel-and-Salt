@@ -4,6 +4,7 @@ import Link from 'next/link';
 import type { ReactElement } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
+import { noMatchText } from '../../lib/text';
 import { dayInUtc, isoDayInUtc } from '../../lib/utc';
 import StackTable from '../DataTable';
 import LocalTime from '../LocalTime';
@@ -13,9 +14,10 @@ import Pager from '../Pager';
 import ConfirmedAction from '../UserList/confirmed-action';
 import CardAttempts from './attempts';
 import { batchName, STATUS_LABEL } from './batches';
-import { cardsHref } from './href';
+import CardsFilterForm from './filter';
+import { NO_CARDS_FILTER, cardsHref } from './href';
 import MintForm, { MINT_TITLE } from './mint-form';
-import type { AdminCardsProps, MintCardsProps } from './types';
+import type { AdminCardsProps, CardsFilter, MintCardsProps } from './types';
 import './index.scss';
 
 // The People page's Invitation Cards tab, `/admin/invitation-cards`: one row per batch (minted, expiry, cards,
@@ -31,8 +33,8 @@ const RevokeCardBatchDocument = graphql(`
 `);
 
 /** Mint Cards, the tab's action beside the heading: a link to `?mint`, which opens the form over the list. */
-export const MintCards = ({ cursor }: MintCardsProps): ReactElement => {
-  const href = cardsHref(cursor, true);
+export const MintCards = ({ cursor, filter }: MintCardsProps): ReactElement => {
+  const href = cardsHref(cursor, true, filter);
   const onClick = useOpenModalClick(href, { title: MINT_TITLE });
   return (
     <Link className="btn btn--solid" href={href} onClick={onClick}>
@@ -41,16 +43,39 @@ export const MintCards = ({ cursor }: MintCardsProps): ReactElement => {
   );
 };
 
+/** The empty list, naming the filters in use so an admin sees what to change. */
+function emptyText({
+  batch,
+  status,
+  mintedFrom,
+  mintedTo,
+  expiresFrom,
+  expiresTo,
+}: CardsFilter): string {
+  const filters = [
+    batch && `batch “${batch}”`,
+    status && STATUS_LABEL[status],
+    mintedFrom && `minted from ${mintedFrom}`,
+    mintedTo && `minted to ${mintedTo}`,
+    expiresFrom && `expiring from ${expiresFrom}`,
+    expiresTo && `expiring to ${expiresTo}`,
+  ].filter((part): part is string => Boolean(part));
+  return noMatchText('batches', filters, 'No cards have been minted.');
+}
+
 const AdminCards = ({
   batches,
   cursor,
   previousHref,
   nextHref,
   position,
+  filter = NO_CARDS_FILTER,
   minting = false,
 }: AdminCardsProps): ReactElement => (
   <section className="admin-cards" aria-label="Invitation Cards">
     <ListFrame>
+      {/* Keyed by the filter shown, so another one starts the form again from it. */}
+      <CardsFilterForm key={JSON.stringify(filter)} filter={filter} />
       <ListBody>
         <StackTable
           columns={[
@@ -109,13 +134,13 @@ const AdminCards = ({
           ]}
           rows={batches}
           rowKey={(batch) => batch.batchId}
-          empty="No cards have been minted."
+          empty={emptyText(filter)}
           className="data-table--nowrap"
         />
         <Pager previousHref={previousHref} nextHref={nextHref} position={position} />
       </ListBody>
     </ListFrame>
-    <MintForm open={minting} closeHref={cardsHref(cursor)} />
+    <MintForm open={minting} closeHref={cardsHref(cursor, false, filter)} />
   </section>
 );
 

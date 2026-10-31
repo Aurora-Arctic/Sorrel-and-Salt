@@ -824,6 +824,16 @@ type InvitationCardBatch {
 }
 
 """
+Where a batch stands: live while a card can still be accepted; else used up, expired or revoked.
+"""
+enum InvitationCardBatchStatus {
+  expired
+  live
+  revoked
+  usedUp
+}
+
+"""
 Where a card stands now: an accepted card stays accepted whatever became of its date.
 """
 enum InvitationCardState {
@@ -1254,14 +1264,31 @@ enum PrivilegeRoute {
 
 type Query {
   """
-  The accepted cards, newest first: each with the account that arrived by it. Site admins only.
+  The accepted cards, newest first: each with the account that arrived by it, narrowed by every filter given. Site admins only.
   """
-  cardArrivals(after: String, before: String, first: Int, last: Int): QueryCardArrivalsConnection!
+  cardArrivals(
+    after: String
+
+    """The start of the batch number, case-insensitively."""
+    batch: String
+    before: String
+    first: Int
+    last: Int
+
+    """Part of the account's name or email, case-insensitively."""
+    query: String
+  ): QueryCardArrivalsConnection!
 
   """
-  Every arrival as CSV text: account name, email, accepted date and batch. Site admins only.
+  Every arrival the filter keeps as CSV text: account name, email, accepted date and batch. Site admins only.
   """
-  cardArrivalsCsv: String!
+  cardArrivalsCsv(
+    """The start of the batch number, case-insensitively."""
+    batch: String
+
+    """Part of the account's name or email, case-insensitively."""
+    query: String
+  ): String!
 
   """
   The live categories by name, each under a live group: those whose name holds `query`, case-insensitively, and those filed under `groupId`, when given.
@@ -1434,8 +1461,31 @@ type Query {
   """A batch's refused opens, latest first. Site admins only."""
   invitationCardAttempts(after: String, batchId: ID!, before: String, first: Int, last: Int): QueryInvitationCardAttemptsConnection!
 
-  """The batches of cards, newest first. Site admins only."""
-  invitationCardBatches(after: String, before: String, first: Int, last: Int): QueryInvitationCardBatchesConnection!
+  """
+  The batches of cards, newest first, narrowed by every filter given. Site admins only.
+  """
+  invitationCardBatches(
+    after: String
+
+    """The start of the batch number, case-insensitively."""
+    batch: String
+    before: String
+
+    """First day of expiry, in UTC."""
+    expiresFrom: LocalDate
+
+    """Last day of expiry, in UTC."""
+    expiresTo: LocalDate
+    first: Int
+    last: Int
+
+    """First day minted, in UTC."""
+    mintedFrom: LocalDate
+
+    """Last day minted, in UTC."""
+    mintedTo: LocalDate
+    status: InvitationCardBatchStatus
+  ): QueryInvitationCardBatchesConnection!
   me: User!
   ok: Boolean!
   possibleDuplicates(after: String, before: String, first: Int, last: Int, name: String!, workspaceId: ID): QueryPossibleDuplicatesConnection!

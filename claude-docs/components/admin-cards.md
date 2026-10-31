@@ -21,6 +21,16 @@ Expires is a UTC day, `2026-10-30`. Minted On, Refused Opens First and Latest an
   counts, not from one card's `revokedAt` (the head card may have been accepted): any card pending is Live;
   else every card accepted is Used up; else a passed expiry is Expired; else Revoked. Table cell values are
   sentence case.
+- **Invitation Cards filter** (`filter.tsx`, `filter-params.ts`): the shared `FilterForm` ("Filter Invitation Cards"), held in the URL
+  and combined, every field optional. **Batch** matches the start of the batch number (the batch id's first block, hex
+  and case-folded, with `%` and `_` taken literally); **Status** is All Statuses, Live, Revoked, Expired or Used up;
+  **Minted From**, **Minted To**, **Expires From** and **Expires To** are `DateField`s, UTC days and inclusive at both
+  ends (`mintedFrom=2026-10-01&mintedTo=2026-10-31` holds the 1st and the 31st). The URL names are `batch`, `status`
+  (`live`, `revoked`, `expired`, `used-up`), `mintedFrom`, `mintedTo`, `expiresFrom` and `expiresTo`. A `DateField` has no name, so each day is
+  also sent by a hidden input and the form works as a GET before hydration. A day has no clear of its own: Clear
+  empties every field. `invitationCardBatches` takes the same arguments and filters in SQL, status included
+  (`batchStatusIs` in `db/repository/invitations.ts` mirrors `batchStatus()`), then pages through `findPage`. A value
+  the page cannot read (an unknown status, a day that is not a day) is dropped; the service rejects one sent directly.
 - **Refused Opens** (`attempts.tsx`): each batch shows its count of refused opens across all its cards;
   where the count is above zero an eye icon button (tip **View Refused Opens**, right-aligned in the cell) opens a dialog headed by the eyebrow "Refused Opens" over the title "Batch 7c2d0000" (its name, "Refused Opens, Batch 7c2d0000") that reads
   `invitationCardAttempts` for that batch and lists the account (its name links to that account's modal on the People page, and its email sits under it; a removed account is "Removed account" with neither), the **Card** ("Sheet 2, Card 5", from the card's `position`; "Unknown" for a card minted before positions were kept), the reason, how many times, and the **First** and **Latest** times (the row's creation and its last refusal),
@@ -43,6 +53,10 @@ Expires is a UTC day, `2026-10-30`. Minted On, Refused Opens First and Latest an
   date (**Accepted On**), the batch and the covens it owns (**Covens Owned**; "None yet" when none). An account
   that can no longer be read keeps its row as plain "Removed account" text. The name opens that account's user modal over the page, through the Users list's own `UserLink`. **Download CSV** reads `cardArrivalsCsv` through
   GraphQL and hands the string to the browser as `card-sign-ups.csv`; a failure shows as the button's click feedback; the service refuses anyone but an admin.
+- **Card Sign-Ups filter** (`arrivals-filter.tsx`): the shared `FilterForm` ("Filter Card Sign-Ups") with **Name or Email**
+  (`query`, part of either, case-folded) and **Batch** (`batch`, the start of the batch number), both held in the URL and
+  applied together by either magnifier or Enter. `cardArrivals` and its count filter in SQL and page through
+  `findPage`; **Download CSV** sends the same `query` and `batch` to `cardArrivalsCsv`, so the file holds the filtered rows.
 - `src/lib/invitation-cards/limits.ts` holds `CARDS_PER_SHEET`, `MAX_SHEETS_PER_BATCH` and
   `DEFAULT_EXPIRY_DAYS`, a file with no imports so a client file can read it; the service rejects anything
   past the cap whatever the form allows.

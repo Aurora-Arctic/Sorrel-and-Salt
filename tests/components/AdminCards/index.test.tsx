@@ -1,8 +1,9 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import type { ReactNode } from 'react';
+import { afterEach, beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import { buildCardSheetsPdf } from '@/lib/invitation-cards';
 import AdminCards, { MintCards } from '@/components/AdminCards';
-import AdminArrivals from '@/components/AdminCards/arrivals';
+import AdminArrivals, { ArrivalsActions } from '@/components/AdminCards/arrivals';
 import type {
   CreateInvitationCardsMutation,
   CreateInvitationCardsMutationVariables,
@@ -14,6 +15,9 @@ import type {
 import { RouteModalContext } from '@/components/Modal/route-modal-provider';
 import type { RouteModalOpener } from '@/components/Modal/types';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
+import { FILTER_ROWS, filterForm } from '../../support/filter-form';
+import { Navigating } from '../../support/navigating';
+import type { FilterFormSubject } from '../../support/types';
 import { mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
 
 // The Invitation Cards and Card Sign-Ups tabs: render-only, so the page owns the read and this owns what an admin sees of it
@@ -316,7 +320,10 @@ describe('AdminCards', () => {
     URL.createObjectURL = vi.fn(() => 'blob:x');
     URL.revokeObjectURL = vi.fn();
     // The save is an anchor press; jsdom would otherwise try to open the blob address.
-    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    const click = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(() => undefined);
+    onTestFinished(() => click.mockRestore());
     render(<AdminCards batches={[]} minting />);
     fireEvent.change(within(dialog()).getByRole('spinbutton', { name: /Number of Sheets/ }), {
       target: { value: '1' },
@@ -481,5 +488,191 @@ describe('AdminArrivals', () => {
     expect(opener.open).toHaveBeenCalledExactlyOnceWith(WORT.openHref, WORT.heading, undefined);
     expect(screen.getByText('Removed account')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Removed account' })).toBeNull();
+  });
+});
+
+// The Cards tab's filter. The shared rows assert the address it builds and which values count as a filter;
+// the rest proves each field writes the URL and the table shows what the URL holds.
+describe('AdminCards filter', () => {
+  const NONE = {
+    batch: '',
+    status: '' as const,
+    mintedFrom: '',
+    mintedTo: '',
+    expiresFrom: '',
+    expiresTo: '',
+  };
+  const FILTER = {
+    batch: 'b11',
+    status: 'live' as const,
+    mintedFrom: '2026-10-01',
+    mintedTo: '2026-10-31',
+    expiresFrom: '2026-11-01',
+    expiresTo: '2026-12-31',
+  };
+  const PATH = '/admin/invitation-cards';
+  const send = (batch: string, status: string, mf: string, mt: string, ef: string, et: string) =>
+    `batch=${batch}&status=${status}&mintedFrom=${mf}&mintedTo=${mt}&expiresFrom=${ef}&expiresTo=${et}`;
+
+  const SUBJECT: FilterFormSubject = {
+    label: 'Filter Invitation Cards',
+    path: PATH,
+    searchLabel: 'Batch',
+    push: router.push,
+    none: { list: <AdminCards batches={BATCHES} />, sends: send('', '', '', '', '', '') },
+    shown: {
+      list: <AdminCards batches={BATCHES} filter={FILTER} cursor={{ after: 'c25' }} />,
+      sends: send('b11', 'live', '2026-10-01', '2026-10-31', '2026-11-01', '2026-12-31'),
+    },
+    alone: [
+      [{ ...NONE, batch: 'b11' }, send('b11', '', '', '', '', '')],
+      [{ ...NONE, status: 'revoked' as const }, send('', 'revoked', '', '', '', '')],
+      [{ ...NONE, mintedFrom: '2026-10-01' }, send('', '', '2026-10-01', '', '', '')],
+      [{ ...NONE, mintedTo: '2026-10-31' }, send('', '', '', '2026-10-31', '', '')],
+      [{ ...NONE, expiresFrom: '2026-11-01' }, send('', '', '', '', '2026-11-01', '')],
+      [{ ...NONE, expiresTo: '2026-12-31' }, send('', '', '', '', '', '2026-12-31')],
+    ].map(([filter, sends]) => ({
+      list: <AdminCards batches={[]} filter={filter as typeof NONE} />,
+      sends: sends as string,
+    })),
+    searched: `${PATH}?batch=Two+words&status=live&mintedFrom=2026-10-01&mintedTo=2026-10-31&expiresFrom=2026-11-01&expiresTo=2026-12-31`,
+  };
+
+  const inFlight = (ui: ReactNode) => render(<Navigating push={router.push}>{ui}</Navigating>);
+
+  it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));
+
+  it('writes the status picked to the URL from the first page, carrying the batch typed', async () => {
+    inFlight(<AdminCards batches={BATCHES} cursor={{ after: 'c25' }} />);
+
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Batch' }), {
+      target: { value: ' b22 ' },
+    });
+    fireEvent.click(screen.getByRole('combobox', { name: 'Status' }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole('option', { name: 'Used up' }));
+    });
+
+    expect(router.push).toHaveBeenCalledExactlyOnceWith(`${PATH}?batch=b22&status=used-up`);
+  });
+
+  it.each([
+    ['Minted From', 'mintedFrom'],
+    ['Minted To', 'mintedTo'],
+    ['Expires From', 'expiresFrom'],
+    ['Expires To', 'expiresTo'],
+  ])('writes the day picked in %s to the URL from the first page', async (label, name) => {
+    inFlight(<AdminCards batches={BATCHES} cursor={{ after: 'c25' }} />);
+
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(label) }));
+    await act(async () => {
+      fireEvent.click(
+        within(screen.getByRole('grid')).getByRole('button', { name: /, 15 October 2026/ }),
+      );
+    });
+
+    expect(router.push).toHaveBeenCalledExactlyOnceWith(`${PATH}?${name}=2026-10-15`);
+  });
+
+  it('shows the filter the URL holds in its fields and the rows sent for it', () => {
+    render(<AdminCards batches={[BATCHES[0]]} filter={FILTER} />);
+
+    expect(screen.getByRole('searchbox', { name: 'Batch' })).toHaveValue('b11');
+    expect(screen.getByRole('combobox', { name: 'Status' })).toHaveTextContent('Live');
+    expect(screen.getByRole('button', { name: /Minted From/ })).toHaveTextContent('2026');
+    expect(screen.getAllByRole('row')).toHaveLength(2);
+  });
+
+  it('names the filter in use when nothing matches, and Clear leads to every batch', () => {
+    render(<AdminCards batches={[]} filter={{ ...NONE, batch: 'zz' }} />);
+
+    expect(screen.getByText(/zz/)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Clear' })).toHaveAttribute('href', PATH);
+  });
+});
+
+describe('AdminArrivals filter', () => {
+  const PATH = '/admin/card-sign-ups';
+  const SUBJECT: FilterFormSubject = {
+    label: 'Filter Card Sign-Ups',
+    path: PATH,
+    searchLabel: 'Name or Email',
+    push: router.push,
+    none: { list: <AdminArrivals arrivals={[]} />, sends: 'query=&batch=' },
+    shown: {
+      list: <AdminArrivals arrivals={[]} filter={{ query: 'wort', batch: 'b11' }} />,
+      sends: 'query=wort&batch=b11',
+    },
+    alone: [
+      {
+        list: <AdminArrivals arrivals={[]} filter={{ query: 'wort', batch: '' }} />,
+        sends: 'query=wort&batch=',
+      },
+      {
+        list: <AdminArrivals arrivals={[]} filter={{ query: '', batch: 'b11' }} />,
+        sends: 'query=&batch=b11',
+      },
+    ],
+    searched: `${PATH}?query=Two+words&batch=b11`,
+  };
+
+  // Two search boxes draw two magnifiers, so the shared row that presses the one Search button is replaced by the test below.
+  it.each(FILTER_ROWS.filter(([title]) => !title.startsWith('opens the searched list')))(
+    '%s',
+    (_title, run) => run(SUBJECT),
+  );
+
+  it('writes both boxes to the URL together on either magnifier or Enter, trimmed', () => {
+    render(<AdminArrivals arrivals={[]} filter={{ query: 'wort', batch: '' }} />);
+
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Batch' }), {
+      target: { value: ' b22 ' },
+    });
+    fireEvent.click(screen.getAllByRole('button', { name: 'Search' })[1]);
+    fireEvent.submit(filterForm('Filter Card Sign-Ups'));
+
+    expect(router.push.mock.calls).toEqual([
+      [`${PATH}?query=wort&batch=b22`],
+      [`${PATH}?query=wort&batch=b22`],
+    ]);
+  });
+
+  it('shows what the URL holds, and Clear leads to every sign-up', () => {
+    render(<AdminArrivals arrivals={[]} filter={{ query: 'wort', batch: 'b11' }} />);
+
+    expect(screen.getByRole('searchbox', { name: 'Name or Email' })).toHaveValue('wort');
+    expect(screen.getByRole('searchbox', { name: 'Batch' })).toHaveValue('b11');
+    expect(screen.getByRole('link', { name: 'Clear' })).toHaveAttribute('href', PATH);
+  });
+
+  const askedCsv = async (filter: { query: string; batch: string }) => {
+    const asked: unknown[] = [];
+    mockGraphQLQuery('CardArrivalsCsv', (variables) => {
+      asked.push(variables);
+      return { cardArrivalsCsv: 'name,email\n' };
+    });
+    // The anchor's click is stubbed: jsdom would navigate to the object URL, and every later request in the file would fail on the page's origin.
+    const click = vi
+      .spyOn(HTMLAnchorElement.prototype, 'click')
+      .mockImplementation(() => undefined);
+    onTestFinished(() => click.mockRestore());
+    URL.createObjectURL = vi.fn(() => 'blob:csv');
+    URL.revokeObjectURL = vi.fn();
+
+    render(<ArrivalsActions filter={filter} />);
+    fireEvent.click(screen.getByRole('button', { name: /Download CSV/ }));
+    await waitFor(() => expect(asked).toHaveLength(1));
+    return asked[0];
+  };
+
+  it('sends the filter shown to the CSV download', async () => {
+    expect(await askedCsv({ query: 'wort', batch: 'b11' })).toEqual({
+      query: 'wort',
+      batch: 'b11',
+    });
+  });
+
+  it('sends no variables when the filter is blank, as on the unfiltered tab', async () => {
+    expect(await askedCsv({ query: '', batch: '' })).toEqual({});
   });
 });

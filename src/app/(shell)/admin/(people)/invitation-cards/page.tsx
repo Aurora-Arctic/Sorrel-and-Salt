@@ -2,7 +2,9 @@ import type { Metadata } from 'next';
 import { cache } from 'react';
 import AdminCards from '../../../../../components/AdminCards';
 import { batchStatus } from '../../../../../components/AdminCards/batches';
+import { readCardsFilter } from '../../../../../components/AdminCards/filter-params';
 import { cardsHref } from '../../../../../components/AdminCards/href';
+import type { CardsFilter } from '../../../../../components/AdminCards/types';
 import { pagerHrefs } from '../../../../../lib/list-href';
 import { requireAdminSession } from '../../../../../lib/request-session';
 import type { Session } from '../../../../../lib/session';
@@ -18,11 +20,24 @@ export const metadata: Metadata = {
 // One page of the batches and its count, newest first, numbered as every admin list is (rule 8), with each
 // batch's cards counted in SQL. Cached so a second render in the request reads once.
 const readBatches = cache(
-  async (session: Session, after: string | undefined, before: string | undefined) => {
+  async (
+    session: Session,
+    filter: CardsFilter,
+    after: string | undefined,
+    before: string | undefined,
+  ) => {
+    const sent = {
+      batch: filter.batch,
+      status: filter.status || undefined,
+      mintedFrom: filter.mintedFrom,
+      mintedTo: filter.mintedTo,
+      expiresFrom: filter.expiresFrom,
+      expiresTo: filter.expiresTo,
+    };
     const page = await readNumberedPage(
       { after, before },
-      (request) => listCardBatches(session, request),
-      (start) => countCardBatches(session, start),
+      (request) => listCardBatches(session, sent, request),
+      (start) => countCardBatches(session, sent, start),
     );
     const totals = new Map(
       (
@@ -60,13 +75,15 @@ export default async function CardsPage({ searchParams }: CardsPageProps) {
   const session = await requireAdminSession();
   const params = await searchParams;
   const { after, before } = readListPlace(params);
-  const { batches, pageInfo, position } = await readBatches(session, after, before);
+  const filter = readCardsFilter(params);
+  const { batches, pageInfo, position } = await readBatches(session, filter, after, before);
   return (
     <AdminCards
       batches={batches}
       cursor={{ after, before }}
       position={position}
-      {...pagerHrefs(pageInfo, (turn) => cardsHref(turn))}
+      filter={filter}
+      {...pagerHrefs(pageInfo, (turn) => cardsHref(turn, false, filter))}
       minting={params.mint !== undefined}
     />
   );

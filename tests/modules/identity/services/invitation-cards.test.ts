@@ -8,6 +8,7 @@ import {
   cardArrivalsCsv,
   cardBatchTotals,
   cardState,
+  countCardArrivals,
   countCardBatches,
   listCardArrivals,
   listCardBatches,
@@ -40,16 +41,31 @@ describe('who may mint, list and revoke', () => {
     const { batchId } = await mintInvitationCards(asUser(E), 1, NEXT_WEEK());
     const rows = await cards();
     expect(rows.every((row) => row.revoked_at === null)).toBe(true);
+    // Filters that name the batch and an arrival it holds, so an admin's call would answer a row.
+    await sql`update invitations set accepted_at = now(), accepted_by = ${B.id} where id = ${rows[0]!.id}`;
+    const FILTERED_BATCHES = { batch: batchId.slice(0, 4), status: 'live' as const };
+    const FILTERED_ARRIVALS = { query: B.email, batch: batchId.slice(0, 4) };
+    expect(await listCardBatches(asUser(E), FILTERED_BATCHES, PAGE)).toHaveLength(1);
+    expect(await listCardArrivals(asUser(E), FILTERED_ARRIVALS, PAGE)).toHaveLength(1);
 
     for (const who of [F, A, B]) {
       const session = asUser(who);
       await expect(mintInvitationCards(session, 1, NEXT_WEEK())).rejects.toBeInstanceOf(Forbidden);
       await expect(revokeInvitationCardBatch(session, batchId)).rejects.toBeInstanceOf(Forbidden);
-      await expect(listCardBatches(session, PAGE)).rejects.toBeInstanceOf(Forbidden);
-      await expect(countCardBatches(session, undefined)).rejects.toBeInstanceOf(Forbidden);
+      await expect(listCardBatches(session, FILTERED_BATCHES, PAGE)).rejects.toBeInstanceOf(
+        Forbidden,
+      );
+      await expect(countCardBatches(session, FILTERED_BATCHES, undefined)).rejects.toBeInstanceOf(
+        Forbidden,
+      );
       await expect(cardBatchTotals(session, [batchId])).rejects.toBeInstanceOf(Forbidden);
-      await expect(listCardArrivals(session, PAGE)).rejects.toBeInstanceOf(Forbidden);
-      await expect(cardArrivalsCsv(session)).rejects.toBeInstanceOf(Forbidden);
+      await expect(listCardArrivals(session, FILTERED_ARRIVALS, PAGE)).rejects.toBeInstanceOf(
+        Forbidden,
+      );
+      await expect(countCardArrivals(session, FILTERED_ARRIVALS, undefined)).rejects.toBeInstanceOf(
+        Forbidden,
+      );
+      await expect(cardArrivalsCsv(session, FILTERED_ARRIVALS)).rejects.toBeInstanceOf(Forbidden);
     }
 
     expect(await cards()).toHaveLength(CARDS_PER_SHEET);
@@ -168,11 +184,15 @@ describe('listing', () => {
     await sql`update invitations set created_at = created_at - interval '1 day' where batch_id = ${first.batchId}`;
     const second = await mintInvitationCards(asUser(E), 1, NEXT_WEEK());
 
-    const page = await listCardBatches(asUser(E), PAGE);
+    const page = await listCardBatches(asUser(E), {}, PAGE);
 
     expect(page.map(({ node }) => node.batchId)).toEqual([second.batchId, first.batchId]);
-    expect((await countCardBatches(asUser(E), undefined)).totalCount).toBe(2);
-    const turned = await listCardBatches(asUser(E), { ...PAGE, limit: 2, after: page[0]!.cursor });
+    expect((await countCardBatches(asUser(E), {}, undefined)).totalCount).toBe(2);
+    const turned = await listCardBatches(
+      asUser(E),
+      {},
+      { ...PAGE, limit: 2, after: page[0]!.cursor },
+    );
     expect(turned.map(({ node }) => node.batchId)).toEqual([first.batchId]);
   });
 
@@ -233,8 +253,41 @@ describe('the arrivals CSV', () => {
     );
   });
 
+  it('holds only the arrivals the filter keeps', async () => {
+    await mintInvitationCards(asUser(E), 1, NEXT_WEEK());
+    const [first, second] = await cards();
+    await sql`update invitations set accepted_at = now(), accepted_by = ${A.id} where id = ${first!.id}`;
+    await sql`update invitations set accepted_at = now(), accepted_by = ${B.id} where id = ${second!.id}`;
+
+    const everyone = await cardArrivalsCsv(asUser(E));
+    const byName = await cardArrivalsCsv(asUser(E), { query: B.email });
+    const byBatch = await cardArrivalsCsv(asUser(E), { batch: 'ffffffff' });
+
+    expect(everyone.trimEnd().split('\r\n')).toHaveLength(3);
+    expect(byName.trimEnd().split('\r\n')).toHaveLength(2);
+    expect(byName).toContain(B.email);
+    expect(byName).not.toContain(A.email);
+    expect(byBatch).toBe('Account Name,Email,Accepted,Batch\r\n');
+  });
+
   it('is only a header when nobody arrived', async () => {
     await mintInvitationCards(asUser(E), 1, NEXT_WEEK());
     expect(await cardArrivalsCsv(asUser(E))).toBe('Account Name,Email,Accepted,Batch\r\n');
+  });
+});
+
+describe('the filters', () => {
+  it('reads a blank text part as no filter and refuses a day that is not one', async () => {
+    await mintInvitationCards(asUser(E), 1, NEXT_WEEK());
+
+    const blank = await listCardBatches(asUser(E), { batch: '  ' }, PAGE);
+
+    expect(blank).toHaveLength(1);
+    await expect(
+      listCardBatches(asUser(E), { mintedFrom: 'yesterday' }, PAGE),
+    ).rejects.toBeInstanceOf(ValidationError);
+    await expect(
+      countCardBatches(asUser(E), { expiresTo: '2026-02-31' }, undefined),
+    ).rejects.toBeInstanceOf(ValidationError);
   });
 });

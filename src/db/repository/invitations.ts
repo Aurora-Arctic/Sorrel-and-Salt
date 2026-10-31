@@ -1,12 +1,12 @@
 import { and, eq, gt, inArray, isNotNull, isNull, lte, or, sql, type SQL } from 'drizzle-orm';
-import { alias } from 'drizzle-orm/pg-core';
+import { alias, type AnyPgColumn } from 'drizzle-orm/pg-core';
 import { applyAudit } from '../audit';
 import { workspaces } from '../../modules/coven/schema/workspaces';
 import { invitations } from '../../modules/coven/schema/invitations';
 import { cardInvitationAttempts } from '../../modules/coven/schema/card-invitation-attempts';
 import { users } from '../../modules/identity/schema/users';
 import type { AuditSession } from '../types';
-import { containsText, notSoftDeleted, scopedTo } from './predicates';
+import { containsText, notSoftDeleted, scopedTo, startsWithText } from './predicates';
 import { findPageCountInScope, findPageInScope } from './finders';
 import { existsIn, selectFrom, selectOne } from './select';
 import { hashToken } from './tokens';
@@ -16,10 +16,13 @@ import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types'
 import type {
   AuditWriter,
   AddressInvitationRow,
+  CardArrivalFilter,
   CardArrivalRow,
   CardAttemptReason,
   CardAttemptRow,
   CardInvitationValues,
+  CardBatchFilter,
+  CardBatchStatus,
   CardBatchTotal,
   CardPosition,
   CardRow,
@@ -373,25 +376,53 @@ function arrivedByCard(): SQL {
   ) as SQL;
 }
 
+// The arrivals a filter keeps: the account's name or address holds the query, and the batch number starts as given.
+function arrivalsWhere({ query, batch }: CardArrivalFilter): SQL | undefined {
+  return and(
+    query
+      ? existsIn(
+          users,
+          and(
+            eq(users.id, invitations.acceptedBy),
+            or(containsText(users.name, query), containsText(users.email, query)),
+          ),
+        )
+      : undefined,
+    batch ? startsWithText(invitations.batchId, batch) : undefined,
+  );
+}
+
 /**
  * One page of the accounts that arrived by card, newest first: the card rows alone, each with the account that
  * accepted it, when, and its batch. A site admin's read, as the admin Arrivals view is.
  */
 export function findCardArrivalPage(
   _admin: SiteAdmin,
+  filter: CardArrivalFilter,
   page: PageRequest,
 ): Promise<PageEntry<CardArrivalRow>[]> {
-  return findPageInScope(invitations, arrivedByCard(), CARD_ARRIVAL_ORDER, page) as Promise<
-    PageEntry<CardArrivalRow>[]
-  >;
+  return findPageInScope(
+    invitations,
+    arrivedByCard(),
+    CARD_ARRIVAL_ORDER,
+    page,
+    arrivalsWhere(filter),
+  ) as Promise<PageEntry<CardArrivalRow>[]>;
 }
 
 /** How many arrivals `findCardArrivalPage` pages, and how many come before `start`, a page's first row. */
 export function findCardArrivalCount(
   _admin: SiteAdmin,
+  filter: CardArrivalFilter,
   start: Cursor | undefined,
 ): Promise<PageCount> {
-  return findPageCountInScope(invitations, arrivedByCard(), CARD_ARRIVAL_ORDER, start);
+  return findPageCountInScope(
+    invitations,
+    arrivedByCard(),
+    CARD_ARRIVAL_ORDER,
+    start,
+    arrivalsWhere(filter),
+  );
 }
 
 /** Every card, newest first, the key negated as the other lists' are. */
@@ -424,25 +455,68 @@ function batchHeads(): SQL {
   ) as SQL;
 }
 
+// A day's first instant in UTC, as a timestamp.
+const dayStart = (day: string): SQL => sql`(${day}::date)::timestamp at time zone 'UTC'`;
+
+// A batch's standing worked out in SQL from its live cards, as the admin table's `batchStatus` does from their counts: a
+// card still pending is live; with none, every card accepted is used up, a passed expiry is expired, else revoked.
+function batchStatusIs(status: CardBatchStatus): SQL {
+  const mate = alias(invitations, 'status_card');
+  const mates = (extra: SQL) =>
+    sql`exists (select 1 from ${invitations} as ${sql.identifier('status_card')} where ${mate.kind} = 'card' and ${mate.batchId} = ${invitations.batchId} and ${mate.deletedAt} is null and ${extra})`;
+  const pending = mates(
+    sql`${mate.acceptedAt} is null and ${mate.declinedAt} is null and ${mate.revokedAt} is null and ${mate.expiresAt} > now()`,
+  );
+  if (status === 'live') return pending;
+  const unaccepted = mates(sql`${mate.acceptedAt} is null`);
+  if (status === 'used-up') return sql`not ${pending} and not ${unaccepted}`;
+  const lapsed =
+    status === 'expired'
+      ? sql`${invitations.expiresAt} <= now()`
+      : sql`${invitations.expiresAt} > now()`;
+  return sql`not ${pending} and ${unaccepted} and ${lapsed}`;
+}
+
+// The batches a filter keeps. The head card stands for its batch, so its dates are the batch's; the days are whole, UTC.
+function batchesWhere(filter: CardBatchFilter): SQL | undefined {
+  const { batch, status, mintedFrom, mintedTo, expiresFrom, expiresTo } = filter;
+  const through = (column: AnyPgColumn, from?: string, to?: string) => [
+    from ? sql`${column} >= ${dayStart(from)}` : undefined,
+    to ? sql`${column} < ${dayStart(to)} + interval '1 day'` : undefined,
+  ];
+  return and(
+    batch ? startsWithText(invitations.batchId, batch) : undefined,
+    status ? batchStatusIs(status) : undefined,
+    ...through(invitations.createdAt, mintedFrom, mintedTo),
+    ...through(invitations.expiresAt, expiresFrom, expiresTo),
+  );
+}
+
 /**
  * One page of the batches, newest first: each entry is the batch's first card, which holds its batch id and dates. A site
  * admin's read; the counts per batch come from `findCardBatchTotals`.
  */
 export function findCardBatchPage(
   _admin: SiteAdmin,
+  filter: CardBatchFilter,
   page: PageRequest,
 ): Promise<PageEntry<CardRow>[]> {
-  return findPageInScope(invitations, batchHeads(), CARD_ORDER, page) as Promise<
-    PageEntry<CardRow>[]
-  >;
+  return findPageInScope(
+    invitations,
+    batchHeads(),
+    CARD_ORDER,
+    page,
+    batchesWhere(filter),
+  ) as Promise<PageEntry<CardRow>[]>;
 }
 
 /** How many batches `findCardBatchPage` pages, and how many come before `start`, a page's first batch. */
 export function findCardBatchCount(
   _admin: SiteAdmin,
+  filter: CardBatchFilter,
   start: Cursor | undefined,
 ): Promise<PageCount> {
-  return findPageCountInScope(invitations, batchHeads(), CARD_ORDER, start);
+  return findPageCountInScope(invitations, batchHeads(), CARD_ORDER, start, batchesWhere(filter));
 }
 
 /** Each named batch's cards, accepted cards, cards still pending and refused opens, counted in SQL. */
