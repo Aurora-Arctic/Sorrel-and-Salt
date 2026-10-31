@@ -32,23 +32,43 @@ function mockSending() {
   return calls;
 }
 
-function fill() {
+function fillText() {
   fireEvent.change(subject(), { target: { value: ' Cannot read the menu ' } });
   fireEvent.change(message(), { target: { value: ' The text is too faint. ' } });
 }
 
+// Writes the subject and message, and chooses Bug when the form opened with nothing chosen.
+function fill() {
+  fillText();
+  if (!within(aboutGroup()).queryByRole('radio', { checked: true })) {
+    fireEvent.click(aboutRadio('Bug'));
+  }
+}
+
 describe('SupportForm', () => {
-  it('offers seven cards, accessibility first and checked, unless an about is given', () => {
+  it('offers seven cards with none chosen, unless an about is given', () => {
     const { unmount } = render(<SupportForm path="/a" />);
     const radios = within(aboutGroup()).getAllByRole('radio');
     expect(radios).toHaveLength(7);
-    expect(radios[0]).toBeChecked();
-    expect(radios.filter((radio) => (radio as HTMLInputElement).checked)).toHaveLength(1);
+    for (const radio of radios) expect(radio).not.toBeChecked();
     unmount();
 
     render(<SupportForm path="/a" about="bug" />);
     expect(aboutRadio('Bug')).toBeChecked();
     expect(aboutRadio('Accessibility')).not.toBeChecked();
+  });
+
+  it('sends nothing and says so while no about is chosen', () => {
+    const calls = mockSending();
+    render(<SupportForm path="/a" />);
+    fillText();
+    fireEvent.click(send());
+    expect(aboutGroup()).toHaveAccessibleDescription('Choose what this is about.');
+    expect(calls).toHaveLength(0);
+    expect(screen.queryByRole('status')).toBeNull();
+
+    fireEvent.click(aboutRadio('Question'));
+    expect(aboutGroup()).not.toHaveAccessibleDescription('Choose what this is about.');
   });
 
   it('shows what each about means inside its card', () => {

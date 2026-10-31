@@ -4,7 +4,7 @@ import type { SupportAbout } from '@/modules/support';
 export type { SupportAbout };
 
 export interface SupportFormProps {
-  /** What it is about when the form opens; accessibility, the first on offer, when left out. */
+  /** What it is about when the form opens; nothing is chosen when left out. */
   about?: SupportAbout;
   /** The HTTP status of the error page the sender came from, stored with the request. */
   errorCode?: number;

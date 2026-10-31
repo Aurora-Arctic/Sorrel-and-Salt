@@ -55,11 +55,9 @@ export const SUPPORT_ABOUTS = [
 ] as const;
 export type SupportAboutParam = (typeof SUPPORT_ABOUTS)[number]['value'];
 
-/** The subject a value of `?support` names; accessibility, the first offered, for a bare or unknown one. */
-export function supportAboutOf(value: string | null): SupportAboutParam {
-  return SUPPORT_ABOUTS.some((about) => about.value === value)
-    ? (value as SupportAboutParam)
-    : 'accessibility';
+/** The about a value of `?support` names, or `undefined` for a bare, missing or unknown one: nothing is chosen for the sender. */
+export function supportAboutOf(value: string | null): SupportAboutParam | undefined {
+  return SUPPORT_ABOUTS.find((about) => about.value === value)?.value;
 }
 
 /** An HTTP status read from a parameter, or `undefined` when it is not one. */
@@ -73,11 +71,11 @@ export function errorCodeOf(value: string | null): number | undefined {
 export function supportHref(
   pathname: string,
   params: URLSearchParams,
-  about: SupportAboutParam,
+  about?: SupportAboutParam,
   errorCode?: number,
 ): string {
   const rest = new URLSearchParams(params);
-  rest.set(SUPPORT_PARAM, about);
+  rest.set(SUPPORT_PARAM, about ?? '');
   if (errorCode === undefined) rest.delete(SUPPORT_ERROR_PARAM);
   else rest.set(SUPPORT_ERROR_PARAM, String(errorCode));
   return `${pathname}?${rest}`;

@@ -13,10 +13,10 @@ describe('supportAboutOf', () => {
     for (const { value } of SUPPORT_ABOUTS) expect(supportAboutOf(value)).toBe(value);
   });
 
-  it('falls back to accessibility for a bare or unknown value', () => {
-    expect(supportAboutOf('')).toBe('accessibility');
-    expect(supportAboutOf(null)).toBe('accessibility');
-    expect(supportAboutOf('billing')).toBe('accessibility');
+  it('names nothing for a bare, missing or unknown value', () => {
+    expect(supportAboutOf('')).toBeUndefined();
+    expect(supportAboutOf(null)).toBeUndefined();
+    expect(supportAboutOf('billing')).toBeUndefined();
   });
 });
 

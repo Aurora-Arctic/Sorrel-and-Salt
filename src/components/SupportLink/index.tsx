@@ -15,10 +15,7 @@ function Opening({ children, ...rest }: SupportLinkProps): ReactElement {
   const pathname = usePathname();
   const params = useSearchParams();
   return (
-    <Link
-      {...rest}
-      href={supportHref(pathname, new URLSearchParams(params), 'accessibility') as Route}
-    >
+    <Link {...rest} href={supportHref(pathname, new URLSearchParams(params)) as Route}>
       {children}
     </Link>
   );

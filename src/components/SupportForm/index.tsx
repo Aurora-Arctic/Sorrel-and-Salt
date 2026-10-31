@@ -29,11 +29,14 @@ const SUBJECT_LIMIT = 120;
 const MESSAGE_LIMIT = 4000;
 const PATH_LIMIT = 500;
 
+/** Said under the choices when Send is pressed with none chosen. */
+const ABOUT_REQUIRED = 'Choose what this is about.';
+
 /** What the about field is called. */
 const ABOUT_LABEL = 'What Is This About?';
 
 const SupportForm = ({
-  about: initialAbout = 'accessibility',
+  about: initialAbout,
   errorCode,
   path,
   onDone,
@@ -42,11 +45,12 @@ const SupportForm = ({
   const subjectId = useId();
   const messageId = useId();
   const pageId = useId();
-  const [about, setAbout] = useState<SupportAbout>(initialAbout);
+  const [about, setAbout] = useState<SupportAbout | null>(initialAbout ?? null);
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [page, setPage] = useState(path);
   const [sending, setSending] = useState(false);
+  const [aboutMissing, setAboutMissing] = useState(false);
   const [failure, setFailure] = useState<Failure>({});
   const [sent, setSent] = useState(false);
 
@@ -72,6 +76,10 @@ const SupportForm = ({
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (about === null) {
+      setAboutMissing(true);
+      return;
+    }
     setSending(true);
     setFailure({});
     try {
@@ -88,7 +96,7 @@ const SupportForm = ({
       setSent(true);
     } catch (error) {
       setSending(false);
-      setFailure(readGraphqlFailure(error, ['subject', 'message', 'path']));
+      setFailure(readGraphqlFailure(error, ['about', 'subject', 'message', 'path']));
     }
   }
 
@@ -121,6 +129,13 @@ const SupportForm = ({
         options={SUPPORT_ABOUTS}
         value={about}
         disabled={sending}
+        error={
+          aboutMissing && about === null
+            ? ABOUT_REQUIRED
+            : failure.field?.name === 'about'
+              ? failure.field.message
+              : undefined
+        }
         onChange={setAbout}
       />
       {errorCode !== undefined && <p className="support-form__context">Error {errorCode}.</p>}

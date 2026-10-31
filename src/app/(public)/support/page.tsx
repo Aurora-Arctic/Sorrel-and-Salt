@@ -29,7 +29,7 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
       ? { kind: 'timed-out', until }
       : {
           kind: 'form',
-          support: asked === undefined ? undefined : supportAboutOf(asked),
+          support: supportAboutOf(asked ?? null),
           errorCode: errorCodeOf(single(params.error) ?? null),
         };
   }
