@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactElement, useEffect, useState } from 'react';
+import { Fragment, type ReactElement, type ReactNode, useEffect, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE } from '../../lib/graphql-failure';
@@ -57,6 +57,15 @@ const REASON_LABEL: Record<CardAttemptReason, string> = {
   expired: 'Expired',
   accepted: 'Accepted by another account',
 };
+
+// An address with a break opportunity before the @ and each dot, so a long one wraps between its parts only.
+const breakable = (email: string | null): ReactNode =>
+  email?.split(/(?=[@.])/).map((part, i) => (
+    <Fragment key={i}>
+      {i > 0 && <wbr />}
+      {part}
+    </Fragment>
+  ));
 
 const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
   const [attempts, setAttempts] = useState<CardAttemptEntry[]>([]);
@@ -137,7 +146,10 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
                   'Removed account'
                 ),
             },
-            { heading: 'Email', cell: (a) => (a.accountId && a.accountName ? a.accountEmail : '') },
+            {
+              heading: 'Email',
+              cell: (a) => (a.accountId && a.accountName ? breakable(a.accountEmail) : ''),
+            },
             {
               heading: 'Card',
               cell: (a) => {
@@ -146,17 +158,25 @@ const AttemptList = ({ batchId }: { batchId: string }): ReactElement => {
                 return `Sheet ${sheet}, Card ${card}`;
               },
             },
-            { heading: 'Reason', cell: (a) => REASON_LABEL[a.reason] },
-            { heading: 'Times', cell: (a) => a.attempts },
             {
-              heading: 'First',
-              className: 'admin-cards__fact',
-              cell: (a) => <LocalTime at={a.firstAttemptedAt} />,
-            },
-            {
-              heading: 'Latest',
-              className: 'admin-cards__fact',
-              cell: (a) => <LocalTime at={a.lastAttemptedAt} />,
+              heading: 'Refusal',
+              cell: (a) => (
+                <>
+                  {REASON_LABEL[a.reason]}
+                  <span className="admin-cards__refusal-when">
+                    {a.attempts === 1 ? (
+                      <>
+                        Once, <LocalTime at={a.firstAttemptedAt} />
+                      </>
+                    ) : (
+                      <>
+                        {a.attempts} times, <LocalTime at={a.firstAttemptedAt} /> to{' '}
+                        <LocalTime at={a.lastAttemptedAt} />
+                      </>
+                    )}
+                  </span>
+                </>
+              ),
             },
           ]}
           rows={attempts}
@@ -191,6 +211,7 @@ const CardAttempts = ({ batchId }: { batchId: string }): ReactElement => (
     className="icon-tip__edit"
     eyebrow="Refused Opens"
     title={`Batch ${batchName(batchId)}`}
+    size="listed"
   >
     {() => <AttemptList batchId={batchId} />}
   </ModalButton>
