@@ -11,6 +11,8 @@ import { CollapsibleSection } from '../CollapsibleSection';
 import DateField from '../DateField';
 import { today } from '../DateField/day';
 import { FieldShell, fieldDescription } from '../Field';
+import IconTip from '../IconTip';
+import { HistoryIcon } from '../IconTip/icons';
 import LocalTime from '../LocalTime';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import ConfirmedAction from '../UserList/confirmed-action';
@@ -244,7 +246,7 @@ const TimeoutForm = ({ userId, name }: { userId: string; name: string }): ReactE
 
 /**
  * A user's time-outs: the one that stands, or the form to set one, and the earlier ones beneath, or
- * with `earlierHref` one line linking to where they are listed.
+ * with `earlierHref` a history icon by the heading linking to where they are listed.
  * `timeouts` is newest first.
  */
 const TimeoutPanel = ({
@@ -278,6 +280,16 @@ const TimeoutPanel = ({
           )}
         </span>
       }
+      info={
+        earlier.length > 0 && earlierHref ? (
+          <IconTip tip="Earlier Time-Outs">
+            <Link className="btn btn--quiet btn--icon" href={earlierHref}>
+              <HistoryIcon />
+              <span className="visually-hidden">Earlier Time-Outs</span>
+            </Link>
+          </IconTip>
+        ) : undefined
+      }
       fold={{ open: folded, invalid: false, onToggle: () => setFolded((value) => !value) }}
     >
       {standing ? (
@@ -285,16 +297,7 @@ const TimeoutPanel = ({
       ) : (
         <TimeoutForm userId={userId} name={name} />
       )}
-      {earlier.length > 0 &&
-        (earlierHref ? (
-          <p className="support-detail__muted">
-            <Link href={earlierHref}>
-              {earlier.length === 1 ? 'Earlier time-outs' : `${earlier.length} earlier time-outs`}
-            </Link>
-          </p>
-        ) : (
-          <Ledger timeouts={earlier} />
-        ))}
+      {earlier.length > 0 && !earlierHref && <Ledger timeouts={earlier} />}
     </CollapsibleSection>
   );
 };

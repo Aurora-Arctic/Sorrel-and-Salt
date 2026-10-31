@@ -174,7 +174,7 @@ describe('Time-Out', () => {
     expect(ahead).toBeLessThanOrEqual(24 * 60 * 60 * 1000);
   });
 
-  it('shows the standing time-out with Lift in place of the form, and a link to the earlier ones', () => {
+  it('shows the standing time-out with Lift in place of the form, and a history link to the earlier ones', () => {
     open(ADMIN, {
       timeouts: [
         {
@@ -199,7 +199,7 @@ describe('Time-Out', () => {
     const panel = within(dialog());
     expect(panel.getByText(/Repeated sends/)).toBeInTheDocument();
     expect(panel.getByText(/Set by Ash Warden/)).toBeInTheDocument();
-    expect(panel.getByRole('link', { name: 'Earlier time-outs' })).toHaveAttribute(
+    expect(panel.getByRole('link', { name: 'Earlier Time-Outs' })).toHaveAttribute(
       'href',
       expect.stringContaining('user=u1'),
     );
