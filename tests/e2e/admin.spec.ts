@@ -133,6 +133,7 @@ test('a curator reaches /admin and the curation pages, and is refused People and
     '/admin/deity-traditions',
     '/admin/celestial-bodies',
     '/admin/zodiac-signs',
+    '/admin/support',
   ]) {
     expect((await page.goto(path))?.status(), path).toBe(200);
   }

@@ -127,8 +127,9 @@ export const readOpened = cache(
   },
 );
 
-/** The curators and admins a request may be assigned to. */
+/** The curators and admins a request may be assigned to: only an admin assigns, so a curator is given none. */
 export const readAssignees = cache(async (session: Session): Promise<SupportPerson[]> => {
+  if (session.role !== 'admin') return [];
   const page = { limit: 200, inverted: false };
   const [admins, curators] = await Promise.all([
     listUsers(session, { role: 'admin' }, page),

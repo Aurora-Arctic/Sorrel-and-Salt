@@ -23,6 +23,8 @@ const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 const ADMIN: SupportViewer = { id: 'admin-1', role: 'admin' };
+const CURATOR: SupportViewer = { id: 'curator-1', role: 'curator' };
+const ADMIN_ONLY = ['Assigned To', 'Issue Address', 'Time Out Until'];
 
 const ROW: SupportRequestEntry = {
   id: 'r1',
@@ -235,5 +237,33 @@ describe('What a viewer is shown', () => {
     }
     expect(within(dialog()).getByRole('switch', { name: 'Curator-Visible' })).toBeInTheDocument();
     expect(within(dialog()).getByRole('button', { name: 'Resolve' })).toBeInTheDocument();
+  });
+
+  it('gives a curator Reply and Resolve on a request assigned to them, and no admin-only control', () => {
+    open(CURATOR, { assignee: { id: CURATOR.id, name: 'Curtis' } });
+    expect(within(dialog()).getByLabelText('Your Reply')).toBeInTheDocument();
+    expect(within(dialog()).getByRole('button', { name: 'Resolve' })).toBeInTheDocument();
+    for (const name of ADMIN_ONLY) {
+      expect(within(dialog()).queryByLabelText(name)).not.toBeInTheDocument();
+    }
+    expect(within(dialog()).queryByRole('switch', { name: 'Curator-Visible' })).toBeNull();
+    expect(within(dialog()).queryByRole('link', { name: 'Create Issue' })).toBeNull();
+    expect(within(dialog()).queryByRole('button', { name: 'Lift' })).toBeNull();
+  });
+
+  it('gives a curator reading a request only shared with them no control at all', () => {
+    open(CURATOR, { curatorVisible: true, assignee: null });
+    expect(within(dialog()).getByText(DETAIL.message)).toBeInTheDocument();
+    expect(within(dialog()).queryByLabelText('Your Reply')).toBeNull();
+    expect(within(dialog()).queryByRole('button', { name: 'Resolve' })).toBeNull();
+    for (const name of ADMIN_ONLY) {
+      expect(within(dialog()).queryByLabelText(name)).not.toBeInTheDocument();
+    }
+  });
+
+  it('gives a curator no reply on a request assigned to someone else', () => {
+    open(CURATOR, { assignee: { id: 'admin-1', name: 'Ada' } });
+    expect(within(dialog()).queryByLabelText('Your Reply')).toBeNull();
+    expect(within(dialog()).queryByRole('button', { name: 'Resolve' })).toBeNull();
   });
 });
