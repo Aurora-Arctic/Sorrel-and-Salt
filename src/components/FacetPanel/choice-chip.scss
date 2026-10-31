@@ -1,0 +1,137 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// A choice chip (ChoiceChip): "Match: All" and a caret opening a menu of radios. A `<details>`,
+// so it opens before the script runs; once run, the menu fades and stays until the fade ends.
+.facet-chip__bar {
+  // The chip and its icon: what a chip's tip is placed against.
+  display: flex;
+  align-items: center;
+  gap: space(1);
+}
+
+.facet-chip__group {
+  margin: 0;
+}
+
+// The spacer stands where a neighbour's label does, so a chip beside a field starts level
+// with its box. Stacked (below the tablet width) there is no neighbour, so it is only
+// an empty line and a gap above the chip.
+.facet-chip__spacer {
+  display: none;
+
+  @media (min-width: $shell-tablet-width) {
+    display: block;
+  }
+}
+
+.facet-chip__details {
+  position: relative;
+}
+
+.facet-chip__summary {
+  @include field-box;
+
+  display: inline-flex;
+  align-items: center;
+  gap: space(2);
+  min-height: var(--facet-control, #{$control-height});
+  padding-block: 0;
+  border-radius: radius('pill');
+  font: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+  list-style: none;
+  @include theme-transition(background-color);
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  &:hover {
+    background-color: color-mix(in srgb, $accent 12%, $surface-card);
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  // A chip that cannot change rests dashed and dim, as a shut field does.
+  &:disabled {
+    // Off, so a hover lands on the bar around it, which shows the hint.
+    pointer-events: none;
+    border-style: dashed;
+    background-color: transparent;
+    color: $text-muted;
+    cursor: default;
+  }
+}
+
+.facet-chip__details[open] > .facet-chip__summary {
+  border-color: $accent;
+}
+
+// The name is the quieter half of the chip: the caption size the counts use, in the muted ink,
+// so the value beside it is what reads. The chip's height is the summary's own minimum.
+.facet-chip__name {
+  color: $text-muted;
+  font-size: type-size('caption');
+}
+
+.facet-chip__value {
+  font-weight: 500;
+}
+
+.facet-chip__caret {
+  // A chevron five eighths of a glyph wide and three eighths high.
+  inline-size: calc(#{$glyph-size} * 0.625);
+  block-size: calc(#{$glyph-size} * 0.375);
+  color: $text-muted;
+}
+
+.facet-chip__menu {
+  @include floating-panel;
+
+  position: absolute;
+  inset-block-start: calc(100% + #{space(1)});
+  inset-inline-start: 0;
+  z-index: layer('floating');
+  min-inline-size: 100%;
+  padding: space(1) space(3);
+  white-space: nowrap;
+}
+
+// A chip at the end of a row opens its menu leftward, from its right edge, so the slide's clip does
+// not cut it; choice-chip.tsx measures on open and adds this class
+// (claude-docs/components/facet-panel.md, "Menus and tips inside the panel").
+.facet-chip__menu--end {
+  inset-inline: auto 0;
+}
+
+// With the script on, the menu is always in the page while open and fades by opacity and
+// visibility, the way a tip bubble does; without it, an open `<details>` shows it whole.
+.facet-chip--script > .facet-chip__menu {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity $modal-fade,
+    visibility 0s linear 150ms;
+
+  &.is-open {
+    opacity: 1;
+    visibility: visible;
+    transition:
+      opacity $modal-fade,
+      visibility 0s;
+  }
+
+  @include reduced-motion {
+    transition: none;
+  }
+}
+
+.facet-chip__option {
+  align-items: center;
+  min-block-size: space(6);
+  padding-block: space(1);
+}
