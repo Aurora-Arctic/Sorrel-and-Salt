@@ -11,7 +11,7 @@
 .passkeys__list {
   display: flex;
   flex-direction: column;
-  gap: space(5);
+  gap: space(4);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -23,6 +23,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: space(2) space(3);
+  padding-block: space(3);
   margin: 0;
 }
 
