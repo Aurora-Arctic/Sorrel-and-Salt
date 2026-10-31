@@ -2,6 +2,7 @@ import { globSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { workflow } from '@workflow/vitest';
 import { defineConfig } from 'vitest/config';
 import { boundedPostgres, dbHarness, dbMaxWorkers } from './tests/support/db-project.mts';
 
@@ -80,7 +81,7 @@ const DB_MOCKING = DB_FILES.filter(leaksPastItsFile);
 
 // What neither `unit` nor `dom` runs: the other projects' files, and
 // Playwright's (its specs end `.spec.ts`, but say so).
-export const NOT_UNIT = [...DB_FILES, 'tests/rsc/**', 'tests/e2e/**'];
+export const NOT_UNIT = [...DB_FILES, 'tests/rsc/**', 'tests/e2e/**', 'tests/workflows/**'];
 
 // The `.ts` tests that need a browser's `location` all the same: Better Auth's
 // client reads `window.location.origin` and `document.cookie`, and the MSW
@@ -249,6 +250,20 @@ export default defineConfig({
           include: DB_MOCKING,
           ...dbHarness,
           isolate: true,
+        },
+      },
+      {
+        extends: true,
+        // Real workflow runs, in process, against a cloned database: the SDK's plugin compiles the
+        // `"use workflow"` and `"use step"` files under the repo into bundles, and its local world runs them.
+        // A step runs from its bundle's own copy of the code, so a mock in a test never reaches it.
+        plugins: [workflow(), boundedPostgres()],
+        test: {
+          name: 'workflow',
+          include: ['tests/workflows/**/*.test.ts'],
+          ...dbHarness,
+          isolate: true,
+          testTimeout: 60_000,
         },
       },
       {

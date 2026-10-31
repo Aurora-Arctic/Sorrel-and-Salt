@@ -314,18 +314,17 @@ list is tested, so adding another is a decision, not an edit.
   `readableIngredientParent` itself, so a finder takes the proof as an optional
   last argument.
 
-## Sweeping provisional accounts
+## Removing a lapsed provisional account
 
-`deleteProvisionalUsers` hard-deletes every provisional account: unverified,
+`deleteLapsedProvisionalUser` hard-deletes one provisional account when it has lapsed: unverified,
 holding a provider `accounts` row, and either untouched for `lifetimeSeconds` or
-created more than `capSeconds` ago. Both ages use the database's own clock, so a
+created more than `capSeconds` ago. The expiry job's step calls it. Both ages use the database's own clock, so a
 seeded row nobody can sign in to is never one. Its `accounts` and `sessions` rows
 go with it by `ON DELETE CASCADE`.
 
 An account holding a `user_privilege_changes` row is kept, because an admin has
 vouched for it, and it is not deleted with its rows: the ledger refuses the
-delete, and its plain foreign key would fail the whole statement and so every
-later sweep.
+delete, and its plain foreign key would fail it.
 
 The delete is hard and outside `withAudit` because Better Auth finds a user by
 address without our `deleted_at` filter, so a tombstone would keep blocking the

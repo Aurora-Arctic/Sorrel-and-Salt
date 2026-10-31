@@ -4,6 +4,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import { truncateAllTables } from '../../support/seeded-database';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
+import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import { MINIMAL_USER_ID } from '@/db/seed/minimal';
 import { resolveScenario, seed } from '@/db/seed/index';
 import { seedAstrology } from '@/db/seed/astrology';
@@ -109,14 +110,15 @@ describe('seed(db, { scenario: "minimal" })', () => {
   });
 
   // The system user is a creator, not an admin, so a bare install has none.
-  it('produces the system user, the signed-out support sender and one user, and no admin', async () => {
+  it('produces the system user, the signed-out support sender, the job actor and one user, and no admin', async () => {
     const users = await allUsers();
     expect(users.map((u) => u.id)).toEqual([
       BOOTSTRAP_USER_ID,
       MINIMAL_USER_ID,
       SIGNED_OUT_SENDER_ID,
+      SYSTEM_ACTOR_ID,
     ]);
-    expect(users.map((u) => u.role)).toEqual(['user', 'user', 'user']);
+    expect(users.map((u) => u.role)).toEqual(['user', 'user', 'user', 'user']);
     expect(users.every((u) => u.deleted_at === null)).toBe(true);
   });
 });

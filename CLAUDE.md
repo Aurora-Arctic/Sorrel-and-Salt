@@ -29,7 +29,7 @@ The devcontainer has no `make`, no `docker` and **no Python**: run the npm scrip
 | `npm run dev`                   | Dev server on **8000**, Altair at `/api/graphql` |
 | `npm run build` / `start`       | Production build; e2e serves it on **8001**+     |
 | `npm run pre-commit`            | Lint, format, types on changed files (MB.38)     |
-| `npm run test:coverage`         | Vitest's five projects, 80% threshold            |
+| `npm run test:coverage`         | Vitest's six projects, 80% threshold             |
 | `npm run test:stories`          | Story suite (Playwright), one line per story     |
 | `npm run e2e`                   | Playwright, a database and server per worker     |
 | `npm run codegen`               | `src/gql/` from the SDL; commit the output       |
@@ -43,7 +43,7 @@ The devcontainer has no `make`, no `docker` and **no Python**: run the npm scrip
 
 The long forms of rules 2–5 and 10 are `.claude/rules/database.md`, of 8 and 9 `.claude/rules/graphql.md`.
 
-**1. Authorization lives in `src/modules/*/services/`. Never in resolvers, never in pages.** Server components call services directly (in React `cache()`); everything the browser initiates — every mutation, and every read without a navigation — goes through `/api/graphql`. There is no third access path: no server actions, no bespoke route handlers, and admin is not an exception (M3.8). Outside both: the OAuth handshake at `/api/auth/*`, with no application data (M2.2), and the sessionless public files `/llms.txt` and `/.well-known/*.json`, serving only the public compendium (M12.2).
+**1. Authorization lives in `src/modules/*/services/`. Never in resolvers, never in pages.** Server components call services directly (in React `cache()`); everything the browser initiates — every mutation, and every read without a navigation — goes through `/api/graphql`. There is no third access path: no server actions, no bespoke route handlers, and admin is not an exception (M3.8). Outside both: the OAuth handshake at `/api/auth/*`, with no application data (M2.2), and the sessionless public files `/llms.txt` and `/.well-known/*.json`, serving only the public compendium (M12.2), and the durable job routes the SDK generates under `/.well-known/workflow/`, which carry no application data and run services as the seeded System account (M15.49).
 
 **2. Only `src/db/repository/` may import the database client.** Callers import its `index.ts`; three files outside it hold a named exemption, and a fourth is a decision (M1.17). Above services, `src/graphql/**`, `src/app/**` and `src/components/**` import nothing under `src/db` at runtime (M3.9), and every service opens with `import 'server-only'`.
 
