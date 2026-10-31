@@ -1,3 +1,5 @@
+import { dayInUtc, printedDateOf } from '../utc';
+
 /** One card front's words: the headline, the brighter tagline, and the two muted lines beneath it. */
 export interface FrontCopy {
   headline: string;
@@ -70,13 +72,7 @@ export const BACK_LEDE =
   'A shared grimoire for a coven or a household: the ingredients you keep, the stock in your jars, and the spells you make from them.';
 export const BACK_NOTE = 'By invitation only.';
 
-// The calendar date in UTC, so the card reads the same wherever the PDF is made.
+// The day the card was minted to last through, in UTC so the card reads the same wherever the PDF is made.
 export function validUntil(expiresAt: Date): string {
-  const date = expiresAt.toLocaleDateString('en-GB', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC',
-  });
-  return `Valid until ${date}`;
+  return `Valid until ${dayInUtc(printedDateOf(expiresAt))}`;
 }

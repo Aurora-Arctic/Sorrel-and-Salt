@@ -33,7 +33,7 @@ const BATCHES = [
   {
     batchId: BATCH_ONE,
     mintedAt: new Date('2026-10-01T00:00:00Z'),
-    expiresAt: new Date('2026-12-01T00:00:00Z'),
+    expiresAt: new Date('2026-12-02T12:00:00Z'),
     cards: 27,
     accepted: 4,
     pending: 20,
@@ -43,7 +43,7 @@ const BATCHES = [
   {
     batchId: 'b2222222-0000-4000-8000-000000000002',
     mintedAt: new Date('2026-01-01T00:00:00Z'),
-    expiresAt: new Date('2026-02-01T00:00:00Z'),
+    expiresAt: new Date('2026-02-02T12:00:00Z'),
     cards: 9,
     accepted: 9,
     pending: 0,
@@ -53,7 +53,7 @@ const BATCHES = [
   {
     batchId: 'b3333333-0000-4000-8000-000000000003',
     mintedAt: new Date('2026-08-01T00:00:00Z'),
-    expiresAt: new Date('2026-11-01T00:00:00Z'),
+    expiresAt: new Date('2026-11-02T12:00:00Z'),
     cards: 9,
     accepted: 2,
     pending: 0,
@@ -63,7 +63,7 @@ const BATCHES = [
   {
     batchId: 'b4444444-0000-4000-8000-000000000004',
     mintedAt: new Date('2026-03-01T00:00:00Z'),
-    expiresAt: new Date('2026-04-01T00:00:00Z'),
+    expiresAt: new Date('2026-04-02T12:00:00Z'),
     cards: 9,
     accepted: 0,
     pending: 0,
@@ -299,7 +299,7 @@ describe('AdminCards', () => {
     fireEvent.click(mint());
 
     await waitFor(() => expect(calls).toHaveLength(1));
-    expect(calls[0]).toEqual({ sheets: 3, expiresAt: '2027-02-01T00:00:00.000Z' });
+    expect(calls[0]).toEqual({ sheets: 3, expiresAt: '2027-02-02T12:00:00.000Z' });
     expect(
       await within(dialog()).findByText(/only copy of these cards and cannot be made again/),
     ).toBeInTheDocument();
@@ -373,7 +373,7 @@ describe('AdminCards', () => {
     await waitFor(() => expect(buildCardSheetsPdf).toHaveBeenCalled());
     const input = vi.mocked(buildCardSheetsPdf).mock.calls[0][0];
     expect(input.links).toEqual(['http://localhost:3000/i/ta', 'http://localhost:3000/i/tb']);
-    expect(input.expiresAt).toEqual(new Date('2027-02-01T00:00:00.000Z'));
+    expect(input.expiresAt).toEqual(new Date('2027-02-02T12:00:00.000Z'));
     await waitFor(() =>
       expect(within(dialog()).getByRole('button', { name: 'Download Again' })).toBeEnabled(),
     );
@@ -441,7 +441,7 @@ describe('Mint Cards default expiry', () => {
     fireEvent.click(mint());
 
     await waitFor(() => expect(calls).toHaveLength(1));
-    expect(calls[0]).toEqual({ sheets: 1, expiresAt: '2027-01-28T00:00:00.000Z' });
+    expect(calls[0]).toEqual({ sheets: 1, expiresAt: '2027-01-29T12:00:00.000Z' });
   });
 });
 

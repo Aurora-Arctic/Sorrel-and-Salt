@@ -5,6 +5,7 @@ import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import type { Failure } from '../../lib/types';
+import { expiryOfDay } from '../../lib/utc';
 import DateField from '../DateField';
 import { FieldShell, FormActions, fieldDescription } from '../Field';
 import { DiscardQuestion, RouteModal, useDiscardGuard } from '../Modal';
@@ -34,8 +35,8 @@ const CreateInvitationCardsDocument = graphql(`
 /** The modal's head, and the tab's action that opens it. */
 export const MINT_TITLE = 'Mint Cards';
 
-/** A day as an expiry: midnight UTC at its start, as an invitation's is. */
-const expiryOf = (day: string): string => `${day}T00:00:00.000Z`;
+/** A day as an expiry: the end of that day in UTC-12, so the card lasts through its printed day everywhere. */
+const expiryOf = (day: string): string => expiryOfDay(day).toISOString();
 
 /** The first day an expiry may be: the day after today in UTC, as the service refuses an expiry at or before now. */
 const earliestDay = (): string =>

@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
+  expiryOfDay,
   inUtc,
   isoDayInUtc,
   longMinuteInUtc,
   longMinuteInZone,
   minuteInUtc,
   minuteInZone,
+  printedDayOf,
 } from '@/lib/utc';
 
 // How a refusal names the instant a compendium redirect closes: in UTC whatever the server's
@@ -46,5 +48,20 @@ describe('minuteInZone', () => {
   it('writes midnight as 12:00 am and noon as 12:00 pm', () => {
     expect(minuteInUtc(new Date('2026-10-30T00:00:00.000Z'))).toBe('2026-10-30 12:00 am');
     expect(minuteInUtc(new Date('2026-10-30T12:00:00.000Z'))).toBe('2026-10-30 12:00 pm');
+  });
+});
+
+// A card's printed day is true everywhere only while it lasts to the end of that day in the last zone on Earth (UTC-12).
+describe('expiryOfDay', () => {
+  it('is 12:00 UTC on the day after the chosen day', () => {
+    expect(expiryOfDay('2027-01-29').toISOString()).toBe('2027-01-30T12:00:00.000Z');
+    expect(expiryOfDay('2027-12-31').toISOString()).toBe('2028-01-01T12:00:00.000Z');
+  });
+});
+
+describe('printedDayOf', () => {
+  it('reads back the day the expiry was chosen as, and round-trips', () => {
+    expect(printedDayOf(new Date('2027-01-30T12:00:00.000Z'))).toBe('2027-01-29');
+    expect(printedDayOf(expiryOfDay('2028-03-01'))).toBe('2028-03-01');
   });
 });
