@@ -135,16 +135,18 @@ const AccountMenu = ({
               </PendingLink>
             </li>
           ))}
-        <li className="account-menu__link">
-          <PendingLink
-            href={SUPPORT_PATH}
-            navigationTarget={SUPPORT_TARGET}
-            className="account-menu__item"
-            onClick={close}
-          >
-            Support
-          </PendingLink>
-        </li>
+        {verified && (
+          <li className="account-menu__link">
+            <PendingLink
+              href={SUPPORT_PATH}
+              navigationTarget={SUPPORT_TARGET}
+              className="account-menu__item"
+              onClick={close}
+            >
+              Support
+            </PendingLink>
+          </li>
+        )}
         <li className="account-menu__signout">
           <SignOutButton />
         </li>

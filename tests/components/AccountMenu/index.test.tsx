@@ -162,3 +162,12 @@ describe('initialsOf', () => {
     expect(initialsOf('   ')).toBe('?');
   });
 });
+
+describe('AccountMenu support link', () => {
+  it('offers Support in the panel, going to the support page', () => {
+    render(<AccountMenu name="Fixture Owner" verified />);
+    expect(screen.queryByRole('link', { name: 'Support' })).not.toBeInTheDocument();
+    fireEvent.click(button());
+    expect(screen.getByRole('link', { name: 'Support' })).toHaveAttribute('href', '/support');
+  });
+});
