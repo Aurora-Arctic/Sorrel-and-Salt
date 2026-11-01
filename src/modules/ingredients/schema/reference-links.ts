@@ -57,8 +57,8 @@ export const referenceLinks = pgTable(
     // "p. 112", `under "Hecate"`: the link's, not the reference's, since the
     // citation names the work and the page shows the locator beside it.
     locator: text('locator'),
-    // How the citation names the ingredient, and the field names it backs; both null until set. Nothing writes either yet, and the sourcing score
-    // will read them from the row rather than the seed file (claude-docs/db/references.md, "Citation attributes").
+    // How the citation names the ingredient, and the field names it backs; null when nobody recorded them. Written by the seed and a curator,
+    // never on a coven's link (claude-docs/db/references.md, "Citation attributes").
     nameBasis: nameBasis('name_basis'),
     supports: text('supports').array(),
     ...auditColumns,

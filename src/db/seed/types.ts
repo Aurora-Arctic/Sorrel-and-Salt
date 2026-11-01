@@ -1,4 +1,9 @@
 import type { Unit } from '../../modules/ingredients/schema/units';
+import type {
+  CitedEntryField,
+  CitedVariantField,
+  NameBasis,
+} from '../../modules/ingredients/schema/ingredient-enums';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type { users } from '../../modules/identity/schema/users';
 import type { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
@@ -255,35 +260,17 @@ export type SourceTargetTable = (typeof SOURCED)[Exclude<
 // from the files under `compendium/`, each field traced to a source
 // its citations name.
 
-/** A compendium entry's fields a citation may support, by the literal's own names. */
-export type CompendiumEntryField =
-  | 'name'
-  | 'canonicalName'
-  | 'nomenclature'
-  | 'description'
-  | 'elements'
-  | 'celestialBodies'
-  | 'zodiacSigns'
-  | 'colors'
-  | 'safetyNotes'
-  | 'toxic'
-  | 'folkNames'
-  | 'deities'
-  | 'categories'
-  | 'substitutes';
+/**
+ * A source as the seed writes it: its citation's fields and, for a peer-reviewed journal's article or a university or academic press's book,
+ * `scholarly`, which lands on its `references` row when the row is first written.
+ */
+export type SeedWork = CitationFields & { scholarly?: true };
+
+/** A compendium entry's fields a citation may support, by the column's own names. */
+export type CompendiumEntryField = CitedEntryField;
 
 /** A form's fields a citation may support. Deities and folk names are the entry's alone. */
-export type CompendiumVariantField =
-  | 'form'
-  | 'description'
-  | 'safetyNotes'
-  | 'toxic'
-  | 'elements'
-  | 'celestialBodies'
-  | 'zodiacSigns'
-  | 'colors'
-  | 'categories'
-  | 'substitutes';
+export type CompendiumVariantField = CitedVariantField;
 
 /**
  * One citation: a source by its handle — a shared work in `WORKS` or
@@ -298,7 +285,7 @@ export interface SeedCitation<Field extends string> {
   /**
    * How the source's name was matched to the entry's formal name (claude-docs/
    * compendium-seed/README.md, "nameBasis"). A file writes it on every citation of an entry with a
-   * formal name. Never stored or hashed.
+   * formal name. Stored on the link, never hashed.
    */
   nameBasis?: NameBasis;
   /** The common name the source heads, when `nameBasis` is `resolved`. */
@@ -306,12 +293,6 @@ export interface SeedCitation<Field extends string> {
   /** The registered source that maps `headedAs` to this formal name, when `resolved`. */
   resolvedBy?: string;
 }
-
-/**
- * The four answers a citation gives about the formal name: the source prints it (`stated`), heads a common name an authority maps to it
- * (`resolved`), leaves doubt (`unresolved`, which blocks `approved`), or predates the rule (`unaudited`, the shrinking legacy list).
- */
-export type NameBasis = 'stated' | 'resolved' | 'unresolved' | 'unaudited';
 
 /**
  * What may stand in: an entry the seed writes, by its identity — the formal

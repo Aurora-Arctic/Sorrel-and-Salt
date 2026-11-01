@@ -12,6 +12,7 @@ import {
   entryRow,
   foldForm,
   folkNameRows,
+  linkColumns,
   namesCategory,
   pickedVariants,
   readPicks,
@@ -291,7 +292,7 @@ async function insertEntries(
     referenceLinks,
     cited.flatMap(({ citation, text, owner }) => {
       const referenceId = referenceIds.get(text);
-      return referenceId ? [{ referenceId, ...owner, locator: citation.locator ?? null }] : [];
+      return referenceId ? [{ referenceId, ...owner, ...linkColumns(citation) }] : [];
     }),
   );
 }

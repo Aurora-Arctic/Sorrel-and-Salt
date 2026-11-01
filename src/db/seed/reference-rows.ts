@@ -2,8 +2,7 @@ import { isNull } from 'drizzle-orm';
 import { insertMissingReturningIds } from './idempotent';
 import { citationText } from '../../lib/citation';
 import { references } from '../../modules/ingredients/schema/references';
-import type { CitationFields } from '../../lib/types';
-import type { SeedTransaction } from './types';
+import type { SeedTransaction, SeedWork } from './types';
 
 // The compendium-tier `references` rows a reference-data seed wants, shared by
 // the sources seed and the compendium seed so both key a
@@ -13,10 +12,11 @@ import type { SeedTransaction } from './types';
 /**
  * Every wanted source's id by its citation, inserting the missing ones. A row a seed wrote answers by its key, `null` when soft-deleted (neither re-inserted
  * nor linked). A live compendium row nobody seeded whose citation matches to the letter is linked, never written to. A source wanted twice is one row.
+ * A work's `scholarly` mark is written with its row and never to a row already present.
  */
 export async function insertMissingReferences(
   tx: SeedTransaction,
-  wanted: readonly CitationFields[],
+  wanted: readonly SeedWork[],
 ): Promise<Map<string, string | null>> {
   const compendium = await tx.select().from(references).where(isNull(references.workspaceId));
   const ids = new Map<string, string | null>();

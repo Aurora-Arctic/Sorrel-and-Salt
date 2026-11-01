@@ -50,6 +50,42 @@ export const NAME_BASES = ['stated', 'resolved', 'unresolved', 'unaudited'] as c
 
 export type NameBasis = (typeof NAME_BASES)[number];
 
+// Not a column: the fields a compendium citation may say it supports, on an entry and on a form, by the column's own names.
+// Deities and folk names are the entry's alone. The seed's files spell `colours` and map it to `colors` as they are read.
+export const CITED_ENTRY_FIELDS = [
+  'name',
+  'canonicalName',
+  'nomenclature',
+  'description',
+  'elements',
+  'celestialBodies',
+  'zodiacSigns',
+  'colors',
+  'safetyNotes',
+  'toxic',
+  'folkNames',
+  'deities',
+  'categories',
+  'substitutes',
+] as const;
+
+export type CitedEntryField = (typeof CITED_ENTRY_FIELDS)[number];
+
+export const CITED_VARIANT_FIELDS = [
+  'form',
+  'description',
+  'safetyNotes',
+  'toxic',
+  'elements',
+  'celestialBodies',
+  'zodiacSigns',
+  'colors',
+  'categories',
+  'substitutes',
+] as const;
+
+export type CitedVariantField = (typeof CITED_VARIANT_FIELDS)[number];
+
 // Not a column: the toxic setting a search takes, kept here so the
 // GraphQL enum, the filter's Zod schema and the facet screen read one list.
 // `any` is no filter; `toxic` keeps an entry flagged on itself or on a live

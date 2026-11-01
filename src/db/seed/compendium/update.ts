@@ -12,6 +12,7 @@ import {
   entryColumns,
   foldForm,
   folkNameRows,
+  linkColumns,
   pick,
   pickedVariants,
   substituteRows,
@@ -32,8 +33,12 @@ import { inventoryItems } from '../../../modules/ingredients/schema/inventory-it
 import { referenceLinks } from '../../../modules/ingredients/schema/reference-links';
 import { references } from '../../../modules/ingredients/schema/references';
 import { spellSteps } from '../../../modules/grimoire/schema/spell-steps';
-import type { CitationFields } from '../../../lib/types';
-import type { SeedCompendiumEntry, SeedCompendiumVariant, SeedTransaction } from '../types';
+import type {
+  SeedCompendiumEntry,
+  SeedCompendiumVariant,
+  SeedTransaction,
+  SeedWork,
+} from '../types';
 
 // The seed's update path for an entry already present (state table: "Write-once,
 // and how a correction lands"). Children are reconciled by key, never dropped and
@@ -43,7 +48,7 @@ import type { SeedCompendiumEntry, SeedCompendiumVariant, SeedTransaction } from
 export interface SeedItem {
   entry: SeedCompendiumEntry;
   /** The works and per-entry sources its citations may name, by handle. */
-  sources: Record<string, CitationFields>;
+  sources: Record<string, SeedWork>;
   /** The entry file's path under the compendium root, which names the entry in the report. */
   where: string;
   /** `contentHash(entry)`, computed when the file was read. */
@@ -290,7 +295,8 @@ interface ChildDiffs {
     remove: { ingredientId: string; variantId: string | null; categoryId: string }[];
   };
   substitutes: { insert: ReturnType<typeof substituteRows>; remove: string[] };
-  references: { insert: Citing[]; remove: string[] };
+  /** A link whose owner, work and locator match keeps its row; `restate` is one whose name basis or supports differ, rewritten in place. */
+  references: { insert: Citing[]; remove: string[]; restate: { id: string; cite: Citing }[] };
   differs: string[];
 }
 
@@ -433,9 +439,34 @@ function childDiffs(
       )
       .map((row) => row.id),
   };
-  if (links.insert.length > 0 || links.remove.length > 0) differs.push('references');
+  const wantedByKey = new Map(
+    wantedLinks.map((cite) => [
+      keyed(ownerKey(cite.owner), cite.text, cite.citation.locator),
+      cite,
+    ]),
+  );
+  const restate = liveLinks.flatMap((row) => {
+    const cite = wantedByKey.get(
+      keyed(ownerKey(row), ctx.referenceTexts.get(row.referenceId) ?? row.referenceId, row.locator),
+    );
+    if (cite === undefined) return [];
+    const { nameBasis, supports } = linkColumns(cite.citation);
+    return same(row.nameBasis, nameBasis) && same(row.supports, supports)
+      ? []
+      : [{ id: row.id, cite }];
+  });
+  if (links.insert.length > 0 || links.remove.length > 0 || restate.length > 0) {
+    differs.push('references');
+  }
 
-  return { folkNames, deities, categories, substitutes, references: links, differs };
+  return {
+    folkNames,
+    deities,
+    categories,
+    substitutes,
+    references: { ...links, restate },
+    differs,
+  };
 }
 
 /** The whole difference between a file and its present row, and whether the update may land. */
@@ -679,6 +710,13 @@ export async function applyUpdate(
       .set(tombstone())
       .where(inArray(referenceLinks.id, children.references.remove));
   }
+  for (const { id, cite } of children.references.restate) {
+    const { nameBasis, supports } = linkColumns(cite.citation);
+    await tx
+      .update(referenceLinks)
+      .set(applyAudit('update', { nameBasis, supports }, BOOTSTRAP_SESSION))
+      .where(eq(referenceLinks.id, id));
+  }
   // A source the run has not met is written here, never deleted: a reference
   // row is a work, and a link that goes is only the link.
   const referenceIds = await insertMissingReferences(
@@ -690,7 +728,7 @@ export async function applyUpdate(
     referenceLinks,
     children.references.insert.flatMap(({ citation, text, owner }) => {
       const referenceId = referenceIds.get(text);
-      return referenceId ? [{ referenceId, ...owner, locator: citation.locator ?? null }] : [];
+      return referenceId ? [{ referenceId, ...owner, ...linkColumns(citation) }] : [];
     }),
   );
 }

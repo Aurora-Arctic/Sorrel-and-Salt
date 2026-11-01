@@ -54,7 +54,7 @@ export const references = pgTable(
     modified: date('modified'),
     accessed: date('accessed'),
     note: text('note'),
-    // A peer-reviewed journal or a university or academic press. Nothing writes it yet, and the sourcing score will rank a source by it.
+    // A peer-reviewed journal or a university or academic press, set by the seed's works and a curator; a coven's source is never marked.
     scholarly: boolean('scholarly').notNull().default(false),
     seedKey: seedKeyColumn(),
     ...auditColumns,
