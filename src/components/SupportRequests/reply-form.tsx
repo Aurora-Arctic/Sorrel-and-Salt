@@ -7,13 +7,14 @@ import BusyButton from '../BusyButton';
 import { ChoiceChip } from '../FacetPanel/choice-chip';
 import { FieldShell, SwitchField, fieldDescription } from '../Field';
 import { utcMinute } from '../../lib/utc';
-import { DiscardQuestion, useDiscardGuard } from '../Modal';
+import { ConfirmQuestion, DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { useSupportAction } from './use-support-action';
 
 // Reply on a request: the sender is mailed that a reply is waiting and reads it on /account/support. A mode beside the box
 // turns the same text into an internal note, which only staff read and nobody is mailed; it opens on Internal Note, so a
 // reply is always chosen. Send stays off until there is something to say; Resolve, when given, sits opposite it.
+// A reply to a timed-out sender asks first, since they cannot answer it until the time-out ends.
 
 type Mode = 'reply' | 'note';
 
@@ -61,13 +62,13 @@ const ReplyForm = ({
   const [body, setBody] = useState('');
   const [mode, setMode] = useState<Mode>('note');
   const [waiting, setWaiting] = useState(false);
+  const [asking, setAsking] = useState(false);
   const note = mode === 'note';
   const { busy, failure, run } = useSupportAction('body');
   const discard = useDiscardGuard(body.trim() !== '');
   const { aria, ...field } = fieldDescription({ id: useId(), error: failure.field?.message });
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function send() {
     if (
       await run(
         () =>
@@ -86,12 +87,14 @@ const ReplyForm = ({
     }
   }
 
+  function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!note && senderTimedOutUntil) setAsking(true);
+    else void send();
+  }
+
   return (
-    <form
-      className="form support-detail__reply"
-      noValidate
-      onSubmit={(event) => void submit(event)}
-    >
+    <form className="form support-detail__reply" noValidate onSubmit={submit}>
       {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
       {!noteOnly && (
         <ChoiceChip
@@ -150,6 +153,21 @@ const ReplyForm = ({
         {resolve}
       </div>
       {discard.asking && <DiscardQuestion guard={discard} />}
+      {asking && senderTimedOutUntil && (
+        <ConfirmQuestion
+          question="Reply to a sender who is timed out?"
+          details={`They cannot answer until ${utcMinute(senderTimedOutUntil)}.`}
+          tone="solid"
+          confirmLabel="Send Reply"
+          busyLabel="Sending"
+          busy={busy}
+          onConfirm={async () => {
+            await send();
+            setAsking(false);
+          }}
+          onKeep={() => setAsking(false)}
+        />
+      )}
     </form>
   );
 };

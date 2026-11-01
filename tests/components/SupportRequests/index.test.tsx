@@ -192,7 +192,7 @@ describe('A timed-out sender', () => {
   });
   const NOTICE = 'The sender cannot answer until 2999-01-01 00:00 UTC.';
 
-  it('is told to staff replying, with the end time, and the reply still sends', async () => {
+  const replySent = () => {
     const sent: ReplyToSupportRequestMutationVariables[] = [];
     mockGraphQLMutation<ReplyToSupportRequestMutation, ReplyToSupportRequestMutationVariables>(
       'ReplyToSupportRequest',
@@ -201,15 +201,43 @@ describe('A timed-out sender', () => {
         return { replyToSupportRequest: { __typename: 'SupportReply', id: 'x' } };
       },
     );
+    return sent;
+  };
+  const writeReply = () => {
     open(ADMIN, { timeouts: [standing(new Date('2999-01-01T00:00:00Z'))] });
     chooseReply();
-    expect(within(dialog()).getByText(NOTICE)).toBeInTheDocument();
-
     fireEvent.change(within(dialog()).getByRole('textbox', { name: /^Your Reply/ }), {
       target: { value: 'Noted.' },
     });
     fireEvent.click(within(dialog()).getByRole('button', { name: 'Reply' }));
+  };
+
+  it('is told to staff replying, with the end time', () => {
+    open(ADMIN, { timeouts: [standing(new Date('2999-01-01T00:00:00Z'))] });
+    chooseReply();
+    expect(within(dialog()).getByText(NOTICE)).toBeInTheDocument();
+  });
+
+  it('asks staff before a reply goes, and sends it on Send Reply', async () => {
+    const sent = replySent();
+    writeReply();
+    const question = await screen.findByRole('group', { name: /timed out/ });
+    expect(sent).toHaveLength(0);
+
+    fireEvent.click(within(question).getByRole('button', { name: 'Send Reply' }));
     await waitFor(() => expect(sent).toHaveLength(1));
+    expect(sent[0]?.body).toBe('Noted.');
+  });
+
+  it('sends nothing when staff answer Cancel, and keeps the reply written', async () => {
+    const sent = replySent();
+    writeReply();
+    const question = await screen.findByRole('group', { name: /timed out/ });
+    fireEvent.click(within(question).getByRole('button', { name: 'Cancel' }));
+
+    expect(screen.queryByRole('group', { name: /timed out/ })).toBeNull();
+    expect(within(dialog()).getByRole('textbox', { name: /^Your Reply/ })).toHaveValue('Noted.');
+    expect(sent).toHaveLength(0);
   });
 
   it('is not told to staff when no time-out stands: none, lifted or past', () => {
