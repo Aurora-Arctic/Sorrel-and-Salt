@@ -44,6 +44,12 @@ export const REFERENCE_KINDS = ['book', 'chapter', 'article', 'entry', 'web_page
 
 export type ReferenceKind = (typeof REFERENCE_KINDS)[number];
 
+// How a citation names the ingredient it supports: `stated` prints the formal name, `resolved` maps a common name to one formal name by a cited authority,
+// `unresolved` could not be mapped, and `unaudited` has not been checked. Null on a link means no answer was recorded.
+export const NAME_BASES = ['stated', 'resolved', 'unresolved', 'unaudited'] as const;
+
+export type NameBasis = (typeof NAME_BASES)[number];
+
 // Not a column: the toxic setting a search takes, kept here so the
 // GraphQL enum, the filter's Zod schema and the facet screen read one list.
 // `any` is no filter; `toxic` keeps an entry flagged on itself or on a live

@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { check, date, pgEnum, pgTable, text, uuid } from 'drizzle-orm/pg-core';
+import { boolean, check, date, pgEnum, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { REFERENCE_KINDS } from './ingredient-enums';
 import { auditColumns } from '../../identity/schema/users';
 import { workspaces } from '../../coven/schema/workspaces';
@@ -54,6 +54,8 @@ export const references = pgTable(
     modified: date('modified'),
     accessed: date('accessed'),
     note: text('note'),
+    // A peer-reviewed journal or a university or academic press. Nothing writes it yet, and the sourcing score will rank a source by it.
+    scholarly: boolean('scholarly').notNull().default(false),
     seedKey: seedKeyColumn(),
     ...auditColumns,
   },

@@ -13,15 +13,19 @@ DESIGN.md §5, "References", is the specification this doc expands.
   tier, as on `ingredients`), `kind`, `authors`, `title` (NOT NULL),
   `container`, `contributors`, `edition`, `volume`, `issue`, `series`,
   `place`, `publisher`, `published`, `pages`, `host`, `url`, `modified`,
-  `accessed`, `note`, + audit. Every column is text as Chicago prints it, with
+  `accessed`, `note`, `scholarly`, + audit. Every column is text as Chicago prints it, with
   a non-blank CHECK, one per column so a refusal names its field (`url`'s is
   its http(s) CHECK, which already refuses a blank), except `modified` and
   `accessed`, which are `date`s.
   `kind` is the enum `reference_kind`: `book`, `chapter`, `article`, `entry`,
   `web_page`.
+  `scholarly` is a boolean, NOT NULL, default false: a peer-reviewed journal or a
+  university or academic press.
 - **`reference_links`** — `id`, `reference_id` (NOT NULL), `ingredient_id`,
-  `deity_id`, `deity_tradition_id`, `celestial_body_id`, `zodiac_sign_id` (each
-  nullable, exactly one set), `locator` (nullable, non-blank), + audit.
+  `deity_id`, `deity_tradition_id`, `celestial_body_id`, `zodiac_sign_id`,
+  `ingredient_variant_id` (each nullable, exactly one set), `locator` (nullable,
+  non-blank), `name_basis` (nullable enum `name_basis`: `stated`, `resolved`,
+  `unresolved`, `unaudited`), `supports` (nullable `text[]`), + audit.
   Soft-deleted, with its own `set_updated_at` trigger line.
 
 **The kind decides the rendering, and the CHECKs make the renderer total.**
@@ -40,7 +44,7 @@ CHECK (accessed IS NULL OR url IS NOT NULL);
 CHECK (kind NOT IN ('chapter', 'article', 'entry') OR container IS NOT NULL);
 CHECK (kind <> 'web_page' OR (url IS NOT NULL AND accessed IS NOT NULL));
 
-CHECK (num_nonnulls(ingredient_id, deity_id, deity_tradition_id, celestial_body_id, zodiac_sign_id) = 1);
+CHECK (num_nonnulls(ingredient_id, deity_id, deity_tradition_id, celestial_body_id, zodiac_sign_id, ingredient_variant_id) = 1);
 
 CREATE UNIQUE INDEX reference_links_ingredient_unique
   ON reference_links (ingredient_id, reference_id)
@@ -49,16 +53,23 @@ CREATE UNIQUE INDEX reference_links_ingredient_unique
 -- and _zodiac_sign_unique in the same shape
 ```
 
+**Citation attributes.** `reference_links.name_basis` records how the citation
+names the ingredient, `reference_links.supports` the field names it backs, and
+`references.scholarly` whether the source is scholarly. All three are nullable
+or defaulted, so every existing row reads null, null and false. Nothing reads or
+writes them yet: M14.37 has the seed and the admin screens write them, and the
+sourcing score (M14.24) reads them from the row.
+
 **The sourced tables are listed once** (MB.207). `SOURCED` in
 `src/modules/ingredients/schema/reference-links.ts` maps each property —
-`ingredientId`, `deityId`, `deityTraditionId`, `celestialBodyId`, `zodiacSignId` —
-to its column and the table it keys into, and the five foreign keys, the five
-partial uniques and the `num_nonnulls` CHECK are built from it, in its order.
-A sixth sourced table is one entry there, and the migration `db:generate`
+`ingredientId`, `deityId`, `deityTraditionId`, `celestialBodyId`, `zodiacSignId`,
+`ingredientVariantId` — to its column and the table it keys into, and the six
+foreign keys, the six partial uniques and the `num_nonnulls` CHECK are built from it, in its order.
+A seventh sourced table is one entry there, and the migration `db:generate`
 writes from it drops and re-adds `reference_links_one_row`, which takes an
 `.ack.md` sidecar ([destructive DDL](expand-contract.md)). MB.217's
 `ingredientVariantId`, a form's own sources beside its ingredient's, was the
-first: `ingredient_variant_id`, `reference_links_ingredient_variant_unique`
+last added: `ingredient_variant_id`, `reference_links_ingredient_variant_unique`
 and a six-column CHECK, in migration `0063`. The repository
 reads the links of any of them through the registry (MB.208):
 `findReferencesOf` and `citesNothing` take a `SourcedKey` and read its
@@ -448,7 +459,7 @@ and how a correction lands").
 
 ## Reference links schema details
 
-- **Adding a sixth sourced table** is one entry in `SOURCED` in `src/modules/ingredients/schema/reference-links.ts`: its column, its partial unique index and the widened CHECK are built from the list. The migration `db:generate` then writes drops and re-adds `reference_links_one_row`, and that DROP CONSTRAINT takes an `.ack.md` sidecar (rule 10). The repository's `findReferencesOf` and `citesNothing` take a key of the registry and read its table, so reading the new links costs nothing more; writing them is still code of its own, as the ingredient services and the sources seed each write the links they own.
+- **Adding a seventh sourced table** is one entry in `SOURCED` in `src/modules/ingredients/schema/reference-links.ts`: its column, its partial unique index and the widened CHECK are built from the list. The migration `db:generate` then writes drops and re-adds `reference_links_one_row`, and that DROP CONSTRAINT takes an `.ack.md` sidecar (rule 10). The repository's `findReferencesOf` and `citesNothing` take a key of the registry and read its table, so reading the new links costs nothing more; writing them is still code of its own, as the ingredient services and the sources seed each write the links they own.
 - **Why one table.** A nullable key per sourced table under one `num_nonnulls` CHECK, as a spell's layers do, rather than a join table per table, which would cost a table, a trigger, a finder and a loader each.
 - **Indexes.** One live link per reference per row, partial per rule 4. Each leads on its sourced id, so a read of one row's links uses it and no plain parent index is built beside them. None leads on `reference_id`: nothing reads from a reference back to its links, and a reference is never hard-deleted.
 - **The `references` table.** Every field is text as Chicago prints it (`authors` with its role, `published` at a year's or a season's precision), because name order and dates are not mechanical across sources; only the two days are `date`s. There is no unique index: nothing short of a librarian identifies a source, so the seed is idempotent by the rendered citation instead.
