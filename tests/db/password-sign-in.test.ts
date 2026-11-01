@@ -267,13 +267,17 @@ describe('Story 70: signing up', () => {
     expect(send.mock.calls[0][0].to).toBe(OWNER);
   });
 
-  it('sweeps a lapsed unverified row holding the address, so the sign-up makes a fresh account', async () => {
+  it('lets the sign-up make a fresh account once the cleanup job has removed a lapsed unverified row holding the address', async () => {
     expect((await signUp('Testwort squats the address')).status).toBe(200);
     const squat = await userRow(OWNER);
     await asTouch(
       sql,
       (tx) => tx`update users set created_at = now() - interval '4 hours' where id = ${squat!.id}`,
     );
+    // The sign-up no longer sweeps; the cleanup job does (claude-docs/db/write-path.md, "Sweeping provisional accounts").
+    const { sweepLapsedProvisionalAccounts } = await import('@/modules/identity');
+    expect(await sweepLapsedProvisionalAccounts()).toBeGreaterThanOrEqual(1);
+    expect(await userRow(OWNER)).toBeUndefined();
     send.mockReset();
 
     expect((await signUp(STRONG)).status).toBe(200);

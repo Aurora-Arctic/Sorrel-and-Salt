@@ -27,7 +27,7 @@ describe('page metadata', () => {
     expect(a).not.toBe(b);
   });
 
-  it('names an absolute canonical without a query, and repeats the text in the previews', () => {
+  it('names an absolute canonical without a query, repeats the text in the previews, and leaves the image to the card file', () => {
     const meta = publicPageMetadata('Testwort', 'About it.', '/compendium/ingredients/testwort');
     expect(meta.alternates?.canonical).toBe(
       'https://sorrelandsalt.com/compendium/ingredients/testwort',
@@ -36,7 +36,9 @@ describe('page metadata', () => {
       description: 'About it.',
       url: 'https://sorrelandsalt.com/compendium/ingredients/testwort',
     });
-    expect(meta.twitter).toMatchObject({ description: 'About it.' });
+    expect(meta.twitter).toMatchObject({ card: 'summary_large_image', description: 'About it.' });
+    // An `images` key here would replace the image the segment's `opengraph-image` file names.
     expect(meta.openGraph).not.toHaveProperty('images');
+    expect(meta.twitter).not.toHaveProperty('images');
   });
 });
