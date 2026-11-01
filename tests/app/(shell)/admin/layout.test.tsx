@@ -38,7 +38,7 @@ describe('the /admin layout', () => {
       within(screen.getByRole('navigation', { name: 'Admin' })).getByRole('link', {
         name: /Support/,
       }),
-    ).toHaveTextContent('Support (5)');
+    ).toHaveTextContent('Support 5');
     expect(countSupportViews).toHaveBeenCalledWith(CURATOR, {});
   });
 
