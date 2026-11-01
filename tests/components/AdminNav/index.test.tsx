@@ -63,3 +63,17 @@ describe('AdminNav', () => {
     expect(currentHrefs(row())).toEqual(expected);
   });
 });
+
+describe('AdminNav support count', () => {
+  it('carries the requests waiting on staff in the Support link’s text', () => {
+    render(<AdminNav managesPeople needsStaff={3} />);
+
+    expect(within(nav()).getByRole('link', { name: /Support/ })).toHaveTextContent('Support 3');
+  });
+
+  it('says only Support where no count is given', () => {
+    render(<AdminNav managesPeople />);
+
+    expect(within(nav()).getByRole('link', { name: /Support/ })).toHaveTextContent(/^Support$/);
+  });
+});

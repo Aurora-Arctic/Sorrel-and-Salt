@@ -5,6 +5,7 @@ import {
   type KeyboardEvent,
   type MouseEvent,
   type ReactElement,
+  type ReactNode,
   type TransitionEvent,
   useEffect,
   useId,
@@ -17,6 +18,7 @@ import { pressFeedback } from '../../lib/press-feedback';
 import InfoTip from '../InfoTip';
 import { useTip } from '../InfoTip/use-tip';
 import { FacetCount } from './facet-count';
+import './choice-chip.scss';
 
 // One choice from a few, drawn as a chip reading "Match: All" that opens a menu of radios. A
 // `<details>` so it opens before the script runs, with native radios so the GET form sends the
@@ -43,8 +45,12 @@ type Phase = 'closed' | 'opening' | 'open' | 'closing';
 export interface ChoiceChipOption<T extends string> {
   value: T;
   label: string;
+  /** What the menu and the chip draw in place of `label`, which still names the option: the same words, one of them styled. */
+  display?: ReactNode;
   /** Shown after the name once known; left out for a choice that has none, such as All. */
   count?: number;
+  /** A decorative icon before the label, in the menu and on the chip once chosen. */
+  icon?: ReactNode;
 }
 
 export interface ChoiceChipProps<T extends string> {
@@ -165,7 +171,10 @@ export function ChoiceChip<T extends string>({
   const face = (
     <>
       <span className="facet-chip__name">{legend}:</span>
-      <span className="facet-chip__value">{chosen.label}</span>
+      <span className="facet-chip__value">
+        {chosen.icon && <span className="facet-chip__icon">{chosen.icon}</span>}
+        {chosen.display ?? chosen.label}
+      </span>
       <svg className="facet-chip__caret" viewBox="0 0 10 6" aria-hidden="true" focusable="false">
         <path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" strokeWidth="1.5" />
       </svg>
@@ -244,7 +253,8 @@ export function ChoiceChip<T extends string>({
                       {...pressFeedback}
                     />
                     <span>
-                      {option.label}
+                      {option.icon && <span className="facet-chip__icon">{option.icon}</span>}
+                      {option.display ?? option.label}
                       {option.count !== undefined && <FacetCount count={option.count} />}
                     </span>
                   </label>

@@ -7,6 +7,7 @@ import {
   assignSupportRequest,
   closeResolvedRequests,
   closeSupportRequest,
+  getMySupportFollowUpId,
   getMySupportRequest,
   getSupportRequest,
   listSupportRequests,
@@ -16,6 +17,7 @@ import {
   sendSenderMessage,
   sendSupportRequest,
   supportTiersForSenders,
+  liftSupportTimeout,
   timeOutSupportSender,
 } from '@/modules/support';
 import type { SupportNotifier } from '@/modules/support';
@@ -258,6 +260,48 @@ describe('a sender’s message', () => {
   });
 });
 
+describe('a timed-out sender’s reply', () => {
+  const until = new Date(Date.now() + 3_600_000);
+  const stamp = until.toISOString().slice(0, 16).replace('T', ' ');
+
+  it('is refused by direct request id with the reply wording, saves nothing, and works once the time-out is lifted', async () => {
+    const request = await waiting();
+    const timeout = await timeOutSupportSender(asUser(E), C.id, until, null);
+
+    const refused = await failureOf(sendSenderMessage(asUser(C), request.id, 'The red one.'));
+    expect(refused).toBeInstanceOf(Forbidden);
+    expect((refused as Error).message).toBe(`You cannot reply until ${stamp} UTC.`);
+    expect(await statusOf(request.id)).toBe('waiting_on_sender');
+    const [{ count }] =
+      await sql`select count(*)::int as count from support_replies where request_id = ${request.id} and author_role = 'sender'`;
+    expect(count).toBe(0);
+
+    await liftSupportTimeout(asUser(E), timeout.id);
+    expect((await sendSenderMessage(asUser(C), request.id, 'The red one.')).status).toBe('open');
+  });
+
+  it('keeps the new-request wording for a closed request', async () => {
+    const closed = await send();
+    await closeSupportRequest(asUser(E), closed.id);
+    await timeOutSupportSender(asUser(E), C.id, until, null);
+
+    const refused = await failureOf(sendSenderMessage(asUser(C), closed.id, 'Again.'));
+    expect((refused as Error).message).toContain('You cannot send support requests until');
+  });
+});
+
+describe('a closed request’s follow-up', () => {
+  it('is found by its sender and no one else, and is absent before the sender writes again', async () => {
+    const closed = await send();
+    await closeSupportRequest(asUser(E), closed.id);
+    expect(await getMySupportFollowUpId(asUser(C), closed.id)).toBeNull();
+
+    const followUp = await sendSenderMessage(asUser(C), closed.id, 'Same fault again.');
+    expect(await getMySupportFollowUpId(asUser(C), closed.id)).toBe(followUp.id);
+    expect(await getMySupportFollowUpId(asUser(D), closed.id)).toBeNull();
+  });
+});
+
 describe('internal notes', () => {
   it('are staff-only: the sender never reads one, by direct id or by the thread', async () => {
     const request = await send();
@@ -330,6 +374,23 @@ describe('internal notes', () => {
     }
   });
 
+  it('saves a curator’s note and refuses their public reply on the same request, by direct id', async () => {
+    const request = await send();
+    await sql`update support_requests set curator_visible = true where id = ${request.id}`;
+    // The preconditions: the curator can read the request, and it is not assigned to them.
+    expect((await getSupportRequest(asUser(F), request.id)).assignedTo).not.toBe(F.id);
+
+    expect((await addSupportInternalNote(asUser(F), request.id, 'A note.')).visibility).toBe(
+      'internal',
+    );
+    expect(
+      await failureOf(replyToSupportRequest(asUser(F), request.id, 'Hello.', mail)),
+    ).toBeInstanceOf(Forbidden);
+    const [{ n }] = await sql`
+      select count(*)::int as n from support_replies where request_id = ${request.id} and visibility = 'public'`;
+    expect(n).toBe(0);
+  });
+
   it('leave replies assigned-only: a curator still cannot reply on a request that is visible but not theirs', async () => {
     const request = await send();
     await sql`update support_requests set curator_visible = true where id = ${request.id}`;
@@ -399,5 +460,32 @@ describe('the sender’s tier', () => {
     expect((await supportTiersForSenders(asUser(E), [entry!.node.createdBy]))[0]).toBe(
       'beta_tester',
     );
+  });
+});
+
+describe('the sender’s latest message time on the list', () => {
+  it('is the sender’s newest message, not a staff reply that came after it', async () => {
+    const request = await send();
+    const followUp = await sendSenderMessage(asUser(C), request.id, 'Still stuck.');
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    await replyToSupportRequest(asUser(E), request.id, 'Try again.', mail);
+
+    const page = await listSupportRequests(asUser(E), {}, PAGE);
+    const listed = page.find(({ node }) => node.id === request.id)!.node;
+
+    // The precondition: staff did write after the sender, so a staff-counting stamp would be later.
+    expect(listed.lastStaffActivityAt!.getTime()).toBeGreaterThan(
+      followUp.lastSenderActivityAt!.getTime(),
+    );
+    expect(listed.lastSenderActivityAt).toEqual(followUp.lastSenderActivityAt);
+  });
+
+  it('is the first message’s time when the sender wrote nothing since', async () => {
+    const request = await send();
+    await replyToSupportRequest(asUser(E), request.id, 'Which jar?', mail);
+
+    const page = await listSupportRequests(asUser(E), {}, PAGE);
+
+    expect(page[0]!.node.lastSenderActivityAt).toEqual(request.lastSenderActivityAt);
   });
 });

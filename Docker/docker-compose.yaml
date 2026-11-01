@@ -3,6 +3,7 @@
 #   make docker-up        app + Postgres, migrated and seeded first
 #   make docker-workshop  also the Storybook workshop (profile: workshop)
 #   make docker-studio    also Drizzle Studio (profile: studio)
+#   make docker-jobs      also the job-run viewer (profile: jobs)
 #   make docker-e2e       run the Playwright suite once (profile: e2e)
 #   make playwright-audit-up  the WebKit/Firefox/phone audit's browsers (profile: audit)
 #   make lighthouse-up    the Chromium `npm run lighthouse:seo` drives (profile: audit)
@@ -28,6 +29,7 @@ volumes:
   node_modules_workshop:
   node_modules_e2e:
   node_modules_studio:
+  node_modules_jobs:
   node_modules_playwright_server:
   node_modules_db_init:
 
@@ -205,6 +207,32 @@ services:
     entrypoint: ['sh', '/app/Docker/ensure-deps.sh']
     # The `db:studio` script passes `--host 0.0.0.0`.
     command: ['npm', 'run', 'db:studio']
+
+  jobs:
+    # Opt-in: `make docker-jobs`. The Workflow SDK's page of job runs, read from
+    # the run data a local dev server writes under the bind-mounted .next; it only
+    # reads, so it can sit beside whichever dev server is running.
+    profiles: ['jobs']
+    build:
+      context: ..
+      dockerfile: Docker/Dockerfile.node
+      target: development
+    image: sorrel-node:development
+    working_dir: /app
+    volumes:
+      - ..:/app:cached
+      - node_modules_jobs:/app/node_modules
+    init: true
+    tty: true
+    ports:
+      - '3456:3456' # workflow web (npm run jobs:web)
+    environment:
+      NODE_ENV: development
+      WORKFLOW_TARGET_WORLD: local
+      WORKFLOW_LOCAL_DATA_DIR: /app/.next/workflow-data
+    entrypoint: ['sh', '/app/Docker/ensure-deps.sh']
+    # It listens on every interface, so the host reaches it with no host flag.
+    command: ['npm', 'run', 'jobs:web']
 
   e2e:
     # Opt-in, one-shot: `make docker-e2e`. The same image build-e2e-image.yml

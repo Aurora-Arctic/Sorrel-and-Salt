@@ -7,6 +7,7 @@ import SectionBody from '../../../components/SectionBody';
 // From its own client file: the Modal index re-exports modules a server
 // component cannot import.
 import { RouteModalProvider } from '../../../components/Modal/route-modal-provider';
+import { countSupportViews } from '@/modules/support';
 import { requireCuratorSession } from '../../../lib/request-session';
 import { titleTemplate } from '../../../lib/site';
 import type { AdminLayoutProps } from './types';
@@ -22,7 +23,8 @@ export const metadata: Metadata = {
 // page calls a guard too, as a layout does not re-run on client navigation
 // (claude-docs/auth/admin-guard.md, "The admin guard"). The route-modal provider is shared by all.
 export default async function AdminLayout({ children }: AdminLayoutProps) {
-  const { role } = await requireCuratorSession();
+  const session = await requireCuratorSession();
+  const { needs_staff: needsStaff } = await countSupportViews(session, {});
 
   return (
     <RouteModalProvider>
@@ -38,7 +40,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
           </PendingLink>
         }
       >
-        <AdminNav managesPeople={role === 'admin'} />
+        <AdminNav managesPeople={session.role === 'admin'} needsStaff={needsStaff} />
       </ContextRow>
       <SectionBody region="admin" className="page-column">
         {children}

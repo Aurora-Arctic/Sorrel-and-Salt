@@ -44,6 +44,7 @@ export default function RouteModal({
   content,
   place,
   returnTo,
+  loadingBody,
 }: RouteModalProps): ReactElement | null {
   const { navigate, refresh } = usePendingNavigation();
   const opener = useRouteModalOpener();
@@ -75,7 +76,7 @@ export default function RouteModal({
       onClose={close}
       returnTo={backTo}
     >
-      {(done) => (content ? content.body(done) : <ModalLoading />)}
+      {(done) => (content ? content.body(done) : (loadingBody ?? <ModalLoading />))}
     </Modal>
   );
 }

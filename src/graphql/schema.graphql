@@ -1118,6 +1118,11 @@ type Mutation {
   ): SupportReply!
 
   """
+  The sender marks their own open or waiting request resolved without replying. A later message from them reopens it.
+  """
+  resolveMySupportRequest(id: ID!): SupportRequest!
+
+  """
   Marks a request resolved. An admin may on any request, a curator on one assigned to them.
   """
   resolveSupportRequest(id: ID!): SupportRequest!

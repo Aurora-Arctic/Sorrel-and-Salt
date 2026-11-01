@@ -174,7 +174,8 @@ $account-menu-avatar: 2rem;
 // The count of pending invitations at the right end of Your Account's row: the
 // site's badge in attention's red, a circle, a pill from two digits. Its tip
 // hangs below it.
-.account-menu__account {
+.account-menu__account,
+.account-menu__link--counted {
   position: relative;
 }
 
@@ -195,7 +196,9 @@ $account-menu-avatar: 2rem;
   padding-inline-end: space(7);
 }
 
-.account-menu__count-mark {
+// The red circle: a link of its own on the Your Account and Admin rows, inside the Support row's link.
+.account-menu__count-mark,
+.account-menu__badge {
   @include badge('attention');
 
   justify-content: center;
@@ -204,6 +207,15 @@ $account-menu-avatar: 2rem;
   height: 1.5rem;
   padding: 0 space(1);
   border-radius: radius('pill');
+}
+
+// Pushed to the row's right end, where the invitations circle sits.
+.account-menu__badge-tip {
+  display: flex;
+  margin-inline-start: auto;
+}
+
+.account-menu__count-mark {
   text-decoration: none;
 
   // A link, so the typography's link hover would recolour the label; it
@@ -236,6 +248,11 @@ $account-menu-avatar: 2rem;
 
 .account-menu__link {
   display: none;
+}
+
+// A row with a count shows at every width, since the count is why to open the menu.
+.account-menu__link--counted {
+  display: block;
 }
 
 // Sign Out is the one row with room around it, so the button never touches the

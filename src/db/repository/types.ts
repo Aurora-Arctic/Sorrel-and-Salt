@@ -27,6 +27,7 @@ import type { spellWorkings } from '../../modules/grimoire/schema/spell-workings
 import type { GRIMOIRE_ORDERS, spells } from '../../modules/grimoire/schema/spells';
 import type { Membership, WorkspaceRole } from '@/modules/coven';
 import type { Curator, SiteAdmin } from '@/modules/identity';
+import type { SupportSenderGroup, SupportView } from '../../lib/support-path';
 import type { Cursor, PageRequest } from '../../lib/types';
 import type { AuditSession, Generic } from '../types';
 import type { FlatTable, ItemTable, PickedTable } from '../vocabularies';
@@ -1372,6 +1373,21 @@ export interface SupportRequestFilter {
   about?: 'accessibility' | 'bug' | 'account' | 'compendium' | 'privacy' | 'feedback' | 'question';
   status?: 'open' | 'waiting_on_sender' | 'resolved' | 'closed';
   errorCode?: number;
+  /** One of the admin page’s views; it narrows by status and assignment, and orders the queue views by oldest sender activity. */
+  view?: SupportView;
+  /** Only requests whose sender is in this group; left out, every sender. */
+  senderGroup?: SupportSenderGroup;
+}
+
+/** How many requests each view holds. */
+export type SupportViewCounts = Record<SupportView, number>;
+
+/** What the account menu counts for one viewer. */
+export interface SupportMenuCounts {
+  /** Open requests assigned to them. */
+  assignedOpen: number;
+  /** Their own requests waiting on their answer. */
+  waitingOnMe: number;
 }
 
 /** How many of a sender's requests are still open and how many are done. */

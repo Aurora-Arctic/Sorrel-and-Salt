@@ -2,6 +2,7 @@ import 'server-only';
 import { cache } from 'react';
 import { byCovenName, membershipsOf, rolePermits, type WorkspaceRole } from '@/modules/coven';
 import { countReceivedInvitations, getMe } from '@/modules/identity';
+import { getMySupportCounts } from '@/modules/support';
 import { getSession, requireSignedIn } from './request-session';
 import type { Session } from './session';
 import { curates } from './site-roles';
@@ -30,6 +31,9 @@ async function viewerFor(session: Session): Promise<ShellContext> {
   const pendingInvitations = me.emailVerified
     ? (await countReceivedInvitations(session, undefined)).totalCount
     : 0;
+  const support = me.emailVerified
+    ? await getMySupportCounts(session)
+    : { assignedOpen: 0, waitingOnMe: 0 };
   return {
     viewer: {
       id: session.userId,
@@ -38,6 +42,8 @@ async function viewerFor(session: Session): Promise<ShellContext> {
       canCreate: me.canCreateWorkspace,
       verified: me.emailVerified,
       pendingInvitations,
+      assignedSupport: support.assignedOpen,
+      waitingSupport: support.waitingOnMe,
     },
     // Alphabetical with the demo coven last: the service's order is the database's, which looks random.
     workspaces: [...memberships]

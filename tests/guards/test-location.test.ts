@@ -39,7 +39,14 @@ describe('where a test file lives', () => {
 
     // Preconditions: the config was read and the scan found the suite, this
     // file included — otherwise "no file is misplaced" is true of nothing.
-    expect(matchers.map((m) => m.name).sort()).toEqual(['db', 'db-mocking', 'dom', 'rsc', 'unit']);
+    expect(matchers.map((m) => m.name).sort()).toEqual([
+      'db',
+      'db-mocking',
+      'dom',
+      'rsc',
+      'unit',
+      'workflow',
+    ]);
     expect(tests.length).toBeGreaterThan(30);
     expect(homes('tests/guards/test-location.test.ts')).toEqual(['unit']);
 

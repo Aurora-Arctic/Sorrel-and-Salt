@@ -35,8 +35,12 @@ test('an admin sees the admin layout and its nav', async ({ page }) => {
     ['People', '/admin/users'],
   ];
   await expect(nav.getByRole('link')).toHaveCount(pages.length);
+  // A tab with a count is named "Support 0": its label, then its count.
   for (const [name, href] of pages) {
-    await expect(nav.getByRole('link', { name, exact: true })).toHaveAttribute('href', href);
+    await expect(nav.getByRole('link', { name: new RegExp(`^${name}( \\d+)?$`) })).toHaveAttribute(
+      'href',
+      href,
+    );
   }
 
   await assertNoAccessibilityViolations(page);

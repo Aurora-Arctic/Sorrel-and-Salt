@@ -4,7 +4,11 @@ import { definedArgs, sessionOf } from '../../../graphql/context-helpers';
 import { UserRef } from '../../identity';
 import { supportReplyAuthorRole, supportReplyVisibility } from '../schema/support-replies';
 import { supportRequestAbout, supportRequestStatus } from '../schema/support-requests';
-import { addSupportInternalNote, sendSenderMessage } from '../services/lifecycle';
+import {
+  addSupportInternalNote,
+  resolveMySupportRequest,
+  sendSenderMessage,
+} from '../services/lifecycle';
 import {
   assignSupportRequest,
   closeSupportRequest,
@@ -343,6 +347,17 @@ builder.mutationField('sendSupportMessage', (t) =>
     authScopes: { signedIn: true },
     resolve: (_root, { requestId, body }, context) =>
       sendSenderMessage(sessionOf(context), requestId, body),
+  }),
+);
+
+builder.mutationField('resolveMySupportRequest', (t) =>
+  t.field({
+    type: SupportRequestRef,
+    description:
+      'The sender marks their own open or waiting request resolved without replying. A later message from them reopens it.',
+    args: { id: t.arg.id({ required: true }) },
+    authScopes: { signedIn: true },
+    resolve: (_root, { id }, context) => resolveMySupportRequest(sessionOf(context), id),
   }),
 );
 

@@ -4,6 +4,7 @@ import {
   findSupportRequestCount,
   findSupportRequestForReader,
   findSupportRequestPage,
+  findSupportViewCounts,
   withAudit,
 } from '../../../db/repository';
 import type {
@@ -11,6 +12,7 @@ import type {
   SupportRequestFilter,
   SupportRequestMove,
   SupportRequestStatus,
+  SupportViewCounts,
 } from '../../../db/repository';
 import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
@@ -57,6 +59,17 @@ export async function countSupportRequests(
   start: Cursor | undefined,
 ): Promise<PageCount> {
   return findSupportRequestCount(readerOf(session, READ_REFUSAL), filter, start);
+}
+
+/**
+ * How many requests each of the admin page’s views holds, among those the session may read. A curator’s counts leave out
+ * requests not marked for curators or assigned to them.
+ */
+export async function countSupportViews(
+  session: Session,
+  filter: Pick<SupportRequestFilter, 'about' | 'errorCode' | 'senderGroup'>,
+): Promise<SupportViewCounts> {
+  return findSupportViewCounts(readerOf(session, READ_REFUSAL), filter);
 }
 
 /**

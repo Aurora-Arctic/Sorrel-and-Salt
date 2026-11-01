@@ -120,9 +120,12 @@ type Documents = {
     "\n  mutation SetSupportRequestCuratorVisible($id: ID!, $visible: Boolean!) {\n    setSupportRequestCuratorVisible(id: $id, visible: $visible) {\n      id\n    }\n  }\n": typeof types.SetSupportRequestCuratorVisibleDocument,
     "\n  mutation ResolveSupportRequest($id: ID!) {\n    resolveSupportRequest(id: $id) {\n      id\n    }\n  }\n": typeof types.ResolveSupportRequestDocument,
     "\n  mutation SetSupportRequestIssueUrl($id: ID!, $issueUrl: String) {\n    setSupportRequestIssueUrl(id: $id, issueUrl: $issueUrl) {\n      id\n    }\n  }\n": typeof types.SetSupportRequestIssueUrlDocument,
-    "\n  mutation ReplyToSupportRequest($requestId: ID!, $body: String!) {\n    replyToSupportRequest(requestId: $requestId, body: $body) {\n      id\n    }\n  }\n": typeof types.ReplyToSupportRequestDocument,
+    "\n  mutation ReplyToSupportRequest($requestId: ID!, $body: String!, $waitingOnSender: Boolean) {\n    replyToSupportRequest(requestId: $requestId, body: $body, waitingOnSender: $waitingOnSender) {\n      id\n    }\n  }\n": typeof types.ReplyToSupportRequestDocument,
+    "\n  mutation AddSupportInternalNote($requestId: ID!, $body: String!) {\n    addSupportInternalNote(requestId: $requestId, body: $body) {\n      id\n    }\n  }\n": typeof types.AddSupportInternalNoteDocument,
     "\n  mutation TimeOutSupportSender($userId: ID!, $until: DateTime!, $note: String) {\n    timeOutSupportSender(userId: $userId, until: $until, note: $note) {\n      id\n    }\n  }\n": typeof types.TimeOutSupportSenderDocument,
     "\n  mutation LiftSupportTimeout($id: ID!) {\n    liftSupportTimeout(id: $id) {\n      id\n    }\n  }\n": typeof types.LiftSupportTimeoutDocument,
+    "\n  mutation SendSupportMessage($requestId: ID!, $body: String!) {\n    sendSupportMessage(requestId: $requestId, body: $body) {\n      id\n    }\n  }\n": typeof types.SendSupportMessageDocument,
+    "\n  mutation ResolveMySupportRequest($id: ID!) {\n    resolveMySupportRequest(id: $id) {\n      id\n    }\n  }\n": typeof types.ResolveMySupportRequestDocument,
     "\n  mutation GrantWorkspaceCreation($userId: ID!, $note: String) {\n    grantWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": typeof types.GrantWorkspaceCreationDocument,
     "\n  mutation RevokeWorkspaceCreation($userId: ID!, $note: String) {\n    revokeWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": typeof types.RevokeWorkspaceCreationDocument,
     "\n  mutation PauseAdminRoleChanges {\n    pauseAdminRoleChanges\n  }\n": typeof types.PauseAdminRoleChangesDocument,
@@ -236,9 +239,12 @@ const documents: Documents = {
     "\n  mutation SetSupportRequestCuratorVisible($id: ID!, $visible: Boolean!) {\n    setSupportRequestCuratorVisible(id: $id, visible: $visible) {\n      id\n    }\n  }\n": types.SetSupportRequestCuratorVisibleDocument,
     "\n  mutation ResolveSupportRequest($id: ID!) {\n    resolveSupportRequest(id: $id) {\n      id\n    }\n  }\n": types.ResolveSupportRequestDocument,
     "\n  mutation SetSupportRequestIssueUrl($id: ID!, $issueUrl: String) {\n    setSupportRequestIssueUrl(id: $id, issueUrl: $issueUrl) {\n      id\n    }\n  }\n": types.SetSupportRequestIssueUrlDocument,
-    "\n  mutation ReplyToSupportRequest($requestId: ID!, $body: String!) {\n    replyToSupportRequest(requestId: $requestId, body: $body) {\n      id\n    }\n  }\n": types.ReplyToSupportRequestDocument,
+    "\n  mutation ReplyToSupportRequest($requestId: ID!, $body: String!, $waitingOnSender: Boolean) {\n    replyToSupportRequest(requestId: $requestId, body: $body, waitingOnSender: $waitingOnSender) {\n      id\n    }\n  }\n": types.ReplyToSupportRequestDocument,
+    "\n  mutation AddSupportInternalNote($requestId: ID!, $body: String!) {\n    addSupportInternalNote(requestId: $requestId, body: $body) {\n      id\n    }\n  }\n": types.AddSupportInternalNoteDocument,
     "\n  mutation TimeOutSupportSender($userId: ID!, $until: DateTime!, $note: String) {\n    timeOutSupportSender(userId: $userId, until: $until, note: $note) {\n      id\n    }\n  }\n": types.TimeOutSupportSenderDocument,
     "\n  mutation LiftSupportTimeout($id: ID!) {\n    liftSupportTimeout(id: $id) {\n      id\n    }\n  }\n": types.LiftSupportTimeoutDocument,
+    "\n  mutation SendSupportMessage($requestId: ID!, $body: String!) {\n    sendSupportMessage(requestId: $requestId, body: $body) {\n      id\n    }\n  }\n": types.SendSupportMessageDocument,
+    "\n  mutation ResolveMySupportRequest($id: ID!) {\n    resolveMySupportRequest(id: $id) {\n      id\n    }\n  }\n": types.ResolveMySupportRequestDocument,
     "\n  mutation GrantWorkspaceCreation($userId: ID!, $note: String) {\n    grantWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": types.GrantWorkspaceCreationDocument,
     "\n  mutation RevokeWorkspaceCreation($userId: ID!, $note: String) {\n    revokeWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": types.RevokeWorkspaceCreationDocument,
     "\n  mutation PauseAdminRoleChanges {\n    pauseAdminRoleChanges\n  }\n": types.PauseAdminRoleChangesDocument,
@@ -687,7 +693,11 @@ export function graphql(source: "\n  mutation SetSupportRequestIssueUrl($id: ID!
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  mutation ReplyToSupportRequest($requestId: ID!, $body: String!) {\n    replyToSupportRequest(requestId: $requestId, body: $body) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation ReplyToSupportRequest($requestId: ID!, $body: String!) {\n    replyToSupportRequest(requestId: $requestId, body: $body) {\n      id\n    }\n  }\n"];
+export function graphql(source: "\n  mutation ReplyToSupportRequest($requestId: ID!, $body: String!, $waitingOnSender: Boolean) {\n    replyToSupportRequest(requestId: $requestId, body: $body, waitingOnSender: $waitingOnSender) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation ReplyToSupportRequest($requestId: ID!, $body: String!, $waitingOnSender: Boolean) {\n    replyToSupportRequest(requestId: $requestId, body: $body, waitingOnSender: $waitingOnSender) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation AddSupportInternalNote($requestId: ID!, $body: String!) {\n    addSupportInternalNote(requestId: $requestId, body: $body) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation AddSupportInternalNote($requestId: ID!, $body: String!) {\n    addSupportInternalNote(requestId: $requestId, body: $body) {\n      id\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -696,6 +706,14 @@ export function graphql(source: "\n  mutation TimeOutSupportSender($userId: ID!,
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation LiftSupportTimeout($id: ID!) {\n    liftSupportTimeout(id: $id) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation LiftSupportTimeout($id: ID!) {\n    liftSupportTimeout(id: $id) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation SendSupportMessage($requestId: ID!, $body: String!) {\n    sendSupportMessage(requestId: $requestId, body: $body) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation SendSupportMessage($requestId: ID!, $body: String!) {\n    sendSupportMessage(requestId: $requestId, body: $body) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation ResolveMySupportRequest($id: ID!) {\n    resolveMySupportRequest(id: $id) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation ResolveMySupportRequest($id: ID!) {\n    resolveMySupportRequest(id: $id) {\n      id\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

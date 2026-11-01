@@ -63,7 +63,9 @@ $track-inset: calc(1px + 0.125rem);
   margin-bottom: 2.5rem;
 }
 
-.tabbed-page--framed > .page-header:not(:has(.add-action)) {
+// A page that sets `tabsBelow` puts its row on a line of its own beneath the heading at every width, by the same forced break.
+.tabbed-page--framed > .page-header:not(:has(.add-action)),
+.tabbed-page--tabs-below > .page-header:not(:has(.add-action)) {
   &::after {
     content: '';
     flex-basis: 100%;
@@ -211,6 +213,8 @@ $track-inset: calc(1px + 0.125rem);
   display: flex;
   position: relative;
   align-items: center;
+  // The count's own leading space is dropped in a flex row, so this gap alone parts the label from the count.
+  gap: space(2);
   box-sizing: border-box;
   height: calc(#{$pill-height} - 2 * #{$track-inset});
   padding-inline: space(3);

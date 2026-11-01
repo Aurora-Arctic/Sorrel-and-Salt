@@ -2,6 +2,7 @@ import 'server-only';
 import { withAudit } from '../../../db/repository';
 import { Forbidden } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
+import { utcMinute } from '../../../lib/utc';
 import { parseInput } from '../../../lib/validation';
 import { supportRequests } from '../schema/support-requests';
 import type { SupportRequestRow } from '../types';
@@ -14,11 +15,6 @@ export const SEND_LIMIT = 10;
 /** The window the limit counts over, in seconds: 24 hours. */
 export const SEND_WINDOW_SECONDS = 24 * 60 * 60;
 
-/** A time-out's end as a refusal names it: the instant in UTC, so the same words read the same everywhere. */
-function utcMinute(date: Date): string {
-  return `${date.toISOString().slice(0, 16).replace('T', ' ')} UTC`;
-}
-
 /** Refuses a sender who is timed out, naming when it ends. */
 export function refuseTimedOut(timedOutUntil: Date | undefined): void {
   if (timedOutUntil) {
@@ -26,6 +22,11 @@ export function refuseTimedOut(timedOutUntil: Date | undefined): void {
       `You cannot send support requests until ${utcMinute(timedOutUntil)}. Your earlier requests are still on your support page.`,
     );
   }
+}
+
+/** Refuses a timed-out sender's reply to a request that is still theirs to answer, naming when it ends. */
+export function refuseTimedOutReply(timedOutUntil: Date | undefined): void {
+  if (timedOutUntil) throw new Forbidden(`You cannot reply until ${utcMinute(timedOutUntil)}.`);
 }
 
 /** Refuses a sender who has used the day's allowance of new requests. */

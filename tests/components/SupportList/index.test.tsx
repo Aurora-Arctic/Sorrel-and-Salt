@@ -17,6 +17,7 @@ const request = (over: Partial<SupportListEntry> = {}): SupportListEntry => ({
   status: 'open',
   createdAt: new Date('2030-01-02T03:04:00Z'),
   replyCount: 0,
+  staffWroteLast: false,
   ...over,
 });
 
@@ -26,6 +27,8 @@ const opened = (over: Partial<SupportSenderRequestEntry> = {}): SupportSenderReq
   message: 'I was sent a card.',
   errorCode: null,
   replies: [],
+  followUpId: null,
+  timedOutUntil: null,
   ...over,
 });
 
@@ -76,7 +79,7 @@ describe('SupportList', () => {
       'href',
       '/account/support?request=r1',
     );
-    expect(within(items[0]!).getByText('Open')).toBeInTheDocument();
+    expect(within(items[0]!).getByText('Received')).toBeInTheDocument();
     expect(within(items[0]!).getByText('Question')).toBeInTheDocument();
     expect(within(items[0]!).getByText('2 Jan 2030')).toBeInTheDocument();
     expect(within(items[0]!).getByText('1 reply')).toBeInTheDocument();
@@ -118,5 +121,21 @@ describe('SupportList', () => {
   it('opens the request in a dialog named by its subject', () => {
     render(<SupportList counts={none} requests={[request()]} opened={opened()} />);
     expect(screen.getByRole('dialog', { name: /How do I join a coven\?/ })).toBeInTheDocument();
+  });
+
+  it('marks a row waiting on the sender with a dot, and no other row', () => {
+    render(
+      <SupportList
+        requests={[
+          request({ id: 'a', subject: 'Waiting one', status: 'waiting_on_sender' }),
+          request({ id: 'b', subject: 'Open one', status: 'open' }),
+          request({ id: 'c', subject: 'Resolved one', status: 'resolved' }),
+        ]}
+        counts={none}
+      />,
+    );
+    const dots = screen.getAllByRole('img', { name: 'Waiting on you' });
+    expect(dots).toHaveLength(1);
+    expect(dots[0]!.closest('li')).toHaveTextContent('Waiting one');
   });
 });

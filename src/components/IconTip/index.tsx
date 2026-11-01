@@ -30,6 +30,13 @@ export {
   PreviewIcon,
   PrintIcon,
   RedoIcon,
+  SproutIcon,
+  CircleCheckIcon,
+  BubbleLinesIcon,
+  PersonCheckIcon,
+  PersonClockIcon,
+  FlagIcon,
+  ArchiveBoxIcon,
   StockIcon,
   UndoIcon,
 } from './icons';

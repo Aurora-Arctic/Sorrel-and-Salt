@@ -11,7 +11,7 @@ import Notice from '../Notice';
 import IssuePanel from './issue-panel';
 import ReplyForm from './reply-form';
 import TimeoutPanel from './timeout-panel';
-import type { SupportDetailProps } from './types';
+import type { SupportDetailProps, SupportTimeoutEntry } from './types';
 import { AnnounceContext, useSupportAction } from './use-support-action';
 import SenderName from './sender-name';
 import SupportFacts from './facts';
@@ -93,7 +93,11 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
               <div>
                 <dt>Resolved</dt>
                 <dd>
-                  by {request.resolvedBy.name} at <LocalTime at={request.resolvedAt} long />
+                  by{' '}
+                  {request.resolvedBy.id === request.sender?.id
+                    ? 'the sender'
+                    : request.resolvedBy.name}{' '}
+                  at <LocalTime at={request.resolvedAt} long />
                 </dd>
               </div>
             )
@@ -120,39 +124,42 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
             ...request.replies.map((reply) => ({
               id: reply.id,
               name: reply.author?.name ?? 'Deleted account',
-              tag: 'Staff',
+              tag: reply.fromSender ? 'Sender' : 'Staff',
+              internal: !reply.fromSender && reply.internal,
               at: reply.createdAt,
               body: reply.body,
             })),
           ]}
         />
 
-        {answers && (
-          <ReplyForm
-            requestId={request.id}
-            resolve={
-              open && (
-                <ConfirmedAction
-                  label="Resolve"
-                  accessibleName="Resolve"
-                  openClass="btn btn--quiet"
-                  title="Resolve This Request?"
-                  question="The sender sees it as resolved on their support page, and can reopen it by replying. It closes by itself after seven days without a reply."
-                  busy="Resolving"
-                  confirmClass="btn btn--solid"
-                  announcement="Request resolved."
-                  inModal
-                  send={() => graphqlRequest(ResolveDocument, { id: request.id })}
-                />
-              )
-            }
-          />
-        )}
+        <ReplyForm
+          noteOnly={!answers}
+          requestId={request.id}
+          canWait={open && answers}
+          senderTimedOutUntil={standingTimeoutEnd(request.timeouts)}
+          resolve={
+            open &&
+            answers && (
+              <ConfirmedAction
+                label="Resolve"
+                accessibleName="Resolve"
+                openClass="btn btn--quiet"
+                title="Resolve This Request?"
+                question="The sender sees it as resolved on their support page, and can reopen it by replying. It closes by itself after seven days without a reply."
+                busy="Resolving"
+                confirmClass="btn btn--solid"
+                announcement="Request resolved."
+                inModal
+                send={() => graphqlRequest(ResolveDocument, { id: request.id })}
+              />
+            )
+          }
+        />
       </div>
 
       {isAdmin && (
         <aside className="support-detail__side" aria-label="Request Settings">
-          <FieldShell label="Assigned To" {...assignField}>
+          <FieldShell label="Assignee" {...assignField}>
             <span className="field__control">
               <select
                 id={assignField.controlId}
@@ -212,6 +219,10 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
     </div>
   );
 };
+
+/** When the sender's standing time-out ends: not lifted and still in the future, or none. */
+const standingTimeoutEnd = (timeouts: SupportTimeoutEntry[]): Date | undefined =>
+  timeouts.find((timeout) => !timeout.liftedAt && timeout.until.getTime() > Date.now())?.until;
 
 const SupportDetail = (props: SupportDetailProps): ReactElement => {
   // The last write's outcome. A trailing no-break space on every other call lets a repeat be spoken,

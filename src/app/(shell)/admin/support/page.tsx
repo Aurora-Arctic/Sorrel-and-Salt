@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
-import PageHeader from '@/components/PageHeader';
+import TabbedPage from '@/components/TabbedPage';
 import SupportRequests from '@/components/SupportRequests';
-import { USER_MODAL_PLACE, supportHref } from '@/components/SupportRequests/href';
+import { USER_MODAL_PLACE, supportHref, supportViewTabs } from '@/components/SupportRequests/href';
 import { pagerHrefs } from '@/lib/list-href';
 import { impersonationEnabled } from '@/lib/impersonation';
 import { requireCuratorSession } from '@/lib/request-session';
@@ -11,7 +11,7 @@ import { readPauseState } from '../(people)/pause-state';
 import { readOpenedUser } from '../(people)/users/opened-user';
 import UserDialog from '../(people)/users/user-dialog';
 import { readSupportPlace } from './filter';
-import { readAssignees, readOpened, readRequests } from './reads';
+import { readAssignees, readOpened, readRequests, readViewCounts } from './reads';
 import type { SupportRequestsCursor } from '@/components/SupportRequests/types';
 import type { SupportPageProps } from './types';
 
@@ -26,9 +26,10 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
   const { filter, cursor, request, user } = readSupportPlace(await searchParams);
   // The user modal is the Users page's own, for an admin; a curator reaches nothing on the People pages.
   const userId = session.role === 'admin' ? user : undefined;
-  const [{ requests, pageInfo, position }, opened, assignees, openedUser, adminChanges] =
+  const [{ requests, pageInfo, position }, counts, opened, assignees, openedUser, adminChanges] =
     await Promise.all([
       readRequests(session, filter, cursor.after, cursor.before),
+      readViewCounts(session, filter),
       request ? readOpened(session, request) : undefined,
       readAssignees(session),
       userId ? readOpenedUser(session, userId) : undefined,
@@ -36,8 +37,12 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
     ]);
 
   return (
-    <main>
-      <PageHeader title="Support" />
+    <TabbedPage
+      title="Support"
+      tabs={supportViewTabs(filter, counts)}
+      open={supportHref(filter)}
+      tabsBelow
+    >
       {userId && !openedUser && <MissingNotice noun="user" />}
       {request && !opened && <MissingNotice noun="support request" />}
       <SupportRequests
@@ -59,6 +64,6 @@ export default async function SupportPage({ searchParams }: SupportPageProps) {
         canImpersonate={impersonationEnabled()}
         changesPaused={Boolean(adminChanges && changesLocked(adminChanges))}
       />
-    </main>
+    </TabbedPage>
   );
 }

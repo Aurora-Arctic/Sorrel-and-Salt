@@ -400,3 +400,199 @@ export function HistoryIcon(): ReactElement {
     </svg>
   );
 }
+
+/** A sprout: a sender who joined by a printed card, a beta tester, as the admin Support page marks one. */
+export function SproutIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M8 14V8M8 8C8 5.2 6.2 3.5 3 3.5 3 6.3 4.8 8 8 8zM8 9.5c0-2.6 1.6-4.2 4.5-4.2 0 2.6-1.6 4.2-4.5 4.2z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** A tick in a circle: a support request that is resolved, as the admin Support page marks one. */
+export function CircleCheckIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <circle
+        cx="8"
+        cy="8"
+        r="6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M5.25 8.25l1.75 1.75 3.75-4"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** A speech bubble with lines: the sender wrote last, as the admin Support page marks a request. */
+export function BubbleLinesIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M3.5 3h9a1.5 1.5 0 0 1 1.5 1.5v5A1.5 1.5 0 0 1 12.5 11H7l-3 2.5V11h-.5A1.5 1.5 0 0 1 2 9.5v-5A1.5 1.5 0 0 1 3.5 3z"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M5 6h6M5 8.25h3.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** A person with a tick: the sender resolved the request themselves, as the admin Support page marks one. */
+export function PersonCheckIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <circle
+        cx="6"
+        cy="5.5"
+        r="2.5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M1.5 14a4.5 4.5 0 0 1 9 0"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M10.5 9l1.5 1.5 3-3.25"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** A person with a clock: a support request waiting on the sender, as the admin Support page marks one. */
+export function PersonClockIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <circle
+        cx="5.25"
+        cy="5.5"
+        r="2.25"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M1.25 14.25a4 4 0 0 1 5.5-3.7"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle
+        cx="11.25"
+        cy="11.5"
+        r="3.75"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M11.25 9.75v1.75l1.25.9"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** A flag: a support request that is open, as the admin Support page marks one. */
+export function FlagIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M3.5 14.5V2M3.5 2.5h8l-1.75 3 1.75 3h-8"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** An archive box: a support request that is closed, as the admin Support page marks one. */
+export function ArchiveBoxIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <rect
+        x="2"
+        y="3"
+        width="12"
+        height="3"
+        rx=".75"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M3 6v6.5A1.5 1.5 0 0 0 4.5 14h7a1.5 1.5 0 0 0 1.5-1.5V6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M6.5 8.75h3"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}

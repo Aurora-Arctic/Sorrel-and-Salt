@@ -13,6 +13,7 @@ import {
   useSyncExternalStore,
 } from 'react';
 import { isAtPath } from '../../lib/at-path';
+import { FacetCount } from '../FacetPanel/facet-count';
 import { ChevronIcon } from '../IconTip/icons';
 import SectionIcon from './icons';
 import type { SectionNavItem, SectionNavProps } from './types';
@@ -234,7 +235,10 @@ const SectionLinks = ({ label, sections }: SectionNavProps): ReactElement => {
               aria-current={isCurrent(pathname, section) ? 'page' : undefined}
             >
               <SectionIcon name={section.icon} />
-              <span>{section.label}</span>
+              <span>
+                {section.label}
+                {section.count !== undefined && <FacetCount count={section.count} />}
+              </span>
             </PendingLink>
           </li>
         ))}
@@ -259,6 +263,7 @@ const SectionLinks = ({ label, sections }: SectionNavProps): ReactElement => {
                   </>
                 )}
                 {hidden ? hidden.label : 'More'}
+                {hidden?.count !== undefined && <FacetCount count={hidden.count} />}
               </span>
               <span className="section-nav__chevron">
                 <ChevronIcon />
@@ -274,7 +279,10 @@ const SectionLinks = ({ label, sections }: SectionNavProps): ReactElement => {
                     aria-current={isCurrent(pathname, section) ? 'page' : undefined}
                   >
                     <SectionIcon name={section.icon} />
-                    <span>{section.label}</span>
+                    <span>
+                      {section.label}
+                      {section.count !== undefined && <FacetCount count={section.count} />}
+                    </span>
                   </PendingLink>
                 </li>
               ))}

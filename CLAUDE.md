@@ -29,7 +29,7 @@ The devcontainer has no `make`, no `docker` and **no Python**: run the npm scrip
 | `npm run dev`                   | Dev server on **8000**, Altair at `/api/graphql` |
 | `npm run build` / `start`       | Production build; e2e serves it on **8001**+     |
 | `npm run pre-commit`            | Lint, format, types on changed files (MB.38)     |
-| `npm run test:coverage`         | Vitest's five projects, 80% threshold            |
+| `npm run test:coverage`         | Vitest's six projects, 80% threshold             |
 | `npm run test:stories`          | Story suite (Playwright), one line per story     |
 | `npm run e2e`                   | Playwright, a database and server per worker     |
 | `npm run codegen`               | `src/gql/` from the SDL; commit the output       |
@@ -43,7 +43,7 @@ The devcontainer has no `make`, no `docker` and **no Python**: run the npm scrip
 
 The long forms of rules 2–5 and 10 are `.claude/rules/database.md`, of 8 and 9 `.claude/rules/graphql.md`.
 
-**1. Authorization lives in `src/modules/*/services/`. Never in resolvers, never in pages.** Server components call services directly (in React `cache()`); everything the browser initiates — every mutation, and every read without a navigation — goes through `/api/graphql`. There is no third access path: no server actions, no bespoke route handlers, and admin is not an exception (M3.8). Outside both: the OAuth handshake at `/api/auth/*`, with no application data (M2.2), the sessionless public files `/llms.txt` and `/.well-known/*.json`, serving only the public compendium (M12.2), and the sessionless share-card images Next generates from each `opengraph-image.tsx` for `/`, `/compendium` and a compendium entry, drawing only what the public compendium shows (M12.34).
+**1. Authorization lives in `src/modules/*/services/`. Never in resolvers, never in pages.** Server components call services directly (in React `cache()`); everything the browser initiates — every mutation, and every read without a navigation — goes through `/api/graphql`. There is no third access path: no server actions, no bespoke route handlers, and admin is not an exception (M3.8). Outside both: the OAuth handshake at `/api/auth/*`, with no application data (M2.2), the sessionless public files `/llms.txt` and `/.well-known/*.json`, serving only the public compendium (M12.2), and the sessionless share-card images Next generates from each `opengraph-image.tsx` for `/`, `/compendium` and a compendium entry, drawing only what the public compendium shows (M12.34), and the durable job routes the SDK generates under `/.well-known/workflow/`, which carry no application data and run services as the seeded System account (M15.49).
 
 **2. Only `src/db/repository/` may import the database client.** Callers import its `index.ts`; three files outside it hold a named exemption, and a fourth is a decision (M1.17). Above services, `src/graphql/**`, `src/app/**` and `src/components/**` import nothing under `src/db` at runtime (M3.9), and every service opens with `import 'server-only'`.
 
@@ -138,7 +138,7 @@ Long form: claude-docs/token-efficiency.md.
 
 Do not build, and do not leave hooks for beyond what the design doc names: the **entire notes subsystem** (stories 35–46; §13), edit history, viewer spell approval, compendium/category suggestions, duplicate merge tooling, bulk add from the compendium, GraphQL response caching, a mailed sign-in link or code (§13), note moderation, subscription billing, help and FAQ articles (§13; MB.175), physical uses (§13; M14.2), and linking a coven's own ingredient to the compendium: the Link dialog, This Is It, and splitting an entry across compendium entries (§13). A coven annotates a compendium entry or makes it its own, and that is the only direction in v1.
 
-Story numbers 35–46 are **not reused** — v1 is 73 stories, numbered 1–34, 47–64 and 70–90.
+Story numbers 35–46 are **not reused** — v1 is 74 stories, numbered 1–34, 47–64 and 70–91.
 
 The one v1 concession to v2: the ingredient detail page (M8.19) is built so a notes section can be added beneath it without restructuring.
 

@@ -60,6 +60,8 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
               verified={viewer.verified}
               links={links}
               pendingInvitations={viewer.pendingInvitations}
+              assignedSupport={viewer.assignedSupport}
+              waitingSupport={viewer.waitingSupport}
             />
             {/* In the bar at every width. */}
             <span className="app-shell__theme">

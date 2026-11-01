@@ -1,5 +1,5 @@
 import type { Window } from 'happy-dom';
-import { afterEach } from 'vitest';
+import { afterEach, vi } from 'vitest';
 import { act, cleanup } from '@testing-library/react';
 import { installConsoleGuard } from './console-guard';
 import HTMLElementConfig from 'happy-dom/lib/config/HTMLElementConfig.js';
@@ -76,3 +76,18 @@ HTMLElementConfig.search = {
   className: 'HTMLElement',
   contentModel: HTMLElementConfigContentModelEnum.anyDescendants,
 };
+
+// The job adapter loads the Workflow SDK, a server-only package that hardens JavaScript's built-ins at
+// import and throws under happy-dom. A page test reaches it through the identity module's index, and no
+// `dom` test starts a job (the `workflow` project does), so the adapter is a stub here.
+vi.mock('@/lib/jobs', () => ({
+  startJob: async () => 'run-stub',
+  jobTokenActive: async () => false,
+}));
+vi.mock('@/lib/jobs/runtime', () => ({
+  createHook: () => undefined,
+  sleep: async () => undefined,
+  start: async () => ({ runId: 'run-stub' }),
+  FatalError: class FatalError extends Error {},
+  RetryableError: class RetryableError extends Error {},
+}));

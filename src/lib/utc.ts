@@ -123,3 +123,8 @@ export function shortMinuteInZone(at: Date, timeZone?: string): string {
   const part = (type: string): string => parts.find((p) => p.type === type)?.value ?? '';
   return `${part('day')} ${part('month')}, ${part('hour')}:${part('minute')} ${part('dayPeriod').toLowerCase()}`;
 }
+
+/** An instant to the minute in UTC as `2026-10-30 14:05 UTC`: how a time-out's end is named, so the same words read the same everywhere. */
+export function utcMinute(at: Date): string {
+  return `${at.toISOString().slice(0, 16).replace('T', ' ')} UTC`;
+}

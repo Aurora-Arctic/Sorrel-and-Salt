@@ -13,6 +13,26 @@
   }
 }
 
+// A date reads as a muted caption, as the invitation cards' Minted On does.
+.support-requests__fact {
+  color: $text-muted;
+  font-size: type-size('caption');
+}
+
+// The subject link reads in the body ink, in every state, and is underlined on hover and focus so it still reads as a link.
+.support-requests__subject {
+  &,
+  &:visited,
+  &:hover {
+    color: $text-primary;
+  }
+
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline;
+  }
+}
+
 // A long unbroken subject wraps inside a capped cell, so the other columns stay on screen.
 .support-requests .data-table td:has(.support-requests__subject) {
   max-inline-size: 28rem;
@@ -191,6 +211,11 @@
   font-size: type-size('small');
 }
 
+// The word Internal in a thread tag, and the whole Internal Note option on the Send As chip, in the warning ink.
+.support-detail__internal {
+  color: $warning;
+}
+
 // The reply form sits under the thread behind a hairline; Reply on the left, Resolve opposite.
 .support-detail__reply {
   padding-block-start: space(5);
@@ -217,8 +242,9 @@
   gap: space(3);
 }
 
-// The switch centres its label and toggle by default; in the side column they sit flush left with the fields around them.
-.support-detail__side .switch {
+// The switch centres its label and toggle by default; in the side column and the reply form they sit flush left with the fields around them.
+.support-detail__side .switch,
+.support-detail__reply .switch {
   align-items: start;
 
   .field__label {
@@ -238,5 +264,84 @@
 
   > .form__actions {
     margin-block: 0;
+  }
+}
+
+// The sender's name and the sprout after it, centred on each other.
+.support-requests__sender {
+  display: inline-flex;
+  align-items: center;
+}
+
+// The beta tester's sprout after the sender's name: a status mark whose press only opens its tip.
+.support-requests__beta {
+  @include icon-button($cursor: default);
+
+  margin-inline-start: space(1);
+  color: $text-primary;
+
+  &:hover {
+    background-color: transparent;
+    color: $text-primary;
+  }
+}
+
+// The status word and its marks on one line.
+.support-requests__status {
+  display: inline-flex;
+  align-items: center;
+  gap: space(1);
+}
+
+// A status mark: a button only so the keyboard reaches its tip, which a press also opens.
+.support-requests__mark {
+  // The glyph is a third larger than the shared 1rem; the 1.5rem target is kept so the row stays as tall.
+  @include icon-button($glyph: 1.3333rem, $cursor: default);
+
+  color: $text-primary;
+
+  &:hover {
+    background-color: transparent;
+    color: $text-primary;
+  }
+}
+
+// Resolved wears the Local badge's green.
+.support-requests__mark--resolved {
+  color: badge-token('local', 'fg');
+
+  &:hover {
+    color: badge-token('local', 'fg');
+  }
+}
+
+// Waiting on the sender wears the warning ochre.
+.support-requests__mark--waiting {
+  color: $warning;
+
+  &:hover {
+    color: $warning;
+  }
+}
+
+// Open wears the error red, the secondary ink.
+.support-requests__mark--open {
+  color: $secondary;
+
+  &:hover {
+    color: $secondary;
+  }
+}
+
+// Closed wears the disabled look (muted ink at the disabled opacity) on the icon alone, so the focus ring keeps full strength.
+.support-requests__mark--closed {
+  color: $text-muted;
+
+  &:hover {
+    color: $text-muted;
+  }
+
+  svg {
+    opacity: $opacity-disabled;
   }
 }

@@ -13,6 +13,8 @@ const SwapPanel = ({
   filter,
   shape,
   count,
+  columns,
+  fields,
   density,
   card,
   loadingMinHeight,
@@ -26,7 +28,15 @@ const SwapPanel = ({
       className={className}
       style={loadingMinHeight ? { minHeight: loadingMinHeight } : undefined}
     >
-      <TabPanelLoading filter={filter} shape={shape} count={count} density={density} card={card} />
+      <TabPanelLoading
+        filter={filter}
+        shape={shape}
+        count={count}
+        columns={columns}
+        fields={fields}
+        density={density}
+        card={card}
+      />
     </div>
   ) : (
     <div key="content" className={className} data-arrived={swapped || undefined}>

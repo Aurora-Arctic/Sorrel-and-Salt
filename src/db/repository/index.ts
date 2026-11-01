@@ -146,20 +146,27 @@ export {
 } from './invitations';
 export {
   findActiveSupportTimeoutEnd,
+  findOwnSupportFollowUp,
   findOwnSupportRequest,
   findOwnSupportRequestCount,
   findOwnSupportStatusCounts,
+  findSupportMenuCounts,
   findOwnSupportRequestPage,
   findCardAcceptorIds,
   findSupportRepliesFor,
   findSupportRequestCount,
+  findSupportViewCounts,
   findSupportRequestForReader,
   findSupportRequestPage,
   findSupportTimeoutById,
   findSupportTimeoutsFor,
 } from './support';
 export { findOpenAdminRoleChangePause } from './admin-roles';
-export { deleteProvisionalUsers } from './provisional-users';
+export {
+  deleteLapsedProvisionalUser,
+  findLapsedProvisionalUserIds,
+  provisionalSecondsLeft,
+} from './provisional-users';
 export { removePasskeyKeepingAWayIn } from './passkeys';
 export type { PasskeyRemoval } from './passkeys';
 export {
@@ -226,6 +233,7 @@ export type {
   SupportRequestFilter,
   SupportRequestMove,
   SupportRequestStatus,
+  SupportViewCounts,
   SupportViewer,
   UserFilter,
   VocabularySuggestion,

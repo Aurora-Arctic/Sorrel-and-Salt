@@ -49,6 +49,8 @@ export default async function SupportListPage({ searchParams }: SupportListPageP
           status: row.status,
           createdAt: row.createdAt,
           replyCount: replies[index]?.length ?? 0,
+          staffWroteLast:
+            replies[index]?.[(replies[index]?.length ?? 1) - 1]?.authorRole === 'staff',
         }))}
         opened={opened}
         counts={counts}

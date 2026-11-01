@@ -2,7 +2,7 @@ import type { supportReplies } from './schema/support-replies';
 import type { supportRequests } from './schema/support-requests';
 import type { supportTimeouts } from './schema/support-timeouts';
 
-export type { SupportRequestFilter } from '../../db/repository';
+export type { SupportRequestFilter, SupportViewCounts } from '../../db/repository';
 
 export type SupportRequestRow = typeof supportRequests.$inferSelect;
 export type SupportReplyRow = typeof supportReplies.$inferSelect;

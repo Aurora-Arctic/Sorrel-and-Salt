@@ -42,12 +42,36 @@ const FILES = readdirSync(join(REPO_ROOT, REPOSITORY), { withFileTypes: true })
 const declaration = (name: string) =>
   new RegExp(`^(?:export )?(?:async )?function ${name}\\b`, 'm');
 
+/** The `{` that opens a function's body: past the parenthesised parameters (which may destructure), then the first brace outside the return type's `<...>`. */
+function bodyStart(text: string, from: number): number {
+  // Generics come first and may hold parentheses of their own, so the parameter list is the first `(` outside `<...>`.
+  let index = from;
+  for (let angle = 0; index < text.length; index += 1) {
+    if (text[index] === '<') angle += 1;
+    if (text[index] === '>' && text[index - 1] !== '=') angle -= 1;
+    if (text[index] === '(' && angle === 0) break;
+  }
+  for (let depth = 0; index < text.length; index += 1) {
+    if (text[index] === '(') depth += 1;
+    if (text[index] === ')') {
+      depth -= 1;
+      if (depth === 0) break;
+    }
+  }
+  for (let angle = 0, cursor = index + 1; cursor < text.length; cursor += 1) {
+    if (text[cursor] === '<') angle += 1;
+    if (text[cursor] === '>' && text[cursor - 1] !== '=') angle -= 1;
+    if (text[cursor] === '{' && angle === 0) return cursor;
+  }
+  throw new Error('no function body found');
+}
+
 /** The body of the one top-level `function name(...) { ... }`, by brace matching. */
 function functionBody(name: string): string {
   const files = FILES.filter((file) => declaration(name).test(source(file)));
   expect(files, `${name} is declared as a top-level function in exactly one file`).toHaveLength(1);
   const text = source(files[0]);
-  const open = text.indexOf('{', text.search(declaration(name)));
+  const open = bodyStart(text, text.search(declaration(name)));
   let depth = 0;
   for (let index = open; index < text.length; index += 1) {
     if (text[index] === '{') depth += 1;
@@ -64,6 +88,20 @@ const FINDERS = [...source(INDEX).matchAll(/^export\s*\{([^}]*)\}\s*from\s*['"][
   .flatMap((match) => match[1].split(','))
   .map((name) => name.trim())
   .filter((name) => name.startsWith('find'));
+
+describe('the guard reads a function body past its signature', () => {
+  const body = (text: string): string => text.slice(bodyStart(text, 0)).split('\n')[1].trim();
+
+  it('skips a destructured parameter and an object return type', () => {
+    const text = 'function f(\n  { x, y }: Filter,\n): Promise<{ n: number }> {\n  return 1;\n}';
+    expect(body(text)).toBe('return 1;');
+  });
+
+  it('skips parentheses inside the generics', () => {
+    const text = 'function g<T extends (A | B)>(\n  a: T,\n): void {\n  return 2;\n}';
+    expect(body(text)).toBe('return 2;');
+  });
+});
 
 describe('CLAUDE.md rule 4 — soft-delete filtering lives in the repository', () => {
   it('applies the filter in every exported finder but the escape hatches', () => {
