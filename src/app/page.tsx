@@ -6,6 +6,7 @@ import { websiteJsonLd } from '../lib/json-ld';
 import { emailPagePath } from '../lib/account-email';
 import { signedInLanding } from '../lib/landing';
 import { SITE_NAME, siteUrl } from '../lib/site';
+import { TWITTER_CARD } from '../lib/page-metadata';
 
 // The one public page that reads the session, with getSession() as requireSession() would redirect the
 // signed-out visitors it exists for. It offers a signed-in visitor their landing, or sign-in; an
@@ -25,7 +26,7 @@ export const metadata: Metadata = {
     siteName: SITE_NAME,
     type: 'website',
   },
-  twitter: { card: 'summary', title: SITE_NAME, description: DESCRIPTION },
+  twitter: { card: TWITTER_CARD, title: SITE_NAME, description: DESCRIPTION },
 };
 
 async function continueTarget(session: Session): Promise<Route> {

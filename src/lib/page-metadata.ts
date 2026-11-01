@@ -4,7 +4,11 @@ import { SITE_NAME, siteUrl, titleTemplate } from './site';
 // The search-result text of a public page: a description of about 160
 // characters, and the Open Graph and Twitter tags that repeat the title and
 // description. Pure, so the three compendium pages share one wording and one
-// test. No image tag: the share image is another file's.
+// test. No image tag: each segment's `opengraph-image` file names its share card,
+// and Twitter inherits it from Open Graph.
+
+/** The Twitter card that shows the share card full width above the title. */
+export const TWITTER_CARD = 'summary_large_image';
 
 /** The longest description a search result shows in full, near enough. */
 export const DESCRIPTION_LENGTH = 160;
@@ -39,7 +43,7 @@ export function entryDescription(title: string, description: string | null): str
 function social(title: string, description: string, url: string): Metadata {
   return {
     openGraph: { title, description, url, siteName: SITE_NAME, type: 'website' },
-    twitter: { card: 'summary', title, description },
+    twitter: { card: TWITTER_CARD, title, description },
   };
 }
 

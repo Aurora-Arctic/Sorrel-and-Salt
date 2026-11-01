@@ -38,6 +38,7 @@ const PUBLIC_ROUTES = [
   '/icon.svg',
   '/apple-icon.png',
   '/manifest.webmanifest',
+  '/opengraph-image', // the site share card for `/`; the compendium's cards sit under /compendium/*
 ];
 
 function isPublic(pathname: string): boolean {

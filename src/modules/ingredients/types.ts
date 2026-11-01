@@ -214,6 +214,17 @@ export type CompendiumAddress =
     }
   | { kind: 'moved'; slug: string };
 
+/** What a compendium entry's share card draws. */
+export interface CompendiumShareCard {
+  name: string;
+  /** The formal name, or null when there is none or it only repeats the name. */
+  formalName: string | null;
+  /** The entry's own categories, alphabetical, each in its group's dark-theme colour. */
+  categories: { name: string; color: string }[];
+  /** Each group's dark-theme colour, once, in the order its first category appears. */
+  groupColors: string[];
+}
+
 /** A category as the entry page shows it: the row and the group whose colours its chip takes. */
 export interface CategoryDetail {
   category: CategoryRow;
