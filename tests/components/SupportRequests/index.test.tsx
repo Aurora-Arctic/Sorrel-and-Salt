@@ -96,9 +96,11 @@ describe('SupportRequests list', () => {
   it('shows about, subject, status, sender, assignee, curator visibility and error number per row', () => {
     render(<SupportRequests requests={[ROW]} viewer={ADMIN} />);
     const row = screen.getByRole('row', { name: /moon icon/ });
-    for (const text of ['Bug', 'Open', 'Ada Wortley', 'Unassigned', 'Not Shared', '500']) {
+    for (const text of ['Bug', 'Ada Wortley', 'Unassigned', 'Not Shared', '500']) {
       expect(within(row).getByText(text)).toBeInTheDocument();
     }
+    expect(within(row).getByRole('button', { name: 'Open' })).toBeInTheDocument();
+    expect(within(row).queryByText('Open')).toBeNull();
     expect(
       within(row).getByRole('link', { name: `${ROW.subject} from Ada Wortley` }),
     ).toHaveAttribute('href', '/admin/support?request=r1');
@@ -772,7 +774,7 @@ describe('The views', () => {
 });
 
 describe('Resolved by the sender', () => {
-  it('shows a resolved request as an icon named Resolved, and an open one as its word', () => {
+  it('shows a resolved request as an icon named Resolved, and an open one as an icon named Open', () => {
     render(
       <SupportRequests
         requests={[
@@ -787,7 +789,20 @@ describe('Resolved by the sender', () => {
     expect(done.queryByText('Resolved')).toBeNull();
     const fresh = within(screen.getByRole('row', { name: /Fresh/ }));
     expect(fresh.queryByRole('button', { name: 'Resolved' })).toBeNull();
-    expect(fresh.getByText('Open')).toBeInTheDocument();
+    expect(fresh.getByRole('button', { name: 'Open' })).toBeInTheDocument();
+    expect(fresh.queryByText('Open')).toBeNull();
+  });
+
+  it('shows a request waiting on the sender as an icon named Waiting on Sender, not the words', () => {
+    render(
+      <SupportRequests
+        requests={[{ ...ROW, id: 'w', subject: 'Pending', status: 'waiting_on_sender' }]}
+        viewer={ADMIN}
+      />,
+    );
+    const row = within(screen.getByRole('row', { name: /Pending/ }));
+    expect(row.getByRole('button', { name: 'Waiting on Sender' })).toBeInTheDocument();
+    expect(row.queryByText('Waiting on Sender')).toBeNull();
   });
 
   it('says so in the list row, and not on a row staff resolved', () => {
@@ -900,7 +915,7 @@ describe('The composer', () => {
 
 describe('The status marks in the Status cell', () => {
   // Each mark is an icon button; the pointer resting on it 300ms opens its tip.
-  it.each(['Resolved', 'Sender Replied', 'Resolved by Sender'])(
+  it.each(['Resolved', 'Sender Replied', 'Resolved by Sender', 'Waiting on Sender', 'Open'])(
     'show the tip %s when the pointer rests on the mark',
     (name) => {
       vi.useFakeTimers();
@@ -916,6 +931,8 @@ describe('The status marks in the Status cell', () => {
                 senderReplied: true,
                 resolvedBySender: true,
               },
+              { ...ROW, id: 'w', subject: 'Pending', status: 'waiting_on_sender' },
+              { ...ROW, id: 'o', subject: 'Fresh', status: 'open' },
             ]}
             viewer={ADMIN}
           />,

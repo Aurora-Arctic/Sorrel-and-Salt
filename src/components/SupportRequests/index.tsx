@@ -6,7 +6,14 @@ import { emptyList, noMatchText } from '../../lib/text';
 import StackTable from '../DataTable';
 import ListFrame, { ListBody } from '../ListFrame';
 import { RouteModal, useOpenModalClick } from '../Modal';
-import IconTip, { BubbleLinesIcon, CircleCheckIcon, PersonCheckIcon, SproutIcon } from '../IconTip';
+import IconTip, {
+  BubbleLinesIcon,
+  CircleCheckIcon,
+  FlagIcon,
+  PersonCheckIcon,
+  PersonClockIcon,
+  SproutIcon,
+} from '../IconTip';
 import Pager from '../Pager';
 import { Mark } from '../UserList/marks';
 import SupportDetail from './detail';
@@ -117,6 +124,26 @@ const SupportRequests = ({
                           aria-label="Resolved"
                         >
                           <CircleCheckIcon />
+                        </button>
+                      </IconTip>
+                    ) : request.status === 'waiting_on_sender' ? (
+                      <IconTip tip="Waiting on Sender" opensOnPress>
+                        <button
+                          type="button"
+                          className="support-requests__mark support-requests__mark--waiting"
+                          aria-label="Waiting on Sender"
+                        >
+                          <PersonClockIcon />
+                        </button>
+                      </IconTip>
+                    ) : request.status === 'open' ? (
+                      <IconTip tip="Open" opensOnPress>
+                        <button
+                          type="button"
+                          className="support-requests__mark support-requests__mark--open"
+                          aria-label="Open"
+                        >
+                          <FlagIcon />
                         </button>
                       </IconTip>
                     ) : (

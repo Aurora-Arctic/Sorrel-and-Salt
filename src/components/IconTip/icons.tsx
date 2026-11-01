@@ -500,3 +500,63 @@ export function PersonCheckIcon(): ReactElement {
     </svg>
   );
 }
+
+/** A person with a clock: a support request waiting on the sender, as the admin Support page marks one. */
+export function PersonClockIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <circle
+        cx="5.25"
+        cy="4.75"
+        r="2.25"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M1.25 13.5a4 4 0 0 1 5.5-3.7"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <circle
+        cx="11.25"
+        cy="11"
+        r="3.75"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M11.25 9.25v1.75l1.25.9"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** A flag: a support request that is open, as the admin Support page marks one. */
+export function FlagIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M3.5 14.5V2M3.5 2.5h8l-1.75 3 1.75 3h-8"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}

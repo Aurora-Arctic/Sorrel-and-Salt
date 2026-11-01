@@ -34,6 +34,8 @@ export {
   CircleCheckIcon,
   BubbleLinesIcon,
   PersonCheckIcon,
+  PersonClockIcon,
+  FlagIcon,
   StockIcon,
   UndoIcon,
 } from './icons';

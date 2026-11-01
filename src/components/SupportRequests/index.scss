@@ -289,7 +289,8 @@
 
 // A status mark: a button only so the keyboard reaches its tip, which a press also opens.
 .support-requests__mark {
-  @include icon-button($cursor: default);
+  // The glyph is a third larger than the shared 1rem; the 1.5rem target is kept so the row stays as tall.
+  @include icon-button($glyph: 1.3333rem, $cursor: default);
 
   color: $text-primary;
 
@@ -305,5 +306,23 @@
 
   &:hover {
     color: badge-token('local', 'fg');
+  }
+}
+
+// Waiting on the sender wears the warning ochre.
+.support-requests__mark--waiting {
+  color: $warning;
+
+  &:hover {
+    color: $warning;
+  }
+}
+
+// Open wears the error red, the secondary ink.
+.support-requests__mark--open {
+  color: $secondary;
+
+  &:hover {
+    color: $secondary;
   }
 }
