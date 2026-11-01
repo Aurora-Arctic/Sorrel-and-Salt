@@ -34,13 +34,28 @@ function countText(count: number, what: string): string {
     : `${count} ${count === 1 ? 'request' : 'requests'} ${what}`;
 }
 
-// The facet count, as text for a screen reader too: the digits alone say nothing of what they count.
-function MenuCount({ count, what }: { count: number; what: string }): ReactElement {
+// The facet count, or with `badge` the red circle, as text for a screen reader too: the digits alone say nothing of what they count.
+function MenuCount({
+  count,
+  what,
+  badge = false,
+}: {
+  count: number;
+  what: string;
+  badge?: boolean;
+}): ReactElement {
+  const shown = count > COUNT_CAP ? `${COUNT_CAP}+` : count;
   return (
     <>
-      <span aria-hidden="true">
-        <FacetCount count={count > COUNT_CAP ? `${COUNT_CAP}+` : count} />
-      </span>
+      {badge ? (
+        <span className="account-menu__badge" aria-hidden="true">
+          {shown}
+        </span>
+      ) : (
+        <span aria-hidden="true">
+          <FacetCount count={shown} />
+        </span>
+      )}
       <span className="visually-hidden">, {countText(count, what)}</span>
     </>
   );
@@ -171,7 +186,7 @@ const AccountMenu = ({
                   aria-current={isAtPath(pathname, base) ? 'page' : undefined}
                 >
                   {label}
-                  {counted && <MenuCount count={staffCount} what="assigned to you" />}
+                  {counted && <MenuCount count={staffCount} what="assigned to you" badge />}
                 </PendingLink>
               </li>
             );

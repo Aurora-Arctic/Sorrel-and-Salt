@@ -195,7 +195,9 @@ $account-menu-avatar: 2rem;
   padding-inline-end: space(7);
 }
 
-.account-menu__count-mark {
+// The red circle, on the invitations link and after the Admin row's label.
+.account-menu__count-mark,
+.account-menu__badge {
   @include badge('attention');
 
   justify-content: center;
@@ -204,6 +206,14 @@ $account-menu-avatar: 2rem;
   height: 1.5rem;
   padding: 0 space(1);
   border-radius: radius('pill');
+}
+
+// Pushed to the row's right end, where the invitations circle sits.
+.account-menu__badge {
+  margin-inline-start: auto;
+}
+
+.account-menu__count-mark {
   text-decoration: none;
 
   // A link, so the typography's link hover would recolour the label; it
