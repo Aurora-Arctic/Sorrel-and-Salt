@@ -123,6 +123,7 @@ describe('public routes', () => {
     // The public documents carry no application data.
     '/privacy',
     '/disclaimer',
+    '/code-of-ethics',
     '/robots.txt',
     '/sitemap.xml',
     '/llms.txt',

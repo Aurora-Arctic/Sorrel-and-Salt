@@ -28,6 +28,7 @@ const PUBLIC_ROUTES = [
   '/support', // offers a signed-out visitor Sign In and holds no data
   '/privacy', // a public document, holding no application data
   '/disclaimer',
+  '/code-of-ethics',
   // What a crawler or a browser asks for with no cookie and no page to ask it.
   // The icon and manifest files are listed ahead of their existence so the first favicon request
   // is never redirected to sign-in.

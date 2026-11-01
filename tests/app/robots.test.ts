@@ -34,6 +34,7 @@ describe('robots', () => {
       '/sign-in',
       '/privacy',
       '/disclaimer',
+      '/code-of-ethics',
       '/llms.txt',
       '/robots.txt',
       '/.well-known/ai-catalog.json',

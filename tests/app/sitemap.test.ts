@@ -20,6 +20,7 @@ describe('sitemap', () => {
       { url: 'https://sorrelandsalt.com/sign-in' },
       { url: 'https://sorrelandsalt.com/privacy' },
       { url: 'https://sorrelandsalt.com/disclaimer' },
+      { url: 'https://sorrelandsalt.com/code-of-ethics' },
       { url: 'https://sorrelandsalt.com/compendium/ingredients/testwort', lastModified },
       { url: 'https://sorrelandsalt.com/compendium/ingredients/fixtura-testalis', lastModified },
     ]);

@@ -10,6 +10,7 @@ import { signInAs } from './session';
 const DOCUMENTS = [
   { path: '/privacy', title: 'Privacy Policy', link: 'Privacy' },
   { path: '/disclaimer', title: 'Disclaimer', link: 'Disclaimer' },
+  { path: '/code-of-ethics', title: 'Code of Ethics', link: 'Code of Ethics' },
 ];
 
 test.beforeAll(async () => {
