@@ -1,0 +1,45 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// A document reads as prose: every running line keeps to the measure, a table may run wider in
+// its own scrolling frame, and each section's heading sits a step above its text.
+.document-page__updated {
+  margin: 0 0 space(6);
+  color: $text-muted;
+  font-size: type-size('small');
+}
+
+.document-page__body {
+  h2 {
+    margin-block: space(8) space(3);
+  }
+
+  h3 {
+    margin-block: space(6) space(2);
+  }
+
+  ul,
+  ol {
+    max-width: $measure;
+    margin-block: space(2) space(4);
+  }
+
+  li {
+    line-height: 1.65;
+  }
+
+  // A source list reads as a bibliography: each entry hangs its second line under the first.
+  .document-page__sources li {
+    padding-inline-start: 1.5rem;
+    text-indent: -1.5rem;
+  }
+
+  .data-table-frame {
+    margin-block: space(3) space(6);
+  }
+
+  // A cell is prose too, so it keeps the paragraph's loose line.
+  .data-table td {
+    line-height: 1.5;
+  }
+}

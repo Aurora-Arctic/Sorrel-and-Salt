@@ -32,6 +32,7 @@ describe('robots', () => {
       '/compendium',
       '/compendium/',
       '/sign-in',
+      '/privacy',
       '/llms.txt',
       '/robots.txt',
       '/.well-known/ai-catalog.json',

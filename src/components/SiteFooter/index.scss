@@ -66,9 +66,26 @@
 
 .site-footer__nav {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   gap: space(4);
   color: $text-muted;
   font-size: type-size('small');
+}
+
+// A document link: the muted ink, underlined on hover so it never relies on colour alone.
+.site-footer__link {
+  color: $text-muted;
+  text-decoration: none;
+
+  &:hover {
+    color: $text-primary;
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
 }
 
 // A bare icon: only the glyph at rest, the quiet button's fill under a pointer or the keyboard. `--icon-ground`
