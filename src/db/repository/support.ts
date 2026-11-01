@@ -58,7 +58,12 @@ const REQUEST_ORDER: readonly SortPart[] = [
   { expression: sql`-extract(epoch from ${supportRequests.createdAt})`, type: 'numeric' },
 ];
 
-const NEWEST_FIRST: readonly SortPart[] = [
+// The sender's list: still open (open, waiting on the sender) ahead of done (resolved, closed), then newest first.
+const OWN_ORDER: readonly SortPart[] = [
+  {
+    expression: sql`case when ${supportRequests.status} in ('open', 'waiting_on_sender') then 0 else 1 end`,
+    type: 'integer',
+  },
   { expression: sql`-extract(epoch from ${supportRequests.createdAt})`, type: 'numeric' },
 ];
 
@@ -186,7 +191,7 @@ export function findOwnSupportRequestPage(
   userId: string,
   page: PageRequest,
 ): Promise<PageEntry<typeof supportRequests.$inferSelect>[]> {
-  return findPage(supportRequests, NEWEST_FIRST, page, eq(supportRequests.createdBy, userId));
+  return findPage(supportRequests, OWN_ORDER, page, eq(supportRequests.createdBy, userId));
 }
 
 /** How many rows `findOwnSupportRequestPage` pages, and how many come before `start`. */
@@ -194,7 +199,7 @@ export function findOwnSupportRequestCount(
   userId: string,
   start: Cursor | undefined,
 ): Promise<PageCount> {
-  return findPageCount(supportRequests, NEWEST_FIRST, start, eq(supportRequests.createdBy, userId));
+  return findPageCount(supportRequests, OWN_ORDER, start, eq(supportRequests.createdBy, userId));
 }
 
 /** How many of the sender's requests are still open (open, waiting on the sender) and how many are done (resolved, closed). */

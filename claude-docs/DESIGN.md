@@ -890,7 +890,7 @@ type Query {
     after: String
   ): QueryGrimoireConnection! # workspace-visible + own private spells; status filters in SQL
   spell(id: ID!, workspaceId: ID!): Spell! # NOT_FOUND for a spell this reader may not see
-  mySupportRequests(first: Int, after: String): QueryMySupportRequestsConnection! # the session's own requests, newest first, each with its replies; the finder ANDs created_by (M15.1)
+  mySupportRequests(first: Int, after: String): QueryMySupportRequestsConnection! # the session's own requests, still open (open, waiting on the sender) ahead of resolved and closed, newest first within each, each with its replies; the finder ANDs created_by (M15.1)
   mySupportRequest(id: ID!): SupportRequest! # one of the session's own; NOT_FOUND for another sender's
   supportRequest(id: ID!): SupportRequest! # curator or admin; NOT_FOUND for a request a curator may not see
   supportRequests(
