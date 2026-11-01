@@ -15,10 +15,8 @@ const SUPPORT_HREF = '/admin/support';
 const items = (managesPeople: boolean, needsStaff?: number): readonly SectionNavItem[] =>
   adminSections(managesPeople).flatMap(({ pages }, section) =>
     pages.map(({ label, icon, tabs: [first, ...rest] }, at) => ({
-      label:
-        first.href === SUPPORT_HREF && needsStaff !== undefined
-          ? `${label} (${needsStaff})`
-          : label,
+      label,
+      count: first.href === SUPPORT_HREF ? needsStaff : undefined,
       icon,
       href: first.href,
       matches: rest.map(({ href }) => href),
