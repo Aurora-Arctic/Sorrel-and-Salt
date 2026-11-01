@@ -21,11 +21,7 @@ const MODES = [
   {
     value: 'note',
     label: 'Internal Note',
-    display: (
-      <>
-        <span className="support-detail__internal">Internal</span> Note
-      </>
-    ),
+    display: <span className="support-detail__internal">Internal Note</span>,
   },
   { value: 'reply', label: 'Reply' },
 ] as const;
