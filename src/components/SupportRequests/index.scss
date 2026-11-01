@@ -13,6 +13,12 @@
   }
 }
 
+// A date reads as a muted caption, as the invitation cards' Minted On does.
+.support-requests__fact {
+  color: $text-muted;
+  font-size: type-size('caption');
+}
+
 // The subject link reads in the body ink, in every state, and is underlined on hover and focus so it still reads as a link.
 .support-requests__subject {
   &,

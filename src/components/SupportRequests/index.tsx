@@ -228,9 +228,14 @@ const SupportRequests = ({
                 ),
               },
               { heading: 'Error #', cell: (request) => request.errorCode ?? '' },
-              { heading: 'Created', cell: (request) => <LocalTime at={request.createdAt} /> },
+              {
+                heading: 'Created',
+                className: 'support-requests__fact',
+                cell: (request) => <LocalTime at={request.createdAt} />,
+              },
               {
                 heading: 'Last From Sender',
+                className: 'support-requests__fact',
                 cell: (request) => <LocalTime at={request.lastFromSenderAt} />,
               },
             ]}
