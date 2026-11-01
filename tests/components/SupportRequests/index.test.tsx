@@ -683,6 +683,7 @@ describe('The views', () => {
 
   const views = () =>
     within(screen.getByRole('navigation', { name: 'Support' })).getAllByRole('link');
+  // A tab's count is drawn aria-hidden beside a spoken ", n", so a link is named "Label, n".
   const renderTabs = () =>
     render(
       <TabbedPage title="Support" tabs={supportViewTabs(FILTER, COUNTS)} open={supportHref(FILTER)}>
@@ -692,16 +693,19 @@ describe('The views', () => {
 
   it('are six links in the shared tab row, each with its count, the chosen one the current page', () => {
     renderTabs();
-    expect(views().map((link) => link.textContent)).toEqual([
-      'Needs Staff (4)',
-      'Mine (1)',
-      'Unassigned (2)',
-      'Waiting on Sender (0)',
-      'Resolved (7)',
-      'Closed (3)',
-    ]);
+    expect(views()).toHaveLength(6);
+    for (const name of [
+      'Needs Staff, 4',
+      'Mine, 1',
+      'Unassigned, 2',
+      'Waiting on Sender, 0',
+      'Resolved, 7',
+      'Closed, 3',
+    ]) {
+      expect(screen.getByRole('link', { name })).toBeInTheDocument();
+    }
     expect(views().filter((link) => link.getAttribute('aria-current') === 'page')).toEqual([
-      screen.getByRole('link', { name: 'Mine (1)' }),
+      screen.getByRole('link', { name: 'Mine, 1' }),
     ]);
   });
 
