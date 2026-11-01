@@ -1,6 +1,6 @@
 # DocumentPage
 
-`src/components/DocumentPage/` — the page a public document is read on: the privacy policy (`/privacy`), and the documents that follow it on the same frame. It draws the page head through [`PageHeader`](page-header.md) with the eyebrow "Documents", the document's title and its lede, then one muted line saying when the text last changed ("Last updated 1 November 2026", as a `<time>` carrying the day in `YYYY-MM-DD`), then the document's own sections. The whole is an `<article>` named by the title.
+`src/components/DocumentPage/` — the page a public document is read on: the privacy policy (`/privacy`) and the disclaimer (`/disclaimer`), and the documents that follow them on the same frame. It draws the page head through [`PageHeader`](page-header.md) with the eyebrow "Documents", the document's title and its lede, then one muted line saying when the text last changed ("Last updated 1 November 2026", as a `<time>` carrying the day in `YYYY-MM-DD`), then the document's own sections. The whole is an `<article>` named by the title.
 
 It reads nothing: no session, no database, no search params. A signed-out visitor and a member read the same page, inside whichever frame the public layout chooses for them (`src/app/(public)/layout.tsx`). A document page is not an exception to the rule that the compendium is the one public surface of data (`CLAUDE.md`, "Domain invariants"): it carries no application data, so there is nothing to protect. The site's own searches read the database, and a document is not in it, so no in-site search can list one; `tests/e2e/document-pages.spec.ts` proves the compendium search returns nothing for a document's title.
 
@@ -23,4 +23,4 @@ A document route is listed in three places beside its page: `PUBLIC_ROUTES` in `
 
 ## The text itself
 
-Each document's text lives in its page under `src/app/(public)/`, as JSX. Its working notes, which cite the file or `DESIGN.md` section behind every claim, live in `claude-docs/design-decisions/` beside the task's record: `m15.2-privacy-policy-notes.md` for the privacy policy.
+Each document's text lives in its page under `src/app/(public)/`, as JSX. Its working notes, which cite the file or `DESIGN.md` section behind every claim, live in `claude-docs/design-decisions/` beside the task's record: `m15.2-privacy-policy-notes.md` for the privacy policy, `m15.3-disclaimer-notes.md` for the disclaimer. A document that cites a source lists it at its end in Chicago form, as the compendium's references are.

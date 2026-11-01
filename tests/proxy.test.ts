@@ -122,6 +122,7 @@ describe('public routes', () => {
     '/support?support=bug&error=404',
     // The public documents carry no application data.
     '/privacy',
+    '/disclaimer',
     '/robots.txt',
     '/sitemap.xml',
     '/llms.txt',

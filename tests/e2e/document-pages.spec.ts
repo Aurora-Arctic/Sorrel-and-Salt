@@ -7,7 +7,10 @@ import { signInAs } from './session';
 // noindex of its own, is linked from the footer in both frames, passes axe signed out and signed in,
 // and is not something the compendium search can find (claude-docs/components/document-page.md).
 
-const DOCUMENTS = [{ path: '/privacy', title: 'Privacy Policy', link: 'Privacy' }];
+const DOCUMENTS = [
+  { path: '/privacy', title: 'Privacy Policy', link: 'Privacy' },
+  { path: '/disclaimer', title: 'Disclaimer', link: 'Disclaimer' },
+];
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();

@@ -410,6 +410,26 @@ describe('IngredientEntry', () => {
     expect(within(substitutes).queryAllByRole('link')).toHaveLength(0);
   });
 
+  it('links the disclaimer beside the safety notes of the details and of every form, notes or none', () => {
+    const { container } = renderEntry();
+
+    // Preconditions: the ingredient and the root form carry no notes, the oil does.
+    expect(detail().entry.safetyNotes).toBeNull();
+    const details = screen.getByRole('region', { name: 'Details' });
+    expect(within(details).queryByRole('region', { name: 'Caution' })).not.toBeInTheDocument();
+    const root = container.querySelector('#form-testroot') as HTMLElement;
+    const oil = container.querySelector('#form-testoil') as HTMLElement;
+    expect(within(root).queryByRole('region', { name: 'Caution' })).not.toBeInTheDocument();
+    expect(within(oil).getByRole('region', { name: 'Caution' })).toBeInTheDocument();
+
+    for (const section of [details, root, oil]) {
+      expect(within(section).getByRole('link', { name: 'Read the Disclaimer' })).toHaveAttribute(
+        'href',
+        '/disclaimer',
+      );
+    }
+  });
+
   it('gives each form a section anchored on its slug, headed by the form, after the details', () => {
     const { container } = renderEntry();
 

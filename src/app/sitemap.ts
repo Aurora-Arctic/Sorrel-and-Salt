@@ -17,6 +17,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: siteUrl('/compendium') },
     { url: siteUrl('/sign-in') },
     { url: siteUrl('/privacy') },
+    { url: siteUrl('/disclaimer') },
     ...entries.map(({ slug, lastModified }) => ({
       url: siteUrl(`/compendium/ingredients/${slug}`),
       lastModified,

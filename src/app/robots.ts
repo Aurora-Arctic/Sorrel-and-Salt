@@ -11,6 +11,7 @@ export const CRAWLABLE_PATHS = [
   '/compendium/',
   '/sign-in',
   '/privacy',
+  '/disclaimer',
   '/llms.txt',
   '/robots.txt',
   '/.well-known/ai-catalog.json',
