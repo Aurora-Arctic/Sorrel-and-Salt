@@ -1,6 +1,7 @@
 'use client';
 
 import { formLabel } from '@/modules/ingredients/validation/form-label';
+import { CITED_VARIANT_FIELDS } from '@/modules/ingredients/schema/ingredient-enums';
 
 import { type ReactElement, useId, useRef, useState } from 'react';
 import { type FieldPath, useFormContext, useFormState, useWatch } from 'react-hook-form';
@@ -14,6 +15,7 @@ import type {
   CopyFromIngredientProps,
   IngredientFormValues,
   MergedCopy,
+  ReferenceListEntry,
   SkippedCopy,
   SkippedNoticeProps,
   SubstituteListEntry,
@@ -62,6 +64,14 @@ function sameForm(entry: SubstituteListEntry, form: string): SubstituteListEntry
   return match && { value: entry.value, link: entry.link, variantId: match.id };
 }
 
+const FORM_FIELDS: ReadonlySet<string> = new Set(CITED_VARIANT_FIELDS);
+
+/** The ingredient's citation as a form's: what it supports kept only where a form has the field, as its deities it has not. */
+const asFormCitation = (entry: ReferenceListEntry): ReferenceListEntry => ({
+  ...entry,
+  supports: entry.supports.filter((field) => FORM_FIELDS.has(field)),
+});
+
 /** A substitute list as its entries and the form each links: what a copy left it as. */
 const listKeyOf = (entries: readonly SubstituteListEntry[]): string =>
   entries.map((entry) => `${substituteKey(entry)}/${entry.variantId ?? ''}`).join('|');
@@ -106,7 +116,11 @@ function merged(
       return { next, added: next.length - own[field].length };
     }
     case 'references': {
-      const next = copiedEntries(own.references, theirs.references, ({ link }) => link.id);
+      const next = copiedEntries(
+        own.references,
+        theirs.references.map(asFormCitation),
+        ({ link }) => link.id,
+      );
       return { next, added: next.length - own.references.length };
     }
     case 'substitutes': {

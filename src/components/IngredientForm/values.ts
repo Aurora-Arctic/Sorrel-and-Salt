@@ -204,8 +204,14 @@ const substituteInputs = (rows: SubstituteListEntry[]) =>
       : { name: value },
   );
 
+/** Each row by its source's id and locator, and each compendium attribute only once one is chosen: a coven's form chooses none, and its citations carry none. */
 const referenceInputs = (rows: ReferenceListEntry[]) =>
-  rows.map(({ link, locator }) => ({ referenceId: link.id, locator }));
+  rows.map(({ link, locator, nameBasis, supports }) => ({
+    referenceId: link.id,
+    locator,
+    ...(nameBasis ? { nameBasis } : {}),
+    ...(supports.length > 0 ? { supports } : {}),
+  }));
 
 /**
  * A variant as the input takes it: every field but `id` sent, `""` or `[]` for none, since an
@@ -399,14 +405,16 @@ function placeIn(
   if ((field === PICKED_FORM || field === KEPT_ROW) && 'formLink' in holder) {
     return index === undefined ? 'form' : undefined;
   }
-  // A reference's source is its row's, and so is its id; its locator is the
-  // row's locator.
+  // A reference's source is its row's, and so is its id; its locator and
+  // its two compendium attributes are the row's own fields.
   if (field === 'references') {
     if (typeof index !== 'number' || index >= holder.references.length) return undefined;
     const [part, ...beyond] = rest;
+    // An issue on one field supported is the Supports field's.
+    if (part === 'supports') return `references.${index}.supports`;
     if (beyond.length > 0) return undefined;
     if (part === undefined || part === 'referenceId') return `references.${index}.value`;
-    return part === 'locator' ? `references.${index}.locator` : undefined;
+    return part === 'locator' || part === 'nameBasis' ? `references.${index}.${part}` : undefined;
   }
   // A substitute's form of the ingredient it links is its entry's: the entry is what picked it.
   const entryPart = rest.length === 1 && rest[0] === PICKED_SUBSTITUTE_FORM;
@@ -597,10 +605,20 @@ function placeIssues(raw: Issues, lists: readonly string[]): Issues {
   const cited = raw.references;
   if (Array.isArray(cited)) {
     errors.references = cited.map(
-      (entry?: FieldError & { referenceId?: FieldError; locator?: FieldError }) =>
+      (
+        entry?: FieldError & {
+          referenceId?: FieldError;
+          locator?: FieldError;
+          nameBasis?: FieldError;
+          supports?: FieldError | (FieldError | undefined)[];
+        },
+      ) =>
         entry && {
           value: entry.message === undefined ? entry.referenceId : entry,
           locator: entry.locator,
+          nameBasis: entry.nameBasis,
+          // One field's issue is the Supports field's.
+          supports: Array.isArray(entry.supports) ? entry.supports.find(Boolean) : entry.supports,
         },
     );
   }

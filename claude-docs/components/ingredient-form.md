@@ -583,12 +583,25 @@ legend as a list's is.
   citation (MB.153), so nothing here moves them. Beside the tier, an open
   row whose source the form may change has **Edit Source**, which edits the
   source itself ([Editing a source](#editing-a-source)).
-- **Entries are a `useFieldArray` of `{ value, link, locator }`**: `value`
+- **On the compendium's form an open row also has Name Basis and Supports**
+  beneath its Locator: a select of `stated`, `resolved`, `unresolved` and
+  `unaudited` (how the source names the ingredient,
+  [`db/references.md`](../db/references.md), "Citation attributes"), and a
+  multi-pick of the fields the source backs, an entry's from
+  `CITED_ENTRY_FIELDS` and a form's from `CITED_VARIANT_FIELDS`, each by the
+  label the form gives it. Each has an info tip. A coven's form renders
+  neither, since a coven's citation carries neither and the service refuses
+  them. Neither is sent until chosen. A row with either in error stays open,
+  as one with its locator in error does. Copy From Ingredient brings a
+  citation's name basis to the form, and of its supports only the fields a
+  form has.
+- **Entries are a `useFieldArray` of `{ value, link, locator, nameBasis, supports }`**: `value`
   the citation, which describes the row and is never sent, `link` the
   source's id and tier and the four fields its short form is made of —
   `kind`, `authors`, `title`, `container` — which `referenceSuggestions`,
   `createReference` and the compendium entry's values (`entry-values.ts`)
-  each read beside the citation, and `locator` as typed. They are not one of `LIST_FIELDS`, which are
+  each read beside the citation, `locator` as typed, `nameBasis` `''` until
+  one is chosen, and `supports` the field names chosen. They are not one of `LIST_FIELDS`, which are
   free text. The box's text is `drafts.references`, and whether the panel is
   open is `referencePanelOpen`, both the form's own.
 - **A search left in the box stops the save**, as text left in any list's
@@ -622,6 +635,13 @@ provides them, and its errors render through `FieldError`.
   web page's address and day read. A printed work's online fields follow
   its publication: Read Through (`host`), Address, Last Modified, Accessed
   and Note. The two days are `<input type="date">`.
+- **Scholarly, on a compendium source alone**: an on-or-off switch after the
+  kind's fields, marking a peer-reviewed journal or a university or academic
+  press (`references.scholarly`), with an info tip. It shows where the source
+  is the compendium's, a new one on the compendium's form or an edited
+  compendium source, and is absent from a coven's, whose sources the service
+  refuses the mark. An edited source opens with its mark as stored, so Save
+  stays off until something changes.
 - **One How to Cite tip, in place of a hint per field** (the owner's call,
   2026-10-20; [`info-tip.md`](info-tip.md), "When a field gets a tip"). It
   sits at the end of the panel's head, just before its ×, in New Reference

@@ -304,6 +304,8 @@ The seed has two ways to meet an entry. Both apply to `approved` files only; a `
 
 The hash is a SHA-256 over the fields that reach the database: scalars, lists, substitutes, the title, the description, the forms, and each citation's source handle and locator. It leaves out `status`, `seedUpdate`, `overwriteEditor`, `supports`, the provenance keys, Edit Notes and Questions, so a note or a reordered key never reads as a change (the rules are in the decision record).
 
+**A citation's `nameBasis` and `supports` are stored on its link and are not hashed.** Adding them to the hash would have staled every `seedUpdate` mark and turned each marked row a person has worked on from a quiet skip into a refusal. They are compared as drift instead: a marked file whose row's link holds a different name basis or supports list, and that no person worked on, has the link updated in place, keeping its id; unmarked, the entry is `PENDING` with `references` among the fields that differ.
+
 **Refusals.** An update is refused, and the entry changes in no way, when:
 
 1. **the row is curator-reviewed** (`curator_reviewed_at` is set);

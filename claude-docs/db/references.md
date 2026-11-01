@@ -56,9 +56,14 @@ CREATE UNIQUE INDEX reference_links_ingredient_unique
 **Citation attributes.** `reference_links.name_basis` records how the citation
 names the ingredient, `reference_links.supports` the field names it backs, and
 `references.scholarly` whether the source is scholarly. All three are nullable
-or defaulted, so every existing row reads null, null and false. Nothing reads or
-writes them yet: M14.37 has the seed and the admin screens write them, and the
-sourcing score (M14.24) reads them from the row.
+or defaulted, so a row written before them reads null, null and false. They are
+a compendium citation's and a compendium source's alone: the seed writes them
+from the files (below), a curator writes them on the compendium's ingredient
+form, and the service refuses each on a coven's citation or source with an
+explaining `ValidationError`. `supports` names only fields the citation's
+owner has: an entry's from `CITED_ENTRY_FIELDS`, a form's from
+`CITED_VARIANT_FIELDS` (`src/modules/ingredients/schema/ingredient-enums.ts`),
+by the column's own names. The sourcing score (M14.24) reads them from the row.
 
 **The sourced tables are listed once** (MB.207). `SOURCED` in
 `src/modules/ingredients/schema/reference-links.ts` maps each property —
@@ -440,11 +445,15 @@ one `reference_links` row, `ingredient_id` for the entry and
 `under "Mugwort"`). Every entry cites at least one source of its own, because the
 admin's "unsourced" filter counts the entry's own links and its forms'.
 
-Which fields a citation backs (`supports`) is the guard's to check and is not
-stored: a link says which work supports the row, and the entry file's
-`supports` list (`compendium/ingredients/<nomenclature>/<slug>.md`) says which
-fields each source gave. The links are written once, with the entry, as everything beneath an
-entry is ([`compendium-seed/README.md`](compendium-seed/README.md), "Write-once,
+Each link also carries its citation's `nameBasis` and `supports`, as the
+entry file (`compendium/ingredients/<nomenclature>/<slug>.md`) writes them,
+`colours` stored as `colors`. The guard still checks `supports` against the
+populated fields before anything is written. A work in `works.ts` that is
+academic says `scholarly: true`, and its `references` row is written with the
+mark; a row already present is never updated, so its mark is set on the site.
+The links are written with the entry, as everything beneath an entry is, and a
+marked file restates a link's two attributes in place when they differ
+([`compendium-seed/README.md`](compendium-seed/README.md), "Write-once,
 and how a correction lands").
 
 ## Reference service details
