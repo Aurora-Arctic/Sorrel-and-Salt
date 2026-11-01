@@ -179,6 +179,26 @@ describe('mySupportRequests', () => {
     expect(replies[0]?.map((reply) => reply.body)).toEqual(['Try again.']);
   });
 
+  it('lists the sender’s still-open requests ahead of their resolved and closed ones, newest first within each', async () => {
+    const waiting = await send(C);
+    const oldOpen = await send(C);
+    const resolved = await send(C);
+    const closed = await send(C);
+    await sql`update support_requests set created_at = now() - interval '1 hour' where id = ${oldOpen.id}`;
+    await sql`update support_requests set created_at = now() - interval '2 hours' where id = ${waiting.id}`;
+    await sql`update support_requests set status = 'waiting_on_sender' where id = ${waiting.id}`;
+    await sql`update support_requests set status = 'closed', created_at = now() - interval '3 hours' where id = ${closed.id}`;
+    await resolveSupportRequest(asUser(E), resolved.id);
+
+    const entries = await listMySupportRequests(asUser(C), PAGE);
+    expect(entries.map((entry) => entry.node.id)).toEqual([
+      oldOpen.id,
+      waiting.id,
+      resolved.id,
+      closed.id,
+    ]);
+  });
+
   it('carries no issue address on the sender’s own reads, though the request has one', async () => {
     const request = await send(C);
     const issue = 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/1394';
