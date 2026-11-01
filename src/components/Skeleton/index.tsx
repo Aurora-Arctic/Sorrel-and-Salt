@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import type { CSSProperties, ReactElement } from 'react';
 import type { SkeletonHead, SkeletonProps, SkeletonShape } from './types';
 import './index.scss';
 
@@ -15,18 +15,27 @@ const DEFAULT_COUNT: Record<SkeletonShape, number> = {
   contents: 2,
   line: 1,
   recipe: 1,
+  detail: 1,
 };
 
 // The admin index's two sections: Compendium's five pages and People's one.
 const CONTENTS_ENTRIES = [5, 1];
 
-const Bars = ({ of: length, className }: { of: number; className: string }): ReactElement => (
+const Bars = ({
+  of: length,
+  className,
+  cells = 3,
+}: {
+  of: number;
+  className: string;
+  cells?: number;
+}): ReactElement => (
   <>
     {Array.from({ length }, (_, at) => (
       <div key={at} className={className}>
-        <span />
-        <span />
-        <span />
+        {Array.from({ length: cells }, (_, cell) => (
+          <span key={cell} />
+        ))}
       </div>
     ))}
   </>
@@ -177,6 +186,10 @@ const Skeleton = ({
   title = false,
   action = false,
   tabs = false,
+  tabsBelow = false,
+  columns,
+  fields = 2,
+  side = false,
   menu = false,
   entry = false,
   head,
@@ -195,11 +208,21 @@ const Skeleton = ({
           // same column, as the page does, so the filter row below lands where the page's does.
           <div className={head === 'eyebrow' ? 'skeleton__intro' : undefined}>
             {head === 'eyebrow' && <span className="skeleton__eyebrow" />}
-            <div className="page-header skeleton__header">
+            <div
+              className={
+                tabs && tabsBelow
+                  ? 'page-header skeleton__header skeleton__header--tabs-below'
+                  : 'page-header skeleton__header'
+              }
+            >
               <div className="skeleton__title-row">
                 <span className="skeleton__title" />
               </div>
-              {tabs && <span className="skeleton__tabs" />}
+              {tabs && (
+                <span
+                  className={tabsBelow ? 'skeleton__tabs skeleton__tabs--wide' : 'skeleton__tabs'}
+                />
+              )}
               {action && <span className="skeleton__action" />}
             </div>
             {head === 'eyebrow' && (
@@ -214,13 +237,16 @@ const Skeleton = ({
         {listed && filter && (
           <div className="skeleton__filter">
             <span className="skeleton__field" />
-            <span
-              className={
-                shape === 'cards'
-                  ? 'skeleton__field skeleton__field--button'
-                  : 'skeleton__field skeleton__field--short'
-              }
-            />
+            {Array.from({ length: shape === 'cards' ? 1 : fields - 1 }, (_, at) => (
+              <span
+                key={at}
+                className={
+                  shape === 'cards'
+                    ? 'skeleton__field skeleton__field--button'
+                    : 'skeleton__field skeleton__field--short'
+                }
+              />
+            ))}
             {shape === 'cards' && density === 'compact' && (
               // The Compact switch the coven's card lists end their filter row with.
               <div className="skeleton__switch">
@@ -246,13 +272,16 @@ const Skeleton = ({
           </div>
         )}
         {shape === 'table' && (
-          <div className="skeleton__table">
+          <div
+            className={columns ? 'skeleton__table skeleton__table--columns' : 'skeleton__table'}
+            style={columns ? ({ '--skeleton-columns': columns } as CSSProperties) : undefined}
+          >
             <div className="skeleton__head">
-              <span />
-              <span />
-              <span />
+              {Array.from({ length: columns ?? 3 }, (_, at) => (
+                <span key={at} />
+              ))}
             </div>
-            <Bars of={many} className="skeleton__row" />
+            <Bars of={many} className="skeleton__row" cells={columns} />
           </div>
         )}
         {listed && (
@@ -361,6 +390,47 @@ const Skeleton = ({
                 </div>
               </div>
             </div>
+          </div>
+        )}
+        {shape === 'detail' && (
+          // An opened support request in the modal's body, in the `.support-detail` grid the detail draws: the facts, the
+          // Thread and the reply in the main column, and for an admin the settings in the side column.
+          <div className={side ? 'support-detail' : 'support-detail support-detail--single'}>
+            <div className="support-detail__main">
+              <div className="support-detail__facts">
+                <div className="support-detail__fact--wide skeleton__entry-block">
+                  <span />
+                  <span />
+                </div>
+                {Array.from({ length: 2 }, (_, at) => (
+                  <div key={at} className="skeleton__entry-block">
+                    <span />
+                    <span />
+                  </div>
+                ))}
+              </div>
+              <span className="skeleton__label" />
+              <div className="skeleton__entry-text">
+                <span />
+                <span />
+                <span />
+              </div>
+              <span className="skeleton__box" />
+              <div className="skeleton__actions">
+                <span />
+                <span />
+              </div>
+            </div>
+            {side && (
+              <div className="support-detail__side">
+                {Array.from({ length: 2 }, (_, at) => (
+                  <div key={at} className="skeleton__form-field">
+                    <span className="skeleton__label" />
+                    <span className="skeleton__box" />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
         {shape === 'line' &&

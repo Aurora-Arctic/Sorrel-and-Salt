@@ -28,6 +28,9 @@ export default function SectionBody({
         title={target.title}
         action={target.action}
         tabs={target.tabs}
+        tabsBelow={target.tabsBelow}
+        columns={target.columns}
+        fields={target.fields}
         filter={target.filter}
         menu={target.frame === 'with-nav' || target.frame === 'entry'}
         entry={target.frame === 'entry'}

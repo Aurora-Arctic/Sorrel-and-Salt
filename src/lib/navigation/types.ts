@@ -12,6 +12,12 @@ export type NavigationTarget = {
   filter?: boolean;
   /** With `title`: the page has a tab row between its heading and its action. */
   tabs?: boolean;
+  /** With `title` and `tabs`: the tab row stands on a line of its own beneath the heading. */
+  tabsBelow?: boolean;
+  /** A `table` wait's column count, where the page's table has more than three. */
+  columns?: number;
+  /** A `table` wait's filter controls, where the page's filter has more than two. */
+  fields?: number;
   /** A `cards` wait draws the compact cards the list opens at, unless the viewer stored Regular. */
   density?: 'compact';
   /** A `cards` wait draws the Grimoire's spell cards, not the Ingredients cards. */

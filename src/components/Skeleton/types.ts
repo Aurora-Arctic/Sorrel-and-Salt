@@ -2,7 +2,16 @@ import type { ReactNode } from 'react';
 
 /** What a skeleton stands in for. */
 export type SkeletonShape =
-  'table' | 'cards' | 'form' | 'page' | 'sections' | 'requests' | 'contents' | 'line' | 'recipe';
+  | 'table'
+  | 'cards'
+  | 'form'
+  | 'page'
+  | 'sections'
+  | 'requests'
+  | 'contents'
+  | 'line'
+  | 'recipe'
+  | 'detail';
 
 /** A page's head: a title and a lede (the default), with an `eyebrow` above them, or the `title` alone. */
 export type SkeletonHead = 'eyebrow' | 'title' | undefined;
@@ -18,6 +27,14 @@ export interface SkeletonProps {
   action?: boolean;
   /** With `title`: a tab track between the heading and the action, for a tabbed page. */
   tabs?: boolean;
+  /** With `title` and `tabs`: the tab row stands on a line of its own beneath the heading, as a page with `tabsBelow` lays it, and is as wide as six pills. */
+  tabsBelow?: boolean;
+  /** A `table` skeleton's column count, where the page's table has more than the default three. */
+  columns?: number;
+  /** A `table` skeleton's filter controls, where the page's filter has more than the default two. */
+  fields?: number;
+  /** A `detail` skeleton draws the side column of settings beside the main column. */
+  side?: boolean;
   /** A `page` skeleton draws a side menu beside its heading and blocks, for a page with a jump or contents menu. */
   menu?: boolean;
   /** With `menu`: the content fills the wide column beside the menu, as an ingredient's entry does, not the narrow column of the coven home. */
@@ -41,6 +58,10 @@ export interface SwapPanelProps {
   filter?: boolean;
   /** Which skeleton, as `TabPanelLoading`'s. */
   shape?: 'table' | 'cards' | 'sections' | 'requests';
+  /** A `table` skeleton's column count, as `TabPanelLoading`'s. */
+  columns?: number;
+  /** A `table` skeleton's filter controls, as `TabPanelLoading`'s. */
+  fields?: number;
   /** With `sections`: how many panels, as `TabPanelLoading`'s. */
   count?: number;
   /** The density of a `cards` skeleton, as `TabPanelLoading`'s. */
