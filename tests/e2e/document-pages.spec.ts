@@ -65,3 +65,14 @@ for (const { path, title, link } of DOCUMENTS) {
     await expect(page.getByRole('main').getByRole('link', { name: title })).toHaveCount(0);
   });
 }
+
+// Signed in: the signed-out page offers its short form with no subject chosen, whatever the address asks.
+test('the code of ethics opens the support form on an accessibility bug', async ({ page }) => {
+  await signInAs(page, 'reporter@document-pages.test', ['discord']);
+  await page.goto('/code-of-ethics');
+  await page.getByRole('link', { name: 'Report an accessibility bug' }).click();
+
+  await expect(page).toHaveURL(/\/support\?support=accessibility$/);
+  // In the page's own form: the Support dialog beside the footer holds a second, closed copy.
+  await expect(page.getByRole('main').getByRole('radio', { name: /^Accessibility/ })).toBeChecked();
+});
