@@ -132,6 +132,8 @@ function cited(
       ...STAMPS,
     },
     locator,
+    nameBasis: null,
+    supports: null,
   };
 }
 

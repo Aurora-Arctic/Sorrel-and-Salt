@@ -248,6 +248,13 @@ export type InvitationCardAttemptReason =
   | 'expired'
   | 'revoked';
 
+/** How a citation names the ingredient: prints the formal name (stated), heads a common name a cited authority maps to it (resolved), leaves doubt (unresolved), or was not checked (unaudited). */
+export type NameBasis =
+  | 'resolved'
+  | 'stated'
+  | 'unaudited'
+  | 'unresolved';
+
 export type Nomenclature =
   | 'botanical'
   | 'chemical'
@@ -281,6 +288,8 @@ export type ReferenceInput = {
   place?: string | null | undefined;
   published?: string | null | undefined;
   publisher?: string | null | undefined;
+  /** A peer-reviewed journal or a university or academic press; left out is false. Refused on a coven's source. */
+  scholarly?: boolean | null | undefined;
   series?: string | null | undefined;
   title: string;
   url?: string | null | undefined;
@@ -296,7 +305,11 @@ export type ReferenceKind =
 
 export type ReferenceLinkInput = {
   locator?: string | null | undefined;
+  /** The compendium's alone: refused on a coven's citation. */
+  nameBasis?: NameBasis | null | undefined;
   referenceId: string | number;
+  /** The fields of the entry, or of the form, this source backs. The compendium's alone: refused on a coven's citation. */
+  supports?: Array<string> | null | undefined;
 };
 
 /** One ingredient's stock edited together: jars to start, change and delete. */

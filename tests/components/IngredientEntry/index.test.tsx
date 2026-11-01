@@ -168,6 +168,8 @@ function cited(
       ...STAMPS,
     },
     locator,
+    nameBasis: null,
+    supports: null,
   };
 }
 
@@ -723,7 +725,7 @@ describe('IngredientEntry references', () => {
 
   it('gives a source its own note for each locator it is cited with in one section', () => {
     const herbal = cited('A Herbal of Testing', 'p. 12');
-    const again = { reference: herbal.reference, locator: 'p. 99' };
+    const again = { ...herbal, locator: 'p. 99' };
     renderEntry({ detail: detail({ references: [herbal, again], variants: [] }) });
 
     const items = within(notes()).getAllByRole('listitem');
@@ -756,7 +758,7 @@ describe('IngredientEntry references', () => {
         variants: [
           {
             ...variantRow('testoil'),
-            references: [mid, { reference: zeta.reference, locator: null }],
+            references: [mid, { ...zeta, locator: null }],
           },
         ],
       }),
@@ -788,7 +790,7 @@ describe('IngredientEntry references', () => {
         variants: [
           {
             ...variantRow('testoil'),
-            references: [{ reference: herbal.reference, locator: 'p. 2' }],
+            references: [{ ...herbal, locator: 'p. 2' }],
           },
         ],
       }),

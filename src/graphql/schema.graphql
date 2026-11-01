@@ -1286,6 +1286,16 @@ type Mutation {
 }
 
 """
+How a citation names the ingredient: prints the formal name (stated), heads a common name a cited authority maps to it (resolved), leaves doubt (unresolved), or was not checked (unaudited).
+"""
+enum NameBasis {
+  resolved
+  stated
+  unaudited
+  unresolved
+}
+
+"""
 A form, zodiac sign or celestial body, and how many entries it would list.
 """
 type NameFacetCount {
@@ -2118,6 +2128,11 @@ type Reference {
   place: String
   published: String
   publisher: String
+
+  """
+  A peer-reviewed journal or a university or academic press. Only a compendium source is marked; a coven's is always false.
+  """
+  scholarly: Boolean!
   series: String
   title: String!
   url: String
@@ -2140,6 +2155,11 @@ input ReferenceInput {
   place: String
   published: String
   publisher: String
+
+  """
+  A peer-reviewed journal or a university or academic press; left out is false. Refused on a coven's source.
+  """
+  scholarly: Boolean
   series: String
   title: String!
   url: String
@@ -2158,12 +2178,30 @@ enum ReferenceKind {
 type ReferenceLink {
   """Where in the source: "p. 112", "chap. 13"."""
   locator: String
+
+  """
+  A compendium citation's; null on a coven's, or when nobody recorded it.
+  """
+  nameBasis: NameBasis
   reference: Reference!
+
+  """
+  The fields of the cited entry or form this source backs, by name. A compendium citation's; null on a coven's, or when nobody recorded them.
+  """
+  supports: [String!]
 }
 
 input ReferenceLinkInput {
   locator: String
+
+  """The compendium's alone: refused on a coven's citation."""
+  nameBasis: NameBasis
   referenceId: ID!
+
+  """
+  The fields of the entry, or of the form, this source backs. The compendium's alone: refused on a coven's citation.
+  """
+  supports: [String!]
 }
 
 """A Reviewed setting, and how many entries it would list (M14.8)."""

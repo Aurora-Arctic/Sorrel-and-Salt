@@ -217,7 +217,7 @@ function substitutesShown(
     .sort(byName);
 }
 
-/** A batch's reference links as a lookup from one parent to its references and locators, alphabetical by rendered citation. */
+/** A batch's reference links as a lookup from one parent to its references and each link's own columns, alphabetical by rendered citation. */
 function citedBy(
   rows: Awaited<ReturnType<typeof findReferencesOf>>,
 ): (owns: (link: (typeof rows)[number]['link']) => boolean) => CitedReference[] {
@@ -230,7 +230,12 @@ function citedBy(
     cited
       .filter(({ link }) => owns(link))
       .sort((a, b) => byCitation(a.citation, b.citation))
-      .map(({ link, reference }) => ({ reference, locator: link.locator }));
+      .map(({ link, reference }) => ({
+        reference,
+        locator: link.locator,
+        nameBasis: link.nameBasis,
+        supports: link.supports,
+      }));
 }
 
 /** The proof for one coven, or `undefined` where the check refuses it. */

@@ -5,7 +5,7 @@ import { AuditInfo } from '../../../graphql/schema/audit';
 import type { BuilderTypes } from '../../../graphql/types';
 import { citationText } from '../../../lib/citation';
 import type { CitationFields } from '../../../lib/types';
-import { REFERENCE_KINDS } from '../schema/ingredient-enums';
+import { NAME_BASES, REFERENCE_KINDS } from '../schema/ingredient-enums';
 import {
   createReference,
   getReference,
@@ -36,6 +36,12 @@ const DESCRIPTION_OF: Partial<Record<ReferenceTextField, string>> = {
 
 export const ReferenceKindEnum = builder.enumType('ReferenceKind', { values: REFERENCE_KINDS });
 
+export const NameBasisEnum = builder.enumType('NameBasis', {
+  values: NAME_BASES,
+  description:
+    'How a citation names the ingredient: prints the formal name (stated), heads a common name a cited authority maps to it (resolved), leaves doubt (unresolved), or was not checked (unaudited).',
+});
+
 export const ReferenceRef = builder.objectRef<ReferenceRow>('Reference').implement({
   description: 'A source, kept once and linked from every row it supports.',
   fields: (t) => ({
@@ -58,6 +64,10 @@ export const ReferenceRef = builder.objectRef<ReferenceRow>('Reference').impleme
       resolve: (row) => citationText(row),
     }),
     isGlobal: t.boolean({ resolve: (row) => row.workspaceId === null }),
+    scholarly: t.exposeBoolean('scholarly', {
+      description:
+        "A peer-reviewed journal or a university or academic press. Only a compendium source is marked; a coven's is always false.",
+    }),
     audit: t.field({ type: AuditInfo, resolve: (row) => row }),
   }),
 });
@@ -71,14 +81,32 @@ export const ReferenceLinkRef = builder.objectRef<CitedReference>('ReferenceLink
       nullable: true,
       description: 'Where in the source: "p. 112", "chap. 13".',
     }),
+    nameBasis: t.expose('nameBasis', {
+      type: NameBasisEnum,
+      nullable: true,
+      description: "A compendium citation's; null on a coven's, or when nobody recorded it.",
+    }),
+    supports: t.exposeStringList('supports', {
+      nullable: true,
+      description:
+        "The fields of the cited entry or form this source backs, by name. A compendium citation's; null on a coven's, or when nobody recorded them.",
+    }),
   }),
 });
 
-/** A reference an ingredient cites: an existing reference's id, and an optional locator. */
+/** A reference an ingredient cites: an existing reference's id, an optional locator, and on the compendium tier the two attributes. */
 export const ReferenceLinkInput = builder.inputType('ReferenceLinkInput', {
   fields: (t) => ({
     referenceId: t.id({ required: true }),
     locator: t.string(),
+    nameBasis: t.field({
+      type: NameBasisEnum,
+      description: "The compendium's alone: refused on a coven's citation.",
+    }),
+    supports: t.stringList({
+      description:
+        "The fields of the entry, or of the form, this source backs. The compendium's alone: refused on a coven's citation.",
+    }),
   }),
 });
 
@@ -88,6 +116,10 @@ const ReferenceInput = builder.inputType('ReferenceInput', {
   fields: (t) => ({
     kind: t.field({ type: ReferenceKindEnum, required: true }),
     title: t.string({ required: true }),
+    scholarly: t.boolean({
+      description:
+        "A peer-reviewed journal or a university or academic press; left out is false. Refused on a coven's source.",
+    }),
     // Typed back from the list: `Object.fromEntries` answers string keys.
     ...(Object.fromEntries(
       OPTIONAL_FIELDS.map((field) => [

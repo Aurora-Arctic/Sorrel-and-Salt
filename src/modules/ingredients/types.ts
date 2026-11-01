@@ -11,6 +11,7 @@ import type {
   StockRow,
   WorkspaceIngredientFacets,
 } from '../../db/repository';
+import type { NameBasis } from './schema/ingredient-enums';
 import type { ingredientDeities } from './schema/ingredient-deities';
 import type { ingredientVariants } from './schema/ingredient-variants';
 import type { CompendiumIngredientInput, LocalIngredientInput } from './validation/ingredient';
@@ -174,10 +175,15 @@ export interface SubstituteRow {
   variantId: string | null;
 }
 
-/** One reference as `Ingredient.references` reads it (DESIGN.md §7, `ReferenceLink`): the source and the locator such as "p. 112", or null. */
+/**
+ * One reference as `Ingredient.references` reads it (DESIGN.md §7, `ReferenceLink`): the source and the locator such as "p. 112", or null,
+ * and on a compendium citation how it names the ingredient and the fields it supports, each null when nobody recorded it.
+ */
 export interface CitedReference {
   reference: ReferenceRow;
   locator: string | null;
+  nameBasis: NameBasis | null;
+  supports: string[] | null;
 }
 
 /** What the workspace service parses: the form's values, or the mutation's input. */
