@@ -261,13 +261,18 @@
   }
 }
 
+// The sender's name and the sprout after it, centred on each other.
+.support-requests__sender {
+  display: inline-flex;
+  align-items: center;
+}
+
 // The beta tester's sprout after the sender's name: a status mark whose press only opens its tip.
 .support-requests__beta {
   @include icon-button($cursor: default);
 
   margin-inline-start: space(1);
   color: $text-primary;
-  vertical-align: middle;
 
   &:hover {
     background-color: transparent;
