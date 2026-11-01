@@ -404,6 +404,7 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   sendSupportMessage: write(
     `mutation { sendSupportMessage(requestId: "${NOWHERE}", body: "Fixture") { id } }`,
   ),
+  resolveMySupportRequest: write(`mutation { resolveMySupportRequest(id: "${NOWHERE}\") { id } }`),
   addSupportInternalNote: write(
     `mutation { addSupportInternalNote(requestId: "${NOWHERE}", body: "Fixture") { id } }`,
   ),
@@ -743,6 +744,8 @@ const OPEN_WRITES = [
   'sendSupportRequest',
   // Any verified session may write on a request; the service finds only the sender's own.
   'sendSupportMessage',
+  // Any verified session may resolve a request; the service finds only the sender's own.
+  'resolveMySupportRequest',
   // A curator's scope admits; the service decides which requests (an admin any, a curator one assigned to them).
   'replyToSupportRequest',
   'resolveSupportRequest',
