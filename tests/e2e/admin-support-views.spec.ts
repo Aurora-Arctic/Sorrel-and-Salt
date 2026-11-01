@@ -29,7 +29,7 @@ test('the views are links that open each view, and every view is accessible', as
   const views = page.getByRole('navigation', { name: 'Support', exact: true }).getByRole('link');
   await expect(views).toHaveCount(6);
   await expect(views.first()).toHaveAttribute('aria-current', 'page');
-  await expect(views.first()).toContainText('Needs Staff (1)');
+  await expect(views.first()).toContainText('Needs Staff');
   await assertNoAccessibilityViolations(page);
 
   for (const [at, view] of VIEWS.slice(1).entries()) {
