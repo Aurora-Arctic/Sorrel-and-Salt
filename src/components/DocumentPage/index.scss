@@ -32,6 +32,8 @@
   .document-page__sources li {
     padding-inline-start: 1.5rem;
     text-indent: -1.5rem;
+    // A source's address has no break in it, so it breaks anywhere rather than widen the page.
+    overflow-wrap: anywhere;
   }
 
   .data-table-frame {

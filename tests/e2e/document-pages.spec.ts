@@ -60,6 +60,7 @@ for (const { path, title, link } of DOCUMENTS) {
     // Preconditions: the search ran with the title as its query, and the list is the compendium's.
     await expect(page.getByRole('combobox', { name: 'Name' })).toHaveValue(title);
     await expect(page.getByText(/no entries match/i)).toBeVisible();
-    await expect(page.getByRole('link', { name: title })).toHaveCount(0);
+    // In the list itself: the footer links every document by name on every page.
+    await expect(page.getByRole('main').getByRole('link', { name: title })).toHaveCount(0);
   });
 }
