@@ -5,6 +5,7 @@ import { users } from '../../modules/identity/schema/users';
 // The database client; why only the repository may import it: see `select.ts`.
 // oxlint-disable-next-line no-restricted-imports
 import { db } from '../connection';
+import { notSoftDeleted } from './predicates';
 import { existsIn } from './select';
 
 /** The rows a lapse can reach: unverified, holding a provider, and not vouched for by an admin. */
@@ -79,6 +80,7 @@ export async function findLapsedProvisionalUserIds(
     .from(users)
     .where(
       and(
+        notSoftDeleted(users),
         provisional(),
         or(
           lt(users.updatedAt, sql`now() - make_interval(secs => ${lifetimeSeconds})`),
