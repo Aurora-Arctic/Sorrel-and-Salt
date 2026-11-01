@@ -9,6 +9,7 @@ import { RouteModal, useOpenModalClick } from '../Modal';
 import IconTip, {
   BubbleLinesIcon,
   CircleCheckIcon,
+  ArchiveBoxIcon,
   FlagIcon,
   PersonCheckIcon,
   PersonClockIcon,
@@ -144,6 +145,16 @@ const SupportRequests = ({
                           aria-label="Open"
                         >
                           <FlagIcon />
+                        </button>
+                      </IconTip>
+                    ) : request.status === 'closed' ? (
+                      <IconTip tip="Closed" opensOnPress>
+                        <button
+                          type="button"
+                          className="support-requests__mark support-requests__mark--closed"
+                          aria-label="Closed"
+                        >
+                          <ArchiveBoxIcon />
                         </button>
                       </IconTip>
                     ) : (

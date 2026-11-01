@@ -36,6 +36,7 @@ export {
   PersonCheckIcon,
   PersonClockIcon,
   FlagIcon,
+  ArchiveBoxIcon,
   StockIcon,
   UndoIcon,
 } from './icons';

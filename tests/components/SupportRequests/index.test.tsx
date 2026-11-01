@@ -805,6 +805,18 @@ describe('Resolved by the sender', () => {
     expect(row.queryByText('Waiting on Sender')).toBeNull();
   });
 
+  it('shows a closed request as an icon named Closed, not the word', () => {
+    render(
+      <SupportRequests
+        requests={[{ ...ROW, id: 'c', subject: 'Shut', status: 'closed' }]}
+        viewer={ADMIN}
+      />,
+    );
+    const row = within(screen.getByRole('row', { name: /Shut/ }));
+    expect(row.getByRole('button', { name: 'Closed' })).toBeInTheDocument();
+    expect(row.queryByText('Closed')).toBeNull();
+  });
+
   it('says so in the list row, and not on a row staff resolved', () => {
     render(
       <SupportRequests
@@ -915,36 +927,41 @@ describe('The composer', () => {
 
 describe('The status marks in the Status cell', () => {
   // Each mark is an icon button; the pointer resting on it 300ms opens its tip.
-  it.each(['Resolved', 'Sender Replied', 'Resolved by Sender', 'Waiting on Sender', 'Open'])(
-    'show the tip %s when the pointer rests on the mark',
-    (name) => {
-      vi.useFakeTimers();
-      try {
-        render(
-          <SupportRequests
-            requests={[
-              {
-                ...ROW,
-                id: 'a',
-                subject: 'Marked',
-                status: 'resolved',
-                senderReplied: true,
-                resolvedBySender: true,
-              },
-              { ...ROW, id: 'w', subject: 'Pending', status: 'waiting_on_sender' },
-              { ...ROW, id: 'o', subject: 'Fresh', status: 'open' },
-            ]}
-            viewer={ADMIN}
-          />,
-        );
-        const mark = screen.getByRole('button', { name });
-        expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
-        fireEvent.mouseEnter(mark);
-        act(() => vi.advanceTimersByTime(300));
-        expect(screen.getByRole('tooltip', { hidden: true })).toHaveTextContent(name);
-      } finally {
-        vi.useRealTimers();
-      }
-    },
-  );
+  it.each([
+    'Resolved',
+    'Sender Replied',
+    'Resolved by Sender',
+    'Waiting on Sender',
+    'Open',
+    'Closed',
+  ])('show the tip %s when the pointer rests on the mark', (name) => {
+    vi.useFakeTimers();
+    try {
+      render(
+        <SupportRequests
+          requests={[
+            {
+              ...ROW,
+              id: 'a',
+              subject: 'Marked',
+              status: 'resolved',
+              senderReplied: true,
+              resolvedBySender: true,
+            },
+            { ...ROW, id: 'w', subject: 'Pending', status: 'waiting_on_sender' },
+            { ...ROW, id: 'o', subject: 'Fresh', status: 'open' },
+            { ...ROW, id: 'c', subject: 'Shut', status: 'closed' },
+          ]}
+          viewer={ADMIN}
+        />,
+      );
+      const mark = screen.getByRole('button', { name });
+      expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
+      fireEvent.mouseEnter(mark);
+      act(() => vi.advanceTimersByTime(300));
+      expect(screen.getByRole('tooltip', { hidden: true })).toHaveTextContent(name);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

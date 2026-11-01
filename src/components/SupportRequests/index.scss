@@ -326,3 +326,16 @@
     color: $secondary;
   }
 }
+
+// Closed wears the disabled look (muted ink at the disabled opacity) on the icon alone, so the focus ring keeps full strength.
+.support-requests__mark--closed {
+  color: $text-muted;
+
+  &:hover {
+    color: $text-muted;
+  }
+
+  svg {
+    opacity: $opacity-disabled;
+  }
+}
