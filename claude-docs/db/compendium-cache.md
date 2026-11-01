@@ -101,6 +101,11 @@ naming it, and one `revalidateTag` refreshes the data and the HTML together.
 A page that sets its own `revalidate` takes the lower of its own and the
 reads' hour.
 
+An entry's share card (M12.34) is the same: its `opengraph-image.tsx` reads
+`readCompendiumEntry`, so the card's cached PNG carries the tag and an admin
+write draws it afresh. `tests/e2e/compendium-cache.spec.ts` shows it
+([`../share-card.md`](../share-card.md), "Caching").
+
 ### Expiring the tag
 
 `expireCompendium()`, beside the read wrapper, is

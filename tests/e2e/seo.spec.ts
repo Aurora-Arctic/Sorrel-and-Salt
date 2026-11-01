@@ -15,6 +15,9 @@ const descriptionOf = (html: string): string =>
   /<meta name="description" content="([^"]*)"/.exec(html)?.[1] ?? '';
 const canonicalOf = (html: string): string =>
   /<link rel="canonical" href="([^"]*)"/.exec(html)?.[1] ?? '';
+/** A meta tag's content, by its `property` or `name`. */
+const metaOf = (html: string, key: string): string =>
+  new RegExp(`<meta (?:property|name)="${key}" content="([^"]*)"`).exec(html)?.[1] ?? '';
 
 /** Home, the list, and the first entry the list links to. */
 async function publicPages(
@@ -61,6 +64,34 @@ test('canonicals are absolute, carry no query string, and name the page they sit
   const filtered = await (await request.get('/compendium?query=wort&page=2')).text();
   expect(new URL(canonicalOf(filtered)).pathname).toBe('/compendium');
   expect(new URL(canonicalOf(filtered)).search).toBe('');
+});
+
+test('each public page names its share card for link previews, absolute, sized and described', async ({
+  request,
+}) => {
+  const pages = await publicPages(request);
+
+  for (const [path, html] of Object.entries(pages)) {
+    const image = new URL(metaOf(html, 'og:image'));
+    expect(image.origin, path).toBe('https://sorrelandsalt.com');
+    expect(metaOf(html, 'twitter:image'), path).toBe(image.href);
+    expect(metaOf(html, 'og:image:width'), path).toBe('1200');
+    expect(metaOf(html, 'og:image:height'), path).toBe('630');
+    expect(metaOf(html, 'og:image:alt'), path).not.toBe('');
+    expect(metaOf(html, 'twitter:image:alt'), path).toBe(metaOf(html, 'og:image:alt'));
+    expect(metaOf(html, 'twitter:card'), path).toBe('summary_large_image');
+
+    // The address is this server's card for the page: an image a preview can fetch.
+    const card = await request.get(image.pathname + image.search);
+    expect(card.status(), path).toBe(200);
+    expect(card.headers()['content-type'], path).toBe('image/png');
+  }
+  // An entry's card is its own, described by its name; the other two are the site's.
+  const [home, list, entry] = Object.values(pages);
+  expect(metaOf(entry, 'og:image')).not.toBe(metaOf(home, 'og:image'));
+  expect(metaOf(entry, 'og:image:alt')).toBe(/<h1[^>]*>([^<]*)</.exec(entry)?.[1]);
+  expect(metaOf(home, 'og:image:alt')).toBe('Sorrel &amp; Salt');
+  expect(metaOf(list, 'og:image:alt')).toBe('Sorrel &amp; Salt');
 });
 
 test('the public pages carry no workspace data and, signed out, only public JSON-LD', async ({
