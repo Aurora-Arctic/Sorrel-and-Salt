@@ -76,6 +76,8 @@ function entryOf(row: SupportRequestRow, names: Names, betaTester: boolean): Sup
     curatorVisible: row.curatorVisible,
     errorCode: row.errorCode,
     errorReference: row.errorReference,
+    createdAt: row.createdAt,
+    lastFromSenderAt: row.lastSenderActivityAt ?? row.createdAt,
     senderReplied: senderRepliedOn(row),
     betaTester,
     resolvedBySender: row.status === 'resolved' && row.resolvedBy === row.createdBy,
@@ -163,7 +165,6 @@ export const readOpened = cache(
     return {
       ...entryOf(row, names, tier === 'beta_tester'),
       message: row.message,
-      createdAt: row.createdAt,
       path: row.path || null,
       issueUrl: row.issueUrl,
       resolvedBy: personOf(names, row.resolvedBy),

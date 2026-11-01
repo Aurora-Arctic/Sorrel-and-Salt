@@ -30,6 +30,10 @@ export interface SupportRequestEntry {
   errorCode: number | null;
   /** The error page's digest, to match the server log. */
   errorReference: string | null;
+  /** When it was sent. */
+  createdAt: Date;
+  /** When the sender last wrote on it: their newest message, or the request itself when it has no follow-up. */
+  lastFromSenderAt: Date;
   /** The sender wrote last: their activity is later than staff's. */
   senderReplied: boolean;
   /** The sender accepted a printed card. */
@@ -65,8 +69,6 @@ export interface SupportTimeoutEntry {
 /** A request opened to its message, replies and, for an admin, the sender's time-outs. */
 export interface SupportRequestDetailEntry extends SupportRequestEntry {
   message: string;
-  /** When it was sent. */
-  createdAt: Date;
   path: string | null;
   issueUrl: string | null;
   resolvedBy: SupportPerson | null;

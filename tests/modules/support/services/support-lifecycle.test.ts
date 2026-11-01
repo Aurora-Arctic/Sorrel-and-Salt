@@ -462,3 +462,30 @@ describe('the sender’s tier', () => {
     );
   });
 });
+
+describe('the sender’s latest message time on the list', () => {
+  it('is the sender’s newest message, not a staff reply that came after it', async () => {
+    const request = await send();
+    const followUp = await sendSenderMessage(asUser(C), request.id, 'Still stuck.');
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    await replyToSupportRequest(asUser(E), request.id, 'Try again.', mail);
+
+    const page = await listSupportRequests(asUser(E), {}, PAGE);
+    const listed = page.find(({ node }) => node.id === request.id)!.node;
+
+    // The precondition: staff did write after the sender, so a staff-counting stamp would be later.
+    expect(listed.lastStaffActivityAt!.getTime()).toBeGreaterThan(
+      followUp.lastSenderActivityAt!.getTime(),
+    );
+    expect(listed.lastSenderActivityAt).toEqual(followUp.lastSenderActivityAt);
+  });
+
+  it('is the first message’s time when the sender wrote nothing since', async () => {
+    const request = await send();
+    await replyToSupportRequest(asUser(E), request.id, 'Which jar?', mail);
+
+    const page = await listSupportRequests(asUser(E), {}, PAGE);
+
+    expect(page[0]!.node.lastSenderActivityAt).toEqual(request.lastSenderActivityAt);
+  });
+});

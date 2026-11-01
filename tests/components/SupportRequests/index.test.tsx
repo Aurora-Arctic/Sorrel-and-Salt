@@ -44,6 +44,8 @@ const ROW: SupportRequestEntry = {
   curatorVisible: false,
   errorCode: 500,
   errorReference: null,
+  createdAt: new Date('2026-10-29T09:00:00Z'),
+  lastFromSenderAt: new Date('2026-10-30T14:05:00Z'),
   senderReplied: false,
   betaTester: false,
   resolvedBySender: false,
@@ -52,7 +54,6 @@ const ROW: SupportRequestEntry = {
 const DETAIL: SupportRequestDetailEntry = {
   ...ROW,
   message: 'There is no moon on the spell page.',
-  createdAt: new Date('2026-10-29T09:00:00Z'),
   path: '/coven/[slug]/grimoire',
   issueUrl: null,
   resolvedBy: null,
@@ -963,5 +964,17 @@ describe('The status marks in the Status cell', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe('the date columns', () => {
+  it('show when each request was created and when the sender last wrote', () => {
+    render(<SupportRequests requests={[ROW]} viewer={ADMIN} />);
+    const columns = screen.getAllByRole('columnheader').map((h) => h.textContent);
+    expect(columns).toContain('Created');
+    expect(columns).toContain('Last From Sender');
+    const cells = within(screen.getByRole('row', { name: /The moon icon/ })).getAllByRole('cell');
+    expect(cells[columns.indexOf('Created')]).toHaveTextContent('2026-10-29 9:00 am');
+    expect(cells[columns.indexOf('Last From Sender')]).toHaveTextContent('2026-10-30 2:05 pm');
   });
 });
