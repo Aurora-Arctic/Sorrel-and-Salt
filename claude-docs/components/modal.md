@@ -738,6 +738,7 @@ skipped the fade.
 | `size`        | As `Modal`'s                                                                                                                                                                                                   |
 | `readingBody` | As `Modal`'s                                                                                                                                                                                                   |
 | `place`       | Which of the page's modal places this is, where it has two ([Two places on one page](#opening-at-once)); absent on a page with one                                                                             |
+| `loadingBody` | Optional: what the body shows while the address's contents are on its way; absent, `ModalLoading`'s form skeleton. The support page passes the `detail` skeleton                                               |
 | `content`     | Absent unless the address opens a modal: `{ heading, body }`, the head (`ModalHeading`: title, eyebrow, qualifier) and `body`, a function of `done`, the modal's own close: `(done) => <Form onDone={done} />` |
 | `returnTo`    | Where the focus goes when neither its opener nor a link to its address is left: its owner's trigger; absent, the page's heading ([above](#giving-the-focus-back))                                              |
 
