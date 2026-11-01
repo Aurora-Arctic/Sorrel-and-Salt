@@ -309,6 +309,8 @@ There is no client directive on the page. The links, which must know which tab i
 
 `filtered` on a tab says its list opens with a filter, so its loading skeleton draws a filter row above the table. `cards` is for the grimoire's tabs. `sections` is for the account's tabs, whose content is a jump menu beside stacked panels rather than a list: the skeleton draws the menu and `sections` panels (3 on Account, 4 on Sign-In; the Support Requests tab is a `table`) in the page's own `.page-with-nav` grid, with no head of its own, as the heading above stays put.
 
+A tab's `columns` and `fields` size its table skeleton when the table has more than three columns or the filter more than two controls; the admin Support views set both, and `shape: 'table'`.
+
 ## Pressing a tab
 
 Pressing another tab runs its navigation through the tab switch, which greys the row and shows the panel's loading state until the tab has rendered, as the pager's soft ends do. A Ctrl, Cmd or Shift click and a middle click keep the browser's own behaviour, and without JavaScript each tab is a plain link. The open tab is left to Link, so pressing it again shows no loading state.

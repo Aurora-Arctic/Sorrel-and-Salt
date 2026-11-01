@@ -278,7 +278,7 @@ was scrolled to (MB.271). The `<main>` takes the frame the target names, top-ali
 and never centred in the window: `wide`, `with-nav` and `entry` use `page-column`,
 `narrow` uses `page-frame page-frame--narrow`, and no frame the standard
 `page-frame`. A narrow `form` sits on a `panel`, as the real form does.
-`with-nav` also draws the side menu beside a `page`, in the page's own `.page-with-nav` grid (the narrow column), and `entry` the same menu in `.ingredient-entry--with-nav`, the wide column an ingredient's page fills, from the one `entry-nav-grid` mixin the page shares, and the admin index is the `contents` shape (sections of links), and the target's `head` (`eyebrow` for the coven home and an ingredient's page, `title` for Account) shapes the head the page draws, and `tabs` draws
+`with-nav` also draws the side menu beside a `page`, in the page's own `.page-with-nav` grid (the narrow column), and `entry` the same menu in `.ingredient-entry--with-nav`, the wide column an ingredient's page fills, from the one `entry-nav-grid` mixin the page shares, and the admin index is the `contents` shape (sections of links), and the target's `head` (`eyebrow` for the coven home and an ingredient's page, `title` for Account) shapes the head the page draws, and `tabsBelow` puts that tab track on its own line beneath the heading, `columns` and `fields` size a `table` skeleton's columns and filter controls to the page's (the admin Support list), a route modal can show its own `detail` skeleton as `loadingBody` rather than the form's, and `tabs` draws
 the tab track in the heading row. A navigation with no target, such as a
 refresh, leaves the page standing, and a `coven` or `admin` target is `SectionBody`'s.
 
