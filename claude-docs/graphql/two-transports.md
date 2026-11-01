@@ -44,7 +44,9 @@ resolve: async (_query, { workspaceId }, { session }) =>
   three public files `/llms.txt`, `/.well-known/ai-catalog.json` and
   `/.well-known/ard.json` (M12.2) take no session, serve only what the public compendium already shows and are named in
   lint's allowlist, one by one
-  ([`seo/ai-discovery.md`](../seo/ai-discovery.md)); and lint's `sorrel/route-allowlist` fails any other `route` file under
+  ([`seo/ai-discovery.md`](../seo/ai-discovery.md)); the share-card images Next generates from each
+  `opengraph-image.tsx` (M12.34) take no session either and draw only what the public compendium shows
+  ([`share-card.md`](../share-card.md)); and lint's `sorrel/route-allowlist` fails any other `route` file under
   `src/app/`, by its path: a file is not an import either.
 - **Admin is not an exception to either.** `/admin`'s pages read through
   services, and its writes go through this endpoint
