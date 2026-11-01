@@ -195,7 +195,7 @@ $account-menu-avatar: 2rem;
   padding-inline-end: space(7);
 }
 
-// The red circle, on the invitations link and after the Admin row's label.
+// The red circle, on the invitations link and after the Admin and Support rows' labels.
 .account-menu__count-mark,
 .account-menu__badge {
   @include badge('attention');
@@ -209,7 +209,8 @@ $account-menu-avatar: 2rem;
 }
 
 // Pushed to the row's right end, where the invitations circle sits.
-.account-menu__badge {
+.account-menu__badge-tip {
+  display: flex;
   margin-inline-start: auto;
 }
 
