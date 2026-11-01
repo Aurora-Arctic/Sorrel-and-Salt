@@ -108,6 +108,9 @@ describe('public routes', () => {
     '/.well-known/ard.json',
     '/favicon.ico',
     '/manifest.webmanifest',
+    // The site share card a link preview fetches for `/`, at the address Next gives it.
+    '/opengraph-image',
+    '/opengraph-image?1c801e44ee73c51d',
   ])('lets a signed-out request to %s through', async (path) => {
     const response = await proxy(request(path));
 
@@ -134,6 +137,7 @@ describe('public routes', () => {
     '/account/support',
     '/robots.txt.bak',
     '/llms.txt/x',
+    '/opengraph-image/x',
     '/.well-known',
     '/coven/hearth',
     '/coven/hearth/ingredients',
