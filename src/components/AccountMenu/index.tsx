@@ -8,7 +8,6 @@ import { siteLinkTarget } from '../AppShell/site-target';
 import { ACCOUNT_INVITATIONS_PATH, ACCOUNT_PATH } from '../../lib/sign-in';
 import IconTip from '../IconTip';
 import { ChevronIcon } from '../IconTip/icons';
-import { FacetCount } from '../FacetPanel/facet-count';
 import SupportLink from '../SupportLink';
 import { SUPPORT_LIST_PATH } from '../../lib/support-path';
 import SignOutButton from './sign-out-button';
@@ -34,28 +33,28 @@ function countText(count: number, what: string): string {
     : `${count} ${count === 1 ? 'request' : 'requests'} ${what}`;
 }
 
-// The facet count, or with `badge` the red circle, as text for a screen reader too: the digits alone say nothing of what they count.
+// The red circle, with a tip naming what it counts, and the same as text for a screen reader: the digits alone say nothing.
 function MenuCount({
   count,
   what,
-  badge = false,
+  tipWhat,
 }: {
   count: number;
   what: string;
-  badge?: boolean;
+  /** The tip's words after the count, in title case: "Assigned to You". */
+  tipWhat: string;
 }): ReactElement {
   const shown = count > COUNT_CAP ? `${COUNT_CAP}+` : count;
+  const tip = `${shown} Support ${count === 1 ? 'Request' : 'Requests'} ${tipWhat}`;
   return (
     <>
-      {badge ? (
-        <span className="account-menu__badge" aria-hidden="true">
-          {shown}
-        </span>
-      ) : (
-        <span aria-hidden="true">
-          <FacetCount count={shown} />
-        </span>
-      )}
+      <span className="account-menu__badge-tip">
+        <IconTip tip={tip} placement="below">
+          <span className="account-menu__badge" aria-hidden="true">
+            {shown}
+          </span>
+        </IconTip>
+      </span>
       <span className="visually-hidden">, {countText(count, what)}</span>
     </>
   );
@@ -186,7 +185,13 @@ const AccountMenu = ({
                   aria-current={isAtPath(pathname, base) ? 'page' : undefined}
                 >
                   {label}
-                  {counted && <MenuCount count={staffCount} what="assigned to you" badge />}
+                  {counted && (
+                    <MenuCount
+                      count={staffCount}
+                      what="assigned to you"
+                      tipWhat="Assigned to You"
+                    />
+                  )}
                 </PendingLink>
               </li>
             );
@@ -208,7 +213,7 @@ const AccountMenu = ({
                 onClick={close}
               >
                 Support
-                <MenuCount count={senderCount} what="waiting on you" />
+                <MenuCount count={senderCount} what="waiting on you" tipWhat="Waiting on You" />
               </PendingLink>
             ) : (
               <SupportLink className="account-menu__item" onClick={close}>

@@ -1,5 +1,5 @@
 import type { Route } from 'next';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const pathname = vi.fn<() => string>();
@@ -201,6 +201,34 @@ describe('AccountMenu support link', () => {
       const link = screen.getByRole('link', { name: /^Admin, 3 requests assigned to you/ });
       expect(link).toHaveAttribute('href', '/admin/support?view=mine');
       expect(link).toHaveTextContent('3');
+    });
+
+    it('opens a tip over the Admin count after the pointer rests on it', () => {
+      vi.useFakeTimers();
+      try {
+        render(<AccountMenu name="Fixture Owner" verified links={ADMIN} assignedSupport={3} />);
+        open();
+        expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
+        fireEvent.mouseEnter(screen.getByText('3', { selector: '.account-menu__badge' }));
+        act(() => vi.advanceTimersByTime(300));
+        expect(screen.getByRole('tooltip', { hidden: true })).toHaveTextContent('3');
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('opens a tip over the Support count after the pointer rests on it', () => {
+      vi.useFakeTimers();
+      try {
+        render(<AccountMenu name="Fixture Owner" verified waitingSupport={3} />);
+        open();
+        expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
+        fireEvent.mouseEnter(screen.getByText('3', { selector: '.account-menu__badge' }));
+        act(() => vi.advanceTimersByTime(300));
+        expect(screen.getByRole('tooltip', { hidden: true })).toHaveTextContent('3');
+      } finally {
+        vi.useRealTimers();
+      }
     });
 
     it('counts requests waiting on the sender, and the Support row leads to the list', () => {
