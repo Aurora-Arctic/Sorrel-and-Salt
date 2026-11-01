@@ -13,6 +13,10 @@ export interface PageTab {
   shape?: 'table' | 'cards' | 'sections' | 'requests';
   /** With the `sections` shape: how many panels the skeleton draws, to match the tab's own. */
   sections?: number;
+  /** A `table` tab's column count, where it has more than three. */
+  columns?: number;
+  /** A `table` tab's filter controls, where its filter has more than two. */
+  fields?: number;
   /** With `cards`: the tab's list opens compact, so its loading skeleton does too. */
   density?: 'compact';
   /** With `cards`: the card the list draws, so its loading skeleton does too: the grimoire's spell card. */
@@ -68,6 +72,10 @@ export interface TabPanelLoadingProps {
   shape?: 'table' | 'cards' | 'sections' | 'requests';
   /** With `sections`: how many panels it draws. */
   count?: number;
+  /** A `table` skeleton's column count: the pressed tab's `columns`. */
+  columns?: number;
+  /** A `table` skeleton's filter controls: the pressed tab's `fields`. */
+  fields?: number;
   /** The density of a `cards` skeleton: the pressed tab's `density`. */
   density?: 'compact';
   /** The card of a `cards` skeleton: the pressed tab's `card`. */

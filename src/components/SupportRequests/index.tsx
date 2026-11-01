@@ -17,6 +17,7 @@ import IconTip, {
   SproutIcon,
 } from '../IconTip';
 import Pager from '../Pager';
+import Skeleton from '../Skeleton';
 import { Mark } from '../UserList/marks';
 import SupportDetail from './detail';
 import SupportRequestsFilter, { ABOUT_OPTIONS, STATUS_LABELS } from './filter';
@@ -251,6 +252,7 @@ const SupportRequests = ({
       <RouteModal
         closeHref={supportHref(filter, cursor)}
         size="listed"
+        loadingBody={<Skeleton shape="detail" side={viewer.role === 'admin'} />}
         content={
           opened && {
             heading: {

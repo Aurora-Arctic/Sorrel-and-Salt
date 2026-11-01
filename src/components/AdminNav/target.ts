@@ -10,6 +10,9 @@ const CURATED: Parts = { shape: 'table', title: true, tabs: true, action: true, 
  * arrives (heading, action, filter row, list) under the `admin` row. The index draws its own heading;
  * a tabbed page draws its tab row between heading and action (claude-docs/components/admin-nav.md).
  */
+const SUPPORT_FIELDS = 3;
+const SUPPORT_COLUMNS = 9;
+
 const PARTS: Record<string, Parts> = {
   '/admin': { shape: 'contents' },
   '/admin/compendium': { shape: 'cards', title: true, action: true, filter: true },
@@ -17,6 +20,16 @@ const PARTS: Record<string, Parts> = {
   '/admin/forms': CURATED,
   '/admin/deities': CURATED,
   '/admin/celestial-bodies': CURATED,
+  // The view tabs on a line beneath the heading, a three-control filter and the nine columns of SupportRequests.
+  '/admin/support': {
+    shape: 'table',
+    title: true,
+    tabs: true,
+    tabsBelow: true,
+    filter: true,
+    fields: SUPPORT_FIELDS,
+    columns: SUPPORT_COLUMNS,
+  },
   // Its action is the pause control; the filter is the user search.
   '/admin/users': CURATED,
 };
