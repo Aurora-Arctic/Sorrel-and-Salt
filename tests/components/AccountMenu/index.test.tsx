@@ -189,7 +189,7 @@ describe('AccountMenu support link', () => {
       expect(screen.getByRole('link', { name: 'Admin' })).toHaveAttribute('href', '/admin');
     });
 
-    it('counts requests assigned to a staff viewer, links Admin to their own requests and dots the avatar', () => {
+    it('counts requests assigned to a staff viewer in a link of its own beside Admin, and dots the avatar', () => {
       const { container } = render(
         <AccountMenu name="Fixture Owner" verified links={ADMIN} assignedSupport={3} />,
       );
@@ -198,9 +198,10 @@ describe('AccountMenu support link', () => {
         screen.getByRole('button', { name: 'Fixture Owner, 3 requests assigned to you' }),
       ).toBeInTheDocument();
       open();
-      const link = screen.getByRole('link', { name: /^Admin, 3 requests assigned to you/ });
-      expect(link).toHaveAttribute('href', '/admin/support?view=mine');
-      expect(link).toHaveTextContent('3');
+      expect(screen.getByRole('link', { name: 'Admin' })).toHaveAttribute('href', '/admin');
+      const count = screen.getByRole('link', { name: '3 requests assigned to you' });
+      expect(count).toHaveAttribute('href', '/admin/support?view=mine');
+      expect(count).toHaveTextContent('3');
     });
 
     it('opens a tip over the Admin count after the pointer rests on it', () => {
@@ -209,7 +210,7 @@ describe('AccountMenu support link', () => {
         render(<AccountMenu name="Fixture Owner" verified links={ADMIN} assignedSupport={3} />);
         open();
         expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
-        fireEvent.mouseEnter(screen.getByText('3', { selector: '.account-menu__badge' }));
+        fireEvent.mouseEnter(screen.getByRole('link', { name: '3 requests assigned to you' }));
         act(() => vi.advanceTimersByTime(300));
         expect(screen.getByRole('tooltip', { hidden: true })).toHaveTextContent('3');
       } finally {

@@ -174,7 +174,8 @@ $account-menu-avatar: 2rem;
 // The count of pending invitations at the right end of Your Account's row: the
 // site's badge in attention's red, a circle, a pill from two digits. Its tip
 // hangs below it.
-.account-menu__account {
+.account-menu__account,
+.account-menu__link--counted {
   position: relative;
 }
 
@@ -195,7 +196,7 @@ $account-menu-avatar: 2rem;
   padding-inline-end: space(7);
 }
 
-// The red circle, on the invitations link and after the Admin and Support rows' labels.
+// The red circle: a link of its own on the Your Account and Admin rows, inside the Support row's link.
 .account-menu__count-mark,
 .account-menu__badge {
   @include badge('attention');

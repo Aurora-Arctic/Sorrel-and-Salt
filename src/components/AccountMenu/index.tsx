@@ -33,7 +33,13 @@ function countText(count: number, what: string): string {
     : `${count} ${count === 1 ? 'request' : 'requests'} ${what}`;
 }
 
-// The red circle, with a tip naming what it counts, and the same as text for a screen reader: the digits alone say nothing.
+// The count as a circle shows it, and its tip: "3 Support Requests Assigned to You".
+function supportTip(count: number, tipWhat: string): { shown: number | string; tip: string } {
+  const shown = count > COUNT_CAP ? `${COUNT_CAP}+` : count;
+  return { shown, tip: `${shown} Support ${count === 1 ? 'Request' : 'Requests'} ${tipWhat}` };
+}
+
+// The red circle inside a row's link, with a tip naming what it counts, and the same as text for a screen reader: the digits alone say nothing.
 function MenuCount({
   count,
   what,
@@ -44,8 +50,7 @@ function MenuCount({
   /** The tip's words after the count, in title case: "Assigned to You". */
   tipWhat: string;
 }): ReactElement {
-  const shown = count > COUNT_CAP ? `${COUNT_CAP}+` : count;
-  const tip = `${shown} Support ${count === 1 ? 'Request' : 'Requests'} ${tipWhat}`;
+  const { shown, tip } = supportTip(count, tipWhat);
   return (
     <>
       <span className="account-menu__badge-tip">
@@ -170,6 +175,7 @@ const AccountMenu = ({
         {verified &&
           links.map(({ label, href, base }) => {
             const counted = base === '/admin' && staffCount > 0;
+            const { shown, tip } = supportTip(staffCount, 'Assigned to You');
             return (
               <li
                 key={label}
@@ -178,21 +184,37 @@ const AccountMenu = ({
                 }
               >
                 <PendingLink
-                  href={counted ? (ADMIN_ASSIGNED_PATH as typeof href) : href}
+                  href={href}
                   navigationTarget={siteLinkTarget(base, href)}
-                  className="account-menu__item"
+                  className={
+                    counted
+                      ? 'account-menu__item account-menu__item--counted'
+                      : 'account-menu__item'
+                  }
                   onClick={close}
                   aria-current={isAtPath(pathname, base) ? 'page' : undefined}
                 >
                   {label}
-                  {counted && (
-                    <MenuCount
-                      count={staffCount}
-                      what="assigned to you"
-                      tipWhat="Assigned to You"
-                    />
-                  )}
                 </PendingLink>
+                {/* A link of its own beside Admin, as the invitations count is beside Your Account:
+                    a press on the circle opens the requests assigned to the viewer, on the rest of the row /admin. */}
+                {counted && (
+                  <span className="account-menu__count">
+                    <IconTip tip={tip} placement="below">
+                      <PendingLink
+                        href={ADMIN_ASSIGNED_PATH as typeof href}
+                        navigationTarget={siteLinkTarget(base, ADMIN_ASSIGNED_PATH as typeof href)}
+                        className="account-menu__count-mark"
+                        onClick={close}
+                      >
+                        <span aria-hidden="true">{shown}</span>
+                        <span className="visually-hidden">
+                          {countText(staffCount, 'assigned to you')}
+                        </span>
+                      </PendingLink>
+                    </IconTip>
+                  </span>
+                )}
               </li>
             );
           })}
