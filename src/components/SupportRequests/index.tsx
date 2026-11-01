@@ -6,6 +6,7 @@ import { emptyList, noMatchText } from '../../lib/text';
 import StackTable from '../DataTable';
 import ListFrame, { ListBody } from '../ListFrame';
 import { RouteModal, useOpenModalClick } from '../Modal';
+import LocalTime from '../LocalTime';
 import IconTip, {
   BubbleLinesIcon,
   CircleCheckIcon,
@@ -227,6 +228,16 @@ const SupportRequests = ({
                 ),
               },
               { heading: 'Error #', cell: (request) => request.errorCode ?? '' },
+              {
+                heading: 'Created',
+                className: 'support-requests__fact',
+                cell: (request) => <LocalTime at={request.createdAt} />,
+              },
+              {
+                heading: 'Last From Sender',
+                className: 'support-requests__fact',
+                cell: (request) => <LocalTime at={request.lastFromSenderAt} />,
+              },
             ]}
             rows={requests}
             rowKey={(request) => request.id}
