@@ -507,7 +507,7 @@ export function PersonClockIcon(): ReactElement {
     <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
       <circle
         cx="5.25"
-        cy="4.75"
+        cy="5.5"
         r="2.25"
         fill="none"
         stroke="currentColor"
@@ -516,7 +516,7 @@ export function PersonClockIcon(): ReactElement {
         strokeLinejoin="round"
       />
       <path
-        d="M1.25 13.5a4 4 0 0 1 5.5-3.7"
+        d="M1.25 14.25a4 4 0 0 1 5.5-3.7"
         fill="none"
         stroke="currentColor"
         strokeWidth="1.5"
@@ -525,7 +525,7 @@ export function PersonClockIcon(): ReactElement {
       />
       <circle
         cx="11.25"
-        cy="11"
+        cy="11.5"
         r="3.75"
         fill="none"
         stroke="currentColor"
@@ -534,7 +534,7 @@ export function PersonClockIcon(): ReactElement {
         strokeLinejoin="round"
       />
       <path
-        d="M11.25 9.25v1.75l1.25.9"
+        d="M11.25 9.75v1.75l1.25.9"
         fill="none"
         stroke="currentColor"
         strokeWidth="1.5"
