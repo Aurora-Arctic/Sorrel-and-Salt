@@ -15,6 +15,8 @@ export interface PageTab {
   sections?: number;
   /** With `cards`: the tab's list opens compact, so its loading skeleton does too. */
   density?: 'compact';
+  /** With `cards`: the card the list draws, so its loading skeleton does too: the grimoire's spell card. */
+  card?: 'spell';
 }
 
 export interface TabbedPageProps {
@@ -68,6 +70,8 @@ export interface TabPanelLoadingProps {
   count?: number;
   /** The density of a `cards` skeleton: the pressed tab's `density`. */
   density?: 'compact';
+  /** The card of a `cards` skeleton: the pressed tab's `card`. */
+  card?: 'spell';
 }
 
 export interface TabPanelProps {

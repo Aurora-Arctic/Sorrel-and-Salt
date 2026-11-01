@@ -10,6 +10,7 @@ export {
   QuickLookButton,
   RecordButton,
 } from './icon-button';
+export { LiddedEyeIcon } from './lidded-eye';
 export {
   BinIcon,
   CauldronIcon,

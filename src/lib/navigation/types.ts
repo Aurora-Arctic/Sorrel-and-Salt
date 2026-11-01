@@ -1,7 +1,9 @@
 /** Where a navigation is headed, so the part of the page that will change can draw its own wait. */
 export type NavigationTarget = {
   region: 'coven' | 'admin' | 'main';
-  shape: 'table' | 'cards' | 'form' | 'page' | 'contents';
+  /** A coven switch names the coven it opens, so what belongs to the old coven can leave at once. */
+  coven?: string;
+  shape: 'table' | 'cards' | 'form' | 'page' | 'contents' | 'recipe';
   /** A `table` or `cards` wait draws the page's heading row above the list. */
   title?: boolean;
   /** With `title`: the page has an action (Add) at the heading's end. */
@@ -12,6 +14,8 @@ export type NavigationTarget = {
   tabs?: boolean;
   /** A `cards` wait draws the compact cards the list opens at, unless the viewer stored Regular. */
   density?: 'compact';
+  /** A `cards` wait draws the Grimoire's spell cards, not the Ingredients cards. */
+  card?: 'spell';
   /**
    * The frame the destination sits in, so a `main` wait is drawn in it: `wide`
    * (the page column), `narrow` (a forms column) or `with-nav` (the narrow column

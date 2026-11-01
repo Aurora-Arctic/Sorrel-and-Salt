@@ -10,7 +10,7 @@ import {
   useRef,
 } from 'react';
 import Notice from '../Notice';
-import IconTip, { CloseIcon, MysticEyeIcon, PreviewButton } from '../IconTip';
+import IconTip, { CloseIcon, LiddedEyeIcon, PreviewButton } from '../IconTip';
 import { SpellCardFilters } from '../SpellCard';
 import SpellRecipeBody from '../SpellRecipe/body';
 import SpellRecipeSummary from '../SpellRecipe/summary';
@@ -180,14 +180,17 @@ export default function SpellPreview(props: SpellPreviewProps): ReactElement {
         <div className="spell-preview__bar">
           {/* The tip says what a press does; the name stays Screen Awake, and `aria-pressed` holds the state. */}
           {wake.shown && (
-            <IconTip tip={wake.held ? 'Let the Screen Sleep' : 'Keep the Screen from Sleeping'}>
+            <IconTip
+              tip={wake.held ? 'Let the Screen Sleep' : 'Keep the Screen from Sleeping'}
+              placement="below"
+            >
               <button
                 type="button"
                 className="icon-tip__edit icon-tip__edit--plain spell-preview__awake"
                 aria-pressed={wake.held}
                 onClick={wake.toggle}
               >
-                <MysticEyeIcon />
+                <LiddedEyeIcon open={wake.held} />
                 <span className="visually-hidden">Screen Awake</span>
               </button>
             </IconTip>
