@@ -280,9 +280,30 @@
   }
 }
 
-.support-requests__labels {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-  margin-block-start: 0.25rem;
+// The status word and its marks on one line.
+.support-requests__status {
+  display: inline-flex;
+  align-items: center;
+  gap: space(1);
+}
+
+// A status mark: a button only so the keyboard reaches its tip, which a press also opens.
+.support-requests__mark {
+  @include icon-button($cursor: default);
+
+  color: $text-primary;
+
+  &:hover {
+    background-color: transparent;
+    color: $text-primary;
+  }
+}
+
+// Resolved wears the Local badge's green.
+.support-requests__mark--resolved {
+  color: badge-token('local', 'fg');
+
+  &:hover {
+    color: badge-token('local', 'fg');
+  }
 }

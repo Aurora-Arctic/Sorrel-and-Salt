@@ -6,7 +6,7 @@ import { emptyList, noMatchText } from '../../lib/text';
 import StackTable from '../DataTable';
 import ListFrame, { ListBody } from '../ListFrame';
 import { RouteModal, useOpenModalClick } from '../Modal';
-import IconTip, { SproutIcon } from '../IconTip';
+import IconTip, { BubbleLinesIcon, CircleCheckIcon, PersonCheckIcon, SproutIcon } from '../IconTip';
 import Pager from '../Pager';
 import { Mark } from '../UserList/marks';
 import SupportDetail from './detail';
@@ -107,19 +107,44 @@ const SupportRequests = ({
               {
                 heading: 'Status',
                 cell: (request) => (
-                  <>
-                    {STATUS_LABELS[request.status]}
-                    {(request.senderReplied || request.resolvedBySender) && (
-                      <span className="support-requests__labels">
-                        {request.senderReplied && (
-                          <span className="badge badge--local">Sender Replied</span>
-                        )}
-                        {request.resolvedBySender && (
-                          <span className="badge badge--muted">Resolved by Sender</span>
-                        )}
-                      </span>
+                  // One line: the status, then the marks. Each mark is a button only so the keyboard reaches its tip.
+                  <span className="support-requests__status">
+                    {request.status === 'resolved' ? (
+                      <IconTip tip="Resolved" opensOnPress>
+                        <button
+                          type="button"
+                          className="support-requests__mark support-requests__mark--resolved"
+                          aria-label="Resolved"
+                        >
+                          <CircleCheckIcon />
+                        </button>
+                      </IconTip>
+                    ) : (
+                      STATUS_LABELS[request.status]
                     )}
-                  </>
+                    {request.senderReplied && (
+                      <IconTip tip="Sender Replied" opensOnPress>
+                        <button
+                          type="button"
+                          className="support-requests__mark"
+                          aria-label="Sender Replied"
+                        >
+                          <BubbleLinesIcon />
+                        </button>
+                      </IconTip>
+                    )}
+                    {request.resolvedBySender && (
+                      <IconTip tip="Resolved by Sender" opensOnPress>
+                        <button
+                          type="button"
+                          className="support-requests__mark"
+                          aria-label="Resolved by Sender"
+                        >
+                          <PersonCheckIcon />
+                        </button>
+                      </IconTip>
+                    )}
+                  </span>
                 ),
               },
               {

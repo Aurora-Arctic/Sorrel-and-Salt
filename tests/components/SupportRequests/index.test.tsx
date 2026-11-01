@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { StatusRegionProvider } from '@/components/ClickFeedback/status-region';
@@ -752,7 +752,7 @@ describe('The views', () => {
       />,
     );
     const first = screen.getByRole('row', { name: /First/ });
-    expect(within(first).getByText('Sender Replied')).toBeInTheDocument();
+    expect(within(first).getByRole('button', { name: 'Sender Replied' })).toBeInTheDocument();
     const columns = screen.getAllByRole('columnheader').map((h) => h.textContent);
     const cellIn = (row: HTMLElement, heading: string) =>
       within(row).getAllByRole('cell')[columns.indexOf(heading)];
@@ -762,14 +762,34 @@ describe('The views', () => {
     expect(
       within(cellIn(first, 'Status')).queryByRole('button', { name: 'Beta Tester' }),
     ).toBeNull();
-    expect(within(cellIn(first, 'Status')).getByText('Sender Replied')).toBeInTheDocument();
+    expect(
+      within(cellIn(first, 'Status')).getByRole('button', { name: 'Sender Replied' }),
+    ).toBeInTheDocument();
     const second = screen.getByRole('row', { name: /Second/ });
-    expect(within(second).queryByText('Sender Replied')).toBeNull();
+    expect(within(second).queryByRole('button', { name: 'Sender Replied' })).toBeNull();
     expect(within(second).queryByRole('button', { name: 'Beta Tester' })).toBeNull();
   });
 });
 
 describe('Resolved by the sender', () => {
+  it('shows a resolved request as an icon named Resolved, and an open one as its word', () => {
+    render(
+      <SupportRequests
+        requests={[
+          { ...ROW, id: 'a', subject: 'Done', status: 'resolved' },
+          { ...ROW, id: 'b', subject: 'Fresh', status: 'open' },
+        ]}
+        viewer={ADMIN}
+      />,
+    );
+    const done = within(screen.getByRole('row', { name: /Done/ }));
+    expect(done.getByRole('button', { name: 'Resolved' })).toBeInTheDocument();
+    expect(done.queryByText('Resolved')).toBeNull();
+    const fresh = within(screen.getByRole('row', { name: /Fresh/ }));
+    expect(fresh.queryByRole('button', { name: 'Resolved' })).toBeNull();
+    expect(fresh.getByText('Open')).toBeInTheDocument();
+  });
+
   it('says so in the list row, and not on a row staff resolved', () => {
     render(
       <SupportRequests
@@ -781,10 +801,14 @@ describe('Resolved by the sender', () => {
       />,
     );
     expect(
-      within(screen.getByRole('row', { name: /Own/ })).getByText('Resolved by Sender'),
+      within(screen.getByRole('row', { name: /Own/ })).getByRole('button', {
+        name: 'Resolved by Sender',
+      }),
     ).toBeInTheDocument();
     expect(
-      within(screen.getByRole('row', { name: /Staff/ })).queryByText('Resolved by Sender'),
+      within(screen.getByRole('row', { name: /Staff/ })).queryByRole('button', {
+        name: 'Resolved by Sender',
+      }),
     ).toBeNull();
   });
 
@@ -872,4 +896,38 @@ describe('The composer', () => {
     expect(within(note as HTMLElement).getByText(/Internal/)).toBeInTheDocument();
     expect(within(spoken as HTMLElement).queryByText(/Internal/)).toBeNull();
   });
+});
+
+describe('The status marks in the Status cell', () => {
+  // Each mark is an icon button; the pointer resting on it 300ms opens its tip.
+  it.each(['Resolved', 'Sender Replied', 'Resolved by Sender'])(
+    'show the tip %s when the pointer rests on the mark',
+    (name) => {
+      vi.useFakeTimers();
+      try {
+        render(
+          <SupportRequests
+            requests={[
+              {
+                ...ROW,
+                id: 'a',
+                subject: 'Marked',
+                status: 'resolved',
+                senderReplied: true,
+                resolvedBySender: true,
+              },
+            ]}
+            viewer={ADMIN}
+          />,
+        );
+        const mark = screen.getByRole('button', { name });
+        expect(screen.queryByRole('tooltip', { hidden: true })).toBeNull();
+        fireEvent.mouseEnter(mark);
+        act(() => vi.advanceTimersByTime(300));
+        expect(screen.getByRole('tooltip', { hidden: true })).toHaveTextContent(name);
+      } finally {
+        vi.useRealTimers();
+      }
+    },
+  );
 });

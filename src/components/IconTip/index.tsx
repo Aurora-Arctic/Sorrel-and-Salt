@@ -31,6 +31,9 @@ export {
   PrintIcon,
   RedoIcon,
   SproutIcon,
+  CircleCheckIcon,
+  BubbleLinesIcon,
+  PersonCheckIcon,
   StockIcon,
   UndoIcon,
 } from './icons';

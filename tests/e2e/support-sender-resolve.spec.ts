@@ -48,7 +48,9 @@ test('a sender resolves a waiting request, the menu count goes out and the admin
   await signInAs(adminPage, 'admin@support-resolve.test', ['discord'], 'admin');
   await adminPage.goto('/admin/support?view=resolved');
   await expect(
-    adminPage.getByRole('row', { name: new RegExp(subject) }).getByText('Resolved by Sender'),
+    adminPage
+      .getByRole('row', { name: new RegExp(subject) })
+      .getByRole('button', { name: 'Resolved by Sender' }),
   ).toBeVisible();
   await adminContext.close();
 });
