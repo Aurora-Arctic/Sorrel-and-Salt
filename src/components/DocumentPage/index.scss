@@ -4,16 +4,43 @@
 // A document reads as prose: every running line keeps to the measure, a table may run wider in
 // its own scrolling frame, and each section's heading sits a step above its text.
 // The page is `.page-with-nav` with its column widened from the narrow column to the reading
-// measure, and the same breakpoints; the text stays start-aligned inside the centred column.
-.document-page {
+// measure, and the same breakpoints; the text stays start-aligned inside the centred column. The
+// rule names both classes, as the primitives are emitted under `body` and one class alone loses to
+// them.
+// The menu's column is half as wide again as `.page-with-nav`'s: a document's section headings run
+// to a clause or two, and in the narrower column most of them broke into three lines. From a tablet
+// up the menu and the measure still fit side by side inside the frame's gutters.
+$menu-column: calc(#{space(8)} * 4 + #{space(6)});
+
+.document-page.page-with-nav {
   @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
-    grid-template-columns: calc(#{space(8)} * 3) minmax(0, $measure);
+    grid-template-columns: $menu-column minmax(0, $measure);
   }
 
-  @media (min-width: calc(#{space(8)} * 6 + #{$measure} + #{space(6)} * 2 + #{space(4)} * 2)) {
-    grid-template-columns:
-      calc(#{space(8)} * 3) minmax(0, $measure)
-      calc(#{space(8)} * 3);
+  @media (min-width: calc(#{$menu-column} * 2 + #{$measure} + #{space(6)} * 2 + #{space(4)} * 2)) {
+    grid-template-columns: $menu-column minmax(0, $measure) $menu-column;
+  }
+
+  // A menu of long entries: each entry takes a step more air above and below, so the gap between
+  // two entries is plainly wider than the gap between one entry's own lines, and its lines are set
+  // a touch looser than the font's own so a two-line entry reads as one thing.
+  > .page-nav a {
+    padding-block: space(2);
+    line-height: 1.3;
+  }
+
+  // A document has more sections than the menu can show in a short window, so while the menu is
+  // sticky it is no taller than the room under the shell's bar and scrolls inside itself. The
+  // focus ring sits inside the entry here, as the scrolling edge would clip one drawn outside.
+  @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+    > .page-nav {
+      max-height: calc(100dvh - #{$shell-bar-height} - #{space(4)} * 2);
+      overflow-y: auto;
+
+      a:focus-visible {
+        @include focus-ring($placement: inset);
+      }
+    }
   }
 }
 

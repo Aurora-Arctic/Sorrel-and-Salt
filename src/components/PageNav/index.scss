@@ -22,6 +22,10 @@
     color: $text-muted;
     text-align: start;
     text-decoration: none;
+    // An entry too long for the column breaks into lines of even length, as the headings do, so no
+    // line is left holding one word; a single-line entry is untouched.
+    // stylelint-disable-next-line plugin/use-baseline -- enhancement: the entry wraps in the ordinary way, uneven lines, where unsupported
+    text-wrap: balance;
     box-shadow: inset $rule-heavy 0 0 0 transparent;
     @include theme-transition(background-color, color);
 
