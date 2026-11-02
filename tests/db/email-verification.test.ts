@@ -383,6 +383,8 @@ describe('the primary admin is promoted at first-party verification', () => {
     const response = await signIn('microsoft', { sub: 'ms-7', email: STRANGER, verified: true });
     expectSignedIn(response);
     const cookie = cookieHeader(response);
+    // The change as setEmail records it, which the link must match to be honoured.
+    await sql`update users set pending_email = ${OWNER} where email = ${STRANGER}`;
     const before = (await userRow(STRANGER))!;
     const { secret } = await auth.$context;
     const token = await createEmailVerificationToken(secret, STRANGER, OWNER, 3600, {

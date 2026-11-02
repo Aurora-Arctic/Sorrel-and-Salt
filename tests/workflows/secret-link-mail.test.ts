@@ -1,7 +1,8 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import postgres from 'postgres';
 import { jwtVerify } from 'jose';
-import { start } from 'workflow/api';
+import { getRun, start } from 'workflow/api';
+import { waitForSleep } from '@workflow/vitest';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { verificationSigningSecret } from '@/lib/auth-secrets';
 import { secretLinkMail } from '@/modules/identity/jobs/secret-link-mail';
@@ -80,6 +81,25 @@ async function resetRow(userId: string, token: string, minutes = 15): Promise<vo
     insert into verifications (identifier, value, expires_at)
     values (${`reset-password:${token}`}, ${userId}, ${new Date(Date.now() + minutes * 60_000)})
   `;
+}
+
+/** Records a change to `pending` on the row, as setEmail does: the address in its own column and the row stamped as mailed now. */
+async function askForChange(userId: string, pending: string): Promise<Date> {
+  const [{ at }] = await sql`
+    update users set pending_email = ${pending}, verification_sent_at = now() where id = ${userId}
+    returning verification_sent_at as at
+  `;
+  return at as Date;
+}
+
+const pendingOf = async (userId: string) =>
+  (await sql`select pending_email from users where id = ${userId}`)[0]!.pending_email as
+    string | null;
+
+/** Wakes the run's pending sleep, standing in for the link's lifetime passing. */
+async function wake(run: Awaited<ReturnType<typeof start>>): Promise<void> {
+  const sleepId = await waitForSleep(run);
+  await getRun(run.runId).wakeUp({ correlationIds: [sleepId] });
 }
 
 const linkIn = (text: string, path: string) =>
@@ -195,5 +215,77 @@ describe('the secret-link mail run', () => {
 
     for (const run of runs) await expect(run.returnValue).resolves.toBe(false);
     expect(attempts).toHaveLength(0);
+  });
+
+  it("sends a change link to the pending address, signed as the change from the row's own, then clears the address once the link has expired", async () => {
+    const holder = await account(true);
+    const pending = `moving${made}${DOMAIN}`;
+    await askForChange(holder.id, pending);
+    const link: SecretLink = {
+      kind: 'change',
+      userId: holder.id,
+      authBase: AUTH_BASE,
+      next: '/grimoire',
+    };
+
+    const run = await start(secretLinkMail, [link]);
+
+    await waitForSleep(run);
+    expect(received).toHaveLength(1);
+    expect(received[0]!.to).toBe(pending);
+    const url = linkIn(received[0]!.text, '/verify-email\\?token=');
+    if (!url) throw new Error(`no change link in: ${received[0]!.text}`);
+    const { payload } = await jwtVerify(
+      new URL(url).searchParams.get('token')!,
+      new TextEncoder().encode(verificationSigningSecret()),
+    );
+    expect(payload).toMatchObject({
+      email: holder.email,
+      updateTo: pending,
+      requestType: 'change-email-verification',
+    });
+    expect(new URL(url).searchParams.get('callbackURL')).toContain(encodeURIComponent('/grimoire'));
+    // Precondition: the address is still pending while the link lasts.
+    expect(await pendingOf(holder.id)).toBe(pending);
+    expect(JSON.stringify(link)).not.toContain(DOMAIN);
+
+    await wake(run);
+
+    await expect(run.returnValue).resolves.toBe(true);
+    expect(await pendingOf(holder.id)).toBeNull();
+    // The row's own address and its verified state are as they were: a lapse undoes the request, nothing else.
+    const [row] = await sql`select email, email_verified from users where id = ${holder.id}`;
+    expect(row).toEqual({ email: holder.email, email_verified: true });
+  });
+
+  it("leaves the pending address of a later change alone when the first change's link expires", async () => {
+    const holder = await account(true);
+    await askForChange(holder.id, `first${made}${DOMAIN}`);
+    const run = await start(secretLinkMail, [
+      { kind: 'change', userId: holder.id, authBase: AUTH_BASE, next: null },
+    ]);
+    await waitForSleep(run);
+    const later = `second${made}${DOMAIN}`;
+    await new Promise((resolve) => setTimeout(resolve, 5));
+    await askForChange(holder.id, later);
+
+    await wake(run);
+
+    await expect(run.returnValue).resolves.toBe(true);
+    expect(await pendingOf(holder.id)).toBe(later);
+  });
+
+  it('sends nothing, and leaves the row alone, when a verified account holds the pending address by the time the step runs', async () => {
+    const holder = await account(true);
+    const taker = await account(true);
+    await askForChange(holder.id, taker.email);
+
+    const run = await start(secretLinkMail, [
+      { kind: 'change', userId: holder.id, authBase: AUTH_BASE, next: null },
+    ]);
+
+    await expect(run.returnValue).resolves.toBe(false);
+    expect(attempts).toHaveLength(0);
+    expect(await pendingOf(holder.id)).toBe(taker.email);
   });
 });

@@ -34,6 +34,29 @@ export async function verificationLinkMessage(
   return verifyEmailMessage({ to: email, url, providers });
 }
 
+/**
+ * The change-of-address link, mailed to `pending`, signed now for `lifetimeSeconds` as the change from `current`: `updateTo` plus
+ * this `requestType` is the branch of /verify-email that swaps the address and verifies it in one write.
+ */
+export async function changeLinkMessage(
+  authBase: string,
+  current: string,
+  pending: string,
+  next: string | null,
+  lifetimeSeconds: number,
+  providers: ProviderId[],
+): Promise<Message> {
+  const token = await createEmailVerificationToken(
+    verificationSigningSecret(),
+    current,
+    pending,
+    lifetimeSeconds,
+    { requestType: 'change-email-verification' },
+  );
+  const url = `${authBase}/verify-email?token=${token}&callbackURL=${encodeURIComponent(verifiedLanding(next ?? undefined))}`;
+  return verifyEmailMessage({ to: pending, url, purpose: 'change', providers });
+}
+
 /** The reset link for `token` under `authBase`, as Better Auth builds it, landing on the reset page. */
 function resetLink(authBase: string, token: string): string {
   const link = new URL(`${authBase}/reset-password/${token}`);

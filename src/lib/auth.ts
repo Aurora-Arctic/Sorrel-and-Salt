@@ -48,7 +48,7 @@ import { send } from './mail';
 import { runInBackground } from './background-tasks';
 import { emailPagePath, returnPathOf } from './account-email';
 import { LAST_USED_PROVIDER_COOKIE, SIGN_IN_TO_VERIFY_PATH } from './sign-in';
-import { sendEmailChangeNotice } from './email-change-notice';
+import { emailChangeNoticeMessage } from './email-change-notice';
 import { signedInLanding } from './landing';
 import { e2eTrustedOrigins, plainSessionCookie } from './e2e-session-cookie';
 import { impersonation, impersonationEnabled } from './impersonation';
@@ -68,6 +68,7 @@ import {
   VERIFICATION_LIFETIME_SECONDS,
   recordVerificationSent,
   verificationWaitFor,
+  emailChangeStanding,
   isEmailHeldByAnother,
   isPlaceholderEmail,
   placeholderEmail,
@@ -333,6 +334,14 @@ async function gateEmailChange(ctx: HookContext): Promise<void> {
   if (session.user.email.toLowerCase() !== claims.email.toLowerCase()) {
     throw refuseWrongAccount(ctx);
   }
+  // Only the newest change's link is honoured: a later change replaced the row's pending address, and a lapsed one cleared it.
+  const standing = await emailChangeStanding(session.user.id, claims.updateTo);
+  if (standing === 'replaced') {
+    throw refuseVerification(ctx, 'CHANGE_REPLACED', 'A newer change link replaced this one.');
+  }
+  if (standing === 'lapsed') {
+    throw refuseVerification(ctx, 'TOKEN_EXPIRED', 'This change link has expired.');
+  }
   if (await isEmailHeldByAnother(claims.updateTo, session.user.id)) {
     throw refuseVerification(ctx, 'EMAIL_TAKEN', 'That address is held by another account.');
   }
@@ -566,7 +575,15 @@ async function countPasswordSignIn(ctx: HookContext) {
 async function noticeCompletedChange(request: Request | undefined): Promise<void> {
   const claims = tokenClaims(request && new URL(request.url).searchParams.get('token'));
   if (!request || !claims?.email || !claims.updateTo) return;
-  await sendEmailChangeNotice(request, claims.email, claims.updateTo, 'completed');
+  await send(
+    await emailChangeNoticeMessage(
+      endpointOrigin(),
+      claims.email,
+      claims.updateTo,
+      'completed',
+      new Date(),
+    ),
+  );
 }
 
 // /api/auth/* is the one exception to the GraphQL-only rule (CLAUDE.md rule 1).
@@ -741,6 +758,8 @@ export const auth = betterAuth({
       termsAcceptedAt: { type: 'date', required: false, input: false, returned: false },
       // Declared so the update hook below can clear it; nothing reads it here.
       verificationSentAt: { type: 'date', required: false, input: false, returned: false },
+      // Declared so the update hook below can clear it at the swap; the email service writes it.
+      pendingEmail: { type: 'string', required: false, input: false, returned: false },
       // NOT NULL with no database default, so every insert must supply these.
       createdBy: { type: 'string', input: false, returned: false },
       updatedBy: { type: 'string', input: false, returned: false },
@@ -879,10 +898,12 @@ export const auth = betterAuth({
           const actor =
             ((await hasRequestState()) ? await actingUser.get() : undefined) ??
             ctx?.context.session?.user.id;
-          const data: { updatedBy?: string; verificationSentAt?: null } = {};
+          const data: { updatedBy?: string; verificationSentAt?: null; pendingEmail?: null } = {};
           if (actor) data.updatedBy = actor;
           // The mail was answered: the clock that spaces mails to the row starts over.
           if (patch.emailVerified === true) data.verificationSentAt = null;
+          // The change link's swap: the pending address is now the row's, cleared in the same write.
+          if (typeof patch.email === 'string') data.pendingEmail = null;
           if (Object.keys(data).length === 0) return;
           return { data };
         },

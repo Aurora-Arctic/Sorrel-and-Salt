@@ -12,6 +12,8 @@ const ERROR_MESSAGES: Record<string, string> = {
   SIGN_IN_TO_VERIFY: 'Open the link from a browser signed in to this account, then open it again.',
   EMAIL_TAKEN: "That email address can't be used yet. Try again in a while, or choose another.",
   TOKEN_EXPIRED: 'That link has expired. Send a new one below.',
+  CHANGE_REPLACED:
+    'A newer link replaced that one. Open the newest link we sent, or send a new one below.',
   INVALID_TOKEN: "That link didn't work. Send a new one below.",
   INVALID_USER:
     'That link belongs to a different account. Sign in to that account, then open it again.',

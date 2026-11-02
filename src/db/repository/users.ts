@@ -1,4 +1,4 @@
-import { and, eq, gt, inArray, like, ne, or, sql, type SQL } from 'drizzle-orm';
+import { and, eq, gt, inArray, isNotNull, like, ne, or, sql, type SQL } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
 import { accounts, passkeys, verifications } from '../../modules/identity/schema/auth';
@@ -13,11 +13,13 @@ import { findMany, findPage, findPageCount } from './finders';
 import { containsText, notSoftDeleted } from './predicates';
 import { existsIn, selectFrom } from './select';
 import type {
+  AuditWriter,
   LinkedProvider,
   PrivilegeChangeFilter,
   SortPart,
   UserFilter,
   UserName,
+  WriterContext,
 } from './types';
 
 /**
@@ -239,3 +241,20 @@ export async function findNewestResetToken(
 
 /** How Better Auth names a reset link's row in `verifications`: this, then the token. */
 const RESET_IDENTIFIER_PREFIX = 'reset-password:';
+
+export function userWrites({ update }: WriterContext): Pick<AuditWriter, 'lapseEmailChange'> {
+  return {
+    // Matched on the stamp the change was mailed under, so a later change, which restamps the row, keeps its own address. To the
+    // millisecond, as the stamp crossed the step boundary as a JavaScript date.
+    lapseEmailChange: (userId, sentAt) =>
+      update(
+        users,
+        { pendingEmail: null },
+        and(
+          eq(users.id, userId),
+          sql`date_trunc('milliseconds', ${users.verificationSentAt}) = ${sentAt.toISOString()}::timestamp`,
+          isNotNull(users.pendingEmail),
+        ),
+      ),
+  };
+}

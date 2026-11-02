@@ -364,7 +364,9 @@ the tests [`tests.md`](tests.md).
   curation or people operation either (the `usersById` loader batch is left as it is), and the GraphQL `admin` and `curator` scopes are false for it, so `selfOrAdmin` falls back to `self`. The list is empty rather than refused because the shell draws the email page and public pages from it.
 - **One rule: an address becomes the account's at verification, never
   before.** `setEmail(session, email, sender, next?)` in
-  `src/modules/identity/services/email.ts` writes nothing to `users.email`.
+  `src/modules/identity/services/email.ts` writes nothing to `users.email`:
+  the address asked for goes to `users.pending_email` until its link is
+  followed, replaced or lapses (below).
   It normalises and validates the address (`ValidationError` on `email`),
   refuses a change from a session created more than
   `EMAIL_CHANGE_WINDOW_SECONDS` ago (a day, as Better Auth's `freshAge` is for
@@ -377,9 +379,10 @@ the tests [`tests.md`](tests.md).
   `after`), so the call does not wait for either and a free address does not
   take longer to answer than a taken one. It tells the address being left that a
   change was asked for (`sender.notifyChangeRequested`: when, and the new
-  address's domain only, with no link in it), stamps the row as mailed (`recordVerificationSent`, which is also
-  what restarts a provisional caller's window), and asks the sender to mail
-  the new address a change link. The row's own, still-unverified address is
+  address's domain only, with no link in it), stamps the row as mailed and records the address as pending in one write
+  (`recordEmailChange`, which is also what restarts a provisional caller's window), and asks the sender to mail
+  the pending address a change link. A held address is recorded as pending too, so the two cases write alike; no link is
+  sent to it. The row's own, still-unverified address is
   mailed again instead; verified, there is nothing to do. Either way `next`
   is handed to the sender as given, for the link's landing.
 - **The address being left is told twice.** `src/emails/email-change-notice.tsx`
@@ -401,13 +404,24 @@ the tests [`tests.md`](tests.md).
   held back by it. The page hands the form the seconds left, so a sign-up
   that lands on it sees the countdown from the start rather than a refusal
   on its first submit.
-- **The change link is Better Auth's own.** `src/lib/email-verification.ts`
-  mints `/verify-email`'s change token — `createEmailVerificationToken` with
-  `updateTo` and `requestType: 'change-email-verification'` — under the same
-  secret and the request's own base URL (`resolveBaseURL`, so a preview host
-  links to itself), and sends `verify-email.tsx` with `purpose: 'change'`.
+- **The change link is Better Auth's own, signed when it is sent.** `src/lib/email-verification.ts`
+  starts the secret-link job (`kind: 'change'`, [`email.md`](../email.md), "Secret links") with the account's id, the
+  request's own base URL (`resolveBaseURL`, so a preview host links to itself) and the guarded `next`, never an address.
+  Its step reads `users.email` and `users.pending_email`, mints `/verify-email`'s change token —
+  `createEmailVerificationToken` with `updateTo` set to the pending address and
+  `requestType: 'change-email-verification'` — under the same secret, and sends `verify-email.tsx` with
+  `purpose: 'change'` to the pending address; one a verified account has come to hold is sent nothing.
   Following it, `/verify-email` swaps `email` and sets `emailVerified` in
-  one adapter write, stamped by the update hook. `user.changeEmail` stays
+  one adapter write, stamped by the update hook, which clears `pending_email` in the same write.
+- **Only the newest change is honoured, and only while its link lasts.** A second change overwrites `pending_email`
+  and the stamp, so the first link is refused at the gate (`?error=CHANGE_REPLACED`) and the second is honoured. The job
+  sleeps for the link's lifetime after sending, then clears `pending_email` as the System account, but only while the
+  row still carries the stamp it was sent under, so a later change keeps its own address; a link followed after that is
+  refused as `?error=TOKEN_EXPIRED`. With `MAIL_TRANSPORT` unset, or a job that did not start, nothing lapses the
+  column: it stays until the next change or the swap, and the link itself has expired by then.
+- **A pending address blocks nobody.** `pending_email` has no unique index, so an address pending on one account is
+  still free for another to sign up with or ask for: the unique index on `email` decides only at verification, and the
+  gate refuses `EMAIL_TAKEN` from `users.email` alone, as before (MB.67's provisional sweep reads neither address). `user.changeEmail` stays
   off: this replaces it, and nothing on `/api/auth` is added.
 - **Every link lands on the confirmed view, carrying where the account was
   going** (MB.111). Better Auth would land a sign-up's link where the
@@ -440,7 +454,8 @@ the tests [`tests.md`](tests.md).
   `src/lib/auth.ts`, decodes the token's claims (not verified: it only ever
   refuses, and the endpoint verifies the signature after), refuses unless
   the session holds the row named by `email` (`?error=SIGN_IN_TO_VERIFY`,
-  or 403 with no `callbackURL`), refuses while
+  or 403 with no `callbackURL`), refuses unless `updateTo` is the row's `pending_email` (`CHANGE_REPLACED`, or
+  `TOKEN_EXPIRED` once it was cleared), refuses while
   another live row holds `updateTo` (`?error=EMAIL_TAKEN`, which the unique
   index would otherwise 500 on), and records the acting user so the write
   is stamped and `afterEmailVerification` runs — so a change to the
@@ -464,8 +479,8 @@ the tests [`tests.md`](tests.md).
   `src/graphql/context.ts` and passed to the service by the `setEmail`
   resolver — the way loaders are. `resend` calls
   `auth.api.sendVerificationEmail` with the request's own headers, so the
-  existing hook restarts the window and mails; `requestChange` mints and
-  sends as above. Each takes the `next` `setEmail` was given and lands its
+  existing hook restarts the window and mails; `requestChange` starts the
+  secret-link job as above, and `notifyChangeRequested` the account notice job, each with the account's id. Each takes the `next` `setEmail` was given and lands its
   link at `verifiedLanding(next)`. `auth` is imported at call time there,
   since the route is built at `NODE_ENV=production` in its tests.
 - **A provider that shared no address gets a placeholder.** `orPlaceholder`

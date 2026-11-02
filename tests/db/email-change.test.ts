@@ -105,14 +105,32 @@ async function signUpUnverified(email = OWNER, sub = 'ms-owner') {
   return { cookie: cookieHeader(response), before };
 }
 
-/** A change link for `address`, requested from the row's own session, carrying `next` if given. */
+/** The address a change was asked for and not yet followed, replaced or lapsed. */
+async function pendingOf(id: string): Promise<string | null> {
+  const [row] = await sql`select pending_email from users where id = ${id}`;
+  return (row?.pending_email as string | null) ?? null;
+}
+
+/**
+ * A change link for `address`, as setEmail asks for one: the address written to the row's pending column, then the link
+ * requested from the row's own session, carrying `next` if given.
+ */
 async function changeLink(
   cookie: string,
   current: string,
   address = NEW,
   next?: string,
 ): Promise<string> {
-  await sender(cookie).requestChange(current, address, next);
+  // With the touch trigger off for this one statement, so the row compares equal to how it was before but for the pending column.
+  const id = await sql.begin(async (tx) => {
+    await tx`alter table users disable trigger set_updated_at`;
+    const [row] =
+      await tx`update users set pending_email = ${address} where email = ${current} returning id`;
+    await tx`alter table users enable trigger set_updated_at`;
+    return row!.id as string;
+  });
+  send.mockReset();
+  await sender(cookie).requestChange(id, next);
   expect(send.mock.calls[0][0]).toMatchObject({ to: address });
   return mailedLink();
 }
@@ -126,6 +144,7 @@ describe('Story 59: asking for a new address', () => {
     expect(link).toMatch(new RegExp(`^${ORIGIN}/api/auth/verify-email\\?token=`));
     expect(await userRow(OWNER)).toEqual(before);
     expect(await userRow(NEW)).toBeUndefined();
+    expect(await pendingOf(before.id)).toBe(NEW);
 
     const response = await follow(link, cookie);
 
@@ -139,6 +158,41 @@ describe('Story 59: asking for a new address', () => {
       // The mail was answered, so the next one is not held back by it.
       verification_sent_at: null,
     });
+    // Cleared in the swap's own write: the pending address is now the row's.
+    expect(await pendingOf(before.id)).toBeNull();
+  });
+
+  it('refuses the first link once a second change replaced it, and honours the second', async () => {
+    const { cookie, before } = await signUpUnverified();
+    const first = await changeLink(cookie, OWNER);
+    const second = await changeLink(cookie, OWNER, STRANGER);
+
+    const refused = await follow(first, cookie);
+
+    expect(landingOf(refused)).toBe('/account/email?error=CHANGE_REPLACED');
+    expect(await userRow(OWNER)).toEqual(before);
+    expect(await pendingOf(before.id)).toBe(STRANGER);
+    // Why the first could otherwise have been honoured: its token is good, and the address it names is free.
+    expect(await userRow(NEW)).toBeUndefined();
+    await follow(second, cookie);
+    expect(await userRow(STRANGER)).toMatchObject({ id: before.id, email_verified: true });
+  });
+
+  it('refuses a link whose pending address has lapsed as expired, and leaves the row unchanged', async () => {
+    const { cookie, before } = await signUpUnverified();
+    const link = await changeLink(cookie, OWNER);
+    // What the change job does once the link has expired.
+    await sql.begin(async (tx) => {
+      await tx`alter table users disable trigger set_updated_at`;
+      await tx`update users set pending_email = null where id = ${before.id}`;
+      await tx`alter table users enable trigger set_updated_at`;
+    });
+
+    const response = await follow(link, cookie);
+
+    expect(landingOf(response)).toBe('/account/email?error=TOKEN_EXPIRED');
+    expect(await userRow(OWNER)).toEqual(before);
+    expect(await userRow(NEW)).toBeUndefined();
   });
 
   it('refuses the link from no session, sending the browser to sign in with no session issued, and leaves the row unchanged', async () => {
@@ -174,7 +228,9 @@ describe('Story 59: asking for a new address', () => {
   it('refuses the link when a live account holds the address by the time it is followed', async () => {
     const { cookie, before } = await signUpUnverified();
     const link = await changeLink(cookie, OWNER);
-    // Why the refusal could otherwise be explained: the address is now held.
+    // A pending address blocks no one: the address is still free to sign up with, and the unique index on `email` alone
+    // decides at verification.
+    expect(await pendingOf(before.id)).toBe(NEW);
     expectSignedIn(await signIn('google', { sub: 'g-taker', email: NEW, verified: true }));
     expect(await userRow(NEW)).toMatchObject({ email_verified: true });
 

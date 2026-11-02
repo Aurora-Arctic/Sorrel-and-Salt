@@ -2,6 +2,7 @@ import 'server-only';
 import { findOneById, findUserByEmail, withAudit } from '../../../db/repository';
 import { normaliseEmail, validateEmailAddress } from '../../../lib/email-address';
 import { ValidationError } from '../../../lib/errors';
+import { SYSTEM_ACTOR_ID } from '../../../lib/system-actor';
 import type { Session } from '../../../lib/session';
 import { users } from '../schema/users';
 import { getMe } from './profile';
@@ -9,7 +10,7 @@ import type { AuditSession } from '../../../db/types';
 import type { EmailVerificationSender, UserRow } from '../types';
 
 // The address an account is mailed at changes only at verification: asking
-// for a new one is a token and a mail, never a write to `users.email`, so an
+// for a new one writes it to `pending_email` and mails a link, never a write to `users.email`, so an
 // established account never re-enters the provisional sweep
 // (claude-docs/auth/admin-bootstrap.md, "The email page").
 
@@ -65,6 +66,40 @@ export async function recordVerificationSent(session: AuditSession): Promise<voi
   );
 }
 
+/**
+ * Stamps the row as mailed now and records `address` as the change asked for, in one write that leaves `users.email` alone.
+ * A later change replaces the address and the stamp, so only the newest link is honoured.
+ */
+async function recordEmailChange(session: AuditSession, address: string): Promise<void> {
+  await withAudit(session, (write) =>
+    write.updateById(users, session.userId, {
+      verificationSentAt: new Date(),
+      pendingEmail: address,
+    }),
+  );
+}
+
+/** How a change link for `address` stands against account `userId`'s row: still the change asked for, replaced by a later one, or lapsed. */
+export async function emailChangeStanding(
+  userId: string,
+  address: string,
+): Promise<'pending' | 'replaced' | 'lapsed'> {
+  const row = await findOneById(users, userId);
+  if (!row?.pendingEmail) return 'lapsed';
+  return row.pendingEmail === address.toLowerCase() ? 'pending' : 'replaced';
+}
+
+/**
+ * Clears account `userId`'s pending address once its link has expired, as the System account, unless a later change restamped
+ * the row since `sentAt`. True when it cleared one.
+ */
+export async function lapseEmailChange(userId: string, sentAt: Date): Promise<boolean> {
+  const cleared = await withAudit({ userId: SYSTEM_ACTOR_ID }, (write) =>
+    write.lapseEmailChange(userId, sentAt),
+  );
+  return cleared.length > 0;
+}
+
 /** Whether a live account other than `userId`'s holds this address — what the unique index refuses at verification. */
 export async function isEmailHeldByAnother(email: string, userId: string): Promise<boolean> {
   const holder = await findUserByEmail(email);
@@ -72,8 +107,8 @@ export async function isEmailHeldByAnother(email: string, userId: string): Promi
 }
 
 /**
- * Asks for `input` to become the signed-in account's address. Nothing is
- * written to `users.email`: it becomes the row's when the mailed link is
+ * Asks for `input` to become the signed-in account's address. It is written to
+ * `pending_email`, never `users.email`: it becomes the row's when the mailed link is
  * followed from this account's session. The row is stamped as mailed, which
  * also restarts a provisional caller's window so the link cannot outlive the
  * row. An address a live verified account holds is answered the same and
@@ -121,12 +156,12 @@ export async function setEmail(
     return me;
   }
 
-  await recordVerificationSent(session);
+  await recordEmailChange(session, email);
   // Answered alike whether or not a verified account holds the address, so the form cannot be used to find out: the holder is mailed nothing, as a
   // notice to it would be a mail anyone signed in could send to any account. Both mails go out after the answer, since waiting for one on only the
   // free path would show in how long the answer takes.
   const held = await isEmailHeldByVerifiedAccount(email);
-  sender.defer(() => sender.notifyChangeRequested(me.email, email));
-  if (!held) sender.defer(() => sender.requestChange(me.email, email, next));
+  sender.defer(() => sender.notifyChangeRequested(me.id));
+  if (!held) sender.defer(() => sender.requestChange(me.id, next));
   return me;
 }

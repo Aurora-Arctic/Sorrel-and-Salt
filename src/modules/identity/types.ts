@@ -55,14 +55,14 @@ export interface EmailVerificationSender {
   /** Mails the row's own, still-unverified address its link again, landing on the way to `next`. */
   resend(email: string, next?: string): Promise<void>;
   /**
-   * Mails `address` a link that, followed from the row's session, makes it the
-   * row's address, landing on the way to `next`.
+   * Mails account `userId`'s pending address a link that, followed from the row's session, makes it the row's address,
+   * landing on the way to `next`.
    */
-  requestChange(current: string, address: string, next?: string): Promise<void>;
+  requestChange(userId: string, next?: string): Promise<void>;
   /** Whether the request's session was created less than `seconds` ago. */
   sessionIsFresh(seconds: number): Promise<boolean>;
-  /** Tells `current`, the address being left, that a change to `address` was asked for. Names the address's domain only; never throws on a failed send. */
-  notifyChangeRequested(current: string, address: string): Promise<void>;
+  /** Tells account `userId`'s address, the one being left, that a change to its pending address was asked for. Names that address's domain only; never throws on a failed send. */
+  notifyChangeRequested(userId: string): Promise<void>;
   /** Runs `task` once the response is sent, so a mail adds nothing to how long the answer takes. */
   defer(task: () => Promise<void>): void;
 }
@@ -188,4 +188,14 @@ export type SecretLink =
   /** The password reset link. */
   | { kind: 'reset'; userId: string; authBase: string }
   /** The lockout notice, with its reset link, for a lock of `minutes`. */
-  | { kind: 'lockout'; userId: string; authBase: string; minutes: number };
+  | { kind: 'lockout'; userId: string; authBase: string; minutes: number }
+  /** The change-of-address link, sent to the row's pending address and landing on the way to `next`. */
+  | { kind: 'change'; userId: string; authBase: string; next: string | null };
+
+/**
+ * An account notice, as its job's run holds it: ids, a kind and the site origin, never the address or the mail. The step reads
+ * the address from the row when it sends.
+ */
+export type AccountNotice =
+  /** Tells the address being left that a change to the row's pending address was asked for. */
+  { kind: 'change-requested'; userId: string; origin: string };
