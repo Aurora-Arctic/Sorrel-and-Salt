@@ -112,3 +112,7 @@ export type IngredientSource = (typeof INGREDIENT_SOURCES)[number];
 /** Which of the compendium's entries a curator's list reads: the shown ones (the public's only view), the hidden ones, or both. */
 export const COMPENDIUM_LISTINGS = ['shown', 'hidden', 'all'] as const;
 export type CompendiumListing = (typeof COMPENDIUM_LISTINGS)[number];
+
+/** The orders a curator's compendium list may take besides its default, by name or by best match: the sourcing score, lowest first. */
+export const COMPENDIUM_SORTS = ['sourcing_score'] as const;
+export type CompendiumSort = (typeof COMPENDIUM_SORTS)[number];

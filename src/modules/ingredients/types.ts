@@ -12,7 +12,7 @@ import type {
   WorkspaceIngredientFacets,
 } from '../../db/repository';
 import type { NameBasis } from './schema/ingredient-enums';
-import type { SOURCING_FACTS } from './services/sourcing-weights';
+import type { SOURCING_FACTS } from './schema/sourcing-weights';
 import type { ingredientDeities } from './schema/ingredient-deities';
 import type { ingredientVariants } from './schema/ingredient-variants';
 import type { CompendiumIngredientInput, LocalIngredientInput } from './validation/ingredient';

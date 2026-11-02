@@ -9,7 +9,7 @@ import {
   NOMENCLATURE_UNKNOWN,
   SAFETY_UNSOURCED,
   SOURCES,
-} from './sourcing-weights';
+} from '../schema/sourcing-weights';
 import { NAMELESS_KIND, UNSETTLED_KIND, type ReferenceKind } from '../schema/ingredient-enums';
 import type { CitedReference, SourcingFact, SourcingInput, SourcingScore } from '../types';
 

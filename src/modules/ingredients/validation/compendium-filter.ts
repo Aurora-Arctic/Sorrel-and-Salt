@@ -3,6 +3,7 @@ import { RowId, optionalText } from '../../../lib/validation';
 import {
   CATEGORY_MODES,
   COMPENDIUM_LISTINGS,
+  COMPENDIUM_SORTS,
   INGREDIENT_ELEMENTS,
   INGREDIENT_SOURCES,
   NOMENCLATURE_KINDS,
@@ -94,6 +95,12 @@ export const CompendiumFilter = z.object({
     .enum(COMPENDIUM_LISTINGS)
     .nullish()
     .transform((listing) => listing ?? 'shown'),
+  // A curator's order: the sourcing score, lowest first. Null or missing is the default order, by name or best match. The
+  // service refuses it without a curator's session, as the score is a curator's alone.
+  sort: z
+    .enum(COMPENDIUM_SORTS)
+    .nullish()
+    .transform((sort) => sort ?? undefined),
   // How the entries are classified; `unknown` is the formal names still to look up.
   nomenclature: z
     .enum(NOMENCLATURE_KINDS)

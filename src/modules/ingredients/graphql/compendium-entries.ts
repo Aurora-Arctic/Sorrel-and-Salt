@@ -9,7 +9,7 @@ import {
   updateCompendiumEntry,
 } from '../services/compendium';
 import { readSourcingScore } from '../services/compendium-sourcing';
-import { SOURCING_FACTS } from '../services/sourcing-weights';
+import { SOURCING_FACTS } from '../schema/sourcing-weights';
 import type { SourcingFact, SourcingScore } from '../types';
 import { clearIngredientChildren } from '../loaders/ingredient-children';
 import { EXPECTED_REVISION, IngredientRef } from './ingredient';

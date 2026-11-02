@@ -204,6 +204,13 @@ enum CompendiumListing {
   shown
 }
 
+"""
+An order for the compendium list besides its default: sourcing_score is the sourcing score, lowest first, then name. A curator or admin's alone.
+"""
+enum CompendiumSort {
+  sourcing_score
+}
+
 """A completed working, and the steps it took nothing for."""
 type CompleteWorkingResult {
   warnings: [WorkingWarning!]!
@@ -1456,6 +1463,7 @@ type Query {
     Keeps the entries a curator has marked reviewed, or with false the ones needing review. A curator or admin alone may set it.
     """
     reviewed: Boolean
+    sort: CompendiumSort
 
     """
     Keeps toxic entries, or entries that are not toxic; any, or leaving it out, keeps both.

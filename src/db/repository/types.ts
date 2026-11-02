@@ -11,6 +11,7 @@ import type { ingredientDeities } from '../../modules/ingredients/schema/ingredi
 import type { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
 import type {
   CategoryMode,
+  CompendiumSort,
   IngredientElement,
   NomenclatureKind,
 } from '../../modules/ingredients/schema/ingredient-enums';
@@ -822,6 +823,11 @@ export interface IngredientFilter {
    * A coven's cupboard read ignores it and keeps a hidden entry it names. The service lets only a curator set anything but shown.
    */
   listing?: 'shown' | 'hidden' | 'all';
+  /**
+   * The compendium's only: `sourcing_score` orders by the sourcing score, lowest first, then name; absent orders by name, or by best match
+   * under a query. A coven's cupboard read ignores it. The service lets only a curator set it.
+   */
+  sort?: CompendiumSort;
   /**
    * The compendium only: keep an entry when a live cupboard row of any one of these covens names it. A proof each, so a coven the caller is not in
    * cannot be named; an empty list is no filter.
