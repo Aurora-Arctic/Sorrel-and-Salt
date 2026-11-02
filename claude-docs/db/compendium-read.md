@@ -668,4 +668,4 @@ the facets, so they cannot disagree.
 
 An entry with `shown = false` is excluded in SQL from the public read: the list, its search and counts, the slug finder and its redirects, the picker and `ingredients-by-id`, so a hidden slug is a 404. The `listing` filter (`shown`, the default, `hidden` or `all`) is a curator's: a call from anyone else that sets it is refused with `Forbidden`, because the cache is keyed by the parsed filter. A coven's cupboard is read without the arm, so an entry it names stays visible there, as do the admin screens and the audit queue.
 
-An entry lands hidden when neither it nor any of its forms names a category; a category only on a form keeps the entry shown. The search results do not yet show or filter on a form's categories.
+An entry lands hidden when neither it nor any of its forms names a category; a category only on a form keeps the entry shown. A search result shows the union of its ingredient's categories and its live forms' (a form-only chip drawn outlined, its tip naming the form), and the category filter and its counts match the same union (`claude-docs/design-decisions/m14.38-form-categories-in-search.md`).
