@@ -56,7 +56,8 @@ export interface SchemaTypes {
   };
 }
 
-export type ErrorCode = 'VALIDATION' | 'FORBIDDEN' | 'NOT_FOUND' | 'STALE_WRITE' | 'RATE_LIMITED';
+export type ErrorCode =
+  'VALIDATION' | 'FORBIDDEN' | 'ACCESS_PAUSED' | 'NOT_FOUND' | 'STALE_WRITE' | 'RATE_LIMITED';
 
 /**
  * What a mapped error carries under `extensions`: `fieldErrors` only on
@@ -66,6 +67,8 @@ export interface ErrorExtensions {
   code: ErrorCode;
   fieldErrors?: ValidationIssue[];
   currentRevision?: number;
+  /** Set with `ACCESS_PAUSED`: when the pause ends, as an ISO string, or `null` for a pause with no end. */
+  pausedUntil?: string | null;
   /** Set with `RATE_LIMITED`: the HTTP status and the Retry-After header Yoga sends. */
   http?: { status: number; headers: Record<string, string> };
 }

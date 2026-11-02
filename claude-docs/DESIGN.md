@@ -747,6 +747,7 @@ Yoga maps them on the way out through `maskedErrors.maskError`, which keeps mask
 | Thrown            | `extensions.code` | Also carries                              |
 | ----------------- | ----------------- | ----------------------------------------- |
 | `ValidationError` | `VALIDATION`      | `extensions.fieldErrors`, from its issues |
+| `AccessPaused`    | `ACCESS_PAUSED`   | `extensions.pausedUntil`, ISO or `null`   |
 | `Forbidden`       | `FORBIDDEN`       | —                                         |
 | `NotFound`        | `NOT_FOUND`       | —                                         |
 | `StaleWrite`      | `STALE_WRITE`     | `extensions.currentRevision`              |
