@@ -107,7 +107,7 @@ export default function PrivacyPolicyPage() {
       <h2>The Short Version</h2>
       <ul>
         <li>The site keeps only what it needs to sign you in and to run your covens.</li>
-        <li>It shows no advertising, runs no analytics script and sells nothing about you.</li>
+        <li>It shows no advertising and sells nothing about you.</li>
         <li>
           It sets cookies only for signing in: the one that keeps you signed in, and one that
           remembers which sign-in method you used last. Your light or dark theme is kept in your own
@@ -334,7 +334,7 @@ export default function PrivacyPolicyPage() {
 
       <h2>What the Site Does Not Do</h2>
       <ul>
-        <li>It shows no advertising and runs no analytics or tracking script.</li>
+        <li>It shows no advertising and runs no tracking script.</li>
         <li>It sells, rents or shares your data with nobody, beyond the services named above.</li>
       </ul>
 
