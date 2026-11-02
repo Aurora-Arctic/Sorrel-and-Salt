@@ -16,6 +16,7 @@ import { membershipWrites, workspaceWrites } from './memberships';
 import { spellStepWrites } from './spells';
 import { stockWrites } from './stock';
 import { supportWrites } from './support';
+import { userAccessPauseWrites } from './user-access-pauses';
 import { workingWrites } from './workings';
 import { existsIn, selectFrom } from './select';
 import { StaleWrite } from '@/lib/errors';
@@ -221,6 +222,7 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
     ...spellStepWrites(context),
     ...stockWrites(context),
     ...supportWrites(context),
+    ...userAccessPauseWrites(context),
     ...workingWrites(context),
     ...workspaceWrites(context),
     delete: (table, match) => {

@@ -58,6 +58,7 @@ export const AUDITED_TABLES = [
   'support_requests',
   'support_send_counts',
   'support_timeouts',
+  'user_access_pauses',
   'user_privilege_changes',
   'users',
   'workspace_compendium_entries',

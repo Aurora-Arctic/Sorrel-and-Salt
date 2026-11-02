@@ -63,8 +63,10 @@ filtering and the partial-index convention"](soft-delete.md).
 Some tables are written only through named writer methods, because a row
 authorises something or holds a state only a named call may move:
 `admin_role_change_pauses` (MB.62), opened and ended by
-`pauseAdminRoleChanges` and `resumeAdminRoleChanges`, and `invitations`
-(MB.201), made, accepted and revoked by its named insert, accept and revoke. Such a table says so once, in its schema file:
+`pauseAdminRoleChanges` and `resumeAdminRoleChanges`, `invitations`
+(MB.201), made, accepted and revoked by its named insert, accept and revoke,
+and `user_access_pauses` (M15.51), set and lifted by `setUserAccessPause` and
+`liftUserAccessPause`. Such a table says so once, in its schema file:
 
 ```ts
 export const adminRoleChangePauses = namedWrites(pgTable('admin_role_change_pauses', { … }));

@@ -827,6 +827,13 @@
       "when": 1793586951144,
       "tag": "0117_compendium-hide-uncategorised-live",
       "breakpoints": true
+    },
+    {
+      "idx": 118,
+      "version": "7",
+      "when": 1793608126875,
+      "tag": "0118_user-access-pauses",
+      "breakpoints": true
     }
   ]
 }

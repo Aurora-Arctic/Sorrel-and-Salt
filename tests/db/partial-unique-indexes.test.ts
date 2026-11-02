@@ -280,6 +280,10 @@ const ROWS: Record<string, PartialIndexRow> = {
   references_seed_key_unique: { row: reference },
   spell_steps_spell_id_custom_name_unique: { row: () => spellStep(false) },
   spell_steps_spell_id_position_unique: { row: () => spellStep(true) },
+  // One live pause per user: a fresh pause on A, whatever it holds.
+  user_access_pauses_one_live: {
+    row: async () => stamped({ user_id: AUTHOR }),
+  },
   users_email_unique: { row: async () => stamped({ name: 'Fixture Person', email: address() }) },
   workspaces_demo_unique: {
     row: async () => {

@@ -19,6 +19,7 @@ import * as spellWorkings from '@/modules/grimoire/schema/spell-workings';
 import * as spells from '@/modules/grimoire/schema/spells';
 import * as adminRoleChangePauses from '@/modules/identity/schema/admin-role-change-pauses';
 import * as auth from '@/modules/identity/schema/auth';
+import * as userAccessPauses from '@/modules/identity/schema/user-access-pauses';
 import * as userPrivilegeChanges from '@/modules/identity/schema/user-privilege-changes';
 import * as users from '@/modules/identity/schema/users';
 import * as ingredientCategories from '@/modules/ingredients/schema/ingredient-categories';
@@ -74,6 +75,7 @@ const MODULES = [
   spells,
   adminRoleChangePauses,
   auth,
+  userAccessPauses,
   userPrivilegeChanges,
   users,
   ingredientCategories,
