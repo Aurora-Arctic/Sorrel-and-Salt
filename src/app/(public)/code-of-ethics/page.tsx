@@ -37,7 +37,8 @@ export default function CodeOfEthicsPage() {
         </li>
         <li>
           Take only what can be spared: no endangered plants, no animal parts from protected
-          species, nothing poached.
+          species, nothing poached. The law can make exceptions for Indigenous peoples' religious
+          and cultural use. <SourceMarks cite="exception-short" numbers={[11]} />
         </li>
         <li>What the compendium says, it sources. A claim with no source is a claim to doubt.</li>
         <li>
@@ -135,21 +136,21 @@ export default function CodeOfEthicsPage() {
         people you are not part of. This is advice, not a rule of your account, and the site does
         not enforce it.
       </p>
-      <p>So the site commits to this:</p>
+      <p>Here is what the site does today, and what it commits to:</p>
       <ul>
         <li>
-          The compendium records where an ingredient's lore comes from, by naming its sources. We
-          commit that an entry whose lore comes from a closed practice will say so, name the people
-          it belongs to, and not describe the ceremony.
+          The compendium records where an ingredient's lore comes from, by naming its sources. No
+          entry yet says whether its lore comes from a closed practice, so an entry can come from
+          one without saying so.
+        </li>
+        <li>
+          A warning on an entry whose practice is closed, and ethical warnings on ingredients, are
+          planned for the compendium and not yet built. Until they are, this page is the warning.
         </li>
         <li>
           We commit to describing Indigenous, African diasporic and other closed traditions in the
           words their own practitioners use, cited to those practitioners where a source exists, and
           never to repackaging them as generic "witchcraft".
-        </li>
-        <li>
-          A warning on an entry whose practice is closed, and ethical warnings on ingredients, are
-          planned for the compendium and not yet built. Until they are, this page is the warning.
         </li>
         <li>
           If you belong to a tradition the compendium describes and it gets your tradition wrong,
@@ -414,7 +415,7 @@ export default function CodeOfEthicsPage() {
           </a>
           .
         </SourceItem>
-        <SourceItem number={11} cites={['exception']}>
+        <SourceItem number={11} cites={['exception-short', 'exception']}>
           U.S. Fish & Wildlife Service. "National Eagle Repository." Accessed 2 November 2026.{' '}
           <a href="https://www.fws.gov/program/national-eagle-repository">
             https://www.fws.gov/program/national-eagle-repository
