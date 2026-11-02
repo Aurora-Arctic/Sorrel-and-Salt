@@ -71,7 +71,8 @@ export default function TermsOfUsePage() {
       <p>
         A spell marked private is shown to you alone. Once a spell is complete and shared with your
         coven, it cannot be made private again, because the people who have seen it may already rely
-        on it; to change a shared spell, make a draft copy of it.
+        on it. To change a shared spell, use Duplicate: it makes a private draft copy that you can
+        edit, and the shared spell stays as it was.
       </p>
       <p>
         A coven's owner may delete the coven, and may remove any member from it. Any member may
