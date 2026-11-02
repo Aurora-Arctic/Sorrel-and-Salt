@@ -130,7 +130,7 @@ type Documents = {
     "\n  mutation SendSupportMessage($requestId: ID!, $body: String!) {\n    sendSupportMessage(requestId: $requestId, body: $body) {\n      id\n    }\n  }\n": typeof types.SendSupportMessageDocument,
     "\n  mutation ResolveMySupportRequest($id: ID!) {\n    resolveMySupportRequest(id: $id) {\n      id\n    }\n  }\n": typeof types.ResolveMySupportRequestDocument,
     "\n  mutation AgreeToTerms {\n    agreeToTerms {\n      id\n      termsVersion\n    }\n  }\n": typeof types.AgreeToTermsDocument,
-    "\n  mutation PauseUserAccess($userId: ID!, $until: DateTime, $note: String) {\n    pauseUserAccess(userId: $userId, until: $until, note: $note) {\n      id\n    }\n  }\n": typeof types.PauseUserAccessDocument,
+    "\n  mutation PauseUserAccess($userId: ID!, $until: DateTime, $note: String!) {\n    pauseUserAccess(userId: $userId, until: $until, note: $note) {\n      id\n    }\n  }\n": typeof types.PauseUserAccessDocument,
     "\n  mutation LiftUserAccessPause($userId: ID!) {\n    liftUserAccessPause(userId: $userId) {\n      id\n    }\n  }\n": typeof types.LiftUserAccessPauseDocument,
     "\n  mutation GrantWorkspaceCreation($userId: ID!, $note: String) {\n    grantWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": typeof types.GrantWorkspaceCreationDocument,
     "\n  mutation RevokeWorkspaceCreation($userId: ID!, $note: String) {\n    revokeWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": typeof types.RevokeWorkspaceCreationDocument,
@@ -255,7 +255,7 @@ const documents: Documents = {
     "\n  mutation SendSupportMessage($requestId: ID!, $body: String!) {\n    sendSupportMessage(requestId: $requestId, body: $body) {\n      id\n    }\n  }\n": types.SendSupportMessageDocument,
     "\n  mutation ResolveMySupportRequest($id: ID!) {\n    resolveMySupportRequest(id: $id) {\n      id\n    }\n  }\n": types.ResolveMySupportRequestDocument,
     "\n  mutation AgreeToTerms {\n    agreeToTerms {\n      id\n      termsVersion\n    }\n  }\n": types.AgreeToTermsDocument,
-    "\n  mutation PauseUserAccess($userId: ID!, $until: DateTime, $note: String) {\n    pauseUserAccess(userId: $userId, until: $until, note: $note) {\n      id\n    }\n  }\n": types.PauseUserAccessDocument,
+    "\n  mutation PauseUserAccess($userId: ID!, $until: DateTime, $note: String!) {\n    pauseUserAccess(userId: $userId, until: $until, note: $note) {\n      id\n    }\n  }\n": types.PauseUserAccessDocument,
     "\n  mutation LiftUserAccessPause($userId: ID!) {\n    liftUserAccessPause(userId: $userId) {\n      id\n    }\n  }\n": types.LiftUserAccessPauseDocument,
     "\n  mutation GrantWorkspaceCreation($userId: ID!, $note: String) {\n    grantWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": types.GrantWorkspaceCreationDocument,
     "\n  mutation RevokeWorkspaceCreation($userId: ID!, $note: String) {\n    revokeWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": types.RevokeWorkspaceCreationDocument,
@@ -745,7 +745,7 @@ export function graphql(source: "\n  mutation AgreeToTerms {\n    agreeToTerms {
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  mutation PauseUserAccess($userId: ID!, $until: DateTime, $note: String) {\n    pauseUserAccess(userId: $userId, until: $until, note: $note) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation PauseUserAccess($userId: ID!, $until: DateTime, $note: String) {\n    pauseUserAccess(userId: $userId, until: $until, note: $note) {\n      id\n    }\n  }\n"];
+export function graphql(source: "\n  mutation PauseUserAccess($userId: ID!, $until: DateTime, $note: String!) {\n    pauseUserAccess(userId: $userId, until: $until, note: $note) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation PauseUserAccess($userId: ID!, $until: DateTime, $note: String!) {\n    pauseUserAccess(userId: $userId, until: $until, note: $note) {\n      id\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

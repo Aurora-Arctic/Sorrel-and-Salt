@@ -81,6 +81,8 @@ export interface PauseFieldsProps {
   onDay: (day: string) => void;
   note: string;
   onNote: (note: string) => void;
+  /** Marks the note required: a site pause needs one, a coven pause does not. */
+  noteRequired?: boolean;
   /** Who reads the note, beneath the field. */
   noteHint: string;
   notePlaceholder: string;

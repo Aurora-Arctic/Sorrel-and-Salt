@@ -1114,9 +1114,9 @@ type Mutation {
   pauseMemberAccess(note: String, until: DateTime, userId: ID!, workspaceId: ID!): WorkspaceMemberPause!
 
   """
-  Pauses a user’s access until `until`, or with no end when it is left out, and ends every session they hold. Site admins only.
+  Pauses a user’s access until `until`, or with no end when it is left out, with a note saying why, and ends every session they hold. Site admins only.
   """
-  pauseUserAccess(note: String, until: DateTime, userId: ID!): UserAccessPause!
+  pauseUserAccess(note: String!, until: DateTime, userId: ID!): UserAccessPause!
 
   """
   Makes a common name the ingredient's display name, and the old display name a common name. A null workspaceId names a compendium entry, under the admin proof.
@@ -2797,14 +2797,14 @@ type User {
 }
 
 """
-A pause on a user’s access to the site: no sign-in by any method until `until`, or with no end when `until` is null, unless lifted sooner.
+A pause on a user’s access to the site: nothing but support until `until`, or with no end when `until` is null, unless lifted sooner. `note` says why, for staff.
 """
 type UserAccessPause {
   audit: AuditInfo!
   id: ID!
   liftedAt: DateTime
   liftedBy: ID
-  note: String
+  note: String!
   until: DateTime
   userId: ID!
 }

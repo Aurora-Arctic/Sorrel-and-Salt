@@ -340,8 +340,8 @@ describe('Story 58: a paused account is still removed, with its pauses', () => {
   it('removes a lapsed account holding a site pause and a coven pause, and the pauses with it', async () => {
     const squatter = await squat(OWNER);
     await sql`
-      insert into user_access_pauses (user_id, created_by, updated_by)
-      values (${squatter.row.id}, ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
+      insert into user_access_pauses (user_id, note, created_by, updated_by)
+      values (${squatter.row.id}, 'Testnote', ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
     `;
     await sql`
       insert into workspace_member_pauses (workspace_id, user_id, created_by, updated_by)

@@ -19,6 +19,7 @@ import type { NamedWrites } from '@/db/types';
 const OWN_COLUMNS = ['id', 'user_id', 'until', 'note', 'lifted_at', 'lifted_by'];
 const LIFTED_TOGETHER = 'user_access_pauses_lifted_together';
 const ONE_LIVE = 'user_access_pauses_one_live';
+const NOTE_NOT_BLANK = 'user_access_pauses_note_not_blank';
 const ADMIN = E.id;
 const PAUSED = A.id;
 
@@ -29,9 +30,9 @@ describe('user_access_pauses schema', () => {
     expect(Object.keys(byName).sort()).toEqual([...OWN_COLUMNS, ...AUDIT_COLUMNS].sort());
   });
 
-  it('declares until, note and the lifted pair nullable', () => {
+  it('declares until and the lifted pair nullable, and the note required', () => {
     expect(byName.until.notNull).toBe(false);
-    expect(byName.note.notNull).toBe(false);
+    expect(byName.note.notNull).toBe(true);
     expect(byName.lifted_at.notNull).toBe(false);
     expect(byName.lifted_by.notNull).toBe(false);
   });
@@ -57,15 +58,15 @@ useTestDatabase((client) => (sql = client));
 
 function livePause(userId = PAUSED) {
   return sql`
-    insert into user_access_pauses (user_id, created_by, updated_by)
-    values (${userId}, ${ADMIN}, ${ADMIN}) returning *
+    insert into user_access_pauses (user_id, note, created_by, updated_by)
+    values (${userId}, 'Testnote', ${ADMIN}, ${ADMIN}) returning *
   `;
 }
 
 function liftedPause() {
   return sql`
-    insert into user_access_pauses (user_id, lifted_at, lifted_by, created_by, updated_by)
-    values (${PAUSED}, now(), ${ADMIN}, ${ADMIN}, ${ADMIN})
+    insert into user_access_pauses (user_id, note, lifted_at, lifted_by, created_by, updated_by)
+    values (${PAUSED}, 'Testnote', now(), ${ADMIN}, ${ADMIN}, ${ADMIN})
   `;
 }
 
@@ -79,18 +80,37 @@ describe('user_access_pauses table', () => {
 
   it('refuses a pause for no user', async () => {
     const error = await failureOf(sql`
-      insert into user_access_pauses (user_id, created_by, updated_by)
-      values (pg_catalog.gen_random_uuid(), ${ADMIN}, ${ADMIN})
+      insert into user_access_pauses (user_id, note, created_by, updated_by)
+      values (pg_catalog.gen_random_uuid(), 'Testnote', ${ADMIN}, ${ADMIN})
     `);
 
     // 23503 is foreign_key_violation.
     expect(error.code).toBe('23503');
   });
 
-  it('accepts an open-ended pause with no note, not lifted', async () => {
+  it('accepts an open-ended pause with a note, not lifted', async () => {
     const [row] = await livePause();
 
-    expect(row).toMatchObject({ until: null, note: null, lifted_at: null, lifted_by: null });
+    expect(row).toMatchObject({ until: null, note: 'Testnote', lifted_at: null, lifted_by: null });
+  });
+
+  it('refuses a pause with no note, and one whose note is blank', async () => {
+    const none = await failureOf(sql`
+      insert into user_access_pauses (user_id, created_by, updated_by)
+      values (${PAUSED}, ${ADMIN}, ${ADMIN})
+    `);
+    const blank = await failureOf(sql`
+      insert into user_access_pauses (user_id, note, created_by, updated_by)
+      values (${PAUSED}, ' \t ', ${ADMIN}, ${ADMIN})
+    `);
+
+    // 23502 is not_null_violation; 23514 is check_violation.
+    expect(none.code).toBe('23502');
+    expect(none.column_name).toBe('note');
+    expect(blank.code).toBe('23514');
+    expect(blank.constraint_name).toBe(NOTE_NOT_BLANK);
+    // The precondition: the same row with a note goes in.
+    await livePause();
   });
 
   it('refuses a second live pause for the same user', async () => {
@@ -117,8 +137,8 @@ describe('user_access_pauses table', () => {
   // An expired pause still holds the slot: `until` passing cannot sit in an index predicate, since now() is not immutable.
   it('counts a live pause whose until has passed as live', async () => {
     await sql`
-      insert into user_access_pauses (user_id, until, created_by, updated_by)
-      values (${PAUSED}, now() - interval '1 day', ${ADMIN}, ${ADMIN})
+      insert into user_access_pauses (user_id, note, until, created_by, updated_by)
+      values (${PAUSED}, 'Testnote', now() - interval '1 day', ${ADMIN}, ${ADMIN})
     `;
 
     const second = await failureOf(livePause());
@@ -128,12 +148,12 @@ describe('user_access_pauses table', () => {
 
   it('refuses a lifted_at without lifted_by, and a lifted_by without lifted_at', async () => {
     const noBy = await failureOf(sql`
-      insert into user_access_pauses (user_id, lifted_at, created_by, updated_by)
-      values (${PAUSED}, now(), ${ADMIN}, ${ADMIN})
+      insert into user_access_pauses (user_id, note, lifted_at, created_by, updated_by)
+      values (${PAUSED}, 'Testnote', now(), ${ADMIN}, ${ADMIN})
     `);
     const noAt = await failureOf(sql`
-      insert into user_access_pauses (user_id, lifted_by, created_by, updated_by)
-      values (${PAUSED}, ${ADMIN}, ${ADMIN}, ${ADMIN})
+      insert into user_access_pauses (user_id, note, lifted_by, created_by, updated_by)
+      values (${PAUSED}, 'Testnote', ${ADMIN}, ${ADMIN}, ${ADMIN})
     `);
 
     // 23514 is check_violation.
@@ -181,7 +201,7 @@ describe('the repository', () => {
 
   it('reads an open-ended pause as standing', async () => {
     const [set] = await withAudit(asUser(E), (write) =>
-      write.setUserAccessPause(admin, PAUSED, { until: null, note: null }),
+      write.setUserAccessPause(admin, PAUSED, { until: null, note: 'Testnote' }),
     );
 
     expect(await findStandingUserAccessPause(PAUSED)).toEqual(set);
@@ -190,8 +210,8 @@ describe('the repository', () => {
   // The row is live, so the index still counts it, but the pause no longer stands: the user is let back in with no write.
   it('reads a live pause whose until has passed as not standing', async () => {
     await sql`
-      insert into user_access_pauses (user_id, until, created_by, updated_by)
-      values (${PAUSED}, now() - interval '1 minute', ${ADMIN}, ${ADMIN})
+      insert into user_access_pauses (user_id, note, until, created_by, updated_by)
+      values (${PAUSED}, 'Testnote', now() - interval '1 minute', ${ADMIN}, ${ADMIN})
     `;
 
     expect(await findStandingUserAccessPause(PAUSED)).toBeUndefined();
@@ -199,7 +219,7 @@ describe('the repository', () => {
 
   it('reads no standing pause for another user than the paused one', async () => {
     await withAudit(asUser(E), (write) =>
-      write.setUserAccessPause(admin, PAUSED, { until: null, note: null }),
+      write.setUserAccessPause(admin, PAUSED, { until: null, note: 'Testnote' }),
     );
 
     expect(await findStandingUserAccessPause(B.id)).toBeUndefined();
@@ -207,8 +227,8 @@ describe('the repository', () => {
 
   it('reads no soft-deleted pause as standing', async () => {
     await sql`
-      insert into user_access_pauses (user_id, created_by, updated_by, deleted_at, deleted_by)
-      values (${PAUSED}, ${ADMIN}, ${ADMIN}, now(), ${ADMIN})
+      insert into user_access_pauses (user_id, note, created_by, updated_by, deleted_at, deleted_by)
+      values (${PAUSED}, 'Testnote', ${ADMIN}, ${ADMIN}, now(), ${ADMIN})
     `;
 
     expect(await findStandingUserAccessPause(PAUSED)).toBeUndefined();
@@ -217,7 +237,7 @@ describe('the repository', () => {
   // A is no admin, but the writer stamps whoever the session names: the stamps below can only have come from the session, not from E's proof.
   it('lifts the standing pause, stamping lifted_by and updated_by from the session', async () => {
     const [set] = await withAudit(asUser(E), (write) =>
-      write.setUserAccessPause(admin, PAUSED, { until: null, note: null }),
+      write.setUserAccessPause(admin, PAUSED, { until: null, note: 'Testnote' }),
     );
 
     const lifted = await withAudit(asUser(A), (write) => write.liftUserAccessPause(admin, PAUSED));
@@ -236,8 +256,8 @@ describe('the repository', () => {
   // A pause that ran out ended by itself; lifting it would record an admin ending what had already ended.
   it('lifts nothing when no pause stands, an expired one included', async () => {
     await sql`
-      insert into user_access_pauses (user_id, until, created_by, updated_by)
-      values (${PAUSED}, now() - interval '1 minute', ${ADMIN}, ${ADMIN})
+      insert into user_access_pauses (user_id, note, until, created_by, updated_by)
+      values (${PAUSED}, 'Testnote', now() - interval '1 minute', ${ADMIN}, ${ADMIN})
     `;
 
     const lifted = await withAudit(asUser(E), (write) => write.liftUserAccessPause(admin, PAUSED));
@@ -249,7 +269,7 @@ describe('the repository', () => {
 
   it("lifts only the named user's pause", async () => {
     await withAudit(asUser(E), (write) =>
-      write.setUserAccessPause(admin, PAUSED, { until: null, note: null }),
+      write.setUserAccessPause(admin, PAUSED, { until: null, note: 'Testnote' }),
     );
 
     const lifted = await withAudit(asUser(E), (write) => write.liftUserAccessPause(admin, B.id));
@@ -261,12 +281,12 @@ describe('the repository', () => {
   // The set writer frees the one-live slot first: the expired row it closes keeps its until, so it still reads as having run out on its own.
   it('sets a new pause over an expired one, closing the expired row from the session', async () => {
     const [expired] = await sql`
-      insert into user_access_pauses (user_id, until, created_by, updated_by)
-      values (${PAUSED}, now() - interval '1 minute', ${ADMIN}, ${ADMIN}) returning id, until
+      insert into user_access_pauses (user_id, note, until, created_by, updated_by)
+      values (${PAUSED}, 'Testnote', now() - interval '1 minute', ${ADMIN}, ${ADMIN}) returning id, until
     `;
 
     const set = await withAudit(asUser(E), (write) =>
-      write.setUserAccessPause(admin, PAUSED, { until: null, note: null }),
+      write.setUserAccessPause(admin, PAUSED, { until: null, note: 'Testnote' }),
     );
 
     expect(set).toHaveLength(1);
@@ -281,7 +301,7 @@ describe('the repository', () => {
 
   it('sets a new pause over a standing one, replacing it', async () => {
     const [first] = await withAudit(asUser(E), (write) =>
-      write.setUserAccessPause(admin, PAUSED, { until: tomorrow(), note: null }),
+      write.setUserAccessPause(admin, PAUSED, { until: tomorrow(), note: 'Testnote' }),
     );
 
     const [second] = await withAudit(asUser(E), (write) =>
@@ -310,7 +330,7 @@ describe('the repository', () => {
     expect(await tokensOf(PAUSED)).toHaveLength(2);
 
     await withAudit(asUser(E), (write) =>
-      write.setUserAccessPause(admin, PAUSED, { until: null, note: null }),
+      write.setUserAccessPause(admin, PAUSED, { until: null, note: 'Testnote' }),
     );
 
     expect(await tokensOf(PAUSED)).toEqual([]);
@@ -319,12 +339,12 @@ describe('the repository', () => {
 
   it("reads every pause for a user, newest first, and no other user's", async () => {
     await sql`
-      insert into user_access_pauses (user_id, lifted_at, lifted_by, created_at, created_by, updated_by)
-      values (${PAUSED}, now(), ${ADMIN}, now() - interval '2 days', ${ADMIN}, ${ADMIN}),
-             (${B.id}, null, null, now(), ${ADMIN}, ${ADMIN})
+      insert into user_access_pauses (user_id, note, lifted_at, lifted_by, created_at, created_by, updated_by)
+      values (${PAUSED}, 'Testnote', now(), ${ADMIN}, now() - interval '2 days', ${ADMIN}, ${ADMIN}),
+             (${B.id}, 'Testnote', null, null, now(), ${ADMIN}, ${ADMIN})
     `;
     const [standing] = await withAudit(asUser(E), (write) =>
-      write.setUserAccessPause(admin, PAUSED, { until: null, note: null }),
+      write.setUserAccessPause(admin, PAUSED, { until: null, note: 'Testnote' }),
     );
 
     const history = await historyOf(PAUSED);
@@ -336,8 +356,8 @@ describe('the repository', () => {
 
   it('reads no soft-deleted pause into the history', async () => {
     await sql`
-      insert into user_access_pauses (user_id, created_by, updated_by, deleted_at, deleted_by)
-      values (${PAUSED}, ${ADMIN}, ${ADMIN}, now(), ${ADMIN})
+      insert into user_access_pauses (user_id, note, created_by, updated_by, deleted_at, deleted_by)
+      values (${PAUSED}, 'Testnote', ${ADMIN}, ${ADMIN}, now(), ${ADMIN})
     `;
 
     expect(await historyOf(PAUSED)).toEqual([]);
@@ -346,12 +366,12 @@ describe('the repository', () => {
   it('reads the standing pauses of the users asked for, and no expired, lifted, deleted or unasked one', async () => {
     // A standing, B run out, C lifted, D soft-deleted, F standing but not asked for; E has none.
     await sql`
-      insert into user_access_pauses (user_id, until, lifted_at, lifted_by, deleted_at, deleted_by, created_by, updated_by)
-      values (${A.id}, null, null, null, null, null, ${ADMIN}, ${ADMIN}),
-             (${B.id}, now() - interval '1 minute', null, null, null, null, ${ADMIN}, ${ADMIN}),
-             (${C.id}, null, now(), ${ADMIN}, null, null, ${ADMIN}, ${ADMIN}),
-             (${D.id}, null, null, null, now(), ${ADMIN}, ${ADMIN}, ${ADMIN}),
-             (${F.id}, now() + interval '1 day', null, null, null, null, ${ADMIN}, ${ADMIN})
+      insert into user_access_pauses (user_id, note, until, lifted_at, lifted_by, deleted_at, deleted_by, created_by, updated_by)
+      values (${A.id}, 'Testnote', null, null, null, null, null, ${ADMIN}, ${ADMIN}),
+             (${B.id}, 'Testnote', now() - interval '1 minute', null, null, null, null, ${ADMIN}, ${ADMIN}),
+             (${C.id}, 'Testnote', null, now(), ${ADMIN}, null, null, ${ADMIN}, ${ADMIN}),
+             (${D.id}, 'Testnote', null, null, null, now(), ${ADMIN}, ${ADMIN}, ${ADMIN}),
+             (${F.id}, 'Testnote', now() + interval '1 day', null, null, null, null, ${ADMIN}, ${ADMIN})
     `;
 
     const asked = await findStandingUserAccessPausesFor(admin, [A.id, B.id, C.id, D.id, E.id]);

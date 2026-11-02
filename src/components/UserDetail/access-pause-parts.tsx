@@ -68,6 +68,7 @@ export const PauseFields = ({
   onDay,
   note,
   onNote,
+  noteRequired = false,
   noteHint,
   notePlaceholder,
 }: PauseFieldsProps): ReactElement => {
@@ -106,7 +107,7 @@ export const PauseFields = ({
           />
         </FieldShell>
       )}
-      <FieldShell label="Note" hint={noteHint} {...noteField}>
+      <FieldShell label="Note" hint={noteHint} required={noteRequired} {...noteField}>
         <input
           id={noteField.controlId}
           className="input"
@@ -114,6 +115,7 @@ export const PauseFields = ({
           autoComplete="off"
           placeholder={notePlaceholder}
           maxLength={500}
+          aria-required={noteRequired || undefined}
           {...noteAria}
           value={note}
           onChange={(event) => onNote(event.target.value)}

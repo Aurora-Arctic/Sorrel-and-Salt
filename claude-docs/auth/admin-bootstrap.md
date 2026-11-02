@@ -711,9 +711,10 @@ The table is DESIGN.md §5's `user_access_pauses` (M15.51).
 - the admin themselves: `Forbidden`, "You cannot pause your own access";
 - another admin while admin changes are paused (MB.62), unless the caller is the primary admin: the same refusal a revoke of admin gets;
 - a user already paused: a validation error, "This user is already paused; lift the pause first";
-- an `until` that is not in the future, or a note over 500 characters: a validation error on that field.
+- an `until` that is not in the future: a validation error on `until`, "Choose a time in the future";
+- a note missing, blank, or over 500 characters: a validation error on `note`, "Write a note saying why" or "Keep the note to 500 characters".
 
-A note is trimmed, and an empty one is stored as none. Lifting a user with no standing pause, a run-out one included, answers `NotFound`.
+Every pause, dated or open-ended, needs a note saying why: the GraphQL argument is required, the service refuses one blank once trimmed, and the column is NOT NULL with a CHECK that it holds a character other than whitespace. The note is stored trimmed. Lifting a user with no standing pause, a run-out one included, answers `NotFound`.
 
 **What a pause does.** Setting it lifts any run-out live row, deletes every row in `sessions` for the user and inserts
 the new pause, all in one `withAudit` transaction (`setUserAccessPause` in `src/db/repository/user-access-pauses.ts`).

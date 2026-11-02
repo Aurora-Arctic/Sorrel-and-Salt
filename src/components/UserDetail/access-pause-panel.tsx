@@ -13,12 +13,12 @@ import { Ledger, PauseFields, Until, endOf, pauseReady, stands } from './access-
 import type { AccessPauseEntry, PauseSpan } from './types';
 import '../SupportRequests/timeout-panel.scss';
 
-// An admin's pause on a user's access to the site: no sign-in by any method until an end, or with no end date, until
-// lifted (claude-docs/components/user-detail.md, "Site Access"). Laid out on the support time-out panel's classes, so
+// An admin's pause on a user's access to the site: nothing but support until an end, or with no end date, until lifted,
+// with a note saying why (claude-docs/components/user-detail.md, "Site Access"). Laid out on the support time-out panel's classes, so
 // the two sections of the user modal read alike.
 
 const PauseDocument = graphql(`
-  mutation PauseUserAccess($userId: ID!, $until: DateTime, $note: String) {
+  mutation PauseUserAccess($userId: ID!, $until: DateTime, $note: String!) {
     pauseUserAccess(userId: $userId, until: $until, note: $note) {
       id
     }
@@ -65,7 +65,7 @@ const StandingCard = ({
       title="Lift the Pause?"
       question={
         <>
-          <strong>{name}</strong> will be able to sign in again once you confirm.
+          <strong>{name}</strong> will reach the whole site again once you confirm.
         </>
       }
       busy="Lifting"
@@ -87,7 +87,7 @@ const PauseForm = ({ userId, name }: { userId: string; name: string }): ReactEle
 
   // The end is worked out when the question opens or the answer is sent, never kept in state.
   const end = endOf(span, day, new Date());
-  const ready = pauseReady(span, day);
+  const ready = pauseReady(span, day) && note.trim() !== '';
 
   return (
     <div className="form">
@@ -98,6 +98,7 @@ const PauseForm = ({ userId, name }: { userId: string; name: string }): ReactEle
         onDay={setDay}
         note={note}
         onNote={setNote}
+        noteRequired
         noteHint={NOTE_HINT}
         notePlaceholder="Why, for staff"
       />
@@ -111,8 +112,8 @@ const PauseForm = ({ userId, name }: { userId: string; name: string }): ReactEle
           title={`Pause Access for ${name}?`}
           question={
             end
-              ? `They cannot sign in until ${longMinuteInZone(end)}, and are signed out now. You can lift it sooner.`
-              : 'They cannot sign in until you lift the pause, and are signed out now.'
+              ? `They can reach only Support until ${longMinuteInZone(end)}, and are signed out now. You can lift it sooner.`
+              : 'They can reach only Support until you lift the pause, and are signed out now.'
           }
           busy="Pausing"
           confirmClass="btn btn--destructive"
@@ -124,7 +125,7 @@ const PauseForm = ({ userId, name }: { userId: string; name: string }): ReactEle
             return graphqlRequest(PauseDocument, {
               userId,
               until: until?.toISOString() ?? null,
-              note: note.trim() || undefined,
+              note: note.trim(),
             });
           }}
           onSent={() => {

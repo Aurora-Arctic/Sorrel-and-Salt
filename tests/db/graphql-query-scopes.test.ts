@@ -439,7 +439,9 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
     `mutation { revokeWorkspaceCreation(userId: "${NOWHERE}") { id } }`,
   ),
   setUserRole: write(`mutation { setUserRole(userId: "${NOWHERE}", role: admin) { id } }`),
-  pauseUserAccess: write(`mutation { pauseUserAccess(userId: "${NOWHERE}") { id } }`),
+  pauseUserAccess: write(
+    `mutation { pauseUserAccess(userId: "${NOWHERE}", note: "Testnote") { id } }`,
+  ),
   liftUserAccessPause: write(`mutation { liftUserAccessPause(userId: "${NOWHERE}") { id } }`),
   pauseAdminRoleChanges: write('mutation { pauseAdminRoleChanges }'),
   resumeAdminRoleChanges: write('mutation { resumeAdminRoleChanges }'),

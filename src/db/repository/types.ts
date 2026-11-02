@@ -1088,17 +1088,20 @@ export type IngredientRow = Omit<typeof ingredients.$inferSelect, UnreadIngredie
 /** One `user_access_pauses` row. */
 export type UserAccessPauseRow = typeof userAccessPauses.$inferSelect;
 
-/** What a site access pause is set with: `until` null for no end date. */
+/** What a site access pause is set with: `until` null for no end date, and always a note saying why. */
 export interface UserAccessPauseInput {
   until: Date | null;
-  note: string | null;
+  note: string;
 }
 
 /** One `workspace_member_pauses` row. */
 export type WorkspaceMemberPauseRow = typeof workspaceMemberPauses.$inferSelect;
 
-/** What a coven pause is set with: the same as a site access pause's. */
-export type WorkspaceMemberPauseInput = UserAccessPauseInput;
+/** What a coven pause is set with: `until` null for no end date, and a note or none. */
+export interface WorkspaceMemberPauseInput {
+  until: Date | null;
+  note: string | null;
+}
 
 export type ReadRow<TTable extends PgTable> = TTable extends typeof ingredients
   ? IngredientRow
