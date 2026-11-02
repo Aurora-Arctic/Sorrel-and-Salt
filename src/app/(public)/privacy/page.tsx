@@ -149,7 +149,7 @@ export default function PrivacyPolicyPage() {
         </li>
         <li>
           <strong>An authenticator app:</strong> the site keeps the shared secret and your backup
-          codes in an encrypted form, and counts wrong codes.
+          codes in an encrypted form.
         </li>
       </ul>
 
