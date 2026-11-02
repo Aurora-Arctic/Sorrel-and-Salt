@@ -115,8 +115,17 @@ const QUEUE_ORDER: readonly SortPart[] = [
 
 const QUEUE_VIEWS: readonly SupportView[] = ['needs_staff', 'mine', 'unassigned'];
 
-const orderOf = ({ view }: SupportRequestFilter): readonly SortPart[] =>
-  view && QUEUE_VIEWS.includes(view) ? QUEUE_ORDER : REQUEST_ORDER;
+// Staff's every view: an anonymised request, which the System account holds and which takes no more work, after every other,
+// the view's own order kept within each. A key of the cursor's, so a page that crosses from one to the other stays exact.
+const ANONYMISED_LAST: SortPart = {
+  expression: sql`case when ${supportRequests.createdBy} = ${SYSTEM_ACTOR_ID} then 1 else 0 end`,
+  type: 'integer',
+};
+
+const orderOf = ({ view }: SupportRequestFilter): readonly SortPart[] => [
+  ANONYMISED_LAST,
+  ...(view && QUEUE_VIEWS.includes(view) ? QUEUE_ORDER : REQUEST_ORDER),
+];
 
 /** What a view holds: the status, and for the queue views who holds the request. */
 function viewArm(reader: SupportReader, view: SupportView): SQL {
@@ -158,7 +167,7 @@ function filterArms(
   ];
 }
 
-/** One page of the requests the reader may see, open ahead of resolved and newest first within each. */
+/** One page of the requests the reader may see, anonymised ones last, and within each, open ahead of resolved and newest first. */
 export function findSupportRequestPage(
   reader: SupportReader,
   filter: SupportRequestFilter,

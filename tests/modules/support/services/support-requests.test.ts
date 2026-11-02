@@ -3,9 +3,11 @@ import type postgres from 'postgres';
 import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
 import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
 import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
-import type { PageRequest } from '@/lib/types';
+import type { Cursor, PageEntry, PageRequest } from '@/lib/types';
 import {
   assignSupportRequest,
+  closeSupportRequest,
+  countSupportRequests,
   getMySupportRequest,
   countMySupportRequestsByStatus,
   getMySupportTimeout,
@@ -646,6 +648,60 @@ describe('the cursor', () => {
       { limit: 2, inverted: false, after: first[0]!.cursor },
     );
     expect(rest.map((entry) => entry.node.id)).toEqual([resolved.id]);
+  });
+});
+
+describe('an anonymised request in the staff list', () => {
+  // Two ordinary closed requests and an anonymised one sent after both: newest first alone would put it ahead of them.
+  const closedTrio = async () => {
+    const older = await send(C);
+    const newer = await send(D);
+    const anonymised = await send(C);
+    for (const request of [older, newer, anonymised]) {
+      await closeSupportRequest(asUser(E), request.id);
+    }
+    await sql`update support_requests set created_at = now() - interval '2 hours' where id = ${older.id}`;
+    await sql`update support_requests set created_at = now() - interval '1 hour' where id = ${newer.id}`;
+    await sql`update support_requests set created_by = ${SYSTEM_ACTOR_ID} where id = ${anonymised.id}`;
+    return { older, newer, anonymised };
+  };
+
+  it('comes after every ordinary request in the same view, though it is the newest', async () => {
+    const { older, newer, anonymised } = await closedTrio();
+    const [{ created_at: anonymisedAt }] =
+      await sql`select created_at from support_requests where id = ${anonymised.id}`;
+    const [{ created_at: newerAt }] =
+      await sql`select created_at from support_requests where id = ${newer.id}`;
+    expect(anonymisedAt.getTime()).toBeGreaterThan(newerAt.getTime());
+
+    const ids = (await listSupportRequests(asUser(E), { view: 'closed' }, PAGE)).map(
+      (entry) => entry.node.id,
+    );
+
+    expect(ids).toEqual([newer.id, older.id, anonymised.id]);
+  });
+
+  it('pages across the boundary one row at a time, every row once and in order, and counts the rows before it', async () => {
+    const { older, newer, anonymised } = await closedTrio();
+    const seen: PageEntry<{ id: string }>[] = [];
+    let after: Cursor | undefined;
+    for (let page = 0; page < 10; page += 1) {
+      const entries = await listSupportRequests(
+        asUser(E),
+        { view: 'closed' },
+        { limit: 1, inverted: false, ...(after ? { after } : {}) },
+      );
+      if (entries.length === 0) break;
+      seen.push(...entries);
+      after = entries[entries.length - 1]!.cursor;
+    }
+
+    expect(seen.map((entry) => entry.node.id)).toEqual([newer.id, older.id, anonymised.id]);
+    // The anonymised row's page starts after both ordinary rows, so its position counts them.
+    expect(await countSupportRequests(asUser(E), { view: 'closed' }, seen[2]!.cursor)).toEqual({
+      totalCount: 3,
+      countBefore: 2,
+    });
   });
 });
 
