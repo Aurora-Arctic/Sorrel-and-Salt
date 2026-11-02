@@ -14,6 +14,8 @@ An entry's categories as a row of chips: the first `CATEGORY_CHIP_LIMIT` (2) sho
 | `compact`    | The tighter chip size for a table cell; the card keeps the regular one (default `false`)                                                                                                                                                                                                                |
 | `absent`     | Draws the chips hollow (no fill, a dashed muted border, muted text), for categories that are named but not there: Category Match's Missing row (default `false`)                                                                                                                                        |
 
+**A category only a form carries.** A `CardCategory` may carry `forms`, the names of the forms that carry a category its entry does not (a result card reads them, [`compendium-read.md`](../db/compendium-read.md), "What a result card shows"). Such a chip is a tip chip whatever `tipOf` says, its tip naming the forms ("On: Oil, Dried Leaf"), and is drawn outlined in its group's colour rather than washed (`.category-chips__form-chip`), so it reads apart from the entry's own. The caller puts those chips after the entry's own; the row keeps the order it is given. `chip-tip.ts` picks a chip's tip.
+
 `CardCategory` and `CATEGORY_CHIP_LIMIT` live here; the card re-exports the type. The chips are full-level chips ([`styling.md`](../styling.md), "Category chips"), plain text and not links; the list is named "Categories".
 
 ## The +N toggletip
@@ -28,7 +30,7 @@ The panel is `position: fixed`, placed by Floating UI beneath the chip row (the 
 
 ## Styling
 
-Tokens only, as signed off in MB.120 (2026-10-20). `CategoryChips/index.scss` styles the chip inside the list (`.category-chips .chip`), the `+N` item (`.category-more-item`) and its button (`.category-more__button`, a `space()` step), the toggletip's fixed panel and its fade (`.category-more__panel`), and the compact size (`.category-chips--compact`). The chip itself is the shared `.chip`
+Tokens only, as signed off in MB.120 (2026-10-20). `CategoryChips/index.scss` styles the chip inside the list (`.category-chips .chip`), the `+N` item (`.category-more-item`) and its button (`.category-more__button`, a `space()` step), the toggletip's fixed panel and its fade (`.category-more__panel`), the compact size (`.category-chips--compact`) and the outlined chip of a category only a form carries (`.category-chips__form-chip`: no fill, a border in the group's own colour through `group-colour()`, the owner's call recorded in [`m14.38-form-categories-in-search.md`](../design-decisions/m14.38-form-categories-in-search.md)). The chip itself is the shared `.chip`
 primitive.
 
 **On a phone** the chips wrap with their row. The `+N` panel is fixed and placed by Floating UI, so a narrow card or table frame never clips it; it flips above near the window's foot. The compact size grows the `+N` button's hit area to 24px (WCAG 2.5.8). Under reduced motion the panel appears without fading.
@@ -37,8 +39,8 @@ primitive.
 
 ## Testing
 
-`tests/components/CategoryChips` covers the chips, the limit and the panel's open and close paths. Placement and height are measured in a browser: `tests/e2e/public-compendium.spec.ts` (the card) and `tests/e2e/admin-compendium.spec.ts` (the table, desktop and phone).
+`tests/components/CategoryChips` covers the chips, the limit, the panel's open and close paths, and a form-only chip's place after the own chips and its tip, in the row and behind +N. Placement and height are measured in a browser: `tests/e2e/public-compendium.spec.ts` (the card) and `tests/e2e/admin-compendium.spec.ts` (the table, desktop and phone).
 
 ## Stories
 
-`src/components/CategoryChips/index.stories.tsx`, titled "Ingredients / Category Chips": `States`, a grid of No Categories, Exactly At The Limit (two chips), One In The More Button, Several In The More Button, More Panel Open (the +N panel pressed open), In A Scrolling Frame (as the admin table holds it, the panel not clipped) and Sizes (the regular size the card wears and the compact one the table does).
+`src/components/CategoryChips/index.stories.tsx`, titled "Ingredients / Category Chips": `States`, a grid of No Categories, Exactly At The Limit (two chips), One In The More Button, Several In The More Button, More Panel Open (the +N panel pressed open), In A Scrolling Frame (as the admin table holds it, the panel not clipped) Sizes (the regular size the card wears and the compact one the table does) and On A Form Only (an own chip, then two outlined chips only forms carry).

@@ -11,6 +11,7 @@ import type { CardCategory } from './types';
 const CategoryTipChip = ({
   category,
   group,
+  forms,
   tip,
 }: CardCategory & { tip: string }): ReactElement => {
   const tipId = useId();
@@ -18,7 +19,11 @@ const CategoryTipChip = ({
     <IconTip tip={tip} placement="above" opensOnPress>
       <button
         type="button"
-        className="chip category-chips__tip-chip"
+        className={
+          forms && forms.length > 0
+            ? 'chip category-chips__tip-chip category-chips__form-chip'
+            : 'chip category-chips__tip-chip'
+        }
         style={chipColors(group)}
         aria-describedby={tipId}
       >
