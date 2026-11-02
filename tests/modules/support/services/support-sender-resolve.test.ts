@@ -28,8 +28,6 @@ beforeEach(async () => {
 
 const INPUT = { about: 'bug', subject: 'The jar will not open', message: 'It sticks.' } as const;
 const mail: SupportNotifier = {
-  received: async () => undefined,
-  resolved: async () => undefined,
   origin: async () => 'http://localhost:3000',
 };
 

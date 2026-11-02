@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { Forbidden, RateLimited, ValidationError } from '@/lib/errors';
 import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
@@ -12,6 +12,7 @@ import {
 } from '@/modules/support';
 import type { SupportNotifier } from '@/modules/support';
 import { supportReplyNotice } from '@/modules/support/jobs/support-reply-notice';
+import { supportStatusMail } from '@/modules/support/jobs/support-status-mail';
 import { A, E, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 
@@ -33,8 +34,14 @@ const replyNotices = () =>
 
 beforeEach(async () => {
   startJob.mockClear();
+  // Set, so the receipt starts its job rather than being tried once here.
+  vi.stubEnv('MAIL_TRANSPORT', 'smtp');
   await sql`truncate support_replies, support_timeouts, support_requests cascade`;
   await sql`delete from support_send_counts`;
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
 });
 
 const INPUT = {
@@ -44,16 +51,13 @@ const INPUT = {
   message: 'The code never arrives.',
 } as const;
 
+// The receipt goes out through its job too, whose mail is tested in tests/modules/support/services/support-status-mail.test.ts.
+const receipts = () =>
+  startJob.mock.calls.filter(([job]) => job === supportStatusMail).map(([, args]) => args);
+
 function notifier() {
-  const received: { to: string; subject: string; requestId: string | null }[] = [];
-  const mail: SupportNotifier = {
-    received: async (to, subject, requestId) => {
-      received.push({ to, subject, requestId });
-    },
-    resolved: async () => undefined,
-    origin: async () => 'http://localhost:3000',
-  };
-  return { mail, received };
+  const mail: SupportNotifier = { origin: async () => 'http://localhost:3000' };
+  return { mail };
 }
 
 const send = (
@@ -70,7 +74,7 @@ const count = async () => (await sql`select count(*)::int as n from support_requ
 
 describe('sendSignedOutSupportRequest', () => {
   it('stores the request under the signed-out sender with the address beside it, and mails a receipt', async () => {
-    const { mail, received } = notifier();
+    const { mail } = notifier();
 
     await send(INPUT, { mail });
 
@@ -79,9 +83,11 @@ describe('sendSignedOutSupportRequest', () => {
     expect(row!.sender_email).toBe('visitor@example.test');
     expect(row!.about).toBe('account');
     expect(row!.status).toBe('open');
-    expect(received).toEqual([
-      { to: 'visitor@example.test', subject: INPUT.subject, requestId: null },
+    // The run carries the request id and the origin; its step reads the address from the row.
+    expect(receipts()).toEqual([
+      [{ kind: 'received', requestId: row!.id, origin: 'http://localhost:3000' }],
     ]);
+    expect(JSON.stringify(receipts())).not.toContain('visitor@example.test');
   });
 
   it.each(['accessibility', 'account', 'bug', 'privacy', 'question'] as const)(
@@ -149,12 +155,12 @@ describe('sendSignedOutSupportRequest', () => {
   });
 
   it('drops a send whose hidden field is filled, storing, counting and mailing nothing', async () => {
-    const { mail, received } = notifier();
+    const { mail } = notifier();
 
     await send({ ...INPUT, website: 'https://spam.example' }, { mail });
 
     expect(await count()).toBe(0);
-    expect(received).toEqual([]);
+    expect(receipts()).toEqual([]);
     expect(await sql`select 1 from support_send_counts`).toHaveLength(0);
   });
 

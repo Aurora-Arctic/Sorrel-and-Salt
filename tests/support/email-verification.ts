@@ -26,7 +26,5 @@ export const noPasswordSetter: PasswordSetter = {
 };
 
 export const noSupportNotifier: SupportNotifier = {
-  received: async () => unexpected('mail a receipt'),
-  resolved: async () => unexpected('mail a resolved notice'),
   origin: async () => unexpected('resolve an origin'),
 };

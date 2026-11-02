@@ -24,5 +24,6 @@ export type {
   SupportViewCounts,
   SupportRequestRow,
   SupportStatus,
+  SupportStatusMail,
   SupportTimeoutRow,
 } from './types';

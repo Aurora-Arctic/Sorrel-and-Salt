@@ -56,8 +56,6 @@ const INPUT = { about: 'bug', subject: 'The jar will not open', message: 'It sti
 
 function notifier(): SupportNotifier {
   return {
-    received: async () => undefined,
-    resolved: async () => undefined,
     origin: async () => 'http://localhost:3000',
   };
 }
@@ -66,8 +64,6 @@ const send = (user: SessionUser = C, input: Parameters<typeof sendSupportRequest
   sendSupportRequest(asUser(user), input, notifier());
 
 const mail: SupportNotifier = {
-  received: async () => undefined,
-  resolved: async () => undefined,
   origin: async () => 'http://localhost:3000',
 };
 

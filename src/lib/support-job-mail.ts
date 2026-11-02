@@ -1,6 +1,8 @@
 import { supportClosingSoonMessage } from '../emails/support-closing-soon';
 import { supportEmailReplyMessage } from '../emails/support-email-reply';
 import { supportReplyNoticeMessage } from '../emails/support-reply-notice';
+import { supportReceivedMessage } from '../emails/support-received';
+import { supportResolvedMessage } from '../emails/support-resolved';
 import { supportRequestPath } from './support-path';
 import type { Message } from './types';
 
@@ -36,4 +38,24 @@ export function supportReplyMessage(
     return supportEmailReplyMessage({ to, url: `${origin}/support`, body: reply.body });
   const url = `${origin}${supportRequestPath(reply.requestId)}`;
   return supportReplyNoticeMessage({ to, url, requestSubject: reply.requestSubject });
+}
+
+const STATUS_MESSAGES = {
+  received: supportReceivedMessage,
+  resolved: supportResolvedMessage,
+};
+
+/**
+ * The received or resolved mail, linked from `origin`. A signed-out sender has no page to open, so `requestId` is null and the
+ * mail links to the support form; a signed-in sender's opens the request.
+ */
+export function supportStatusMessage(
+  mail: keyof typeof STATUS_MESSAGES,
+  origin: string,
+  to: string,
+  requestSubject: string,
+  requestId: string | null,
+): Promise<Message> {
+  const url = `${origin}${requestId === null ? '/support' : supportRequestPath(requestId)}`;
+  return STATUS_MESSAGES[mail]({ to, url, requestSubject, signedOut: requestId === null });
 }
