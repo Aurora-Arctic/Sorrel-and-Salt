@@ -440,7 +440,7 @@ and soft-deletes the old row
 (`tests/db/migrations/0095-rekey-citation-seed-keys.test.ts`).
 
 A change to a source's own fields changes its key the same way.
-`0115_print-encyclopedia-entries` did it for the 22 vocabulary sources read
+`0116_print-encyclopedia-entries` did it for the 22 vocabulary sources read
 through Encyclopedia.com and the Jewish Virtual Library, which were chapters
 and are now entries in the print work (the _Encyclopedia of Religion_,
 _Encyclopaedia Judaica_, _Encyclopedia of India_ and _Contemporary American
@@ -451,7 +451,7 @@ soft-deleted rows included so a deleted source stays deleted, and leaves a row
 alone where another compendium row already holds the new key. The row keeps its
 id and its links, and the next `db:seed:sources` run writes the new fields
 onto it unless a person edited it
-(`tests/db/migrations/0115-print-encyclopedia-entries.test.ts`,
+(`tests/db/migrations/0116-print-encyclopedia-entries.test.ts`,
 `tests/db/seed/sources-print-entries.test.ts`).
 
 ### How the compendium seed cites its sources (MB.242)

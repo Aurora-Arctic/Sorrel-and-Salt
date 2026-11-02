@@ -11,10 +11,10 @@ import { SOURCES, seedSources } from '@/db/seed/sources';
 import { citationText } from '@/lib/citation';
 
 // A source the seed stored before it carried its print work's details is not found by the seed, which then inserts a second copy.
-// This proves the seed updates the stored row in place once the migration that rewrites the keys has run (`0115`), and twins it
-// before. Retired with the migration's own test once `0115` is in production's journal.
+// This proves the seed updates the stored row in place once the migration that rewrites the keys has run (`0116`), and twins it
+// before. Retired with the migration's own test once `0116` is in production's journal.
 
-const MIGRATION = fromRoot('src/db/migrations/0115_print-encyclopedia-entries.sql');
+const MIGRATION = fromRoot('src/db/migrations/0116_print-encyclopedia-entries.sql');
 const STATEMENTS = readFileSync(MIGRATION, 'utf8')
   .split('--> statement-breakpoint')
   .map((statement) => statement.replace(/^\s*--.*$/gm, '').trim())

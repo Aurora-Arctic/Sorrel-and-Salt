@@ -12,7 +12,7 @@ import { NAME_BASES } from '@/modules/ingredients/schema/ingredient-enums';
 // The citation columns: `reference_links.name_basis` and `supports`, `references.scholarly`. Nothing reads or writes them yet; this file proves the catalogue holds them.
 
 const AUTHOR = FIXTURE_USERS.A.id;
-const MIGRATION = fromRoot('src/db/migrations/0114_citation-columns.sql');
+const MIGRATION = fromRoot('src/db/migrations/0115_citation-columns.sql');
 
 let sql: postgres.Sql;
 useTestDatabase((client) => (sql = client));

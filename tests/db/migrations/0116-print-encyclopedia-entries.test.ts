@@ -12,12 +12,12 @@ import { SOURCES } from '@/db/seed/sources';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { citationText } from '@/lib/citation';
 
-// A migration test, retired once `0115` is in production's journal. `0115` rewrites the `seed_key` of the 22 encyclopedia sources
+// A migration test, retired once `0116` is in production's journal. `0116` rewrites the `seed_key` of the 22 encyclopedia sources
 // the vocabulary seed now cites as entries in the print work, so the seed finds each stored row again rather than inserting a twin.
 // The test database is already migrated and empty of compendium rows, so the statement runs again over rows each case writes.
 // The sources are the real ones, since the migration names their citations.
 
-const FILE = fromRoot('src/db/migrations/0115_print-encyclopedia-entries.sql');
+const FILE = fromRoot('src/db/migrations/0116_print-encyclopedia-entries.sql');
 const SQL_TEXT = readFileSync(FILE, 'utf8');
 const STATEMENTS = SQL_TEXT.split('--> statement-breakpoint')
   .map((statement) => statement.replace(/^\s*--.*$/gm, '').trim())
@@ -90,7 +90,7 @@ const seedKeyOf = async (id: string) => {
   return row;
 };
 
-describe('0115', () => {
+describe('0116', () => {
   it('maps an old key to the key the seed builds today for each of the 22 sources', () => {
     const wanted = SOURCES.map(({ reference }) => reference).filter((work) =>
       PRINT_WORKS.includes(work.container ?? ''),
