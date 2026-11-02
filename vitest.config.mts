@@ -33,6 +33,7 @@ export const DB_FREE = [
   'tests/modules/ingredients/schema/ingredient-enums.test.ts',
   'tests/modules/ingredients/schema/units.test.ts',
   'tests/modules/ingredients/services/cupboard-entries.test.ts',
+  'tests/modules/ingredients/services/sourcing-score.test.ts',
   'tests/modules/ingredients/units/**',
   'tests/modules/grimoire/categories/**',
 ];

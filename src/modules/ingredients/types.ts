@@ -12,6 +12,7 @@ import type {
   WorkspaceIngredientFacets,
 } from '../../db/repository';
 import type { NameBasis } from './schema/ingredient-enums';
+import type { SOURCING_FACTS } from './services/sourcing-weights';
 import type { ingredientDeities } from './schema/ingredient-deities';
 import type { ingredientVariants } from './schema/ingredient-variants';
 import type { CompendiumIngredientInput, LocalIngredientInput } from './validation/ingredient';
@@ -184,6 +185,36 @@ export interface CitedReference {
   locator: string | null;
   nameBasis: NameBasis | null;
   supports: string[] | null;
+}
+
+/** One fact behind a sourcing score: which, how the list says it ("3 Sources"), and the points it adds or takes away. */
+export interface SourcingFact {
+  fact: (typeof SOURCING_FACTS)[number];
+  label: string;
+  points: number;
+}
+
+/** A compendium entry's sourcing score and every fact behind it, zero-point ones too; the facts' points sum to `score`. */
+export interface SourcingScore {
+  score: number;
+  facts: SourcingFact[];
+}
+
+/** What the sourcing score reads: the entry, whether a curator has reviewed it, its own live citations, and each live form with its own. */
+export interface SourcingInput {
+  entry: Pick<IngredientRow, 'workspaceId' | 'nomenclature' | 'safetyNotes'> & {
+    reviewed: boolean;
+  };
+  references: readonly CitedReference[];
+  forms: readonly { safetyNotes: string | null; references: readonly CitedReference[] }[];
+}
+
+/** Where the sourcing score's read loads an entry's forms and citations: the request's loaders, or one batch each without them. */
+export interface SourcingChildren {
+  variants: (entry: IngredientRow) => Promise<IngredientVariantRow[]>;
+  references: (entry: IngredientRow) => Promise<CitedReference[]>;
+  /** Each form's own citations, in the order given, read as one batch. */
+  variantReferences: (variants: readonly IngredientVariantRow[]) => Promise<CitedReference[][]>;
 }
 
 /** What the workspace service parses: the form's values, or the mutation's input. */
