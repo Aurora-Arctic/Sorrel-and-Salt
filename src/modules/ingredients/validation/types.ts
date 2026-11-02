@@ -1,5 +1,5 @@
 import type { CitationFields } from '../../../lib/types';
-import type { INGREDIENT_ELEMENTS, NomenclatureKind } from '../schema/ingredient-enums';
+import type { INGREDIENT_ELEMENTS, NameBasis, NomenclatureKind } from '../schema/ingredient-enums';
 
 // Apart from the module's types.ts, which reaches the schema tables: a form
 // loads this file, so it imports only what a validation file may.
@@ -60,15 +60,20 @@ export type SubstituteEntry = LinkOrName<'ingredientId'> & { substituteVariantId
 export interface ReferenceLinkFields {
   referenceId: string;
   locator?: string | null;
+  nameBasis?: NameBasis | null;
+  supports?: string[] | null;
 }
 
 /**
  * One reference an ingredient cites (DESIGN.md §7): an existing reference's
- * id, and the locator the link carries — "p. 112" — or null.
+ * id, and the locator the link carries — "p. 112" — or null. A compendium
+ * citation also says how it names the ingredient and which fields it backs; a coven's carries neither.
  */
 export interface ReferenceLinkEntry {
   referenceId: string;
   locator: string | null;
+  nameBasis: NameBasis | null;
+  supports: string[] | null;
 }
 
 /** One deity as the schema reads it. */

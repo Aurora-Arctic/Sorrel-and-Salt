@@ -1,0 +1,15 @@
+@use '../../scss/variables' as *;
+
+.sourcing-score {
+  margin-block-end: space(4);
+}
+
+.sourcing-score__heading {
+  margin-block: 0 space(2);
+}
+
+.sourcing-score__facts {
+  margin: 0;
+  padding-inline-start: space(5);
+  color: $text-muted;
+}

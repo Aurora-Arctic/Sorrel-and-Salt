@@ -16,6 +16,7 @@ import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS, labelOf } from '../IngredientForm/options';
 import IngredientSearch from '../IngredientSearch';
 import CompendiumListFilter from './filter';
+import { compendiumHref } from './href';
 import type {
   CompendiumCategoryChoice,
   CompendiumFacetCounts,
@@ -239,6 +240,36 @@ export function emptyText(
   );
 }
 
+/**
+ * The list's two orders, each a link to the same filter at its first page: the default, by name or by best match under a
+ * search, and a curator's by sourcing score, lowest first, so the worst-sourced entries come to the top.
+ */
+export function SortLinks({ filter }: { filter: CompendiumListProps['filter'] }): ReactElement {
+  const orders = [
+    { sort: '' as const, label: filter.query ? 'Best Match' : 'Name' },
+    { sort: 'sourcing_score' as const, label: 'Sourcing Score (Lowest First)' },
+  ];
+  return (
+    <nav aria-label="Sort" className="compendium-list__sort">
+      <span className="compendium-list__sort-label" aria-hidden="true">
+        Sort:
+      </span>
+      <ul className="compendium-list__sort-list">
+        {orders.map(({ sort, label }) => (
+          <li key={label}>
+            <PendingLink
+              href={compendiumHref({ ...filter, sort })}
+              aria-current={(filter.sort ?? '') === sort ? 'page' : undefined}
+            >
+              {label}
+            </PendingLink>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
 const CompendiumList = ({
   entries,
   filter,
@@ -269,6 +300,7 @@ const CompendiumList = ({
     nextHref={nextHref}
     position={position}
   >
+    <SortLinks filter={filter} />
     <StackTable
       columns={COLUMNS}
       rows={entries}

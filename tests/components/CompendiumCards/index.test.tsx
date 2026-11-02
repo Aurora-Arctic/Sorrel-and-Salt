@@ -42,6 +42,7 @@ const NO_FILTER: CompendiumListFilter = {
   celestialBodies: [],
   toxic: '',
   reviewed: '',
+  sort: '',
   covens: [],
   covensNot: false,
 };

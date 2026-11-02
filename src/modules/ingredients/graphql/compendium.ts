@@ -5,6 +5,7 @@ import type { CompendiumFilterInput } from '../validation/compendium-filter';
 import {
   CategoryModeEnum,
   CompendiumListingEnum,
+  CompendiumSortEnum,
   IngredientElementEnum,
   IngredientRef,
   NomenclatureEnum,
@@ -86,8 +87,10 @@ builder.queryField('compendium', (t) =>
         description:
           'Keeps the entries a curator has marked reviewed, or with false the ones needing review. A curator or admin alone may set it.',
       }),
+      // A curator's order by sourcing score: FORBIDDEN to anyone else, as the score is.
+      sort: t.arg({ type: CompendiumSortEnum, required: false }),
     },
-    // The session reaches the read for the Reviewed setting alone, a curator's.
+    // The session reaches the read for a curator's settings alone: Reviewed, the hidden listing and the sourcing sort.
     resolve: (_root, args, page, { session }) => listCompendium(filterOf(args), page, session),
     // "Page X of Y" (claude-docs/graphql/pagination.md, "Pagination").
     count: (_root, args, start, { session }) => countCompendium(filterOf(args), start, session),
@@ -174,6 +177,7 @@ function filterOf({
   nomenclature,
   reviewed,
   listing,
+  sort,
 }: CompendiumFilterInput): CompendiumFilterInput {
   return {
     query,
@@ -190,5 +194,6 @@ function filterOf({
     nomenclature,
     reviewed,
     listing,
+    sort,
   };
 }

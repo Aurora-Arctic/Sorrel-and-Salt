@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import {
+  CITED_ENTRY_FIELDS,
+  CITED_VARIANT_FIELDS,
   INGREDIENT_ELEMENTS,
+  NAME_BASES,
   NAMELESS_KIND,
   NOMENCLATURE_KINDS,
   UNSETTLED_KIND,
@@ -72,10 +75,15 @@ const substitute = z.object({
 /** A deity links the curated one picked or names one (DESIGN.md §5, `ingredient_deities`), refused rather than dropped when blank, as its index is its position. */
 const deity = z.object({ deityId: optionalText(), name: optionalText() });
 
-/** A reference the ingredient cites (DESIGN.md §7): an existing reference's id and its locator, tidied with ranges dashed. A blank id is refused by `referenceRules` rather than dropped, so the service's refusal counts the rows sent. */
+/**
+ * A reference the ingredient cites (DESIGN.md §7): an existing reference's id and its locator, tidied with ranges dashed. A blank id is refused by `referenceRules` rather than dropped, so the service's refusal counts the rows sent.
+ * `nameBasis` and `supports` are a compendium citation's; `covenCitationRules` refuses them on a coven's.
+ */
 const referenceLink = z.object({
   referenceId: z.string({ error: 'Choose a source' }).trim(),
   locator: optionalText(formatLocator),
+  nameBasis: z.enum(NAME_BASES, { error: 'Not a name basis' }).nullish(),
+  supports: z.array(z.string().trim()).nullish(),
 });
 
 /** Each entry as the one half it carries, once `linkOrNameRules` has held it to one. */
@@ -108,9 +116,14 @@ function asSubstitutes(entries: SubstituteFields[]): SubstituteEntry[] {
   }));
 }
 
-/** Each reference as its id and locator, once `referenceRules` has held it to an id. */
+/** Each reference as its id, locator and the two attributes, once `referenceRules` has held it to an id; each field it supports once. */
 function asReferences(entries: ReferenceLinkFields[]): ReferenceLinkEntry[] {
-  return entries.map(({ referenceId, locator }) => ({ referenceId, locator: locator ?? null }));
+  return entries.map(({ referenceId, locator, nameBasis, supports }) => ({
+    referenceId,
+    locator: locator ?? null,
+    nameBasis: nameBasis ?? null,
+    supports: supports ? [...new Set(supports)] : null,
+  }));
 }
 
 /** Each substitute and deity as the one half it carries, and each reference as its id and locator. */
@@ -169,7 +182,7 @@ const variant = z
     }
     substituteRules(value.substitutes, ctx);
     formLinkRules(value.substitutes, ctx);
-    referenceRules(value.references, ctx);
+    referenceRules(value.references, CITED_VARIANT_FIELDS, ctx);
     categoryRules(value.categoryIds, ctx);
   })
   .transform((value) => ({
@@ -255,7 +268,7 @@ function crossFieldRules(value: Parsed, ctx: z.RefinementCtx) {
   }
   substituteRules(value.substitutes ?? [], ctx);
   deityRules(value.deities ?? [], ctx);
-  referenceRules(value.references ?? [], ctx);
+  referenceRules(value.references ?? [], CITED_ENTRY_FIELDS, ctx);
   categoryRules(value.categoryIds ?? [], ctx);
   variantRules(value.variants ?? [], ctx);
 }
@@ -383,19 +396,65 @@ function formLinkRules(entries: readonly SubstituteFields[], ctx: z.RefinementCt
   });
 }
 
-/** Each reference names one by its id and is listed once whatever its locator (`reference_links_ingredient_unique`). */
-function referenceRules(entries: ReferenceLinkFields[], ctx: z.RefinementCtx) {
+/**
+ * Each reference names one by its id and is listed once whatever its locator (`reference_links_ingredient_unique`), and supports only
+ * `fields`, the ones the row it cites has: an entry's, or a form's.
+ */
+function referenceRules(
+  entries: ReferenceLinkFields[],
+  fields: readonly string[],
+  ctx: z.RefinementCtx,
+) {
   const refuse = (index: number, message: string) =>
     ctx.addIssue({ code: 'custom', path: ['references', index], message });
   const listed = new Set<string>();
 
-  entries.forEach(({ referenceId }, index) => {
+  entries.forEach(({ referenceId, supports }, index) => {
     if (!referenceId) refuse(index, 'Choose a source');
     // Not a uuid names nothing and would be a driver error at the comparison.
     else if (!RowId.safeParse(referenceId).success) refuse(index, 'No such source');
     else if (listed.has(referenceId)) refuse(index, 'This source is already listed');
     else listed.add(referenceId);
+    supports?.forEach((field, at) => {
+      if (!fields.includes(field)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['references', index, 'supports', at],
+          message: `Not a field this citation can support: choose from ${fields.join(', ')}`,
+        });
+      }
+    });
   });
+}
+
+/** What a coven's citation is refused, by attribute: each is the compendium's to record. */
+const COMPENDIUM_ONLY = {
+  nameBasis: 'Only a compendium citation records how its source names the ingredient',
+  supports: 'Only a compendium citation records the fields its source supports',
+} as const;
+
+/** A coven's citations, the entry's and each form's, carry neither compendium attribute. */
+function covenCitationRules(
+  value: {
+    references?: ReferenceLinkFields[] | null;
+    variants?: { references: ReferenceLinkEntry[] }[] | null;
+  },
+  ctx: z.RefinementCtx,
+) {
+  const refuse = (at: (string | number)[], entries: readonly ReferenceLinkFields[]) =>
+    entries.forEach((entry, index) => {
+      for (const key of ['nameBasis', 'supports'] as const) {
+        if (entry[key] != null) {
+          ctx.addIssue({
+            code: 'custom',
+            path: [...at, 'references', index, key],
+            message: COMPENDIUM_ONLY[key],
+          });
+        }
+      }
+    });
+  refuse([], value.references ?? []);
+  value.variants?.forEach((variant, index) => refuse(['variants', index], variant.references));
 }
 
 /** Each category is an id; a repeat is not refused, since a category is a chip, on or off, and the service writes it once. */
@@ -431,6 +490,7 @@ export const LocalIngredientInput = z
       value.nomenclature ?? (value.canonicalName == null ? NAMELESS_KIND : UNSETTLED_KIND),
   }))
   .superRefine(crossFieldRules)
+  .superRefine(covenCitationRules)
   .transform(dropBlankEntries)
   .transform(asEntries);
 

@@ -284,6 +284,8 @@ describe('the ingredient fields, on the local variant', () => {
     const SIMEK = '00000000-0000-4000-8000-0000000000b1';
     const SMITH = '00000000-0000-4000-8000-0000000000b2';
     const GRIMM = '00000000-0000-4000-8000-0000000000b3';
+    // A coven's citation carries neither compendium attribute.
+    const NO_ATTRIBUTES = { nameBasis: null, supports: null };
 
     it('takes references with and without a locator, a blank one as none', () => {
       const parsed = Schema.parse({
@@ -296,9 +298,9 @@ describe('the ingredient fields, on the local variant', () => {
       });
 
       expect(parsed.references).toEqual([
-        { referenceId: SIMEK, locator: 'p. 112' },
-        { referenceId: SMITH, locator: null },
-        { referenceId: GRIMM, locator: null },
+        { referenceId: SIMEK, locator: 'p. 112', ...NO_ATTRIBUTES },
+        { referenceId: SMITH, locator: null, ...NO_ATTRIBUTES },
+        { referenceId: GRIMM, locator: null, ...NO_ATTRIBUTES },
       ]);
     });
 
@@ -311,7 +313,7 @@ describe('the ingredient fields, on the local variant', () => {
       });
 
       expect(parsed.references).toEqual([
-        { referenceId: SIMEK, locator: 'pp. 12–19, 40; chap. 3' },
+        { referenceId: SIMEK, locator: 'pp. 12–19, 40; chap. 3', ...NO_ATTRIBUTES },
       ]);
     });
 

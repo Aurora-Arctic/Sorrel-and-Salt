@@ -1249,3 +1249,36 @@ test('No Form lists the entries with no form, counts them, and lives in the addr
   await page.goBack();
   await expect(page).not.toHaveURL(/withoutForms/);
 });
+
+test('the sourcing score sort lists lowest first, and an entry opened from it shows its score', async ({
+  page,
+}) => {
+  await signInAs(page, 'sort-admin@admin-compendium.test', ['discord'], 'admin');
+  await page.goto('/admin/compendium');
+  const sort = page.getByRole('navigation', { name: 'Sort' });
+  // The precondition: the list starts in its default order, by name.
+  await expect(sort.getByRole('link', { name: 'Name' })).toHaveAttribute('aria-current', 'page');
+
+  await sort.getByRole('link', { name: 'Sourcing Score (Lowest First)' }).click();
+  await expect(page).toHaveURL(/[?&]sort=sourcing_score(&|$)/);
+  await expect(sort.getByRole('link', { name: 'Sourcing Score (Lowest First)' })).toHaveAttribute(
+    'aria-current',
+    'page',
+  );
+
+  // The first two rows' scores, read from each one's edit dialog, come lowest first.
+  const scoreOfRow = async (index: number): Promise<number> => {
+    const row = page.getByRole('table').getByRole('row').nth(index);
+    await row.getByRole('link', { name: /^Edit / }).click();
+    const dialog = page.getByRole('dialog', { name: /^Edit Ingredient, / });
+    const heading = dialog.getByRole('heading', { name: /^Sourcing Score: -?\d+$/ });
+    await expect(heading).toBeVisible();
+    const score = Number((await heading.textContent())!.replace('Sourcing Score: ', ''));
+    await page.goBack();
+    await expect(dialog).toHaveCount(0);
+    return score;
+  };
+  const first = await scoreOfRow(1);
+  const second = await scoreOfRow(2);
+  expect(first).toBeLessThanOrEqual(second);
+});

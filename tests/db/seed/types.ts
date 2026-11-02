@@ -6,7 +6,7 @@ export interface SeedEntry {
   /** The seeds this one reads from, run for real first. */
   prepare?: (handle: SeedDatabase) => Promise<void>;
   /** The seed itself, which a dry run rolls back. */
-  seed: (handle: SeedDatabase, options?: SeedRunOptions) => Promise<void>;
+  seed: (handle: SeedDatabase, options?: SeedRunOptions) => Promise<unknown>;
   /** The seed the fill sweep runs in place of `seed`, when the other sweeps take a smaller input: the compendium's real files, where they take the fixture. */
   fillSeed?: (handle: SeedDatabase) => Promise<void>;
   /** `prepare`, then `seed`. */
@@ -126,6 +126,7 @@ export interface ReferenceRow {
   modified: string | null;
   accessed: string | null;
   note: string | null;
+  scholarly: boolean;
   seed_key: string | null;
   created_by: string;
   updated_by: string;
