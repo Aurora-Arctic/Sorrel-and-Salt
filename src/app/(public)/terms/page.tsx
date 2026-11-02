@@ -192,11 +192,11 @@ export default function TermsOfUsePage() {
       </p>
 
       <p>
-        Once a dispute is in court, Washington law lets the judge order whichever side brought a
-        claim or a defence that the judge finds frivolous and advanced without reasonable cause to
-        pay the other side's reasonable expenses, including lawyer's fees. That works in either
-        direction, against the site's owner as much as against you, and it is the court's decision,
-        not the arbitrator's.
+        If a dispute goes to court, the judge can make one side pay the other side's reasonable
+        costs, including lawyer's fees. This happens only when the judge finds that side's claim or
+        defence frivolous, meaning it had no real basis and was pursued without good reason. It
+        applies to both sides: the site's owner can be made to pay as much as you can. Only the
+        judge can order this, not the arbitrator.
       </p>
 
       <h2>Leaving</h2>
