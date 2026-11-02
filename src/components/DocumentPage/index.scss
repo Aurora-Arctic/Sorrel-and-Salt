@@ -3,6 +3,20 @@
 
 // A document reads as prose: every running line keeps to the measure, a table may run wider in
 // its own scrolling frame, and each section's heading sits a step above its text.
+// The page is `.page-with-nav` with its column widened from the narrow column to the reading
+// measure, and the same breakpoints; the text stays start-aligned inside the centred column.
+.document-page {
+  @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+    grid-template-columns: calc(#{space(8)} * 3) minmax(0, $measure);
+  }
+
+  @media (min-width: calc(#{space(8)} * 6 + #{$measure} + #{space(6)} * 2 + #{space(4)} * 2)) {
+    grid-template-columns:
+      calc(#{space(8)} * 3) minmax(0, $measure)
+      calc(#{space(8)} * 3);
+  }
+}
+
 .document-page__updated {
   margin: 0 0 space(2);
   color: $text-muted;
@@ -14,6 +28,7 @@
 
   h2 {
     margin-block: space(8) space(3);
+    scroll-margin-top: calc(#{$shell-bar-height} + #{space(4)});
   }
 
   h3 {

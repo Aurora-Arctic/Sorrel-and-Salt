@@ -1,6 +1,6 @@
 # DocumentPage
 
-`src/components/DocumentPage/` — the page a public document is read on: the privacy policy (`/privacy`), the disclaimer (`/disclaimer`) and the code of ethics (`/code-of-ethics`), and any document that follows them on the same frame. It opens with one muted line saying when the text last changed ("Last updated 1 November 2026", as a `<time>` carrying the day in `YYYY-MM-DD`), above the title as an ingredient entry's Last Edit line sits above its names. Then it draws the page head through [`PageHeader`](page-header.md) with the document's title and its lede, then the document's own sections. The whole is an `<article>` named by the title.
+`src/components/DocumentPage/` — the page a public document is read on: the privacy policy (`/privacy`), the disclaimer (`/disclaimer`), the code of ethics (`/code-of-ethics`) and the terms (`/terms`), and any document that follows them on the same frame. It opens with one muted line saying when the text last changed ("Last updated 1 November 2026", as a `<time>` carrying the day in `YYYY-MM-DD`), above the title as an ingredient entry's Last Edit line sits above its names. Then it draws the page head through [`PageHeader`](page-header.md) with the document's title and its lede, then a jump menu ([`PageNav`](page-nav.md), "On This Page") and the document's own sections. The whole is an `<article>` named by the title.
 
 It reads nothing: no session, no database, no search params. A signed-out visitor and a member read the same page, inside whichever frame the public layout chooses for them (`src/app/(public)/layout.tsx`). A document page is not an exception to the rule that the compendium is the one public surface of data (`CLAUDE.md`, "Domain invariants"): it carries no application data, so there is nothing to protect. The site's own searches read the database, and a document is not in it, so no in-site search can list one; `tests/e2e/document-pages.spec.ts` proves the compendium search returns nothing for a document's title.
 
@@ -16,6 +16,12 @@ A document route is listed in three places beside its page: `PUBLIC_ROUTES` in `
 | `lede`      | Optional: a sentence under the title saying what the document is for                          |
 | `updatedOn` | The day the text last changed, a `Date`; the page shows it in UTC, so no server zone moves it |
 | `children`  | The document's sections: `h2` headings, paragraphs, lists and tables                          |
+
+## The jump menu
+
+The menu is read from `children`: each direct `h2` child becomes one entry, in page order, and is given an `id` that is the slug of its text (`src/lib/slugify.ts`), so a heading is written once and the menu cannot drift from it. An `h2` must therefore be a direct child of `DocumentPage` and hold plain text; a document with no `h2` draws no menu. Each `h2` keeps a scroll margin under the shell's bar.
+
+The article is `.page-with-nav` ([`page-nav.md`](page-nav.md), "Where it stands"): from a tablet up the menu is a sticky column to the left of the sections, and on a wide screen an empty column of the menu's width balances it, so the text column sits at the window's centre; below that the pair is centred together. On a phone the menu stands above the sections. The column is the reading measure rather than `.page-with-nav`'s narrow column, with the same breakpoints; text inside stays start-aligned.
 
 ## Styling
 
