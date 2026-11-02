@@ -133,7 +133,7 @@ export const PauseFields = ({
           onChange={(event) => onNote(event.target.value)}
         />
       </FieldShell>
-      <FieldShell label={messageLabel} {...messageField}>
+      <FieldShell label={messageLabel} hint={MESSAGE_HINT} {...messageField}>
         <input
           id={messageField.controlId}
           className="input"
