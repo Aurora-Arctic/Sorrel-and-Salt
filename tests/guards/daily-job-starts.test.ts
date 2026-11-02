@@ -31,6 +31,29 @@ describe('a daily job starts from its cron route alone', () => {
     ]);
   });
 
+  it('only the provisional-cleanup route starts the provisional cleanup', () => {
+    // Precondition: the listing holds the route, so an empty one cannot pass.
+    expect(sources()).toContain('src/app/api/cron/provisional-cleanup/route.ts');
+
+    expect(callers(/\bstartProvisionalCleanup\(/)).toEqual([
+      'src/app/api/cron/provisional-cleanup/route.ts',
+      'src/modules/identity/services/provisional-cleanup.ts',
+    ]);
+    expect(callers(/\bstartJob\(\s*provisionalCleanup\b/)).toEqual([
+      'src/modules/identity/services/provisional-cleanup.ts',
+    ]);
+  });
+
+  it('the coordinator ends: it neither sleeps nor holds a hook', () => {
+    const job = readFileSync(
+      join(REPO_ROOT, 'src/modules/identity/jobs/provisional-cleanup.ts'),
+      'utf8',
+    );
+    // Precondition: the file is the coordinator.
+    expect(job).toMatch(/export async function provisionalCleanup\(/);
+    expect(job).not.toMatch(/\b(?:sleep|createHook)\b/);
+  });
+
   it('the admin Support page starts no support job', () => {
     const page = readFileSync(join(REPO_ROOT, 'src/app/(shell)/admin/support/page.tsx'), 'utf8');
     // Precondition: the page is the one that reads the support requests.

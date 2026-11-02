@@ -4,12 +4,14 @@ import {
   findLapsedProvisionalUserIds,
   provisionalSecondsLeft,
 } from '../../../db/repository';
+import { CLEANUP_PAGE_SIZE } from '../jobs/provisional-cleanup-pages';
 
 // An unverified account is provisional: it lapses one verification lifetime
 // after its last mail, and three hours after sign-up whatever it resends, so
 // it cannot hold an address against its owner for long
 // (claude-docs/auth/admin-bootstrap.md, "Provisional accounts"). One job per
-// sign-up does the removing (src/modules/identity/jobs/provisional-expiry.ts).
+// sign-up does the removing (src/modules/identity/jobs/provisional-expiry.ts), and
+// a daily cleanup removes any its run missed (src/modules/identity/jobs/provisional-cleanup.ts).
 
 /** The verification link's lifetime, and so the provisional window. */
 export const VERIFICATION_LIFETIME_SECONDS = 3600;
@@ -31,19 +33,26 @@ export async function expireProvisionalAccount(userId: string): Promise<number |
   return provisionalSecondsLeft(userId, VERIFICATION_LIFETIME_SECONDS, PROVISIONAL_CAP_SECONDS);
 }
 
-/** The most accounts one daily cleanup removes; a backlog past it is cleared by the next day's run. */
-export const CLEANUP_BATCH_SIZE = 500;
-
 /**
- * Removes every provisional account whose window has lapsed, each through the same single-row
- * delete the per-sign-up job uses. Returns how many went, so a re-run after success removes none.
+ * One page of the ids of provisional accounts whose window has lapsed, in id order after `after`
+ * (from the start when null), at most `CLEANUP_PAGE_SIZE`. The daily cleanup reads them a page at a
+ * time and deletes each page in a batch run.
  */
-export async function sweepLapsedProvisionalAccounts(): Promise<number> {
-  const ids = await findLapsedProvisionalUserIds(
+export async function findLapsedProvisionalPage(after: string | null): Promise<string[]> {
+  return findLapsedProvisionalUserIds(
     VERIFICATION_LIFETIME_SECONDS,
     PROVISIONAL_CAP_SECONDS,
-    CLEANUP_BATCH_SIZE,
+    after,
+    CLEANUP_PAGE_SIZE,
   );
+}
+
+/**
+ * Removes each of `ids` that has still lapsed, through the same single-row delete the per-sign-up
+ * job uses, so an account verified since the page was read stays, and one already gone is skipped.
+ * Returns how many went: a re-run or an overlapping run deletes nothing twice and raises no error.
+ */
+export async function deleteLapsedProvisionalAccounts(ids: readonly string[]): Promise<number> {
   let removed = 0;
   for (const id of ids) {
     if (

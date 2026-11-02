@@ -309,10 +309,11 @@ verification window, and three hours at most. The argument is
   `users_provisional_updated_at_idx` and `users_provisional_created_at_idx`,
   hold only unverified rows, one for each half of the predicate. The
   mechanism is [`design-decisions/m15.49-job-mechanism.md`](../design-decisions/m15.49-job-mechanism.md).
-- **A run that is lost leaves its account in place.** A failed start is
-  logged at `error` and the sign-up carries on. That account then holds its
-  address until an admin removes it, as the callback sweep this job replaced would have removed it
-  at the next callback. The job runs the delete as its own step with
+- **A run that is lost leaves its account in place until the next daily
+  cleanup.** A failed start is logged at `error` and the sign-up carries on.
+  That account then holds its address until the daily cleanup, which a
+  Vercel Cron Job starts once a day, deletes it
+  (`src/modules/identity/jobs/provisional-cleanup.ts`). The job runs the delete as its own step with
   retries, so a step that fails is tried again rather than lost.
 - **An account an admin has vouched for is not removed** (MB.204). Approving
   an unverified account for coven creation (M5.8) or making it an admin

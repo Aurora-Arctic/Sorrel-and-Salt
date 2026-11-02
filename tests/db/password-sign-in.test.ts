@@ -276,9 +276,12 @@ describe('Story 70: signing up', () => {
       sql,
       (tx) => tx`update users set created_at = now() - interval '4 hours' where id = ${squat!.id}`,
     );
-    // The sign-up no longer sweeps; the cleanup job does (claude-docs/db/write-path.md, "Sweeping provisional accounts").
-    const { sweepLapsedProvisionalAccounts } = await import('@/modules/identity');
-    expect(await sweepLapsedProvisionalAccounts()).toBeGreaterThanOrEqual(1);
+    // The sign-up no longer sweeps; the cleanup job does (claude-docs/db/write-path.md, "Removing a lapsed provisional account").
+    const { deleteLapsedProvisionalAccounts, findLapsedProvisionalPage } =
+      await import('@/modules/identity');
+    const lapsed = await findLapsedProvisionalPage(null);
+    expect(lapsed).toContain(squat!.id);
+    expect(await deleteLapsedProvisionalAccounts(lapsed)).toBeGreaterThanOrEqual(1);
     expect(await userRow(OWNER)).toBeUndefined();
     send.mockReset();
 
