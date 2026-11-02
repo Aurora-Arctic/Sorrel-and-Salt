@@ -175,7 +175,10 @@ export default function PrivacyPolicyPage() {
       </p>
       <p>
         Every change to a site role or to the right to create covens is also written to a ledger
-        that cannot be edited: who changed it, how, when and any note the admin wrote.
+        that cannot be edited: who changed it, how, when and any note the admin wrote. An account's
+        own stamps keep only its latest change, so the ledger is the lasting record of who was given
+        or lost these powers, and since no one can edit it, not even an admin, that record can be
+        trusted.
       </p>
 
       <h3>What a Coven Holds</h3>
