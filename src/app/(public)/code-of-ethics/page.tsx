@@ -59,10 +59,6 @@ export default function CodeOfEthicsPage() {
           antisemitism, Islamophobia and every other bigotry have no place on the site, in a coven
           or in a support request.
         </li>
-        <li>Take only what can be spared: no endangered plants, no parts of protected animals.</li>
-        <li>
-          Be honest about what you know and where you learned it, and say when you are unsure.
-        </li>
         <li>
           Read the <Link href="/disclaimer">Disclaimer</Link> before you act on anything the
           compendium says.
@@ -165,7 +161,8 @@ export default function CodeOfEthicsPage() {
       <h2>Ethical and Sustainable Sourcing</h2>
       <p>
         An ingredient that is sacred, scarce or both is not a commodity. The site asks every coven
-        to take only what can be spared, and three plants sold for burning show why.
+        to take only what can be spared. This is advice, not a rule of your account, and the site
+        does not enforce it. Three plants sold for burning show why it matters.
       </p>
       <ul>
         <li>
@@ -225,6 +222,11 @@ export default function CodeOfEthicsPage() {
         credited, and lets a curator correct a mistake at its root. We prefer academic sources and
         the voices of the practitioners themselves, and we name an encyclopaedia where that is the
         best there is.
+      </p>
+      <p>
+        We ask the same of you: be honest about what you know and where you learned it, and say when
+        you are unsure. This is advice, not a rule of your account, and the site does not enforce
+        it.
       </p>
 
       <h2>Accessibility</h2>
