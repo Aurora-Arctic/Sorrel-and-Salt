@@ -32,7 +32,7 @@ export default function TermsOfUsePage() {
         The <Link href="/disclaimer">Disclaimer</Link> says what the site's information is and is
         not. The <Link href="/code-of-ethics">Code of Ethics</Link> says what the site stands for:
         its section "What Everyone Agrees To" binds every account, and its sections for curators,
-        admins and the owner bind whoever holds that role.
+        admins, developers and the owner bind whoever holds that role.
       </p>
 
       <h2>The Short Version</h2>
