@@ -446,11 +446,15 @@ and are now entries in the print work (the _Encyclopedia of Religion_,
 _Encyclopaedia Judaica_, _Encyclopedia of India_ and _Contemporary American
 Religion_), with the editor, edition, place, publisher and year their Library
 of Congress catalogue records give and the record named in each note. It
-rewrites each compendium row's key from its old citation to its new one,
+does the same for de Groot's _The Religious System of China_, volumes IV and
+VI, whose files in `compendium/sources/` gained a place, a publisher and the
+title page's wording in the note; the compendium seed restates those fields.
+It rewrites each compendium row's key from its old citation to its new one,
 soft-deleted rows included so a deleted source stays deleted, and leaves a row
 alone where another compendium row already holds the new key. The row keeps its
 id and its links, and the next `db:seed:sources` run writes the new fields
-onto it unless a person edited it
+onto it, and the next compendium seed run does the same for de Groot,
+unless a person edited it
 (`tests/db/migrations/0116-print-encyclopedia-entries.test.ts`,
 `tests/db/seed/sources-print-entries.test.ts`).
 
