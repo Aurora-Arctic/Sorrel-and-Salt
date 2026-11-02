@@ -91,6 +91,11 @@ const PROBES: Record<string, ScopeProbe> = {
     source: '{ documentForEditing(key: "disclaimer") { id } }',
     outcome: 'refuses',
   },
+  // The seeded disclaimer again: what a mailing of it would take, and any mailing of it so far.
+  documentMailing: {
+    source: '{ documentMailing(key: "disclaimer") { accountCount } }',
+    outcome: 'refuses',
+  },
   invitationCardBatches: {
     source: '{ invitationCardBatches(first: 1) { edges { node { batchId } } } }',
     outcome: 'refuses',
@@ -413,6 +418,12 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   updateDocument: write(
     `mutation { updateDocument(id: "${NOWHERE}", input: { title: "Fixture", lede: "Fixture" }) { id } }`,
   ),
+  emailDocumentToEveryAccount: write(
+    `mutation { emailDocumentToEveryAccount(documentId: "${NOWHERE}", summary: "Fixture") { accountCount } }`,
+  ),
+  resumeDocumentMailing: write(
+    `mutation { resumeDocumentMailing(mailingId: "${NOWHERE}") { accountCount } }`,
+  ),
   setName: write('mutation { setName(name: "Fixture") { id } }'),
   setPassword: write('mutation { setPassword(newPassword: "fixture password") }'),
   agreeToTerms: write('mutation { agreeToTerms(version: 1) { id } }'),
@@ -705,6 +716,8 @@ const ADMIN_WRITES: Record<string, AdminWrite> = {
   saveDocumentDraft: { governs: 'documents' },
   publishDocumentDraft: { governs: 'documents' },
   updateDocument: { governs: 'documents' },
+  emailDocumentToEveryAccount: { governs: 'documents' },
+  resumeDocumentMailing: { governs: 'documents' },
   createCategory: { governs: 'categories' },
   updateCategory: { governs: 'categories' },
   deleteCategory: { governs: 'categories' },
@@ -923,16 +936,19 @@ describe('a curator at every admin write, and at the people page’s reads', () 
     });
   });
 
-  it.each(['users', 'privilegeChanges', 'userAccessPauses', 'documentForEditing'])(
-    '%s refuses a curator, answering an admin',
-    async (field) => {
-      const { source } = PROBES[field];
-      expect(codesOf(await run(asUser(E), source))).toEqual([]);
+  it.each([
+    'users',
+    'privilegeChanges',
+    'userAccessPauses',
+    'documentForEditing',
+    'documentMailing',
+  ])('%s refuses a curator, answering an admin', async (field) => {
+    const { source } = PROBES[field];
+    expect(codesOf(await run(asUser(E), source))).toEqual([]);
 
-      const result = await run(asUser(F), source);
+    const result = await run(asUser(F), source);
 
-      expect(result.data?.[field] ?? null).toBeNull();
-      expect(codesOf(result)).toEqual(['FORBIDDEN']);
-    },
-  );
+    expect(result.data?.[field] ?? null).toBeNull();
+    expect(codesOf(result)).toEqual(['FORBIDDEN']);
+  });
 });

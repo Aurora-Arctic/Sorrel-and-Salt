@@ -163,3 +163,51 @@ test('/admin/documents is not a page, even for an admin', async ({ page }) => {
 
   expect((await page.goto('/admin/documents'))?.status()).toBe(404);
 });
+
+// A published change is emailed to every account only when an admin asks: the edit page offers it, the confirmation says what will be
+// sent to how many and over how many days, and the mailing it starts is recorded on the page (claude-docs/design-decisions/m15.59-
+// document-editor-scope.md, "M15.63: emailing every account").
+test('an admin publishes a change to the code of ethics, then emails every account about it', async ({
+  page,
+}) => {
+  await signInAs(page, 'mail-admin@admin-documents.test', ['discord'], 'admin');
+  await page.goto('/admin/documents/code-of-ethics');
+  const main = page.getByRole('main');
+
+  await appendTo(
+    page,
+    'Everyone is welcome here, and bigotry is not.',
+    ' Fixturewort duty from the editor.',
+  );
+  await main.getByRole('button', { name: 'Save Draft' }).click();
+  await expect(main.getByRole('button', { name: 'Save Draft' })).toBeDisabled();
+  await main.getByRole('button', { name: 'Publish', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Publish', exact: true }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+
+  // The published change has not been emailed: the page offers it, and shows no mailing.
+  const email = main.getByRole('button', { name: 'Email Every Account' });
+  await expect(email).toBeEnabled();
+  await expect(main.getByRole('progressbar')).toHaveCount(0);
+
+  await email.click();
+  const confirmation = page.getByRole('dialog', { name: 'Email Every Account' });
+  await expect(confirmation).toContainText('Code of Ethics');
+  const send = confirmation.getByRole('button', { name: 'Send Emails' });
+  await expect(send).toBeDisabled();
+  await confirmation
+    .getByRole('textbox', { name: 'Summary' })
+    .fill('A new duty to name your sources.');
+  await expect(send).toBeEnabled();
+  await assertNoAccessibilityViolations(page);
+  await send.click();
+  await expect(confirmation).toHaveCount(0);
+
+  // Recorded: the mailing's progress stands where the offer was, and still does when the page is read again.
+  await expect(main.getByRole('progressbar')).toBeVisible();
+  await expect(email).toHaveCount(0);
+  await page.reload();
+  await expect(main.getByRole('progressbar')).toBeVisible();
+  await expect(main.getByRole('button', { name: 'Email Every Account' })).toHaveCount(0);
+  await assertNoAccessibilityViolations(page);
+});

@@ -83,6 +83,22 @@ describe('the document files', () => {
     expect(blocks).toContain('{access-cards}');
     expect(section).not.toMatch(/^\s*\|/m);
   });
+
+  // An admin may email every account about a published change, so the privacy policy says so where it says how it changes. The
+  // wording is the owner’s; what is checked is that the section holds more than its one dating paragraph, and that the addition is
+  // about email.
+  it('say, under the privacy policy’s Changes to This Policy, that a change may be emailed to every account', () => {
+    const body = byKey.get('privacy')?.body ?? '';
+    const section = body.split(/^## Changes to This Policy$/m)[1]?.split(/^#{1,6} /m)[0] ?? '';
+    const blocks = section
+      .split(/\n\s*\n/)
+      .map((block) => block.trim())
+      .filter((block) => block !== '');
+
+    expect(body).toMatch(/^## Changes to This Policy$/m);
+    expect(blocks.length).toBeGreaterThanOrEqual(2);
+    expect(blocks.some((block) => /\bemail/i.test(block))).toBe(true);
+  });
 });
 
 describe('loadDocuments', () => {
