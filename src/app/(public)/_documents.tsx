@@ -34,6 +34,7 @@ export async function currentDocumentPage(
       title={current.title}
       lede={current.lede}
       updatedOn={current.publishedAt}
+      number={current.number}
       body={current.body}
       placeholders={placeholders}
       history={versions
@@ -61,6 +62,7 @@ export async function versionDocumentPage(
       title={version.title}
       lede={version.lede}
       updatedOn={version.publishedAt}
+      number={version.number}
       body={version.body}
       placeholders={placeholders}
     />

@@ -623,6 +623,7 @@ export async function insertMissingFixtureUsers(
     toRow: (user) => ({
       emailVerified: true,
       termsVersion: TERMS_VERSION,
+      agreedTermsVersion: 1,
       termsAcceptedAt: new Date(),
       ...user,
     }),

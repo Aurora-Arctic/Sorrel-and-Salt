@@ -5,7 +5,7 @@ lede: 'The rules of Sorrel & Salt: who may use it, what is yours, what the site 
 published: 2026-11-02
 ---
 
-**Version 2026-11-02.** When these terms change, the version changes with them, and the site asks you to agree to the new version before you use it again.
+When these terms change, the site asks you to agree to the new version before you use it again.
 
 These terms include two other pages, and agreeing to these terms is agreeing to them too. The [Disclaimer](/disclaimer) says what the site's information is and is not. The [Code of Ethics](/code-of-ethics) says what the site stands for: its section "What Everyone Agrees To" binds every account, and its sections for curators, admins, developers and the owner bind whoever holds that role.
 

@@ -753,8 +753,9 @@ export const auth = betterAuth({
       // hook below can set these. No `defaultValue`, so Postgres's own applies.
       role: { type: 'string', input: false },
       canCreateWorkspace: { type: 'boolean', input: false },
-      // The terms the account agreed to: read into the session so the page gate can compare it with `TERMS_VERSION`, written
-      // only by the `agreeToTerms` service.
+      // The terms the account agreed to: read into the session so the page gate can compare it with the terms version in force,
+      // written only by the `agreeToTerms` service. `termsVersion` is the older text form, still written until it is dropped.
+      agreedTermsVersion: { type: "number", required: false, input: false },
       termsVersion: { type: 'string', required: false, input: false },
       termsAcceptedAt: { type: 'date', required: false, input: false, returned: false },
       // Declared so the update hook below can clear it; nothing reads it here.

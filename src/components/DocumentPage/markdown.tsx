@@ -64,7 +64,7 @@ function markPlaceholders(
     if (!isElement(child) || child.tagName !== 'p') return child;
     const text = child.children.length === 1 ? textOf(child).trim() : '';
     const name = PLACEHOLDER_TEXT.exec(text)?.[1];
-    if (name === undefined || !Object.hasOwn(placeholders, name)) return child;
+    if (name === undefined || !Object.prototype.hasOwnProperty.call(placeholders, name)) return child;
     return { type: 'element', tagName: PLACEHOLDER_TAG, properties: { name }, children: [] };
   });
 }

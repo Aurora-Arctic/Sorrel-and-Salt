@@ -137,7 +137,7 @@ export function documentWrites({
     updateDocument: (_admin, documentId, values) =>
       update(documents, values, eq(documents.id, documentId)),
     // The document row is locked first, so two admins opening at once take turns and the second finds the first's draft.
-    openDocumentDraft: async (_admin, documentId) => {
+    openDocumentDraft: async (_admin, documentId, givenBody) => {
       const [document] = await selectFrom(
         documents,
         and(notSoftDeleted(documents), eq(documents.id, documentId)),
@@ -170,7 +170,7 @@ export function documentWrites({
         .values(
           applyAudit(
             'insert',
-            { documentId, number: (highest ?? 0) + 1, body: latest?.body ?? '' },
+            { documentId, number: (highest ?? 0) + 1, body: givenBody ?? latest?.body ?? '' },
             session,
           ) as never,
         )

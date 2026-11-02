@@ -19,6 +19,7 @@ const DocumentPage = ({
   title,
   lede,
   updatedOn,
+  number,
   body,
   history,
   placeholders,
@@ -28,7 +29,8 @@ const DocumentPage = ({
     <article className="document-page page-with-nav" aria-labelledby="document-title">
       <div className="document-page__head">
         <p className="document-page__updated">
-          Last updated{' '}
+          {number !== undefined && <>Version {number}, </>}
+          {number !== undefined ? 'last updated' : 'Last updated'}{' '}
           <time dateTime={updatedOn.toISOString().slice(0, 10)}>{dayInUtc(updatedOn)}</time>
         </p>
         <PageHeader id="document-title" title={title} lede={lede} />

@@ -524,10 +524,15 @@ export interface AuditWriter {
     values: DocumentTextInput,
   ): Promise<DocumentRow[]>;
   /**
-   * Open the document's draft: the next number past every version it ever held, deleted ones included, with the body of the latest live
-   * published version, or empty when it has none. No row comes back while a draft is open, or for a soft-deleted or missing document.
+   * Open the document's draft: the next number past every version it ever held, deleted ones included, with `body` when one is given, else
+   * the body of the latest live published version, or empty when it has none. A given body is written in the insert, so the draft
+   * starts at revision 1. No row comes back while a draft is open, or for a soft-deleted or missing document.
    */
-  openDocumentDraft(admin: SiteAdmin, documentId: string): Promise<DocumentVersionRow[]>;
+  openDocumentDraft(
+    admin: SiteAdmin,
+    documentId: string,
+    body?: string,
+  ): Promise<DocumentVersionRow[]>;
   /**
    * Write a draft's body while it is at `expectedRevision`: a draft that has moved on throws `StaleWrite` with its revision now, and
    * `null` writes whatever the draft holds. A published, deleted or missing version answers `[]`, never `StaleWrite`.

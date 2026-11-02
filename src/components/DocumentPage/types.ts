@@ -17,6 +17,8 @@ export interface DocumentPageProps {
   title: string;
   /** A sentence under the title saying what the document is for. */
   lede?: string;
+  /** The version's number, shown beside the date. */
+  number?: number;
   /** The day the text was last changed, shown under the title as a dated `<time>`. */
   updatedOn: Date;
   /** The document's text in markdown: `##` and `###` headings, paragraphs, lists, tables and footnotes. */
