@@ -477,6 +477,7 @@ describe('ReferencesField', () => {
       modified: null,
       accessed: null,
       note: null,
+      scholarly: false,
     } as const;
     const RENAMED_CITATION =
       'Placeholder, Bram. "Notes on Fixtureleaf." Journal of Fixtures 3 (1950): 12–19.';
@@ -486,6 +487,8 @@ describe('ReferencesField', () => {
       value: citation,
       link,
       locator: '',
+      nameBasis: '' as const,
+      supports: [],
     });
 
     /** The ingredient's references and its one variant's, each citing `sources`, in a form of their own. */
@@ -711,9 +714,10 @@ describe('ReferencesField', () => {
         { referenceId: COVEN_ID, locator: '' },
       ]);
       expect(JSON.stringify(saves[0].input)).not.toContain('Herbal');
+      // A coven's citations carry neither compendium attribute.
       expect(LocalIngredientInput.parse(saves[0].input).references).toEqual([
-        { referenceId: COMPENDIUM_ID, locator: 'p. 112' },
-        { referenceId: COVEN_ID, locator: null },
+        { referenceId: COMPENDIUM_ID, locator: 'p. 112', nameBasis: null, supports: null },
+        { referenceId: COVEN_ID, locator: null, nameBasis: null, supports: null },
       ]);
       await waitFor(() => expect(rows()).toHaveLength(0));
       noPanel();

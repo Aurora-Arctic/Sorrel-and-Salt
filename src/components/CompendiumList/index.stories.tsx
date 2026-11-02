@@ -210,6 +210,7 @@ const FilteredView = () => (
         covensNot: false,
         toxic: '',
         reviewed: '',
+        sort: '',
       }}
       facets={FACETS}
       categories={CATEGORIES}
@@ -255,6 +256,7 @@ const noMatchesNode = (
         covensNot: false,
         toxic: '',
         reviewed: '',
+        sort: '',
       }}
       facets={FACETS}
       categories={CATEGORIES}

@@ -1,8 +1,11 @@
-import type { CitationFields } from '../../../lib/types';
+import type { SeedWork } from '../types';
 
 // The works many entry files cite, declared once so every file renders one citation and the seed writes one `references` row each. Each is the edition
 // in the curator's library as its title and copyright pages give it (claude-docs/db/compendium-seed/README.md, "The library"); per-entry pages are files under
 // `compendium/sources/`. Culpeper is the edition Project Gutenberg transcribes; Grieve is cited page by page, as `grieve-<heading>`.
+// `scholarly` marks a work scholars edited or reviewed, in print or online: a peer-reviewed journal; a university, its press or its museum; an academic
+// press; a learned society's edition or series; a reference work edited by scholars with signed articles. A trade press (Llewellyn among them), a wiki,
+// a site republishing others' works (cite the original instead) and an unsigned site carry none.
 export const WORKS = {
   'cunningham-herbs': {
     kind: 'book',
@@ -60,6 +63,7 @@ export const WORKS = {
     publisher: 'CRC Press',
     published: '2013',
     note: 'PDF',
+    scholarly: true,
   },
   'kynes-remedies': {
     kind: 'book',
@@ -91,4 +95,4 @@ export const WORKS = {
     modified: '2024-10-24',
     accessed: '2026-10-11',
   },
-} as const satisfies Record<string, CitationFields>;
+} as const satisfies Record<string, SeedWork>;
