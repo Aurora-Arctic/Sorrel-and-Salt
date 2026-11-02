@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 /** The day this text last changed. */
-const UPDATED_ON = new Date('2026-11-01T00:00:00Z');
+const UPDATED_ON = new Date('2026-11-02T00:00:00Z');
 
 // What the site stands for. Each commitment is the site's own; each fact is cited in the Sources
 // list at the end, and the working notes say where every sentence comes from
@@ -38,6 +38,32 @@ export default function CodeOfEthicsPage() {
           The site is built to be used by everyone, and an accessibility bug is a bug we fix first.
         </li>
         <li>No advertising, no selling of data, no owner above the community.</li>
+      </ul>
+
+      <h2>What Everyone Agrees To</h2>
+      <p>
+        The Terms of Use make this section part of what every account agrees to. It is kept short on
+        purpose. The sections after it say why each rule is here; the three at the end add to it for
+        curators, admins and the site's owner, and bind whoever holds that role.
+      </p>
+      <ul>
+        <li>
+          Treat everyone here with respect. Racism, misogyny, transphobia, homophobia, ableism,
+          antisemitism, Islamophobia and every other bigotry have no place on the site, in a coven
+          or in a support request.
+        </li>
+        <li>
+          Do not claim a closed practice as your own, and do not share what belongs to a people you
+          are not part of.
+        </li>
+        <li>Take only what can be spared: no endangered plants, no parts of protected animals.</li>
+        <li>
+          Be honest about what you know and where you learned it, and say when you are unsure.
+        </li>
+        <li>
+          Read the <Link href="/disclaimer">Disclaimer</Link> before you act on anything the
+          compendium says.
+        </li>
       </ul>
 
       <h2>What We Value</h2>
@@ -202,6 +228,101 @@ export default function CodeOfEthicsPage() {
         opens the support form with Accessibility already chosen; you can send one without an
         account.
       </p>
+
+      <h2>For Curators</h2>
+      <p>
+        A curator curates the compendium, its vocabularies and its references, and reads the support
+        requests an admin has marked for curators or assigned to them. A curator agrees to
+        everything above, and to this:
+      </p>
+      <ul>
+        <li>
+          Every entry you write or change says where it comes from. You add no claim you cannot
+          source, and you leave an unsourced entry on the to-do list rather than guessing a source
+          for it.
+        </li>
+        <li>
+          You describe a closed practice in its own people's words, cited to them where a source
+          exists, and you do not describe its ceremonies.
+        </li>
+        <li>
+          You keep the compendium's safety notes honest: you write what a source says, you mark what
+          has not been checked, and you never soften a hazard.
+        </li>
+        <li>
+          A support request shows you what a sender chose to write, with their address hidden. You
+          read it only to help, and you repeat nothing from it outside the request.
+        </li>
+        <li>
+          Your curator role gives you nothing in any coven but your own. You do not use it, or ask
+          an admin to use theirs, to reach another coven's ingredients or grimoire.
+        </li>
+      </ul>
+
+      <h2>For Admins</h2>
+      <p>
+        An admin can do everything a curator can, and also manages who uses the site: an admin sees
+        which covens a person belongs to, by name and role, grants and revokes the right to create
+        covens, changes site roles, times out a support sender, mints invitations and holds an
+        owner's seat in the demo coven. An admin agrees to everything above, and to this:
+      </p>
+      <ul>
+        <li>
+          You use each of those powers for the site's sake and never for your own: to keep people
+          safe, to keep the compendium honest and to keep the site running. A grudge is not a
+          reason.
+        </li>
+        <li>
+          Every change you make to a person's role or rights is recorded with your name, and you
+          write a note saying why wherever the screen offers one.
+        </li>
+        <li>
+          You see a sender's email address and which covens a person belongs to. You use neither for
+          anything but the request in front of you, and you share neither.
+        </li>
+        <li>
+          A time-out on a support sender is the site's one sanction today, and you use it for abuse
+          of the support form, not for disagreement.
+        </li>
+        <li>
+          Your owner's seat in the demo coven is for showing people the site. The demo coven is a
+          coven like any other to the people in it, and you treat what they write there as theirs.
+        </li>
+        <li>
+          An admin's role gives you nothing in any other coven. The site's code refuses it, and so
+          do you.
+        </li>
+      </ul>
+
+      <h2>For the Site's Owner</h2>
+      <p>
+        The owner runs the site: its hosting, its database, its mail and its code, and holds the
+        primary admin account, which no one can revoke. The owner agrees to everything above, and to
+        this:
+      </p>
+      <ul>
+        <li>
+          The site stays free of advertising, sells no data and uses nothing anyone writes here to
+          train anything, and the owner says so in writing before that could ever change.
+        </li>
+        <li>
+          The owner reaches the database by hand only to do what a person has asked for, such as an
+          erasure, or to fix a fault, and says so when it is done.
+        </li>
+        <li>
+          Every rule on this page, and every change to the terms, applies to the owner as to anyone
+          else, and a change to the terms is published as a new version that everyone agrees to
+          again.
+        </li>
+        <li>
+          The owner keeps the site's code public, so that anyone can check that these pages describe
+          what it does.
+        </li>
+        <li>
+          If the site must end, the owner says so ahead of time and gives people a way to take their
+          own writing with them.
+        </li>
+      </ul>
 
       <h2>Sources</h2>
       <ol className="document-page__sources">
