@@ -185,8 +185,10 @@ export const Ledger = ({
             </span>
             {pause.liftedAt && (
               <span className="badge badge--muted">
-                {'Lifted '}
-                <LocalDay at={pause.liftedAt} year={false} />
+                {/* One inline run: the badge is a flex box, which drops a space between two flex items. */}
+                <span>
+                  Lifted <LocalDay at={pause.liftedAt} year={false} />
+                </span>
               </span>
             )}
           </span>
