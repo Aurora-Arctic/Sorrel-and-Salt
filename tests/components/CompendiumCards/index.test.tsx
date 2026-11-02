@@ -43,6 +43,7 @@ const NO_FILTER: CompendiumListFilter = {
   toxic: '',
   reviewed: '',
   sort: '',
+  order: '',
   covens: [],
   covensNot: false,
 };

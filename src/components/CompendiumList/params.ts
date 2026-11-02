@@ -106,9 +106,11 @@ export const COMPENDIUM_PARAMS = defineSearchParams({
       setting === 'reviewed' ? '1' : setting === 'needs_review' ? '0' : undefined,
     toVariable: (setting) => (setting === '' ? undefined : setting === 'reviewed'),
   }),
-  // A curator's order, `?sort=sourcing_score`: the sourcing score, lowest first. Absent is the default, by name or by best match
-  // under a query. Only the admin list offers it, and the read refuses it without a curator's session, as the score is theirs alone.
+  // The column the admin list sorts on, `?sort=name` or `?sort=sourcing_score`, each in its first direction: A to Z, lowest first.
+  // Absent is the default, by name or by best match under a query. The read refuses the sourcing score without a curator's session.
   sort: choiceParam('sort', COMPENDIUM_SORTS, 'sort'),
+  // `?order=desc` beside a sort reverses it; absent is the sort's first direction, so a sort's address needs no second parameter.
+  order: choiceParam('order', ['desc'] as const, 'order'),
   // Entries held in any of these covens of the viewer's, `?covens=<id>&covens=<id>`. Ids, not slugs, as
   // a shared address should not spell a coven out. Only the public compendium offers it, and the read
   // proves each id by membership, so a coven the viewer is not in filters nothing.

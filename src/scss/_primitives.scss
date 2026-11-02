@@ -944,6 +944,16 @@
     }
   }
 
+  // A sortable heading's arrow, a step from its name.
+  .data-table__sort-arrow {
+    margin-inline-start: space(1);
+  }
+
+  // The sort select a phone shows above the cards; the headings sort at every other width.
+  .data-table-frame > .data-table__sort {
+    display: none;
+  }
+
   // The two row tweaks a list's table takes by class (DataTable's `className`): `--roomy`, taller rows
   // centred on their cells, for a chip or button taller than a line of text; `--nowrap`, every cell on
   // one line, the table scrolling in its frame and wrapping again as cards. Both classes, to outrank
@@ -962,6 +972,21 @@
   // changes on its parts. A component's `position: sticky` cell must reset to `static` under this
   // rule in its own stylesheet (claude-docs/styling.md, "Tables at phone width").
   @container data-table (max-width: #{$table-stack-width}) {
+    .data-table-frame > .data-table__sort {
+      display: flex;
+      margin-block-end: space(3);
+    }
+
+    // The hidden header row's sort links leave the tab order, as the select above stands in for them; their
+    // text stays visible to a screen reader, which still reads each heading.
+    .data-table--stack .data-table__sort-link {
+      visibility: hidden;
+
+      > * {
+        visibility: visible;
+      }
+    }
+
     .data-table--stack {
       display: block;
 

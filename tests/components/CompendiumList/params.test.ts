@@ -247,6 +247,7 @@ describe('the whole table', () => {
       toxic: '',
       reviewed: '',
       sort: '',
+      order: '',
       covens: [],
       covensNot: false,
     });

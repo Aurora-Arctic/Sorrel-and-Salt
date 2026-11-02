@@ -32,6 +32,8 @@ export interface CompendiumListEntry extends UpdatedStamp {
   categories: readonly CardCategory[];
   /** Whether the public compendium lists it; a hidden entry is labelled so and offers Show. */
   shown: boolean;
+  /** Its sourcing score, the Sourcing Score column's value; absent where the read carried none. */
+  sourcingScore?: number;
   editHref: Route;
   /** The head of its edit modal, which a press shows at once while the form loads. */
   editHeading: ModalHeading;
@@ -180,8 +182,8 @@ export type CompendiumListFilterProps = Pick<
    * The filter the page shows. A coven list's also carries its Source, In Stock and Low Stock Only
    * choices (`CovenListFilter`), which the other two lists leave out.
    */
-  filter: Omit<CompendiumListFilter, 'reviewed' | 'hidden' | 'sort'> &
-    Partial<Pick<CompendiumListFilter, 'reviewed' | 'hidden' | 'sort'>> &
+  filter: Omit<CompendiumListFilter, 'reviewed' | 'hidden' | 'sort' | 'order'> &
+    Partial<Pick<CompendiumListFilter, 'reviewed' | 'hidden' | 'sort' | 'order'>> &
     Partial<Pick<CovenListFilter, 'source' | 'inStock' | 'lowStockOnly'>>;
   /**
    * Who the filter is for: the admin's (the default) offers No Refs; the public one submits to

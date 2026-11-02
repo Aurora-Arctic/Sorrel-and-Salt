@@ -10,7 +10,7 @@ import { Fragment, type ReactElement, type ReactNode } from 'react';
 import CategoryChips from '../CategoryChips';
 import FormIcon from '../FormIcon';
 import StackTable, { updatedColumn } from '../DataTable';
-import type { StackColumn } from '../DataTable/types';
+import type { ColumnSort, OtherOrder, SortDirection, StackColumn } from '../DataTable/types';
 import { NO_MATCH_ADVICE, emptyList, noMatchLead } from '../../lib/text';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS, labelOf } from '../IngredientForm/options';
@@ -38,10 +38,53 @@ const NONE = '—';
 // a formal name: Edit and Quick Look read it after their verb.
 const nameOf = (entry: CompendiumListEntry): string => cardName(entry.name, entry.canonicalName);
 
-/** The columns; Edit's pencil stands at a card's top right on a phone. */
-const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
+/** The direction the address asks for: `?order=desc` reverses a sort, and absent is its first direction. */
+const directionOf = (filter: Filter): SortDirection =>
+  filter.order === 'desc' ? 'descending' : 'ascending';
+
+/**
+ * Name's sort, A to Z first. With no search the list is by name already, so its A to Z address writes no sort; under a search
+ * the default is Best Match, so A to Z names the sort to override it.
+ */
+function nameSort(filter: Filter): ColumnSort {
+  const byDefault = !filter.sort && !filter.query;
+  return {
+    current: filter.sort === 'name' ? directionOf(filter) : byDefault ? 'ascending' : undefined,
+    href: {
+      ascending: compendiumHref({ ...filter, sort: filter.query ? 'name' : '', order: '' }),
+      descending: compendiumHref({ ...filter, sort: 'name', order: 'desc' }),
+    },
+    labels: { ascending: 'A to Z', descending: 'Z to A' },
+  };
+}
+
+/** The sourcing score's sort, lowest first, so the worst-sourced entries come to the top. */
+const scoreSort = (filter: Filter): ColumnSort => ({
+  current: filter.sort === 'sourcing_score' ? directionOf(filter) : undefined,
+  href: {
+    ascending: compendiumHref({ ...filter, sort: 'sourcing_score', order: '' }),
+    descending: compendiumHref({ ...filter, sort: 'sourcing_score', order: 'desc' }),
+  },
+  labels: { ascending: 'Lowest First', descending: 'Highest First' },
+});
+
+/** A search's own order, which no heading gives: the phone's select offers it, and clearing the search returns to it too. */
+const bestMatch = (filter: Filter): OtherOrder[] =>
+  filter.query
+    ? [
+        {
+          label: 'Best Match',
+          href: compendiumHref({ ...filter, sort: '', order: '' }),
+          current: !filter.sort,
+        },
+      ]
+    : [];
+
+/** The columns under `filter`, which sets each sortable heading's order; Edit's pencil stands at a card's top right on a phone. */
+const columnsFor = (filter: Filter): readonly StackColumn<CompendiumListEntry>[] => [
   {
     heading: 'Name',
+    sort: nameSort(filter),
     // The Quick Look eye opens the entry's details over the list, left of the name; then the entry's
     // public page by its stored slug, which offers a curator Edit. The pencil opens the edit modal here.
     cell: (entry) => (
@@ -103,6 +146,11 @@ const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
       ) : (
         NONE
       ),
+  },
+  {
+    heading: 'Sourcing Score',
+    sort: scoreSort(filter),
+    cell: (entry) => entry.sourcingScore ?? NONE,
   },
   updatedColumn(),
   {
@@ -240,36 +288,6 @@ export function emptyText(
   );
 }
 
-/**
- * The list's two orders, each a link to the same filter at its first page: the default, by name or by best match under a
- * search, and a curator's by sourcing score, lowest first, so the worst-sourced entries come to the top.
- */
-export function SortLinks({ filter }: { filter: CompendiumListProps['filter'] }): ReactElement {
-  const orders = [
-    { sort: '' as const, label: filter.query ? 'Best Match' : 'Name' },
-    { sort: 'sourcing_score' as const, label: 'Sourcing Score (Lowest First)' },
-  ];
-  return (
-    <nav aria-label="Sort" className="compendium-list__sort">
-      <span className="compendium-list__sort-label" aria-hidden="true">
-        Sort:
-      </span>
-      <ul className="compendium-list__sort-list">
-        {orders.map(({ sort, label }) => (
-          <li key={label}>
-            <PendingLink
-              href={compendiumHref({ ...filter, sort })}
-              aria-current={(filter.sort ?? '') === sort ? 'page' : undefined}
-            >
-              {label}
-            </PendingLink>
-          </li>
-        ))}
-      </ul>
-    </nav>
-  );
-}
-
 const CompendiumList = ({
   entries,
   filter,
@@ -300,9 +318,9 @@ const CompendiumList = ({
     nextHref={nextHref}
     position={position}
   >
-    <SortLinks filter={filter} />
     <StackTable
-      columns={COLUMNS}
+      columns={columnsFor(filter)}
+      otherOrders={bestMatch(filter)}
       rows={entries}
       rowKey={(entry) => entry.id}
       empty={emptyText(filter, categories, facets)}
