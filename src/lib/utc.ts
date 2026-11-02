@@ -1,3 +1,6 @@
+/** The no-break space between a 12-hour time and its am or pm, so a line never breaks between them. */
+export const TIME_PERIOD_SPACE = '\u00a0';
+
 /**
  * An instant as a person reads it, in UTC (`28 August 2026, 00:00 UTC`): how a refusal names when a compendium redirect closes. `expires_at` is midnight UTC,
  * so the server's zone must not move it.
@@ -49,7 +52,7 @@ export function minuteInZone(at: Date, timeZone?: string): string {
   }).formatToParts(at);
   const part = (type: string): string => parts.find((p) => p.type === type)?.value ?? '';
   const period = part('dayPeriod').toLowerCase();
-  return `${part('year')}-${part('month')}-${part('day')} ${part('hour')}:${part('minute')} ${period}`;
+  return `${part('year')}-${part('month')}-${part('day')} ${part('hour')}:${part('minute')}${TIME_PERIOD_SPACE}${period}`;
 }
 
 /**
@@ -68,7 +71,7 @@ export function longMinuteInZone(at: Date, timeZone?: string): string {
   }).formatToParts(at);
   const part = (type: string): string => parts.find((p) => p.type === type)?.value ?? '';
   const period = part('dayPeriod').toLowerCase();
-  return `${part('day')} ${part('month')} ${part('year')}, ${part('hour')}:${part('minute')} ${period}`;
+  return `${part('day')} ${part('month')} ${part('year')}, ${part('hour')}:${part('minute')}${TIME_PERIOD_SPACE}${period}`;
 }
 
 /** An instant to the minute as `28 August 2026, 12:00 am` in UTC: what the server and hydration print. */
@@ -121,7 +124,7 @@ export function shortMinuteInZone(at: Date, timeZone?: string): string {
     timeZone,
   }).formatToParts(at);
   const part = (type: string): string => parts.find((p) => p.type === type)?.value ?? '';
-  return `${part('day')} ${part('month')}, ${part('hour')}:${part('minute')} ${part('dayPeriod').toLowerCase()}`;
+  return `${part('day')} ${part('month')}, ${part('hour')}:${part('minute')}${TIME_PERIOD_SPACE}${part('dayPeriod').toLowerCase()}`;
 }
 
 /** An instant to the minute in UTC as `2026-10-30 14:05 UTC`: how a time-out's end is named, so the same words read the same everywhere. */

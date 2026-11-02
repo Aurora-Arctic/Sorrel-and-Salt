@@ -21,6 +21,8 @@ The formatters (`minuteInZone`, `minuteInUtc`, `longMinuteInZone`, `longMinuteIn
 `src/lib/utc.ts`, beside `inUtc` and `dayInUtc`. `inUtc` (24-hour, with a UTC suffix) is left to the
 compendium redirect refusal, a server-built sentence that cannot know the viewer's zone. `minuteInZone`
 builds the text from `Intl.DateTimeFormat` parts, so no locale's separators leak in; midnight is `12:00 am`.
+The minutes and the am or pm are joined by a no-break space (`TIME_PERIOD_SPACE`, U+00A0), so a narrow line
+never leaves the am or pm alone; every 12-hour formatter there uses it, `shortMinuteInZone` included.
 `LocalTime` takes `long` to print `28 August 2026, 12:00 am` through `longMinuteInZone`.
 
 ## Where it is used
