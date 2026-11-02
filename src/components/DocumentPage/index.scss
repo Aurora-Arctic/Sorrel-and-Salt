@@ -4,12 +4,14 @@
 // A document reads as prose: every running line keeps to the measure, a table may run wider in
 // its own scrolling frame, and each section's heading sits a step above its text.
 .document-page__updated {
-  margin: 0 0 space(6);
+  margin: 0 0 space(2);
   color: $text-muted;
   font-size: type-size('small');
 }
 
 .document-page__body {
+  margin-block-start: space(6);
+
   h2 {
     margin-block: space(8) space(3);
   }
