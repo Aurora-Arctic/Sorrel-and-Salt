@@ -944,9 +944,29 @@
     }
   }
 
-  // A sortable heading's arrow, a step from its name.
+  // A sortable heading is a link with no underline in any state; the sorted one is the accent, and
+  // hover and the focus ring are the global link's. The arrow is a step from the name.
+  .data-table__sort-link {
+    display: inline-flex;
+    align-items: center;
+    gap: space(1);
+    text-decoration: none;
+
+    &.is-sorted {
+      color: $accent;
+    }
+  }
+
   .data-table__sort-arrow {
-    margin-inline-start: space(1);
+    flex: none;
+    inline-size: 1rem;
+    block-size: 1rem;
+  }
+
+  // The up-and-down pair on a column not sorted by, faded as a disabled control is.
+  .data-table__sort-link:not(.is-sorted) .data-table__sort-arrow {
+    color: $text-muted;
+    opacity: $opacity-disabled;
   }
 
   // The sort select a phone shows above the cards; the headings sort at every other width.

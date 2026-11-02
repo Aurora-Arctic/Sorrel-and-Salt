@@ -16,6 +16,31 @@ function cellClass<Row>({ className, action }: StackColumn<Row>): string | undef
   );
 }
 
+/** A sortable heading's arrow for the eye alone: up for ascending, down for descending, and both for a column not sorted by. */
+function SortArrow({ current }: { current: ColumnSort['current'] }): ReactNode {
+  const path =
+    current === 'ascending'
+      ? 'M12 19V5M5 12l7-7 7 7'
+      : current === 'descending'
+        ? 'M12 5v14M5 12l7 7 7-7'
+        : 'M8 9l4-4 4 4M8 15l4 4 4-4';
+  return (
+    <svg
+      className="data-table__sort-arrow"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d={path} />
+    </svg>
+  );
+}
+
 /**
  * A sortable heading: a link to the column's other direction when the list is sorted by it, and to its first direction when
  * not. Its name says the order in force, "Name, Sorted A to Z"; the arrow is for the eye alone.
@@ -24,18 +49,12 @@ function SortHeading({ heading, sort }: { heading: string; sort: ColumnSort }): 
   const { current, href, labels } = sort;
   return (
     <PendingLink
-      className="data-table__sort-link"
+      className={current ? 'data-table__sort-link is-sorted' : 'data-table__sort-link'}
       href={current === 'ascending' ? href.descending : href.ascending}
     >
       <span>{heading}</span>
-      {current && (
-        <>
-          <span className="visually-hidden">, Sorted {labels[current]}</span>
-          <span className="data-table__sort-arrow" aria-hidden="true">
-            {current === 'ascending' ? '↑' : '↓'}
-          </span>
-        </>
-      )}
+      {current && <span className="visually-hidden">, Sorted {labels[current]}</span>}
+      <SortArrow current={current} />
     </PendingLink>
   );
 }
