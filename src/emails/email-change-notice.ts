@@ -1,3 +1,4 @@
+import { Fragment, createElement as h } from 'react';
 import { EmailLayout, IgnoreNote, Paragraph, defineMessage } from './parts/layout';
 import type { EmailChangeNoticeProps } from './types';
 
@@ -30,33 +31,41 @@ export function EmailChangeNotice({
   url,
   origin = new URL(url).origin,
 }: EmailChangeNoticeProps) {
-  return (
-    <EmailLayout
-      preview={PREVIEW[stage]}
-      heading={stage === 'requested' ? 'New Email Requested' : 'Email Changed'}
-      origin={origin}
-    >
-      {stage === 'requested' ? (
-        <>
-          <Paragraph>
-            {`On ${whenOf(at)}, a signed-in session asked to use an address at ${newDomain} for your Sorrel & Salt account.`}
-          </Paragraph>
-          <Paragraph>
-            Nothing has changed yet: the change only takes effect when the link we sent to the new
-            address is followed.
-          </Paragraph>
-        </>
-      ) : (
-        <Paragraph>
-          {`On ${whenOf(at)}, your Sorrel & Salt account moved to an address at ${newDomain}. This address no longer receives its mail.`}
-        </Paragraph>
-      )}
-      <Paragraph>
-        If this was not you, sign in to Sorrel & Salt, change your email address back and remove any
-        sign-in method you do not recognise.
-      </Paragraph>
-      <IgnoreNote when="If this was you" />
-    </EmailLayout>
+  const what =
+    stage === 'requested'
+      ? h(
+          Fragment,
+          null,
+          h(
+            Paragraph,
+            null,
+            `On ${whenOf(at)}, a signed-in session asked to use an address at ${newDomain} for your Sorrel & Salt account.`,
+          ),
+          h(
+            Paragraph,
+            null,
+            'Nothing has changed yet: the change only takes effect when the link we sent to the new address is followed.',
+          ),
+        )
+      : h(
+          Paragraph,
+          null,
+          `On ${whenOf(at)}, your Sorrel & Salt account moved to an address at ${newDomain}. This address no longer receives its mail.`,
+        );
+  return h(
+    EmailLayout,
+    {
+      preview: PREVIEW[stage],
+      heading: stage === 'requested' ? 'New Email Requested' : 'Email Changed',
+      origin,
+    },
+    what,
+    h(
+      Paragraph,
+      null,
+      'If this was not you, sign in to Sorrel & Salt, change your email address back and remove any sign-in method you do not recognise.',
+    ),
+    h(IgnoreNote, { when: 'If this was you' }),
   );
 }
 

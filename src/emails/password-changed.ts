@@ -1,3 +1,4 @@
+import { createElement as h } from 'react';
 import { Action, EmailLayout, Paragraph, actionVerb, defineMessage } from './parts/layout';
 import type { PasswordChange, PasswordChangedProps } from './types';
 
@@ -21,15 +22,17 @@ export function PasswordChanged({
   origin = new URL(url).origin,
   part,
 }: PasswordChangedProps) {
-  return (
-    <EmailLayout preview={PREVIEW} heading={SUBJECT} origin={origin}>
-      <Paragraph>{WHAT_HAPPENED[how]}</Paragraph>
-      <Paragraph>If that was you, there is nothing more to do.</Paragraph>
-      <Paragraph>
-        {`If this was not you, someone else may be able to sign in to your account: ${actionVerb(part)} to reset the password now.`}
-      </Paragraph>
-      <Action href={url} label="Reset My Password" part={part} />
-    </EmailLayout>
+  return h(
+    EmailLayout,
+    { preview: PREVIEW, heading: SUBJECT, origin },
+    h(Paragraph, null, WHAT_HAPPENED[how]),
+    h(Paragraph, null, 'If that was you, there is nothing more to do.'),
+    h(
+      Paragraph,
+      null,
+      `If this was not you, someone else may be able to sign in to your account: ${actionVerb(part)} to reset the password now.`,
+    ),
+    h(Action, { href: url, label: 'Reset My Password', part }),
   );
 }
 

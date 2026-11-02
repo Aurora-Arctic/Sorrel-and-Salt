@@ -1,3 +1,4 @@
+import { createElement as h } from 'react';
 import {
   Action,
   EmailLayout,
@@ -28,21 +29,25 @@ export function AdminInvitation({
   origin = new URL(url).origin,
   part,
 }: AdminInvitationProps) {
-  return (
-    <EmailLayout
-      preview={`Accept within ${LIFETIME} to become ${ROLE[siteRole].prose}.`}
-      heading="You Are Invited"
-      origin={origin}
-    >
-      <Paragraph>
-        {`${inviterName}, an admin of Sorrel & Salt, has invited this email address to become ${ROLE[siteRole].prose}.`}
-      </Paragraph>
-      <Paragraph>
-        {`To accept, ${actionVerb(part)} within ${LIFETIME}, then sign in with an account that uses this email address.`}
-      </Paragraph>
-      <Action href={url} label="Accept the Invitation" part={part} />
-      <IgnoreNote when="If you were not expecting this" />
-    </EmailLayout>
+  return h(
+    EmailLayout,
+    {
+      preview: `Accept within ${LIFETIME} to become ${ROLE[siteRole].prose}.`,
+      heading: 'You Are Invited',
+      origin,
+    },
+    h(
+      Paragraph,
+      null,
+      `${inviterName}, an admin of Sorrel & Salt, has invited this email address to become ${ROLE[siteRole].prose}.`,
+    ),
+    h(
+      Paragraph,
+      null,
+      `To accept, ${actionVerb(part)} within ${LIFETIME}, then sign in with an account that uses this email address.`,
+    ),
+    h(Action, { href: url, label: 'Accept the Invitation', part }),
+    h(IgnoreNote, { when: 'If you were not expecting this' }),
   );
 }
 

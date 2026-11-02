@@ -1,4 +1,10 @@
-import type { CSSProperties, ReactElement, ReactNode } from 'react';
+import {
+  Fragment,
+  createElement as h,
+  type CSSProperties,
+  type ReactElement,
+  type ReactNode,
+} from 'react';
 import {
   Body,
   Container,
@@ -19,7 +25,9 @@ import type { EmailLayoutProps, InkProps, Part } from './types';
 
 // Every mail's frame: the site's palette, type and corner photographs (claude-docs/email.md,
 // "Design"). Dark is inline, light the one media query's override; Zoho Mail's Night mode needs
-// dark written as a gradient and an anchor around text (measurements in email.md).
+// dark written as a gradient and an anchor around text (measurements in email.md). Written as
+// `createElement` calls, not JSX: a durable job's step renders these, and the step bundler leaves JSX
+// uncompiled.
 
 const { dark, light } = EMAIL_THEMES;
 
@@ -118,14 +126,13 @@ const INK_BACKGROUND = 'linear-gradient(rgba(0,0,0,0),rgba(0,0,0,0))';
  * element nested within.
  */
 function Ink({ className, color, font, children }: InkProps) {
-  return (
-    // oxlint-disable-next-line jsx-a11y/anchor-is-valid -- an anchor with no href is the point: it is text that Zoho Mail Night mode leaves uncoloured
-    <a
-      className={className}
-      style={{ background: INK_BACKGROUND, color, fontFamily: font, textDecoration: 'none' }}
-    >
-      {children}
-    </a>
+  return h(
+    'a',
+    {
+      className,
+      style: { background: INK_BACKGROUND, color, fontFamily: font, textDecoration: 'none' },
+    },
+    children,
   );
 }
 
@@ -151,120 +158,138 @@ const MSO_OPEN_COMMENT =
 const MSO_CLOSE_COMMENT = '<!--[if mso]></td></tr></table><![endif]-->';
 
 /** A padded block as a table of its own: Word honours padding only on a cell, not on a Section's. */
-function PaddedCell({ padding, children }: { padding: string; children: ReactNode }) {
-  return (
-    <table role="presentation" width="100%" border={0} cellPadding={0} cellSpacing={0}>
-      <tbody>
-        <tr>
-          <td style={{ padding }}>{children}</td>
-        </tr>
-      </tbody>
-    </table>
+function PaddedCell({ padding, children }: { padding: string; children?: ReactNode }) {
+  return h(
+    'table',
+    { role: 'presentation', width: '100%', border: 0, cellPadding: 0, cellSpacing: 0 },
+    h('tbody', null, h('tr', null, h('td', { style: { padding } }, children))),
   );
 }
 
 export function EmailLayout({ preview, heading, origin, children }: EmailLayoutProps) {
-  return (
-    <Html lang="en">
-      <Head>
-        {/* Tells Apple Mail the mail has its own dark and light, so it does not invert it. */}
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="color-scheme" content="dark light" />
-        <meta name="supported-color-schemes" content="dark light" />
-        <style dangerouslySetInnerHTML={{ __html: stylesheet(origin) }} />
-      </Head>
-      <Preview>{preview}</Preview>
-      <Body
-        className="ss-body"
-        style={{
+  const wordmark = h(
+    PaddedCell,
+    { padding: `${WORDMARK_TOP}px 32px 0` },
+    h(
+      Text,
+      { style: { margin: 0, textAlign: 'right', lineHeight: `${WORDMARK_LINE}px` } },
+      h(
+        Link,
+        {
+          href: origin,
+          className: 'ss-wordmark',
+          style: {
+            background: INK_BACKGROUND,
+            color: dark.text,
+            fontFamily: HEADING_FONT,
+            fontSize: '21px',
+            fontWeight: 700,
+            letterSpacing: '0.01em',
+            textDecoration: 'none',
+          },
+        },
+        'Sorrel & Salt',
+      ),
+    ),
+  );
+  const content = h(
+    PaddedCell,
+    // The heading starts OVERLAP above the sorrel's lower edge.
+    {
+      padding: `${ORNAMENTS.sorrel.height - OVERLAP - WORDMARK_TOP - WORDMARK_LINE}px 32px ${ORNAMENTS.salt.height - PARAGRAPH_GAP}px`,
+    },
+    h(
+      Heading,
+      {
+        as: 'h1',
+        style: {
+          margin: '0 0 16px',
+          color: dark.text,
+          fontFamily: HEADING_FONT,
+          fontSize: '32px',
+          fontWeight: 700,
+          letterSpacing: '0.01em',
+          lineHeight: '38px',
+          ...EXACT_LINES,
+        },
+      },
+      h(Ink, { className: 'ss-text', color: dark.text, font: HEADING_FONT }, heading),
+    ),
+    children,
+  );
+  return h(
+    Html,
+    { lang: 'en' },
+    h(
+      Head,
+      null,
+      // The colour-scheme pair tells Apple Mail the mail has its own dark and light, so it does not invert it.
+      h('meta', { name: 'viewport', content: 'width=device-width, initial-scale=1' }),
+      h('meta', { name: 'color-scheme', content: 'dark light' }),
+      h('meta', { name: 'supported-color-schemes', content: 'dark light' }),
+      h('style', { dangerouslySetInnerHTML: { __html: stylesheet(origin) } }),
+    ),
+    h(Preview, null, preview),
+    h(
+      Body,
+      {
+        className: 'ss-body',
+        style: {
           margin: 0,
           padding: 0,
           background: paint(dark.page),
           color: dark.text,
           fontFamily: BODY_FONT,
           fontWeight: 300,
-        }}
-      >
-        {/* The page colour on one cell of our own, the one element every light
-            rule is scoped beneath; Section cannot put a class on its cell. */}
-        <table
-          role="presentation"
-          width="100%"
-          border={0}
-          cellPadding={0}
-          cellSpacing={0}
-          align="center"
-        >
-          <tbody>
-            <tr>
-              <td
-                className="ss-page"
-                style={{ background: paint(dark.page), color: dark.text, padding: '0 0 24px' }}
-              >
-                <span data-mso="open" />
-                {/* Backgrounds rather than images, so the text can run over their edges:
-              Gmail strips the negative margins an overlap would otherwise take. */}
-                <Container style={{ maxWidth: '600px' }}>
-                  <Section className="ss-sorrel" style={ornament('sorrel', origin, 'left top')}>
-                    <Section className="ss-salt" style={ornament('salt', origin, 'right bottom')}>
-                      <PaddedCell padding={`${WORDMARK_TOP}px 32px 0`}>
-                        <Text
-                          style={{
-                            margin: 0,
-                            textAlign: 'right',
-                            lineHeight: `${WORDMARK_LINE}px`,
-                          }}
-                        >
-                          <Link
-                            href={origin}
-                            className="ss-wordmark"
-                            style={{
-                              background: INK_BACKGROUND,
-                              color: dark.text,
-                              fontFamily: HEADING_FONT,
-                              fontSize: '21px',
-                              fontWeight: 700,
-                              letterSpacing: '0.01em',
-                              textDecoration: 'none',
-                            }}
-                          >
-                            Sorrel &amp; Salt
-                          </Link>
-                        </Text>
-                      </PaddedCell>
-                      <PaddedCell
-                        // The heading starts OVERLAP above the sorrel's lower edge.
-                        padding={`${ORNAMENTS.sorrel.height - OVERLAP - WORDMARK_TOP - WORDMARK_LINE}px 32px ${ORNAMENTS.salt.height - PARAGRAPH_GAP}px`}
-                      >
-                        <Heading
-                          as="h1"
-                          style={{
-                            margin: '0 0 16px',
-                            color: dark.text,
-                            fontFamily: HEADING_FONT,
-                            fontSize: '32px',
-                            fontWeight: 700,
-                            letterSpacing: '0.01em',
-                            lineHeight: '38px',
-                            ...EXACT_LINES,
-                          }}
-                        >
-                          <Ink className="ss-text" color={dark.text} font={HEADING_FONT}>
-                            {heading}
-                          </Ink>
-                        </Heading>
-                        {children}
-                      </PaddedCell>
-                    </Section>
-                  </Section>
-                </Container>
-                <span data-mso="close" />
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </Body>
-    </Html>
+        },
+      },
+      // The page colour on one cell of our own, the one element every light rule is scoped beneath; Section cannot put a
+      // class on its cell.
+      h(
+        'table',
+        {
+          role: 'presentation',
+          width: '100%',
+          border: 0,
+          cellPadding: 0,
+          cellSpacing: 0,
+          align: 'center',
+        },
+        h(
+          'tbody',
+          null,
+          h(
+            'tr',
+            null,
+            h(
+              'td',
+              {
+                className: 'ss-page',
+                style: { background: paint(dark.page), color: dark.text, padding: '0 0 24px' },
+              },
+              h('span', { 'data-mso': 'open' }),
+              // Backgrounds rather than images, so the text can run over their edges: Gmail strips the negative margins an
+              // overlap would otherwise take.
+              h(
+                Container,
+                { style: { maxWidth: '600px' } },
+                h(
+                  Section,
+                  { className: 'ss-sorrel', style: ornament('sorrel', origin, 'left top') },
+                  h(
+                    Section,
+                    { className: 'ss-salt', style: ornament('salt', origin, 'right bottom') },
+                    wordmark,
+                    content,
+                  ),
+                ),
+              ),
+              h('span', { 'data-mso': 'close' }),
+            ),
+          ),
+        ),
+      ),
+    ),
   );
 }
 
@@ -281,40 +306,52 @@ function paragraphStyle(muted: boolean): CSSProperties {
 }
 
 /** A paragraph of text only: a link inside one goes through `Action`, since an anchor cannot nest. */
-export function Paragraph({ children, muted = false }: { children: ReactNode; muted?: boolean }) {
-  return (
-    <Text style={paragraphStyle(muted)}>
-      <Ink className={muted ? 'ss-muted' : 'ss-text'} color={muted ? dark.muted : dark.text}>
-        {children}
-      </Ink>
-    </Text>
+export function Paragraph({ children, muted = false }: { children?: ReactNode; muted?: boolean }) {
+  return h(
+    Text,
+    { style: paragraphStyle(muted) },
+    h(
+      Ink,
+      { className: muted ? 'ss-muted' : 'ss-text', color: muted ? dark.muted : dark.text },
+      children,
+    ),
   );
 }
 
 /** The one thing to do: a button in the HTML (with the link written out for clients that hide buttons), the link once in the text. */
 export function Action({ href, label, part }: { href: string; label: string; part: Part }) {
-  if (part === 'text') return <Paragraph>{href}</Paragraph>;
-  return (
-    <>
-      {/* The button is an anchor of our own, not React Email's, whose label
-          sits in a nested span Zoho would recolour. A gradient alone paints
-          it, so Zoho has no colour to invert; the cell's `bgcolor` is for
-          Word, which draws no gradient, and the anchor covers it elsewhere. */}
-      <table
-        role="presentation"
-        border={0}
-        cellPadding={0}
-        cellSpacing={0}
-        style={{ margin: '8px 0 24px' }}
-      >
-        <tbody>
-          <tr>
-            <td {...{ bgcolor: dark.accent }} style={{ borderRadius: '8px' }}>
-              <a
-                href={href}
-                target="_blank"
-                className="ss-button"
-                style={{
+  if (part === 'text') return h(Paragraph, null, href);
+  return h(
+    Fragment,
+    null,
+    // The button is an anchor of our own, not React Email's, whose label sits in a nested span Zoho would recolour. A
+    // gradient alone paints it, so Zoho has no colour to invert; the cell's `bgcolor` is for Word, which draws no
+    // gradient, and the anchor covers it elsewhere.
+    h(
+      'table',
+      {
+        role: 'presentation',
+        border: 0,
+        cellPadding: 0,
+        cellSpacing: 0,
+        style: { margin: '8px 0 24px' },
+      },
+      h(
+        'tbody',
+        null,
+        h(
+          'tr',
+          null,
+          h(
+            'td',
+            { bgcolor: dark.accent, style: { borderRadius: '8px' } },
+            h(
+              'a',
+              {
+                href,
+                target: '_blank',
+                className: 'ss-button',
+                style: {
                   display: 'block',
                   background: `linear-gradient(${dark.accent},${dark.accent})`,
                   color: dark.onAccent,
@@ -326,33 +363,34 @@ export function Action({ href, label, part }: { href: string; label: string; par
                   lineHeight: '20px',
                   textDecoration: 'none',
                   ...EXACT_LINES,
-                }}
-              >
-                {label}
-              </a>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <Text style={paragraphStyle(true)}>
-        <Ink className="ss-muted" color={dark.muted}>
-          Or copy this link into your browser:
-        </Ink>
-        <br />
-        <Link
-          href={href}
-          className="ss-link"
-          style={{
+                },
+              },
+              label,
+            ),
+          ),
+        ),
+      ),
+    ),
+    h(
+      Text,
+      { style: paragraphStyle(true) },
+      h(Ink, { className: 'ss-muted', color: dark.muted }, 'Or copy this link into your browser:'),
+      h('br'),
+      h(
+        Link,
+        {
+          href,
+          className: 'ss-link',
+          style: {
             background: INK_BACKGROUND,
             color: dark.accent,
             fontFamily: BODY_FONT,
             wordBreak: 'break-all',
-          }}
-        >
-          {href}
-        </Link>
-      </Text>
-    </>
+          },
+        },
+        href,
+      ),
+    ),
   );
 }
 
@@ -367,11 +405,11 @@ export function actionVerb(part: Part): string {
 /**
  * The closing line every mail ends on: whoever did not ask for it can ignore
  * it. `when` is the template's own way of saying who that is. One string,
- * not JSX text around an expression, which React renders with a `<!-- -->`
+ * not text around an expression, which React renders with a `<!-- -->`
  * between the two in the HTML.
  */
 export function IgnoreNote({ when }: { when: string }) {
-  return <Paragraph muted>{`${when}, you can ignore this email.`}</Paragraph>;
+  return h(Paragraph, { muted: true }, `${when}, you can ignore this email.`);
 }
 
 /** Renders a template once per part, so the text part is written for text, not stripped from the HTML. */
@@ -409,6 +447,6 @@ export function defineMessage<Props extends BaseEmailProps>(
   return async (input) => ({
     to: input.to,
     subject: typeof subject === 'function' ? subject(input) : subject,
-    ...(await renderParts((part) => <Template {...input} part={part} />)),
+    ...(await renderParts((part) => h(Template, { ...input, part }))),
   });
 }

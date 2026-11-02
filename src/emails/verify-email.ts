@@ -1,3 +1,4 @@
+import { createElement as h } from 'react';
 import {
   Action,
   EmailLayout,
@@ -27,23 +28,27 @@ export function VerifyEmail({
   part,
 }: VerifyEmailProps) {
   const signedUpWith = providerList(providers);
-  return (
-    <EmailLayout preview={PREVIEW[purpose]} heading="Confirm Your Email Address" origin={origin}>
-      <Paragraph>
-        {purpose === 'change'
-          ? 'Someone asked to use this email address for their Sorrel & Salt account'
-          : 'Someone made a Sorrel & Salt account with this email address'}
-        {signedUpWith && purpose === 'sign-up' && <>, using {signedUpWith}</>}.
-      </Paragraph>
-      <Paragraph>
-        {`If that was you, ${actionVerb(part)} within one hour, in the same browser where you are signed in to Sorrel & Salt.`}
-      </Paragraph>
-      <Paragraph>
-        If the link has expired, sign in and ask for a new one from your account page.
-      </Paragraph>
-      <Action href={url} label="Confirm My Email" part={part} />
-      <IgnoreNote when="If this was not you" />
-    </EmailLayout>
+  const who =
+    purpose === 'change'
+      ? 'Someone asked to use this email address for their Sorrel & Salt account'
+      : 'Someone made a Sorrel & Salt account with this email address';
+  const using = signedUpWith && purpose === 'sign-up' ? `, using ${signedUpWith}` : '';
+  return h(
+    EmailLayout,
+    { preview: PREVIEW[purpose], heading: 'Confirm Your Email Address', origin },
+    h(Paragraph, null, `${who}${using}.`),
+    h(
+      Paragraph,
+      null,
+      `If that was you, ${actionVerb(part)} within one hour, in the same browser where you are signed in to Sorrel & Salt.`,
+    ),
+    h(
+      Paragraph,
+      null,
+      'If the link has expired, sign in and ask for a new one from your account page.',
+    ),
+    h(Action, { href: url, label: 'Confirm My Email', part }),
+    h(IgnoreNote, { when: 'If this was not you' }),
   );
 }
 

@@ -1,3 +1,4 @@
+import { Fragment, createElement as h } from 'react';
 import { Action, EmailLayout, Paragraph, actionVerb, defineMessage } from './parts/layout';
 import { supportTitle } from './parts/support-title';
 import type { SupportResolvedProps } from './types';
@@ -15,22 +16,26 @@ export function SupportResolved({
   signedOut = false,
 }: SupportResolvedProps) {
   const title = titleOf(requestSubject);
-  return (
-    <EmailLayout preview="Your support request is resolved." heading={title} origin={origin}>
-      {signedOut ? (
-        <>
-          <Paragraph>{`If you still need help, ${actionVerb(part)} to write to us again.`}</Paragraph>
-          <Action href={url} label="Write to Us Again" part={part} />
-        </>
-      ) : (
-        <>
-          <Paragraph>
-            {`A reply from you reopens it, and it closes by itself after seven days without one. To open the request, ${actionVerb(part)}.`}
-          </Paragraph>
-          <Action href={url} label="Open the Request" part={part} />
-        </>
-      )}
-    </EmailLayout>
+  return h(
+    EmailLayout,
+    { preview: 'Your support request is resolved.', heading: title, origin },
+    signedOut
+      ? h(
+          Fragment,
+          null,
+          h(Paragraph, null, `If you still need help, ${actionVerb(part)} to write to us again.`),
+          h(Action, { href: url, label: 'Write to Us Again', part }),
+        )
+      : h(
+          Fragment,
+          null,
+          h(
+            Paragraph,
+            null,
+            `A reply from you reopens it, and it closes by itself after seven days without one. To open the request, ${actionVerb(part)}.`,
+          ),
+          h(Action, { href: url, label: 'Open the Request', part }),
+        ),
   );
 }
 

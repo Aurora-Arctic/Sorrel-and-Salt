@@ -1,3 +1,4 @@
+import { createElement as h } from 'react';
 import { Action, EmailLayout, Paragraph, actionVerb, defineMessage } from './parts/layout';
 import { supportTitle } from './parts/support-title';
 import type { SupportReplyNoticeProps } from './types';
@@ -15,15 +16,11 @@ export function SupportReplyNotice({
   requestSubject,
 }: SupportReplyNoticeProps) {
   const title = titleOf(requestSubject);
-  return (
-    <EmailLayout
-      preview="There is a reply to your support request."
-      heading={title}
-      origin={origin}
-    >
-      <Paragraph>{`Sign in, then ${actionVerb(part)} to read it on your support page.`}</Paragraph>
-      <Action href={url} label="Read the Reply" part={part} />
-    </EmailLayout>
+  return h(
+    EmailLayout,
+    { preview: 'There is a reply to your support request.', heading: title, origin },
+    h(Paragraph, null, `Sign in, then ${actionVerb(part)} to read it on your support page.`),
+    h(Action, { href: url, label: 'Read the Reply', part }),
   );
 }
 

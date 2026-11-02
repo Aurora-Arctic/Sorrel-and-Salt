@@ -1,3 +1,4 @@
+import { createElement as h } from 'react';
 import { Action, EmailLayout, Paragraph, actionVerb, defineMessage } from './parts/layout';
 import { providerList } from './parts/providers';
 import type { AccountExistsProps } from './types';
@@ -25,20 +26,25 @@ export function AccountExists({
   part,
 }: AccountExistsProps) {
   const how = howToSignIn(providers, hasPassword);
-  return (
-    <EmailLayout preview={PREVIEW} heading={SUBJECT} origin={origin}>
-      <Paragraph>
-        Someone tried to make a new Sorrel & Salt account with this email address, which already has
-        one. No second account was made.
-      </Paragraph>
-      <Paragraph>
-        {`If that was you, sign in ${how ? `${how} ` : ''}instead: ${actionVerb(part)}.`}
-      </Paragraph>
-      <Action href={url} label="Sign In" part={part} />
-      <Paragraph muted>
-        If this was not you, nothing about your account has changed, and you can ignore this email.
-      </Paragraph>
-    </EmailLayout>
+  return h(
+    EmailLayout,
+    { preview: PREVIEW, heading: SUBJECT, origin },
+    h(
+      Paragraph,
+      null,
+      'Someone tried to make a new Sorrel & Salt account with this email address, which already has one. No second account was made.',
+    ),
+    h(
+      Paragraph,
+      null,
+      `If that was you, sign in ${how ? `${how} ` : ''}instead: ${actionVerb(part)}.`,
+    ),
+    h(Action, { href: url, label: 'Sign In', part }),
+    h(
+      Paragraph,
+      { muted: true },
+      'If this was not you, nothing about your account has changed, and you can ignore this email.',
+    ),
   );
 }
 

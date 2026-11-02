@@ -1,3 +1,4 @@
+import { createElement as h } from 'react';
 import { Action, EmailLayout, Paragraph, actionVerb, defineMessage } from './parts/layout';
 import type { SupportEmailReplyProps } from './types';
 
@@ -10,20 +11,16 @@ export function SupportEmailReply({
   origin = new URL(url).origin,
   part,
 }: SupportEmailReplyProps) {
-  return (
-    <EmailLayout
-      preview="There is a reply to your message."
-      heading="Reply to Your Message"
-      origin={origin}
-    >
-      {body.split(/\n{2,}/).map((paragraph, index) => (
-        <Paragraph key={index}>{paragraph}</Paragraph>
-      ))}
-      <Paragraph muted>
-        {`To answer, ${actionVerb(part)} to write to us again, from this address.`}
-      </Paragraph>
-      <Action href={url} label="Write to Us" part={part} />
-    </EmailLayout>
+  return h(
+    EmailLayout,
+    { preview: 'There is a reply to your message.', heading: 'Reply to Your Message', origin },
+    body.split(/\n{2,}/).map((paragraph, index) => h(Paragraph, { key: index }, paragraph)),
+    h(
+      Paragraph,
+      { muted: true },
+      `To answer, ${actionVerb(part)} to write to us again, from this address.`,
+    ),
+    h(Action, { href: url, label: 'Write to Us', part }),
   );
 }
 

@@ -1,3 +1,4 @@
+import { createElement as h } from 'react';
 import { Action, EmailLayout, Paragraph, actionVerb, defineMessage } from './parts/layout';
 import { providerList } from './parts/providers';
 import type { ProviderId } from '../lib/types';
@@ -32,20 +33,25 @@ export function PasswordLocked({
   part,
 }: PasswordLockedProps) {
   const length = lockLength(minutes);
-  return (
-    <EmailLayout preview={PREVIEW} heading={SUBJECT} origin={origin}>
-      <Paragraph>
-        {`Several wrong passwords were just tried on the Sorrel & Salt account with this email address, so signing in to it with a password is paused for ${length}. It starts again on its own after that.${otherWays(providers, hasPasskey)}`}
-      </Paragraph>
-      <Paragraph>
-        {`If that was you and you have forgotten the password, ${actionVerb(part)} within 15 minutes to choose a new one. Choosing one lifts the pause at once and signs the account out everywhere.`}
-      </Paragraph>
-      <Action href={url} label="Choose a New Password" part={part} />
-      <Paragraph muted>
-        If this was not you, your password has not changed and nobody signed in with it. You can
-        ignore this email, or choose a new password if you think someone knows it.
-      </Paragraph>
-    </EmailLayout>
+  return h(
+    EmailLayout,
+    { preview: PREVIEW, heading: SUBJECT, origin },
+    h(
+      Paragraph,
+      null,
+      `Several wrong passwords were just tried on the Sorrel & Salt account with this email address, so signing in to it with a password is paused for ${length}. It starts again on its own after that.${otherWays(providers, hasPasskey)}`,
+    ),
+    h(
+      Paragraph,
+      null,
+      `If that was you and you have forgotten the password, ${actionVerb(part)} within 15 minutes to choose a new one. Choosing one lifts the pause at once and signs the account out everywhere.`,
+    ),
+    h(Action, { href: url, label: 'Choose a New Password', part }),
+    h(
+      Paragraph,
+      { muted: true },
+      'If this was not you, your password has not changed and nobody signed in with it. You can ignore this email, or choose a new password if you think someone knows it.',
+    ),
   );
 }
 

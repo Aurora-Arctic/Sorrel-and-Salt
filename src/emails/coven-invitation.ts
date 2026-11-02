@@ -1,3 +1,4 @@
+import { createElement as h } from 'react';
 import {
   Action,
   EmailLayout,
@@ -22,21 +23,25 @@ export function CovenInvitation({
   origin = new URL(url).origin,
   part,
 }: CovenInvitationProps) {
-  return (
-    <EmailLayout
-      preview={`Accept within ${LIFETIME} to join ${covenName} as a ${role}.`}
-      heading="You Are Invited"
-      origin={origin}
-    >
-      <Paragraph>
-        {`${inviterName} has invited you to join ${covenName} on Sorrel & Salt as a ${role}.`}
-      </Paragraph>
-      <Paragraph>
-        {`To accept, ${actionVerb(part)} within ${LIFETIME}, then sign in with an account that uses this email address.`}
-      </Paragraph>
-      <Action href={url} label="Accept the Invitation" part={part} />
-      <IgnoreNote when="If you were not expecting this" />
-    </EmailLayout>
+  return h(
+    EmailLayout,
+    {
+      preview: `Accept within ${LIFETIME} to join ${covenName} as a ${role}.`,
+      heading: 'You Are Invited',
+      origin,
+    },
+    h(
+      Paragraph,
+      null,
+      `${inviterName} has invited you to join ${covenName} on Sorrel & Salt as a ${role}.`,
+    ),
+    h(
+      Paragraph,
+      null,
+      `To accept, ${actionVerb(part)} within ${LIFETIME}, then sign in with an account that uses this email address.`,
+    ),
+    h(Action, { href: url, label: 'Accept the Invitation', part }),
+    h(IgnoreNote, { when: 'If you were not expecting this' }),
   );
 }
 

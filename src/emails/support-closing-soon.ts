@@ -1,3 +1,4 @@
+import { Fragment, createElement as h } from 'react';
 import { Action, EmailLayout, Paragraph, actionVerb, defineMessage } from './parts/layout';
 import { supportTitle } from './parts/support-title';
 import type { SupportClosingSoonProps } from './types';
@@ -15,24 +16,30 @@ export function SupportClosingSoon({
   signedOut = false,
 }: SupportClosingSoonProps) {
   const title = titleOf(requestSubject);
-  return (
-    <EmailLayout preview="Your support request closes soon." heading={title} origin={origin}>
-      {signedOut ? (
-        <>
-          <Paragraph>
-            {`It closes in 2 days. If you still need help, ${actionVerb(part)} to write to us again.`}
-          </Paragraph>
-          <Action href={url} label="Write to Us Again" part={part} />
-        </>
-      ) : (
-        <>
-          <Paragraph>
-            {`It closes in 2 days, and a reply from you before then keeps it open. To open the request, ${actionVerb(part)}.`}
-          </Paragraph>
-          <Action href={url} label="Open the Request" part={part} />
-        </>
-      )}
-    </EmailLayout>
+  return h(
+    EmailLayout,
+    { preview: 'Your support request closes soon.', heading: title, origin },
+    signedOut
+      ? h(
+          Fragment,
+          null,
+          h(
+            Paragraph,
+            null,
+            `It closes in 2 days. If you still need help, ${actionVerb(part)} to write to us again.`,
+          ),
+          h(Action, { href: url, label: 'Write to Us Again', part }),
+        )
+      : h(
+          Fragment,
+          null,
+          h(
+            Paragraph,
+            null,
+            `It closes in 2 days, and a reply from you before then keeps it open. To open the request, ${actionVerb(part)}.`,
+          ),
+          h(Action, { href: url, label: 'Open the Request', part }),
+        ),
   );
 }
 
