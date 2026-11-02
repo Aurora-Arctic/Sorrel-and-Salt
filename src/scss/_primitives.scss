@@ -975,8 +975,11 @@
     }
   }
 
+  // Turned over as the dropdown chevrons are (MenuButton, CollapsibleSection): the shared flip and its
+  // transition, which carries the reduced-motion guard itself.
   .data-table__sort-turn {
     transform-origin: 12px 12px;
+    @include chevron-flip('.is-descending');
   }
 
   .data-table__sort-head {
@@ -1011,10 +1014,6 @@
       opacity: 1;
       transform: none;
     }
-
-    &.is-descending .data-table__sort-turn {
-      transform: rotate(180deg);
-    }
   }
 
   // The change eases in only for a visitor who has not asked for less motion, who sees it at once.
@@ -1025,7 +1024,6 @@
         opacity $motion-short ease-out;
     }
 
-    .data-table__sort-turn,
     .data-table__sort-head,
     .data-table__sort-mate,
     .data-table__sort-stem {
