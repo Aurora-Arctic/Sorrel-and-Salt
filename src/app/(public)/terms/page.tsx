@@ -29,10 +29,13 @@ export default function TermsOfUsePage() {
 
       <h2>The Short Version</h2>
       <ul>
-        <li>The site is free, carries no advertising and sells nothing about you.</li>
+        <li>
+          The site is free, carries no advertising and sells nothing about you. That is a promise,
+          not a description of today.
+        </li>
         <li>
           What you write stays yours. The site shows it only to the people you chose to share it
-          with.
+          with, and never uses it to train anything.
         </li>
         <li>Treat the people here, and the traditions their practice comes from, with respect.</li>
         <li>
@@ -40,8 +43,8 @@ export default function TermsOfUsePage() {
           <Link href="/disclaimer">Disclaimer</Link> before you act on any of it.
         </li>
         <li>
-          The site is run by people in their spare time. It may go down, change or end, and we will
-          say so plainly when it does.
+          Today the site is run by people in their spare time. It may go down, change or end, and we
+          will say so plainly when it does.
         </li>
       </ul>
 
@@ -52,9 +55,10 @@ export default function TermsOfUsePage() {
         own needs an invitation, or a grant from a site admin. There is no way to buy your way in.
       </p>
       <p>
-        You must be at least thirteen years old. That is the youngest age at which the data
-        protection law of the United Kingdom lets an online service rely on a person's own consent,
-        and the site relies on yours.
+        You must be at least thirteen years old. The site is run from the United States, whose
+        Children's Online Privacy Protection Act treats anyone under thirteen as a child whose
+        personal information an online service may not collect without a parent's consent, and the
+        site does not ask for a parent's consent.
       </p>
       <p>
         Your account is yours alone. Keep your sign-in details to yourself, and tell us through the{' '}
@@ -65,9 +69,9 @@ export default function TermsOfUsePage() {
       <p>
         Everything you write in a coven stays yours: your ingredients, your stock, your spells,
         their steps and their workings. The site claims no ownership over any of it, and takes no
-        right to use it beyond storing it and showing it to the people your coven settings allow. It
-        is never sold, never used to train anything and never shown outside the coven it was written
-        in.
+        right to use it beyond storing it and showing it to the people your coven settings allow. We
+        promise that it is never sold, never used to train anything and never shown outside the
+        coven it was written in.
       </p>
       <p>
         A spell marked private is shown to you alone. Once a spell is complete and shared with your
@@ -90,9 +94,16 @@ export default function TermsOfUsePage() {
 
       <h2>How to Treat Each Other</h2>
       <p>
-        The <Link href="/code-of-ethics">Code of Ethics</Link> says what the site stands for, and it
-        binds everyone who uses it. In short: no bigotry, in any form, towards anyone; no claiming a
-        closed practice as your own; and honesty about what you know and where you learned it.
+        The <Link href="/code-of-ethics">Code of Ethics</Link> says what the site stands for. Its
+        section "What Everyone Agrees To" binds every account, and agreeing to these terms is
+        agreeing to it. In short: no bigotry, in any form, towards anyone; no claiming a closed
+        practice as your own; taking only what can be spared; and honesty about what you know and
+        where you learned it.
+      </p>
+      <p>
+        The Code of Ethics goes on to ask more of the people who run the site. Its sections for
+        curators, for admins and for the site's owner each add to the one before, and bind whoever
+        holds that role for as long as they hold it.
       </p>
       <p>
         The tools the site has today for keeping to this are small, and we name them rather than
@@ -114,6 +125,13 @@ export default function TermsOfUsePage() {
         You are responsible for how you use what you read here. The people who run the site are
         responsible for what the law says they are responsible for, and these terms do not try to
         take any right from you that the law gives you.
+      </p>
+
+      <h2>Which Law Applies</h2>
+      <p>
+        The site is run from the State of Washington, in the United States, and these terms are
+        governed by the law of that state. Nothing in them takes away a protection that the law of
+        the place you live gives you and does not let you give up.
       </p>
 
       <h2>Leaving</h2>
@@ -148,17 +166,21 @@ export default function TermsOfUsePage() {
       <h2>Sources</h2>
       <ol className="document-page__sources">
         <li>
-          United Kingdom. <em>Data Protection Act 2018</em>, c. 12, s. 9 (as enacted). Accessed 2
-          November 2026.{' '}
-          <a href="https://www.legislation.gov.uk/ukpga/2018/12/section/9/enacted">
-            https://www.legislation.gov.uk/ukpga/2018/12/section/9/enacted
+          United States. <em>Children's Online Privacy Protection Act</em>, 15 U.S.C. § 6501
+          (Definitions). Legal Information Institute, Cornell Law School. Accessed 2 November 2026.{' '}
+          <a href="https://www.law.cornell.edu/uscode/text/15/6501">
+            https://www.law.cornell.edu/uscode/text/15/6501
           </a>
           .
         </li>
         <li>
-          European Union. <em>Regulation (EU) 2016/679 (General Data Protection Regulation)</em>,
-          art. 8. Accessed 2 November 2026.{' '}
-          <a href="https://gdpr-info.eu/art-8-gdpr/">https://gdpr-info.eu/art-8-gdpr/</a>.
+          United States. <em>Children's Online Privacy Protection Rule</em>, 16 C.F.R. part 312, §§
+          312.1 and 312.2. Legal Information Institute, Cornell Law School. Accessed 2 November
+          2026.{' '}
+          <a href="https://www.law.cornell.edu/cfr/text/16/part-312">
+            https://www.law.cornell.edu/cfr/text/16/part-312
+          </a>
+          .
         </li>
       </ol>
     </DocumentPage>
