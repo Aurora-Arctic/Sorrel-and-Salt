@@ -65,8 +65,9 @@ authorises something or holds a state only a named call may move:
 `admin_role_change_pauses` (MB.62), opened and ended by
 `pauseAdminRoleChanges` and `resumeAdminRoleChanges`, `invitations`
 (MB.201), made, accepted and revoked by its named insert, accept and revoke,
-and `user_access_pauses` (M15.51), set and lifted by `setUserAccessPause` and
-`liftUserAccessPause`. Such a table says so once, in its schema file:
+`user_access_pauses` (M15.51), set and lifted by `setUserAccessPause` and
+`liftUserAccessPause`, and `workspace_member_pauses` (M15.54), set and lifted
+under a `Membership` by `setWorkspaceMemberPause` and `liftWorkspaceMemberPause`. Such a table says so once, in its schema file:
 
 ```ts
 export const adminRoleChangePauses = namedWrites(pgTable('admin_role_change_pauses', { … }));

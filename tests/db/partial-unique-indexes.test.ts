@@ -304,6 +304,10 @@ const ROWS: Record<string, PartialIndexRow> = {
     row: async () => ({ ...(await cupboardEntry()), label: `Testleaf ${token()}` }),
     clash: ['workspace_id', 'label'],
   },
+  // One live pause per member per coven: a fresh pause on B in W, whatever it holds.
+  workspace_member_pauses_one_live: {
+    row: async () => stamped({ workspace_id: WORKSPACE_W_ID, user_id: FIXTURE_USERS.B.id }),
+  },
   zodiac_signs_seed_key_unique: { row: zodiacSign },
   zodiac_signs_slug_unique: { row: zodiacSign },
 };

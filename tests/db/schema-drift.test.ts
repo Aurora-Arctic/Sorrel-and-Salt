@@ -6,6 +6,7 @@ import { useTestDatabase } from '../support/db/database';
 import { tableFacts } from '../support/db/table-metadata';
 import * as cardInvitationAttempts from '@/modules/coven/schema/card-invitation-attempts';
 import * as invitations from '@/modules/coven/schema/invitations';
+import * as workspaceMemberPauses from '@/modules/coven/schema/workspace-member-pauses';
 import * as workspaces from '@/modules/coven/schema/workspaces';
 import * as supportRequests from '@/modules/support/schema/support-requests';
 import * as supportReplies from '@/modules/support/schema/support-replies';
@@ -62,6 +63,7 @@ const pendingIn = (table: string, kind: (typeof PENDING_DROPS)[number]['kind']) 
 const MODULES = [
   cardInvitationAttempts,
   invitations,
+  workspaceMemberPauses,
   workspaces,
   supportRequests,
   supportReplies,

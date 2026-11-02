@@ -834,6 +834,13 @@
       "when": 1793608126875,
       "tag": "0118_user-access-pauses",
       "breakpoints": true
+    },
+    {
+      "idx": 119,
+      "version": "7",
+      "when": 1793610844590,
+      "tag": "0119_workspace-member-pauses",
+      "breakpoints": true
     }
   ]
 }

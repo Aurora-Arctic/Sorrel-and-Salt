@@ -6,6 +6,7 @@ import type { invitations } from '../../modules/coven/schema/invitations';
 import type { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
 import type { adminRoleChangePauses } from '../../modules/identity/schema/admin-role-change-pauses';
 import type { userAccessPauses } from '../../modules/identity/schema/user-access-pauses';
+import type { workspaceMemberPauses } from '../../modules/coven/schema/workspace-member-pauses';
 import type { userPrivilegeChanges } from '../../modules/identity/schema/user-privilege-changes';
 import type { auditColumns, users } from '../../modules/identity/schema/users';
 import type { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
@@ -519,6 +520,24 @@ export interface AuditWriter {
    * none stands; a pause that has run out is left as it is.
    */
   liftUserAccessPause(admin: SiteAdmin, userId: string): Promise<UserAccessPauseRow[]>;
+  /**
+   * Pause a member's access to the proof's coven, stamped from the session: `until` null for no end date. The member's live pause
+   * there, standing or run out, is lifted first from the session, so the one-live index takes the new row. No row comes back when a
+   * pause set alongside took the slot. The permission the proof must carry is the service's to check.
+   */
+  setWorkspaceMemberPause(
+    membership: Membership,
+    userId: string,
+    pause: WorkspaceMemberPauseInput,
+  ): Promise<WorkspaceMemberPauseRow[]>;
+  /**
+   * Lift the pause standing on a member's access to the proof's coven, stamping `lifted_at` now and `lifted_by` from the session.
+   * No row comes back when none stands there; a pause that has run out is left as it is.
+   */
+  liftWorkspaceMemberPause(
+    membership: Membership,
+    userId: string,
+  ): Promise<WorkspaceMemberPauseRow[]>;
   /**
    * Soft-delete the proof's own workspace, stamped from the session; the `workspaces` row is the proof's `workspaceId` (it has no `workspace_id` column).
    * Membership rows are untouched. An empty result means the workspace was already deleted.
@@ -1074,6 +1093,12 @@ export interface UserAccessPauseInput {
   until: Date | null;
   note: string | null;
 }
+
+/** One `workspace_member_pauses` row. */
+export type WorkspaceMemberPauseRow = typeof workspaceMemberPauses.$inferSelect;
+
+/** What a coven pause is set with: the same as a site access pause's. */
+export type WorkspaceMemberPauseInput = UserAccessPauseInput;
 
 export type ReadRow<TTable extends PgTable> = TTable extends typeof ingredients
   ? IngredientRow

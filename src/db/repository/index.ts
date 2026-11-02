@@ -164,6 +164,10 @@ export {
 export { findOpenAdminRoleChangePause } from './admin-roles';
 export { findStandingUserAccessPause, findUserAccessPausePage } from './user-access-pauses';
 export {
+  findStandingWorkspaceMemberPause,
+  findWorkspaceMemberPausePage,
+} from './workspace-member-pauses';
+export {
   deleteLapsedProvisionalUser,
   findLapsedProvisionalUserIds,
   provisionalSecondsLeft,
