@@ -25,7 +25,7 @@ async function build(databases: string[]): Promise<void> {
 }
 
 // Builds the seeded template once per run, then one clone per pool slot. The
-// slot clones are re-made before every test file by db-setup.ts; they are made
+// slot clones are re-made before every test file by db-runner.ts; they are made
 // here so `workerDatabases` names databases that exist from the first file.
 export default async function setup(project: TestProject) {
   // `maxWorkers` is what bounds `VITEST_POOL_ID`; db-project.mts pins it, and

@@ -3,7 +3,8 @@ import { check, integer, pgTable, text, timestamp, uniqueIndex } from 'drizzle-o
 import { idColumn } from '../../../db/schema-parts';
 import { auditColumns } from '../../identity/schema/users';
 
-// How many requests a signed-out visitor has sent in the current window, per email address and per client address. Written as
+// How many requests a signed-out visitor has sent in the current window, per email address and per client address, each
+// keyed by an HMAC of the address (src/lib/send-count-key.ts) and never by the address. Written as
 // the seeded signed-out sender, since a visitor has no session. A row is the count for one key; the window restarts when the
 // next send finds `window_start` older than the window.
 export const supportSendCounts = pgTable(
@@ -12,6 +13,7 @@ export const supportSendCounts = pgTable(
     id: idColumn(),
     // Which kind of key `key` is: an email address or a client address.
     kind: text('kind').notNull(),
+    // The HMAC of the address, in hex.
     key: text('key').notNull(),
     windowStart: timestamp('window_start').notNull(),
     count: integer('count').notNull(),

@@ -258,6 +258,8 @@ export interface ComboboxSelectProps {
   choices: readonly ComboboxChoice[];
   /** Shown while the value is none of the choices, and not itself a choice. */
   placeholder?: string;
+  /** The box is as wide as its longest choice whichever is shown, rather than its field's width. */
+  fit?: boolean;
   required?: boolean;
   /** The box, which takes the focus: a `div`, since nothing is typed into it. */
   inputRef?: Ref<HTMLDivElement>;

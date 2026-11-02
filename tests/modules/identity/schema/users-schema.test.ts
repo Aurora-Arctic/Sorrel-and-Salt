@@ -27,6 +27,8 @@ describe('users schema', () => {
         'two_factor_enabled',
         'terms_version',
         'terms_accepted_at',
+        'pending_email',
+        'former_email',
         ...AUDIT_COLUMNS,
       ].sort(),
     );

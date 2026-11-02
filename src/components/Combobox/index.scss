@@ -117,6 +117,30 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   min-width: 0;
 }
 
+// A box that fits its choices (`fit`): the shown value and an unseen copy of every label share one grid cell, so the cell, and
+// the box, take the longest label's width whichever is shown. The copies are no height, so they set the width alone.
+.combobox--fit {
+  width: auto;
+
+  .combobox__values {
+    display: grid;
+    align-items: center;
+  }
+
+  .combobox__values > *,
+  .combobox__sizer > * {
+    grid-area: 1 / 1;
+  }
+}
+
+.combobox__sizer {
+  display: grid;
+  block-size: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  visibility: hidden;
+}
+
 // The text itself, unboxed: the control around it is the box. It takes the
 // line's rest, and wraps onto a row of its own under 6rem, a few letters'
 // room, the control's own geometry rather than a step of space.

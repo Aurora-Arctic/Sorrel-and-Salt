@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { invitationSender } from '@/lib/invitation-mail';
+import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
 import { decodeCursor, resolvePage } from '@/lib/pagination';
 import { ADMIN_CHANGES_PAUSED_REFUSAL as PAUSED_REFUSAL } from '@/lib/primary-admin';
@@ -70,6 +71,8 @@ async function invitations(): Promise<InvitationStateRow[]> {
 
 beforeEach(async () => {
   send.mockClear();
+  // With no transport the mail is built and tried once in the request, by the job step's own code, so `send` receives it.
+  vi.stubEnv('MAIL_TRANSPORT', '');
   await sql`truncate card_invitation_attempts, invitations`;
   await sql`truncate admin_role_change_pauses`;
   await sql`truncate user_privilege_changes`;
@@ -89,7 +92,7 @@ afterEach(() => {
 });
 
 describe('createAdminInvitation', () => {
-  it('writes a pending site-tier invitation stamped as the admin, storing only the hash of the token it mails', async () => {
+  it('writes a pending site-tier invitation made by the admin, storing only the hash of the token it mails', async () => {
     const row = await createAdminInvitation(
       asUser(E),
       `  ${INVITED.toUpperCase()} `,
@@ -115,7 +118,8 @@ describe('createAdminInvitation', () => {
         accepted_at: null,
         revoked_at: null,
         created_by: E.id,
-        updated_by: E.id,
+        // The mail's step swapped in the mailed token, as the System account.
+        updated_by: SYSTEM_ACTOR_ID,
       }),
     ]);
     // Nothing in the answer carries the token, so only the inbox holds it.

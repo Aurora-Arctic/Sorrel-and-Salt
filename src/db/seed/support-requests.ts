@@ -3,6 +3,8 @@ import { supportReplies } from '../../modules/support/schema/support-replies';
 import { supportRequests } from '../../modules/support/schema/support-requests';
 import { supportTimeouts } from '../../modules/support/schema/support-timeouts';
 import { users } from '../../modules/identity/schema/users';
+import { SYSTEM_ACTOR_ID } from '../../lib/system-actor';
+import { ANONYMISED_SUBJECT } from '../../lib/support-sender';
 import { insertStamped } from './idempotent';
 import { SANCTIONED_USERS } from './sanctioned-users';
 import { FIXTURE_USERS } from './standard';
@@ -20,6 +22,7 @@ const { I } = SANCTIONED_USERS;
 
 interface SeedRequest {
   id: string;
+  /** The System account for a request already anonymised, which keeps no sender. */
   sender: string;
   about: 'accessibility' | 'bug' | 'account' | 'compendium' | 'privacy' | 'feedback' | 'question';
   subject: string;
@@ -250,6 +253,36 @@ const SUPPORT_REQUESTS: readonly SeedRequest[] = [
     path: '/support',
     daysAgo: 2.9,
   },
+  // Closed thirteen months ago and already anonymised, as `anonymiseClosedSupportRequests` leaves a row: the fixed subject, no
+  // message, path or sender; the topic, status, staff and dates kept.
+  {
+    id: '00000000-0000-0000-0005-000000000018',
+    sender: SYSTEM_ACTOR_ID,
+    about: 'accessibility',
+    subject: ANONYMISED_SUBJECT,
+    message: '',
+    path: '',
+    assignedTo: E.id,
+    resolved: { by: E.id, daysAgo: 395 },
+    closed: { daysAgo: 388 },
+    staffActivityDaysAgo: 395,
+    daysAgo: 398.4,
+  },
+  // Closed just over twelve months ago and not yet anonymised, so the sweep a visit to /admin/support runs anonymises it.
+  {
+    id: '00000000-0000-0000-0005-000000000019',
+    sender: C.id,
+    about: 'feedback',
+    subject: 'The grimoire could sort spells by when I last changed them',
+    message:
+      'I keep going back to the same few spells. Could the grimoire list the ones I changed most recently first?',
+    path: '/coven/whitethorn-coven/grimoire',
+    assignedTo: E.id,
+    resolved: { by: E.id, daysAgo: 372.5 },
+    closed: { by: E.id, daysAgo: 370.2 },
+    staffActivityDaysAgo: 370.2,
+    daysAgo: 375.7,
+  },
 ];
 
 interface SeedReply {
@@ -259,9 +292,11 @@ interface SeedReply {
   body: string;
   /** Days before the first run. */
   daysAgo: number;
+  /** Last written by the System account, as an anonymised request's replies are. */
+  anonymised?: boolean;
 }
 
-const [, , , R4, R5, R6, R7, , , R10, , R12, R13, R14, R15] = SUPPORT_REQUESTS.map(
+const [, , , R4, R5, R6, R7, , , R10, , R12, R13, R14, R15, , , R18, R19] = SUPPORT_REQUESTS.map(
   (request) => request.id,
 );
 
@@ -342,6 +377,21 @@ const SUPPORT_REPLIES: readonly SeedReply[] = [
     by: E.id,
     body: 'I am closing this while the issue is open. Write to us again if it is still a problem for you.',
     daysAgo: 14.6,
+  },
+  {
+    id: '00000000-0000-0000-0005-000000000112',
+    requestId: R18,
+    by: E.id,
+    body: '',
+    daysAgo: 396.1,
+    anonymised: true,
+  },
+  {
+    id: '00000000-0000-0000-0005-000000000113',
+    requestId: R19,
+    by: E.id,
+    body: 'Thank you, that is a good idea. I have added it to our list, and I am closing this one for now.',
+    daysAgo: 370.2,
   },
 ];
 
@@ -427,6 +477,7 @@ export async function seedSupportRequests(tx: SeedTransaction): Promise<void> {
     authorOf: (item: W) => string,
     toRow: (item: W) => Omit<T['$inferInsert'], 'id' | InsertStamps>,
     createdAt: (item: W) => Date,
+    updatedBy?: (item: W) => string | undefined,
   ) {
     const present = new Set(
       (
@@ -453,7 +504,7 @@ export async function seedSupportRequests(tx: SeedTransaction): Promise<void> {
       for (const item of own) {
         await tx
           .update(table)
-          .set({ createdAt: createdAt(item) } as never)
+          .set({ createdAt: createdAt(item), updatedBy: updatedBy?.(item) ?? author } as never)
           .where(eq(table.id, item.id));
       }
     }
@@ -497,6 +548,7 @@ export async function seedSupportRequests(tx: SeedTransaction): Promise<void> {
     (r) => r.by,
     (r) => ({ requestId: r.requestId, body: r.body }),
     (r) => ago(r.daysAgo),
+    (r) => (r.anonymised ? SYSTEM_ACTOR_ID : undefined),
   );
 
   await writeMissing(

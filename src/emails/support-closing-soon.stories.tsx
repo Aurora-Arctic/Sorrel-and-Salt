@@ -17,6 +17,7 @@ const message = () =>
     origin: WORKSHOP_ORIGIN,
     requestSubject: 'The jar will not open',
     signedOut: true,
+    timeLeftMs: 2 * 24 * 60 * 60 * 1000,
   });
 
 // Follows the toolbar's theme control, as the mail follows a reader's setting.

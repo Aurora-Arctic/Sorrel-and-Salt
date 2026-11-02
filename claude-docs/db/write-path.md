@@ -321,7 +321,7 @@ list is tested, so adding another is a decision, not an edit.
 
 `deleteLapsedProvisionalUser` hard-deletes one provisional account when it has lapsed: unverified,
 holding a provider `accounts` row, and either untouched for `lifetimeSeconds` or
-created more than `capSeconds` ago. The expiry job's step calls it. Both ages use the database's own clock, so a
+created more than `capSeconds` ago. The expiry job's step calls it, and so does each batch of the daily cleanup, for every id of its page. Both ages use the database's own clock, so a
 seeded row nobody can sign in to is never one. Its `accounts` and `sessions` rows
 go with it by `ON DELETE CASCADE`, and so do any pauses naming it, site (`user_access_pauses`) and coven
 (`workspace_member_pauses`) alike: a pause means nothing once its account is gone, and keeping the account

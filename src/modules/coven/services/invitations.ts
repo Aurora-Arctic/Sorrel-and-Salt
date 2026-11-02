@@ -14,7 +14,6 @@ import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/typ
 import { newToken } from '../../../lib/invitation-token';
 import type { Session } from '../../../lib/session';
 import { RowId } from '../../../lib/validation';
-import { users } from '../../identity/schema/users';
 import { normaliseEmail, validateEmailAddress } from '../../identity';
 import type { InvitationSender } from '../../identity';
 import { workspaces } from '../schema/workspaces';
@@ -90,19 +89,14 @@ export async function createInvitation(
   const workspace = await findOneById(workspaces, workspaceId);
   if (!workspace) throw new ValidationError([{ path: ['workspaceId'], message: 'No such coven' }]);
 
-  const token = newToken();
-  // The waiting invitation to this address is withdrawn in the write that creates the new one.
+  // The waiting invitation to this address is withdrawn in the write that creates the new one. The token stored here is
+  // never told to anyone: the mail's step replaces it with the one it mails.
   const [row] = await withAudit(session, async (write) => {
     await write.revokePendingInvitationsTo(membership, email);
-    return write.insertInvitation(membership, { email, role, token });
+    return write.insertInvitation(membership, { email, role, token: newToken() });
   });
-  // After the commit, so a mailed link always names a row. The session holds the id alone, so the sender's name is read here.
-  const inviter = await findOneById(users, session.userId);
-  await sender.workspaceInvitation(email, token, {
-    name: workspace.name,
-    role,
-    inviterName: inviter?.name ?? '',
-  });
+  // After the commit, so the job's step finds the row.
+  await sender.invitation(row.id);
   return row;
 }
 

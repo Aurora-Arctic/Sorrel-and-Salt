@@ -1,4 +1,4 @@
-import { readdirSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { accountExistsMessage } from '@/emails/account-exists';
 import { adminInvitationMessage } from '@/emails/admin-invitation';
@@ -176,6 +176,7 @@ const MAILS: {
       supportClosingSoonMessage({
         to: 'someone@layout.test',
         url: `${ORIGIN}/account/support?request=req-1`,
+        timeLeftMs: 2 * 24 * 60 * 60 * 1000,
         requestSubject: 'The jar will not open',
       }),
   },
@@ -370,12 +371,27 @@ describe('the shared layout', () => {
 describe('the templates', () => {
   // A new template cannot ship without a row above.
   it('are all covered by a row', () => {
+    // A template is a file that defines a message.
     const templates = readdirSync(fromRoot('src/emails'))
-      .filter((file) => file.endsWith('.tsx') && !file.endsWith('.stories.tsx'))
-      .map((file) => file.replace(/\.tsx$/, ''))
+      .filter((file) => /\.tsx?$/.test(file) && !file.endsWith('.stories.tsx'))
+      .filter((file) =>
+        readFileSync(fromRoot(`src/emails/${file}`), 'utf8').includes('defineMessage<'),
+      )
+      .map((file) => file.replace(/\.tsx?$/, ''))
       .sort();
 
     expect(templates.length).toBeGreaterThan(0);
     expect(templates).toEqual([...new Set(MAILS.map((mail) => mail.template))].sort());
+  });
+
+  // A durable job's step renders the templates, and the step bundler leaves JSX uncompiled, so a template, and every part it
+  // draws on, is a plain .ts file. Only the stories, which no step reaches, are .tsx.
+  it('hold no JSX outside the stories', () => {
+    const jsx = [
+      ...readdirSync(fromRoot('src/emails')),
+      ...readdirSync(fromRoot('src/emails/parts')).map((file) => `parts/${file}`),
+    ].filter((file) => file.endsWith('.tsx') && !file.endsWith('.stories.tsx'));
+
+    expect(jsx).toEqual([]);
   });
 });

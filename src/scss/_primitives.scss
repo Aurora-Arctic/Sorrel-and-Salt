@@ -471,6 +471,12 @@
       flex: 1 1 $filter-choice-width;
       min-width: 0;
     }
+
+    // A choice marked to fit (`FilterSelectField`'s `fit`) is as wide as its longest option: the native select sizes so
+    // itself, and the hydrated box stacks every label unseen in its value's place. Same weight as the rule above, later.
+    > .filter-row__choice.filter-row__choice--fit {
+      flex: none;
+    }
   }
 
   // Clear, drawn only while the page shows a filter: a plain text link taking the page's link style

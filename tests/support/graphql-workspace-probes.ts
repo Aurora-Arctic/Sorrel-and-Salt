@@ -485,8 +485,7 @@ export const PROBES: Record<string, WorkspaceIdProbe> = {
 
 // The admitted createInvitation reaches its sender; this one mails no one.
 const mailsNothing: InvitationSender = {
-  siteInvitation: async () => {},
-  workspaceInvitation: async () => {},
+  invitation: async () => {},
 };
 
 const yoga = createYoga<Context>({ schema, maskedErrors, logging: false });

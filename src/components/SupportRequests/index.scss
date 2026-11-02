@@ -81,6 +81,12 @@
   }
 }
 
+// The anonymised notice stands where the reply form would, across the column, not at the notice's measure.
+// Two classes, as the primitive is `body .notice`: a lone class loses to it.
+.notice.support-detail__anonymised {
+  max-width: none;
+}
+
 .support-detail__side {
   padding-inline-start: space(5);
   border-inline-start: 1px solid $hairline;
@@ -267,6 +273,14 @@
   }
 }
 
+// An anonymised request's Sender cell is empty: as a card, the cell goes, its label with it, rather than
+// a label over nothing.
+.data-table--stack > tbody > tr > .support-requests__sender-cell:empty {
+  @container data-table (max-width: #{$table-stack-width}) {
+    display: none;
+  }
+}
+
 // The sender's name and the sprout after it, centred on each other.
 .support-requests__sender {
   display: inline-flex;
@@ -333,8 +347,10 @@
   }
 }
 
-// Closed wears the disabled look (muted ink at the disabled opacity) on the icon alone, so the focus ring keeps full strength.
-.support-requests__mark--closed {
+// Closed wears the body ink, the mark's own colour; anonymised, the same box, wears the faded one below.
+
+// Anonymised wears the disabled look (muted ink at the disabled opacity) on the icon alone, so the focus ring keeps full strength.
+.support-requests__mark--anonymised {
   color: $text-muted;
 
   &:hover {

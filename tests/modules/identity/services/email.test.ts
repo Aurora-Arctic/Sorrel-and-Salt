@@ -41,7 +41,7 @@ const sender: EmailVerificationSender = {
 
 async function userRow(id: string): Promise<EmailUserRow> {
   const [row] = await sql`
-    select id, email, email_verified, updated_by, updated_at, verification_sent_at
+    select id, email, email_verified, updated_by, updated_at, verification_sent_at, pending_email
     from users where id = ${id}
   `;
   return row as EmailUserRow;
@@ -79,6 +79,7 @@ beforeEach(async () => {
   );
   await sql`update users set email_verified = false where id = ${A.id}`;
   await setSentAt(B.id, null);
+  await sql`update users set pending_email = null where id in (${A.id}, ${B.id})`;
 });
 
 describe('validateEmailAddress', () => {
@@ -129,7 +130,7 @@ describe('setEmail', () => {
 
     expect(sender.requestChange).toHaveBeenCalledTimes(1);
     expect(sender.notifyChangeRequested).toHaveBeenCalledTimes(1);
-    expect(sender.notifyChangeRequested).toHaveBeenCalledWith(B.email, NEW);
+    expect(sender.notifyChangeRequested).toHaveBeenCalledWith(B.id);
   });
 
   it.each([
@@ -150,7 +151,7 @@ describe('setEmail', () => {
 
     expect(outcome).not.toBe(timedOut);
     // The send was handed over to run after the answer, not dropped.
-    expect(slow.notifyChangeRequested).toHaveBeenCalledWith(B.email, address);
+    expect(slow.notifyChangeRequested).toHaveBeenCalledWith(B.id);
   });
 
   it("does not ask a stale session for freshness when it only asks for the row's own link again", async () => {
@@ -183,6 +184,7 @@ describe('setEmail', () => {
     const freeMailed = vi.mocked(sender.requestChange).mock.calls.length;
     vi.mocked(sender.requestChange).mockClear();
     await setSentAt(B.id, null);
+    await sql`update users set pending_email = null where id = ${B.id}`;
     const held = await setEmail(asUser(B), A.email, sender);
 
     const stable = ({ updatedAt: _a, updatedBy: _b, ...rest }: typeof free) => rest;
@@ -193,7 +195,9 @@ describe('setEmail', () => {
     expect(sender.resend).not.toHaveBeenCalled();
     // The request still counts: the row is stamped and the address being left told, so the two cases cost the same cooldown.
     expect((await userRow(B.id)).verification_sent_at).not.toBeNull();
-    expect(sender.notifyChangeRequested).toHaveBeenLastCalledWith(B.email, A.email);
+    // Recorded alike too: the notice to the address being left reads the domain from it, and no link is sent to it.
+    expect((await userRow(B.id)).pending_email).toBe(A.email);
+    expect(sender.notifyChangeRequested).toHaveBeenLastCalledWith(B.id);
   });
 
   it('holds a held address to the same cooldown as a free one, so the wait gives nothing away', async () => {
@@ -213,7 +217,7 @@ describe('setEmail', () => {
 
   it('accepts a held address the same way once the holder is no longer verified', async () => {
     await expect(setEmail(asUser(B), A.email, sender)).resolves.toMatchObject({ id: B.id });
-    expect(sender.requestChange).toHaveBeenCalledWith(B.email, A.email, undefined);
+    expect(sender.requestChange).toHaveBeenCalledWith(B.id, undefined);
   });
 
   it("restarts a provisional caller's window, stamped as them, and mails the new address — the row's own stays", async () => {
@@ -230,8 +234,23 @@ describe('setEmail', () => {
     expect(after.updated_by).toBe(B.id);
     expect(after.updated_at.getTime()).toBeGreaterThan(before.updated_at.getTime());
     expect(after.verification_sent_at).toBeInstanceOf(Date);
-    expect(sender.requestChange).toHaveBeenCalledExactlyOnceWith(B.email, NEW, undefined);
+    // The address asked for waits in its own column, which the link reads when it is sent.
+    expect(after.pending_email).toBe(NEW);
+    expect(sender.requestChange).toHaveBeenCalledExactlyOnceWith(B.id, undefined);
     expect(sender.resend).not.toHaveBeenCalled();
+  });
+
+  it('replaces the pending address with a later change, so only the later link can be honoured', async () => {
+    const later = `later${DOMAIN}`;
+    await setEmail(asUser(B), NEW, sender);
+    expect((await userRow(B.id)).pending_email).toBe(NEW);
+    await setSentAt(B.id, null);
+
+    await setEmail(asUser(B), later, sender);
+
+    const after = await userRow(B.id);
+    expect(after).toMatchObject({ email: B.email, pending_email: later });
+    expect(sender.requestChange).toHaveBeenCalledTimes(2);
   });
 
   it("writes only the mail's clock for a verified caller: address and verified state are as they were, and the new address is mailed", async () => {
@@ -244,7 +263,7 @@ describe('setEmail', () => {
     const after = await userRow(B.id);
     expect(after).toMatchObject({ email: before.email, email_verified: true, updated_by: B.id });
     expect(after.verification_sent_at).toBeInstanceOf(Date);
-    expect(sender.requestChange).toHaveBeenCalledExactlyOnceWith(B.email, NEW, undefined);
+    expect(sender.requestChange).toHaveBeenCalledExactlyOnceWith(B.id, undefined);
   });
 
   // One mail a minute per account, whichever path would send it, so the
@@ -275,7 +294,7 @@ describe('setEmail', () => {
 
     await expect(setEmail(asUser(B), NEW, sender)).resolves.toMatchObject({ id: B.id });
 
-    expect(sender.requestChange).toHaveBeenCalledExactlyOnceWith(B.email, NEW, undefined);
+    expect(sender.requestChange).toHaveBeenCalledExactlyOnceWith(B.id, undefined);
   });
 
   it("mails the row's own address again when it is asked for unchanged and still unverified", async () => {
@@ -300,7 +319,7 @@ describe('setEmail', () => {
   it('normalises what was typed before comparing or mailing it', async () => {
     await setEmail(asUser(B), `  New${DOMAIN.toUpperCase()} `, sender);
 
-    expect(sender.requestChange).toHaveBeenCalledExactlyOnceWith(B.email, NEW, undefined);
+    expect(sender.requestChange).toHaveBeenCalledExactlyOnceWith(B.id, undefined);
   });
 
   // Where the page was sent from rides on the link's landing; guarding it is
@@ -308,7 +327,7 @@ describe('setEmail', () => {
   it('hands the sender the return path on both the change and the resend path', async () => {
     await setEmail(asUser(B), NEW, sender, '/admin');
 
-    expect(sender.requestChange).toHaveBeenCalledExactlyOnceWith(B.email, NEW, '/admin');
+    expect(sender.requestChange).toHaveBeenCalledExactlyOnceWith(B.id, '/admin');
 
     await setSentAt(B.id, null);
     await setEmail(asUser(B), B.email, sender, '/admin');

@@ -265,6 +265,8 @@ export interface FilterSelectFieldProps {
   onChange: (value: string) => void;
   /** Typed into once hydrated, its list narrowing to the choices holding the text. */
   typeahead?: boolean;
+  /** As wide as its longest choice, rather than the filter row's one width for a choice. Not with `typeahead`. */
+  fit?: boolean;
 }
 
 /** One field an action changed: what it held before, and what it holds now. */

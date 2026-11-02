@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
 import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
@@ -6,7 +6,6 @@ import type { PageRequest } from '@/lib/types';
 import {
   addSupportInternalNote,
   assignSupportRequest,
-  closeResolvedRequests,
   closeSupportRequest,
   getMySupportFollowUpId,
   getMySupportRequest,
@@ -17,11 +16,14 @@ import {
   resolveSupportRequest,
   sendSenderMessage,
   sendSupportRequest,
+  setSupportRequestCuratorVisible,
+  setSupportRequestIssueUrl,
   supportTiersForSenders,
   liftSupportTimeout,
   timeOutSupportSender,
 } from '@/modules/support';
 import type { SupportNotifier } from '@/modules/support';
+import { supportReplyNotice } from '@/modules/support/jobs/support-reply-notice';
 import { A, B, C, D, E, F, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { noPauseNotifier } from '../../../support/email-verification';
@@ -34,18 +36,23 @@ useTestDatabase((client) => {
   sql = client;
 });
 
+// A reply's notice goes out through its job, whose mail is tested in tests/workflows/support-reply-notice.test.ts.
+const { startJob } = vi.hoisted(() => ({
+  startJob: vi.fn(async (..._args: unknown[]) => 'run-id'),
+}));
+vi.mock('@/lib/jobs', () => ({ startJob }));
+const replyNotices = () =>
+  startJob.mock.calls.filter(([job]) => job === supportReplyNotice).map(([, args]) => args);
+
 beforeEach(async () => {
+  startJob.mockClear();
   await sql`truncate support_replies, support_timeouts, support_requests cascade`;
 });
 
 const PAGE: PageRequest = { limit: 101, inverted: false };
 const INPUT = { about: 'bug', subject: 'The jar will not open', message: 'It sticks.' } as const;
 const mail: SupportNotifier = {
-  replyWaiting: async () => undefined,
-  received: async () => undefined,
-  resolved: async () => undefined,
-  closingSoon: async () => undefined,
-  signedOutReply: async () => undefined,
+  origin: async () => 'http://localhost:3000',
 };
 
 const send = () => sendSupportRequest(asUser(C), INPUT, mail);
@@ -348,20 +355,12 @@ describe('internal notes', () => {
 
   it('never change the status or mail the sender', async () => {
     const request = await send();
-    const sent: string[] = [];
     await addSupportInternalNote(asUser(E), request.id, 'Note.');
-    await replyToSupportRequest(asUser(E), request.id, 'Hi.', {
-      replyWaiting: async (to) => {
-        sent.push(to);
-      },
-      received: async () => undefined,
-      resolved: async () => undefined,
-      closingSoon: async () => undefined,
-      signedOutReply: async () => undefined,
-    });
+    const reply = await replyToSupportRequest(asUser(E), request.id, 'Hi.', mail);
 
     expect(await statusOf(request.id)).toBe('open');
-    expect(sent).toHaveLength(1);
+    // The reply's notice alone: the note starts none.
+    expect(replyNotices()).toEqual([[reply.id, 'http://localhost:3000']]);
   });
 
   it('are written by an admin, and by a curator on any request they can read, assigned to them or not', async () => {
@@ -424,28 +423,6 @@ describe('internal notes', () => {
     expect(
       await failureOf(replyToSupportRequest(asUser(F), request.id, 'Hello.', mail)),
     ).toBeInstanceOf(Forbidden);
-  });
-});
-
-describe('closeResolvedRequests', () => {
-  it('closes resolved requests idle for seven days and no others', async () => {
-    const old = await send();
-    const recent = await send();
-    const open = await send();
-    await resolveSupportRequest(asUser(E), old.id, mail);
-    await resolveSupportRequest(asUser(E), recent.id, mail);
-    await sql`update support_requests set resolved_at = now() - interval '8 days' where id = ${old.id}`;
-    await sql`update support_requests set resolved_at = now() - interval '6 days' where id = ${recent.id}`;
-    await sql`update support_requests set created_at = now() - interval '30 days' where id = ${open.id}`;
-
-    const closed = await closeResolvedRequests(asUser(E), new Date());
-
-    expect(closed.map((row) => row.id)).toEqual([old.id]);
-    expect(await statusOf(old.id)).toBe('closed');
-    expect(await statusOf(recent.id)).toBe('resolved');
-    expect(await statusOf(open.id)).toBe('open');
-    const [row] = await sql`select closed_at from support_requests where id = ${old.id}`;
-    expect(row!.closed_at).toBeInstanceOf(Date);
   });
 });
 
@@ -549,5 +526,64 @@ describe('an anonymised request', () => {
     expect(error).toBeInstanceOf(Forbidden);
     expect((error as Error).message).toMatch(/anonymised/);
     expect(await savedReplies(request.id)).toBe(0);
+  });
+
+  // Each change below is tried first on a closed request that is not anonymised, which it changes, so the refusal is the
+  // anonymising's and not the close's.
+  const ISSUE = 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/12';
+  const closed = async () => {
+    const request = await send();
+    await closeSupportRequest(asUser(E), request.id);
+    return request;
+  };
+  const settings = async (id: string) => {
+    const [row] = await sql`
+      select assigned_to, curator_visible, issue_url from support_requests where id = ${id}
+    `;
+    return row;
+  };
+
+  it('takes no assignee, and the same admin assigns a request that is not anonymised', async () => {
+    const plain = await closed();
+    await assignSupportRequest(asUser(E), plain.id, F.id);
+    expect((await settings(plain.id))!.assigned_to).toBe(F.id);
+
+    const request = await anonymised();
+    const before = await settings(request.id);
+    const error = await failureOf(assignSupportRequest(asUser(E), request.id, F.id));
+
+    expect(error).toBeInstanceOf(Forbidden);
+    expect((error as Error).message).toMatch(/anonymised/);
+    expect(await settings(request.id)).toEqual(before);
+  });
+
+  it('cannot be shared with curators, and the same admin shares a request that is not anonymised', async () => {
+    const plain = await closed();
+    await setSupportRequestCuratorVisible(asUser(E), plain.id, true);
+    expect((await settings(plain.id))!.curator_visible).toBe(true);
+
+    const request = await anonymised();
+    const before = await settings(request.id);
+    expect(before!.curator_visible).toBe(false);
+    const error = await failureOf(setSupportRequestCuratorVisible(asUser(E), request.id, true));
+
+    expect(error).toBeInstanceOf(Forbidden);
+    expect((error as Error).message).toMatch(/anonymised/);
+    expect(await settings(request.id)).toEqual(before);
+  });
+
+  it('takes no issue link, and the same admin links one to a request that is not anonymised', async () => {
+    const plain = await closed();
+    await setSupportRequestIssueUrl(asUser(E), plain.id, ISSUE);
+    expect((await settings(plain.id))!.issue_url).toBe(ISSUE);
+
+    const request = await anonymised();
+    const before = await settings(request.id);
+    expect(before!.issue_url).toBeNull();
+    const error = await failureOf(setSupportRequestIssueUrl(asUser(E), request.id, ISSUE));
+
+    expect(error).toBeInstanceOf(Forbidden);
+    expect((error as Error).message).toMatch(/anonymised/);
+    expect(await settings(request.id)).toEqual(before);
   });
 });

@@ -422,19 +422,24 @@ filter, page)` is one page of the pending list, newest first, and
   `{ email, expiringSoon }`: a fragment of the address, trimmed, and only
   the invitations lapsing within 24 hours, each narrowed in the
   repository's SQL ([`db/invitations.md`](../db/invitations.md)).
-- **The token is the mail's alone.** `crypto.randomBytes(32)`, base64url,
-  goes to the repository's `insertInvitation(admin, …)`, which stores its
-  hash, and to the sender, which mails the link; the row the mutation answers
-  carries neither, and `Invitation` has no field that could. The sender,
-  `invitationSender(request)` in `src/lib/invitation-mail.ts`, is built per
-  request by the GraphQL context as the email page's is, because the link's
+- **The token is the mail's alone.** The invitation is inserted through the
+  repository's `insertInvitation(admin, …)` holding the hash of a token
+  nobody is told, and after the commit the service hands the sender the row's
+  id. The sender, `invitationSender(request)` in `src/lib/invitation-mail.ts`,
+  is built per request by the GraphQL context as the email page's is, and
+  starts the secret-link job with the id and the origin, because the link's
   origin is Better Auth's to resolve against its allowed hosts: a forged
-  `Host` cannot have a live token mailed on a link to another site. The mail
-  is `src/emails/admin-invitation.tsx` ([`email.md`](../email.md)); the
-  service hands the sender the inviting admin's name, read from their `users`
-  row, for the mail to open with. A failed
-  send is logged by the transport and never thrown, so the invitation stays
-  pending, to be withdrawn and sent again.
+  `Host` cannot have a live token mailed on a link to another site. The job's
+  step mints the token (`crypto.randomBytes(32)`, base64url) through
+  `rotateInvitationToken`, stores its hash, reads the inviting admin's name
+  for the mail to open with, and mails `src/emails/admin-invitation.ts`
+  ([`email.md`](../email.md)). Each retry mints again, so only the newest
+  mailed link works
+  ([m15.50-invitation-token-rotation.md](../design-decisions/m15.50-invitation-token-rotation.md)).
+  The row the mutation answers carries neither the token nor its hash, and
+  `Invitation` has no field that could. A mail that fails every attempt is
+  logged by invitation id, and the invitation stays pending, to be withdrawn
+  and sent again.
 - **The role is the invitation's.** `siteRole` is `curator` or `admin`,
   stored on the row (`invitations.site_role`), named in the mail's subject
   and body, and on the Accept page; GraphQL takes it as the

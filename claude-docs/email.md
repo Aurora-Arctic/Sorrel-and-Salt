@@ -6,16 +6,82 @@ The decision record behind delivery and verification is
 
 ## Sending
 
-`src/lib/mail.ts`'s `send({ to, subject, text, html })` is the one way the site
-mails (MB.65). `MAIL_TRANSPORT` picks Resend in production, the Mailtrap Sandbox
+`src/lib/mail-transport.ts`'s `deliver({ to, subject, text, html })` is the one
+way a mail reaches a transport (MB.65), called by a mail job's step or, for one
+try in the request, by `send` in `src/lib/mail.ts`. `MAIL_TRANSPORT` picks Resend in production, the Mailtrap Sandbox
 in previews and Mailpit in compose and CI; unset, the message is logged and not
-sent, which is what Vitest sees. A refused or failed send is logged and never
-thrown. A recipient under `.invalid` is refused before any transport is chosen:
-RFC 2606 reserves the domain, and it is where the placeholder for a provider
-that shared no address lives (MB.54;
-[`auth/admin-bootstrap.md`](auth/admin-bootstrap.md), "The email page"). The
-variables and the per-environment guard are in [`secrets.md`](secrets.md); the
-Mailpit container is in [`docker.md`](docker.md).
+sent. `send` never throws. A recipient under
+`.invalid` is refused before any transport is chosen: RFC 2606 reserves the
+domain, and it is where the placeholder for a provider that shared no address
+lives (MB.54; [`auth/admin-bootstrap.md`](auth/admin-bootstrap.md), "The email
+page"). The variables and the per-environment guard are in
+[`secrets.md`](secrets.md); the Mailpit container is in [`docker.md`](docker.md).
+
+**Retries.** Every mail that can be rebuilt from the rows goes through a durable
+job, and the job's run argument holds ids and never the mail: no address,
+subject, body, token or link. `startJob` (`src/lib/jobs/index.ts`) refuses any
+other run argument before the run starts (`assertRunArguments` in
+`src/lib/jobs/run-arguments.ts`): a string must be an id, a `kind` or `how` word,
+a site origin or a return path, and nothing holding `@` passes. The job's step
+reads the rows and renders the mail when it sends, then hands it to the
+transport through `deliver` (`src/lib/mail-transport.ts`), which throws when the
+transport answers with an error or cannot be reached, so the Workflow SDK
+retries the step: the first try and three retries
+([`design-decisions/m15.49-job-mechanism.md`](design-decisions/m15.49-job-mechanism.md)).
+A mail that fails every attempt is logged ("every attempt failed") by ids alone.
+A refusal (`.invalid`, a transport the environment may not use, a missing
+variable) is logged once and not retried, since no retry would change it.
+`startMailJob` (`src/lib/mail-job.ts`) starts each mail's job; while
+`MAIL_TRANSPORT` is unset, or when the run cannot be started, it builds the mail
+in the request with the step's own code and tries it once through `send`.
+
+The mail jobs:
+
+- `secretLinkMail` (`src/modules/identity/jobs/secret-link-mail.ts`): the
+  sign-up and resend verification link, the password reset link, the lockout
+  mail, the change-of-address link, and the admin and coven invitations. A
+  verification or change link is signed afresh in the step with the secret
+  Better Auth verifies with (`verificationSigningSecret`); a reset link carries
+  the newest unexpired reset token Better Auth stored for the account; an
+  invitation is given a fresh token by `rotateInvitationToken` on every
+  attempt, so only the newest mailed link works
+  ([`design-decisions/m15.50-invitation-token-rotation.md`](design-decisions/m15.50-invitation-token-rotation.md)).
+  A printed card is never mailed.
+- `accountNoticeMail` (`src/modules/identity/jobs/account-notice-mail.ts`): the
+  change-requested and change-completed notices, the account-exists mail and
+  the password-changed notice, each by the account's id. The change-completed
+  notice goes to `users.former_email`, which the swap filled, and its step
+  clears that column once the transport took the mail or every attempt failed
+  ([`auth/admin-bootstrap.md`](auth/admin-bootstrap.md), "The email page").
+- `supportStatusMail` (`src/modules/support/jobs/support-status-mail.ts`): the
+  support received and resolved mails, by the request's id. The step reads the
+  sender's address from the request, or from the account that sent it, and
+  sends no resolved mail for a request reopened since.
+- The support closing-soon notice, sent by a batch run of the daily
+  support-retention job (`src/modules/support/jobs/support-retention-batch.ts`),
+  which Vercel Cron starts once a day; a refused notice fails the batch's step
+  once the page's others are sent, so the retry sends only that one.
+- A staff reply's mail, sent by the reply's own job.
+
+**Every mail has a job.** `send` (`src/lib/mail.ts`), which delivers once and
+never throws, is only what a job falls back to when `MAIL_TRANSPORT` is unset or
+its run cannot be started. The record is
+[`design-decisions/m15.50-mail-through-a-retried-job.md`](design-decisions/m15.50-mail-through-a-retried-job.md).
+
+**A "sent" marker.** A caller that records a mail as sent does it in its own job
+step, after `deliver` returned true: the support closing-soon notice and its
+`closing_notice_sent_at` (`src/modules/support/services/retention.ts`), and a
+staff reply's mail and its `support_replies.notice_sent_at`
+(`src/modules/support/services/reply-notice.ts`). No other mail has a marker.
+
+**Tests.** A test that reads the mail its service built either mocks
+`@/lib/mail`'s `send` with `MAIL_TRANSPORT` stubbed empty, so the mail is built
+and tried once in the request, or mocks `@/lib/jobs`'s `startJob` and asserts
+the run argument, then runs the step itself. Real retries are tested in the
+`workflow` project (`tests/workflows/secret-link-mail.test.ts`,
+`tests/workflows/invitation-mail.test.ts`,
+`tests/workflows/support-status-mail.test.ts`,
+`tests/workflows/support-retention.test.ts`).
 
 ## Templates: React Email (MB.66)
 
@@ -23,7 +89,7 @@ A message is a React component in `src/emails/`, rendered twice by `render`
 from `react-email` (which depends on `@react-email/render`, so there is still
 one copy): once to HTML and once with
 `{ plainText: true }` to the text part, by `renderParts` in
-`src/emails/parts/layout.tsx`. Each template module exports the
+`src/emails/parts/layout.ts`. Each template module exports the
 component and a function returning a finished `Message`, built by
 `defineMessage(subject, Template)` from the same file, so a caller never
 renders anything itself:
@@ -32,7 +98,16 @@ renders anything itself:
 await send(await verifyEmailMessage({ to, url, providers }));
 ```
 
-- **Why React Email.** The site already writes JSX, and the package's
+- **Plain TypeScript, not JSX.** Every template and every part of the frame
+  is a `.ts` file that builds its elements with React's `createElement`
+  (imported as `h`). A durable job's step renders a mail when it runs, and the
+  Workflow SDK's step bundler compiles TypeScript but leaves JSX as written, so
+  a `.tsx` file reachable from a step stops every step in the bundle from
+  loading. Only the stories, which no step reaches, are `.tsx`.
+  `tests/emails/parts/layout.test.tsx` fails on a `.tsx` file anywhere else
+  under `src/emails/`.
+
+- **Why React Email.** The package's
   components emit the table-and-inline markup mail clients need, so a
   template reads like a component rather than a string of HTML. The cost is the
   dependency tree: the barrel
@@ -53,9 +128,9 @@ await send(await verifyEmailMessage({ to, url, providers }));
   would otherwise capitalise. The wordmark's link is dropped from the text part
   (`ignoreHref` on `a.ss-wordmark` in `renderParts`), so the first address a
   text client shows is the action's, not the homepage (MB.118).
-- **Where things go.** A template is a top-level `src/emails/<name>.tsx` with
+- **Where things go.** A template is a top-level `src/emails/<name>.ts` with
   a sibling `<name>.stories.tsx`. The frame every mail shares is
-  `src/emails/parts/layout.tsx`
+  `src/emails/parts/layout.ts`
   (`EmailLayout`, `Paragraph`, `Action`, `IgnoreNote`). Their types are in
   `parts/types.ts`, and the
   templates' in `src/emails/types.ts`, each extending `BaseEmailProps`: the
@@ -240,20 +315,20 @@ the owner reads them in the clients.
 
 ## What is sent
 
-| Template                                           | Sent by                                                                                                                                                                                                 | Carries                                                                                                                                                                                                                                                                                              |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `src/emails/verify-email.tsx`                      | Better Auth's `sendVerificationEmail`, at sign-up and on request                                                                                                                                        | The one-hour `/verify-email` link, the providers linked to the account, and that it must be opened from a browser signed in to it; never the account's name, since a mistyped address would hand it to a stranger                                                                                    |
-| `src/emails/email-change-notice.tsx`               | `src/lib/email-change-notice.ts`, from `setEmail` (`stage: 'requested'`) and `afterEmailVerification` (`'completed'`)                                                                                   | The time (UTC) and the new address's domain, never the address; no link but the site's wordmark, and no name                                                                                                                                                                                         |
-| `src/emails/verify-email.tsx`, `purpose: 'change'` | `src/lib/email-verification.ts`'s `requestChange`, from the email page's `setEmail`                                                                                                                     | The same link with a change token, to the _new_ address, again with no name: its first sentence says an existing account asked for this address, since the reader did not sign up                                                                                                                    |
-| `src/emails/account-exists.tsx`                    | `src/lib/auth.ts`'s `mailExistingHolder`, the `before` hook's `answerHeldSignUp`, at a password sign-up to an address that already has an account                                                       | That someone tried to make an account with the address and none was made, a link to `/sign-in`, and how the account signs in (its password, its linked providers, or both); never a name, since whoever made the sign-up need not be the holder                                                      |
-| `src/emails/reset-password.tsx`                    | `src/lib/auth.ts`'s `mailResetLink`, Better Auth's `sendResetPassword`, from `/forgot-password`, to a verified address only                                                                             | The single-use `/reset-password` link that lasts 15 minutes, that a new password signs the account out everywhere, and that a reader who did not ask can ignore it; never a name, since anyone can ask for it for any address                                                                        |
-| `src/emails/password-changed.tsx`                  | `src/lib/password-notice.ts`'s `mailPasswordChanged`, after a reset (`onPasswordReset`), a change (the `/change-password` after hook) or a first password set (`passwordSetter`)                        | That the password was reset, changed or added, which sessions were signed out, and a link to `/forgot-password` for a holder who made no change                                                                                                                                                      |
-| `src/emails/admin-invitation.tsx`                  | `src/lib/invitation-mail.ts`'s `siteInvitation`, from `createAdminInvitation` (MB.70)                                                                                                                   | The `/invite/[token]` link, the only place its token exists, to the invited address: the inviting admin's name, the site role it grants (M11.20), that the link lasts seven days, and to sign in with an account that uses the address                                                               |
-| `src/emails/coven-invitation.tsx`                  | `src/lib/invitation-mail.ts`'s `workspaceInvitation`, from `createInvitation` (M7.3)                                                                                                                    | The `/invite/[token]` link, the only place its token exists, to the invited address: the inviting owner's name, which coven and what role, that the link lasts seven days, and to sign in with an account that uses the address                                                                      |
-| `src/emails/support-reply-notice.tsx`              | `replyToSupportRequest`, through `send()` in `src/lib/mail.ts`, by way of `supportNotifier` in `src/lib/support-mail.ts`                                                                                | A short notice that names the request (subject and heading read "Reply to your support request: <subject>", the subject cut at 80 characters) and a link that opens that request (`/account/support?request=<id>`); never the reply text (M15.1)                                                     |
-| `src/emails/support-received.tsx`                  | `sendSupportRequest` and `sendSignedOutSupportRequest`, once the request is saved, through `send()` in `src/lib/mail.ts`, by way of `supportNotifier` in `src/lib/support-mail.ts`                      | That the request arrived and will be answered within 5 working days, naming it (subject cut at 80 characters). A signed-in sender’s link opens the request (`/account/support?request=<id>`); a signed-out sender’s goes to `/support`, which needs no account. Never what the sender wrote (M15.45) |
-| `src/emails/support-resolved.tsx`                  | `resolveSupportRequest`, once the move is saved, through `send()` in `src/lib/mail.ts`, by way of `supportNotifier` in `src/lib/support-mail.ts`                                                        | That the request is resolved, naming it. A signed-in sender is told a reply from them reopens it and that it closes by itself after seven days; a signed-out sender, who cannot reply to the request, is told to write again at `/support`. Never the thread or an internal note (M15.45)            |
-| `src/emails/support-closing-soon.tsx`              | `supportNotifier.closingSoon`. Nothing calls it yet; M15.46 sends it on day five of a resolved request, through `send()` in `src/lib/mail.ts`, by way of `supportNotifier` in `src/lib/support-mail.ts` | That the resolved request closes in 2 days, naming it, with the same links as the resolved mail. A signed-in sender is told a reply keeps it open (M15.45)                                                                                                                                           |
+| Template                                          | Sent by                                                                                                                                                                                                                                                                                                                             | Carries                                                                                                                                                                                                                                                                                              |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/emails/verify-email.ts`                      | Better Auth's `sendVerificationEmail`, at sign-up and on request                                                                                                                                                                                                                                                                    | The one-hour `/verify-email` link, the providers linked to the account, and that it must be opened from a browser signed in to it; never the account's name, since a mistyped address would hand it to a stranger                                                                                    |
+| `src/emails/email-change-notice.ts`               | `src/lib/email-change-notice.ts`, through the account-notice job, from `setEmail` (`stage: 'requested'`) and `afterEmailVerification` (`'completed'`, to `users.former_email`)                                                                                                                                                      | The time (UTC) and the new address's domain, never the address; no link but the site's wordmark, and no name                                                                                                                                                                                         |
+| `src/emails/verify-email.ts`, `purpose: 'change'` | `src/lib/email-verification.ts`'s `requestChange`, from the email page's `setEmail`                                                                                                                                                                                                                                                 | The same link with a change token, to the _new_ address, again with no name: its first sentence says an existing account asked for this address, since the reader did not sign up                                                                                                                    |
+| `src/emails/account-exists.ts`                    | `src/lib/auth.ts`'s `mailExistingHolder`, the `before` hook's `answerHeldSignUp`, at a password sign-up to an address that already has an account, through `scheduleAccountNotice` (`kind: 'account-exists'`) and the `accountNoticeMail` job, whose step renders it with `accountExistsNotice` in `src/lib/account-notice-mail.ts` | That someone tried to make an account with the address and none was made, a link to `/sign-in`, and how the account signs in (its password, its linked providers, or both); never a name, since whoever made the sign-up need not be the holder                                                      |
+| `src/emails/reset-password.ts`                    | `src/lib/auth.ts`'s `mailResetLink`, Better Auth's `sendResetPassword`, from `/forgot-password`, to a verified address only                                                                                                                                                                                                         | The single-use `/reset-password` link that lasts 15 minutes, that a new password signs the account out everywhere, and that a reader who did not ask can ignore it; never a name, since anyone can ask for it for any address                                                                        |
+| `src/emails/password-changed.ts`                  | `scheduleAccountNotice` (`kind: 'password-changed'`), after a reset (`onPasswordReset`), a change (the `/change-password` after hook) or a first password set (`passwordSetter`), sent by the `accountNoticeMail` job, whose step renders it with `passwordChangedNotice` in `src/lib/account-notice-mail.ts`                       | That the password was reset, changed or added, which sessions were signed out, and a link to `/forgot-password` for a holder who made no change                                                                                                                                                      |
+| `src/emails/admin-invitation.ts`                  | `createAdminInvitation` (MB.70), through `invitationSender` in `src/lib/invitation-mail.ts` and the `secretLinkMail` job (`kind: 'invitation'`), whose step mints the token with `rotateInvitationToken` and renders it with `invitationLinkMessage` in `src/lib/invitation-link-mail.ts`                                           | The `/invite/[token]` link, the only place its token exists, to the invited address: the inviting admin's name, the site role it grants (M11.20), that the link lasts seven days, and to sign in with an account that uses the address                                                               |
+| `src/emails/coven-invitation.ts`                  | `createInvitation` (M7.3), the same way as the admin invitation                                                                                                                                                                                                                                                                     | The `/invite/[token]` link, the only place its token exists, to the invited address: the inviting owner's name, which coven and what role, that the link lasts seven days, and to sign in with an account that uses the address                                                                      |
+| `src/emails/support-reply-notice.ts`              | `replyToSupportRequest`, through the reply's own job (`src/modules/support/jobs/support-reply-notice.ts`), whose step renders it from the rows with `supportReplyMessage` in `src/lib/support-job-mail.ts` and sets `support_replies.notice_sent_at`; the signed-out sender's `support-email-reply.ts` goes the same way            | A short notice that names the request (subject and heading read "Reply to your support request: <subject>", the subject cut at 80 characters) and a link that opens that request (`/account/support?request=<id>`); never the reply text (M15.1)                                                     |
+| `src/emails/support-received.ts`                  | `sendSupportRequest` and `sendSignedOutSupportRequest`, once the request is saved, through the `supportStatusMail` job (`kind: 'received'`), whose step renders it from the request with `supportStatusMessage` in `src/lib/support-job-mail.ts`                                                                                    | That the request arrived and will be answered within 5 working days, naming it (subject cut at 80 characters). A signed-in sender’s link opens the request (`/account/support?request=<id>`); a signed-out sender’s goes to `/support`, which needs no account. Never what the sender wrote (M15.45) |
+| `src/emails/support-resolved.ts`                  | `resolveSupportRequest`, once the move is saved, through the `supportStatusMail` job (`kind: 'resolved'`), which sends nothing if the request is no longer resolved when the step runs                                                                                                                                              | That the request is resolved, naming it. A signed-in sender is told a reply from them reopens it and that it closes by itself after seven days; a signed-out sender, who cannot reply to the request, is told to write again at `/support`. Never the thread or an internal note (M15.45)            |
+| `src/emails/support-closing-soon.ts`              | The daily support-retention job's batch (`src/modules/support/jobs/support-retention-batch.ts`), on day five or six of a resolved request, rendered by `supportClosingNoticeMessage` in `src/lib/support-job-mail.ts` and sent by the batch's step, from the row as it stands then, which sets `closing_notice_sent_at`             | How long is left until the resolved request closes, worked out when it sends, naming it, with the same links as the resolved mail. A signed-in sender is told a reply keeps it open (M15.45)                                                                                                         |
 
 The verification flow itself is
 [`auth/admin-bootstrap.md`](auth/admin-bootstrap.md), "First-party verification"

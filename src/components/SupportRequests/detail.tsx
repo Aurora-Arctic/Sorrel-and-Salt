@@ -3,7 +3,6 @@
 import { type ReactElement, useId, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { SYSTEM_ACTOR_ID } from '../../lib/system-actor';
 import ConfirmedAction from '../UserList/confirmed-action';
 import { FieldShell, SwitchField, fieldDescription } from '../Field';
 import Spinner from '../Spinner';
@@ -50,6 +49,8 @@ const ResolveDocument = graphql(`
 
 const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps): ReactElement => {
   const isAdmin = viewer.role === 'admin';
+  // An anonymised request is refused every change, so an admin sees it as a curator does: the issue read-only, no settings.
+  const edits = isAdmin && !request.anonymised;
   const answers = isAdmin || request.assignee?.id === viewer.id;
   const open = request.status === 'open';
   const assign = useSupportAction();
@@ -58,7 +59,7 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
   const failure = assign.failure.alert ?? visible.failure.alert;
 
   return (
-    <div className={isAdmin ? 'support-detail' : 'support-detail support-detail--single'}>
+    <div className={edits ? 'support-detail' : 'support-detail support-detail--single'}>
       <div className="support-detail__main">
         <SupportFacts
           createdAt={request.createdAt}
@@ -66,28 +67,31 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
           errorCode={request.errorCode}
           errorReference={request.errorReference}
           lead={
-            <div className="support-detail__fact--wide">
-              <dt>From</dt>
-              <dd>
-                {request.sender ? (
-                  <>
-                    <SenderName
-                      sender={request.sender}
-                      signedOut={request.signedOut}
-                      userHref={userHref}
-                    />
-                    {request.sender.email && (
-                      <>
-                        {' '}
-                        <span className="support-detail__muted">{request.sender.email}</span>
-                      </>
-                    )}
-                  </>
-                ) : (
-                  'Deleted account'
-                )}
-              </dd>
-            </div>
+            // An anonymised request has no sender to show.
+            !request.anonymised && (
+              <div className="support-detail__fact--wide">
+                <dt>From</dt>
+                <dd>
+                  {request.sender ? (
+                    <>
+                      <SenderName
+                        sender={request.sender}
+                        signedOut={request.signedOut}
+                        userHref={userHref}
+                      />
+                      {request.sender.email && (
+                        <>
+                          {' '}
+                          <span className="support-detail__muted">{request.sender.email}</span>
+                        </>
+                      )}
+                    </>
+                  ) : (
+                    'Deleted account'
+                  )}
+                </dd>
+              </div>
+            )
           }
           afterSent={
             request.resolvedBy &&
@@ -108,35 +112,45 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
 
         {failure && <Notice kind="error">{failure}</Notice>}
 
-        {(isAdmin || request.issueUrl) && (
-          <IssuePanel key={request.issueUrl ?? ''} request={request} canEdit={isAdmin} />
+        {(edits || request.issueUrl) && (
+          <IssuePanel key={request.issueUrl ?? ''} request={request} canEdit={edits} />
         )}
 
         <SupportThread
           entries={[
-            {
-              id: request.id,
-              name: request.signedOut
-                ? 'Signed-out sender'
-                : (request.sender?.name ?? 'Deleted account'),
-              tag: 'Sender',
-              at: request.createdAt,
-              body: request.message,
-            },
-            ...request.replies.map((reply) => ({
-              id: reply.id,
-              name: reply.author?.name ?? 'Deleted account',
-              tag: reply.fromSender ? 'Sender' : 'Staff',
-              internal: !reply.fromSender && reply.internal,
-              at: reply.createdAt,
-              body: reply.body,
-            })),
+            // An anonymised request keeps only what staff wrote: the sender's message and follow-ups are emptied.
+            ...(request.anonymised
+              ? []
+              : [
+                  {
+                    id: request.id,
+                    name: request.signedOut
+                      ? 'Signed-out sender'
+                      : (request.sender?.name ?? 'Deleted account'),
+                    tag: 'Sender',
+                    at: request.createdAt,
+                    body: request.message,
+                  },
+                ]),
+            ...request.replies
+              .filter((reply) => !(request.anonymised && reply.fromSender))
+              .map((reply) => ({
+                id: reply.id,
+                name: reply.author?.name ?? 'Deleted account',
+                tag: reply.fromSender ? 'Sender' : 'Staff',
+                internal: !reply.fromSender && reply.internal,
+                at: reply.createdAt,
+                body: reply.body,
+              })),
           ]}
         />
 
-        {request.sender?.id === SYSTEM_ACTOR_ID ? (
-          // An anonymised request is owned by the System account, and the service refuses a note or a reply on it.
-          <Notice kind="plain">This request is anonymised. It takes no notes or replies.</Notice>
+        {request.anonymised ? (
+          // An anonymised request is owned by the System account, and the service refuses any change to it.
+          <Notice kind="caution" quiet className="support-detail__anonymised">
+            This request is anonymised. It takes no notes or replies, and its settings cannot be
+            changed.
+          </Notice>
         ) : (
           <ReplyForm
             noteOnly={!answers}
@@ -164,7 +178,7 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
         )}
       </div>
 
-      {isAdmin && (
+      {edits && (
         <aside className="support-detail__side" aria-label="Request Settings">
           <FieldShell label="Assignee" {...assignField}>
             <span className="field__control">
