@@ -46,8 +46,7 @@ export default function TermsOfUsePage() {
       <h2>Who May Use the Site</h2>
       <p>
         Anyone may read the public compendium without an account. Signing in by any method gives you
-        an account and a viewer's seat in the demo coven, and nothing more: creating a coven of your
-        own needs an invitation, or a grant from a site admin. There is no way to buy your way in.
+        an account and a viewer's seat in the demo coven.
       </p>
       <p>
         You must be at least thirteen years old. The site is run from the United States, whose
