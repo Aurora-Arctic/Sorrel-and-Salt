@@ -32,8 +32,9 @@ export default function CodeOfEthicsPage() {
       <ul>
         <li>Everyone is welcome here, and bigotry is not.</li>
         <li>
-          Other people's closed practices are theirs. The compendium records where an ingredient's
-          lore comes from. A warning on ingredients from closed practices is planned.
+          Other people's closed practices are theirs. The compendium names a source for an
+          ingredient's lore, but not yet the tradition it comes from. A warning on ingredients from
+          closed practices is planned.
         </li>
         <li>
           Take only what can be spared: no endangered plants, no animal parts from protected
@@ -139,9 +140,9 @@ export default function CodeOfEthicsPage() {
       <p>Here is what the site does today, and what it commits to:</p>
       <ul>
         <li>
-          The compendium records where an ingredient's lore comes from, by naming its sources. No
-          entry yet says whether its lore comes from a closed practice, so an entry can come from
-          one without saying so.
+          The compendium names a source for each piece of an ingredient's lore. It does not yet
+          record which tradition the lore comes from, or whether that tradition is closed, so an
+          entry can draw on a closed practice without saying so.
         </li>
         <li>
           A warning on an entry whose practice is closed, and ethical warnings on ingredients, are
