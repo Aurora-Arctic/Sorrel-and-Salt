@@ -5,7 +5,7 @@ import { pausedCovenBySlug } from '@/modules/coven';
 import PageHeader from '../../../../components/PageHeader';
 import { Forbidden } from '../../../../lib/errors';
 import { requireSession } from '../../../../lib/request-session';
-import { inUtc } from '../../../../lib/utc';
+import LocalTime from '../../../../components/LocalTime';
 import type { CovenPausedPageProps } from './types';
 
 export const metadata: Metadata = {
@@ -33,8 +33,8 @@ export default async function CovenPausedPage({ params }: CovenPausedPageProps) 
         <PageHeader title="Access Paused" />
         {paused.until ? (
           <p>
-            Your access to {paused.name} is paused until {inUtc(paused.until)}. You can open it
-            again after that.
+            Your access to {paused.name} is paused until <LocalTime at={paused.until} long />. You
+            can open it again after that.
           </p>
         ) : (
           <p>

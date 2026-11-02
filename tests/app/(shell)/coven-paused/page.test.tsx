@@ -1,5 +1,6 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { longMinuteInZone } from '@/lib/utc';
 import { Forbidden } from '@/lib/errors';
 
 // `/coven-paused/[slug]`, where a member whose access to one coven is paused is sent from its pages. It reads the pause itself
@@ -35,17 +36,15 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe('/coven-paused/[slug]', () => {
-  it('names the coven and the end of a dated pause, in UTC, asking the service with its own slug', async () => {
-    pausedCovenBySlug.mockResolvedValue({
-      name: 'Fixture Coven',
-      until: new Date('2026-12-01T09:30:00.000Z'),
-    });
+  it('names the coven and the end of a dated pause, as the site prints a date, asking the service with its own slug', async () => {
+    const until = new Date('2026-12-01T09:30:00.000Z');
+    pausedCovenBySlug.mockResolvedValue({ name: 'Fixture Coven', until });
     await visit();
 
     expect(pausedCovenBySlug).toHaveBeenCalledExactlyOnceWith(SESSION, 'fixture-coven');
     expect(screen.getByRole('heading', { name: 'Access Paused' })).toBeInTheDocument();
     expect(screen.getByText(/Fixture Coven/)).toHaveTextContent(
-      'Your access to Fixture Coven is paused until 1 December 2026, 09:30 UTC.',
+      `Your access to Fixture Coven is paused until ${longMinuteInZone(until)}.`,
     );
   });
 
