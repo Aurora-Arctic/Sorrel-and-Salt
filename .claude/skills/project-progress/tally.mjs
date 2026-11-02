@@ -10,6 +10,7 @@
 
 import { execFileSync } from 'node:child_process';
 
+import { idsNamedByMerge } from '../../../scripts/task-ids.mjs';
 import { HEADING, ID, TASKS_FILES } from '../../../scripts/tasks-md.mjs';
 
 const args = process.argv.slice(2);
@@ -39,23 +40,22 @@ for (const path of TASKS_FILES.filter(existsAt)) {
 const canonical = new Map([...plan.keys()].map((id) => [id.toUpperCase(), id]));
 const norm = (id) => canonical.get(id.toUpperCase()) ?? id.toUpperCase();
 
-// Three places a merged task names itself, and only these — an id mentioned
+// Four places a merged task names itself, and only these — an id mentioned
 // mid-sentence ("the check M1.5 added") is a reference, not a completion:
 //   branch  `Merge pull request #156 from org/feature/m2.6-build-…`
-//   lead    `M2.4/M2.5/M0.27 — OAuth provider wiring…`
+//   lead    `M2.4/M2.5/M0.27 — OAuth provider wiring…`, in the subject or in the
+//           first body line, where GitHub writes the PR title of a merge commit
 //   tail    `Stop branch skills setting the base branch as upstream (MB.13)`
 // A tail names exactly one id, and only an id with a heading in the breakdown:
 // a list of ids (`(M10.22, MB.6, MB.123)`) marks every task a doc edit touched,
 // and a bracketed code that is no task (`(P9)`) would count as a task at 0h.
-const BRANCH = /from [^/\s]+\/(?:feature|hotfix)\/(?:backlog-)?(m[a-z]*[0-9]*(?:\.[a-z0-9]+)+?)-/i;
-const LEAD = new RegExp(String.raw`^((?:${ID})(?:\s*/\s*${ID})*)\s+[—-]\s`);
 const TAIL = new RegExp(String.raw`\((${ID})\)\s*$`);
 const done = new Set();
-for (const subject of git('log', ref, '--format=%s').split('\n')) {
-  const b = BRANCH.exec(subject);
-  if (b) done.add(norm(b[1]));
-  const l = LEAD.exec(subject);
-  if (l) for (const id of l[1].split(/\s*[,/]\s*/)) done.add(norm(id));
+const RECORD = '\x1e';
+const FIELD = '\x1f';
+for (const record of git('log', ref, `--format=%s${FIELD}%b${RECORD}`).split(RECORD)) {
+  const [subject = '', body = ''] = record.replace(/^\n/, '').split(FIELD);
+  for (const id of idsNamedByMerge(subject, body)) done.add(norm(id));
   const t = TAIL.exec(subject);
   if (t && plan.has(norm(t[1]))) done.add(norm(t[1]));
 }
