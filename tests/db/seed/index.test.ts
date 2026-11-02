@@ -13,6 +13,7 @@ import { seedDeities } from '@/db/seed/deities';
 import { seedForms } from '@/db/seed/forms';
 import { seedSources } from '@/db/seed/sources';
 import { seedCompendium } from '@/db/seed/compendium';
+import { seedDocuments } from '@/db/seed/documents';
 import { loadCompendium } from '@/db/seed/compendium/load';
 import type { SeedDatabase } from '@/db/seed/types';
 import { fixtureFiles } from './compendium/files-fixture';
@@ -197,6 +198,12 @@ const SEED_ENTRIES: SeedEntry[] = (
         'references',
         'reference_links',
       ],
+    },
+    {
+      // The site's four documents, read from the real files under `documents/`: there are few enough for every sweep.
+      name: 'the documents seed',
+      seed: seedDocuments,
+      tables: ['documents', 'document_versions'],
     },
   ] satisfies Omit<SeedEntry, 'run'>[]
 ).map((entry: Omit<SeedEntry, 'run'>) => ({
