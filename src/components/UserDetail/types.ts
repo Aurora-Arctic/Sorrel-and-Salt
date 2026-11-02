@@ -85,7 +85,7 @@ export interface PauseFieldsProps {
   /** Who reads the note, beneath the field. */
   noteHint: string;
   notePlaceholder: string;
-  /** Marks the note required, for a sanction that must say why: a site pause or a support time-out, never a coven pause. */
+  /** Marks the note and the message required, for a sanction that must say why: a site pause or a support time-out, never a coven pause. */
   noteRequired?: boolean;
   message: string;
   onMessage: (message: string) => void;
@@ -127,7 +127,7 @@ export interface PausePanelProps {
   /** Every pause but the standing one, newest first. */
   earlier: readonly AccessPauseEntry[];
   copy: PausePanelCopy;
-  /** Marks the note required and holds Pause Access until it has text: a site pause needs one, a coven pause does not. */
+  /** Marks the note and the message required and holds Pause Access until both have text: a site pause needs one, a coven pause does not. */
   noteRequired?: boolean;
   /** Sends the pause, until an end or with none, with its note. */
   pause: (until: Date | null, note: string | undefined, message: string | null) => Promise<unknown>;

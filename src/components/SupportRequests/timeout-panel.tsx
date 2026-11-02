@@ -29,7 +29,7 @@ import './timeout-panel.scss';
 // serves the request dialog and the user modal, keyed by the user, so a repeat sender is seen as one.
 
 const TimeOutDocument = graphql(`
-  mutation TimeOutSupportSender($userId: ID!, $until: DateTime, $note: String!, $message: String) {
+  mutation TimeOutSupportSender($userId: ID!, $until: DateTime, $note: String!, $message: String!) {
     timeOutSupportSender(userId: $userId, until: $until, note: $note, message: $message) {
       id
     }
@@ -109,7 +109,7 @@ const TimeoutForm = ({ userId, name }: { userId: string; name: string }): ReactE
 
   // The end is worked out when the question opens or the answer is sent, never kept in state.
   const end = endOf(span, day, new Date());
-  const ready = pauseReady(span, day) && note.trim() !== '';
+  const ready = pauseReady(span, day) && note.trim() !== '' && message.trim() !== '';
 
   return (
     <div className="form">
@@ -152,7 +152,7 @@ const TimeoutForm = ({ userId, name }: { userId: string; name: string }): ReactE
               userId,
               until: until?.toISOString() ?? null,
               note: note.trim(),
-              message: message.trim() || null,
+              message: message.trim(),
             });
           }}
           onSent={() => {

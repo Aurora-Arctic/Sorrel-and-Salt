@@ -447,8 +447,8 @@ builder.mutationField('timeOutSupportSender', (t) =>
       until: t.arg({ type: 'DateTime', required: false }),
       note: t.arg.string({ required: true }),
       message: t.arg.string({
-        required: false,
-        description: 'What the user is emailed, up to 500 characters; the note is never mailed.',
+        required: true,
+        description: 'What the user is emailed, 1 to 500 characters; the note is never mailed.',
       }),
     },
     authScopes: { admin: true },

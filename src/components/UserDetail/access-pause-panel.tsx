@@ -13,7 +13,7 @@ import type { AccessPauseEntry, PausePanelCopy } from './types';
 // the two sections of the user modal read alike.
 
 const PauseDocument = graphql(`
-  mutation PauseUserAccess($userId: ID!, $until: DateTime, $note: String!, $message: String) {
+  mutation PauseUserAccess($userId: ID!, $until: DateTime, $note: String!, $message: String!) {
     pauseUserAccess(userId: $userId, until: $until, note: $note, message: $message) {
       id
     }
@@ -77,7 +77,7 @@ const AccessPausePanel = ({
           userId,
           until: until?.toISOString() ?? null,
           note: note ?? '',
-          message,
+          message: message ?? '',
         })
       }
       lift={() => graphqlRequest(LiftDocument, { userId })}

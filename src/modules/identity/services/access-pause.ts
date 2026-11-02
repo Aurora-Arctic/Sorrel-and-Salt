@@ -7,7 +7,7 @@ import {
   withAudit,
 } from '../../../db/repository';
 import { Forbidden, NotFound, ValidationError, fieldRefusal } from '../../../lib/errors';
-import { parsePauseMessage } from '../../../lib/pause-message';
+import { parseRequiredPauseMessage } from '../../../lib/pause-message';
 import { isStandInAccount } from '../../../lib/system-actor';
 import type { Session } from '../../../lib/session';
 import type { PageEntry, PageRequest } from '../../../lib/types';
@@ -41,7 +41,7 @@ const ALREADY_PAUSED = 'This user is already paused; lift the pause first';
  * sender account; or admin changes are paused
  * and the user is an admin.
  * @throws {NotFound} no live user has this id.
- * @throws {ValidationError} `until` is not in the future, the note is missing, blank or over 500 characters, the message is over
+ * @throws {ValidationError} `until` is not in the future, the note is missing, blank or over 500 characters, the message is missing, blank or over
  * 500, or a pause already stands.
  */
 export async function pauseUserAccess(
@@ -50,7 +50,7 @@ export async function pauseUserAccess(
   until: Date | null | undefined,
   note: string | null | undefined,
   notifier: AccessPauseNotifier,
-  message?: string | null,
+  message: string,
 ): Promise<UserAccessPauseRow> {
   const admin = assertSiteAdmin(session, REFUSAL);
   const id = parseInput(RowId, userId);
@@ -65,7 +65,7 @@ export async function pauseUserAccess(
   if (trimmed.length > NOTE_MAX_LENGTH) {
     throw fieldRefusal('note', LONG_NOTE);
   }
-  const toUser = parsePauseMessage(message);
+  const toUser = parseRequiredPauseMessage(message);
   const user = await findOneById(users, id);
   if (!user) throw new NotFound('No such user');
   if (isPrimaryAdmin(user)) throw new Forbidden(PRIMARY_REFUSAL);

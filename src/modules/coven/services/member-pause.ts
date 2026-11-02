@@ -7,7 +7,7 @@ import {
   withAudit,
 } from '../../../db/repository';
 import { Forbidden, NotFound, fieldRefusal } from '../../../lib/errors';
-import { parsePauseMessage } from '../../../lib/pause-message';
+import { parseOptionalPauseMessage } from '../../../lib/pause-message';
 import { isStandInAccount } from '../../../lib/system-actor';
 import type { Session } from '../../../lib/session';
 import type { PageEntry, PageRequest } from '../../../lib/types';
@@ -71,7 +71,7 @@ export async function pauseMemberAccess(
   if (trimmed && trimmed.length > NOTE_MAX_LENGTH) {
     throw fieldRefusal('note', LONG_NOTE);
   }
-  const toMember = parsePauseMessage(message);
+  const toMember = parseOptionalPauseMessage(message);
   if (isStandInAccount(userId)) throw new Forbidden(STAND_IN_REFUSAL);
   if ((await memberRoleOf(membership.workspaceId, userId)) === 'owner') {
     throw new Forbidden(OWNER_REFUSAL);

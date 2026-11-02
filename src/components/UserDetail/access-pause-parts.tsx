@@ -133,7 +133,12 @@ export const PauseFields = ({
           onChange={(event) => onNote(event.target.value)}
         />
       </FieldShell>
-      <FieldShell label={messageLabel} hint={MESSAGE_HINT} {...messageField}>
+      <FieldShell
+        label={messageLabel}
+        hint={MESSAGE_HINT}
+        required={noteRequired}
+        {...messageField}
+      >
         <input
           id={messageField.controlId}
           className="input"
@@ -141,6 +146,7 @@ export const PauseFields = ({
           autoComplete="off"
           placeholder={messagePlaceholder}
           maxLength={500}
+          aria-required={noteRequired || undefined}
           {...messageAria}
           value={message}
           onChange={(event) => onMessage(event.target.value)}

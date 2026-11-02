@@ -1127,9 +1127,9 @@ type Mutation {
   """
   pauseUserAccess(
     """
-    What the user is emailed, up to 500 characters; the note is never mailed.
+    What the user is emailed, 1 to 500 characters; the note is never mailed.
     """
-    message: String
+    message: String!
     note: String!
     until: DateTime
     userId: ID!
@@ -1257,9 +1257,9 @@ type Mutation {
   """
   timeOutSupportSender(
     """
-    What the user is emailed, up to 500 characters; the note is never mailed.
+    What the user is emailed, 1 to 500 characters; the note is never mailed.
     """
-    message: String
+    message: String!
     note: String!
     until: DateTime
     userId: ID!

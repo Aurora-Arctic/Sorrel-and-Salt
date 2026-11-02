@@ -86,7 +86,8 @@ const PauseForm = ({
 
   // The end is worked out when the question opens or the answer is sent, never kept in state.
   const end = endOf(span, day, new Date());
-  const ready = pauseReady(span, day) && (!noteRequired || note.trim() !== '');
+  const ready =
+    pauseReady(span, day) && (!noteRequired || (note.trim() !== '' && message.trim() !== ''));
 
   return (
     <div className="form">

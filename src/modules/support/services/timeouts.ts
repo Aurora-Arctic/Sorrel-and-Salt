@@ -2,7 +2,7 @@ import 'server-only';
 import { findOneById, findSupportTimeoutById, withAudit } from '../../../db/repository';
 import { Forbidden, NotFound, fieldRefusal } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
-import { parsePauseMessage } from '../../../lib/pause-message';
+import { parseRequiredPauseMessage } from '../../../lib/pause-message';
 import { isStandInAccount } from '../../../lib/system-actor';
 import { RowId, parseInput } from '../../../lib/validation';
 import { assertSiteAdmin } from '../../identity';
@@ -26,7 +26,7 @@ const LONG_NOTE = `Keep the note to ${NOTE_MAX_LENGTH} characters`;
  * @throws {Forbidden} the session is not an admin, or the user is the System account or the signed-out sender account, which are
  * not people.
  * @throws {NotFound} no live user has this id.
- * @throws {ValidationError} `until` is not in the future, the note is missing, blank or over 500 characters, or the message is over 500.
+ * @throws {ValidationError} `until` is not in the future, the note is missing, blank or over 500 characters, or the message is missing, blank or over 500.
  */
 export async function timeOutSupportSender(
   session: Session,
@@ -34,7 +34,7 @@ export async function timeOutSupportSender(
   until: Date | null | undefined,
   note: string,
   notifier: TimeoutNotifier,
-  message?: string | null,
+  message: string,
 ): Promise<SupportTimeoutRow> {
   assertSiteAdmin(session, REFUSAL);
   const id = parseInput(RowId, userId);
@@ -47,7 +47,7 @@ export async function timeOutSupportSender(
   }
   if (!trimmed) throw fieldRefusal('note', NO_NOTE);
   if (trimmed.length > NOTE_MAX_LENGTH) throw fieldRefusal('note', LONG_NOTE);
-  const toUser = parsePauseMessage(message);
+  const toUser = parseRequiredPauseMessage(message);
   const user = await findOneById(users, id);
   if (!user) throw new NotFound('No such user');
   if (isStandInAccount(id)) throw new Forbidden(STAND_IN_REFUSAL);

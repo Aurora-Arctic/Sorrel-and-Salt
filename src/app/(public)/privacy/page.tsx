@@ -263,7 +263,7 @@ export default function PrivacyPolicyPage() {
       <p>
         When an admin times you out of support, pauses your access to the site, or a coven owner
         pauses your access to their coven, a record is kept about you. It holds the end date if
-        there is one, who set it, the note they wrote, and the message they wrote to you, if they
+        there is one, who set it, the note they wrote, and the message they wrote to you, where they
         wrote one. You are emailed once when one is set, at the address on your account. The email
         carries the message and the end date, never the note, which only staff or the coven's owners
         see. Lifting one sends no email.
