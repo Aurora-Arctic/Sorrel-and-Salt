@@ -40,8 +40,9 @@ const AccessCards = ({ roles, rows }: AccessCardsProps): ReactElement => {
           <span className="access-cards__columns-label">Kind of Data</span>
           {roles.map((role) => (
             // A span, not a control: the row is hidden from assistive technology, and the note above
-            // and each open card give a keyboard the full names. A tap opens the tip, as no hover can.
-            <IconTip key={role.name} tip={role.name} placement="above" opensOnPress>
+            // and each open card give a keyboard the full names. A tap opens the tip, as no hover can. Below,
+            // as above would run under the bar when the row is stuck.
+            <IconTip key={role.name} tip={role.name} placement="below" opensOnPress>
               <span className="access-cards__short">{role.short}</span>
             </IconTip>
           ))}

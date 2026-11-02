@@ -115,14 +115,20 @@
   padding-inline: var(--access-pad-x);
 }
 
+// The space between the bar and the stuck row, as IngredientSearch's search row keeps it: inside the
+// row, as padding its ground fills, so no card shows through the gap.
+$stuck-pad: space(4);
+
 // The label row: pinned under the site's bar while the cards pass beneath it, in the page's ground
 // so a card scrolling under it does not show through.
 .access-cards__columns {
   position: sticky;
-  top: calc(#{$top-inset} + #{$shell-bar-height});
+  // stylelint-disable-next-line length-zero-no-unit -- a bare 0 is invalid in the calc() sums
+  top: var(--sticky-top, 0px);
   z-index: layer('sticky-row');
   align-items: end;
-  padding-block: space(1);
+  margin-block-start: calc(-1 * #{$stuck-pad});
+  padding-block: $stuck-pad space(1);
   border-bottom: 1px solid $hairline;
   background-color: $surface-page;
 
