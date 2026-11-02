@@ -193,7 +193,7 @@ describe('A timed-out sender', () => {
     setBy: { id: 'admin-1', name: 'Ash Warden' },
     liftedBy: null,
   });
-  const NOTICE = 'The sender cannot answer until 2999-01-01 00:00 UTC.';
+  const NOTICE = /The sender cannot answer until/;
 
   const replySent = () => {
     const sent: ReplyToSupportRequestMutationVariables[] = [];
@@ -218,7 +218,7 @@ describe('A timed-out sender', () => {
   it('is told to staff replying, with the end time', () => {
     open(ADMIN, { timeouts: [standing(new Date('2999-01-01T00:00:00Z'))] });
     chooseReply();
-    expect(within(dialog()).getByText(NOTICE)).toBeInTheDocument();
+    expect(within(dialog()).getByText(NOTICE)).toHaveTextContent(/1 January 2999/);
   });
 
   it('is told to staff replying when the time-out has no end date', () => {

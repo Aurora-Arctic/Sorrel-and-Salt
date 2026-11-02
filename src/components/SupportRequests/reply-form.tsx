@@ -6,8 +6,8 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import BusyButton from '../BusyButton';
 import { ChoiceChip } from '../FacetPanel/choice-chip';
 import { FieldShell, SwitchField, fieldDescription } from '../Field';
-import { utcMinute } from '../../lib/utc';
 import { ConfirmQuestion, DiscardQuestion, useDiscardGuard } from '../Modal';
+import LocalTime from '../LocalTime';
 import Notice from '../Notice';
 import { useSupportAction } from './use-support-action';
 
@@ -44,8 +44,14 @@ const NoteDocument = graphql(`
 `);
 
 /** How long a timed-out sender cannot answer: until the end, or with no end date. */
-const cannotAnswer = (until: Date | null): string =>
-  until ? `until ${utcMinute(until)}` : 'while timed out with no end date';
+const cannotAnswer = (until: Date | null): ReactNode =>
+  until ? (
+    <>
+      until <LocalTime at={until} long />
+    </>
+  ) : (
+    'while timed out with no end date'
+  );
 
 const ReplyForm = ({
   requestId,
@@ -160,7 +166,7 @@ const ReplyForm = ({
       {asking && senderTimedOut && (
         <ConfirmQuestion
           question="Reply to a sender who is timed out?"
-          details={`They cannot answer ${cannotAnswer(senderTimedOut.until)}.`}
+          details={<>They cannot answer {cannotAnswer(senderTimedOut.until)}.</>}
           tone="solid"
           confirmLabel="Send Reply"
           busyLabel="Sending"
