@@ -25,8 +25,11 @@ import {
   adoptHash,
   applyUpdate,
   decide,
+  linkAttributes,
   readReferenceTexts,
   readStates,
+  restateScholarly,
+  writeLinkAttributes,
   type SeedItem,
 } from './compendium/update';
 import { WORKS } from './compendium/works';
@@ -46,7 +49,7 @@ import type {
 } from './types';
 
 // The production compendium, seeded as reference data after the curated vocabularies and the sources. An absent entry is
-// inserted whole with its content hash; a present one is left alone unless its file is marked for update (claude-docs/db/
+// inserted whole with its content hash; a present one is left alone unless its file is marked for update, bar its citations' provenance (claude-docs/db/
 // compendium-seed/README.md, "Write-once, and how a correction lands"). Rows are ./compendium/rows.ts's, decisions ./compendium/update.ts's.
 
 export interface SeedCompendiumOptions {
@@ -133,6 +136,9 @@ export async function seedCompendiumContent(
   await insertEntries(tx, missing, picks);
   report.inserted = missing.length;
   report.hidden = missing.filter(({ entry }) => !namesCategory(entry)).length;
+  for (const kept of await restateScholarly(tx, { ...WORKS, ...input.sources })) {
+    report.kept.push({ where: null, ...kept });
+  }
   if (met.length === 0) return report;
 
   const rows = await tx.select().from(ingredients).where(isNull(ingredients.workspaceId));
@@ -153,6 +159,12 @@ export async function seedCompendiumContent(
   for (const { item, id } of met) {
     const state = requireFrom(states, id, () => `${item.where} was present and then not.`);
     const { adopt, outcome } = decide(item, state, ctx);
+    // An update restates the attributes with everything else; any other outcome but a retired row still takes them, link by link.
+    if (outcome.kind !== 'update' && outcome.kind !== 'retired') {
+      const { write, kept } = linkAttributes(item, state, ctx);
+      await writeLinkAttributes(tx, write);
+      report.kept.push(...kept.map((link) => ({ where: item.where, ...link })));
+    }
     if (adopt) {
       await adoptHash(tx, id, adopt.hash);
       report.adopted.push({ where: item.where, differs: adopt.differs });

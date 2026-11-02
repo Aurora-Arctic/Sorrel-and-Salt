@@ -448,13 +448,18 @@ admin's "unsourced" filter counts the entry's own links and its forms'.
 Each link also carries its citation's `nameBasis` and `supports`, as the
 entry file (`compendium/ingredients/<nomenclature>/<slug>.md`) writes them,
 `colours` stored as `colors`. The guard still checks `supports` against the
-populated fields before anything is written. A work in `works.ts` that is
+populated fields before anything is written. A work in `works.ts` or `compendium/sources/` that is
 academic says `scholarly: true`, and its `references` row is written with the
-mark; a row already present is never updated, so its mark is set on the site.
-The links are written with the entry, as everything beneath an entry is, and a
-marked file restates a link's two attributes in place when they differ
-([`compendium-seed/README.md`](compendium-seed/README.md), "Write-once,
-and how a correction lands").
+mark. The links are written with the entry, as everything beneath an entry is.
+
+The three attributes say where content comes from; they are not content, so no
+`seedUpdate` mark and no person's work on the entry holds them back. Every run
+restates each present link's two attributes where they differ from its file,
+and each present source's `scholarly` mark, either way, where it differs from
+its work, unless a person edited that link or that source: a person's edit is
+kept, and the run prints a `KEPT` line for it without failing
+([`compendium-seed/README.md`](compendium-seed/README.md), "Citation
+attributes on a present entry").
 
 ## Reference service details
 

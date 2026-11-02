@@ -287,6 +287,12 @@ function planVariants(entry: SeedCompendiumEntry, state: PresentState, picks: Pi
 /** A key over the columns a child's unique index folds, so the file's rows and the live rows meet. */
 const keyed = (...parts: (string | null | undefined)[]) => parts.map((p) => p ?? '').join('|');
 
+interface Restate {
+  row: LinkRow;
+  cite: Citing;
+  differs: ('nameBasis' | 'supports')[];
+}
+
 interface ChildDiffs {
   folkNames: { insert: { ingredientId: string; name: string }[]; remove: string[] };
   deities: { rename: { id: string; name: string }[]; replace: boolean };
@@ -295,8 +301,11 @@ interface ChildDiffs {
     remove: { ingredientId: string; variantId: string | null; categoryId: string }[];
   };
   substitutes: { insert: ReturnType<typeof substituteRows>; remove: string[] };
-  /** A link whose owner, work and locator match keeps its row; `restate` is one whose name basis or supports differ, rewritten in place. */
-  references: { insert: Citing[]; remove: string[]; restate: { id: string; cite: Citing }[] };
+  /**
+   * A link whose owner, work and locator match keeps its row. `restate` is one whose name basis or supports differ: provenance, not content,
+   * so it is left out of `differs` and written by `linkAttributes` whatever the entry's outcome.
+   */
+  references: { insert: Citing[]; remove: string[]; restate: Restate[] };
   differs: string[];
 }
 
@@ -445,17 +454,19 @@ function childDiffs(
       cite,
     ]),
   );
-  const restate = liveLinks.flatMap((row) => {
+  const restate = liveLinks.flatMap((row): Restate[] => {
     const cite = wantedByKey.get(
       keyed(ownerKey(row), ctx.referenceTexts.get(row.referenceId) ?? row.referenceId, row.locator),
     );
     if (cite === undefined) return [];
     const { nameBasis, supports } = linkColumns(cite.citation);
-    return same(row.nameBasis, nameBasis) && same(row.supports, supports)
-      ? []
-      : [{ id: row.id, cite }];
+    const differs = [
+      ...(same(row.nameBasis, nameBasis) ? [] : (['nameBasis'] as const)),
+      ...(same(row.supports, supports) ? [] : (['supports'] as const)),
+    ];
+    return differs.length === 0 ? [] : [{ row, cite, differs }];
   });
-  if (links.insert.length > 0 || links.remove.length > 0 || restate.length > 0) {
+  if (links.insert.length > 0 || links.remove.length > 0) {
     differs.push('references');
   }
 
@@ -710,13 +721,7 @@ export async function applyUpdate(
       .set(tombstone())
       .where(inArray(referenceLinks.id, children.references.remove));
   }
-  for (const { id, cite } of children.references.restate) {
-    const { nameBasis, supports } = linkColumns(cite.citation);
-    await tx
-      .update(referenceLinks)
-      .set(applyAudit('update', { nameBasis, supports }, BOOTSTRAP_SESSION))
-      .where(eq(referenceLinks.id, id));
-  }
+  await writeLinkAttributes(tx, children.references.restate);
   // A source the run has not met is written here, never deleted: a reference
   // row is a work, and a link that goes is only the link.
   const referenceIds = await insertMissingReferences(
@@ -731,4 +736,78 @@ export async function applyUpdate(
       return referenceId ? [{ referenceId, ...owner, ...linkColumns(citation) }] : [];
     }),
   );
+}
+
+/** What `linkAttributes` found: the links the seed writes, and the ones a person edited, kept. */
+export interface LinkAttributes {
+  write: Restate[];
+  kept: { source: string; differs: string[] }[];
+}
+
+/**
+ * Each matched link whose name basis or supports differ from the file, decided per link rather than per entry: provenance, not content,
+ * so neither the mark nor a person's work on the entry holds it back. A link no person edited takes the file's; one a person edited is kept.
+ */
+export function linkAttributes(
+  item: SeedItem,
+  state: PresentState,
+  ctx: UpdateContext,
+): LinkAttributes {
+  const { matched } = planVariants(item.entry, state, ctx.picks);
+  const variantIdOf = new Map([...matched].map(([variant, row]) => [variant, row.id] as const));
+  const { restate } = childDiffs(item, state, ctx, variantIdOf).references;
+  return {
+    write: restate.filter(({ row }) => !touched(row)),
+    kept: restate
+      .filter(({ row }) => touched(row))
+      .map(({ cite, differs }) => ({ source: cite.citation.source, differs })),
+  };
+}
+
+/** Rewrites each link's two attributes in place as the bootstrap user. */
+export async function writeLinkAttributes(
+  tx: SeedTransaction,
+  restate: readonly { row: LinkRow; cite: Citing }[],
+): Promise<void> {
+  for (const { row, cite } of restate) {
+    const { nameBasis, supports } = linkColumns(cite.citation);
+    await tx
+      .update(referenceLinks)
+      .set(applyAudit('update', { nameBasis, supports }, BOOTSTRAP_SESSION))
+      .where(eq(referenceLinks.id, row.id));
+  }
+}
+
+/**
+ * Sets each present source the seed wrote to its work's `scholarly` mark, either way, unless a person edited the row: that one is
+ * kept and returned by handle. A soft-deleted source is left alone. A source two handles name takes the mark if either gives it.
+ */
+export async function restateScholarly(
+  tx: SeedTransaction,
+  works: Record<string, SeedWork>,
+): Promise<{ source: string; differs: string[] }[]> {
+  const wanted = new Map<string, { source: string; scholarly: boolean }>();
+  for (const [source, work] of Object.entries(works)) {
+    const text = citationText(work);
+    const scholarly = work.scholarly === true || wanted.get(text)?.scholarly === true;
+    wanted.set(text, { source: wanted.get(text)?.source ?? source, scholarly });
+  }
+  const rows = await tx
+    .select()
+    .from(references)
+    .where(and(isNull(references.workspaceId), isNull(references.deletedAt)));
+  const kept: { source: string; differs: string[] }[] = [];
+  for (const row of rows) {
+    const work = row.seedKey === null ? undefined : wanted.get(row.seedKey);
+    if (work === undefined || row.scholarly === work.scholarly) continue;
+    if (touched(row)) {
+      kept.push({ source: work.source, differs: ['scholarly'] });
+      continue;
+    }
+    await tx
+      .update(references)
+      .set(applyAudit('update', { scholarly: work.scholarly }, BOOTSTRAP_SESSION))
+      .where(eq(references.id, row.id));
+  }
+  return kept;
 }
