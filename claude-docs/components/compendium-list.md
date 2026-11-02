@@ -144,7 +144,24 @@ The admin list filters by a curator's review mark: the panel's Reviewed chip ([`
 
 ## The sort
 
-Above the table, a navigation landmark named "Sort" offers two orders as links. The first is the default: "Name" with no search, "Best Match" under one. The second is "Sourcing Score (Lowest First)", which writes `?sort=sourcing_score` and lists the worst-sourced entries first, ties broken by name. The current order carries `aria-current="page"`. Each link keeps the filter and drops the page cursor and any open modal, so a change of order starts at page one. The order is a curator's: the service refuses `sort` from anyone else, and the public list and a coven's list carry no `sort` (`publicParams` and `COVEN_PARAMS` leave it out). The score itself is computed in SQL ([`../db/compendium-read.md`](../db/compendium-read.md), "The sourcing sort"), and an entry's own score shows in its edit dialog ([`sourcing-score.md`](sourcing-score.md)).
+The admin list sorts from two column headings, Name and Sourcing Score, each a link inside its heading ([`data-table.md`](data-table.md), "Sortable columns"). Clicking a heading sorts by it; clicking the heading already sorted reverses the order. The first click sorts Name A to Z and Sourcing Score lowest first, so the worst-sourced entries come first, ties broken by name. With no search the list starts sorted by name, A to Z, and the Name heading is marked. Under a search the default order is Best Match and no heading is marked; Best Match comes back by clearing the search, or from the phone select.
+
+The order is in the URL:
+
+| URL                               | Order                         |
+| --------------------------------- | ----------------------------- |
+| no `sort`, no search              | Name, A to Z                  |
+| no `sort`, a search               | Best Match                    |
+| `?sort=name`                      | Name, A to Z                  |
+| `?sort=name&order=desc`           | Name, Z to A                  |
+| `?sort=sourcing_score`            | Sourcing Score, lowest first  |
+| `?sort=sourcing_score&order=desc` | Sourcing Score, highest first |
+
+`order` reverses whatever `sort` names, so a link to the first direction needs one parameter and an old `?sort=sourcing_score` link keeps meaning lowest first. An unknown value of either reads as absent. Each link keeps the filter and drops the page cursor and any open modal, so a change of order starts at page one.
+
+A Sourcing Score column, after Categories, shows each entry's score, read in the same SQL query as the rows; the admin page asks for it with `withSourcingScore`. At phone width, where the rows become cards and the headings are hidden, a Sort By select above the cards offers each column in each direction ("Name, Z to A"), with Best Match first under a search; choosing one navigates. The select is drawn only once JavaScript runs, so without it the headings still sort on a wide screen.
+
+The score sort and the score are a curator's: the service refuses either from anyone else, and the public list and a coven's list carry no `sort` and no `order` (`publicParams` and `COVEN_PARAMS` leave them out). The score itself is computed in SQL ([`../db/compendium-read.md`](../db/compendium-read.md), "The sourcing sort"), and an entry's own score and the facts behind it show in its edit dialog ([`sourcing-score.md`](sourcing-score.md)).
 
 ## The panel's counts
 
@@ -181,7 +198,7 @@ mineral's or a chemical's name is not, and the row does not carry its kind.
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/CompendiumList/index.stories.tsx), `Ingredients / Compendium List`: one story, `States`, with a control that chooses Default (a middle page), First Page, Filtered, Chosen Values Counted, No Matches, Empty, Zodiac And Bodies Chosen, Without Forms, Match All Categories, Last Page, Single Page and Filter Panel Open. At 375px, from the toolbar viewport menu, every row is a card and Filtered shows the Filters button and Clear All. The filter shows a deity, categories, forms and elements. Every state is the page as `/admin/compendium` draws it: the admin layout's frame with the Compendium page current in its nav, then a `main` holding the page header with Add Ingredient, then the list. The filter reaches `/admin/compendium`, which the workshop does not serve. Render-only, no test ids, no snapshots.
+[`index.stories.tsx`](../../src/components/CompendiumList/index.stories.tsx), `Ingredients / Compendium List`: one story, `States`, with a control that chooses Default (a middle page), First Page, Filtered, Chosen Values Counted, No Matches, Empty, Zodiac And Bodies Chosen, Without Forms, Match All Categories, Last Page, Single Page, Filter Panel Open, Sorted By Sourcing Score, Sorted By Name, Z to A, and Sort At Phone Width (24rem wide, under a search, with the Sort By select). At 375px, from the toolbar viewport menu, every row is a card and Filtered shows the Filters button and Clear All. The filter shows a deity, categories, forms and elements. Every state is the page as `/admin/compendium` draws it: the admin layout's frame with the Compendium page current in its nav, then a `main` holding the page header with Add Ingredient, then the list. The filter reaches `/admin/compendium`, which the workshop does not serve. Render-only, no test ids, no snapshots.
 
 ## Testing
 

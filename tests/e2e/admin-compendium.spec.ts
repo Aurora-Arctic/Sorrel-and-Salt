@@ -1250,35 +1250,47 @@ test('No Form lists the entries with no form, counts them, and lives in the addr
   await expect(page).not.toHaveURL(/withoutForms/);
 });
 
-test('the sourcing score sort lists lowest first, and an entry opened from it shows its score', async ({
+test('the Sourcing Score heading sorts lowest first, then highest first, and each row shows the score its edit dialog does', async ({
   page,
 }) => {
   await signInAs(page, 'sort-admin@admin-compendium.test', ['discord'], 'admin');
   await page.goto('/admin/compendium');
-  const sort = page.getByRole('navigation', { name: 'Sort' });
-  // The precondition: the list starts in its default order, by name.
-  await expect(sort.getByRole('link', { name: 'Name' })).toHaveAttribute('aria-current', 'page');
+  const nameHead = page.getByRole('columnheader', { name: /^Name/ });
+  const scoreHead = page.getByRole('columnheader', { name: /^Sourcing Score/ });
+  // The precondition: the list starts in its default order, by name, with the score unsorted.
+  await expect(nameHead).toHaveAttribute('aria-sort', 'ascending');
+  await expect(scoreHead).not.toHaveAttribute('aria-sort');
 
-  await sort.getByRole('link', { name: 'Sourcing Score (Lowest First)' }).click();
+  await scoreHead.getByRole('link').click();
   await expect(page).toHaveURL(/[?&]sort=sourcing_score(&|$)/);
-  await expect(sort.getByRole('link', { name: 'Sourcing Score (Lowest First)' })).toHaveAttribute(
-    'aria-current',
-    'page',
-  );
+  await expect(scoreHead).toHaveAttribute('aria-sort', 'ascending');
+  await expect(nameHead).not.toHaveAttribute('aria-sort');
 
-  // The first two rows' scores, read from each one's edit dialog, come lowest first.
-  const scoreOfRow = async (index: number): Promise<number> => {
-    const row = page.getByRole('table').getByRole('row').nth(index);
-    await row.getByRole('link', { name: /^Edit / }).click();
-    const dialog = page.getByRole('dialog', { name: /^Edit Ingredient, / });
-    const heading = dialog.getByRole('heading', { name: /^Sourcing Score: -?\d+$/ });
-    await expect(heading).toBeVisible();
-    const score = Number((await heading.textContent())!.replace('Sourcing Score: ', ''));
-    await page.goBack();
-    await expect(dialog).toHaveCount(0);
-    return score;
+  const scoreColumn = async () =>
+    (await page.getByRole('columnheader').allTextContents()).findIndex((text) =>
+      text.startsWith('Sourcing Score'),
+    );
+  const cellScore = async (index: number): Promise<number> => {
+    const column = await scoreColumn();
+    const cell = page.getByRole('table').getByRole('row').nth(index).getByRole('cell').nth(column);
+    return Number(await cell.textContent());
   };
-  const first = await scoreOfRow(1);
-  const second = await scoreOfRow(2);
-  expect(first).toBeLessThanOrEqual(second);
+  // The first row's score, read from its edit dialog, matches its cell.
+  const row = page.getByRole('table').getByRole('row').nth(1);
+  await row.getByRole('link', { name: /^Edit / }).click();
+  const dialog = page.getByRole('dialog', { name: /^Edit Ingredient, / });
+  const heading = dialog.getByRole('heading', { name: /^Sourcing Score: -?\d+$/ });
+  await expect(heading).toBeVisible();
+  const fromDialog = Number((await heading.textContent())!.replace('Sourcing Score: ', ''));
+  await page.goBack();
+  await expect(dialog).toHaveCount(0);
+  expect(await cellScore(1)).toBe(fromDialog);
+  expect(await cellScore(1)).toBeLessThanOrEqual(await cellScore(2));
+
+  // The heading already sorted reverses the order.
+  await scoreHead.getByRole('link').click();
+  await expect(page).toHaveURL(/[?&]order=desc(&|$)/);
+  await expect(scoreHead).toHaveAttribute('aria-sort', 'descending');
+  expect(await cellScore(1)).toBeGreaterThanOrEqual(await cellScore(2));
+  await assertNoAccessibilityViolations(page);
 });
