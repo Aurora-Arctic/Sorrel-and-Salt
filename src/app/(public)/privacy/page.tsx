@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 /** The day this text last changed. */
-const UPDATED_ON = new Date('2026-11-01T00:00:00Z');
+const UPDATED_ON = new Date('2026-11-02T00:00:00Z');
 
 /** Who may see each kind of data: one row per kind, one cell per role, each cell drawn from the service that enforces it. */
 const ACCESS_ROWS: AccessRow[] = [
@@ -257,6 +257,14 @@ export default function PrivacyPolicyPage() {
         after a "?" is dropped. A curator sees only requests an admin marked for curators or
         assigned to them, without the requestor's email or the coven named in the page address. An
         admin sees them with the requestor's email.
+      </p>
+
+      <h3>Time-Outs and Pauses</h3>
+      <p>
+        When an admin times you out of support, pauses your access to the site, or a coven owner
+        pauses your access to their coven, a record is kept about you. It holds the end date if
+        there is one, who set it, and the note they wrote. You are emailed once when one is set, at
+        the address on your account. Lifting one sends no email.
       </p>
 
       <h2>Who Sees It</h2>
