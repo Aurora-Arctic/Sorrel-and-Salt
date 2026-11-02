@@ -106,6 +106,8 @@ navigating.
 
 `tests/components/UserDetail/access-pause-panel.test.tsx`: no Site Access section when no pauses are passed; a dated pause and an open-ended one, each sending nothing until confirmed and then the user, the end (or null) and the trimmed note; Pause Access held until a day is picked; a standing pause showing Lift Pause in place of the form and lifting once confirmed; lifted and run-out pauses listed as earlier ones with who set and who lifted each.
 
+`tests/e2e/access-pause.spec.ts` walks it in a browser: an admin sets an open-ended pause from the modal (axe with the question open), the user's password sign-in lands on `/access-paused` with no session made (axe there), the admin lifts the pause, which moves to Earlier Pauses, and the same sign-in then succeeds.
+
 ## The modal body
 
 The component is the body of the modal that opens over `/admin/users` on a user, or over `/admin/support` on a sender. It shows the facts the users table holds about them, read-only, then the covens they belong to and, where impersonation is registered, the action to act as them. The row's Grant or Revoke and Approve or Revoke sit beside the facts they change, and each asks over this modal rather than opening another.
