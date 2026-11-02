@@ -2,8 +2,10 @@ import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { type Query, QueryClient, queryOptions } from '@tanstack/react-query';
 import { type GraphQLFormattedError, getOperationAST, print } from 'graphql';
 import { CLIENT_HEADER, CLIENT_HEADER_VALUE } from '../graphql/csrf';
+import { ACCESS_PAUSED_CODE, covenPausedPath, covenSlugOf } from './access-paused';
 import { apiPath } from './api-path';
 import { GraphQLClientError, StaleWriteError } from './graphql-client-error';
+import { reportLeaving } from './navigation/store';
 import type { VariablesArg } from './types';
 
 // The browser's half of the API: a small fetch wrapper sends a codegen document and
@@ -21,6 +23,18 @@ const MAX_RETRIES = 2;
 
 /** What Yoga sends back, as far as the client reads it. */
 type GraphQLBody<TResult> = { data?: TResult | null; errors?: readonly GraphQLFormattedError[] };
+
+/**
+ * Leaves a coven page for its paused page when an answer says the viewer's access to that coven is paused, as the
+ * coven's layout would on the next load. A full navigation, since the paused page sits outside the coven's layout.
+ */
+function leaveIfCovenPaused(errors: readonly GraphQLFormattedError[] | undefined): void {
+  if (!errors?.some(({ extensions }) => extensions?.code === ACCESS_PAUSED_CODE)) return;
+  const slug = covenSlugOf(new URL(window.location.href).pathname);
+  if (slug === undefined) return;
+  reportLeaving();
+  window.location.assign(covenPausedPath(slug));
+}
 
 async function send<TResult, TVariables extends object>(
   document: TypedDocumentNode<TResult, TVariables>,
@@ -65,6 +79,7 @@ async function send<TResult, TVariables extends object>(
     if (typeof currentRevision === 'number') {
       throw new StaleWriteError({ status: response.status, errors: body?.errors, currentRevision });
     }
+    leaveIfCovenPaused(body?.errors);
     throw new GraphQLClientError({ status: response.status, errors: body?.errors });
   }
   return body.data;
