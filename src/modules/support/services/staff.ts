@@ -16,6 +16,7 @@ import type {
 } from '../../../db/repository';
 import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
+import { SYSTEM_ACTOR_ID } from '../../../lib/system-actor';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { RowId, parseInput } from '../../../lib/validation';
 import { assertSiteAdmin } from '../../identity';
@@ -108,6 +109,20 @@ export async function requestToAnswer(
     throw new Forbidden(`A curator may ${doing} only a request assigned to them`);
   }
   return row;
+}
+
+/**
+ * Refuses a note or a reply on an anonymised request, one whose sender was anonymised and which the System account now owns.
+ * It is never reopened, so there is no one to write to and nothing more to record.
+ *
+ * @throws {Forbidden} the request is anonymised.
+ */
+export function refuseAnonymised(request: SupportRequestRow): void {
+  if (request.createdBy === SYSTEM_ACTOR_ID) {
+    throw new Forbidden(
+      'This request is anonymised and takes no notes or replies; its sender is no longer on record',
+    );
+  }
 }
 
 async function change(

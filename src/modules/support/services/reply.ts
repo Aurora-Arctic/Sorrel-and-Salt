@@ -8,7 +8,7 @@ import { supportReplies } from '../schema/support-replies';
 import { supportRequests } from '../schema/support-requests';
 import type { SupportNotifier, SupportReplyRow } from '../types';
 import { SupportMessage } from '../validation/support';
-import { requestToAnswer } from './staff';
+import { refuseAnonymised, requestToAnswer } from './staff';
 
 /**
  * Replies to a request and tells its sender one is waiting. An admin may reply to any request, a curator only to one assigned
@@ -16,7 +16,7 @@ import { requestToAnswer } from './staff';
  * The notice carries no reply text: the reply is read on the sender's support page, behind their sign-in.
  *
  * @throws {Forbidden} the session is neither a curator nor an admin, or a curator and the request is not assigned to them, or
- * the reply is marked waiting on the sender and the request is not open, or the request is closed (nothing is saved).
+ * the reply is marked waiting on the sender and the request is not open, or the request is closed or anonymised (nothing is saved).
  * @throws {NotFound} the reader may not see a request with this id.
  * @throws {ValidationError} the body is empty or over 4,000 characters.
  */
@@ -28,6 +28,7 @@ export async function replyToSupportRequest(
   options: { waitingOnSender?: boolean } = {},
 ): Promise<SupportReplyRow> {
   const request = await requestToAnswer(session, requestId, 'reply to');
+  refuseAnonymised(request);
   if (request.status === 'closed') {
     throw new Forbidden(
       'This request is closed and takes no more replies; the sender\u2019s next message opens a new request linked to it',
