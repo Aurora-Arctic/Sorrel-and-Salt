@@ -48,7 +48,7 @@ const SupportSenderReplyBox = ({
       onSubmit={(event) => void submit(event)}
     >
       {timedOut && (
-        <Notice kind="caution" quiet>
+        <Notice kind="warn" quiet>
           {timedOut.until
             ? `You cannot reply until ${utcMinute(timedOut.until)}.`
             : 'You cannot reply: you are timed out with no end date.'}
