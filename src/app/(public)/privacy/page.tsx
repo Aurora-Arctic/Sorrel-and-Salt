@@ -200,7 +200,10 @@ export default function PrivacyPolicyPage() {
         A support request keeps what you chose to write (its subject and message), the page you sent
         it from, the error code if you sent it from an error page, its status, who it is assigned to
         and any replies. A request sent without an account keeps the email address you gave so that
-        a reply can reach you. A time-out an admin sets on a sender is kept as history.
+        a reply can reach you. A time-out an admin sets on a sender is kept as history. Before a
+        request is saved, the page address is cleaned: an invitation code in it is replaced and
+        anything after a "?" is dropped. A curator reading a request never sees the sender's email
+        address or the coven named in the page address; an admin sees both.
       </p>
 
       <h2>Who Processes It</h2>
