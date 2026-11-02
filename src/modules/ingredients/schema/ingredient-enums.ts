@@ -113,6 +113,13 @@ export type IngredientSource = (typeof INGREDIENT_SOURCES)[number];
 export const COMPENDIUM_LISTINGS = ['shown', 'hidden', 'all'] as const;
 export type CompendiumListing = (typeof COMPENDIUM_LISTINGS)[number];
 
-/** The orders a curator's compendium list may take besides its default, by name or by best match: the sourcing score, lowest first. */
-export const COMPENDIUM_SORTS = ['sourcing_score'] as const;
+/**
+ * The columns the compendium list may be sorted on, overriding its default of by name or, under a query, by best match. Name sorts A to Z
+ * and the sourcing score lowest first, each the other way under the `desc` order. The sourcing score is a curator's alone.
+ */
+export const COMPENDIUM_SORTS = ['name', 'sourcing_score'] as const;
 export type CompendiumSort = (typeof COMPENDIUM_SORTS)[number];
+
+/** Which way a compendium sort runs: `asc` is its first-click direction, `desc` the reverse. */
+export const COMPENDIUM_ORDERS = ['asc', 'desc'] as const;
+export type CompendiumOrder = (typeof COMPENDIUM_ORDERS)[number];
