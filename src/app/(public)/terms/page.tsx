@@ -127,11 +127,44 @@ export default function TermsOfUsePage() {
         take any right from you that the law gives you.
       </p>
 
+      <h2>What the Site Is Not Liable For</h2>
+      <p>
+        This section limits what you could claim from the people who run the site. It is written to
+        be read, not hidden, so here is what it does and what it does not do.
+      </p>
+      <ul>
+        <li>
+          <strong>Not liable for:</strong> the site being unavailable, slow or changed; anything you
+          lose because a page was wrong, incomplete or out of date; anything you do with what you
+          read here, including with any ingredient; and anything a coven's members write to one
+          another.
+        </li>
+        <li>
+          <strong>Up to what point:</strong> the site charges nothing, so the most the people who
+          run it will owe you for any claim about it is what you paid them for it, which is nothing.
+        </li>
+        <li>
+          <strong>What this cannot remove:</strong> any liability the law does not let a site
+          exclude, and any right the law gives you that it does not let you give up. Washington's
+          Consumer Protection Act, for instance, declares unfair or deceptive acts in trade unlawful
+          and lets a person injured by one sue; these terms do not take that away. Washington law
+          also treats a limitation of damages as invalid where it is unconscionable, that is, so
+          one-sided that a court will not enforce it, and this one is meant to be read as the narrow
+          limit it says it is and no more.
+        </li>
+      </ul>
+
       <h2>Which Law Applies</h2>
       <p>
         The site is run from the State of Washington, in the United States, and these terms are
         governed by the law of that state. Nothing in them takes away a protection that the law of
         the place you live gives you and does not let you give up.
+      </p>
+      <p>
+        If a dispute about these terms or the site has to go to court, it goes to the state courts
+        of Washington in Spokane County, where the Spokane County Superior Court sits, and you and
+        the site's owner each agree to that court hearing it. Washington's venue law already lets an
+        action be brought in the county where the defendant lives, and the owner lives there.
       </p>
 
       <h2>Leaving</h2>
@@ -165,6 +198,42 @@ export default function TermsOfUsePage() {
 
       <h2>Sources</h2>
       <ol className="document-page__sources">
+        <li>
+          Washington State Legislature. <em>Revised Code of Washington</em>, 19.86.020, "Unfair
+          competition, practices, declared unlawful", and 19.86.090, "Civil action for damages".
+          Accessed 2 November 2026.{' '}
+          <a href="https://app.leg.wa.gov/RCW/default.aspx?cite=19.86.020">
+            https://app.leg.wa.gov/RCW/default.aspx?cite=19.86.020
+          </a>
+          ,{' '}
+          <a href="https://app.leg.wa.gov/RCW/default.aspx?cite=19.86.090">
+            https://app.leg.wa.gov/RCW/default.aspx?cite=19.86.090
+          </a>
+          .
+        </li>
+        <li>
+          Washington State Legislature. <em>Revised Code of Washington</em>, 62A.2-719, "Contractual
+          modification or limitation of remedy". Accessed 2 November 2026.{' '}
+          <a href="https://app.leg.wa.gov/RCW/default.aspx?cite=62A.2-719">
+            https://app.leg.wa.gov/RCW/default.aspx?cite=62A.2-719
+          </a>
+          .
+        </li>
+        <li>
+          Washington State Legislature. <em>Revised Code of Washington</em>, 4.12.025, "Action to be
+          brought where defendant resides". Accessed 2 November 2026.{' '}
+          <a href="https://app.leg.wa.gov/RCW/default.aspx?cite=4.12.025">
+            https://app.leg.wa.gov/RCW/default.aspx?cite=4.12.025
+          </a>
+          .
+        </li>
+        <li>
+          Washington Courts. "Court Directory: Spokane County." Accessed 2 November 2026.{' '}
+          <a href="https://www.courts.wa.gov/court_dir/orgs/291.html">
+            https://www.courts.wa.gov/court_dir/orgs/291.html
+          </a>
+          .
+        </li>
         <li>
           United States. <em>Children's Online Privacy Protection Act</em>, 15 U.S.C. § 6501
           (Definitions). Legal Information Institute, Cornell Law School. Accessed 2 November 2026.{' '}
