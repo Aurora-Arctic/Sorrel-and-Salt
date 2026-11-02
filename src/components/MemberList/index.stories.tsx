@@ -7,8 +7,8 @@ import type { MemberListEntry } from './types';
 
 // Render-only; behaviour is asserted in tests/components/MemberList. A member's
 // view leaves the addresses out; an owner's draws them. The controls are plain
-// buttons styled as the real controls: Change Role and Remove both quiet, the red
-// kept for the confirm in Remove's question.
+// buttons styled as the real controls: Change Role, Pause Access, Lift Pause and Remove all quiet, the red
+// kept for the confirm in each question. The viewer's row shows a standing pause.
 const meta = {
   title: 'Coven / Member List',
 } satisfies Meta;
@@ -60,6 +60,21 @@ const withActionsNode = (
         Change Role
       </button>
     )}
+    accessAction={(member) =>
+      member.role === 'owner' ? null : member.role === 'viewer' ? (
+        <span className="member-list__access">
+          <span className="badge badge--caution">Paused</span>
+          <span className="member-list__fact">with no end date</span>
+          <button type="button" className="btn btn--quiet btn--small">
+            Lift Pause
+          </button>
+        </span>
+      ) : (
+        <button type="button" className="btn btn--quiet btn--small">
+          Pause Access
+        </button>
+      )
+    }
     removeAction={(member) =>
       member.role === 'owner' ? null : (
         <button type="button" className="btn btn--quiet btn--small">

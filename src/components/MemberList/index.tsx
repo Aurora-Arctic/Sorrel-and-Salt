@@ -14,7 +14,7 @@ import './index.scss';
 // no permission check (claude-docs/components/member-list.md).
 
 /**
- * The columns: name, address where asked, role with its change, then joined, invited by and Updated; Remove is last, ruled in red, and only when the page passes it.
+ * The columns: name, address where asked, role with its change, then joined, invited by, Updated and the access pause where asked; Remove is last, ruled in red, and only when the page passes it.
  * (claude-docs/components/member-list.md, "Columns").
  */
 const columns = (
@@ -23,7 +23,8 @@ const columns = (
     showEmail,
     roleAction,
     removeAction,
-  }: Pick<MemberListProps, 'showEmail' | 'roleAction' | 'removeAction'>,
+    accessAction,
+  }: Pick<MemberListProps, 'showEmail' | 'roleAction' | 'removeAction' | 'accessAction'>,
 ): readonly (StackColumn<MemberListEntry> | false)[] => [
   {
     heading: 'Name',
@@ -73,6 +74,10 @@ const columns = (
     cell: (member) => member.invitedBy && <span>{member.invitedBy}</span>,
   },
   updatedColumn('member-list__fact'),
+  Boolean(accessAction) && {
+    heading: 'Access',
+    cell: (member) => accessAction?.(member),
+  },
   Boolean(removeAction) && {
     heading: 'Remove',
     action: 'corner',
@@ -88,11 +93,12 @@ const MemberList = ({
   showEmail,
   roleAction,
   removeAction,
+  accessAction,
 }: MemberListProps): ReactElement => (
   <div className="member-list">
     <StackTable
       aria-label="Members"
-      columns={columns(currentUserId, { showEmail, roleAction, removeAction })}
+      columns={columns(currentUserId, { showEmail, roleAction, removeAction, accessAction })}
       rows={members}
       rowKey={(member) => member.userId}
       empty={emptyList('members')}

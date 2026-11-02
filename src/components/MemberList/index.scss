@@ -53,3 +53,8 @@
 .member-list__remove {
   @include sticky-action-column;
 }
+
+// A standing pause's badge and end, then Lift Pause, on one line as the role and its change are.
+.member-list__access {
+  @include value-and-control;
+}

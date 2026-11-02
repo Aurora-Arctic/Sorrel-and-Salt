@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import ListFrame, { ListBody } from '../../../../../../components/ListFrame';
 import MemberList from '../../../../../../components/MemberList';
+import PauseControl from '../../../../../../components/MemberList/pause-control';
 import RemoveControl from '../../../../../../components/MemberList/remove-control';
 import RoleControl from '../../../../../../components/MemberList/role-control';
 import type { MemberListEntry } from '../../../../../../components/MemberList/types';
@@ -13,7 +14,13 @@ import { requireCovenMembership, requireSession } from '../../../../../../lib/re
 import { listHref, pagerHrefs } from '../../../../../../lib/list-href';
 import { readPageCursors } from '../../../../../../lib/numbered-page';
 import { displayNamesOf } from '@/modules/identity';
-import { listMembers, memberEmails, memberRoster, rolePermits } from '@/modules/coven';
+import {
+  listMembers,
+  memberEmails,
+  memberRoster,
+  rolePermits,
+  standingMemberPauses,
+} from '@/modules/coven';
 import type { CovenLayoutParams } from '../../types';
 import type { MembersPageProps } from './types';
 
@@ -85,6 +92,16 @@ export default async function MembersPage({
 
   const canChangeRoles = rolePermits(membership.role, { member: ['update'] });
   const canRemove = rolePermits(membership.role, { member: ['remove'] });
+  const canPause = rolePermits(membership.role, { member: ['pause'] });
+  // The pauses standing on this page's members, in one read, and only for a role that may set them.
+  const pauses = canPause
+    ? await standingMemberPauses(
+        session,
+        workspace.id,
+        page.edges.map(({ node }) => node.userId),
+      )
+    : [];
+  const pauseOf = (id: string) => pauses.find(({ userId }) => userId === id);
 
   return (
     <>
@@ -113,6 +130,24 @@ export default async function MembersPage({
                       currentRole={member.role}
                     />
                   )
+                : undefined
+            }
+            // A member's or a viewer's row only: an owner's access is never paused.
+            accessAction={
+              canPause
+                ? (member) =>
+                    member.role !== 'owner' && (
+                      <PauseControl
+                        workspaceId={workspace.id}
+                        userId={member.userId}
+                        name={member.name}
+                        standing={
+                          pauseOf(member.userId)
+                            ? { until: pauseOf(member.userId)?.until ?? null }
+                            : null
+                        }
+                      />
+                    )
                 : undefined
             }
             // Another's row only: leaving is the coven page's, for every role.

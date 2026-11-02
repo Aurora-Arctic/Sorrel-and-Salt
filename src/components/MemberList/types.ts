@@ -40,6 +40,11 @@ export interface MemberListProps {
    * which is how a member who cannot remove anyone sees it.
    */
   removeAction?: (member: MemberListEntry) => ReactNode;
+  /**
+   * The access pause on each row — Pause Access, or Paused with Lift Pause — in a column of its own, given the member it
+   * is for; it may return nothing for a row with none. When absent, the list has no such column.
+   */
+  accessAction?: (member: MemberListEntry) => ReactNode;
 }
 
 /** The role change a member's row offers an owner. */
@@ -58,4 +63,14 @@ export interface RemoveControlProps {
   /** The member to remove. */
   userId: string;
   name: string;
+}
+
+/** The access pause a member's row offers an owner. */
+export interface PauseControlProps {
+  workspaceId: string;
+  /** The member the pause is for. */
+  userId: string;
+  name: string;
+  /** The pause that stands on them now, with its end or null for none; null while their access is open. */
+  standing: { until: Date | null } | null;
 }

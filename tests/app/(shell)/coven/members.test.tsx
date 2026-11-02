@@ -18,10 +18,12 @@ vi.mock('@/lib/request-session', () => ({ requireCovenMembership, requireSession
 const listMembers = vi.fn();
 const memberRoster = vi.fn();
 const memberEmails = vi.fn();
+const standingMemberPauses = vi.fn();
 vi.mock('@/modules/coven', async () => ({
   listMembers,
   memberEmails,
   memberRoster,
+  standingMemberPauses,
   rolePermits: (
     await vi.importActual<typeof import('@/modules/coven/services/access-control')>(
       '@/modules/coven/services/access-control',
@@ -60,6 +62,7 @@ beforeEach(() => {
   memberEmails.mockImplementation(async (_session: unknown, _workspaceId: string, ids: string[]) =>
     ids.map((userId) => ({ userId, address: `${userId}@testwort.test` })),
   );
+  standingMemberPauses.mockResolvedValue([{ userId: 'u-viewer', until: null }]);
   memberRoster.mockImplementation(async () => SEATS.map(([userId, role]) => ({ userId, role })));
   listMembers.mockImplementation(async () =>
     SEATS.map(([userId, role], index) => ({
@@ -169,5 +172,35 @@ describe('the /coven/[slug]/members page', () => {
 
     expect(memberEmails).not.toHaveBeenCalled();
     expect(screen.getByRole('table', { name: 'Members' })).not.toHaveTextContent('@testwort.test');
+  });
+
+  it("gives an owner Pause Access on a member's row, Lift Pause on a paused viewer's, and neither on an owner's", async () => {
+    await render_('owner');
+
+    expect(standingMemberPauses).toHaveBeenCalledWith(expect.anything(), 'w', [
+      'u-owner',
+      'u-member',
+      'u-viewer',
+    ]);
+    expect(
+      screen.getByRole('button', { name: 'Pause Access for Name of u-member' }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: 'Lift Pause for Name of u-viewer' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Pause Access for Name of u-viewer' })).toBeNull();
+    // Why the owner's row could have had one: the owner's row is drawn, with its own Change Role.
+    expect(
+      screen.getByRole('button', { name: 'Change Role for Name of u-owner' }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Pause Access for Name of u-owner' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Lift Pause for Name of u-owner' })).toBeNull();
+  });
+
+  it('offers a member no pause controls and reads no pauses', async () => {
+    await render_('member');
+
+    expect(standingMemberPauses).not.toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: /^(Pause Access|Lift Pause)/ })).toBeNull();
   });
 });
