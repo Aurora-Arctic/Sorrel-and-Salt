@@ -349,7 +349,7 @@ export default function PrivacyPolicyPage() {
 
       <h2>Who Can See What</h2>
       <p>
-        Each cell below comes from the rule the site enforces in its services, not from what a
+        Each line below comes from the rule the site enforces in its services, not from what a
         screen happens to show. "Coven" means the coven in which you hold that role; every account
         holds a viewer seat in the demo coven, and every site admin an owner seat there. A developer
         with database access means a person who can read the database directly. Database access is
