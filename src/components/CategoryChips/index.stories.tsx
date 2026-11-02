@@ -52,7 +52,7 @@ export const States: Story = {
             <CategoryChips categories={make(6)} label="Testwort" />
           </div>
         ),
-        // The entry's own chip, then two only its forms carry: outlined, each with a tip naming the forms.
+        // The entry's own chip, then two only its forms carry: dashed, each with a tip naming the forms.
         'On A Form Only': (
           <CategoryChips
             categories={[

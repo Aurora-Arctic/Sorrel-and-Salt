@@ -10,7 +10,7 @@ import './index.scss';
 // An entry's categories as a row of full chips: the first few, then a +N button holding
 // the rest in a panel that floats over the page. Shared by the ingredient card and the
 // admin Compendium table, so the two draw and behave alike. Chips are plain text, not
-// links or toggles; one only a form carries is outlined, with a tip naming the forms. claude-docs/components/category-chips.md.
+// links or toggles; one only a form carries has a dashed border and a tip naming the forms. claude-docs/components/category-chips.md.
 const CategoryChips = ({
   categories,
   label,

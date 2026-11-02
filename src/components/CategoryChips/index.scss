@@ -132,9 +132,8 @@
   @include visually-hidden;
 }
 
-// A category only the entry's forms carry: outlined in its group's colour rather than washed, so it
-// reads apart from the entry's own; its tip names the forms.
+// A category only the entry's forms carry: the plain chip with a dashed border, so it reads apart
+// from the entry's own without outweighing them; its tip names the forms.
 .category-chips .category-chips__form-chip {
-  background-color: transparent;
-  border-color: group-colour();
+  border-style: dashed;
 }
