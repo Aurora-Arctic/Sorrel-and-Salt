@@ -58,8 +58,8 @@ export default function CodeOfEthicsPage() {
       <ul>
         <li>
           Treat everyone here with respect. Racism, misogyny, transphobia, homophobia, ableism,
-          antisemitism, bigotry against any faith or against having none, and every other kind of
-          bigotry have no place on the site, in a coven or in a support request.
+          antisemitism, bigotry against any faith or lack thereof, and every other kind of bigotry
+          have no place on the site, in a coven or in a support request.
         </li>
         <li>
           Read the <Link href="/disclaimer">Disclaimer</Link> before you act on anything the
@@ -79,8 +79,8 @@ export default function CodeOfEthicsPage() {
           sceptical, of every race, nation, faith and none, every gender and every sexuality.
           Transgender, non-binary and queer practitioners are welcome here as themselves, without
           question or qualification. Racism, misogyny, transphobia, homophobia, ableism,
-          antisemitism, bigotry against any faith or against having none, and every other kind of
-          bigotry have no place here.
+          antisemitism, bigotry against any faith or lack thereof, and every other kind of bigotry
+          have no place here.
         </li>
         <li>
           <strong>Witchcraft's history is a gendered history.</strong> Between about 1400 and 1775,
