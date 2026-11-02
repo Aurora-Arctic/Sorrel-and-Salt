@@ -5,6 +5,7 @@ import { type ReactElement, useCallback, useEffect, useId, useRef, useState } fr
 import { chipColors } from '../../lib/chip-colors';
 import { TIP_OPEN_DELAY_MS } from '../InfoTip/constants';
 import CategoryTipChip from './category-tip-chip';
+import { chipTip } from './chip-tip';
 import type { CardCategory, CategoryChipsProps } from './types';
 
 /** The least width the panel takes when the chip row is narrower. */
@@ -156,20 +157,16 @@ const CategoryMore = ({ categories, label, tipOf }: CategoryMoreProps): ReactEle
         aria-hidden={!open}
         className={open ? 'category-more__panel is-open' : 'category-more__panel'}
       >
-        {categories.map(({ category, group }) =>
-          tipOf ? (
-            <CategoryTipChip
-              key={category.id}
-              category={category}
-              group={group}
-              tip={tipOf(category)}
-            />
+        {categories.map((chip) => {
+          const tip = chipTip(chip, tipOf);
+          return tip !== undefined ? (
+            <CategoryTipChip key={chip.category.id} {...chip} tip={tip} />
           ) : (
-            <span key={category.id} className="chip" style={chipColors(group)}>
-              {category.name}
+            <span key={chip.category.id} className="chip" style={chipColors(chip.group)}>
+              {chip.category.name}
             </span>
-          ),
-        )}
+          );
+        })}
       </span>
     </span>
   );

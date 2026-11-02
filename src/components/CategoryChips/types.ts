@@ -4,6 +4,8 @@ import type { GroupColors } from '../../lib/types';
 export interface CardCategory {
   category: { id: string; name: string };
   group: GroupColors;
+  /** The forms that carry it when the entry itself does not, as shown; given, the chip is drawn outlined with a tip naming them. */
+  forms?: readonly string[];
 }
 
 export interface CategoryChipsProps {

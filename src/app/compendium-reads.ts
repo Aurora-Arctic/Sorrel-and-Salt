@@ -10,11 +10,12 @@ import { NotFound } from '../lib/errors';
 import { readNumberedPage } from '../lib/numbered-page';
 import { DEFAULT_PAGE_SIZE, allPages } from '../lib/pagination';
 import type { Session } from '../lib/session';
+import { formLabel } from '@/modules/ingredients/validation/form-label';
 
 import {
   compendiumFacets,
   compendiumFacetsHeldIn,
-  categoriesOf,
+  cardCategoriesOf,
   countCompendium,
   countCompendiumHeldIn,
   getIngredient,
@@ -229,8 +230,8 @@ export const readFacetsHeldIn = cache(async (session: Session, variables: string
 });
 
 /**
- * The categories each of a page's entries is filed under, as a card's chips, with group colours: one
- * batch for the page. A category whose group is gone is left out. A ref naming a coven the session
+ * The categories each of a page's entries shows as a card's chips, with group colours: its own, then those only its live
+ * forms carry, each beside those forms as the screen names them. One batch for the page. A category whose group is gone is left out. A ref naming a coven the session
  * is not in throws `Forbidden`; `heldBy` admits a retired entry its cupboard still names.
  */
 export async function readCardCategoriesOf(
@@ -239,15 +240,17 @@ export async function readCardCategoriesOf(
   heldBy?: CovenMembership['membership'],
 ): Promise<CardCategory[][]> {
   const [answers, known] = await Promise.all([
-    categoriesOf(session, refs, heldBy),
+    cardCategoriesOf(session, refs, heldBy),
     readCategories(),
   ]);
   const byId = new Map(known.map((category) => [category.id, category]));
   return answers.map((answer) => {
     if (answer instanceof Error) throw answer;
-    return answer.flatMap(({ id }) => {
+    return answer.flatMap(({ category: { id }, forms }): CardCategory[] => {
       const category = byId.get(id);
-      return category ? [{ category: { id, name: category.name }, group: category.group }] : [];
+      if (!category) return [];
+      const chip = { category: { id, name: category.name }, group: category.group };
+      return [forms.length > 0 ? { ...chip, forms: forms.map(formLabel) } : chip];
     });
   });
 }

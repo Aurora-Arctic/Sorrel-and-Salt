@@ -219,10 +219,16 @@ export interface CompendiumShareCard {
   name: string;
   /** The formal name, or null when there is none or it only repeats the name. */
   formalName: string | null;
-  /** The entry's own categories, alphabetical, each in its group's dark-theme colour. */
+  /** The entry's own categories, else its live forms', alphabetical, each in its group's dark-theme colour. */
   categories: { name: string; color: string }[];
   /** Each group's dark-theme colour, once, in the order its first category appears. */
   groupColors: string[];
+}
+
+/** A category as a result card shows it: the row, and the stored forms that carry it when the ingredient itself does not (empty for its own). */
+export interface CardCategoryRow {
+  category: CategoryRow;
+  forms: string[];
 }
 
 /** A category as the entry page shows it: the row and the group whose colours its chip takes. */
