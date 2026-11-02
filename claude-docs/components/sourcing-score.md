@@ -14,7 +14,7 @@ The score and its facts come from `sourcingScore` in `src/modules/ingredients/se
 
 ## Where it shows
 
-The compendium's edit dialog (`src/app/(shell)/admin/compendium/compendium-dialog.tsx`), above the form, on the admin compendium and on the public compendium's edit dialog for a curator. `readCompendiumEntry` in `read-entry.ts` reads the score through `readSourcingScore`, which refuses anyone who is not a curator or admin; an add has no score. The section is a landmark named by its heading, so a screen reader can jump to it.
+The compendium's edit dialog (`src/app/(shell)/admin/compendium/compendium-dialog.tsx`), at the start of the form's Sources section (the form's `sourcesIntro` slot), on the admin compendium and on the public compendium's edit dialog for a curator. `readCompendiumEntry` in `read-entry.ts` reads the score through `readSourcingScore`, which refuses anyone who is not a curator or admin; an add has no score. The section is a landmark named by its heading, so a screen reader can jump to it.
 
 ## Testing
 

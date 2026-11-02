@@ -80,6 +80,8 @@ interface IngredientFormCallbacks {
    * curator or admin only. A flip changes the form, Save sends it after the entry, Cancel drops it.
    */
   review?: ReviewOffer;
+  /** Shown at the start of the Sources section, above the first source: the compendium edit dialog's sourcing score. */
+  sourcesIntro?: ReactNode;
 }
 
 /** The Reviewed switch as the page found it: `reviewed` is whether a curator has marked the entry. */

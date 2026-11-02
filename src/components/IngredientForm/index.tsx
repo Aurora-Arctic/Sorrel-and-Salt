@@ -245,6 +245,7 @@ const IngredientForm = ({
   entryHref,
   mayPromote = false,
   review,
+  sourcesIntro,
   onCreated,
   onAutosaved,
   onReload,
@@ -1111,6 +1112,7 @@ const IngredientForm = ({
                     summary={<SectionSummary section="sources" />}
                     fold={fold('sources')}
                   >
+                    {sourcesIntro}
                     {/* Last, as a bibliography is: the sources picked, each
             with its locator, and a panel for a new one. */}
                     <ReferencesField workspaceId={workspaceId} />
