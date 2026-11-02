@@ -5,7 +5,6 @@ import {
   advanceSupportRequest,
   sendClosingNotice,
 } from '../services/retention';
-import type { Message } from '../../../lib/types';
 
 // The steps of the support-lifecycle job. A file of its own, so the workflow bundle keeps only the calls to them and never the
 // database code they reach.
@@ -18,7 +17,7 @@ export async function advanceStep(
   return advanceSupportRequest(requestId, noticeSkippedFor);
 }
 
-/** Sends the closing-soon notice; true once the transport took it. A transport failure throws, so the SDK retries the step. */
-export async function closingNoticeStep(requestId: string, notice: Message): Promise<boolean> {
-  return sendClosingNotice(requestId, notice);
+/** Renders the closing-soon notice from the row and sends it; true once the transport took it. A transport failure throws, so the SDK retries the step. */
+export async function closingNoticeStep(requestId: string, origin: string): Promise<boolean> {
+  return sendClosingNotice(requestId, origin);
 }

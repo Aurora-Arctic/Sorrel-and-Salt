@@ -3,7 +3,7 @@ import { findOneById } from '../../../db/repository';
 import { users } from '../../identity/schema/users';
 import type { SupportNotifier, SupportRequestRow } from '../types';
 
-type StatusMail = 'received' | 'resolved' | 'closingSoon';
+type StatusMail = 'received' | 'resolved';
 
 /**
  * Mails a request's sender one of the status mails: the address a signed-out sender gave, or the account's address. A sender

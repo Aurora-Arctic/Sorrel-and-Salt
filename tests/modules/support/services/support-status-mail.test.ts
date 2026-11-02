@@ -9,6 +9,7 @@ import {
 } from '@/modules/support';
 import type { SupportNotifier } from '@/modules/support';
 import { supportNotifier } from '@/lib/support-mail';
+import { closingNoticeStep } from '@/modules/support/jobs/support-lifecycle-steps';
 import { C, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 
@@ -19,6 +20,14 @@ const sent = vi.hoisted(() => [] as { to: string; subject: string; text: string;
 vi.mock('@/lib/mail', () => ({
   send: async (message: (typeof sent)[number]) => {
     sent.push(message);
+  },
+}));
+
+// The closing-soon notice is sent by its job's step, through the transport itself.
+vi.mock('@/lib/mail-transport', () => ({
+  deliver: async (message: (typeof sent)[number]) => {
+    sent.push(message);
+    return true;
   },
 }));
 
@@ -45,7 +54,6 @@ function recorder() {
     replyWaiting: record('replyWaiting'),
     received: record('received'),
     resolved: record('resolved'),
-    closingSoon: record('closingSoon'),
     signedOutReply: record('signedOutReply'),
     origin: async () => 'http://localhost:3000',
   };
@@ -158,7 +166,7 @@ describe('the rendered mails', () => {
     expect(await sql`select 1 from support_replies where body = ${NOTE}`).toHaveLength(1);
     await replyToSupportRequest(asUser(E), request.id, 'Which jar?', notifier);
     await resolveSupportRequest(asUser(E), request.id, notifier);
-    await notifier.closingSoon(await emailOf(C.id), INPUT.subject, request.id);
+    expect(await closingNoticeStep(request.id, 'http://localhost:8000')).toBe(true);
 
     expect(sent).toHaveLength(4);
     for (const message of sent) {
@@ -175,7 +183,7 @@ describe('the rendered mails', () => {
     await addSupportInternalNote(asUser(E), row!.id as string, NOTE);
     await replyToSupportRequest(asUser(E), row!.id as string, 'Use the card.', notifier);
     await resolveSupportRequest(asUser(E), row!.id as string, notifier);
-    await notifier.closingSoon(SIGNED_OUT.email, SIGNED_OUT.subject, null);
+    expect(await closingNoticeStep(row!.id as string, 'http://localhost:8000')).toBe(true);
 
     // received, replied, resolved, closing soon
     expect(sent).toHaveLength(4);

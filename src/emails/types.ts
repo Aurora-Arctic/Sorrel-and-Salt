@@ -115,7 +115,10 @@ export type SupportReceivedProps = SupportStatusProps;
 /** Told a sender that their support request is resolved. */
 export type SupportResolvedProps = SupportStatusProps;
 /** Told a sender that their resolved support request is about to close. */
-export type SupportClosingSoonProps = SupportStatusProps;
+export interface SupportClosingSoonProps extends SupportStatusProps {
+  /** How long until it closes, in milliseconds, as of the send. */
+  timeLeftMs: number;
+}
 
 /** A staff reply to a signed-out visitor, whose only way to read it is this mail. `url` is the support page, for writing again. */
 export interface SupportEmailReplyProps extends BaseEmailProps {

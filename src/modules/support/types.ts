@@ -24,8 +24,6 @@ export interface SupportNotifier {
   received(to: string, subject: string, requestId: string | null): Promise<void>;
   /** Mails the sender that the request is resolved and that a reply reopens it. `requestId` is null for a signed-out sender. Never throws on a failed send. */
   resolved(to: string, subject: string, requestId: string | null): Promise<void>;
-  /** Mails the sender that the resolved request closes in two days. `requestId` is null for a signed-out sender. Never throws on a failed send. */
-  closingSoon(to: string, subject: string, requestId: string | null): Promise<void>;
   /** Mails a signed-out visitor a staff reply in full, since they have no page to read it on. Never throws on a failed send. */
   signedOutReply(to: string, body: string): Promise<void>;
 }

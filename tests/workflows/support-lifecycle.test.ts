@@ -4,7 +4,6 @@ import { getRun, start } from 'workflow/api';
 import { waitForSleep } from '@workflow/vitest';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
-import { supportStatusMessage } from '@/lib/support-mail';
 import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import { supportRequestLifecycle } from '@/modules/support/jobs/support-lifecycle';
 import { supportRetentionSweep } from '@/modules/support/jobs/support-retention-sweep';
@@ -113,23 +112,12 @@ async function closedRequest(by: string, monthsAgo: number, about = 'bug'): Prom
   return id as string;
 }
 
-/** Moves the request's resolution back to `daysAgo` days ago. */
-async function resolvedDaysAgo(id: string, daysAgo: number): Promise<void> {
-  await sql`update support_requests set resolved_at = now() - make_interval(days => ${daysAgo}) where id = ${id}`;
-}
-
-/** The closing-soon notice the resolve service renders for the run, to the request's sender. */
-async function noticeFor(id: string) {
-  const [row] = await sql`
-    select r.subject, u.email from support_requests r join users u on u.id = r.created_by where r.id = ${id}
+/** Moves the request's resolution back to `daysAgo` days ago, and `hoursAgo` hours more. */
+async function resolvedDaysAgo(id: string, daysAgo: number, hoursAgo = 0): Promise<void> {
+  await sql`
+    update support_requests set resolved_at = now() - make_interval(days => ${daysAgo}, hours => ${hoursAgo})
+    where id = ${id}
   `;
-  return supportStatusMessage(
-    'closingSoon',
-    ORIGIN,
-    row!.email as string,
-    row!.subject as string,
-    id,
-  );
 }
 
 const rowOf = async (id: string) =>
@@ -145,7 +133,7 @@ describe('the closing-soon notice and the close', () => {
   it('sends the notice on day 5, marks it only once sent, then closes on day 7 and waits twelve months to anonymise', async () => {
     const { id: by, email } = await sender();
     const id = await resolvedRequest(by, 4);
-    const run = await start(supportRequestLifecycle, [id, await noticeFor(id)]);
+    const run = await start(supportRequestLifecycle, [id, ORIGIN]);
 
     // Day 4: the run waits for day 5 and has mailed nothing.
     await waitForSleep(run);
@@ -171,26 +159,58 @@ describe('the closing-soon notice and the close', () => {
     expect(received).toHaveLength(1);
   });
 
-  it('closes a request resolved 8 days ago with no sender activity, after the notice', async () => {
+  it('reads the sender and the subject when it sends, and says how long is actually left', async () => {
+    const { id: by, email } = await sender();
+    const id = await resolvedRequest(by, 4);
+    const run = await start(supportRequestLifecycle, [id, ORIGIN]);
+    await waitForSleep(run);
+
+    // Changed after the run started: the notice names what the row says when it is sent.
+    const renamed = `renamed${DOMAIN}`;
+    await sql`update users set email = ${renamed} where id = ${by}`;
+    await sql`update support_requests set subject = 'The Testwort lid is stuck' where id = ${id}`;
+    // A late wake: day 6 and 12 hours, so half a day is left, not two.
+    await resolvedDaysAgo(id, 6, 12);
+    await wake(run);
+    await waitForSleep(run);
+
+    expect(received).toHaveLength(1);
+    expect(received[0]!.to).toBe(renamed);
+    expect(received[0]!.to).not.toBe(email);
+    expect(received[0]!.subject).toContain('The Testwort lid is stuck');
+    expect(received[0]!.text).toContain('closes in 12 hours');
+    expect(received[0]!.text).not.toContain('2 days');
+  });
+
+  it('says two days on the fifth day', async () => {
+    const { id: by } = await sender();
+    const id = await resolvedRequest(by, 5);
+    const run = await start(supportRequestLifecycle, [id, ORIGIN]);
+    await waitForSleep(run);
+
+    expect(received).toHaveLength(1);
+    expect(received[0]!.text).toContain('closes in 2 days');
+  });
+
+  it('closes a request resolved 8 days ago with no notice, since it has already lapsed', async () => {
     const { id: by } = await sender();
     const id = await resolvedRequest(by, 8);
     const resolvedAt = (await rowOf(id)).resolved_at as Date;
 
-    const run = await start(supportRequestLifecycle, [id, await noticeFor(id)]);
+    const run = await start(supportRequestLifecycle, [id, ORIGIN]);
     await waitForSleep(run);
 
-    // The notice reached the transport while the request was still resolved; the close came after it.
-    expect(received.map((mail) => mail.status)).toEqual(['resolved']);
+    expect(received).toEqual([]);
     const row = await rowOf(id);
     expect(row.status).toBe('closed');
     expect((row.closed_at as Date).getTime()).toBe(resolvedAt.getTime() + 7 * 24 * 60 * 60 * 1000);
-    expect(row.closing_notice_sent_at).toBeInstanceOf(Date);
+    expect(row.closing_notice_sent_at).toBeNull();
   });
 
   it('leaves a request untouched whose sender wrote on day 3, and ends the run', async () => {
     const { id: by } = await sender();
     const id = await resolvedRequest(by, 3);
-    const run = await start(supportRequestLifecycle, [id, await noticeFor(id)]);
+    const run = await start(supportRequestLifecycle, [id, ORIGIN]);
     await waitForSleep(run);
 
     // The sender's message reopens it, as sendSenderMessage writes.
@@ -215,11 +235,11 @@ describe('the closing-soon notice and the close', () => {
   it('sends the notice once: a second start while the first waits ends at once, and a later run sends no second notice', async () => {
     const { id: by } = await sender();
     const id = await resolvedRequest(by, 6);
-    const first = await start(supportRequestLifecycle, [id, await noticeFor(id)]);
+    const first = await start(supportRequestLifecycle, [id, ORIGIN]);
     await waitForSleep(first);
     expect(received).toHaveLength(1);
 
-    const second = await start(supportRequestLifecycle, [id, await noticeFor(id)]);
+    const second = await start(supportRequestLifecycle, [id, ORIGIN]);
     expect(await second.returnValue).toBe('duplicate');
 
     await resolvedDaysAgo(id, 7);
@@ -228,7 +248,7 @@ describe('the closing-soon notice and the close', () => {
     expect((await rowOf(id)).status).toBe('closed');
 
     // The first run waits twelve months, so a start now is a duplicate too; the mail count stays at one.
-    const third = await start(supportRequestLifecycle, [id, await noticeFor(id)]);
+    const third = await start(supportRequestLifecycle, [id, ORIGIN]);
     expect(await third.returnValue).toBe('duplicate');
     expect(received).toHaveLength(1);
     expect(attempts).toHaveLength(1);
@@ -238,7 +258,7 @@ describe('the closing-soon notice and the close', () => {
     const { id: by } = await sender();
     const id = await resolvedRequest(by, 5);
     failNext = 2;
-    const run = await start(supportRequestLifecycle, [id, await noticeFor(id)]);
+    const run = await start(supportRequestLifecycle, [id, ORIGIN]);
     await waitForSleep(run);
 
     expect(attempts).toHaveLength(3);
@@ -249,22 +269,25 @@ describe('the closing-soon notice and the close', () => {
   it('logs a notice that fails every attempt, leaves the marker unset, and still closes on day 7', async () => {
     const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const { id: by } = await sender();
-    const id = await resolvedRequest(by, 8);
+    const id = await resolvedRequest(by, 6);
     failNext = Number.POSITIVE_INFINITY;
-    const run = await start(supportRequestLifecycle, [id, await noticeFor(id)]);
+    const run = await start(supportRequestLifecycle, [id, ORIGIN]);
 
-    // Every attempt fails, the run gives the notice up, and the close still comes.
-    await vi.waitFor(async () => expect((await rowOf(id)).status).toBe('closed'), {
-      timeout: 30_000,
-      interval: 250,
-    });
+    // Every attempt fails, and the run gives the notice up and waits for day 7.
+    await waitForSleep(run);
     expect(attempts.length).toBe(4);
     expect(received).toEqual([]);
     expect((await rowOf(id)).closing_notice_sent_at).toBeNull();
     expect(errors.mock.calls.some(([line]) => /mailpit answered 503/.test(String(line)))).toBe(
       true,
     );
+
+    // The close still comes, and the given-up notice is not tried again.
+    await resolvedDaysAgo(id, 7);
+    await wake(run);
     await waitForSleep(run);
+    expect((await rowOf(id)).status).toBe('closed');
+    expect(attempts.length).toBe(4);
     errors.mockRestore();
   });
 });

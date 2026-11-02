@@ -176,6 +176,7 @@ const MAILS: {
       supportClosingSoonMessage({
         to: 'someone@layout.test',
         url: `${ORIGIN}/account/support?request=req-1`,
+        timeLeftMs: 2 * 24 * 60 * 60 * 1000,
         requestSubject: 'The jar will not open',
       }),
   },

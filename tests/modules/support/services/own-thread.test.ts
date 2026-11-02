@@ -27,7 +27,6 @@ const mail: SupportNotifier = {
   replyWaiting: async () => undefined,
   received: async () => undefined,
   resolved: async () => undefined,
-  closingSoon: async () => undefined,
   signedOutReply: async () => undefined,
   origin: async () => 'http://localhost:3000',
 };

@@ -59,7 +59,6 @@ function notifier(): SupportNotifier & { sent: string[]; subjects: string[]; ids
     },
     received: async () => undefined,
     resolved: async () => undefined,
-    closingSoon: async () => undefined,
     signedOutReply: async () => undefined,
     origin: async () => 'http://localhost:3000',
   };
@@ -72,7 +71,6 @@ const mail: SupportNotifier = {
   replyWaiting: async () => undefined,
   received: async () => undefined,
   resolved: async () => undefined,
-  closingSoon: async () => undefined,
   signedOutReply: async () => undefined,
   origin: async () => 'http://localhost:3000',
 };

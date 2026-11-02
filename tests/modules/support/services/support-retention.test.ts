@@ -47,18 +47,10 @@ const mail: SupportNotifier = {
   replyWaiting: async () => undefined,
   received: async () => undefined,
   resolved: async () => undefined,
-  closingSoon: async () => undefined,
   signedOutReply: async () => undefined,
   origin: async () => ORIGIN,
 };
 const DAY_MS = 24 * 60 * 60 * 1000;
-/** The rendered closing-soon notice a resolve hands the run: to C, linking the request from the origin. */
-const closingNotice = (id: string) =>
-  expect.objectContaining({
-    to: C.email,
-    subject: expect.any(String),
-    text: expect.stringContaining(`${ORIGIN}/account/support?request=${id}`),
-  });
 
 const send = () => sendSupportRequest(asUser(C), INPUT, mail);
 /** A request C sent, resolved by staff `daysAgo` days ago. */
@@ -74,22 +66,16 @@ const statusOf = async (id: string) =>
   (await sql`select status from support_requests where id = ${id}`)[0]!.status as string;
 
 describe('the run each resolve starts', () => {
-  it('a staff resolve starts the request’s lifecycle run with its id and the origin', async () => {
+  it('a staff resolve starts the request’s lifecycle run with its id and the origin, and nothing of the sender’s', async () => {
     const request = await send();
     await resolveSupportRequest(asUser(E), request.id, mail);
-    expect(startJob).toHaveBeenCalledWith(supportRequestLifecycle, [
-      request.id,
-      closingNotice(request.id),
-    ]);
+    expect(startJob).toHaveBeenCalledWith(supportRequestLifecycle, [request.id, ORIGIN]);
   });
 
   it('the sender’s own resolve starts it too', async () => {
     const request = await send();
     await resolveMySupportRequest(asUser(C), request.id, mail);
-    expect(startJob).toHaveBeenCalledWith(supportRequestLifecycle, [
-      request.id,
-      closingNotice(request.id),
-    ]);
+    expect(startJob).toHaveBeenCalledWith(supportRequestLifecycle, [request.id, ORIGIN]);
   });
 
   it('a staff close starts it with no origin, for the anonymising alone', async () => {

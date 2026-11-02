@@ -1,7 +1,9 @@
 import 'server-only';
 import { RESOLVED_CLOSES_AFTER_DAYS, findOneById, withAudit } from '../../../db/repository';
 import { deliver } from '../../../lib/mail-transport';
+import { supportClosingNoticeMessage } from '../../../lib/support-job-mail';
 import { SYSTEM_ACTOR_ID } from '../../../lib/system-actor';
+import { users } from '../../identity/schema/users';
 import { supportRequests } from '../schema/support-requests';
 import type { Message } from '../../../lib/types';
 import type { SupportRequestRow } from '../types';
@@ -40,8 +42,8 @@ const waitUntil = (due: number, now: Date): SupportRequestNext => ({
 
 /**
  * Does whatever is due on the request as of `now`, and says what comes next. A resolved request waits for day 5, asks for the
- * notice unless it went out or was given up on for this resolution (`noticeSkippedFor`, the resolution's instant), waits for day 7,
- * and closes; a closed one waits twelve months from its close and is anonymised. Anything else, an anonymised row included, ends the run.
+ * notice unless it went out, was given up on for this resolution (`noticeSkippedFor`, the resolution's instant) or the request
+ * has already lapsed, waits for day 7, and closes; a closed one waits twelve months from its close and is anonymised. Anything else, an anonymised row included, ends the run.
  */
 export async function advanceSupportRequest(
   requestId: string,
@@ -56,7 +58,7 @@ export async function advanceSupportRequest(
     const noticeAt = resolvedAt + NOTICE_AFTER_DAYS * DAY_MS;
     const closeAt = resolvedAt + RESOLVED_CLOSES_AFTER_DAYS * DAY_MS;
     if (now.getTime() < noticeAt) return waitUntil(noticeAt, now);
-    if (!row.closingNoticeSentAt && noticeSkippedFor !== resolvedAt) {
+    if (!row.closingNoticeSentAt && noticeSkippedFor !== resolvedAt && now.getTime() < closeAt) {
       return { kind: 'notice', resolvedAt };
     }
     if (now.getTime() < closeAt) return waitUntil(closeAt, now);
@@ -80,15 +82,45 @@ export async function advanceSupportRequest(
 }
 
 /**
- * Sends the closing-soon notice, rendered when the run started, if the request is still resolved and has not had it, and stamps
- * `closing_notice_sent_at` once the transport took it. True when this call sent it.
+ * The closing-soon notice for the request as it stands at `now`: to the address a signed-out sender gave or the account's
+ * current one, under the subject it has now, saying how long is left until `closeAt`. Null for a sender who has left.
+ */
+async function closingNoticeFor(
+  row: SupportRequestRow,
+  origin: string,
+  closeAt: number,
+  now: Date,
+): Promise<Message | null> {
+  const signedOut = row.senderEmail !== null;
+  const to = row.senderEmail ?? (await findOneById(users, row.createdBy))?.email;
+  if (!to) return null;
+  return supportClosingNoticeMessage(
+    origin,
+    to,
+    row.subject,
+    signedOut ? null : row.id,
+    closeAt - now.getTime(),
+  );
+}
+
+/**
+ * Renders and sends the closing-soon notice, linked from `origin`, if the request is still resolved, has not had it and has
+ * not lapsed, and stamps `closing_notice_sent_at` once the transport took it. The mail is built here, from the row, so the
+ * run carries nothing of the sender's. True when this call sent it.
  *
  * @throws {MailNotSent} the transport failed this attempt; nothing is stamped, so a retry sends it.
  */
-export async function sendClosingNotice(requestId: string, notice: Message): Promise<boolean> {
+export async function sendClosingNotice(
+  requestId: string,
+  origin: string,
+  now: Date = new Date(),
+): Promise<boolean> {
   const row = await findOneById(supportRequests, requestId);
-  if (!row || row.status !== 'resolved' || row.closingNoticeSentAt) return false;
-  if (!(await deliver(notice))) return false;
+  if (!row || row.status !== 'resolved' || !row.resolvedAt || row.closingNoticeSentAt) return false;
+  const closeAt = row.resolvedAt.getTime() + RESOLVED_CLOSES_AFTER_DAYS * DAY_MS;
+  if (now.getTime() >= closeAt) return false;
+  const notice = await closingNoticeFor(row, origin, closeAt, now);
+  if (!notice || !(await deliver(notice))) return false;
   await withAudit(SYSTEM, (write) => write.markClosingNoticeSent(requestId, new Date()));
   return true;
 }

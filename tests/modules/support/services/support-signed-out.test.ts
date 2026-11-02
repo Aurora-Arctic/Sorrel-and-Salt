@@ -43,7 +43,6 @@ function notifier() {
       received.push({ to, subject, requestId });
     },
     resolved: async () => undefined,
-    closingSoon: async () => undefined,
     signedOutReply: async (to, body) => {
       replies.push({ to, body });
     },

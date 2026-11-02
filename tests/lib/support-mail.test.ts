@@ -32,7 +32,7 @@ describe('supportNotifier', () => {
 
   const notifier = () => supportNotifier(new Request('http://localhost:8000/api/graphql'));
 
-  it.each(['received', 'resolved', 'closingSoon'] as const)(
+  it.each(['received', 'resolved'] as const)(
     'mails a signed-in sender the %s mail, naming the request and linking to it',
     async (method) => {
       await notifier()[method]('sender@example.test', 'The jar will not open', 'req-1');
@@ -45,7 +45,7 @@ describe('supportNotifier', () => {
     },
   );
 
-  it.each(['received', 'resolved', 'closingSoon'] as const)(
+  it.each(['received', 'resolved'] as const)(
     'mails a signed-out sender the %s mail, linking to the support page alone',
     async (method) => {
       await notifier()[method]('visitor@example.test', 'I cannot sign in', null);
