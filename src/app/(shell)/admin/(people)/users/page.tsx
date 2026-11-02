@@ -127,7 +127,6 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
         awaitingApproval={awaitingApproval}
         role={role}
         canImpersonate={canImpersonate}
-        adminChanges={adminChanges}
         position={position}
         {...pagerHrefs(pageInfo, (cursor) =>
           userListHref({ query, awaitingApproval, role }, cursor),

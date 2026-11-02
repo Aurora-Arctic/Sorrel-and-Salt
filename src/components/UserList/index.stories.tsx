@@ -53,7 +53,7 @@ const USERS: readonly UserListEntry[] = [
     emailVerified: false,
     primaryAdmin: false,
   }),
-  // Approved, so the row shows Yes and no control: Revoke is in the user modal alone.
+  // Approved, so the row shows Yes.
   listed({
     id: 'u-cy',
     name: 'Cy Fixturewort',
@@ -71,7 +71,7 @@ const USERS: readonly UserListEntry[] = [
 // Each story sits inside the admin layout's frame and the People page, Users tab
 // open, with the switch on admin changes beside the heading where a story gives it.
 
-// The page as /admin/users draws it where impersonation is registered: seven columns,
+// The page as /admin/users draws it where impersonation is registered: nine columns,
 // facts no control changes muted, Impersonate red in its red-ruled column at the right.
 // Impersonate and Pause Admin Changes, the two red controls that destroy nothing, each ask first; the call reaches no server, so confirming
 // shows the refusal. Drawn in the app shell, so the phone shows the bottom bar.
@@ -165,36 +165,9 @@ const withoutImpersonationNode = (
   </AdminTabbedFrame>
 );
 
-// Two users awaiting approval, one unverified and one verified. Approve
-// on the first opens a confirmation warning that nobody has proved who holds
-// the address; on the second, none.
-const unverifiedApprovalNode = (
-  <AdminTabbedFrame page="people">
-    <UserList
-      users={[
-        USERS[1] as UserListEntry,
-        listed({
-          id: 'u-di',
-          name: 'Di Fixturewort',
-          email: 'di@users.test',
-          role: 'user',
-          canCreateWorkspace: false,
-          createdAt: new Date('2026-07-08T09:10:11Z'),
-          providers: ['discord'],
-          emailVerified: true,
-          primaryAdmin: false,
-        }),
-      ]}
-      query=""
-      awaitingApproval
-    />
-  </AdminTabbedFrame>
-);
-
-// The primary admin, labelled, with Change Role in view but unusable (reason
-// beside it). Every other row's Change Role opens the roles the user lacks, with
-// a promotion warning on Bo's unverified address. Dee is a curator, in bold as an
-// admin is, with no coven-creation control since every curator holds it.
+// The primary admin, labelled with the crown and its tip. Dee is a curator, in bold
+// as an admin is, and Yes under Can Create, as every curator holds it. Change Role
+// is the user modal's (UserDetail's stories).
 const adminRolesNode = (
   <AdminTabbedFrame page="people">
     <UserList
@@ -231,28 +204,18 @@ const adminRolesNode = (
 );
 
 // The switch as the Users tab's action beside the heading, as /admin/users draws it.
-// Paused: the warning and a usable Resume, and every row's control usable.
+// Paused: the warning and a usable Resume.
 const adminChangesPausedNode = (
   <AdminTabbedFrame page="people" action={<PauseControl paused canToggle />}>
-    <UserList
-      users={USERS}
-      query=""
-      awaitingApproval={false}
-      adminChanges={{ paused: true, canToggle: true }}
-    />
+    <UserList users={USERS} query="" awaitingApproval={false} />
   </AdminTabbedFrame>
 );
 
-// Paused, to another admin: the warning, Resume locked with its reason in a
-// tip, and every Change Role and Approve locked with the pause's reason.
+// Paused, to another admin: the warning, and Resume locked with its reason in a
+// tip.
 const adminChangesNotPrimaryNode = (
   <AdminTabbedFrame page="people" action={<PauseControl paused canToggle={false} />}>
-    <UserList
-      users={USERS}
-      query=""
-      awaitingApproval={false}
-      adminChanges={{ paused: true, canToggle: false }}
-    />
+    <UserList users={USERS} query="" awaitingApproval={false} />
   </AdminTabbedFrame>
 );
 
@@ -264,7 +227,6 @@ const LISTED_STATES: Record<string, ReactNode> = {
   'Role Filter': roleFilterNode,
   'No Matches': noMatchesNode,
   'Without Impersonation': withoutImpersonationNode,
-  'Unverified Approval': unverifiedApprovalNode,
   'Admin Roles': adminRolesNode,
   'Admin Changes Paused': adminChangesPausedNode,
   'Admin Changes Not Primary': adminChangesNotPrimaryNode,

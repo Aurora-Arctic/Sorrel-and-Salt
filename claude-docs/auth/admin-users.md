@@ -2,7 +2,7 @@
 
 `/admin/users` lists everyone with an account, so an admin can act on a person
 without being sent their id: M5.8's approval control and MB.59's grant control
-act on its rows (Change Role since M11.20), and MB.53 picks an impersonation target from it. Each row
+(Change Role since M11.20) act on a user from the modal each row's name opens, and MB.53 picks an impersonation target from it. Each row
 shows the name, the email, the role, whether the user may create a workspace,
 when the account was made, the providers linked to it, and whether its address
 is verified. The last two are what an admin changing a role is asked to judge
@@ -107,9 +107,9 @@ workspace's contents, and which covens someone belongs to is not among them
   the qualifier. The body is `UserDetail`
   ([`components/user-detail.md`](../components/user-detail.md)): every fact
   the list's row shows (the page reads them with the user, so the modal holds
-  the whole row), with the row's Change Role and Approve or Revoke
-  beside the facts they change, asking inside the modal and going through the
-  same mutations and services as the row's, then a Covens list (each coven's name, with its role and joining date beneath), owners first, then members, then viewers, each
+  the whole row), with Change Role and Approve or Revoke
+  beside the facts they change, asking inside the modal; the modal is the one
+  place they are, the rows holding the facts alone. Then a Covens list (each coven's name, with its role and joining date beneath), owners first, then members, then viewers, each
   by name. Coven names are text, not links: an admin reaches no coven, and
   `/coven/[slug]` is a 404 to a non-member.
 - **The reads come with the navigation**, from the server page, under
@@ -138,9 +138,9 @@ tagged `@story-19`, which passes an axe scan with the modal open.
 
 ## Approving workspace creation (M5.8)
 
-An admin approves someone who has no invitation from that person's row on
+An admin approves someone who has no invitation from that person's user modal on
 `/admin/users`, so a person starting a coven of their own gets in without
-knowing an existing user, and can revoke the approval from the same row. It is
+knowing an existing user, and can revoke the approval from the same modal. It is
 the second of the flag's routes: the first is accepting a workspace invitation
 (M7.5), and being made a curator or an admin sets it in its own write (MB.177, M11.20). Neither act
 touches anything but the flag: it confers no workspace access on the admin,
@@ -214,9 +214,9 @@ the shape.
   by direct call, and the `setUserRole` mutation in front of it carries the
   `admin` scope as the second check ([`graphql/schema.md`](../graphql/schema.md),
   "Auth scopes"). A curator is refused at both: changing roles is a people-page
-  act. The page has no path of its own: the row's control sends the mutation.
-- **One dialog, every role but the one held.** The row's Change Role button
-  opens a dialog naming the user and listing the roles they do not hold, each
+  act. The page has no path of its own: the user modal's control sends the mutation.
+- **One question, every role but the one held.** The user modal's Change Role button
+  asks over the modal, naming the user and listing the roles they do not hold, each
   with a line on what it allows, and an optional reason. Nothing is preselected,
   and the confirm button reads Promote or Demote by the ladder `user` <
   `curator` < `admin`, a demotion styled as destructive

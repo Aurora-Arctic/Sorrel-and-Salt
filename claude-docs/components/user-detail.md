@@ -36,10 +36,9 @@ A `UserCoven` is `workspaceId`, `name`, `slug`, the user's `role` there and
   Sign-In Methods and Signed Up, the terms in one column and their values in
   the next. The address itself is not repeated: the heading carries it, under
   the name.
-- **The row's controls sit beside the facts they change, at the right edge**
-  (the owner's call, 2026-10-12): Change Role beside Role, Approve or Revoke of coven creation beside Coven Creation (none for a curator or an admin, as on the row). Revoke is here alone: the row offers Approve only, so the row is an index into this modal (the owner's call, MB.123 D38). They are the row's own `RoleControl` and
-  `CreationControl`, keyed by their action, locked by `changesPaused` as the
-  row's are (MB.63). With `inModal`, `ConfirmedAction` asks over this modal's
+- **The role and creation controls sit beside the facts they change, at the right edge**
+  (the owner's call, 2026-10-12): Change Role beside Role, Approve or Revoke of coven creation beside Coven Creation (none for a curator or an admin, who each hold the flag). This modal is the one place an admin changes either: the users table's rows hold the facts alone, so a row is an index into this modal (the owner's call, MB.123 D38 for Revoke, 2026-11-02 for Change Role and Approve). They are `UserList`'s `RoleControl` and
+  `CreationControl`, keyed by their action, locked by `changesPaused` while admin changes are paused (MB.63). With `inModal`, `ConfirmedAction` asks over this modal's
   body through `ConfirmOverlay`, its warning and Reason field included,
   rather than open a second modal on top; a success reads the page again, so
   the modal shows the new value and the other action. A refusal is the
@@ -99,11 +98,13 @@ which the workshop does not serve: the question can be seen, its answer cannot.
 ## Tests
 
 `tests/components/UserDetail/index.test.tsx`, with the component inside a
-`Modal` (the question draws into its layer): the facts (a term and definition each, the sign-up `<time>`, the providers, the primary-admin mark only on the primary admin), Change Role and Approve beside their facts and no creation control on a curator or an admin, each asking inside the one dialog and sending its write, Revoke with a trimmed reason and no unverified warning, every control locked while paused, the order, role and joining date of each coven,
+`Modal` (the question draws into its layer): the facts (a term and definition each, the sign-up `<time>`, the providers, the primary-admin mark only on the primary admin), Change Role and Approve beside their facts and no creation control on a curator or an admin, each asking inside the one dialog and sending its write, Revoke with a trimmed reason and no unverified warning, every control locked while paused, each control's refusal in the callout under it, the order, role and joining date of each coven,
 no links, no coven list when empty, Impersonate present for a user and absent for an
 admin or when off, the question before any send, Cancel, a confirm sending
 `{ userId }` then landing on `/`, and a refusal showing an alert and not
 navigating.
+
+`tests/components/UserDetail/role-and-creation.test.tsx`, the controls' own cases, moved from the users table's tests when the rows lost them: Revoke offered rather than Approve to a user who may create a coven, Approve's question and Cancel sending nothing, the unverified warning describing Approve and none for a verified user, a trimmed reason with the busy confirm and the announcement; Change Role offering every role but the one held, a promotion and a demotion sent with or without a reason, a curator moved either way, the warning on a promotion of an unverified user and on no demotion, the primary admin's `aria-disabled` Change Role described by its reason and raising an alert when tried, the lock while admin changes are paused and none while they are on, and the primary admin's own reason kept while paused.
 
 `tests/components/UserDetail/access-pause-panel.test.tsx`: no Site Access section when no pauses are passed; a dated pause and an open-ended one, each sending nothing until confirmed and then the user, the end (or null) and the trimmed note; Pause Access held until a day is picked; a standing pause showing Lift Pause in place of the form and lifting once confirmed; lifted and run-out pauses listed as earlier ones with who set and who lifted each.
 
@@ -111,6 +112,6 @@ navigating.
 
 ## The modal body
 
-The component is the body of the modal that opens over `/admin/users` on a user, or over `/admin/support` on a sender. It shows the facts the users table holds about them, read-only, then the covens they belong to and, where impersonation is registered, the action to act as them. The row's Grant or Revoke and Approve or Revoke sit beside the facts they change, and each asks over this modal rather than opening another.
+The component is the body of the modal that opens over `/admin/users` on a user, or over `/admin/support` on a sender. It shows the facts the users table holds about them, read-only, then the covens they belong to and, where impersonation is registered, the action to act as them. Change Role, and Approve or Revoke, sit beside the facts they change, and each asks over this modal rather than opening another.
 
 It is laid out as the ingredient modal is, in sections parted by hairlines, because a table's labels repeat on every card at a modal's width. It only renders: the page reads the memberships through the coven service.
