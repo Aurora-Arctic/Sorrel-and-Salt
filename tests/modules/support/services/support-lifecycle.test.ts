@@ -16,6 +16,8 @@ import {
   resolveSupportRequest,
   sendSenderMessage,
   sendSupportRequest,
+  setSupportRequestCuratorVisible,
+  setSupportRequestIssueUrl,
   supportTiersForSenders,
   liftSupportTimeout,
   timeOutSupportSender,
@@ -517,5 +519,64 @@ describe('an anonymised request', () => {
     expect(error).toBeInstanceOf(Forbidden);
     expect((error as Error).message).toMatch(/anonymised/);
     expect(await savedReplies(request.id)).toBe(0);
+  });
+
+  // Each change below is tried first on a closed request that is not anonymised, which it changes, so the refusal is the
+  // anonymising's and not the close's.
+  const ISSUE = 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/12';
+  const closed = async () => {
+    const request = await send();
+    await closeSupportRequest(asUser(E), request.id);
+    return request;
+  };
+  const settings = async (id: string) => {
+    const [row] = await sql`
+      select assigned_to, curator_visible, issue_url from support_requests where id = ${id}
+    `;
+    return row;
+  };
+
+  it('takes no assignee, and the same admin assigns a request that is not anonymised', async () => {
+    const plain = await closed();
+    await assignSupportRequest(asUser(E), plain.id, F.id);
+    expect((await settings(plain.id))!.assigned_to).toBe(F.id);
+
+    const request = await anonymised();
+    const before = await settings(request.id);
+    const error = await failureOf(assignSupportRequest(asUser(E), request.id, F.id));
+
+    expect(error).toBeInstanceOf(Forbidden);
+    expect((error as Error).message).toMatch(/anonymised/);
+    expect(await settings(request.id)).toEqual(before);
+  });
+
+  it('cannot be shared with curators, and the same admin shares a request that is not anonymised', async () => {
+    const plain = await closed();
+    await setSupportRequestCuratorVisible(asUser(E), plain.id, true);
+    expect((await settings(plain.id))!.curator_visible).toBe(true);
+
+    const request = await anonymised();
+    const before = await settings(request.id);
+    expect(before!.curator_visible).toBe(false);
+    const error = await failureOf(setSupportRequestCuratorVisible(asUser(E), request.id, true));
+
+    expect(error).toBeInstanceOf(Forbidden);
+    expect((error as Error).message).toMatch(/anonymised/);
+    expect(await settings(request.id)).toEqual(before);
+  });
+
+  it('takes no issue link, and the same admin links one to a request that is not anonymised', async () => {
+    const plain = await closed();
+    await setSupportRequestIssueUrl(asUser(E), plain.id, ISSUE);
+    expect((await settings(plain.id))!.issue_url).toBe(ISSUE);
+
+    const request = await anonymised();
+    const before = await settings(request.id);
+    expect(before!.issue_url).toBeNull();
+    const error = await failureOf(setSupportRequestIssueUrl(asUser(E), request.id, ISSUE));
+
+    expect(error).toBeInstanceOf(Forbidden);
+    expect((error as Error).message).toMatch(/anonymised/);
+    expect(await settings(request.id)).toEqual(before);
   });
 });

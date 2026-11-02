@@ -49,6 +49,8 @@ const ResolveDocument = graphql(`
 
 const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps): ReactElement => {
   const isAdmin = viewer.role === 'admin';
+  // An anonymised request is refused every change, so an admin sees it as a curator does: the issue read-only, no settings.
+  const edits = isAdmin && !request.anonymised;
   const answers = isAdmin || request.assignee?.id === viewer.id;
   const open = request.status === 'open';
   const assign = useSupportAction();
@@ -57,7 +59,7 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
   const failure = assign.failure.alert ?? visible.failure.alert;
 
   return (
-    <div className={isAdmin ? 'support-detail' : 'support-detail support-detail--single'}>
+    <div className={edits ? 'support-detail' : 'support-detail support-detail--single'}>
       <div className="support-detail__main">
         <SupportFacts
           createdAt={request.createdAt}
@@ -110,8 +112,8 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
 
         {failure && <Notice kind="error">{failure}</Notice>}
 
-        {(isAdmin || request.issueUrl) && (
-          <IssuePanel key={request.issueUrl ?? ''} request={request} canEdit={isAdmin} />
+        {(edits || request.issueUrl) && (
+          <IssuePanel key={request.issueUrl ?? ''} request={request} canEdit={edits} />
         )}
 
         <SupportThread
@@ -144,8 +146,11 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
         />
 
         {request.anonymised ? (
-          // An anonymised request is owned by the System account, and the service refuses a note or a reply on it.
-          <Notice kind="plain">This request is anonymised. It takes no notes or replies.</Notice>
+          // An anonymised request is owned by the System account, and the service refuses any change to it.
+          <Notice kind="plain">
+            This request is anonymised. It takes no notes or replies, and its settings cannot be
+            changed.
+          </Notice>
         ) : (
           <ReplyForm
             noteOnly={!answers}
@@ -173,7 +178,7 @@ const DetailBody = ({ request, viewer, assignees, userHref }: SupportDetailProps
         )}
       </div>
 
-      {isAdmin && (
+      {edits && (
         <aside className="support-detail__side" aria-label="Request Settings">
           <FieldShell label="Assignee" {...assignField}>
             <span className="field__control">

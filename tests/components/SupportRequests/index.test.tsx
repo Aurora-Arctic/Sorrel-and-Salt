@@ -637,6 +637,29 @@ describe('What a viewer is shown', () => {
     expect(within(dialog()).getByText(/anonymised/)).toBeInTheDocument();
   });
 
+  it('lets an admin change no setting of an anonymised request, showing its issue as a link, and does on another', () => {
+    const ISSUE = 'https://github.com/Aurora-Arctic/Sorrel-and-Salt/issues/12';
+    const { unmount } = open(ADMIN, { issueUrl: ISSUE });
+    expect(within(dialog()).getByLabelText('Assignee')).toBeInTheDocument();
+    expect(
+      within(dialog()).getByRole('switch', { name: 'Shared With Curators' }),
+    ).toBeInTheDocument();
+    expect(
+      within(dialog()).getByRole('button', { name: 'Change Issue Address' }),
+    ).toBeInTheDocument();
+    unmount();
+    open(ADMIN, { status: 'closed', anonymised: true, sender: null, issueUrl: ISSUE });
+    expect(within(dialog()).queryByLabelText('Assignee')).toBeNull();
+    expect(within(dialog()).queryByRole('switch', { name: 'Shared With Curators' })).toBeNull();
+    expect(within(dialog()).queryByRole('button', { name: 'Change Issue Address' })).toBeNull();
+    expect(within(dialog()).queryByLabelText('GitHub Issue')).toBeNull();
+    expect(
+      within(within(dialog()).getByRole('region', { name: 'Issue' })).getByRole('link', {
+        name: /#12$/,
+      }),
+    ).toHaveAttribute('href', ISSUE);
+  });
+
   it('gives an admin every control', () => {
     open(ADMIN);
     for (const name of ['Assignee', 'GitHub Issue', 'For', /^Your Note/]) {
