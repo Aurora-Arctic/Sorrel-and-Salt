@@ -4,6 +4,7 @@ import type postgres from 'postgres';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden, ValidationError } from '@/lib/errors';
 import { invitationSender } from '@/lib/invitation-mail';
+import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import type { Message } from '@/lib/types';
 import {
   createInvitation,
@@ -75,6 +76,8 @@ async function insertCoven(
 beforeEach(async () => {
   send.mockClear();
   mail.real = false;
+  // With no transport the mail is built and tried once in the request, by the job step's own code, so `send` receives it.
+  vi.stubEnv('MAIL_TRANSPORT', '');
   await sql`truncate card_invitation_attempts, invitations`;
 });
 
@@ -85,7 +88,7 @@ afterEach(() => {
 });
 
 describe('createInvitation', () => {
-  it("writes a pending invitation into the owner's coven with the chosen role, stamped as the owner, storing only the hash of the token it mails", async () => {
+  it("writes a pending invitation into the owner's coven with the chosen role, made by the owner, storing only the hash of the token it mails", async () => {
     const row = await createInvitation(
       asUser(A),
       WORKSPACE_W_ID,
@@ -104,7 +107,8 @@ describe('createInvitation', () => {
       accepted_at: null,
       revoked_at: null,
       created_by: A.id,
-      updated_by: A.id,
+      // The mail's step swapped in the mailed token, as the System account.
+      updated_by: SYSTEM_ACTOR_ID,
     });
     expect(stored.expires_at.getTime()).toBeGreaterThan(Date.now());
     expect(stored.token_hash).toBe(sha256(token));

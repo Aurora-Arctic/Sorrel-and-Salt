@@ -94,18 +94,11 @@ export interface AdminRoleChangePauseState {
  * `EmailVerificationSender` is, because a service may not import Better Auth's origin resolution.
  */
 export interface InvitationSender {
-  /** Mails `to` the link that accepts the site invitation `token` names, with the site role and sender. Never throws on a failed send. */
-  siteInvitation(
-    to: string,
-    token: string,
-    invitation: { siteRole: InvitableSiteRole; inviterName: string },
-  ): Promise<void>;
-  /** Mails `to` the link that accepts the coven invitation `token` names, with the coven, role and inviter. Never throws on a failed send. */
-  workspaceInvitation(
-    to: string,
-    token: string,
-    coven: { name: string; role: 'viewer' | 'member'; inviterName: string },
-  ): Promise<void>;
+  /**
+   * Mails the invited address of the address invitation `invitationId` the link that accepts it, through the secret-link job: the
+   * run holds the id and the origin, and its step gives the invitation a fresh token when it sends. Never throws on a failed send.
+   */
+  invitation(invitationId: string): Promise<void>;
 }
 
 /** An invitation into a coven: it names the workspace and the role it seats the person at. */
@@ -190,7 +183,9 @@ export type SecretLink =
   /** The lockout notice, with its reset link, for a lock of `minutes`. */
   | { kind: 'lockout'; userId: string; authBase: string; minutes: number }
   /** The change-of-address link, sent to the row's pending address and landing on the way to `next`. */
-  | { kind: 'change'; userId: string; authBase: string; next: string | null };
+  | { kind: 'change'; userId: string; authBase: string; next: string | null }
+  /** An address invitation's link, coven or admin, on a token its step mints when it sends, so only the newest mailed link works. */
+  | { kind: 'invitation'; invitationId: string; origin: string };
 
 /**
  * An account notice, as its job's run holds it: ids, a kind and the site origin, never the address or the mail. The step reads

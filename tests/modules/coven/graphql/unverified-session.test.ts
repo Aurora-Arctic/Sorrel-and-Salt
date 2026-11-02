@@ -12,8 +12,7 @@ useRawClient();
 // The refusal is made once, in `assertMembership`, which every coven-scoped service passes through.
 
 const quietSender: InvitationSender = {
-  siteInvitation: async () => {},
-  workspaceInvitation: async () => {},
+  invitation: async () => {},
 };
 
 const unverified = (): Session => ({ ...asUser(A), emailUnverified: true });

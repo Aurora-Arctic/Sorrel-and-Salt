@@ -2,7 +2,6 @@ import 'server-only';
 import {
   findPendingSiteInvitationCount,
   findPendingSiteInvitationPage,
-  findOneById,
   findUserByEmail,
   withAudit,
 } from '../../../db/repository';
@@ -18,7 +17,6 @@ import type { Session, UserRole } from '../../../lib/session';
 import { outranks } from '../../../lib/site-roles';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { normaliseEmail, validateEmailAddress } from './email';
-import { users } from '../schema/users';
 import { assertSiteAdmin } from './site-admin';
 import { adminDeclaration } from './admin-changes';
 import { assertAdminChangesOpen } from './admin-role-pause';
@@ -54,20 +52,19 @@ export async function createAdminInvitation(
     ]);
   }
 
-  const token = newToken();
-  // The waiting site-tier invitation to this address is withdrawn in the same write.
+  // The waiting site-tier invitation to this address is withdrawn in the same write. The token stored here is never told
+  // to anyone: the mail's step replaces it with the one it mails.
   const [row] = await withAudit(session, async (write) => {
     await write.revokePendingInvitationsTo(admin, email);
     return write.insertInvitation(admin, {
       email,
-      token,
+      token: newToken(),
       siteRole,
       note: adminDeclaration(note).note ?? null,
     });
   });
-  // After the commit, so a mailed link always names a row. The session holds the id alone, so the sender's name is read here.
-  const inviter = await findOneById(users, session.userId);
-  await sender.siteInvitation(email, token, { siteRole, inviterName: inviter?.name ?? '' });
+  // After the commit, so the job's step finds the row.
+  await sender.invitation(row.id);
   return row;
 }
 

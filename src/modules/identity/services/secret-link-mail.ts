@@ -1,10 +1,13 @@
 import 'server-only';
 import {
   findHoldsPasskey,
+  findInvitedCoven,
   findNewestResetToken,
   findOneById,
   findOwnProviderIds,
+  rotateInvitationToken,
 } from '../../../db/repository';
+import { invitationLinkMessage } from '../../../lib/invitation-link-mail';
 import { deliver } from '../../../lib/mail-transport';
 import {
   changeLinkMessage,
@@ -24,6 +27,7 @@ import type { SecretLink } from '../types';
 
 /** The mail for `link` as the rows stand, or null when there is none to send: the account is gone, unmailable, or has nothing left to verify or reset. */
 export async function secretLinkMessage(link: SecretLink): Promise<Message | null> {
+  if (link.kind === 'invitation') return invitationMessage(link);
   const user = await findOneById(users, link.userId);
   if (!user) return null;
   const providers = (await findOwnProviderIds(user.id)).filter(isRosterProvider);
@@ -61,6 +65,38 @@ export async function secretLinkMessage(link: SecretLink): Promise<Message | nul
     minutes: link.minutes,
     providers,
     hasPasskey: await findHoldsPasskey(user.id),
+  });
+}
+
+/**
+ * The mail for an address invitation, on a token minted now: the row's hash is swapped for the new token's, so a retried
+ * step mails a fresh link and every earlier one stops working. Null, with nothing written, once the invitation is
+ * accepted, declined, revoked, expired or its coven deleted.
+ */
+async function invitationMessage(
+  link: Extract<SecretLink, { kind: 'invitation' }>,
+): Promise<Message | null> {
+  const rotated = await rotateInvitationToken(link.invitationId);
+  if (!rotated) return null;
+  const { token, invitation } = rotated;
+  const inviterName = (await findOneById(users, invitation.createdBy))?.name ?? '';
+  const to = invitation.email;
+  if (!to) return null;
+  if (invitation.workspaceId === null) {
+    if (invitation.siteRole !== 'curator' && invitation.siteRole !== 'admin') return null;
+    return invitationLinkMessage(link.origin, token, {
+      to,
+      inviterName,
+      siteRole: invitation.siteRole,
+    });
+  }
+  const coven = await findInvitedCoven(invitation.workspaceId);
+  if (!coven || !invitation.role || invitation.role === 'owner') return null;
+  return invitationLinkMessage(link.origin, token, {
+    to,
+    inviterName,
+    covenName: coven.name,
+    role: invitation.role,
   });
 }
 

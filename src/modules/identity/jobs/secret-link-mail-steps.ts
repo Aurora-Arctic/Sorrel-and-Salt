@@ -27,9 +27,9 @@ export async function lapseChangeStep(userId: string, sentAt: string): Promise<b
   return lapseEmailChange(userId, new Date(sentAt));
 }
 
-/** Logs a mail that failed every attempt, by kind and account id alone. */
+/** Logs a mail that failed every attempt, by kind and account or invitation id alone. */
 export async function reportSecretLinkUnsent(link: SecretLink): Promise<void> {
-  console.error(
-    `mail: every attempt failed; the ${link.kind} mail to user ${link.userId} was not sent`,
-  );
+  const whom =
+    link.kind === 'invitation' ? `for invitation ${link.invitationId}` : `to user ${link.userId}`;
+  console.error(`mail: every attempt failed; the ${link.kind} mail ${whom} was not sent`);
 }

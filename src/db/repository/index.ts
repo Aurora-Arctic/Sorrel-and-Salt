@@ -2,7 +2,7 @@
 // `db` is not re-exported, so `withAudit`'s `AuditWriter` is the sole write mechanism. Rule 4: every exported finder applies `deleted_at IS NULL`
 // bar the named `…IncludingSoftDeleted` hatches and the internal ones, which tests/guards/soft-delete-finder-guard.test.ts holds. Import this file, never a sibling.
 
-export { withAudit } from './write';
+export { rotateInvitationToken, withAudit } from './write';
 export {
   findMany,
   findManyByIds,
