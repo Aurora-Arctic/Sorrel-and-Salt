@@ -203,9 +203,9 @@ export default function CodeOfEthicsPage() {
           given the highest protection, Appendix II those whose trade must be controlled to avoid
           use incompatible with their survival.
           <SourceMarks cite="wildlife" numbers={[6]} /> The law can make exceptions for Indigenous
-          peoples' religious and cultural use: in the United States, the government's National Eagle
-          Repository gives eagle feathers and parts to enrolled members of federally recognised
-          tribes "for spiritual and religious use".
+          peoples' religious and cultural use. For example, in the United States, the government's
+          National Eagle Repository gives eagle feathers and parts to enrolled members of federally
+          recognised tribes "for spiritual and religious use".
           <SourceMarks cite="exception" numbers={[11]} /> Outside such an exception, no bone,
           feather, fur, shell or tooth of a listed species belongs in a working, and the site will
           not help you source one.
