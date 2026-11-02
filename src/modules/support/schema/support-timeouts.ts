@@ -9,9 +9,10 @@ export const supportTimeouts = pgTable(
   'support_timeouts',
   {
     id: idColumn(),
+    // Goes with the sender it names: a hard-deleted provisional account takes its time-outs, as it takes its sessions.
     userId: uuid('user_id')
       .notNull()
-      .references(() => users.id),
+      .references(() => users.id, { onDelete: 'cascade' }),
     until: timestamp('until').notNull(),
     note: text('note'),
     liftedAt: timestamp('lifted_at'),

@@ -358,6 +358,31 @@ describe('Story 58: a paused account is still removed, with its pauses', () => {
   });
 });
 
+// A support time-out sanctions the sender it names and means nothing without it, so it goes with the account, as a pause does.
+describe('Story 58: an account under a support time-out is still removed, with its time-outs', () => {
+  async function timeoutRows(userId: string): Promise<number> {
+    const [{ count }] =
+      await sql`select count(*)::int as count from support_timeouts where user_id = ${userId}`;
+    return count as number;
+  }
+
+  it('removes a lapsed account holding a standing support time-out, and the time-out with it', async () => {
+    const squatter = await squat(OWNER);
+    await sql`
+      insert into support_timeouts (user_id, until, created_by, updated_by)
+      values (${squatter.row.id}, now() + interval '1 day', ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
+    `;
+    await backdate(squatter.row.id, EXPIRED);
+    // Why this could have been kept: the time-out row names the account.
+    expect(await timeoutRows(squatter.row.id)).toBe(1);
+
+    expect(await expireStep(squatter.row.id)).toBeNull();
+
+    expect(await linkedRows(squatter.row.id)).toEqual({ users: 0, accounts: 0, sessions: 0 });
+    expect(await timeoutRows(squatter.row.id)).toBe(0);
+  });
+});
+
 describe('Story 58: a resend restarts the window', () => {
   function resend(cookie: string | undefined, email: string): Promise<Response> {
     return auth.handler(
