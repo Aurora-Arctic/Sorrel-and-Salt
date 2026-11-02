@@ -246,11 +246,8 @@ export default function CodeOfEthicsPage() {
         the colours in both themes keep to the guidelines' contrast floor.
         <SourceMarks cite="contrast" numbers={[10]} /> Automated checks do not find everything, so
         if something on the site does not work for you, that is a bug, and we commit to fixing
-        accessibility bugs first.
-      </p>
-      <p>
-        <SupportLink about="accessibility">Report an accessibility bug</SupportLink>. The link opens
-        the support form with Accessibility already chosen; you can send one without an account.
+        accessibility bugs first. You can report an accessibility bug through the{' '}
+        <SupportLink about="accessibility">support form</SupportLink>.
       </p>
 
       <h2>For Curators</h2>
