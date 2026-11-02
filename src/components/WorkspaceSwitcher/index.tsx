@@ -4,6 +4,7 @@ import { usePathname } from 'next/navigation';
 import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
 import { NEW_COVEN_PATH, covenTarget, covenSlugOf, pathInCoven } from '../../lib/coven-path';
 import { usePendingNavigation } from '../../lib/navigation';
+import { inUtc } from '../../lib/utc';
 import type { NavigationTarget } from '../../lib/navigation';
 import { ComboboxSelect } from '../Combobox';
 import { useCovenSwitchRegistration } from '../CovenSwitchTargets/context';
@@ -36,9 +37,13 @@ export default function WorkspaceSwitcher({
   const registration = useCovenSwitchRegistration();
   const [picked, setPicked] = useState<string>();
   const box = useRef<HTMLDivElement>(null);
-  const choices = workspaces.map(({ slug, name }) => ({
+  // A paused coven stays pickable: its layout sends the viewer on to the paused page, which says the same.
+  const choices = workspaces.map(({ slug, name, paused }) => ({
     value: slug,
     label: name,
+    ...(paused && {
+      note: paused.until ? `Paused until ${inUtc(paused.until)}` : 'Paused, with no end date',
+    }),
   }));
 
   useEffect(() => {

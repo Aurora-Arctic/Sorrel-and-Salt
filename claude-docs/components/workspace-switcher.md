@@ -10,12 +10,18 @@ create choice "Create Coven"; code and these docs say workspace.
 ## Props
 
 `workspaces`: `SwitcherWorkspace[]`, every workspace the viewer is a member of,
-in the order to list them (alphabetical, the demo coven last). Each is `{ slug, name, canReadMembers, canInvite }`:
+in the order to list them (alphabetical, the demo coven last). Each is `{ slug, name, canReadMembers, canInvite, paused }`:
 the two flags say what the viewer's role there may open (member: read, and
 member: invite, an owner's alone), so the switcher can step back from a people
 page the next coven would 404. The caller already holds the memberships (the
 coven layout, M6.10; the shell, MB.7, which reads the flags from `rolePermits`
 in `viewerOf`), so the component fetches nothing.
+`paused` is the pause an owner set on the viewer's seat there, `{ until }` or
+null, `until` null for no end date (M15.55, M15.56). A paused coven's row
+carries a second line, "Paused until 1 January 2099, 00:00 UTC" or "Paused,
+with no end date", read as part of its name. It stays pickable: the coven
+layout sends the viewer on to `/coven-paused/[slug]`, which says the same.
+`viewerOf` also reads both flags false for a paused coven.
 
 `canCreate`: whether the viewer holds `canCreateWorkspace`, which the caller
 reads from the user row, never from the session. When true, the list ends

@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeQueryClient } from '@/lib/graphql-client';
 import type { Session } from '@/lib/session';
@@ -25,7 +25,7 @@ const SESSION: Session = { userId: '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f', role:
 
 async function renderPage(
   canCreateWorkspace: boolean,
-  workspaces: { slug: string; name: string }[] = [],
+  workspaces: { slug: string; name: string; paused?: { until: Date | null } | null }[] = [],
   searchParams?: { card?: string },
 ) {
   requireSession.mockResolvedValue(SESSION);
@@ -58,6 +58,21 @@ describe('the /coven/new page', () => {
 
     const row = screen.getByRole('region', { name: 'Context' });
     expect(within(row).getByRole('combobox')).toBeInTheDocument();
+  });
+
+  it("hands the switcher each coven's pause as the shell read it, so a paused coven is marked", async () => {
+    await renderPage(true, [
+      { slug: 'fixture-coven', name: 'Fixture Coven', paused: { until: null } },
+      { slug: 'testwort-circle', name: 'Testwort Circle', paused: null },
+    ]);
+
+    fireEvent.click(within(screen.getByRole('region', { name: 'Context' })).getByRole('combobox'));
+
+    expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
+      'Fixture CovenPaused, with no end date',
+      'Testwort Circle',
+      'Create Coven',
+    ]);
   });
 
   it('shows no context row to a user with no coven to switch to', async () => {

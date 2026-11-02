@@ -18,8 +18,20 @@ const { CovenSwitchProvider } = await import('@/components/CovenSwitchTargets/co
 // the way to the create page, offered only to a viewer holding the right.
 
 const WORKSPACES = [
-  { slug: 'fixture-coven', name: 'Fixture Coven', canReadMembers: true, canInvite: true },
-  { slug: 'testwort-circle', name: 'Testwort Circle', canReadMembers: true, canInvite: true },
+  {
+    slug: 'fixture-coven',
+    name: 'Fixture Coven',
+    canReadMembers: true,
+    canInvite: true,
+    paused: null,
+  },
+  {
+    slug: 'testwort-circle',
+    name: 'Testwort Circle',
+    canReadMembers: true,
+    canInvite: true,
+    paused: null,
+  },
 ];
 
 const box = () => screen.getByRole('combobox', { name: 'Coven' });
@@ -39,6 +51,27 @@ describe('WorkspaceSwitcher', () => {
       'Fixture Coven',
       'Testwort Circle',
     ]);
+  });
+
+  it('marks a coven whose access is paused, with when the pause ends', () => {
+    const workspaces = [
+      { ...WORKSPACES[0]!, paused: { until: new Date('2099-01-01T00:00:00Z') } },
+      { ...WORKSPACES[1]!, paused: { until: null } },
+      { ...WORKSPACES[1]!, slug: 'third-circle', name: 'Third Circle' },
+    ];
+    render(<WorkspaceSwitcher workspaces={workspaces} />);
+
+    fireEvent.click(box());
+
+    expect(screen.getByRole('option', { name: /Fixture Coven/ })).toHaveAccessibleName(
+      'Fixture Coven Paused until 1 January 2099, 00:00 UTC',
+    );
+    expect(screen.getByRole('option', { name: /Testwort Circle/ })).toHaveAccessibleName(
+      'Testwort Circle Paused, with no end date',
+    );
+    expect(screen.getByRole('option', { name: /Third Circle/ })).toHaveAccessibleName(
+      'Third Circle',
+    );
   });
 
   it('goes to the same section in the chosen workspace', () => {
