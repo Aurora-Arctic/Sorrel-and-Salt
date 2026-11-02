@@ -40,6 +40,7 @@ import OwnEntryActions from './own-actions';
 import StockSection from './stock-section';
 import { reviewedAtOf } from './review-date';
 import { cardName } from '../IngredientCard/card-name';
+import SourcingScore from '../SourcingScore';
 import type { IngredientEntryProps } from './types';
 import {
   blockOf,
@@ -373,6 +374,8 @@ const IngredientEntry = ({
         )}
         {/* A curator's review line, the head's last row: the Reviewed switch and the review day. */}
         {reviewControl}
+        {/* The curator's sourcing score, the head's last row; the page reads it for a curator or admin alone. */}
+        {edit?.sourcing && <SourcingScore sourcing={edit.sourcing} variant="head" />}
       </header>
 
       {variants.length > 0 && (

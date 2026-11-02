@@ -76,3 +76,19 @@ export const CostsAgainstFullGains: Story = {
     },
   },
 };
+
+// The entry page's head row: the total, the facts behind "Show the Facts".
+export const Head: Story = {
+  args: {
+    variant: 'head',
+    sourcing: {
+      score: 38,
+      facts: [
+        { fact: 'sources', label: '1 Source', points: 10 },
+        { fact: 'bestSource', label: 'Best Source: Book', points: 18 },
+        { fact: 'formCitesNothing', label: 'Forms Citing Nothing: 1', points: -5 },
+        { fact: 'curatorReviewed', label: 'Curator Review: Not Yet', points: 0 },
+      ],
+    },
+  },
+};

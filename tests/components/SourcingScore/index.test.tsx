@@ -1,4 +1,5 @@
 import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import SourcingScore from '@/components/SourcingScore';
 import type { SourcingScore as Score } from '@/modules/ingredients';
@@ -85,5 +86,34 @@ describe('SourcingScore', () => {
       parseFloat((part as HTMLElement).style.width),
     );
     expect(widths.reduce((sum, width) => sum + width, 0)).toBeLessThanOrEqual(100);
+  });
+});
+
+describe('SourcingScore as the entry page head', () => {
+  it('shows the total and a Show the Facts toggle, with no bar', () => {
+    render(<SourcingScore sourcing={SCORE} variant="head" />);
+
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'Sourcing Score: 7' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Show the Facts')).toBeInTheDocument();
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+  });
+
+  it('turns to Hide the Facts when opened, and lists the facts in gain, cost, zero order', async () => {
+    const user = userEvent.setup();
+    render(<SourcingScore sourcing={SCORE} variant="head" />);
+
+    await user.click(screen.getByText('Show the Facts'));
+
+    expect(await screen.findByText('Hide the Facts')).toBeInTheDocument();
+    expect(screen.getAllByRole('listitem').map((item) => item.textContent)).toEqual([
+      '1 Source+10',
+      'Best Source: Book+18',
+      'Citations with No Locator: 1−3',
+      'Forms Citing Nothing: 1−5',
+      'Curator Review: Not Yet0',
+      'Safety Note: None0',
+    ]);
   });
 });
