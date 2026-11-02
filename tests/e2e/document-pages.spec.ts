@@ -37,7 +37,7 @@ for (const { path, title, link } of DOCUMENTS) {
       'datetime',
       /^\d{4}-\d{2}-\d{2}$/,
     );
-    await expect(page.getByRole('link', { name: 'Sign In' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Sign In', exact: true })).toBeVisible();
     await expect(page.getByRole('contentinfo').getByRole('link', { name: link })).toHaveAttribute(
       'href',
       path,
@@ -53,7 +53,7 @@ for (const { path, title, link } of DOCUMENTS) {
 
     await expect(page).toHaveURL(new RegExp(`${path}$`));
     await expect(page.getByRole('heading', { level: 1, name: title })).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Sign In' })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Sign In', exact: true })).toHaveCount(0);
     await assertNoAccessibilityViolations(page);
   });
 
@@ -78,7 +78,8 @@ test('the code of ethics opens the support form on an accessibility bug', async 
     .getByRole('link', { name: 'support form' })
     .click();
 
-  await expect(page).toHaveURL(/\/support\?support=accessibility$/);
-  // In the page's own form: the Support dialog beside the footer holds a second, closed copy.
-  await expect(page.getByRole('main').getByRole('radio', { name: /^Accessibility/ })).toBeChecked();
+  // The dialog opens over the page it was asked from, the topic already chosen.
+  await expect(page).toHaveURL(/\/code-of-ethics\?support=accessibility$/);
+  const dialog = page.getByRole('dialog', { name: 'Contact Support' });
+  await expect(dialog.getByRole('radio', { name: /^Accessibility/ })).toBeChecked();
 });

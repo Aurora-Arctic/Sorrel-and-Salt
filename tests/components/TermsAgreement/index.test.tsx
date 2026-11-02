@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import TermsAgreement from '@/components/TermsAgreement';
 import { makeQueryClient } from '@/lib/graphql-client';
-import { mockGraphQLError, mockGraphQLMutation } from '../support/msw/graphql';
+import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
 // The acceptance page's body: it links the terms, and its one button records agreement, then goes to where the account was headed.
 

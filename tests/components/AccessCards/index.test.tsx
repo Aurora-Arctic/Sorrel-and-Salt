@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import AccessCards from '@/components/AccessCards';
 import type { AccessRole, AccessRow } from '@/components/AccessCards/types';
@@ -62,14 +62,23 @@ describe('AccessCards', () => {
     ]);
   });
 
-  it('labels each column with its role, in the roles’ order', () => {
-    render(<AccessCards roles={ROLES} rows={ROWS} />);
-    const labels = screen.getAllByTitle(/Fixture (Owner|Reader)/);
-    expect(labels.map((label) => label.getAttribute('title'))).toEqual([
-      'Fixture Owner',
-      'Fixture Reader',
+  it('labels each column with its role, in the roles’ order, a press tipping its full name', () => {
+    // The label row is hidden from assistive technology, so its labels have no role to query by.
+    const { unmount } = render(<AccessCards roles={ROLES} rows={ROWS} />);
+    expect(screen.getAllByText(/^(Own|Rdr)$/).map((label) => label.textContent)).toEqual([
+      'Own',
+      'Rdr',
     ]);
-    expect(labels.map((label) => label.textContent)).toEqual(['Own', 'Rdr']);
+    unmount();
+
+    const tips = ROLES.map(({ short }) => {
+      const view = render(<AccessCards roles={ROLES} rows={ROWS} />);
+      fireEvent.click(screen.getByText(short));
+      const tip = screen.getByRole('tooltip', { hidden: true }).textContent;
+      view.unmount();
+      return tip;
+    });
+    expect(tips).toEqual(['Fixture Owner', 'Fixture Reader']);
   });
 
   it('explains the three marks and names the roles in column order', () => {
