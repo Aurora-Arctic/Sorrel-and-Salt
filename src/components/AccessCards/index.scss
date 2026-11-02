@@ -36,8 +36,9 @@
 }
 
 // The three marks, each a different shape so the colour only confirms it: Yes the site's ✦ in the
-// accent, In Part a ring half filled in the warning ochre, No a short dash in the muted ink. Forced
-// colours would paint the fills away, so there each is drawn in the text colour.
+// accent, In Part the same ✦ with one half filled and the other an outline, in the warning ochre,
+// No a short dash in the muted ink. Forced colours would paint the fills away, so there each is
+// drawn in the text colour.
 .access-cards__mark {
   display: inline-grid;
   flex: none;
@@ -67,16 +68,17 @@
   }
 }
 
+// Drawn by mask, as the warning triangle is: the star's outline at the Yes star's size, over its
+// left half filled, so the half fill holds under forced colours where a gradient would not.
 .access-cards__mark--part::before {
-  inline-size: 0.8rem;
-  block-size: 0.8rem;
-  border: 1.6px solid $warning;
-  border-radius: 50%;
-  background-image: linear-gradient(90deg, $warning 50%, transparent 50%);
+  inline-size: 1.05rem;
+  block-size: 1.05rem;
+  background-color: $warning;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-1 -1 18 18'%3E%3CclipPath id='h'%3E%3Crect x='-1' y='-1' width='9' height='18'/%3E%3C/clipPath%3E%3Cpolygon points='8,0 9.28,6.72 16,8 9.28,9.28 8,16 6.72,9.28 0,8 6.72,6.72' fill='black' clip-path='url(%23h)'/%3E%3Cpolygon points='8,0 9.28,6.72 16,8 9.28,9.28 8,16 6.72,9.28 0,8 6.72,6.72' fill='none' stroke='black' stroke-width='1.2' stroke-linejoin='round'/%3E%3C/svg%3E")
+    center / contain no-repeat;
 
   @include forced-colors {
-    border-color: CanvasText;
-    background-image: linear-gradient(90deg, CanvasText 50%, transparent 50%);
+    background-color: CanvasText;
   }
 }
 
@@ -124,17 +126,19 @@
   border-bottom: 1px solid $hairline;
   background-color: $surface-page;
 
-  abbr {
-    display: block;
-    text-align: center;
-    font-size: type-size('tab');
-    font-weight: 500;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    text-decoration: none;
-    color: $text-muted;
-    cursor: help;
+  // Each label's tip wrapper is the grid item; the label is centred in it.
+  .icon-tip {
+    justify-content: center;
   }
+}
+
+.access-cards__short {
+  font-size: type-size('tab');
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: $text-muted;
+  cursor: help;
 }
 
 .access-cards__columns-label {
@@ -152,10 +156,6 @@
     border-bottom: 1px solid $hairline;
     border-end-start-radius: 0;
     border-end-end-radius: 0;
-  }
-
-  &[open] .access-cards__chevron {
-    transform: rotate(180deg);
   }
 }
 
@@ -184,21 +184,9 @@
   line-height: 1.45;
 }
 
+// The site's disclosure chevron: down while the card is closed, turned over while it is open.
 .access-cards__chevron {
-  display: inline-grid;
-  inline-size: var(--access-chevron-col);
-  block-size: var(--access-chevron-col);
-  color: $text-muted;
-  @include theme-transition(transform);
-
-  svg {
-    width: 100%;
-    height: 100%;
-  }
-
-  @include reduced-motion {
-    transition: none;
-  }
+  @include disclosure-chevron('.access-cards__card[open]');
 }
 
 // The open card: each role on a line, its mark, its name and the cell's full wording.
@@ -226,9 +214,11 @@
     line-height: 1.65;
   }
 
+  // The wording at the small size, as the role beside it, with prose leading.
   dd {
     margin: 0;
-    line-height: 1.5;
+    font-size: type-size('small');
+    line-height: 1.6;
   }
 }
 
@@ -247,6 +237,11 @@
   .access-cards__name {
     grid-column: 1 / -1;
     padding-inline-end: 0;
+  }
+
+  // The first mark starts the second line under the first label, not in the name's column.
+  .access-cards__name + .access-cards__mark {
+    grid-column: 2;
   }
 
   .access-cards__columns-label {
