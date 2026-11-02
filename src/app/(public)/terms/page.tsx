@@ -170,6 +170,22 @@ export default function TermsOfUsePage() {
         with other people, by agreeing to these terms.
       </p>
       <p>
+        Whoever asks for the arbitration pays the arbitrator. The site's owner does not pay for an
+        arbitration a member starts, and a member does not pay for one the owner starts.
+      </p>
+      <p>
+        A person who cannot afford that may skip arbitration and go straight to court. The test is
+        the one Washington's courts use when they waive their own filing fees for people who cannot
+        pay them, General Rule 34: you qualify if you receive help from a needs-based programme such
+        as TANF, SSI, poverty-related veterans' benefits or food stamps; or your household income is
+        at or below 125 per cent of the federal poverty guideline; or it is above that line but your
+        recurring basic living expenses leave you unable to pay; or other compelling circumstances
+        show you cannot pay. You check yourself against those guidelines; you need no order from
+        anyone first. The court looks at the same question when you ask it to waive your filing
+        fees. If the claim of hardship was false, the owner may raise that in the same case. The
+        point of this is simple: a person with a real claim is never priced out of court.
+      </p>
+      <p>
         If arbitration does not settle the dispute, either of you may take it to the state courts of
         Washington in Spokane County, where the Spokane County Superior Court sits, and you and the
         site's owner each agree to that court hearing it.
@@ -207,6 +223,18 @@ export default function TermsOfUsePage() {
 
       <h2>Sources</h2>
       <ol className="document-page__sources">
+        <li>
+          Washington Courts.{' '}
+          <em>
+            General Rule 34: Waiver of Court and Clerk's Fees and Charges in Civil Matters on the
+            Basis of Indigency
+          </em>
+          , (a)(3)–(4). Adopted 28 December 2010, amended 1 January 2023. Accessed 2 November 2026.{' '}
+          <a href="https://www.courts.wa.gov/court_rules/pdf/GR/GA_GR_34_00_00.pdf">
+            https://www.courts.wa.gov/court_rules/pdf/GR/GA_GR_34_00_00.pdf
+          </a>
+          .
+        </li>
         <li>
           Washington State Legislature. <em>Revised Code of Washington</em>, 7.04A.030, "When
           chapter applies", and 7.04A.060, "Validity of agreement to arbitrate" (Uniform Arbitration
