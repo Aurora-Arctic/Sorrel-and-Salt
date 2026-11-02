@@ -286,7 +286,7 @@ export default function PrivacyPolicyPage() {
       <h2>How to Ask for Removal</h2>
       <p>
         There is no "delete my account" button yet, and no self-service export. Until those are
-        built, write to whoever runs the site through the{' '}
+        built, write to the site admins through the{' '}
         <Link href="/support?support=privacy">support form</Link>, choosing Privacy &amp; Data. You
         can send one without an account. Say what you want erased, and the site's admin will do it
         by hand in the database and tell you when it is done.
