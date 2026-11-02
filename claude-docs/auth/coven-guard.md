@@ -27,7 +27,8 @@ visitors four ways, all from the server:
   pause a member's access to one coven; the service then throws `AccessPaused`,
   which is a kind of `Forbidden`, so the guard checks for it first and redirects
   to `/coven-paused/<slug>`. That page sits outside the coven's layout, reads the
-  pause again through `pausedCovenBySlug`, and says when it ends; a stranger gets
+  pause again through `pausedCovenBySlug`, says when it ends, and offers Leave
+  Coven, the one write a paused member keeps (`assertSeatToLeave`); a stranger gets
   the 404 there too, and a member with no pause standing is sent back
   (claude-docs/design-decisions/m15.55-coven-access-pause.md, "What M15.56 adds").
 - **The workspace comes from the URL segment only.** Never a cookie or a

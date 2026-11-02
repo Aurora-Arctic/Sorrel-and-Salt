@@ -1,6 +1,8 @@
 # LeaveWorkspaceButton
 
-`src/components/LeaveWorkspaceButton/` — Leave Coven, in the coven index's Your Membership section (M6.15). A client
+`src/components/LeaveWorkspaceButton/` — Leave Coven, in the coven index's Your Membership section (M6.15), and on
+the paused page `/coven-paused/[slug]` for a member whose access to the coven is paused (M15.56). An owner is never
+paused, so the paused page passes no `successors`. A client
 component taking the workspace's `workspaceId` and `name`, and, for the coven's only owner,
 `successors` (M6.16, below).
 

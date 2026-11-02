@@ -91,3 +91,38 @@ test('an owner pauses a member’s access to the coven, the member sees the paus
 
   await member.close();
 });
+
+test('a member whose access is paused leaves the coven from its paused page', async ({ page }) => {
+  // The page ends signed in as the member.
+  const coven = await seedCoven(page, 'Fixture Leaving Coven', 'coven-pause-leave.test', {
+    Owner: 'owner',
+    Member: 'member',
+  });
+  const memberId = coven.users.Member!;
+  // The pause is a setup row: the owner's controls that set one are walked above.
+  await withSql(
+    (sql) => sql`
+      insert into workspace_member_pauses (workspace_id, user_id, until, created_by, updated_by)
+      values (${coven.id}, ${memberId}, null, ${coven.users.Owner!}, ${coven.users.Owner!})`,
+  );
+
+  await page.goto(`/coven/${coven.slug}`);
+  await expect(page).toHaveURL(`/coven-paused/${coven.slug}`);
+  await page.getByRole('main').getByRole('button', { name: 'Leave Coven', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toContainText('Leave Fixture Leaving Coven?');
+  await assertNoAccessibilityViolations(page);
+  await dialog.getByRole('button', { name: 'Leave Coven', exact: true }).click();
+
+  // The leave lands: the member is sent to the coven landing, and the seat is gone, left by the member.
+  await expect(page).toHaveURL('/coven');
+  const [seat] = await withSql(
+    (sql) => sql<{ deleted_by: string | null }[]>`
+      select deleted_by from workspace_members
+      where workspace_id = ${coven.id} and user_id = ${memberId} and deleted_at is not null`,
+  );
+  expect(seat).toEqual({ deleted_by: memberId });
+  // With the seat gone, the paused page is closed to the former member as well.
+  await page.goto(`/coven-paused/${coven.slug}`);
+  await expect(page.getByRole('heading', { name: 'Access Paused' })).toHaveCount(0);
+});

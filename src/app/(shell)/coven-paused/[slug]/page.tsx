@@ -2,6 +2,7 @@ import type { Metadata, Route } from 'next';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { pausedCovenBySlug } from '@/modules/coven';
+import LeaveWorkspaceButton from '../../../../components/LeaveWorkspaceButton';
 import PageHeader from '../../../../components/PageHeader';
 import { Forbidden } from '../../../../lib/errors';
 import { requireSession } from '../../../../lib/request-session';
@@ -46,6 +47,12 @@ export default async function CovenPausedPage({ params }: CovenPausedPageProps) 
           You keep your place in the coven, and your other covens are not affected. The{' '}
           <Link href="/compendium">Compendium</Link> stays open to everyone.
         </p>
+        {/* Leaving is the one thing a paused member may still do in the coven. An owner is never paused, so the plain
+            confirmation serves and no successors are read. */}
+        <p>You can still leave the coven.</p>
+        <div className="form__actions">
+          <LeaveWorkspaceButton workspaceId={paused.id} name={paused.name} />
+        </div>
       </div>
     </main>
   );

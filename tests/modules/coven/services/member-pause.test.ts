@@ -478,6 +478,7 @@ describe('pausedCovenBySlug', () => {
 
     await pauseMemberAccess(asUser(A), covenId, B.id, LATER, null);
     await expect(pausedCovenBySlug(asUser(B), slug)).resolves.toEqual({
+      id: covenId,
       name: 'Fixture Paused Page Coven',
       until: LATER,
     });

@@ -40,5 +40,5 @@ export async function pausedCovenBySlug(
   if (!workspace) throw new Forbidden();
   const seat = await findWorkspaceSeat(session.userId, workspace.id);
   if (!seat) throw new Forbidden();
-  return seat.pause ? { name: workspace.name, until: seat.pause.until } : null;
+  return seat.pause ? { id: workspace.id, name: workspace.name, until: seat.pause.until } : null;
 }

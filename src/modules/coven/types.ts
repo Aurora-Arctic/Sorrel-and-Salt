@@ -30,8 +30,8 @@ export type CovenMembership = {
   membership: Membership;
 };
 
-/** The coven a paused member is shut out of, as the paused page names it: its name, and when the pause ends, or null for none. */
-export type PausedCoven = { name: string; until: Date | null };
+/** The coven a paused member is shut out of, as the paused page names it: its id, for Leave; its name; and when the pause ends, or null for none. */
+export type PausedCoven = { id: string; name: string; until: Date | null };
 
 /** A member's address as the owner's Email column reads it. */
 export type MemberEmail = {

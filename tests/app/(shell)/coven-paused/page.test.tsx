@@ -18,6 +18,12 @@ const requireSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireSession }));
 const pausedCovenBySlug = vi.fn();
 vi.mock('@/modules/coven', () => ({ pausedCovenBySlug }));
+// The Leave button's confirmation and its leave are its own (tests/components/LeaveWorkspaceButton/index.test.tsx); here
+// only that the page hands it this coven.
+const LeaveWorkspaceButton = vi.fn((_props: { workspaceId: string; name: string }) => (
+  <button type="button">Leave Coven</button>
+));
+vi.mock('@/components/LeaveWorkspaceButton', () => ({ default: LeaveWorkspaceButton }));
 
 const { default: CovenPausedPage, metadata } =
   await import('@/app/(shell)/coven-paused/[slug]/page');
@@ -30,6 +36,7 @@ const visit = async (slug = 'fixture-coven') =>
 beforeEach(() => {
   requireSession.mockResolvedValue(SESSION);
   pausedCovenBySlug.mockReset();
+  LeaveWorkspaceButton.mockClear();
 });
 
 afterEach(cleanup);
@@ -56,6 +63,17 @@ describe('/coven-paused/[slug]', () => {
     expect(screen.getByText(/Fixture Coven/)).toHaveTextContent(
       'Your access to Fixture Coven is paused, with no end date.',
     );
+  });
+
+  it('offers the paused member Leave Coven, for this coven', async () => {
+    pausedCovenBySlug.mockResolvedValue({ id: 'coven-id', name: 'Fixture Coven', until: null });
+    await visit();
+
+    expect(screen.getByRole('button', { name: 'Leave Coven' })).toBeInTheDocument();
+    expect(LeaveWorkspaceButton.mock.lastCall?.[0]).toEqual({
+      workspaceId: 'coven-id',
+      name: 'Fixture Coven',
+    });
   });
 
   it('links to the compendium, which stays open', async () => {
