@@ -109,8 +109,8 @@ export default function TermsOfUsePage() {
         The tools the site has today for keeping to this are small, and we name them rather than
         promise more. A coven's owner may remove a member from the coven. A site admin may stop a
         person sending support requests for a time, and may take away the right to create covens.
-        There is no button that closes an account, so an admin who needs to close one does it and
-        says so.
+        Accounts are never closed. There is no way yet to pause one, so an admin who needs to stop
+        an account does it by hand and says so.
       </p>
 
       <h2>What the Site Promises, and What It Does Not</h2>
