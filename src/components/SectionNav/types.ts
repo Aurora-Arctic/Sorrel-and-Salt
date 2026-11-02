@@ -13,7 +13,8 @@ export type SectionIconName =
   | 'deities'
   | 'astrology'
   | 'people'
-  | 'support';
+  | 'support'
+  | 'documents';
 
 /**
  * One section: a tab on a wide screen, an item in the bottom bar on a phone.

@@ -120,24 +120,24 @@ The owner holds the primary admin account, which no one can revoke. The site rel
 - Every rule on this page, and every change to the terms, applies to the owner as to anyone else, and a change to the terms is published as a new version that everyone agrees to again.
 - If the site must end, the owner says so ahead of time. The owner commits to building a way for people to take their own writing with them; it does not exist yet.
 
-[^1]: U.S. Fish & Wildlife Service. "National Eagle Repository." Accessed 2 November 2026. <https://www.fws.gov/program/national-eagle-repository>.
+[^1]: U.S. Fish & Wildlife Service. "National Eagle Repository." Accessed 2 November 2026. https://www.fws.gov/program/national-eagle-repository.
 
-[^2]: Wikipedia. "Witch Trials in the Early Modern Period." Accessed 1 November 2026. <https://en.wikipedia.org/wiki/Witch_trials_in_the_early_modern_period>.
+[^2]: Wikipedia. "Witch Trials in the Early Modern Period." Accessed 1 November 2026. https://en.wikipedia.org/wiki/Witch_trials_in_the_early_modern_period.
 
-[^3]: World Wide Web Consortium, Web Accessibility Initiative. "WCAG 2 Overview." Last updated 17 September 2026. <https://www.w3.org/WAI/standards-guidelines/wcag/>.
+[^3]: World Wide Web Consortium, Web Accessibility Initiative. "WCAG 2 Overview." Last updated 17 September 2026. https://www.w3.org/WAI/standards-guidelines/wcag/.
 
-[^4]: Wikipedia. "Smudging." Accessed 1 November 2026. <https://en.wikipedia.org/wiki/Smudging>.
+[^4]: Wikipedia. "Smudging." Accessed 1 November 2026. https://en.wikipedia.org/wiki/Smudging.
 
-[^5]: Wikipedia. "American Indian Religious Freedom Act." Accessed 1 November 2026. <https://en.wikipedia.org/wiki/American_Indian_Religious_Freedom_Act>.
+[^5]: Wikipedia. "American Indian Religious Freedom Act." Accessed 1 November 2026. https://en.wikipedia.org/wiki/American_Indian_Religious_Freedom_Act.
 
-[^6]: Wikipedia. "Hoodoo (Spirituality)." Accessed 1 November 2026. <https://en.wikipedia.org/wiki/Hoodoo_(spirituality)>.
+[^6]: Wikipedia. "Hoodoo (Spirituality)." Accessed 1 November 2026. https://en.wikipedia.org/wiki/Hoodoo_(spirituality).
 
-[^7]: Wikipedia. "Salvia apiana." Accessed 1 November 2026. <https://en.wikipedia.org/wiki/Salvia_apiana>.
+[^7]: Wikipedia. "Salvia apiana." Accessed 1 November 2026. https://en.wikipedia.org/wiki/Salvia_apiana.
 
-[^8]: Wikipedia. "Bursera graveolens." Accessed 1 November 2026. <https://en.wikipedia.org/wiki/Bursera_graveolens>.
+[^8]: Wikipedia. "Bursera graveolens." Accessed 1 November 2026. https://en.wikipedia.org/wiki/Bursera_graveolens.
 
-[^9]: Wikipedia. "Bulnesia sarmientoi." Accessed 1 November 2026. <https://en.wikipedia.org/wiki/Bulnesia_sarmientoi>.
+[^9]: Wikipedia. "Bulnesia sarmientoi." Accessed 1 November 2026. https://en.wikipedia.org/wiki/Bulnesia_sarmientoi.
 
-[^10]: Wikipedia. "Santalum album." Accessed 1 November 2026. <https://en.wikipedia.org/wiki/Santalum_album>.
+[^10]: Wikipedia. "Santalum album." Accessed 1 November 2026. https://en.wikipedia.org/wiki/Santalum_album.
 
-[^11]: Wikipedia. "CITES." Accessed 1 November 2026. <https://en.wikipedia.org/wiki/CITES>.
+[^11]: Wikipedia. "CITES." Accessed 1 November 2026. https://en.wikipedia.org/wiki/CITES.

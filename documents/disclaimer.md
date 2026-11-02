@@ -58,8 +58,8 @@ The compendium links to the sources it cites. The site does not control those pa
 
 If a page is wrong, incomplete or dangerous, tell us through the [support form](?support=compendium). A correction with a source is the most useful thing you can send.
 
-[^1]: Kaddu, Steven, Helmut Kerl, and Peter Wolf. "Accidental Bullous Phototoxic Reactions to Bergamot Aromatherapy Oil." _Journal of the American Academy of Dermatology_ 45, no. 3 (2001): 458–61. <https://doi.org/10.1067/mjd.2001.116226>.
+[^1]: Kaddu, Steven, Helmut Kerl, and Peter Wolf. "Accidental Bullous Phototoxic Reactions to Bergamot Aromatherapy Oil." _Journal of the American Academy of Dermatology_ 45, no. 3 (2001): 458–61. https://doi.org/10.1067/mjd.2001.116226.
 
-[^2]: Wikipedia. "Bergamot Orange." Accessed 1 November 2026. <https://en.wikipedia.org/wiki/Bergamot_orange>.
+[^2]: Wikipedia. "Bergamot Orange." Accessed 1 November 2026. https://en.wikipedia.org/wiki/Bergamot_orange.
 
-[^3]: McDaniel-Price, Amanda. "Capsaicin: When the Chili Is Too Hot." National Capital Poison Center. Accessed 1 November 2026. <https://www.poison.org/articles/capsaicin-when-the-chili-is-too-hot>.
+[^3]: McDaniel-Price, Amanda. "Capsaicin: When the Chili Is Too Hot." National Capital Poison Center. Accessed 1 November 2026. https://www.poison.org/articles/capsaicin-when-the-chili-is-too-hot.

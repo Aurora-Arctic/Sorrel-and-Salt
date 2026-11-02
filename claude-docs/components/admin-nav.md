@@ -1,7 +1,7 @@
 # AdminNav
 
 `src/components/AdminNav/` — the `/admin` layout's nav, a `<nav>` labelled
-"Admin" linking every admin page, in two sections (a curator sees the first only), in the context row beside
+"Admin" linking every admin page, in three sections (a curator sees the first and Support only; Documents is admin only), in the context row beside
 the word Admin and, on a phone, along the foot of the window. A thin wrapper:
 the tabs, the bar and the More button are [`SectionNav`](section-nav.md)'s. The same sections are the
 `/admin` index's table of contents, which this component also draws
@@ -18,10 +18,11 @@ tabs, each tab at its own address, and the nav links a page at its first tab
 |                  | Astrology  | Celestial Bodies `/admin/celestial-bodies` · Zodiac Signs `/admin/zodiac-signs`                        | MB.95                |
 | People & Support | People     | Users `/admin/users` · Invitations `/admin/invitations` · Privilege Changes `/admin/privilege-changes` | MB.52, MB.70, MB.200 |
 |                  | Support    | none: `/admin/support`                                                                                 |                      |
+| Site             | Documents  | none: `/admin/documents` (admin only; the editor is `/admin/documents/[key]`)                          | M15.71               |
 
 It takes `managesPeople` (M11.20) and an optional `needsStaff` count, which the admin layout reads with `countSupportViews` and which the Support link draws after its label as a facet count, with no brackets; the layout does not re-run on client navigation, so the count is as fresh as its last render. `managesPeople` is true for an admin, false for a curator, whom the People page leaves out. It is display only; the pages' guards refuse a curator whatever the nav shows ([`auth/admin-guard.md`](../auth/admin-guard.md), "The curator guard (M11.20)"). The list is in `sections.ts`: `ADMIN_PAGES`, each page
 a label, its icon (`SectionNav/icons.tsx`), the one line the index says about it and its tabs, each a route and
-a short label; and `ADMIN_SECTIONS`, each section a name and its pages, and People carrying `adminOnly: true`; `adminSections(managesPeople)` drops the `adminOnly` pages and any section left empty. Support follows People in the same section, so no hairline sits between them; a curator, with no People, sees Support open that section.
+a short label; and `ADMIN_SECTIONS`, each section a name and its pages, and People and Documents each carrying `adminOnly: true`; `adminSections(managesPeople)` drops the `adminOnly` pages and any section left empty. Support follows People in the same section, so no hairline sits between them; a curator, with no People, sees Support open that section.
 Each tabbed page's layout reads its tabs from `ADMIN_PAGES` too, and a vocabulary's tabs take their address and label from its kind table (`GroupList/kinds.ts`, `GroupedValueList/kinds.ts`). `index.tsx`
 turns the sections into `SectionNav` items (a page at its first tab, its other
 tabs as `matches`, the first page of each later section `apart`) and stays a

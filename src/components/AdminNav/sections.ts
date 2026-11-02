@@ -76,6 +76,14 @@ export const ADMIN_PAGES = {
     description: 'The help requests people have sent, with replies, assignment and time-outs.',
     tabs: [{ href: '/admin/support', label: 'Support' }],
   },
+  documents: {
+    label: 'Documents',
+    icon: 'documents',
+    adminOnly: true,
+    description:
+      'The privacy policy, disclaimer, code of ethics and terms of use: edit a draft, then publish it as a new version.',
+    tabs: [{ href: '/admin/documents', label: 'Documents' }],
+  },
 } as const satisfies Record<string, AdminPage>;
 
 export const ADMIN_SECTIONS: readonly AdminSection[] = [
@@ -90,6 +98,7 @@ export const ADMIN_SECTIONS: readonly AdminSection[] = [
     ],
   },
   { name: 'People & Support', pages: [ADMIN_PAGES.people, ADMIN_PAGES.support] },
+  { name: 'Site', pages: [ADMIN_PAGES.documents] },
 ];
 
 /**

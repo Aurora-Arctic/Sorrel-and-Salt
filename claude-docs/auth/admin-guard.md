@@ -109,6 +109,7 @@ redirected first, as everywhere.
 | ----------------------------------------------------------------------------------------- | ------------------------- | -------------- |
 | `/admin` layout and index, the compendium, categories, forms, deities and astrology pages | `requireCuratorSession()` | The page       |
 | `/admin/users`, `/admin/invitations`, `/admin/privilege-changes` (the `(people)` group)   | `requireAdminSession()`   | **403**        |
+| `/admin/documents` and `/admin/documents/[key]`                                           | `requireAdminSession()`   | **403**        |
 | The workshop (`assertWorkshopAccess`)                                                     | `assertSiteAdmin`         | Refused        |
 
 - **The layout cannot guard the people pages.** The admin layout runs
