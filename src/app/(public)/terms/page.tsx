@@ -98,8 +98,7 @@ export default function TermsOfUsePage() {
       <p>
         The <Link href="/code-of-ethics">Code of Ethics</Link> says what the site stands for. Its
         section "What Everyone Agrees To" binds every account, and agreeing to these terms is
-        agreeing to it. In short: no bigotry, in any form, towards anyone; taking only what can be
-        spared; and honesty about what you know and where you learned it.
+        agreeing to it. In short: no bigotry, in any form, towards anyone.
       </p>
       <p>
         The Code of Ethics goes on to ask more of the people who run the site. Its sections for
