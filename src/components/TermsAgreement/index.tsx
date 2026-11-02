@@ -44,6 +44,17 @@ const TermsAgreement = ({ version, updatedOn, destination }: TermsAgreementProps
         Version {version}, last updated{' '}
         <time dateTime={updatedOn}>{dayInUtc(new Date(updatedOn))}</time>
       </p>
+      <p>
+        The terms include the{' '}
+        <Link href="/disclaimer" target="_blank">
+          Disclaimer
+        </Link>{' '}
+        and the{' '}
+        <Link href="/code-of-ethics" target="_blank">
+          Code of Ethics
+        </Link>
+        , and agreeing to the terms is agreeing to them too.
+      </p>
       {alert && <Notice kind="error">{alert}</Notice>}
       <p className="terms-agreement__actions">
         <Link className="btn btn--quiet" href="/terms" target="_blank">
