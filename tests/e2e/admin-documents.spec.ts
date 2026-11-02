@@ -4,13 +4,16 @@ import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
-// An admin edits the site's documents in place at /admin/documents: a saved draft is the admin's alone, and a publish is what a
+// An admin edits the site's documents in place, one tab each under /admin/documents: a saved draft is the admin's alone, and a publish is what a
 // reader sees, as a new version with the old one in its history. Publishing the terms asks every account to agree again, and the
 // confirmation says so first (claude-docs/design-decisions/m15.59-document-editor-scope.md).
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
+
+// The four documents, in the order their tabs and the footer list them.
+const DOCUMENT_KEYS = ['privacy', 'disclaimer', 'code-of-ethics', 'terms'] as const;
 
 /** The editor's editable text. */
 const editorOf = (page: Page) =>
@@ -31,13 +34,21 @@ test('an admin edits the disclaimer, saves a draft no reader sees, then publishe
   const reader = await (await browser.newContext()).newPage();
   const ADDITION = ' Fixturewort sentence from the editor.';
 
-  // The list: one link per document.
-  const response = await page.goto('/admin/documents');
-  expect(response?.status()).toBe(200);
+  // The nav's Documents opens the privacy policy's editor, under a tab row with one tab per document in the footer's order.
+  await page.goto('/admin');
+  await page
+    .getByRole('navigation', { name: 'Admin' })
+    .getByRole('link', { name: 'Documents' })
+    .click();
+  await expect(page).toHaveURL(/\/admin\/documents\/privacy$/);
   const main = page.getByRole('main');
-  for (const name of ['Privacy Policy', 'Disclaimer', 'Code of Ethics', 'Terms of Use']) {
-    await expect(main.getByRole('link', { name, exact: true })).toBeVisible();
+  const tabs = main.getByRole('navigation', { name: 'Documents' }).getByRole('link');
+  await expect(tabs).toHaveText(['Privacy Policy', 'Disclaimer', 'Code of Ethics', 'Terms of Use']);
+  for (const [index, key] of DOCUMENT_KEYS.entries()) {
+    await expect(tabs.nth(index)).toHaveAttribute('href', `/admin/documents/${key}`);
   }
+  await expect(tabs.nth(0)).toHaveAttribute('aria-current', 'page');
+  await expect(editorOf(page)).toBeVisible();
   await assertNoAccessibilityViolations(page);
 
   // Before: the seed's one version, so the public page lists no earlier one.
@@ -45,8 +56,12 @@ test('an admin edits the disclaimer, saves a draft no reader sees, then publishe
   await expect(reader.getByRole('main')).not.toContainText('Fixturewort');
   await expect(reader.getByRole('region', { name: 'Earlier Versions' })).toHaveCount(0);
 
-  await main.getByRole('link', { name: 'Disclaimer', exact: true }).click();
+  await main
+    .getByRole('navigation', { name: 'Documents' })
+    .getByRole('link', { name: 'Disclaimer', exact: true })
+    .click();
   await expect(page).toHaveURL(/\/admin\/documents\/disclaimer$/);
+  await expect(tabs.nth(1)).toHaveAttribute('aria-current', 'page');
   await expect(editorOf(page)).toContainText('agreeing to the terms is agreeing to it');
   const save = main.getByRole('button', { name: 'Save Draft' });
   await expect(save).toBeDisabled();
@@ -122,7 +137,7 @@ test('publishing the terms warns that every account will agree again, and sends 
 });
 
 // A curator curates the compendium and does not govern the site's documents: each page refuses them itself, whatever the nav shows.
-test('a curator is refused /admin/documents with the styled not-authorised page', async ({
+test('a curator is refused every document editor with the styled not-authorised page', async ({
   page,
 }) => {
   await signInAs(page, 'a-curator@admin-documents.test', ['discord'], 'curator');
@@ -130,11 +145,21 @@ test('a curator is refused /admin/documents with the styled not-authorised page'
   // Precondition: the curator reaches the admin pages that curate.
   expect((await page.goto('/admin/compendium'))?.status()).toBe(200);
 
-  for (const path of ['/admin/documents', '/admin/documents/disclaimer']) {
+  for (const path of ['/admin/documents/privacy', '/admin/documents/disclaimer']) {
     expect((await page.goto(path))?.status(), path).toBe(403);
     await expect(
       page.getByRole('main').getByRole('heading', { level: 1, name: 'Not Authorized' }),
     ).toBeVisible();
   }
   await assertNoAccessibilityViolations(page);
+});
+
+// The documents open on their first tab, so no list page stands at /admin/documents: the address answers as one never built.
+test('/admin/documents is not a page, even for an admin', async ({ page }) => {
+  await signInAs(page, 'list-admin@admin-documents.test', ['discord'], 'admin');
+
+  // Precondition: this admin reaches the documents' editors.
+  expect((await page.goto('/admin/documents/privacy'))?.status()).toBe(200);
+
+  expect((await page.goto('/admin/documents'))?.status()).toBe(404);
 });

@@ -33,7 +33,8 @@ test('an admin sees the admin layout and its nav', async ({ page }) => {
     ['Astrology', '/admin/celestial-bodies'],
     ['Support', '/admin/support'],
     ['People', '/admin/users'],
-    ['Documents', '/admin/documents'],
+    // The documents open on the privacy policy, their first tab.
+    ['Documents', '/admin/documents/privacy'],
   ];
   await expect(nav.getByRole('link')).toHaveCount(pages.length);
   // A tab with a count is named "Support 0": its label, then its count.
@@ -196,7 +197,7 @@ test('a curator reaches /admin and the curation pages, and is refused People and
     '/admin/invitations',
     '/admin/invitation-cards',
     '/admin/card-sign-ups',
-    '/admin/documents',
+    '/admin/documents/privacy',
     '/admin/documents/disclaimer',
   ]) {
     expect((await page.goto(path))?.status(), path).toBe(403);

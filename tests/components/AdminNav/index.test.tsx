@@ -27,7 +27,8 @@ const PAGES = [
   '/admin/celestial-bodies',
   '/admin/users',
   '/admin/support',
-  '/admin/documents',
+  // The documents open on their first tab, the privacy policy.
+  '/admin/documents/privacy',
 ];
 
 beforeEach(() => {
@@ -47,7 +48,7 @@ describe('AdminNav', () => {
     render(<AdminNav managesPeople={false} />);
 
     expect(hrefs(row())).toEqual(
-      PAGES.filter((href) => href !== '/admin/users' && href !== '/admin/documents'),
+      PAGES.filter((href) => href !== '/admin/users' && href !== '/admin/documents/privacy'),
     );
     expect(hrefs(row())).toContain('/admin/support');
   });
@@ -58,7 +59,8 @@ describe('AdminNav', () => {
     ['/admin', []],
     ['/admin/categories', ['/admin/categories']],
     ['/admin/category-groups', ['/admin/categories']],
-    ['/admin/documents/disclaimer', ['/admin/documents']],
+    ['/admin/documents/privacy', ['/admin/documents/privacy']],
+    ['/admin/documents/disclaimer', ['/admin/documents/privacy']],
   ])('marks only the page you are on at %s as current', (path, expected) => {
     pathname.mockReturnValue(path);
 
