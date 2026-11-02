@@ -4,7 +4,6 @@ import { usePathname } from 'next/navigation';
 import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
 import { NEW_COVEN_PATH, covenTarget, covenSlugOf, pathInCoven } from '../../lib/coven-path';
 import { usePendingNavigation } from '../../lib/navigation';
-import { pausedCovenSlugOf } from '../../lib/access-paused';
 import { pauseNote } from '../../lib/pause-note';
 import type { NavigationTarget } from '../../lib/navigation';
 import { ComboboxSelect } from '../Combobox';
@@ -67,12 +66,7 @@ export default function WorkspaceSwitcher({
       <ComboboxSelect
         id={id}
         label="Coven"
-        value={
-          (pending ? picked : undefined) ??
-          covenSlugOf(pathname) ??
-          pausedCovenSlugOf(pathname) ??
-          ''
-        }
+        value={(pending ? picked : undefined) ?? covenSlugOf(pathname) ?? ''}
         busy={pending}
         inputRef={box}
         onChange={(value) => {

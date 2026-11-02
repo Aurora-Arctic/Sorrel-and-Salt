@@ -144,18 +144,6 @@ describe('WorkspaceSwitcher', () => {
     });
   });
 
-  it('shows the paused coven as current on its paused page, and goes from there to another coven’s home', () => {
-    pathname.mockReturnValue('/coven-paused/fixture-coven');
-    const workspaces = [{ ...WORKSPACES[0]!, paused: { until: null } }, WORKSPACES[1]!];
-    render(<WorkspaceSwitcher workspaces={workspaces} />);
-
-    expect(box()).toHaveTextContent('Fixture Coven');
-    fireEvent.click(box());
-    fireEvent.click(screen.getByRole('option', { name: 'Testwort Circle' }));
-
-    expect(push).toHaveBeenCalledExactlyOnceWith('/coven/testwort-circle');
-  });
-
   it('keeps the current workspace from the address, so a re-render in another tab’s workspace does not change it', () => {
     const { rerender } = render(<WorkspaceSwitcher workspaces={WORKSPACES} />);
     pathname.mockReturnValue('/coven/testwort-circle/ingredients');

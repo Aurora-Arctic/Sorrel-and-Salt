@@ -5,6 +5,8 @@ the paused page `/coven-paused/[slug]` for a member whose access to the coven is
 paused, so the paused page passes no `successors`. A client
 component taking the workspace's `workspaceId` and `name`, and, for the coven's only owner,
 `successors` (M6.16, below).
+`quiet` draws the opening button as `btn btn--quiet` rather than `btn`, for the paused page, where leaving
+is the secondary action below the links onward; the confirm stays `btn btn--destructive` either way.
 
 ## Contracts
 

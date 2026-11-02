@@ -38,12 +38,6 @@ export function covenPausedPath(slug: string): Route {
   return `/coven-paused/${encodeURIComponent(slug)}` as Route;
 }
 
-/** The coven a paused page's path names, `/coven-paused/<slug>`, or `undefined` for any other page. */
-export function pausedCovenSlugOf(pathname: string): string | undefined {
-  const match = /^\/coven-paused\/([^/]+)/.exec(pathname);
-  return match ? decodeURIComponent(match[1]) : undefined;
-}
-
 /** The coven slug a page's path sits under, `/coven/<slug>/…`, or `undefined` for a page outside every coven. */
 export function covenSlugOf(pathname: string): string | undefined {
   const match = /^\/coven\/([^/]+)/.exec(pathname);

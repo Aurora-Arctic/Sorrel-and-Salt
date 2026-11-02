@@ -2,10 +2,9 @@ import type { Metadata, Route } from 'next';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { pausedCovenBySlug } from '@/modules/coven';
-import ContextRow from '../../../../components/ContextRow';
 import LeaveWorkspaceButton from '../../../../components/LeaveWorkspaceButton';
 import PageHeader from '../../../../components/PageHeader';
-import WorkspaceSwitcher from '../../../../components/WorkspaceSwitcher';
+import SupportLink from '../../../../components/SupportLink';
 import { Forbidden } from '../../../../lib/errors';
 import { requireSession } from '../../../../lib/request-session';
 import { viewerOf } from '../../../../lib/viewer';
@@ -30,56 +29,52 @@ export default async function CovenPausedPage({ params }: CovenPausedPageProps) 
     throw error;
   }
   if (!paused) redirect(`/coven/${encodeURIComponent(slug)}` as Route);
-  // The viewer's other covens, so a paused coven is never a dead end: the switcher lists every one, the paused marked, and
-  // the page links to each the viewer can open.
-  const { viewer, workspaces } = await viewerOf();
+  // The viewer's other covens they can open, so a paused coven is never a dead end. The list is the one way on: the page
+  // draws no switcher, which would offer the same covens a second time.
+  const { workspaces } = await viewerOf();
   const others = workspaces.filter((workspace) => workspace.slug !== slug && !workspace.paused);
 
   return (
-    <>
-      <ContextRow
-        lead={<WorkspaceSwitcher workspaces={workspaces} canCreate={viewer.canCreate} />}
-      />
-      <main className="page-frame page-frame--narrow">
-        <div className="panel">
-          <PageHeader title="Access Paused" />
-          {paused.until ? (
-            <p>
-              Your access to {paused.name} is paused until <LocalTime at={paused.until} long />. You
-              can open it again after that.
-            </p>
-          ) : (
-            <p>
-              Your access to {paused.name} is paused, with no end date. You can open it again once
-              an owner of the coven lifts the pause.
-            </p>
-          )}
-          <p>
-            You keep your place in the coven, and your other covens are not affected. The{' '}
-            <Link href="/compendium">Compendium</Link> stays open to everyone.
-          </p>
-          {/* Leaving is the one thing a paused member may still do in the coven. An owner is never paused, so the plain
-            confirmation serves and no successors are read. */}
-          <p>You can still leave the coven.</p>
-          <div className="form__actions">
-            <LeaveWorkspaceButton workspaceId={paused.id} name={paused.name} />
-          </div>
-          {others.length > 0 && (
-            <>
-              <p>Your other covens are open to you:</p>
-              <ul aria-label="Your Other Covens">
-                {others.map((other) => (
-                  <li key={other.slug}>
-                    <Link href={`/coven/${encodeURIComponent(other.slug)}` as Route}>
-                      {other.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
+    <main className="page-frame page-frame--narrow">
+      <div className="page-frame__section panel">
+        <PageHeader
+          title="Access Paused"
+          lede={
+            paused.until ? (
+              <>
+                Your access to <strong>{paused.name}</strong> is paused until{' '}
+                <LocalTime at={paused.until} long />.
+              </>
+            ) : (
+              <>
+                Your access to <strong>{paused.name}</strong> is paused, with no end date.
+              </>
+            )
+          }
+        />
+        <p>
+          You can still ask the coven’s owner, or <SupportLink>Support</SupportLink>, about it.
+        </p>
+        {others.length > 0 && (
+          <section className="page-frame__section">
+            <h2 id="other-covens">Your Other Covens</h2>
+            <ul aria-labelledby="other-covens">
+              {others.map((other) => (
+                <li key={other.slug}>
+                  <Link href={`/coven/${encodeURIComponent(other.slug)}` as Route}>
+                    {other.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+        {/* Leaving is the one thing a paused member may still do in the coven: last and quiet, its confirm the red. An
+          owner is never paused, so the plain confirmation serves and no successors are read. */}
+        <div className="form__actions">
+          <LeaveWorkspaceButton workspaceId={paused.id} name={paused.name} quiet />
         </div>
-      </main>
-    </>
+      </div>
+    </main>
   );
 }

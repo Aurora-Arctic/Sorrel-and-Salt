@@ -161,20 +161,13 @@ test('a member paused in the coven they would land in is taken to their next cov
   await page.goto('/coven');
   await expect(page).toHaveURL(birchHome);
 
-  // The paused coven's page lists the switcher, showing the paused coven as current, and links to Birch.
+  // The paused coven's page links to Birch, its one way onward.
   await page.goto(`/coven/${alder.slug}`);
   await expect(page).toHaveURL(`/coven-paused/${alder.slug}`);
-  await expect(page.getByRole('combobox', { name: 'Coven' })).toHaveText(/Fixture Alder Coven/);
   await assertNoAccessibilityViolations(page);
   await page
     .getByRole('list', { name: 'Your Other Covens' })
     .getByRole('link', { name: 'Fixture Birch Coven' })
     .click();
-  await expect(page).toHaveURL(birchHome);
-
-  // The switcher leads there as well.
-  await page.goto(`/coven-paused/${alder.slug}`);
-  await page.getByRole('combobox', { name: 'Coven' }).click();
-  await page.getByRole('option', { name: 'Fixture Birch Coven' }).click();
   await expect(page).toHaveURL(birchHome);
 });

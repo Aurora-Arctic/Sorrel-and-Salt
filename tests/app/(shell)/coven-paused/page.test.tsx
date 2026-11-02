@@ -14,6 +14,8 @@ vi.mock('next/navigation', () => ({
   notFound: () => {
     throw new Error('not-found');
   },
+  usePathname: () => '/coven-paused/fixture-coven',
+  useSearchParams: () => new URLSearchParams(),
 }));
 const requireSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireSession }));
@@ -21,15 +23,16 @@ const pausedCovenBySlug = vi.fn();
 vi.mock('@/modules/coven', () => ({ pausedCovenBySlug }));
 // The Leave button's confirmation and its leave are its own (tests/components/LeaveWorkspaceButton/index.test.tsx); here
 // only that the page hands it this coven.
-const LeaveWorkspaceButton = vi.fn((_props: { workspaceId: string; name: string }) => (
-  <button type="button">Leave Coven</button>
-));
+const LeaveWorkspaceButton = vi.fn(
+  (_props: { workspaceId: string; name: string; quiet?: boolean }) => (
+    <button type="button">Leave Coven</button>
+  ),
+);
 vi.mock('@/components/LeaveWorkspaceButton', () => ({ default: LeaveWorkspaceButton }));
 
 const viewerOf = vi.fn();
 vi.mock('@/lib/viewer', () => ({ viewerOf }));
-// The switcher's choices and moves are its own (tests/components/WorkspaceSwitcher/index.test.tsx); here only that the page
-// hands it every coven of the viewer's.
+// The page draws no switcher, its list of the other covens being the way on; mocked so a draw would be seen.
 const WorkspaceSwitcher = vi.fn((_props: { workspaces: unknown[]; canCreate: boolean }) => (
   <div>Coven switcher</div>
 ));
@@ -65,21 +68,21 @@ describe('/coven-paused/[slug]', () => {
 
     expect(pausedCovenBySlug).toHaveBeenCalledExactlyOnceWith(SESSION, 'fixture-coven');
     expect(screen.getByRole('heading', { name: 'Access Paused' })).toBeInTheDocument();
-    expect(screen.getByText(/Fixture Coven/)).toHaveTextContent(
+    expect(screen.getByText(/Your access to/)).toHaveTextContent(
       `Your access to Fixture Coven is paused until ${longMinuteInZone(until)}.`,
     );
   });
 
-  it('says a pause with no end lasts until an owner lifts it', async () => {
+  it('says a pause with no end has none', async () => {
     pausedCovenBySlug.mockResolvedValue({ name: 'Fixture Coven', until: null });
     await visit();
 
-    expect(screen.getByText(/Fixture Coven/)).toHaveTextContent(
+    expect(screen.getByText(/Your access to/)).toHaveTextContent(
       'Your access to Fixture Coven is paused, with no end date.',
     );
   });
 
-  it('offers the paused member Leave Coven, for this coven', async () => {
+  it('offers the paused member Leave Coven, quiet, for this coven', async () => {
     pausedCovenBySlug.mockResolvedValue({ id: 'coven-id', name: 'Fixture Coven', until: null });
     await visit();
 
@@ -87,19 +90,28 @@ describe('/coven-paused/[slug]', () => {
     expect(LeaveWorkspaceButton.mock.lastCall?.[0]).toEqual({
       workspaceId: 'coven-id',
       name: 'Fixture Coven',
+      quiet: true,
     });
   });
 
-  it('offers the coven switcher over every coven of the viewer’s, so the paused coven is no dead end', async () => {
+  it('opens the Support dialog over the page from its Support link, to ask about the pause', async () => {
+    pausedCovenBySlug.mockResolvedValue({ id: 'coven-id', name: 'Fixture Coven', until: null });
+    await visit();
+
+    expect(screen.getByRole('link', { name: 'Support' })).toHaveAttribute(
+      'href',
+      '/coven-paused/fixture-coven?support=',
+    );
+  });
+
+  it('draws no coven switcher, so the other covens are offered once, by the list', async () => {
     pausedCovenBySlug.mockResolvedValue({ id: 'coven-id', name: 'Fixture Coven', until: null });
     viewerOf.mockResolvedValue({ viewer: { canCreate: true }, workspaces: [FIXTURE, TESTWORT] });
     await visit();
 
-    expect(screen.getByRole('region', { name: 'Context' })).toHaveTextContent('Coven switcher');
-    expect(WorkspaceSwitcher.mock.lastCall?.[0]).toEqual({
-      workspaces: [FIXTURE, TESTWORT],
-      canCreate: true,
-    });
+    expect(screen.getByRole('list', { name: 'Your Other Covens' })).toBeInTheDocument();
+    expect(WorkspaceSwitcher).not.toHaveBeenCalled();
+    expect(screen.queryByRole('region', { name: 'Context' })).toBeNull();
   });
 
   it('links to each other coven the viewer can open, passing over this one and any other paused', async () => {
@@ -124,13 +136,6 @@ describe('/coven-paused/[slug]', () => {
     await visit();
 
     expect(screen.queryByRole('list', { name: 'Your Other Covens' })).toBeNull();
-  });
-
-  it('links to the compendium, which stays open', async () => {
-    pausedCovenBySlug.mockResolvedValue({ name: 'Fixture Coven', until: null });
-    await visit();
-
-    expect(screen.getByRole('link', { name: 'Compendium' })).toHaveAttribute('href', '/compendium');
   });
 
   it('sends a member with no pause standing back into the coven', async () => {
