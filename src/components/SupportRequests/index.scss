@@ -82,7 +82,8 @@
 }
 
 // The anonymised notice stands where the reply form would, across the column, not at the notice's measure.
-.support-detail__anonymised {
+// Two classes, as the primitive is `body .notice`: a lone class loses to it.
+.notice.support-detail__anonymised {
   max-width: none;
 }
 
