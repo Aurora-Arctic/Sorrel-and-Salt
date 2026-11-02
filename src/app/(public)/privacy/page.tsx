@@ -155,16 +155,10 @@ export default function PrivacyPolicyPage() {
 
       <h3>Your Sessions</h3>
       <p>
-        Each time you sign in, a session row is written: a token that matches the cookie in your
-        browser, when the session expires, the network address (IP address) you came from and the
-        browser details your browser sent. Signing in to another account as an admin, which is
-        possible only outside production, records which admin did so.
-      </p>
-
-      <h3>Verification Links</h3>
-      <p>
-        A link the site mails you, to verify an address or reset a password, is kept as a row
-        holding what it identifies, its value and when it expires.
+        Each time you sign in, session info is stored: this includes the network address (IP
+        address) you came from and the browser details your browser sent. The sign-in library the
+        site is built on records these with every session by default. The site does not use them for
+        anything today, and no screen shows them to anyone.
       </p>
 
       <h3>Rate-Limit Counters</h3>
