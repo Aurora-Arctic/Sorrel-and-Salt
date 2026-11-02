@@ -1,11 +1,13 @@
 import { useId, type ReactElement } from 'react';
+import IconTip from '../IconTip';
+import { ChevronIcon } from '../IconTip/icons';
 import type { AccessCardsProps, AccessMark } from './types';
 import './index.scss';
 
 // Who may see each kind of data, as one card per kind: its summary line carries a mark per role,
 // and opening it shows every role's full wording. A row of role labels over the cards shares the
-// cards' columns and pins to the top of the window while they scroll past. Native `<details>`, so
-// it reads and opens with no script (claude-docs/components/access-cards.md).
+// cards' columns and pins under the bar while they scroll past, each label tipped with its role's
+// full name. Native `<details>`, so a card opens with no script (claude-docs/components/access-cards.md).
 
 const MARK_WORD: Record<AccessMark, string> = { yes: 'Yes', part: 'In Part', no: 'No' };
 
@@ -14,20 +16,6 @@ const Mark = ({ mark, spoken }: { mark: AccessMark; spoken?: string }): ReactEle
   <span className={`access-cards__mark access-cards__mark--${mark}`}>
     {spoken && <span className="access-cards__spoken">{spoken}</span>}
   </span>
-);
-
-const Chevron = (): ReactElement => (
-  <svg
-    viewBox="0 0 16 16"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="1.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    aria-hidden="true"
-  >
-    <path d="M3 6l5 5 5-5" />
-  </svg>
 );
 
 // Each card is named by its kind of data alone, not by the marks' hidden text on the same line.
@@ -51,9 +39,11 @@ const AccessCards = ({ roles, rows }: AccessCardsProps): ReactElement => {
         <div className="access-cards__row access-cards__columns" aria-hidden="true">
           <span className="access-cards__columns-label">Kind of Data</span>
           {roles.map((role) => (
-            <abbr key={role.name} title={role.name}>
-              {role.short}
-            </abbr>
+            // A span, not a control: the row is hidden from assistive technology, and the note above
+            // and each open card give a keyboard the full names. A tap opens the tip, as no hover can.
+            <IconTip key={role.name} tip={role.name} placement="above" opensOnPress>
+              <span className="access-cards__short">{role.short}</span>
+            </IconTip>
           ))}
         </div>
         {rows.map(({ data, cells }, row) => (
@@ -69,9 +59,7 @@ const AccessCards = ({ roles, rows }: AccessCardsProps): ReactElement => {
                   spoken={`${roles[index].name}: ${MARK_WORD[cell.mark]}.`}
                 />
               ))}
-              <span className="access-cards__chevron">
-                <Chevron />
-              </span>
+              <ChevronIcon className="access-cards__chevron" />
             </summary>
             <dl className="access-cards__detail">
               {cells.map((cell, index) => (
