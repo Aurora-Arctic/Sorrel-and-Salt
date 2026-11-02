@@ -85,12 +85,12 @@ const ACCESS_ROWS: { data: string; cells: [string, string, string, string, strin
 ];
 
 const ROLES = [
-  'Coven owner',
-  'Coven member',
-  'Coven viewer',
-  'Site curator',
-  'Site admin',
-  'A developer with database access',
+  'Coven Owner',
+  'Coven Member',
+  'Coven Viewer',
+  'Site Curator',
+  'Site Admin',
+  'A Developer with Database Access',
 ];
 
 // The one public document that describes what the site keeps about a person. Every statement in it
@@ -217,8 +217,8 @@ export default function PrivacyPolicyPage() {
           <thead>
             <tr>
               <th scope="col">Service</th>
-              <th scope="col">What it does</th>
-              <th scope="col">What it handles</th>
+              <th scope="col">What It Does</th>
+              <th scope="col">What It Handles</th>
             </tr>
           </thead>
           <tbody>
