@@ -1,3 +1,4 @@
+import type { workspaceMemberPauses } from './schema/workspace-member-pauses';
 import type { workspaceMembers, workspaces } from './schema/workspaces';
 import type { Membership } from './services/membership';
 
@@ -11,6 +12,9 @@ export type WorkspaceSeat = {
 };
 
 export type WorkspaceRow = typeof workspaces.$inferSelect;
+
+/** One pause an owner set on a member's access to their coven, standing, run out or lifted. */
+export type WorkspaceMemberPauseRow = typeof workspaceMemberPauses.$inferSelect;
 
 /** One membership, carrying the workspace it is of. */
 export type MembershipWithWorkspace = typeof workspaceMembers.$inferSelect & {

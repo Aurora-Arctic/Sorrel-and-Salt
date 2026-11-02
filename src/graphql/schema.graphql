@@ -1090,6 +1090,11 @@ type Mutation {
   """
   leaveWorkspace(workspaceId: ID!): Boolean!
 
+  """
+  Lifts the pause standing on a member’s access to a coven now, and answers it. Owners only.
+  """
+  liftMemberAccessPause(userId: ID!, workspaceId: ID!): WorkspaceMemberPause!
+
   """Ends a time-out now. Site admins only."""
   liftSupportTimeout(id: ID!): SupportTimeout!
 
@@ -1102,6 +1107,11 @@ type Mutation {
   Pauses admin grants and revokes for every admin but the primary one; answers true, paused. The primary admin alone may.
   """
   pauseAdminRoleChanges: Boolean!
+
+  """
+  Pauses a member’s access to a coven until `until`, or with no end when it is left out. Owners only; an owner cannot be paused.
+  """
+  pauseMemberAccess(note: String, until: DateTime, userId: ID!, workspaceId: ID!): WorkspaceMemberPause!
 
   """
   Pauses a user’s access until `until`, or with no end when it is left out, and ends every session they hold. Site admins only.
@@ -2922,6 +2932,20 @@ type WorkspaceMember {
   role: WorkspaceRole!
   user: CoMember!
   workspace: Workspace!
+}
+
+"""
+A pause on one member’s access to a coven: every read and write in it is refused until `until`, or with no end when `until` is null, unless lifted sooner. The member keeps their seat.
+"""
+type WorkspaceMemberPause {
+  audit: AuditInfo!
+  id: ID!
+  liftedAt: DateTime
+  liftedBy: ID
+  note: String
+  until: DateTime
+  userId: ID!
+  workspaceId: ID!
 }
 
 type WorkspaceMembersConnection {

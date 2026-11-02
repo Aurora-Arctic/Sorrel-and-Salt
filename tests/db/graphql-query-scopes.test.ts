@@ -466,6 +466,13 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   updateMemberRole: write(
     `mutation { updateMemberRole(workspaceId: "${WORKSPACE_W_ID}", userId: "not-an-id", role: member) { role } }`,
   ),
+  // A malformed person id, so a caller past the scope is refused by the service before anything is written.
+  pauseMemberAccess: write(
+    `mutation { pauseMemberAccess(workspaceId: "${WORKSPACE_W_ID}", userId: "not-an-id") { id } }`,
+  ),
+  liftMemberAccessPause: write(
+    `mutation { liftMemberAccessPause(workspaceId: "${WORKSPACE_W_ID}", userId: "not-an-id") { id } }`,
+  ),
   // A malformed id, so a caller past the scope is refused by the service
   // before anything is deleted.
   deleteWorkspace: write('mutation { deleteWorkspace(workspaceId: "not-an-id") }'),
@@ -723,6 +730,9 @@ const OPEN_WRITES = [
   'createWorkspace',
   // The owner's `member: update` decides, which the service checks.
   'updateMemberRole',
+  // The owner's `member: pause` decides, which the service checks.
+  'pauseMemberAccess',
+  'liftMemberAccessPause',
   // The owner's `workspace: delete` decides, which the service checks.
   'deleteWorkspace',
   // `member: remove` decides removal, and leaving is the caller's own seat.
