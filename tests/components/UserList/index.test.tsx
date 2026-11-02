@@ -102,32 +102,32 @@ describe('UserList, standing support time-outs and access pauses', () => {
       />,
     );
 
-  it('marks a standing time-out with its end in UTC, and a cross for a user with none', () => {
+  it('marks a standing time-out with its end in UTC under Support, and a user with none as not timed out', () => {
     rows();
-    expect(screen.getByRole('columnheader', { name: 'Time-Out' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Support' })).toBeInTheDocument();
     expect(
-      within(cellUnder('Bo Fixturewort', 'Time-Out')).getByText(
+      within(cellUnder('Bo Fixturewort', 'Support')).getByText(
         'Timed out until 20 November 2026, 09:30 UTC',
       ),
     ).toBeInTheDocument();
     for (const name of ['Ada Fixturewort', 'Cy Fixturewort']) {
-      expect(within(cellUnder(name, 'Time-Out')).getByText('Not timed out')).toBeInTheDocument();
+      expect(within(cellUnder(name, 'Support')).getByText('Not timed out')).toBeInTheDocument();
     }
   });
 
-  it('marks a standing pause with its end in UTC or none, and a cross for a user with none', () => {
+  it('marks a standing pause with its end in UTC or none under Access, and a user with none as not paused', () => {
     rows();
-    expect(screen.getByRole('columnheader', { name: 'Paused' })).toBeInTheDocument();
+    expect(screen.getByRole('columnheader', { name: 'Access' })).toBeInTheDocument();
     expect(
-      within(cellUnder('Bo Fixturewort', 'Paused')).getByText(
+      within(cellUnder('Bo Fixturewort', 'Access')).getByText(
         'Paused until 20 November 2026, 09:30 UTC',
       ),
     ).toBeInTheDocument();
     expect(
-      within(cellUnder('Cy Fixturewort', 'Paused')).getByText('Paused with no end date'),
+      within(cellUnder('Cy Fixturewort', 'Access')).getByText('Paused with no end date'),
     ).toBeInTheDocument();
     expect(
-      within(cellUnder('Ada Fixturewort', 'Paused')).getByText('Not paused'),
+      within(cellUnder('Ada Fixturewort', 'Access')).getByText('Not paused'),
     ).toBeInTheDocument();
   });
 });

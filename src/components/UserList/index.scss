@@ -126,6 +126,11 @@
     color: $text-muted;
     font-size: type-size('caption');
   }
+
+  // The mark columns (Can Create, Support, Access) and Logins: each heading centred over its marks or logos.
+  .user-list .user-list__mark-column {
+    text-align: center;
+  }
 }
 
 // The Impersonate column: the shared dangerous-action column (`row-action-column`), red since it

@@ -4,7 +4,8 @@ import type { StackColumn } from '../DataTable/types';
 import { emptyList } from '../../lib/text';
 import { workspaceRoleLabel } from '../UserDetail/roles';
 import RoleTip from '../RoleTip';
-import { Until } from '../UserDetail/access-pause-parts';
+import { Mark } from '../UserList/marks';
+import { inUtc } from '../../lib/utc';
 import MemberLink from './member-link';
 import { WORKSPACE_ROLE_ACCESS } from './role-access';
 import type { MemberListEntry, MemberListProps } from './types';
@@ -74,18 +75,23 @@ const columns = (
     cell: (member) => member.invitedBy && <span>{member.invitedBy}</span>,
   },
   updatedColumn('member-list__fact'),
-  // A pause standing on the member, and when it ends; empty while their access is open.
+  // A green check while the member's access is open, a red cross while a pause stands, its end or that it has none
+  // in the tip and in hidden text, as the admin user list marks a site pause.
   Boolean(showAccess) && {
     heading: 'Access',
-    cell: (member) =>
-      member.paused && (
-        <span className="member-list__access">
-          <span className="badge badge--caution">Paused</span>
-          <span className="member-list__fact">
-            <Until until={member.paused.until} />
-          </span>
-        </span>
-      ),
+    className: 'member-list__mark-column',
+    headingClassName: 'member-list__mark-column',
+    cell: ({ paused }) => {
+      if (!paused) return <Mark value label="Not paused" hint />;
+      const end = paused.until && inUtc(paused.until);
+      return (
+        <Mark
+          value={false}
+          label={end ? `Paused until ${end}` : 'Paused with no end date'}
+          tip={end ? `Until ${end}` : 'No end date'}
+        />
+      );
+    },
   },
 ];
 

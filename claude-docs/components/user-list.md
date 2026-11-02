@@ -63,7 +63,7 @@ head, both built by the page per row, as the other admin lists carry
   hydration the form submits natively, with the switch as `awaiting=`, which
   the page reads the same, as it does an older link's `awaiting=1`.
 - **Eight columns, in the owner's order**: Name, Email, Role, Can Create,
-  Time-Out, Paused, Logins and Signed Up, each heading in title case (DESIGN.md §9).
+  Support, Access, Logins and Signed Up, each heading in title case (DESIGN.md §9).
   The headings are short so the table needs less width (the owner's call,
   2026-11-02); each cell's hidden text still says the whole fact, "Not timed
   out" or "Paused with no end date", so a screen reader loses nothing.
@@ -88,14 +88,16 @@ head, both built by the page per row, as the other admin lists carry
   native `title` showed too late to be seen, on the owner's review. The bubble
   is `aria-hidden`, the reader having the hidden word. The creation flag's
   says Yes or No, which its heading asks, and has no bubble.
-  Time-Out and Paused mark whether one stands: not
-  lifted, not deleted, and with no end or an end still to come, the services'
-  own rule, so a time-out or pause that has run out is a cross and nothing is
-  written to end it. A check's hidden word carries the end, "Timed out until
-  <instant>" or "Paused until <instant>" (`inUtc`), or "Paused with no end
-  date"; its bubble says "Until <instant>" or "No end date", the heading
-  saying the rest. A cross says "Not timed out" or "Not paused" and has no
-  bubble. The page reads both for the whole page of users in one query each,
+  Support and Access mark whether the user may send support requests and
+  sign in, as Can Create marks whether they may create a coven: a green check
+  while no time-out or pause stands, a red cross while one does (the owner's
+  call, 2026-11-02). One stands when it is not lifted, not deleted, and has no
+  end or an end still to come, the services' own rule, so a time-out or pause
+  that has run out is a check again and nothing is written to end it. A
+  cross's hidden word carries the end, "Timed out until <instant>" or "Paused
+  until <instant>" (`inUtc`), or "Paused with no end date"; its bubble says
+  "Until <instant>" or "No end date", the heading saying the rest. A check
+  says "Not timed out" or "Not paused" and has no bubble. The page reads both for the whole page of users in one query each,
   `standingTimeoutsOf` (support) and `standingAccessPausesOf` (identity), both
   under `assertSiteAdmin`, beside `providersOf`, and hands each row
   `supportTimeoutUntil` and `accessPause` (`{ until }`), absent when none
@@ -370,6 +372,9 @@ a `.data-table-frame`, and its pager the `.pager`.
 Its own stylesheets hold only what is the list's, on the tokens. At desktop
 width the seven columns keep their order, restyled at MB.115's sign-off.
 
+- **Can Create, Support, Access and Logins are centred** under their headings,
+  heading and cells alike (`.user-list__mark-column`), above the stacking
+  width only, since a card leads each with its label.
 - **Cells are centred on the row** rather than on the text's baseline, the
   primitive's rule, since its rows mix text with provider marks, check marks
   and buttons whose baselines sit at different heights; the signup date never
@@ -478,7 +483,7 @@ Pause asking first with Cancel sending nothing, Pause's confirm and Resume
 busy until the refresh and then said in the status region, a refusal under the button pressed, Resume's included, and another
 admin's locked switch, described by its reason and raising an alert when
 tried. The role and creation controls' tests are the user modal's
-(`tests/components/UserDetail/role-and-creation.test.tsx`, [`user-detail.md`](user-detail.md)). It also covers the time-out and pause columns: a check with its end, dated or open, and a cross for none, each found under its column heading. Its colours, marks, tips and their placement, and the cards at phone width,
+(`tests/components/UserDetail/role-and-creation.test.tsx`, [`user-detail.md`](user-detail.md)). It also covers the Support and Access columns: a standing time-out or pause read with its end, dated or open, and "Not timed out" or "Not paused" for none, each found under its column heading. Its colours, marks, tips and their placement, and the cards at phone width,
 are presentation; paging is Pager's. `tests/app/(shell)/admin/(people)/users/page.test.tsx` reads the page's
 half: what it hands the list, the impersonation gate and the primary admin's
 flag included, `awaiting` read by its presence, and the count behind the
@@ -528,7 +533,7 @@ Three kinds of mark carry a tip that behaves as InfoTip's does, through the same
 
 - **The primary admin's mark** beside its role is a crown named "Primary Admin". It is a button, as InfoTip's ⓘ is, so the keyboard reaches the tip too. The tip says no more than the button's name, so it is hidden from assistive technology while closed.
 - **The history link** is a row's way into the privilege ledger narrowed to its user: the ledger's search opened with their address, lower-cased as every address is held. It is an icon before the name, named "Privilege changes for <name>", with a tip reading Privilege Changes, the ledger's one name. The tip says less than the link's name, so it describes nothing, and is hidden from assistive technology while closed.
-- **A hint** is a mark or a logo that says what it is in a tip bubble on hover: the provider logos, and the yes-or-no marks whose column heading does not say it, and a standing time-out's or pause's check, whose bubble gives its end (`Mark`'s `tip`, shown in place of its word). The bubble is the eye's copy, hidden from assistive technology, since the mark carries its word as hidden text. It opens on hover only, as before it was CSS's. `useTip` places it so it stays on the screen, centred over the mark where there is room. It takes no pointer, so it never blocks the row it overlaps.
+- **A hint** is a mark or a logo that says what it is in a tip bubble on hover: the provider logos, and the yes-or-no marks whose column heading does not say it, and a standing time-out's or pause's cross, whose bubble gives its end (`Mark`'s `tip`, shown in place of its word). The bubble is the eye's copy, hidden from assistive technology, since the mark carries its word as hidden text. It opens on hover only, as before it was CSS's. `useTip` places it so it stays on the screen, centred over the mark where there is room. It takes no pointer, so it never blocks the row it overlaps.
 
 ## The user link and the filter
 

@@ -57,8 +57,11 @@ test('an owner pauses a member’s access to the coven, the member sees the paus
   await expect(access.getByRole('button', { name: 'Lift Pause' })).toBeVisible();
   await expect(access).toContainText('Cooling off');
   await expect(
-    table.getByRole('row').filter({ hasText: 'Fixture Member' }).getByText('Paused'),
-  ).toBeVisible();
+    table
+      .getByRole('row')
+      .filter({ hasText: 'Fixture Member' })
+      .getByText(/^Paused until /),
+  ).toBeAttached();
   const [standing] = await withSql(
     (sql) => sql<{ dated: boolean; note: string | null }[]>`
       select until > now() + interval '6 days' as dated, note from workspace_member_pauses

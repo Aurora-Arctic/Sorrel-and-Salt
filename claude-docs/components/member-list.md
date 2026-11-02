@@ -52,9 +52,13 @@ Change Role, Coven Access and Remove.
   with no verified mark as the admin user list draws, since every member's address is verified. A seat is taken only by accepting an invitation, which matches a verified address, or by creating a coven, which an unverified account cannot reach, and an address changes only at verification. Without `showEmail` the column
   does not exist, so a member's table has no
   empty Email column to give the feature away.
-- **Access shows a standing pause** where the page sets `showAccess`: a
-  **Paused** badge and its end ("until …", or "with no end date"), and an
-  empty cell while access is open. Pausing and lifting are the modal's.
+- **Access marks whether the member's access is open** where the page sets
+  `showAccess`, with the admin user list's `Mark` ([`user-list.md`](user-list.md)):
+  a green check while no pause stands, its hidden word and its tip "Not
+  paused"; a red cross while one does, its hidden word "Paused until <instant>"
+  (`inUtc`) or "Paused with no end date", and its tip "Until <instant>" or "No
+  end date". The heading and the marks are centred above the stacking width
+  (`.member-list__mark-column`). Pausing and lifting are the modal's.
 - **The own row is marked in text** ("You"), not by colour or a test id.
 - **The sole-owner note is the page's**, not this component's: a quiet warning
   drawn inside the page's `ListFrame`, ahead of the list, so the frame's gap
@@ -127,8 +131,8 @@ inside a `ListFrame` ahead of the list); Gaps In The Record; and Addresses Witho
 
 `tests/components/MemberList/index.test.tsx`, by role and label queries: all
 three roles with their dates and tips, Invited By, the Updated stamp, each name
-a link to its modal with no action on any row, the Access column's badge and
-end only under `showAccess`, "You" on the own row only, and the address only
+a link to its modal with no action on any row, the Access column's mark and
+the pause's end only under `showAccess`, "You" on the own row only, and the address only
 under `showEmail`. `tests/components/MemberList/remove-control.test.tsx` and
 `role-control.test.tsx` hold each control's refusal and success.
 `tests/app/(shell)/coven/members.test.tsx` holds the page: no row actions for

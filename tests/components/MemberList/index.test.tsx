@@ -114,11 +114,13 @@ describe('MemberList', () => {
     expect(screen.queryByRole('columnheader', { name: 'Remove' })).toBeNull();
   });
 
-  it('shows a standing pause and its end in the Access column, where the page asks', () => {
+  it('marks each row’s access in the Access column, a standing pause with its end in UTC or none', () => {
+    const AT = new Date('2026-11-20T09:30:00Z');
     render(
       <MemberList
         members={[
           { ...MEMBER, paused: { until: null } },
+          { ...OWNER, paused: { until: AT } },
           { ...VIEWER, paused: null },
         ]}
         currentUserId={OWNER.userId}
@@ -126,10 +128,15 @@ describe('MemberList', () => {
       />,
     );
     expect(screen.getByRole('columnheader', { name: 'Access' })).toBeTruthy();
-    const paused = rowOf(MEMBER.name);
-    expect(within(paused).getByText('Paused')).toBeTruthy();
-    expect(paused).toHaveTextContent('with no end date');
-    expect(within(rowOf(VIEWER.name)).queryByText('Paused')).toBeNull();
+    expect(within(rowOf(MEMBER.name)).getByText('Paused with no end date')).toBeTruthy();
+    expect(
+      within(rowOf(OWNER.name)).getByText('Paused until 20 November 2026, 09:30 UTC'),
+    ).toBeTruthy();
+    // The check's tip repeats its word, so the word is read from the page, not the hover bubble.
+    expect(
+      within(rowOf(VIEWER.name)).getByText('Not paused', { ignore: '[aria-hidden="true"]' }),
+    ).toBeTruthy();
+    expect(within(rowOf(VIEWER.name)).queryByText(/^Paused/)).toBeNull();
   });
 
   it('draws no Access column where the page does not ask, though a row carries a pause', () => {
@@ -140,7 +147,7 @@ describe('MemberList', () => {
       />,
     );
     expect(screen.queryByRole('columnheader', { name: 'Access' })).toBeNull();
-    expect(screen.queryByText('Paused')).toBeNull();
+    expect(screen.queryByText(/paused/i)).toBeNull();
   });
 
   it('marks only the signed-in member’s own row', () => {

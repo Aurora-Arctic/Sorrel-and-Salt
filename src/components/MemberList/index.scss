@@ -40,9 +40,12 @@
   }
 }
 
-// A standing pause's badge and its end, on one line as the role and its tip are.
-.member-list__access {
-  @include value-and-control;
+// The Access column's heading and mark centred over each other, above the stacking width only, as a card
+// leads the mark with its label.
+@container data-table (width > #{$table-stack-width}) {
+  .member-list .member-list__mark-column {
+    text-align: center;
+  }
 }
 
 // The address under the name in the member modal's head. Lives here, not in Modal's sheet: the heading is built by the

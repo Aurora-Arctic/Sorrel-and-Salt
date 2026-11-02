@@ -84,32 +84,39 @@ const columns = (canImpersonate: boolean): readonly (StackColumn<UserListEntry> 
   },
   {
     heading: 'Can Create',
+    className: 'user-list__mark-column',
+    headingClassName: 'user-list__mark-column',
     // Whether they may create covens. Approve and Revoke are the user modal's.
     cell: (user) => (
       <Mark value={user.canCreateWorkspace} label={user.canCreateWorkspace ? 'Yes' : 'No'} />
     ),
   },
   {
-    heading: 'Time-Out',
-    // Whether a time-out stands on them now, its end in the tip; one run out or lifted is a cross.
+    heading: 'Support',
+    className: 'user-list__mark-column',
+    headingClassName: 'user-list__mark-column',
+    // A green check while they may send support requests; a red cross while a time-out stands, its end in the tip.
     cell: (user) =>
       user.supportTimeoutUntil ? (
         <Mark
-          value
+          value={false}
           label={`Timed out until ${inUtc(user.supportTimeoutUntil)}`}
           tip={`Until ${inUtc(user.supportTimeoutUntil)}`}
         />
       ) : (
-        <Mark value={false} label="Not timed out" />
+        <Mark value label="Not timed out" />
       ),
   },
   {
-    heading: 'Paused',
-    // Whether a pause stands on their access now, its end or that it has none in the tip.
+    heading: 'Access',
+    className: 'user-list__mark-column',
+    headingClassName: 'user-list__mark-column',
+    // A green check while their site access is open; a red cross while a pause stands, its end or that it has none in
+    // the tip.
     cell: ({ accessPause }) =>
       accessPause ? (
         <Mark
-          value
+          value={false}
           label={
             accessPause.until
               ? `Paused until ${inUtc(accessPause.until)}`
@@ -118,14 +125,15 @@ const columns = (canImpersonate: boolean): readonly (StackColumn<UserListEntry> 
           tip={accessPause.until ? `Until ${inUtc(accessPause.until)}` : 'No end date'}
         />
       ) : (
-        <Mark value={false} label="Not paused" />
+        <Mark value label="Not paused" />
       ),
   },
   {
     heading: 'Logins',
     // Logos, empty when none: a blank reads as none.
     // This and Signed Up are facts no control changes, so muted (index.scss).
-    className: 'user-list__fact',
+    className: 'user-list__fact user-list__mark-column',
+    headingClassName: 'user-list__mark-column',
     cell: (user) => (
       <span className="user-list__providers">
         {user.providers.map((id) => (
