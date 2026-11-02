@@ -15,19 +15,19 @@ The score and its facts come from `sourcingScore` in `src/modules/ingredients/se
 
 `SourcingScoreProps` (`types.ts`):
 
-| Prop       | What it is                                                                       |
-| ---------- | -------------------------------------------------------------------------------- |
-| `sourcing` | The `SourcingScore` the curator read returns: `score` and its `facts` list.      |
-| `variant`  | `panel` (the default) is the edit dialog's; `head` is the entry page's head row. |
+| Prop           | What it is                                                                                                                       |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `sourcing`     | The `SourcingScore` the curator read returns: `score` and its `facts` list.                                                      |
+| `headingLevel` | The heading's level: 4 (the default) in the edit dialog, 2 on the entry page under its h1. The size is the h4's at either level. |
 
-## The head variant
+## On the entry page
 
-On the public entry page the score is the last row of the entry's head, ruled off above by a hairline with `space(4)` padding. It is an `h2` sized with `heading-size(3)` and the same InfoTip, with no bar or key. Beneath is a native `<details>` whose summary reads "Show the Facts", or "Hide the Facts" once open (kept in state from the `toggle` event), in muted caption ink with the shared `disclosure-chevron`. The facts are the same glyph rows in the same order, in a grid of `repeat(auto-fill, minmax(16rem, 1fr))`: one column at phone width, more in a wide head. The component is a client component for that state.
+The entry page shows the same panel, whole and always open, as the last row of the entry's head, with `headingLevel={2}`. `IngredientEntry` wraps it in `.ingredient-entry__score`, which rules it off above with a hairline and `space(4)` padding and drops the panel's own bottom divider and margin, as nothing follows it in the head. There is no toggle.
 
 ## Where it shows
 
-The compendium's edit dialog, at the start of the form's Sources section (the form's `sourcesIntro` slot). The admin compendium dialog and the entry page's dialog both render [`CompendiumEntryForm`](compendium-entry-form.md), which draws the panel from its `sourcing` prop. The admin page reads the score in `read-entry.ts`; the entry page reads it in `sourcingOf` in `src/app/(public)/compendium/ingredients/[slug]/page.tsx`. Both call `readSourcingScore`, which refuses anyone who is not a curator or admin; the entry page asks only when the viewer can curate, and the score is never in the cached public read. An add and a coven's own entry have none. The panel is a landmark named by its heading, so a screen reader can jump to it. The head variant shows on the entry page itself, from the same read.
+The compendium's edit dialog, at the start of the form's Sources section (the form's `sourcesIntro` slot). The admin compendium dialog and the entry page's dialog both render [`CompendiumEntryForm`](compendium-entry-form.md), which draws the panel from its `sourcing` prop. The admin page reads the score in `read-entry.ts`; the entry page reads it in `sourcingOf` in `src/app/(public)/compendium/ingredients/[slug]/page.tsx`. Both call `readSourcingScore`, which refuses anyone who is not a curator or admin; the entry page asks only when the viewer can curate, and the score is never in the cached public read. An add and a coven's own entry have none. The panel is a landmark named by its heading, so a screen reader can jump to it. The entry page also shows it in its head, from the same read.
 
 ## Testing
 
-`tests/components/SourcingScore/index.test.tsx` checks the region is named by the heading, the rows run gains, costs then zeros with their signed points, the bar's accessible name states the numbers (including for a negative total), and the bar never passes its track. `tests/app/(shell)/admin/compendium/compendium-dialog.test.tsx` checks the edit dialog shows it. The head variant's toggle and fact order are tested in the same file, and `tests/app/(public)/compendium/ingredients/slug-page.test.tsx` checks who is handed the score. The service refusal is `tests/modules/ingredients/services/compendium-sourcing.test.ts`.
+`tests/components/SourcingScore/index.test.tsx` checks the region is named by the heading, the rows run gains, costs then zeros with their signed points, the bar's accessible name states the numbers (including for a negative total), and the bar never passes its track. `tests/app/(shell)/admin/compendium/compendium-dialog.test.tsx` checks the edit dialog shows it. The heading level prop is tested in the same file, and `tests/app/(public)/compendium/ingredients/slug-page.test.tsx` checks who is handed the score. The service refusal is `tests/modules/ingredients/services/compendium-sourcing.test.ts`.

@@ -632,3 +632,16 @@ $replaces-gap: space(5);
     flex-wrap: nowrap;
   }
 }
+
+// The sourcing score, the head's last row: ruled off above, and the panel's own bottom divider and
+// margin dropped, as nothing follows it in the head.
+.ingredient-entry__score {
+  padding-block-start: space(4);
+  border-block-start: 1px solid $hairline;
+
+  .sourcing-score {
+    margin-block: 0;
+    padding-block-end: 0;
+    border-block-end: 0;
+  }
+}

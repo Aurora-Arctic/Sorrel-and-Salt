@@ -308,7 +308,7 @@ A coven's own entry lists the compendium entries it replaces, and a compendium e
 
 A coven's own entry takes the dialog with the coven's form: a save closes it, and Delete says "{name} deleted" in the page's status region and leaves for `deletedHref`, where the focus goes to the page's heading. The coven's list renders the dialog over its rows with no entry until `?edit=<id>` names one.
 
-A compendium entry's dialog draws [`CompendiumEntryForm`](compendium-entry-form.md), the same component the admin compendium's `compendium-dialog.tsx` renders; the two differ only in the navigation they pass. `edit.sourcing` carries the Sourcing Score the page read for a curator or admin, which opens Sources and also shows in the page's head ([`sourcing-score.md`](sourcing-score.md), "The head variant").
+A compendium entry's dialog draws [`CompendiumEntryForm`](compendium-entry-form.md), the same component the admin compendium's `compendium-dialog.tsx` renders; the two differ only in the navigation they pass. `edit.sourcing` carries the Sourcing Score the page read for a curator or admin, which opens Sources and also shows in the page's head ([`sourcing-score.md`](sourcing-score.md), "On the entry page"): the same panel as the dialog, always open, as the last row of the head.
 
 ## Discarding while annotating
 

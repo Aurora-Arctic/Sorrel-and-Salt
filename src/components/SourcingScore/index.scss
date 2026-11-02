@@ -22,6 +22,9 @@ $bar-height: 0.5rem;
 
 .sourcing-score__heading {
   margin: 0;
+  // The h4 size at any level, so the panel looks the same under the dialog's h3 and the page's h1.
+  font-size: heading-size(4);
+  line-height: 1.25;
 }
 
 .sourcing-score__bar {
@@ -80,47 +83,4 @@ $bar-height: 0.5rem;
 
 .sourcing-score__fact--none .sourcing-score__glyph {
   color: $text-muted;
-}
-
-// The entry page's head variant: the last row of the head, ruled off above, the facts behind a disclosure.
-.sourcing-score-head {
-  display: flex;
-  flex-direction: column;
-  gap: space(1);
-  padding-block-start: space(4);
-  border-block-start: 1px solid $hairline;
-}
-
-.sourcing-score-head__heading {
-  margin: 0;
-  font-size: heading-size(3);
-}
-
-.sourcing-score-head__summary {
-  display: inline-flex;
-  align-items: center;
-  gap: space(1);
-  inline-size: fit-content;
-  cursor: pointer;
-  font-size: type-size('caption');
-  color: $text-muted;
-  // The native marker is replaced by the chevron.
-  list-style: none;
-
-  &::-webkit-details-marker {
-    display: none;
-  }
-}
-
-.sourcing-score-head__chevron {
-  @include disclosure-chevron('.sourcing-score-head__details[open]');
-}
-
-// One column at phone width, as many 16rem columns as the head's width takes above it.
-.sourcing-score-head__facts {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
-  gap: space(1) space(5);
-  @include list-reset;
-  padding-block-start: space(2);
 }

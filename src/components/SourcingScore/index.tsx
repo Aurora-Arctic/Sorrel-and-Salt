@@ -1,15 +1,11 @@
-'use client';
-
-import { useId, useState, type ReactElement } from 'react';
+import { useId, type ReactElement } from 'react';
 import InfoTip from '../InfoTip';
-import { ChevronIcon } from '../IconTip/icons';
 import type { SourcingScoreProps } from './types';
 import './index.scss';
 
 // A compendium entry's sourcing score for a curator: the total as the heading, a bar of what was
 // gained and what it cost out of the maximum, then each fact that made it with its points, so the
-// sum can be checked by eye. The `head` variant is the entry page's: the total, and the facts behind
-// a disclosure (claude-docs/components/sourcing-score.md).
+// sum can be checked by eye. (claude-docs/components/sourcing-score.md).
 
 /** The most an entry can score, which the bar is drawn out of (`sourcing-weights.ts`). */
 const MAXIMUM = 100;
@@ -73,44 +69,13 @@ const TIP = (
   </>
 );
 
-// The entry page's head row: the total always shown, the facts behind a native disclosure.
-function HeadScore({ sourcing }: SourcingScoreProps): ReactElement {
-  const heading = useId();
-  const tip = useId();
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="sourcing-score-head">
-      <div className="sourcing-score__head">
-        <h2 id={heading} className="sourcing-score-head__heading">
-          Sourcing Score: {sourcing.score}
-        </h2>
-        <InfoTip id={tip} label="Sourcing Score">
-          {TIP}
-        </InfoTip>
-      </div>
-      <details
-        className="sourcing-score-head__details"
-        onToggle={(e) => setOpen(e.currentTarget.open)}
-      >
-        <summary className="sourcing-score-head__summary">
-          <span className="sourcing-score-head__chevron" aria-hidden="true">
-            <ChevronIcon />
-          </span>
-          {open ? 'Hide the Facts' : 'Show the Facts'}
-        </summary>
-        <Facts sourcing={sourcing} className="sourcing-score-head__facts" />
-      </details>
-    </div>
-  );
-}
-
 export default function SourcingScore({
   sourcing,
-  variant = 'panel',
+  headingLevel = 4,
 }: SourcingScoreProps): ReactElement {
   const heading = useId();
   const tip = useId();
-  if (variant === 'head') return <HeadScore sourcing={sourcing} />;
+  const Heading = `h${headingLevel}` as const;
 
   const gained = sourcing.facts.reduce((sum, { points }) => sum + Math.max(points, 0), 0);
   const cost = sourcing.facts.reduce((sum, { points }) => sum - Math.min(points, 0), 0);
@@ -121,9 +86,9 @@ export default function SourcingScore({
   return (
     <section aria-labelledby={heading} className="sourcing-score">
       <div className="sourcing-score__head">
-        <h4 id={heading} className="sourcing-score__heading">
+        <Heading id={heading} className="sourcing-score__heading">
           Sourcing Score: {sourcing.score}
-        </h4>
+        </Heading>
         <InfoTip id={tip} label="Sourcing Score">
           {TIP}
         </InfoTip>

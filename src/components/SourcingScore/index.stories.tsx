@@ -77,10 +77,10 @@ export const CostsAgainstFullGains: Story = {
   },
 };
 
-// The entry page's head row: the total, the facts behind "Show the Facts".
-export const Head: Story = {
+// The entry page's: the same panel under an h2.
+export const OnTheEntryPage: Story = {
   args: {
-    variant: 'head',
+    headingLevel: 2,
     sourcing: {
       score: 38,
       facts: [

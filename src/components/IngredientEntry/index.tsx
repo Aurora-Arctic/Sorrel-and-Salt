@@ -375,7 +375,11 @@ const IngredientEntry = ({
         {/* A curator's review line, the head's last row: the Reviewed switch and the review day. */}
         {reviewControl}
         {/* The curator's sourcing score, the head's last row; the page reads it for a curator or admin alone. */}
-        {edit?.sourcing && <SourcingScore sourcing={edit.sourcing} variant="head" />}
+        {edit?.sourcing && (
+          <div className="ingredient-entry__score">
+            <SourcingScore sourcing={edit.sourcing} headingLevel={2} />
+          </div>
+        )}
       </header>
 
       {variants.length > 0 && (
