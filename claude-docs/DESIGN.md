@@ -252,7 +252,7 @@ Code, schema, and prose use _workspace_. The URL segment says _coven_, and the s
 
 **`user_privilege_changes`** — `id`, `userId`, `privilege` (`admin` | `curator` | `create_workspace`), `change` (`grant` | `revoke`), `via` (`bootstrap` | `admin` | `invitation` | `manual`), `note` (nullable), + audit; each set a closed enum. The one privilege ledger: one row per change to a privilege column on `users`, `role` as `admin` and as `curator`, each its own privilege, and `canCreateWorkspace` as `create_workspace`, because the next update to a user's row overwrites its `updated_by`. `created_by` is who made the change and `created_at` when. `via` is how it came about: `bootstrap` the primary admin's promotion by `ADMIN_BOOTSTRAP_EMAIL`, `admin` an admin's act on `/admin/users`, `invitation` an acceptance, and `manual` a `psql` fix that declared itself. Append-only by the database: a `forbid_rewrite()` trigger refuses every update and delete from any client, so the writer's types need no marker for it. Its migration copied the two one-privilege ledgers it replaced (MB.58's and MB.193's) with their ids and stamps, and `record_privilege_change()`, a trigger on `users`, fills it (MB.195): one row per changed privilege (a move from curator to admin writes a curator revoke and an admin grant at one instant; user to curator writes a curator grant and a create_workspace grant), its actor `app.current_user_id` or else the row's own `updated_by`, its route and note those the writer declared to `withAudit` (or, outside it, set as `app.privilege_route` and `app.privilege_note`), and a change declaring no route refused. Nothing in the application inserts into it. A third privilege is a value in the enum and a line in that trigger, not a table. A privilege's account, not §13's edit history (MB.194; [`mb.194-privilege-ledger-by-trigger.md`](design-decisions/mb.194-privilege-ledger-by-trigger.md)).
 
-**`support_requests`** — `id`, `about` (`accessibility` | `bug` | `account` | `compendium` | `privacy` | `feedback` | `question`), `subject` (1–120 characters), `message` (1–4,000), `path` (the page it was sent from, as the address, coven slug included; a curator reads it with the segment after `/coven/` redacted, an admin and the sender as stored; a curator is never shown a sender’s email, neither a signed-out visitor’s `senderEmail` nor an account’s address, and an admin is shown both, 2026-10-31; an invitation token is replaced and a query string dropped on write; [`m15-support-path-keeps-coven.md`](design-decisions/m15-support-path-keeps-coven.md)), `errorCode` (nullable integer; the HTTP status of the error page it was sent from), `status` (`open` | `waiting_on_sender` | `resolved` | `closed`), `assignedTo` (nullable user), `curatorVisible` (boolean, default `false`), `issueUrl` (nullable; an issue on the project's repository), `resolvedBy` (nullable user), `resolvedAt` (nullable), `lastSenderActivityAt` and `lastStaffActivityAt` (nullable), `closedAt` (nullable), `linkedFrom` (nullable request: the closed request this one follows up), `errorReference` (nullable; the digest Next gives an error page), `senderEmail` (nullable; the address of a signed-out visitor, in which case `created_by` is the seeded signed-out sender account and a CHECK ties the two together; [`m15-support-review.md`](design-decisions/m15-support-review.md)), + audit; soft-deleted, resolved and closed rows kept. A message a signed-in, verified account sends to whoever runs the site (M15.1; [`m15.1-support-form.md`](design-decisions/m15.1-support-form.md)). No workspace id: a request is the account's, and the sender is `created_by`, so the sender's finder ANDs `created_by`. A curator reads a request only when `curatorVisible` or `assignedTo` them, filtered in SQL. An account may send ten in 24 hours, counted from this table. Owned by the `support` module.
+**`support_requests`** — `id`, `about` (`accessibility` | `bug` | `account` | `compendium` | `privacy` | `feedback` | `question`), `subject` (1–120 characters), `message` (1–4,000), `path` (the page it was sent from, as the address, coven slug included; a curator reads it with the segment after `/coven/` redacted, an admin and the sender as stored; a curator is never shown a sender’s email, neither a signed-out visitor’s `senderEmail` nor an account’s address, and an admin is shown both, 2026-10-31; an invitation token is replaced and a query string dropped on write; [`m15-support-path-keeps-coven.md`](design-decisions/m15-support-path-keeps-coven.md)), `errorCode` (nullable integer; the HTTP status of the error page it was sent from), `status` (`open` | `waiting_on_sender` | `resolved` | `closed`), `assignedTo` (nullable user), `curatorVisible` (boolean, default `false`), `issueUrl` (nullable; an issue on the project's repository), `resolvedBy` (nullable user), `resolvedAt` (nullable), `lastSenderActivityAt` and `lastStaffActivityAt` (nullable), `closedAt` (nullable), `closingNoticeSentAt` (nullable `timestamptz`; when the closing-soon notice for the current resolution was taken by the mail transport, cleared by a reopen, M15.46), `linkedFrom` (nullable request: the closed request this one follows up), `errorReference` (nullable; the digest Next gives an error page), `senderEmail` (nullable; the address of a signed-out visitor, in which case `created_by` is the seeded signed-out sender account and a CHECK ties the two together; [`m15-support-review.md`](design-decisions/m15-support-review.md)), + audit; soft-deleted, resolved and closed rows kept, and a request closed twelve months is anonymised rather than deleted (below). A message a signed-in, verified account sends to whoever runs the site (M15.1; [`m15.1-support-form.md`](design-decisions/m15.1-support-form.md)). No workspace id: a request is the account's, and the sender is `created_by`, so the sender's finder ANDs `created_by`. A curator reads a request only when `curatorVisible` or `assignedTo` them, filtered in SQL. An account may send ten in 24 hours, counted from this table. **Retention (M15.46).** A resolved request closes seven days after resolving, with `closedAt` set to `resolvedAt` plus seven days, and readers treat a lapsed resolved row as closed from that moment, before the job writes it. Twelve calendar months after `closedAt`, the job empties `subject`, `message`, `path` and every reply's `body`, sets `senderEmail` null, and passes `created_by` (and a sender's `resolvedBy`, and a sender-authored reply's `created_by`) to the System account; `about`, `status`, `errorCode`, the dates, the staff ids and `issueUrl` stay, so counts per topic and month do not change ([`m15.46-resolved-requests-close-and-anonymise.md`](design-decisions/m15.46-resolved-requests-close-and-anonymise.md)). Owned by the `support` module.
 
 **`support_replies`** — `id`, `requestId`, `body` (1–4,000 characters), `authorRole` (`sender` | `staff`, default `staff`), `visibility` (`public` | `internal`, default `public`), + audit; soft-deleted. One message on a request; the author is `created_by`. An internal note is staff-only, and any curator who can read a request may add one to it, assigned to them or not (2026-10-31). The sender reads it on `/account/support`, and a mailed notice says one is waiting without carrying its text.
 
@@ -894,6 +894,7 @@ type Query {
   spell(id: ID!, workspaceId: ID!): Spell! # NOT_FOUND for a spell this reader may not see
   mySupportRequests(first: Int, after: String): QueryMySupportRequestsConnection! # the session's own requests, still open (open, waiting on the sender) ahead of resolved and closed, newest first within each, each with its replies; the finder ANDs created_by (M15.1)
   mySupportRequest(id: ID!): SupportRequest! # one of the session's own; NOT_FOUND for another sender's
+  supportDialogState: SupportDialogState! # open to a signed-out caller: whether the Support dialog shows the form, the signed-out form, the time-out or the email page's prompt, about the caller alone (M15.40)
   supportRequest(id: ID!): SupportRequest! # curator or admin; NOT_FOUND for a request a curator may not see
   supportRequests(
     about: SupportAbout
@@ -966,13 +967,15 @@ type Mutation {
   updateDeityTradition(id: ID!, input: DeityTraditionInput!): DeityTradition! # touches no deity
   deleteDeityTradition(id: ID!, moveTo: ID): ID! # its live deities move to moveTo first; needed only when it has some
   sendSupportRequest(input: SupportRequestInput!): SupportRequest! # a verified session; refuses the eleventh in 24 hours and a send during a time-out, each with an explaining error (M15.1)
+  sendSignedOutSupportRequest(input: SignedOutSupportRequestInput!): Boolean! # open to anyone; refused after ten sends from one address or thirty from one client in 24 hours; written as the seeded signed-out sender; returns nothing, as replies come by email (M15.40)
+  resolveMySupportRequest(id: ID!): SupportRequest! # the sender's own open or waiting request, resolved without a reply; starts the request's job (M15.42, M15.46)
   replyToSupportRequest(requestId: ID!, body: String!, waitingOnSender: Boolean): SupportReply! # an admin on any request, a curator on one assigned to them; mails a notice with no reply text; waitingOnSender moves an open request to waiting_on_sender and is refused on any other status (M15.42)
   sendSupportMessage(requestId: ID!, body: String!): SupportRequest! # the sender's own request: reopens a waiting or resolved one; on a closed one opens a new request linked to it, returned (M15.42)
   addSupportInternalNote(requestId: ID!, body: String!): SupportReply! # staff-only note; changes no status, mails no one (M15.42)
   closeSupportRequest(id: ID!): SupportRequest! # an open, waiting or resolved request; an admin on any, a curator on one assigned to them (M15.42)
   assignSupportRequest(id: ID!, assigneeId: ID): SupportRequest! # admin only; null unassigns
   setSupportRequestCuratorVisible(id: ID!, visible: Boolean!): SupportRequest! # admin only
-  resolveSupportRequest(id: ID!): SupportRequest! # an admin on any request, a curator on one assigned to them
+  resolveSupportRequest(id: ID!): SupportRequest! # an admin on any request, a curator on one assigned to them; starts the request's job, which mails the closing-soon notice on day 5 and closes it on day 7 (M15.46)
   setSupportRequestIssueUrl(id: ID!, issueUrl: String): SupportRequest! # admin only; must be an issue on Aurora-Arctic/Sorrel-and-Salt
   timeOutSupportSender(userId: ID!, until: DateTime!, note: String): SupportTimeout! # admin only
   liftSupportTimeout(id: ID!): SupportTimeout! # admin only
@@ -1356,6 +1359,27 @@ input SupportRequestInput {
   message: String! # 1–4,000 characters
   path: String # the page it was sent from, coven slug included; a curator reads it with the segment after /coven/ redacted; an invitation token is redacted on write
   errorCode: Int # the HTTP status of the error page it was sent from
+  errorReference: String # the digest of the error page it was sent from
+}
+input SignedOutSupportRequestInput {
+  about: SupportAbout! # accessibility, account, bug, privacy or question only
+  email: String! # where the reply is mailed
+  subject: String! # 1–120 characters
+  message: String! # 1–4,000 characters
+  path: String
+  errorCode: Int
+  errorReference: String
+  website: String # a trap for bots: the form hides it, so any value drops the send
+}
+enum SupportDialogKind {
+  form
+  signedOut
+  timedOut
+  unverified
+}
+type SupportDialogState {
+  kind: SupportDialogKind!
+  until: DateTime # when the time-out ends; set only for timedOut
 }
 type SupportRequest {
   id: ID!
@@ -1364,14 +1388,15 @@ type SupportRequest {
   message: String!
   path: String
   errorCode: Int
-  status: SupportStatus!
+  status: SupportStatus! # a resolved request past its seventh day reads as closed before its job has closed it (M15.46)
   sender: User # a curator or admin reads it; a sender is the session's own user; null once the account is gone
   assignedTo: User
   curatorVisible: Boolean!
-  issueUrl: String
+  issueUrl: String # staff only
+  errorReference: String # staff only
   resolvedBy: User
   resolvedAt: DateTime
-  closedAt: DateTime
+  closedAt: DateTime # a lapsed resolved request reads as closed on its seventh day
   lastSenderActivityAt: DateTime
   lastStaffActivityAt: DateTime
   linkedFromId: ID # the closed request this one follows up
@@ -1739,6 +1764,29 @@ Keeping a spell `private` while building it, and the one-way widen of a complete
 89. Send a question, a bug or an accessibility bug from wherever I am, and read the reply later, so that I never have to search for an address.
 90. Work through a support request as an admin: reply, assign it, share it with curators, turn it into an issue, resolve it, and time its sender out and lift it, so that I can answer people and stop abuse from one page.
 91. Answer an admin in the thread as a sender, and reply again after it is resolved, so that I can finish a conversation without writing a new request.
+
+**Statuses.** A request is `open`, `waiting_on_sender`, `resolved` or `closed` (M15.41). The support service runs every move and refuses any pair not listed here with an explaining error (M15.42):
+
+| From                                    | Event                                     | To                                                | By                |
+| --------------------------------------- | ----------------------------------------- | ------------------------------------------------- | ----------------- |
+| (none)                                  | the sender sends                          | `open`                                            | sender            |
+| `open`                                  | staff reply, marked waiting on the sender | `waiting_on_sender`                               | staff             |
+| `open`, `waiting_on_sender`             | staff resolve                             | `resolved`                                        | staff             |
+| `open`, `waiting_on_sender`             | the sender resolves it                    | `resolved`                                        | sender            |
+| `open`, `waiting_on_sender`, `resolved` | a sender message                          | `open`                                            | sender            |
+| `resolved`                              | seven days pass                           | `closed`                                          | the request's job |
+| `open`, `waiting_on_sender`, `resolved` | staff close                               | `closed`                                          | staff             |
+| `closed`                                | a sender message                          | a new `open` request, `linkedFrom` the closed one | sender            |
+
+A staff reply or an internal note never changes the status. A resolved request past its seventh day reads as closed everywhere, as of that day, before its job writes the close, so a sender message on it opens a linked follow-up and staff can no longer move it.
+
+**Views.** `/admin/support` has six tabs, each with its count: Needs Staff (open requests, oldest sender activity first), Mine, Unassigned, Waiting on Sender, Resolved and Closed (M15.44). A curator sees only the requests marked for curators or assigned to them, inside every view, filtered in SQL. A Beta Testers filter narrows the current view and its counts.
+
+**The beta-tester tier.** A sender who accepted a printed invitation card (`invitations.kind = 'card'`) is a beta tester. The tier is derived on read and never stored; a row carries a Beta Tester label, and no view is kept per tier (M15.42).
+
+**Mail.** The sender is mailed when the request arrives, when staff reply, when it is resolved, and on day 5 of a resolution, when the closing-soon notice says it closes in two days (M15.45, M15.46). No mail carries a reply's text. Every mail goes through a job the SDK retries, bar those carrying a secret link (M15.50; [`email.md`](email.md)).
+
+**Retention.** Each resolve or close starts one durable job for the request. It sends the closing-soon notice on day 5, closes the request on day 7, and anonymises it twelve months after the close, keeping its topic, status and dates so the counts per topic and month survive. An admin's visit to `/admin/support` starts a sweep that closes and anonymises whatever a lost run left (M15.46; §5, `support_requests`).
 
 ---
 

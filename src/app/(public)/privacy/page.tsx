@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 /** The day this text last changed. */
-const UPDATED_ON = new Date('2026-11-01T00:00:00Z');
+const UPDATED_ON = new Date('2026-11-02T00:00:00Z');
 
 /** Who may see each kind of data: one row per kind, one cell per role, each cell drawn from the service that enforces it. */
 const ACCESS_ROWS: AccessRow[] = [
@@ -329,6 +329,12 @@ export default function PrivacyPolicyPage() {
         It works this way for two reasons: a spell keeps showing what went into it even after one of
         those ingredients is deleted, and a later version of the site can offer to bring back
         something deleted by mistake. That second feature does not exist yet.
+      </p>
+      <p>
+        A support request closes by itself seven days after it is resolved. Twelve months after it
+        closes, it is anonymised: its subject, message, page address and the text of every reply are
+        emptied, and the email and account it was sent from are removed from it. Its topic, status
+        and dates are kept, so the site can still count requests by topic and month.
       </p>
       <p>Some rows are removed outright:</p>
       <ul>
