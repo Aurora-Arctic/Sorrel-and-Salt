@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NotFound } from '@/lib/errors';
 
 // The four document pages and their version pages: what each reads, and what it hands DocumentPage. The reads and DocumentPage
@@ -149,5 +149,50 @@ describe.each(Object.keys(PAGES))('/%s', (key) => {
       expect(notFound, number).toHaveBeenCalled();
     }
     expect(readDocumentVersion).not.toHaveBeenCalled();
+  });
+});
+
+// The privacy policy's "Who Can See What" cards depend on code, so they stay in code: the markdown holds a `{access-cards}`
+// paragraph and the page hands DocumentPage the cards to draw there, on the current page and on every version page alike, since a
+// version that holds the placeholder must draw the cards too. How a mapped placeholder renders is tests/components/DocumentPage's.
+describe('/privacy hands DocumentPage the access cards', () => {
+  // Loaded once the mocks above exist, since AccessCards reaches next/navigation.
+  let accessCards: unknown;
+  beforeAll(async () => {
+    accessCards = (await import('@/components/AccessCards')).default;
+  });
+
+  /** The props of the AccessCards element the page mapped to `access-cards`. */
+  function accessCardsProps(props: Record<string, unknown>): {
+    roles: readonly unknown[];
+    rows: readonly { cells: readonly unknown[] }[];
+  } {
+    const placeholders = props.placeholders as Record<string, unknown> | undefined;
+    const element = placeholders?.['access-cards'] as
+      { type?: unknown; props?: Record<string, unknown> } | undefined;
+    expect(element?.type).toBe(accessCards);
+    return element!.props as ReturnType<typeof accessCardsProps>;
+  }
+
+  /** Six roles and ten kinds of data, as the page drew them before the text moved into the database. */
+  function expectTheAccessData({ roles, rows }: ReturnType<typeof accessCardsProps>): void {
+    expect(roles).toHaveLength(6);
+    expect(rows).toHaveLength(10);
+    for (const row of rows) expect(row.cells).toHaveLength(roles.length);
+  }
+
+  it('on the current page', async () => {
+    readDocument.mockResolvedValue(version('privacy', 2, SECOND));
+    listDocumentVersions.mockResolvedValue([]);
+    const Page = await PAGES.privacy!.page();
+
+    expectTheAccessData(accessCardsProps(documentPageProps(await Page())));
+  });
+
+  it('on a version page', async () => {
+    readDocumentVersion.mockResolvedValue(version('privacy', 1, FIRST));
+    const Page = await PAGES.privacy!.version();
+
+    expectTheAccessData(accessCardsProps(documentPageProps(await Page(params('1')))));
   });
 });

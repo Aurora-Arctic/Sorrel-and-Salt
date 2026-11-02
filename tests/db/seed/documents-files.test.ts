@@ -65,6 +65,24 @@ describe('the document files', () => {
       expect(body.match(/<\/?[a-z][\w-]*[\s/>]/i), key).toBeNull();
     }
   });
+
+  // Who can see what is drawn as cards from code, so the privacy file holds a placeholder paragraph where the table stood, under its
+  // editable heading and introduction; a table there would print beside the cards.
+  it('hold the access cards placeholder, and no table, under the privacy policy’s Who Can See What', () => {
+    const body = byKey.get('privacy')?.body ?? '';
+    const section = body.split(/^### Who Can See What$/m)[1]?.split(/^#{1,6} /m)[0] ?? '';
+    const blocks = section
+      .split(/\n\s*\n/)
+      .map((block) => block.trim())
+      .filter((block) => block !== '');
+
+    // Precondition: the heading is there, with an introduction before the placeholder.
+    expect(body).toMatch(/^### Who Can See What$/m);
+    expect(blocks.length).toBeGreaterThanOrEqual(2);
+    expect(blocks[0]).not.toBe('{access-cards}');
+    expect(blocks).toContain('{access-cards}');
+    expect(section).not.toMatch(/^\s*\|/m);
+  });
 });
 
 describe('loadDocuments', () => {

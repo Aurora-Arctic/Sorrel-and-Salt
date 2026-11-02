@@ -246,4 +246,58 @@ describe('DocumentPage', () => {
     expect(first).toHaveAttribute('href', '/privacy/versions/1');
     expect(second.compareDocumentPosition(first) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
+
+  // A part of a page that depends on code, such as the privacy policy's access cards, stays in code: the markdown names where it
+  // goes with a paragraph that is only `{name}`, and the page hands the renderer what to draw there.
+  describe('a placeholder paragraph', () => {
+    const cards = (
+      <aside aria-label="Fixture Cards">
+        <p>Fixture card text.</p>
+      </aside>
+    );
+
+    it('draws the node the page maps to its name in place of the paragraph, in the text’s order', () => {
+      show(
+        ['## Fixture Section', 'Fixture opening.', '{fixture-cards}', 'Fixture closing.'].join(
+          '\n\n',
+        ),
+        { placeholders: { 'fixture-cards': cards } },
+      );
+
+      const drawn = screen.getByRole('complementary', { name: 'Fixture Cards' });
+      // A placeholder is a block of its own, never a paragraph's content.
+      expect(drawn.closest('p')).toBeNull();
+      expect(screen.queryByText('{fixture-cards}')).toBeNull();
+      const opening = screen.getByText('Fixture opening.');
+      const closing = screen.getByText('Fixture closing.');
+      expect(
+        opening.compareDocumentPosition(drawn) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+      expect(
+        drawn.compareDocumentPosition(closing) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    });
+
+    it('prints a placeholder the page does not map as the text it was written as', () => {
+      show('{fixture-missing}', { placeholders: { 'fixture-cards': cards } });
+
+      // Precondition: the map holds a node, so only the name decides it is not drawn.
+      expect(screen.queryByRole('complementary')).toBeNull();
+      expect(screen.getByText('{fixture-missing}').tagName).toBe('P');
+    });
+
+    it('prints a mapped name inside other text as the text it was written as', () => {
+      show('See {fixture-cards} below.', { placeholders: { 'fixture-cards': cards } });
+
+      expect(screen.queryByRole('complementary')).toBeNull();
+      expect(screen.getByText('See {fixture-cards} below.').tagName).toBe('P');
+    });
+
+    it('prints every placeholder as text on a page that maps none', () => {
+      show('{fixture-cards}');
+
+      expect(screen.queryByRole('complementary')).toBeNull();
+      expect(screen.getByText('{fixture-cards}').tagName).toBe('P');
+    });
+  });
 });
