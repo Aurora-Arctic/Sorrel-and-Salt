@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import DocumentPage from '../../../components/DocumentPage';
+import DocumentPage, { SourceItem, SourceMarks } from '../../../components/DocumentPage';
 import { SITE_NAME, siteUrl } from '../../../lib/site';
 
 export const metadata: Metadata = {
@@ -85,10 +85,10 @@ export default function CodeOfEthicsPage() {
           <strong>Witchcraft's history is a gendered history.</strong> Between about 1400 and 1775,
           Europe and its colonies executed an estimated 40,000 to 60,000 people for witchcraft, and
           roughly four in five of them were women, in a period that held women to be less
-          intelligent than men and more open to sin.<sup>7</sup> A site about witchcraft that is not
-          feminist has forgotten whose history it is handling. Feminism here means the plain thing:
-          that women, including trans women, are people whose knowledge, work and bodies are their
-          own.
+          intelligent than men and more open to sin.
+          <SourceMarks cite="fear" numbers={[7]} /> A site about witchcraft that is not feminist has
+          forgotten whose history it is handling. Feminism here means the plain thing: that women,
+          including trans women, are people whose knowledge, work and bodies are their own.
         </li>
         <li>
           <strong>Community over profit.</strong> The site shows no advertising, sells no data and
@@ -120,14 +120,16 @@ export default function CodeOfEthicsPage() {
           prohibited by law; the Act's own findings say ceremonies had been "intruded upon,
           interfered with, and in a few instances banned". Today, mass-market "smudging kits" are
           sold against traditional prohibitions on selling spiritual medicines such as white sage,
-          and Native activists have protested this as cultural misappropriation.<sup>2, 8</sup>
+          and Native activists have protested this as cultural misappropriation.
+          <SourceMarks cite="borrowing" numbers={[2, 8]} />
         </li>
         <li>
           Hoodoo was created by enslaved African Americans in the Southern United States, drawing on
           Central and West African spiritualities under slave codes that forbade them to gather. It
           was practised in secrecy, as a form of resistance, and by the twentieth century white
           drugstore owners and mail-order companies had appropriated it for profit. That
-          appropriation remains a major concern for the people who hold the tradition.<sup>9</sup>
+          appropriation remains a major concern for the people who hold the tradition.
+          <SourceMarks cite="tradition" numbers={[9]} />
         </li>
       </ul>
       <p>So the site commits to this:</p>
@@ -166,30 +168,34 @@ export default function CodeOfEthicsPage() {
           illegal harvest is believed to be happening on public land, and in 2018 four people were
           arrested for taking 400 pounds of it. It is not on the United States' endangered species
           list, but conservationists are concerned for its survival. Grow your own, or buy from a
-          grower, never from a wild harvest you cannot trace.<sup>1, 2</sup>
+          grower, never from a wild harvest you cannot trace.
+          <SourceMarks cite="sourcing" numbers={[1, 2]} />
         </li>
         <li>
           <strong>Palo santo</strong> is two trees. <em>Bursera graveolens</em>, the one burned as
           incense in Bolivia, Ecuador and Peru, is assessed as Least Concern by the IUCN, and Peru
-          permits only the collection of naturally fallen or dead wood.<sup>3</sup>{' '}
-          <em>Bulnesia sarmientoi</em>, also called palo santo, has been listed as Endangered on the
-          IUCN Red List since 2018 and in Appendix II of CITES since 2010, under pressure from
-          deforestation of the Gran Chaco and global demand for its wood, extracts and oils.
-          <sup>4</sup> Know which tree you are buying, and buy fallen wood.
+          permits only the collection of naturally fallen or dead wood.
+          <SourceMarks cite="wood" numbers={[3]} /> <em>Bulnesia sarmientoi</em>, also called palo
+          santo, has been listed as Endangered on the IUCN Red List since 2018 and in Appendix II of
+          CITES since 2010, under pressure from deforestation of the Gran Chaco and global demand
+          for its wood, extracts and oils.
+          <SourceMarks cite="tree" numbers={[4]} /> Know which tree you are buying, and buy fallen
+          wood.
         </li>
         <li>
           <strong>Indian sandalwood</strong> (<em>Santalum album</em>), burned as incense and held
           sacred in Hinduism, is assessed as Vulnerable by the IUCN because over-exploitation has
           put its wild population at risk of extinction, and India has banned its export.
-          <sup>5</sup>
+          <SourceMarks cite="resin" numbers={[5]} />
         </li>
         <li>
           <strong>Animal parts.</strong> CITES, the treaty in force since 1975 that protects
           endangered plants and animals from the threats of international trade, covers over 40,900
           species, subspecies and populations: Appendix I lists those threatened with extinction and
           given the highest protection, Appendix II those whose trade must be controlled to avoid
-          use incompatible with their survival.<sup>6</sup> No bone, feather, fur, shell or tooth of
-          a listed species belongs in a working, and the site will not help you source one.
+          use incompatible with their survival.
+          <SourceMarks cite="wildlife" numbers={[6]} /> No bone, feather, fur, shell or tooth of a
+          listed species belongs in a working, and the site will not help you source one.
         </li>
       </ul>
       <p>
@@ -220,9 +226,10 @@ export default function CodeOfEthicsPage() {
         at a large text size, in light or in dark. Its pages are checked against the Web Content
         Accessibility Guidelines, the W3C's standard for making web content accessible to people
         with disabilities, by an automated test in the browser suite that runs on every change, and
-        the colours in both themes keep to the guidelines' contrast floor.<sup>10</sup> Automated
-        checks do not find everything, so if something on the site does not work for you, that is a
-        bug, and we commit to fixing accessibility bugs first.
+        the colours in both themes keep to the guidelines' contrast floor.
+        <SourceMarks cite="contrast" numbers={[10]} /> Automated checks do not find everything, so
+        if something on the site does not work for you, that is a bug, and we commit to fixing
+        accessibility bugs first.
       </p>
       <p>
         <Link href="/support?support=accessibility">Report an accessibility bug</Link>. The link
@@ -328,74 +335,74 @@ export default function CodeOfEthicsPage() {
 
       <h2>Sources</h2>
       <ol className="document-page__sources">
-        <li>
+        <SourceItem number={1} cites={['sourcing']}>
           Wikipedia. "Salvia apiana." Accessed 1 November 2026.{' '}
           <a href="https://en.wikipedia.org/wiki/Salvia_apiana">
             https://en.wikipedia.org/wiki/Salvia_apiana
           </a>
           .
-        </li>
-        <li>
+        </SourceItem>
+        <SourceItem number={2} cites={['borrowing', 'sourcing']}>
           Wikipedia. "Smudging." Accessed 1 November 2026.{' '}
           <a href="https://en.wikipedia.org/wiki/Smudging">
             https://en.wikipedia.org/wiki/Smudging
           </a>
           .
-        </li>
-        <li>
+        </SourceItem>
+        <SourceItem number={3} cites={['wood']}>
           Wikipedia. "Bursera graveolens." Accessed 1 November 2026.{' '}
           <a href="https://en.wikipedia.org/wiki/Bursera_graveolens">
             https://en.wikipedia.org/wiki/Bursera_graveolens
           </a>
           .
-        </li>
-        <li>
+        </SourceItem>
+        <SourceItem number={4} cites={['tree']}>
           Wikipedia. "Bulnesia sarmientoi." Accessed 1 November 2026.{' '}
           <a href="https://en.wikipedia.org/wiki/Bulnesia_sarmientoi">
             https://en.wikipedia.org/wiki/Bulnesia_sarmientoi
           </a>
           .
-        </li>
-        <li>
+        </SourceItem>
+        <SourceItem number={5} cites={['resin']}>
           Wikipedia. "Santalum album." Accessed 1 November 2026.{' '}
           <a href="https://en.wikipedia.org/wiki/Santalum_album">
             https://en.wikipedia.org/wiki/Santalum_album
           </a>
           .
-        </li>
-        <li>
+        </SourceItem>
+        <SourceItem number={6} cites={['wildlife']}>
           Wikipedia. "CITES." Accessed 1 November 2026.{' '}
           <a href="https://en.wikipedia.org/wiki/CITES">https://en.wikipedia.org/wiki/CITES</a>.
-        </li>
-        <li>
+        </SourceItem>
+        <SourceItem number={7} cites={['fear']}>
           Wikipedia. "Witch Trials in the Early Modern Period." Accessed 1 November 2026.{' '}
           <a href="https://en.wikipedia.org/wiki/Witch_trials_in_the_early_modern_period">
             https://en.wikipedia.org/wiki/Witch_trials_in_the_early_modern_period
           </a>
           .
-        </li>
-        <li>
+        </SourceItem>
+        <SourceItem number={8} cites={['borrowing']}>
           Wikipedia. "American Indian Religious Freedom Act." Accessed 1 November 2026.{' '}
           <a href="https://en.wikipedia.org/wiki/American_Indian_Religious_Freedom_Act">
             https://en.wikipedia.org/wiki/American_Indian_Religious_Freedom_Act
           </a>
           .
-        </li>
-        <li>
+        </SourceItem>
+        <SourceItem number={9} cites={['tradition']}>
           Wikipedia. "Hoodoo (Spirituality)." Accessed 1 November 2026.{' '}
           <a href="https://en.wikipedia.org/wiki/Hoodoo_(spirituality)">
             https://en.wikipedia.org/wiki/Hoodoo_(spirituality)
           </a>
           .
-        </li>
-        <li>
+        </SourceItem>
+        <SourceItem number={10} cites={['contrast']}>
           World Wide Web Consortium, Web Accessibility Initiative. "WCAG 2 Overview." Last updated
           17 September 2026.{' '}
           <a href="https://www.w3.org/WAI/standards-guidelines/wcag/">
             https://www.w3.org/WAI/standards-guidelines/wcag/
           </a>
           .
-        </li>
+        </SourceItem>
       </ol>
     </DocumentPage>
   );

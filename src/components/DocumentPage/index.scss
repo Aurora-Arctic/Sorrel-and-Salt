@@ -38,6 +38,60 @@
     overflow-wrap: anywhere;
   }
 
+  // Source numbers sit on the line without lifting it: the superscript takes no line height of its
+  // own, so a line holding one is as tall as its neighbours.
+  sup {
+    line-height: 0;
+  }
+
+  // Each number is its own link to hit, set apart by spacing alone.
+  .document-page__marks a {
+    padding-inline: space(1);
+  }
+
+  // A source number, an entry's link and its return arrow rest in the body ink and fade to
+  // `$accent-hover` when pointed at or focused, as an ingredient entry's note numbers do.
+  .document-page__marks a,
+  .document-page__sources a {
+    color: $text-primary;
+    @include faded-underline;
+    @include theme-transition(color);
+
+    &:hover,
+    &:focus-visible {
+      color: $accent-hover;
+    }
+
+    &:focus-visible {
+      @include focus-ring;
+    }
+
+    &:where(:visited) {
+      color: $text-primary;
+    }
+
+    &:hover:where(:visited),
+    &:focus-visible:where(:visited) {
+      color: $accent-hover;
+    }
+  }
+
+  .document-page__return {
+    margin-inline-start: space(2);
+    white-space: nowrap;
+  }
+
+  // The number a jump lands on, and the entry it lands on, stand out and clear the top inset.
+  .document-page__marks a:target,
+  .document-page__source:target {
+    background-color: $fill-quiet;
+  }
+
+  .document-page__marks a,
+  .document-page__source {
+    scroll-margin-top: calc(#{$shell-bar-height} + #{space(8)});
+  }
+
   .data-table-frame {
     margin-block: space(3) space(6);
   }

@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import DocumentPage from '../../../components/DocumentPage';
+import DocumentPage, { SourceItem, SourceMarks } from '../../../components/DocumentPage';
 import { SITE_NAME, siteUrl } from '../../../lib/site';
 
 export const metadata: Metadata = {
@@ -101,19 +101,20 @@ export default function DisclaimerPage() {
           <strong>Bergamot.</strong> An essence from the peel of this citrus fruit flavours Earl
           Grey tea, and its peel is sometimes candied. The same oil on the skin, followed by
           ultraviolet light, has caused blistering burns within two to three days, because of a
-          compound in it called bergapten.<sup>1, 2</sup>
+          compound in it called bergapten.
+          <SourceMarks cite="bergamot" numbers={[1, 2]} />
         </li>
         <li>
           <strong>Chilli.</strong> Many people enjoy the heat chilli peppers add to food. Yet the
           compound that gives that heat, capsaicin, causes pain and redness when its oils get on the
           skin, intense pain if juice reaches an eye, and, when inhaled, can trigger an asthma
-          attack or respiratory distress in susceptible people. A poison centre's advice is to open
-          the windows when preparing or cooking hot peppers.<sup>3</sup>
+          attack or respiratory distress in susceptible people.
+          <SourceMarks cite="chilli" numbers={[3]} />
         </li>
       </ul>
       <p>
-        These are warnings about how risk changes with use. They are not medical advice, and they do
-        not list every way these or any other ingredients can harm.
+        These are just some examples about how risk changes with use. Please do your own research
+        and ask a doctor, pharmacist or other qualified professional for advice.
       </p>
 
       <h2>Other Sites</h2>
@@ -131,7 +132,7 @@ export default function DisclaimerPage() {
 
       <h2>Sources</h2>
       <ol className="document-page__sources">
-        <li>
+        <SourceItem number={1} cites={['bergamot']}>
           Kaddu, Steven, Helmut Kerl, and Peter Wolf. "Accidental Bullous Phototoxic Reactions to
           Bergamot Aromatherapy Oil." <em>Journal of the American Academy of Dermatology</em> 45,
           no. 3 (2001): 458–61.{' '}
@@ -139,22 +140,22 @@ export default function DisclaimerPage() {
             https://doi.org/10.1067/mjd.2001.116226
           </a>
           .
-        </li>
-        <li>
+        </SourceItem>
+        <SourceItem number={2} cites={['bergamot']}>
           Wikipedia. "Bergamot Orange." Accessed 1 November 2026.{' '}
           <a href="https://en.wikipedia.org/wiki/Bergamot_orange">
             https://en.wikipedia.org/wiki/Bergamot_orange
           </a>
           .
-        </li>
-        <li>
+        </SourceItem>
+        <SourceItem number={3} cites={['chilli']}>
           McDaniel-Price, Amanda. "Capsaicin: When the Chili Is Too Hot." National Capital Poison
           Center. Accessed 1 November 2026.{' '}
           <a href="https://www.poison.org/articles/capsaicin-when-the-chili-is-too-hot">
             https://www.poison.org/articles/capsaicin-when-the-chili-is-too-hot
           </a>
           .
-        </li>
+        </SourceItem>
       </ol>
     </DocumentPage>
   );
