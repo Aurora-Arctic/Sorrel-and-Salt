@@ -191,6 +191,14 @@ export default function TermsOfUsePage() {
         site's owner each agree to that court hearing it.
       </p>
 
+      <p>
+        Once a dispute is in court, Washington law lets the judge order whichever side brought a
+        claim or a defence that the judge finds frivolous and advanced without reasonable cause to
+        pay the other side's reasonable expenses, including lawyer's fees. That works in either
+        direction, against the site's owner as much as against you, and it is the court's decision,
+        not the arbitrator's.
+      </p>
+
       <h2>Leaving</h2>
       <p>
         You may stop using the site at any time. You can leave any coven from its page. To have your
@@ -297,6 +305,15 @@ export default function TermsOfUsePage() {
           2026.{' '}
           <a href="https://www.law.cornell.edu/cfr/text/16/part-312">
             https://www.law.cornell.edu/cfr/text/16/part-312
+          </a>
+          .
+        </li>
+        <li>
+          Washington State Legislature. <em>Revised Code of Washington</em>, 4.84.185, "Prevailing
+          party to receive expenses for opposing frivolous action or defense". Accessed 2 November
+          2026.{' '}
+          <a href="https://app.leg.wa.gov/RCW/default.aspx?cite=4.84.185">
+            https://app.leg.wa.gov/RCW/default.aspx?cite=4.84.185
           </a>
           .
         </li>
