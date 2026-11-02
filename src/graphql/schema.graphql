@@ -1094,9 +1094,19 @@ type Mutation {
   liftSupportTimeout(id: ID!): SupportTimeout!
 
   """
+  Lifts the pause standing on a user’s access now, and answers it. Site admins only.
+  """
+  liftUserAccessPause(userId: ID!): UserAccessPause!
+
+  """
   Pauses admin grants and revokes for every admin but the primary one; answers true, paused. The primary admin alone may.
   """
   pauseAdminRoleChanges: Boolean!
+
+  """
+  Pauses a user’s access until `until`, or with no end when it is left out, and ends every session they hold. Site admins only.
+  """
+  pauseUserAccess(note: String, until: DateTime, userId: ID!): UserAccessPause!
 
   """
   Makes a common name the ingredient's display name, and the old display name a common name. A null workspaceId names a compendium entry, under the admin proof.
@@ -2759,6 +2769,18 @@ type User {
   providers: [String!]!
   role: UserRole!
   termsVersion: String
+}
+
+"""
+A pause on a user’s access to the site: no sign-in by any method until `until`, or with no end when `until` is null, unless lifted sooner.
+"""
+type UserAccessPause {
+  audit: AuditInfo!
+  id: ID!
+  liftedAt: DateTime
+  note: String
+  until: DateTime
+  userId: ID!
 }
 
 """

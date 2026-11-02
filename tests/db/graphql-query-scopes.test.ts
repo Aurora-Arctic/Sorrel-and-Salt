@@ -435,6 +435,8 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
     `mutation { revokeWorkspaceCreation(userId: "${NOWHERE}") { id } }`,
   ),
   setUserRole: write(`mutation { setUserRole(userId: "${NOWHERE}", role: admin) { id } }`),
+  pauseUserAccess: write(`mutation { pauseUserAccess(userId: "${NOWHERE}") { id } }`),
+  liftUserAccessPause: write(`mutation { liftUserAccessPause(userId: "${NOWHERE}") { id } }`),
   pauseAdminRoleChanges: write('mutation { pauseAdminRoleChanges }'),
   resumeAdminRoleChanges: write('mutation { resumeAdminRoleChanges }'),
   // A malformed address, so an admin past the scope is refused by the service
@@ -655,6 +657,9 @@ const ADMIN_WRITES: Record<string, AdminWrite> = {
   revokeWorkspaceCreation: { governs: 'workspace creation' },
   // Who is an admin or a curator, granted and revoked by an admin.
   setUserRole: { governs: 'site role' },
+  // A user's access to the site, paused and lifted by an admin.
+  pauseUserAccess: { governs: 'site access' },
+  liftUserAccessPause: { governs: 'site access' },
   // The primary admin's pause on those changes.
   pauseAdminRoleChanges: { governs: 'site role' },
   resumeAdminRoleChanges: { governs: 'site role' },
@@ -820,7 +825,12 @@ describe('a signed-in non-admin at every admin write', () => {
 
 // The people page's writes are an admin's alone; every other admin write is curation, which a curator's scope admits.
 // A write added to ADMIN_WRITES lands on one side or the other.
-const PEOPLE_PAGE: readonly Governed[] = ['workspace creation', 'site role', 'support'];
+const PEOPLE_PAGE: readonly Governed[] = [
+  'workspace creation',
+  'site role',
+  'site access',
+  'support',
+];
 const governsPeople = (field: string) => PEOPLE_PAGE.includes(ADMIN_WRITES[field].governs);
 const PEOPLE_WRITES = Object.keys(ADMIN_WRITES).filter(governsPeople);
 const CURATION_WRITES = Object.keys(ADMIN_WRITES).filter((field) => !governsPeople(field));

@@ -1,5 +1,6 @@
 import { and, eq, gt, isNull, or, sql } from 'drizzle-orm';
 import { applyAudit } from '../audit';
+import { sessions } from '../../modules/identity/schema/auth';
 import { userAccessPauses } from '../../modules/identity/schema/user-access-pauses';
 import type { SiteAdmin } from '@/modules/identity';
 import { notSoftDeleted } from './predicates';
@@ -50,8 +51,11 @@ export function userAccessPauseWrites({
   return {
     // The live row is closed first, run out or standing, so the one-live index takes the new one. No conflict target: a pause
     // set for the same user in a transaction alongside wins the slot, and this call writes nothing rather than failing.
+    // Every session the user holds ends in the same transaction, so their next request is signed out; a session row has no
+    // audit columns or `deleted_at`, and Better Auth deletes it the same way at sign-out.
     setUserAccessPause: async (_admin, userId, { until, note }) => {
       await update(userAccessPauses, lifted(), liveFor(userId));
+      await tx.delete(sessions).where(eq(sessions.userId, userId));
       return tx
         .insert(userAccessPauses)
         .values(applyAudit('insert', { userId, until, note }, session) as never)

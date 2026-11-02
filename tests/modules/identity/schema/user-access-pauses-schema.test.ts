@@ -65,6 +65,7 @@ function liftedPause() {
 }
 
 async function emptied(): Promise<void> {
+  await sql`delete from sessions where token like 'pause-test-%'`;
   await sql`truncate user_access_pauses`;
 }
 
@@ -281,6 +282,29 @@ describe('the repository', () => {
     expect(await findStandingUserAccessPause(PAUSED)).toEqual(second);
     const history = await findUserAccessPauses(admin, PAUSED);
     expect(history.find((row) => row.id === first?.id)).toMatchObject({ liftedBy: ADMIN });
+  });
+
+  it("ends every session of the paused user in the same write, and no other user's", async () => {
+    const session = (userId: string, token: string) => sql`
+      insert into sessions (token, user_id, expires_at, updated_at)
+      values (${token}, ${userId}, now() + interval '1 day', now())
+    `;
+    await session(PAUSED, 'pause-test-a-1');
+    await session(PAUSED, 'pause-test-a-2');
+    await session(B.id, 'pause-test-b');
+    const tokensOf = async (userId: string) =>
+      (
+        await sql`select token from sessions where user_id = ${userId} and token like 'pause-test-%'`
+      ).map((row) => row.token);
+    // The precondition: the paused user holds two sessions before the pause.
+    expect(await tokensOf(PAUSED)).toHaveLength(2);
+
+    await withAudit(asUser(E), (write) =>
+      write.setUserAccessPause(admin, PAUSED, { until: null, note: null }),
+    );
+
+    expect(await tokensOf(PAUSED)).toEqual([]);
+    expect(await tokensOf(B.id)).toEqual(['pause-test-b']);
   });
 
   it("reads every pause for a user, newest first, and no other user's", async () => {

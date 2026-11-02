@@ -1,3 +1,4 @@
+import type { userAccessPauses } from './schema/user-access-pauses';
 import type { userPrivilegeChanges } from './schema/user-privilege-changes';
 import type { users } from './schema/users';
 import type {
@@ -27,6 +28,9 @@ export interface AdminInvitationFilter {
   /** Only the invitations lapsing within the next 24 hours. */
   expiringSoon?: boolean;
 }
+
+/** One site access pause: standing, run out or lifted. */
+export type UserAccessPauseRow = typeof userAccessPauses.$inferSelect;
 
 /** One row of the privilege ledger. */
 export type PrivilegeChangeRow = typeof userPrivilegeChanges.$inferSelect;
