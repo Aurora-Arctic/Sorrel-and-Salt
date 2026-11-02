@@ -259,6 +259,12 @@ export function findOwnSupportFollowUp(userId: string, id: string) {
   );
 }
 
+/** A time-out stands: not lifted, and its `until` none or still ahead. The column read and the user list's filter share it. */
+export const timeoutStands = and(
+  isNull(supportTimeouts.liftedAt),
+  noEndOrAhead(supportTimeouts.until),
+) as SQL;
+
 /**
  * The end of the time-out standing on the sender, latest first, `until` null when one has no end date; `undefined` when none
  * stands.
@@ -268,12 +274,7 @@ export async function findStandingSupportTimeout(
 ): Promise<StandingTimeout | undefined> {
   const rows = await selectFrom(
     supportTimeouts,
-    and(
-      notSoftDeleted(supportTimeouts),
-      eq(supportTimeouts.userId, userId),
-      isNull(supportTimeouts.liftedAt),
-      noEndOrAhead(supportTimeouts.until),
-    ),
+    and(notSoftDeleted(supportTimeouts), eq(supportTimeouts.userId, userId), timeoutStands),
   );
   return latestEnd(rows);
 }
@@ -373,8 +374,7 @@ export function findStandingSupportTimeoutsFor(_admin: SiteAdmin, userIds: reado
     and(
       notSoftDeleted(supportTimeouts),
       inArray(supportTimeouts.userId, [...userIds]),
-      isNull(supportTimeouts.liftedAt),
-      noEndOrAhead(supportTimeouts.until),
+      timeoutStands,
     ),
   );
 }

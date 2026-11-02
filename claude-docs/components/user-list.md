@@ -15,6 +15,9 @@ the hrefs of the pages either side
 | `users`            | This page's `UserListEntry` rows, in the list's order                         |
 | `query`            | The name-or-email filter as asked, blank for none                             |
 | `awaitingApproval` | Whether the list is narrowed to `canCreateWorkspace = false`                  |
+| `role`             | The site role the list is narrowed to, absent for every role                  |
+| `timedOut`         | Whether the list is narrowed to the users a support time-out stands on        |
+| `paused`           | Whether the list is narrowed to the users a site access pause stands on       |
 | `previousHref`     | The page before this one, absent on the first                                 |
 | `nextHref`         | The page after this one, absent on the last                                   |
 | `position`         | Where this page stands, `{ page, pages }`, the pager's "Page X of Y" (MB.115) |
@@ -35,9 +38,11 @@ head, both built by the page per row, as the other admin lists carry
   a `<search>` landmark: a search box labelled "Name or Email" (`query`), a
   Role dropdown, a native select from the server and the select-only box once
   hydrated (`role`: All Roles, then `ROLE_LABELS`: Admin, Curator or User;
-  a `FilterSelectField`, [`field.md`](field.md)), a "Needs Approval"
-  switch (`awaiting`), each label in title case on the owner's call, and no
-  Filter button (MB.115). The switch is `SwitchField`, a slide toggle with its label
+  a `FilterSelectField`, [`field.md`](field.md)), and three switches:
+  "Needs Approval" (`awaiting`), "Support Timed Out" (`timed-out`) and
+  "Access Paused" (`paused`), each the filter for the Can Create, Support and
+  Access column beside it, each label in title case on the owner's call, and no
+  Filter button (MB.115). Each switch is `SwitchField`, a slide toggle with its label
   above as the other fields have, over a native checkbox; it was a checkbox
   until the owner found it out of place in the row, and the compendium's
   No Refs changed with it, so the filters match (MB.115;
@@ -47,20 +52,20 @@ head, both built by the page per row, as the other admin lists carry
   since the form carries no cursor. It is `filter.tsx`, a client file: the
   search text, held in state, inside the shared `FilterForm`
   ([`filter-form.md`](filter-form.md)). The search applies from its
-  magnifier or Enter; the Role dropdown and the switch apply the moment
+  magnifier or Enter; the Role dropdown and the switches apply the moment
   they change, each carrying the search text and starting from the first page.
   Its Clear link, offered only while the page shows a query, a role or
-  Needs Approval, opens `/admin/users` with none. How every filter navigates
+  a switch on, opens `/admin/users` with none. How every filter navigates
   and loads is [`filter-form.md`](filter-form.md#contracts).
 - **A new filter applies without a button** (MB.115, replacing MB.53's Filter
   button, disabled until something differed): the search’s magnifier is
-  always live, and the role and the switch send on change.
-- **`awaiting` is a bare flag**, read by its presence (MB.53, on the owner's
-  word). A submit builds the address itself with `href.ts`'s `userListHref`,
+  always live, and the role and the switches send on change.
+- **`awaiting`, `timed-out` and `paused` are bare flags**, each read by its presence (MB.53, on the owner's
+  word; M15.56). A submit builds the address itself with `href.ts`'s `userListHref`,
   a thin typed wrapper over the shared `listHref` (`src/lib/list-href.ts`),
   the pager's builder too, so it reads `?query=bo&awaiting` rather than
   `awaiting=1`, and opens it softly. Before
-  hydration the form submits natively, with the switch as `awaiting=`, which
+  hydration the form submits natively, with each switch as `awaiting=`, `timed-out=` or `paused=`, which
   the page reads the same, as it does an older link's `awaiting=1`.
 - **Eight columns, in the owner's order**: Name, Email, Role, Can Create,
   Support, Access, Logins and Signed Up, each heading in title case (DESIGN.md §9).
@@ -472,8 +477,8 @@ context row above the column) and the People page with its Users tab open:
 coven-creation flag and signup date in the order given, the flag's and the
 address's marks the one rendering of their state; a provider outside the
 roster; no table when no user matches; through the shared filter rows (`tests/support/filter-form.tsx`, [`filter-form.md`](filter-form.md)) the filter form's action, method,
-names and kept values, Needs Approval found as a `switch`; no Filter button, the
-bare `awaiting` a change of the switch opens, the Role select's values and the `role` a change opens, the search text carried along;
+names and kept values, the three switches found as a `switch`; no Filter button, the
+bare `awaiting`, `timed-out` or `paused` a change of its switch opens, the other filters kept, and the list without it when switched off, the Role select's values and the `role` a change opens, the search text carried along;
 Clear offered by each filter shown and absent with none; the row starting again from a filter shown anew;
 the history link before every name and its address; each name a link to its
 `openHref`, a plain press calling the opener with the row's href and heading; the Impersonate column:
@@ -488,7 +493,7 @@ tried. The role and creation controls' tests are the user modal's
 (`tests/components/UserDetail/role-and-creation.test.tsx`, [`user-detail.md`](user-detail.md)). It also covers the Support and Access columns: a standing time-out or pause read with its end, dated or open, and "Not timed out" or "Not paused" for none, each found under its column heading. Its colours, marks, tips and their placement, and the cards at phone width,
 are presentation; paging is Pager's. `tests/app/(shell)/admin/(people)/users/page.test.tsx` reads the page's
 half: what it hands the list, the impersonation gate and the primary admin's
-flag included, `awaiting` read by its presence, and the count behind the
+flag included, `awaiting`, `timed-out` and `paused` read by their presence, and the count behind the
 pager's position; the page's standing time-outs and pauses read in one batch each, as the guard's session, and marked on their rows; and the user modal (M9.19): `?user=<id>` reading the user and
 their covens as the guard's session into a dialog, each name's link keeping the
 filter, and the notice with no dialog, and no read, for an id that is not one,
@@ -541,7 +546,7 @@ Three kinds of mark carry a tip that behaves as InfoTip's does, through the same
 
 A row's name opens the user's modal over the list, at `?user=<id>`. A press opens it at once under `heading`, with the user's covens arriving with the navigation. It is still a link, so a new tab, or a press before the script loads, opens the address. It is a client file of its own so the list stays a server component.
 
-The filter sits in the shared `FilterForm`. Only the search text is held in the form, until the magnifier or Enter sends it. The Role dropdown, a select-only box once hydrated (`FilterSelectField`), and the Needs Approval switch start from the filter shown and apply the moment they change, softly and from the first page, carrying the search text along. There is no Filter button to press. Before hydration the form submits natively: the switch, a native checkbox, as `awaiting=`, which the page reads the same as the bare flag, and the server's native role select, whose "All Roles" is `role=`, which the page reads as no role.
+The filter sits in the shared `FilterForm`. Only the search text is held in the form, until the magnifier or Enter sends it. The Role dropdown, a select-only box once hydrated (`FilterSelectField`), and the three switches start from the filter shown and apply the moment they change, softly and from the first page, carrying the search text along. There is no Filter button to press. Before hydration the form submits natively: each switch, a native checkbox, as `awaiting=`, `timed-out=` or `paused=`, which the page reads the same as the bare flag, and the server's native role select, whose "All Roles" is `role=`, which the page reads as no role.
 
 ## The list's stylesheet
 

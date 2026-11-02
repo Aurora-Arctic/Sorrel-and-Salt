@@ -15,6 +15,8 @@ export interface UsersSearchParams {
   query?: string | string[];
   awaiting?: string | string[];
   role?: string | string[];
+  'timed-out'?: string | string[];
+  paused?: string | string[];
   after?: string | string[];
   before?: string | string[];
   /** The id of the user whose modal is open over the list. */

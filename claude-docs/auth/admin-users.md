@@ -44,7 +44,7 @@ may _change_.
   is not counted. `?after=` and `?before=` carry the cursor. A cursor the codec
   cannot read, or one it reads that names no row of this list, as a cursor
   copied from another list does, gets the first page rather than an error.
-- **Three filters, all in SQL.** `?query=` matches a substring of the name or
+- **Five filters, all in SQL.** `?query=` matches a substring of the name or
   the email, case-insensitively, with `%` and `_` read literally, through
   the repository's `containsText`, which the category and form lists share (MB.178). It
   is an `ilike` rather than a trigram match, because an admin looks a person
@@ -52,7 +52,16 @@ may _change_.
   its presence (MB.53), narrows to `canCreateWorkspace = false`, the to-do
   list M5.8 acts on. `?role=admin`, `?role=curator` or `?role=user` narrows to that site role
   (M5.8, on the owner's review); any other value is no role, since only a
-  hand-edited address carries one. The filter is a GET form to the page
+  hand-edited address carries one. `?timed-out` narrows to the users a support
+  time-out stands on, and `?paused` to those a site access pause stands on, each a
+  flag read by its presence (M15.56). "Stands" is the test the Support and Access
+  columns read by: not lifted, not deleted, and `until` null or still ahead, so a
+  time-out or pause that has run out or been lifted narrows to nothing. Each is a
+  semi-join (`EXISTS`) in `findUserPage` and `findUserCount`, sharing
+  `timeoutStands` (`support.ts`) and `pauseStands` (`user-access-pauses.ts`)
+  with the column reads, so the filter and the marks cannot disagree and paging
+  stays in the cursor helper. GraphQL's `users` takes them as `timedOut` and
+  `paused`. The filter is a GET form to the page
   itself, so a filtered page is an address.
 - **Soft-deleted users never appear.** `findUserPage` drops them, like every
   finder (rule 4); the service has no predicate to add, and no way to build

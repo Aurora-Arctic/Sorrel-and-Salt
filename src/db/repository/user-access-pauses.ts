@@ -1,4 +1,4 @@
-import { and, eq, gt, inArray, isNull, or, sql } from 'drizzle-orm';
+import { and, eq, gt, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
 import { applyAudit } from '../audit';
 import { sessions } from '../../modules/identity/schema/auth';
 import { userAccessPauses } from '../../modules/identity/schema/user-access-pauses';
@@ -11,6 +11,9 @@ import type { AuditWriter, SortPart, UserAccessPauseRow, WriterContext } from '.
 
 /** A live pause's `until` is still ahead, or it has none: whether the pause stands rather than having run out. */
 const notRunOut = or(isNull(userAccessPauses.until), gt(userAccessPauses.until, sql`now()`));
+
+/** A pause stands: not lifted, and not run out. The column read and the user list's filter share it. */
+export const pauseStands = and(isNull(userAccessPauses.liftedAt), notRunOut) as SQL;
 
 /** One user's live pause: not lifted, and (by the writes' own filter, or `notSoftDeleted` in a read) not deleted. */
 const liveFor = (userId: string) =>
@@ -43,8 +46,7 @@ export function findStandingUserAccessPausesFor(
     and(
       notSoftDeleted(userAccessPauses),
       inArray(userAccessPauses.userId, [...userIds]),
-      isNull(userAccessPauses.liftedAt),
-      notRunOut,
+      pauseStands,
     ),
   );
 }

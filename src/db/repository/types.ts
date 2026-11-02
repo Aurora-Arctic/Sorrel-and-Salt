@@ -1325,6 +1325,10 @@ export interface UserFilter {
   awaitingApproval?: boolean;
   /** Only the users holding this site role. */
   role?: (typeof users.$inferSelect)['role'];
+  /** Only the users a support time-out stands on: not lifted, and with no end date or one still ahead. */
+  timedOut?: boolean;
+  /** Only the users a site access pause stands on: not lifted, and with no end date or one still ahead. */
+  paused?: boolean;
 }
 
 /** What the privilege ledger is narrowed by. Each part is optional, and absent means no filter. */

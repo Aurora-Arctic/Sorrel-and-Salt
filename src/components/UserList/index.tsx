@@ -26,11 +26,13 @@ import './index.scss';
  * an admin sees what to change: "No users match “ada” and the role Admin.
  * Change or clear the filter to see more."
  */
-function noMatch({ query, role, awaitingApproval }: UserListFilterProps): string {
+function noMatch({ query, role, awaitingApproval, timedOut, paused }: UserListFilterProps): string {
   const filters = [
     query && `“${query}”`,
     role && `the role ${roleLabel(role)}`,
     awaitingApproval && 'Needs Approval',
+    timedOut && 'Support Timed Out',
+    paused && 'Access Paused',
   ].filter((filter): filter is string => Boolean(filter));
   return noMatchText('users', filters, emptyList('users'));
 }
@@ -173,6 +175,8 @@ const UserList = ({
   query,
   awaitingApproval,
   role,
+  timedOut = false,
+  paused = false,
   previousHref,
   nextHref,
   position,
@@ -180,10 +184,12 @@ const UserList = ({
 }: UserListProps): ReactElement => (
   <ListFrame className="user-list">
     <UserListFilter
-      key={`${query}\n${role ?? ''}\n${awaitingApproval}`}
+      key={`${query}\n${role ?? ''}\n${awaitingApproval}\n${timedOut}\n${paused}`}
       query={query}
       awaitingApproval={awaitingApproval}
       role={role}
+      timedOut={timedOut}
+      paused={paused}
     />
 
     <ListBody>
@@ -192,7 +198,7 @@ const UserList = ({
         columns={columns(canImpersonate)}
         rows={users}
         rowKey={(user) => user.id}
-        empty={noMatch({ query, role, awaitingApproval })}
+        empty={noMatch({ query, role, awaitingApproval, timedOut, paused })}
         className="data-table--roomy data-table--nowrap"
       />
 

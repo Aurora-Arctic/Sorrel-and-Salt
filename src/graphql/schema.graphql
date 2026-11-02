@@ -1701,7 +1701,21 @@ type Query {
   Every pause set on a user’s access, standing, run out and lifted alike, newest first. Site admins only.
   """
   userAccessPauses(after: String, before: String, first: Int, last: Int, userId: ID!): QueryUserAccessPausesConnection!
-  users(after: String, awaitingApproval: Boolean, before: String, first: Int, last: Int, query: String, role: UserRole): QueryUsersConnection!
+  users(
+    after: String
+    awaitingApproval: Boolean
+    before: String
+    first: Int
+    last: Int
+
+    """Only the users a site access pause stands on."""
+    paused: Boolean
+    query: String
+    role: UserRole
+
+    """Only the users a support time-out stands on."""
+    timedOut: Boolean
+  ): QueryUsersConnection!
 
   """
   What completing a working of this spell would take from the coven’s jars now: the plan completion follows, read and not applied.

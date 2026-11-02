@@ -208,18 +208,18 @@ describe('the /admin/users page', () => {
     expect(standingTimeoutsOf).toHaveBeenCalledExactlyOnceWith(ADMIN, ids);
     expect(standingAccessPausesOf).toHaveBeenCalledExactlyOnceWith(ADMIN, ids);
     expect(
-      within(cellUnder('Listed Fixture 01', 'Time-Out')).getByText(
+      within(cellUnder('Listed Fixture 01', 'Support')).getByText(
         'Timed out until 20 November 2026, 09:30 UTC',
       ),
     ).toBeInTheDocument();
     expect(
-      within(cellUnder('Listed Fixture 01', 'Paused')).getByText('Not paused'),
+      within(cellUnder('Listed Fixture 01', 'Access')).getByText('Not paused'),
     ).toBeInTheDocument();
     expect(
-      within(cellUnder('Listed Fixture 02', 'Time-Out')).getByText('Timed out with no end date'),
+      within(cellUnder('Listed Fixture 02', 'Support')).getByText('Timed out with no end date'),
     ).toBeInTheDocument();
     expect(
-      within(cellUnder('Listed Fixture 02', 'Paused')).getByText('Paused with no end date'),
+      within(cellUnder('Listed Fixture 02', 'Access')).getByText('Paused with no end date'),
     ).toBeInTheDocument();
   });
 
@@ -255,6 +255,16 @@ describe('the /admin/users page', () => {
     expect(countUsers.mock.calls[0]?.[1]).toEqual({ query: 'fixture', awaitingApproval: true });
     expect(screen.getByLabelText('Name or Email')).toHaveValue('fixture');
     expect(screen.getByRole('switch', { name: 'Needs Approval' })).toBeChecked();
+  });
+
+  it('reads ?timed-out and ?paused as the time-out and pause filters', async () => {
+    await renderPage({ 'timed-out': '', paused: '' });
+
+    const filter = { query: undefined, awaitingApproval: false, timedOut: true, paused: true };
+    expect(listUsers.mock.calls[0]?.[1]).toEqual(filter);
+    expect(countUsers.mock.calls[0]?.[1]).toEqual(filter);
+    expect(screen.getByRole('switch', { name: 'Support Timed Out' })).toBeChecked();
+    expect(screen.getByRole('switch', { name: 'Access Paused' })).toBeChecked();
   });
 
   // A flag by presence: an older link's `awaiting=1` reads as the bare one.
@@ -298,10 +308,12 @@ describe('the /admin/users page', () => {
       query: 'listed',
       awaiting: '',
       role: 'user',
+      'timed-out': '',
+      paused: '',
       after: encodeCursor(entry(0).cursor),
     });
 
-    const filter = '/admin/users?query=listed&awaiting&role=user';
+    const filter = '/admin/users?query=listed&awaiting&role=user&timed-out&paused';
     expect(screen.getByRole('link', { name: 'Next' })).toHaveAttribute(
       'href',
       `${filter}&after=${encodeURIComponent(encodeCursor(entry(25).cursor))}`,

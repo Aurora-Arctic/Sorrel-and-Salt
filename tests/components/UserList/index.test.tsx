@@ -341,11 +341,14 @@ describe('UserList filter', () => {
             query: 'fixturewort',
             role: 'admin',
             awaitingApproval: true,
-            previousHref: '/admin/users?query=fixturewort&awaiting&role=admin&before=x',
+            timedOut: true,
+            paused: true,
+            previousHref:
+              '/admin/users?query=fixturewort&awaiting&role=admin&timed-out&paused&before=x',
           })}
         />
       ),
-      sends: 'query=fixturewort&role=admin&awaiting=',
+      sends: 'query=fixturewort&role=admin&awaiting=&timed-out=&paused=',
     },
     alone: [
       { list: <UserList {...props({ query: 'bo' })} />, sends: 'query=bo&role=' },
@@ -354,8 +357,16 @@ describe('UserList filter', () => {
         list: <UserList {...props({ awaitingApproval: true })} />,
         sends: 'query=&role=&awaiting=',
       },
+      {
+        list: <UserList {...props({ timedOut: true })} />,
+        sends: 'query=&role=&timed-out=',
+      },
+      {
+        list: <UserList {...props({ paused: true })} />,
+        sends: 'query=&role=&paused=',
+      },
     ],
-    searched: '/admin/users?query=Two+words&awaiting&role=admin',
+    searched: '/admin/users?query=Two+words&awaiting&role=admin&timed-out&paused',
   };
 
   it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));
@@ -420,6 +431,30 @@ describe('UserList filter', () => {
 
     expect(router.push).toHaveBeenCalledWith('/admin/users');
   });
+
+  it.each([
+    ['Support Timed Out', 'timed-out', { timedOut: true }],
+    ['Access Paused', 'paused', { paused: true }],
+  ] as const)(
+    'applies %s as a bare flag the moment it is switched, keeping the other filters, and off again',
+    async (label, flag, on) => {
+      const { unmount } = inFlight(<UserList {...props({ role: 'user' })} />);
+      expect(screen.getByRole('switch', { name: label })).not.toBeChecked();
+
+      await act(async () => {
+        fireEvent.click(screen.getByRole('switch', { name: label }));
+      });
+      expect(router.push).toHaveBeenLastCalledWith(`/admin/users?role=user&${flag}`);
+      unmount();
+
+      inFlight(<UserList {...props({ role: 'user', ...on })} />);
+      expect(screen.getByRole('switch', { name: label })).toBeChecked();
+      await act(async () => {
+        fireEvent.click(screen.getByRole('switch', { name: label }));
+      });
+      expect(router.push).toHaveBeenLastCalledWith('/admin/users?role=user');
+    },
+  );
 });
 
 // A user who may not yet create a coven is approved from their row, and one who may is revoked, each behind a confirmation naming them; an admin's row offers neither.

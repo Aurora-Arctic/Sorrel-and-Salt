@@ -36,6 +36,10 @@ export interface UserListProps extends Partial<PagerHrefs<Route>> {
   awaitingApproval: boolean;
   /** The role the list is narrowed to, absent for every role. */
   role?: UserRole;
+  /** Whether the list is narrowed to the users a support time-out stands on. */
+  timedOut?: boolean;
+  /** Whether the list is narrowed to the users a site access pause stands on. */
+  paused?: boolean;
 
   /** Where this page stands, the pager's "Page X of Y"; none when left out. */
   position?: PagePosition;
@@ -48,6 +52,8 @@ export interface UserListFilterProps {
   query: string;
   awaitingApproval: boolean;
   role?: UserRole;
+  timedOut?: boolean;
+  paused?: boolean;
 }
 
 /** The filter as the address carries it: what `userListHref` writes. */
