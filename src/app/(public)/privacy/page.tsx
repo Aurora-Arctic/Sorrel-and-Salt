@@ -240,11 +240,6 @@ export default function PrivacyPolicyPage() {
               <td>Your address and the mail's text: verification links, invitations, notices</td>
             </tr>
             <tr>
-              <td>Mailtrap</td>
-              <td>Captures the mail of the staging site, which delivers none</td>
-              <td>The same, for test accounts on staging</td>
-            </tr>
-            <tr>
               <td>Discord, Google, Microsoft, Facebook</td>
               <td>Sign you in, when you choose one of them</td>
               <td>
