@@ -198,8 +198,13 @@ export default function CodeOfEthicsPage() {
           species, subspecies and populations: Appendix I lists those threatened with extinction and
           given the highest protection, Appendix II those whose trade must be controlled to avoid
           use incompatible with their survival.
-          <SourceMarks cite="wildlife" numbers={[6]} /> No bone, feather, fur, shell or tooth of a
-          listed species belongs in a working, and the site will not help you source one.
+          <SourceMarks cite="wildlife" numbers={[6]} /> The law can make exceptions for Indigenous
+          peoples' religious and cultural use: in the United States, the government's National Eagle
+          Repository gives eagle feathers and parts to enrolled members of federally recognised
+          tribes "for spiritual and religious use".
+          <SourceMarks cite="exception" numbers={[11]} /> Outside such an exception, no bone,
+          feather, fur, shell or tooth of a listed species belongs in a working, and the site will
+          not help you source one.
         </li>
       </ul>
       <p>
@@ -406,6 +411,13 @@ export default function CodeOfEthicsPage() {
           17 September 2026.{' '}
           <a href="https://www.w3.org/WAI/standards-guidelines/wcag/">
             https://www.w3.org/WAI/standards-guidelines/wcag/
+          </a>
+          .
+        </SourceItem>
+        <SourceItem number={11} cites={['exception']}>
+          U.S. Fish & Wildlife Service. "National Eagle Repository." Accessed 2 November 2026.{' '}
+          <a href="https://www.fws.gov/program/national-eagle-repository">
+            https://www.fws.gov/program/national-eagle-repository
           </a>
           .
         </SourceItem>
