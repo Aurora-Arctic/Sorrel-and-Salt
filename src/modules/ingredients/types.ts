@@ -225,6 +225,12 @@ export interface CompendiumShareCard {
   groupColors: string[];
 }
 
+/** A category as a result card shows it: the row, and the stored forms that carry it when the ingredient itself does not (empty for its own). */
+export interface CardCategoryRow {
+  category: CategoryRow;
+  forms: string[];
+}
+
 /** A category as the entry page shows it: the row and the group whose colours its chip takes. */
 export interface CategoryDetail {
   category: CategoryRow;
