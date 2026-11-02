@@ -236,7 +236,7 @@ export default function PrivacyPolicyPage() {
             </tr>
             <tr>
               <td>Resend</td>
-              <td>Sends the site's mail on production</td>
+              <td>Sends the site's mail</td>
               <td>Your address and the mail's text: verification links, invitations, notices</td>
             </tr>
             <tr>
