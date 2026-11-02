@@ -73,7 +73,7 @@ const ACCESS_ROWS: { data: string; cells: [string, string, string, string, strin
       'No',
       'No',
       'No',
-      "Only requests an admin marked for curators or assigned to them, without anyone's email (bar the curator's own) or the coven named in the page address",
+      "Only requests an admin marked for curators or assigned to them, without the requestor's email or the coven named in the page address",
       'Yes, with your email',
       'Yes',
     ],
