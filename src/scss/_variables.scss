@@ -158,6 +158,10 @@ $dismiss-ink-dark: #fff;
 // text.
 $card-more-ink-dark: #fff;
 
+// The ◆ list marker in dark, pure white; light draws it in $iron-gall, its body text, since white
+// would vanish on parchment.
+$list-marker-ink-dark: #fff;
+
 // Otherwise a mistyped theme surfaces as a null ink rather than an error naming it.
 @function _assert-theme($theme) {
   @if not list.index((dark, light), $theme) {
@@ -481,6 +485,7 @@ $preview-ember-char: var(--preview-ember-char);
 $preview-ash: var(--preview-ash);
 $dismiss-ink: var(--dismiss-ink);
 $card-more-ink: var(--card-more-ink);
+$list-marker-ink: var(--list-marker-ink);
 // The Last Edit line's ink: the placeholder's mix in dark, where it holds 4.5:1; the muted ink in
 // light, where the placeholder mix is 4.22:1 on the page and falls short.
 $last-edit-ink: var(--last-edit-ink);

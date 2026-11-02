@@ -68,7 +68,7 @@
 // every size and line height). Centred `$centre` down from the item's top,
 // by default the middle of its first line (`lh`, Baseline Widely Available),
 // and on the gutter where typography-base's 1.25rem indent puts it. The size
-// is the ◆ glyph's ink in Lexend. Being empty, it is no "black diamond" to a
+// is 89% of the ◆ glyph's ink in Lexend. Being empty, it is no "black diamond" to a
 // screen reader either. Forced colours would paint the background away, so
 // there it is drawn in the text colour.
 @mixin list-marker($centre: 0.5lh) {
@@ -76,9 +76,9 @@
   position: absolute;
   top: $centre;
   left: calc(-1.25rem + 0.5em);
-  inline-size: 0.57em;
-  block-size: 0.64em;
-  background-color: $accent;
+  inline-size: 0.507em;
+  block-size: 0.57em;
+  background-color: $list-marker-ink;
   clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%);
   transform: translate(-50%, -50%);
 
@@ -1102,6 +1102,7 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   --preview-ash: #{$preview-ash-dark};
   --dismiss-ink: #{$dismiss-ink-dark};
   --card-more-ink: #{$card-more-ink-dark};
+  --list-marker-ink: #{$list-marker-ink-dark};
   --last-edit-ink: color-mix(in srgb, var(--text-muted) 85%, var(--surface-card));
   --notice-button-ink: var(--accent);
   --ornament-screen: 0.3;
@@ -1153,6 +1154,7 @@ $-entry-tablet: calc(#{$shell-tablet-width} + 0.01rem);
   --preview-ash: #{$preview-ash-light};
   --dismiss-ink: var(--text-primary);
   --card-more-ink: #{$iron-gall};
+  --list-marker-ink: #{$iron-gall};
   --last-edit-ink: var(--text-muted);
   --ornament-screen: 0;
   --ornament-multiply: 0.4;
