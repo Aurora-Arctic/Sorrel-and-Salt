@@ -192,11 +192,23 @@ async function readPage(params: Record<string, string | string[]> = {}) {
 
 const lastRequest = (): PageRequest => listCompendium.mock.lastCall?.[1] as PageRequest;
 
-/** The filter the list and its count were last read under, which must agree, without the `listing` every admin read carries. */
+/** The filter the list and its count were last read under, which must agree, without the `listing` every admin read carries or the score every admin row carries. */
 function lastFilter(): unknown {
-  const listed = (listCompendium.mock.lastCall?.[0] ?? {}) as { listing?: string };
+  const listed = (listCompendium.mock.lastCall?.[0] ?? {}) as {
+    listing?: string;
+    withSourcingScore?: boolean;
+  };
   expect(countCompendium.mock.lastCall?.[0]).toEqual(listed);
-  const { listing: _listing, ...rest } = listed;
+  expect(listed.withSourcingScore).toBe(true);
+  const { listing: _listing, withSourcingScore: _score, ...rest } = listed;
+  return rest;
+}
+
+/** The list's filter as the facets are read under it: the facets carry no score. */
+function facetFilter(): unknown {
+  const { withSourcingScore: _score, ...rest } = (listCompendium.mock.lastCall?.[0] ?? {}) as {
+    withSourcingScore?: boolean;
+  };
   return rest;
 }
 
@@ -361,10 +373,7 @@ describe('the /admin/compendium filter', () => {
   it('counts the facets under the same filter as the list and its count', async () => {
     await readPage({ query: 'test', forms: 'Fixture Oil', toxic: 'toxic' });
 
-    expect(compendiumFacets).toHaveBeenCalledExactlyOnceWith(
-      listCompendium.mock.lastCall?.[0],
-      ADMIN,
-    );
+    expect(compendiumFacets).toHaveBeenCalledExactlyOnceWith(facetFilter(), ADMIN);
     expect(lastFilter()).toEqual({ query: 'test', forms: ['Fixture Oil'], toxic: 'toxic' });
   });
 

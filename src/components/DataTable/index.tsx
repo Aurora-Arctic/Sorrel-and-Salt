@@ -16,17 +16,17 @@ function cellClass<Row>({ className, action }: StackColumn<Row>): string | undef
   );
 }
 
-/** A sortable heading's arrow for the eye alone: up for ascending, down for descending, and both for a column not sorted by. */
+/**
+ * A sortable heading's arrow for the eye alone: up for ascending, down for descending, and an up-and-down pair for a column
+ * not sorted by. One set of parts is drawn in every state, so a sort moves them rather than swapping a path: the pair's
+ * upper chevron grows into the arrow's head and gains its stem, the lower chevron fades, and a flip turns the arrow over.
+ */
 function SortArrow({ current }: { current: ColumnSort['current'] }): ReactNode {
-  const path =
-    current === 'ascending'
-      ? 'M12 19V5M5 12l7-7 7 7'
-      : current === 'descending'
-        ? 'M12 5v14M5 12l7 7 7-7'
-        : 'M8 9l4-4 4 4M8 15l4 4 4-4';
   return (
     <svg
-      className="data-table__sort-arrow"
+      className={
+        current === 'descending' ? 'data-table__sort-arrow is-descending' : 'data-table__sort-arrow'
+      }
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -36,7 +36,11 @@ function SortArrow({ current }: { current: ColumnSort['current'] }): ReactNode {
       aria-hidden="true"
       focusable="false"
     >
-      <path d={path} />
+      <g className="data-table__sort-turn">
+        <path className="data-table__sort-stem" d="M12 5v14" />
+        <path className="data-table__sort-head" d="M5 12l7-7 7 7" />
+      </g>
+      <path className="data-table__sort-mate" d="M5 12l7 7 7-7" />
     </svg>
   );
 }

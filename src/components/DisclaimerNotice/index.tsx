@@ -8,8 +8,8 @@ import './index.scss';
 // (claude-docs/components/disclaimer-notice.md).
 const DisclaimerNotice = (): ReactElement => (
   <p className="disclaimer-notice" role="note">
-    Safety notes are not complete, and an ingredient with none is not thereby safe.{' '}
-    <Link href="/disclaimer">Read the Disclaimer</Link>
+    Safety notes do not list every risk. If an ingredient has no safety note, that does not mean it
+    is safe. <Link href="/disclaimer">Read the Disclaimer</Link>
   </p>
 );
 
