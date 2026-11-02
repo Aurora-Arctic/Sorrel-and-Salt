@@ -28,6 +28,8 @@ vi.mock('@/lib/mail', () => ({ send }));
 
 const startJob = vi.hoisted(() => vi.fn<(job: unknown, args: unknown[]) => Promise<string>>());
 vi.mock('@/lib/jobs', () => ({ startJob }));
+// A mail job starts only while MAIL_TRANSPORT is set; set here, so the resend's run is seen whatever the machine's own env.
+vi.stubEnv('MAIL_TRANSPORT', 'mailpit');
 
 const DOMAIN = '@provisional-accounts.test';
 const OWNER = `owner${DOMAIN}`;
