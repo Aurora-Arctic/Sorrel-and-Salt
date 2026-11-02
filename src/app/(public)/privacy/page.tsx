@@ -186,7 +186,7 @@ export default function PrivacyPolicyPage() {
         (the invited address, the role offered and any note), its ingredients and their stock, and
         its grimoire: every spell, its steps and its workings, with who wrote each. A spell marked
         private is shown only to the person who wrote it. Nobody else in the coven sees it, its
-        owners included, though it is stored with the coven's other spells.
+        owners included, though it is stored in the database.
       </p>
       <p>
         A printed invitation card is bound to no address. When someone opens a card's link and is
