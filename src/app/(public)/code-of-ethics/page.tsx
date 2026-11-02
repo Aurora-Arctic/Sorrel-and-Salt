@@ -173,8 +173,8 @@ export default function CodeOfEthicsPage() {
           incense sticks and cones. Over-harvesting is reducing its wild population and range,
           illegal harvest is believed to be happening on public land, and in 2018 four people were
           arrested for taking 400 pounds of it. It is not on the United States' endangered species
-          list, but conservationists are concerned for its survival. Grow your own, or buy from a
-          grower, never from a wild harvest you cannot trace.
+          list, but conservationists are concerned for its survival. Grow your own, or buy from an
+          ethical grower, never from a wild harvest you cannot trace.
           <SourceMarks cite="sourcing" numbers={[1, 2]} />
         </li>
         <li>
