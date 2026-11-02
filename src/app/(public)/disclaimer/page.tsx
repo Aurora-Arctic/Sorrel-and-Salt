@@ -6,7 +6,7 @@ import { SITE_NAME, siteUrl } from '../../../lib/site';
 
 export const metadata: Metadata = {
   title: 'Disclaimer',
-  description: `${SITE_NAME} is folklore and reference, not medical or professional advice, and its safety notes are not complete.`,
+  description: `${SITE_NAME} is folklore and reference, not medical or professional advice, and its safety notes do not list every risk.`,
   alternates: { canonical: siteUrl('/disclaimer') },
 };
 
@@ -39,7 +39,8 @@ export default function DisclaimerPage() {
         </li>
         <li>The site comes with no warranty. Its text can be wrong, out of date or incomplete.</li>
         <li>
-          Safety notes are not complete. An ingredient with no safety note is not thereby safe.
+          Safety notes do not list every risk. If an ingredient has no safety note, that does not
+          mean it is safe.
         </li>
         <li>
           An ingredient can harm in a way its usual use does not suggest. Something eaten every day
