@@ -59,10 +59,6 @@ export default function CodeOfEthicsPage() {
           antisemitism, Islamophobia and every other bigotry have no place on the site, in a coven
           or in a support request.
         </li>
-        <li>
-          Do not claim a closed practice as your own, and do not share what belongs to a people you
-          are not part of.
-        </li>
         <li>Take only what can be spared: no endangered plants, no parts of protected animals.</li>
         <li>
           Be honest about what you know and where you learned it, and say when you are unsure.
@@ -138,6 +134,11 @@ export default function CodeOfEthicsPage() {
           <SourceMarks cite="tradition" numbers={[9]} />
         </li>
       </ul>
+      <p>
+        We ask you not to claim a closed practice as your own, and not to share what belongs to a
+        people you are not part of. This is advice, not a rule of your account, and the site does
+        not enforce it.
+      </p>
       <p>So the site commits to this:</p>
       <ul>
         <li>
