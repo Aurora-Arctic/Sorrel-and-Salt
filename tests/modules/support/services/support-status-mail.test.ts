@@ -47,6 +47,7 @@ function recorder() {
     resolved: record('resolved'),
     closingSoon: record('closingSoon'),
     signedOutReply: record('signedOutReply'),
+    origin: async () => 'http://localhost:3000',
   };
   return { mail, calls };
 }

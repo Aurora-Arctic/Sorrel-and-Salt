@@ -160,6 +160,7 @@ export {
   findSupportRequestPage,
   findSupportTimeoutById,
   findSupportTimeoutsFor,
+  RESOLVED_CLOSES_AFTER_DAYS,
 } from './support';
 export { findOpenAdminRoleChangePause } from './admin-roles';
 export {

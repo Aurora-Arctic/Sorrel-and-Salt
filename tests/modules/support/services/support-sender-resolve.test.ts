@@ -33,6 +33,7 @@ const mail: SupportNotifier = {
   resolved: async () => undefined,
   closingSoon: async () => undefined,
   signedOutReply: async () => undefined,
+  origin: async () => 'http://localhost:3000',
 };
 
 const sendAs = (user: typeof C) => sendSupportRequest(asUser(user), INPUT, mail);
@@ -47,7 +48,7 @@ describe('resolveMySupportRequest', () => {
     await waitOn(request.id);
     expect((await row(request.id)).status).toBe('waiting_on_sender');
 
-    const resolved = await resolveMySupportRequest(asUser(C), request.id);
+    const resolved = await resolveMySupportRequest(asUser(C), request.id, mail);
 
     expect(resolved).toMatchObject({ status: 'resolved', resolvedBy: C.id });
     expect(resolved.resolvedAt).toBeInstanceOf(Date);
@@ -56,7 +57,7 @@ describe('resolveMySupportRequest', () => {
 
   it('resolves the sender’s own open request', async () => {
     const request = await sendAs(C);
-    expect((await resolveMySupportRequest(asUser(C), request.id)).status).toBe('resolved');
+    expect((await resolveMySupportRequest(asUser(C), request.id, mail)).status).toBe('resolved');
   });
 
   it('refuses another account’s request by direct id, which exists and is waiting', async () => {
@@ -66,10 +67,10 @@ describe('resolveMySupportRequest', () => {
     const before = await row(request.id);
     expect(before).toMatchObject({ status: 'waiting_on_sender', created_by: C.id });
 
-    expect(await failureOf(resolveMySupportRequest(asUser(D), request.id))).toBeInstanceOf(
+    expect(await failureOf(resolveMySupportRequest(asUser(D), request.id, mail))).toBeInstanceOf(
       NotFound,
     );
-    expect(await failureOf(resolveMySupportRequest(asUser(A), request.id))).toBeInstanceOf(
+    expect(await failureOf(resolveMySupportRequest(asUser(A), request.id, mail))).toBeInstanceOf(
       NotFound,
     );
     expect((await row(request.id)).status).toBe('waiting_on_sender');
@@ -79,13 +80,13 @@ describe('resolveMySupportRequest', () => {
   it('refuses a resolved or closed request with an explaining error', async () => {
     const resolved = await sendAs(C);
     await resolveSupportRequest(asUser(E), resolved.id, mail);
-    const failure = await failureOf(resolveMySupportRequest(asUser(C), resolved.id));
+    const failure = await failureOf(resolveMySupportRequest(asUser(C), resolved.id, mail));
     expect(failure).toBeInstanceOf(Forbidden);
     expect((failure as Error).message).toMatch(/open or waiting on sender/);
 
     const closed = await sendAs(C);
     await closeSupportRequest(asUser(E), closed.id);
-    expect(await failureOf(resolveMySupportRequest(asUser(C), closed.id))).toBeInstanceOf(
+    expect(await failureOf(resolveMySupportRequest(asUser(C), closed.id, mail))).toBeInstanceOf(
       Forbidden,
     );
     expect((await row(closed.id)).status).toBe('closed');
@@ -94,14 +95,14 @@ describe('resolveMySupportRequest', () => {
   it('refuses an unverified account', async () => {
     const request = await sendAs(C);
     const unverified = { ...asUser(C), emailUnverified: true as const };
-    expect(await failureOf(resolveMySupportRequest(unverified, request.id))).toBeInstanceOf(
+    expect(await failureOf(resolveMySupportRequest(unverified, request.id, mail))).toBeInstanceOf(
       Forbidden,
     );
   });
 
   it('lets the sender’s next message reopen it', async () => {
     const request = await sendAs(C);
-    await resolveMySupportRequest(asUser(C), request.id);
+    await resolveMySupportRequest(asUser(C), request.id, mail);
     expect((await sendSenderMessage(asUser(C), request.id, 'Still stuck.')).status).toBe('open');
   });
 });
@@ -151,7 +152,7 @@ describe('getMySupportCounts', () => {
     expect((await getMySupportCounts(asUser(C))).waitingOnMe).toBe(2);
     await resolveSupportRequest(asUser(E), staffResolved.id, mail);
     expect((await getMySupportCounts(asUser(C))).waitingOnMe).toBe(1);
-    await resolveMySupportRequest(asUser(C), selfResolved.id);
+    await resolveMySupportRequest(asUser(C), selfResolved.id, mail);
     expect((await getMySupportCounts(asUser(C))).waitingOnMe).toBe(0);
   });
 

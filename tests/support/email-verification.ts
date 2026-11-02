@@ -31,4 +31,5 @@ export const noSupportNotifier: SupportNotifier = {
   resolved: async () => unexpected('mail a resolved notice'),
   closingSoon: async () => unexpected('mail a closing-soon notice'),
   signedOutReply: async () => unexpected('mail a signed-out reply'),
+  origin: async () => unexpected('resolve an origin'),
 };

@@ -5,7 +5,6 @@ import type { PageRequest } from '@/lib/types';
 import {
   addSupportInternalNote,
   assignSupportRequest,
-  closeResolvedRequests,
   closeSupportRequest,
   getMySupportFollowUpId,
   getMySupportRequest,
@@ -44,6 +43,7 @@ const mail: SupportNotifier = {
   resolved: async () => undefined,
   closingSoon: async () => undefined,
   signedOutReply: async () => undefined,
+  origin: async () => 'http://localhost:3000',
 };
 
 const send = () => sendSupportRequest(asUser(C), INPUT, mail);
@@ -338,6 +338,7 @@ describe('internal notes', () => {
       resolved: async () => undefined,
       closingSoon: async () => undefined,
       signedOutReply: async () => undefined,
+      origin: async () => 'http://localhost:3000',
     });
 
     expect(await statusOf(request.id)).toBe('open');
@@ -404,28 +405,6 @@ describe('internal notes', () => {
     expect(
       await failureOf(replyToSupportRequest(asUser(F), request.id, 'Hello.', mail)),
     ).toBeInstanceOf(Forbidden);
-  });
-});
-
-describe('closeResolvedRequests', () => {
-  it('closes resolved requests idle for seven days and no others', async () => {
-    const old = await send();
-    const recent = await send();
-    const open = await send();
-    await resolveSupportRequest(asUser(E), old.id, mail);
-    await resolveSupportRequest(asUser(E), recent.id, mail);
-    await sql`update support_requests set resolved_at = now() - interval '8 days' where id = ${old.id}`;
-    await sql`update support_requests set resolved_at = now() - interval '6 days' where id = ${recent.id}`;
-    await sql`update support_requests set created_at = now() - interval '30 days' where id = ${open.id}`;
-
-    const closed = await closeResolvedRequests(asUser(E), new Date());
-
-    expect(closed.map((row) => row.id)).toEqual([old.id]);
-    expect(await statusOf(old.id)).toBe('closed');
-    expect(await statusOf(recent.id)).toBe('resolved');
-    expect(await statusOf(open.id)).toBe('open');
-    const [row] = await sql`select closed_at from support_requests where id = ${old.id}`;
-    expect(row!.closed_at).toBeInstanceOf(Date);
   });
 });
 

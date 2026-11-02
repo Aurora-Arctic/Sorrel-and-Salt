@@ -1,10 +1,11 @@
-import { and, eq, inArray, isNull, lte, or, sql, type SQL } from 'drizzle-orm';
+import { and, eq, inArray, isNull, lte, ne, not, or, sql, type SQL } from 'drizzle-orm';
 import { invitations } from '../../modules/coven/schema/invitations';
 import { supportReplies } from '../../modules/support/schema/support-replies';
 import { supportRequests } from '../../modules/support/schema/support-requests';
 import { supportSendCounts } from '../../modules/support/schema/support-send-counts';
 import { supportTimeouts } from '../../modules/support/schema/support-timeouts';
 import { SUPPORT_VIEWS } from '../../lib/support-path';
+import { SYSTEM_ACTOR_ID } from '../../lib/system-actor';
 import type { SupportSenderGroup, SupportView } from '../../lib/support-path';
 import { findPage, findPageCount } from './finders';
 import { notSoftDeleted } from './predicates';
@@ -24,6 +25,39 @@ import type {
 
 // The support finders. A request is the account's, not a coven's, so no `Membership` scopes it: what a reader may see is
 // spelled here in SQL, so a request outside it never reaches a resolver (claude-docs/design-decisions/m15.1-support-form.md, "The curator view").
+
+/** How long a resolved request stays resolved before it is closed, in days. */
+export const RESOLVED_CLOSES_AFTER_DAYS = 7;
+
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * A resolved request whose seven days have passed reads as closed, whether or not its job has closed it yet, so a lost run only
+ * delays the stored move. Every finder and move below reads status through this.
+ */
+const lapsedResolved = sql`(${supportRequests.status} = 'resolved' and ${supportRequests.resolvedAt} <= now() - make_interval(days => ${RESOLVED_CLOSES_AFTER_DAYS}))`;
+
+/** The status a reader is shown: a lapsed resolved request as closed, from the day it lapsed. */
+function asOfNow<Row extends typeof supportRequests.$inferSelect>(row: Row): Row {
+  if (row.status !== 'resolved' || row.resolvedAt === null) return row;
+  const closedAt = new Date(row.resolvedAt.getTime() + RESOLVED_CLOSES_AFTER_DAYS * DAY_MS);
+  return closedAt.getTime() <= Date.now() ? { ...row, status: 'closed', closedAt } : row;
+}
+
+const oneAsOfNow = <Row extends typeof supportRequests.$inferSelect>(row: Row | undefined) =>
+  row && asOfNow(row);
+
+const readAsOfNow = <Entry extends { node: typeof supportRequests.$inferSelect }>(
+  entries: Entry[],
+): Entry[] => entries.map((entry) => ({ ...entry, node: asOfNow(entry.node) }));
+
+/** A status as `asOfNow` reads it, in SQL. */
+function statusIs(status: (typeof supportRequests.$inferSelect)['status']): SQL {
+  if (status === 'resolved')
+    return and(eq(supportRequests.status, 'resolved'), not(lapsedResolved)) as SQL;
+  if (status === 'closed') return or(eq(supportRequests.status, 'closed'), lapsedResolved) as SQL;
+  return eq(supportRequests.status, status);
+}
 
 /** What a curator reads: a request marked for curators, or assigned to them. An admin reads every request. */
 function readerScope(reader: SupportReader): SQL | undefined {
@@ -93,9 +127,9 @@ function viewArm(reader: SupportReader, view: SupportView): SQL {
     case 'waiting':
       return eq(supportRequests.status, 'waiting_on_sender');
     case 'resolved':
-      return eq(supportRequests.status, 'resolved');
+      return statusIs('resolved');
     case 'closed':
-      return eq(supportRequests.status, 'closed');
+      return statusIs('closed');
   }
 }
 
@@ -114,7 +148,7 @@ function filterArms(
   return [
     view ? viewArm(reader, view) : undefined,
     about ? eq(supportRequests.about, about) : undefined,
-    status ? eq(supportRequests.status, status) : undefined,
+    status ? statusIs(status) : undefined,
     errorCode === undefined ? undefined : eq(supportRequests.errorCode, errorCode),
     senderGroup ? senderArm(senderGroup) : undefined,
   ];
@@ -131,7 +165,7 @@ export function findSupportRequestPage(
     orderOf(filter),
     page,
     and(readerScope(reader), ...filterArms(reader, filter)),
-  );
+  ).then(readAsOfNow);
 }
 
 /** How many rows `findSupportRequestPage` pages, and how many come before `start`, a page's first row. */
@@ -183,7 +217,7 @@ export function findSupportRequestForReader(reader: SupportReader, id: string) {
   return selectOne(
     supportRequests,
     and(notSoftDeleted(supportRequests), eq(supportRequests.id, id), readerScope(reader)),
-  );
+  ).then(oneAsOfNow);
 }
 
 /** One page of the sender's own requests, newest first. The finder ANDs `created_by` itself. */
@@ -191,7 +225,9 @@ export function findOwnSupportRequestPage(
   userId: string,
   page: PageRequest,
 ): Promise<PageEntry<typeof supportRequests.$inferSelect>[]> {
-  return findPage(supportRequests, OWN_ORDER, page, eq(supportRequests.createdBy, userId));
+  return findPage(supportRequests, OWN_ORDER, page, eq(supportRequests.createdBy, userId)).then(
+    readAsOfNow,
+  );
 }
 
 /** How many rows `findOwnSupportRequestPage` pages, and how many come before `start`. */
@@ -242,7 +278,7 @@ export function findOwnSupportRequest(userId: string, id: string) {
       eq(supportRequests.id, id),
       eq(supportRequests.createdBy, userId),
     ),
-  );
+  ).then(oneAsOfNow);
 }
 
 /** The request the sender opened as a follow-up to this closed one of theirs, or `undefined` when they have not. */
@@ -254,7 +290,7 @@ export function findOwnSupportFollowUp(userId: string, id: string) {
       eq(supportRequests.linkedFrom, id),
       eq(supportRequests.createdBy, userId),
     ),
-  );
+  ).then(oneAsOfNow);
 }
 
 /** When the sender's latest live time-out ends, or `undefined` with none in force. */
@@ -356,6 +392,7 @@ export const SUPPORT_SEND_LOCK_NAMESPACE = 0x53555031;
 
 export function supportWrites({
   tx,
+  session,
   insert,
   update,
 }: WriterContext): Pick<
@@ -364,6 +401,8 @@ export function supportWrites({
   | 'countSignedOutSend'
   | 'moveSupportRequest'
   | 'closeIdleResolvedSupportRequests'
+  | 'markClosingNoticeSent'
+  | 'anonymiseClosedSupportRequests'
 > {
   // One key's count: its advisory lock first, then the live row, started again when its window has passed.
   async function countKey(
@@ -412,15 +451,76 @@ export function supportWrites({
         and(
           eq(supportRequests.id, id),
           inArray(supportRequests.status, [...from]),
+          // A lapsed resolved request reads as closed, so it moves as a closed one would.
+          not(lapsedResolved),
           ownerId === null ? undefined : eq(supportRequests.createdBy, ownerId),
         ),
       ),
-    closeIdleResolvedSupportRequests: (cutoff, closedAt) =>
+    // Closed as of the day it lapsed, the date readers already show, so a late close does not put off the anonymising.
+    closeIdleResolvedSupportRequests: (cutoff, id) =>
       update(
         supportRequests,
-        { status: 'closed', closedAt },
-        and(eq(supportRequests.status, 'resolved'), lte(supportRequests.resolvedAt, cutoff)),
+        {
+          status: 'closed',
+          closedAt: sql`${supportRequests.resolvedAt} + make_interval(days => ${RESOLVED_CLOSES_AFTER_DAYS})`,
+        },
+        and(
+          id === undefined ? undefined : eq(supportRequests.id, id),
+          eq(supportRequests.status, 'resolved'),
+          lte(supportRequests.resolvedAt, cutoff),
+        ),
       ),
+    markClosingNoticeSent: (id, sentAt) =>
+      update(
+        supportRequests,
+        { closingNoticeSentAt: sentAt },
+        and(
+          eq(supportRequests.id, id),
+          eq(supportRequests.status, 'resolved'),
+          isNull(supportRequests.closingNoticeSentAt),
+        ),
+      ),
+    // The sender leaves the row in one statement, so the one-sender CHECK never sees an address without the signed-out
+    // sender: `created_by` passes to the System account, which no request is otherwise created by, and which marks the row done.
+    // The audit writer strips `created_by` from what it sets, so this one statement goes to the transaction itself.
+    anonymiseClosedSupportRequests: async (cutoff, id) => {
+      const rows = await tx
+        .update(supportRequests)
+        .set({
+          subject: '',
+          message: '',
+          path: '',
+          senderEmail: null,
+          resolvedBy: sql`case when ${supportRequests.resolvedBy} = ${supportRequests.createdBy} then null else ${supportRequests.resolvedBy} end`,
+          createdBy: SYSTEM_ACTOR_ID,
+          updatedBy: session.userId,
+        })
+        .where(
+          and(
+            notSoftDeleted(supportRequests),
+            id === undefined ? undefined : eq(supportRequests.id, id),
+            eq(supportRequests.status, 'closed'),
+            lte(supportRequests.closedAt, cutoff),
+            ne(supportRequests.createdBy, SYSTEM_ACTOR_ID),
+          ),
+        )
+        .returning();
+      if (rows.length === 0) return rows;
+      await tx
+        .update(supportReplies)
+        .set({
+          body: '',
+          createdBy: sql`case when ${supportReplies.authorRole} = 'sender' then ${SYSTEM_ACTOR_ID}::uuid else ${supportReplies.createdBy} end`,
+          updatedBy: session.userId,
+        })
+        .where(
+          inArray(
+            supportReplies.requestId,
+            rows.map((row) => row.id),
+          ),
+        );
+      return rows;
+    },
     // An advisory lock, not a row lock: the send limit counts rows that do not exist yet, so there is no row to lock. Taken
     // first in the send's transaction, so a second send from the same account waits and then counts the first. Both reads are
     // in that transaction, as its connection is the one the lock holds. Released at commit.

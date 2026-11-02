@@ -47,6 +47,7 @@ function notifier() {
     signedOutReply: async (to, body) => {
       replies.push({ to, body });
     },
+    origin: async () => 'http://localhost:3000',
   };
   return { mail, received, replies };
 }

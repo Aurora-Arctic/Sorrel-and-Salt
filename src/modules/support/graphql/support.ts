@@ -357,7 +357,8 @@ builder.mutationField('resolveMySupportRequest', (t) =>
       'The sender marks their own open or waiting request resolved without replying. A later message from them reopens it.',
     args: { id: t.arg.id({ required: true }) },
     authScopes: { signedIn: true },
-    resolve: (_root, { id }, context) => resolveMySupportRequest(sessionOf(context), id),
+    resolve: (_root, { id }, context) =>
+      resolveMySupportRequest(sessionOf(context), id, context.support),
   }),
 );
 

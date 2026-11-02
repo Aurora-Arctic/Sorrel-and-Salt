@@ -1,8 +1,9 @@
 import type { Message, Outgoing } from './types';
-// Outgoing mail, over HTTP to every target, as SMTP from a Vercel function is unreliable. A failed send is logged and never thrown, so an outage costs a resend,
-// not a sign-in (claude-docs/design-decisions/mb.61-email-verification-and-delivery.md, "Delivery").
+// Outgoing mail, over HTTP to every target, as SMTP from a Vercel function is unreliable. `send` logs a failed send and never
+// throws, so an outage costs a resend, not a sign-in; `deliver` throws one, for a job step that retries it
+// (claude-docs/email.md, "Sending").
 
-// A send never throws, so the log is how a refused or failed one is seen.
+// The log is how a refused or failed send is seen.
 /* oxlint-disable no-console */
 
 // The one transport each deployed environment may use. Anything else there,
@@ -56,14 +57,25 @@ function outgoing(transport: string, message: Message): Outgoing | string {
   }
 }
 
-/** Sends through MAIL_TRANSPORT. Never throws; with MAIL_TRANSPORT unset outside a deployment, logs the message instead. */
-export async function send(message: Message): Promise<void> {
+/** Thrown by `deliver` when the transport did not take a message, so a job step's retry tries it again. */
+export class MailNotSent extends Error {
+  override name = 'MailNotSent';
+}
+
+/**
+ * Hands the message to MAIL_TRANSPORT once. True when the transport took it, or when MAIL_TRANSPORT is unset outside a deployment
+ * and the message is logged in its place; false when it is refused before any transport is tried (a recipient under `.invalid`, or
+ * a transport this environment may not use), which no retry would change. Every outcome but success is logged.
+ *
+ * @throws {MailNotSent} the transport answered with an error, or could not be reached.
+ */
+export async function deliver(message: Message): Promise<boolean> {
   // RFC 2606 reserves `.invalid`: no mailbox exists under it, so the address
   // is the placeholder a provider that shared none is stored under
   // (src/modules/identity/services/email.ts), and nothing can receive this.
   if (/\.invalid$/i.test(message.to)) {
     console.error(`mail: refused a recipient under .invalid; "${message.subject}" not sent`);
-    return;
+    return false;
   }
   // '' is unset, as Vercel and compose both write an empty variable.
   const transport = process.env.MAIL_TRANSPORT || undefined;
@@ -76,31 +88,44 @@ export async function send(message: Message): Promise<void> {
     console.error(
       `mail: refused MAIL_TRANSPORT=${transport ?? '(unset)'} at VERCEL_ENV=${vercelEnv}, which sends only through ${required}; "${message.subject}" not sent`,
     );
-    return;
+    return false;
   }
   if (!transport) {
     console.info('mail: MAIL_TRANSPORT is unset; logged, not sent:', message);
-    return;
+    return true;
   }
 
   const request = outgoing(transport, message);
   if (typeof request === 'string') {
     console.error(`mail: ${request}; "${message.subject}" not sent`);
-    return;
+    return false;
   }
 
+  let response: Response;
   try {
-    const response = await fetch(request.url, {
+    response = await fetch(request.url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...request.headers },
       body: JSON.stringify(request.body),
     });
-    if (!response.ok) {
-      console.error(
-        `mail: ${transport} answered ${response.status}; "${message.subject}" not sent: ${await response.text()}`,
-      );
-    }
   } catch (error) {
     console.error(`mail: ${transport} send failed; "${message.subject}" not sent`, error);
+    throw new MailNotSent(`${transport} could not be reached`);
+  }
+  if (!response.ok) {
+    console.error(
+      `mail: ${transport} answered ${response.status}; "${message.subject}" not sent: ${await response.text()}`,
+    );
+    throw new MailNotSent(`${transport} answered ${response.status}`);
+  }
+  return true;
+}
+
+/** Sends through MAIL_TRANSPORT, as `deliver` does, once and without throwing: a failed send is logged and lost. */
+export async function send(message: Message): Promise<void> {
+  try {
+    await deliver(message);
+  } catch {
+    // `deliver` logged it.
   }
 }

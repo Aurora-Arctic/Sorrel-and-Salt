@@ -16,6 +16,8 @@ export type SupportStatus = SupportRequestRow['status'];
  * may not import the origin resolution the link needs.
  */
 export interface SupportNotifier {
+  /** The origin a mailed link is built on, which a job that mails later carries with it. @throws {Error} where none resolves. */
+  origin(): Promise<string>;
   /** Mails `to` that a reply to the request `requestId`, headed `subject`, is waiting; the link opens that request. Carries no reply text; never throws on a failed send. */
   replyWaiting(to: string, subject: string, requestId: string): Promise<void>;
   /** Mails the sender that the request arrived, with the 5-working-day promise. `requestId` is null for a signed-out sender, whose mail links to the support page. Never throws on a failed send. */

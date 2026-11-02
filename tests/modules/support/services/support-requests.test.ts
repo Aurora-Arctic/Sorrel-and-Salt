@@ -61,6 +61,7 @@ function notifier(): SupportNotifier & { sent: string[]; subjects: string[]; ids
     resolved: async () => undefined,
     closingSoon: async () => undefined,
     signedOutReply: async () => undefined,
+    origin: async () => 'http://localhost:3000',
   };
 }
 
@@ -73,6 +74,7 @@ const mail: SupportNotifier = {
   resolved: async () => undefined,
   closingSoon: async () => undefined,
   signedOutReply: async () => undefined,
+  origin: async () => 'http://localhost:3000',
 };
 
 async function emailOf(user: SessionUser): Promise<string> {

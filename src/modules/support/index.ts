@@ -7,6 +7,8 @@ export * from './services/own';
 export * from './services/staff';
 export * from './services/reply';
 export * from './services/lifecycle';
+export { startSupportRetentionSweep } from './services/retention-start';
+export { sweepSupportRetention } from './services/retention';
 export * from './services/timeouts';
 export * from './services/reads';
 export * from './graphql/support';
