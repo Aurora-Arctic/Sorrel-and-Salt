@@ -1,5 +1,4 @@
 import type { Route } from 'next';
-import type { ReactNode } from 'react';
 import type { ModalHeading } from '../Modal/types';
 import type { WorkspaceRole } from '@/modules/coven';
 import type { UpdatedStamp } from '../DataTable/types';
@@ -37,25 +36,13 @@ export interface MemberListProps {
    */
   showEmail?: boolean;
   /**
-   * The role change beside each role — Change Role — given the member it
-   * is for; it may return nothing for a row with none. When absent, the Role
-   * column holds the role alone.
+   * Whether to draw the Access column, a standing pause's badge and end from each entry's `paused`, which the page sets
+   * for an owner alone. When absent, the list has no such column.
    */
-  roleAction?: (member: MemberListEntry) => ReactNode;
-  /**
-   * The removal at the end of each row, in a column of its own — Remove —
-   * given the member it is for. When absent, the list has no such column,
-   * which is how a member who cannot remove anyone sees it.
-   */
-  removeAction?: (member: MemberListEntry) => ReactNode;
-  /**
-   * The access pause on each row — Pause Access, or Paused with Lift Pause — in a column of its own, given the member it
-   * is for; it may return nothing for a row with none. When absent, the list has no such column.
-   */
-  accessAction?: (member: MemberListEntry) => ReactNode;
+  showAccess?: boolean;
 }
 
-/** The role change a member's row offers an owner. */
+/** The role change the member modal offers an owner. */
 export interface RoleControlProps {
   workspaceId: string;
   /** The member the change is for. */
@@ -67,7 +54,7 @@ export interface RoleControlProps {
   inModal?: boolean;
 }
 
-/** The removal a member's row offers an owner. */
+/** The removal the member modal offers an owner. */
 export interface RemoveControlProps {
   workspaceId: string;
   /** The member to remove. */
@@ -77,16 +64,6 @@ export interface RemoveControlProps {
   inModal?: boolean;
   /** Called once the member is removed, in place of reading the page again; the member modal closes through it. */
   onSent?: () => void;
-}
-
-/** The access pause a member's row offers an owner. */
-export interface PauseControlProps {
-  workspaceId: string;
-  /** The member the pause is for. */
-  userId: string;
-  name: string;
-  /** The pause that stands on them now, with its end or null for none; null while their access is open. */
-  standing: { until: Date | null } | null;
 }
 
 /** A row's name, linking to the member's modal. */

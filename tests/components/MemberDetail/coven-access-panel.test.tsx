@@ -161,6 +161,27 @@ describe('CovenAccessPanel, while access stands open', () => {
   });
 });
 
+describe('CovenAccessPanel, when the pauses cannot be read', () => {
+  it("keeps the modal on the page's own answer when the read is refused, as when the owner was demoted meanwhile", async () => {
+    let refused = 0;
+    server.use(
+      graphqlLink.query('MemberPauses', () => {
+        refused += 1;
+        return HttpResponse.json({
+          data: null,
+          errors: [{ message: 'Forbidden', extensions: { code: 'FORBIDDEN' } }],
+        });
+      }),
+    );
+    renderPanel({ until: null });
+
+    await waitFor(() => expect(refused).toBe(1));
+    unfold();
+    expect(within(section()).getAllByText('Paused').length).toBeGreaterThan(0);
+    expect(within(section()).getByRole('button', { name: 'Lift Pause' })).toBeInTheDocument();
+  });
+});
+
 describe('CovenAccessPanel, while a pause stands', () => {
   it('shows the pause, with its note once read, and lifts it, offering no second pause', async () => {
     const { sent } = serve([STANDING, LIFTED]);

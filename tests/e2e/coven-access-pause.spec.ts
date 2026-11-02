@@ -4,9 +4,9 @@ import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
 import { seedCoven, withSql } from './stories/coven-ingredients';
 
-// An owner pauses a member's access to one coven from the members page, the member opening the coven lands on the
-// coven's paused page, and once the owner lifts the pause the member opens the coven again
-// (claude-docs/components/member-list.md, "Pausing access").
+// An owner pauses a member's access to one coven from the member's modal on the members page, the member opening the
+// coven lands on the coven's paused page, and once the owner lifts the pause the member opens the coven again
+// (claude-docs/components/member-detail.md, "Coven Access").
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -30,21 +30,35 @@ test('an owner pauses a member’s access to the coven, the member sees the paus
   await memberPage.goto(home);
   await expect(memberPage).toHaveURL(home);
 
-  // The owner pauses the member for a week, asked before it is sent.
+  // The owner pauses the member for a week from the member's modal, asked before it is sent.
   await page.goto(`${home}/members`);
-  await expect(
-    page.getByRole('button', { name: 'Pause Access for Fixture Owner' }),
-  ).not.toBeVisible();
-  await page.getByRole('button', { name: 'Pause Access for Fixture Member' }).click();
-  const dialog = page.getByRole('dialog', { name: 'Pause Access for Fixture Member?' });
-  await dialog.getByRole('combobox', { name: 'For' }).selectOption({ label: '1 Week' });
-  await dialog.getByRole('textbox', { name: 'Note' }).fill('Cooling off');
-  await expect(dialog.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
-  await assertNoAccessibilityViolations(page);
-  await dialog.getByRole('button', { name: 'Pause', exact: true }).click();
+  const table = page.getByRole('table', { name: 'Members' });
+  // An owner's access is never paused: the owner's modal has no Coven Access section.
+  await table.getByRole('link', { name: 'Fixture Owner', exact: true }).click();
+  const ownerModal = page.getByRole('dialog', { name: 'Fixture Owner' });
+  await expect(ownerModal.getByRole('region', { name: 'Membership' })).toBeVisible();
+  await expect(ownerModal.getByRole('region', { name: 'Coven Access' })).toHaveCount(0);
+  await page.keyboard.press('Escape');
+  await expect(ownerModal).toHaveCount(0);
 
-  // The row now shows the pause, and offers its lifting instead.
-  await expect(page.getByRole('button', { name: 'Lift Pause for Fixture Member' })).toBeVisible();
+  await table.getByRole('link', { name: 'Fixture Member', exact: true }).click();
+  const modal = page.getByRole('dialog', { name: 'Fixture Member' });
+  const access = modal.getByRole('region', { name: 'Coven Access' });
+  await access.getByRole('button', { name: 'Coven Access' }).click();
+  await access.getByRole('combobox', { name: 'For' }).selectOption({ label: '1 Week' });
+  await access.getByRole('textbox', { name: 'Note' }).fill('Cooling off');
+  await access.getByRole('button', { name: 'Pause Access' }).click();
+  // The question asks over the modal's body, its answers in the modal.
+  await expect(modal.getByRole('button', { name: 'Pause', exact: true })).toBeVisible();
+  await assertNoAccessibilityViolations(page);
+  await modal.getByRole('button', { name: 'Pause', exact: true }).click();
+
+  // The modal now shows the pause, with its note, and offers its lifting instead; the row behind marks it.
+  await expect(access.getByRole('button', { name: 'Lift Pause' })).toBeVisible();
+  await expect(access).toContainText('Cooling off');
+  await expect(
+    table.getByRole('row').filter({ hasText: 'Fixture Member' }).getByText('Paused'),
+  ).toBeVisible();
   const [standing] = await withSql(
     (sql) => sql<{ dated: boolean; note: string | null }[]>`
       select until > now() + interval '6 days' as dated, note from workspace_member_pauses
@@ -61,18 +75,12 @@ test('an owner pauses a member’s access to the coven, the member sees the paus
   );
   await assertNoAccessibilityViolations(memberPage);
 
-  // The owner lifts it; the row offers Pause Access again, and the dialog lists the lifted pause.
-  await page.getByRole('button', { name: 'Lift Pause for Fixture Member' }).click();
-  await page
-    .getByRole('dialog', { name: 'Lift the Pause for Fixture Member?' })
-    .getByRole('button', { name: 'Lift', exact: true })
-    .click();
-  await page.getByRole('button', { name: 'Pause Access for Fixture Member' }).click();
+  // The owner lifts it; the modal offers Pause Access again, and lists the lifted pause.
+  await access.getByRole('button', { name: 'Lift Pause' }).click();
+  await modal.getByRole('button', { name: 'Lift', exact: true }).click();
+  await expect(access.getByRole('button', { name: 'Pause Access' })).toBeVisible();
   await expect(
-    page
-      .getByRole('dialog', { name: 'Pause Access for Fixture Member?' })
-      .getByRole('list', { name: 'Earlier Pauses' })
-      .getByRole('listitem'),
+    access.getByRole('list', { name: 'Earlier Pauses' }).getByRole('listitem'),
   ).toHaveCount(1);
 
   // The member's access is restored: the coven opens, and its paused page sends them back to it.

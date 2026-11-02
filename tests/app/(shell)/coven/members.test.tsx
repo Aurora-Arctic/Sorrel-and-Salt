@@ -56,7 +56,7 @@ const render_ = async (role: WorkspaceRole, searchParams: Record<string, string>
   });
   requireSession.mockResolvedValue({ userId: 'u-owner', role: 'user' });
   // The modal's Coven Access reads the member's pauses through the query client the app provides.
-  render(
+  return render(
     <QueryClientProvider client={makeQueryClient()}>
       {await MembersPage({
         params: Promise.resolve({ slug: 'fixture-coven' }),
@@ -115,22 +115,19 @@ describe('the /coven/[slug]/members page', () => {
     expect(within(rowOf('u-viewer')!).queryByText('Name of u-inviter')).not.toBeInTheDocument();
   });
 
-  it('gives an owner a Change Role control on every row', async () => {
-    await render_('owner');
-
-    for (const who of ['u-owner', 'u-member', 'u-viewer'])
+  it('draws no action on any row, for an owner or a member: the actions are the modal’s', async () => {
+    for (const role of ['owner', 'member'] as const) {
+      const { unmount } = await render_(role);
+      const table = screen.getByRole('table', { name: 'Members' });
+      // Why one could have been drawn: an owner may change roles, pause and remove.
+      expect(within(table).getAllByRole('link')).toHaveLength(SEATS.length);
       expect(
-        screen.getByRole('button', { name: `Change Role for Name of ${who}` }),
-      ).toBeInTheDocument();
-  });
-
-  it('shows a member the list and no role controls', async () => {
-    await render_('member');
-
-    expect(within(screen.getByRole('table', { name: 'Members' })).getAllByRole('row')).toHaveLength(
-      1 + SEATS.length,
-    );
-    expect(screen.queryByRole('button', { name: /^Change Role/ })).not.toBeInTheDocument();
+        within(table).queryAllByRole('button', {
+          name: /^(Change Role|Pause Access|Lift Pause|Remove)/,
+        }),
+      ).toEqual([]);
+      unmount();
+    }
   });
 
   it('answers a viewer, whose seat exists, with the 404 a stranger gets', async () => {
@@ -190,34 +187,32 @@ describe('the /coven/[slug]/members page', () => {
     expect(screen.getByRole('table', { name: 'Members' })).not.toHaveTextContent('@testwort.test');
   });
 
-  it("gives an owner Pause Access on a member's row, Lift Pause on a paused viewer's, and neither on an owner's", async () => {
+  it("reads the standing pauses in one batch for an owner, and marks the paused viewer's row alone", async () => {
     await render_('owner');
 
-    expect(standingMemberPauses).toHaveBeenCalledWith(expect.anything(), 'w', [
+    expect(standingMemberPauses).toHaveBeenCalledExactlyOnceWith(expect.anything(), 'w', [
       'u-owner',
       'u-member',
       'u-viewer',
     ]);
-    expect(
-      screen.getByRole('button', { name: 'Pause Access for Name of u-member' }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole('button', { name: 'Lift Pause for Name of u-viewer' }),
-    ).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Pause Access for Name of u-viewer' })).toBeNull();
-    // Why the owner's row could have had one: the owner's row is drawn, with its own Change Role.
-    expect(
-      screen.getByRole('button', { name: 'Change Role for Name of u-owner' }),
-    ).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Pause Access for Name of u-owner' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Lift Pause for Name of u-owner' })).toBeNull();
+    const table = screen.getByRole('table', { name: 'Members' });
+    expect(within(table).getByRole('columnheader', { name: 'Access' })).toBeInTheDocument();
+    const rowOf = (id: string) =>
+      within(table)
+        .getAllByRole('row')
+        .find((row) => within(row).queryByRole('link', { name: `Name of ${id}` }))!;
+    expect(within(rowOf('u-viewer')).getByText('Paused')).toBeInTheDocument();
+    expect(rowOf('u-viewer')).toHaveTextContent('with no end date');
+    expect(within(rowOf('u-member')).queryByText('Paused')).toBeNull();
+    expect(within(rowOf('u-owner')).queryByText('Paused')).toBeNull();
   });
 
-  it('offers a member no pause controls and reads no pauses', async () => {
+  it('reads no pauses for a member, and draws no Access column', async () => {
     await render_('member');
 
     expect(standingMemberPauses).not.toHaveBeenCalled();
-    expect(screen.queryByRole('button', { name: /^(Pause Access|Lift Pause)/ })).toBeNull();
+    expect(screen.queryByRole('columnheader', { name: 'Access' })).toBeNull();
+    expect(screen.queryByText('Paused')).toBeNull();
   });
 });
 

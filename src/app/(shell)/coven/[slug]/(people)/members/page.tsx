@@ -2,11 +2,8 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import ListFrame, { ListBody } from '../../../../../../components/ListFrame';
 import MemberList from '../../../../../../components/MemberList';
-import PauseControl from '../../../../../../components/MemberList/pause-control';
-import RemoveControl from '../../../../../../components/MemberList/remove-control';
-import RoleControl from '../../../../../../components/MemberList/role-control';
 import type { MemberListEntry } from '../../../../../../components/MemberList/types';
-import { RouteModalProvider } from '../../../../../../components/Modal';
+import { RouteModalProvider } from '../../../../../../components/Modal/route-modal-provider';
 import Notice from '../../../../../../components/Notice';
 import Pager from '../../../../../../components/Pager';
 import { Forbidden } from '../../../../../../lib/errors';
@@ -33,7 +30,8 @@ export const metadata: Metadata = {
   title: 'Members',
 };
 
-// Who is in the coven and what each may do. A viewer gets the stranger's 404. The read is
+// Who is in the coven and what each may do; a name opens the member's modal, which holds what the viewer may do
+// to them. A viewer gets the stranger's 404. The read is
 // `listMembers`, which GraphQL ends at too (rule 1). An address is an owner's alone, asked only when
 // the role holds `member: readEmail` and checked again by `memberEmails`.
 export default async function MembersPage({
@@ -153,45 +151,7 @@ export default async function MembersPage({
             members={members}
             currentUserId={session.userId}
             showEmail={showEmail}
-            roleAction={
-              canChangeRoles
-                ? (member) => (
-                    <RoleControl
-                      workspaceId={workspace.id}
-                      userId={member.userId}
-                      name={member.name}
-                      currentRole={member.role}
-                    />
-                  )
-                : undefined
-            }
-            // A member's or a viewer's row only: an owner's access is never paused.
-            accessAction={
-              canPause
-                ? (member) =>
-                    member.role !== 'owner' && (
-                      <PauseControl
-                        workspaceId={workspace.id}
-                        userId={member.userId}
-                        name={member.name}
-                        standing={member.paused ?? null}
-                      />
-                    )
-                : undefined
-            }
-            // Another's row only: leaving is the coven page's, for every role.
-            removeAction={
-              canRemove
-                ? (member) =>
-                    member.userId !== session.userId && (
-                      <RemoveControl
-                        workspaceId={workspace.id}
-                        userId={member.userId}
-                        name={member.name}
-                      />
-                    )
-                : undefined
-            }
+            showAccess={canPause}
           />
           <Pager {...pagerHrefs(page.pageInfo, (at) => listHref(path, at))} soft />
         </ListBody>

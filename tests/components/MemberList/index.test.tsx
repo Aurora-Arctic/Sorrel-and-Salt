@@ -1,12 +1,15 @@
 import { render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import type { Route } from 'next';
+import { describe, expect, it, vi } from 'vitest';
 import MemberList from '@/components/MemberList';
 import { WORKSPACE_ROLE_ACCESS } from '@/components/MemberList/role-access';
 import type { MemberListEntry } from '@/components/MemberList/types';
 
 // A coven's member list (claude-docs/components/member-list.md): one row per
-// member with their role and joining date, an action slot the page fills, and
+// member with their role and joining date, a name opening the member's modal, and
 // the signed-in member's own row marked.
+
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn(), replace: vi.fn() }) }));
 
 const OWNER: MemberListEntry = {
   userId: 'u-owner',
@@ -83,42 +86,61 @@ describe('MemberList', () => {
     expect(within(rowOf(OWNER.name)).queryByText('Testwort Inviter')).toBeNull();
   });
 
-  it('has no Remove column when no removeAction is passed', () => {
-    render(<MemberList members={ALL} currentUserId={OWNER.userId} />);
-    expect(screen.queryByRole('columnheader', { name: 'Remove' })).toBeNull();
-    expect(screen.queryByRole('button', { name: /^Remove/ })).toBeNull();
-  });
-
-  it("puts each control on its row, given that row's member", () => {
+  it('links each name to its member modal, and draws no action on any row', () => {
+    const heading = (name: string) => ({ eyebrow: 'Member', title: name });
     render(
       <MemberList
-        members={ALL}
+        members={ALL.map((member) => ({
+          ...member,
+          openHref: `/coven/w/members?member=${member.userId}` as Route,
+          heading: heading(member.name),
+        }))}
         currentUserId={OWNER.userId}
-        roleAction={(member) => <button type="button">Change {member.name}</button>}
-        removeAction={(member) => <button type="button">Remove {member.name}</button>}
+        showEmail
+        showAccess
       />,
     );
-    expect(screen.getByRole('columnheader', { name: 'Remove' })).toBeTruthy();
-    for (const { name } of ALL) {
+    for (const { name, userId } of ALL) {
       const row = rowOf(name);
-      expect(within(row).getByRole('button', { name: `Change ${name}` })).toBeTruthy();
-      expect(within(row).getByRole('button', { name: `Remove ${name}` })).toBeTruthy();
+      expect(within(row).getByRole('link', { name })).toHaveAttribute(
+        'href',
+        `/coven/w/members?member=${userId}`,
+      );
+      // The role tip is the one button a row holds: the actions are the modal's.
+      expect(within(row).getAllByRole('button')).toEqual([
+        within(row).getByRole('button', { name: /^About / }),
+      ]);
     }
+    expect(screen.queryByRole('columnheader', { name: 'Remove' })).toBeNull();
   });
 
-  it('keeps the role control in the Role cell, apart from Remove', () => {
+  it('shows a standing pause and its end in the Access column, where the page asks', () => {
     render(
       <MemberList
-        members={[MEMBER]}
+        members={[
+          { ...MEMBER, paused: { until: null } },
+          { ...VIEWER, paused: null },
+        ]}
         currentUserId={OWNER.userId}
-        roleAction={() => <button type="button">Demote</button>}
-        removeAction={() => <button type="button">Remove</button>}
+        showAccess
       />,
     );
-    const cells = within(rowOf(MEMBER.name)).getAllByRole('cell');
-    const [role, remove] = [cells[1], cells[cells.length - 1]];
-    expect(within(role).getByRole('button', { name: 'Demote' })).toBeTruthy();
-    expect(within(remove).getByRole('button', { name: 'Remove' })).toBeTruthy();
+    expect(screen.getByRole('columnheader', { name: 'Access' })).toBeTruthy();
+    const paused = rowOf(MEMBER.name);
+    expect(within(paused).getByText('Paused')).toBeTruthy();
+    expect(paused).toHaveTextContent('with no end date');
+    expect(within(rowOf(VIEWER.name)).queryByText('Paused')).toBeNull();
+  });
+
+  it('draws no Access column where the page does not ask, though a row carries a pause', () => {
+    render(
+      <MemberList
+        members={[{ ...MEMBER, paused: { until: null } }]}
+        currentUserId={OWNER.userId}
+      />,
+    );
+    expect(screen.queryByRole('columnheader', { name: 'Access' })).toBeNull();
+    expect(screen.queryByText('Paused')).toBeNull();
   });
 
   it('marks only the signed-in member’s own row', () => {

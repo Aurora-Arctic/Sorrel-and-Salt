@@ -1,4 +1,4 @@
-import type { MemberListEntry, PauseControlProps } from '../MemberList/types';
+import type { MemberListEntry } from '../MemberList/types';
 
 export interface MemberDetailProps {
   workspaceId: string;
@@ -16,5 +16,12 @@ export interface MemberDetailProps {
   onRemoved?: () => void;
 }
 
-/** The member modal's Coven Access section: the pause the page found standing on them, or null. */
-export type CovenAccessPanelProps = PauseControlProps;
+/** The member modal's Coven Access, for an owner. */
+export interface CovenAccessPanelProps {
+  workspaceId: string;
+  /** The member the pause is for. */
+  userId: string;
+  name: string;
+  /** The pause that stands on them now, with its end or null for none; null while their access is open. */
+  standing: { until: Date | null } | null;
+}

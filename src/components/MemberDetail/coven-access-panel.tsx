@@ -95,7 +95,8 @@ const CovenAccessPanel = ({
 }: CovenAccessPanelProps): ReactElement => {
   const queryClient = useQueryClient();
   const query = graphqlQuery(MemberPausesDocument, { workspaceId, userId });
-  const { data } = useQuery({ ...query, staleTime: 0 });
+  // A refused read (an owner demoted while the modal is open) leaves the page's answer showing, never the error page.
+  const { data } = useQuery({ ...query, staleTime: 0, throwOnError: false });
   const [now] = useState(() => Date.now());
   const pauses = (data?.workspace?.memberPauses.edges ?? []).map(({ node }): AccessPauseEntry => ({
     id: node.id,
