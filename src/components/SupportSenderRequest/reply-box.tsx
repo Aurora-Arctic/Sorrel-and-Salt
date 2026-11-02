@@ -3,10 +3,10 @@
 import { type FormEvent, type ReactElement, useId, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { utcMinute } from '../../lib/utc';
 import BusyButton from '../BusyButton';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import { FieldShell, fieldDescription } from '../Field';
+import LocalTime from '../LocalTime';
 import Notice from '../Notice';
 import { useSupportAction } from '../SupportRequests/use-support-action';
 import type { SupportSenderReplyBoxProps } from './types';
@@ -49,9 +49,13 @@ const SupportSenderReplyBox = ({
     >
       {timedOut && (
         <Notice kind="warn" quiet>
-          {timedOut.until
-            ? `You cannot reply until ${utcMinute(timedOut.until)}.`
-            : 'You cannot reply: you are timed out with no end date.'}
+          {timedOut.until ? (
+            <>
+              You cannot reply until <LocalTime at={timedOut.until} long />.
+            </>
+          ) : (
+            'You cannot reply: you are timed out with no end date.'
+          )}
         </Notice>
       )}
       {failure.alert && <Notice kind="error">{failure.alert}</Notice>}

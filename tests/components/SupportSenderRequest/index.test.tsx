@@ -164,7 +164,8 @@ describe('SupportSenderRequest', () => {
         request={request({ timedOut: { until: new Date('2999-01-01T00:00:00Z') } })}
       />,
     );
-    const notice = screen.getByText('You cannot reply until 2999-01-01 00:00 UTC.');
+    const notice = screen.getByText(/You cannot reply until/);
+    expect(notice).toHaveTextContent(/1 January 2999/);
     const box = screen.getByRole('textbox', { name: 'Your Reply' });
     expect(box).toBeDisabled();
     expect(screen.getByRole('button', { name: 'Reply' })).toBeDisabled();
