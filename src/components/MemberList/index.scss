@@ -58,3 +58,9 @@
 .member-list__access {
   @include value-and-control;
 }
+
+// The address under the name in the member modal's head. Lives here, not in Modal's sheet: the heading is built by the
+// page for this list's modal and shown at once on a press, before the body's stylesheet matters.
+.member-list__modal-email {
+  display: block;
+}

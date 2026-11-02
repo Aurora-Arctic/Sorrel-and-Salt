@@ -4,6 +4,7 @@ import type { StackColumn } from '../DataTable/types';
 import { emptyList } from '../../lib/text';
 import { workspaceRoleLabel } from '../UserDetail/roles';
 import RoleTip from '../RoleTip';
+import MemberLink from './member-link';
 import { WORKSPACE_ROLE_ACCESS } from './role-access';
 import type { MemberListEntry, MemberListProps } from './types';
 import './index.scss';
@@ -30,7 +31,11 @@ const columns = (
     heading: 'Name',
     cell: (member) => (
       <span className="member-list__name">
-        {member.name}
+        {member.openHref && member.heading ? (
+          <MemberLink href={member.openHref} heading={member.heading} name={member.name} />
+        ) : (
+          member.name
+        )}
         {member.userId === currentUserId && <span className="member-list__you">You</span>}
       </span>
     ),

@@ -1,7 +1,12 @@
+import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { WorkspaceRole } from '@/modules/coven';
 import { Forbidden } from '@/lib/errors';
+import { makeQueryClient } from '@/lib/graphql-client';
+import { encodeCursor } from '@/lib/pagination';
+import { mockGraphQLQuery } from '../../../support/msw/graphql';
 
 // The members page, with the guard and the services mocked and the role check real, read off the access-control statements.
 // It proves who gets role controls and that a refusal from the service is a 404.
@@ -9,7 +14,8 @@ import { Forbidden } from '@/lib/errors';
 const notFound = vi.fn(() => {
   throw new Error('not-found');
 });
-vi.mock('next/navigation', () => ({ notFound, useRouter: () => ({ refresh: vi.fn() }) }));
+const replace = vi.fn();
+vi.mock('next/navigation', () => ({ notFound, useRouter: () => ({ refresh: vi.fn(), replace }) }));
 
 const requireCovenMembership = vi.fn();
 const requireSession = vi.fn();
@@ -43,22 +49,34 @@ const SEATS = [
   ['u-viewer', 'viewer'],
 ] as const;
 
-const render_ = async (role: WorkspaceRole) => {
+const render_ = async (role: WorkspaceRole, searchParams: Record<string, string> = {}) => {
   requireCovenMembership.mockResolvedValue({
     workspace: WORKSPACE,
     membership: { workspaceId: 'w', userId: 'u-owner', role },
   });
   requireSession.mockResolvedValue({ userId: 'u-owner', role: 'user' });
+  // The modal's Coven Access reads the member's pauses through the query client the app provides.
   render(
-    await MembersPage({
-      params: Promise.resolve({ slug: 'fixture-coven' }),
-      searchParams: Promise.resolve({}),
-    }),
+    <QueryClientProvider client={makeQueryClient()}>
+      {await MembersPage({
+        params: Promise.resolve({ slug: 'fixture-coven' }),
+        searchParams: Promise.resolve(searchParams),
+      })}
+    </QueryClientProvider>,
   );
 };
 
 beforeEach(() => {
+  HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
+    this.setAttribute('open', '');
+  };
+  HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
+    this.removeAttribute('open');
+  };
   vi.clearAllMocks();
+  mockGraphQLQuery('MemberPauses', () => ({
+    workspace: { id: 'w', memberPauses: { edges: [] } },
+  }));
   memberEmails.mockImplementation(async (_session: unknown, _workspaceId: string, ids: string[]) =>
     ids.map((userId) => ({ userId, address: `${userId}@testwort.test` })),
   );
@@ -92,9 +110,7 @@ describe('the /coven/[slug]/members page', () => {
     await render_('owner');
     const rows = within(screen.getByRole('table', { name: 'Members' })).getAllByRole('row');
     const rowOf = (id: string) =>
-      rows.find((row) =>
-        within(row).queryByText(`Name of ${id}`, { selector: '.member-list__name' }),
-      );
+      rows.find((row) => within(row).queryByRole('link', { name: `Name of ${id}` }));
     expect(within(rowOf('u-member')!).getByText('Name of u-inviter')).toBeInTheDocument();
     expect(within(rowOf('u-viewer')!).queryByText('Name of u-inviter')).not.toBeInTheDocument();
   });
@@ -202,5 +218,97 @@ describe('the /coven/[slug]/members page', () => {
 
     expect(standingMemberPauses).not.toHaveBeenCalled();
     expect(screen.queryByRole('button', { name: /^(Pause Access|Lift Pause)/ })).toBeNull();
+  });
+});
+
+// `?member=<id>` opens the member's modal over the list, from the rows the page already read.
+describe('the /coven/[slug]/members page, the member modal', () => {
+  /** The member modal's name: its eyebrow, then the name, then the address an owner is shown. */
+  const VIEWING_MEMBER = 'Member, Name of u-member, u-member@testwort.test';
+
+  it('links each name to its modal, keeping the cursor', async () => {
+    const after = encodeCursor({ key: ['1'], id: 'u-member' });
+    await render_('owner', { after });
+
+    expect(screen.getByRole('link', { name: 'Name of u-viewer' })).toHaveAttribute(
+      'href',
+      `/coven/fixture-coven/members?after=${encodeURIComponent(after)}&member=u-viewer`,
+    );
+  });
+
+  it('opens no modal without ?member=', async () => {
+    await render_('owner');
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it("opens an owner the member's modal, with the role change, the access pause and the removal, reading nothing more", async () => {
+    await render_('owner', { member: 'u-member' });
+
+    const dialog = screen.getByRole('dialog', { name: VIEWING_MEMBER });
+    expect(listMembers).toHaveBeenCalledTimes(1);
+    expect(
+      within(dialog).getByRole('button', { name: 'Change Role for Name of u-member' }),
+    ).toBeInTheDocument();
+    expect(within(dialog).getByRole('region', { name: 'Coven Access' })).toBeInTheDocument();
+    expect(
+      within(dialog).getByRole('button', { name: 'Remove Name of u-member' }),
+    ).toBeInTheDocument();
+  });
+
+  it("carries the pause the page read for the member into the modal's Coven Access", async () => {
+    await render_('owner', { member: 'u-viewer' });
+
+    const access = within(screen.getByRole('dialog')).getByRole('region', { name: 'Coven Access' });
+    // The badge in the folded section's summary, as its standing card holds another.
+    expect(within(access).getAllByText('Paused').length).toBeGreaterThan(0);
+  });
+
+  it("offers no pause on an owner's modal and no Remove on your own", async () => {
+    await render_('owner', { member: 'u-owner' });
+
+    const dialog = screen.getByRole('dialog');
+    // Why either could have been there: the viewer is an owner, with the role change on this modal.
+    expect(
+      within(dialog).getByRole('button', { name: 'Change Role for Name of u-owner' }),
+    ).toBeInTheDocument();
+    expect(within(dialog).queryByRole('region', { name: 'Coven Access' })).toBeNull();
+    expect(within(dialog).queryByRole('button', { name: /^Remove/ })).toBeNull();
+  });
+
+  it('opens a member the modal with the facts alone, no address and no actions', async () => {
+    await render_('member', { member: 'u-viewer' });
+
+    const dialog = screen.getByRole('dialog', { name: 'Member, Name of u-viewer' });
+    expect(within(dialog).getByRole('region', { name: 'Membership' })).toHaveTextContent('Viewer');
+    expect(
+      within(dialog).queryAllByRole('button', {
+        name: /^(Change Role|Pause Access|Lift Pause|Remove)/,
+      }),
+    ).toEqual([]);
+    expect(within(dialog).queryByRole('region', { name: 'Coven Access' })).toBeNull();
+  });
+
+  it('closes back to the list at the same cursor', async () => {
+    const after = encodeCursor({ key: ['1'], id: 'u-member' });
+    await render_('owner', { after, member: 'u-member' });
+
+    await userEvent.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: 'Close' }),
+    );
+
+    expect(replace).toHaveBeenCalledWith(
+      `/coven/fixture-coven/members?after=${encodeURIComponent(after)}`,
+      { scroll: false },
+    );
+  });
+
+  // Hand-edited, a member since removed, or one on another page: the list beneath is still the page asked for.
+  it('says the address names no member on this page, and opens no modal, for an id not among its rows', async () => {
+    await render_('owner', { member: 'u-elsewhere' });
+
+    expect(screen.getByRole('alert')).toHaveTextContent('No member');
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByRole('table', { name: 'Members' })).toBeInTheDocument();
   });
 });

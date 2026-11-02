@@ -2,7 +2,6 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { type ReactElement, useState } from 'react';
-import { graphql } from '../../gql';
 import { graphqlQuery, graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlFailure } from '../../lib/graphql-failure';
 import { longMinuteInZone } from '../../lib/utc';
@@ -17,56 +16,16 @@ import {
 } from '../UserDetail/access-pause-parts';
 import type { AccessPauseEntry, PauseSpan } from '../UserDetail/types';
 import ConfirmedAction from '../UserList/confirmed-action';
+import {
+  LiftMemberDocument,
+  MemberPausesDocument,
+  PauseMemberDocument,
+} from '../MemberDetail/coven-access-panel';
 import type { PauseControlProps } from './types';
 
 // The members page's Pause Access and Lift Pause: an owner's pause on one member's access to this coven, until an end or
 // with no end date, and its lifting. Each dialog lists the member's earlier pauses, read only once it opens
 // (claude-docs/components/member-list.md, "Pausing access").
-
-const PauseMemberDocument = graphql(`
-  mutation PauseMemberAccess($workspaceId: ID!, $userId: ID!, $until: DateTime, $note: String) {
-    pauseMemberAccess(workspaceId: $workspaceId, userId: $userId, until: $until, note: $note) {
-      id
-    }
-  }
-`);
-
-const LiftMemberDocument = graphql(`
-  mutation LiftMemberAccessPause($workspaceId: ID!, $userId: ID!) {
-    liftMemberAccessPause(workspaceId: $workspaceId, userId: $userId) {
-      id
-    }
-  }
-`);
-
-const MemberPausesDocument = graphql(`
-  query MemberPauses($workspaceId: ID!, $userId: ID!) {
-    workspace(id: $workspaceId) {
-      id
-      memberPauses(userId: $userId, first: 25) {
-        edges {
-          node {
-            id
-            until
-            note
-            liftedAt
-            audit {
-              createdAt
-            }
-            setBy {
-              id
-              name
-            }
-            liftedBy {
-              id
-              name
-            }
-          }
-        }
-      }
-    }
-  }
-`);
 
 const NOTE_HINT = "Seen by the coven's owners only, up to 500 characters.";
 
