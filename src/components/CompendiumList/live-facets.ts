@@ -200,7 +200,7 @@ export function useLiveFacets({
   const variables = JSON.stringify(
     workspaceId === undefined
       ? withListing(
-          COMPENDIUM_PARAMS.variables({ reviewed: '', hidden: false, ...held }, lookups),
+          COMPENDIUM_PARAMS.variables({ reviewed: '', hidden: false, sort: '', ...held }, lookups),
           admin,
         )
       : {

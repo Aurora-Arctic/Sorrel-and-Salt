@@ -43,6 +43,8 @@ vi.mock('@/app/compendium-reads', () => ({
 
 // What a curator's ?edit=<slug> reads: the entry at the slug, then its form's values.
 const resolveCompendiumSlug = vi.fn();
+// The edited entry's sourcing score, none here: its own tests are the dialog's and the component's.
+const readSourcingScore = vi.fn(async () => null);
 // The held read is `held.test.tsx`'s; here the coven holds nothing.
 const SESSION = { userId: 'user-fixture' };
 const getSession = vi.fn();
@@ -55,6 +57,7 @@ const readCompendiumReview = vi.fn();
 // The curator's read of the row itself, for the form's shown switch.
 const getIngredient = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
+  readSourcingScore,
   readCompendiumReview,
   getIngredient,
   resolveCompendiumSlug,

@@ -10,6 +10,7 @@ import {
 import { single } from '../../lib/search-params';
 import {
   type CategoryMode,
+  COMPENDIUM_SORTS,
   INGREDIENT_ELEMENTS,
   type ToxicFilter,
 } from '@/modules/ingredients/schema/ingredient-enums';
@@ -105,6 +106,9 @@ export const COMPENDIUM_PARAMS = defineSearchParams({
       setting === 'reviewed' ? '1' : setting === 'needs_review' ? '0' : undefined,
     toVariable: (setting) => (setting === '' ? undefined : setting === 'reviewed'),
   }),
+  // A curator's order, `?sort=sourcing_score`: the sourcing score, lowest first. Absent is the default, by name or by best match
+  // under a query. Only the admin list offers it, and the read refuses it without a curator's session, as the score is theirs alone.
+  sort: choiceParam('sort', COMPENDIUM_SORTS, 'sort'),
   // Entries held in any of these covens of the viewer's, `?covens=<id>&covens=<id>`. Ids, not slugs, as
   // a shared address should not spell a coven out. Only the public compendium offers it, and the read
   // proves each id by membership, so a coven the viewer is not in filters nothing.

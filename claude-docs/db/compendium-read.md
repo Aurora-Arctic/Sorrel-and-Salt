@@ -664,6 +664,12 @@ the facets, so they cannot disagree.
   entries nobody can stock or put in a spell yet; a soft-deleted variant is none,
   through `existsIn`.
 
+### The sourcing sort
+
+`filter.sort = 'sourcing_score'` orders the compendium list by each entry's sourcing score, lowest first, then by name, then by id. The score is `sourcingScoreExpression` in `src/db/repository/sourcing-score.ts`: one correlated SQL expression over the listed row that adds up the same facts as the pure `sourcingScore` function, reading every weight from `src/modules/ingredients/schema/sourcing-weights.ts`, so the two cannot drift apart without a test noticing. It counts only live links to live compendium works, on the entry or on its live forms. The cursor helper pages on the expression like any other sort key, and the count uses the same order, so "Page X of Y" stays right. A search still narrows the list to the entries it matches; under the sort they come in score order, not best match. A coven's cupboard read ignores the sort.
+
+The sort is a curator's: `compendiumFilterFor` refuses it with `Forbidden` for a signed-out request or anyone not a curator or admin, as it does the Reviewed filter, because the cache is keyed by the parsed filter. `tests/db/repository/sourcing-score.test.ts` lists eight fixture entries under the sort and checks both the order and each row's sort key against the pure function.
+
 ## Hidden entries (M14.35)
 
 An entry with `shown = false` is excluded in SQL from the public read: the list, its search and counts, the slug finder and its redirects, the picker and `ingredients-by-id`, so a hidden slug is a 404. The `listing` filter (`shown`, the default, `hidden` or `all`) is a curator's: a call from anyone else that sets it is refused with `Forbidden`, because the cache is keyed by the parsed filter. A coven's cupboard is read without the arm, so an entry it names stays visible there, as do the admin screens and the audit queue.
