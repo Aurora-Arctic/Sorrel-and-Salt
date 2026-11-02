@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
+import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
+import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import {
   liftUserAccessPause,
   listUserAccessPauses,
@@ -177,6 +179,24 @@ describe('pauseUserAccess', () => {
     vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', `elsewhere${DOMAIN}`);
     await pauseUserAccess(asUser(E), PRIMARY, null, 'Testnote');
     expect(await pauseRows(PRIMARY)).toHaveLength(1);
+  });
+
+  it.each([
+    ['the System account', SYSTEM_ACTOR_ID],
+    ['the signed-out sender account', SIGNED_OUT_SENDER_ID],
+  ])('refuses to pause %s, which is not a person, saying why', async (_label, accountId) => {
+    // Why this could have succeeded: the account is a live user, which an admin may pause, and the call is the same one that pauses a person.
+    expect(
+      await sql`select id from users where id = ${accountId} and deleted_at is null`,
+    ).toHaveLength(1);
+    await pauseUserAccess(asUser(E), A.id, null, 'Testnote');
+    expect(await pauseRows(A.id)).toHaveLength(1);
+
+    const error = await refusalOf(pauseUserAccess(asUser(E), accountId, null, 'Testnote'));
+
+    expect(error).toBeInstanceOf(Forbidden);
+    expect(error.message).toBe('This account is not a person, so its access cannot be paused');
+    expect(await pauseRows(accountId)).toEqual([]);
   });
 
   it('refuses an admin pausing themselves, saying why', async () => {
