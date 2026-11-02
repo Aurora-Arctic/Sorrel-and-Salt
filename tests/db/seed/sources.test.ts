@@ -148,16 +148,20 @@ describe('seedSources', () => {
       const [edited] = await allReferences();
       const before = citationText(edited);
       await sql`
-        update "references" set title = 'Retitled by an Admin', updated_by = ${BOOTSTRAP_USER_ID}
+        insert into users (id, name, email, created_by, updated_by)
+        values (${A_ID}, 'Fixture Person A', ${`${A_ID}@users.test`}, ${A_ID}, ${A_ID})`;
+      await sql`
+        update "references" set title = 'Retitled by an Admin', updated_by = ${A_ID}
         where id = ${edited.id}
       `;
       // Precondition: the edit changed the citation, so keying by it would twin.
       expect(citationText(await referenceById(edited.id))).not.toBe(before);
 
-      await seedSources(db);
+      const kept = await seedSources(db);
 
       expect(await allReferences()).toHaveLength(SOURCES.length);
       expect((await referenceById(edited.id)).title).toBe('Retitled by an Admin');
+      expect(kept).toEqual([{ source: before, differs: ['title'] }]);
     });
 
     // Unkeyed is what marks a row as not the seed's; an emptied database holds
