@@ -22,7 +22,7 @@ The score and its facts come from `sourcingScore` in `src/modules/ingredients/se
 
 ## On the entry page
 
-The entry page shows the same panel, whole and always open, as the last block of the References section, with `headingLevel={3}`, so the section still ends the page. `ReferencesSection` takes it as `children`; the section is always drawn (with "No sources recorded." when there are none), so an entry with no references still shows the score. The section spaces its parts with its own stack gap and no hairline, so the panel takes that gap, and `.ingredient-entry__references .sourcing-score` drops the panel's bottom divider, margin and padding, as nothing follows it. There is no toggle.
+The entry page shows the same panel, whole and always open, as the last block of the References section, with `headingLevel={3}`, so the section still ends the page. `ReferencesSection` takes it as `children`; the section is always drawn (with "No sources recorded." when there are none), so an entry with no references still shows the score. The section spaces its parts with its own stack gap and no hairline, so the panel takes that gap, and `.ingredient-entry__references .sourcing-score` drops the panel's bottom divider, margin and padding, as nothing follows it. From above `$shell-tablet-width` the panel is capped at the text column's width (the References width less `$side-column` and the body grid's `space(8)` gap), so it lines up with Stock, Details and the forms' text; below it, it runs full width. There is no toggle.
 
 ## Where it shows
 

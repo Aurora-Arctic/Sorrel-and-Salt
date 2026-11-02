@@ -640,3 +640,10 @@ $replaces-gap: space(5);
   padding-block-end: 0;
   border-block-end: 0;
 }
+
+// Beside the side column the panel keeps to the text column, the width the body's grid gives it.
+@media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+  .ingredient-entry__references .sourcing-score {
+    max-inline-size: calc(100% - #{$side-column} - #{space(8)});
+  }
+}
