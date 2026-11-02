@@ -103,6 +103,16 @@ describe('loadCompendium', () => {
     expect(loaded.issues[1]).toMatch(/isbn/);
   });
 
+  it('reads a source’s scholarly mark, and reports any value but true', () => {
+    const made = folder();
+    made.write('sources/press.yaml', 'kind: book\ntitle: Pressed\nscholarly: true\n');
+    made.write('sources/unsure.yaml', 'kind: book\ntitle: Unsure\nscholarly: false\n');
+    const loaded = loadCompendium(made.root);
+    expect(loaded.sources.press).toEqual({ kind: 'book', title: 'Pressed', scholarly: true });
+    expect(loaded.sources.unsure).toBeUndefined();
+    expect(loaded.issues).toEqual([expect.stringContaining('sources/unsure.yaml scholarly')]);
+  });
+
   it('reads unaudited.txt one path per line, skipping blank lines and # comments', () => {
     const made = folder();
     made.write('unaudited.txt', `# converted 2026\n\n${entryFilePath(TESTWORT)}\n  \n`);

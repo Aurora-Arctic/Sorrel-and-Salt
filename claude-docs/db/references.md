@@ -405,7 +405,12 @@ sources were recast in Chicago form from pages fetched again.
 
 **Keyed by `seed_key`** (MB.171). A reference the seed writes records the
 citation it rendered, so one an admin has since edited is still its own and
-is neither overwritten nor twinned; a soft-deleted one is neither re-inserted
+is neither overwritten nor twinned. The one field a run restates on a present
+source is its `scholarly` mark, set or cleared to match `sources.ts`, unless
+a person edited the row: that one is kept, and `db:seed:sources` prints a
+`KEPT <citation> (edited on the site)` line for it without failing
+([`compendium-seed/README.md`](compendium-seed/README.md), "Citation
+attributes on a present entry"). A soft-deleted one is neither re-inserted
 nor linked anew. A live compendium reference nobody seeded whose citation is
 a source's to the letter is linked rather than duplicated, and never written
 to. Link targets are found by the `seed_key` their own seed gave them, so a

@@ -5,8 +5,7 @@ import { z } from 'zod';
 import { parseEntryFile } from './parse-entry';
 import { withoutBlanks } from './file-schema';
 import { NOMENCLATURE_KINDS } from '../../../modules/ingredients/schema/ingredient-enums';
-import type { CitationFields } from '../../../lib/types';
-import type { SeedCompendiumFile, SeedCompendiumShard } from '../types';
+import type { SeedCompendiumFile, SeedCompendiumShard, SeedWork } from '../types';
 
 // The compendium's files read as one shard: entry files under `ingredients/<nomenclature>/`, per-entry sources under `sources/`, and `unaudited.txt`.
 // Synchronous, as the seed and the guard both want the whole corpus first. Reports only what stops it reading (a stray file, an unknown folder, a non-citation source); parse-entry.ts and guard.ts judge content.
@@ -26,7 +25,7 @@ export interface LoadedCompendium {
   /** Every file that parsed clean, in path order. */
   files: SeedCompendiumFile[];
   /** The per-entry sources, by handle, from `sources/<handle>.yaml`. The shared works are `WORKS`. */
-  sources: Record<string, CitationFields>;
+  sources: Record<string, SeedWork>;
   /** One synthetic shard named `compendium`, so `checkCompendium` and the seed take the files as they took the literals. */
   shards: SeedCompendiumShard[];
   /** The paths `unaudited.txt` lists, relative to the root. */
@@ -35,7 +34,7 @@ export interface LoadedCompendium {
   issues: string[];
 }
 
-/** A source file's fields: `CitationFields`, every key named, nothing else. */
+/** A source file's fields: `CitationFields`, every key named, nothing else, and the work's `scholarly` mark. */
 const citationFieldsSchema = z.strictObject({
   kind: z.enum(['book', 'chapter', 'article', 'entry', 'web_page']),
   title: z.string().min(1),
@@ -55,6 +54,7 @@ const citationFieldsSchema = z.strictObject({
   modified: z.string().optional(),
   accessed: z.string().optional(),
   note: z.string().optional(),
+  scholarly: z.literal(true).optional(),
 });
 
 const KINDS: readonly string[] = NOMENCLATURE_KINDS;
@@ -102,9 +102,9 @@ function readEntries(root: string, issues: string[]): SeedCompendiumFile[] {
 }
 
 /** The per-entry sources: `sources/<handle>.yaml`, the handle being the file's name. */
-function readSources(root: string, issues: string[]): Record<string, CitationFields> {
+function readSources(root: string, issues: string[]): Record<string, SeedWork> {
   const folder = join(root, 'sources');
-  const sources: Record<string, CitationFields> = {};
+  const sources: Record<string, SeedWork> = {};
   if (!existsSync(folder)) return sources;
   for (const name of readdirSync(folder).sort((a, b) => a.localeCompare(b, 'en'))) {
     const path = `sources/${name}`;

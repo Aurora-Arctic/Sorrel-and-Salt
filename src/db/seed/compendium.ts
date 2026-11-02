@@ -1,6 +1,6 @@
 import { isNull } from 'drizzle-orm';
 import { beginSeedTransaction, insertStamped, requireFrom } from './idempotent';
-import { insertMissingReferences } from './reference-rows';
+import { insertMissingReferences, restateScholarly } from './reference-rows';
 import { identityOf } from './coven-content';
 import { checkCompendiumFiles } from './compendium/guard';
 import { loadCompendium, readConversionManifest, type LoadedCompendium } from './compendium/load';
@@ -28,7 +28,6 @@ import {
   linkAttributes,
   readReferenceTexts,
   readStates,
-  restateScholarly,
   writeLinkAttributes,
   type SeedItem,
 } from './compendium/update';
@@ -136,7 +135,7 @@ export async function seedCompendiumContent(
   await insertEntries(tx, missing, picks);
   report.inserted = missing.length;
   report.hidden = missing.filter(({ entry }) => !namesCategory(entry)).length;
-  for (const kept of await restateScholarly(tx, { ...WORKS, ...input.sources })) {
+  for (const kept of await restateScholarly(tx, Object.entries({ ...WORKS, ...input.sources }))) {
     report.kept.push({ where: null, ...kept });
   }
   if (met.length === 0) return report;

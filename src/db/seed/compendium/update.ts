@@ -1,7 +1,6 @@
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { applyAudit } from '../../audit';
-import { BOOTSTRAP_USER_ID } from '../../bootstrap';
-import { BOOTSTRAP_SESSION } from '../bootstrap-admin';
+import { BOOTSTRAP_SESSION, touched } from '../bootstrap-admin';
 import { insertStamped } from '../idempotent';
 import { insertMissingReferences } from '../reference-rows';
 import { identityOf } from '../coven-content';
@@ -176,20 +175,6 @@ export async function readStates(
 export async function readReferenceTexts(tx: SeedTransaction): Promise<Map<string, string>> {
   const rows = await tx.select().from(references).where(isNull(references.workspaceId));
   return new Map(rows.map((row) => [row.id, row.seedKey ?? citationText(row)]));
-}
-
-/** A row a person wrote, changed or deleted: anyone but the bootstrap user on any stamp. The seed's own soft delete is not a person's. */
-function touched(row: {
-  createdBy: string;
-  updatedBy: string;
-  deletedAt?: Date | null;
-  deletedBy?: string | null;
-}): boolean {
-  return (
-    row.createdBy !== BOOTSTRAP_USER_ID ||
-    row.updatedBy !== BOOTSTRAP_USER_ID ||
-    ((row.deletedAt ?? null) !== null && row.deletedBy !== BOOTSTRAP_USER_ID)
-  );
 }
 
 /** The child table a person touched, in the order the README lists them, or `null`. */
@@ -776,38 +761,4 @@ export async function writeLinkAttributes(
       .set(applyAudit('update', { nameBasis, supports }, BOOTSTRAP_SESSION))
       .where(eq(referenceLinks.id, row.id));
   }
-}
-
-/**
- * Sets each present source the seed wrote to its work's `scholarly` mark, either way, unless a person edited the row: that one is
- * kept and returned by handle. A soft-deleted source is left alone. A source two handles name takes the mark if either gives it.
- */
-export async function restateScholarly(
-  tx: SeedTransaction,
-  works: Record<string, SeedWork>,
-): Promise<{ source: string; differs: string[] }[]> {
-  const wanted = new Map<string, { source: string; scholarly: boolean }>();
-  for (const [source, work] of Object.entries(works)) {
-    const text = citationText(work);
-    const scholarly = work.scholarly === true || wanted.get(text)?.scholarly === true;
-    wanted.set(text, { source: wanted.get(text)?.source ?? source, scholarly });
-  }
-  const rows = await tx
-    .select()
-    .from(references)
-    .where(and(isNull(references.workspaceId), isNull(references.deletedAt)));
-  const kept: { source: string; differs: string[] }[] = [];
-  for (const row of rows) {
-    const work = row.seedKey === null ? undefined : wanted.get(row.seedKey);
-    if (work === undefined || row.scholarly === work.scholarly) continue;
-    if (touched(row)) {
-      kept.push({ source: work.source, differs: ['scholarly'] });
-      continue;
-    }
-    await tx
-      .update(references)
-      .set(applyAudit('update', { scholarly: work.scholarly }, BOOTSTRAP_SESSION))
-      .where(eq(references.id, row.id));
-  }
-  return kept;
 }

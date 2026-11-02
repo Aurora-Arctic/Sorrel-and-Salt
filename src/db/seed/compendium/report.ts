@@ -20,7 +20,7 @@ export interface RefusedEntry extends EntryOutcome {
 export interface KeptCitation {
   /** The entry file citing it; `null` for a source's own mark, which no one entry owns. */
   where: string | null;
-  /** The work's handle in the works list. */
+  /** The work's handle in the works list; a vocabulary source's citation. */
   source: string;
   /** `nameBasis`, `supports` or `scholarly`: what the file says differently. */
   differs: string[];
@@ -89,12 +89,17 @@ export function formatReport(
     lines.push(`REFUSED ${where}: ${reason}`);
     if (differs.length > 0) lines.push(`  differs: ${differs.join(', ')}`);
   }
-  for (const { where, source, differs } of report.kept) {
-    lines.push(`KEPT ${where === null ? source : `${where}: ${source}`} (edited on the site)`);
-    lines.push(`  differs: ${differs.join(', ')}`);
-  }
+  lines.push(...keptLines(report.kept));
   lines.push(
     `inserted ${report.inserted}, hidden ${report.hidden}, skipped ${report.skipped}, updated ${report.updated.length}, pending ${report.pending.length}, retired ${report.retired.length}, adopted ${report.adopted.length}, refused ${report.refused.length}`,
   );
   return lines.join('\n');
+}
+
+/** Two lines per `KEPT` citation or source: which, and what the file or list says differently. Never an error: no run exits 1 for one. */
+export function keptLines(kept: readonly KeptCitation[]): string[] {
+  return kept.flatMap(({ where, source, differs }) => [
+    `KEPT ${where === null ? source : `${where}: ${source}`} (edited on the site)`,
+    `  differs: ${differs.join(', ')}`,
+  ]);
 }
