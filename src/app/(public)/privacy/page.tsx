@@ -163,9 +163,9 @@ export default function PrivacyPolicyPage() {
 
       <h3>Rate-Limit Counters</h3>
       <p>
-        To slow down guessing, the sign-in routes count requests by network address and route. A
-        support request sent without an account is counted by network address and by email address
-        for twenty-four hours.
+        To slow down malicious actors, the sign-in routes count requests by network address and
+        route. A support request sent without an account is counted by network address and by email
+        address for twenty-four hours.
       </p>
 
       <h3>Who Wrote What</h3>
