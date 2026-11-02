@@ -23,6 +23,11 @@ export default function CodeOfEthicsPage() {
       lede={`What ${SITE_NAME} values, and how it handles the cultures, sourcing and access questions its subject raises.`}
       updatedOn={UPDATED_ON}
     >
+      <p>
+        This code is part of the <Link href="/terms">Terms of Use</Link>. Its section "What Everyone
+        Agrees To" binds every account that agrees to the terms, and its sections for curators,
+        admins and the owner bind whoever holds that role.
+      </p>
       <h2>The Short Version</h2>
       <ul>
         <li>Everyone is welcome here, and bigotry is not.</li>

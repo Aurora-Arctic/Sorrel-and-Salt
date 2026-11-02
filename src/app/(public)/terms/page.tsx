@@ -27,6 +27,13 @@ export default function TermsOfUsePage() {
         <strong>Version {TERMS_VERSION}.</strong> When these terms change, the version changes with
         them, and the site asks you to agree to the new version before you use it again.
       </p>
+      <p>
+        These terms include two other pages, and agreeing to these terms is agreeing to them too.
+        The <Link href="/disclaimer">Disclaimer</Link> says what the site's information is and is
+        not. The <Link href="/code-of-ethics">Code of Ethics</Link> says what the site stands for:
+        its section "What Everyone Agrees To" binds every account, and its sections for curators,
+        admins and the owner bind whoever holds that role.
+      </p>
 
       <h2>The Short Version</h2>
       <ul>
@@ -71,8 +78,9 @@ export default function TermsOfUsePage() {
       <p>
         A spell marked private is shown to you alone. Once a spell is complete and shared with your
         coven, it cannot be made private again, because the people who have seen it may already rely
-        on it. To change a shared spell, use Duplicate: it makes a private draft copy that you can
-        edit, and the shared spell stays as it was.
+        on it. To have a private version of a shared spell again, or to change it, use Duplicate: it
+        makes a private draft copy that only you can see and edit, and the shared spell stays as it
+        was.
       </p>
       <p>
         A coven's owner may delete the coven, and may remove any member from it. Any member may
@@ -83,9 +91,8 @@ export default function TermsOfUsePage() {
       <p>
         The compendium is written and checked by the site's admins and curators. Every entry records
         where its information came from, and an entry with no source stays on the curators' list of
-        work to do. It is a reference for people who practise, and it is offered as one: the{' '}
-        <Link href="/disclaimer">Disclaimer</Link> is part of these terms, and so is the{' '}
-        <Link href="/code-of-ethics">Code of Ethics</Link>.
+        work to do. It is a reference for people who practise, and it is offered as one, as the{' '}
+        <Link href="/disclaimer">Disclaimer</Link> sets out.
       </p>
 
       <h2>How to Treat Each Other</h2>

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import SupportLink from '../../../components/SupportLink';
 import DocumentPage, { SourceItem, SourceMarks } from '../../../components/DocumentPage';
 import { SITE_NAME, siteUrl } from '../../../lib/site';
@@ -22,6 +23,10 @@ export default function DisclaimerPage() {
       lede="What the site's information is, what it is not, and why a safety note is never the whole story."
       updatedOn={UPDATED_ON}
     >
+      <p>
+        This disclaimer is part of the <Link href="/terms">Terms of Use</Link>: agreeing to the
+        terms is agreeing to it.
+      </p>
       <h2>The Short Version</h2>
       <ul>
         <li>
