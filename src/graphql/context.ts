@@ -1,6 +1,7 @@
 import { emailVerificationSender } from '../lib/email-verification';
 import { invitationSender } from '../lib/invitation-mail';
 import { passwordSetter } from '../lib/password-setter';
+import { pauseNotifier } from '../lib/pause-mail';
 import { supportNotifier } from '../lib/support-mail';
 import { sessionStateFromHeaders } from '../lib/request-session';
 import { createLoaders } from './loaders';
@@ -28,6 +29,7 @@ export async function createContext({
     invitations: invitationSender(request),
     passwords: passwordSetter(request),
     support: supportNotifier(request),
+    pauses: pauseNotifier(request),
     clientIp: request.headers.get('x-vercel-forwarded-for')?.split(',')[0]?.trim() || null,
   };
 }

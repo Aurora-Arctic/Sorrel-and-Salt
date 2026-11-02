@@ -431,7 +431,7 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
     `mutation { setSupportRequestIssueUrl(id: "${NOWHERE}", issueUrl: null) { id } }`,
   ),
   timeOutSupportSender: write(
-    `mutation { timeOutSupportSender(userId: "${NOWHERE}", note: "Spam") { id } }`,
+    `mutation { timeOutSupportSender(userId: "${NOWHERE}", note: "Spam", message: "Hi") { id } }`,
   ),
   liftSupportTimeout: write(`mutation { liftSupportTimeout(id: "${NOWHERE}") { id } }`),
   grantWorkspaceCreation: write(`mutation { grantWorkspaceCreation(userId: "${NOWHERE}") { id } }`),
@@ -440,7 +440,7 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   ),
   setUserRole: write(`mutation { setUserRole(userId: "${NOWHERE}", role: admin) { id } }`),
   pauseUserAccess: write(
-    `mutation { pauseUserAccess(userId: "${NOWHERE}", note: "Testnote") { id } }`,
+    `mutation { pauseUserAccess(userId: "${NOWHERE}", note: "Testnote", message: "Hi") { id } }`,
   ),
   liftUserAccessPause: write(`mutation { liftUserAccessPause(userId: "${NOWHERE}") { id } }`),
   pauseAdminRoleChanges: write('mutation { pauseAdminRoleChanges }'),

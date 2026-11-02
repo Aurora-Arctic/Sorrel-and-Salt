@@ -1,4 +1,5 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { memberPauseMail } from '@/modules/coven/jobs/member-pause-mail';
 import { A, B, C, asUser } from '../../../support/as-user';
 import { sql, useRawClient } from '../../../support/db/probe-tables';
 import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
@@ -6,9 +7,15 @@ import { run } from '../../../support/graphql/run';
 
 useRawClient();
 
+const { startJob } = vi.hoisted(() => ({
+  startJob: vi.fn(async (..._args: unknown[]) => 'run-id'),
+}));
+vi.mock('@/lib/jobs', () => ({ startJob }));
+vi.mock('@/lib/mail', () => ({ send: async () => {} }));
+
 // The transport's half of `Workspace.memberPauses`: one member's pauses, each with who set and lifted it named through
 // `usersById`, and the refusal reaching the wire as `FORBIDDEN`. Who may read them is the service's, in
-// tests/modules/coven/services/member-pause.test.ts.
+// tests/modules/coven/services/member-pause.test.ts. The message argument of `pauseMemberAccess` is at the end.
 
 const HISTORY = /* GraphQL */ `
   query ($id: ID!, $userId: ID!) {
@@ -97,5 +104,88 @@ describe('Workspace.memberPauses', () => {
     const answer = await run<History>(asUser(B), HISTORY, { id, userId: C.id });
 
     expect(answer.errors?.[0]?.extensions).toMatchObject({ code: 'FORBIDDEN' });
+  });
+});
+
+const PAUSE = /* GraphQL */ `
+  mutation ($workspaceId: ID!, $userId: ID!, $until: DateTime, $note: String, $message: String) {
+    pauseMemberAccess(
+      workspaceId: $workspaceId
+      userId: $userId
+      until: $until
+      note: $note
+      message: $message
+    ) {
+      id
+    }
+  }
+`;
+
+type Paused = { pauseMemberAccess: { id: string } | null };
+
+// The message to the member is an optional argument, handed to the service and stored on the pause beside the note. What the
+// mail says is tests/modules/coven/services/member-pause-mail.test.ts.
+describe('Mutation.pauseMemberAccess', () => {
+  beforeEach(() => {
+    startJob.mockClear();
+    vi.stubEnv('MAIL_TRANSPORT', 'smtp');
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('stores the message it is given on the pause, and starts its mail', async () => {
+    const id = await covenWithHistory('Fixture Pause Message');
+    await sql`update workspace_member_pauses set lifted_at = now(), lifted_by = ${A.id} where workspace_id = ${id}`;
+
+    const answer = await run<Paused>(asUser(A), PAUSE, {
+      workspaceId: id,
+      userId: C.id,
+      until: null,
+      note: 'Owners only: a cooling-off pause.',
+      message: 'A short break from the coven while we talk.',
+    });
+
+    expect(answer.errors).toBeUndefined();
+    const pauseId = answer.data?.pauseMemberAccess?.id;
+    const [row] =
+      await sql`select note, message from workspace_member_pauses where id = ${pauseId ?? null}`;
+    expect(row).toEqual({
+      note: 'Owners only: a cooling-off pause.',
+      message: 'A short break from the coven while we talk.',
+    });
+    expect(startJob.mock.calls.filter(([job]) => job === memberPauseMail)).toHaveLength(1);
+  });
+
+  it('declares the message an optional String, unlike the time-out and the site pause', async () => {
+    const answer = await run<{
+      __type: { fields: { name: string; args: { name: string; type: object }[] }[] };
+    }>(
+      asUser(A),
+      `{ __type(name: "Mutation") { fields { name args { name type { kind name } } } } }`,
+    );
+
+    const field = answer.data?.__type.fields.find(({ name }) => name === 'pauseMemberAccess');
+    expect(field?.args.find(({ name }) => name === 'message')?.type).toEqual({
+      kind: 'SCALAR',
+      name: 'String',
+    });
+  });
+
+  it('takes a pause with no message, storing none', async () => {
+    const id = await covenWithHistory('Fixture Pause No Message');
+    await sql`update workspace_member_pauses set lifted_at = now(), lifted_by = ${A.id} where workspace_id = ${id}`;
+
+    const answer = await run<Paused>(asUser(A), PAUSE, {
+      workspaceId: id,
+      userId: C.id,
+      until: null,
+    });
+
+    expect(answer.errors).toBeUndefined();
+    const [row] = await sql`
+      select message from workspace_member_pauses where workspace_id = ${id} and lifted_at is null`;
+    expect(row).toEqual({ message: null });
   });
 });

@@ -12,9 +12,21 @@ export type SupportAbout = SupportRequestRow['about'];
 export type SupportStatus = SupportRequestRow['status'];
 
 /**
- * The origin a support mail links from, which the mail job carries. Built per request by the GraphQL context, because a service
- * may not import the origin resolution the link needs.
+ * The origin a support time-out mail links from, which the mail job carries. Handed to the service by the GraphQL context, because
+ * a service may not import the origin resolution the link needs.
  */
+export interface TimeoutNotifier {
+  /** The origin a mailed link is built on. @throws {Error} where none resolves. */
+  origin(): Promise<string>;
+}
+
+/** One support time-out mail, as its job carries it: the time-out's id and the origin, and nothing of the user's. */
+export type SupportTimeoutMail = {
+  kind: 'support-time-out';
+  timeoutId: string;
+  origin: string;
+};
+
 export interface SupportNotifier {
   /** The origin a mailed link is built on, which a job that mails later carries with it. @throws {Error} where none resolves. */
   origin(): Promise<string>;

@@ -69,6 +69,8 @@ M6.3 built it; M10.3 applies the same shape to spell `visibility`, and M5.2 to t
 
 **A named exception: the invitation token rotation.** `rotateInvitationToken(invitationId)` in `src/db/repository/write.ts` takes no `Membership` and no `SiteAdmin`. The invitation mail goes through the secret-link job, whose run argument holds ids alone, so its step has no session from which to prove anything. The writer runs through `withAudit` as the System account. It swaps a fresh token's hash onto a pending address invitation in a live coven or on the site tier, and never onto a card. It returns the plaintext token to the step and to no one else. Its write is on no `AuditWriter` method: `invitationTokenRotation` in `invitations.ts` is reached only through the writer's private context in `write.ts`. `tests/guards/invitation-token-rotation.test.ts` fails if any file other than its definition, the repository index, `src/modules/identity/services/secret-link-mail.ts` and its own tests names it (claude-docs/design-decisions/m15.50-invitation-token-rotation.md).
 
+**A named exception: the coven pause mail read.** `findWorkspaceMemberPauseForMail(pauseId)` in `src/db/repository/workspace-member-pauses.ts` takes no `Membership`. The mail step runs as a job with no session, and the run carries only the pause id. It reads one live pause with the names the email needs (claude-docs/design-decisions/m15.66-member-pause-mail-read.md).
+
 **RLS waits for the public launch** (MB.29, DESIGN.md §8 and §14): its migration's specification is claude-docs/design-decisions/mb.24-rls-role-split.md, superseded as a plan for v1 and intact as a plan for then.
 
 ## Rule 10 — migrations are expand/contract and forward-only

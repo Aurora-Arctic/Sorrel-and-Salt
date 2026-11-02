@@ -13,7 +13,7 @@ import { insertReference } from './db/insert-reference';
 import { insertSpell } from './db/insert-spell';
 import { insertStock } from './db/insert-stock';
 import { variantIdOf } from './db/read-variants';
-import { noSender, noSupportNotifier } from './email-verification';
+import { noPauseNotifier, noSender, noSupportNotifier } from './email-verification';
 import {
   makeIngredient,
   makeSpell,
@@ -513,6 +513,7 @@ export async function runProbe(
       emailVerification: noSender,
       invitations: mailsNothing,
       support: noSupportNotifier,
+      pauses: noPauseNotifier,
     },
   );
   return (await response.json()) as Answer;

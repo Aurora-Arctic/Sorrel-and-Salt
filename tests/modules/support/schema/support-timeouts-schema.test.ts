@@ -9,7 +9,7 @@ import { assertSiteAdmin } from '@/modules/identity';
 import { asUser } from '../../../support/as-user';
 import { supportTimeouts } from '@/modules/support/schema/support-timeouts';
 
-const OWN_COLUMNS = ['id', 'user_id', 'until', 'note', 'lifted_at'];
+const OWN_COLUMNS = ['id', 'user_id', 'until', 'note', 'message', 'lifted_at'];
 const ACTIVE_INDEX = 'support_timeouts_user_until_idx';
 const ADMIN = FIXTURE_USERS.E.id;
 const SENDER = FIXTURE_USERS.A.id;
@@ -21,9 +21,10 @@ describe('support_timeouts schema', () => {
     expect(Object.keys(byName).sort()).toEqual([...OWN_COLUMNS, ...AUDIT_COLUMNS].sort());
   });
 
-  it('declares a required note, and nullable until and lifted_at', () => {
+  it('declares a required note, and nullable until, message and lifted_at', () => {
     expect(byName.note.notNull).toBe(true);
     expect(byName.until.notNull).toBe(false);
+    expect(byName.message.notNull).toBe(false);
     expect(byName.lifted_at.notNull).toBe(false);
   });
 
@@ -60,6 +61,19 @@ describe('support_timeouts table', () => {
     expect(row.until).toBeNull();
     expect(row.note).toBe('Spam');
     expect(row.lifted_at).toBeNull();
+    expect(row.message).toBeNull();
+  });
+
+  it('holds a nullable message text column, kept as written', async () => {
+    const [column] = await sql`
+      select data_type, is_nullable from information_schema.columns
+       where table_name = 'support_timeouts' and column_name = 'message'`;
+    const [row] = await sql`
+      insert into support_timeouts (user_id, note, message, created_by, updated_by)
+      values (${SENDER}, 'Spam', 'One problem per request, please.', ${ADMIN}, ${ADMIN}) returning message`;
+
+    expect(column).toEqual({ data_type: 'text', is_nullable: 'YES' });
+    expect(row.message).toBe('One problem per request, please.');
   });
 
   it('refuses a time-out with no note', async () => {

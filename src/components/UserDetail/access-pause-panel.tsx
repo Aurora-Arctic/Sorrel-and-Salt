@@ -13,8 +13,8 @@ import type { AccessPauseEntry, PausePanelCopy } from './types';
 // the two sections of the user modal read alike.
 
 const PauseDocument = graphql(`
-  mutation PauseUserAccess($userId: ID!, $until: DateTime, $note: String!) {
-    pauseUserAccess(userId: $userId, until: $until, note: $note) {
+  mutation PauseUserAccess($userId: ID!, $until: DateTime, $note: String!, $message: String!) {
+    pauseUserAccess(userId: $userId, until: $until, note: $note, message: $message) {
       id
     }
   }
@@ -32,6 +32,8 @@ const LiftDocument = graphql(`
 const copyFor = (name: string): PausePanelCopy => ({
   noteHint: 'Seen by staff only, up to 500 characters.',
   notePlaceholder: 'Why, for staff',
+  messageLabel: 'Message to User',
+  messagePlaceholder: 'For them',
   pauseQuestion: (end) =>
     end
       ? `They can reach only Support until ${longMinuteInZone(end)}, and are signed out now. You can lift it sooner.`
@@ -70,11 +72,12 @@ const AccessPausePanel = ({
       copy={copyFor(name)}
       noteRequired
       // Pause Access is held until the note has text, so the empty string is never sent.
-      pause={(until, note) =>
+      pause={(until, note, message) =>
         graphqlRequest(PauseDocument, {
           userId,
           until: until?.toISOString() ?? null,
           note: note ?? '',
+          message: message ?? '',
         })
       }
       lift={() => graphqlRequest(LiftDocument, { userId })}

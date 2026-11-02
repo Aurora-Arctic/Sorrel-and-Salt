@@ -9,6 +9,7 @@ import {
   noInvitationSender,
   noPasswordSetter,
   noSender,
+  noPauseNotifier,
   noSupportNotifier,
 } from '../email-verification';
 import type { Answer, ContextOverrides } from './types';
@@ -45,6 +46,7 @@ function runnerOn(target: GraphQLSchema) {
         invitations: noInvitationSender,
         passwords: noPasswordSetter,
         support: noSupportNotifier,
+        pauses: noPauseNotifier,
         ...context,
       },
     );

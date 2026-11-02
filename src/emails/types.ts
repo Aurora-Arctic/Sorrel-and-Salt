@@ -125,3 +125,31 @@ export interface SupportEmailReplyProps extends BaseEmailProps {
   /** What staff wrote. */
   body: string;
 }
+
+/** Told to a user that an admin timed them out of support. `url` opens the support page, where their past requests and the time-out notice stay. */
+export interface SupportTimedOutProps extends BaseEmailProps {
+  url: string;
+  /** When the time-out ends, or `null` when it has no end date. */
+  until: Date | null;
+  /** What the admin wrote to the user, or `null` when they wrote none. */
+  message: string | null;
+}
+
+/** Told to a user that an admin paused their site access. `url` opens the support page, which a paused account can still reach. */
+export interface AccessPausedProps extends BaseEmailProps {
+  url: string;
+  /** When the pause ends, or `null` when it has no end date. */
+  until: Date | null;
+  /** What the admin wrote to the user, or `null` when they wrote none. */
+  message: string | null;
+}
+
+/** Told to a member that a coven owner paused their access to the coven. */
+export interface CovenAccessPausedProps extends BaseEmailProps {
+  url: string;
+  covenName: string;
+  /** When the pause ends, or `null` when it has no end date. */
+  until: Date | null;
+  /** What the owner wrote to the member, or `null` when they wrote none. */
+  message: string | null;
+}

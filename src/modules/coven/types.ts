@@ -44,3 +44,16 @@ export type MemberKey = {
   workspaceId: string;
   userId: string;
 };
+
+/** The origin a coven access pause mail links from, which the mail job carries. Handed to the service by the GraphQL context. */
+export interface MemberPauseNotifier {
+  /** The origin a mailed link is built on. @throws {Error} where none resolves. */
+  origin(): Promise<string>;
+}
+
+/** One coven access pause mail, as its job carries it: the pause's id and the origin, and nothing of the member's. */
+export type MemberPauseMail = {
+  kind: 'member-pause';
+  pauseId: string;
+  origin: string;
+};

@@ -32,6 +32,19 @@ export interface AdminInvitationFilter {
 /** One site access pause: standing, run out or lifted. */
 export type UserAccessPauseRow = typeof userAccessPauses.$inferSelect;
 
+/** The origin a site access pause mail links from, which the mail job carries. Handed to the service by the GraphQL context. */
+export interface AccessPauseNotifier {
+  /** The origin a mailed link is built on. @throws {Error} where none resolves. */
+  origin(): Promise<string>;
+}
+
+/** One site access pause mail, as its job carries it: the pause's id and the origin, and nothing of the user's. */
+export type AccessPauseMail = {
+  kind: 'access-pause';
+  pauseId: string;
+  origin: string;
+};
+
 /** One row of the privilege ledger. */
 export type PrivilegeChangeRow = typeof userPrivilegeChanges.$inferSelect;
 

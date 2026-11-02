@@ -6,8 +6,14 @@ import type {
   ObjectRef,
 } from '@pothos/core';
 import type { FieldAuthScopes } from '@pothos/plugin-scope-auth';
-import type { EmailVerificationSender, InvitationSender, PasswordSetter } from '@/modules/identity';
-import type { SupportNotifier } from '@/modules/support';
+import type { MemberPauseNotifier } from '@/modules/coven';
+import type {
+  AccessPauseNotifier,
+  EmailVerificationSender,
+  InvitationSender,
+  PasswordSetter,
+} from '@/modules/identity';
+import type { SupportNotifier, TimeoutNotifier } from '@/modules/support';
 import type { Session } from '../lib/session';
 import type { Cursor, PageCount, PageEntry, PageRequest, ValidationIssue } from '../lib/types';
 import type { Loaders } from './loaders';
@@ -27,6 +33,8 @@ export interface Context {
   passwords: PasswordSetter;
   /** Bound to this request's host: a reply's notice to the sender goes out through it. */
   support: SupportNotifier;
+  /** Bound to this request's host: the notice of a support time-out, a site access pause or a coven access pause goes out through it. */
+  pauses: TimeoutNotifier & AccessPauseNotifier & MemberPauseNotifier;
   /** The caller's address from the platform's forwarded-for header; `null` when there is none. Only the signed-out support send reads it. */
   clientIp: string | null;
 }

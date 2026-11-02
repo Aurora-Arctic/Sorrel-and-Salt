@@ -44,6 +44,19 @@ export function findStandingWorkspaceMemberPause(
 }
 
 /**
+ * The live pause with this id, in any coven, or `undefined`. For the mail job only: it carries a pause id and no proof, and
+ * reads the pause to mail the member, never to authorise anything.
+ */
+export function findWorkspaceMemberPauseForMail(
+  id: string,
+): Promise<WorkspaceMemberPauseRow | undefined> {
+  return selectOne(
+    workspaceMemberPauses,
+    and(notSoftDeleted(workspaceMemberPauses), eq(workspaceMemberPauses.id, id)),
+  );
+}
+
+/**
  * The pauses standing on any of `userIds` in the proof's coven, one read for a page of the members list: live and not run out,
  * at most one per member.
  */
@@ -98,14 +111,14 @@ export function workspaceMemberPauseWrites({
   return {
     // The live row is closed first, run out or standing, so the one-live index takes the new one. No conflict target: a pause
     // set for the same member in a transaction alongside wins the slot, and this call writes nothing rather than failing.
-    setWorkspaceMemberPause: async (membership, userId, { until, note }) => {
+    setWorkspaceMemberPause: async (membership, userId, { until, note, message }) => {
       await update(workspaceMemberPauses, lifted(), liveFor(membership, userId));
       return tx
         .insert(workspaceMemberPauses)
         .values(
           applyAudit(
             'insert',
-            { workspaceId: membership.workspaceId, userId, until, note },
+            { workspaceId: membership.workspaceId, userId, until, note, message },
             session,
           ) as never,
         )

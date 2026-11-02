@@ -1119,6 +1119,8 @@ export type UserAccessPauseRow = typeof userAccessPauses.$inferSelect;
 export interface UserAccessPauseInput {
   until: Date | null;
   note: string;
+  /** What the user is mailed, or `null`/absent for none. */
+  message?: string | null;
 }
 
 /** One `workspace_member_pauses` row. */
@@ -1128,6 +1130,8 @@ export type WorkspaceMemberPauseRow = typeof workspaceMemberPauses.$inferSelect;
 export interface WorkspaceMemberPauseInput {
   until: Date | null;
   note: string | null;
+  /** What the member is mailed, or `null`/absent for none. */
+  message?: string | null;
 }
 
 export type ReadRow<TTable extends PgTable> = TTable extends typeof ingredients
