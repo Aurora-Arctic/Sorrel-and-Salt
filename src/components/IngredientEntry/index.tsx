@@ -40,6 +40,7 @@ import OwnEntryActions from './own-actions';
 import StockSection from './stock-section';
 import { reviewedAtOf } from './review-date';
 import { cardName } from '../IngredientCard/card-name';
+import SourcingScore from '../SourcingScore';
 import type { IngredientEntryProps } from './types';
 import {
   blockOf,
@@ -493,7 +494,10 @@ const IngredientEntry = ({
         )}
 
         {/* Last, so v2's notes section, appended beneath it, moves nothing. */}
-        <ReferencesSection model={notes} />
+        <ReferencesSection model={notes}>
+          {/* The curator's sourcing score ends the section; the page reads it for a curator or admin alone. */}
+          {edit?.sourcing && <SourcingScore sourcing={edit.sourcing} headingLevel={3} />}
+        </ReferencesSection>
       </div>
     </article>
   );

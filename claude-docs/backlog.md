@@ -55,6 +55,34 @@
       `src/modules/identity/services/email.ts` (MB.54), one deliberately
       loose function that nothing else reads, so the swap is one import
       and its tests in `tests/modules/identity/services/email.test.ts`.
+      The same task covers the signed-out support form, where the library
+      also stops the form being used to mail strangers:
+
+      1. **Count sends by the normalised address.**
+         `sendSignedOutSupportRequest`
+         (`src/modules/support/services/signed-out.ts`) allows 10 sends per
+         address in 24 hours, but counts the address as typed, only trimmed
+         and lowercased (`src/modules/support/validation/support.ts`). So
+         `name+1@gmail.com`, `name+2@gmail.com` and `n.ame@gmail.com` each
+         get their own 10. Count by the library's normalised address
+         instead. For Gmail and Googlemail that drops dots and `+tag`; other
+         providers follow the library's own rules, since RFC 5321 leaves the
+         part before the @ to the receiving provider.
+      2. **Cap the "received" email across the whole site.** Nothing limits
+         the total today, so many IP addresses can mail many victims. Past a
+         daily ceiling, skip only the email and still store the request: the
+         request is stored before the email is sent, so a cap on the email
+         cannot be used to block someone reporting an accessibility barrier.
+      3. **Update the privacy page.** `src/app/(public)/privacy/page.tsx`
+         says a signed-out request "is counted by network address and by
+         email for twenty-four hours"; it gains the daily ceiling on the
+         "received" email.
+
+      Whether the form also needs a captcha is undecided. Research on
+      2026-11-02 found self-hosted ALTCHA (a puzzle the browser solves with
+      no cookie and no third party) the only option that leaves the privacy
+      page true; Turnstile, hCaptcha, reCAPTCHA and Vercel BotID each add a
+      third party, a cookie, or both.
 
 ### V2
 

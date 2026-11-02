@@ -19,6 +19,7 @@ import {
   readCompendiumEntry,
   readCompendiumEntryAsCurator,
   readCompendiumReview,
+  readSourcingScore,
 } from '@/modules/ingredients';
 import { publicCupboardOf } from './cupboard';
 import { covensHolding } from '@/app/plus-covens';
@@ -83,6 +84,19 @@ async function reviewOf(id: string) {
   }
 }
 
+// The curator's sourcing score, from its own guarded, uncached read: never part of the cached public
+// read above. A refusal or a missing entry means no score, never an error page.
+async function sourcingOf(id: string) {
+  const curator = await getSession();
+  if (!curator) return undefined;
+  try {
+    return await readSourcingScore(curator, id);
+  } catch (error) {
+    if (error instanceof Forbidden || error instanceof NotFound) return undefined;
+    throw error;
+  }
+}
+
 export default async function CompendiumEntryPage({ params, searchParams }: CompendiumEntryParams) {
   const { slug } = await params;
   const found = await entryAt(slug);
@@ -114,6 +128,8 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
   // The review switch's read, for a curator or admin only: per viewer, never in the cached read
   // above, so a visitor's page is unchanged. One read serves the head's switch and the form's field.
   const review = canEdit ? await reviewOf(entry.id) : undefined;
+  // Beside it, the sourcing score: the head shows it, and the edit form's Sources opens with it.
+  const sourcing = canEdit ? await sourcingOf(entry.id) : undefined;
 
   return (
     <>
@@ -133,6 +149,7 @@ export default async function CompendiumEntryPage({ params, searchParams }: Comp
                 closeHref: own,
                 deletedHref: '/compendium' as Route,
                 opened,
+                sourcing,
                 ...(review && {
                   review: {
                     reviewed: review.reviewedAt !== null,

@@ -1279,6 +1279,8 @@ test('the Sourcing Score heading sorts lowest first, then highest first, and eac
   const row = page.getByRole('table').getByRole('row').nth(1);
   await row.getByRole('link', { name: /^Edit / }).click();
   const dialog = page.getByRole('dialog', { name: /^Edit Ingredient, / });
+  // The score sits in the Sources section, which hides its content while closed.
+  await dialog.getByRole('button', { name: 'Sources', exact: true }).click();
   const heading = dialog.getByRole('heading', { name: /^Sourcing Score: -?\d+$/ });
   await expect(heading).toBeVisible();
   const fromDialog = Number((await heading.textContent())!.replace('Sourcing Score: ', ''));

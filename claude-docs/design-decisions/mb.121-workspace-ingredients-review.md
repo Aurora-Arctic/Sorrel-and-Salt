@@ -72,8 +72,8 @@ obvious way to set it apart, in a way the page's other sections can share.
   in busy, cluttered designs", and that whitespace and proximity are often
   enough; a rule is the lighter cue.[^harleyregion] The rule ends where its
   heading does, so on a tablet or wider it stops at the text column and never
-  runs under Details' side column; the Forms and References headings span the
-  whole body, so their rules do too.
+  runs under Details' side column; the Forms heading spans the whole body, so its
+  rule does too; References, since the owner's later call, keeps to the text column.
 - **The rule is short** (owner, 2026-10-23). It is as wide as the heading's own
   text plus `space(4)` (1rem) past it, starting at the heading's left edge, and
   never wider than the column, so a long heading wraps and the rule keeps to the

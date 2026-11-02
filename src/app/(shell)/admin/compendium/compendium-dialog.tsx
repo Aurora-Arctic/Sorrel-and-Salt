@@ -4,8 +4,7 @@ import { usePendingNavigation } from '@/lib/navigation';
 import { useState, type ReactElement } from 'react';
 import { compendiumHref } from '../../../../components/CompendiumList/href';
 import { detailsHeading } from '../../../../components/IngredientEntry/details';
-import IngredientForm from '../../../../components/IngredientForm';
-import SourcingScore from '../../../../components/SourcingScore';
+import CompendiumEntryForm from '../../../../components/CompendiumEntryForm';
 import { RouteModal } from '../../../../components/Modal';
 import type { CompendiumDialogProps } from './types';
 
@@ -33,7 +32,7 @@ export default function CompendiumDialog({
           heading: opened.heading,
           body: (done) => (
             <>
-              <IngredientForm
+              <CompendiumEntryForm
                 // A fresh form per entry, inside the one modal: Save Ingredient's move
                 // from ?new to ?edit= swaps the form without the modal fading away
                 // and back.
@@ -47,11 +46,8 @@ export default function CompendiumDialog({
                   navigate(href({ edit: saved.slug }), { replace: true, scroll: false });
                   refresh();
                 }}
-                workspaceId={null}
-                mayPromote
                 review={opened.review}
-                // An edit's sourcing score opens its Sources section, so a curator sees what the entry still lacks.
-                sourcesIntro={opened.sourcing && <SourcingScore sourcing={opened.sourcing} />}
+                sourcing={opened.sourcing}
                 entry={entry && entry.id !== created ? entry : undefined}
                 // Save Ingredient opens the entry it saved, at the address its name
                 // now spells; Save & Add Another stays on the new form, which clears
