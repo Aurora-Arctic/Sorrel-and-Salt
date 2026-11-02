@@ -267,6 +267,11 @@ export default function PrivacyPolicyPage() {
         "erased". This applies to covens and their memberships, ingredients, spells and support
         replies alike.
       </p>
+      <p>
+        It works this way for two reasons: a spell keeps showing what went into it even after one of
+        those ingredients is deleted, and a later version of the site can offer to bring back
+        something deleted by mistake. That second feature does not exist yet.
+      </p>
       <p>Some rows are removed outright:</p>
       <ul>
         <li>
