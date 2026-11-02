@@ -8,11 +8,11 @@ import { A } from '../../support/as-user';
 import { makeIngredient, makeVariant } from '../../support/fixtures';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 
-// A migration test, retired once `0116` is in production's journal. `0116` hides each live, shown compendium entry with no
+// A migration test, retired once `0117` is in production's journal. `0117` hides each live, shown compendium entry with no
 // live category: a pair counts only where its category and that category's group are live, filed on the entry or on a live form.
 // The test database is already migrated, so the statements run again over rows each case writes.
 
-const FILE = fromRoot('src/db/migrations/0116_compendium-hide-uncategorised-live.sql');
+const FILE = fromRoot('src/db/migrations/0117_compendium-hide-uncategorised-live.sql');
 
 const STATEMENTS = readFileSync(FILE, 'utf8')
   .split('--> statement-breakpoint')
@@ -90,7 +90,7 @@ const pairs = async (id: string) => {
   return count;
 };
 
-describe('0116', () => {
+describe('0117', () => {
   it('hides a live compendium entry with no category, leaving its updated_by', async () => {
     const bare = await entry('Fixture Bareroot');
     expect(await shown(bare)).toBe(true);
