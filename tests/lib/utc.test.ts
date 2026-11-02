@@ -8,6 +8,7 @@ import {
   minuteInUtc,
   minuteInZone,
   printedDayOf,
+  shortMinuteInZone,
 } from '@/lib/utc';
 
 // How a refusal names the instant a compendium redirect closes: in UTC whatever the server's
@@ -28,26 +29,38 @@ describe('isoDayInUtc', () => {
 describe('longMinuteInZone', () => {
   const at = new Date('2026-10-30T23:05:00.000Z');
   it('writes the day, the month in full, the year and a 12-hour time in the zone given, with no zone suffix', () => {
-    expect(longMinuteInZone(at, 'UTC')).toBe('30 October 2026, 11:05 pm');
-    expect(longMinuteInZone(at, 'Asia/Tokyo')).toBe('31 October 2026, 8:05 am');
-    expect(longMinuteInZone(at, 'America/Los_Angeles')).toBe('30 October 2026, 4:05 pm');
+    expect(longMinuteInZone(at, 'UTC')).toBe('30 October 2026, 11:05\u00a0pm');
+    expect(longMinuteInZone(at, 'Asia/Tokyo')).toBe('31 October 2026, 8:05\u00a0am');
+    expect(longMinuteInZone(at, 'America/Los_Angeles')).toBe('30 October 2026, 4:05\u00a0pm');
   });
   it('writes midnight as 12:00 am and noon as 12:00 pm', () => {
-    expect(longMinuteInUtc(new Date('2026-08-28T00:00:00.000Z'))).toBe('28 August 2026, 12:00 am');
-    expect(longMinuteInUtc(new Date('2026-08-28T12:00:00.000Z'))).toBe('28 August 2026, 12:00 pm');
+    expect(longMinuteInUtc(new Date('2026-08-28T00:00:00.000Z'))).toBe(
+      '28 August 2026, 12:00\u00a0am',
+    );
+    expect(longMinuteInUtc(new Date('2026-08-28T12:00:00.000Z'))).toBe(
+      '28 August 2026, 12:00\u00a0pm',
+    );
+  });
+});
+
+describe('shortMinuteInZone', () => {
+  it('writes day, short month, then h:mm am/pm in the zone given', () => {
+    expect(shortMinuteInZone(new Date('2026-10-30T14:01:00.000Z'), 'UTC')).toBe(
+      '30 Oct, 2:01\u00a0pm',
+    );
   });
 });
 
 describe('minuteInZone', () => {
   const at = new Date('2026-10-30T23:05:00.000Z');
   it('writes YYYY-MM-DD h:mm am/pm in the zone given, moving the day across midnight', () => {
-    expect(minuteInZone(at, 'UTC')).toBe('2026-10-30 11:05 pm');
-    expect(minuteInZone(at, 'Asia/Tokyo')).toBe('2026-10-31 8:05 am');
-    expect(minuteInZone(at, 'America/Los_Angeles')).toBe('2026-10-30 4:05 pm');
+    expect(minuteInZone(at, 'UTC')).toBe('2026-10-30 11:05\u00a0pm');
+    expect(minuteInZone(at, 'Asia/Tokyo')).toBe('2026-10-31 8:05\u00a0am');
+    expect(minuteInZone(at, 'America/Los_Angeles')).toBe('2026-10-30 4:05\u00a0pm');
   });
   it('writes midnight as 12:00 am and noon as 12:00 pm', () => {
-    expect(minuteInUtc(new Date('2026-10-30T00:00:00.000Z'))).toBe('2026-10-30 12:00 am');
-    expect(minuteInUtc(new Date('2026-10-30T12:00:00.000Z'))).toBe('2026-10-30 12:00 pm');
+    expect(minuteInUtc(new Date('2026-10-30T00:00:00.000Z'))).toBe('2026-10-30 12:00\u00a0am');
+    expect(minuteInUtc(new Date('2026-10-30T12:00:00.000Z'))).toBe('2026-10-30 12:00\u00a0pm');
   });
 });
 
