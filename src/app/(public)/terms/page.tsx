@@ -203,9 +203,9 @@ export default function TermsOfUsePage() {
       <p>
         You may stop using the site at any time. You can leave any coven from its page. To have your
         account or anything in it erased, ask through the{' '}
-        <SupportLink about="privacy">support form</SupportLink>; until an erase-my-account button
-        exists, the site's admin does it and tells you when it is done. What you delete yourself is
-        marked deleted rather than erased, as the Privacy Policy explains.
+        <SupportLink about="privacy">support form</SupportLink>, and the site's admin does it and
+        tells you when it is done. What you delete yourself is marked deleted rather than erased, as
+        the Privacy Policy explains.
       </p>
 
       <h2>Agreeing to These Terms</h2>
