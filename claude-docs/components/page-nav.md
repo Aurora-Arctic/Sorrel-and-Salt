@@ -2,7 +2,7 @@
 
 `src/components/PageNav/` — a menu of jump links to the sections of one page,
 which marks the section in view. The account page is its first user, the coven
-index (`/coven/[slug]`) its second, and the ingredient page (M8.19) its third.
+index (`/coven/[slug]`) its second, and the ingredient page (M8.19) its third. The public document pages ([`document-page.md`](document-page.md)) use it too, on `.page-with-nav` with a wider column.
 
 ## Purpose
 
