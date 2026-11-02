@@ -339,7 +339,10 @@ export default function PrivacyPolicyPage() {
       <h2>What the Site Does Not Do</h2>
       <ul>
         <li>It shows no advertising and runs no tracking script.</li>
-        <li>It sells, rents or shares your data with nobody, beyond the services named above.</li>
+        <li>
+          It does not sell, rent or share your data. The services named above handle it only to run
+          the site.
+        </li>
       </ul>
 
       <h2>Changes to This Policy</h2>
