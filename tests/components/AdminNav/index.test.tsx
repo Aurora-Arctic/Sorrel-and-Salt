@@ -27,6 +27,7 @@ const PAGES = [
   '/admin/celestial-bodies',
   '/admin/users',
   '/admin/support',
+  '/admin/documents',
 ];
 
 beforeEach(() => {
@@ -40,12 +41,14 @@ describe('AdminNav', () => {
     expect(hrefs(row())).toEqual(PAGES);
   });
 
-  // A curator is shown the curation pages and no People, which every
-  // page beneath refuses them anyway (claude-docs/auth/admin-guard.md).
-  it('leaves People out for a curator, who manages no one', () => {
+  // A curator is shown the curation pages, and neither People nor the site's documents, which every page beneath refuses them anyway
+  // (claude-docs/auth/admin-guard.md).
+  it('leaves People and Documents out for a curator, who manages neither', () => {
     render(<AdminNav managesPeople={false} />);
 
-    expect(hrefs(row())).toEqual(PAGES.filter((href) => href !== '/admin/users'));
+    expect(hrefs(row())).toEqual(
+      PAGES.filter((href) => href !== '/admin/users' && href !== '/admin/documents'),
+    );
     expect(hrefs(row())).toContain('/admin/support');
   });
 
@@ -55,6 +58,7 @@ describe('AdminNav', () => {
     ['/admin', []],
     ['/admin/categories', ['/admin/categories']],
     ['/admin/category-groups', ['/admin/categories']],
+    ['/admin/documents/disclaimer', ['/admin/documents']],
   ])('marks only the page you are on at %s as current', (path, expected) => {
     pathname.mockReturnValue(path);
 

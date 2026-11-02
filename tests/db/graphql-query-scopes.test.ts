@@ -86,6 +86,11 @@ const PROBES: Record<string, ScopeProbe> = {
     source: `{ userAccessPauses(userId: "${NOWHERE}", first: 1) { edges { node { id } } } }`,
     outcome: 'refuses',
   },
+  // The seeded disclaimer, so an admin's read answers it.
+  documentForEditing: {
+    source: '{ documentForEditing(key: "disclaimer") { id } }',
+    outcome: 'refuses',
+  },
   invitationCardBatches: {
     source: '{ invitationCardBatches(first: 1) { edges { node { batchId } } } }',
     outcome: 'refuses',
@@ -399,9 +404,18 @@ const REFERENCE = '{ kind: book, title: "A Herbal of Fixture Covens" }';
 
 const MUTATION_PROBES: Record<string, ScopeProbe> = {
   setEmail: write('mutation { setEmail(email: "fixture@example.org") { id } }'),
+  saveDocumentDraft: write(
+    `mutation { saveDocumentDraft(documentId: "${NOWHERE}", body: "Fixture", expectedRevision: null) { id } }`,
+  ),
+  publishDocumentDraft: write(
+    `mutation { publishDocumentDraft(documentId: "${NOWHERE}", expectedRevision: null) { number } }`,
+  ),
+  updateDocument: write(
+    `mutation { updateDocument(id: "${NOWHERE}", input: { title: "Fixture", lede: "Fixture" }) { id } }`,
+  ),
   setName: write('mutation { setName(name: "Fixture") { id } }'),
   setPassword: write('mutation { setPassword(newPassword: "fixture password") }'),
-  agreeToTerms: write('mutation { agreeToTerms { id } }'),
+  agreeToTerms: write('mutation { agreeToTerms(version: 1) { id } }'),
   // Open to anyone by design. The honeypot field is filled, so the send is dropped and the probe stores and mails nothing.
   sendSignedOutSupportRequest: {
     source:
@@ -688,6 +702,9 @@ const ADMIN_WRITES: Record<string, AdminWrite> = {
   setSupportRequestIssueUrl: { governs: 'support' },
   timeOutSupportSender: { governs: 'support' },
   liftSupportTimeout: { governs: 'support' },
+  saveDocumentDraft: { governs: 'documents' },
+  publishDocumentDraft: { governs: 'documents' },
+  updateDocument: { governs: 'documents' },
   createCategory: { governs: 'categories' },
   updateCategory: { governs: 'categories' },
   deleteCategory: { governs: 'categories' },
@@ -726,7 +743,7 @@ const OPEN_WRITES = [
   'setName',
   // The session's own cookie names the account, which Better Auth reads.
   'setPassword',
-  // The session names the account it records against, and the service records the version in force.
+  // The session names the account it records against, and the service refuses any version but the one in force.
   'agreeToTerms',
   // The flag decides who may, which the service reads.
   'createWorkspace',
@@ -839,13 +856,14 @@ describe('a signed-in non-admin at every admin write', () => {
   });
 });
 
-// The people page's writes are an admin's alone; every other admin write is curation, which a curator's scope admits.
-// A write added to ADMIN_WRITES lands on one side or the other.
+// The people page's writes, and the site's documents, are an admin's alone; every other admin write is curation, which a curator's
+// scope admits. A write added to ADMIN_WRITES lands on one side or the other.
 const PEOPLE_PAGE: readonly Governed[] = [
   'workspace creation',
   'site role',
   'site access',
   'support',
+  'documents',
 ];
 const governsPeople = (field: string) => PEOPLE_PAGE.includes(ADMIN_WRITES[field].governs);
 const PEOPLE_WRITES = Object.keys(ADMIN_WRITES).filter(governsPeople);
@@ -868,7 +886,12 @@ describe('a curator at every admin write, and at the people page’s reads', () 
   it('splits the admin writes into curation and the people page', () => {
     expect(CURATION_WRITES.length).toBeGreaterThan(0);
     expect(PEOPLE_WRITES).toEqual(
-      expect.arrayContaining(['setUserRole', 'grantWorkspaceCreation', 'createAdminInvitation']),
+      expect.arrayContaining([
+        'setUserRole',
+        'grantWorkspaceCreation',
+        'createAdminInvitation',
+        'publishDocumentDraft',
+      ]),
     );
   });
 
@@ -900,7 +923,7 @@ describe('a curator at every admin write, and at the people page’s reads', () 
     });
   });
 
-  it.each(['users', 'privilegeChanges', 'userAccessPauses'])(
+  it.each(['users', 'privilegeChanges', 'userAccessPauses', 'documentForEditing'])(
     '%s refuses a curator, answering an admin',
     async (field) => {
       const { source } = PROBES[field];

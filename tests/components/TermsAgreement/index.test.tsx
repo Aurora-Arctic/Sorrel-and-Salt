@@ -6,7 +6,8 @@ import TermsAgreement from '@/components/TermsAgreement';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
-// The acceptance page's body: it links the terms, and its one button records agreement, then goes to where the account was headed.
+// The acceptance page's body: it links the terms, and its one button records agreement to the version it showed, then goes to where
+// the account was headed. The server refuses a version no longer in force (tests/modules/identity/services/terms.test.ts).
 
 const assign = vi.fn();
 
@@ -18,7 +19,7 @@ beforeEach(() => {
 function renderAgreement() {
   return render(
     <QueryClientProvider client={makeQueryClient()}>
-      <TermsAgreement version="2026-11-02" updatedOn="2026-11-02" destination="/coven/hearth" />
+      <TermsAgreement version={3} updatedOn="2026-11-02" destination="/coven/hearth" />
     </QueryClientProvider>,
   );
 }
@@ -31,18 +32,21 @@ describe('TermsAgreement', () => {
       'href',
       '/terms',
     );
-    expect(screen.getByText(/2026-11-02/)).toBeInTheDocument();
+    expect(screen.getByText(/Version 3\b/)).toBeInTheDocument();
   });
 
-  it('goes to the destination once agreement is recorded', async () => {
-    mockGraphQLMutation('AgreeToTerms', () => ({
-      agreeToTerms: { id: 'u1', termsVersion: '2026-11-02' },
-    }));
+  it('records agreement to the version it showed, then goes to the destination', async () => {
+    const sent = vi.fn();
+    mockGraphQLMutation('AgreeToTerms', (variables) => {
+      sent(variables);
+      return { agreeToTerms: { id: 'u1', agreedTermsVersion: 3 } };
+    });
     renderAgreement();
 
     await userEvent.click(screen.getByRole('button', { name: 'Agree & Continue' }));
 
     await waitFor(() => expect(assign).toHaveBeenCalledWith('/coven/hearth'));
+    expect(sent).toHaveBeenCalledWith({ version: 3 });
   });
 
   it('stays, with the failure shown, when the record is refused', async () => {

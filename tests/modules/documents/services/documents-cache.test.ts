@@ -4,8 +4,15 @@ import { revalidateTag } from 'next/cache';
 import { COMPENDIUM_TAG } from '@/lib/compendium-cache';
 import { DOCUMENTS_TAG } from '@/lib/documents-cache';
 import type { PageRequest } from '@/lib/types';
-import { listDocumentVersions, readDocument, readDocumentVersion } from '@/modules/documents';
-import { E } from '../../../support/as-user';
+import {
+  listDocumentVersions,
+  publishDocumentDraft,
+  readDocument,
+  readDocumentVersion,
+  saveDocumentDraft,
+  updateDocument,
+} from '@/modules/documents';
+import { E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertDocument, insertDocumentVersion } from '../../../support/db/insert-document';
 import { clearDataCache } from '../../../support/next-data-cache';
@@ -76,5 +83,40 @@ describe('the documents reads are cached under the documents tag', () => {
     revalidateTag(COMPENDIUM_TAG, { expire: 0 });
 
     expect((await readDocument('privacy')).number).toBe(1);
+  });
+});
+
+// The admin's writes empty the cache themselves, so a reader sees a publish, or a new title, on the next read rather than whenever
+// the cache would have lapsed. A saved draft leaves it, since no reader is shown a draft.
+describe('the editing services expire the documents tag', () => {
+  it('shows a reader the published draft, and the earlier version in the list, after a publish', async () => {
+    expect((await readDocument('privacy')).number).toBe(1);
+    expect(await numbersListed()).toEqual([1]);
+
+    const draft = await saveDocumentDraft(asUser(E), documentId, {
+      body: 'Fixture published edit.',
+      expectedRevision: null,
+    });
+    // A saved draft is no reader's: the cache still answers version 1.
+    expect((await readDocument('privacy')).number).toBe(1);
+
+    await publishDocumentDraft(asUser(E), documentId, { expectedRevision: draft.revision });
+
+    expect(await readDocument('privacy')).toMatchObject({
+      number: 2,
+      body: 'Fixture published edit.',
+    });
+    expect(await numbersListed()).toEqual([2, 1]);
+  });
+
+  it('shows a reader the new title after a title change', async () => {
+    expect((await readDocument('privacy')).title).toBe('Fixture Policy');
+
+    await updateDocument(asUser(E), documentId, {
+      title: 'Fixture Policy Renamed',
+      lede: 'What the fixture keeps.',
+    });
+
+    expect((await readDocument('privacy')).title).toBe('Fixture Policy Renamed');
   });
 });

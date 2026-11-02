@@ -33,6 +33,7 @@ test('an admin sees the admin layout and its nav', async ({ page }) => {
     ['Astrology', '/admin/celestial-bodies'],
     ['Support', '/admin/support'],
     ['People', '/admin/users'],
+    ['Documents', '/admin/documents'],
   ];
   await expect(nav.getByRole('link')).toHaveCount(pages.length);
   // A tab with a count is named "Support 0": its label, then its count.
@@ -161,7 +162,7 @@ test('an admin narrows the users to those timed out of support, and to those who
   await assertNoAccessibilityViolations(page);
 });
 
-// A curator reaches every curation page and nothing on People. The navigation leaving People out is only
+// A curator reaches every curation page, and nothing on People or among the site's documents. The navigation leaving People out is only
 // what they see; each People page refuses them itself, and a coven they hold no seat in is a 404.
 test('a curator reaches /admin and the curation pages, and is refused People and a coven', async ({
   page,
@@ -195,6 +196,8 @@ test('a curator reaches /admin and the curation pages, and is refused People and
     '/admin/invitations',
     '/admin/invitation-cards',
     '/admin/card-sign-ups',
+    '/admin/documents',
+    '/admin/documents/disclaimer',
   ]) {
     expect((await page.goto(path))?.status(), path).toBe(403);
   }
