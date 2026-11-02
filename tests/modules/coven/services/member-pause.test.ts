@@ -187,11 +187,14 @@ describe('pauseMemberAccess', () => {
       assertMembership(asUser(A), covenId, { member: ['pause'] }),
     ).resolves.toBeDefined();
 
+    // The sentence the browser shows, whole: the members page names no field, so it says the error's message.
+    const owner =
+      "An owner's access can't be paused. Change their role first if they should be paused.";
     await expect(pauseMemberAccess(asUser(A), covenId, D.id, LATER, null)).rejects.toThrow(
-      /owner.*can't be paused/i,
+      new Forbidden(owner),
     );
     await expect(pauseMemberAccess(asUser(A), covenId, A.id, null, null)).rejects.toThrow(
-      Forbidden,
+      new Forbidden(owner),
     );
     expect(await pausesOf(covenId, D.id)).toHaveLength(0);
     expect(await pausesOf(covenId, A.id)).toHaveLength(0);
@@ -200,11 +203,13 @@ describe('pauseMemberAccess', () => {
   it('refuses a person who is not a member of the coven, and an id that names no one', async () => {
     const covenId = await insertCoven('Fixture Stranger Pause Coven', [[A.id, 'owner']]);
 
+    const stranger = new Forbidden('That person is not a member of this coven');
     await expect(pauseMemberAccess(asUser(A), covenId, D.id, LATER, null)).rejects.toThrow(
-      'That person is not a member of this coven',
+      stranger,
     );
+    // An id that cannot name a user is refused as a wrong one is, in the same words.
     await expect(pauseMemberAccess(asUser(A), covenId, 'not-an-id', LATER, null)).rejects.toThrow(
-      Forbidden,
+      stranger,
     );
     expect(await pausesOf(covenId, D.id)).toHaveLength(0);
   });
@@ -219,9 +224,11 @@ describe('pauseMemberAccess', () => {
     const second = pauseMemberAccess(asUser(A), covenId, B.id, null, 'Second');
     await expect(second).rejects.toThrow(ValidationError);
     await expect(issuePaths(second)).resolves.toEqual([['userId']]);
+    // The sentence the browser shows: the members page names no field, so it says the error's message.
     await expect(pauseMemberAccess(asUser(A), covenId, B.id, null, 'Second')).rejects.toMatchObject(
       {
-        issues: [{ message: expect.stringMatching(/already paused; lift the pause first/) }],
+        message: 'This member is already paused; lift the pause first',
+        issues: [{ message: 'This member is already paused; lift the pause first' }],
       },
     );
     const rows = await pausesOf(covenId, B.id);
@@ -264,6 +271,13 @@ describe('pauseMemberAccess', () => {
     await expect(
       issuePaths(pauseMemberAccess(asUser(A), covenId, B.id, LATER, 'x'.repeat(501))),
     ).resolves.toEqual([['note']]);
+    // The sentences the browser shows: the members page names no field, so it says each error's message.
+    await expect(
+      pauseMemberAccess(asUser(A), covenId, B.id, new Date(Date.now() - 1000), null),
+    ).rejects.toMatchObject({ message: 'Choose a time in the future' });
+    await expect(
+      pauseMemberAccess(asUser(A), covenId, B.id, LATER, 'x'.repeat(501)),
+    ).rejects.toMatchObject({ message: 'Keep the note to 500 characters' });
     expect(await pausesOf(covenId, B.id)).toHaveLength(0);
 
     // The limit itself is allowed.

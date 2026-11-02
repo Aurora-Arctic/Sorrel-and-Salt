@@ -21,15 +21,22 @@ const NOTE_MAX_LENGTH = 500;
 const OWNER_REFUSAL =
   "An owner's access can't be paused. Change their role first if they should be paused.";
 const ALREADY_PAUSED = 'This member is already paused; lift the pause first';
+const STRANGER_REFUSAL = 'That person is not a member of this coven';
+const PAST_END = 'Choose a time in the future';
+const LONG_NOTE = `Keep the note to ${NOTE_MAX_LENGTH} characters`;
+
+// Each sentence is also the error's message, which is what the members page shows, since it names no field.
+const refusal = (path: string, message: string) =>
+  new ValidationError([{ path: [path], message }], message);
 
 /**
  * The live seat `userId` holds in the proof's coven, refused as a stranger when there is none: an id that cannot name a user
  * included, as a wrong one is.
  */
 async function memberRoleOf(workspaceId: string, userId: string) {
-  if (!RowId.safeParse(userId).success) throw new Forbidden();
+  if (!RowId.safeParse(userId).success) throw new Forbidden(STRANGER_REFUSAL);
   const role = await findWorkspaceRole(userId, workspaceId);
-  if (!role) throw new Forbidden('That person is not a member of this coven');
+  if (!role) throw new Forbidden(STRANGER_REFUSAL);
   return role;
 }
 
@@ -54,18 +61,16 @@ export async function pauseMemberAccess(
     until != null &&
     (!(until instanceof Date) || Number.isNaN(until.getTime()) || until.getTime() <= Date.now())
   ) {
-    throw new ValidationError([{ path: ['until'], message: 'Choose a time in the future' }]);
+    throw refusal('until', PAST_END);
   }
   if (trimmed && trimmed.length > NOTE_MAX_LENGTH) {
-    throw new ValidationError([
-      { path: ['note'], message: `Keep the note to ${NOTE_MAX_LENGTH} characters` },
-    ]);
+    throw refusal('note', LONG_NOTE);
   }
   if ((await memberRoleOf(membership.workspaceId, userId)) === 'owner') {
     throw new Forbidden(OWNER_REFUSAL);
   }
   if (await findStandingWorkspaceMemberPause(membership, userId)) {
-    throw new ValidationError([{ path: ['userId'], message: ALREADY_PAUSED }]);
+    throw refusal('userId', ALREADY_PAUSED);
   }
   return withAudit(session, async (write) => {
     const [row] = await write.setWorkspaceMemberPause(membership, userId, {
@@ -73,7 +78,7 @@ export async function pauseMemberAccess(
       note: trimmed,
     });
     // An empty answer is a pause another owner set in the same moment, which took the one live slot.
-    if (!row) throw new ValidationError([{ path: ['userId'], message: ALREADY_PAUSED }]);
+    if (!row) throw refusal('userId', ALREADY_PAUSED);
     return row;
   });
 }

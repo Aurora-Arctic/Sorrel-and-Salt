@@ -173,6 +173,8 @@ describe('pauseUserAccess', () => {
 
     expect(error).toBeInstanceOf(ValidationError);
     expect(issuesOf(error)).toEqual([{ path: ['until'], message: 'Choose a time in the future' }]);
+    // The sentence the browser shows: the admin's form names no field, so it says the error's message.
+    expect(error.message).toBe('Choose a time in the future');
     expect(await pauseRows(A.id)).toEqual([]);
     await pauseUserAccess(asUser(E), A.id, inADay(), null);
     expect(await pauseRows(A.id)).toHaveLength(1);
@@ -185,6 +187,7 @@ describe('pauseUserAccess', () => {
     expect(issuesOf(error)).toEqual([
       { path: ['note'], message: 'Keep the note to 500 characters' },
     ]);
+    expect(error.message).toBe('Keep the note to 500 characters');
     expect(await pauseRows(A.id)).toEqual([]);
     const row = await pauseUserAccess(asUser(E), A.id, null, 'n'.repeat(500));
     expect(row.note).toHaveLength(500);
@@ -208,6 +211,7 @@ describe('pauseUserAccess', () => {
     expect(issuesOf(error)).toEqual([
       { path: ['userId'], message: 'This user is already paused; lift the pause first' },
     ]);
+    expect(error.message).toBe('This user is already paused; lift the pause first');
     expect(await standingAccessPause(A.id)).toEqual(first);
     await liftUserAccessPause(asUser(E), A.id);
     const second = await pauseUserAccess(asUser(E), A.id, null, 'Second');
@@ -236,6 +240,9 @@ describe('pauseUserAccess', () => {
     const error = await refusalOf(pauseUserAccess(asUser(E), OTHER_ADMIN, null, null));
 
     expect(error).toBeInstanceOf(Forbidden);
+    expect(error.message).toBe(
+      'The primary admin has paused admin changes. Ask them to resume changes.',
+    );
     expect(await pauseRows(OTHER_ADMIN)).toEqual([]);
     // A plain user is not an admin change, so the switch leaves pausing them open.
     await pauseUserAccess(asUser(E), A.id, null, null);
