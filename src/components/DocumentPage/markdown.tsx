@@ -124,6 +124,36 @@ function openableLinks(children: ElementContent[]): ElementContent[] {
   });
 }
 
+/**
+ * Seats each table in the scrolling frame the page's styles give a wide table, so it never widens the page.
+ * The frame takes focus and is named for the heading above it, so a keyboard can scroll it.
+ */
+function frameTables(children: ElementContent[]): ElementContent[] {
+  let heading = '';
+  const frame = (nodes: ElementContent[]): ElementContent[] =>
+    nodes.map((child) => {
+      if (!isElement(child)) return child;
+      if (/^h[1-6]$/.test(child.tagName)) heading = textOf(child);
+      if (child.tagName !== 'table') {
+        child.children = frame(child.children);
+        return child;
+      }
+      classes(child, 'data-table');
+      return {
+        type: 'element',
+        tagName: 'div',
+        properties: {
+          className: ['data-table-frame'],
+          role: 'region',
+          tabIndex: 0,
+          ...(heading ? { ariaLabel: heading } : {}),
+        },
+        children: [child],
+      };
+    });
+  return frame(children);
+}
+
 function visitElements(node: Root | Element, visit: (element: Element) => void): void {
   for (const child of node.children) {
     if (!isElement(child)) continue;
@@ -159,6 +189,7 @@ function sectionsOf(tree: Root): PageNavEntry[] {
 export function renderMarkdown(body: string): { content: ReactNode; entries: PageNavEntry[] } {
   const tree = markdownProcessor.runSync(markdownProcessor.parse(body)) as Root;
   tree.children = openableLinks(tree.children as ElementContent[]) as RootContent[];
+  tree.children = frameTables(tree.children as ElementContent[]) as RootContent[];
   visitElements(tree, shapeFootnotes);
   const entries = sectionsOf(tree);
   return { content: reactProcessor.stringify(tree) as ReactNode, entries };

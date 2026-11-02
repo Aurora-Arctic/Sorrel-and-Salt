@@ -95,8 +95,6 @@ These terms are refreshed from time to time, and only ever by a new version with
 
 You may stop using the site at any time. You can leave any coven from its page. To have your account or anything in it erased, ask through the [support form](?support=privacy), and the site's admin does it and tells you when it is done. What you delete yourself is marked deleted rather than erased, as the Privacy Policy explains.
 
-## Sources
-
 [^1]: United States. _Children's Online Privacy Protection Act_, 15 U.S.C. § 6501 (Definitions). Legal Information Institute, Cornell Law School. Accessed 2 November 2026. <https://www.law.cornell.edu/uscode/text/15/6501>.
 
 [^2]: United States. _Children's Online Privacy Protection Rule_, 16 C.F.R. part 312, §§ 312.1 and 312.2. Legal Information Institute, Cornell Law School. Accessed 2 November 2026. <https://www.law.cornell.edu/cfr/text/16/part-312>.

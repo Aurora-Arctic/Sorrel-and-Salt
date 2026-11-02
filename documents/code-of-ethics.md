@@ -120,8 +120,6 @@ The owner holds the primary admin account, which no one can revoke. The site rel
 - Every rule on this page, and every change to the terms, applies to the owner as to anyone else, and a change to the terms is published as a new version that everyone agrees to again.
 - If the site must end, the owner says so ahead of time. The owner commits to building a way for people to take their own writing with them; it does not exist yet.
 
-## Sources
-
 [^1]: U.S. Fish & Wildlife Service. "National Eagle Repository." Accessed 2 November 2026. <https://www.fws.gov/program/national-eagle-repository>.
 
 [^2]: Wikipedia. "Witch Trials in the Early Modern Period." Accessed 1 November 2026. <https://en.wikipedia.org/wiki/Witch_trials_in_the_early_modern_period>.
