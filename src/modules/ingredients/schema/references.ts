@@ -54,7 +54,9 @@ export const references = pgTable(
     modified: date('modified'),
     accessed: date('accessed'),
     note: text('note'),
-    // A peer-reviewed journal or a university or academic press, set by the seed's works and a curator; a coven's source is never marked.
+    // Scholars edited or reviewed the work, in print or online (claude-docs/db/references.md, "Citation attributes"): a peer-reviewed journal; a university,
+    // its press or its museum; an academic press; a learned society's edition or series; a reference work edited by scholars with signed articles. Never a
+    // trade press, a wiki, a site republishing others' works or an unsigned site. Set by the seed's works and a curator; a coven's source is never marked.
     scholarly: boolean('scholarly').notNull().default(false),
     seedKey: seedKeyColumn(),
     ...auditColumns,

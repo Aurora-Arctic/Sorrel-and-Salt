@@ -19,8 +19,13 @@ DESIGN.md §5, "References", is the specification this doc expands.
   `accessed`, which are `date`s.
   `kind` is the enum `reference_kind`: `book`, `chapter`, `article`, `entry`,
   `web_page`.
-  `scholarly` is a boolean, NOT NULL, default false: a peer-reviewed journal or a
-  university or academic press.
+  `scholarly` is a boolean, NOT NULL, default false. A work is scholarly when
+  scholars edited or reviewed it, in print or online. That includes a
+  peer-reviewed journal; a university, its press or its museum; an academic
+  press; a learned society's edition or series; and a reference work edited by
+  scholars with signed articles. It is not scholarly when it is a trade press,
+  a wiki, a site that republishes others' works (credit the original work
+  instead), or an unsigned site.
 - **`reference_links`** — `id`, `reference_id` (NOT NULL), `ingredient_id`,
   `deity_id`, `deity_tradition_id`, `celestial_body_id`, `zodiac_sign_id`,
   `ingredient_variant_id` (each nullable, exactly one set), `locator` (nullable,

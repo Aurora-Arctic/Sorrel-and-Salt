@@ -3,7 +3,9 @@ import type { SeedWork } from '../types';
 // The works many entry files cite, declared once so every file renders one citation and the seed writes one `references` row each. Each is the edition
 // in the curator's library as its title and copyright pages give it (claude-docs/db/compendium-seed/README.md, "The library"); per-entry pages are files under
 // `compendium/sources/`. Culpeper is the edition Project Gutenberg transcribes; Grieve is cited page by page, as `grieve-<heading>`.
-// `scholarly` marks a peer-reviewed journal or a university or academic press; a trade press, Llewellyn among them, carries none.
+// `scholarly` marks a work scholars edited or reviewed, in print or online: a peer-reviewed journal; a university, its press or its museum; an academic
+// press; a learned society's edition or series; a reference work edited by scholars with signed articles. A trade press (Llewellyn among them), a wiki,
+// a site republishing others' works (cite the original instead) and an unsigned site carry none.
 export const WORKS = {
   'cunningham-herbs': {
     kind: 'book',

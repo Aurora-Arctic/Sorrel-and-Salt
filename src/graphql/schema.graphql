@@ -2130,7 +2130,7 @@ type Reference {
   publisher: String
 
   """
-  A peer-reviewed journal or a university or academic press. Only a compendium source is marked; a coven's is always false.
+  Edited or reviewed by scholars, in print or online: a peer-reviewed journal; a university, its press or its museum; an academic press; a learned society's edition or series; a reference work edited by scholars with signed articles. Only a compendium source is marked; a coven's is always false.
   """
   scholarly: Boolean!
   series: String
@@ -2157,7 +2157,7 @@ input ReferenceInput {
   publisher: String
 
   """
-  A peer-reviewed journal or a university or academic press; left out is false. Refused on a coven's source.
+  Edited or reviewed by scholars, in print or online: a peer-reviewed journal; a university, its press or its museum; an academic press; a learned society's edition or series; a reference work edited by scholars with signed articles; left out is false. Refused on a coven's source.
   """
   scholarly: Boolean
   series: String

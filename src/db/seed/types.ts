@@ -261,7 +261,7 @@ export type SourceTargetTable = (typeof SOURCED)[Exclude<
 // its citations name.
 
 /**
- * A source as the seed writes it: its citation's fields and, for a peer-reviewed journal's article or a university or academic press's book,
+ * A source as the seed writes it: its citation's fields and, for a work scholars edited or reviewed (`references.scholarly`'s rule),
  * `scholarly`, which lands on its `references` row when written and, while no person edits the row, on every compendium seed run.
  */
 export type SeedWork = CitationFields & { scholarly?: true };

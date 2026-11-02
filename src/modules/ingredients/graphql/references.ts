@@ -66,7 +66,7 @@ export const ReferenceRef = builder.objectRef<ReferenceRow>('Reference').impleme
     isGlobal: t.boolean({ resolve: (row) => row.workspaceId === null }),
     scholarly: t.exposeBoolean('scholarly', {
       description:
-        "A peer-reviewed journal or a university or academic press. Only a compendium source is marked; a coven's is always false.",
+        "Edited or reviewed by scholars, in print or online: a peer-reviewed journal; a university, its press or its museum; an academic press; a learned society's edition or series; a reference work edited by scholars with signed articles. Only a compendium source is marked; a coven's is always false.",
     }),
     audit: t.field({ type: AuditInfo, resolve: (row) => row }),
   }),
@@ -118,7 +118,7 @@ const ReferenceInput = builder.inputType('ReferenceInput', {
     title: t.string({ required: true }),
     scholarly: t.boolean({
       description:
-        "A peer-reviewed journal or a university or academic press; left out is false. Refused on a coven's source.",
+        "Edited or reviewed by scholars, in print or online: a peer-reviewed journal; a university, its press or its museum; an academic press; a learned society's edition or series; a reference work edited by scholars with signed articles; left out is false. Refused on a coven's source.",
     }),
     // Typed back from the list: `Object.fromEntries` answers string keys.
     ...(Object.fromEntries(

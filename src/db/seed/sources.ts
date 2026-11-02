@@ -1056,6 +1056,7 @@ export const SOURCES: SeedSource[] = [
       host: 'Penn Museum',
       url: 'https://www.penn.museum/sites/bulletin/3283/',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     deities: [
       {
@@ -1171,6 +1172,7 @@ export const SOURCES: SeedSource[] = [
       host: 'Jewish Virtual Library',
       url: 'https://www.jewishvirtuallibrary.org/lilith',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     traditions: ['Akkadian & Babylonian'],
     deities: [
@@ -1234,6 +1236,7 @@ export const SOURCES: SeedSource[] = [
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/people/philosophy-and-religion/biblical-proper-names-biographies/anath',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     traditions: ['Canaanite & Phoenician'],
     deities: [
@@ -1586,6 +1589,7 @@ export const SOURCES: SeedSource[] = [
       host: 'CELT: Corpus of Electronic Texts, University College Cork',
       url: 'https://celt.ucc.ie/published/T300010.html',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     traditions: ['Irish'],
     deities: [
@@ -1802,6 +1806,7 @@ export const SOURCES: SeedSource[] = [
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/slavic-religion',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     traditions: ['Slavic'],
     deities: [
@@ -1819,6 +1824,7 @@ export const SOURCES: SeedSource[] = [
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/perun',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     traditions: ['Slavic'],
     deities: [
@@ -1836,6 +1842,7 @@ export const SOURCES: SeedSource[] = [
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/veles-volos',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     traditions: ['Slavic'],
   },
@@ -1891,6 +1898,7 @@ export const SOURCES: SeedSource[] = [
       publisher: 'ABC-CLIO',
       published: '1998',
       note: 'Existence confirmed at Open Library, https://openlibrary.org/books/OL360283M/Encyclopedia_of_Russian_Slavic_myth_and_legend, and the Internet Archive catalogue record',
+      scholarly: true,
     },
     traditions: ['Slavic'],
   },
@@ -1949,6 +1957,7 @@ export const SOURCES: SeedSource[] = [
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/baltic-religion-overview',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     traditions: ['Baltic'],
   },
@@ -1961,6 +1970,7 @@ export const SOURCES: SeedSource[] = [
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/baltic-religion-history-study',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     traditions: ['Baltic'],
   },
@@ -2100,6 +2110,7 @@ export const SOURCES: SeedSource[] = [
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/ukko',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     traditions: ['Finnish'],
     deities: [
@@ -2117,6 +2128,7 @@ export const SOURCES: SeedSource[] = [
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/finnish-religions',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     traditions: ['Finnish'],
   },
@@ -2175,6 +2187,7 @@ export const SOURCES: SeedSource[] = [
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/philosophy-and-religion/eastern-religions/hinduism/soma',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     traditions: ['Hindu'],
     deities: [
@@ -2192,6 +2205,7 @@ export const SOURCES: SeedSource[] = [
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/philosophy-and-religion/eastern-religions/hinduism/agni',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     traditions: ['Hindu'],
     deities: [
@@ -2209,6 +2223,7 @@ export const SOURCES: SeedSource[] = [
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/durga-hinduism',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     traditions: ['Hindu'],
     deities: [
@@ -2322,6 +2337,7 @@ export const SOURCES: SeedSource[] = [
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/international/encyclopedias-almanacs-transcripts-and-maps/agni',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     deities: [
       {
@@ -2650,6 +2666,7 @@ export const SOURCES: SeedSource[] = [
       publisher: 'ABC-CLIO',
       published: '2003',
       note: 'Existence confirmed through Google Books, https://books.google.com/books/about/Handbook_of_Japanese_Mythology.html?id=GGFrygAACAAJ, and the _Education About Asia_ review, https://www.asianstudies.org/publications/eaa/archives/handbook-of-japanese-mythology-2/',
+      scholarly: true,
     },
     traditions: ['Japanese'],
   },
@@ -2662,6 +2679,7 @@ export const SOURCES: SeedSource[] = [
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/akan-religion',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     traditions: ['Akan'],
     deities: [
@@ -2755,6 +2773,7 @@ export const SOURCES: SeedSource[] = [
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/igbo-religion',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     traditions: ['Igbo'],
     deities: [
@@ -2893,6 +2912,7 @@ export const SOURCES: SeedSource[] = [
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/fon-and-ewe-religion',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     traditions: ['Fon & Ewe'],
     deities: [
@@ -2925,6 +2945,7 @@ export const SOURCES: SeedSource[] = [
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/mawu-lisa',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     traditions: ['Fon & Ewe'],
     deities: [
@@ -3302,6 +3323,7 @@ export const SOURCES: SeedSource[] = [
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/kongo-religion',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     traditions: ['Kongo'],
     deities: [
@@ -3322,6 +3344,7 @@ export const SOURCES: SeedSource[] = [
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/god-african-supreme-beings',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     traditions: ['Kongo'],
     deities: [
@@ -3549,6 +3572,7 @@ export const SOURCES: SeedSource[] = [
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/zulu-religion',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     traditions: ['Zulu'],
     deities: [
@@ -3569,6 +3593,7 @@ export const SOURCES: SeedSource[] = [
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/unkulunkulu',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     traditions: ['Zulu'],
     deities: [
@@ -3853,6 +3878,7 @@ export const SOURCES: SeedSource[] = [
       host: 'Encyclopedia.com',
       url: 'https://www.encyclopedia.com/religion/legal-and-political-magazines/vodun-voodoo',
       accessed: '2026-10-06',
+      scholarly: true,
     },
     traditions: ['Haitian Vodou'],
     deities: [
@@ -3920,6 +3946,7 @@ export const SOURCES: SeedSource[] = [
       publisher: 'UCLA Fowler Museum of Cultural History',
       published: '1995',
       note: 'Confirmed through Open Library, https://openlibrary.org/books/OL792534M/Sacred_arts_of_Haitian_vodou',
+      scholarly: true,
     },
     traditions: ['Haitian Vodou'],
   },
@@ -3934,6 +3961,7 @@ export const SOURCES: SeedSource[] = [
       publisher: 'Praeger',
       published: '2010',
       note: "The set confirmed through Open Library, https://openlibrary.org/works/OL35706227W; the chapter's volume and pages were not verified, see Notes",
+      scholarly: true,
     },
     traditions: ['Haitian Vodou'],
     deities: [

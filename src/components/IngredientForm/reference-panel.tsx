@@ -468,7 +468,7 @@ function ScholarlyField(): ReactElement {
       value="1"
       checked={field.value}
       onChange={field.onChange}
-      hint="A peer-reviewed journal, or a book from a university or academic press."
+      hint="Edited or reviewed by scholars: a peer-reviewed journal, a university, its press or museum, an academic press, a learned society's series, or a reference work with signed articles. Not a trade press, a wiki, a site that republishes others' works, or an unsigned site."
     />
   );
 }
