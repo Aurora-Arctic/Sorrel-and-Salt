@@ -120,7 +120,8 @@ export default function DisclaimerPage() {
       <h2>Other Sites</h2>
       <p>
         The compendium links to the sources it cites. The site does not control those pages and does
-        not vouch for them.
+        not vouch for them. Curators and admins try to use reputable sources but cannot control the
+        words of other authors.
       </p>
 
       <h2>Questions</h2>
