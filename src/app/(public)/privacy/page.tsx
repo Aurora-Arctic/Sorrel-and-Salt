@@ -1,5 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import AccessCards from '../../../components/AccessCards';
+import type { AccessRole, AccessRow } from '../../../components/AccessCards/types';
 import DocumentPage from '../../../components/DocumentPage';
 import { SITE_NAME, siteUrl } from '../../../lib/site';
 
@@ -13,91 +15,133 @@ export const metadata: Metadata = {
 const UPDATED_ON = new Date('2026-11-01T00:00:00Z');
 
 /** Who may see each kind of data: one row per kind, one cell per role, each cell drawn from the service that enforces it. */
-const ACCESS_ROWS: { data: string; cells: [string, string, string, string, string, string] }[] = [
+const ACCESS_ROWS: AccessRow[] = [
   {
     data: 'Your name and the picture your sign-in provider shared',
     cells: [
-      'Yes, for everyone in the coven',
-      'Yes, for everyone in the coven',
-      'No: a viewer does not see the list of members',
-      'Yes, as the name beside a compendium edit',
-      'Yes, for every account',
-      'Yes',
+      { mark: 'yes', text: 'Yes, for everyone in the coven' },
+      { mark: 'yes', text: 'Yes, for everyone in the coven' },
+      { mark: 'no', text: 'No: a viewer does not see the list of members' },
+      { mark: 'yes', text: 'Yes, as the name beside a compendium edit' },
+      { mark: 'yes', text: 'Yes, for every account' },
+      { mark: 'yes', text: 'Yes' },
     ],
   },
   {
     data: 'Your email address',
-    cells: ['Yes, for everyone in the coven', 'No', 'No', 'No', 'Yes, for every account', 'Yes'],
+    cells: [
+      { mark: 'yes', text: 'Yes, for everyone in the coven' },
+      { mark: 'no', text: 'No' },
+      { mark: 'no', text: 'No' },
+      { mark: 'no', text: 'No' },
+      { mark: 'yes', text: 'Yes, for every account' },
+      { mark: 'yes', text: 'Yes' },
+    ],
   },
   {
     data: 'Which covens you belong to, and your role in each',
-    cells: ['Only this coven', 'Only this coven', 'No', 'No', 'Yes, by coven name and role', 'Yes'],
+    cells: [
+      { mark: 'part', text: 'Only this coven' },
+      { mark: 'part', text: 'Only this coven' },
+      { mark: 'no', text: 'No' },
+      { mark: 'no', text: 'No' },
+      { mark: 'yes', text: 'Yes, by coven name and role' },
+      { mark: 'yes', text: 'Yes' },
+    ],
   },
   {
     data: 'Your sign-in details: which providers you use, your sessions, the network address and browser they record',
-    cells: ['No', 'No', 'No', 'No', 'Which providers you use, and nothing else', 'Yes'],
+    cells: [
+      { mark: 'no', text: 'No' },
+      { mark: 'no', text: 'No' },
+      { mark: 'no', text: 'No' },
+      { mark: 'no', text: 'No' },
+      { mark: 'part', text: 'Which providers you use, and nothing else' },
+      { mark: 'yes', text: 'Yes' },
+    ],
   },
   {
     data: 'Your password, passkey and authenticator secrets',
     cells: [
-      'No',
-      'No',
-      'No',
-      'No',
-      'No',
-      "Only in a locked form: your password can never be turned back into the original, the authenticator secrets cannot be read without a key kept outside the database, and a passkey's private half never reaches the site",
+      { mark: 'no', text: 'No' },
+      { mark: 'no', text: 'No' },
+      { mark: 'no', text: 'No' },
+      { mark: 'no', text: 'No' },
+      { mark: 'no', text: 'No' },
+      {
+        mark: 'part',
+        text: "Only in a locked form: your password can never be turned back into the original, the authenticator secrets cannot be read without a key kept outside the database, and a passkey's private half never reaches the site",
+      },
     ],
   },
   {
     data: "A coven's ingredients and stock",
-    cells: ['Yes', 'Yes', 'Yes', 'No', 'No', 'Yes'],
+    cells: [
+      { mark: 'yes', text: 'Yes' },
+      { mark: 'yes', text: 'Yes' },
+      { mark: 'yes', text: 'Yes' },
+      { mark: 'no', text: 'No' },
+      { mark: 'no', text: 'No' },
+      { mark: 'yes', text: 'Yes' },
+    ],
   },
   {
     data: "A coven's shared spells and workings",
-    cells: ['Yes', 'Yes', 'Yes', 'No', 'No', 'Yes'],
+    cells: [
+      { mark: 'yes', text: 'Yes' },
+      { mark: 'yes', text: 'Yes' },
+      { mark: 'yes', text: 'Yes' },
+      { mark: 'no', text: 'No' },
+      { mark: 'no', text: 'No' },
+      { mark: 'yes', text: 'Yes' },
+    ],
   },
   {
     data: 'A private spell',
     cells: [
-      'Only your own',
-      'Only your own',
-      'Only your own',
-      'No',
-      'Only their own, in the demo coven',
-      'Yes',
+      { mark: 'part', text: 'Only your own' },
+      { mark: 'part', text: 'Only your own' },
+      { mark: 'part', text: 'Only your own' },
+      { mark: 'no', text: 'No' },
+      { mark: 'part', text: 'Only their own, in the demo coven' },
+      { mark: 'yes', text: 'Yes' },
     ],
   },
   {
     data: 'Your support requests and the replies to them',
     cells: [
-      'No',
-      'No',
-      'No',
-      "Only requests an admin marked for curators or assigned to them, without the requestor's email or the coven named in the page address",
-      'Yes, with your email',
-      'Yes',
+      { mark: 'no', text: 'No' },
+      { mark: 'no', text: 'No' },
+      { mark: 'no', text: 'No' },
+      {
+        mark: 'part',
+        text: "Only requests an admin marked for curators or assigned to them, without the requestor's email or the coven named in the page address",
+      },
+      { mark: 'yes', text: 'Yes, with your email' },
+      { mark: 'yes', text: 'Yes' },
     ],
   },
   {
     data: 'Who wrote or changed a row, and when',
     cells: [
-      'Yes, within the coven',
-      'Yes, within the coven',
-      'Yes, within the coven',
-      'Yes, on the compendium and its lists',
-      'Yes, on accounts and on the compendium',
-      'Yes',
+      { mark: 'yes', text: 'Yes, within the coven' },
+      { mark: 'yes', text: 'Yes, within the coven' },
+      { mark: 'yes', text: 'Yes, within the coven' },
+      { mark: 'yes', text: 'Yes, on the compendium and its lists' },
+      { mark: 'yes', text: 'Yes, on accounts and on the compendium' },
+      { mark: 'yes', text: 'Yes' },
     ],
   },
 ];
 
-const ROLES = [
-  'Coven Owner',
-  'Coven Member',
-  'Coven Viewer',
-  'Site Curator',
-  'Site Admin',
-  'A Developer with Database Access',
+/** The roles, in column order, each with the short label over its column. */
+const ROLES: AccessRole[] = [
+  { name: 'Coven Owner', short: 'Own' },
+  { name: 'Coven Member', short: 'Mem' },
+  { name: 'Coven Viewer', short: 'View' },
+  { name: 'Site Curator', short: 'Cur' },
+  { name: 'Site Admin', short: 'Adm' },
+  { name: 'A Developer with Database Access', short: 'Dev' },
 ];
 
 // The one public document that describes what the site keeps about a person. Every statement in it
@@ -124,7 +168,7 @@ export default function PrivacyPolicyPage() {
           What you delete is marked deleted rather than erased. To have something erased, ask
           through the <Link href="/support?support=privacy">support form</Link>.
         </li>
-        <li>Who can see what is set out in a table at the end, role by role.</li>
+        <li>Who can see what is set out at the end, one card per kind of data, role by role.</li>
       </ul>
 
       <h2>What Is Stored</h2>
@@ -311,30 +355,7 @@ export default function PrivacyPolicyPage() {
         with database access means a person who can read the database directly. Database access is
         given to as few developers as possible, and only to those who need it to run the site.
       </p>
-      <div className="data-table-frame">
-        <table className="data-table" aria-label="Who can see what">
-          <thead>
-            <tr>
-              <th scope="col">Data</th>
-              {ROLES.map((role) => (
-                <th key={role} scope="col">
-                  {role}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {ACCESS_ROWS.map(({ data, cells }) => (
-              <tr key={data}>
-                <th scope="row">{data}</th>
-                {cells.map((cell, index) => (
-                  <td key={ROLES[index]}>{cell}</td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <AccessCards roles={ROLES} rows={ACCESS_ROWS} />
 
       <h2>What the Site Does Not Do</h2>
       <ul>
