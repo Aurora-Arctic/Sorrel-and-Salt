@@ -171,8 +171,7 @@ export default function PrivacyPolicyPage() {
       <p>
         Nearly every row carries four stamps: who created it and when, and who last changed it and
         when. A row that is deleted gains two more: who deleted it and when. These stamps are how
-        the site shows "edited by" names, and they are written from your session, never from
-        anything the browser sends.
+        the site shows "edited by" names.
       </p>
       <p>
         Every change to a site role or to the right to create covens is also written to a ledger
