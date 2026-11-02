@@ -165,15 +165,18 @@ describe('Story 58: an unverified account lapses so the address owner can sign i
   });
 });
 
+// The auth module is imported afresh, so a job is named rather than compared by identity. A sign-up also starts its
+// verification mail's job, which these tests do not count as an expiry run.
+const runsOf = (name: string): unknown[] =>
+  startJob.mock.calls
+    .filter(([job]) => (job as { name: string }).name === name)
+    .map(([, args]) => args);
+
 describe('Story 58: the job starts at an unverified sign-up', () => {
   it('starts one expiry run for the new account, named by its id', async () => {
     const squatter = await squat(OWNER);
 
-    expect(startJob).toHaveBeenCalledTimes(1);
-    // The auth module is imported afresh, so the job is named rather than compared by identity.
-    const [job, args] = startJob.mock.calls[0];
-    expect((job as { name: string }).name).toBe('provisionalAccountExpiry');
-    expect(args).toEqual([squatter.row.id]);
+    expect(runsOf('provisionalAccountExpiry')).toEqual([[squatter.row.id]]);
   });
 
   it('starts none for a sign-up whose provider verified the address', async () => {
@@ -192,7 +195,7 @@ describe('Story 58: the job starts at an unverified sign-up', () => {
 
     expectSignedIn(response);
     expect((await userRow(OWNER))?.email_verified).toBe(false);
-    expect(startJob).toHaveBeenCalledTimes(1);
+    expect(runsOf('provisionalAccountExpiry')).toHaveLength(1);
   });
 });
 
@@ -349,6 +352,7 @@ describe('Story 58: a resend restarts the window', () => {
     const before = (await userRow(OWNER))!;
     expect(before).toMatchObject({ email_verified: false, updated_by: BOOTSTRAP_USER_ID });
     send.mockReset();
+    startJob.mockClear();
     return { id, before, cookie: cookieHeader(response) };
   }
 
@@ -358,7 +362,10 @@ describe('Story 58: a resend restarts the window', () => {
     const response = await resend(cookie, OWNER);
 
     expect(response.status, await response.clone().text()).toBe(200);
-    expect(send).toHaveBeenCalledTimes(1);
+    // The link is mailed through its job, started with the account's id and never the link.
+    expect(runsOf('secretLinkMail')).toEqual([
+      [expect.objectContaining({ kind: 'verification', userId: id })],
+    ]);
     const touched = (await userRow(OWNER))!;
     expect(touched.updated_at.getTime()).toBeGreaterThan(before.updated_at.getTime());
     expect(touched.updated_by).toBe(id);
@@ -413,6 +420,7 @@ describe('Story 58: a resend restarts the window', () => {
 
     expect(response.status).toBe(401);
     expect(send).not.toHaveBeenCalled();
+    expect(runsOf('secretLinkMail')).toEqual([]);
     expect(await userRow(OWNER)).toEqual(before);
     expect(await expireStep(id)).toBeNull();
     expect((await linkedRows(id)).users).toBe(0);
