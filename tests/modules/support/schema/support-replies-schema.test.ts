@@ -6,7 +6,7 @@ import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 import { supportReplies } from '@/modules/support/schema/support-replies';
 
-const OWN_COLUMNS = ['id', 'request_id', 'body', 'author_role', 'visibility'];
+const OWN_COLUMNS = ['id', 'request_id', 'body', 'author_role', 'visibility', 'notice_sent_at'];
 const REQUEST_INDEX = 'support_replies_request_idx';
 const AUTHOR = FIXTURE_USERS.E.id;
 
