@@ -100,6 +100,32 @@ export async function lapseEmailChange(userId: string, sentAt: Date): Promise<bo
   return cleared.length > 0;
 }
 
+/**
+ * The address account `userId` is leaving as its address becomes `address`: the one an earlier change left whose notice is
+ * still owed, or else the row's own. None when the row already holds `address` or a placeholder, which nobody reads.
+ */
+export async function addressBeingLeft(userId: string, address: string): Promise<string | null> {
+  const row = await findOneById(users, userId);
+  if (!row || row.email.toLowerCase() === address.toLowerCase()) return null;
+  if (row.formerEmail) return row.formerEmail;
+  return isPlaceholderEmail(row.email) ? null : row.email;
+}
+
+/**
+ * Clears account `userId`'s former address once its notice is done with, as the System account, unless the address or the move
+ * the notice named has changed since. True when it cleared one.
+ */
+export async function clearFormerEmail(
+  userId: string,
+  formerEmail: string,
+  email: string,
+): Promise<boolean> {
+  const cleared = await withAudit({ userId: SYSTEM_ACTOR_ID }, (write) =>
+    write.clearFormerEmail(userId, formerEmail, email),
+  );
+  return cleared.length > 0;
+}
+
 /** Whether a live account other than `userId`'s holds this address — what the unique index refuses at verification. */
 export async function isEmailHeldByAnother(email: string, userId: string): Promise<boolean> {
   const holder = await findUserByEmail(email);

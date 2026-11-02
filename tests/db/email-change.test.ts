@@ -12,6 +12,7 @@ import {
   PROVIDER_CREDENTIALS,
 } from '../support/oauth';
 import type { Message, ProviderId } from '@/lib/types';
+import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
 import { importAuth } from '../support/auth-module';
 import type { AuthInstance, Profile } from '../support/types';
 import type { UserRow } from './types';
@@ -145,6 +146,7 @@ describe('Story 59: asking for a new address', () => {
     expect(await userRow(OWNER)).toEqual(before);
     expect(await userRow(NEW)).toBeUndefined();
     expect(await pendingOf(before.id)).toBe(NEW);
+    send.mockReset();
 
     const response = await follow(link, cookie);
 
@@ -154,12 +156,18 @@ describe('Story 59: asking for a new address', () => {
     expect(await userRow(NEW)).toMatchObject({
       id: before.id,
       email_verified: true,
-      updated_by: before.id,
+      // The System account's: with no transport the notice to the address left is tried once in the request, and the
+      // address it held is cleared after it.
+      updated_by: SYSTEM_ACTOR_ID,
       // The mail was answered, so the next one is not held back by it.
       verification_sent_at: null,
     });
     // Cleared in the swap's own write: the pending address is now the row's.
     expect(await pendingOf(before.id)).toBeNull();
+    expect(send).toHaveBeenCalledTimes(1);
+    expect(send.mock.calls[0]![0].to).toBe(OWNER);
+    const [row] = await sql`select former_email from users where id = ${before.id}`;
+    expect(row!.former_email).toBeNull();
   });
 
   it('refuses the first link once a second change replaced it, and honours the second', async () => {

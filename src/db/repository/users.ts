@@ -242,7 +242,9 @@ export async function findNewestResetToken(
 /** How Better Auth names a reset link's row in `verifications`: this, then the token. */
 const RESET_IDENTIFIER_PREFIX = 'reset-password:';
 
-export function userWrites({ update }: WriterContext): Pick<AuditWriter, 'lapseEmailChange'> {
+export function userWrites({
+  update,
+}: WriterContext): Pick<AuditWriter, 'lapseEmailChange' | 'clearFormerEmail'> {
   return {
     // Matched on the stamp the change was mailed under, so a later change, which restamps the row, keeps its own address. To the
     // millisecond, as the stamp crossed the step boundary as a JavaScript date.
@@ -255,6 +257,13 @@ export function userWrites({ update }: WriterContext): Pick<AuditWriter, 'lapseE
           sql`date_trunc('milliseconds', ${users.verificationSentAt}) = ${sentAt.toISOString()}::timestamp`,
           isNotNull(users.pendingEmail),
         ),
+      ),
+    // Matched on the move the notice named too, so a later move that kept the same former address is still told.
+    clearFormerEmail: (userId, formerEmail, email) =>
+      update(
+        users,
+        { formerEmail: null },
+        and(eq(users.id, userId), eq(users.formerEmail, formerEmail), eq(users.email, email)),
       ),
   };
 }

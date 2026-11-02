@@ -197,4 +197,6 @@ export type AccountNotice =
   /** Tells the account a sign-up arrived for its address, in place of the second account that is not made. */
   | { kind: 'account-exists'; userId: string; origin: string }
   /** Tells the account its password was just replaced, and `how`. */
-  | { kind: 'password-changed'; userId: string; origin: string; how: 'reset' | 'change' | 'set' };
+  | { kind: 'password-changed'; userId: string; origin: string; how: 'reset' | 'change' | 'set' }
+  /** Tells the address a completed change left, held in the row's `former_email`, where the account went. */
+  | { kind: 'change-completed'; userId: string; origin: string };

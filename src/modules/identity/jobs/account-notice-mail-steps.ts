@@ -1,6 +1,6 @@
 'use step';
 
-import { sendAccountNotice } from '../services/account-notice-mail';
+import { abandonAccountNotice, sendAccountNotice } from '../services/account-notice-mail';
 import type { AccountNotice } from '../types';
 
 // The step of the account notice job. A file of its own, so the workflow bundle keeps only the call to it and never the
@@ -14,9 +14,10 @@ export async function accountNoticeStep(notice: AccountNotice): Promise<boolean>
   return sendAccountNotice(notice);
 }
 
-/** Logs a notice that failed every attempt, by kind and account id alone. */
+/** Logs a notice that failed every attempt, by kind and account id alone, and lets go of any address it was owed to. */
 export async function reportAccountNoticeUnsent(notice: AccountNotice): Promise<void> {
   console.error(
     `mail: every attempt failed; the ${notice.kind} mail to user ${notice.userId} was not sent`,
   );
+  await abandonAccountNotice(notice);
 }

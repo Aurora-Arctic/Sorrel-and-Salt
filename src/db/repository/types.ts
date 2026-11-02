@@ -611,6 +611,12 @@ export interface AuditWriter {
   markClosingNoticeSent(id: string, sentAt: Date): Promise<(typeof supportRequests.$inferSelect)[]>;
   /** Clears account `userId`'s pending address while the row is still stamped `sentAt`, the change mailed then; none when a later change or the swap moved it. */
   lapseEmailChange(userId: string, sentAt: Date): Promise<(typeof users.$inferSelect)[]>;
+  /** Clears account `userId`'s former address while it is still `formerEmail` and the row still at `email`, the move its notice named; none when either changed. */
+  clearFormerEmail(
+    userId: string,
+    formerEmail: string,
+    email: string,
+  ): Promise<(typeof users.$inferSelect)[]>;
   /** Stamps the sender's notice of staff reply `id` while it is unstamped; none when it already was. */
   markReplyNoticeSent(id: string, sentAt: Date): Promise<(typeof supportReplies.$inferSelect)[]>;
   /**

@@ -44,11 +44,9 @@ import { toUserRole } from './session-role';
 import { requiredInProduction } from './env';
 import { authSecrets } from './auth-secrets';
 import { SITE_NAME } from './site';
-import { send } from './mail';
 import { runInBackground } from './background-tasks';
 import { emailPagePath, returnPathOf } from './account-email';
 import { LAST_USED_PROVIDER_COOKIE, SIGN_IN_TO_VERIFY_PATH } from './sign-in';
-import { emailChangeNoticeMessage } from './email-change-notice';
 import { signedInLanding } from './landing';
 import { e2eTrustedOrigins, plainSessionCookie } from './e2e-session-cookie';
 import { impersonation, impersonationEnabled } from './impersonation';
@@ -66,6 +64,7 @@ import {
   VERIFICATION_LIFETIME_SECONDS,
   recordVerificationSent,
   verificationWaitFor,
+  addressBeingLeft,
   emailChangeStanding,
   isEmailHeldByAnother,
   isPlaceholderEmail,
@@ -572,20 +571,12 @@ async function countPasswordSignIn(ctx: HookContext) {
   if (userId && !locked) await countFailure(ctx, userId);
 }
 
-// The change link's token names the address being left and the one taken; the left one is told once the swap is written.
-// Sent once, with no job: after the swap no row holds the address being left, so a run would have to carry it.
-async function noticeCompletedChange(request: Request | undefined): Promise<void> {
+// Once a change link's swap is written, the address it left is told. The swap held that address in `former_email`, so the
+// notice's job carries the account id alone and its step reads the address when it sends.
+async function noticeCompletedChange(userId: string, request: Request | undefined): Promise<void> {
   const claims = tokenClaims(request && new URL(request.url).searchParams.get('token'));
-  if (!request || !claims?.email || !claims.updateTo) return;
-  await send(
-    await emailChangeNoticeMessage(
-      endpointOrigin(),
-      claims.email,
-      claims.updateTo,
-      'completed',
-      new Date(),
-    ),
-  );
+  if (!claims?.email || !claims.updateTo) return;
+  await scheduleAccountNotice({ kind: 'change-completed', userId, origin: endpointOrigin() });
 }
 
 // /api/auth/* is the one exception to the GraphQL-only rule (CLAUDE.md rule 1).
@@ -704,7 +695,7 @@ export const auth = betterAuth({
     // a change link, which Better Auth calls it on without the check above.
     afterEmailVerification: async (user, request) => {
       if (!(await hasRequestState()) || (await actingUser.get()) !== user.id) return;
-      await noticeCompletedChange(request);
+      await noticeCompletedChange(user.id, request);
       // The adapter returns the whole row; the hook's type omits additionalFields.
       const role = toUserRole(Reflect.get(user, 'role'));
       await promotePrimaryAdminAtVerification(
@@ -762,6 +753,8 @@ export const auth = betterAuth({
       verificationSentAt: { type: 'date', required: false, input: false, returned: false },
       // Declared so the update hook below can clear it at the swap; the email service writes it.
       pendingEmail: { type: 'string', required: false, input: false, returned: false },
+      // Declared so the update hook below can set it at the swap; the account notice job clears it.
+      formerEmail: { type: 'string', required: false, input: false, returned: false },
       // NOT NULL with no database default, so every insert must supply these.
       createdBy: { type: 'string', input: false, returned: false },
       updatedBy: { type: 'string', input: false, returned: false },
@@ -900,12 +893,23 @@ export const auth = betterAuth({
           const actor =
             ((await hasRequestState()) ? await actingUser.get() : undefined) ??
             ctx?.context.session?.user.id;
-          const data: { updatedBy?: string; verificationSentAt?: null; pendingEmail?: null } = {};
+          const data: {
+            updatedBy?: string;
+            verificationSentAt?: null;
+            pendingEmail?: null;
+            formerEmail?: string;
+          } = {};
           if (actor) data.updatedBy = actor;
           // The mail was answered: the clock that spaces mails to the row starts over.
           if (patch.emailVerified === true) data.verificationSentAt = null;
           // The change link's swap: the pending address is now the row's, cleared in the same write.
           if (typeof patch.email === 'string') data.pendingEmail = null;
+          // And the address being left is held for its notice, which reads it from the row.
+          const leaving =
+            typeof patch.email === 'string' && actor
+              ? await addressBeingLeft(actor, patch.email)
+              : null;
+          if (leaving) data.formerEmail = leaving;
           if (Object.keys(data).length === 0) return;
           return { data };
         },

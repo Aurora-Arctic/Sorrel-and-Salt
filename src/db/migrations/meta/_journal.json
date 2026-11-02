@@ -855,6 +855,13 @@
       "when": 1793636819910,
       "tag": "0121_users-pending-email",
       "breakpoints": true
+    },
+    {
+      "idx": 122,
+      "version": "7",
+      "when": 1793639566395,
+      "tag": "0122_users-former-email",
+      "breakpoints": true
     }
   ]
 }

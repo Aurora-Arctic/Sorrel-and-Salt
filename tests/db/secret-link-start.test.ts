@@ -248,3 +248,159 @@ describe('an account notice starts its job with ids alone', () => {
     expect(notice).toBeNull();
   });
 });
+
+describe('the notice to the address a completed change left', () => {
+  const NEW = `new${DOMAIN}`;
+  const NEWER = `newer${DOMAIN}`;
+  const OTHER = `other${DOMAIN}`;
+
+  const formerOf = async (id: string) =>
+    (await sql`select email, former_email, updated_by from users where id = ${id}`)[0]!;
+
+  /** A verified password account at `email`, signed in: its id and its session's cookie. */
+  async function signedIn(email: string): Promise<{ id: string; cookie: string }> {
+    const up = await post(auth, '/sign-up/email', {
+      name: 'Fixture Person',
+      email,
+      password: RIGHT,
+    });
+    expect(up.status, await up.clone().text()).toBe(200);
+    await asTouch(sql, (tx) => tx`update users set email_verified = true where email = ${email}`);
+    const response = await post(auth, '/sign-in/email', { email, password: RIGHT });
+    expect(response.status).toBe(200);
+    const id = (await sql`select id from users where email = ${email}`)[0]!.id as string;
+    return { id, cookie: cookieHeader(response) };
+  }
+
+  /** Asks for `address` as setEmail does, runs the change link's step as the run would, and follows the mailed link. */
+  async function completeChange(id: string, cookie: string, address: string): Promise<Response> {
+    await asTouch(
+      sql,
+      (tx) =>
+        tx`update users set pending_email = ${address}, verification_sent_at = now() where id = ${id}`,
+    );
+    startJob.mockClear();
+    const { emailVerificationSender } = await import('@/lib/email-verification');
+    const request = new Request('http://localhost:8000/api/graphql', { headers: { cookie } });
+    await emailVerificationSender(request).requestChange(id);
+    const [run] = await secretLinkRuns();
+    const { changeLinkStep } = await import('@/modules/identity/jobs/secret-link-mail-steps');
+    delivered.length = 0;
+    await changeLinkStep(run as Parameters<typeof changeLinkStep>[0]);
+    const link = delivered[0]!.text.match(/https?:\/\/\S+\/verify-email\?[^\s\]]+/)![0];
+    startJob.mockClear();
+    return auth.handler(new Request(link, { headers: { cookie } }));
+  }
+
+  it('holds the address being left in the swap, starts the notice with ids alone, and its step mails that address and clears it', async () => {
+    const { id, cookie } = await signedIn(OWNER);
+
+    const response = await completeChange(id, cookie, NEW);
+
+    expect(response.status).toBe(302);
+    expect(await formerOf(id)).toMatchObject({ email: NEW, former_email: OWNER });
+    const runs = await accountNoticeRuns();
+    expect(runs).toEqual([{ kind: 'change-completed', userId: id, origin: expect.any(String) }]);
+    expect(JSON.stringify(runs)).not.toContain(DOMAIN);
+    // The run is the only way the notice goes.
+    expect(send).not.toHaveBeenCalled();
+
+    const message = await noticeFor(runs[0]!);
+
+    expect(message!.to).toBe(OWNER);
+    expect(message!.text).toContain(DOMAIN.slice(1));
+    expect(await formerOf(id)).toMatchObject({ email: NEW, former_email: null });
+    // A second run of the step finds nothing left to say.
+    expect(await noticeFor(runs[0]!)).toBeNull();
+  });
+
+  it('keeps the first address left when a second change completes before its notice is sent, and tells it where the account is now', async () => {
+    const { id, cookie } = await signedIn(OWNER);
+    await completeChange(id, cookie, NEW);
+    const [first] = await accountNoticeRuns();
+
+    await completeChange(id, cookie, NEWER);
+
+    // The first notice was never sent, so the address it is owed to is kept over the one the second change left.
+    expect(await formerOf(id)).toMatchObject({ email: NEWER, former_email: OWNER });
+    const [second] = await accountNoticeRuns();
+    expect(second).toEqual({ kind: 'change-completed', userId: id, origin: expect.any(String) });
+
+    const message = await noticeFor(first!);
+    expect(message!.to).toBe(OWNER);
+    expect(await formerOf(id)).toMatchObject({ former_email: null });
+    expect(await noticeFor(second!)).toBeNull();
+  });
+
+  it('clears nothing when the account moved again while the notice was going out, so the later move is told too', async () => {
+    const { id } = await signedIn(OWNER);
+    await asTouch(
+      sql,
+      (tx) => tx`update users set email = ${NEWER}, former_email = ${OWNER} where id = ${id}`,
+    );
+    const { clearFormerEmail } = await import('@/modules/identity');
+
+    // The step mailed OWNER that the account moved to NEW; the row has since moved to NEWER.
+    expect(await clearFormerEmail(id, OWNER, NEW)).toBe(false);
+    expect(await formerOf(id)).toMatchObject({ former_email: OWNER });
+
+    expect(await clearFormerEmail(id, OWNER, NEWER)).toBe(true);
+    const row = await formerOf(id);
+    expect(row).toMatchObject({ former_email: null });
+    const { SYSTEM_ACTOR_ID } = await import('@/lib/system-actor');
+    expect(row.updated_by).toBe(SYSTEM_ACTOR_ID);
+  });
+
+  it('lets another account sign up with the address being left, and mails no account-exists notice for it', async () => {
+    const { id, cookie } = await signedIn(OWNER);
+    await completeChange(id, cookie, NEW);
+    // Precondition: the address is still held, waiting for its notice.
+    expect(await formerOf(id)).toMatchObject({ former_email: OWNER });
+
+    const response = await post(auth, '/sign-up/email', {
+      name: 'Fixture Newcomer',
+      email: OWNER,
+      password: RIGHT,
+    });
+
+    expect(response.status).toBe(200);
+    const holders = await sql`select id from users where email = ${OWNER}`;
+    expect(holders).toHaveLength(1);
+    expect(holders[0]!.id).not.toBe(id);
+    expect((await accountNoticeRuns()).filter((run) => run.kind === 'account-exists')).toEqual([]);
+  });
+
+  it('lets another account change to the address being left', async () => {
+    const { id, cookie } = await signedIn(OWNER);
+    await completeChange(id, cookie, NEW);
+    expect(await formerOf(id)).toMatchObject({ former_email: OWNER });
+    const other = await signedIn(OTHER);
+
+    const response = await completeChange(other.id, other.cookie, OWNER);
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get('location')).not.toContain('EMAIL_TAKEN');
+    expect(await formerOf(other.id)).toMatchObject({ email: OWNER, former_email: OTHER });
+    // The first account's notice is still owed to the mailbox it left.
+    expect(await formerOf(id)).toMatchObject({ former_email: OWNER });
+  });
+
+  it('tries the notice once itself when the run cannot be started, and clears the address after', async () => {
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const { id, cookie } = await signedIn(OWNER);
+    const { accountNoticeMail } = await import('@/modules/identity/jobs/account-notice-mail');
+    startJob.mockImplementation(async (job) => {
+      if (job === accountNoticeMail) throw new Error('queue down');
+      return 'run-id';
+    });
+
+    await completeChange(id, cookie, NEW);
+
+    startJob.mockImplementation(async () => 'run-id');
+    errors.mockRestore();
+    expect(send).toHaveBeenCalledTimes(1);
+    expect(send.mock.calls[0]![0].to).toBe(OWNER);
+    // Nothing would try it again, so the address is not kept.
+    expect(await formerOf(id)).toMatchObject({ email: NEW, former_email: null });
+  });
+});
