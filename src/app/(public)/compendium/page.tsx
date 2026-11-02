@@ -77,6 +77,13 @@ const isFiltered = (params: PublicCompendiumSearchParams) =>
   JSON.stringify(COMPENDIUM_PARAMS.read(publicParams(params))) !==
   JSON.stringify(COMPENDIUM_PARAMS.read({}));
 
+/**
+ * Whether the address is the list's own: unfiltered, with no Quick Look open and no pager cursor.
+ * Presence, not a readable value, decides, as it does for the noindex the proxy sends.
+ */
+const isListAddress = (params: PublicCompendiumSearchParams) =>
+  !isFiltered(params) && [params.entry, params.after, params.before].every((v) => v === undefined);
+
 /** A filtered view is a thin copy: kept out of search results, with the unfiltered page canonical. */
 export async function generateMetadata({
   searchParams,
@@ -265,7 +272,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
   return (
     // Holds a pressed Edit's opening, as the admin layout does; a plain wrapper for anyone else.
     <RouteModalProvider>
-      {!isFiltered(params) && (
+      {isListAddress(params) && (
         <script
           type="application/ld+json"
           // Our own serialiser's output, with `<` escaped (src/lib/json-ld.ts).

@@ -30,6 +30,8 @@ Every other wave is complete first. This one is mostly verification, but not pur
 
 **M15.64 and M15.65 follow M15.63**, minted on 2026-11-02 on the owner's call: a support time-out may have no end date, and every time-out carries a note ([`tasks/m15.md`](../tasks/m15.md), "Account pauses"). M15.64 changes the `support_timeouts` table and M15.65 the service, the panel and every place that shows a time-out's end, in that order. They sit before M11.8, whose axe sweep scans the time-out panel, and are prerequisites for nothing else.
 
+**M15.67 follows M15.66**, minted on 2026-11-02 on the owner's call ([`tasks/m15.md`](../tasks/m15.md), "Search engines"): Google indexes only the real public pages, never an address that opens a dialog over one, a compendium pager page, or a sign-in copy. It needs nothing before it and is a prerequisite for nothing.
+
 **M15.2 follows it**, minted on 2026-10-15 from the backlog's legal list, the owner's call: the privacy policy, and with it the public document page and footer links that the later legal documents reuse. It needs M11.20's curator role to exist, which Wave 11 settles, and it runs ahead of M11.8's axe sweep and MB.124's design review for the reason M15.1 does: both cover every page, its own included ([`tasks/m15.md`](../tasks/m15.md)).
 
 **M15.3 follows M15.2**, minted the same day from the same list, the owner's call: the legal disclaimers, on the document page M15.2 builds, with a notice beside the safety notes on the ingredient detail page that M8.19 builds in Wave 12. It runs ahead of M11.8 and MB.124 for the same reason ([`tasks/m15.md`](../tasks/m15.md)).

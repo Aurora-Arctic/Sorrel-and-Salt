@@ -15,8 +15,11 @@ import {
 import { getMySupportTimeout } from '../../../modules/support';
 import type { SupportPageProps } from './types';
 
+// Crawlable, so a search engine reads this and drops the bare address it would otherwise list from
+// links; the page holds nothing worth a result.
 export const metadata: Metadata = {
   title: 'Support',
+  robots: { index: false, follow: true },
 };
 
 // Open to a signed-out visitor, who is offered Sign In in place of the form. An unverified account is

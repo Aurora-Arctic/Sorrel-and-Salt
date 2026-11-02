@@ -247,6 +247,9 @@ describe('the compendium entry page title', () => {
       `https://sorrelandsalt.com/compendium/ingredients/${entryDetail().entry.slug}`,
     );
     expect(result.description).toBeTruthy();
+    // A shown entry is a real page, so nothing keeps it out of search results.
+    expect(entryDetail().entry.shown).toBe(true);
+    expect(result.robots).toBeUndefined();
   });
 
   it('describes two entries that share a label differently', async () => {

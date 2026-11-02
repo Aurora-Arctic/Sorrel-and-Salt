@@ -145,15 +145,27 @@ async function route(request: NextRequest): Promise<NextResponse> {
 }
 
 /**
+ * Query parameters that make an address a copy of a real page, kept out of
+ * search results with their links still followed: `entry` opens Quick Look over
+ * the compendium, `support` the support dialog over any page, and `after` and
+ * `before` turn the compendium's pages, whose contents drift as entries change.
+ */
+const NOINDEX_PARAMS = ['entry', 'support', 'after', 'before'];
+
+/**
  * Anything but a production deploy tells search engines to index nothing,
  * because staging is a public URL that would otherwise be indexed as a
- * duplicate of the compendium . `VERCEL_ENV`, not `NODE_ENV`, which is
+ * duplicate of the compendium. `VERCEL_ENV`, not `NODE_ENV`, which is
  * `production` on every deploy, staging included (the test impersonation
  * uses, src/lib/impersonation.ts). Unset locally, so a dev server is noindex too.
+ * On production only an address carrying one of NOINDEX_PARAMS is marked.
  */
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const response = await route(request);
   if (process.env.VERCEL_ENV !== 'production') response.headers.set('X-Robots-Tag', 'noindex');
+  else if (NOINDEX_PARAMS.some((name) => request.nextUrl.searchParams.has(name))) {
+    response.headers.set('X-Robots-Tag', 'noindex, follow');
+  }
   return response;
 }
 
