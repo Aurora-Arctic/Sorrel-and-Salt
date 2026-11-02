@@ -273,7 +273,7 @@ export default function CodeOfEthicsPage() {
         <li>
           A support request shows you what a requestor chose to write, without the requestor's email
           or the coven named in the page address. You read it only to help, and you repeat nothing
-          from it outside the request.
+          to anyone who is not authorized to view it.
         </li>
         <li>
           Your curator role gives you nothing in any coven but your own. You do not use it, or ask
