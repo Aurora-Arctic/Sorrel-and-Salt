@@ -71,6 +71,13 @@ route handler has no React cache scope, so its dedupe is the request's
 DataLoaders ([`graphql/two-transports.md`](../graphql/two-transports.md), "The
 two transports").
 
+**Leaving is the one write a paused seat may make.** `assertSeatToLeave(session,
+workspaceId)`, beside `assertMembership` in the same file, runs the same check
+for `workspace: read` but lets a paused seat pass, and `leaveWorkspace` is its
+only caller. The proof names the session's own user, and `leaveWorkspace` takes
+no user id, so it cannot reach another member's seat; every other write still
+goes through `assertMembership` and is refused (M15.55).
+
 **The finder convention** has a file of its own: [`finder-convention.md`](finder-convention.md).
 
 ### The reads that take no proof

@@ -53,6 +53,30 @@ export async function assertMembership(
   workspaceId: string,
   permission: WorkspacePermission,
 ): Promise<Membership> {
+  return admit(session, workspaceId, permission, false);
+}
+
+/**
+ * The caller's own seat in `workspaceId`, for leaving it and nothing else: `assertMembership` for `workspace: read`, except that
+ * a paused seat passes. A paused member may still go (the owner's call, M15.55); every other write stays refused by
+ * `assertMembership`. The proof names the session's own user, so a leave built on it cannot reach anyone else's seat.
+ *
+ * @throws {Forbidden} as `assertMembership`: unverified, or no live seat.
+ */
+export async function assertSeatToLeave(
+  session: Session,
+  workspaceId: string,
+): Promise<Membership> {
+  return admit(session, workspaceId, { workspace: ['read'] }, true);
+}
+
+/** Both checks above; `pausedMayPass` is true for leaving alone. */
+async function admit(
+  session: Session,
+  workspaceId: string,
+  permission: WorkspacePermission,
+  pausedMayPass: boolean,
+): Promise<Membership> {
   // An empty request authorizes vacuously and would admit any member to anything, so `{}` is a bug in the caller, not a refusal.
   if (Object.keys(permission).length === 0) {
     throw new Error('assertMembership requires a permission to check');
@@ -77,7 +101,7 @@ export async function assertMembership(
 
   // Before the role's check, so a paused member is told of the pause whatever they asked for. Its own refusal rather than a bare
   // Forbidden: the user holds the seat and knows the coven exists, so the page can say why and until when.
-  if (seat.pause) throw new AccessPaused(seat.pause.until);
+  if (seat.pause && !pausedMayPass) throw new AccessPaused(seat.pause.until);
 
   // Said to a real member, and shown as the alert beside the button they pressed (a stale page after a demotion, say). It names
   // neither the role nor the permission, which are the service's to decide.
