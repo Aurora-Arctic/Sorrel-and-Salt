@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import SupportLink from '../../../components/SupportLink';
 import AccessCards from '../../../components/AccessCards';
 import type { AccessRole, AccessRow } from '../../../components/AccessCards/types';
 import DocumentPage from '../../../components/DocumentPage';
@@ -166,7 +166,7 @@ export default function PrivacyPolicyPage() {
         </li>
         <li>
           What you delete is marked deleted rather than erased. To have something erased, ask
-          through the <Link href="/support?support=privacy">support form</Link>.
+          through the <SupportLink about="privacy">support form</SupportLink>.
         </li>
         <li>Who can see what is set out at the end, one card per kind of data, role by role.</li>
       </ul>
@@ -338,9 +338,9 @@ export default function PrivacyPolicyPage() {
       <p>
         There is no "delete my account" button yet, and no self-service export. Until those are
         built, write to the site admins through the{' '}
-        <Link href="/support?support=privacy">support form</Link>, choosing Privacy &amp; Data. You
-        can send one without an account. Say what you want erased, and the site's admin will do it
-        and tell you when it is done.
+        <SupportLink about="privacy">support form</SupportLink>. You can send one without an
+        account. Say what you want erased, and the site's admin will do it and tell you when it is
+        done.
       </p>
       <p>
         You can leave a coven yourself from the coven's page, and a coven's owner can delete the

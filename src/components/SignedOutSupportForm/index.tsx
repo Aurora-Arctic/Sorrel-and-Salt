@@ -13,7 +13,7 @@ import Notice from '../Notice';
 import type { SignedOutSupportFormProps } from './types';
 
 // The support form for a visitor with no account: the five topics open without an account, an address to
-// reply to, and the same subject and message. It sends `sendSignedOutSupportRequest`; the reply comes by email alone.
+// reply to, and the same subject and message. A topic passed in is chosen already when it is one of the five. It sends `sendSignedOutSupportRequest`; the reply comes by email alone.
 
 const SendSignedOutSupportRequestDocument = graphql(`
   mutation SendSignedOutSupportRequest($input: SignedOutSupportRequestInput!) {
@@ -31,12 +31,17 @@ const SIGNED_OUT_TOPICS = SUPPORT_ABOUTS.filter(({ value }) =>
 
 const ABOUT_REQUIRED = 'Choose what this is about.';
 
-const SignedOutSupportForm = ({ path }: SignedOutSupportFormProps): ReactElement => {
+const SignedOutSupportForm = ({
+  about: initialAbout,
+  path,
+}: SignedOutSupportFormProps): ReactElement => {
   const aboutId = useId();
   const emailId = useId();
   const subjectId = useId();
   const messageId = useId();
-  const [about, setAbout] = useState<SupportAbout | null>(null);
+  const [about, setAbout] = useState<SupportAbout | null>(
+    SIGNED_OUT_TOPICS.find(({ value }) => value === initialAbout)?.value ?? null,
+  );
   const [email, setEmail] = useState('');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');

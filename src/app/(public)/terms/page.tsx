@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import SupportLink from '../../../components/SupportLink';
 import DocumentPage from '../../../components/DocumentPage';
 import { SITE_NAME, siteUrl } from '../../../lib/site';
 import { TERMS_UPDATED_ON, TERMS_VERSION } from '../../../lib/terms-version';
@@ -62,7 +63,8 @@ export default function TermsOfUsePage() {
       </p>
       <p>
         Your account is yours alone. Keep your sign-in details to yourself, and tell us through the{' '}
-        <Link href="/support">support form</Link> if you think someone else has used them.
+        <SupportLink about="account">support form</SupportLink> if you think someone else has used
+        them.
       </p>
 
       <h2>What Is Yours</h2>
@@ -203,10 +205,9 @@ export default function TermsOfUsePage() {
       <p>
         You may stop using the site at any time. You can leave any coven from its page. To have your
         account or anything in it erased, ask through the{' '}
-        <Link href="/support?support=privacy">support form</Link>, choosing Privacy &amp; Data;
-        until an erase-my-account button exists, the site's admin does it by hand and tells you when
-        it is done. What you delete yourself is marked deleted rather than erased, as the Privacy
-        Policy explains.
+        <SupportLink about="privacy">support form</SupportLink>; until an erase-my-account button
+        exists, the site's admin does it by hand and tells you when it is done. What you delete
+        yourself is marked deleted rather than erased, as the Privacy Policy explains.
       </p>
 
       <h2>Agreeing to These Terms</h2>

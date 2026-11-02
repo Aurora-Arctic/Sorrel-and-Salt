@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import SupportLink from '../../../components/SupportLink';
 import DocumentPage, { SourceItem, SourceMarks } from '../../../components/DocumentPage';
 import { SITE_NAME, siteUrl } from '../../../lib/site';
 
@@ -150,7 +151,7 @@ export default function CodeOfEthicsPage() {
         </li>
         <li>
           If you belong to a tradition the compendium describes and it gets your tradition wrong,
-          tell us through the <Link href="/support?support=compendium">support form</Link>. Your
+          tell us through the <SupportLink about="compendium">support form</SupportLink>. Your
           account of your own practice outranks any book on our shelf.
         </li>
       </ul>
@@ -232,9 +233,8 @@ export default function CodeOfEthicsPage() {
         accessibility bugs first.
       </p>
       <p>
-        <Link href="/support?support=accessibility">Report an accessibility bug</Link>. The link
-        opens the support form with Accessibility already chosen; you can send one without an
-        account.
+        <SupportLink about="accessibility">Report an accessibility bug</SupportLink>. The link opens
+        the support form with Accessibility already chosen; you can send one without an account.
       </p>
 
       <h2>For Curators</h2>

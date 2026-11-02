@@ -25,7 +25,7 @@ const SupportPanel = ({
           Without one, you can write to us about accessibility, a bug, signing in, privacy or a
           question.
         </Notice>
-        <SignedOutSupportForm path={path} />
+        <SignedOutSupportForm about={state.support} path={path} />
       </div>
     );
   }
