@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 /** The day this text last changed. */
-const UPDATED_ON = new Date('2026-11-01T00:00:00Z');
+const UPDATED_ON = new Date('2026-11-02T00:00:00Z');
 
 /** Who may see each kind of data: one row per kind, one cell per role, each cell drawn from the service that enforces it. */
 const ACCESS_ROWS: AccessRow[] = [
@@ -372,7 +372,10 @@ export default function PrivacyPolicyPage() {
       </ul>
 
       <h2>Changes to This Policy</h2>
-      <p>When the text changes, the date at the top changes with it.</p>
+      <p>
+        When the text changes, the date at the top changes with it. When this policy changes, an
+        admin may also email every account to say so, with a link to this page.
+      </p>
     </DocumentPage>
   );
 }
