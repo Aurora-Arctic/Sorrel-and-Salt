@@ -143,7 +143,7 @@ export default function CodeOfEthicsPage() {
         <li>
           The compendium names a source for each piece of an ingredient's lore. It does not yet
           record which tradition the lore comes from, or whether that tradition is closed, so an
-          entry can draw on a closed practice without saying so.
+          entry can draw on a closed practice without saying so. Recording both is planned.
         </li>
         <li>
           A warning on an entry whose practice is closed, and ethical warnings on ingredients, are
