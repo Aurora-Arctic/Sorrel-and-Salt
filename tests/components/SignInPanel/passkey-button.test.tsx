@@ -34,6 +34,29 @@ afterEach(() => {
 });
 
 describe('Sign In with a Passkey', () => {
+  it('disables the providers and Continue with Email while the passkey prompt is open, and frees them when it fails', async () => {
+    let refuse: (answer: typeof REFUSED) => void = () => {};
+    passkeyMock.mockReturnValue(new Promise((resolve) => (refuse = resolve)));
+    render(<SignInPanel configured={['google']} />);
+    const google = screen.getByRole('button', { name: 'Continue with Google' });
+    const email = screen.getByRole('button', { name: 'Continue with Email' });
+    // Pressable before the prompt opens, so only the prompt disables them.
+    expect(google).toBeEnabled();
+    expect(email).toBeEnabled();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', BUTTON));
+    });
+
+    expect(google).toBeDisabled();
+    expect(email).toBeDisabled();
+
+    await act(async () => refuse(REFUSED));
+
+    expect(google).toBeEnabled();
+    expect(email).toBeEnabled();
+  });
+
   it('signs in with the browser prompt and lands through /sign-in carrying next', async () => {
     passkeyMock.mockResolvedValue(SIGNED_IN);
     render(<SignInPanel next="/coven/hearth" configured={['google']} />);

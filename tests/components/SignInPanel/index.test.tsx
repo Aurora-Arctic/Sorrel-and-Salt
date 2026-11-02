@@ -104,6 +104,27 @@ describe('SignInPanel', () => {
     expect(socialMock).toHaveBeenCalledTimes(1);
   });
 
+  it('disables Sign In with a Passkey and Continue with Email while a provider’s hop is under way, and frees them on failure', async () => {
+    let fail: (answer: { error: { message: string } }) => void = () => {};
+    socialMock.mockReturnValue(new Promise((resolve) => (fail = resolve)));
+    render(<SignInPanel configured={['google']} />);
+    const passkey = screen.getByRole('button', { name: 'Sign In with a Passkey' });
+    const email = screen.getByRole('button', { name: 'Continue with Email' });
+    // Pressable before the hop starts, so only the hop disables them.
+    expect(passkey).toBeEnabled();
+    expect(email).toBeEnabled();
+
+    await press(screen.getByRole('button', { name: 'Continue with Google' }));
+
+    expect(passkey).toBeDisabled();
+    expect(email).toBeDisabled();
+
+    await act(async () => fail({ error: { message: 'network down' } }));
+
+    expect(passkey).toBeEnabled();
+    expect(email).toBeEnabled();
+  });
+
   it.each([
     ['answers an error', () => Promise.resolve({ error: { message: 'network down' } })],
     ['cannot be reached', () => Promise.reject(new Error('offline'))],
