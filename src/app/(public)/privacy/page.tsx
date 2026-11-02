@@ -123,9 +123,8 @@ export default function PrivacyPolicyPage() {
       <h2>What Is Stored</h2>
       <h3>Your Account</h3>
       <p>
-        Signing in creates an account row holding your name, your email address, whether that
-        address is verified, and a link to the picture your sign-in provider shared (if it shared
-        one).
+        Signing in creates an account holding your name, your email address, whether that address is
+        verified, and a link to the picture your sign-in provider shared (if it shared one).
       </p>
       <p>
         Your email address changes only when you verify the new one. Until then the old address
