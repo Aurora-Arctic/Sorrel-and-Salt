@@ -316,14 +316,6 @@ export default function TermsOfUsePage() {
           </a>
           .
         </SourceItem>
-        <SourceItem number={9} cites={[]}>
-          Washington State Legislature. <em>Revised Code of Washington</em>, 7.06.050, "Decision and
-          award—Appeals—Trial—Judgment" (Arbitration of Civil Actions). Accessed 2 November 2026.{' '}
-          <a href="https://app.leg.wa.gov/RCW/default.aspx?cite=7.06.050">
-            https://app.leg.wa.gov/RCW/default.aspx?cite=7.06.050
-          </a>
-          .
-        </SourceItem>
       </ol>
     </DocumentPage>
   );

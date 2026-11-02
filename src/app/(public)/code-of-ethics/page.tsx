@@ -33,7 +33,7 @@ export default function CodeOfEthicsPage() {
         <li>Everyone is welcome here, and bigotry is not.</li>
         <li>
           Other people's closed practices are theirs. The compendium records where an ingredient's
-          lore comes from and does not hand out what is not ours to give.
+          lore comes from. A warning on ingredients from closed practices is planned.
         </li>
         <li>
           Take only what can be spared: no endangered plants, no animal parts from protected
