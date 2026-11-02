@@ -13,12 +13,16 @@ export function invitationSender(request: Request): InvitationSender {
     async siteInvitation(to, token, { siteRole, inviterName }) {
       const url = await linkFor(token);
       const { send } = await import('./mail');
-      await send(await adminInvitationMessage({ to, url, siteRole, inviterName }));
+      await send(await adminInvitationMessage({ to, url, siteRole, inviterName }), {
+        carriesSecret: true,
+      });
     },
     async workspaceInvitation(to, token, { name, role, inviterName }) {
       const url = await linkFor(token);
       const { send } = await import('./mail');
-      await send(await covenInvitationMessage({ to, url, covenName: name, role, inviterName }));
+      await send(await covenInvitationMessage({ to, url, covenName: name, role, inviterName }), {
+        carriesSecret: true,
+      });
     },
   };
 }

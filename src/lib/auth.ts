@@ -391,7 +391,9 @@ async function mailResetLink({
   if (!user.emailVerified || isPlaceholderEmail(user.email)) return;
   const link = new URL(url);
   link.searchParams.set('callbackURL', RESET_PASSWORD_PAGE);
-  await send(await resetPasswordMessage({ to: user.email, url: link.toString() }));
+  await send(await resetPasswordMessage({ to: user.email, url: link.toString() }), {
+    carriesSecret: true,
+  });
 }
 
 const PASSWORD_SIGN_IN_PAUSED = {
@@ -494,6 +496,7 @@ async function mailLockNotice(ctx: HookContext, userId: string, length: number) 
       providers: accounts.map((account) => account.providerId).filter(isRosterProvider),
       hasPasskey: passkeys.length > 0,
     }),
+    { carriesSecret: true },
   );
 }
 
@@ -687,6 +690,7 @@ export const auth = betterAuth({
           url: link.href,
           providers: await linkedProviderIds(ctx.context, user.id),
         }),
+        { carriesSecret: true },
       );
     },
     // Only from a browser signed in to this very account. Without it, a

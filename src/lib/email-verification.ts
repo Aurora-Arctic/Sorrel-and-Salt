@@ -53,7 +53,9 @@ export function emailVerificationSender(request: Request): EmailVerificationSend
       const holder = await ctx.internalAdapter.findUserByEmail(current);
       const providers = holder ? await linkedProviderIds(ctx, holder.user.id) : [];
       const { send } = await import('./mail');
-      await send(await verifyEmailMessage({ to: address, url, purpose: 'change', providers }));
+      await send(await verifyEmailMessage({ to: address, url, purpose: 'change', providers }), {
+        carriesSecret: true,
+      });
     },
   };
 }

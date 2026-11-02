@@ -2,7 +2,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { http, HttpResponse } from 'msw/http';
 import { server } from '../support/msw/server';
 import { send } from '@/lib/mail';
+import { mailDelivery } from '@/lib/mail-delivery';
 import type { Captured } from './types';
+
+// A started job runs here and now, its steps as plain calls, so each transport is exercised through `send`; the SDK's retries
+// are tests/workflows/mail-delivery.test.ts.
+const { startJob } = vi.hoisted(() => ({
+  startJob: vi.fn(async (job: (...args: never[]) => Promise<unknown>, args: never[]) => {
+    await job(...args);
+    return 'run-id';
+  }),
+}));
+vi.mock('@/lib/jobs', () => ({ startJob }));
 
 const MESSAGE = {
   to: 'recipient@example.test',
@@ -67,6 +78,7 @@ let error: ReturnType<typeof vi.spyOn>;
 
 beforeEach(() => {
   requests = [];
+  startJob.mockClear();
   responseStatus = 200;
   captureEverything();
   clearMailEnv();
@@ -261,5 +273,39 @@ describe('when nothing can be sent', () => {
       expect.stringContaining('mailpit send failed'),
       expect.any(Error),
     );
+  });
+});
+
+describe('which mails go through the retried job', () => {
+  it('starts one delivery run for a mail when a transport is set', async () => {
+    configure('mailpit');
+    await send(MESSAGE);
+    expect(startJob).toHaveBeenCalledTimes(1);
+    expect(startJob).toHaveBeenCalledWith(mailDelivery, [MESSAGE]);
+    expect(requests).toHaveLength(1);
+  });
+
+  it('sends a mail carrying a secret once, itself, so the link never enters a run', async () => {
+    configure('mailpit');
+    await send(MESSAGE, { carriesSecret: true });
+    expect(startJob).not.toHaveBeenCalled();
+    expect(requests).toHaveLength(1);
+  });
+
+  it('starts no run while MAIL_TRANSPORT is unset, as the mail is only logged', async () => {
+    await send(MESSAGE);
+    expect(startJob).not.toHaveBeenCalled();
+    expect(info).toHaveBeenCalledWith(expect.stringContaining('MAIL_TRANSPORT is unset'), MESSAGE);
+  });
+
+  it('tries once itself, and logs it, when the run cannot be started', async () => {
+    configure('mailpit');
+    startJob.mockRejectedValueOnce(new Error('queue down'));
+    await send(MESSAGE);
+    expect(error).toHaveBeenCalledWith(
+      expect.stringContaining('the delivery job did not start'),
+      expect.any(Error),
+    );
+    expect(requests).toHaveLength(1);
   });
 });

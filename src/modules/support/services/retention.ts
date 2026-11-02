@@ -1,6 +1,6 @@
 import 'server-only';
 import { RESOLVED_CLOSES_AFTER_DAYS, findOneById, withAudit } from '../../../db/repository';
-import { deliver } from '../../../lib/mail';
+import { deliver } from '../../../lib/mail-transport';
 import { SYSTEM_ACTOR_ID } from '../../../lib/system-actor';
 import { supportRequests } from '../schema/support-requests';
 import type { Message } from '../../../lib/types';
