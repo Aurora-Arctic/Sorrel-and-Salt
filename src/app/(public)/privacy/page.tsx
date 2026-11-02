@@ -124,10 +124,8 @@ export default function PrivacyPolicyPage() {
       <h3>Your Account</h3>
       <p>
         Signing in creates an account row holding your name, your email address, whether that
-        address is verified, a link to the picture your sign-in provider shared (if it shared one),
-        your site role (user, curator or admin), whether you may create covens and whether you have
-        turned on a second sign-in step. Every account is also given a viewer seat in the demo
-        coven.
+        address is verified, and a link to the picture your sign-in provider shared (if it shared
+        one). Every account is also given a viewer seat in the demo coven.
       </p>
       <p>
         Your email address changes only when you verify the new one. Until then the old address
