@@ -1,1 +1,1 @@
-ALTER TABLE "support_requests" ADD COLUMN "closing_notice_sent_at" timestamp with time zone;
+ALTER TABLE "support_requests" ADD COLUMN "closing_notice_sent_at" timestamp;

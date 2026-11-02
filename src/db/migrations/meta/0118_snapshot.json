@@ -1,5 +1,5 @@
 {
-  "id": "a6bcc480-857b-48a0-a9d3-5d01cd637b59",
+  "id": "3736cc7f-017d-4651-965e-13f2896f700f",
   "prevId": "c9646ff6-1490-46ae-8a13-c62256a3cfbe",
   "version": "7",
   "dialect": "postgresql",
@@ -5839,7 +5839,7 @@
         },
         "closing_notice_sent_at": {
           "name": "closing_notice_sent_at",
-          "type": "timestamp with time zone",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": false
         },

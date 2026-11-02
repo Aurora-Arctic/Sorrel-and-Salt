@@ -56,7 +56,7 @@ export const supportRequests = pgTable(
     lastStaffActivityAt: timestamp('last_staff_activity_at'),
     closedAt: timestamp('closed_at'),
     // When the closing-soon notice went out for the current resolution: set only once the mail transport took it, cleared by a reopen.
-    closingNoticeSentAt: timestamp('closing_notice_sent_at', { withTimezone: true }),
+    closingNoticeSentAt: timestamp('closing_notice_sent_at'),
     // The closed request this one follows up, when a sender wrote on a closed one.
     linkedFrom: uuid('linked_from').references((): AnyPgColumn => supportRequests.id),
     // The digest Next gives an error page, so a request can be matched to the server log line.
