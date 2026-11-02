@@ -157,7 +157,7 @@ export default function CodeOfEthicsPage() {
         <li>
           If you belong to a tradition the compendium describes and it gets your tradition wrong,
           tell us through the <SupportLink about="compendium">support form</SupportLink>. Your
-          account of your own practice outranks any book on our shelf.
+          account of your own practice outranks any sources we use and our compendium entries.
         </li>
       </ul>
 
