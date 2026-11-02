@@ -50,11 +50,11 @@ const ACCESS_ROWS: { data: string; cells: [string, string, string, string, strin
   },
   {
     data: "A coven's ingredients and stock",
-    cells: ['Yes', 'Yes', 'Yes', 'No', 'No, except in the demo coven', 'Yes'],
+    cells: ['Yes', 'Yes', 'Yes', 'No', 'No', 'Yes'],
   },
   {
     data: "A coven's shared spells and workings",
-    cells: ['Yes', 'Yes', 'Yes', 'No', 'No, except in the demo coven', 'Yes'],
+    cells: ['Yes', 'Yes', 'Yes', 'No', 'No', 'Yes'],
   },
   {
     data: 'A private spell',
