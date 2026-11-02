@@ -88,14 +88,14 @@ head, both built by the page per row, as the other admin lists carry
   lifted, not deleted, and with no end or an end still to come, the services'
   own rule, so a time-out or pause that has run out is a cross and nothing is
   written to end it. A check's hidden word carries the end, "Timed out until
-  <instant>" or "Paused until <instant>" (`inUtc`), or "Paused with no end
-  date"; its bubble says "Until <instant>" or "No end date", the heading
+  <instant>" or "Paused until <instant>" (`inUtc`), or "Timed out with no
+  end date" or "Paused with no end date"; its bubble says "Until <instant>" or "No end date", the heading
   saying the rest. A cross says "Not timed out" or "Not paused" and has no
   bubble. The page reads both for the whole page of users in one query each,
   `standingTimeoutsOf` (support) and `standingAccessPausesOf` (identity), both
   under `assertSiteAdmin`, beside `providersOf`, and hands each row
-  `supportTimeoutUntil` and `accessPause` (`{ until }`), absent when none
-  stands.
+  `supportTimeout` and `accessPause` (each `{ until }`, `until` null for no
+  end date), absent when none stands.
   An admin's or a curator's role is bold, on the owner's call. The signup is the UTC
   date, in a `<time>` carrying the full instant. A provider shows as its
   logo, on the owner's call: the shared provider mark, `ProviderMark`

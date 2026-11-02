@@ -106,6 +106,18 @@ Sources: <https://vercel.com/docs/workflow>, <https://vercel.com/docs/workflows/
 
 The owner approved a redraw on reviewing the PR. The form asks "For" first, with a day-only "Until" for a date. It asks before it acts. A standing time-out is a card with Lift and the setter, and earlier ones are a ledger. The setter is `created_by` from the audit columns, so no migration was needed. The same panel sits in the admin user modal.
 
+### Open-Ended Time-Outs (M15.64, M15.65)
+
+**Decision (owner, 2026-11-02).** "Allow permanent time outs. But make the note required." A support time-out may have no end date, and every time-out carries a note saying why.
+
+- **The table (M15.64).** `support_timeouts.until` is nullable, and null means no end date, as `user_access_pauses.until` does. `note` is NOT NULL with a CHECK that `btrim(note) <> ''`. The table shipped in v0.11.0, so the migration first fills a null or blank note with the sentence "No note was recorded when this time-out was set.", then adds the constraints. That sentence awaits the owner's approval. The local development database held no row it would change.
+- **Standing.** A time-out stands while it is not lifted and `until` is null or in the future. The repository reads that through one predicate, `noEndOrAhead` in `src/db/repository/predicates.ts`. Where several stand, one with no end date is the one shown, else the one ending last.
+- **The service (M15.65).** `timeOutSupportSender` takes `until` as optional and `note` as required. Each refusal of a field ("Choose a time in the future", "Write a note saying why", "Keep the note to 500 characters") is its own sentence and the error's message, through `fieldRefusal` in `src/lib/errors.ts`, which the two access-pause services share.
+- **The words.** Every place that shows a time-out's end says "with no end date" when it has none: the send and reply refusals ("you are timed out with no end date"), the support page and the Support dialog, the sender's reply box, the staff reply form's notice, the Users table's Time-Out column ("Timed out with no end date") and the panel's card. No email names a time-out's end.
+- **The panel.** The time-out panel offers No End Date beside the dated spans and marks Note required, keeping Time Out Sender off until a note is written. It draws its fields, its end and its earlier time-outs from the site access pause panel's parts (`access-pause-parts.tsx`), so the two read alike.
+- **The seed.** Fixture I's time-out has no end date, in place of the year-long stand-in.
+- **The Terms of Use** say an admin may stop a person sending support requests "until a date or with no end date", in place of "for a time".
+
 ### The Footer Row (2026-10-31)
 
 The owner approved a redesign of the site footer: the site name as a link home at the left, the links at the right, Support the only one. There is no small descriptive line until the owner writes one.
