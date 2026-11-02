@@ -289,7 +289,7 @@ export default function PrivacyPolicyPage() {
         built, write to the site admins through the{' '}
         <Link href="/support?support=privacy">support form</Link>, choosing Privacy &amp; Data. You
         can send one without an account. Say what you want erased, and the site's admin will do it
-        by hand in the database and tell you when it is done.
+        and tell you when it is done.
       </p>
       <p>
         You can leave a coven yourself from the coven's page, and a coven's owner can delete the
