@@ -87,7 +87,7 @@ live row's `lower(name)`.
 
 `src/modules/vocabulary/services/astrology.ts`, in the form writes' shape
 ([`categories.md`](categories.md), "Form writes") without the group, for
-`/admin/celestial-bodies` (it was `/admin/planets` until MB.251) and `/admin/zodiac-signs`. One code path for both, keyed by
+`/curator/celestial-bodies` (it was `/admin/planets` until MB.251) and `/curator/zodiac-signs`. One code path for both, keyed by
 the ingredient list each curates (`CuratedField`, `'celestialBodies' | 'zodiacSigns'`).
 A compendium entry's celestial bodies and signs are curated spellings (MB.162), and
 these writes keep them so after the write.

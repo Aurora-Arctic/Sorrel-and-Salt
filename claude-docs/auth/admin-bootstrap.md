@@ -521,7 +521,7 @@ the tests [`tests.md`](tests.md).
   `src/lib/account-email.ts`'s `verifyErrorMessage` (one sentence per code
   Better Auth or the gate appends, never the code), and the session's
   `signedInLanding` as `landing`, which Continue takes when there is no
-  `next`. That is `/admin` for an admin, a primary admin a followed link
+  `next`. That is `/keepers` for an admin, `/curator` for a curator, a primary admin a followed link
   has just promoted included, since the page reads the role after the
   link's write; a member's first coven; or `/coven` for someone in none
   (MB.257). `EmailForm` has two views: `?verified` on a verified row is
@@ -679,7 +679,7 @@ component docs are [`components/name-form.md`](../components/name-form.md),
 
 Specified in DESIGN.md §5 and argued in
 [`design-decisions/m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md).
-An admin grants and revokes admin (or sets the curator role, M11.20) from a user's row on `/admin/users`
+An admin grants and revokes admin (or sets the curator role, M11.20) from a user's row on `/keepers/users`
 (MB.59; [`admin-users.md`](admin-users.md), "Changing a site role"),
 where the primary admin cannot be revoked and a demotion that would leave no
 admin is refused. Changing who the primary admin is, is that section's too.
@@ -711,7 +711,7 @@ hand fix checks neither the primary admin nor the count the service does. The
 tasks that build the rest:
 
 - **MB.58 and MB.59** (built): the ledger, `user_privilege_changes` since
-  MB.194, and granting and revoking any other admin from `/admin/users`. The
+  MB.194, and granting and revoking any other admin from `/keepers/users`. The
   primary admin can be neither revoked nor deleted, and a revoke that would
   leave zero admins is refused (the record's "The primary admin" and
   "Revoking").
@@ -859,12 +859,12 @@ only the token's hash. Accepting a card follows the invitation-token rules in CL
 - **Revoking.** `revokeInvitationCardBatch(batchId)` sets `revoked_at` on the batch's pending cards only; a
   card already accepted stays accepted. A single card is never revoked on its own.
 - **Listing.** `invitationCardBatches` pages one row per batch (minted, expiry, cards, accepted, pending),
-  counted in SQL. The Invitation Cards tab at `/admin/invitation-cards` shows it; the QR codes cannot be
+  counted in SQL. The Invitation Cards tab at `/keepers/invitation-cards` shows it; the QR codes cannot be
   redrawn from it.
 - **Card sign-ups.** `cardArrivals` pages every accepted card with the account, the date and the covens that
   account owns (read as an admin may read anyone's memberships). `cardArrivalsCsv` returns the same as
   CSV text (Account Name, Email, Accepted, Batch, Covens Owned), with a leading apostrophe on any cell a spreadsheet
-  would read as a formula. The Card Sign-Ups tab at `/admin/card-sign-ups` offers it as a download.
+  would read as a formula. The Card Sign-Ups tab at `/keepers/card-sign-ups` offers it as a download.
 - **Refused opens.** When a signed-in, verified account opens a card link that is refused as revoked,
   expired or already accepted by another account, the refused panel sends `recordCardAttempt(token)`
   and the service writes one row per card, account and reason, counting repeats

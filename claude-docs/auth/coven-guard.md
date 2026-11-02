@@ -13,9 +13,9 @@ visitors four ways, all from the server:
 | A member, at any role                              | The layout, around the page             | `src/app/(shell)/coven/[slug]/layout.tsx` |
 | A member whose access to this coven is paused      | 307 to `/coven-paused/<slug>`           | `requireCovenMembership()`'s `redirect()` |
 
-- **A 404, not a 403.** This is the opposite of `/admin`, on purpose. A slug
+- **A 404, not a 403.** This is the opposite of `/keepers`, on purpose. A slug
   is a guess at someone's private data, so answering "you may not" would
-  confirm that the coven exists. `/admin` is a path everyone already knows,
+  confirm that the coven exists. `/keepers` is a path everyone already knows,
   so pretending it is missing hides nothing ([admin-guard.md](admin-guard.md)).
 - **An unknown slug and a coven you are not in look the same.** The service,
   `membershipBySlug` in `src/modules/coven/services/workspace-by-slug.ts`,
@@ -70,7 +70,7 @@ name as the heading, and a lede saying which role the caller holds and what that
 role lets them do (`WORKSPACE_ROLE_ACCESS`); the layout's title template gives
 its tab title the name too. The
 navigation shell (`src/app/(shell)/layout.tsx`, MB.7) wraps it, as it wraps
-every page under `/coven`, `/account` and `/admin`.
+every page under `/coven`, `/account` and `/keepers`.
 
 **The section nav is the layout's.** `src/app/(shell)/coven/[slug]/layout.tsx`
 renders `CovenNav` above the page, inside the `.coven-layout` frame, so

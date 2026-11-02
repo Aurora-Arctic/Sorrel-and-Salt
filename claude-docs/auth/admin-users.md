@@ -1,6 +1,6 @@
 ## The user list (MB.52)
 
-`/admin/users` lists everyone with an account, so an admin can act on a person
+`/keepers/users` lists everyone with an account, so an admin can act on a person
 without being sent their id: M5.8's approval control and MB.59's grant control
 (Change Role since M11.20) act on a user from the modal each row's name opens, and MB.53 picks an impersonation target from it. Each row
 shows the name, the email, the role, whether the user may create a workspace,
@@ -148,7 +148,7 @@ tagged `@story-19`, which passes an axe scan with the modal open.
 ## Approving workspace creation (M5.8)
 
 An admin approves someone who has no invitation from that person's user modal on
-`/admin/users`, so a person starting a coven of their own gets in without
+`/keepers/users`, so a person starting a coven of their own gets in without
 knowing an existing user, and can revoke the approval from the same modal. It is
 the second of the flag's routes: the first is accepting a workspace invitation
 (M7.5), and being made a curator or an admin sets it in its own write (MB.177, M11.20). Neither act
@@ -208,7 +208,7 @@ session's whatever the request carries.
 ## Changing a site role (MB.59, M11.20)
 
 An admin gives another user a site role, `user`, `curator` or `admin`, from
-that person's row on `/admin/users`, so a second admin is no longer an `UPDATE`
+that person's row on `/keepers/users`, so a second admin is no longer an `UPDATE`
 in `psql`. A curator is between the two: it uses every curation screen an admin
 can and reaches no people page
 ([`admin-guard.md`](admin-guard.md), "The curator guard"). The rules, and the
@@ -367,7 +367,7 @@ the good ones while it is dealt with, and back on. The argument is
   its grants and revokes go through and are recorded as usual. The exemption
   costs nothing, since the primary admin is the one account a rogue admin
   cannot become: the variable names it, and it cannot be revoked.
-- **On `/admin/users`**, the People page's Users tab, every admin sees the
+- **On `/keepers/users`**, the People page's Users tab, every admin sees the
   control as the tab's action, beside the page's heading, and a warning saying changes are paused while they are. The
   control is usable by the primary admin alone, in view but `aria-disabled`
   for any other, with the reason in a tip; while paused, such an admin's
@@ -519,8 +519,8 @@ filter, page)` is one page of the pending list, newest first, and
   lands a new curator or admin on `/admin`. An
   unverified account reaches the page, since `requireSession()`'s redirect
   would lose the reason; the accept refuses it all the same.
-- **On `/admin/invitations`**, the People page's Invitations tab (beneath
-  the user list on `/admin/users` until MB.115), every admin sees Invite
+- **On `/keepers/invitations`**, the People page's Invitations tab (beneath
+  the user list on `/keepers/users` until MB.115), every admin sees Invite
   Admin, whose form asks for the address, the role (Curator chosen to begin
   with, so granting the People page is a choice) and an optional reason, and
   the pending invitations 25 to a page, each with
@@ -559,7 +559,7 @@ story 62's browser flow is in `tests/e2e/stories/08-email-and-admin.spec.ts`.
 Every change to who is an admin or a curator and who may create a coven is a row of
 `user_privilege_changes`, which the database writes and nothing in the
 application inserts into (MB.194, MB.195; DESIGN.md §5). MB.199 is its read
-and MB.200 its page, `/admin/privilege-changes`, now the People page's
+and MB.200 its page, `/keepers/privilege-changes`, now the People page's
 Privilege Changes tab (MB.115): the whole ledger, newest
 first, for the admin who suspects misuse (story 61).
 
@@ -587,9 +587,9 @@ first, for the admin who suspects misuse (story 61).
   whose service, `usersForAdmin(session, userIds)`, answers a site admin each
   live user, null where none is live, and refuses every slot to anyone else.
   It is the admin's whole row, not MB.10's display-name `usersById`.
-- **One page, not one per privilege.** `/admin/privilege-changes` is one
+- **One page, not one per privilege.** `/keepers/privilege-changes` is one
   ledger, filtered by part of the subject's name or email (`?query=`, which
-  the privilege changes icon before each name on `/admin/users` opens with
+  the privilege changes icon before each name on `/keepers/users` opens with
   that user's address) and by privilege (`?privilege=admin|curator|create_workspace`,
   a dropdown). The page takes no `?user=`: the read's `userId` is GraphQL's.
   It is not merged with the pause or the invitations, which stay where they
@@ -600,7 +600,7 @@ first, for the admin who suspects misuse (story 61).
   users a page names in one `usersForAdmin` call. A hand-edited privilege is
   no filter, and a cursor from another list reads the first page
   ([`components/privilege-ledger.md`](../components/privilege-ledger.md)).
-- **A row links its people to their `/admin/users` rows**, the list filtered
+- **A row links its people to their `/keepers/users` rows**, the list filtered
   to their address, except the seed's bootstrap user, which the list leaves
   out (`listedOnUserList`).
 - **No index beyond the key.** The plan does not want one: the ledger holds a

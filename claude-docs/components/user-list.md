@@ -1,6 +1,6 @@
 # UserList
 
-`src/components/UserList/` — `/admin/users`' filter, table and pager (MB.52).
+`src/components/UserList/` — `/keepers/users`' filter, table and pager (MB.52).
 It is render-only and a server component: the page reads one page of users
 through the identity service and hands it over, with the filter as asked and
 the hrefs of the pages either side
@@ -34,7 +34,7 @@ head, both built by the page per row, as the other admin lists carry
 
 ## Contracts
 
-- **The filter is a GET form to `/admin/users`** (`USERS_PATH`, `href.ts`), named "Filter Users" inside
+- **The filter is a GET form to `/keepers/users`** (`USERS_PATH`, `href.ts`), named "Filter Users" inside
   a `<search>` landmark: a search box labelled "Name or Email" (`query`), a
   Role dropdown, a native select from the server and the select-only box once
   hydrated (`role`: All Roles, then `ROLE_LABELS`: Admin, Curator or User;
@@ -55,7 +55,7 @@ head, both built by the page per row, as the other admin lists carry
   magnifier or Enter; the Role dropdown and the switches apply the moment
   they change, each carrying the search text and starting from the first page.
   Its Clear link, offered only while the page shows a query, a role or
-  a switch on, opens `/admin/users` with none. How every filter navigates
+  a switch on, opens `/keepers/users` with none. How every filter navigates
   and loads is [`filter-form.md`](filter-form.md#contracts).
 - **A new filter applies without a button** (MB.115, replacing MB.53's Filter
   button, disabled until something differed): the search’s magnifier is
@@ -142,7 +142,7 @@ head, both built by the page per row, as the other admin lists carry
   `AdminNav`.
 - **A history icon leads each name** (MB.200, on the owner's call: an
   icon rather than a column), on every row, an admin's included: a link to
-  `/admin/privilege-changes?query=<email>`, the privilege ledger searched for
+  `/keepers/privilege-changes?query=<email>`, the privilege ledger searched for
   that user's address, lower-cased as every address is held, built by `PrivilegeLedger`'s `privilegeLedgerHref`
   ([`privilege-ledger.md`](privilege-ledger.md)). It is `history-link.tsx`,
   a client file, and `icons.tsx`'s `HistoryIcon`, a clock with a
@@ -159,7 +159,7 @@ head, both built by the page per row, as the other admin lists carry
 - **Each name opens the user's modal** (M9.19,
   [`design-decisions/m9.19-admin-sees-user-covens.md`](../design-decisions/m9.19-admin-sees-user-covens.md)).
   The name, after the history icon, is a link to the row's `openHref`,
-  `/admin/users?<filter>&user=<id>`, its accessible name the user's name.
+  `/keepers/users?<filter>&user=<id>`, its accessible name the user's name.
   It is `user-link.tsx`, a client file, so the list stays a server
   component, and its press is `useOpenModalClick(openHref, heading)`: a plain
   press opens the modal at once over a skeleton, a press with a modifier or
@@ -169,7 +169,7 @@ head, both built by the page per row, as the other admin lists carry
   cursor; the pager and the filter leave it out, so paging or filtering
   closes the modal, as they drop `?edit=` elsewhere. A fourth optional argument, `from`, names a screen in `USER_MODAL_ORIGINS` (`href.ts`): the Invitation Cards and Card Sign-Ups tabs. The page then sends Close back to that tab instead of the list; a value outside the set is ignored.
 - **The user modal is the page's, not the list's.** The page renders
-  `UserDialog` (`src/app/(shell)/admin/(people)/users/user-dialog.tsx`), a
+  `UserDialog` (`src/app/(shell)/keepers/(people)/users/user-dialog.tsx`), a
   `RouteModal` at one fixed place, whatever the address opens. Its head is
   `userHeading(user)` (`user-heading.tsx` beside the page): eyebrow User,
   the name as title and the address as qualifier, on a line beneath the name, so the dialog is named
@@ -313,11 +313,11 @@ head, both built by the page per row, as the other admin lists carry
   from `pause-control.tsx`, exported beside the list as `PauseControl`: the
   People page draws it beside its heading while Users is open, where the
   other admin tabs put their primary action, from
-  `src/app/(shell)/admin/(people)/@action/users/page.tsx`
+  `src/app/(shell)/keepers/(people)/@action/users/page.tsx`
   ([`tabbed-page.md`](tabbed-page.md)), and keys it by the state so the
   refresh after a flip mounts a fresh one (all on the owner's call). That
   page and the Users page read the pause through
-  `src/app/(shell)/admin/(people)/pause-state.ts`, cached per request, so it is
+  `src/app/(shell)/keepers/(people)/pause-state.ts`, cached per request, so it is
   read once. It is
   one row, `.user-list__pause`, centred with a `space(3)` gap. At a phone's
   width, where the heading line spans its action, the warning and the switch
@@ -496,7 +496,7 @@ busy until the refresh and then said in the status region, a refusal under the b
 admin's locked switch, described by its reason and raising an alert when
 tried. The role and creation controls' tests are the user modal's
 (`tests/components/UserDetail/role-and-creation.test.tsx`, [`user-detail.md`](user-detail.md)). It also covers the Support and Access columns: a standing time-out or pause read with its end, dated or open, and "Not timed out" or "Not paused" for none, each found under its column heading. Its colours, marks, tips and their placement, and the cards at phone width,
-are presentation; paging is Pager's. `tests/app/(shell)/admin/(people)/users/page.test.tsx` reads the page's
+are presentation; paging is Pager's. `tests/app/(shell)/keepers/(people)/users/page.test.tsx` reads the page's
 half: what it hands the list, the impersonation gate and the primary admin's
 flag included, `awaiting`, `timed-out` and `paused` read by their presence, and the count behind the
 pager's position; the page's standing time-outs and pauses read in one batch each, as the guard's session, and marked on their rows; and the user modal (M9.19): `?user=<id>` reading the user and

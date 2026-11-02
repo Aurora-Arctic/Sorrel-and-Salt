@@ -4,7 +4,7 @@
 on the same line, the action at the end, and, on the pages that carry them, an eyebrow above
 and a lede beneath. No page writes its own `h1`; `tests/guards/page-heads.test.ts` fails one
 that does, bar the loading covers' visually hidden heading
-([`styling.md`](../styling.md), "Designing a section"). The action example is `/admin/compendium`'s Add Ingredient
+([`styling.md`](../styling.md), "Designing a section"). The action example is `/curator/compendium`'s Add Ingredient
 beside its `h1` (the owner's call, M5.6). Nine admin pages wrote the
 `.page-header` row and its heading by hand until MB.115. Since MB.115's
 tabbed pages, `TabbedPage` renders it too, with its row of tab pills beside the
@@ -49,7 +49,7 @@ None of its own. In the column shape `.header` spaces the parts and `.header > .
 "Buttons"), the row centred and the action brought down to sit level with the
 heading's letters (`position: relative; top`, not a `translate`, which would hold the Add's tip under the bar; it holds while the item shares the heading's line, and is cancelled where the action goes beneath). Under 28rem of its own width the action goes beneath the
 heading, at its natural width and the line's start, as every action is. The
-exception is the shared Add (`src/app/(shell)/admin/add-action.tsx`): at that
+exception is the shared Add (`src/app/(shell)/curator/add-action.tsx`): at that
 width, and on a tabbed page from `$tabbed-plus-width` (680px of the header's
 own width, the owner's measure) down, it is a plus icon button, a
 `$control-height` square, on the heading's line at its end, with its label as

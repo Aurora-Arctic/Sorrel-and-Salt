@@ -29,7 +29,7 @@ beside it that opens a tip (a small note) saying what the role may do.
 
 ## Where it is used
 
-- [`user-list.md`](user-list.md): the Role column of `/admin/users`, every row,
+- [`user-list.md`](user-list.md): the Role column of `/keepers/users`, every row,
   bold for an admin or a curator, beside the primary admin's crown when the row
   has one.
 - [`member-list.md`](member-list.md): the Role column of `/coven/[slug]/members`,

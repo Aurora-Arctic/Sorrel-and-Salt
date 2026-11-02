@@ -7,8 +7,8 @@ in the `vocabulary` module, in `src/modules/vocabulary/schema/deities.ts`
 (MB.128), seeded by `src/db/seed/deities.ts` (MB.129) from
 ["The deity vocabulary seed"](deity-vocabulary-seed.md), read by a member's
 autofill, `deitySuggestions` (MB.130, on
-[the member's autofill](member-autofill.md)), and curated at `/admin/deities`
-and `/admin/deity-traditions` (MB.132). MB.131 puts that autofill on
+[the member's autofill](member-autofill.md)), and curated at `/curator/deities`
+and `/curator/deity-traditions` (MB.132). MB.131 puts that autofill on
 the form's Deities box, so a member picks a curated spelling rather than
 typing their own; a spelling the vocabulary lacks still needs someone to
 curate it.
@@ -104,7 +104,7 @@ tradition is live too, as a form is only while its group is.
 
 ### The admin's writes (MB.132)
 
-`/admin/deities` and `/admin/deity-traditions` write the two tables through
+`/curator/deities` and `/curator/deity-traditions` write the two tables through
 `vocabulary`'s `services/deities.ts` and `services/deity-traditions.ts`, the
 site admin's alone, on the forms' and form groups' rules
 ([`design-decisions/mb.132-admin-deities.md`](../design-decisions/mb.132-admin-deities.md)):

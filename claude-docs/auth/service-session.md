@@ -64,7 +64,7 @@ service that has stopped checking anything.
 They are two types rather than one because **the route decides which of them
 the browser is shown, and it can only decide if the service said which
 happened**: `/coven/[slug]` answers 404 to a non-member, since the existence of
-a workspace is itself private, while `/admin` answers a styled "not authorized"
+a workspace is itself private, while `/keepers` answers a styled "not authorized"
 page, since everyone already knows that path exists (CLAUDE.md's domain
 invariants). None of the three carries a status code or a GraphQL error code:
 the transport renders a refusal, and a service called from a script has no use

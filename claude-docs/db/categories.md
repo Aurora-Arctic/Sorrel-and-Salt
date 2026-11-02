@@ -191,7 +191,7 @@ records them. Each write expires the `compendium` tag once it has committed (M8.
 ## Form writes (M5.6a)
 
 `src/modules/vocabulary/services/ingredient-form-values.ts`, in the shape of
-the category writes above, for `/admin/forms`. A compendium entry's form is a
+the category writes above, for `/curator/forms`. A compendium entry's form is a
 pick of a curated row (MB.162, on the pick since MB.167), and these writes
 keep it one after the write.
 
@@ -251,7 +251,7 @@ Each write expires the `compendium` tag once it has committed (M8.7;
 
 `src/modules/vocabulary/services/category-groups.ts` and
 `ingredient-form-groups.ts`, in the shape of the writes above, for
-`/admin/category-groups` and `/admin/form-groups`. Each write opens on
+`/curator/category-groups` and `/curator/form-groups`. Each write opens on
 `assertSiteAdmin` before it reads the input.
 
 - **The reads.** `listCategoryGroups(page)` and
