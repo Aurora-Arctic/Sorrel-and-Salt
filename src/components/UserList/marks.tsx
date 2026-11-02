@@ -36,12 +36,13 @@ export const ProviderLogo = ({ id }: ProviderLogoProps): ReactElement => {
  * A yes-or-no as a mark: a green check or a red cross,
  * its word in the page for a screen reader since the mark is drawn alone, and
  * where `hint` asks, in a tip bubble on hover too, since the column's heading
- * does not say it. The bubble is the eye's copy, hidden from the reader.
+ * does not say it, or `tip` gives it other words. The bubble is the eye's copy, hidden from the reader.
  */
-export const Mark = ({ value, label, hint = false }: MarkProps): ReactElement => {
+export const Mark = ({ value, label, hint = false, tip }: MarkProps): ReactElement => {
   const icon = value ? <CheckIcon /> : <CrossIcon />;
+  const bubble = tip ?? (hint ? label : undefined);
   const className = ['user-list__mark', `user-list__mark--${value ? 'yes' : 'no'}`]
-    .concat(hint ? ['user-list__hint'] : [])
+    .concat(bubble ? ['user-list__hint'] : [])
     .join(' ');
   const body = (
     <>
@@ -49,8 +50,8 @@ export const Mark = ({ value, label, hint = false }: MarkProps): ReactElement =>
       <span className="visually-hidden">{label}</span>
     </>
   );
-  return hint ? (
-    <Hint className={className} label={label}>
+  return bubble ? (
+    <Hint className={className} label={bubble}>
       {body}
     </Hint>
   ) : (

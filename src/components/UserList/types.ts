@@ -21,6 +21,10 @@ export interface UserListEntry {
   openHref: Route;
   /** The modal’s head, shown at once on a press: the one the loaded modal carries. */
   heading: ModalHeading;
+  /** When the support time-out standing on them ends; absent when none stands. */
+  supportTimeoutUntil?: Date;
+  /** The pause standing on their site access, `until` null for one with no end; absent when none stands. */
+  accessPause?: { until: Date | null };
 }
 
 export interface UserListProps extends Partial<PagerHrefs<Route>> {
@@ -223,4 +227,6 @@ export interface MarkProps {
   label: string;
   /** Whether a tip bubble shows the word on hover too, where the heading does not say it. */
   hint?: boolean;
+  /** The tip bubble's own words, where they differ from `label`; a bubble shows them on hover. */
+  tip?: string;
 }

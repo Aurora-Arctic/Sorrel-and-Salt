@@ -78,12 +78,62 @@ const props = (overrides: Partial<UserListProps> = {}): UserListProps => ({
   ...overrides,
 });
 
-function cellsOf(name: string): string[] {
+/** The cell in a user's row under the column with this heading. */
+function cellUnder(name: string, heading: string): HTMLElement {
+  const headings = screen.getAllByRole('columnheader').map((header) => header.textContent);
   const row = screen.getByRole('row', { name: new RegExp(name) });
-  return within(row)
-    .getAllByRole('cell')
-    .map((cell) => cell.textContent ?? '');
+  return within(row).getAllByRole('cell')[headings.indexOf(heading)] as HTMLElement;
 }
+
+describe('UserList, standing support time-outs and access pauses', () => {
+  const AT = new Date('2026-11-20T09:30:00Z');
+  // Bo stands timed out and paused until AT, Cy paused with no end, Ada neither: the page passes only what stands.
+  const rows = () =>
+    render(
+      <UserList
+        {...props({
+          users: [
+            ADA,
+            { ...BO, supportTimeoutUntil: AT, accessPause: { until: AT } },
+            { ...CY, accessPause: { until: null } },
+          ],
+        })}
+      />,
+    );
+
+  it('marks a standing time-out with its end in UTC, and a cross for a user with none', () => {
+    rows();
+    expect(screen.getByRole('columnheader', { name: 'Support Time-Out' })).toBeInTheDocument();
+    expect(
+      within(cellUnder('Bo Fixturewort', 'Support Time-Out')).getByText(
+        'Timed out until 20 November 2026, 09:30 UTC',
+      ),
+    ).toBeInTheDocument();
+    for (const name of ['Ada Fixturewort', 'Cy Fixturewort']) {
+      expect(
+        within(cellUnder(name, 'Support Time-Out')).getByText('Not timed out'),
+      ).toBeInTheDocument();
+    }
+  });
+
+  it('marks a standing pause with its end in UTC or none, and a cross for a user with none', () => {
+    rows();
+    expect(screen.getByRole('columnheader', { name: 'Site Access Paused' })).toBeInTheDocument();
+    expect(
+      within(cellUnder('Bo Fixturewort', 'Site Access Paused')).getByText(
+        'Paused until 20 November 2026, 09:30 UTC',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(cellUnder('Cy Fixturewort', 'Site Access Paused')).getByText(
+        'Paused with no end date',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(cellUnder('Ada Fixturewort', 'Site Access Paused')).getByText('Not paused'),
+    ).toBeInTheDocument();
+  });
+});
 
 describe('UserList', () => {
   it('gives every row a tooltip saying what its role may do, in the words Change Role shows', () => {
@@ -179,7 +229,7 @@ describe('UserList', () => {
   it('names a provider outside the roster by its id rather than dropping it', () => {
     render(<UserList {...props({ users: [{ ...BO, providers: ['github'] }] })} />);
 
-    expect(cellsOf('Bo Fixturewort')[4]).toBe('github');
+    expect(cellUnder('Bo Fixturewort', 'Sign-In Methods')).toHaveTextContent(/^github$/);
   });
 
   it('draws no table when no user matches', () => {

@@ -24,6 +24,7 @@ const usersForAdmin = vi.fn();
 const ensureProvisionalCleanup = vi.fn(async () => null);
 const listedOnUserList = vi.fn();
 const listUserAccessPauses = vi.fn();
+const standingAccessPausesOf = vi.fn();
 vi.mock('@/modules/identity', () => ({
   adminRoleChangePauseState,
   countUsers,
@@ -33,11 +34,15 @@ vi.mock('@/modules/identity', () => ({
   listUserAccessPauses,
   listUsers,
   providersOf,
+  standingAccessPausesOf,
   usersForAdmin,
 }));
 
 const membershipsOf = vi.fn();
 vi.mock('@/modules/coven', () => ({ membershipsOf }));
+
+const standingTimeoutsOf = vi.fn();
+vi.mock('@/modules/support', () => ({ standingTimeoutsOf }));
 
 // The modal also reads the user's support time-outs, which are the support page tests' to prove; none here.
 vi.mock('@/app/(shell)/admin/support/reads', () => ({ readTimeoutsOf: vi.fn(async () => []) }));
@@ -93,6 +98,13 @@ async function renderPage(params: Record<string, string> = {}) {
   );
 }
 
+/** The cell in a user's row under the column with this heading. */
+function cellUnder(name: string, heading: string): HTMLElement {
+  const headings = screen.getAllByRole('columnheader').map((header) => header.textContent);
+  const row = screen.getByRole('row', { name: new RegExp(name) });
+  return within(row).getAllByRole('cell')[headings.indexOf(heading)] as HTMLElement;
+}
+
 function lastRequest(): PageRequest {
   return listUsers.mock.calls[listUsers.mock.calls.length - 1]?.[2] as PageRequest;
 }
@@ -121,6 +133,14 @@ beforeEach(() => {
   listedOnUserList.mockReset();
   listedOnUserList.mockReturnValue(true);
   listUserAccessPauses.mockReset();
+  standingAccessPausesOf.mockReset();
+  standingAccessPausesOf.mockImplementation(async (_session, ids: string[]) =>
+    ids.map(() => undefined),
+  );
+  standingTimeoutsOf.mockReset();
+  standingTimeoutsOf.mockImplementation(async (_session, ids: string[]) =>
+    ids.map(() => undefined),
+  );
   listUserAccessPauses.mockResolvedValue([]);
   membershipsOf.mockReset();
   membershipsOf.mockImplementation(async (_session, ids: string[]) => ids.map(() => [COVEN_ROW]));
@@ -169,15 +189,40 @@ describe('the /admin/users page', () => {
   it('shows each user with the providers read for them', async () => {
     await renderPage();
 
-    // The providers are the fifth cell; none linked leaves it empty.
-    const linked = within(screen.getByRole('row', { name: /Listed Fixture 01/ })).getAllByRole(
-      'cell',
+    // None linked leaves the cell empty.
+    expect(cellUnder('Listed Fixture 01', 'Sign-In Methods')).toHaveTextContent('Google');
+    expect(cellUnder('Listed Fixture 02', 'Sign-In Methods')).toHaveTextContent(/^$/);
+  });
+
+  it('reads the page’s standing time-outs and pauses in one batch each, as the guard’s session, and marks each row', async () => {
+    const until = new Date('2026-11-20T09:30:00Z');
+    standingTimeoutsOf.mockImplementation(async (_session, ids: string[]) =>
+      ids.map((id) => (id === user(1).id ? { userId: id, until } : undefined)),
     );
-    expect(linked[4]).toHaveTextContent('Google');
-    const none = within(screen.getByRole('row', { name: /Listed Fixture 02/ })).getAllByRole(
-      'cell',
+    standingAccessPausesOf.mockImplementation(async (_session, ids: string[]) =>
+      ids.map((id) => (id === user(2).id ? { userId: id, until: null } : undefined)),
     );
-    expect(none[4]).toHaveTextContent(/^$/);
+    await renderPage();
+
+    const ids = [user(1).id, user(2).id];
+    expect(standingTimeoutsOf).toHaveBeenCalledExactlyOnceWith(ADMIN, ids);
+    expect(standingAccessPausesOf).toHaveBeenCalledExactlyOnceWith(ADMIN, ids);
+    expect(
+      within(cellUnder('Listed Fixture 01', 'Support Time-Out')).getByText(
+        'Timed out until 20 November 2026, 09:30 UTC',
+      ),
+    ).toBeInTheDocument();
+    expect(
+      within(cellUnder('Listed Fixture 01', 'Site Access Paused')).getByText('Not paused'),
+    ).toBeInTheDocument();
+    expect(
+      within(cellUnder('Listed Fixture 02', 'Support Time-Out')).getByText('Not timed out'),
+    ).toBeInTheDocument();
+    expect(
+      within(cellUnder('Listed Fixture 02', 'Site Access Paused')).getByText(
+        'Paused with no end date',
+      ),
+    ).toBeInTheDocument();
   });
 
   // Whether a row is the primary admin's is the identity service's

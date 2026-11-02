@@ -63,8 +63,8 @@ head, both built by the page per row, as the other admin lists carry
   `awaiting=1`, and opens it softly. Before
   hydration the form submits natively, with the switch as `awaiting=`, which
   the page reads the same, as it does an older link's `awaiting=1`.
-- **Six columns, in the owner's order**: Name, Email, Role, Coven Creation,
-  Sign-In Methods and Signed Up, each heading in title case (DESIGN.md §9).
+- **Eight columns, in the owner's order**: Name, Email, Role, Coven Creation,
+  Support Time-Out, Site Access Paused, Sign-In Methods and Signed Up, each heading in title case (DESIGN.md §9).
   The table is [`StackTable`](data-table.md), so each heading is also the
   `data-label` its cells carry as a card at phone width, and the table writes
   out its roles (MB.115, "Tables at phone width" in
@@ -84,6 +84,18 @@ head, both built by the page per row, as the other admin lists carry
   native `title` showed too late to be seen, on the owner's review. The bubble
   is `aria-hidden`, the reader having the hidden word. The creation flag's
   says Yes or No, which its heading asks, and has no bubble.
+  Support Time-Out and Site Access Paused mark whether one stands: not
+  lifted, not deleted, and with no end or an end still to come, the services'
+  own rule, so a time-out or pause that has run out is a cross and nothing is
+  written to end it. A check's hidden word carries the end, "Timed out until
+  <instant>" or "Paused until <instant>" (`inUtc`), or "Paused with no end
+  date"; its bubble says "Until <instant>" or "No end date", the heading
+  saying the rest. A cross says "Not timed out" or "Not paused" and has no
+  bubble. The page reads both for the whole page of users in one query each,
+  `standingTimeoutsOf` (support) and `standingAccessPausesOf` (identity), both
+  under `assertSiteAdmin`, beside `providersOf`, and hands each row
+  `supportTimeoutUntil` and `accessPause` (`{ until }`), absent when none
+  stands.
   An admin's or a curator's role is bold, on the owner's call. The signup is the UTC
   date, in a `<time>` carrying the full instant. A provider shows as its
   logo, on the owner's call: the shared provider mark, `ProviderMark`
@@ -470,14 +482,15 @@ admin's locked switch, described by its reason and raising an alert when
 tried; and, while paused, every Change Role and Approve locked for another admin and described by the pause, the primary admin's
 Approve usable, nothing locked while changes are on, and the primary admin's
 Change Role kept on its own reason — which of the two reasons won is told by
-which of the two strings describes it. Its colours, marks, tips and their placement, and the cards at phone width,
+which of the two strings describes it. It also covers the time-out and pause columns: a check with its end, dated or open, and a cross for none, each found under its column heading. Its colours, marks, tips and their placement, and the cards at phone width,
 are presentation; paging is Pager's. `tests/app/(shell)/admin/(people)/users/page.test.tsx` reads the page's
 half: what it hands the list, the impersonation gate and the primary admin's
 flag included, `awaiting` read by its presence, and the count behind the
-pager's position; and the user modal (M9.19): `?user=<id>` reading the user and
+pager's position; the page's standing time-outs and pauses read in one batch each, as the guard's session, and marked on their rows; and the user modal (M9.19): `?user=<id>` reading the user and
 their covens as the guard's session into a dialog, each name's link keeping the
 filter, and the notice with no dialog, and no read, for an id that is not one,
 and the notice for a user the service finds none of or the list leaves out.
+The batched finders' own tests, in `tests/modules/identity/schema/user-access-pauses-schema.test.ts` and `tests/modules/support/schema/support-timeouts-schema.test.ts`, return only a standing row of a user asked for, never one run out, lifted, deleted or another user's; the services' tests keep the ids' order and refuse a curator and a plain user.
 `tests/e2e/admin.spec.ts` approves and revokes a user against the built
 server, and changes a role through the dialog with a reason, with axe over each open
 modal; and, tagged `@story-19`, opens a user's modal from their name, finds
@@ -520,7 +533,7 @@ Three kinds of mark carry a tip that behaves as InfoTip's does, through the same
 
 - **The primary admin's mark** beside its role is a crown named "Primary Admin". It is a button, as InfoTip's ⓘ is, so the keyboard reaches the tip too. The tip says no more than the button's name, so it is hidden from assistive technology while closed.
 - **The history link** is a row's way into the privilege ledger narrowed to its user: the ledger's search opened with their address, lower-cased as every address is held. It is an icon before the name, named "Privilege changes for <name>", with a tip reading Privilege Changes, the ledger's one name. The tip says less than the link's name, so it describes nothing, and is hidden from assistive technology while closed.
-- **A hint** is a mark or a logo that says what it is in a tip bubble on hover: the provider logos, and the yes-or-no marks whose column heading does not say it. The bubble is the eye's copy, hidden from assistive technology, since the mark carries its word as hidden text. It opens on hover only, as before it was CSS's. `useTip` places it so it stays on the screen, centred over the mark where there is room. It takes no pointer, so it never blocks the row it overlaps.
+- **A hint** is a mark or a logo that says what it is in a tip bubble on hover: the provider logos, and the yes-or-no marks whose column heading does not say it, and a standing time-out's or pause's check, whose bubble gives its end (`Mark`'s `tip`, shown in place of its word). The bubble is the eye's copy, hidden from assistive technology, since the mark carries its word as hidden text. It opens on hover only, as before it was CSS's. `useTip` places it so it stays on the screen, centred over the mark where there is room. It takes no pointer, so it never blocks the row it overlaps.
 
 ## The user link and the filter
 

@@ -2,6 +2,7 @@ import 'server-only';
 import {
   findOneById,
   findStandingUserAccessPause,
+  findStandingUserAccessPausesFor,
   findUserAccessPausePage,
   withAudit,
 } from '../../../db/repository';
@@ -121,4 +122,17 @@ export async function listUserAccessPauses(
   const admin = assertSiteAdmin(session, REFUSAL);
   const id = parseInput(RowId, userId);
   return findUserAccessPausePage(admin, id, page);
+}
+
+/**
+ * The pause standing on each user, in the order asked, undefined where none stands: one query for a page of the user list.
+ * To a site admin alone.
+ */
+export async function standingAccessPausesOf(
+  session: Session,
+  userIds: readonly string[],
+): Promise<(UserAccessPauseRow | undefined)[]> {
+  const admin = assertSiteAdmin(session, REFUSAL);
+  const rows = await findStandingUserAccessPausesFor(admin, userIds);
+  return userIds.map((id) => rows.find((row) => row.userId === id));
 }

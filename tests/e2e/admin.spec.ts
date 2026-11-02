@@ -86,7 +86,7 @@ test('an admin lists the users at /admin/users, filtered, with their sign-in met
   const admin = page.getByRole('row', {
     name: /Fixture Person Verified an-admin@admin-users\.test/,
   });
-  // The name, the address, the role, the creation flag, both sign-in
+  // The name, the address, the role, the creation flag, no standing time-out or pause, both sign-in
   // methods and the joining date: the account's state as the row carries it.
   await expect(admin.getByRole('cell')).toHaveText([
     /Fixture Person$/,
@@ -95,6 +95,8 @@ test('an admin lists the users at /admin/users, filtered, with their sign-in met
     // A mark alone: every admin may create a workspace, and the users CHECK
     // says so, so the cell offers no control.
     'Yes',
+    'Not timed out',
+    'Not paused',
     /Discord.*Google/,
     /\d/,
   ]);
@@ -107,7 +109,7 @@ test('an admin lists the users at /admin/users, filtered, with their sign-in met
   // So does each sign-in logo's.
   const discord = admin
     .getByRole('cell')
-    .nth(4)
+    .nth(6)
     .locator('.user-list__hint:has(.provider-mark--discord)');
   await discord.hover();
   await expect(discord.locator('.user-list__tip')).toBeVisible();

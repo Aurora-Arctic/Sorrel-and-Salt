@@ -15,6 +15,7 @@ import Pager from '../Pager';
 import StackTable from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
 import { emptyList, noMatchText } from '../../lib/text';
+import { inUtc } from '../../lib/utc';
 import type { UserListEntry, UserListFilterProps, UserListProps } from './types';
 import './index.scss';
 
@@ -121,6 +122,38 @@ const columns = (
         )}
       </div>
     ),
+  },
+  {
+    heading: 'Support Time-Out',
+    // Whether a time-out stands on them now, its end in the tip; one run out or lifted is a cross.
+    cell: (user) =>
+      user.supportTimeoutUntil ? (
+        <Mark
+          value
+          label={`Timed out until ${inUtc(user.supportTimeoutUntil)}`}
+          tip={`Until ${inUtc(user.supportTimeoutUntil)}`}
+        />
+      ) : (
+        <Mark value={false} label="Not timed out" />
+      ),
+  },
+  {
+    heading: 'Site Access Paused',
+    // Whether a pause stands on their access now, its end or that it has none in the tip.
+    cell: ({ accessPause }) =>
+      accessPause ? (
+        <Mark
+          value
+          label={
+            accessPause.until
+              ? `Paused until ${inUtc(accessPause.until)}`
+              : 'Paused with no end date'
+          }
+          tip={accessPause.until ? `Until ${inUtc(accessPause.until)}` : 'No end date'}
+        />
+      ) : (
+        <Mark value={false} label="Not paused" />
+      ),
   },
   {
     heading: 'Sign-In Methods',
