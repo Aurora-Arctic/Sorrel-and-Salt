@@ -51,7 +51,7 @@
 
 ## The holding count
 
-The plus and the check show how many of the viewer's covens hold the entry (M12.55). The page asks `heldCompendiumEntryIdsIn` over every membership, viewers included, not only the writable ones, and gives each entry `holding`, the names of the covens whose cupboard holds it, in the switcher's order. `held` and `heldIn` still count the writable covens alone, so the check and the menu's disabled items are unchanged, and the menu still lists only the covens the viewer may write in. The page asks nothing when the viewer has no coven they may write in, since then there is no plus or check to carry the count.
+The plus and the check show how many of the viewer's covens hold the entry (M12.55). The page asks `heldCompendiumEntryIdsIn` over every membership, viewers included, not only the writable ones, bar one whose seat is paused (its read is refused, which would blank the count for every coven; M15.56), and gives each entry `holding`, the names of the covens whose cupboard holds it, in the switcher's order. `held` and `heldIn` still count the writable covens alone, so the check and the menu's disabled items are unchanged, and the menu still lists only the covens the viewer may write in. The page asks nothing when the viewer has no coven they may write in, since then there is no plus or check to carry the count.
 
 `AddIcon` and `HeldMark` take `holding` and draw it through `src/components/AddIcon/holding.tsx`:
 

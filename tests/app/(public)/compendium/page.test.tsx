@@ -56,13 +56,15 @@ const covensHoldingEntry = vi.fn();
 const readCompendiumReview = vi.fn();
 // The curator's read of the row itself, for the form's shown switch.
 const getIngredient = vi.fn();
+// Which entries each coven holds, for the plus's count: nothing held, unless a test says otherwise.
+const heldCompendiumEntryIdsIn = vi.fn(async () => new Map<string, ReadonlySet<string>>());
 vi.mock('@/modules/ingredients', () => ({
   readSourcingScore,
   readCompendiumReview,
   getIngredient,
   resolveCompendiumSlug,
   covensHoldingEntry,
-  heldCompendiumEntryIdsIn: async () => new Map<string, ReadonlySet<string>>(),
+  heldCompendiumEntryIdsIn,
   MAKE_IT_OURS_PERMISSION: { ingredient: ['create', 'delete'], inventory: ['update'] },
 }));
 // What Edit Stock opens with is `entry-stock.ts`'s, tests/app/entry-stock.test.ts; here only that
@@ -252,7 +254,7 @@ describe('the public compendium page, narrowed to the viewer’s covens', () => 
     readCompendium.mockClear();
   });
 
-  it("hands In My Covens each coven's pause as the shell read it, a paused coven out of reach", async () => {
+  it("hands In My Covens each coven's pause as the shell read it, and counts holdings in the unpaused covens alone", async () => {
     const shell = shellOf(true, true);
     viewerIfSignedIn.mockResolvedValue({
       ...shell,
@@ -265,6 +267,9 @@ describe('the public compendium page, narrowed to the viewer’s covens', () => 
 
     fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
     fireEvent.click(screen.getByRole('combobox', { name: 'In My Covens' }));
+
+    // The holding count asks only the coven the viewer may read: the paused one's read would be refused, and blank the count for both.
+    expect(heldCompendiumEntryIdsIn).toHaveBeenLastCalledWith(SESSION, ['w1'], expect.any(Array));
 
     const paused = screen.getByRole('option', { name: /Coven 0/ });
     expect(paused).toHaveAccessibleName('Coven 0 Paused, with no end date');

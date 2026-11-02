@@ -188,10 +188,11 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
   // window: one read, per request, for both, and none for a visitor or a viewer.
   const cardCovens = defaultCoven ? await readCardCovens(writable) : [];
   // Asked of every coven, not only the writable ones, for the holding count; read only where
-  // there is a plus or a check to count on.
+  // there is a plus or a check to count on. Not of a paused one: its read is refused, which
+  // would blank the count for every coven.
   const held = defaultCoven
     ? await heldEntryIds(
-        mine.map(({ id }) => id),
+        mine.filter(({ paused }) => !paused).map(({ id }) => id),
         page.edges.map(({ node }) => node.id),
       )
     : undefined;
