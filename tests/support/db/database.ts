@@ -8,7 +8,7 @@ import type { IndexRow, CatalogueReads } from './types';
 
 /**
  * Hands the client to `bind` rather than returning it, so a file's existing `let sql` stays as written.
- * `DATABASE_URL` is read inside the hook, after `db-setup.ts` has pointed it at this worker's clone.
+ * `DATABASE_URL` is read inside the hook, after `db-runner.ts` has pointed it at this worker's clone.
  */
 export function useTestDatabase(bind: (client: postgres.Sql) => void): CatalogueReads {
   let sql: postgres.Sql;

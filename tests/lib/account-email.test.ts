@@ -24,6 +24,7 @@ describe('verifyErrorMessage', () => {
       'SIGN_IN_TO_VERIFY',
       'EMAIL_TAKEN',
       'TOKEN_EXPIRED',
+      'CHANGE_REPLACED',
       'INVALID_TOKEN',
       'INVALID_USER',
       'USER_NOT_FOUND',

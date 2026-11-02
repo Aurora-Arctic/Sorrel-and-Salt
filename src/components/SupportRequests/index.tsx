@@ -69,10 +69,16 @@ const SubjectLink = ({
   return (
     <ModalLink href={href} onClick={onClick} className="support-requests__subject">
       {request.subject}
-      {/* Names the sender too, so two requests with one subject are told apart. */}{' '}
-      <span className="visually-hidden">
-        from {request.signedOut ? 'Signed-out sender' : (request.sender?.name ?? 'Deleted account')}
-      </span>
+      {/* Names the sender too, so two requests with one subject are told apart; an anonymised one has none to name. */}
+      {!request.anonymised && (
+        <>
+          {' '}
+          <span className="visually-hidden">
+            from{' '}
+            {request.signedOut ? 'Signed-out sender' : (request.sender?.name ?? 'Deleted account')}
+          </span>
+        </>
+      )}
     </ModalLink>
   );
 };
@@ -148,6 +154,16 @@ const SupportRequests = ({
                           <FlagIcon />
                         </button>
                       </IconTip>
+                    ) : request.anonymised ? (
+                      <IconTip tip="Anonymised" opensOnPress>
+                        <button
+                          type="button"
+                          className="support-requests__mark support-requests__mark--anonymised"
+                          aria-label="Anonymised"
+                        >
+                          <ArchiveBoxIcon />
+                        </button>
+                      </IconTip>
                     ) : request.status === 'closed' ? (
                       <IconTip tip="Closed" opensOnPress>
                         <button
@@ -188,28 +204,31 @@ const SupportRequests = ({
               },
               {
                 heading: 'Sender',
-                cell: (request) => (
-                  // A row of its own, so the sprout centres on the name rather than sitting on the text's x-height.
-                  <span className="support-requests__sender">
-                    <SenderName
-                      sender={request.sender}
-                      signedOut={request.signedOut}
-                      userHref={userHref}
-                    />
-                    {request.betaTester && (
-                      // A status mark: a button only so the keyboard reaches its tip, which a press also opens.
-                      <IconTip tip="Beta Tester" opensOnPress>
-                        <button
-                          type="button"
-                          className="support-requests__beta"
-                          aria-label="Beta Tester"
-                        >
-                          <SproutIcon />
-                        </button>
-                      </IconTip>
-                    )}
-                  </span>
-                ),
+                // Empty for an anonymised request, which the stacked card then drops, label and all.
+                className: 'support-requests__sender-cell',
+                cell: (request) =>
+                  !request.anonymised && (
+                    // A row of its own, so the sprout centres on the name rather than sitting on the text's x-height.
+                    <span className="support-requests__sender">
+                      <SenderName
+                        sender={request.sender}
+                        signedOut={request.signedOut}
+                        userHref={userHref}
+                      />
+                      {request.betaTester && (
+                        // A status mark: a button only so the keyboard reaches its tip, which a press also opens.
+                        <IconTip tip="Beta Tester" opensOnPress>
+                          <button
+                            type="button"
+                            className="support-requests__beta"
+                            aria-label="Beta Tester"
+                          >
+                            <SproutIcon />
+                          </button>
+                        </IconTip>
+                      )}
+                    </span>
+                  ),
               },
               {
                 heading: 'Assignee',

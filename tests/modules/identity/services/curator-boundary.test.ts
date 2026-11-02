@@ -91,6 +91,8 @@ beforeEach(async () => {
   const [{ email }] = await sql`select email from users where id = ${E.id}`;
   vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', email as string);
   send.mockClear();
+  // With no transport the mail is built and tried once in the request, by the job step's own code, so `send` receives it.
+  vi.stubEnv('MAIL_TRANSPORT', '');
 });
 
 afterEach(() => {

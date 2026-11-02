@@ -4,5 +4,15 @@
     "deploymentEnabled": {
       "**": false
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/support-retention",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/provisional-cleanup",
+      "schedule": "0 4 * * *"
+    }
+  ]
 }

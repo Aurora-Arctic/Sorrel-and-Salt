@@ -16,8 +16,7 @@ export const noSender: EmailVerificationSender = {
 };
 
 export const noInvitationSender: InvitationSender = {
-  siteInvitation: async () => unexpected('mail an invitation'),
-  workspaceInvitation: async () => unexpected('mail a coven invitation'),
+  invitation: async () => unexpected('mail an invitation'),
 };
 
 export const noPasswordSetter: PasswordSetter = {
@@ -26,9 +25,5 @@ export const noPasswordSetter: PasswordSetter = {
 };
 
 export const noSupportNotifier: SupportNotifier = {
-  replyWaiting: async () => unexpected('mail a support reply notice'),
-  received: async () => unexpected('mail a receipt'),
-  resolved: async () => unexpected('mail a resolved notice'),
-  closingSoon: async () => unexpected('mail a closing-soon notice'),
-  signedOutReply: async () => unexpected('mail a signed-out reply'),
+  origin: async () => unexpected('resolve an origin'),
 };

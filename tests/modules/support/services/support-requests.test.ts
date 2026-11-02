@@ -1,11 +1,13 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
 import { SIGNED_OUT_SENDER_ID } from '@/lib/support-sender';
 import { SYSTEM_ACTOR_ID } from '@/lib/system-actor';
-import type { PageRequest } from '@/lib/types';
+import type { Cursor, PageEntry, PageRequest } from '@/lib/types';
 import {
   assignSupportRequest,
+  closeSupportRequest,
+  countSupportRequests,
   getMySupportRequest,
   countMySupportRequestsByStatus,
   getMySupportTimeout,
@@ -26,6 +28,7 @@ import {
   usersNamedOnRequests,
 } from '@/modules/support';
 import type { SupportNotifier } from '@/modules/support';
+import { supportReplyNotice } from '@/modules/support/jobs/support-reply-notice';
 import { A, B, C, D, E, F, asUser } from '../../../support/as-user';
 import { failureOf, useTestDatabase } from '../../../support/db/database';
 import type { SessionUser } from '../../../support/types';
@@ -34,12 +37,21 @@ import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 // The support services by direct call: who may send, read, answer and manage a request, each refusal paired with the
 // same call succeeding once its precondition holds (claude-docs/design-decisions/m15.1-support-form.md).
 
+// A reply's notice goes out through its job, whose mail is tested in tests/workflows/support-reply-notice.test.ts.
+const { startJob } = vi.hoisted(() => ({
+  startJob: vi.fn(async (..._args: unknown[]) => 'run-id'),
+}));
+vi.mock('@/lib/jobs', () => ({ startJob }));
+const replyNotices = () =>
+  startJob.mock.calls.filter(([job]) => job === supportReplyNotice).map(([, args]) => args);
+
 let sql: postgres.Sql;
 useTestDatabase((client) => {
   sql = client;
 });
 
 beforeEach(async () => {
+  startJob.mockClear();
   await sql`truncate support_replies, support_timeouts, support_requests cascade`;
 });
 
@@ -47,23 +59,9 @@ const PAGE: PageRequest = { limit: 101, inverted: false };
 const FUTURE = () => new Date(Date.now() + 3_600_000);
 const INPUT = { about: 'bug', subject: 'The jar will not open', message: 'It sticks.' } as const;
 
-function notifier(): SupportNotifier & { sent: string[]; subjects: string[]; ids: string[] } {
-  const sent: string[] = [];
-  const subjects: string[] = [];
-  const ids: string[] = [];
+function notifier(): SupportNotifier {
   return {
-    sent,
-    subjects,
-    ids,
-    replyWaiting: async (to, subject, requestId) => {
-      ids.push(requestId);
-      sent.push(to);
-      subjects.push(subject);
-    },
-    received: async () => undefined,
-    resolved: async () => undefined,
-    closingSoon: async () => undefined,
-    signedOutReply: async () => undefined,
+    origin: async () => 'http://localhost:3000',
   };
 }
 
@@ -71,17 +69,8 @@ const send = (user: SessionUser = C, input: Parameters<typeof sendSupportRequest
   sendSupportRequest(asUser(user), input, notifier());
 
 const mail: SupportNotifier = {
-  replyWaiting: async () => undefined,
-  received: async () => undefined,
-  resolved: async () => undefined,
-  closingSoon: async () => undefined,
-  signedOutReply: async () => undefined,
+  origin: async () => 'http://localhost:3000',
 };
-
-async function emailOf(user: SessionUser): Promise<string> {
-  const [row] = await sql`select email from users where id = ${user.id}`;
-  return row!.email as string;
-}
 
 describe('sendSupportRequest', () => {
   it('lets a viewer and an account in no coven send', async () => {
@@ -409,7 +398,7 @@ describe('supportRequests', () => {
 });
 
 describe('replyToSupportRequest', () => {
-  it('lets an admin reply to any request, stores the reply and notifies the sender without its text', async () => {
+  it('lets an admin reply to any request, stores the reply and starts its notice with ids alone', async () => {
     const request = await send(C);
     const mail = notifier();
     const reply = await replyToSupportRequest(asUser(E), request.id, 'A secret answer.', mail);
@@ -419,9 +408,7 @@ describe('replyToSupportRequest', () => {
       body: 'A secret answer.',
       createdBy: E.id,
     });
-    expect(mail.sent).toEqual([await emailOf(C)]);
-    expect(mail.subjects).toEqual([INPUT.subject]);
-    expect(mail.ids).toEqual([request.id]);
+    expect(replyNotices()).toEqual([[reply.id, 'http://localhost:3000']]);
   });
 
   it('lets a curator reply only to a request assigned to them', async () => {
@@ -432,7 +419,7 @@ describe('replyToSupportRequest', () => {
     expect(
       await failureOf(replyToSupportRequest(asUser(F), request.id, 'Hi.', mail)),
     ).toBeInstanceOf(Forbidden);
-    expect(mail.sent).toEqual([]);
+    expect(replyNotices()).toEqual([]);
 
     await assignSupportRequest(asUser(E), request.id, F.id);
     expect((await replyToSupportRequest(asUser(F), request.id, 'Hi.', mail)).createdBy).toBe(F.id);
@@ -661,6 +648,60 @@ describe('the cursor', () => {
       { limit: 2, inverted: false, after: first[0]!.cursor },
     );
     expect(rest.map((entry) => entry.node.id)).toEqual([resolved.id]);
+  });
+});
+
+describe('an anonymised request in the staff list', () => {
+  // Two ordinary closed requests and an anonymised one sent after both: newest first alone would put it ahead of them.
+  const closedTrio = async () => {
+    const older = await send(C);
+    const newer = await send(D);
+    const anonymised = await send(C);
+    for (const request of [older, newer, anonymised]) {
+      await closeSupportRequest(asUser(E), request.id);
+    }
+    await sql`update support_requests set created_at = now() - interval '2 hours' where id = ${older.id}`;
+    await sql`update support_requests set created_at = now() - interval '1 hour' where id = ${newer.id}`;
+    await sql`update support_requests set created_by = ${SYSTEM_ACTOR_ID} where id = ${anonymised.id}`;
+    return { older, newer, anonymised };
+  };
+
+  it('comes after every ordinary request in the same view, though it is the newest', async () => {
+    const { older, newer, anonymised } = await closedTrio();
+    const [{ created_at: anonymisedAt }] =
+      await sql`select created_at from support_requests where id = ${anonymised.id}`;
+    const [{ created_at: newerAt }] =
+      await sql`select created_at from support_requests where id = ${newer.id}`;
+    expect(anonymisedAt.getTime()).toBeGreaterThan(newerAt.getTime());
+
+    const ids = (await listSupportRequests(asUser(E), { view: 'closed' }, PAGE)).map(
+      (entry) => entry.node.id,
+    );
+
+    expect(ids).toEqual([newer.id, older.id, anonymised.id]);
+  });
+
+  it('pages across the boundary one row at a time, every row once and in order, and counts the rows before it', async () => {
+    const { older, newer, anonymised } = await closedTrio();
+    const seen: PageEntry<{ id: string }>[] = [];
+    let after: Cursor | undefined;
+    for (let page = 0; page < 10; page += 1) {
+      const entries = await listSupportRequests(
+        asUser(E),
+        { view: 'closed' },
+        { limit: 1, inverted: false, ...(after ? { after } : {}) },
+      );
+      if (entries.length === 0) break;
+      seen.push(...entries);
+      after = entries[entries.length - 1]!.cursor;
+    }
+
+    expect(seen.map((entry) => entry.node.id)).toEqual([newer.id, older.id, anonymised.id]);
+    // The anonymised row's page starts after both ordinary rows, so its position counts them.
+    expect(await countSupportRequests(asUser(E), { view: 'closed' }, seen[2]!.cursor)).toEqual({
+      totalCount: 3,
+      countBefore: 2,
+    });
   });
 });
 

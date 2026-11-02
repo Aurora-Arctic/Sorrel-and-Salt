@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 /** The day this text last changed. */
-const UPDATED_ON = new Date('2026-11-01T00:00:00Z');
+const UPDATED_ON = new Date('2026-11-02T00:00:00Z');
 
 /** Who may see each kind of data: one row per kind, one cell per role, each cell drawn from the service that enforces it. */
 const ACCESS_ROWS: AccessRow[] = [
@@ -330,13 +330,21 @@ export default function PrivacyPolicyPage() {
         those ingredients is deleted, and a later version of the site can offer to bring back
         something deleted by mistake. That second feature does not exist yet.
       </p>
+      <p>
+        A support request closes by itself seven days after it is resolved. Twelve months after it
+        closes, a job that runs once a day anonymises it, within a day: its subject is replaced with
+        “Anonymised support request.”, its message, page address and the text of every reply are
+        emptied, and the email and account it was sent from are removed from it. Its topic, status
+        and dates are kept, so the site can still count requests by topic and month.
+      </p>
       <p>Some rows are removed outright:</p>
       <ul>
         <li>
           An account that signed in through a provider but never verified its email lapses an hour
           after its last verification mail, or three hours after it was created, whichever comes
-          first. The next sign-in on the site removes every lapsed account, with its sessions and
-          provider rows.
+          first. A background job started at sign-up removes the account, with its sessions and
+          provider rows, once it lapses, and a daily check removes any lapsed account that job
+          missed.
         </li>
         <li>
           A row that only pairs two things, an ingredient with a category or a spell with a

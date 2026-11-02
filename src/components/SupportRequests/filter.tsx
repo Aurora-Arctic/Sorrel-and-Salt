@@ -49,7 +49,6 @@ const SupportRequestsFilter = ({ filter }: SupportRequestsFilterProps): ReactEle
       searchHref={() => supportHref({ ...filter, errorCode: code })}
       shown={[filter.about, filter.view, filter.errorCode, filter.sender]}
     >
-      <input type="hidden" name="view" value={filter.view} />
       <SearchField
         label="Error #"
         name="error"
@@ -57,12 +56,15 @@ const SupportRequestsFilter = ({ filter }: SupportRequestsFilterProps): ReactEle
         value={draftCode}
         onChange={setDraftCode}
       />
+      {/* After the search, which the filter row grows only as its first child. */}
+      <input type="hidden" name="view" value={filter.view} />
       <FilterSelectField
         label="About"
         name="about"
         all="All"
         options={ABOUT_OPTIONS}
         defaultValue={filter.about}
+        fit
         onChange={(about) =>
           apply(supportHref({ ...filter, errorCode: code, about: about as SupportAbout | '' }))
         }

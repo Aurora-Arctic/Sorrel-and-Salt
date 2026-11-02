@@ -241,8 +241,9 @@ endpoints, configured in `emailAndPassword` and the hooks in
   anyone change a password on a schedule (DESIGN.md §8).
 - **The notice.** A reset (`onPasswordReset`), a change (an `after` hook on
   `/change-password`) and a first password set each mail
-  `src/emails/password-changed.tsx` through `mailPasswordChanged`
-  (`src/lib/password-notice.ts`): the password was replaced, how, and a link to
+  `src/emails/password-changed.ts` through the account-notice job
+  (`scheduleAccountNotice` with `kind: 'password-changed'`, whose run holds the
+  account id, the origin and how): the password was replaced, how, and a link to
   `/forgot-password` for a holder who made no change.
 
 Both pages are public routes in `src/proxy.ts`

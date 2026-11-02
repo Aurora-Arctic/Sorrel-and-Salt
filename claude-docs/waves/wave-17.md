@@ -6,4 +6,6 @@
 
 **M17.2 and M17.3 scope the two ingredient warnings** the backlog lists under V Fast Follow, on the owner's call of 2026-11-02: the closed-practice warning and the ethical warnings, each from the data M14.29 gathered in `compendium/ethics/`. Neither depends on the billing work, so they sit after M17.1 in board order only. Each mints its own build tasks, and the task that ships a warning updates the Code of Ethics in the same PR.
 
+**M17.4 follows M17.3**, minted on 2026-11-02 on the owner's call: hourly cron jobs for the unverified-account expiry and the address-change lapse, which replace two runs that sleep. Its trigger is the move to Vercel Pro, since Hobby runs a cron job at most once a day; it needs M15.68.
+
 **MB.163, MB.175 and MB.78 stay on Wave 15**, unscheduled by design and trigger-based, until the owner moves them: they were minted before this wave existed and nothing about them changed.
