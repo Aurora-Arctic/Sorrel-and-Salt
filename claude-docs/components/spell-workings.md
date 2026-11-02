@@ -9,7 +9,7 @@ The page passes the section to `SpellRecipe` as `workings`, and the recipe draws
 
 ## A row
 
-The list is a `ul` named Workings with no marker (`list-reset`, which turns off typography-base's ◆), each row headed by its date.
+The list is a `ul` named Workings with no marker (`list-reset`, which turns off typography-base's ✦), each row headed by its date.
 
 Each working draws its date, a Draft badge on a draft, a Private badge on a private working, who
 recorded it and who took part, its note, and, on a complete working, its deductions. The recorder

@@ -1095,7 +1095,7 @@ match a row (`.ingredient-form__matches`), then a Create Anyway button,
 medium-sized and in the accent outline (`.btn.btn--medium`; the owner's call of
 2026-10-18, which took it off MB.115's quiet style). The rows' title links
 wear the body ink and the faded underline of the entry page's links, with
-a ◆ centred on the row: the `list-marker` shape (`_mixins.scss`), not
+a ✦ centred on the row: the `list-marker` shape (`_mixins.scss`), not
 typography-base's glyph, whose box sat its top rather than its middle on a
 centre line (M12.48).
 
