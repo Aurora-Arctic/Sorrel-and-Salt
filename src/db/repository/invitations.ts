@@ -192,7 +192,7 @@ function pendingOnSite({ email, expiresWithinHours }: SiteInvitationFilter): SQL
 }
 
 /**
- * One page of the site tier's pending invitations, newest first, for `/admin/invitations`, narrowed in SQL by a
+ * One page of the site tier's pending invitations, newest first, for `/keepers/invitations`, narrowed in SQL by a
  * `SiteInvitationFilter`. Typed as site-tier rows, since the CHECKs give each one a site role.
  */
 export function findPendingSiteInvitationPage(

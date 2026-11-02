@@ -1,5 +1,5 @@
 import { trimmed } from '../../../../../lib/search-params';
-import { readListPlace } from '../../list-page';
+import { readListPlace } from '../../../curator/list-page';
 import type { InvitationsPlace, InvitationsSearchParams } from './types';
 
 /**

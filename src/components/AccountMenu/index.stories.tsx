@@ -29,7 +29,7 @@ const Right = ({ children }: { children: ReactElement }) => (
 
 const LINKS = [
   { label: 'Your Coven', href: route('/coven/fixture-coven'), base: '/coven' },
-  { label: 'Admin', href: '/admin' as const, base: '/admin' },
+  { label: 'Keepers', href: '/keepers' as const, base: '/keepers' },
 ];
 
 // Opened once on mount, as a press on it would; `failSignOut` then presses Sign
@@ -84,7 +84,7 @@ const STATES: Record<string, ReactNode> = {
   'Open With Invitations': <Opened pendingInvitations={2} />,
   'Open With One Invitation': <Opened pendingInvitations={1} />,
   'Open On The Admin Page': (
-    <WorkshopPathname.Provider value="/admin">
+    <WorkshopPathname.Provider value="/keepers">
       <Opened />
     </WorkshopPathname.Provider>
   ),

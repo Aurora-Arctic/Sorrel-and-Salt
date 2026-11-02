@@ -12,8 +12,8 @@ const meta = {
 export default meta;
 type Story = StoryObj<{ state?: import('react').ReactNode }>;
 
-const ADA = { name: 'Ada Fixturewort', href: '/admin/users?query=ada%40users.test' };
-const BRAM = { name: 'Bram Testwort', href: '/admin/users?query=bram%40users.test' };
+const ADA = { name: 'Ada Fixturewort', href: '/keepers/users?query=ada%40users.test' };
+const BRAM = { name: 'Bram Testwort', href: '/keepers/users?query=bram%40users.test' };
 
 const CHANGES: PrivilegeLedgerEntry[] = [
   {

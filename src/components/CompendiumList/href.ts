@@ -7,12 +7,12 @@ import type { SearchCursor } from '../../lib/search-param-table';
 import { COMPENDIUM_PARAMS } from './params';
 import type { CompendiumPlace, CovenListDialog, CovenListFilter } from './types';
 
-// The address of `/admin/compendium` under a filter, at a page, with a modal open or not. The filter is
+// The address of `/curator/compendium` under a filter, at a page, with a modal open or not. The filter is
 // written through the parameter table (`./params.ts`), then the cursor, the details modal and the edit
 // modal.
 
 /** The page itself, unfiltered: where the filter submits, and what Clear opens. */
-export const COMPENDIUM_PATH: Route = '/admin/compendium';
+export const COMPENDIUM_PATH: Route = '/curator/compendium';
 
 /** The public compendium: the same filter and cursor, no modal. */
 export const PUBLIC_COMPENDIUM_PATH: Route = '/compendium';

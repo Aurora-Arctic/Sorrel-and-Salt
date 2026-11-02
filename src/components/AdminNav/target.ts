@@ -14,14 +14,15 @@ const SUPPORT_FIELDS = 3;
 const SUPPORT_COLUMNS = 9;
 
 const PARTS: Record<string, Parts> = {
-  '/admin': { shape: 'contents' },
-  '/admin/compendium': { shape: 'cards', title: true, action: true, filter: true },
-  '/admin/categories': CURATED,
-  '/admin/forms': CURATED,
-  '/admin/deities': CURATED,
-  '/admin/celestial-bodies': CURATED,
+  '/curator': { shape: 'contents' },
+  '/keepers': { shape: 'contents' },
+  '/curator/compendium': { shape: 'cards', title: true, action: true, filter: true },
+  '/curator/categories': CURATED,
+  '/curator/forms': CURATED,
+  '/curator/deities': CURATED,
+  '/curator/celestial-bodies': CURATED,
   // The view tabs on a line beneath the heading, a three-control filter and the nine columns of SupportRequests.
-  '/admin/support': {
+  '/keepers/support': {
     shape: 'table',
     title: true,
     tabs: true,
@@ -31,7 +32,7 @@ const PARTS: Record<string, Parts> = {
     columns: SUPPORT_COLUMNS,
   },
   // Its action is the pause control; the filter is the user search.
-  '/admin/users': CURATED,
+  '/keepers/users': CURATED,
 };
 
 // Any other admin address (a later tab) is a titled table with no filter.

@@ -174,7 +174,7 @@ export async function requireSession(): Promise<Session> {
 
 /**
  * `requireSession()` then the site-role check: a signed-in non-admin gets Next's forbidden page (403), not a redirect or 404,
- * as `/admin` is a known path (claude-docs/auth/admin-guard.md, "The admin guard"). The layout and every page call it,
+ * as `/keepers` is a known path (claude-docs/auth/admin-guard.md, "The admin guard"). The layout and every page call it,
  * since a layout does not re-run on client-side navigation.
  */
 export async function requireAdminSession(): Promise<Session> {

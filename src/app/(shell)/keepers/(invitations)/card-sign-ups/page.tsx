@@ -14,12 +14,12 @@ import { changesLocked } from '../../../../../components/UserList/lock';
 import { impersonationEnabled } from '../../../../../lib/impersonation';
 import { single } from '../../../../../lib/search-params';
 import { withParam } from '../../../../../lib/list-href';
-import { readOpenedUser } from '../users/opened-user';
-import UserDialog from '../users/user-dialog';
-import { userHeading } from '../users/user-heading';
-import MissingNotice from '../../missing-notice';
-import { readPauseState } from '../pause-state';
-import { readListPlace } from '../../list-page';
+import { readOpenedUser } from '../../(people)/users/opened-user';
+import UserDialog from '../../(people)/users/user-dialog';
+import { userHeading } from '../../(people)/users/user-heading';
+import MissingNotice from '../../../curator/missing-notice';
+import { readPauseState } from '../../(people)/pause-state';
+import { readListPlace } from '../../../curator/list-page';
 import type { ArrivalsPageProps } from '../invitation-cards/types';
 
 export const metadata: Metadata = {

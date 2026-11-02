@@ -26,7 +26,7 @@ type Story = StoryObj<{ state?: import('react').ReactNode }>;
 const FILTER: AdminInvitationsFilter = { email: 'brook', expiringSoon: true };
 
 // The admin layout's frame and the People page with its Invitations tab
-// open, as /admin/invitations draws them: New Invitation beside the heading as
+// open, as /keepers/invitations draws them: New Invitation beside the heading as
 // the tab's action, the filter row and the list beneath.
 const Frame = ({
   invitations,
@@ -38,7 +38,7 @@ const Frame = ({
 }: AdminInvitationsProps): ReactElement => (
   <AdminTabbedFrame
     page="people"
-    open="/admin/invitations"
+    open="/keepers/invitations"
     action={<InviteAdmin locked={locked} filter={filter} cursor={cursor} />}
   >
     <AdminInvitations

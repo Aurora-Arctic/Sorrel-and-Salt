@@ -20,9 +20,9 @@ import {
 } from '@/modules/identity';
 import { standingTimeoutsOf } from '@/modules/support';
 import { pagerHrefs } from '../../../../../lib/list-href';
-import { readListPlace } from '../../list-page';
+import { readListPlace } from '../../../curator/list-page';
 import { readNumberedPage } from '@/lib/numbered-page';
-import MissingNotice from '../../missing-notice';
+import MissingNotice from '../../../curator/missing-notice';
 import { readPauseState } from '../pause-state';
 import UserDialog from './user-dialog';
 import { readOpenedUser } from './opened-user';

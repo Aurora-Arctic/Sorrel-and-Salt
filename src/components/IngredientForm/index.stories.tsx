@@ -849,10 +849,10 @@ const linkOf = ({
 
 /** Where a near match links: a coven's entry page, or on the admin's page that entry's modal. */
 const covenDuplicateHref = ({ id }: { id: string }) => `/coven/fixture-coven/ingredients/${id}`;
-const compendiumDuplicateHref = ({ slug }: { slug: string }) => `/admin/compendium?edit=${slug}`;
+const compendiumDuplicateHref = ({ slug }: { slug: string }) => `/curator/compendium?edit=${slug}`;
 
 /** Where a summary links its entry on the admin's page: that entry's modal. */
-const entryHref = ({ slug }: { slug: string }) => `/admin/compendium?edit=${slug}`;
+const entryHref = ({ slug }: { slug: string }) => `/curator/compendium?edit=${slug}`;
 
 /** One of SOURCES as a reference row, cited at `locator`. */
 const cited = ({ citation, ...link }: (typeof SOURCES)[number], locator = '') => ({

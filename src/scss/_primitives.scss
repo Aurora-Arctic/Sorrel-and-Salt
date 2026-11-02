@@ -767,7 +767,7 @@
   }
 
   // A table of contents: titled sections of links, each link with its one
-  // line beneath it in the muted ink. The `/admin` index's (AdminNav's
+  // line beneath it in the muted ink. The `/curator` and `/keepers` indexes (AdminNav's
   // `contents.tsx`) and the coven index's. Not bulleted: a list of links, so
   // typography-base's marker and indent go. Here among the primitives rather
   // than in a component's stylesheet, since a route loads a component's
@@ -776,7 +776,7 @@
     @include stack;
   }
 
-  // The `/admin` index in the reading column, centred in the admin area's wider one as the account page's sections are in the
+  // The curator and keepers indexes in the reading column, centred in the admin area's wider one as the account page's sections are in the
   // page; the text inside stays left-aligned.
   .admin-index {
     box-sizing: border-box;

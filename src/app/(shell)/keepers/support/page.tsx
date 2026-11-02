@@ -5,7 +5,7 @@ import { USER_MODAL_PLACE, supportHref, supportViewTabs } from '@/components/Sup
 import { pagerHrefs } from '@/lib/list-href';
 import { impersonationEnabled } from '@/lib/impersonation';
 import { requireCuratorSession } from '@/lib/request-session';
-import MissingNotice from '../missing-notice';
+import MissingNotice from '../../curator/missing-notice';
 import { changesLocked } from '@/components/UserList/lock';
 import { readPauseState } from '../(people)/pause-state';
 import { readOpenedUser } from '../(people)/users/opened-user';

@@ -10,7 +10,7 @@ import {
   SUPPORT_VIEWS,
 } from '@/lib/support-path';
 import { oneOf, single, trimmed } from '@/lib/search-params';
-import { readListPlace } from '../list-page';
+import { readListPlace } from '../../curator/list-page';
 import type { SupportSearchParams } from './types';
 
 const VIEWS = SUPPORT_VIEWS.map((view) => view.value);
