@@ -6,6 +6,7 @@ import PrimaryAdminMark from '../UserList/primary-admin-mark';
 import RoleControl from '../UserList/role-control';
 import { roleLabel } from '../UserList/roles';
 import TimeoutPanel from '../SupportRequests/timeout-panel';
+import AccessPausePanel from './access-pause-panel';
 import ImpersonateAction from './impersonate-action';
 import { workspaceRoleLabel, workspaceRoleRank } from './roles';
 import type { UserCoven, UserDetailProps } from './types';
@@ -47,6 +48,7 @@ const UserDetail = ({
   user,
   memberships,
   timeouts,
+  pauses,
   canImpersonate = false,
   changesPaused = false,
 }: UserDetailProps): ReactElement => (
@@ -155,6 +157,11 @@ const UserDetail = ({
     {timeouts && (
       <section aria-label="Support Time-Out" className="user-detail__section">
         <TimeoutPanel userId={user.id} name={user.name} timeouts={timeouts} />
+      </section>
+    )}
+    {pauses && (
+      <section aria-label="Site Access" className="user-detail__section">
+        <AccessPausePanel userId={user.id} name={user.name} pauses={pauses} />
       </section>
     )}
     {/* Not on an admin: the endpoint refuses one. */}

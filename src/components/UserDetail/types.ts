@@ -34,6 +34,11 @@ export interface UserDetailProps {
   memberships: readonly UserCoven[];
   /** The user's support time-outs, newest first; the Time-Out section shows when this is given. */
   timeouts?: SupportTimeoutEntry[];
+  /**
+   * The user's access pauses, newest first; the Site Access section shows when this is given, which is never for the
+   * primary admin or the viewing admin's own account.
+   */
+  pauses?: AccessPauseEntry[];
   /** Whether impersonation is registered here; off by default. */
   canImpersonate?: boolean;
   /**
@@ -41,4 +46,25 @@ export interface UserDetailProps {
    * and creation controls then say why they cannot be used.
    */
   changesPaused?: boolean;
+}
+
+/** An account named on a pause: who set it or lifted it. */
+export interface AccessPausePerson {
+  id: string;
+  name: string;
+}
+
+/** One pause on a user's access to the site, as the user modal draws it. */
+export interface AccessPauseEntry {
+  id: string;
+  /** When the pause ends by itself; null for a pause with no end date. */
+  until: Date | null;
+  note: string | null;
+  /** When it was set. */
+  createdAt: Date;
+  liftedAt: Date | null;
+  /** The admin who set it; null if no live account holds the id. */
+  setBy: AccessPausePerson | null;
+  /** The admin who lifted it; null while it stands, or if no live account holds the id. */
+  liftedBy: AccessPausePerson | null;
 }

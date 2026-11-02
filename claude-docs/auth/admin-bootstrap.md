@@ -735,7 +735,10 @@ malformed one reads as no end date. It links to the compendium, which a paused a
 
 **Ending.** A dated pause ends by itself once `until` passes, with no write; the next sign-in simply succeeds.
 A lift stamps `lifted_at` and `lifted_by`. Neither restores a session: the user signs in again.
-The admin user modal's controls and the pause history are M15.53's.
+**In the user modal.** The People page's user modal has a Site Access section (`claude-docs/components/user-detail.md`)
+where an admin sets a pause, lifts the one that stands, and reads the earlier ones with who set and who lifted each. It is
+absent on the primary admin and on the admin's own account. The history is read through `listUserAccessPauses`, a
+keyset page newest first, which GraphQL serves as the paged `userAccessPauses` query for site admins.
 
 ### The self-created user
 

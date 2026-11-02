@@ -14,6 +14,7 @@ coven service and builds the modal around it; this draws only the body.
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `user`           | `UserDetailUser`: a `Pick` of the list's `UserListEntry` (id, name, email, emailVerified, role, primaryAdmin, canCreateWorkspace, providers, createdAt) |
 | `memberships`    | The user's live covens as `UserCoven`s, in any order                                                                                                    |
+| `pauses`         | The user's access pauses as `AccessPauseEntry`s, newest first; left out for the primary admin and the viewing admin's own account                       |
 | `canImpersonate` | Whether impersonation is registered here (MB.53); off by default                                                                                        |
 
 A `UserCoven` is `workspaceId`, `name`, `slug`, the user's `role` there and
@@ -22,6 +23,7 @@ A `UserCoven` is `workspaceId`, `name`, `slug`, the user's `role` there and
 ## Contracts
 
 - **Support Time-Out** (2026-10-31): when the page passes `timeouts`, a section after Covens and before Impersonate holds the same `TimeoutPanel` as the support request dialog (card, ledger and form), keyed by the user. This is the one place the ledger of earlier time-outs is drawn: each entry a date range with a "Lifted {date}" badge where lifted, the note, then "Set by {name}" and, where lifted, " · Lifted by {name}" (the lifter is the row's `updated_by`, the lift being the only write after insert), with no list marker. The request dialog links here instead. The page reads them with `readTimeoutsOf`, which returns nothing for a non-admin.
+- **Site Access** (M15.53): when the page passes `pauses`, a section after Support Time-Out and before Impersonate holds `AccessPausePanel` (`access-pause-panel.tsx`), laid out on the time-out panel's classes. With no pause standing it shows a form: For (1 Day, 1 Week, 1 Month, Until a Date, No End Date), Until when a date is chosen, and Note, then Pause Access, which asks before it sends `pauseUserAccess` (`until` is null for No End Date) and is held while Until a Date has no future day. With a pause standing it shows a card instead: a Paused badge, the end or "with no end date", the note, who set it and when, and Lift Pause, which asks before it sends `liftUserAccessPause`. Pauses lifted or run out are listed beneath as Earlier Pauses, each with its days, the note, "Set by {name}" and, where lifted, " · Lifted by {name}". The page (`readOpenedUser`) reads the newest 25 through `listUserAccessPauses` and passes none for the primary admin, for the admin's own account and for a non-admin, so the action is absent there (`claude-docs/auth/admin-bootstrap.md`, "Pausing a user's access").
 
 - **Laid out as the ingredient modal is, not as a table** (the owner's call,
   2026-10-12): two sections, Account and Covens, each under a small title in
@@ -88,6 +90,8 @@ which the workshop does not serve: the question can be seen, its answer cannot.
 - Without Impersonation: the user where impersonation is not registered.
 - Changes Paused and No Providers. May Create Covens: the plain Revoke of coven
   creation, beside the red Impersonate.
+- Access Open: the Site Access form, with one earlier pause lifted. Access
+  Paused: an open-ended pause standing, with Lift Pause.
 - `InAModal`: the detail inside a `Modal`, in its own iframe, so Impersonate's
   question draws over it.
 
@@ -99,6 +103,8 @@ no links, no coven list when empty, Impersonate present for a user and absent fo
 admin or when off, the question before any send, Cancel, a confirm sending
 `{ userId }` then landing on `/`, and a refusal showing an alert and not
 navigating.
+
+`tests/components/UserDetail/access-pause-panel.test.tsx`: no Site Access section when no pauses are passed; a dated pause and an open-ended one, each sending nothing until confirmed and then the user, the end (or null) and the trimmed note; Pause Access held until a day is picked; a standing pause showing Lift Pause in place of the form and lifting once confirmed; lifted and run-out pauses listed as earlier ones with who set and who lifted each.
 
 ## The modal body
 
