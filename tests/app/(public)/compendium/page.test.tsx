@@ -584,6 +584,16 @@ describe('the public compendium page structured data', () => {
     await renderPage({ query: 'wort' });
     expect(scripts()).toHaveLength(0);
   });
+
+  // The addresses the proxy marks noindex: Quick Look open over the list, and a pager page.
+  it.each<Record<string, string>>([{ entry: NODE.id }, { after: 'c' }, { before: 'c' }])(
+    'describes %o as nothing, as a copy of the list',
+    async (params) => {
+      await renderPage(params);
+      expect(screen.getByRole('list', { name: 'Compendium' })).toBeInTheDocument();
+      expect(scripts()).toHaveLength(0);
+    },
+  );
 });
 
 describe('the public compendium page metadata', () => {
