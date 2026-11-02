@@ -271,6 +271,21 @@ describe('IngredientEntry', () => {
     expect(screen.queryByRole('button', { name: /^Edited/ })).not.toBeInTheDocument();
   });
 
+  it("draws a paused viewer's notice inside the entry, ahead of its name, and none without a pause", () => {
+    const { unmount } = renderEntry({ accessPause: { until: null } });
+    const notice = screen.getByRole('complementary', { name: 'Site Access' });
+    expect(screen.getByRole('article')).toContainElement(notice);
+    expect(precedes(notice, screen.getByRole('heading', { level: 1 }))).toBe(true);
+    expect(within(notice).getByRole('link', { name: 'What This Means' })).toHaveAttribute(
+      'href',
+      '/access-paused',
+    );
+    unmount();
+
+    renderEntry();
+    expect(screen.queryByRole('complementary', { name: 'Site Access' })).not.toBeInTheDocument();
+  });
+
   it('heads the page with the entry name', () => {
     renderEntry();
 

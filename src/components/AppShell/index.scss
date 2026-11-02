@@ -166,8 +166,7 @@
 }
 
 // Over a page that narrows its column the notice takes that column, by the page's own grid: `.page-with-nav`'s (Support,
-// the account's tabs), and an ingredient entry's, whose text column ends short of its side column. An enhancement on
-// `:has()`: without it the notice keeps the wide column.
+// the account's tabs) and a document page's. Where `:has()` is missing the notice keeps the wide column.
 .app-shell__main:has(.page-with-nav) .app-shell__pause {
   column-gap: space(6);
   @include page-with-nav-grid;
@@ -181,13 +180,8 @@
   @include page-with-nav-grid($document-menu-column, $measure);
 }
 
-.app-shell__main:has(.ingredient-entry--with-nav) .app-shell__pause {
-  column-gap: space(6);
-  @include entry-nav-grid;
-}
-
-@media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
-  .app-shell__main:has(.ingredient-entry) .app-shell__pause .notice {
-    margin-inline-end: calc(#{$side-column} + #{space(8)});
-  }
+// An ingredient entry draws the notice in its own text column, which the band cannot follow: the entry's menu column
+// grows to its longest label. Its copy takes the band's place.
+.app-shell__main:has(.ingredient-entry__pause) .app-shell__pause {
+  display: none;
 }

@@ -1,17 +1,14 @@
 import { PendingLink } from '../../lib/navigation';
 import type { ReactElement } from 'react';
 import { covenHome } from '../../lib/shell-home';
-import Link from 'next/link';
-import { ACCESS_PAUSED_PATH } from '../../lib/access-paused';
 import AccountMenu from '../AccountMenu';
-import LocalTime from '../LocalTime';
-import Notice from '../Notice';
 import ThemeToggle from '../ThemeToggle';
 import { ViewerIdProvider } from '../../lib/viewer-id';
 import AddIngredientButton from './add-ingredient-button';
 import BrandName from './brand-name';
 import MainBody from './main-body';
 import NewSpellElsewhere from './new-spell-elsewhere';
+import PausedNotice from './paused-notice';
 import SiteNav from './site-nav';
 import type { AppShellProps, SiteLink } from './types';
 import './index.scss';
@@ -83,22 +80,9 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
           click, and the next Tab would restart at the top of the page. */}
       <span id="main" className="skip-target" tabIndex={-1} />
       <div className="app-shell__main">
-        {/* A paused viewer is told so on every page they reach; a landmark of its own, as the page owns `main`. */}
+        {/* A paused viewer is told so on every page they reach. */}
         {viewer.accessPause && (
-          <aside className="app-shell__pause" aria-label="Site Access">
-            <Notice kind="error" quiet>
-              Your site access is paused
-              {viewer.accessPause.until ? (
-                <>
-                  {' '}
-                  until <LocalTime at={viewer.accessPause.until} long />.
-                </>
-              ) : (
-                ', with no end date.'
-              )}{' '}
-              <Link href={ACCESS_PAUSED_PATH}>What This Means</Link>
-            </Notice>
-          </aside>
+          <PausedNotice until={viewer.accessPause.until} className="app-shell__pause" />
         )}
         <ViewerIdProvider id={viewer.id}>
           <MainBody>{children}</MainBody>

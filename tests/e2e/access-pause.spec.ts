@@ -5,6 +5,9 @@ import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 import { withSql } from './stories/coven-ingredients';
+import { makeIngredient } from '../support/fixtures/ingredient';
+import { insertIngredient } from '../support/db/insert-ingredient';
+import { ingredientSlug } from '@/lib/slugify';
 
 // An admin pauses a user's access from the People page's user modal; the user still signs in, by password through the
 // sign-in page, into support and nothing else, told on every page they reach that they are paused, and once the admin lifts
@@ -53,7 +56,14 @@ test('an admin pauses a user’s access, the user signs in to support alone, and
   await user.clearCookies();
   expect(await sessionsOf(userId)).toHaveLength(1);
 
-  await signInAs(page, `admin-${randomUUID()}@access-pause.test`, ['discord'], 'admin');
+  const { userId: adminId } = await signInAs(
+    page,
+    `admin-${randomUUID()}@access-pause.test`,
+    ['discord'],
+    'admin',
+  );
+  const entry = makeIngredient({ name: 'Testwort Pausewort', nomenclature: 'none' });
+  await withSql((sql) => insertIngredient(sql, entry, adminId));
   await page.goto(`/admin/users?user=${userId}`);
   const modal = page.getByRole('dialog');
   const access = modal.getByRole('region', { name: 'Site Access' });
@@ -110,6 +120,12 @@ test('an admin pauses a user’s access, the user signs in to support alone, and
   // The compendium reads as signed out beneath the notice; a coven or account page sends the user to the paused page.
   await userPage.goto('/compendium');
   await expect(userPage.getByRole('complementary', { name: 'Site Access' })).toBeVisible();
+  // An entry draws the notice in its own text column, and the shell draws none beside it.
+  await userPage.goto(`/compendium/ingredients/${ingredientSlug(entry.name, entry.canonicalName)}`);
+  await expect(userPage.getByRole('complementary', { name: 'Site Access' })).toHaveCount(1);
+  await expect(
+    userPage.getByRole('main').getByRole('complementary', { name: 'Site Access' }),
+  ).toBeVisible();
   for (const path of ['/coven', '/account']) {
     await userPage.goto(path);
     await expect(userPage).toHaveURL('/access-paused');

@@ -40,6 +40,7 @@ import OwnEntryActions from './own-actions';
 import StockSection from './stock-section';
 import { reviewedAtOf } from './review-date';
 import { cardName } from '../IngredientCard/card-name';
+import PausedNotice from '../AppShell/paused-notice';
 import type { IngredientEntryProps } from './types';
 import {
   blockOf,
@@ -228,6 +229,7 @@ const IngredientEntry = ({
   edit,
   movedAway,
   back,
+  accessPause,
   replaces,
   similar,
   cupboard,
@@ -280,6 +282,10 @@ const IngredientEntry = ({
       }
     >
       <header className="ingredient-entry__head">
+        {/* In the text column, in place of the shell's band (AppShell hides its own beside this one). */}
+        {accessPause && (
+          <PausedNotice until={accessPause.until} className="ingredient-entry__pause" />
+        )}
         {(back || recency || toxic || caution) && (
           // One row for the way back (left, first for a screen reader), the New / Updated marker
           // (top right) and the one safety badge beside the marker or in its place; the badge alone
