@@ -28,6 +28,10 @@ export default function DisclaimerPage() {
           {SITE_NAME} is folklore and reference. Nothing on it is medical, legal or other
           professional advice.
         </li>
+        <li>
+          The compendium is how its admins and curators read their sources. It is not an authority,
+          and spirituality is personal.
+        </li>
         <li>The site comes with no warranty. Its text can be wrong, out of date or incomplete.</li>
         <li>
           Safety notes are not complete. An ingredient with no safety note is not thereby safe.
@@ -50,6 +54,18 @@ export default function DisclaimerPage() {
         doctor, pharmacist or other qualified professional before you eat, drink, burn, inhale or
         put on your skin anything described here. If you think you or someone else has been
         poisoned, contact your local poison centre or emergency service straight away.
+      </p>
+
+      <h2>An Interpretation, Not an Authority</h2>
+      <p>
+        What the compendium says is its admins' and curators' understanding of the sources they have
+        read. They choose which sources to cite and decide what each one means for an entry, and
+        another reader of the same books could decide differently. The site is not an authority on
+        any tradition or practice.
+      </p>
+      <p>
+        Spirituality is personal. Your own practice, tradition and experience may differ from what
+        you read here, and they are yours to follow.
       </p>
 
       <h2>No Warranty</h2>
